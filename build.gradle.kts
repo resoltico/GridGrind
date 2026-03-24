@@ -108,6 +108,10 @@ spotless {
             "gradle/**/*.toml",
             "examples/**/*.json"
         )
+        // Exclude all generated build outputs. Gradle and the Kotlin DSL plugin extract
+        // and copy source files (e.g. convention plugins) into build/ directories during
+        // compilation — those copies must never be checked or reformatted by Spotless.
+        targetExclude("**/build/**", "**/.gradle/**")
         trimTrailingWhitespace()
         endWithNewline()
     }
