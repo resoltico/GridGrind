@@ -41,23 +41,28 @@ class ExcelWorkbookTest {
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
       ExcelSheet sheet = workbook.sheet("Budget");
 
-      ExcelCellSnapshot.FormulaSnapshot totalSnapshot = (ExcelCellSnapshot.FormulaSnapshot) sheet.snapshotCell("B4");
+      ExcelCellSnapshot.FormulaSnapshot totalSnapshot =
+          (ExcelCellSnapshot.FormulaSnapshot) sheet.snapshotCell("B4");
       assertEquals("FORMULA", totalSnapshot.declaredType());
       assertEquals("FORMULA", totalSnapshot.effectiveType());
       assertEquals("SUM(B2:B3)", totalSnapshot.formula());
-      assertEquals(61.0, ((ExcelCellSnapshot.NumberSnapshot)totalSnapshot.evaluation()).numberValue());
+      assertEquals(
+          61.0, ((ExcelCellSnapshot.NumberSnapshot) totalSnapshot.evaluation()).numberValue());
 
       List<ExcelPreviewRow> preview = sheet.preview(4, 2);
       assertEquals(4, preview.size());
       assertEquals("A1", preview.get(0).cells().get(0).address());
-      assertEquals("Hosting", ((ExcelCellSnapshot.TextSnapshot) preview.get(1).cells().get(0)).stringValue());
+      assertEquals(
+          "Hosting",
+          ((ExcelCellSnapshot.TextSnapshot) preview.get(1).cells().get(0)).stringValue());
       assertEquals("61", preview.get(3).cells().get(1).displayValue());
     }
   }
 
   @Test
   void managesWorkbookLifecycleAndValidation() throws IOException {
-    Path workbookPath = Files.createTempDirectory("gridgrind-workbook-").resolve("nested/book.xlsx");
+    Path workbookPath =
+        Files.createTempDirectory("gridgrind-workbook-").resolve("nested/book.xlsx");
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Hello"));

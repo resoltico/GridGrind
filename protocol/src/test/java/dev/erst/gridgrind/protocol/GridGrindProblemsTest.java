@@ -184,7 +184,8 @@ class GridGrindProblemsTest {
     assertEquals(6, problem.context().jsonLine());
     assertEquals(41, problem.context().jsonColumn());
 
-    // Explicit json location in ReadRequest is preserved even when exception carries different values
+    // Explicit json location in ReadRequest is preserved even when exception carries different
+    // values
     GridGrindResponse.ProblemContext explicitContext =
         new GridGrindResponse.ProblemContext.ReadRequest(
             "/tmp/request.json", "analysis.sheets[1]", 9, 12);

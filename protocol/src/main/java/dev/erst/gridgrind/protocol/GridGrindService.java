@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.protocol;
 
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelPreviewRow;
 import dev.erst.gridgrind.excel.ExcelSheet;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
@@ -52,9 +51,7 @@ public final class GridGrindService {
           GridGrindProblems.fromException(
               exception,
               new GridGrindResponse.ProblemContext.OpenWorkbook(
-                  reqSourceMode(request),
-                  reqPersistenceMode(request),
-                  reqSourcePath(request))));
+                  reqSourceMode(request), reqPersistenceMode(request), reqSourcePath(request))));
     }
 
     return guardUnexpectedRuntime(
@@ -143,7 +140,8 @@ public final class GridGrindService {
   private ExcelWorkbook openWorkbook(GridGrindRequest.WorkbookSource source) throws IOException {
     return switch (source) {
       case GridGrindRequest.WorkbookSource.New _ -> ExcelWorkbook.create();
-      case GridGrindRequest.WorkbookSource.ExistingFile existingFile -> ExcelWorkbook.open(Path.of(existingFile.path()));
+      case GridGrindRequest.WorkbookSource.ExistingFile existingFile ->
+          ExcelWorkbook.open(Path.of(existingFile.path()));
     };
   }
 
@@ -151,8 +149,7 @@ public final class GridGrindService {
     return switch (operation) {
       case WorkbookOperation.EnsureSheet op -> new WorkbookCommand.CreateSheet(op.sheetName());
       case WorkbookOperation.SetCell op ->
-          new WorkbookCommand.SetCell(
-              op.sheetName(), op.address(), op.value().toExcelCellValue());
+          new WorkbookCommand.SetCell(op.sheetName(), op.address(), op.value().toExcelCellValue());
       case WorkbookOperation.SetRange op ->
           new WorkbookCommand.SetRange(
               op.sheetName(),
@@ -160,14 +157,13 @@ public final class GridGrindService {
               op.rows().stream()
                   .map(row -> row.stream().map(CellInput::toExcelCellValue).toList())
                   .toList());
-      case WorkbookOperation.ClearRange op -> new WorkbookCommand.ClearRange(op.sheetName(), op.range());
+      case WorkbookOperation.ClearRange op ->
+          new WorkbookCommand.ClearRange(op.sheetName(), op.range());
       case WorkbookOperation.ApplyStyle op ->
-          new WorkbookCommand.ApplyStyle(
-              op.sheetName(), op.range(), op.style().toExcelCellStyle());
+          new WorkbookCommand.ApplyStyle(op.sheetName(), op.range(), op.style().toExcelCellStyle());
       case WorkbookOperation.AppendRow op ->
           new WorkbookCommand.AppendRow(
-              op.sheetName(),
-              op.values().stream().map(CellInput::toExcelCellValue).toList());
+              op.sheetName(), op.values().stream().map(CellInput::toExcelCellValue).toList());
       case WorkbookOperation.AutoSizeColumns op ->
           new WorkbookCommand.AutoSizeColumns(op.sheetName(), op.columns());
       case WorkbookOperation.EvaluateFormulas _ -> new WorkbookCommand.EvaluateAllFormulas();
@@ -214,7 +210,8 @@ public final class GridGrindService {
       throw new AnalysisException(sheetRequest.sheetName(), null, exception);
     }
 
-    List<GridGrindResponse.CellReport> requestedCells = new ArrayList<>(sheetRequest.cells().size());
+    List<GridGrindResponse.CellReport> requestedCells =
+        new ArrayList<>(sheetRequest.cells().size());
     for (String address : sheetRequest.cells()) {
       try {
         requestedCells.add(toCellReport(sheet.snapshotCell(address)));
@@ -241,27 +238,39 @@ public final class GridGrindService {
   }
 
   private GridGrindResponse.CellReport toCellReport(ExcelCellSnapshot snapshot) {
-    GridGrindResponse.CellStyleReport style = new GridGrindResponse.CellStyleReport(
-        snapshot.style().numberFormat(),
-        snapshot.style().bold(),
-        snapshot.style().italic(),
-        snapshot.style().wrapText(),
-        snapshot.style().horizontalAlignment(),
-        snapshot.style().verticalAlignment());
+    GridGrindResponse.CellStyleReport style =
+        new GridGrindResponse.CellStyleReport(
+            snapshot.style().numberFormat(),
+            snapshot.style().bold(),
+            snapshot.style().italic(),
+            snapshot.style().wrapText(),
+            snapshot.style().horizontalAlignment(),
+            snapshot.style().verticalAlignment());
 
     return switch (snapshot) {
-      case ExcelCellSnapshot.BlankSnapshot s -> new GridGrindResponse.CellReport.BlankReport(
-          s.address(), s.declaredType(), s.displayValue(), style);
-      case ExcelCellSnapshot.TextSnapshot s -> new GridGrindResponse.CellReport.TextReport(
-          s.address(), s.declaredType(), s.displayValue(), style, s.stringValue());
-      case ExcelCellSnapshot.NumberSnapshot s -> new GridGrindResponse.CellReport.NumberReport(
-          s.address(), s.declaredType(), s.displayValue(), style, s.numberValue());
-      case ExcelCellSnapshot.BooleanSnapshot s -> new GridGrindResponse.CellReport.BooleanReport(
-          s.address(), s.declaredType(), s.displayValue(), style, s.booleanValue());
-      case ExcelCellSnapshot.ErrorSnapshot s -> new GridGrindResponse.CellReport.ErrorReport(
-          s.address(), s.declaredType(), s.displayValue(), style, s.errorValue());
-      case ExcelCellSnapshot.FormulaSnapshot s -> new GridGrindResponse.CellReport.FormulaReport(
-          s.address(), s.declaredType(), s.displayValue(), style, s.formula(), toCellReport(s.evaluation()));
+      case ExcelCellSnapshot.BlankSnapshot s ->
+          new GridGrindResponse.CellReport.BlankReport(
+              s.address(), s.declaredType(), s.displayValue(), style);
+      case ExcelCellSnapshot.TextSnapshot s ->
+          new GridGrindResponse.CellReport.TextReport(
+              s.address(), s.declaredType(), s.displayValue(), style, s.stringValue());
+      case ExcelCellSnapshot.NumberSnapshot s ->
+          new GridGrindResponse.CellReport.NumberReport(
+              s.address(), s.declaredType(), s.displayValue(), style, s.numberValue());
+      case ExcelCellSnapshot.BooleanSnapshot s ->
+          new GridGrindResponse.CellReport.BooleanReport(
+              s.address(), s.declaredType(), s.displayValue(), style, s.booleanValue());
+      case ExcelCellSnapshot.ErrorSnapshot s ->
+          new GridGrindResponse.CellReport.ErrorReport(
+              s.address(), s.declaredType(), s.displayValue(), style, s.errorValue());
+      case ExcelCellSnapshot.FormulaSnapshot s ->
+          new GridGrindResponse.CellReport.FormulaReport(
+              s.address(),
+              s.declaredType(),
+              s.displayValue(),
+              style,
+              s.formula(),
+              toCellReport(s.evaluation()));
     };
   }
 
@@ -337,7 +346,8 @@ public final class GridGrindService {
 
   private String reqSourcePath(GridGrindRequest request) {
     if (request == null
-        || !(request.source() instanceof GridGrindRequest.WorkbookSource.ExistingFile existingFile)) {
+        || !(request.source()
+            instanceof GridGrindRequest.WorkbookSource.ExistingFile existingFile)) {
       return null;
     }
     return absolutePath(existingFile.path());

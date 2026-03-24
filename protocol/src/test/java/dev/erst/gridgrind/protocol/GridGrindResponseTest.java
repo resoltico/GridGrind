@@ -52,7 +52,9 @@ class GridGrindResponseTest {
         new GridGrindResponse.CellStyleReport("General", false, false, false, "GENERAL", "BOTTOM");
     List<GridGrindResponse.CellReport> cells =
         new ArrayList<>(
-            List.of(new GridGrindResponse.CellReport.TextReport("A1", "STRING", "Item", cellStyle, "Item")));
+            List.of(
+                new GridGrindResponse.CellReport.TextReport(
+                    "A1", "STRING", "Item", cellStyle, "Item")));
     List<GridGrindResponse.PreviewRowReport> previewRows =
         new ArrayList<>(List.of(new GridGrindResponse.PreviewRowReport(0, cells)));
 
@@ -71,17 +73,16 @@ class GridGrindResponseTest {
     assertEquals("General", report.requestedCells().getFirst().style().numberFormat());
 
     assertThrows(
-        NullPointerException.class,
-        () -> new GridGrindResponse.Success(null, null, null, null));
+        NullPointerException.class, () -> new GridGrindResponse.Success(null, null, null, null));
     assertThrows(
         NullPointerException.class, () -> new GridGrindResponse.WorkbookSummary(1, null, true));
     assertThrows(
         NullPointerException.class,
-        () ->
-            new GridGrindResponse.CellReport.TextReport("A1", "STRING", "x", null, "x"));
+        () -> new GridGrindResponse.CellReport.TextReport("A1", "STRING", "x", null, "x"));
     assertThrows(
         NullPointerException.class,
-        () -> new GridGrindResponse.CellStyleReport(null, false, false, false, "GENERAL", "BOTTOM"));
+        () ->
+            new GridGrindResponse.CellStyleReport(null, false, false, false, "GENERAL", "BOTTOM"));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -97,30 +98,26 @@ class GridGrindResponseTest {
 
     GridGrindResponse.Success emptySuccess =
         new GridGrindResponse.Success(
-            null,
-            null,
-            new GridGrindResponse.WorkbookSummary(0, List.of(), false),
-            null);
+            null, null, new GridGrindResponse.WorkbookSummary(0, List.of(), false), null);
     assertEquals(GridGrindProtocolVersion.V1, emptySuccess.protocolVersion());
     assertEquals(List.of(), emptySuccess.sheets());
 
     GridGrindResponse.Success explicitNullVersion =
         new GridGrindResponse.Success(
-            null,
-            null,
-            new GridGrindResponse.WorkbookSummary(0, List.of(), false),
-            List.of());
+            null, null, new GridGrindResponse.WorkbookSummary(0, List.of(), false), List.of());
     assertEquals(GridGrindProtocolVersion.V1, explicitNullVersion.protocolVersion());
   }
 
   @Test
   void problemContextRecordsReturnCorrectStages() {
-    GridGrindResponse.ProblemContext parseArgs = new GridGrindResponse.ProblemContext.ParseArguments("--response");
+    GridGrindResponse.ProblemContext parseArgs =
+        new GridGrindResponse.ProblemContext.ParseArguments("--response");
     assertEquals("PARSE_ARGUMENTS", parseArgs.stage());
     assertEquals("--response", parseArgs.argument());
 
     GridGrindResponse.ProblemContext readRequest =
-        new GridGrindResponse.ProblemContext.ReadRequest("/tmp/request.json", "analysis.sheets[0]", 7, 21);
+        new GridGrindResponse.ProblemContext.ReadRequest(
+            "/tmp/request.json", "analysis.sheets[0]", 7, 21);
     assertEquals("READ_REQUEST", readRequest.stage());
     assertEquals("/tmp/request.json", readRequest.requestPath());
     assertEquals("analysis.sheets[0]", readRequest.jsonPath());
@@ -150,12 +147,14 @@ class GridGrindResponseTest {
     assertEquals("SUM(B2:B3)", applyOperation.formula());
 
     GridGrindResponse.ProblemContext persistWorkbook =
-        new GridGrindResponse.ProblemContext.PersistWorkbook("NEW", "SAVE_AS", "/tmp/source.xlsx", "/tmp/output.xlsx");
+        new GridGrindResponse.ProblemContext.PersistWorkbook(
+            "NEW", "SAVE_AS", "/tmp/source.xlsx", "/tmp/output.xlsx");
     assertEquals("PERSIST_WORKBOOK", persistWorkbook.stage());
     assertEquals("/tmp/output.xlsx", persistWorkbook.persistencePath());
 
     GridGrindResponse.ProblemContext analyzeWorkbook =
-        new GridGrindResponse.ProblemContext.AnalyzeWorkbook("NEW", "SAVE_AS", "Budget", "B4", "SUM(B2:B3)");
+        new GridGrindResponse.ProblemContext.AnalyzeWorkbook(
+            "NEW", "SAVE_AS", "Budget", "B4", "SUM(B2:B3)");
     assertEquals("ANALYZE_WORKBOOK", analyzeWorkbook.stage());
 
     GridGrindResponse.ProblemContext executeRequest =

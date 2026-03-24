@@ -333,28 +333,56 @@ public final class ExcelSheet {
       } catch (RuntimeException exception) {
         throw FormulaExceptions.wrap(name(), address, formula, exception);
       }
-      
+
       ExcelCellSnapshot evaluation;
       if (evaluatedCell == null) {
         evaluation = new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style);
       } else {
-        evaluation = switch (evaluatedCell.getCellType()) {
-          case STRING -> new ExcelCellSnapshot.TextSnapshot(address, "STRING", displayValue, style, evaluatedCell.getStringValue());
-          case NUMERIC -> new ExcelCellSnapshot.NumberSnapshot(address, "NUMERIC", displayValue, style, evaluatedCell.getNumberValue());
-          case BOOLEAN -> new ExcelCellSnapshot.BooleanSnapshot(address, "BOOLEAN", displayValue, style, evaluatedCell.getBooleanValue());
-          case ERROR -> new ExcelCellSnapshot.ErrorSnapshot(address, "ERROR", displayValue, style, FormulaError.forInt(evaluatedCell.getErrorValue()).getString());
-          case BLANK, _NONE, FORMULA -> new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style);
-        };
+        evaluation =
+            switch (evaluatedCell.getCellType()) {
+              case STRING ->
+                  new ExcelCellSnapshot.TextSnapshot(
+                      address, "STRING", displayValue, style, evaluatedCell.getStringValue());
+              case NUMERIC ->
+                  new ExcelCellSnapshot.NumberSnapshot(
+                      address, "NUMERIC", displayValue, style, evaluatedCell.getNumberValue());
+              case BOOLEAN ->
+                  new ExcelCellSnapshot.BooleanSnapshot(
+                      address, "BOOLEAN", displayValue, style, evaluatedCell.getBooleanValue());
+              case ERROR ->
+                  new ExcelCellSnapshot.ErrorSnapshot(
+                      address,
+                      "ERROR",
+                      displayValue,
+                      style,
+                      FormulaError.forInt(evaluatedCell.getErrorValue()).getString());
+              case BLANK, _NONE, FORMULA ->
+                  new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style);
+            };
       }
-      return new ExcelCellSnapshot.FormulaSnapshot(address, "FORMULA", displayValue, style, formula, evaluation);
+      return new ExcelCellSnapshot.FormulaSnapshot(
+          address, "FORMULA", displayValue, style, formula, evaluation);
     }
 
     return switch (declaredType) {
-      case STRING -> new ExcelCellSnapshot.TextSnapshot(address, "STRING", displayValue, style, cell.getStringCellValue());
-      case NUMERIC -> new ExcelCellSnapshot.NumberSnapshot(address, "NUMERIC", displayValue, style, cell.getNumericCellValue());
-      case BOOLEAN -> new ExcelCellSnapshot.BooleanSnapshot(address, "BOOLEAN", displayValue, style, cell.getBooleanCellValue());
-      case ERROR -> new ExcelCellSnapshot.ErrorSnapshot(address, "ERROR", displayValue, style, FormulaError.forInt(cell.getErrorCellValue()).getString());
-      case BLANK, _NONE, FORMULA -> new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style);
+      case STRING ->
+          new ExcelCellSnapshot.TextSnapshot(
+              address, "STRING", displayValue, style, cell.getStringCellValue());
+      case NUMERIC ->
+          new ExcelCellSnapshot.NumberSnapshot(
+              address, "NUMERIC", displayValue, style, cell.getNumericCellValue());
+      case BOOLEAN ->
+          new ExcelCellSnapshot.BooleanSnapshot(
+              address, "BOOLEAN", displayValue, style, cell.getBooleanCellValue());
+      case ERROR ->
+          new ExcelCellSnapshot.ErrorSnapshot(
+              address,
+              "ERROR",
+              displayValue,
+              style,
+              FormulaError.forInt(cell.getErrorCellValue()).getString());
+      case BLANK, _NONE, FORMULA ->
+          new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style);
     };
   }
 

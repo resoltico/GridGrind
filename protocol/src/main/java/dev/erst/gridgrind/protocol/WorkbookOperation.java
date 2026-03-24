@@ -146,15 +146,21 @@ public sealed interface WorkbookOperation {
   default String extractAddress() {
     return switch (this) {
       case SetCell op -> op.address();
-      case EnsureSheet _, SetRange _, ClearRange _, ApplyStyle _,
-          AppendRow _, AutoSizeColumns _, EvaluateFormulas _,
-          ForceFormulaRecalculationOnOpen _ -> null;
+      case EnsureSheet _,
+          SetRange _,
+          ClearRange _,
+          ApplyStyle _,
+          AppendRow _,
+          AutoSizeColumns _,
+          EvaluateFormulas _,
+          ForceFormulaRecalculationOnOpen _ ->
+          null;
     };
   }
 
   /**
-   * Returns the range if this operation targets a range (SetRange, ClearRange, ApplyStyle), or
-   * null for all other subtypes.
+   * Returns the range if this operation targets a range (SetRange, ClearRange, ApplyStyle), or null
+   * for all other subtypes.
    *
    * <p>Null is permitted here because this is a protocol-layer default method on a sealed interface
    * used for wire serialization; internal code must use a switch expression instead.
@@ -164,8 +170,13 @@ public sealed interface WorkbookOperation {
       case SetRange op -> op.range();
       case ClearRange op -> op.range();
       case ApplyStyle op -> op.range();
-      case EnsureSheet _, SetCell _, AppendRow _, AutoSizeColumns _,
-          EvaluateFormulas _, ForceFormulaRecalculationOnOpen _ -> null;
+      case EnsureSheet _,
+          SetCell _,
+          AppendRow _,
+          AutoSizeColumns _,
+          EvaluateFormulas _,
+          ForceFormulaRecalculationOnOpen _ ->
+          null;
     };
   }
 
@@ -178,9 +189,15 @@ public sealed interface WorkbookOperation {
   default CellInput extractValue() {
     return switch (this) {
       case SetCell op -> op.value();
-      case EnsureSheet _, SetRange _, ClearRange _, ApplyStyle _,
-          AppendRow _, AutoSizeColumns _, EvaluateFormulas _,
-          ForceFormulaRecalculationOnOpen _ -> null;
+      case EnsureSheet _,
+          SetRange _,
+          ClearRange _,
+          ApplyStyle _,
+          AppendRow _,
+          AutoSizeColumns _,
+          EvaluateFormulas _,
+          ForceFormulaRecalculationOnOpen _ ->
+          null;
     };
   }
 

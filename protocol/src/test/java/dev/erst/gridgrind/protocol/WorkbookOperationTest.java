@@ -14,8 +14,8 @@ class WorkbookOperationTest {
     List<List<CellInput>> rows =
         new ArrayList<>(
             List.of(
-                new ArrayList<>(List.of(new CellInput.Text("Item"), new CellInput.Number(12.0))),
-                new ArrayList<>(List.of(new CellInput.Text("Tax"), new CellInput.Number(3.0)))));
+                new ArrayList<>(List.of(new CellInput.Text("Item"), new CellInput.Numeric(12.0))),
+                new ArrayList<>(List.of(new CellInput.Text("Tax"), new CellInput.Numeric(3.0)))));
     List<String> columns = new ArrayList<>(List.of("A"));
     CellStyleInput style =
         new CellStyleInput(
@@ -27,14 +27,18 @@ class WorkbookOperationTest {
             CellStyleInput.VerticalAlignmentInput.CENTER);
 
     WorkbookOperation.EnsureSheet ensureSheet = new WorkbookOperation.EnsureSheet("Budget");
-    WorkbookOperation.SetCell setCell = new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("Item"));
+    WorkbookOperation.SetCell setCell =
+        new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("Item"));
     WorkbookOperation.SetRange setRange = new WorkbookOperation.SetRange("Budget", "A1:B2", rows);
     WorkbookOperation.ClearRange clearRange = new WorkbookOperation.ClearRange("Budget", "C1:C4");
-    WorkbookOperation.ApplyStyle applyStyle = new WorkbookOperation.ApplyStyle("Budget", "B1:B2", style);
+    WorkbookOperation.ApplyStyle applyStyle =
+        new WorkbookOperation.ApplyStyle("Budget", "B1:B2", style);
     WorkbookOperation.AppendRow appendRow = new WorkbookOperation.AppendRow("Budget", rowValues);
-    WorkbookOperation.AutoSizeColumns autoSizeColumns = new WorkbookOperation.AutoSizeColumns("Budget", columns);
+    WorkbookOperation.AutoSizeColumns autoSizeColumns =
+        new WorkbookOperation.AutoSizeColumns("Budget", columns);
     WorkbookOperation.EvaluateFormulas evaluateFormulas = new WorkbookOperation.EvaluateFormulas();
-    WorkbookOperation.ForceFormulaRecalculationOnOpen recalcOnOpen = new WorkbookOperation.ForceFormulaRecalculationOnOpen();
+    WorkbookOperation.ForceFormulaRecalculationOnOpen recalcOnOpen =
+        new WorkbookOperation.ForceFormulaRecalculationOnOpen();
 
     rowValues.clear();
     rows.clear();
@@ -55,8 +59,7 @@ class WorkbookOperationTest {
   @Test
   void validatesNullAndEmptyCollectionConstraints() {
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookOperation.AppendRow("Budget", null));
+        IllegalArgumentException.class, () -> new WorkbookOperation.AppendRow("Budget", null));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookOperation.AutoSizeColumns("Budget", null));
@@ -65,39 +68,63 @@ class WorkbookOperationTest {
   @Test
   void validatesOperationRequirements() {
     assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.EnsureSheet(" "));
-    
-    assertThrows(NullPointerException.class, () -> new WorkbookOperation.SetCell("Budget", null, new CellInput.Text("x")));
-    assertThrows(NullPointerException.class, () -> new WorkbookOperation.SetCell("Budget", "A1", null));
-    
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.SetRange("Budget", "A1:B2", List.of()));
-    
+
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.SetCell("Budget", null, new CellInput.Text("x")));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.SetCell("Budget", "A1", null));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.SetRange("Budget", "A1:B2", List.of()));
+
     List<List<CellInput>> rowsWithNullRow = new ArrayList<>();
     rowsWithNullRow.add(null);
-    assertThrows(NullPointerException.class, () -> new WorkbookOperation.SetRange("Budget", "A1:B1", rowsWithNullRow));
-    
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.SetRange("Budget", "A1:B2", List.of(List.of())));
-    
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.SetRange("Budget", "A1:B2", List.of(
-        List.of(new CellInput.Text("x")),
-        List.of(new CellInput.Text("y"), new CellInput.Text("z"))
-    )));
-    
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.SetRange("Budget", "A1:B1", rowsWithNullRow));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.SetRange("Budget", "A1:B2", List.of(List.of())));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.SetRange(
+                "Budget",
+                "A1:B2",
+                List.of(
+                    List.of(new CellInput.Text("x")),
+                    List.of(new CellInput.Text("y"), new CellInput.Text("z")))));
+
     List<List<CellInput>> rowsWithNullValue = new ArrayList<>();
     List<CellInput> rowWithNullValue = new ArrayList<>();
     rowWithNullValue.add(null);
     rowsWithNullValue.add(rowWithNullValue);
-    assertThrows(NullPointerException.class, () -> new WorkbookOperation.SetRange("Budget", "A1", rowsWithNullValue));
-    
-    assertThrows(NullPointerException.class, () -> new WorkbookOperation.ApplyStyle("Budget", "A1:A2", null));
-    
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.SetRange("Budget", "A1", rowsWithNullValue));
+
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.ApplyStyle("Budget", "A1:A2", null));
+
     List<CellInput> valuesWithNull = new ArrayList<>();
     valuesWithNull.add(null);
-    assertThrows(NullPointerException.class, () -> new WorkbookOperation.AppendRow("Budget", valuesWithNull));
-    
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.AppendRow("Budget", valuesWithNull));
+
     List<String> columnsWithNull = new ArrayList<>();
     columnsWithNull.add(null);
-    assertThrows(NullPointerException.class, () -> new WorkbookOperation.AutoSizeColumns("Budget", columnsWithNull));
-    
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.AutoSizeColumns("Budget", List.of(" ")));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.AutoSizeColumns("Budget", columnsWithNull));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.AutoSizeColumns("Budget", List.of(" ")));
   }
 }

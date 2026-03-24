@@ -59,34 +59,45 @@ class ExcelSheetTest {
       assertEquals(3, sheet.lastRowIndex());
       assertEquals(5, sheet.lastColumnIndex());
 
-      ExcelCellSnapshot.TextSnapshot textSnapshot = (ExcelCellSnapshot.TextSnapshot) sheet.snapshotCell("A1");
+      ExcelCellSnapshot.TextSnapshot textSnapshot =
+          (ExcelCellSnapshot.TextSnapshot) sheet.snapshotCell("A1");
       assertEquals("STRING", textSnapshot.declaredType());
       assertEquals("Name", textSnapshot.stringValue());
 
-      ExcelCellSnapshot.NumberSnapshot numberSnapshot = (ExcelCellSnapshot.NumberSnapshot) sheet.snapshotCell("B1");
+      ExcelCellSnapshot.NumberSnapshot numberSnapshot =
+          (ExcelCellSnapshot.NumberSnapshot) sheet.snapshotCell("B1");
       assertEquals("NUMERIC", numberSnapshot.declaredType());
       assertEquals(42.5, numberSnapshot.numberValue());
 
-      ExcelCellSnapshot.BooleanSnapshot booleanSnapshot = (ExcelCellSnapshot.BooleanSnapshot) sheet.snapshotCell("C1");
+      ExcelCellSnapshot.BooleanSnapshot booleanSnapshot =
+          (ExcelCellSnapshot.BooleanSnapshot) sheet.snapshotCell("C1");
       assertEquals("BOOLEAN", booleanSnapshot.declaredType());
       assertTrue(booleanSnapshot.booleanValue());
 
-      ExcelCellSnapshot.BlankSnapshot blankSnapshot = (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A2");
+      ExcelCellSnapshot.BlankSnapshot blankSnapshot =
+          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A2");
       assertEquals("BLANK", blankSnapshot.declaredType());
       assertEquals("BLANK", blankSnapshot.effectiveType());
 
-      ExcelCellSnapshot.FormulaSnapshot stringFormulaSnapshot = (ExcelCellSnapshot.FormulaSnapshot) sheet.snapshotCell("F1");
+      ExcelCellSnapshot.FormulaSnapshot stringFormulaSnapshot =
+          (ExcelCellSnapshot.FormulaSnapshot) sheet.snapshotCell("F1");
       assertEquals("FORMULA", stringFormulaSnapshot.declaredType());
       assertEquals("FORMULA", stringFormulaSnapshot.effectiveType());
       assertEquals("\"Hi\"", stringFormulaSnapshot.formula());
-      assertEquals("Hi", ((ExcelCellSnapshot.TextSnapshot)stringFormulaSnapshot.evaluation()).stringValue());
+      assertEquals(
+          "Hi",
+          ((ExcelCellSnapshot.TextSnapshot) stringFormulaSnapshot.evaluation()).stringValue());
 
-      ExcelCellSnapshot.FormulaSnapshot errorFormulaSnapshot = (ExcelCellSnapshot.FormulaSnapshot) sheet.snapshotCell("D2");
+      ExcelCellSnapshot.FormulaSnapshot errorFormulaSnapshot =
+          (ExcelCellSnapshot.FormulaSnapshot) sheet.snapshotCell("D2");
       assertEquals("FORMULA", errorFormulaSnapshot.declaredType());
       assertEquals("FORMULA", errorFormulaSnapshot.effectiveType());
-      assertEquals("#DIV/0!", ((ExcelCellSnapshot.ErrorSnapshot)errorFormulaSnapshot.evaluation()).errorValue());
+      assertEquals(
+          "#DIV/0!",
+          ((ExcelCellSnapshot.ErrorSnapshot) errorFormulaSnapshot.evaluation()).errorValue());
 
-      ExcelCellSnapshot.ErrorSnapshot errorSnapshot = (ExcelCellSnapshot.ErrorSnapshot) sheet.snapshotCell("A4");
+      ExcelCellSnapshot.ErrorSnapshot errorSnapshot =
+          (ExcelCellSnapshot.ErrorSnapshot) sheet.snapshotCell("A4");
       assertEquals("ERROR", errorSnapshot.declaredType());
       assertEquals("#DIV/0!", errorSnapshot.errorValue());
 

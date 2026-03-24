@@ -5,14 +5,13 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Objects;
 
 /** JSON-friendly typed cell input used at the agent protocol boundary. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = CellInput.Blank.class, name = "BLANK"),
   @JsonSubTypes.Type(value = CellInput.Text.class, name = "TEXT"),
-  @JsonSubTypes.Type(value = CellInput.Number.class, name = "NUMBER"),
+  @JsonSubTypes.Type(value = CellInput.Numeric.class, name = "NUMBER"),
   @JsonSubTypes.Type(value = CellInput.BooleanValue.class, name = "BOOLEAN"),
   @JsonSubTypes.Type(value = CellInput.Date.class, name = "DATE"),
   @JsonSubTypes.Type(value = CellInput.DateTime.class, name = "DATE_TIME"),
@@ -44,8 +43,8 @@ public sealed interface CellInput {
   }
 
   /** Numeric cell input stored as a double. */
-  record Number(Double number) implements CellInput {
-    public Number {
+  record Numeric(Double number) implements CellInput {
+    public Numeric {
       Validation.required(number, "number");
     }
 

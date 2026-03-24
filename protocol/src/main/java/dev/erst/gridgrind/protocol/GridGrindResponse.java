@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.protocol;
 
-import java.util.List;
-import java.util.Objects;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Structured protocol response for both successful workbook workflows and deterministic failures.
@@ -26,19 +26,19 @@ public sealed interface GridGrindResponse {
       List<SheetReport> sheets)
       implements GridGrindResponse {
     public Success {
-      protocolVersion = protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
+      protocolVersion =
+          protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
       Objects.requireNonNull(workbook, "workbook must not be null");
       sheets = copySheets(sheets);
     }
   }
 
   /** Failed workbook execution with a structured problem. */
-  record Failure(
-      GridGrindProtocolVersion protocolVersion,
-      Problem problem)
+  record Failure(GridGrindProtocolVersion protocolVersion, Problem problem)
       implements GridGrindResponse {
     public Failure {
-      protocolVersion = protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
+      protocolVersion =
+          protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
       Objects.requireNonNull(problem, "problem must not be null");
     }
   }
@@ -82,12 +82,16 @@ public sealed interface GridGrindResponse {
   sealed interface CellReport {
     /** Cell address in A1 notation. */
     String address();
+
     /** POI cell type as declared before evaluation. */
     String declaredType();
+
     /** Effective cell type after formula evaluation. */
     String effectiveType();
+
     /** Formatted display string as shown in Excel. */
     String displayValue();
+
     /** Style snapshot captured for this cell. */
     CellStyleReport style();
 
@@ -97,7 +101,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String formula() { return null; }
+    default String formula() {
+      return null;
+    }
 
     /**
      * String value; populated only by TextReport, null for all other subtypes.
@@ -105,7 +111,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String stringValue() { return null; }
+    default String stringValue() {
+      return null;
+    }
 
     /**
      * Numeric value; populated only by NumberReport, null for all other subtypes.
@@ -113,7 +121,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default Double numberValue() { return null; }
+    default Double numberValue() {
+      return null;
+    }
 
     /**
      * Boolean value; populated only by BooleanReport, null for all other subtypes.
@@ -121,7 +131,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default Boolean booleanValue() { return null; }
+    default Boolean booleanValue() {
+      return null;
+    }
 
     /**
      * Error code string; populated only by ErrorReport, null for all other subtypes.
@@ -129,7 +141,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String errorValue() { return null; }
+    default String errorValue() {
+      return null;
+    }
 
     /** CellReport for a cell with no value or formula. */
     record BlankReport(
@@ -141,12 +155,21 @@ public sealed interface GridGrindResponse {
         Objects.requireNonNull(displayValue, "displayValue must not be null");
         Objects.requireNonNull(style, "style must not be null");
       }
-      @Override @JsonProperty public String effectiveType() { return "BLANK"; }
+
+      @Override
+      @JsonProperty
+      public String effectiveType() {
+        return "BLANK";
+      }
     }
 
     /** CellReport for a cell containing a plain string value. */
     record TextReport(
-        String address, String declaredType, String displayValue, CellStyleReport style, String stringValue)
+        String address,
+        String declaredType,
+        String displayValue,
+        CellStyleReport style,
+        String stringValue)
         implements CellReport {
       public TextReport {
         Objects.requireNonNull(address, "address must not be null");
@@ -154,12 +177,21 @@ public sealed interface GridGrindResponse {
         Objects.requireNonNull(displayValue, "displayValue must not be null");
         Objects.requireNonNull(style, "style must not be null");
       }
-      @Override @JsonProperty public String effectiveType() { return "STRING"; }
+
+      @Override
+      @JsonProperty
+      public String effectiveType() {
+        return "STRING";
+      }
     }
 
     /** CellReport for a cell containing a numeric value. */
     record NumberReport(
-        String address, String declaredType, String displayValue, CellStyleReport style, Double numberValue)
+        String address,
+        String declaredType,
+        String displayValue,
+        CellStyleReport style,
+        Double numberValue)
         implements CellReport {
       public NumberReport {
         Objects.requireNonNull(address, "address must not be null");
@@ -167,12 +199,21 @@ public sealed interface GridGrindResponse {
         Objects.requireNonNull(displayValue, "displayValue must not be null");
         Objects.requireNonNull(style, "style must not be null");
       }
-      @Override @JsonProperty public String effectiveType() { return "NUMERIC"; }
+
+      @Override
+      @JsonProperty
+      public String effectiveType() {
+        return "NUMERIC";
+      }
     }
 
     /** CellReport for a cell containing a boolean value. */
     record BooleanReport(
-        String address, String declaredType, String displayValue, CellStyleReport style, Boolean booleanValue)
+        String address,
+        String declaredType,
+        String displayValue,
+        CellStyleReport style,
+        Boolean booleanValue)
         implements CellReport {
       public BooleanReport {
         Objects.requireNonNull(address, "address must not be null");
@@ -180,12 +221,21 @@ public sealed interface GridGrindResponse {
         Objects.requireNonNull(displayValue, "displayValue must not be null");
         Objects.requireNonNull(style, "style must not be null");
       }
-      @Override @JsonProperty public String effectiveType() { return "BOOLEAN"; }
+
+      @Override
+      @JsonProperty
+      public String effectiveType() {
+        return "BOOLEAN";
+      }
     }
 
     /** CellReport for a cell in an error state (e.g., #DIV/0!, #REF!). */
     record ErrorReport(
-        String address, String declaredType, String displayValue, CellStyleReport style, String errorValue)
+        String address,
+        String declaredType,
+        String displayValue,
+        CellStyleReport style,
+        String errorValue)
         implements CellReport {
       public ErrorReport {
         Objects.requireNonNull(address, "address must not be null");
@@ -193,12 +243,22 @@ public sealed interface GridGrindResponse {
         Objects.requireNonNull(displayValue, "displayValue must not be null");
         Objects.requireNonNull(style, "style must not be null");
       }
-      @Override @JsonProperty public String effectiveType() { return "ERROR"; }
+
+      @Override
+      @JsonProperty
+      public String effectiveType() {
+        return "ERROR";
+      }
     }
 
     /** CellReport for a cell containing a formula, with its evaluated result nested inside. */
     record FormulaReport(
-        String address, String declaredType, String displayValue, CellStyleReport style, String formula, CellReport evaluation)
+        String address,
+        String declaredType,
+        String displayValue,
+        CellStyleReport style,
+        String formula,
+        CellReport evaluation)
         implements CellReport {
       public FormulaReport {
         Objects.requireNonNull(address, "address must not be null");
@@ -207,7 +267,12 @@ public sealed interface GridGrindResponse {
         Objects.requireNonNull(style, "style must not be null");
         Objects.requireNonNull(formula, "formula must not be null");
       }
-      @Override @JsonProperty public String effectiveType() { return "FORMULA"; }
+
+      @Override
+      @JsonProperty
+      public String effectiveType() {
+        return "FORMULA";
+      }
     }
   }
 
@@ -295,7 +360,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String sourceMode() { return null; }
+    default String sourceMode() {
+      return null;
+    }
 
     /**
      * Persistence mode string; populated by ValidateRequest, OpenWorkbook, ApplyOperation,
@@ -304,7 +371,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String persistenceMode() { return null; }
+    default String persistenceMode() {
+      return null;
+    }
 
     /**
      * Path to the JSON request file; populated by ReadRequest. Null for all other subtypes.
@@ -312,7 +381,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String requestPath() { return null; }
+    default String requestPath() {
+      return null;
+    }
 
     /**
      * JSON pointer path to the failing element; populated by ReadRequest. Null for all other
@@ -321,7 +392,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String jsonPath() { return null; }
+    default String jsonPath() {
+      return null;
+    }
 
     /**
      * Line number within the JSON payload where the error was detected; populated by ReadRequest.
@@ -330,7 +403,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default Integer jsonLine() { return null; }
+    default Integer jsonLine() {
+      return null;
+    }
 
     /**
      * Column number within the JSON payload where the error was detected; populated by ReadRequest.
@@ -339,7 +414,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default Integer jsonColumn() { return null; }
+    default Integer jsonColumn() {
+      return null;
+    }
 
     /**
      * Path to the JSON response file; populated by WriteResponse. Null for all other subtypes.
@@ -347,16 +424,20 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String responsePath() { return null; }
+    default String responsePath() {
+      return null;
+    }
 
     /**
-     * Path to the source workbook file; populated by OpenWorkbook and PersistWorkbook. Null for
-     * all other subtypes.
+     * Path to the source workbook file; populated by OpenWorkbook and PersistWorkbook. Null for all
+     * other subtypes.
      *
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String sourceWorkbookPath() { return null; }
+    default String sourceWorkbookPath() {
+      return null;
+    }
 
     /**
      * Path to the persistence destination; populated by PersistWorkbook. Null for all other
@@ -365,7 +446,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String persistencePath() { return null; }
+    default String persistencePath() {
+      return null;
+    }
 
     /**
      * Zero-based index of the operation that failed; populated by ApplyOperation. Null for all
@@ -374,7 +457,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default Integer operationIndex() { return null; }
+    default Integer operationIndex() {
+      return null;
+    }
 
     /**
      * SCREAMING_SNAKE_CASE type name of the failing operation; populated by ApplyOperation. Null
@@ -383,7 +468,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String operationType() { return null; }
+    default String operationType() {
+      return null;
+    }
 
     /**
      * Name of the sheet involved in the failure; populated by ApplyOperation and AnalyzeWorkbook.
@@ -392,7 +479,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String sheetName() { return null; }
+    default String sheetName() {
+      return null;
+    }
 
     /**
      * Cell address in A1 notation where the failure occurred; populated by ApplyOperation and
@@ -401,7 +490,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String address() { return null; }
+    default String address() {
+      return null;
+    }
 
     /**
      * Range address where the failure occurred; populated by ApplyOperation. Null for all other
@@ -410,7 +501,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String range() { return null; }
+    default String range() {
+      return null;
+    }
 
     /**
      * Formula text associated with the failure; populated by ApplyOperation and AnalyzeWorkbook.
@@ -419,7 +512,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String formula() { return null; }
+    default String formula() {
+      return null;
+    }
 
     /**
      * CLI argument that triggered the failure; populated by ParseArguments. Null for all other
@@ -428,7 +523,9 @@ public sealed interface GridGrindResponse {
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String argument() { return null; }
+    default String argument() {
+      return null;
+    }
 
     /** Context for failures that occur while parsing CLI arguments. */
     record ParseArguments(String argument) implements ProblemContext {
@@ -493,8 +590,8 @@ public sealed interface GridGrindResponse {
       }
 
       /**
-       * Returns a new ApplyOperation with exception-derived location details merged in, keeping
-       * any existing non-null values.
+       * Returns a new ApplyOperation with exception-derived location details merged in, keeping any
+       * existing non-null values.
        */
       public ApplyOperation withExceptionData(
           String sheetName, String address, String range, String formula) {
@@ -523,7 +620,9 @@ public sealed interface GridGrindResponse {
       }
     }
 
-    /** Context for failures that occur while analyzing the workbook after operations are applied. */
+    /**
+     * Context for failures that occur while analyzing the workbook after operations are applied.
+     */
     record AnalyzeWorkbook(
         String sourceMode, String persistenceMode, String sheetName, String address, String formula)
         implements ProblemContext {

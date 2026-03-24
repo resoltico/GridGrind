@@ -13,7 +13,8 @@ public record GridGrindRequest(
     List<WorkbookOperation> operations,
     WorkbookAnalysisRequest analysis) {
   public GridGrindRequest {
-    protocolVersion = protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
+    protocolVersion =
+        protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
     Objects.requireNonNull(source, "source must not be null");
     persistence = persistence == null ? new WorkbookPersistence.None() : persistence;
     operations = copyOperations(operations);

@@ -3,9 +3,13 @@ package dev.erst.gridgrind.excel;
 /** Immutable snapshot of a cell after formatting and, when needed, formula evaluation. */
 public sealed interface ExcelCellSnapshot {
   String address();
+
   String declaredType();
+
   String effectiveType();
+
   String displayValue();
+
   ExcelCellStyleSnapshot style();
 
   record BlankSnapshot(

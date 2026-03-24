@@ -38,11 +38,15 @@ class GridGrindServiceTest {
                 new WorkbookOperation.AppendRow(
                     "Budget",
                     List.of(
-                        new CellInput.Text("Hosting"), new CellInput.Number(49.0), new CellInput.BooleanValue(true))),
+                        new CellInput.Text("Hosting"),
+                        new CellInput.Numeric(49.0),
+                        new CellInput.BooleanValue(true))),
                 new WorkbookOperation.AppendRow(
                     "Budget",
                     List.of(
-                        new CellInput.Text("Domain"), new CellInput.Number(12.0), new CellInput.BooleanValue(false))),
+                        new CellInput.Text("Domain"),
+                        new CellInput.Numeric(12.0),
+                        new CellInput.BooleanValue(false))),
                 new WorkbookOperation.SetCell("Budget", "A4", new CellInput.Text("Total")),
                 new WorkbookOperation.SetCell("Budget", "B4", new CellInput.Formula("SUM(B2:B3)")),
                 new WorkbookOperation.AutoSizeColumns("Budget", List.of("A", "B", "C")),
@@ -67,9 +71,11 @@ class GridGrindServiceTest {
     assertEquals("Budget", success.sheets().get(0).sheetName());
     assertEquals("Item", success.sheets().get(0).requestedCells().get(0).stringValue());
     GridGrindResponse.CellReport.FormulaReport formulaCell =
-        (GridGrindResponse.CellReport.FormulaReport) success.sheets().get(0).requestedCells().get(1);
+        (GridGrindResponse.CellReport.FormulaReport)
+            success.sheets().get(0).requestedCells().get(1);
     assertEquals("SUM(B2:B3)", formulaCell.formula());
-    assertEquals(61.0, ((GridGrindResponse.CellReport.NumberReport) formulaCell.evaluation()).numberValue());
+    assertEquals(
+        61.0, ((GridGrindResponse.CellReport.NumberReport) formulaCell.evaluation()).numberValue());
     assertTrue(success.sheets().get(0).requestedCells().get(2).booleanValue());
     assertEquals(4, success.sheets().get(0).previewRows().size());
   }
@@ -89,7 +95,7 @@ class GridGrindServiceTest {
             new GridGrindRequest.WorkbookPersistence.OverwriteSource(),
             List.of(
                 new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("After")),
-                new WorkbookOperation.SetCell("Budget", "B1", new CellInput.Number(12.0))),
+                new WorkbookOperation.SetCell("Budget", "B1", new CellInput.Numeric(12.0))),
             new GridGrindRequest.WorkbookAnalysisRequest(
                 List.of(
                     new GridGrindRequest.SheetInspectionRequest(
@@ -125,8 +131,7 @@ class GridGrindServiceTest {
     assertEquals(GridGrindProblemCategory.RESOURCE, failure.problem().category());
     assertEquals(GridGrindProblemRecovery.CHANGE_REQUEST, failure.problem().recovery());
     assertEquals(
-        workbookPath.toAbsolutePath().toString(),
-        failure.problem().context().sourceWorkbookPath());
+        workbookPath.toAbsolutePath().toString(), failure.problem().context().sourceWorkbookPath());
   }
 
   @Test
@@ -285,8 +290,8 @@ class GridGrindServiceTest {
                     new GridGrindRequest.WorkbookSource.New(),
                     new GridGrindRequest.WorkbookPersistence.None(),
                     List.of(
-                        new WorkbookOperation.SetCell("Data", "A1", new CellInput.Number(1.0)),
-                        new WorkbookOperation.SetCell("Data", "B1", new CellInput.Number(2.0)),
+                        new WorkbookOperation.SetCell("Data", "A1", new CellInput.Numeric(1.0)),
+                        new WorkbookOperation.SetCell("Data", "B1", new CellInput.Numeric(2.0)),
                         new WorkbookOperation.SetCell(
                             "Data", "C1", new CellInput.Formula("TEXTAFTER(\"a,b\",\",\")")),
                         new WorkbookOperation.EvaluateFormulas()),
@@ -435,7 +440,8 @@ class GridGrindServiceTest {
                             "A1:B2",
                             List.of(
                                 List.of(new CellInput.Text("Item"), new CellInput.Text("Amount")),
-                                List.of(new CellInput.Text("Hosting"), new CellInput.Number(49.0)))),
+                                List.of(
+                                    new CellInput.Text("Hosting"), new CellInput.Numeric(49.0)))),
                         new WorkbookOperation.ApplyStyle(
                             "Budget",
                             "A1:B1",
@@ -456,7 +462,8 @@ class GridGrindServiceTest {
                                 null,
                                 CellStyleInput.HorizontalAlignmentInput.RIGHT,
                                 CellStyleInput.VerticalAlignmentInput.BOTTOM)),
-                        new WorkbookOperation.SetCell("Budget", "B3", new CellInput.Formula("SUM(B2:B2)")),
+                        new WorkbookOperation.SetCell(
+                            "Budget", "B3", new CellInput.Formula("SUM(B2:B2)")),
                         new WorkbookOperation.EvaluateFormulas(),
                         new WorkbookOperation.ClearRange("Budget", "A2")),
                     new GridGrindRequest.WorkbookAnalysisRequest(

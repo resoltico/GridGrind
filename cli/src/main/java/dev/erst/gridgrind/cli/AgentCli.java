@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.protocol.InvalidJsonException;
-import dev.erst.gridgrind.protocol.InvalidRequestException;
 import dev.erst.gridgrind.protocol.GridGrindJson;
 import dev.erst.gridgrind.protocol.GridGrindProblemCode;
 import dev.erst.gridgrind.protocol.GridGrindProblems;
@@ -9,6 +7,8 @@ import dev.erst.gridgrind.protocol.GridGrindProtocolVersion;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
 import dev.erst.gridgrind.protocol.GridGrindService;
+import dev.erst.gridgrind.protocol.InvalidJsonException;
+import dev.erst.gridgrind.protocol.InvalidRequestException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -69,7 +69,8 @@ public final class AgentCli {
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
-                  new GridGrindResponse.ProblemContext.ReadRequest(pathString(options.requestPath()), null, null, null))));
+                  new GridGrindResponse.ProblemContext.ReadRequest(
+                      pathString(options.requestPath()), null, null, null))));
     } catch (InvalidJsonException exception) {
       return writeResponseWithFallback(
           options.responsePath(),
@@ -78,7 +79,8 @@ public final class AgentCli {
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
-                  new GridGrindResponse.ProblemContext.ReadRequest(pathString(options.requestPath()), null, null, null))));
+                  new GridGrindResponse.ProblemContext.ReadRequest(
+                      pathString(options.requestPath()), null, null, null))));
     } catch (IOException exception) {
       return writeResponseWithFallback(
           options.responsePath(),
@@ -87,7 +89,8 @@ public final class AgentCli {
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
-                  new GridGrindResponse.ProblemContext.ReadRequest(pathString(options.requestPath()), null, null, null))));
+                  new GridGrindResponse.ProblemContext.ReadRequest(
+                      pathString(options.requestPath()), null, null, null))));
     }
 
     GridGrindResponse response;
@@ -98,8 +101,7 @@ public final class AgentCli {
           new GridGrindResponse.Failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
-                  exception,
-                  new GridGrindResponse.ProblemContext.ExecuteRequest(null, null)));
+                  exception, new GridGrindResponse.ProblemContext.ExecuteRequest(null, null)));
     }
 
     return writeResponseWithFallback(options.responsePath(), stdout, response);
@@ -137,10 +139,10 @@ public final class AgentCli {
               new GridGrindResponse.ProblemContext.WriteResponse(pathString(responsePath)));
       if (response instanceof GridGrindResponse.Failure f) {
         problem =
-            GridGrindProblems.appendCause(
-                problem, GridGrindProblems.problemCause(f.problem()));
+            GridGrindProblems.appendCause(problem, GridGrindProblems.problemCause(f.problem()));
       }
-      writeResponse(stdout, new GridGrindResponse.Failure(GridGrindProtocolVersion.current(), problem));
+      writeResponse(
+          stdout, new GridGrindResponse.Failure(GridGrindProtocolVersion.current(), problem));
       return 1;
     }
   }
@@ -165,7 +167,8 @@ public final class AgentCli {
       GridGrindResponse.ProblemContext context,
       Throwable cause) {
     return new GridGrindResponse.Failure(
-        GridGrindProtocolVersion.current(), GridGrindProblems.problem(code, message, context, cause));
+        GridGrindProtocolVersion.current(),
+        GridGrindProblems.problem(code, message, context, cause));
   }
 
   private String message(Exception exception) {

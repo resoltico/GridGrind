@@ -55,10 +55,7 @@ class GridGrindRequestTest {
         NullPointerException.class,
         () ->
             new GridGrindRequest(
-                new GridGrindRequest.WorkbookSource.New(),
-                null,
-                nullOperationList,
-                null));
+                new GridGrindRequest.WorkbookSource.New(), null, nullOperationList, null));
     assertThrows(
         NullPointerException.class,
         () -> new GridGrindRequest.WorkbookAnalysisRequest(nullSheetList));
@@ -69,28 +66,20 @@ class GridGrindRequestTest {
     assertThrows(NullPointerException.class, () -> new GridGrindRequest(null, null, null, null));
     assertEquals(
         GridGrindProtocolVersion.V1,
-        new GridGrindRequest(
-                null,
-                new GridGrindRequest.WorkbookSource.New(),
-                null,
-                null,
-                null)
+        new GridGrindRequest(null, new GridGrindRequest.WorkbookSource.New(), null, null, null)
             .protocolVersion());
-            
+
     assertThrows(
-        NullPointerException.class,
-        () -> new GridGrindRequest.WorkbookSource.ExistingFile(null));
+        NullPointerException.class, () -> new GridGrindRequest.WorkbookSource.ExistingFile(null));
     assertThrows(
         IllegalArgumentException.class,
         () -> new GridGrindRequest.WorkbookSource.ExistingFile(" "));
-        
+
     assertThrows(
-        NullPointerException.class,
-        () -> new GridGrindRequest.WorkbookPersistence.SaveAs(null));
+        NullPointerException.class, () -> new GridGrindRequest.WorkbookPersistence.SaveAs(null));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new GridGrindRequest.WorkbookPersistence.SaveAs(""));
-        
+        IllegalArgumentException.class, () -> new GridGrindRequest.WorkbookPersistence.SaveAs(""));
+
     assertThrows(
         NullPointerException.class,
         () -> new GridGrindRequest.SheetInspectionRequest(null, null, null, null));

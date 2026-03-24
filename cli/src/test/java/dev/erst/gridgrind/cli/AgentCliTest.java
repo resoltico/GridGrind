@@ -61,9 +61,11 @@ class AgentCliTest {
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
     assertEquals("Budget", success.workbook().sheetNames().get(0));
     GridGrindResponse.CellReport.FormulaReport b3Cell =
-        (GridGrindResponse.CellReport.FormulaReport) success.sheets().get(0).requestedCells().get(1);
+        (GridGrindResponse.CellReport.FormulaReport)
+            success.sheets().get(0).requestedCells().get(1);
     assertEquals("SUM(B2:B2)", b3Cell.formula());
-    assertEquals(49.0, ((GridGrindResponse.CellReport.NumberReport) b3Cell.evaluation()).numberValue());
+    assertEquals(
+        49.0, ((GridGrindResponse.CellReport.NumberReport) b3Cell.evaluation()).numberValue());
   }
 
   @Test
@@ -187,7 +189,9 @@ class AgentCliTest {
 
     assertEquals(2, exitCode);
     assertInstanceOf(GridGrindResponse.Failure.class, response);
-    assertEquals("Duplicate argument: --request", ((GridGrindResponse.Failure) response).problem().message());
+    assertEquals(
+        "Duplicate argument: --request",
+        ((GridGrindResponse.Failure) response).problem().message());
   }
 
   @Test
@@ -205,7 +209,9 @@ class AgentCliTest {
 
     assertEquals(2, exitCode);
     assertInstanceOf(GridGrindResponse.Failure.class, response);
-    assertEquals("Duplicate argument: --response", ((GridGrindResponse.Failure) response).problem().message());
+    assertEquals(
+        "Duplicate argument: --response",
+        ((GridGrindResponse.Failure) response).problem().message());
   }
 
   @Test

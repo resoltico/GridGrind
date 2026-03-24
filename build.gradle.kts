@@ -59,6 +59,7 @@ subprojects {
                 "BoxedPrimitiveConstructor",
                 "CheckReturnValue",
                 "EqualsIncompatibleType",
+                "JavaLangClash",
                 "MissingCasesInEnumSwitch",
                 "MissingOverride",
                 "ReferenceEquality",

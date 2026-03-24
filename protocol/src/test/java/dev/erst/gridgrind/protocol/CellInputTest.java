@@ -21,7 +21,7 @@ class CellInputTest {
 
     ExcelCellValue.NumberValue numberValue =
         assertInstanceOf(
-            ExcelCellValue.NumberValue.class, new CellInput.Number(42.5).toExcelCellValue());
+            ExcelCellValue.NumberValue.class, new CellInput.Numeric(42.5).toExcelCellValue());
     assertEquals(42.5, numberValue.value());
 
     ExcelCellValue.BooleanValue booleanValue =
@@ -50,7 +50,7 @@ class CellInputTest {
   @Test
   void validatesTypedInputRequirements() {
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Text(null));
-    assertThrows(IllegalArgumentException.class, () -> new CellInput.Number(null));
+    assertThrows(IllegalArgumentException.class, () -> new CellInput.Numeric(null));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.BooleanValue(null));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Formula(null));
     assertThrows(DateTimeParseException.class, () -> new CellInput.Date("not-a-date"));
