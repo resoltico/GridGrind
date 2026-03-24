@@ -5,6 +5,7 @@ on:
     types: [published]
 
 env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/gridgrind
 
@@ -23,7 +24,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           java-version: '26'
-          distribution: 'temurin'
+          distribution: 'zulu'
 
       - uses: gradle/actions/setup-gradle@v4
 
