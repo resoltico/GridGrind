@@ -1,0 +1,82 @@
+{
+  "protocolVersion": "V1",
+  "source": { "mode": "NEW" },
+  "persistence": {
+    "mode": "SAVE_AS",
+    "path": "cli/build/generated-workbooks/gridgrind-budget.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Budget" },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Budget",
+      "range": "A1:C3",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Item" },
+          { "type": "TEXT", "text": "Amount" },
+          { "type": "TEXT", "text": "Billable" }
+        ],
+        [
+          { "type": "TEXT", "text": "Hosting" },
+          { "type": "NUMBER", "number": 49.0 },
+          { "type": "BOOLEAN", "bool": true }
+        ],
+        [
+          { "type": "TEXT", "text": "Domain" },
+          { "type": "NUMBER", "number": 12.0 },
+          { "type": "BOOLEAN", "bool": false }
+        ]
+      ]
+    },
+    {
+      "type": "APPLY_STYLE",
+      "sheetName": "Budget",
+      "range": "A1:C1",
+      "style": {
+        "bold": true,
+        "wrapText": true,
+        "horizontalAlignment": "CENTER",
+        "verticalAlignment": "CENTER"
+      }
+    },
+    {
+      "type": "APPLY_STYLE",
+      "sheetName": "Budget",
+      "range": "B2:B4",
+      "style": {
+        "numberFormat": "#,##0.00",
+        "horizontalAlignment": "RIGHT"
+      }
+    },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Budget",
+      "address": "A4",
+      "value": { "type": "TEXT", "text": "Total" }
+    },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Budget",
+      "address": "B4",
+      "value": { "type": "FORMULA", "formula": "SUM(B2:B3)" }
+    },
+    {
+      "type": "AUTO_SIZE_COLUMNS",
+      "sheetName": "Budget",
+      "columns": ["A", "B", "C"]
+    },
+    { "type": "EVALUATE_FORMULAS" },
+    { "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
+  ],
+  "analysis": {
+    "sheets": [
+      {
+        "sheetName": "Budget",
+        "cells": ["A1", "B4", "C2"],
+        "previewRowCount": 4,
+        "previewColumnCount": 3
+      }
+    ]
+  }
+}

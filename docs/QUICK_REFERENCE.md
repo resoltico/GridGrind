@@ -1,0 +1,151 @@
+---
+afad: "3.3"
+version: "1.0.0"
+domain: QUICK_REFERENCE
+updated: "2026-03-24"
+route:
+  keywords: [gridgrind, quick-reference, snippets, json, operations, copy-paste, ensure-sheet, set-cell, set-range, apply-style, append-row, clear-range, evaluate-formulas]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind operation examples"]
+---
+
+# Quick Reference
+
+Copy-paste JSON fragments for every GridGrind operation. All snippets are valid
+standalone operation objects for use inside the `operations` array.
+
+---
+
+## Request Skeleton
+
+```json
+{
+  "protocolVersion": "V1",
+  "source": { "mode": "NEW" },
+  "persistence": { "mode": "SAVE_AS", "path": "output.xlsx" },
+  "operations": [],
+  "analysis": { "sheets": [] }
+}
+```
+
+---
+
+## Source
+
+```json
+{ "mode": "NEW" }
+{ "mode": "EXISTING", "path": "path/to/file.xlsx" }
+```
+
+## Persistence
+
+```json
+{ "mode": "SAVE_AS",   "path": "path/to/output.xlsx" }
+{ "mode": "OVERWRITE", "path": "path/to/existing.xlsx" }
+```
+
+---
+
+## ENSURE_SHEET
+
+```json
+{ "type": "ENSURE_SHEET", "sheetName": "Sheet1" }
+```
+
+## SET_CELL
+
+```json
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "A1", "value": { "type": "TEXT",    "text": "Hello"   } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "B1", "value": { "type": "NUMBER",  "number": 42.0    } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "C1", "value": { "type": "BOOLEAN", "bool": true      } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "D1", "value": { "type": "FORMULA", "formula": "SUM(B1:B10)" } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "E1", "value": { "type": "BLANK"                      } }
+```
+
+## SET_RANGE
+
+```json
+{
+  "type": "SET_RANGE",
+  "sheetName": "Sheet1",
+  "range": "A1:C2",
+  "rows": [
+    [{ "type": "TEXT", "text": "A" }, { "type": "TEXT", "text": "B" }, { "type": "TEXT", "text": "C" }],
+    [{ "type": "NUMBER", "number": 1 }, { "type": "NUMBER", "number": 2 }, { "type": "NUMBER", "number": 3 }]
+  ]
+}
+```
+
+## CLEAR_RANGE
+
+```json
+{ "type": "CLEAR_RANGE", "sheetName": "Sheet1", "range": "A1:Z100" }
+```
+
+## APPLY_STYLE
+
+```json
+{
+  "type": "APPLY_STYLE",
+  "sheetName": "Sheet1",
+  "range": "A1:C1",
+  "style": {
+    "bold": true,
+    "italic": false,
+    "wrapText": true,
+    "numberFormat": "#,##0.00",
+    "horizontalAlignment": "CENTER",
+    "verticalAlignment": "CENTER"
+  }
+}
+```
+
+`horizontalAlignment` values: `"LEFT"` `"CENTER"` `"RIGHT"` `"GENERAL"`
+`verticalAlignment` values:   `"TOP"` `"CENTER"` `"BOTTOM"`
+
+## APPEND_ROW
+
+```json
+{
+  "type": "APPEND_ROW",
+  "sheetName": "Sheet1",
+  "values": [
+    { "type": "TEXT", "text": "Row label" },
+    { "type": "NUMBER", "number": 100 }
+  ]
+}
+```
+
+## AUTO_SIZE_COLUMNS
+
+```json
+{ "type": "AUTO_SIZE_COLUMNS", "sheetName": "Sheet1" }
+```
+
+## EVALUATE_FORMULAS
+
+```json
+{ "type": "EVALUATE_FORMULAS" }
+```
+
+## FORCE_FORMULA_RECALCULATION_ON_OPEN
+
+```json
+{ "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
+```
+
+---
+
+## Analysis
+
+```json
+{
+  "sheets": [
+    {
+      "sheetName": "Sheet1",
+      "cells": ["A1", "B4", "C10"],
+      "previewRowCount": 5,
+      "previewColumnCount": 4
+    }
+  ]
+}
+```

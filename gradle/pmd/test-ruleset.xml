@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset
+    name="GridGrind Java Test Quality"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.github.io/pmd-7.0.0/ruleset_xml_schema.xsd">
+    <description>
+        High-signal PMD rules for GridGrind test code. Structural, design, performance, security,
+        and concurrency checks are enforced to the same standard as production code. Test-specific
+        relaxations are limited to assertion volume and method count only.
+    </description>
+
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="AvoidCatchingGenericException"/>
+        <exclude name="AvoidDuplicateLiterals"/>
+        <exclude name="AvoidFieldNameMatchingMethodName"/>
+        <exclude name="AvoidLiteralsInIfCondition"/>
+        <exclude name="NullAssignment"/>
+    </rule>
+
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="UnitTestAssertionsShouldIncludeMessage"/>
+        <exclude name="UnitTestContainsTooManyAsserts"/>
+    </rule>
+
+    <rule ref="category/java/design.xml">
+        <!-- Demeter violations are too noisy for a layered facade API -->
+        <exclude name="LawOfDemeter"/>
+        <!-- Requires explicit package configurations to be useful -->
+        <exclude name="LoosePackageCoupling"/>
+        <!-- Produces false positives on well-structured value/command objects -->
+        <exclude name="DataClass"/>
+        <!-- Test helpers legitimately import many assertion/fixture types -->
+        <exclude name="ExcessiveImports"/>
+        <!-- Test classes legitimately contain many test methods -->
+        <exclude name="TooManyMethods"/>
+    </rule>
+
+    <rule ref="category/java/multithreading.xml">
+        <!-- Tests are allowed to create threads explicitly for concurrency scenarios -->
+        <exclude name="DoNotUseThreads"/>
+    </rule>
+
+    <rule ref="category/java/performance.xml"/>
+
+    <rule ref="category/java/security.xml"/>
+
+    <rule ref="category/java/documentation.xml/CommentRequired">
+        <properties>
+            <property name="classCommentRequirement" value="Required"/>
+            <property name="enumCommentRequirement" value="Required"/>
+            <property name="publicMethodCommentRequirement" value="Ignored"/>
+            <property name="methodWithOverrideCommentRequirement" value="Ignored"/>
+            <property name="accessorCommentRequirement" value="Ignored"/>
+            <property name="fieldCommentRequirement" value="Ignored"/>
+            <property name="protectedMethodCommentRequirement" value="Ignored"/>
+            <property name="serialVersionUIDCommentRequirement" value="Ignored"/>
+            <property name="serialPersistentFieldsCommentRequirement" value="Ignored"/>
+        </properties>
+    </rule>
+
+</ruleset>

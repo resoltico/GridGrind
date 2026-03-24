@@ -1,0 +1,81 @@
+GridGrind
+Copyright (c) 2026 Ervins Strauhmanis
+
+Licensed under the MIT License. See LICENSE file for details.
+
+================================================================================
+
+The Apache License, Version 2.0 full text is included in this distribution as
+LICENSE-APACHE-2.0 and is also available at:
+  https://www.apache.org/licenses/LICENSE-2.0
+
+================================================================================
+
+This product bundles Apache POI in its executable JAR distribution.
+
+  Project:   Apache POI
+  Copyright: 2001- The Apache Software Foundation
+  License:   Apache License 2.0
+  Website:   https://poi.apache.org/
+
+Apache POI is licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+
+Apache POI notice:
+
+    Apache POI
+    Copyright 2001- The Apache Software Foundation
+
+    This product includes software developed at
+    The Apache Software Foundation (https://www.apache.org/).
+
+================================================================================
+
+This product bundles Apache Log4j Core in its executable JAR distribution.
+
+  Project:   Apache Log4j Core
+  Copyright: 1999- The Apache Software Foundation
+  License:   Apache License 2.0
+  Website:   https://logging.apache.org/log4j/2.x/
+
+Apache Log4j Core is licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+
+Apache Log4j Core notice:
+
+    Apache Log4j Core
+    Copyright 1999- The Apache Software Foundation
+
+    This product includes software developed at
+    The Apache Software Foundation (https://www.apache.org/).
+
+================================================================================
+
+This product bundles Jackson Databind in its executable JAR distribution.
+
+  Project:   Jackson Databind (tools.jackson.core)
+  Copyright: 2007- Tatu Saloranta, tatu.saloranta@iki.fi
+  License:   Apache License 2.0
+  Website:   https://github.com/FasterXML/jackson
+
+Jackson Databind is licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+
+Jackson Databind notice:
+
+    Jackson JSON processor
+
+    Copyright (c) 2007- Tatu Saloranta, tatu.saloranta@iki.fi
+
+================================================================================
+
+Trademark Notice
+----------------
+
+"Apache", "Apache POI", "Apache Log4j", and the Apache feather logo are
+trademarks of The Apache Software Foundation. Use of these marks in this
+document is descriptive only and does not imply affiliation with or
+endorsement by The Apache Software Foundation.
+
+"Microsoft Excel", "Excel", and related product names are trademarks of
+Microsoft Corporation. Use of these names is descriptive only.
+
+GridGrind is not affiliated with, endorsed by, or sponsored by The Apache
+Software Foundation or Microsoft Corporation.

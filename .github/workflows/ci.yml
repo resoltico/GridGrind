@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '26'
+          distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          # On PRs, only read from the cache to avoid cache poisoning from untrusted code.
+          cache-read-only: ${{ github.event_name == 'pull_request' }}
+
+      - name: Check and enforce coverage
+        run: ./gradlew check coverage --no-daemon
