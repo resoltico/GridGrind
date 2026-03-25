@@ -130,6 +130,129 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void wrapsNonXlsxWorkbookPathsAsInvalidRequestErrors() {
+    InvalidRequestException sourceFailure =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "mode": "EXISTING", "path": "budget.xlsm" },
+                      "operations": [],
+                      "analysis": { "sheets": [] }
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    assertEquals(
+        "path must point to a .xlsx workbook; .xls, .xlsm, and .xlsb are not supported: budget.xlsm",
+        sourceFailure.getMessage());
+    assertEquals("source", sourceFailure.jsonPath());
+
+    InvalidRequestException persistenceFailure =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "mode": "NEW" },
+                      "persistence": { "mode": "SAVE_AS", "path": "output.xls" },
+                      "operations": [],
+                      "analysis": { "sheets": [] }
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    assertEquals(
+        "path must point to a .xlsx workbook; .xls, .xlsm, and .xlsb are not supported: output.xls",
+        persistenceFailure.getMessage());
+    assertEquals("persistence", persistenceFailure.jsonPath());
+  }
+
+  @Test
+  void readsSheetManagementOperationsFromJson() throws IOException {
+    GridGrindRequest request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "source": { "mode": "NEW" },
+              "operations": [
+                { "type": "RENAME_SHEET", "sheetName": "Budget", "newSheetName": "Summary" },
+                { "type": "DELETE_SHEET", "sheetName": "Scratch" },
+                { "type": "MOVE_SHEET", "sheetName": "Summary", "targetIndex": 0 }
+              ],
+              "analysis": { "sheets": [] }
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    assertEquals(3, request.operations().size());
+    assertInstanceOf(WorkbookOperation.RenameSheet.class, request.operations().get(0));
+    assertInstanceOf(WorkbookOperation.DeleteSheet.class, request.operations().get(1));
+    assertInstanceOf(WorkbookOperation.MoveSheet.class, request.operations().get(2));
+
+    WorkbookOperation.RenameSheet renameSheet =
+        (WorkbookOperation.RenameSheet) request.operations().get(0);
+    WorkbookOperation.MoveSheet moveSheet =
+        (WorkbookOperation.MoveSheet) request.operations().get(2);
+    assertEquals("Summary", renameSheet.newSheetName());
+    assertEquals(0, moveSheet.targetIndex());
+  }
+
+  @Test
+  void readsStructuralLayoutOperationsFromJson() throws IOException {
+    GridGrindRequest request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "source": { "mode": "NEW" },
+              "operations": [
+                { "type": "MERGE_CELLS", "sheetName": "Budget", "range": "A1:B2" },
+                { "type": "UNMERGE_CELLS", "sheetName": "Budget", "range": "A1:B2" },
+                {
+                  "type": "SET_COLUMN_WIDTH",
+                  "sheetName": "Budget",
+                  "firstColumnIndex": 0,
+                  "lastColumnIndex": 2,
+                  "widthCharacters": 16.0
+                },
+                {
+                  "type": "SET_ROW_HEIGHT",
+                  "sheetName": "Budget",
+                  "firstRowIndex": 0,
+                  "lastRowIndex": 3,
+                  "heightPoints": 28.5
+                },
+                {
+                  "type": "FREEZE_PANES",
+                  "sheetName": "Budget",
+                  "splitColumn": 1,
+                  "splitRow": 2,
+                  "leftmostColumn": 1,
+                  "topRow": 2
+                }
+              ],
+              "analysis": { "sheets": [] }
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    assertEquals(5, request.operations().size());
+    assertInstanceOf(WorkbookOperation.MergeCells.class, request.operations().get(0));
+    assertInstanceOf(WorkbookOperation.UnmergeCells.class, request.operations().get(1));
+    assertInstanceOf(WorkbookOperation.SetColumnWidth.class, request.operations().get(2));
+    assertInstanceOf(WorkbookOperation.SetRowHeight.class, request.operations().get(3));
+    assertInstanceOf(WorkbookOperation.FreezePanes.class, request.operations().get(4));
+
+    WorkbookOperation.SetColumnWidth setColumnWidth =
+        (WorkbookOperation.SetColumnWidth) request.operations().get(2);
+    WorkbookOperation.FreezePanes freezePanes =
+        (WorkbookOperation.FreezePanes) request.operations().get(4);
+    assertEquals(16.0, setColumnWidth.widthCharacters());
+    assertEquals(2, freezePanes.topRow());
+  }
+
+  @Test
   void wrapsRecordConstructionFailureAsInvalidPayloadError() {
     // Parsing a response where CellStyleReport.numberFormat is null triggers a NullPointerException
     // inside the record compact constructor. Jackson catches and wraps it as a JacksonException.
@@ -138,14 +261,14 @@ class GridGrindJsonTest {
             InvalidJsonException.class,
             () ->
                 GridGrindJson.readResponse(
-                    ("""
+                    """
                     {"status":"SUCCESS","protocolVersion":"V1","savedWorkbookPath":null,\
                     "workbook":{"sheetCount":0,"sheetNames":[],"forceFormulaRecalculationOnOpen":false},\
                     "sheets":[{"sheetName":"X","physicalRowCount":0,"lastRowIndex":0,"lastColumnIndex":0,\
                     "requestedCells":[{"effectiveType":"BLANK","address":"A1","declaredType":"BLANK",\
                     "displayValue":"","style":{"numberFormat":null,"bold":false,"italic":false,\
                     "wrapText":false,"horizontalAlignment":"GENERAL","verticalAlignment":"BOTTOM"}}],\
-                    "previewRows":[]}]}""")
+                    "previewRows":[]}]}"""
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertNotNull(failure.getMessage());

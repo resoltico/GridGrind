@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.4.1"
+version: "0.5.0"
 domain: ERRORS
 updated: "2026-03-25"
 route:
@@ -62,9 +62,9 @@ route:
 | Code | Trigger |
 |:-----|:--------|
 | `INVALID_JSON` | Request payload is not valid JSON. |
-| `INVALID_REQUEST` | JSON is valid but the payload shape violates the protocol schema. |
+| `INVALID_REQUEST` | JSON is valid but the payload shape violates the protocol schema, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid structural layout values, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. |
 | `INVALID_CELL_ADDRESS` | A1-notation cell address is malformed. |
-| `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or its dimensions do not match `rows`. |
+| `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or its dimensions do not match `rows`, including invalid `MERGE_CELLS` or `UNMERGE_CELLS` ranges. |
 
 ### Formula (`FORMULA` category)
 
@@ -78,7 +78,7 @@ route:
 | Code | Trigger |
 |:-----|:--------|
 | `WORKBOOK_NOT_FOUND` | `source.mode=EXISTING` path does not exist. |
-| `SHEET_NOT_FOUND` | An operation or analysis references a sheet that does not exist. |
+| `SHEET_NOT_FOUND` | An operation or analysis references a sheet that does not exist, including sheet-management and structural-layout operations such as `RENAME_SHEET`, `DELETE_SHEET`, `MOVE_SHEET`, `MERGE_CELLS`, `UNMERGE_CELLS`, `SET_COLUMN_WIDTH`, `SET_ROW_HEIGHT`, or `FREEZE_PANES`. |
 | `CELL_NOT_FOUND` | An analysis `cells` entry references a cell that has not been written. |
 
 ### I/O (`IO` category)

@@ -10,8 +10,8 @@ RETRIEVAL_HINTS:
 **A fresh grind for every workbook.**
 
 GridGrind gives AI agents a typed, structured, deterministic way to create, edit, calculate,
-inspect, and save Excel workbooks. Send a JSON request. Get a JSON response. No low-level library
-calls, no ad hoc scripting, no brittle string parsing.
+inspect, and save `.xlsx` workbooks. Send a JSON request. Get a JSON response. No low-level
+library calls, no ad hoc scripting, no brittle string parsing.
 
 ---
 
@@ -80,6 +80,9 @@ java -jar gridgrind.jar --version
 
 ## How It Works
 
+GridGrind currently supports `.xlsx` workbooks only. Requests that use `.xls`, `.xlsm`, `.xlsb`,
+or other non-`.xlsx` workbook paths are rejected as `INVALID_REQUEST`.
+
 Every request follows the same pipeline:
 
 1. **Operations** run in order — create sheets, write cells, apply styles, evaluate formulas.
@@ -96,6 +99,14 @@ deterministic failure semantics instead of "error after side effect."
 | Operation | What It Does |
 |:----------|:-------------|
 | `ENSURE_SHEET` | Create a sheet if it does not already exist |
+| `RENAME_SHEET` | Rename an existing sheet to a new name |
+| `DELETE_SHEET` | Remove an existing sheet |
+| `MOVE_SHEET` | Move an existing sheet to a zero-based position |
+| `MERGE_CELLS` | Merge a rectangular A1-style range |
+| `UNMERGE_CELLS` | Remove a merged region by exact range match |
+| `SET_COLUMN_WIDTH` | Set one or more column widths using character units |
+| `SET_ROW_HEIGHT` | Set one or more row heights using point units |
+| `FREEZE_PANES` | Freeze panes using explicit split and visible-origin coordinates |
 | `SET_CELL` | Write a typed value to a single cell |
 | `SET_RANGE` | Write a rectangular grid of typed values |
 | `CLEAR_RANGE` | Remove all values and styles from a rectangular range |
@@ -106,6 +117,15 @@ deterministic failure semantics instead of "error after side effect."
 | `FORCE_FORMULA_RECALCULATION_ON_OPEN` | Mark the workbook to recalculate when opened in Excel |
 
 Cell values accept types: `TEXT`, `NUMBER`, `BOOLEAN`, `FORMULA`, `DATE`, `DATE_TIME`, `BLANK`.
+
+Sheet-management operations use strict semantics: missing sheets fail, `MOVE_SHEET.targetIndex`
+is zero-based, and `RENAME_SHEET` requires a valid destination name that does not conflict with
+another sheet.
+
+Structural layout operations are also strict: `MERGE_CELLS` uses A1-style ranges, `UNMERGE_CELLS`
+requires an exact merged-region match, `SET_COLUMN_WIDTH.widthCharacters` is converted to POI
+width units with `round(widthCharacters * 256)`, `SET_ROW_HEIGHT.heightPoints` is passed through
+as Excel point units, and `FREEZE_PANES` uses explicit split plus visible-origin coordinates.
 
 See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the full reference with all fields and examples.
 

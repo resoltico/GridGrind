@@ -1,10 +1,10 @@
 ---
 afad: "3.4"
-version: "0.4.1"
+version: "0.5.0"
 domain: QUICK_REFERENCE
 updated: "2026-03-25"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, copy-paste, ensure-sheet, set-cell, set-range, apply-style, append-row, clear-range, evaluate-formulas]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, apply-style, append-row, clear-range, evaluate-formulas]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind operation examples"]
 ---
 
@@ -12,6 +12,9 @@ route:
 
 Copy-paste JSON fragments for every GridGrind operation. All snippets are valid
 standalone operation objects for use inside the `operations` array.
+
+GridGrind supports `.xlsx` workbooks only. Use `.xlsx` paths for `source.path` and
+`persistence.path`; `.xls`, `.xlsm`, and `.xlsb` are rejected.
 
 ---
 
@@ -49,6 +52,73 @@ standalone operation objects for use inside the `operations` array.
 
 ```json
 { "type": "ENSURE_SHEET", "sheetName": "Sheet1" }
+```
+
+## RENAME_SHEET
+
+```json
+{ "type": "RENAME_SHEET", "sheetName": "Archive", "newSheetName": "History" }
+```
+
+## DELETE_SHEET
+
+```json
+{ "type": "DELETE_SHEET", "sheetName": "Scratch" }
+```
+
+## MOVE_SHEET
+
+```json
+{ "type": "MOVE_SHEET", "sheetName": "History", "targetIndex": 0 }
+```
+
+## MERGE_CELLS
+
+```json
+{ "type": "MERGE_CELLS", "sheetName": "Sheet1", "range": "A1:C1" }
+```
+
+## UNMERGE_CELLS
+
+```json
+{ "type": "UNMERGE_CELLS", "sheetName": "Sheet1", "range": "A1:C1" }
+```
+
+## SET_COLUMN_WIDTH
+
+```json
+{
+  "type": "SET_COLUMN_WIDTH",
+  "sheetName": "Sheet1",
+  "firstColumnIndex": 0,
+  "lastColumnIndex": 2,
+  "widthCharacters": 16.0
+}
+```
+
+## SET_ROW_HEIGHT
+
+```json
+{
+  "type": "SET_ROW_HEIGHT",
+  "sheetName": "Sheet1",
+  "firstRowIndex": 0,
+  "lastRowIndex": 3,
+  "heightPoints": 28.5
+}
+```
+
+## FREEZE_PANES
+
+```json
+{
+  "type": "FREEZE_PANES",
+  "sheetName": "Sheet1",
+  "splitColumn": 1,
+  "splitRow": 1,
+  "leftmostColumn": 1,
+  "topRow": 1
+}
 ```
 
 ## SET_CELL
@@ -122,6 +192,9 @@ standalone operation objects for use inside the `operations` array.
 ```json
 { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Sheet1" }
 ```
+
+`SET_COLUMN_WIDTH.widthCharacters` is converted to POI width units with `round(widthCharacters * 256)`.
+`SET_ROW_HEIGHT.heightPoints` uses Excel point units. `UNMERGE_CELLS` requires an exact merged-range match.
 
 ## EVALUATE_FORMULAS
 

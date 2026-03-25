@@ -160,6 +160,24 @@ public final class GridGrindService {
   private WorkbookCommand toCommand(WorkbookOperation operation) {
     return switch (operation) {
       case WorkbookOperation.EnsureSheet op -> new WorkbookCommand.CreateSheet(op.sheetName());
+      case WorkbookOperation.RenameSheet op ->
+          new WorkbookCommand.RenameSheet(op.sheetName(), op.newSheetName());
+      case WorkbookOperation.DeleteSheet op -> new WorkbookCommand.DeleteSheet(op.sheetName());
+      case WorkbookOperation.MoveSheet op ->
+          new WorkbookCommand.MoveSheet(op.sheetName(), op.targetIndex());
+      case WorkbookOperation.MergeCells op ->
+          new WorkbookCommand.MergeCells(op.sheetName(), op.range());
+      case WorkbookOperation.UnmergeCells op ->
+          new WorkbookCommand.UnmergeCells(op.sheetName(), op.range());
+      case WorkbookOperation.SetColumnWidth op ->
+          new WorkbookCommand.SetColumnWidth(
+              op.sheetName(), op.firstColumnIndex(), op.lastColumnIndex(), op.widthCharacters());
+      case WorkbookOperation.SetRowHeight op ->
+          new WorkbookCommand.SetRowHeight(
+              op.sheetName(), op.firstRowIndex(), op.lastRowIndex(), op.heightPoints());
+      case WorkbookOperation.FreezePanes op ->
+          new WorkbookCommand.FreezePanes(
+              op.sheetName(), op.splitColumn(), op.splitRow(), op.leftmostColumn(), op.topRow());
       case WorkbookOperation.SetCell op ->
           new WorkbookCommand.SetCell(op.sheetName(), op.address(), op.value().toExcelCellValue());
       case WorkbookOperation.SetRange op ->
@@ -402,6 +420,14 @@ public final class GridGrindService {
             case CellInput.DateTime _ -> null;
           };
       case WorkbookOperation.EnsureSheet _ -> null;
+      case WorkbookOperation.RenameSheet _ -> null;
+      case WorkbookOperation.DeleteSheet _ -> null;
+      case WorkbookOperation.MoveSheet _ -> null;
+      case WorkbookOperation.MergeCells _ -> null;
+      case WorkbookOperation.UnmergeCells _ -> null;
+      case WorkbookOperation.SetColumnWidth _ -> null;
+      case WorkbookOperation.SetRowHeight _ -> null;
+      case WorkbookOperation.FreezePanes _ -> null;
       case WorkbookOperation.SetRange _ -> null;
       case WorkbookOperation.ClearRange _ -> null;
       case WorkbookOperation.ApplyStyle _ -> null;
@@ -420,6 +446,14 @@ public final class GridGrindService {
     String fromOp =
         switch (operation) {
           case WorkbookOperation.EnsureSheet op -> op.sheetName();
+          case WorkbookOperation.RenameSheet op -> op.sheetName();
+          case WorkbookOperation.DeleteSheet op -> op.sheetName();
+          case WorkbookOperation.MoveSheet op -> op.sheetName();
+          case WorkbookOperation.MergeCells op -> op.sheetName();
+          case WorkbookOperation.UnmergeCells op -> op.sheetName();
+          case WorkbookOperation.SetColumnWidth op -> op.sheetName();
+          case WorkbookOperation.SetRowHeight op -> op.sheetName();
+          case WorkbookOperation.FreezePanes op -> op.sheetName();
           case WorkbookOperation.SetCell op -> op.sheetName();
           case WorkbookOperation.SetRange op -> op.sheetName();
           case WorkbookOperation.ClearRange op -> op.sheetName();
@@ -441,6 +475,14 @@ public final class GridGrindService {
         switch (operation) {
           case WorkbookOperation.SetCell op -> op.address();
           case WorkbookOperation.EnsureSheet _ -> null;
+          case WorkbookOperation.RenameSheet _ -> null;
+          case WorkbookOperation.DeleteSheet _ -> null;
+          case WorkbookOperation.MoveSheet _ -> null;
+          case WorkbookOperation.MergeCells _ -> null;
+          case WorkbookOperation.UnmergeCells _ -> null;
+          case WorkbookOperation.SetColumnWidth _ -> null;
+          case WorkbookOperation.SetRowHeight _ -> null;
+          case WorkbookOperation.FreezePanes _ -> null;
           case WorkbookOperation.SetRange _ -> null;
           case WorkbookOperation.ClearRange _ -> null;
           case WorkbookOperation.ApplyStyle _ -> null;
@@ -462,7 +504,15 @@ public final class GridGrindService {
           case WorkbookOperation.SetRange op -> op.range();
           case WorkbookOperation.ClearRange op -> op.range();
           case WorkbookOperation.ApplyStyle op -> op.range();
+          case WorkbookOperation.MergeCells op -> op.range();
+          case WorkbookOperation.UnmergeCells op -> op.range();
           case WorkbookOperation.EnsureSheet _ -> null;
+          case WorkbookOperation.RenameSheet _ -> null;
+          case WorkbookOperation.DeleteSheet _ -> null;
+          case WorkbookOperation.MoveSheet _ -> null;
+          case WorkbookOperation.SetColumnWidth _ -> null;
+          case WorkbookOperation.SetRowHeight _ -> null;
+          case WorkbookOperation.FreezePanes _ -> null;
           case WorkbookOperation.SetCell _ -> null;
           case WorkbookOperation.AppendRow _ -> null;
           case WorkbookOperation.AutoSizeColumns _ -> null;

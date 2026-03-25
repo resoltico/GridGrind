@@ -1,0 +1,171 @@
+package dev.erst.gridgrind.excel;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.util.PaneInformation;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+/** Creates temporary workbook paths and reopens saved `.xlsx` files for structural inspection. */
+public final class XlsxRoundTrip {
+  private XlsxRoundTrip() {}
+
+  /** Returns a fresh temporary path for a workbook that does not yet exist on disk. */
+  public static Path newWorkbookPath(String prefix) throws IOException {
+    requireNonBlank(prefix, "prefix");
+    Path directory = Files.createTempDirectory(prefix);
+    return directory.resolve("workbook.xlsx").toAbsolutePath();
+  }
+
+  /** Returns the sheet order exactly as stored in the saved workbook. */
+  public static List<String> sheetOrder(Path workbookPath) throws IOException {
+    return readWorkbook(
+        workbookPath,
+        workbook -> {
+          List<String> sheetOrder = new ArrayList<>(workbook.getNumberOfSheets());
+          for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+            sheetOrder.add(workbook.getSheetName(sheetIndex));
+          }
+          return List.copyOf(sheetOrder);
+        });
+  }
+
+  /** Returns all merged regions on the named sheet using A1-style range strings. */
+  public static List<String> mergedRegions(Path workbookPath, String sheetName) throws IOException {
+    return readSheet(
+        workbookPath,
+        sheetName,
+        sheet -> {
+          List<String> mergedRegions = new ArrayList<>(sheet.getNumMergedRegions());
+          for (int regionIndex = 0; regionIndex < sheet.getNumMergedRegions(); regionIndex++) {
+            mergedRegions.add(sheet.getMergedRegion(regionIndex).formatAsString());
+          }
+          return List.copyOf(mergedRegions);
+        });
+  }
+
+  /** Returns the requested column width in Apache POI's raw width units. */
+  public static int columnWidth(Path workbookPath, String sheetName, int columnIndex)
+      throws IOException {
+    requireNonNegative(columnIndex, "columnIndex");
+    return readSheet(workbookPath, sheetName, sheet -> sheet.getColumnWidth(columnIndex));
+  }
+
+  /** Returns the requested row height in twips, falling back to the sheet default when absent. */
+  public static short rowHeightTwips(Path workbookPath, String sheetName, int rowIndex)
+      throws IOException {
+    requireNonNegative(rowIndex, "rowIndex");
+    return readSheet(
+        workbookPath,
+        sheetName,
+        sheet -> {
+          Row row = sheet.getRow(rowIndex);
+          return row == null ? sheet.getDefaultRowHeight() : row.getHeight();
+        });
+  }
+
+  /** Returns the freeze-pane state stored on the named sheet. */
+  public static FreezePaneState freezePaneState(Path workbookPath, String sheetName)
+      throws IOException {
+    return readSheet(
+        workbookPath,
+        sheetName,
+        sheet -> {
+          PaneInformation paneInformation = sheet.getPaneInformation();
+          if (paneInformation == null || !paneInformation.isFreezePane()) {
+            return new FreezePaneState.None();
+          }
+          return new FreezePaneState.Frozen(
+              paneInformation.getVerticalSplitPosition(),
+              paneInformation.getHorizontalSplitPosition(),
+              paneInformation.getVerticalSplitLeftColumn(),
+              paneInformation.getHorizontalSplitTopRow());
+        });
+  }
+
+  private static <T> T readSheet(Path workbookPath, String sheetName, SheetReader<T> sheetReader)
+      throws IOException {
+    requireNonBlank(sheetName, "sheetName");
+    return readWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFSheet sheet = workbook.getSheet(sheetName);
+          if (sheet == null) {
+            throw new SheetNotFoundException(sheetName);
+          }
+          return sheetReader.read(sheet);
+        });
+  }
+
+  private static <T> T readWorkbook(Path workbookPath, WorkbookReader<T> workbookReader)
+      throws IOException {
+    Path absolutePath = requireWorkbookPath(workbookPath);
+
+    try (InputStream inputStream = Files.newInputStream(absolutePath);
+        XSSFWorkbook workbook = new XSSFWorkbook(inputStream)) {
+      return workbookReader.read(workbook);
+    }
+  }
+
+  private static Path requireWorkbookPath(Path workbookPath) {
+    Objects.requireNonNull(workbookPath, "workbookPath must not be null");
+
+    Path absolutePath = workbookPath.toAbsolutePath();
+    if (!Files.exists(absolutePath)) {
+      throw new WorkbookNotFoundException(absolutePath);
+    }
+    return absolutePath;
+  }
+
+  private static void requireNonNegative(int value, String fieldName) {
+    if (value < 0) {
+      throw new IllegalArgumentException(fieldName + " must not be negative");
+    }
+  }
+
+  private static String requireNonBlank(String value, String fieldName) {
+    Objects.requireNonNull(value, fieldName + " must not be null");
+    if (value.isBlank()) {
+      throw new IllegalArgumentException(fieldName + " must not be blank");
+    }
+    return value;
+  }
+
+  /** Reads a saved workbook and returns a derived value. */
+  @FunctionalInterface
+  private interface WorkbookReader<T> {
+    /** Reads the workbook and returns the derived value. */
+    T read(XSSFWorkbook workbook) throws IOException;
+  }
+
+  /** Reads a saved sheet and returns a derived value. */
+  @FunctionalInterface
+  private interface SheetReader<T> {
+    /** Reads the sheet and returns the derived value. */
+    T read(XSSFSheet sheet);
+  }
+
+  /** Represents the freeze-pane state stored on a sheet. */
+  public sealed interface FreezePaneState permits FreezePaneState.None, FreezePaneState.Frozen {
+    /** Represents a sheet without any frozen panes. */
+    record None() implements FreezePaneState {}
+
+    /** Represents a sheet with a frozen pane defined by split and visible-origin coordinates. */
+    record Frozen(int splitColumn, int splitRow, int leftmostColumn, int topRow)
+        implements FreezePaneState {
+      /** Validates the stored freeze-pane coordinates. */
+      public Frozen {
+        requireNonNegative(splitColumn, "splitColumn");
+        requireNonNegative(splitRow, "splitRow");
+        requireNonNegative(leftmostColumn, "leftmostColumn");
+        requireNonNegative(topRow, "topRow");
+      }
+    }
+  }
+}

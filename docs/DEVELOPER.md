@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.4.1"
+version: "0.5.0"
 domain: DEVELOPER
 updated: "2026-03-25"
 route:
@@ -142,6 +142,8 @@ These runnable examples cover the core operation surface:
 | `examples/budget-request.json` | Range write, style, formula, analysis in one request |
 | `examples/live-workflow-create.json` | Multi-sheet workbook with cross-sheet formulas and aggregations |
 | `examples/live-workflow-revise.json` | Reopen, revise, recalculate, reanalyze |
+| `examples/sheet-management-request.json` | Sheet rename, delete, and reorder semantics |
+| `examples/structural-layout-request.json` | Merge, size, and freeze-pane document shaping |
 
 Run any fixture with:
 
