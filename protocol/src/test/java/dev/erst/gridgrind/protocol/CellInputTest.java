@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import org.junit.jupiter.api.Test;
 
 /** Tests for CellInput record construction and ExcelCellValue conversion. */
@@ -37,13 +36,14 @@ class CellInputTest {
 
     ExcelCellValue.DateValue dateValue =
         assertInstanceOf(
-            ExcelCellValue.DateValue.class, new CellInput.Date("2026-03-23").toExcelCellValue());
+            ExcelCellValue.DateValue.class,
+            new CellInput.Date(LocalDate.of(2026, 3, 23)).toExcelCellValue());
     assertEquals(LocalDate.of(2026, 3, 23), dateValue.value());
 
     ExcelCellValue.DateTimeValue dateTimeValue =
         assertInstanceOf(
             ExcelCellValue.DateTimeValue.class,
-            new CellInput.DateTime("2026-03-23T10:15:30").toExcelCellValue());
+            new CellInput.DateTime(LocalDateTime.of(2026, 3, 23, 10, 15, 30)).toExcelCellValue());
     assertEquals(LocalDateTime.of(2026, 3, 23, 10, 15, 30), dateTimeValue.value());
   }
 
@@ -53,7 +53,7 @@ class CellInputTest {
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Numeric(null));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.BooleanValue(null));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Formula(null));
-    assertThrows(DateTimeParseException.class, () -> new CellInput.Date("not-a-date"));
-    assertThrows(DateTimeParseException.class, () -> new CellInput.DateTime("not-a-date-time"));
+    assertThrows(IllegalArgumentException.class, () -> new CellInput.Date(null));
+    assertThrows(IllegalArgumentException.class, () -> new CellInput.DateTime(null));
   }
 }

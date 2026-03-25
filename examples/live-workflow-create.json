@@ -125,8 +125,8 @@
     { "type": "SET_CELL", "sheetName": "Sales", "address": "F7", "value": { "type": "FORMULA", "formula": "ROUND(SUM(F2:F5),2)" } },
     { "type": "SET_CELL", "sheetName": "Sales", "address": "G7", "value": { "type": "FORMULA", "formula": "ROUND(SUMPRODUCT(B2:B5,C2:C5)/SUM(B2:B5),2)" } },
     { "type": "SET_CELL", "sheetName": "Sales", "address": "H7", "value": { "type": "FORMULA", "formula": "COUNTIF(G2:G5,\"Enterprise\")" } },
-    { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Rates", "columns": ["A", "B", "C"] },
-    { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Sales", "columns": ["A", "B", "C", "D", "E", "F", "G", "H"] },
+    { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Rates" },
+    { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Sales" },
     { "type": "EVALUATE_FORMULAS" },
     { "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
   ],

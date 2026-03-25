@@ -1,11 +1,11 @@
 {
   "protocolVersion": "V1",
   "source": {
-    "mode": "EXISTING_FILE",
+    "mode": "EXISTING",
     "path": "cli/build/generated-workbooks/live-finance-workbook.xlsx"
   },
   "persistence": {
-    "mode": "OVERWRITE_SOURCE"
+    "mode": "OVERWRITE"
   },
   "operations": [
     {

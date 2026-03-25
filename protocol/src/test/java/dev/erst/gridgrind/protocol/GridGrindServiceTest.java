@@ -49,7 +49,7 @@ class GridGrindServiceTest {
                         new CellInput.BooleanValue(false))),
                 new WorkbookOperation.SetCell("Budget", "A4", new CellInput.Text("Total")),
                 new WorkbookOperation.SetCell("Budget", "B4", new CellInput.Formula("SUM(B2:B3)")),
-                new WorkbookOperation.AutoSizeColumns("Budget", List.of("A", "B", "C")),
+                new WorkbookOperation.AutoSizeColumns("Budget"),
                 new WorkbookOperation.EvaluateFormulas(),
                 new WorkbookOperation.ForceFormulaRecalculationOnOpen()),
             new GridGrindRequest.WorkbookAnalysisRequest(
@@ -142,7 +142,7 @@ class GridGrindServiceTest {
                 new GridGrindRequest(
                     new GridGrindRequest.WorkbookSource.New(),
                     new GridGrindRequest.WorkbookPersistence.None(),
-                    List.of(new WorkbookOperation.AutoSizeColumns("Budget", List.of("A"))),
+                    List.of(new WorkbookOperation.AutoSizeColumns("Budget")),
                     new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
 
     assertInstanceOf(GridGrindResponse.Failure.class, response);
@@ -255,7 +255,7 @@ class GridGrindServiceTest {
     assertInstanceOf(GridGrindResponse.Failure.class, response);
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
-    assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
+    assertEquals("VALIDATE_REQUEST", failure.problem().context().stage());
   }
 
   @Test
@@ -348,7 +348,7 @@ class GridGrindServiceTest {
             new GridGrindRequest(
                 new GridGrindRequest.WorkbookSource.New(),
                 new GridGrindRequest.WorkbookPersistence.None(),
-                List.of(new WorkbookOperation.AutoSizeColumns("Budget", List.of("A"))),
+                List.of(new WorkbookOperation.AutoSizeColumns("Budget")),
                 new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
 
     assertInstanceOf(GridGrindResponse.Failure.class, response);
@@ -622,5 +622,135 @@ class GridGrindServiceTest {
     assertEquals("Budget", failure.problem().context().sheetName());
     assertEquals("A1:", failure.problem().context().range());
     assertEquals("CLEAR_RANGE", failure.problem().context().operationType());
+  }
+
+  @Test
+  void returnsStructuredFailureForSetRangeWithInvalidRange() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.SetRange(
+                            "Budget", "A1:", List.of(List.of(new CellInput.Text("x"))))),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("SET_RANGE", failure.problem().context().operationType());
+    assertEquals("Budget", failure.problem().context().sheetName());
+    assertEquals("A1:", failure.problem().context().range());
+  }
+
+  @Test
+  void returnsStructuredFailureForApplyStyleWithInvalidRange() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.ApplyStyle(
+                            "Budget",
+                            "A1:",
+                            new CellStyleInput(null, true, null, null, null, null))),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("APPLY_STYLE", failure.problem().context().operationType());
+    assertEquals("Budget", failure.problem().context().sheetName());
+    assertEquals("A1:", failure.problem().context().range());
+  }
+
+  @Test
+  void returnsStructuredFailureForAppendRowWithInvalidFormula() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.AppendRow(
+                            "Budget", List.of(new CellInput.Formula("SUM(")))),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("APPEND_ROW", failure.problem().context().operationType());
+    assertEquals("Budget", failure.problem().context().sheetName());
+  }
+
+  @Test
+  void returnsStructuredFailureForEnsureSheetWithInvalidSheetName() {
+    // Sheet names exceeding Excel's 31-character limit are rejected by POI.
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(new WorkbookOperation.EnsureSheet("[Budget]")),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("ENSURE_SHEET", failure.problem().context().operationType());
+    assertEquals("[Budget]", failure.problem().context().sheetName());
+  }
+
+  @Test
+  void extractsNullContextForOperationsWithNoSheetAddressRangeOrFormula() {
+    // Direct unit tests for the package-private context-extraction helpers.
+    // These operation types (ForceFormulaRecalculationOnOpen, EvaluateFormulas without
+    // FormulaException, AppendRow without FormulaException) carry no sheet/address/range/formula
+    // in the operation record and produce exceptions that do not carry formula context.
+    RuntimeException ex = new RuntimeException("test");
+    WorkbookOperation forceRecalc = new WorkbookOperation.ForceFormulaRecalculationOnOpen();
+    WorkbookOperation evalFormulas = new WorkbookOperation.EvaluateFormulas();
+    WorkbookOperation appendRow =
+        new WorkbookOperation.AppendRow("Budget", List.of(new CellInput.Text("x")));
+
+    assertNull(GridGrindService.formulaFor(forceRecalc, ex));
+    assertNull(GridGrindService.formulaFor(evalFormulas, ex));
+    assertNull(GridGrindService.formulaFor(appendRow, ex));
+
+    assertNull(GridGrindService.sheetNameFor(forceRecalc, ex));
+    assertNull(GridGrindService.addressFor(forceRecalc, ex));
+    assertNull(GridGrindService.rangeFor(forceRecalc, ex));
+  }
+
+  @Test
+  void extractsNullFormulaFromSetCellWithNonFormulaValueWhenExceptionCarriesNone() {
+    // SetCell fails with an invalid address; value is Text (not Formula). The formula context
+    // must be null since neither the exception nor the operation carries a formula.
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.SetCell(
+                            "Budget", "INVALID!", new CellInput.Text("hello"))),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("SET_CELL", failure.problem().context().operationType());
+    assertNull(failure.problem().context().formula());
   }
 }

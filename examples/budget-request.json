@@ -61,11 +61,7 @@
       "address": "B4",
       "value": { "type": "FORMULA", "formula": "SUM(B2:B3)" }
     },
-    {
-      "type": "AUTO_SIZE_COLUMNS",
-      "sheetName": "Budget",
-      "columns": ["A", "B", "C"]
-    },
+    { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Budget" },
     { "type": "EVALUATE_FORMULAS" },
     { "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
   ],

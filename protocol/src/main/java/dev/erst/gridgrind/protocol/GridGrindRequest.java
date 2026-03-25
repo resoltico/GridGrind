@@ -34,7 +34,7 @@ public record GridGrindRequest(
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
   @JsonSubTypes({
     @JsonSubTypes.Type(value = WorkbookSource.New.class, name = "NEW"),
-    @JsonSubTypes.Type(value = WorkbookSource.ExistingFile.class, name = "EXISTING_FILE")
+    @JsonSubTypes.Type(value = WorkbookSource.ExistingFile.class, name = "EXISTING")
   })
   public sealed interface WorkbookSource {
     record New() implements WorkbookSource {}
@@ -50,9 +50,7 @@ public record GridGrindRequest(
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
   @JsonSubTypes({
     @JsonSubTypes.Type(value = WorkbookPersistence.None.class, name = "NONE"),
-    @JsonSubTypes.Type(
-        value = WorkbookPersistence.OverwriteSource.class,
-        name = "OVERWRITE_SOURCE"),
+    @JsonSubTypes.Type(value = WorkbookPersistence.OverwriteSource.class, name = "OVERWRITE"),
     @JsonSubTypes.Type(value = WorkbookPersistence.SaveAs.class, name = "SAVE_AS")
   })
   public sealed interface WorkbookPersistence {

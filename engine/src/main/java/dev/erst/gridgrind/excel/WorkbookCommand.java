@@ -121,22 +121,12 @@ public sealed interface WorkbookCommand
     }
   }
 
-  record AutoSizeColumns(String sheetName, List<String> columnNames) implements WorkbookCommand {
+  /** Auto-sizes all populated columns on the named sheet. */
+  record AutoSizeColumns(String sheetName) implements WorkbookCommand {
     public AutoSizeColumns {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
-      Objects.requireNonNull(columnNames, "columnNames must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
-      }
-      columnNames = List.copyOf(columnNames);
-      if (columnNames.isEmpty()) {
-        throw new IllegalArgumentException("columnNames must not be empty");
-      }
-      for (String columnName : columnNames) {
-        Objects.requireNonNull(columnName, "columnName must not be null");
-        if (columnName.isBlank()) {
-          throw new IllegalArgumentException("columnName must not be blank");
-        }
       }
     }
   }

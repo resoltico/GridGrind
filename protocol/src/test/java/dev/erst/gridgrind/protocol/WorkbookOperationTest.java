@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Tests for WorkbookOperation record construction and default method behavior. */
+/** Tests for WorkbookOperation record construction and operationType behavior. */
 class WorkbookOperationTest {
   @Test
   void buildsSupportedOperationsAndCopiesCollections() {
@@ -16,7 +16,6 @@ class WorkbookOperationTest {
             List.of(
                 new ArrayList<>(List.of(new CellInput.Text("Item"), new CellInput.Numeric(12.0))),
                 new ArrayList<>(List.of(new CellInput.Text("Tax"), new CellInput.Numeric(3.0)))));
-    List<String> columns = new ArrayList<>(List.of("A"));
     CellStyleInput style =
         new CellStyleInput(
             "#,##0.00",
@@ -35,23 +34,22 @@ class WorkbookOperationTest {
         new WorkbookOperation.ApplyStyle("Budget", "B1:B2", style);
     WorkbookOperation.AppendRow appendRow = new WorkbookOperation.AppendRow("Budget", rowValues);
     WorkbookOperation.AutoSizeColumns autoSizeColumns =
-        new WorkbookOperation.AutoSizeColumns("Budget", columns);
+        new WorkbookOperation.AutoSizeColumns("Budget");
     WorkbookOperation.EvaluateFormulas evaluateFormulas = new WorkbookOperation.EvaluateFormulas();
     WorkbookOperation.ForceFormulaRecalculationOnOpen recalcOnOpen =
         new WorkbookOperation.ForceFormulaRecalculationOnOpen();
 
     rowValues.clear();
     rows.clear();
-    columns.clear();
 
-    assertEquals("ENSURE_SHEET", ensureSheet.operationType());
+    assertEquals("Budget", ensureSheet.sheetName());
     assertEquals("A1", setCell.address());
     assertEquals("A1:B2", setRange.range());
     assertEquals(2, setRange.rows().size());
     assertEquals("C1:C4", clearRange.range());
     assertEquals(style, applyStyle.style());
     assertEquals(1, appendRow.values().size());
-    assertEquals(List.of("A"), autoSizeColumns.columns());
+    assertEquals("Budget", autoSizeColumns.sheetName());
     assertEquals("EVALUATE_FORMULAS", evaluateFormulas.operationType());
     assertEquals("FORCE_FORMULA_RECALCULATION_ON_OPEN", recalcOnOpen.operationType());
   }
@@ -60,9 +58,8 @@ class WorkbookOperationTest {
   void validatesNullAndEmptyCollectionConstraints() {
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookOperation.AppendRow("Budget", null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookOperation.AutoSizeColumns("Budget", null));
+    assertThrows(NullPointerException.class, () -> new WorkbookOperation.AutoSizeColumns(null));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.AutoSizeColumns(" "));
   }
 
   @Test
@@ -117,97 +114,34 @@ class WorkbookOperationTest {
         NullPointerException.class,
         () -> new WorkbookOperation.AppendRow("Budget", valuesWithNull));
 
-    List<String> columnsWithNull = new ArrayList<>();
-    columnsWithNull.add(null);
-    assertThrows(
-        NullPointerException.class,
-        () -> new WorkbookOperation.AutoSizeColumns("Budget", columnsWithNull));
-
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookOperation.AutoSizeColumns("Budget", List.of(" ")));
-
     // null rows list is coalesced to empty, which then fails the non-empty check
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookOperation.SetRange("Budget", "A1", null));
   }
 
   @Test
-  void defaultMethodsReturnCorrectValuesForAllSubtypes() {
-    CellStyleInput style = new CellStyleInput(null, false, null, false, null, null);
+  void operationTypeCoversAllSubtypes() {
     CellInput textValue = new CellInput.Text("x");
+    CellStyleInput style = new CellStyleInput(null, false, null, false, null, null);
 
-    WorkbookOperation.EnsureSheet ensureSheet = new WorkbookOperation.EnsureSheet("Budget");
-    WorkbookOperation.SetCell setCell = new WorkbookOperation.SetCell("Budget", "A1", textValue);
-    WorkbookOperation.SetCell setCellWithFormula =
-        new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Formula("SUM(B1:B2)"));
-    WorkbookOperation.SetRange setRange =
-        new WorkbookOperation.SetRange("Budget", "A1:B2", List.of(List.of(textValue, textValue)));
-    WorkbookOperation.SetRange setRangeWithAddress =
-        new WorkbookOperation.SetRange("Budget", "A1", List.of(List.of(textValue)));
-    WorkbookOperation.ClearRange clearRange = new WorkbookOperation.ClearRange("Budget", "C1:C2");
-    WorkbookOperation.ApplyStyle applyStyle =
-        new WorkbookOperation.ApplyStyle("Budget", "D1:D2", style);
-    WorkbookOperation.AppendRow appendRow =
-        new WorkbookOperation.AppendRow("Budget", List.of(textValue));
-    WorkbookOperation.AutoSizeColumns autoSizeColumns =
-        new WorkbookOperation.AutoSizeColumns("Budget", List.of("A"));
-    WorkbookOperation.EvaluateFormulas evaluateFormulas = new WorkbookOperation.EvaluateFormulas();
-    WorkbookOperation.ForceFormulaRecalculationOnOpen recalcOnOpen =
-        new WorkbookOperation.ForceFormulaRecalculationOnOpen();
-
-    // operationType for all subtypes
-    assertEquals("SET_CELL", setCell.operationType());
-    assertEquals("SET_RANGE", setRange.operationType());
-    assertEquals("CLEAR_RANGE", clearRange.operationType());
-    assertEquals("APPLY_STYLE", applyStyle.operationType());
-    assertEquals("APPEND_ROW", appendRow.operationType());
-    assertEquals("AUTO_SIZE_COLUMNS", autoSizeColumns.operationType());
-
-    // extractSheetName — subtypes with a sheet
-    assertEquals("Budget", ensureSheet.extractSheetName());
-    assertEquals("Budget", setCell.extractSheetName());
-    assertEquals("Budget", setRange.extractSheetName());
-    assertEquals("Budget", clearRange.extractSheetName());
-    assertEquals("Budget", applyStyle.extractSheetName());
-    assertEquals("Budget", appendRow.extractSheetName());
-    assertEquals("Budget", autoSizeColumns.extractSheetName());
-    // extractSheetName — subtypes without a sheet
-    assertNull(evaluateFormulas.extractSheetName());
-    assertNull(recalcOnOpen.extractSheetName());
-
-    // extractAddress — only SetCell returns non-null
-    assertEquals("A1", setCell.extractAddress());
-    assertNull(ensureSheet.extractAddress());
-    assertNull(setRange.extractAddress());
-    assertNull(clearRange.extractAddress());
-    assertNull(applyStyle.extractAddress());
-    assertNull(appendRow.extractAddress());
-    assertNull(autoSizeColumns.extractAddress());
-    assertNull(evaluateFormulas.extractAddress());
-    assertNull(recalcOnOpen.extractAddress());
-
-    // extractRange — SetRange, ClearRange, ApplyStyle return non-null
-    assertEquals("A1:B2", setRange.extractRange());
-    assertEquals("C1:C2", clearRange.extractRange());
-    assertEquals("D1:D2", applyStyle.extractRange());
-    assertNull(ensureSheet.extractRange());
-    assertNull(setCell.extractRange());
-    assertNull(appendRow.extractRange());
-    assertNull(autoSizeColumns.extractRange());
-    assertNull(evaluateFormulas.extractRange());
-    assertNull(recalcOnOpen.extractRange());
-
-    // extractValue — only SetCell returns non-null
-    assertEquals(textValue, setCell.extractValue());
-    assertInstanceOf(CellInput.Formula.class, setCellWithFormula.extractValue());
-    assertNull(ensureSheet.extractValue());
-    assertNull(setRangeWithAddress.extractValue());
-    assertNull(clearRange.extractValue());
-    assertNull(applyStyle.extractValue());
-    assertNull(appendRow.extractValue());
-    assertNull(autoSizeColumns.extractValue());
-    assertNull(evaluateFormulas.extractValue());
-    assertNull(recalcOnOpen.extractValue());
+    assertEquals("ENSURE_SHEET", new WorkbookOperation.EnsureSheet("Budget").operationType());
+    assertEquals(
+        "SET_CELL", new WorkbookOperation.SetCell("Budget", "A1", textValue).operationType());
+    assertEquals(
+        "SET_RANGE",
+        new WorkbookOperation.SetRange("Budget", "A1", List.of(List.of(textValue)))
+            .operationType());
+    assertEquals("CLEAR_RANGE", new WorkbookOperation.ClearRange("Budget", "A1").operationType());
+    assertEquals(
+        "APPLY_STYLE", new WorkbookOperation.ApplyStyle("Budget", "A1", style).operationType());
+    assertEquals(
+        "APPEND_ROW",
+        new WorkbookOperation.AppendRow("Budget", List.of(textValue)).operationType());
+    assertEquals(
+        "AUTO_SIZE_COLUMNS", new WorkbookOperation.AutoSizeColumns("Budget").operationType());
+    assertEquals("EVALUATE_FORMULAS", new WorkbookOperation.EvaluateFormulas().operationType());
+    assertEquals(
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN",
+        new WorkbookOperation.ForceFormulaRecalculationOnOpen().operationType());
   }
 }

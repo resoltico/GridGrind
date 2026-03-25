@@ -73,7 +73,7 @@ class AgentCliTest {
     String request =
         """
             {
-              "source": { "mode": "EXISTING_FILE", "path": "/tmp/does-not-exist.xlsx" },
+              "source": { "mode": "EXISTING", "path": "/tmp/does-not-exist.xlsx" },
               "persistence": { "mode": "NONE" },
               "operations": [],
               "analysis": { "sheets": [] }

@@ -150,17 +150,12 @@ public final class ExcelSheet {
     return lastColumnIndex;
   }
 
-  /**
-   * Auto-sizes the requested columns by Excel-style column letters such as {@code A} or {@code BC}.
-   */
-  public ExcelSheet autoSizeColumns(String... columnNames) {
-    Objects.requireNonNull(columnNames, "columnNames must not be null");
-
-    for (String columnName : columnNames) {
-      requireNonBlank(columnName, "columnName");
-      sheet.autoSizeColumn(CellReference.convertColStringToIndex(columnName));
+  /** Auto-sizes all populated columns on this sheet to fit their content. */
+  public ExcelSheet autoSizeColumns() {
+    int lastColumn = lastColumnIndex();
+    for (int col = 0; col <= lastColumn; col++) {
+      sheet.autoSizeColumn(col);
     }
-
     return this;
   }
 

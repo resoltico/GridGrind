@@ -81,17 +81,10 @@ public sealed interface WorkbookOperation {
     }
   }
 
-  /** Auto-sizes the specified columns to fit their content. */
-  record AutoSizeColumns(String sheetName, List<String> columns) implements WorkbookOperation {
+  /** Auto-sizes all populated columns on the sheet to fit their content. */
+  record AutoSizeColumns(String sheetName) implements WorkbookOperation {
     public AutoSizeColumns {
       Validation.requireNonBlank(sheetName, "sheetName");
-      columns = columns == null ? List.of() : List.copyOf(columns);
-      if (columns.isEmpty()) {
-        throw new IllegalArgumentException("columns must not be empty");
-      }
-      for (String column : columns) {
-        Validation.requireNonBlank(column, "column");
-      }
     }
   }
 
@@ -113,91 +106,6 @@ public sealed interface WorkbookOperation {
       case AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
       case EvaluateFormulas _ -> "EVALUATE_FORMULAS";
       case ForceFormulaRecalculationOnOpen _ -> "FORCE_FORMULA_RECALCULATION_ON_OPEN";
-    };
-  }
-
-  /**
-   * Returns the sheet name if this operation targets a specific sheet, or null for operations that
-   * do not target a sheet (EvaluateFormulas, ForceFormulaRecalculationOnOpen).
-   *
-   * <p>Null is permitted here because this is a protocol-layer default method on a sealed interface
-   * used for wire serialization; internal code must use a switch expression instead.
-   */
-  default String extractSheetName() {
-    return switch (this) {
-      case EnsureSheet op -> op.sheetName();
-      case SetCell op -> op.sheetName();
-      case SetRange op -> op.sheetName();
-      case ClearRange op -> op.sheetName();
-      case ApplyStyle op -> op.sheetName();
-      case AppendRow op -> op.sheetName();
-      case AutoSizeColumns op -> op.sheetName();
-      case EvaluateFormulas _, ForceFormulaRecalculationOnOpen _ -> null;
-    };
-  }
-
-  /**
-   * Returns the cell address if this operation targets a single cell, or null for all other
-   * subtypes.
-   *
-   * <p>Null is permitted here because this is a protocol-layer default method on a sealed interface
-   * used for wire serialization; internal code must use a switch expression instead.
-   */
-  default String extractAddress() {
-    return switch (this) {
-      case SetCell op -> op.address();
-      case EnsureSheet _,
-          SetRange _,
-          ClearRange _,
-          ApplyStyle _,
-          AppendRow _,
-          AutoSizeColumns _,
-          EvaluateFormulas _,
-          ForceFormulaRecalculationOnOpen _ ->
-          null;
-    };
-  }
-
-  /**
-   * Returns the range if this operation targets a range (SetRange, ClearRange, ApplyStyle), or null
-   * for all other subtypes.
-   *
-   * <p>Null is permitted here because this is a protocol-layer default method on a sealed interface
-   * used for wire serialization; internal code must use a switch expression instead.
-   */
-  default String extractRange() {
-    return switch (this) {
-      case SetRange op -> op.range();
-      case ClearRange op -> op.range();
-      case ApplyStyle op -> op.range();
-      case EnsureSheet _,
-          SetCell _,
-          AppendRow _,
-          AutoSizeColumns _,
-          EvaluateFormulas _,
-          ForceFormulaRecalculationOnOpen _ ->
-          null;
-    };
-  }
-
-  /**
-   * Returns the cell input value if this is a SetCell operation, or null for all other subtypes.
-   *
-   * <p>Null is permitted here because this is a protocol-layer default method on a sealed interface
-   * used for wire serialization; internal code must use a switch expression instead.
-   */
-  default CellInput extractValue() {
-    return switch (this) {
-      case SetCell op -> op.value();
-      case EnsureSheet _,
-          SetRange _,
-          ClearRange _,
-          ApplyStyle _,
-          AppendRow _,
-          AutoSizeColumns _,
-          EvaluateFormulas _,
-          ForceFormulaRecalculationOnOpen _ ->
-          null;
     };
   }
 

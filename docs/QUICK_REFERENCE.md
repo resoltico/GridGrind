@@ -1,8 +1,8 @@
 ---
-afad: "3.3"
-version: "1.0.0"
+afad: "3.4"
+version: "0.3.0"
 domain: QUICK_REFERENCE
-updated: "2026-03-24"
+updated: "2026-03-25"
 route:
   keywords: [gridgrind, quick-reference, snippets, json, operations, copy-paste, ensure-sheet, set-cell, set-range, apply-style, append-row, clear-range, evaluate-formulas]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind operation examples"]
@@ -40,7 +40,7 @@ standalone operation objects for use inside the `operations` array.
 
 ```json
 { "mode": "SAVE_AS",   "path": "path/to/output.xlsx" }
-{ "mode": "OVERWRITE", "path": "path/to/existing.xlsx" }
+{ "mode": "OVERWRITE" }
 ```
 
 ---
@@ -54,11 +54,13 @@ standalone operation objects for use inside the `operations` array.
 ## SET_CELL
 
 ```json
-{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "A1", "value": { "type": "TEXT",    "text": "Hello"   } }
-{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "B1", "value": { "type": "NUMBER",  "number": 42.0    } }
-{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "C1", "value": { "type": "BOOLEAN", "bool": true      } }
-{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "D1", "value": { "type": "FORMULA", "formula": "SUM(B1:B10)" } }
-{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "E1", "value": { "type": "BLANK"                      } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "A1", "value": { "type": "TEXT",      "text": "Hello"                        } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "B1", "value": { "type": "NUMBER",    "number": 42.0                         } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "C1", "value": { "type": "BOOLEAN",   "bool": true                           } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "D1", "value": { "type": "FORMULA",   "formula": "SUM(B1:B10)"               } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "E1", "value": { "type": "DATE",      "date": "2026-03-25"                   } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "F1", "value": { "type": "DATE_TIME", "dateTime": "2026-03-25T10:15:30"      } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "G1", "value": { "type": "BLANK"                                             } }
 ```
 
 ## SET_RANGE

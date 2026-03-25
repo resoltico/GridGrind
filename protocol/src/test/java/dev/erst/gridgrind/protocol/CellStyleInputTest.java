@@ -47,4 +47,15 @@ class CellStyleInputTest {
         IllegalArgumentException.class,
         () -> new CellStyleInput(null, null, null, null, null, null));
   }
+
+  @Test
+  void acceptsSingleAttributeStyles() {
+    assertNotNull(new CellStyleInput(null, null, null, true, null, null));
+    assertNotNull(
+        new CellStyleInput(
+            null, null, null, null, CellStyleInput.HorizontalAlignmentInput.CENTER, null));
+    assertNotNull(
+        new CellStyleInput(
+            null, null, null, null, null, CellStyleInput.VerticalAlignmentInput.TOP));
+  }
 }

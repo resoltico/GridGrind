@@ -43,7 +43,7 @@ class ExcelSheetTest {
           ExcelCellValue.formula("1/0"));
       sheet.setCell("B3", ExcelCellValue.date(LocalDate.of(2026, 3, 24)));
       sheet.setCell("C3", ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 24, 9, 0)));
-      sheet.autoSizeColumns("A", "B");
+      sheet.autoSizeColumns();
 
       Row errorRow = poiSheet.createRow(3);
       Cell errorCell = errorRow.createCell(0);
@@ -145,9 +145,6 @@ class ExcelSheetTest {
       assertThrows(NullPointerException.class, () -> sheet.appendRow((ExcelCellValue[]) null));
       assertThrows(
           NullPointerException.class, () -> sheet.appendRow(ExcelCellValue.text("x"), null));
-      assertThrows(NullPointerException.class, () -> sheet.autoSizeColumns((String[]) null));
-      assertThrows(NullPointerException.class, () -> sheet.autoSizeColumns("A", null));
-      assertThrows(IllegalArgumentException.class, () -> sheet.autoSizeColumns(" "));
       assertThrows(NullPointerException.class, () -> sheet.snapshotCell(null));
       assertThrows(IllegalArgumentException.class, () -> sheet.snapshotCell(" "));
       InvalidCellAddressException invalidSetCell =

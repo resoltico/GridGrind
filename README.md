@@ -56,9 +56,6 @@ docker run -i \
 File paths in `persistence.path` are resolved relative to the container working directory
 (`/workdir` above), so the generated `.xlsx` lands in `$(pwd)` on the host.
 
-Available tags: `latest`, `0.2`, `0.2.0` — see
-[ghcr.io/resoltico/gridgrind](https://github.com/resoltico/GridGrind/pkgs/container/gridgrind).
-
 ### Fat JAR (requires Java 26)
 
 Download the self-contained JAR from the
@@ -101,7 +98,7 @@ deterministic failure semantics instead of "error after side effect."
 | `EVALUATE_FORMULAS` | Force formula recalculation before save |
 | `FORCE_FORMULA_RECALCULATION_ON_OPEN` | Mark the workbook to recalculate when opened in Excel |
 
-Cell values accept types: `TEXT`, `NUMBER`, `BOOLEAN`, `FORMULA`, `BLANK`.
+Cell values accept types: `TEXT`, `NUMBER`, `BOOLEAN`, `FORMULA`, `DATE`, `DATE_TIME`, `BLANK`.
 
 See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the full reference with all fields and examples.
 
@@ -187,6 +184,7 @@ See [docs/ERRORS.md](docs/ERRORS.md) for all problem codes and the full error mo
 
 | Resource | Description |
 |:---------|:------------|
+| [docs/DEVELOPER.md](docs/DEVELOPER.md) | Build, architecture, coverage, and QA reference |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Complete operation reference with all fields |
 | [docs/ERRORS.md](docs/ERRORS.md) | Problem codes, categories, and error model |
 | [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) | Copy-paste JSON for every operation type |

@@ -34,7 +34,7 @@ class WorkbookCommandExecutorTest {
                   "Budget",
                   List.of(ExcelCellValue.text("Total"), ExcelCellValue.formula("SUM(B1:B2)"))),
               new WorkbookCommand.ClearRange("Budget", "A2"),
-              new WorkbookCommand.AutoSizeColumns("Budget", List.of("A", "B")),
+              new WorkbookCommand.AutoSizeColumns("Budget"),
               new WorkbookCommand.EvaluateAllFormulas(),
               new WorkbookCommand.ForceFormulaRecalculationOnOpen()));
       assertEquals("Item", workbook.sheet("Budget").text("A1"));
