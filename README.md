@@ -41,8 +41,8 @@ echo '{"source":{"mode":"NEW"},"operations":[],"analysis":{"sheets":[]}}' \
   | docker run -i ghcr.io/resoltico/gridgrind:latest
 ```
 
-To read a request file and write a response file from the host filesystem,
-mount the working directory:
+To read a request file and write response and `.xlsx` files back to the host,
+mount a working directory:
 
 ```bash
 docker run -i \
@@ -53,9 +53,12 @@ docker run -i \
   --response response.json
 ```
 
-Any `SAVE_AS` or `MODIFY` persistence paths in the request are resolved relative
-to the working directory inside the container, so mount the directory that should
-receive the generated `.xlsx` files.
+File paths in `persistence.path` are resolved relative to the container working
+directory (`/workdir` above), so the generated `.xlsx` lands in `$(pwd)` on the host.
+
+**Apple Silicon (M-series Macs):** the current image is `linux/amd64` and runs via
+Rosetta emulation. Add `--platform linux/amd64` to both `docker pull` and `docker run`.
+Native `linux/arm64` images are published from v0.2.0 onward.
 
 Available tags: `latest`, `0.1`, `0.1.0` — see
 [ghcr.io/resoltico/gridgrind](https://github.com/resoltico/GridGrind/pkgs/container/gridgrind).
