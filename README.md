@@ -2,7 +2,7 @@
 RETRIEVAL_HINTS:
   keywords: [gridgrind, excel, xlsx, workbook, agent, automation, json, protocol, java, apache-poi, spreadsheet, ai]
   answers: [what is gridgrind, how to use gridgrind, excel automation for ai agents, json workbook api, gridgrind quick start, gridgrind operations, gridgrind install]
-  related: [docs/DEVELOPER.md, docs/QUICK_REFERENCE.md, docs/OPERATIONS.md, docs/ERRORS.md]
+  related: [docs/QUICK_REFERENCE.md, docs/OPERATIONS.md, docs/ERRORS.md]
 -->
 
 # GridGrind
@@ -26,9 +26,9 @@ to be.
 
 ## Running GridGrind
 
-### Container (no install required)
+### Container (recommended)
 
-Pull and run directly from the GitHub Container Registry:
+No install required beyond Docker. Works on macOS, Linux, and Windows across both x64 and ARM:
 
 ```bash
 docker pull ghcr.io/resoltico/gridgrind:latest
@@ -53,27 +53,17 @@ docker run -i \
   --response response.json
 ```
 
-File paths in `persistence.path` are resolved relative to the container working
-directory (`/workdir` above), so the generated `.xlsx` lands in `$(pwd)` on the host.
+File paths in `persistence.path` are resolved relative to the container working directory
+(`/workdir` above), so the generated `.xlsx` lands in `$(pwd)` on the host.
 
-**Apple Silicon (M-series Macs):** the current image is `linux/amd64` and runs via
-Rosetta emulation. Add `--platform linux/amd64` to both `docker pull` and `docker run`.
-Native `linux/arm64` images are published from v0.2.0 onward.
-
-Available tags: `latest`, `0.1`, `0.1.0` — see
+Available tags: `latest`, `0.2`, `0.2.0` — see
 [ghcr.io/resoltico/gridgrind](https://github.com/resoltico/GridGrind/pkgs/container/gridgrind).
 
 ### Fat JAR (requires Java 26)
 
 Download the self-contained JAR from the
-[Releases page](https://github.com/resoltico/GridGrind/releases/latest):
-
-```bash
-curl -L https://github.com/resoltico/GridGrind/releases/download/v0.1.0/gridgrind-0.1.0.jar \
-  -o gridgrind.jar
-```
-
-Run it the same way as the container — stdin/stdout or explicit file paths:
+[Releases page](https://github.com/resoltico/GridGrind/releases/latest) and run it the same
+way as the container — stdin/stdout or explicit file paths:
 
 ```bash
 echo '{"source":{"mode":"NEW"},"operations":[],"analysis":{"sheets":[]}}' \
@@ -81,18 +71,6 @@ echo '{"source":{"mode":"NEW"},"operations":[],"analysis":{"sheets":[]}}' \
 
 java -jar gridgrind.jar --request request.json --response response.json
 ```
-
-### Build from source
-
-```bash
-./gradlew test
-./gradlew :cli:run --args="--request examples/budget-request.json"
-```
-
-The build uses Gradle toolchains — Java 26 is auto-provisioned if not already installed locally.
-
-See [docs/DEVELOPER.md](docs/DEVELOPER.md) for the full build reference, coverage requirements,
-and architecture details.
 
 ---
 
@@ -209,7 +187,6 @@ See [docs/ERRORS.md](docs/ERRORS.md) for all problem codes and the full error mo
 
 | Resource | Description |
 |:---------|:------------|
-| [docs/DEVELOPER.md](docs/DEVELOPER.md) | Build, architecture, coverage, and QA reference |
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Complete operation reference with all fields |
 | [docs/ERRORS.md](docs/ERRORS.md) | Problem codes, categories, and error model |
 | [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) | Copy-paste JSON for every operation type |
