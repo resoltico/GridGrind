@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.4.0"
+version: "0.4.1"
 domain: DEVELOPER
 updated: "2026-03-25"
 route:
@@ -69,6 +69,7 @@ before every commit.
 # Build artifacts
 ./gradlew :cli:shadowJar
 ./gradlew :cli:run --args="--request examples/budget-request.json"
+./gradlew :cli:run --args="--version"
 ```
 
 ---
