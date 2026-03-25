@@ -58,7 +58,7 @@ final class FormulaExceptions {
     return functionName == null ? "" : " function " + functionName;
   }
 
-  private static String leadingFunctionName(String formula) {
+  static String leadingFunctionName(String formula) {
     if (formula == null) {
       return null;
     }

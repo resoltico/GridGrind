@@ -4,6 +4,7 @@ package dev.erst.gridgrind.protocol;
 public enum GridGrindProtocolVersion {
   V1;
 
+  /** Returns the protocol version used by this build of GridGrind. */
   public static GridGrindProtocolVersion current() {
     return V1;
   }

@@ -224,5 +224,82 @@ class GridGrindResponseTest {
     assertEquals("Budget", enriched.sheetName());
     assertEquals("C1", enriched.address());
     assertEquals("SUM(B1:B3)", enriched.formula());
+
+    // Existing non-null fields are preserved (true branches of the ternary guards)
+    GridGrindResponse.ProblemContext.AnalyzeWorkbook populated =
+        new GridGrindResponse.ProblemContext.AnalyzeWorkbook(
+            "NEW", "NONE", "Sheet1", "A1", "SUM(B1:B2)");
+    GridGrindResponse.ProblemContext.AnalyzeWorkbook preservedPopulated =
+        populated.withExceptionData("OtherSheet", "B2", "OTHER()");
+    assertEquals("Sheet1", preservedPopulated.sheetName());
+    assertEquals("A1", preservedPopulated.address());
+    assertEquals("SUM(B1:B2)", preservedPopulated.formula());
+  }
+
+  @Test
+  void cellReportSubtypesExposeTypedGettersAndDefaultNulls() {
+    GridGrindResponse.CellStyleReport style =
+        new GridGrindResponse.CellStyleReport("General", false, false, false, "GENERAL", "BOTTOM");
+
+    GridGrindResponse.CellReport.BlankReport blankReport =
+        new GridGrindResponse.CellReport.BlankReport("A1", "BLANK", "", style);
+    GridGrindResponse.CellReport.TextReport textReport =
+        new GridGrindResponse.CellReport.TextReport("A2", "STRING", "Hello", style, "Hello");
+    GridGrindResponse.CellReport.NumberReport numberReport =
+        new GridGrindResponse.CellReport.NumberReport("B1", "NUMERIC", "42", style, 42.0);
+    GridGrindResponse.CellReport.BooleanReport booleanReport =
+        new GridGrindResponse.CellReport.BooleanReport("C1", "BOOLEAN", "TRUE", style, true);
+    GridGrindResponse.CellReport.ErrorReport errorReport =
+        new GridGrindResponse.CellReport.ErrorReport("D1", "ERROR", "#DIV/0!", style, "#DIV/0!");
+    GridGrindResponse.CellReport.FormulaReport formulaReport =
+        new GridGrindResponse.CellReport.FormulaReport(
+            "E1",
+            "FORMULA",
+            "85",
+            style,
+            "SUM(B1:B2)",
+            new GridGrindResponse.CellReport.NumberReport("E1", "NUMERIC", "85", style, 85.0));
+
+    assertEquals("BLANK", blankReport.effectiveType());
+    assertEquals("STRING", textReport.effectiveType());
+    assertEquals("NUMERIC", numberReport.effectiveType());
+    assertEquals("BOOLEAN", booleanReport.effectiveType());
+    assertEquals("ERROR", errorReport.effectiveType());
+    assertEquals("FORMULA", formulaReport.effectiveType());
+
+    // Default null methods return null for subtypes that do not populate them
+    assertNull(blankReport.formula());
+    assertNull(blankReport.stringValue());
+    assertNull(blankReport.numberValue());
+    assertNull(blankReport.booleanValue());
+    assertNull(blankReport.errorValue());
+  }
+
+  @Test
+  void problemContextDefaultNullsReturnNullForNonApplicableSubtypes() {
+    GridGrindResponse.ProblemContext.ParseArguments parseArgs =
+        new GridGrindResponse.ProblemContext.ParseArguments("--help");
+
+    assertNull(parseArgs.sourceMode());
+    assertNull(parseArgs.persistenceMode());
+    assertNull(parseArgs.requestPath());
+    assertNull(parseArgs.jsonPath());
+    assertNull(parseArgs.jsonLine());
+    assertNull(parseArgs.jsonColumn());
+    assertNull(parseArgs.responsePath());
+    assertNull(parseArgs.sourceWorkbookPath());
+    assertNull(parseArgs.persistencePath());
+    assertNull(parseArgs.operationIndex());
+    assertNull(parseArgs.operationType());
+    assertNull(parseArgs.sheetName());
+    assertNull(parseArgs.address());
+    assertNull(parseArgs.range());
+    assertNull(parseArgs.formula());
+    assertEquals("--help", parseArgs.argument());
+
+    // argument() default returns null for subtypes that are not ParseArguments
+    GridGrindResponse.ProblemContext.ValidateRequest validateRequest =
+        new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE");
+    assertNull(validateRequest.argument());
   }
 }

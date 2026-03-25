@@ -6,6 +6,7 @@ public final class InvalidCellAddressException extends IllegalArgumentException 
 
   private final String address;
 
+  /** Creates the exception for the given cell address and the original parsing cause. */
   public InvalidCellAddressException(String address, Throwable cause) {
     super("Invalid cell address: " + address, cause);
     this.address = address;

@@ -1,4 +1,4 @@
-FROM eclipse-temurin:26-jre-alpine
+FROM azul/zulu-openjdk-alpine:26-jre
 
 WORKDIR /app
 

@@ -17,6 +17,7 @@ public final class GridGrindService {
   private final WorkbookCommandExecutor commandExecutor;
   private final WorkbookCloser workbookCloser;
 
+  /** Creates the production GridGrindService with the default command executor and closer. */
   public GridGrindService() {
     this(new WorkbookCommandExecutor(), ExcelWorkbook::close);
   }
@@ -68,19 +69,7 @@ public final class GridGrindService {
               commandExecutor.apply(workbook, toCommand(operation));
             } catch (Exception exception) {
               response =
-                  new GridGrindResponse.Failure(
-                      protocolVersion,
-                      GridGrindProblems.fromException(
-                          exception,
-                          new GridGrindResponse.ProblemContext.ApplyOperation(
-                              reqSourceMode(request),
-                              reqPersistenceMode(request),
-                              operationIndex,
-                              operation.operationType(),
-                              sheetNameFor(operation, exception),
-                              addressFor(operation, exception),
-                              rangeFor(operation, exception),
-                              formulaFor(operation, exception))));
+                  operationFailure(protocolVersion, request, operationIndex, operation, exception);
               return closeWorkbook(workbook, response, request);
             }
           }
@@ -91,18 +80,7 @@ public final class GridGrindService {
             try {
               reports.add(analyzeSheet(workbook, sheetRequest));
             } catch (AnalysisException exception) {
-              Exception cause = exception.cause();
-              response =
-                  new GridGrindResponse.Failure(
-                      protocolVersion,
-                      GridGrindProblems.fromException(
-                          cause,
-                          new GridGrindResponse.ProblemContext.AnalyzeWorkbook(
-                              reqSourceMode(request),
-                              reqPersistenceMode(request),
-                              exception.sheetName(),
-                              exception.address(),
-                              GridGrindProblems.formulaFor(cause))));
+              response = analysisFailure(protocolVersion, request, exception);
               return closeWorkbook(workbook, response, request);
             }
           }
@@ -285,7 +263,7 @@ public final class GridGrindService {
   }
 
   private String absolutePath(String path) {
-    return path == null ? null : Path.of(path).toAbsolutePath().toString();
+    return Path.of(path).toAbsolutePath().toString();
   }
 
   private GridGrindResponse closeWorkbook(
@@ -333,15 +311,11 @@ public final class GridGrindService {
   }
 
   private String reqSourceMode(GridGrindRequest request) {
-    return request == null || request.source() == null
-        ? null
-        : request.source().getClass().getSimpleName();
+    return request.source().getClass().getSimpleName();
   }
 
   private String reqPersistenceMode(GridGrindRequest request) {
-    return request == null || request.persistence() == null
-        ? null
-        : request.persistence().getClass().getSimpleName();
+    return request.persistence().getClass().getSimpleName();
   }
 
   private String reqSourcePath(GridGrindRequest request) {
@@ -353,17 +327,15 @@ public final class GridGrindService {
     return absolutePath(existingFile.path());
   }
 
-  private String persistencePath(
+  String persistencePath(
       GridGrindRequest.WorkbookSource source, GridGrindRequest.WorkbookPersistence persistence) {
     return switch (persistence) {
-      case GridGrindRequest.WorkbookPersistence.None _ -> null;
-      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> {
-        if (source instanceof GridGrindRequest.WorkbookSource.ExistingFile existingFile) {
-          yield absolutePath(existingFile.path());
-        }
-        yield null;
-      }
       case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> absolutePath(saveAs.path());
+      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ ->
+          source instanceof GridGrindRequest.WorkbookSource.ExistingFile existingFile
+              ? absolutePath(existingFile.path())
+              : null;
+      case GridGrindRequest.WorkbookPersistence.None _ -> null;
     };
   }
 
@@ -392,6 +364,44 @@ public final class GridGrindService {
     return GridGrindProblems.addressFor(exception);
   }
 
+  private GridGrindResponse operationFailure(
+      GridGrindProtocolVersion protocolVersion,
+      GridGrindRequest request,
+      int operationIndex,
+      WorkbookOperation operation,
+      Exception exception) {
+    return new GridGrindResponse.Failure(
+        protocolVersion,
+        GridGrindProblems.fromException(
+            exception,
+            new GridGrindResponse.ProblemContext.ApplyOperation(
+                reqSourceMode(request),
+                reqPersistenceMode(request),
+                operationIndex,
+                operation.operationType(),
+                sheetNameFor(operation, exception),
+                addressFor(operation, exception),
+                rangeFor(operation, exception),
+                formulaFor(operation, exception))));
+  }
+
+  private GridGrindResponse analysisFailure(
+      GridGrindProtocolVersion protocolVersion,
+      GridGrindRequest request,
+      AnalysisException exception) {
+    Exception cause = exception.cause();
+    return new GridGrindResponse.Failure(
+        protocolVersion,
+        GridGrindProblems.fromException(
+            cause,
+            new GridGrindResponse.ProblemContext.AnalyzeWorkbook(
+                reqSourceMode(request),
+                reqPersistenceMode(request),
+                exception.sheetName(),
+                exception.address(),
+                GridGrindProblems.formulaFor(cause))));
+  }
+
   private String rangeFor(WorkbookOperation operation, Exception exception) {
     if (operation.extractRange() != null) {
       return operation.extractRange();
@@ -402,9 +412,11 @@ public final class GridGrindService {
   /** Functional interface for closing an ExcelWorkbook after request execution. */
   @FunctionalInterface
   interface WorkbookCloser {
+    /** Closes the workbook, releasing any held resources. */
     void close(ExcelWorkbook workbook) throws IOException;
   }
 
+  /** Wraps a sheet-level analysis failure with its location for propagation out of the lambda. */
   private static final class AnalysisException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 

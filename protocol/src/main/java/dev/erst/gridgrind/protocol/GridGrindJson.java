@@ -111,9 +111,6 @@ public final class GridGrindJson {
         throwable instanceof JacksonException jacksonException
             ? jacksonException.getOriginalMessage()
             : throwable.getMessage();
-    if (message == null || message.isBlank()) {
-      return throwable.getClass().getSimpleName();
-    }
     return cleanJacksonMessage(message);
   }
 
@@ -121,14 +118,6 @@ public final class GridGrindJson {
     int startMarkerIndex = message.indexOf(" (start marker at [Source:");
     if (startMarkerIndex >= 0) {
       return message.substring(0, startMarkerIndex);
-    }
-    int sourceIndex = message.indexOf(" at [Source:");
-    if (sourceIndex >= 0) {
-      return message.substring(0, sourceIndex);
-    }
-    int referenceChainIndex = message.indexOf(" (through reference chain:");
-    if (referenceChainIndex >= 0) {
-      return message.substring(0, referenceChainIndex);
     }
     return message;
   }
@@ -160,19 +149,13 @@ public final class GridGrindJson {
   }
 
   private static Integer jsonLine(TokenStreamLocation location) {
-    if (location == null || TokenStreamLocation.NA.equals(location) || location.getLineNr() <= 0) {
-      return null;
-    }
-    return location.getLineNr();
+    int line = location == null ? -1 : location.getLineNr();
+    return line > 0 ? line : null;
   }
 
   private static Integer jsonColumn(TokenStreamLocation location) {
-    if (location == null
-        || TokenStreamLocation.NA.equals(location)
-        || location.getColumnNr() <= 0) {
-      return null;
-    }
-    return location.getColumnNr();
+    int column = location == null ? -1 : location.getColumnNr();
+    return column > 0 ? column : null;
   }
 
   private record PayloadMetadata(String jsonPath, Integer jsonLine, Integer jsonColumn) {}

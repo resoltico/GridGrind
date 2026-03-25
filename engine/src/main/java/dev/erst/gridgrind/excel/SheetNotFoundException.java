@@ -6,6 +6,7 @@ public final class SheetNotFoundException extends IllegalArgumentException {
 
   private final String sheetName;
 
+  /** Creates the exception for the given sheet name. */
   public SheetNotFoundException(String sheetName) {
     super("Sheet does not exist: " + sheetName);
     this.sheetName = sheetName;

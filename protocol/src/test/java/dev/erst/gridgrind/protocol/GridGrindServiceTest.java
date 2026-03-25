@@ -488,6 +488,121 @@ class GridGrindServiceTest {
   }
 
   @Test
+  void producesErrorReportForCellsWithErrorValues() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Data"),
+                        new WorkbookOperation.SetCell("Data", "A1", new CellInput.Formula("1/0")),
+                        new WorkbookOperation.EvaluateFormulas()),
+                    new GridGrindRequest.WorkbookAnalysisRequest(
+                        List.of(
+                            new GridGrindRequest.SheetInspectionRequest(
+                                "Data", List.of("A1"), null, null)))));
+
+    assertInstanceOf(GridGrindResponse.Success.class, response);
+    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    GridGrindResponse.CellReport cell = success.sheets().get(0).requestedCells().get(0);
+    assertInstanceOf(GridGrindResponse.CellReport.FormulaReport.class, cell);
+    GridGrindResponse.CellReport evaluation =
+        ((GridGrindResponse.CellReport.FormulaReport) cell).evaluation();
+    assertInstanceOf(GridGrindResponse.CellReport.ErrorReport.class, evaluation);
+    assertEquals("ERROR", evaluation.effectiveType());
+  }
+
+  @Test
+  void extractsFormulaFromSetCellOperationWhenExceptionCarriesNone() {
+    // Uses an invalid cell address so SetCell fails with InvalidCellAddressException,
+    // which carries no formula. The service must extract the formula from the operation itself.
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Data"),
+                        new WorkbookOperation.SetCell(
+                            "Data", "INVALID!", new CellInput.Formula("SUM(B1:B2)"))),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    // The exception carries no formula; the service extracts it from the SetCell operation itself.
+    assertEquals("SUM(B1:B2)", failure.problem().context().formula());
+  }
+
+  @Test
+  void persistencePathResolvesCorrectlyForAllPersistenceAndSourceCombinations() {
+    GridGrindService service = new GridGrindService();
+
+    GridGrindRequest.WorkbookSource newSource = new GridGrindRequest.WorkbookSource.New();
+    GridGrindRequest.WorkbookSource existingFile =
+        new GridGrindRequest.WorkbookSource.ExistingFile("/tmp/source.xlsx");
+    GridGrindRequest.WorkbookPersistence none = new GridGrindRequest.WorkbookPersistence.None();
+    GridGrindRequest.WorkbookPersistence overwrite =
+        new GridGrindRequest.WorkbookPersistence.OverwriteSource();
+    GridGrindRequest.WorkbookPersistence saveAs =
+        new GridGrindRequest.WorkbookPersistence.SaveAs("/tmp/out.xlsx");
+
+    // SaveAs always resolves to the saveAs path regardless of source
+    assertEquals(
+        Path.of("/tmp/out.xlsx").toAbsolutePath().toString(),
+        service.persistencePath(newSource, saveAs));
+
+    // OverwriteSource + ExistingFile resolves to the source path
+    assertEquals(
+        Path.of("/tmp/source.xlsx").toAbsolutePath().toString(),
+        service.persistencePath(existingFile, overwrite));
+
+    // OverwriteSource + New resolves to null (no source path to overwrite)
+    assertNull(service.persistencePath(newSource, overwrite));
+
+    // None always resolves to null regardless of source
+    assertNull(service.persistencePath(newSource, none));
+    // Note: None + ExistingFile also resolves to null since None persistence has no target path.
+    // This arm is only exercised defensively (persistWorkbook with None cannot fail in practice).
+    assertNull(service.persistencePath(existingFile, none));
+  }
+
+  @Test
+  void guardsCatastrophicRuntimeExceptionsAndProducesExecuteRequestFailure() {
+    // The closer throws RuntimeException on the first call (inside the success path lambda),
+    // which bubbles out of closeWorkbook (which only catches IOException), through the lambda,
+    // and is caught by guardUnexpectedRuntime. The second closeWorkbook call in the catch
+    // block succeeds so the failure response is returned cleanly.
+    int[] callCount = {0};
+    GridGrindService service =
+        new GridGrindService(
+            new WorkbookCommandExecutor(),
+            workbook -> {
+              int count = callCount[0];
+              callCount[0] = count + 1;
+              if (count == 0) {
+                throw new IllegalStateException("catastrophic close failure");
+              }
+            });
+
+    GridGrindResponse response =
+        service.execute(
+            new GridGrindRequest(
+                new GridGrindRequest.WorkbookSource.New(),
+                new GridGrindRequest.WorkbookPersistence.None(),
+                List.of(new WorkbookOperation.EnsureSheet("Budget")),
+                new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+  }
+
+  @Test
   void returnsStructuredFailureForInvalidRangeOperations() {
     GridGrindResponse response =
         new GridGrindService()

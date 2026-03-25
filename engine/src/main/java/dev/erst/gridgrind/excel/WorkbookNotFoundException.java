@@ -8,6 +8,7 @@ public final class WorkbookNotFoundException extends IllegalArgumentException {
 
   private final Path workbookPath;
 
+  /** Creates the exception for the given workbook path. */
   public WorkbookNotFoundException(Path workbookPath) {
     super("Workbook does not exist: " + workbookPath);
     this.workbookPath = workbookPath;

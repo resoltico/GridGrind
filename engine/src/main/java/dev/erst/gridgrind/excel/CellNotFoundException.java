@@ -6,6 +6,7 @@ public final class CellNotFoundException extends IllegalArgumentException {
 
   private final String address;
 
+  /** Creates the exception for the given A1-style cell address. */
   public CellNotFoundException(String address) {
     super("Cell does not exist: " + address);
     this.address = address;

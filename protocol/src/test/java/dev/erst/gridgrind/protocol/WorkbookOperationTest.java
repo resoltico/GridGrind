@@ -126,5 +126,88 @@ class WorkbookOperationTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookOperation.AutoSizeColumns("Budget", List.of(" ")));
+
+    // null rows list is coalesced to empty, which then fails the non-empty check
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.SetRange("Budget", "A1", null));
+  }
+
+  @Test
+  void defaultMethodsReturnCorrectValuesForAllSubtypes() {
+    CellStyleInput style = new CellStyleInput(null, false, null, false, null, null);
+    CellInput textValue = new CellInput.Text("x");
+
+    WorkbookOperation.EnsureSheet ensureSheet = new WorkbookOperation.EnsureSheet("Budget");
+    WorkbookOperation.SetCell setCell = new WorkbookOperation.SetCell("Budget", "A1", textValue);
+    WorkbookOperation.SetCell setCellWithFormula =
+        new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Formula("SUM(B1:B2)"));
+    WorkbookOperation.SetRange setRange =
+        new WorkbookOperation.SetRange("Budget", "A1:B2", List.of(List.of(textValue, textValue)));
+    WorkbookOperation.SetRange setRangeWithAddress =
+        new WorkbookOperation.SetRange("Budget", "A1", List.of(List.of(textValue)));
+    WorkbookOperation.ClearRange clearRange = new WorkbookOperation.ClearRange("Budget", "C1:C2");
+    WorkbookOperation.ApplyStyle applyStyle =
+        new WorkbookOperation.ApplyStyle("Budget", "D1:D2", style);
+    WorkbookOperation.AppendRow appendRow =
+        new WorkbookOperation.AppendRow("Budget", List.of(textValue));
+    WorkbookOperation.AutoSizeColumns autoSizeColumns =
+        new WorkbookOperation.AutoSizeColumns("Budget", List.of("A"));
+    WorkbookOperation.EvaluateFormulas evaluateFormulas = new WorkbookOperation.EvaluateFormulas();
+    WorkbookOperation.ForceFormulaRecalculationOnOpen recalcOnOpen =
+        new WorkbookOperation.ForceFormulaRecalculationOnOpen();
+
+    // operationType for all subtypes
+    assertEquals("SET_CELL", setCell.operationType());
+    assertEquals("SET_RANGE", setRange.operationType());
+    assertEquals("CLEAR_RANGE", clearRange.operationType());
+    assertEquals("APPLY_STYLE", applyStyle.operationType());
+    assertEquals("APPEND_ROW", appendRow.operationType());
+    assertEquals("AUTO_SIZE_COLUMNS", autoSizeColumns.operationType());
+
+    // extractSheetName — subtypes with a sheet
+    assertEquals("Budget", ensureSheet.extractSheetName());
+    assertEquals("Budget", setCell.extractSheetName());
+    assertEquals("Budget", setRange.extractSheetName());
+    assertEquals("Budget", clearRange.extractSheetName());
+    assertEquals("Budget", applyStyle.extractSheetName());
+    assertEquals("Budget", appendRow.extractSheetName());
+    assertEquals("Budget", autoSizeColumns.extractSheetName());
+    // extractSheetName — subtypes without a sheet
+    assertNull(evaluateFormulas.extractSheetName());
+    assertNull(recalcOnOpen.extractSheetName());
+
+    // extractAddress — only SetCell returns non-null
+    assertEquals("A1", setCell.extractAddress());
+    assertNull(ensureSheet.extractAddress());
+    assertNull(setRange.extractAddress());
+    assertNull(clearRange.extractAddress());
+    assertNull(applyStyle.extractAddress());
+    assertNull(appendRow.extractAddress());
+    assertNull(autoSizeColumns.extractAddress());
+    assertNull(evaluateFormulas.extractAddress());
+    assertNull(recalcOnOpen.extractAddress());
+
+    // extractRange — SetRange, ClearRange, ApplyStyle return non-null
+    assertEquals("A1:B2", setRange.extractRange());
+    assertEquals("C1:C2", clearRange.extractRange());
+    assertEquals("D1:D2", applyStyle.extractRange());
+    assertNull(ensureSheet.extractRange());
+    assertNull(setCell.extractRange());
+    assertNull(appendRow.extractRange());
+    assertNull(autoSizeColumns.extractRange());
+    assertNull(evaluateFormulas.extractRange());
+    assertNull(recalcOnOpen.extractRange());
+
+    // extractValue — only SetCell returns non-null
+    assertEquals(textValue, setCell.extractValue());
+    assertInstanceOf(CellInput.Formula.class, setCellWithFormula.extractValue());
+    assertNull(ensureSheet.extractValue());
+    assertNull(setRangeWithAddress.extractValue());
+    assertNull(clearRange.extractValue());
+    assertNull(applyStyle.extractValue());
+    assertNull(appendRow.extractValue());
+    assertNull(autoSizeColumns.extractValue());
+    assertNull(evaluateFormulas.extractValue());
+    assertNull(recalcOnOpen.extractValue());
   }
 }

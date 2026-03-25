@@ -27,6 +27,7 @@ public final class ExcelSheet {
     this.dataFormatter = new DataFormatter();
   }
 
+  /** Returns the sheet name as defined in the workbook. */
   public String name() {
     return sheet.getSheetName();
   }
@@ -126,14 +127,19 @@ public final class ExcelSheet {
     return this;
   }
 
+  /** Returns the number of physically stored rows in the sheet. */
   public int physicalRowCount() {
     return sheet.getPhysicalNumberOfRows();
   }
 
+  /** Returns the 0-based index of the last row, or -1 if no rows exist. */
   public int lastRowIndex() {
     return sheet.getLastRowNum();
   }
 
+  /**
+   * Returns the 0-based index of the widest column across all rows, or -1 if the sheet is empty.
+   */
   public int lastColumnIndex() {
     int lastColumnIndex = -1;
     for (Row row : sheet) {
@@ -230,19 +236,23 @@ public final class ExcelSheet {
     List<ExcelPreviewRow> previewRows = new ArrayList<>();
     int endingRowIndex = Math.min(lastRowIndex(), maxRows - 1);
     for (int rowIndex = 0; rowIndex <= endingRowIndex; rowIndex++) {
-      Row row = sheet.getRow(rowIndex);
-      List<ExcelCellSnapshot> cells = new ArrayList<>();
-      if (row != null) {
-        for (int columnIndex = 0; columnIndex < maxColumns; columnIndex++) {
-          Cell cell = row.getCell(columnIndex);
-          if (shouldPreview(cell)) {
-            cells.add(snapshot(new CellReference(rowIndex, columnIndex).formatAsString(), cell));
-          }
-        }
-      }
-      previewRows.add(new ExcelPreviewRow(rowIndex, List.copyOf(cells)));
+      previewRows.add(new ExcelPreviewRow(rowIndex, previewRow(rowIndex, maxColumns)));
     }
     return List.copyOf(previewRows);
+  }
+
+  private List<ExcelCellSnapshot> previewRow(int rowIndex, int maxColumns) {
+    Row row = sheet.getRow(rowIndex);
+    List<ExcelCellSnapshot> cells = new ArrayList<>();
+    if (row != null) {
+      for (int columnIndex = 0; columnIndex < maxColumns; columnIndex++) {
+        Cell cell = row.getCell(columnIndex);
+        if (shouldPreview(cell)) {
+          cells.add(snapshot(new CellReference(rowIndex, columnIndex).formatAsString(), cell));
+        }
+      }
+    }
+    return List.copyOf(cells);
   }
 
   private void setCell(int rowIndex, int columnIndex, ExcelCellValue value) {
@@ -334,32 +344,27 @@ public final class ExcelSheet {
         throw FormulaExceptions.wrap(name(), address, formula, exception);
       }
 
-      ExcelCellSnapshot evaluation;
-      if (evaluatedCell == null) {
-        evaluation = new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style);
-      } else {
-        evaluation =
-            switch (evaluatedCell.getCellType()) {
-              case STRING ->
-                  new ExcelCellSnapshot.TextSnapshot(
-                      address, "STRING", displayValue, style, evaluatedCell.getStringValue());
-              case NUMERIC ->
-                  new ExcelCellSnapshot.NumberSnapshot(
-                      address, "NUMERIC", displayValue, style, evaluatedCell.getNumberValue());
-              case BOOLEAN ->
-                  new ExcelCellSnapshot.BooleanSnapshot(
-                      address, "BOOLEAN", displayValue, style, evaluatedCell.getBooleanValue());
-              case ERROR ->
-                  new ExcelCellSnapshot.ErrorSnapshot(
-                      address,
-                      "ERROR",
-                      displayValue,
-                      style,
-                      FormulaError.forInt(evaluatedCell.getErrorValue()).getString());
-              case BLANK, _NONE, FORMULA ->
-                  new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style);
-            };
-      }
+      CellType evalType = evaluatedCell != null ? evaluatedCell.getCellType() : CellType.BLANK;
+      ExcelCellSnapshot evaluation =
+          switch (evalType) {
+            case STRING ->
+                new ExcelCellSnapshot.TextSnapshot(
+                    address, "STRING", displayValue, style, evaluatedCell.getStringValue());
+            case NUMERIC ->
+                new ExcelCellSnapshot.NumberSnapshot(
+                    address, "NUMERIC", displayValue, style, evaluatedCell.getNumberValue());
+            case BOOLEAN ->
+                new ExcelCellSnapshot.BooleanSnapshot(
+                    address, "BOOLEAN", displayValue, style, evaluatedCell.getBooleanValue());
+            case ERROR ->
+                new ExcelCellSnapshot.ErrorSnapshot(
+                    address,
+                    "ERROR",
+                    displayValue,
+                    style,
+                    FormulaError.forInt(evaluatedCell.getErrorValue()).getString());
+            default -> new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style);
+          };
       return new ExcelCellSnapshot.FormulaSnapshot(
           address, "FORMULA", displayValue, style, formula, evaluation);
     }

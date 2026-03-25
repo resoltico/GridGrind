@@ -62,16 +62,19 @@ class ExcelSheetTest {
       ExcelCellSnapshot.TextSnapshot textSnapshot =
           (ExcelCellSnapshot.TextSnapshot) sheet.snapshotCell("A1");
       assertEquals("STRING", textSnapshot.declaredType());
+      assertEquals("STRING", textSnapshot.effectiveType());
       assertEquals("Name", textSnapshot.stringValue());
 
       ExcelCellSnapshot.NumberSnapshot numberSnapshot =
           (ExcelCellSnapshot.NumberSnapshot) sheet.snapshotCell("B1");
       assertEquals("NUMERIC", numberSnapshot.declaredType());
+      assertEquals("NUMERIC", numberSnapshot.effectiveType());
       assertEquals(42.5, numberSnapshot.numberValue());
 
       ExcelCellSnapshot.BooleanSnapshot booleanSnapshot =
           (ExcelCellSnapshot.BooleanSnapshot) sheet.snapshotCell("C1");
       assertEquals("BOOLEAN", booleanSnapshot.declaredType());
+      assertEquals("BOOLEAN", booleanSnapshot.effectiveType());
       assertTrue(booleanSnapshot.booleanValue());
 
       ExcelCellSnapshot.BlankSnapshot blankSnapshot =
@@ -99,6 +102,7 @@ class ExcelSheetTest {
       ExcelCellSnapshot.ErrorSnapshot errorSnapshot =
           (ExcelCellSnapshot.ErrorSnapshot) sheet.snapshotCell("A4");
       assertEquals("ERROR", errorSnapshot.declaredType());
+      assertEquals("ERROR", errorSnapshot.effectiveType());
       assertEquals("#DIV/0!", errorSnapshot.errorValue());
 
       List<ExcelPreviewRow> preview = sheet.preview(4, 6);
@@ -330,6 +334,9 @@ class ExcelSheetTest {
       assertEquals("FORMULA", blankEvaluatedFormula.effectiveType());
       assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.number("A1"));
       assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.bool("A1"));
+      assertInstanceOf(
+          ExcelCellSnapshot.BlankSnapshot.class,
+          ((ExcelCellSnapshot.FormulaSnapshot) blankEvaluatedFormula).evaluation());
     }
   }
 

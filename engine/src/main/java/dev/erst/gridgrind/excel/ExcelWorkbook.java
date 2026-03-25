@@ -86,20 +86,24 @@ public final class ExcelWorkbook implements AutoCloseable {
       for (Row row : sheet) {
         for (Cell cell : row) {
           if (cell.getCellType() == CellType.FORMULA) {
-            try {
-              formulaEvaluator.evaluate(cell);
-            } catch (RuntimeException exception) {
-              throw FormulaExceptions.wrap(
-                  sheet.getSheetName(),
-                  new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
-                  cell.getCellFormula(),
-                  exception);
-            }
+            evaluateFormulaCell(sheet.getSheetName(), cell);
           }
         }
       }
     }
     return this;
+  }
+
+  private void evaluateFormulaCell(String sheetName, Cell cell) {
+    try {
+      formulaEvaluator.evaluate(cell);
+    } catch (RuntimeException exception) {
+      throw FormulaExceptions.wrap(
+          sheetName,
+          new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
+          cell.getCellFormula(),
+          exception);
+    }
   }
 
   /** Marks the workbook to recalculate formulas when opened in Excel-compatible clients. */
@@ -108,10 +112,12 @@ public final class ExcelWorkbook implements AutoCloseable {
     return this;
   }
 
+  /** Returns the number of sheets in the workbook. */
   public int sheetCount() {
     return workbook.getNumberOfSheets();
   }
 
+  /** Returns an ordered list of all sheet names in the workbook. */
   public List<String> sheetNames() {
     List<String> sheetNames = new ArrayList<>(workbook.getNumberOfSheets());
     for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
@@ -120,6 +126,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     return List.copyOf(sheetNames);
   }
 
+  /** Returns whether the workbook is marked to recalculate formulas when opened in Excel. */
   public boolean forceFormulaRecalculationOnOpenEnabled() {
     return workbook.getForceFormulaRecalculation();
   }

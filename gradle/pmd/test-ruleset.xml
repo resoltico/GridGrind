@@ -34,6 +34,14 @@
         <exclude name="ExcessiveImports"/>
         <!-- Test classes legitimately contain many test methods -->
         <exclude name="TooManyMethods"/>
+        <!-- Integration tests couple to both the production API and test framework
+             types, legitimately exceeding the default threshold -->
+        <exclude name="CouplingBetweenObjects"/>
+        <!-- Same POI adapter exclusions as the main ruleset: integration tests
+             exercise ExcelSheet, ExcelWorkbook, and WorkbookStyleRegistry directly -->
+        <exclude name="GodClass"/>
+        <exclude name="CyclomaticComplexity"/>
+        <exclude name="CognitiveComplexity"/>
     </rule>
 
     <rule ref="category/java/multithreading.xml">
@@ -47,15 +55,13 @@
 
     <rule ref="category/java/documentation.xml/CommentRequired">
         <properties>
-            <property name="classCommentRequirement" value="Required"/>
-            <property name="enumCommentRequirement" value="Required"/>
-            <property name="publicMethodCommentRequirement" value="Ignored"/>
-            <property name="methodWithOverrideCommentRequirement" value="Ignored"/>
-            <property name="accessorCommentRequirement" value="Ignored"/>
-            <property name="fieldCommentRequirement" value="Ignored"/>
-            <property name="protectedMethodCommentRequirement" value="Ignored"/>
-            <property name="serialVersionUIDCommentRequirement" value="Ignored"/>
-            <property name="serialPersistentFieldsCommentRequirement" value="Ignored"/>
+            <property name="classCommentRequirement" value="required"/>
+            <property name="enumCommentRequirement" value="required"/>
+            <property name="publicMethodCommentRequirement" value="ignored"/>
+            <property name="methodWithOverrideCommentRequirement" value="ignored"/>
+            <property name="accessorCommentRequirement" value="ignored"/>
+            <property name="fieldCommentRequirement" value="ignored"/>
+            <property name="protectedMethodCommentRequirement" value="ignored"/>
         </properties>
     </rule>
 

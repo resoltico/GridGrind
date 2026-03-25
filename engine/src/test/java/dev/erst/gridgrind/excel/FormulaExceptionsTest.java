@@ -2,8 +2,6 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
 
 /** Tests for FormulaExceptions POI exception translation. */
@@ -52,18 +50,13 @@ class FormulaExceptionsTest {
   }
 
   @Test
-  void extractsFunctionNamesConservatively()
-      throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-    Method leadingFunctionName =
-        FormulaExceptions.class.getDeclaredMethod("leadingFunctionName", String.class);
-    leadingFunctionName.setAccessible(true);
-
-    assertNull(leadingFunctionName.invoke(null, (Object) null));
-    assertNull(leadingFunctionName.invoke(null, "A1"));
-    assertNull(leadingFunctionName.invoke(null, " (A1)"));
-    assertNull(leadingFunctionName.invoke(null, "1SUM(A1)"));
-    assertEquals("TEXTAFTER", leadingFunctionName.invoke(null, "TEXTAFTER(\"a,b\",\",\")"));
+  void extractsFunctionNamesConservatively() {
+    assertNull(FormulaExceptions.leadingFunctionName(null));
+    assertNull(FormulaExceptions.leadingFunctionName("A1"));
+    assertNull(FormulaExceptions.leadingFunctionName(" (A1)"));
+    assertNull(FormulaExceptions.leadingFunctionName("1SUM(A1)"));
+    assertEquals("TEXTAFTER", FormulaExceptions.leadingFunctionName("TEXTAFTER(\"a,b\",\",\")"));
     assertEquals(
-        "_XLFN.TEXTAFTER", leadingFunctionName.invoke(null, "_XLFN.TEXTAFTER(\"a,b\",\",\")"));
+        "_XLFN.TEXTAFTER", FormulaExceptions.leadingFunctionName("_XLFN.TEXTAFTER(\"a,b\",\",\")"));
   }
 }

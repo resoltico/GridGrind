@@ -130,6 +130,52 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void wrapsRecordConstructionFailureAsInvalidPayloadError() {
+    // Parsing a response where CellStyleReport.numberFormat is null triggers a NullPointerException
+    // inside the record compact constructor. Jackson catches and wraps it as a JacksonException.
+    InvalidJsonException failure =
+        assertThrows(
+            InvalidJsonException.class,
+            () ->
+                GridGrindJson.readResponse(
+                    ("""
+                    {"status":"SUCCESS","protocolVersion":"V1","savedWorkbookPath":null,\
+                    "workbook":{"sheetCount":0,"sheetNames":[],"forceFormulaRecalculationOnOpen":false},\
+                    "sheets":[{"sheetName":"X","physicalRowCount":0,"lastRowIndex":0,"lastColumnIndex":0,\
+                    "requestedCells":[{"effectiveType":"BLANK","address":"A1","declaredType":"BLANK",\
+                    "displayValue":"","style":{"numberFormat":null,"bold":false,"italic":false,\
+                    "wrapText":false,"horizontalAlignment":"GENERAL","verticalAlignment":"BOTTOM"}}],\
+                    "previewRows":[]}]}""")
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertNotNull(failure.getMessage());
+    assertFalse(failure.getMessage().contains("[Source:"));
+  }
+
+  @Test
+  void stripsJacksonSourceLocationFromInvalidEnumValueMessages() throws IOException {
+    // An unrecognised enum value produces an InvalidFormatException whose raw message
+    // contains " at [Source:" — verify the cleaned message does not expose that suffix.
+    InvalidJsonException failure =
+        assertThrows(
+            InvalidJsonException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "protocolVersion": "INVALID_VERSION",
+                      "source": { "mode": "NEW" },
+                      "operations": [],
+                      "analysis": { "sheets": [] }
+                    }
+                    """
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+
+    assertNotNull(failure.getMessage());
+    assertFalse(failure.getMessage().contains("[Source:"));
+  }
+
+  @Test
   void validatesNullArguments() {
     assertThrows(NullPointerException.class, () -> GridGrindJson.readRequest((byte[]) null));
     assertThrows(
@@ -154,6 +200,7 @@ class GridGrindJsonTest {
         () -> GridGrindJson.writeResponse(new ByteArrayOutputStream(), null));
   }
 
+  /** ByteArrayInputStream that records whether {@code close()} was called. */
   private static final class TrackingInputStream extends ByteArrayInputStream {
     private boolean closed;
 

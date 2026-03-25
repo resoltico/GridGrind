@@ -2,14 +2,22 @@ package dev.erst.gridgrind.excel;
 
 /** Immutable snapshot of a cell after formatting and, when needed, formula evaluation. */
 public sealed interface ExcelCellSnapshot {
+  /** A1-style address of the cell, such as {@code B4}. */
   String address();
 
+  /** Raw cell type as reported by Excel: STRING, NUMERIC, BOOLEAN, FORMULA, BLANK, or ERROR. */
   String declaredType();
 
+  /**
+   * Resolved value type after formula evaluation: same as {@link #declaredType()} for non-formula
+   * cells; the evaluated result type for formula cells.
+   */
   String effectiveType();
 
+  /** Formatted display string as Excel would render it in the cell. */
   String displayValue();
 
+  /** Formatting style applied to the cell at the time of the snapshot. */
   ExcelCellStyleSnapshot style();
 
   record BlankSnapshot(

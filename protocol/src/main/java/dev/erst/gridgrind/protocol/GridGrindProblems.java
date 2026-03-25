@@ -146,31 +146,19 @@ public final class GridGrindProblems {
   }
 
   static String formulaFor(Throwable exception) {
-    return switch (exception) {
-      case FormulaException fe -> fe.formula();
-      default -> null;
-    };
+    return exception instanceof FormulaException fe ? fe.formula() : null;
   }
 
   static String sheetNameFor(Throwable exception) {
-    return switch (exception) {
-      case FormulaException fe -> fe.sheetName();
-      default -> null;
-    };
+    return exception instanceof FormulaException fe ? fe.sheetName() : null;
   }
 
   static String addressFor(Throwable exception) {
-    return switch (exception) {
-      case FormulaException fe -> fe.address();
-      default -> null;
-    };
+    return exception instanceof FormulaException fe ? fe.address() : null;
   }
 
   static String rangeFor(Throwable exception) {
-    return switch (exception) {
-      case InvalidRangeAddressException ire -> ire.range();
-      default -> null;
-    };
+    return exception instanceof InvalidRangeAddressException ire ? ire.range() : null;
   }
 
   private static String simpleName(Throwable exception) {

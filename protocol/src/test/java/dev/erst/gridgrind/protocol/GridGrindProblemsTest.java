@@ -220,6 +220,40 @@ class GridGrindProblemsTest {
   }
 
   @Test
+  void enrichesAnalyzeWorkbookContextFromFormulaException() {
+    GridGrindResponse.ProblemContext analyzeContext =
+        new GridGrindResponse.ProblemContext.AnalyzeWorkbook("NEW", "NONE", null, null, null);
+    InvalidFormulaException formulaException =
+        new InvalidFormulaException(
+            "Budget", "C3", "SUM(", "bad formula", new IllegalArgumentException("bad"));
+
+    GridGrindResponse.Problem enriched =
+        GridGrindProblems.fromException(formulaException, analyzeContext);
+
+    assertEquals(GridGrindProblemCode.INVALID_FORMULA, enriched.code());
+    assertEquals("ANALYZE_WORKBOOK", enriched.context().stage());
+    assertEquals("Budget", enriched.context().sheetName());
+    assertEquals("C3", enriched.context().address());
+    assertEquals("SUM(", enriched.context().formula());
+  }
+
+  @Test
+  void leavesReadRequestContextUnchangedWhenExceptionIsNotPayloadException() {
+    GridGrindResponse.ProblemContext readContext =
+        new GridGrindResponse.ProblemContext.ReadRequest("/tmp/request.json", null, null, null);
+
+    GridGrindResponse.Problem problem =
+        GridGrindProblems.fromException(new IOException("disk"), readContext);
+
+    assertEquals(GridGrindProblemCode.IO_ERROR, problem.code());
+    assertEquals("READ_REQUEST", problem.context().stage());
+    assertEquals("/tmp/request.json", problem.context().requestPath());
+    assertNull(problem.context().jsonPath());
+    assertNull(problem.context().jsonLine());
+    assertNull(problem.context().jsonColumn());
+  }
+
+  @Test
   void enrichesFormulaAndRangeContextWithoutOverwritingExplicitValues() {
     GridGrindResponse.ProblemContext blankContext =
         new GridGrindResponse.ProblemContext.ApplyOperation(

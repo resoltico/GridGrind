@@ -535,6 +535,7 @@ class AgentCliTest {
     }
   }
 
+  /** ByteArrayInputStream that records whether {@code close()} was called. */
   private static final class TrackingInputStream extends ByteArrayInputStream {
     private boolean closed;
 

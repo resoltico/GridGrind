@@ -8,12 +8,22 @@ import org.gradle.testing.jacoco.tasks.JacocoReport
 
 plugins {
     base
+    jacoco
     alias(libs.plugins.spotless)
     alias(libs.plugins.errorprone) apply false
     alias(libs.plugins.shadow) apply false
 }
 
 description = "AI-friendly workbook automation engine built on Apache POI"
+
+// Root-level JaCoCo configuration for the aggregated report task.
+repositories {
+    mavenCentral()
+}
+
+configure<JacocoPluginExtension> {
+    toolVersion = libs.versions.jacoco.get()
+}
 
 allprojects {
     group = providers.gradleProperty("group").get()
@@ -130,9 +140,18 @@ tasks.register<JacocoReport>("jacocoAggregatedReport") {
     description = "Aggregates JaCoCo coverage reports from all modules into a single report."
 
     dependsOn(":engine:test", ":protocol:test", ":cli:test")
+    mustRunAfter(
+        "spotlessProjectFiles",
+        ":engine:spotlessJava",
+        ":protocol:spotlessJava",
+        ":cli:spotlessJava",
+        ":engine:jacocoTestReport",
+        ":protocol:jacocoTestReport",
+        ":cli:jacocoTestReport"
+    )
 
     executionData.from(
-        fileTree(rootDir) { include("**/build/jacoco/test.exec") }
+        subprojects.map { file("${it.projectDir}/build/jacoco/test.exec") }
     )
     sourceDirectories.from(
         subprojects.map { file("${it.projectDir}/src/main/java") }

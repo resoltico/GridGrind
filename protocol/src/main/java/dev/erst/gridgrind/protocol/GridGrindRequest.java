@@ -21,6 +21,7 @@ public record GridGrindRequest(
     analysis = analysis == null ? new WorkbookAnalysisRequest(List.of()) : analysis;
   }
 
+  /** Creates a request with the current protocol version and the given parameters. */
   public GridGrindRequest(
       WorkbookSource source,
       WorkbookPersistence persistence,

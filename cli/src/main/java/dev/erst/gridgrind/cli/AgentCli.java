@@ -20,6 +20,7 @@ import java.util.Objects;
 public final class AgentCli {
   private final GridGrindHandler gridGrindHandler;
 
+  /** Creates the production AgentCli backed by the default {@link GridGrindService}. */
   public AgentCli() {
     this(new GridGrindService()::execute);
   }
@@ -172,9 +173,7 @@ public final class AgentCli {
   }
 
   private String message(Exception exception) {
-    return exception.getMessage() == null
-        ? exception.getClass().getSimpleName()
-        : exception.getMessage();
+    return exception.getMessage();
   }
 
   private String pathString(Path path) {
@@ -222,6 +221,7 @@ public final class AgentCli {
     }
   }
 
+  /** Signals an unrecognized or malformed CLI argument. */
   private static final class CliArgumentException extends IllegalArgumentException {
     private static final long serialVersionUID = 1L;
 
@@ -237,8 +237,10 @@ public final class AgentCli {
     }
   }
 
+  /** Functional interface for executing a {@link GridGrindRequest} and returning a response. */
   @FunctionalInterface
   interface GridGrindHandler {
+    /** Executes the request and returns the corresponding response. */
     GridGrindResponse execute(GridGrindRequest request);
   }
 }
