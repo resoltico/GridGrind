@@ -24,7 +24,62 @@ to be.
 
 ---
 
-## Quick Start
+## Running GridGrind
+
+### Container (no install required)
+
+Pull and run directly from the GitHub Container Registry:
+
+```bash
+docker pull ghcr.io/resoltico/gridgrind:latest
+```
+
+Pipe a JSON request to stdin, receive a JSON response on stdout:
+
+```bash
+echo '{"source":{"mode":"NEW"},"operations":[],"analysis":{"sheets":[]}}' \
+  | docker run -i ghcr.io/resoltico/gridgrind:latest
+```
+
+To read a request file and write a response file from the host filesystem,
+mount the working directory:
+
+```bash
+docker run -i \
+  -v "$(pwd)":/workdir \
+  -w /workdir \
+  ghcr.io/resoltico/gridgrind:latest \
+  --request request.json \
+  --response response.json
+```
+
+Any `SAVE_AS` or `MODIFY` persistence paths in the request are resolved relative
+to the working directory inside the container, so mount the directory that should
+receive the generated `.xlsx` files.
+
+Available tags: `latest`, `0.1`, `0.1.0` — see
+[ghcr.io/resoltico/gridgrind](https://github.com/resoltico/GridGrind/pkgs/container/gridgrind).
+
+### Fat JAR (requires Java 26)
+
+Download the self-contained JAR from the
+[Releases page](https://github.com/resoltico/GridGrind/releases/latest):
+
+```bash
+curl -L https://github.com/resoltico/GridGrind/releases/download/v0.1.0/gridgrind-0.1.0.jar \
+  -o gridgrind.jar
+```
+
+Run it the same way as the container — stdin/stdout or explicit file paths:
+
+```bash
+echo '{"source":{"mode":"NEW"},"operations":[],"analysis":{"sheets":[]}}' \
+  | java -jar gridgrind.jar
+
+java -jar gridgrind.jar --request request.json --response response.json
+```
+
+### Build from source
 
 ```bash
 ./gradlew test
