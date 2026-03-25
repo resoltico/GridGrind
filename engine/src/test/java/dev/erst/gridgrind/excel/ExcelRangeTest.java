@@ -27,6 +27,14 @@ class ExcelRangeTest {
   }
 
   @Test
+  void rejectsInvalidConstructorArguments() {
+    assertThrows(IllegalArgumentException.class, () -> new ExcelRange(-1, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelRange(5, 3, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelRange(0, 0, -1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelRange(0, 0, 5, 3));
+  }
+
+  @Test
   void rejectsInvalidRanges() {
     assertThrows(NullPointerException.class, () -> ExcelRange.parse(null));
     assertThrows(IllegalArgumentException.class, () -> ExcelRange.parse(" "));

@@ -6,5 +6,5 @@ public record ExcelCellStyleSnapshot(
     boolean bold,
     boolean italic,
     boolean wrapText,
-    String horizontalAlignment,
-    String verticalAlignment) {}
+    ExcelHorizontalAlignment horizontalAlignment,
+    ExcelVerticalAlignment verticalAlignment) {}

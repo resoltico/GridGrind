@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # Run all local verification gates and release packaging checks.
 #
-# Stage 1 mirrors the GitHub CI quality-gate workflow:
+# Stage 1 runs all quality gates and generates coverage reports for local inspection:
 #   check    -> Spotless (format), Error Prone (compile-time checks), PMD (static analysis),
 #               JaCoCo coverage thresholds, and all unit tests
 #   coverage -> per-module and aggregated JaCoCo HTML/XML reports
+#
+# CI runs only the check task (verification without report generation).
 #
 # Stage 2 mirrors the GitHub release/container packaging workflow:
 #   :cli:shadowJar -> build the distributable fat JAR

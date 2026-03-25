@@ -2,6 +2,8 @@ package dev.erst.gridgrind.protocol;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -22,8 +24,8 @@ class WorkbookOperationTest {
             true,
             null,
             true,
-            CellStyleInput.HorizontalAlignmentInput.RIGHT,
-            CellStyleInput.VerticalAlignmentInput.CENTER);
+            ExcelHorizontalAlignment.RIGHT,
+            ExcelVerticalAlignment.CENTER);
 
     WorkbookOperation.EnsureSheet ensureSheet = new WorkbookOperation.EnsureSheet("Budget");
     WorkbookOperation.SetCell setCell =

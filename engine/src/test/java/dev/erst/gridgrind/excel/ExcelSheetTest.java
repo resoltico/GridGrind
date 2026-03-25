@@ -219,8 +219,8 @@ class ExcelSheetTest {
       assertEquals("#,##0.00", styledValue.style().numberFormat());
       assertTrue(styledValue.style().bold());
       assertTrue(styledValue.style().wrapText());
-      assertEquals("CENTER", styledValue.style().horizontalAlignment());
-      assertEquals("TOP", styledValue.style().verticalAlignment());
+      assertEquals(ExcelHorizontalAlignment.CENTER, styledValue.style().horizontalAlignment());
+      assertEquals(ExcelVerticalAlignment.TOP, styledValue.style().verticalAlignment());
 
       List<ExcelPreviewRow> preview = sheet.preview(2, 3);
       assertTrue(preview.getFirst().cells().stream().anyMatch(cell -> "C1".equals(cell.address())));
@@ -233,8 +233,8 @@ class ExcelSheetTest {
       assertEquals("BLANK", cleared.declaredType());
       assertEquals("General", cleared.style().numberFormat());
       assertFalse(cleared.style().bold());
-      assertEquals("GENERAL", cleared.style().horizontalAlignment());
-      assertEquals("BOTTOM", cleared.style().verticalAlignment());
+      assertEquals(ExcelHorizontalAlignment.GENERAL, cleared.style().horizontalAlignment());
+      assertEquals(ExcelVerticalAlignment.BOTTOM, cleared.style().verticalAlignment());
 
       assertThrows(
           IllegalArgumentException.class,
@@ -334,6 +334,25 @@ class ExcelSheetTest {
       assertInstanceOf(
           ExcelCellSnapshot.BlankSnapshot.class,
           ((ExcelCellSnapshot.FormulaSnapshot) blankEvaluatedFormula).evaluation());
+    }
+  }
+
+  @Test
+  void previewRowReturnsEmptyCellsForGapRows() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Sparse");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setCell("A1", ExcelCellValue.text("first"));
+      sheet.setCell("A3", ExcelCellValue.text("third"));
+
+      List<ExcelPreviewRow> preview = sheet.preview(3, 1);
+      assertEquals(3, preview.size());
+      assertEquals(1, preview.get(0).cells().size());
+      assertEquals(0, preview.get(1).cells().size());
+      assertEquals(1, preview.get(2).cells().size());
     }
   }
 

@@ -144,9 +144,8 @@ public final class GridGrindService {
                             (Throwable) null)));
             case GridGrindRequest.WorkbookSource.ExistingFile _ -> Optional.empty();
           };
-      case GridGrindRequest.WorkbookPersistence.None _,
-          GridGrindRequest.WorkbookPersistence.SaveAs _ ->
-          Optional.empty();
+      case GridGrindRequest.WorkbookPersistence.None _ -> Optional.empty();
+      case GridGrindRequest.WorkbookPersistence.SaveAs _ -> Optional.empty();
     };
   }
 
@@ -255,8 +254,8 @@ public final class GridGrindService {
             snapshot.style().bold(),
             snapshot.style().italic(),
             snapshot.style().wrapText(),
-            snapshot.style().horizontalAlignment(),
-            snapshot.style().verticalAlignment());
+            snapshot.style().horizontalAlignment().name(),
+            snapshot.style().verticalAlignment().name());
 
     return switch (snapshot) {
       case ExcelCellSnapshot.BlankSnapshot s ->
@@ -305,22 +304,24 @@ public final class GridGrindService {
       workbookCloser.close(workbook);
       return response;
     } catch (IOException exception) {
-      if (response instanceof GridGrindResponse.Failure f) {
-        return new GridGrindResponse.Failure(
-            f.protocolVersion(),
-            GridGrindProblems.appendCause(
-                f.problem(),
-                GridGrindProblems.supplementalCause(
-                    "EXECUTE_REQUEST",
+      return switch (response) {
+        case GridGrindResponse.Failure f ->
+            new GridGrindResponse.Failure(
+                f.protocolVersion(),
+                GridGrindProblems.appendCause(
+                    f.problem(),
+                    GridGrindProblems.supplementalCause(
+                        "EXECUTE_REQUEST",
+                        exception,
+                        "Workbook close failed after the primary problem")));
+        case GridGrindResponse.Success _ ->
+            new GridGrindResponse.Failure(
+                response.protocolVersion(),
+                GridGrindProblems.fromException(
                     exception,
-                    "Workbook close failed after the primary problem")));
-      }
-      return new GridGrindResponse.Failure(
-          response.protocolVersion(),
-          GridGrindProblems.fromException(
-              exception,
-              new GridGrindResponse.ProblemContext.ExecuteRequest(
-                  reqSourceMode(request), reqPersistenceMode(request))));
+                    new GridGrindResponse.ProblemContext.ExecuteRequest(
+                        reqSourceMode(request), reqPersistenceMode(request))));
+      };
     }
   }
 
@@ -390,18 +391,24 @@ public final class GridGrindService {
       return fromException;
     }
     return switch (operation) {
-      case WorkbookOperation.SetCell op when op.value() instanceof CellInput.Formula f ->
-          f.formula();
-      case WorkbookOperation.EnsureSheet _,
-          WorkbookOperation.SetCell _,
-          WorkbookOperation.SetRange _,
-          WorkbookOperation.ClearRange _,
-          WorkbookOperation.ApplyStyle _,
-          WorkbookOperation.AppendRow _,
-          WorkbookOperation.AutoSizeColumns _,
-          WorkbookOperation.EvaluateFormulas _,
-          WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
-          null;
+      case WorkbookOperation.SetCell op ->
+          switch (op.value()) {
+            case CellInput.Formula f -> f.formula();
+            case CellInput.Blank _ -> null;
+            case CellInput.Text _ -> null;
+            case CellInput.Numeric _ -> null;
+            case CellInput.BooleanValue _ -> null;
+            case CellInput.Date _ -> null;
+            case CellInput.DateTime _ -> null;
+          };
+      case WorkbookOperation.EnsureSheet _ -> null;
+      case WorkbookOperation.SetRange _ -> null;
+      case WorkbookOperation.ClearRange _ -> null;
+      case WorkbookOperation.ApplyStyle _ -> null;
+      case WorkbookOperation.AppendRow _ -> null;
+      case WorkbookOperation.AutoSizeColumns _ -> null;
+      case WorkbookOperation.EvaluateFormulas _ -> null;
+      case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
     };
   }
 
@@ -419,9 +426,8 @@ public final class GridGrindService {
           case WorkbookOperation.ApplyStyle op -> op.sheetName();
           case WorkbookOperation.AppendRow op -> op.sheetName();
           case WorkbookOperation.AutoSizeColumns op -> op.sheetName();
-          case WorkbookOperation.EvaluateFormulas _,
-              WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
-              null;
+          case WorkbookOperation.EvaluateFormulas _ -> null;
+          case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
         };
     return fromOp != null ? fromOp : GridGrindProblems.sheetNameFor(exception);
   }
@@ -434,15 +440,14 @@ public final class GridGrindService {
     String fromOp =
         switch (operation) {
           case WorkbookOperation.SetCell op -> op.address();
-          case WorkbookOperation.EnsureSheet _,
-              WorkbookOperation.SetRange _,
-              WorkbookOperation.ClearRange _,
-              WorkbookOperation.ApplyStyle _,
-              WorkbookOperation.AppendRow _,
-              WorkbookOperation.AutoSizeColumns _,
-              WorkbookOperation.EvaluateFormulas _,
-              WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
-              null;
+          case WorkbookOperation.EnsureSheet _ -> null;
+          case WorkbookOperation.SetRange _ -> null;
+          case WorkbookOperation.ClearRange _ -> null;
+          case WorkbookOperation.ApplyStyle _ -> null;
+          case WorkbookOperation.AppendRow _ -> null;
+          case WorkbookOperation.AutoSizeColumns _ -> null;
+          case WorkbookOperation.EvaluateFormulas _ -> null;
+          case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
         };
     return fromOp != null ? fromOp : GridGrindProblems.addressFor(exception);
   }
@@ -457,13 +462,12 @@ public final class GridGrindService {
           case WorkbookOperation.SetRange op -> op.range();
           case WorkbookOperation.ClearRange op -> op.range();
           case WorkbookOperation.ApplyStyle op -> op.range();
-          case WorkbookOperation.EnsureSheet _,
-              WorkbookOperation.SetCell _,
-              WorkbookOperation.AppendRow _,
-              WorkbookOperation.AutoSizeColumns _,
-              WorkbookOperation.EvaluateFormulas _,
-              WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
-              null;
+          case WorkbookOperation.EnsureSheet _ -> null;
+          case WorkbookOperation.SetCell _ -> null;
+          case WorkbookOperation.AppendRow _ -> null;
+          case WorkbookOperation.AutoSizeColumns _ -> null;
+          case WorkbookOperation.EvaluateFormulas _ -> null;
+          case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
         };
     return fromOp != null ? fromOp : GridGrindProblems.rangeFor(exception);
   }

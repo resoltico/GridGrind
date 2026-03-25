@@ -204,6 +204,14 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void jsonLineAndColumnReturnNullForNullOrNonPositiveLocation() {
+    assertNull(GridGrindJson.jsonLine(null));
+    assertNull(GridGrindJson.jsonColumn(null));
+    assertNull(GridGrindJson.jsonLine(tools.jackson.core.TokenStreamLocation.NA));
+    assertNull(GridGrindJson.jsonColumn(tools.jackson.core.TokenStreamLocation.NA));
+  }
+
+  @Test
   void validatesNullArguments() {
     assertThrows(NullPointerException.class, () -> GridGrindJson.readRequest((byte[]) null));
     assertThrows(

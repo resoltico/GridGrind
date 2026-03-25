@@ -254,6 +254,26 @@ class GridGrindProblemsTest {
   }
 
   @Test
+  void enrichContextReturnsCatchAllContextForUnenrichedTypes() {
+    // Contexts with no when-guard enrichment (ParseArguments, ValidateRequest, WriteResponse)
+    // and the guard-false paths for ReadRequest and AnalyzeWorkbook always return context
+    // unchanged.
+    RuntimeException ex = new RuntimeException("test");
+
+    GridGrindResponse.ProblemContext parseArgs =
+        new GridGrindResponse.ProblemContext.ParseArguments("--request");
+    assertSame(parseArgs, GridGrindProblems.enrichContext(parseArgs, ex));
+
+    GridGrindResponse.ProblemContext validateReq =
+        new GridGrindResponse.ProblemContext.ValidateRequest(null, null);
+    assertSame(validateReq, GridGrindProblems.enrichContext(validateReq, ex));
+
+    GridGrindResponse.ProblemContext writeResp =
+        new GridGrindResponse.ProblemContext.WriteResponse("/tmp/response.json");
+    assertSame(writeResp, GridGrindProblems.enrichContext(writeResp, ex));
+  }
+
+  @Test
   void enrichesFormulaAndRangeContextWithoutOverwritingExplicitValues() {
     GridGrindResponse.ProblemContext blankContext =
         new GridGrindResponse.ProblemContext.ApplyOperation(

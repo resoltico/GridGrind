@@ -140,21 +140,26 @@ public final class GridGrindJson {
         path.append(propertyName);
         continue;
       }
-      int index = reference.getIndex();
-      if (index >= 0) {
-        path.append('[').append(index).append(']');
-      }
+      path.append('[').append(reference.getIndex()).append(']');
     }
     return path.isEmpty() ? null : path.toString();
   }
 
-  private static Integer jsonLine(TokenStreamLocation location) {
-    int line = location == null ? -1 : location.getLineNr();
+  /** Returns the 1-based line number from the location, or null when unavailable. */
+  static Integer jsonLine(TokenStreamLocation location) {
+    if (location == null) {
+      return null;
+    }
+    int line = location.getLineNr();
     return line > 0 ? line : null;
   }
 
-  private static Integer jsonColumn(TokenStreamLocation location) {
-    int column = location == null ? -1 : location.getColumnNr();
+  /** Returns the 1-based column number from the location, or null when unavailable. */
+  static Integer jsonColumn(TokenStreamLocation location) {
+    if (location == null) {
+      return null;
+    }
+    int column = location.getColumnNr();
     return column > 0 ? column : null;
   }
 
