@@ -30,4 +30,17 @@ class ExcelCellStyleTest {
         () -> new ExcelCellStyle(null, null, null, null, null, null));
     assertThrows(IllegalArgumentException.class, () -> ExcelCellStyle.alignment(null, null));
   }
+
+  @Test
+  void acceptsSingleAttributePatches() {
+    ExcelCellStyle italicOnly = new ExcelCellStyle(null, null, true, null, null, null);
+    assertTrue(italicOnly.italic());
+
+    ExcelCellStyle wrapTextOnly = new ExcelCellStyle(null, null, null, true, null, null);
+    assertTrue(wrapTextOnly.wrapText());
+
+    ExcelCellStyle verticalOnly = ExcelCellStyle.alignment(null, ExcelVerticalAlignment.TOP);
+    assertNull(verticalOnly.horizontalAlignment());
+    assertEquals(ExcelVerticalAlignment.TOP, verticalOnly.verticalAlignment());
+  }
 }

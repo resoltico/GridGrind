@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.3.0"
+version: "0.4.0"
 domain: DEVELOPER
 updated: "2026-03-25"
 route:
@@ -49,51 +49,33 @@ top. Future adapters (HTTP, gRPC, library embedding) can be added without touchi
 
 ---
 
-## Build Commands
+## Commands
+
+`./gradlew check` is the single command that runs every quality gate: Spotless formatting,
+Error Prone, PMD, tests, and JaCoCo coverage verification. This is what CI runs. It must pass
+before every commit.
 
 ```bash
-# Run all tests
-./gradlew test
-
-# Run tests + enforce coverage floors
-./gradlew coverage
-
-# Build the executable fat JAR
-./gradlew :cli:shadowJar
-
-# Run a request file
-./gradlew :cli:run --args="--request examples/budget-request.json"
-
-# Format and lint check (Spotless)
-./gradlew spotlessCheck
-
-# Apply Spotless formatting
-./gradlew spotlessApply
-
-# Run PMD static analysis
-./gradlew pmdMain pmdTest
-
-# Run all checks
+# Run every quality gate (what CI runs — the only command that matters for correctness)
 ./gradlew check
+
+# Targeted iteration during development
+./gradlew test                   # tests only, no quality gates
+./gradlew coverage               # tests + coverage verification + HTML/XML report generation
+./gradlew spotlessCheck          # formatting check only
+./gradlew spotlessApply          # auto-format in place (run before spotlessCheck)
+./gradlew pmdMain pmdTest        # PMD only
+
+# Build artifacts
+./gradlew :cli:shadowJar
+./gradlew :cli:run --args="--request examples/budget-request.json"
 ```
-
----
-
-## Coverage Requirements
-
-JaCoCo enforces these floors on every `./gradlew coverage` run:
-
-| Module | Line Coverage | Branch Coverage |
-|:-------|:-------------|:----------------|
-| `engine` | 100% | 95% |
-| `protocol` | 100% | 95% |
-| `cli` | 100% | 95% |
 
 ---
 
 ## Quality Gates
 
-All gates run as part of `./gradlew check`.
+`./gradlew check` runs each of the following gates. Any failure fails the build.
 
 ### Error Prone
 
@@ -103,6 +85,7 @@ Compile-time static analysis. These checks are promoted to errors (build fails):
 - `BoxedPrimitiveConstructor`
 - `CheckReturnValue`
 - `EqualsIncompatibleType`
+- `JavaLangClash`
 - `MissingCasesInEnumSwitch`
 - `MissingOverride`
 - `ReferenceEquality`
@@ -120,13 +103,23 @@ Structural analysis. Two rulesets:
 
 ### Spotless
 
-Google Java Format 1.35.0. Removes unused imports. Enforced on every commit via `spotlessCheck`.
-Run `./gradlew spotlessApply` to auto-format before committing.
+Google Java Format 1.35.0. Removes unused imports. Run `./gradlew spotlessApply` to auto-format
+before committing; `./gradlew spotlessCheck` (run by `check`) will fail if formatting is off.
 
 ### JaCoCo
 
-100% line coverage, 95% branch coverage across all modules. The coverage report is generated at
-`build/reports/jacoco/` in each module after `./gradlew coverage`.
+100% line and branch coverage required across all modules.
+
+| Module | Line Coverage | Branch Coverage |
+|:-------|:-------------|:----------------|
+| `engine` | 100% | 100% |
+| `protocol` | 100% | 100% |
+| `cli` | 100% | 100% |
+
+`./gradlew check` enforces the thresholds but does not write report files. Run
+`./gradlew coverage` to enforce thresholds and generate HTML/XML reports at
+`build/reports/jacoco/` in each module plus an aggregated cross-module report at
+`build/reports/jacoco/aggregated/`.
 
 ---
 

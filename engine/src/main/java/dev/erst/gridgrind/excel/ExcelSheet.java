@@ -143,9 +143,7 @@ public final class ExcelSheet {
   public int lastColumnIndex() {
     int lastColumnIndex = -1;
     for (Row row : sheet) {
-      if (row != null) {
-        lastColumnIndex = Math.max(lastColumnIndex, row.getLastCellNum() - 1);
-      }
+      lastColumnIndex = Math.max(lastColumnIndex, row.getLastCellNum() - 1);
     }
     return lastColumnIndex;
   }
@@ -318,6 +316,7 @@ public final class ExcelSheet {
 
   private ExcelCellSnapshot snapshot(String address, Cell cell) {
     CellType declaredType = cell.getCellType();
+    String formulaExpression = declaredType == CellType.FORMULA ? cell.getCellFormula() : null;
     String displayValue;
     try {
       displayValue =
@@ -325,8 +324,7 @@ public final class ExcelSheet {
               ? dataFormatter.formatCellValue(cell, formulaEvaluator)
               : dataFormatter.formatCellValue(cell);
     } catch (RuntimeException exception) {
-      String formula = declaredType == CellType.FORMULA ? cell.getCellFormula() : null;
-      throw FormulaExceptions.wrap(name(), address, formula, exception);
+      throw FormulaExceptions.wrap(name(), address, formulaExpression, exception);
     }
     ExcelCellStyleSnapshot style = styleRegistry.snapshot(cell);
 

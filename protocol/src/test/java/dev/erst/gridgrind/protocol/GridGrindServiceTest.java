@@ -3,6 +3,8 @@ package dev.erst.gridgrind.protocol;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
@@ -450,8 +452,8 @@ class GridGrindServiceTest {
                                 true,
                                 null,
                                 true,
-                                CellStyleInput.HorizontalAlignmentInput.CENTER,
-                                CellStyleInput.VerticalAlignmentInput.CENTER)),
+                                ExcelHorizontalAlignment.CENTER,
+                                ExcelVerticalAlignment.CENTER)),
                         new WorkbookOperation.ApplyStyle(
                             "Budget",
                             "C1",
@@ -460,8 +462,8 @@ class GridGrindServiceTest {
                                 null,
                                 true,
                                 null,
-                                CellStyleInput.HorizontalAlignmentInput.RIGHT,
-                                CellStyleInput.VerticalAlignmentInput.BOTTOM)),
+                                ExcelHorizontalAlignment.RIGHT,
+                                ExcelVerticalAlignment.BOTTOM)),
                         new WorkbookOperation.SetCell(
                             "Budget", "B3", new CellInput.Formula("SUM(B2:B2)")),
                         new WorkbookOperation.EvaluateFormulas(),
@@ -722,13 +724,19 @@ class GridGrindServiceTest {
     WorkbookOperation appendRow =
         new WorkbookOperation.AppendRow("Budget", List.of(new CellInput.Text("x")));
 
+    WorkbookOperation ensureSheet = new WorkbookOperation.EnsureSheet("Budget");
+
     assertNull(GridGrindService.formulaFor(forceRecalc, ex));
     assertNull(GridGrindService.formulaFor(evalFormulas, ex));
     assertNull(GridGrindService.formulaFor(appendRow, ex));
+    assertNull(GridGrindService.formulaFor(ensureSheet, ex));
 
     assertNull(GridGrindService.sheetNameFor(forceRecalc, ex));
+    assertNull(GridGrindService.sheetNameFor(evalFormulas, ex));
     assertNull(GridGrindService.addressFor(forceRecalc, ex));
+    assertNull(GridGrindService.addressFor(evalFormulas, ex));
     assertNull(GridGrindService.rangeFor(forceRecalc, ex));
+    assertNull(GridGrindService.rangeFor(evalFormulas, ex));
   }
 
   @Test
@@ -752,5 +760,32 @@ class GridGrindServiceTest {
     assertEquals("APPLY_OPERATION", failure.problem().context().stage());
     assertEquals("SET_CELL", failure.problem().context().operationType());
     assertNull(failure.problem().context().formula());
+  }
+
+  @Test
+  void formulaForSetCellReturnsNullForAllNonFormulaValueTypes() {
+    // Direct unit tests covering each CellInput subtype in the SetCell arm of formulaFor.
+    // Text is covered by extractsNullFormulaFromSetCellWithNonFormulaValueWhenExceptionCarriesNone;
+    // this test covers the remaining five non-formula types.
+    RuntimeException ex = new RuntimeException("test");
+    assertNull(
+        GridGrindService.formulaFor(
+            new WorkbookOperation.SetCell("S", "A1", new CellInput.Blank()), ex));
+    assertNull(
+        GridGrindService.formulaFor(
+            new WorkbookOperation.SetCell("S", "A1", new CellInput.Numeric(1.0)), ex));
+    assertNull(
+        GridGrindService.formulaFor(
+            new WorkbookOperation.SetCell("S", "A1", new CellInput.BooleanValue(true)), ex));
+    assertNull(
+        GridGrindService.formulaFor(
+            new WorkbookOperation.SetCell(
+                "S", "A1", new CellInput.Date(java.time.LocalDate.of(2024, 1, 1))),
+            ex));
+    assertNull(
+        GridGrindService.formulaFor(
+            new WorkbookOperation.SetCell(
+                "S", "A1", new CellInput.DateTime(java.time.LocalDateTime.of(2024, 1, 1, 0, 0))),
+            ex));
   }
 }

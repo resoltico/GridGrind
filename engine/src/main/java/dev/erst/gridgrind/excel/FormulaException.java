@@ -1,31 +1,18 @@
 package dev.erst.gridgrind.excel;
 
-/** Base class for formula problems detected while writing or evaluating workbook formulas. */
-public abstract sealed class FormulaException extends IllegalArgumentException
+/**
+ * Sealed marker interface for formula problems detected while writing or evaluating workbook
+ * formulas. Each permitted subtype is a concrete exception class carrying the sheet, address, and
+ * formula context fields directly.
+ */
+public sealed interface FormulaException
     permits InvalidFormulaException, UnsupportedFormulaException {
-  private static final long serialVersionUID = 1L;
+  /** Name of the sheet containing the failing formula cell. */
+  String sheetName();
 
-  private final String sheetName;
-  private final String address;
-  private final String formula;
+  /** A1-notation address of the failing formula cell. */
+  String address();
 
-  protected FormulaException(
-      String message, String sheetName, String address, String formula, Throwable cause) {
-    super(message, cause);
-    this.sheetName = sheetName;
-    this.address = address;
-    this.formula = formula;
-  }
-
-  public String sheetName() {
-    return sheetName;
-  }
-
-  public String address() {
-    return address;
-  }
-
-  public String formula() {
-    return formula;
-  }
+  /** Raw formula text that triggered the failure. */
+  String formula();
 }

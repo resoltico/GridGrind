@@ -40,7 +40,8 @@ class WorkbookCommandExecutorTest {
       assertEquals("Item", workbook.sheet("Budget").text("A1"));
       assertEquals(54.0, workbook.sheet("Budget").number("B3"));
       assertEquals(
-          "CENTER", workbook.sheet("Budget").snapshotCell("A1").style().horizontalAlignment());
+          ExcelHorizontalAlignment.CENTER,
+          workbook.sheet("Budget").snapshotCell("A1").style().horizontalAlignment());
       assertEquals("BLANK", workbook.sheet("Budget").snapshotCell("A2").effectiveType());
       assertTrue(workbook.forceFormulaRecalculationOnOpenEnabled());
     }

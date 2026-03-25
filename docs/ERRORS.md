@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.3.0"
+version: "0.4.0"
 domain: ERRORS
 updated: "2026-03-25"
 route:
@@ -149,5 +149,5 @@ Each entry carries:
 | `message` | Exception message. |
 | `stage` | Pipeline stage where this cause originated, or `null` if not attributed to a stage. |
 
-Agents can inspect `type` to distinguish between, for example, `FormulaException` (invalid
-formula syntax) and `UnsupportedOperationException` (valid formula syntax, unsupported by POI).
+Agents can inspect `type` to distinguish between, for example, `InvalidFormulaException` (invalid
+formula syntax) and `UnsupportedFormulaException` (valid formula syntax, unsupported by POI).

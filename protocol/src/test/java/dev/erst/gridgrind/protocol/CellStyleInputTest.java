@@ -16,8 +16,8 @@ class CellStyleInputTest {
             true,
             false,
             true,
-            CellStyleInput.HorizontalAlignmentInput.RIGHT,
-            CellStyleInput.VerticalAlignmentInput.CENTER);
+            ExcelHorizontalAlignment.RIGHT,
+            ExcelVerticalAlignment.CENTER);
 
     assertEquals("#,##0.00", style.toExcelCellStyle().numberFormat());
     assertTrue(style.toExcelCellStyle().bold());
@@ -52,10 +52,7 @@ class CellStyleInputTest {
   void acceptsSingleAttributeStyles() {
     assertNotNull(new CellStyleInput(null, null, null, true, null, null));
     assertNotNull(
-        new CellStyleInput(
-            null, null, null, null, CellStyleInput.HorizontalAlignmentInput.CENTER, null));
-    assertNotNull(
-        new CellStyleInput(
-            null, null, null, null, null, CellStyleInput.VerticalAlignmentInput.TOP));
+        new CellStyleInput(null, null, null, null, ExcelHorizontalAlignment.CENTER, null));
+    assertNotNull(new CellStyleInput(null, null, null, null, null, ExcelVerticalAlignment.TOP));
   }
 }

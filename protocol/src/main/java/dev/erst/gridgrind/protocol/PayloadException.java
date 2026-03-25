@@ -1,31 +1,17 @@
 package dev.erst.gridgrind.protocol;
 
-/** Base class for JSON payload failures with structured path and location metadata. */
-public abstract sealed class PayloadException extends IllegalArgumentException
-    permits InvalidJsonException, InvalidRequestException {
-  private static final long serialVersionUID = 1L;
+/**
+ * Sealed marker interface for JSON payload failures with structured path and location metadata.
+ * Each permitted subtype is a concrete exception class carrying the JSON path and line/column
+ * coordinates directly.
+ */
+public sealed interface PayloadException permits InvalidJsonException, InvalidRequestException {
+  /** JSON pointer path to the element that triggered the failure. */
+  String jsonPath();
 
-  private final String jsonPath;
-  private final Integer jsonLine;
-  private final Integer jsonColumn;
+  /** Line number within the JSON payload where the error was detected. */
+  Integer jsonLine();
 
-  protected PayloadException(
-      String message, String jsonPath, Integer jsonLine, Integer jsonColumn, Throwable cause) {
-    super(message, cause);
-    this.jsonPath = jsonPath;
-    this.jsonLine = jsonLine;
-    this.jsonColumn = jsonColumn;
-  }
-
-  public String jsonPath() {
-    return jsonPath;
-  }
-
-  public Integer jsonLine() {
-    return jsonLine;
-  }
-
-  public Integer jsonColumn() {
-    return jsonColumn;
-  }
+  /** Column number within the JSON payload where the error was detected. */
+  Integer jsonColumn();
 }

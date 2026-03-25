@@ -15,7 +15,7 @@ calls, no ad hoc scripting, no brittle string parsing.
 
 ---
 
-Alice runs sourcing at **High Ground Roasters**. Her business lives in Excel: green coffee
+Alice runs sourcing at High Ground Roasters. Her business lives in Excel: green coffee
 inventory by origin, roast batch yields, wholesale price tiers, weekly revenue by SKU. Every
 Monday, her AI agent updates those sheets — new arrivals logged, prices recalculated, batch
 reports drafted and filed. The agent does not write code to manipulate cells. It sends GridGrind

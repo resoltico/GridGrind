@@ -4,17 +4,20 @@ import java.util.Objects;
 import org.apache.poi.ss.util.CellReference;
 
 /** Normalized rectangular cell range expressed with zero-based row and column bounds. */
-final class ExcelRange {
-  private final int firstRow;
-  private final int lastRow;
-  private final int firstColumn;
-  private final int lastColumn;
-
-  private ExcelRange(int firstRow, int lastRow, int firstColumn, int lastColumn) {
-    this.firstRow = firstRow;
-    this.lastRow = lastRow;
-    this.firstColumn = firstColumn;
-    this.lastColumn = lastColumn;
+record ExcelRange(int firstRow, int lastRow, int firstColumn, int lastColumn) {
+  ExcelRange {
+    if (firstRow < 0) {
+      throw new IllegalArgumentException("firstRow must not be negative");
+    }
+    if (lastRow < firstRow) {
+      throw new IllegalArgumentException("lastRow must not be less than firstRow");
+    }
+    if (firstColumn < 0) {
+      throw new IllegalArgumentException("firstColumn must not be negative");
+    }
+    if (lastColumn < firstColumn) {
+      throw new IllegalArgumentException("lastColumn must not be less than firstColumn");
+    }
   }
 
   static ExcelRange parse(String range) {
@@ -41,32 +44,18 @@ final class ExcelRange {
         range, new IllegalArgumentException("range must contain at most one ':'"));
   }
 
-  int firstRow() {
-    return firstRow;
-  }
-
-  int lastRow() {
-    return lastRow;
-  }
-
-  int firstColumn() {
-    return firstColumn;
-  }
-
-  int lastColumn() {
-    return lastColumn;
-  }
-
+  /** Returns the number of rows in this range. */
   int rowCount() {
     return lastRow - firstRow + 1;
   }
 
+  /** Returns the number of columns in this range. */
   int columnCount() {
     return lastColumn - firstColumn + 1;
   }
 
   private static CellReference parseCell(String address, String range) {
-    if (address == null || address.isBlank()) {
+    if (address.isBlank()) {
       throw new InvalidRangeAddressException(
           range, new IllegalArgumentException("range endpoint must not be blank"));
     }

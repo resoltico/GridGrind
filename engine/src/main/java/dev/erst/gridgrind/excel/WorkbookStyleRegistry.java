@@ -84,8 +84,8 @@ final class WorkbookStyleRegistry {
         style.bold(),
         style.italic(),
         style.wrapText(),
-        style.horizontalAlignment().name(),
-        style.verticalAlignment().name());
+        style.horizontalAlignment(),
+        style.verticalAlignment());
   }
 
   private ResolvedCellStyle resolvedStyle(Cell cell) {
@@ -94,14 +94,21 @@ final class WorkbookStyleRegistry {
 
   private ResolvedCellStyle resolvedStyle(CellStyle cellStyle) {
     Font font = workbook.getFontAt(cellStyle.getFontIndex());
-    String numberFormat = cellStyle.getDataFormatString();
     return new ResolvedCellStyle(
-        numberFormat == null || numberFormat.isBlank() ? DEFAULT_NUMBER_FORMAT : numberFormat,
+        resolveNumberFormat(cellStyle.getDataFormatString()),
         font.getBold(),
         font.getItalic(),
         cellStyle.getWrapText(),
         fromPoi(cellStyle.getAlignment()),
         fromPoi(cellStyle.getVerticalAlignment()));
+  }
+
+  /**
+   * Returns the number format string, substituting the default "General" format when the raw value
+   * is null or blank.
+   */
+  static String resolveNumberFormat(String numberFormat) {
+    return numberFormat == null || numberFormat.isBlank() ? DEFAULT_NUMBER_FORMAT : numberFormat;
   }
 
   private CellStyle styleFor(ResolvedCellStyle style) {

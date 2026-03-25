@@ -5,7 +5,7 @@
  *  - Java toolchain (version read once from gradle.properties)
  *  - sources JAR production
  *  - JUnit Platform test runner
- *  - JaCoCo report + coverage-verification tasks (100 % line, 95 % branch)
+ *  - JaCoCo report + coverage-verification tasks (100 % line, 100 % branch)
  */
 import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.tasks.bundling.Jar
@@ -63,7 +63,7 @@ tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
             limit {
                 counter = "BRANCH"
                 value = "COVEREDRATIO"
-                minimum = "0.95".toBigDecimal()
+                minimum = "1.0".toBigDecimal()
             }
         }
     }

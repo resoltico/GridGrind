@@ -166,22 +166,40 @@ public final class GridGrindProblems {
     return simpleName.isBlank() ? exception.getClass().getName() : simpleName;
   }
 
-  private static GridGrindResponse.ProblemContext enrichContext(
+  /**
+   * Enriches the problem context with exception-specific fields when the exception type and context
+   * type are paired (e.g., PayloadException in a ReadRequest context).
+   */
+  static GridGrindResponse.ProblemContext enrichContext(
       GridGrindResponse.ProblemContext context, Throwable exception) {
     return switch (context) {
-      case GridGrindResponse.ProblemContext.ReadRequest rc
-          when exception instanceof PayloadException pe ->
-          rc.withJson(pe.jsonPath(), pe.jsonLine(), pe.jsonColumn());
-      case GridGrindResponse.ProblemContext.ApplyOperation ac
-          when exception instanceof FormulaException fe ->
-          ac.withExceptionData(fe.sheetName(), fe.address(), null, fe.formula());
-      case GridGrindResponse.ProblemContext.ApplyOperation ac
-          when exception instanceof InvalidRangeAddressException ire ->
-          ac.withExceptionData(null, null, ire.range(), null);
-      case GridGrindResponse.ProblemContext.AnalyzeWorkbook aw
-          when exception instanceof FormulaException fe ->
-          aw.withExceptionData(fe.sheetName(), fe.address(), fe.formula());
-      default -> context;
+      case GridGrindResponse.ProblemContext.ReadRequest rc -> {
+        if (exception instanceof PayloadException pe) {
+          yield rc.withJson(pe.jsonPath(), pe.jsonLine(), pe.jsonColumn());
+        }
+        yield context;
+      }
+      case GridGrindResponse.ProblemContext.ApplyOperation ac -> {
+        if (exception instanceof FormulaException fe) {
+          yield ac.withExceptionData(fe.sheetName(), fe.address(), null, fe.formula());
+        }
+        if (exception instanceof InvalidRangeAddressException ire) {
+          yield ac.withExceptionData(null, null, ire.range(), null);
+        }
+        yield context;
+      }
+      case GridGrindResponse.ProblemContext.AnalyzeWorkbook aw -> {
+        if (exception instanceof FormulaException fe) {
+          yield aw.withExceptionData(fe.sheetName(), fe.address(), fe.formula());
+        }
+        yield context;
+      }
+      case GridGrindResponse.ProblemContext.ParseArguments _ -> context;
+      case GridGrindResponse.ProblemContext.ValidateRequest _ -> context;
+      case GridGrindResponse.ProblemContext.OpenWorkbook _ -> context;
+      case GridGrindResponse.ProblemContext.PersistWorkbook _ -> context;
+      case GridGrindResponse.ProblemContext.ExecuteRequest _ -> context;
+      case GridGrindResponse.ProblemContext.WriteResponse _ -> context;
     };
   }
 }
