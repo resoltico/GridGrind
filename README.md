@@ -41,6 +41,12 @@ echo '{"source":{"mode":"NEW"},"operations":[],"analysis":{"sheets":[]}}' \
   | docker run -i ghcr.io/resoltico/gridgrind:latest
 ```
 
+To check the version:
+
+```bash
+docker run --rm ghcr.io/resoltico/gridgrind:latest --version
+```
+
 To read a request file and write response and `.xlsx` files back to the host,
 mount a working directory:
 
@@ -67,6 +73,7 @@ echo '{"source":{"mode":"NEW"},"operations":[],"analysis":{"sheets":[]}}' \
   | java -jar gridgrind.jar
 
 java -jar gridgrind.jar --request request.json --response response.json
+java -jar gridgrind.jar --version
 ```
 
 ---

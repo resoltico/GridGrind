@@ -137,6 +137,45 @@ class AgentCliTest {
   }
 
   @Test
+  void versionFrom_returnsUnknown_whenImplementationVersionIsAbsent() {
+    assertEquals("unknown", AgentCli.versionFrom(null));
+  }
+
+  @Test
+  void versionFrom_returnsVersion_whenImplementationVersionIsPresent() {
+    assertEquals("0.4.1", AgentCli.versionFrom("0.4.1"));
+  }
+
+  @Test
+  void versionFlagPrintsVersionLineToStdoutAndReturnsExitCodeZero() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new AgentCli()
+            .run(new String[] {"--version"}, new ByteArrayInputStream(new byte[0]), stdout);
+
+    assertEquals(0, exitCode);
+    // Version reads from the JAR manifest Implementation-Version attribute.
+    // When running from the test classpath (no JAR), the attribute is absent and "unknown" is used.
+    assertEquals("gridgrind unknown\n", stdout.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void versionFlagTakesPrecedenceOverOtherFlags() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new AgentCli()
+            .run(
+                new String[] {"--version", "--request", "ignored.json"},
+                new ByteArrayInputStream(new byte[0]),
+                stdout);
+
+    assertEquals(0, exitCode);
+    assertEquals("gridgrind unknown\n", stdout.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
   void returnsStructuredJsonErrorForInvalidArguments() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 

@@ -12,6 +12,7 @@ import dev.erst.gridgrind.protocol.InvalidRequestException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
@@ -36,9 +37,9 @@ public final class AgentCli {
     Objects.requireNonNull(stdin, "stdin must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
 
-    CliOptions options;
+    ParsedArgs parsed;
     try {
-      options = CliOptions.parse(args);
+      parsed = ParsedArgs.parse(args);
     } catch (CliArgumentException exception) {
       writeResponse(
           stdout,
@@ -59,39 +60,51 @@ public final class AgentCli {
       return 2;
     }
 
+    return switch (parsed) {
+      case ParsedArgs.VersionRequest _ -> {
+        stdout.write(("gridgrind " + version() + "\n").getBytes(StandardCharsets.UTF_8));
+        stdout.flush();
+        yield 0;
+      }
+      case ParsedArgs.OperationRequest op -> executeOperation(op, stdin, stdout);
+    };
+  }
+
+  private int executeOperation(
+      ParsedArgs.OperationRequest op, InputStream stdin, OutputStream stdout) throws IOException {
     GridGrindRequest request;
     try {
-      request = readRequest(options.requestPath(), stdin);
+      request = readRequest(op.requestPath(), stdin);
     } catch (InvalidRequestException exception) {
       return writeResponseWithFallback(
-          options.responsePath(),
+          op.responsePath(),
           stdout,
           new GridGrindResponse.Failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
                   new GridGrindResponse.ProblemContext.ReadRequest(
-                      pathString(options.requestPath()), null, null, null))));
+                      pathString(op.requestPath()), null, null, null))));
     } catch (InvalidJsonException exception) {
       return writeResponseWithFallback(
-          options.responsePath(),
+          op.responsePath(),
           stdout,
           new GridGrindResponse.Failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
                   new GridGrindResponse.ProblemContext.ReadRequest(
-                      pathString(options.requestPath()), null, null, null))));
+                      pathString(op.requestPath()), null, null, null))));
     } catch (IOException exception) {
       return writeResponseWithFallback(
-          options.responsePath(),
+          op.responsePath(),
           stdout,
           new GridGrindResponse.Failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
                   new GridGrindResponse.ProblemContext.ReadRequest(
-                      pathString(options.requestPath()), null, null, null))));
+                      pathString(op.requestPath()), null, null, null))));
     }
 
     GridGrindResponse response;
@@ -105,7 +118,22 @@ public final class AgentCli {
                   exception, new GridGrindResponse.ProblemContext.ExecuteRequest(null, null)));
     }
 
-    return writeResponseWithFallback(options.responsePath(), stdout, response);
+    return writeResponseWithFallback(op.responsePath(), stdout, response);
+  }
+
+  private static String version() {
+    return versionFrom(AgentCli.class.getPackage().getImplementationVersion());
+  }
+
+  /**
+   * Returns the given implementation version string, or {@code "unknown"} when the JAR manifest
+   * attribute is absent (e.g. when running from the test classpath without a packaged JAR).
+   */
+  static String versionFrom(String implementationVersion) {
+    if (implementationVersion == null) {
+      return "unknown";
+    }
+    return implementationVersion;
   }
 
   private GridGrindRequest readRequest(Path requestPath, InputStream stdin) throws IOException {
@@ -180,8 +208,17 @@ public final class AgentCli {
     return path == null ? null : path.toAbsolutePath().toString();
   }
 
-  private record CliOptions(Path requestPath, Path responsePath) {
-    static CliOptions parse(String[] args) {
+  /** Parsed result of CLI argument processing; determines the action taken by {@link #run}. */
+  private sealed interface ParsedArgs {
+
+    /** Requests that the version string be printed to stdout. */
+    record VersionRequest() implements ParsedArgs {}
+
+    /** Requests execution of a protocol operation, reading from and writing to the given paths. */
+    record OperationRequest(Path requestPath, Path responsePath) implements ParsedArgs {}
+
+    /** Parses raw CLI arguments into a typed action descriptor. */
+    static ParsedArgs parse(String[] args) {
       Path requestPath = null;
       Path responsePath = null;
 
@@ -189,6 +226,9 @@ public final class AgentCli {
       while (index < args.length) {
         String argument = args[index];
         switch (argument) {
+          case "--version" -> {
+            return new VersionRequest();
+          }
           case "--request" -> {
             if (requestPath != null) {
               throw new CliArgumentException("--request", "Duplicate argument: --request");
@@ -209,7 +249,7 @@ public final class AgentCli {
         }
       }
 
-      return new CliOptions(requestPath, responsePath);
+      return new OperationRequest(requestPath, responsePath);
     }
 
     private static int nextValueIndex(String[] args, int flagIndex, String flagName) {
