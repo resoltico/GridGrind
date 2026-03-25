@@ -23,11 +23,11 @@ route:
   "protocolVersion": "V1",
   "problem": {
     "code": "INVALID_CELL_ADDRESS",
-    "category": "VALIDATION",
-    "recovery": "CORRECT_REQUEST",
+    "category": "REQUEST",
+    "recovery": "CHANGE_REQUEST",
     "title": "Invalid cell address",
     "message": "Cell address 'ZZZ999999' is not a valid A1-notation address.",
-    "resolution": "Correct the address in the failing operation and resubmit.",
+    "resolution": "Use a valid A1-style address such as A1 or BC12.",
     "context": {
       "stage": "APPLY_OPERATION",
       "operationIndex": 2,
@@ -36,7 +36,12 @@ route:
       "address": "ZZZ999999"
     },
     "causes": [
-      { "type": "InvalidCellAddressException", "message": "..." }
+      {
+        "type": "InvalidCellAddressException",
+        "className": "dev.erst.gridgrind.excel.InvalidCellAddressException",
+        "message": "...",
+        "stage": null
+      }
     ]
   }
 }
@@ -46,42 +51,43 @@ route:
 
 ## Problem Codes
 
-### Transport / Parsing
+### Arguments (`ARGUMENTS` category)
+
+| Code | Trigger |
+|:-----|:--------|
+| `INVALID_ARGUMENTS` | Unrecognized or malformed CLI arguments (e.g. unknown flag, missing value). |
+
+### Request (`REQUEST` category)
 
 | Code | Trigger |
 |:-----|:--------|
 | `INVALID_JSON` | Request payload is not valid JSON. |
-| `INVALID_REQUEST` | JSON is valid but payload shape violates the protocol schema. |
-
-### Workbook Resource
-
-| Code | Trigger |
-|:-----|:--------|
-| `WORKBOOK_NOT_FOUND` | `source.mode=EXISTING` path does not exist. |
-| `WORKBOOK_OPEN_ERROR` | Existing file exists but cannot be opened (corrupt, wrong format, locked). |
-| `WORKBOOK_SAVE_ERROR` | Workbook could not be saved to the specified path. |
-
-### Sheet Resource
-
-| Code | Trigger |
-|:-----|:--------|
-| `SHEET_NOT_FOUND` | An operation or analysis references a sheet that does not exist. |
-
-### Cell / Range Addressing
-
-| Code | Trigger |
-|:-----|:--------|
+| `INVALID_REQUEST` | JSON is valid but the payload shape violates the protocol schema. |
 | `INVALID_CELL_ADDRESS` | A1-notation cell address is malformed. |
-| `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or dimensions do not match `rows`. |
+| `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or its dimensions do not match `rows`. |
 
-### Formula
+### Formula (`FORMULA` category)
 
 | Code | Trigger |
 |:-----|:--------|
 | `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax. |
 | `UNSUPPORTED_FORMULA` | Formula syntax is valid but the function or construct is not supported by Apache POI. |
 
-### Internal
+### Resource (`RESOURCE` category)
+
+| Code | Trigger |
+|:-----|:--------|
+| `WORKBOOK_NOT_FOUND` | `source.mode=EXISTING` path does not exist. |
+| `SHEET_NOT_FOUND` | An operation or analysis references a sheet that does not exist. |
+| `CELL_NOT_FOUND` | An analysis `cells` entry references a cell that has not been written. |
+
+### I/O (`IO` category)
+
+| Code | Trigger |
+|:-----|:--------|
+| `IO_ERROR` | File could not be read or written — wrong path, missing permissions, disk full, or file locked. |
+
+### Internal (`INTERNAL` category)
 
 | Code | Trigger |
 |:-----|:--------|
@@ -93,11 +99,12 @@ route:
 
 | Category | Meaning |
 |:---------|:--------|
-| `TRANSPORT` | Request could not be parsed. Fix the JSON. |
-| `VALIDATION` | Request shape is invalid. Fix the request fields. |
-| `RESOURCE` | Referenced workbook or sheet does not exist or cannot be accessed. |
-| `EXECUTION` | Operation failed during workbook mutation. |
-| `INTERNAL` | Unexpected engine error. |
+| `ARGUMENTS` | CLI argument was unrecognized or malformed. Fix the command invocation. |
+| `REQUEST` | Request JSON is invalid or violates the protocol schema. Fix the request. |
+| `FORMULA` | Formula is syntactically invalid or unsupported by Apache POI. Fix the formula. |
+| `RESOURCE` | Referenced workbook, sheet, or cell does not exist. Fix the path or name. |
+| `IO` | Filesystem failure reading or writing a file. Check paths, permissions, and disk state. |
+| `INTERNAL` | Unexpected engine error. Capture details and escalate. |
 
 ---
 
@@ -105,10 +112,9 @@ route:
 
 | Recovery | Suggested Action |
 |:---------|:----------------|
-| `CORRECT_REQUEST` | Fix the failing field and resubmit. |
-| `CHECK_FILE` | Verify the referenced file exists and is accessible. |
-| `RETRY` | Transient resource failure — retry may succeed. |
-| `CONTACT_SUPPORT` | Internal error — escalate. |
+| `CHANGE_REQUEST` | Fix the failing field or argument and resubmit. |
+| `CHECK_ENVIRONMENT` | Verify file paths, permissions, disk space, and file locks before retrying. |
+| `ESCALATE` | Internal error — capture the full problem object and escalate. |
 
 ---
 
@@ -133,13 +139,15 @@ The `context` block provides structured metadata about where the failure occurre
 
 ## Causes Chain
 
-`causes` is an ordered list of underlying exceptions. Each entry carries:
+`causes` is an ordered list of underlying exceptions from immediate cause to root cause.
+Each entry carries:
 
 | Field | Description |
 |:------|:------------|
 | `type` | Simple class name of the exception (e.g. `InvalidCellAddressException`). |
+| `className` | Fully-qualified class name for precise matching. |
 | `message` | Exception message. |
+| `stage` | Pipeline stage where this cause originated, or `null` if not attributed to a stage. |
 
-The chain starts with the immediate cause and ends with the root cause. Agents can inspect the
-type chain to distinguish between, for example, `FormulaException` (invalid formula) and
-`UnsupportedOperationException` (valid formula, unsupported by POI).
+Agents can inspect `type` to distinguish between, for example, `FormulaException` (invalid
+formula syntax) and `UnsupportedOperationException` (valid formula syntax, unsupported by POI).
