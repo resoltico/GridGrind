@@ -17,7 +17,6 @@ class WorkbookCommandTest {
             List.of(
                 new ArrayList<>(List.of(ExcelCellValue.text("Item"), ExcelCellValue.number(49.0))),
                 new ArrayList<>(List.of(ExcelCellValue.text("Tax"), ExcelCellValue.number(10.0)))));
-    List<String> columns = new ArrayList<>(List.of("A"));
     ExcelCellStyle style =
         new ExcelCellStyle(
             "#,##0.00",
@@ -35,15 +34,13 @@ class WorkbookCommandTest {
     WorkbookCommand.ApplyStyle applyStyle =
         new WorkbookCommand.ApplyStyle("Budget", "A1:B1", style);
     WorkbookCommand.AppendRow appendRow = new WorkbookCommand.AppendRow("Budget", values);
-    WorkbookCommand.AutoSizeColumns autoSizeColumns =
-        new WorkbookCommand.AutoSizeColumns("Budget", columns);
+    WorkbookCommand.AutoSizeColumns autoSizeColumns = new WorkbookCommand.AutoSizeColumns("Budget");
     WorkbookCommand.EvaluateAllFormulas evaluate = new WorkbookCommand.EvaluateAllFormulas();
     WorkbookCommand.ForceFormulaRecalculationOnOpen recalc =
         new WorkbookCommand.ForceFormulaRecalculationOnOpen();
 
     values.clear();
     rows.clear();
-    columns.clear();
 
     assertEquals("Budget", createSheet.sheetName());
     assertEquals("A1", setCell.address());
@@ -52,7 +49,7 @@ class WorkbookCommandTest {
     assertEquals("C1:C2", clearRange.range());
     assertEquals(style, applyStyle.style());
     assertEquals(1, appendRow.values().size());
-    assertEquals(List.of("A"), autoSizeColumns.columnNames());
+    assertEquals("Budget", autoSizeColumns.sheetName());
     assertNotNull(evaluate);
     assertNotNull(recalc);
   }
@@ -137,23 +134,7 @@ class WorkbookCommandTest {
     valuesWithNull.add(null);
     assertThrows(
         NullPointerException.class, () -> new WorkbookCommand.AppendRow("Budget", valuesWithNull));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.AutoSizeColumns(null, List.of("A")));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.AutoSizeColumns(" ", List.of("A")));
-    assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.AutoSizeColumns("Budget", null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.AutoSizeColumns("Budget", List.of()));
-    List<String> columnsWithNull = new ArrayList<>();
-    columnsWithNull.add(null);
-    assertThrows(
-        NullPointerException.class,
-        () -> new WorkbookCommand.AutoSizeColumns("Budget", columnsWithNull));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.AutoSizeColumns("Budget", List.of(" ")));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.AutoSizeColumns(null));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.AutoSizeColumns(" "));
   }
 }

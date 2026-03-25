@@ -11,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Orchestrates protocol requests against the workbook core and returns structured responses. */
 public final class GridGrindService {
@@ -41,6 +42,11 @@ public final class GridGrindService {
               "request must not be null",
               new GridGrindResponse.ProblemContext.ValidateRequest(null, null),
               (Throwable) null));
+    }
+
+    Optional<GridGrindResponse> validationError = validateRequest(protocolVersion, request);
+    if (validationError.isPresent()) {
+      return validationError.get();
     }
 
     ExcelWorkbook workbook;
@@ -87,7 +93,8 @@ public final class GridGrindService {
 
           String savedWorkbookPath;
           try {
-            savedWorkbookPath = persistWorkbook(workbook, request.source(), request.persistence());
+            savedWorkbookPath =
+                persistWorkbook(workbook, request.persistence(), reqSourcePath(request));
           } catch (Exception exception) {
             response =
                 new GridGrindResponse.Failure(
@@ -113,6 +120,34 @@ public final class GridGrindService {
                   reports);
           return closeWorkbook(workbook, response, request);
         });
+  }
+
+  /**
+   * Validates cross-field constraints that cannot be enforced at the record level. Returns a
+   * failure response if the request is invalid, or empty if validation passes.
+   */
+  private Optional<GridGrindResponse> validateRequest(
+      GridGrindProtocolVersion protocolVersion, GridGrindRequest request) {
+    return switch (request.persistence()) {
+      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ ->
+          switch (request.source()) {
+            case GridGrindRequest.WorkbookSource.New _ ->
+                Optional.of(
+                    new GridGrindResponse.Failure(
+                        protocolVersion,
+                        GridGrindProblems.problem(
+                            GridGrindProblemCode.INVALID_REQUEST,
+                            "OVERWRITE persistence requires an EXISTING source; "
+                                + "a NEW workbook has no source file to overwrite",
+                            new GridGrindResponse.ProblemContext.ValidateRequest(
+                                reqSourceMode(request), reqPersistenceMode(request)),
+                            (Throwable) null)));
+            case GridGrindRequest.WorkbookSource.ExistingFile _ -> Optional.empty();
+          };
+      case GridGrindRequest.WorkbookPersistence.None _,
+          GridGrindRequest.WorkbookPersistence.SaveAs _ ->
+          Optional.empty();
+    };
   }
 
   private ExcelWorkbook openWorkbook(GridGrindRequest.WorkbookSource source) throws IOException {
@@ -143,26 +178,24 @@ public final class GridGrindService {
           new WorkbookCommand.AppendRow(
               op.sheetName(), op.values().stream().map(CellInput::toExcelCellValue).toList());
       case WorkbookOperation.AutoSizeColumns op ->
-          new WorkbookCommand.AutoSizeColumns(op.sheetName(), op.columns());
+          new WorkbookCommand.AutoSizeColumns(op.sheetName());
       case WorkbookOperation.EvaluateFormulas _ -> new WorkbookCommand.EvaluateAllFormulas();
       case WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
           new WorkbookCommand.ForceFormulaRecalculationOnOpen();
     };
   }
 
+  /**
+   * Persists the workbook according to the persistence mode. For OverwriteSource, sourcePath is
+   * guaranteed non-null by validateRequest (ExistingFile always paired with OverwriteSource).
+   */
   private String persistWorkbook(
-      ExcelWorkbook workbook,
-      GridGrindRequest.WorkbookSource source,
-      GridGrindRequest.WorkbookPersistence persistence)
+      ExcelWorkbook workbook, GridGrindRequest.WorkbookPersistence persistence, String sourcePath)
       throws IOException {
     return switch (persistence) {
       case GridGrindRequest.WorkbookPersistence.None _ -> null;
       case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> {
-        if (!(source instanceof GridGrindRequest.WorkbookSource.ExistingFile existingFile)) {
-          throw new IllegalArgumentException(
-              "OVERWRITE_SOURCE requires source to be EXISTING_FILE");
-        }
-        Path path = Path.of(existingFile.path());
+        Path path = Path.of(sourcePath);
         workbook.save(path);
         yield path.toAbsolutePath().toString();
       }
@@ -311,20 +344,26 @@ public final class GridGrindService {
   }
 
   private String reqSourceMode(GridGrindRequest request) {
-    return request.source().getClass().getSimpleName();
+    return switch (request.source()) {
+      case GridGrindRequest.WorkbookSource.New _ -> "NEW";
+      case GridGrindRequest.WorkbookSource.ExistingFile _ -> "EXISTING";
+    };
   }
 
   private String reqPersistenceMode(GridGrindRequest request) {
-    return request.persistence().getClass().getSimpleName();
+    return switch (request.persistence()) {
+      case GridGrindRequest.WorkbookPersistence.None _ -> "NONE";
+      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
+      case GridGrindRequest.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
+    };
   }
 
   private String reqSourcePath(GridGrindRequest request) {
-    if (request == null
-        || !(request.source()
-            instanceof GridGrindRequest.WorkbookSource.ExistingFile existingFile)) {
-      return null;
-    }
-    return absolutePath(existingFile.path());
+    return switch (request.source()) {
+      case GridGrindRequest.WorkbookSource.ExistingFile existingFile ->
+          absolutePath(existingFile.path());
+      case GridGrindRequest.WorkbookSource.New _ -> null;
+    };
   }
 
   String persistencePath(
@@ -332,36 +371,101 @@ public final class GridGrindService {
     return switch (persistence) {
       case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> absolutePath(saveAs.path());
       case GridGrindRequest.WorkbookPersistence.OverwriteSource _ ->
-          source instanceof GridGrindRequest.WorkbookSource.ExistingFile existingFile
-              ? absolutePath(existingFile.path())
-              : null;
+          switch (source) {
+            case GridGrindRequest.WorkbookSource.ExistingFile existingFile ->
+                absolutePath(existingFile.path());
+            case GridGrindRequest.WorkbookSource.New _ -> null;
+          };
       case GridGrindRequest.WorkbookPersistence.None _ -> null;
     };
   }
 
-  private String formulaFor(WorkbookOperation operation, Exception exception) {
-    String formula = GridGrindProblems.formulaFor(exception);
-    if (formula != null) {
-      return formula;
+  /**
+   * Returns the formula string for the failure context: checks the exception first (e.g.,
+   * FormulaException), then falls back to the operation record for SetCell with a formula value.
+   */
+  static String formulaFor(WorkbookOperation operation, Exception exception) {
+    String fromException = GridGrindProblems.formulaFor(exception);
+    if (fromException != null) {
+      return fromException;
     }
-    if (operation.extractValue() instanceof CellInput.Formula f) {
-      return f.formula();
-    }
-    return null;
+    return switch (operation) {
+      case WorkbookOperation.SetCell op when op.value() instanceof CellInput.Formula f ->
+          f.formula();
+      case WorkbookOperation.EnsureSheet _,
+          WorkbookOperation.SetCell _,
+          WorkbookOperation.SetRange _,
+          WorkbookOperation.ClearRange _,
+          WorkbookOperation.ApplyStyle _,
+          WorkbookOperation.AppendRow _,
+          WorkbookOperation.AutoSizeColumns _,
+          WorkbookOperation.EvaluateFormulas _,
+          WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
+          null;
+    };
   }
 
-  private String sheetNameFor(WorkbookOperation operation, Exception exception) {
-    if (operation.extractSheetName() != null) {
-      return operation.extractSheetName();
-    }
-    return GridGrindProblems.sheetNameFor(exception);
+  /**
+   * Returns the sheet name for the failure context: checks the operation record first, then falls
+   * back to the exception (e.g., FormulaException carrying sheet context).
+   */
+  static String sheetNameFor(WorkbookOperation operation, Exception exception) {
+    String fromOp =
+        switch (operation) {
+          case WorkbookOperation.EnsureSheet op -> op.sheetName();
+          case WorkbookOperation.SetCell op -> op.sheetName();
+          case WorkbookOperation.SetRange op -> op.sheetName();
+          case WorkbookOperation.ClearRange op -> op.sheetName();
+          case WorkbookOperation.ApplyStyle op -> op.sheetName();
+          case WorkbookOperation.AppendRow op -> op.sheetName();
+          case WorkbookOperation.AutoSizeColumns op -> op.sheetName();
+          case WorkbookOperation.EvaluateFormulas _,
+              WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
+              null;
+        };
+    return fromOp != null ? fromOp : GridGrindProblems.sheetNameFor(exception);
   }
 
-  private String addressFor(WorkbookOperation operation, Exception exception) {
-    if (operation.extractAddress() != null) {
-      return operation.extractAddress();
-    }
-    return GridGrindProblems.addressFor(exception);
+  /**
+   * Returns the cell address for the failure context: checks the operation record first, then falls
+   * back to the exception (e.g., FormulaException carrying address context).
+   */
+  static String addressFor(WorkbookOperation operation, Exception exception) {
+    String fromOp =
+        switch (operation) {
+          case WorkbookOperation.SetCell op -> op.address();
+          case WorkbookOperation.EnsureSheet _,
+              WorkbookOperation.SetRange _,
+              WorkbookOperation.ClearRange _,
+              WorkbookOperation.ApplyStyle _,
+              WorkbookOperation.AppendRow _,
+              WorkbookOperation.AutoSizeColumns _,
+              WorkbookOperation.EvaluateFormulas _,
+              WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
+              null;
+        };
+    return fromOp != null ? fromOp : GridGrindProblems.addressFor(exception);
+  }
+
+  /**
+   * Returns the range string for the failure context: checks the operation record first, then falls
+   * back to the exception (e.g., InvalidRangeAddressException carrying the range).
+   */
+  static String rangeFor(WorkbookOperation operation, Exception exception) {
+    String fromOp =
+        switch (operation) {
+          case WorkbookOperation.SetRange op -> op.range();
+          case WorkbookOperation.ClearRange op -> op.range();
+          case WorkbookOperation.ApplyStyle op -> op.range();
+          case WorkbookOperation.EnsureSheet _,
+              WorkbookOperation.SetCell _,
+              WorkbookOperation.AppendRow _,
+              WorkbookOperation.AutoSizeColumns _,
+              WorkbookOperation.EvaluateFormulas _,
+              WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
+              null;
+        };
+    return fromOp != null ? fromOp : GridGrindProblems.rangeFor(exception);
   }
 
   private GridGrindResponse operationFailure(
@@ -400,13 +504,6 @@ public final class GridGrindService {
                 exception.sheetName(),
                 exception.address(),
                 GridGrindProblems.formulaFor(cause))));
-  }
-
-  private String rangeFor(WorkbookOperation operation, Exception exception) {
-    if (operation.extractRange() != null) {
-      return operation.extractRange();
-    }
-    return GridGrindProblems.rangeFor(exception);
   }
 
   /** Functional interface for closing an ExcelWorkbook after request execution. */

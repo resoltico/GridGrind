@@ -47,9 +47,7 @@ public final class WorkbookCommandExecutor {
               .getOrCreateSheet(appendRow.sheetName())
               .appendRow(appendRow.values().toArray(ExcelCellValue[]::new));
       case WorkbookCommand.AutoSizeColumns autoSizeColumns ->
-          workbook
-              .sheet(autoSizeColumns.sheetName())
-              .autoSizeColumns(autoSizeColumns.columnNames().toArray(String[]::new));
+          workbook.sheet(autoSizeColumns.sheetName()).autoSizeColumns();
       case WorkbookCommand.EvaluateAllFormulas _ -> workbook.evaluateAllFormulas();
       case WorkbookCommand.ForceFormulaRecalculationOnOpen _ ->
           workbook.forceFormulaRecalculationOnOpen();

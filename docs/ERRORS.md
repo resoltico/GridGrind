@@ -1,8 +1,8 @@
 ---
-afad: "3.3"
-version: "1.0.0"
+afad: "3.4"
+version: "0.3.0"
 domain: ERRORS
-updated: "2026-03-24"
+updated: "2026-03-25"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-formula, sheet-not-found, workbook-not-found, causes, context]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context"]
@@ -124,7 +124,7 @@ The `context` block provides structured metadata about where the failure occurre
 
 | Field | Description |
 |:------|:------------|
-| `stage` | `READ_REQUEST`, `VALIDATE_REQUEST`, `APPLY_OPERATION`, `ANALYZE_WORKBOOK`, `PERSIST_WORKBOOK`, `WRITE_RESPONSE` |
+| `stage` | `READ_REQUEST`, `VALIDATE_REQUEST`, `OPEN_WORKBOOK`, `APPLY_OPERATION`, `PERSIST_WORKBOOK`, `ANALYZE_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
 | `operationIndex` | Zero-based index of the failing operation in `operations`. |
 | `operationType` | The `type` field of the failing operation (e.g. `SET_CELL`). |
 | `sheetName` | Sheet referenced by the failing operation, if applicable. |

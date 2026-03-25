@@ -1,8 +1,8 @@
 ---
-afad: "3.3"
-version: "1.0.0"
+afad: "3.4"
+version: "0.3.0"
 domain: OPERATIONS
-updated: "2026-03-24"
+updated: "2026-03-25"
 route:
   keywords: [gridgrind, operations, set-cell, set-range, apply-style, ensure-sheet, append-row, clear-range, evaluate-formulas, auto-size-columns, request, json, protocol]
   questions: ["what operations does gridgrind support", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept"]
@@ -59,9 +59,9 @@ Open an existing `.xlsx` file.
 Write the workbook to the given path, creating parent directories as needed.
 
 ```json
-{ "mode": "OVERWRITE", "path": "path/to/existing.xlsx" }
+{ "mode": "OVERWRITE" }
 ```
-Overwrite an existing file at the given path.
+Overwrite the source file (requires `source.mode=EXISTING`).
 
 Omit `persistence` entirely to run a read-only analysis without saving.
 
@@ -72,11 +72,13 @@ Omit `persistence` entirely to run a read-only analysis without saving.
 Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 
 ```json
-{ "type": "TEXT",    "text": "Origin"  }
-{ "type": "NUMBER",  "number": 8.40    }
-{ "type": "BOOLEAN", "bool": true      }
-{ "type": "FORMULA", "formula": "SUM(B2:B3)" }
-{ "type": "BLANK"                      }
+{ "type": "TEXT",      "text": "Origin"              }
+{ "type": "NUMBER",    "number": 8.40                }
+{ "type": "BOOLEAN",   "bool": true                  }
+{ "type": "FORMULA",   "formula": "SUM(B2:B3)"       }
+{ "type": "DATE",      "date": "2026-03-25"           }
+{ "type": "DATE_TIME", "dateTime": "2026-03-25T10:15:30" }
+{ "type": "BLANK"                                     }
 ```
 
 ---

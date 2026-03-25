@@ -153,6 +153,34 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void wrapsDateTimeParseFailuresAsInvalidRequestErrors() {
+    // Jackson's LocalDate deserializer throws DateTimeParseException (a DateTimeException)
+    // when the input string is not a valid ISO-8601 date. validationCause must detect it.
+    InvalidRequestException failure =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "mode": "NEW" },
+                      "operations": [
+                        {
+                          "type": "SET_CELL",
+                          "sheetName": "Budget",
+                          "address": "A1",
+                          "value": { "type": "DATE", "date": "not-a-date" }
+                        }
+                      ],
+                      "analysis": { "sheets": [] }
+                    }
+                    """
+                        .getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+
+    assertNotNull(failure.getMessage());
+  }
+
+  @Test
   void stripsJacksonSourceLocationFromInvalidEnumValueMessages() throws IOException {
     // An unrecognised enum value produces an InvalidFormatException whose raw message
     // contains " at [Source:" — verify the cleaned message does not expose that suffix.

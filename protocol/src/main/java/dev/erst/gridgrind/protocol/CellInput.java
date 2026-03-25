@@ -78,27 +78,30 @@ public sealed interface CellInput {
     }
   }
 
-  /** ISO-8601 date cell input formatted as a date value in Excel. */
-  record Date(String date) implements CellInput {
+  /** ISO-8601 date cell input formatted as a date value in Excel (e.g. {@code "2024-03-15"}). */
+  record Date(LocalDate date) implements CellInput {
     public Date {
-      LocalDate.parse(Validation.required(date, "date"));
+      Validation.required(date, "date");
     }
 
     @Override
     public ExcelCellValue toExcelCellValue() {
-      return ExcelCellValue.date(LocalDate.parse(date));
+      return ExcelCellValue.date(date);
     }
   }
 
-  /** ISO-8601 date-time cell input formatted as a date-time value in Excel. */
-  record DateTime(String dateTime) implements CellInput {
+  /**
+   * ISO-8601 date-time cell input formatted as a date-time value in Excel (e.g. {@code
+   * "2024-03-15T09:30:00"}).
+   */
+  record DateTime(LocalDateTime dateTime) implements CellInput {
     public DateTime {
-      LocalDateTime.parse(Validation.required(dateTime, "dateTime"));
+      Validation.required(dateTime, "dateTime");
     }
 
     @Override
     public ExcelCellValue toExcelCellValue() {
-      return ExcelCellValue.dateTime(LocalDateTime.parse(dateTime));
+      return ExcelCellValue.dateTime(dateTime);
     }
   }
 
