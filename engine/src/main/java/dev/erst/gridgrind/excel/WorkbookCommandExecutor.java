@@ -28,6 +28,37 @@ public final class WorkbookCommandExecutor {
     switch (command) {
       case WorkbookCommand.CreateSheet createSheet ->
           workbook.getOrCreateSheet(createSheet.sheetName());
+      case WorkbookCommand.RenameSheet renameSheet ->
+          workbook.renameSheet(renameSheet.sheetName(), renameSheet.newSheetName());
+      case WorkbookCommand.DeleteSheet deleteSheet -> workbook.deleteSheet(deleteSheet.sheetName());
+      case WorkbookCommand.MoveSheet moveSheet ->
+          workbook.moveSheet(moveSheet.sheetName(), moveSheet.targetIndex());
+      case WorkbookCommand.MergeCells mergeCells ->
+          workbook.sheet(mergeCells.sheetName()).mergeCells(mergeCells.range());
+      case WorkbookCommand.UnmergeCells unmergeCells ->
+          workbook.sheet(unmergeCells.sheetName()).unmergeCells(unmergeCells.range());
+      case WorkbookCommand.SetColumnWidth setColumnWidth ->
+          workbook
+              .sheet(setColumnWidth.sheetName())
+              .setColumnWidth(
+                  setColumnWidth.firstColumnIndex(),
+                  setColumnWidth.lastColumnIndex(),
+                  setColumnWidth.widthCharacters());
+      case WorkbookCommand.SetRowHeight setRowHeight ->
+          workbook
+              .sheet(setRowHeight.sheetName())
+              .setRowHeight(
+                  setRowHeight.firstRowIndex(),
+                  setRowHeight.lastRowIndex(),
+                  setRowHeight.heightPoints());
+      case WorkbookCommand.FreezePanes freezePanes ->
+          workbook
+              .sheet(freezePanes.sheetName())
+              .freezePanes(
+                  freezePanes.splitColumn(),
+                  freezePanes.splitRow(),
+                  freezePanes.leftmostColumn(),
+                  freezePanes.topRow());
       case WorkbookCommand.SetCell setCell ->
           workbook
               .getOrCreateSheet(setCell.sheetName())

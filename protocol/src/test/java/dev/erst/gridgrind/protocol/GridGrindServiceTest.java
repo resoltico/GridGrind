@@ -12,10 +12,13 @@ import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnsupportedFormulaException;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
+import dev.erst.gridgrind.excel.XlsxRoundTrip;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
 /** Integration tests for GridGrindService end-to-end request execution. */
@@ -114,6 +117,253 @@ class GridGrindServiceTest {
   }
 
   @Test
+  void managesSheetsAndPersistsUpdatedSheetOrder() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-sheet-ops-");
+
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            List.of(
+                new WorkbookOperation.EnsureSheet("Budget"),
+                new WorkbookOperation.EnsureSheet("Archive"),
+                new WorkbookOperation.EnsureSheet("Scratch"),
+                new WorkbookOperation.SetCell("Archive", "A1", new CellInput.Text("Old")),
+                new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("Live")),
+                new WorkbookOperation.RenameSheet("Archive", "History"),
+                new WorkbookOperation.MoveSheet("History", 0),
+                new WorkbookOperation.DeleteSheet("Scratch")),
+            new GridGrindRequest.WorkbookAnalysisRequest(
+                List.of(
+                    new GridGrindRequest.SheetInspectionRequest(
+                        "History", List.of("A1"), null, null),
+                    new GridGrindRequest.SheetInspectionRequest(
+                        "Budget", List.of("A1"), null, null))));
+
+    GridGrindResponse response = new GridGrindService().execute(request);
+
+    assertInstanceOf(GridGrindResponse.Success.class, response);
+    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    assertEquals(workbookPath.toAbsolutePath().toString(), success.savedWorkbookPath());
+    assertEquals(2, success.workbook().sheetCount());
+    assertEquals(List.of("History", "Budget"), success.workbook().sheetNames());
+    assertEquals("History", success.sheets().get(0).sheetName());
+    assertEquals("Old", success.sheets().get(0).requestedCells().get(0).stringValue());
+    assertEquals("Budget", success.sheets().get(1).sheetName());
+    assertEquals("Live", success.sheets().get(1).requestedCells().get(0).stringValue());
+    assertEquals(List.of("History", "Budget"), XlsxRoundTrip.sheetOrder(workbookPath));
+  }
+
+  @Test
+  void appliesStructuralLayoutOperationsAndPersistsWorkbookShape() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-ops-");
+
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            List.of(
+                new WorkbookOperation.EnsureSheet("Budget"),
+                new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("Quarterly")),
+                new WorkbookOperation.MergeCells("Budget", "A1:B1"),
+                new WorkbookOperation.SetColumnWidth("Budget", 0, 1, 16.0),
+                new WorkbookOperation.SetRowHeight("Budget", 0, 0, 28.5),
+                new WorkbookOperation.FreezePanes("Budget", 1, 1, 1, 1)),
+            new GridGrindRequest.WorkbookAnalysisRequest(
+                List.of(
+                    new GridGrindRequest.SheetInspectionRequest(
+                        "Budget", List.of("A1"), null, null))));
+
+    GridGrindResponse response = new GridGrindService().execute(request);
+
+    assertInstanceOf(GridGrindResponse.Success.class, response);
+    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    assertEquals(workbookPath.toAbsolutePath().toString(), success.savedWorkbookPath());
+    assertEquals(
+        "Quarterly", success.sheets().getFirst().requestedCells().getFirst().stringValue());
+    assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
+    assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
+    assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
+    assertEquals(
+        new XlsxRoundTrip.FreezePaneState.Frozen(1, 1, 1, 1),
+        XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+  }
+
+  @Test
+  void returnsStructuredFailureWhenMoveSheetTargetsMissingSheet() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(new WorkbookOperation.MoveSheet("Missing", 0)),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("MOVE_SHEET", failure.problem().context().operationType());
+    assertEquals("Missing", failure.problem().context().sheetName());
+  }
+
+  @Test
+  void returnsStructuredFailureForConflictingRenameTarget() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.EnsureSheet("Summary"),
+                        new WorkbookOperation.RenameSheet("Budget", "Summary")),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals(2, failure.problem().context().operationIndex());
+    assertEquals("RENAME_SHEET", failure.problem().context().operationType());
+    assertEquals("Budget", failure.problem().context().sheetName());
+    assertEquals("Sheet already exists: Summary", failure.problem().message());
+  }
+
+  @Test
+  void returnsStructuredFailureForInvalidMoveSheetIndex() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.MoveSheet("Budget", 1)),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals(1, failure.problem().context().operationIndex());
+    assertEquals("MOVE_SHEET", failure.problem().context().operationType());
+    assertEquals("Budget", failure.problem().context().sheetName());
+    assertEquals("targetIndex must be between 0 and 0 (inclusive): 1", failure.problem().message());
+  }
+
+  @Test
+  void returnsStructuredFailureForMergeCellsWithInvalidRange() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.MergeCells("Budget", "A1:")),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_RANGE_ADDRESS, failure.problem().code());
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("MERGE_CELLS", failure.problem().context().operationType());
+    assertEquals("Budget", failure.problem().context().sheetName());
+    assertEquals("A1:", failure.problem().context().range());
+  }
+
+  @Test
+  void returnsStructuredFailureForUnmergeCellsWithoutExactMatch() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.UnmergeCells("Budget", "A1:B2")),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("UNMERGE_CELLS", failure.problem().context().operationType());
+    assertEquals("Budget", failure.problem().context().sheetName());
+    assertEquals("A1:B2", failure.problem().context().range());
+    assertEquals("No merged region matches range: A1:B2", failure.problem().message());
+  }
+
+  @Test
+  void returnsStructuredFailureWhenFreezePanesTargetsMissingSheet() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(new WorkbookOperation.FreezePanes("Missing", 1, 1, 1, 1)),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("FREEZE_PANES", failure.problem().context().operationType());
+    assertEquals("Missing", failure.problem().context().sheetName());
+  }
+
+  @Test
+  void preservesStructuralWorkbookStateAcrossExistingWorkbookRoundTrips() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-round-trip-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var budget = workbook.createSheet("Budget");
+      workbook.createSheet("Summary");
+
+      budget.addMergedRegion(CellRangeAddress.valueOf("A1:B2"));
+      budget.setColumnWidth(0, 4096);
+      budget.createRow(0).setHeightInPoints(28.5f);
+      budget.createFreezePane(1, 2, 3, 4);
+      budget.createRow(2).createCell(2).setCellValue("Before");
+
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.ExistingFile(workbookPath.toString()),
+            new GridGrindRequest.WorkbookPersistence.OverwriteSource(),
+            List.of(new WorkbookOperation.SetCell("Budget", "C3", new CellInput.Text("After"))),
+            new GridGrindRequest.WorkbookAnalysisRequest(
+                List.of(
+                    new GridGrindRequest.SheetInspectionRequest(
+                        "Budget", List.of("C3"), null, null))));
+
+    GridGrindResponse response = new GridGrindService().execute(request);
+
+    assertInstanceOf(GridGrindResponse.Success.class, response);
+    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    assertEquals(workbookPath.toAbsolutePath().toString(), success.savedWorkbookPath());
+    assertEquals("After", success.sheets().getFirst().requestedCells().getFirst().stringValue());
+    assertEquals(List.of("Budget", "Summary"), XlsxRoundTrip.sheetOrder(workbookPath));
+    assertEquals(List.of("A1:B2"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
+    assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
+    assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
+    assertEquals(
+        new XlsxRoundTrip.FreezePaneState.Frozen(1, 2, 3, 4),
+        XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+  }
+
+  @Test
   void returnsStructuredFailureForMissingWorkbookSource() {
     Path workbookPath = Path.of("missing-workbook.xlsx");
 
@@ -201,14 +451,15 @@ class GridGrindServiceTest {
 
   @Test
   void returnsStructuredFailureForInvalidPersistTarget() throws IOException {
-    Path directory = Files.createTempDirectory("gridgrind-persist-target-");
+    Path parentFile = Files.createTempFile("gridgrind-persist-target-", ".tmp");
+    Path workbookPath = parentFile.resolve("book.xlsx");
 
     GridGrindResponse response =
         new GridGrindService()
             .execute(
                 new GridGrindRequest(
                     new GridGrindRequest.WorkbookSource.New(),
-                    new GridGrindRequest.WorkbookPersistence.SaveAs(directory.toString()),
+                    new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
                     List.of(new WorkbookOperation.EnsureSheet("Budget")),
                     new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
 
@@ -217,7 +468,7 @@ class GridGrindServiceTest {
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals("PERSIST_WORKBOOK", failure.problem().context().stage());
     assertEquals(
-        directory.toAbsolutePath().toString(), failure.problem().context().persistencePath());
+        workbookPath.toAbsolutePath().toString(), failure.problem().context().persistencePath());
   }
 
   @Test
@@ -787,5 +1038,51 @@ class GridGrindServiceTest {
             new WorkbookOperation.SetCell(
                 "S", "A1", new CellInput.DateTime(java.time.LocalDateTime.of(2024, 1, 1, 0, 0))),
             ex));
+  }
+
+  @Test
+  void extractsSheetOnlyContextForDeleteSheetOperations() {
+    RuntimeException ex = new RuntimeException("test");
+    WorkbookOperation deleteSheet = new WorkbookOperation.DeleteSheet("Archive");
+
+    assertNull(GridGrindService.formulaFor(deleteSheet, ex));
+    assertEquals("Archive", GridGrindService.sheetNameFor(deleteSheet, ex));
+    assertNull(GridGrindService.addressFor(deleteSheet, ex));
+    assertNull(GridGrindService.rangeFor(deleteSheet, ex));
+  }
+
+  @Test
+  void extractsContextForStructuralLayoutOperations() {
+    RuntimeException ex = new RuntimeException("test");
+    WorkbookOperation mergeCells = new WorkbookOperation.MergeCells("Budget", "A1:B2");
+    WorkbookOperation unmergeCells = new WorkbookOperation.UnmergeCells("Budget", "A1:B2");
+    WorkbookOperation setColumnWidth = new WorkbookOperation.SetColumnWidth("Budget", 0, 1, 16.0);
+    WorkbookOperation setRowHeight = new WorkbookOperation.SetRowHeight("Budget", 0, 1, 28.5);
+    WorkbookOperation freezePanes = new WorkbookOperation.FreezePanes("Budget", 1, 1, 1, 1);
+
+    assertNull(GridGrindService.formulaFor(mergeCells, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(mergeCells, ex));
+    assertNull(GridGrindService.addressFor(mergeCells, ex));
+    assertEquals("A1:B2", GridGrindService.rangeFor(mergeCells, ex));
+
+    assertNull(GridGrindService.formulaFor(unmergeCells, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(unmergeCells, ex));
+    assertNull(GridGrindService.addressFor(unmergeCells, ex));
+    assertEquals("A1:B2", GridGrindService.rangeFor(unmergeCells, ex));
+
+    assertNull(GridGrindService.formulaFor(setColumnWidth, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(setColumnWidth, ex));
+    assertNull(GridGrindService.addressFor(setColumnWidth, ex));
+    assertNull(GridGrindService.rangeFor(setColumnWidth, ex));
+
+    assertNull(GridGrindService.formulaFor(setRowHeight, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(setRowHeight, ex));
+    assertNull(GridGrindService.addressFor(setRowHeight, ex));
+    assertNull(GridGrindService.rangeFor(setRowHeight, ex));
+
+    assertNull(GridGrindService.formulaFor(freezePanes, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(freezePanes, ex));
+    assertNull(GridGrindService.addressFor(freezePanes, ex));
+    assertNull(GridGrindService.rangeFor(freezePanes, ex));
   }
 }

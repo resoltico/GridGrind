@@ -11,6 +11,7 @@ import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 
 /** High-level sheet wrapper for typed reads, writes, and previews. */
@@ -124,6 +125,72 @@ public final class ExcelSheet {
       setCell(rowIndex, columnIndex, values[columnIndex]);
     }
 
+    return this;
+  }
+
+  /** Merges an A1-style rectangular range into one displayed cell region. */
+  public ExcelSheet mergeCells(String range) {
+    requireNonBlank(range, "range");
+
+    ExcelRange excelRange = parseRange(range);
+    requireMergeableRange(range, excelRange);
+    if (findMergedRegionIndex(sheet, excelRange) >= 0) {
+      return this;
+    }
+    requireNoMergedRegionOverlap(sheet, excelRange);
+    sheet.addMergedRegion(toCellRangeAddress(excelRange));
+    return this;
+  }
+
+  /** Removes the merged region whose coordinates exactly match the given range. */
+  public ExcelSheet unmergeCells(String range) {
+    requireNonBlank(range, "range");
+
+    ExcelRange excelRange = parseRange(range);
+    int mergedRegionIndex = findMergedRegionIndex(sheet, excelRange);
+    if (mergedRegionIndex < 0) {
+      throw new IllegalArgumentException("No merged region matches range: " + range);
+    }
+    sheet.removeMergedRegion(mergedRegionIndex);
+    return this;
+  }
+
+  /** Sets the width of one or more contiguous columns in Excel character units. */
+  public ExcelSheet setColumnWidth(
+      int firstColumnIndex, int lastColumnIndex, double widthCharacters) {
+    requireNonNegative(firstColumnIndex, "firstColumnIndex");
+    requireNonNegative(lastColumnIndex, "lastColumnIndex");
+    requireOrderedSpan(firstColumnIndex, lastColumnIndex, "firstColumnIndex", "lastColumnIndex");
+
+    int widthUnits = toColumnWidthUnits(widthCharacters);
+    for (int columnIndex = firstColumnIndex; columnIndex <= lastColumnIndex; columnIndex++) {
+      sheet.setColumnWidth(columnIndex, widthUnits);
+    }
+    return this;
+  }
+
+  /** Sets the height of one or more contiguous rows in Excel point units. */
+  public ExcelSheet setRowHeight(int firstRowIndex, int lastRowIndex, double heightPoints) {
+    requireNonNegative(firstRowIndex, "firstRowIndex");
+    requireNonNegative(lastRowIndex, "lastRowIndex");
+    requireOrderedSpan(firstRowIndex, lastRowIndex, "firstRowIndex", "lastRowIndex");
+
+    float heightPointsValue = toRowHeightPoints(heightPoints);
+    for (int rowIndex = firstRowIndex; rowIndex <= lastRowIndex; rowIndex++) {
+      getOrCreateRow(rowIndex).setHeightInPoints(heightPointsValue);
+    }
+    return this;
+  }
+
+  /** Freezes panes using explicit split and visible-origin coordinates. */
+  public ExcelSheet freezePanes(int splitColumn, int splitRow, int leftmostColumn, int topRow) {
+    requireNonNegative(splitColumn, "splitColumn");
+    requireNonNegative(splitRow, "splitRow");
+    requireNonNegative(leftmostColumn, "leftmostColumn");
+    requireNonNegative(topRow, "topRow");
+    requireFreezePaneCoordinates(splitColumn, splitRow, leftmostColumn, topRow);
+
+    sheet.createFreezePane(splitColumn, splitRow, leftmostColumn, topRow);
     return this;
   }
 
@@ -307,11 +374,16 @@ public final class ExcelSheet {
   }
 
   private Cell getOrCreateCell(int rowIndex, int columnIndex) {
+    return getOrCreateRow(rowIndex)
+        .getCell(columnIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+  }
+
+  private Row getOrCreateRow(int rowIndex) {
     Row row = sheet.getRow(rowIndex);
     if (row == null) {
       row = sheet.createRow(rowIndex);
     }
-    return row.getCell(columnIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+    return row;
   }
 
   private ExcelCellSnapshot snapshot(String address, Cell cell) {
@@ -400,6 +472,110 @@ public final class ExcelSheet {
     return ExcelRange.parse(range);
   }
 
+  private void requireMergeableRange(String range, ExcelRange excelRange) {
+    if (excelRange.rowCount() == 1 && excelRange.columnCount() == 1) {
+      throw new IllegalArgumentException("range must span at least two cells: " + range);
+    }
+  }
+
+  /** Rejects merges that would overlap any existing merged region on the sheet. */
+  static void requireNoMergedRegionOverlap(Sheet sheet, ExcelRange excelRange) {
+    for (int regionIndex = 0; regionIndex < sheet.getNumMergedRegions(); regionIndex++) {
+      CellRangeAddress existing = sheet.getMergedRegion(regionIndex);
+      if (intersects(existing, excelRange)) {
+        throw new IllegalArgumentException(
+            "Merged range overlaps existing merged region: " + existing.formatAsString());
+      }
+    }
+  }
+
+  /** Returns the exact merged-region index for the range, or {@code -1} when none matches. */
+  static int findMergedRegionIndex(Sheet sheet, ExcelRange excelRange) {
+    for (int regionIndex = 0; regionIndex < sheet.getNumMergedRegions(); regionIndex++) {
+      if (matches(sheet.getMergedRegion(regionIndex), excelRange)) {
+        return regionIndex;
+      }
+    }
+    return -1;
+  }
+
+  private CellRangeAddress toCellRangeAddress(ExcelRange excelRange) {
+    return new CellRangeAddress(
+        excelRange.firstRow(),
+        excelRange.lastRow(),
+        excelRange.firstColumn(),
+        excelRange.lastColumn());
+  }
+
+  /** Returns whether the POI range exactly matches the GridGrind range coordinates. */
+  static boolean matches(CellRangeAddress rangeAddress, ExcelRange excelRange) {
+    return rangeAddress.getFirstRow() == excelRange.firstRow()
+        && rangeAddress.getLastRow() == excelRange.lastRow()
+        && rangeAddress.getFirstColumn() == excelRange.firstColumn()
+        && rangeAddress.getLastColumn() == excelRange.lastColumn();
+  }
+
+  /** Returns whether the POI range intersects the GridGrind range at any cell. */
+  static boolean intersects(CellRangeAddress rangeAddress, ExcelRange excelRange) {
+    return rangeAddress.getFirstRow() <= excelRange.lastRow()
+        && rangeAddress.getLastRow() >= excelRange.firstRow()
+        && rangeAddress.getFirstColumn() <= excelRange.lastColumn()
+        && rangeAddress.getLastColumn() >= excelRange.firstColumn();
+  }
+
+  /** Converts Excel character-width input into POI column-width units. */
+  static int toColumnWidthUnits(double widthCharacters) {
+    requireFinitePositive(widthCharacters, "widthCharacters");
+    if (widthCharacters > 255.0d) {
+      throw new IllegalArgumentException(
+          "widthCharacters must be less than or equal to 255.0: " + widthCharacters);
+    }
+    int widthUnits = (int) Math.round(widthCharacters * 256.0d);
+    if (widthUnits <= 0) {
+      throw new IllegalArgumentException(
+          "widthCharacters is too small to produce a visible Excel column width: "
+              + widthCharacters);
+    }
+    return widthUnits;
+  }
+
+  /** Converts row-height input to POI points after validating Excel storage constraints. */
+  static float toRowHeightPoints(double heightPoints) {
+    requireFinitePositive(heightPoints, "heightPoints");
+    long heightTwips = Math.round(heightPoints * 20.0d);
+    if (heightTwips > Short.MAX_VALUE) {
+      throw new IllegalArgumentException(
+          "heightPoints is too large for Excel row height storage: " + heightPoints);
+    }
+    if (heightTwips <= 0L) {
+      throw new IllegalArgumentException(
+          "heightPoints is too small to produce a visible Excel row height: " + heightPoints);
+    }
+    return (float) heightPoints;
+  }
+
+  /** Validates freeze-pane split and visible-origin coordinates before POI mutation. */
+  static void requireFreezePaneCoordinates(
+      int splitColumn, int splitRow, int leftmostColumn, int topRow) {
+    if (splitColumn == 0 && splitRow == 0) {
+      throw new IllegalArgumentException("splitColumn and splitRow must not both be 0");
+    }
+    if (splitColumn == 0 && leftmostColumn != 0) {
+      throw new IllegalArgumentException(
+          "leftmostColumn must be 0 when splitColumn is 0: " + leftmostColumn);
+    }
+    if (splitRow == 0 && topRow != 0) {
+      throw new IllegalArgumentException("topRow must be 0 when splitRow is 0: " + topRow);
+    }
+    if (splitColumn > 0 && leftmostColumn < splitColumn) {
+      throw new IllegalArgumentException(
+          "leftmostColumn must be greater than or equal to splitColumn");
+    }
+    if (splitRow > 0 && topRow < splitRow) {
+      throw new IllegalArgumentException("topRow must be greater than or equal to splitRow");
+    }
+  }
+
   private boolean shouldPreview(Cell cell) {
     return cell != null
         && (cell.getCellType() != CellType.BLANK || cell.getCellStyle().getIndex() != 0);
@@ -431,6 +607,29 @@ public final class ExcelSheet {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
+    }
+  }
+
+  private static void requireNonNegative(int value, String fieldName) {
+    if (value < 0) {
+      throw new IllegalArgumentException(fieldName + " must not be negative");
+    }
+  }
+
+  private static void requireOrderedSpan(
+      int firstValue, int lastValue, String firstFieldName, String lastFieldName) {
+    if (lastValue < firstValue) {
+      throw new IllegalArgumentException(
+          lastFieldName + " must not be less than " + firstFieldName);
+    }
+  }
+
+  private static void requireFinitePositive(double value, String fieldName) {
+    if (!Double.isFinite(value)) {
+      throw new IllegalArgumentException(fieldName + " must be finite");
+    }
+    if (value <= 0.0d) {
+      throw new IllegalArgumentException(fieldName + " must be greater than 0");
     }
   }
 }

@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -82,6 +83,50 @@ class ExcelWorkbookTest {
   }
 
   @Test
+  void renamesDeletesAndMovesSheetsAcrossSaves() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-sheet-management-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Live"));
+      workbook.getOrCreateSheet("Archive").setCell("A1", ExcelCellValue.text("Old"));
+      workbook.getOrCreateSheet("Scratch");
+
+      workbook.renameSheet("Archive", "History");
+      workbook.moveSheet("History", 0);
+      workbook.deleteSheet("Scratch");
+      workbook.save(workbookPath);
+
+      assertEquals(List.of("History", "Budget"), workbook.sheetNames());
+      assertEquals("Old", workbook.sheet("History").text("A1"));
+      assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Archive"));
+    }
+
+    assertEquals(List.of("History", "Budget"), XlsxRoundTrip.sheetOrder(workbookPath));
+  }
+
+  @Test
+  void persistsStructuralLayoutOperationsAcrossSaves() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet budget = workbook.getOrCreateSheet("Budget");
+      budget.setCell("A1", ExcelCellValue.text("Quarterly"));
+      budget.mergeCells("A1:B1");
+      budget.setColumnWidth(0, 1, 16.0);
+      budget.setRowHeight(0, 0, 28.5);
+      budget.freezePanes(1, 1, 1, 1);
+      workbook.save(workbookPath);
+    }
+
+    assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
+    assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
+    assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
+    assertEquals(
+        new XlsxRoundTrip.FreezePaneState.Frozen(1, 1, 1, 1),
+        XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+  }
+
+  @Test
   void wrapsWorkbookWideFormulaEvaluationFailures() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook();
         ExcelWorkbook workbook =
@@ -116,6 +161,25 @@ class ExcelWorkbookTest {
       SheetNotFoundException missingSheet =
           assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Missing"));
       assertEquals("Missing", missingSheet.sheetName());
+      workbook.getOrCreateSheet("Budget");
+      workbook.getOrCreateSheet("Archive");
+      assertSame(workbook, workbook.renameSheet("Budget", "Budget"));
+      assertThrows(NullPointerException.class, () -> workbook.renameSheet(null, "Summary"));
+      assertThrows(IllegalArgumentException.class, () -> workbook.renameSheet(" ", "Summary"));
+      assertThrows(NullPointerException.class, () -> workbook.renameSheet("Budget", null));
+      assertThrows(IllegalArgumentException.class, () -> workbook.renameSheet("Budget", " "));
+      assertThrows(SheetNotFoundException.class, () -> workbook.renameSheet("Missing", "Summary"));
+      assertThrows(IllegalArgumentException.class, () -> workbook.renameSheet("Budget", "Archive"));
+      assertThrows(
+          IllegalArgumentException.class, () -> workbook.renameSheet("Budget", "Bad/Name"));
+      assertThrows(NullPointerException.class, () -> workbook.deleteSheet(null));
+      assertThrows(IllegalArgumentException.class, () -> workbook.deleteSheet(" "));
+      assertThrows(SheetNotFoundException.class, () -> workbook.deleteSheet("Missing"));
+      assertThrows(NullPointerException.class, () -> workbook.moveSheet(null, 0));
+      assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet(" ", 0));
+      assertThrows(SheetNotFoundException.class, () -> workbook.moveSheet("Missing", 0));
+      assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet("Budget", -1));
+      assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet("Budget", 2));
       assertThrows(NullPointerException.class, () -> workbook.save(null));
     }
   }
@@ -131,6 +195,33 @@ class ExcelWorkbookTest {
     } finally {
       Files.deleteIfExists(relativePath);
     }
+  }
+
+  @Test
+  void roundTripHelpersInspectSavedWorkbookStructure() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-structure-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var budget = workbook.createSheet("Budget");
+      workbook.createSheet("Summary");
+
+      budget.addMergedRegion(CellRangeAddress.valueOf("A1:B2"));
+      budget.setColumnWidth(0, 4096);
+      budget.createRow(0).setHeightInPoints(28.5f);
+      budget.createFreezePane(1, 2, 3, 4);
+
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    assertEquals(List.of("Budget", "Summary"), XlsxRoundTrip.sheetOrder(workbookPath));
+    assertEquals(List.of("A1:B2"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
+    assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
+    assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
+    assertEquals(
+        new XlsxRoundTrip.FreezePaneState.Frozen(1, 2, 3, 4),
+        XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
   }
 
   private FormulaEvaluator failingEvaluator(FormulaEvaluator delegate) {

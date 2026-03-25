@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 class WorkbookCommandExecutorTest {
   @Test
   void appliesAllSupportedCommandTypesThroughVarargs() throws IOException {
+    var workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-command-layout-");
+
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
@@ -19,12 +21,15 @@ class WorkbookCommandExecutorTest {
           executor.apply(
               workbook,
               new WorkbookCommand.CreateSheet("Budget"),
+              new WorkbookCommand.CreateSheet("Archive"),
+              new WorkbookCommand.CreateSheet("Scratch"),
               new WorkbookCommand.SetRange(
                   "Budget",
                   "A1:B2",
                   List.of(
                       List.of(ExcelCellValue.text("Item"), ExcelCellValue.number(49.0)),
                       List.of(ExcelCellValue.text("Tax"), ExcelCellValue.number(5.0)))),
+              new WorkbookCommand.MergeCells("Budget", "A1:B1"),
               new WorkbookCommand.ApplyStyle(
                   "Budget",
                   "A1:B1",
@@ -34,17 +39,34 @@ class WorkbookCommandExecutorTest {
                   "Budget",
                   List.of(ExcelCellValue.text("Total"), ExcelCellValue.formula("SUM(B1:B2)"))),
               new WorkbookCommand.ClearRange("Budget", "A2"),
+              new WorkbookCommand.RenameSheet("Archive", "History"),
+              new WorkbookCommand.MoveSheet("History", 0),
+              new WorkbookCommand.DeleteSheet("Scratch"),
               new WorkbookCommand.AutoSizeColumns("Budget"),
+              new WorkbookCommand.SetColumnWidth("Budget", 0, 1, 16.0),
+              new WorkbookCommand.SetRowHeight("Budget", 0, 0, 28.5),
+              new WorkbookCommand.FreezePanes("Budget", 1, 1, 1, 1),
+              new WorkbookCommand.UnmergeCells("Budget", "A1:B1"),
               new WorkbookCommand.EvaluateAllFormulas(),
               new WorkbookCommand.ForceFormulaRecalculationOnOpen()));
+      assertEquals(List.of("History", "Budget"), workbook.sheetNames());
       assertEquals("Item", workbook.sheet("Budget").text("A1"));
       assertEquals(54.0, workbook.sheet("Budget").number("B3"));
       assertEquals(
           ExcelHorizontalAlignment.CENTER,
           workbook.sheet("Budget").snapshotCell("A1").style().horizontalAlignment());
       assertEquals("BLANK", workbook.sheet("Budget").snapshotCell("A2").effectiveType());
+      assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Scratch"));
       assertTrue(workbook.forceFormulaRecalculationOnOpenEnabled());
+      workbook.save(workbookPath);
     }
+
+    assertEquals(List.of(), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
+    assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
+    assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
+    assertEquals(
+        new XlsxRoundTrip.FreezePaneState.Frozen(1, 1, 1, 1),
+        XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
   }
 
   @Test

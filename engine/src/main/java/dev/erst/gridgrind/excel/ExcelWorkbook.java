@@ -16,6 +16,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
@@ -72,12 +73,38 @@ public final class ExcelWorkbook implements AutoCloseable {
   public ExcelSheet sheet(String sheetName) {
     requireNonBlank(sheetName, "sheetName");
 
-    Sheet sheet = workbook.getSheet(sheetName);
-    if (sheet == null) {
-      throw new SheetNotFoundException(sheetName);
-    }
+    return new ExcelSheet(requiredSheet(sheetName), styleRegistry, formulaEvaluator);
+  }
 
-    return new ExcelSheet(sheet, styleRegistry, formulaEvaluator);
+  /** Renames an existing sheet to a new destination name. */
+  public ExcelWorkbook renameSheet(String sheetName, String newSheetName) {
+    requireNonBlank(sheetName, "sheetName");
+    requireNonBlank(newSheetName, "newSheetName");
+
+    int sheetIndex = requiredSheetIndex(sheetName);
+    WorkbookUtil.validateSheetName(newSheetName);
+    requireSheetNameAvailable(newSheetName, sheetIndex);
+    if (sheetName.equals(newSheetName)) {
+      return this;
+    }
+    workbook.setSheetName(sheetIndex, newSheetName);
+    return this;
+  }
+
+  /** Deletes an existing sheet from the workbook. */
+  public ExcelWorkbook deleteSheet(String sheetName) {
+    workbook.removeSheetAt(requiredSheetIndex(sheetName));
+    return this;
+  }
+
+  /** Moves an existing sheet to a zero-based workbook position. */
+  public ExcelWorkbook moveSheet(String sheetName, int targetIndex) {
+    requireNonBlank(sheetName, "sheetName");
+    Sheet sheet = requiredSheet(sheetName);
+    requireTargetIndex(targetIndex);
+
+    workbook.setSheetOrder(sheet.getSheetName(), targetIndex);
+    return this;
   }
 
   /** Evaluates every formula cell currently present in the workbook. */
@@ -152,6 +179,45 @@ public final class ExcelWorkbook implements AutoCloseable {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
+    }
+  }
+
+  private Sheet requiredSheet(String sheetName) {
+    Sheet sheet = workbook.getSheet(sheetName);
+    if (sheet == null) {
+      throw new SheetNotFoundException(sheetName);
+    }
+    return sheet;
+  }
+
+  private int requiredSheetIndex(String sheetName) {
+    requireNonBlank(sheetName, "sheetName");
+
+    int sheetIndex = workbook.getSheetIndex(sheetName);
+    if (sheetIndex < 0) {
+      throw new SheetNotFoundException(sheetName);
+    }
+    return sheetIndex;
+  }
+
+  private void requireSheetNameAvailable(String newSheetName, int currentSheetIndex) {
+    for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+      if (sheetIndex == currentSheetIndex) {
+        continue;
+      }
+      if (workbook.getSheetName(sheetIndex).equalsIgnoreCase(newSheetName)) {
+        throw new IllegalArgumentException("Sheet already exists: " + newSheetName);
+      }
+    }
+  }
+
+  private void requireTargetIndex(int targetIndex) {
+    if (targetIndex < 0 || targetIndex >= workbook.getNumberOfSheets()) {
+      throw new IllegalArgumentException(
+          "targetIndex must be between 0 and "
+              + (workbook.getNumberOfSheets() - 1)
+              + " (inclusive): "
+              + targetIndex);
     }
   }
 }

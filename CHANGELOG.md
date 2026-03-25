@@ -3,6 +3,26 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-03-25
+
+### Added
+- Explicit `.xlsx`-only request contract for existing-workbook and save-as paths, with deterministic rejection of `.xls`, `.xlsm`, `.xlsb`, and other non-`.xlsx` workbook paths.
+- Reusable `.xlsx` round-trip test infrastructure for reopening generated workbooks and asserting sheet order, merged regions, column widths, row heights, and freeze-pane state.
+- Sheet-management operations: `RENAME_SHEET`, `DELETE_SHEET`, and `MOVE_SHEET`.
+- Structural layout operations: `MERGE_CELLS`, `UNMERGE_CELLS`, `SET_COLUMN_WIDTH`, `SET_ROW_HEIGHT`, and `FREEZE_PANES`.
+- Runnable example requests for sheet management and structural layout workflows.
+- Expanded capability documentation describing current Excel support, shipped behavior, and remaining Apache POI parity gaps.
+
+### Changed
+- GridGrind workbook support is now an explicit product contract for `XSSF .xlsx` only rather than an inferred capability.
+- Public operation and error documentation now covers strict sheet-management and structural-layout semantics, including exact-match unmerge behavior, explicit width and height units, and freeze-pane coordinate rules.
+- Developer documentation now includes the expanded runnable example inventory.
+- Project documentation now summarizes the shipped `.xlsx`, sheet-management, and structural-layout scope together with verification status and the next recommended parity area.
+
+### Fixed
+- Capability inventory contradictions around merged cells and freeze panes removed so the standing agent inventory matches the shipped protocol surface.
+- Structural layout coverage gaps in protocol and engine tests closed, including direct helper-branch verification for merge overlap checks, width and height validation, exact merged-region lookup, and freeze-pane coordinate validation.
+
 ## [0.4.1] - 2026-03-25
 
 ### Added
@@ -87,7 +107,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/resoltico/GridGrind/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/resoltico/GridGrind/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/resoltico/GridGrind/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/resoltico/GridGrind/compare/v0.2.0...v0.3.0

@@ -1,11 +1,11 @@
 ---
 afad: "3.4"
-version: "0.4.1"
+version: "0.5.0"
 domain: OPERATIONS
 updated: "2026-03-25"
 route:
-  keywords: [gridgrind, operations, set-cell, set-range, apply-style, ensure-sheet, append-row, clear-range, evaluate-formulas, auto-size-columns, request, json, protocol]
-  questions: ["what operations does gridgrind support", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept"]
+  keywords: [gridgrind, operations, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, append-row, clear-range, evaluate-formulas, auto-size-columns, request, json, protocol]
+  questions: ["what operations does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept"]
 ---
 
 # Operations Reference
@@ -42,12 +42,15 @@ route:
 ```json
 { "mode": "NEW" }
 ```
-Create a new blank workbook.
+Create a new blank `.xlsx` workbook.
 
 ```json
 { "mode": "EXISTING", "path": "path/to/workbook.xlsx" }
 ```
 Open an existing `.xlsx` file.
+
+GridGrind supports `.xlsx` only. Paths ending in `.xls`, `.xlsm`, `.xlsb`, or any other
+non-`.xlsx` extension are rejected as invalid requests.
 
 ---
 
@@ -57,6 +60,8 @@ Open an existing `.xlsx` file.
 { "mode": "SAVE_AS", "path": "path/to/output.xlsx" }
 ```
 Write the workbook to the given path, creating parent directories as needed.
+
+The save path must end in `.xlsx`.
 
 ```json
 { "mode": "OVERWRITE" }
@@ -96,6 +101,176 @@ Create a sheet if it does not already exist. Does nothing if the sheet exists.
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `sheetName` | Yes | Name of the sheet to create. |
+
+---
+
+### RENAME_SHEET
+
+Rename an existing sheet. The source sheet must already exist. `newSheetName` must be a valid
+Excel sheet name and must not conflict with another sheet name.
+
+```json
+{
+  "type": "RENAME_SHEET",
+  "sheetName": "Archive",
+  "newSheetName": "History"
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing sheet to rename. |
+| `newSheetName` | Yes | New sheet name. Must be valid and unique. |
+
+---
+
+### DELETE_SHEET
+
+Delete an existing sheet.
+
+```json
+{ "type": "DELETE_SHEET", "sheetName": "Scratch" }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing sheet to delete. |
+
+---
+
+### MOVE_SHEET
+
+Move an existing sheet to a zero-based workbook position. `targetIndex` is evaluated at the time
+the operation runs, after all earlier operations in the same request.
+
+```json
+{
+  "type": "MOVE_SHEET",
+  "sheetName": "History",
+  "targetIndex": 0
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing sheet to move. |
+| `targetIndex` | Yes | Zero-based destination index. Must be between `0` and `sheetCount - 1`. |
+
+---
+
+### MERGE_CELLS
+
+Merge a rectangular A1-style range into one displayed region. The range must span at least two
+cells. Repeating the same merge is a no-op, but overlapping a different merged region fails.
+
+```json
+{ "type": "MERGE_CELLS", "sheetName": "Inventory", "range": "A1:C1" }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `range` | Yes | A1-notation rectangular range to merge. Must span at least two cells. |
+
+---
+
+### UNMERGE_CELLS
+
+Remove the merged region whose coordinates exactly match `range`. GridGrind does not partially
+unmerge intersecting regions; the range must identify the merged region exactly.
+
+```json
+{ "type": "UNMERGE_CELLS", "sheetName": "Inventory", "range": "A1:C1" }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `range` | Yes | Exact A1-notation merged range to remove. |
+
+---
+
+### SET_COLUMN_WIDTH
+
+Set the width of one or more contiguous columns. Column indexes are zero-based and inclusive.
+`widthCharacters` is expressed in Excel character units and converted to Apache POI raw width
+units with `round(widthCharacters * 256)`.
+
+```json
+{
+  "type": "SET_COLUMN_WIDTH",
+  "sheetName": "Inventory",
+  "firstColumnIndex": 0,
+  "lastColumnIndex": 2,
+  "widthCharacters": 16.0
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `firstColumnIndex` | Yes | Zero-based first column index. |
+| `lastColumnIndex` | Yes | Zero-based last column index. Must be greater than or equal to `firstColumnIndex`. |
+| `widthCharacters` | Yes | Positive Excel character width. Must be finite and at most `255.0`. |
+
+---
+
+### SET_ROW_HEIGHT
+
+Set the height of one or more contiguous rows. Row indexes are zero-based and inclusive.
+`heightPoints` uses Excel point units and is passed to Apache POI via `setHeightInPoints`.
+
+```json
+{
+  "type": "SET_ROW_HEIGHT",
+  "sheetName": "Inventory",
+  "firstRowIndex": 0,
+  "lastRowIndex": 3,
+  "heightPoints": 28.5
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `firstRowIndex` | Yes | Zero-based first row index. |
+| `lastRowIndex` | Yes | Zero-based last row index. Must be greater than or equal to `firstRowIndex`. |
+| `heightPoints` | Yes | Positive Excel row height in points. Must be finite. |
+
+---
+
+### FREEZE_PANES
+
+Freeze panes using explicit split and visible-origin coordinates. `splitColumn` and `splitRow`
+define the frozen boundary. `leftmostColumn` and `topRow` define the first visible column and row
+in the scrollable pane after the split.
+
+```json
+{
+  "type": "FREEZE_PANES",
+  "sheetName": "Inventory",
+  "splitColumn": 1,
+  "splitRow": 1,
+  "leftmostColumn": 1,
+  "topRow": 1
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `splitColumn` | Yes | Zero-based frozen column count. |
+| `splitRow` | Yes | Zero-based frozen row count. |
+| `leftmostColumn` | Yes | Zero-based first visible column in the scrollable pane. |
+| `topRow` | Yes | Zero-based first visible row in the scrollable pane. |
+
+Constraints:
+
+- `splitColumn` and `splitRow` must not both be `0`.
+- If `splitColumn` is `0`, `leftmostColumn` must also be `0`.
+- If `splitRow` is `0`, `topRow` must also be `0`.
+- When `splitColumn > 0`, `leftmostColumn` must be greater than or equal to `splitColumn`.
+- When `splitRow > 0`, `topRow` must be greater than or equal to `splitRow`.
 
 ---
 
@@ -233,6 +408,9 @@ Resize columns to fit their content. Applies to all columns with data on the she
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `sheetName` | Yes | Target sheet. |
+
+Note: `AUTO_SIZE_COLUMNS` and `SET_COLUMN_WIDTH` can be combined in the same request. Since
+operations run in order, whichever appears later wins.
 
 ---
 

@@ -9,6 +9,14 @@ import java.util.Objects;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = WorkbookOperation.EnsureSheet.class, name = "ENSURE_SHEET"),
+  @JsonSubTypes.Type(value = WorkbookOperation.RenameSheet.class, name = "RENAME_SHEET"),
+  @JsonSubTypes.Type(value = WorkbookOperation.DeleteSheet.class, name = "DELETE_SHEET"),
+  @JsonSubTypes.Type(value = WorkbookOperation.MoveSheet.class, name = "MOVE_SHEET"),
+  @JsonSubTypes.Type(value = WorkbookOperation.MergeCells.class, name = "MERGE_CELLS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.UnmergeCells.class, name = "UNMERGE_CELLS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetColumnWidth.class, name = "SET_COLUMN_WIDTH"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetRowHeight.class, name = "SET_ROW_HEIGHT"),
+  @JsonSubTypes.Type(value = WorkbookOperation.FreezePanes.class, name = "FREEZE_PANES"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetCell.class, name = "SET_CELL"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetRange.class, name = "SET_RANGE"),
   @JsonSubTypes.Type(value = WorkbookOperation.ClearRange.class, name = "CLEAR_RANGE"),
@@ -26,6 +34,101 @@ public sealed interface WorkbookOperation {
   record EnsureSheet(String sheetName) implements WorkbookOperation {
     public EnsureSheet {
       Validation.requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Renames an existing sheet to a new destination name. */
+  record RenameSheet(String sheetName, String newSheetName) implements WorkbookOperation {
+    public RenameSheet {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireNonBlank(newSheetName, "newSheetName");
+    }
+  }
+
+  /** Deletes an existing sheet from the workbook. */
+  record DeleteSheet(String sheetName) implements WorkbookOperation {
+    public DeleteSheet {
+      Validation.requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Moves an existing sheet to a zero-based workbook position. */
+  record MoveSheet(String sheetName, Integer targetIndex) implements WorkbookOperation {
+    public MoveSheet {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(targetIndex, "targetIndex must not be null");
+      Validation.requireNonNegative(targetIndex, "targetIndex");
+    }
+  }
+
+  /** Merges an A1-style rectangular range into one displayed cell region. */
+  record MergeCells(String sheetName, String range) implements WorkbookOperation {
+    public MergeCells {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireNonBlank(range, "range");
+    }
+  }
+
+  /** Removes the merged region whose coordinates exactly match the given range. */
+  record UnmergeCells(String sheetName, String range) implements WorkbookOperation {
+    public UnmergeCells {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireNonBlank(range, "range");
+    }
+  }
+
+  /** Sets the width of one or more contiguous columns in Excel character units. */
+  record SetColumnWidth(
+      String sheetName, Integer firstColumnIndex, Integer lastColumnIndex, Double widthCharacters)
+      implements WorkbookOperation {
+    public SetColumnWidth {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(firstColumnIndex, "firstColumnIndex must not be null");
+      Objects.requireNonNull(lastColumnIndex, "lastColumnIndex must not be null");
+      Objects.requireNonNull(widthCharacters, "widthCharacters must not be null");
+      Validation.requireNonNegative(firstColumnIndex, "firstColumnIndex");
+      Validation.requireNonNegative(lastColumnIndex, "lastColumnIndex");
+      Validation.requireOrderedSpan(
+          firstColumnIndex, lastColumnIndex, "firstColumnIndex", "lastColumnIndex");
+      Validation.requireColumnWidthCharacters(widthCharacters);
+    }
+  }
+
+  /** Sets the height of one or more contiguous rows in Excel point units. */
+  record SetRowHeight(
+      String sheetName, Integer firstRowIndex, Integer lastRowIndex, Double heightPoints)
+      implements WorkbookOperation {
+    public SetRowHeight {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(firstRowIndex, "firstRowIndex must not be null");
+      Objects.requireNonNull(lastRowIndex, "lastRowIndex must not be null");
+      Objects.requireNonNull(heightPoints, "heightPoints must not be null");
+      Validation.requireNonNegative(firstRowIndex, "firstRowIndex");
+      Validation.requireNonNegative(lastRowIndex, "lastRowIndex");
+      Validation.requireOrderedSpan(firstRowIndex, lastRowIndex, "firstRowIndex", "lastRowIndex");
+      Validation.requireRowHeightPoints(heightPoints);
+    }
+  }
+
+  /** Freezes panes using explicit split and visible-origin coordinates. */
+  record FreezePanes(
+      String sheetName,
+      Integer splitColumn,
+      Integer splitRow,
+      Integer leftmostColumn,
+      Integer topRow)
+      implements WorkbookOperation {
+    public FreezePanes {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(splitColumn, "splitColumn must not be null");
+      Objects.requireNonNull(splitRow, "splitRow must not be null");
+      Objects.requireNonNull(leftmostColumn, "leftmostColumn must not be null");
+      Objects.requireNonNull(topRow, "topRow must not be null");
+      Validation.requireNonNegative(splitColumn, "splitColumn");
+      Validation.requireNonNegative(splitRow, "splitRow");
+      Validation.requireNonNegative(leftmostColumn, "leftmostColumn");
+      Validation.requireNonNegative(topRow, "topRow");
+      Validation.requireFreezePaneCoordinates(splitColumn, splitRow, leftmostColumn, topRow);
     }
   }
 
@@ -98,6 +201,14 @@ public sealed interface WorkbookOperation {
   default String operationType() {
     return switch (this) {
       case EnsureSheet _ -> "ENSURE_SHEET";
+      case RenameSheet _ -> "RENAME_SHEET";
+      case DeleteSheet _ -> "DELETE_SHEET";
+      case MoveSheet _ -> "MOVE_SHEET";
+      case MergeCells _ -> "MERGE_CELLS";
+      case UnmergeCells _ -> "UNMERGE_CELLS";
+      case SetColumnWidth _ -> "SET_COLUMN_WIDTH";
+      case SetRowHeight _ -> "SET_ROW_HEIGHT";
+      case FreezePanes _ -> "FREEZE_PANES";
       case SetCell _ -> "SET_CELL";
       case SetRange _ -> "SET_RANGE";
       case ClearRange _ -> "CLEAR_RANGE";
@@ -117,6 +228,75 @@ public sealed interface WorkbookOperation {
       Objects.requireNonNull(value, fieldName + " must not be null");
       if (value.isBlank()) {
         throw new IllegalArgumentException(fieldName + " must not be blank");
+      }
+    }
+
+    static void requireNonNegative(int value, String fieldName) {
+      if (value < 0) {
+        throw new IllegalArgumentException(fieldName + " must not be negative");
+      }
+    }
+
+    static void requireOrderedSpan(
+        int firstValue, int lastValue, String firstFieldName, String lastFieldName) {
+      if (lastValue < firstValue) {
+        throw new IllegalArgumentException(
+            lastFieldName + " must not be less than " + firstFieldName);
+      }
+    }
+
+    static void requireColumnWidthCharacters(double widthCharacters) {
+      requireFinitePositive(widthCharacters, "widthCharacters");
+      if (widthCharacters > 255.0d) {
+        throw new IllegalArgumentException(
+            "widthCharacters must be less than or equal to 255.0: " + widthCharacters);
+      }
+      if (Math.round(widthCharacters * 256.0d) <= 0) {
+        throw new IllegalArgumentException(
+            "widthCharacters is too small to produce a visible Excel column width: "
+                + widthCharacters);
+      }
+    }
+
+    static void requireRowHeightPoints(double heightPoints) {
+      requireFinitePositive(heightPoints, "heightPoints");
+      if (Math.round(heightPoints * 20.0d) > Short.MAX_VALUE) {
+        throw new IllegalArgumentException(
+            "heightPoints is too large for Excel row height storage: " + heightPoints);
+      }
+      if (Math.round(heightPoints * 20.0d) <= 0) {
+        throw new IllegalArgumentException(
+            "heightPoints is too small to produce a visible Excel row height: " + heightPoints);
+      }
+    }
+
+    static void requireFreezePaneCoordinates(
+        int splitColumn, int splitRow, int leftmostColumn, int topRow) {
+      if (splitColumn == 0 && splitRow == 0) {
+        throw new IllegalArgumentException("splitColumn and splitRow must not both be 0");
+      }
+      if (splitColumn == 0 && leftmostColumn != 0) {
+        throw new IllegalArgumentException(
+            "leftmostColumn must be 0 when splitColumn is 0: " + leftmostColumn);
+      }
+      if (splitRow == 0 && topRow != 0) {
+        throw new IllegalArgumentException("topRow must be 0 when splitRow is 0: " + topRow);
+      }
+      if (splitColumn > 0 && leftmostColumn < splitColumn) {
+        throw new IllegalArgumentException(
+            "leftmostColumn must be greater than or equal to splitColumn");
+      }
+      if (splitRow > 0 && topRow < splitRow) {
+        throw new IllegalArgumentException("topRow must be greater than or equal to splitRow");
+      }
+    }
+
+    static void requireFinitePositive(double value, String fieldName) {
+      if (!Double.isFinite(value)) {
+        throw new IllegalArgumentException(fieldName + " must be finite");
+      }
+      if (value <= 0.0d) {
+        throw new IllegalArgumentException(fieldName + " must be greater than 0");
       }
     }
 

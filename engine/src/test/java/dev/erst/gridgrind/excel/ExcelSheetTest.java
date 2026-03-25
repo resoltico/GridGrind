@@ -14,6 +14,7 @@ import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -114,7 +115,7 @@ class ExcelSheetTest {
   }
 
   @Test
-  void validatesCellAccessAndPreviewArguments() throws Exception {
+  void validatesWriteOperationArguments() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       Sheet poiSheet = poiWorkbook.createSheet("Budget");
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
@@ -135,6 +136,32 @@ class ExcelSheetTest {
       assertThrows(IllegalArgumentException.class, () -> sheet.setRange("A1", List.of()));
       assertThrows(NullPointerException.class, () -> sheet.clearRange(null));
       assertThrows(IllegalArgumentException.class, () -> sheet.clearRange(" "));
+      assertThrows(NullPointerException.class, () -> sheet.mergeCells(null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.mergeCells(" "));
+      assertThrows(NullPointerException.class, () -> sheet.unmergeCells(null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.unmergeCells(" "));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setColumnWidth(-1, 0, 16.0));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setColumnWidth(1, 0, 16.0));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setColumnWidth(0, 0, 0.0));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setColumnWidth(0, 0, 256.0));
+      assertThrows(
+          IllegalArgumentException.class, () -> sheet.setColumnWidth(0, 0, Double.MIN_VALUE));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setColumnWidth(0, 0, Double.NaN));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(-1, 0, 28.5));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(1, 0, 28.5));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, 0.0));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.setRowHeight(0, 0, (Short.MAX_VALUE / 20.0d) + 1.0d));
+      assertThrows(
+          IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, Double.MIN_VALUE));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, Double.NaN));
+      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(-1, 0, 0, 0));
+      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(0, 0, 0, 0));
+      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(0, 1, 1, 1));
+      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(1, 0, 1, 1));
+      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(2, 1, 1, 1));
+      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(1, 2, 1, 1));
       assertThrows(
           NullPointerException.class,
           () -> sheet.applyStyle(null, ExcelCellStyle.numberFormat("0")));
@@ -145,6 +172,17 @@ class ExcelSheetTest {
       assertThrows(NullPointerException.class, () -> sheet.appendRow((ExcelCellValue[]) null));
       assertThrows(
           NullPointerException.class, () -> sheet.appendRow(ExcelCellValue.text("x"), null));
+    }
+  }
+
+  @Test
+  void validatesAddressAndRangeParsing() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
       assertThrows(NullPointerException.class, () -> sheet.snapshotCell(null));
       assertThrows(IllegalArgumentException.class, () -> sheet.snapshotCell(" "));
       InvalidCellAddressException invalidSetCell =
@@ -155,13 +193,6 @@ class ExcelSheetTest {
       InvalidCellAddressException invalidSnapshotCell =
           assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell(":"));
       assertEquals(":", invalidSnapshotCell.address());
-      assertThrows(IllegalArgumentException.class, () -> sheet.preview(0, 1));
-      assertThrows(IllegalArgumentException.class, () -> sheet.preview(1, 0));
-      assertEquals(List.of(), sheet.preview(3, 3));
-      CellNotFoundException missingCell =
-          assertThrows(CellNotFoundException.class, () -> sheet.text("A1"));
-      assertEquals("A1", missingCell.address());
-      assertThrows(IllegalArgumentException.class, () -> sheet.text(" "));
       InvalidRangeAddressException invalidRangeSet =
           assertThrows(
               InvalidRangeAddressException.class,
@@ -170,11 +201,35 @@ class ExcelSheetTest {
       InvalidRangeAddressException invalidRangeClear =
           assertThrows(InvalidRangeAddressException.class, () -> sheet.clearRange("A1:B2:C3"));
       assertEquals("A1:B2:C3", invalidRangeClear.range());
-      InvalidRangeAddressException invalidRangeStyle =
-          assertThrows(
-              InvalidRangeAddressException.class,
-              () -> sheet.applyStyle("A1:", ExcelCellStyle.numberFormat("0")));
-      assertEquals("A1:", invalidRangeStyle.range());
+      InvalidRangeAddressException invalidRangeMerge =
+          assertThrows(InvalidRangeAddressException.class, () -> sheet.mergeCells("A1:"));
+      assertEquals("A1:", invalidRangeMerge.range());
+      InvalidRangeAddressException invalidRangeUnmerge =
+          assertThrows(InvalidRangeAddressException.class, () -> sheet.unmergeCells("A1:"));
+      assertEquals("A1:", invalidRangeUnmerge.range());
+      assertThrows(
+          InvalidRangeAddressException.class,
+          () -> sheet.applyStyle("A1:", ExcelCellStyle.numberFormat("0")));
+      assertThrows(IllegalArgumentException.class, () -> sheet.mergeCells("A1"));
+      assertThrows(IllegalArgumentException.class, () -> sheet.unmergeCells("A1:B2"));
+    }
+  }
+
+  @Test
+  void validatesPreviewAndReadFailures() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      assertThrows(IllegalArgumentException.class, () -> sheet.preview(0, 1));
+      assertThrows(IllegalArgumentException.class, () -> sheet.preview(1, 0));
+      assertEquals(List.of(), sheet.preview(3, 3));
+      CellNotFoundException missingCell =
+          assertThrows(CellNotFoundException.class, () -> sheet.text("A1"));
+      assertEquals("A1", missingCell.address());
+      assertThrows(IllegalArgumentException.class, () -> sheet.text(" "));
 
       sheet.setCell("A1", ExcelCellValue.text("Name"));
       sheet.setCell("B1", ExcelCellValue.formula("TRUE()"));
@@ -261,6 +316,116 @@ class ExcelSheetTest {
       rowWithNull.add(null);
       rowsWithNull.add(rowWithNull);
       assertThrows(NullPointerException.class, () -> sheet.setRange("A1", rowsWithNull));
+    }
+  }
+
+  @Test
+  void managesMergedRegionsSizingAndFreezePanes() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      assertSame(sheet, sheet.mergeCells("B2:A1"));
+      assertEquals(1, poiSheet.getNumMergedRegions());
+      assertEquals("A1:B2", poiSheet.getMergedRegion(0).formatAsString());
+      assertSame(sheet, sheet.mergeCells("A1:B2"));
+      assertEquals(1, poiSheet.getNumMergedRegions());
+      assertThrows(IllegalArgumentException.class, () -> sheet.mergeCells("B2:C3"));
+
+      assertSame(sheet, sheet.setColumnWidth(0, 1, 16.0));
+      assertEquals(4096, poiSheet.getColumnWidth(0));
+      assertEquals(4096, poiSheet.getColumnWidth(1));
+
+      assertSame(sheet, sheet.setRowHeight(0, 1, 28.5));
+      assertEquals((short) 570, poiSheet.getRow(0).getHeight());
+      assertEquals((short) 570, poiSheet.getRow(1).getHeight());
+
+      assertSame(sheet, sheet.freezePanes(1, 2, 3, 4));
+      assertNotNull(poiSheet.getPaneInformation());
+      assertEquals(1, poiSheet.getPaneInformation().getVerticalSplitPosition());
+      assertEquals(2, poiSheet.getPaneInformation().getHorizontalSplitPosition());
+      assertEquals(3, poiSheet.getPaneInformation().getVerticalSplitLeftColumn());
+      assertEquals(4, poiSheet.getPaneInformation().getHorizontalSplitTopRow());
+      assertSame(sheet, sheet.freezePanes(0, 2, 0, 2));
+      assertEquals(0, poiSheet.getPaneInformation().getVerticalSplitPosition());
+      assertEquals(2, poiSheet.getPaneInformation().getHorizontalSplitPosition());
+      assertEquals(0, poiSheet.getPaneInformation().getVerticalSplitLeftColumn());
+      assertEquals(2, poiSheet.getPaneInformation().getHorizontalSplitTopRow());
+      assertSame(sheet, sheet.freezePanes(2, 0, 2, 0));
+      assertEquals(2, poiSheet.getPaneInformation().getVerticalSplitPosition());
+      assertEquals(0, poiSheet.getPaneInformation().getHorizontalSplitPosition());
+      assertEquals(2, poiSheet.getPaneInformation().getVerticalSplitLeftColumn());
+      assertEquals(0, poiSheet.getPaneInformation().getHorizontalSplitTopRow());
+
+      assertSame(sheet, sheet.unmergeCells("A1:B2"));
+      assertEquals(0, poiSheet.getNumMergedRegions());
+    }
+  }
+
+  @Test
+  void validatesStructuralLayoutHelpers() throws Exception {
+    ExcelRange exactRange = ExcelRange.parse("A1:B2");
+    CellRangeAddress exactAddress = new CellRangeAddress(0, 1, 0, 1);
+
+    assertTrue(ExcelSheet.matches(exactAddress, exactRange));
+    assertFalse(ExcelSheet.matches(exactAddress, ExcelRange.parse("A2:B3")));
+    assertFalse(ExcelSheet.matches(exactAddress, ExcelRange.parse("A1:B3")));
+    assertFalse(ExcelSheet.matches(exactAddress, ExcelRange.parse("B1:C2")));
+    assertFalse(ExcelSheet.matches(exactAddress, ExcelRange.parse("A1:C2")));
+
+    assertTrue(ExcelSheet.intersects(exactAddress, ExcelRange.parse("B2:C3")));
+    assertFalse(ExcelSheet.intersects(new CellRangeAddress(3, 4, 0, 1), ExcelRange.parse("A1:B2")));
+    assertFalse(ExcelSheet.intersects(new CellRangeAddress(0, 1, 0, 1), ExcelRange.parse("A4:B5")));
+    assertFalse(ExcelSheet.intersects(new CellRangeAddress(0, 1, 3, 4), ExcelRange.parse("A1:B2")));
+    assertFalse(ExcelSheet.intersects(new CellRangeAddress(0, 1, 0, 1), ExcelRange.parse("C1:D2")));
+
+    assertEquals(4096, ExcelSheet.toColumnWidthUnits(16.0d));
+    assertThrows(IllegalArgumentException.class, () -> ExcelSheet.toColumnWidthUnits(256.0d));
+    assertThrows(
+        IllegalArgumentException.class, () -> ExcelSheet.toColumnWidthUnits(Double.MIN_VALUE));
+
+    assertEquals(28.5f, ExcelSheet.toRowHeightPoints(28.5d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ExcelSheet.toRowHeightPoints((Short.MAX_VALUE / 20.0d) + 1.0d));
+    assertThrows(
+        IllegalArgumentException.class, () -> ExcelSheet.toRowHeightPoints(Double.MIN_VALUE));
+
+    assertDoesNotThrow(() -> ExcelSheet.requireFreezePaneCoordinates(1, 2, 1, 2));
+    assertDoesNotThrow(() -> ExcelSheet.requireFreezePaneCoordinates(0, 2, 0, 2));
+    assertDoesNotThrow(() -> ExcelSheet.requireFreezePaneCoordinates(2, 0, 2, 0));
+    assertThrows(
+        IllegalArgumentException.class, () -> ExcelSheet.requireFreezePaneCoordinates(0, 0, 0, 0));
+    assertThrows(
+        IllegalArgumentException.class, () -> ExcelSheet.requireFreezePaneCoordinates(0, 1, 1, 1));
+    assertThrows(
+        IllegalArgumentException.class, () -> ExcelSheet.requireFreezePaneCoordinates(1, 0, 1, 1));
+    assertThrows(
+        IllegalArgumentException.class, () -> ExcelSheet.requireFreezePaneCoordinates(2, 1, 1, 1));
+    assertThrows(
+        IllegalArgumentException.class, () -> ExcelSheet.requireFreezePaneCoordinates(1, 2, 1, 1));
+
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet emptySheet = poiWorkbook.createSheet("Empty");
+      Sheet mergedSheet = poiWorkbook.createSheet("Merged");
+      mergedSheet.addMergedRegion(new CellRangeAddress(0, 1, 0, 1));
+      mergedSheet.addMergedRegion(new CellRangeAddress(3, 4, 3, 4));
+
+      assertEquals(-1, ExcelSheet.findMergedRegionIndex(emptySheet, exactRange));
+      assertEquals(0, ExcelSheet.findMergedRegionIndex(mergedSheet, exactRange));
+      assertEquals(1, ExcelSheet.findMergedRegionIndex(mergedSheet, ExcelRange.parse("D4:E5")));
+      assertEquals(-1, ExcelSheet.findMergedRegionIndex(mergedSheet, ExcelRange.parse("A1:B3")));
+
+      assertDoesNotThrow(
+          () -> ExcelSheet.requireNoMergedRegionOverlap(mergedSheet, ExcelRange.parse("G1:H2")));
+      IllegalArgumentException overlap =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  ExcelSheet.requireNoMergedRegionOverlap(mergedSheet, ExcelRange.parse("B2:C3")));
+      assertEquals("Merged range overlaps existing merged region: A1:B2", overlap.getMessage());
     }
   }
 

@@ -74,11 +74,30 @@ class GridGrindRequestTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new GridGrindRequest.WorkbookSource.ExistingFile(" "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindRequest.WorkbookSource.ExistingFile("budget.xls"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindRequest.WorkbookSource.ExistingFile("budget.xlsm"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindRequest.WorkbookSource.ExistingFile("budget.xlsb"));
+    assertEquals(
+        "Budget.XLSX", new GridGrindRequest.WorkbookSource.ExistingFile("Budget.XLSX").path());
 
     assertThrows(
         NullPointerException.class, () -> new GridGrindRequest.WorkbookPersistence.SaveAs(null));
     assertThrows(
         IllegalArgumentException.class, () -> new GridGrindRequest.WorkbookPersistence.SaveAs(""));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindRequest.WorkbookPersistence.SaveAs("report.xls"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindRequest.WorkbookPersistence.SaveAs("report.xlsm"));
+    assertEquals(
+        "report.XLSX", new GridGrindRequest.WorkbookPersistence.SaveAs("report.XLSX").path());
 
     assertThrows(
         NullPointerException.class,

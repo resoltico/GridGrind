@@ -3,6 +3,7 @@ package dev.erst.gridgrind.protocol;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 
 /** Complete agent request for workbook source, mutations, persistence, and analysis. */
@@ -41,7 +42,7 @@ public record GridGrindRequest(
 
     record ExistingFile(String path) implements WorkbookSource {
       public ExistingFile {
-        requireNonBlank(path, "path");
+        requireXlsxWorkbookPath(path);
       }
     }
   }
@@ -60,7 +61,7 @@ public record GridGrindRequest(
 
     record SaveAs(String path) implements WorkbookPersistence {
       public SaveAs {
-        requireNonBlank(path, "path");
+        requireXlsxWorkbookPath(path);
       }
     }
   }
@@ -120,6 +121,14 @@ public record GridGrindRequest(
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
+    }
+  }
+
+  private static void requireXlsxWorkbookPath(String path) {
+    requireNonBlank(path, "path");
+    if (!path.toLowerCase(Locale.ROOT).endsWith(".xlsx")) {
+      throw new IllegalArgumentException(
+          "path must point to a .xlsx workbook; .xls, .xlsm, and .xlsb are not supported: " + path);
     }
   }
 }
