@@ -1,0 +1,8 @@
+{
+  "targetKey" : "protocol-workflow",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/fdff3124598e4d12e359a3316a884eb8332b5011",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/ensure_sheet_set_range_success.bin",
+  "replayOutcome" : "SUCCESS",
+  "promotedAt" : "2026-03-26T04:15:57.221412Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/ensure_sheet_set_range_success.txt"
+}

@@ -272,8 +272,18 @@ public final class GridGrindService {
             snapshot.style().bold(),
             snapshot.style().italic(),
             snapshot.style().wrapText(),
-            snapshot.style().horizontalAlignment().name(),
-            snapshot.style().verticalAlignment().name());
+            snapshot.style().horizontalAlignment(),
+            snapshot.style().verticalAlignment(),
+            snapshot.style().fontName(),
+            FontHeightReport.fromExcelFontHeight(snapshot.style().fontHeight()),
+            snapshot.style().fontColor(),
+            snapshot.style().underline(),
+            snapshot.style().strikeout(),
+            snapshot.style().fillColor(),
+            snapshot.style().topBorderStyle(),
+            snapshot.style().rightBorderStyle(),
+            snapshot.style().bottomBorderStyle(),
+            snapshot.style().leftBorderStyle());
 
     return switch (snapshot) {
       case ExcelCellSnapshot.BlankSnapshot s ->

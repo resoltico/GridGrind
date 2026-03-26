@@ -1,0 +1,10 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/crash-2f13d11ff7f3014d6023755bd957eccfbbc39d86
+Harness: engine-command-sequence
+Outcome: EXPECTED_INVALID
+Kind: InvalidFormulaException
+Message: Invalid formula at D!E5: [^owe_e`ffffff
+Input Bytes: 57
+Command Count: 5
+Style Kinds: (none)
+Command Kinds: CREATE_SHEET=3, SET_CELL=2

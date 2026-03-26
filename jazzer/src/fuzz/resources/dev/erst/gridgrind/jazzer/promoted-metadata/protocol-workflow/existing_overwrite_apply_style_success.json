@@ -1,0 +1,8 @@
+{
+  "targetKey" : "protocol-workflow",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/7673cafcbf6d09e270c90db5b83156666b590a4e",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_apply_style_success.bin",
+  "replayOutcome" : "SUCCESS",
+  "promotedAt" : "2026-03-26T11:37:30.455503Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/existing_overwrite_apply_style_success.txt"
+}

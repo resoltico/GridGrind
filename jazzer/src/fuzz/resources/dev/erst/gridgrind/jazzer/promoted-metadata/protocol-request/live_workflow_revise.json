@@ -1,0 +1,8 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/examples/live-workflow-revise.json",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/live_workflow_revise.json",
+  "replayOutcome" : "SUCCESS",
+  "promotedAt" : "2026-03-26T04:15:55.071972Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/live_workflow_revise.txt"
+}

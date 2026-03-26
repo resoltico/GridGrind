@@ -1,0 +1,8 @@
+{
+  "targetKey" : "protocol-workflow",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/325d16aa286404ccd3a4d3f442eec48cd85721f8",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/set_cell_failure_case.bin",
+  "replayOutcome" : "SUCCESS",
+  "promotedAt" : "2026-03-26T03:22:12.169217Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/set_cell_failure_case.txt"
+}

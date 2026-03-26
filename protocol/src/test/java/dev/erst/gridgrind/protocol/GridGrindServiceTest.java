@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
@@ -14,6 +15,7 @@ import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
 import dev.erst.gridgrind.excel.XlsxRoundTrip;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -535,6 +537,36 @@ class GridGrindServiceTest {
   }
 
   @Test
+  void returnsFormulaErrorForMalformedParserStateFormulaOperations() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.SetCell(
+                            "Data", "A1", new CellInput.Formula("[^owe_e`ffffff"))),
+                    new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_FORMULA, failure.problem().code());
+    assertEquals(GridGrindProblemCategory.FORMULA, failure.problem().category());
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("Invalid formula at Data!A1: [^owe_e`ffffff", failure.problem().message());
+    assertEquals("A1", failure.problem().context().address());
+    assertEquals("[^owe_e`ffffff", failure.problem().context().formula());
+    assertEquals(
+        "Invalid formula at Data!A1: [^owe_e`ffffff",
+        failure.problem().causes().getFirst().message());
+    assertEquals("InvalidFormulaException", failure.problem().causes().getFirst().type());
+    assertEquals(
+        "Parsed past the end of the formula, pos: 15, length: 14, formula: [^owe_e`ffffff",
+        failure.problem().causes().get(1).message());
+  }
+
+  @Test
   void surfacesWorkbookFormulaLocationWhenEvaluationFails() {
     GridGrindResponse response =
         new GridGrindService()
@@ -704,7 +736,14 @@ class GridGrindServiceTest {
                                 null,
                                 true,
                                 ExcelHorizontalAlignment.CENTER,
-                                ExcelVerticalAlignment.CENTER)),
+                                ExcelVerticalAlignment.CENTER,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)),
                         new WorkbookOperation.ApplyStyle(
                             "Budget",
                             "C1",
@@ -714,7 +753,14 @@ class GridGrindServiceTest {
                                 true,
                                 null,
                                 ExcelHorizontalAlignment.RIGHT,
-                                ExcelVerticalAlignment.BOTTOM)),
+                                ExcelVerticalAlignment.BOTTOM,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)),
                         new WorkbookOperation.SetCell(
                             "Budget", "B3", new CellInput.Formula("SUM(B2:B2)")),
                         new WorkbookOperation.EvaluateFormulas(),
@@ -728,7 +774,7 @@ class GridGrindServiceTest {
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
     assertTrue(Files.exists(workbookPath));
     assertEquals(
-        "CENTER",
+        ExcelHorizontalAlignment.CENTER,
         success.sheets().getFirst().requestedCells().getFirst().style().horizontalAlignment());
     assertTrue(success.sheets().getFirst().requestedCells().getFirst().style().bold());
     assertTrue(success.sheets().getFirst().requestedCells().getFirst().style().wrapText());
@@ -738,6 +784,73 @@ class GridGrindServiceTest {
         success.sheets().getFirst().previewRows().getFirst().cells().stream()
             .anyMatch(cell -> "C1".equals(cell.address())));
     assertTrue(success.sheets().getFirst().requestedCells().get(3).style().italic());
+  }
+
+  @Test
+  void executesFormattingDepthWorkflowAndPersistsReportedStyleState() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-format-depth-", ".xlsx");
+    Files.deleteIfExists(workbookPath);
+
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("Item")),
+                        new WorkbookOperation.ApplyStyle(
+                            "Budget",
+                            "A1",
+                            new CellStyleInput(
+                                null,
+                                true,
+                                false,
+                                true,
+                                ExcelHorizontalAlignment.CENTER,
+                                ExcelVerticalAlignment.TOP,
+                                "Aptos",
+                                new FontHeightInput.Points(new BigDecimal("11.5")),
+                                "#1F4E78",
+                                true,
+                                true,
+                                "#FFF2CC",
+                                new CellBorderInput(
+                                    new CellBorderSideInput(ExcelBorderStyle.THIN),
+                                    null,
+                                    new CellBorderSideInput(ExcelBorderStyle.DOUBLE),
+                                    null,
+                                    null)))),
+                    new GridGrindRequest.WorkbookAnalysisRequest(
+                        List.of(
+                            new GridGrindRequest.SheetInspectionRequest(
+                                "Budget", List.of("A1"), null, null)))));
+
+    assertInstanceOf(GridGrindResponse.Success.class, response);
+    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    GridGrindResponse.CellStyleReport style =
+        success.sheets().getFirst().requestedCells().getFirst().style();
+    assertTrue(Files.exists(workbookPath));
+    assertTrue(style.bold());
+    assertFalse(style.italic());
+    assertTrue(style.wrapText());
+    assertEquals(ExcelHorizontalAlignment.CENTER, style.horizontalAlignment());
+    assertEquals(ExcelVerticalAlignment.TOP, style.verticalAlignment());
+    assertEquals("Aptos", style.fontName());
+    assertEquals(230, style.fontHeight().twips());
+    assertEquals(new BigDecimal("11.5"), style.fontHeight().points());
+    assertEquals("#1F4E78", style.fontColor());
+    assertTrue(style.underline());
+    assertTrue(style.strikeout());
+    assertEquals("#FFF2CC", style.fillColor());
+    assertEquals(ExcelBorderStyle.THIN, style.topBorderStyle());
+    assertEquals(ExcelBorderStyle.DOUBLE, style.rightBorderStyle());
+    assertEquals(ExcelBorderStyle.THIN, style.bottomBorderStyle());
+    assertEquals(ExcelBorderStyle.THIN, style.leftBorderStyle());
+
+    assertEquals(
+        style, toResponseStyleReport(XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1")));
   }
 
   @Test
@@ -765,6 +878,27 @@ class GridGrindServiceTest {
         ((GridGrindResponse.CellReport.FormulaReport) cell).evaluation();
     assertInstanceOf(GridGrindResponse.CellReport.ErrorReport.class, evaluation);
     assertEquals("ERROR", evaluation.effectiveType());
+  }
+
+  private GridGrindResponse.CellStyleReport toResponseStyleReport(
+      dev.erst.gridgrind.excel.ExcelCellStyleSnapshot style) {
+    return new GridGrindResponse.CellStyleReport(
+        style.numberFormat(),
+        style.bold(),
+        style.italic(),
+        style.wrapText(),
+        style.horizontalAlignment(),
+        style.verticalAlignment(),
+        style.fontName(),
+        FontHeightReport.fromExcelFontHeight(style.fontHeight()),
+        style.fontColor(),
+        style.underline(),
+        style.strikeout(),
+        style.fillColor(),
+        style.topBorderStyle(),
+        style.rightBorderStyle(),
+        style.bottomBorderStyle(),
+        style.leftBorderStyle());
   }
 
   @Test
@@ -912,7 +1046,9 @@ class GridGrindServiceTest {
                         new WorkbookOperation.ApplyStyle(
                             "Budget",
                             "A1:",
-                            new CellStyleInput(null, true, null, null, null, null))),
+                            new CellStyleInput(
+                                null, true, null, null, null, null, null, null, null, null, null,
+                                null, null))),
                     new GridGrindRequest.WorkbookAnalysisRequest(List.of())));
 
     assertInstanceOf(GridGrindResponse.Failure.class, response);

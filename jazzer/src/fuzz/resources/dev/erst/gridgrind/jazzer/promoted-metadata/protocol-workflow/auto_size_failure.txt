@@ -1,0 +1,9 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/ffbeeade11fe37088d3bb32892ea09f429c48731
+Harness: protocol-workflow
+Outcome: SUCCESS
+Input Bytes: 38
+Operation Count: 3
+Analysis Sheet Count: 0
+Response Kind: FAILURE
+Operation Kinds: AUTO_SIZE_COLUMNS=3

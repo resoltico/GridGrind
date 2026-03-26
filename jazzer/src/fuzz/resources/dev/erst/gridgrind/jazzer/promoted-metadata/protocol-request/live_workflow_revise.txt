@@ -1,0 +1,9 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/examples/live-workflow-revise.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 1079
+Decode Outcome: PARSED
+Operation Count: 5
+Analysis Sheet Count: 2
+Operation Kinds: SET_CELL=3, EVALUATE_FORMULAS=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1

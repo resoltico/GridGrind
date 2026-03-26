@@ -1,0 +1,48 @@
+{
+  "protocolVersion": "V1",
+  "source": {
+    "mode": "EXISTING",
+    "path": "cli/build/generated-workbooks/live-finance-workbook.xlsx"
+  },
+  "persistence": {
+    "mode": "OVERWRITE"
+  },
+  "operations": [
+    {
+      "type": "SET_CELL",
+      "sheetName": "Sales",
+      "address": "B3",
+      "value": { "type": "NUMBER", "number": 18.0 }
+    },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Sales",
+      "address": "B5",
+      "value": { "type": "NUMBER", "number": 20.0 }
+    },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Rates",
+      "address": "B5",
+      "value": { "type": "NUMBER", "number": 55.25 }
+    },
+    { "type": "EVALUATE_FORMULAS" },
+    { "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
+  ],
+  "analysis": {
+    "sheets": [
+      {
+        "sheetName": "Rates",
+        "cells": ["B5"],
+        "previewRowCount": 5,
+        "previewColumnCount": 3
+      },
+      {
+        "sheetName": "Sales",
+        "cells": ["E3", "F3", "E5", "F5", "F7", "G7", "H7"],
+        "previewRowCount": 7,
+        "previewColumnCount": 8
+      }
+    ]
+  }
+}

@@ -5,11 +5,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -185,6 +187,21 @@ class ExcelWorkbookTest {
   }
 
   @Test
+  void rejectsNonXlsxWorkbookFiles() throws Exception {
+    Path workbookPath = Files.createTempFile("gridgrind-legacy-", ".xls");
+
+    try (HSSFWorkbook workbook = new HSSFWorkbook();
+        var outputStream = Files.newOutputStream(workbookPath)) {
+      workbook.createSheet("Budget").createRow(0).createCell(0).setCellValue("Legacy");
+      workbook.write(outputStream);
+    }
+
+    IllegalArgumentException exception =
+        assertThrows(IllegalArgumentException.class, () -> ExcelWorkbook.open(workbookPath));
+    assertEquals("Only .xlsx workbooks are supported", exception.getMessage());
+  }
+
+  @Test
   void savesToPathsWithoutParentDirectories() throws IOException {
     Path relativePath = Path.of("gridgrind-relative-" + UUID.randomUUID() + ".xlsx");
 
@@ -222,6 +239,56 @@ class ExcelWorkbookTest {
     assertEquals(
         new XlsxRoundTrip.FreezePaneState.Frozen(1, 2, 3, 4),
         XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+  }
+
+  @Test
+  void savesAndReopensFormattingDepthStyles() throws Exception {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-style-roundtrip-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Item"));
+      workbook
+          .sheet("Budget")
+          .applyStyle(
+              "A1",
+              new ExcelCellStyle(
+                  null,
+                  true,
+                  false,
+                  true,
+                  ExcelHorizontalAlignment.CENTER,
+                  ExcelVerticalAlignment.TOP,
+                  "Aptos",
+                  ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
+                  "#1F4E78",
+                  true,
+                  true,
+                  "#FFF2CC",
+                  new ExcelBorder(
+                      new ExcelBorderSide(ExcelBorderStyle.THIN),
+                      null,
+                      new ExcelBorderSide(ExcelBorderStyle.DOUBLE),
+                      null,
+                      null)));
+      workbook.save(workbookPath);
+    }
+
+    ExcelCellStyleSnapshot style = XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1");
+    assertTrue(style.bold());
+    assertFalse(style.italic());
+    assertTrue(style.wrapText());
+    assertEquals(ExcelHorizontalAlignment.CENTER, style.horizontalAlignment());
+    assertEquals(ExcelVerticalAlignment.TOP, style.verticalAlignment());
+    assertEquals("Aptos", style.fontName());
+    assertEquals(new BigDecimal("11.5"), style.fontHeight().points());
+    assertEquals("#1F4E78", style.fontColor());
+    assertTrue(style.underline());
+    assertTrue(style.strikeout());
+    assertEquals("#FFF2CC", style.fillColor());
+    assertEquals(ExcelBorderStyle.THIN, style.topBorderStyle());
+    assertEquals(ExcelBorderStyle.DOUBLE, style.rightBorderStyle());
+    assertEquals(ExcelBorderStyle.THIN, style.bottomBorderStyle());
+    assertEquals(ExcelBorderStyle.THIN, style.leftBorderStyle());
   }
 
   private FormulaEvaluator failingEvaluator(FormulaEvaluator delegate) {

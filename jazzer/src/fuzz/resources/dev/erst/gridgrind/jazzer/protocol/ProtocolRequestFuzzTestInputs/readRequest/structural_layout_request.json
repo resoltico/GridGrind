@@ -1,0 +1,26 @@
+{
+  "protocolVersion": "V1",
+  "source": { "mode": "NEW" },
+  "persistence": {
+    "mode": "SAVE_AS",
+    "path": "reports/structural-layout.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Summary" },
+    { "type": "SET_CELL", "sheetName": "Summary", "address": "A1", "value": { "type": "TEXT", "text": "Quarterly Summary" } },
+    { "type": "MERGE_CELLS", "sheetName": "Summary", "range": "A1:C1" },
+    { "type": "SET_COLUMN_WIDTH", "sheetName": "Summary", "firstColumnIndex": 0, "lastColumnIndex": 2, "widthCharacters": 16.0 },
+    { "type": "SET_ROW_HEIGHT", "sheetName": "Summary", "firstRowIndex": 0, "lastRowIndex": 0, "heightPoints": 28.5 },
+    { "type": "FREEZE_PANES", "sheetName": "Summary", "splitColumn": 0, "splitRow": 1, "leftmostColumn": 0, "topRow": 1 }
+  ],
+  "analysis": {
+    "sheets": [
+      {
+        "sheetName": "Summary",
+        "cells": ["A1"],
+        "previewRowCount": 3,
+        "previewColumnCount": 3
+      }
+    ]
+  }
+}

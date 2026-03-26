@@ -1,0 +1,9 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/examples/budget-request.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 1937
+Decode Outcome: PARSED
+Operation Count: 9
+Analysis Sheet Count: 1
+Operation Kinds: SET_CELL=2, APPLY_STYLE=2, FORCE_FORMULA_RECALCULATION_ON_OPEN=1, ENSURE_SHEET=1, AUTO_SIZE_COLUMNS=1, SET_RANGE=1, EVALUATE_FORMULAS=1

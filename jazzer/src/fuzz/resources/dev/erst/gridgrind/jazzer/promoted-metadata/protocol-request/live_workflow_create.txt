@@ -1,0 +1,9 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/examples/live-workflow-create.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 6800
+Decode Outcome: PARSED
+Operation Count: 42
+Analysis Sheet Count: 2
+Operation Kinds: SET_CELL=26, APPEND_ROW=10, ENSURE_SHEET=2, AUTO_SIZE_COLUMNS=2, EVALUATE_FORMULAS=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1

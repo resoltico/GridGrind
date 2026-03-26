@@ -8,13 +8,12 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -23,15 +22,15 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  * High-level workbook wrapper around Apache POI for creation, loading, saving, and sheet access.
  */
 public final class ExcelWorkbook implements AutoCloseable {
-  private final Workbook workbook;
+  private final XSSFWorkbook workbook;
   private final WorkbookStyleRegistry styleRegistry;
   private final FormulaEvaluator formulaEvaluator;
 
-  private ExcelWorkbook(Workbook workbook) {
+  private ExcelWorkbook(XSSFWorkbook workbook) {
     this(workbook, workbook.getCreationHelper().createFormulaEvaluator());
   }
 
-  ExcelWorkbook(Workbook workbook, FormulaEvaluator formulaEvaluator) {
+  ExcelWorkbook(XSSFWorkbook workbook, FormulaEvaluator formulaEvaluator) {
     this.workbook = workbook;
     this.styleRegistry = new WorkbookStyleRegistry(workbook);
     this.formulaEvaluator =
@@ -53,7 +52,11 @@ public final class ExcelWorkbook implements AutoCloseable {
     }
 
     try (InputStream inputStream = Files.newInputStream(absolutePath)) {
-      return new ExcelWorkbook(WorkbookFactory.create(inputStream));
+      try {
+        return new ExcelWorkbook(new XSSFWorkbook(inputStream));
+      } catch (NotOfficeXmlFileException exception) {
+        throw new IllegalArgumentException("Only .xlsx workbooks are supported", exception);
+      }
     }
   }
 

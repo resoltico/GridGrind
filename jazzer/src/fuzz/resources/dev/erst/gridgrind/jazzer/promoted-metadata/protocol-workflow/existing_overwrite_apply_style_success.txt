@@ -1,0 +1,12 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/7673cafcbf6d09e270c90db5b83156666b590a4e
+Harness: protocol-workflow
+Outcome: SUCCESS
+Input Bytes: 148
+Source Kind: EXISTING
+Persistence Kind: OVERWRITE
+Operation Count: 6
+Analysis Sheet Count: 0
+Response Kind: SUCCESS
+Style Kinds: border_all=4, border=4, font_color=4, fill_color=4, border_right=2, border_bottom=1, border_top=1, border_all_none=1, border_left=1
+Operation Kinds: APPLY_STYLE=4, EVALUATE_FORMULAS=1, AUTO_SIZE_COLUMNS=1

@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.5.0"
+version: "0.6.0"
 domain: OPERATIONS
-updated: "2026-03-25"
+updated: "2026-03-26"
 route:
   keywords: [gridgrind, operations, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, append-row, clear-range, evaluate-formulas, auto-size-columns, request, json, protocol]
   questions: ["what operations does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept"]
@@ -348,9 +348,17 @@ unspecified style properties are left untouched.
   "range": "A1:C1",
   "style": {
     "bold": true,
+    "fontName": "Aptos",
+    "fontHeight": { "type": "POINTS", "points": 13 },
+    "fontColor": "#FFFFFF",
+    "fillColor": "#1F4E78",
     "horizontalAlignment": "CENTER",
     "verticalAlignment": "CENTER",
-    "wrapText": true
+    "wrapText": true,
+    "border": {
+      "all": { "style": "THIN" },
+      "bottom": { "style": "DOUBLE" }
+    }
   }
 }
 ```
@@ -371,6 +379,56 @@ Style fields:
 | `wrapText` | boolean | `true` / `false` |
 | `horizontalAlignment` | string | `"LEFT"`, `"CENTER"`, `"RIGHT"`, `"GENERAL"` |
 | `verticalAlignment` | string | `"TOP"`, `"CENTER"`, `"BOTTOM"` |
+| `fontName` | string | Excel font family name, e.g. `"Aptos"` |
+| `fontHeight` | object | Typed font height. See below. |
+| `fontColor` | string | RGB hex string in `#RRGGBB` form. Lowercase input is normalized to uppercase. |
+| `underline` | boolean | `true` adds a single underline, `false` removes it |
+| `strikeout` | boolean | `true` / `false` |
+| `fillColor` | string | Solid foreground fill color in `#RRGGBB` form |
+| `border` | object | Nested border patch. See below. |
+
+Font-height input:
+
+| Field | Type | Values |
+|:------|:-----|:-------|
+| `fontHeight.type` | string | `"POINTS"` or `"TWIPS"` |
+| `fontHeight.points` | number | Required when `type` is `"POINTS"`. Must resolve exactly to whole twips, e.g. `11`, `11.5`, `13.25` |
+| `fontHeight.twips` | integer | Required when `type` is `"TWIPS"`. Positive exact twip value where `20` twips = `1` point |
+
+Color notes:
+
+- `fontColor` and `fillColor` must match `#RRGGBB`.
+- Lowercase hex input is accepted and normalized to uppercase.
+- This contract does not support alpha channels, theme colors, indexed colors, or gradient fills.
+
+Fill notes:
+
+- `fillColor` always means a solid foreground fill.
+- Non-solid patterns and background-fill authoring are not part of the public contract.
+- Style analysis reports `fontHeight` as an object with both `twips` and `points`.
+
+Border patch:
+
+| Field | Type | Values |
+|:------|:-----|:-------|
+| `all` | object | Optional default for every border side not explicitly set in the same patch |
+| `top` | object | Optional side-specific override |
+| `right` | object | Optional side-specific override |
+| `bottom` | object | Optional side-specific override |
+| `left` | object | Optional side-specific override |
+
+Each border-side object currently contains one field:
+
+| Field | Type | Values |
+|:------|:-----|:-------|
+| `style` | string | `"NONE"`, `"THIN"`, `"MEDIUM"`, `"DASHED"`, `"DOTTED"`, `"THICK"`, `"DOUBLE"`, `"HAIR"`, `"MEDIUM_DASHED"`, `"DASH_DOT"`, `"MEDIUM_DASH_DOT"`, `"DASH_DOT_DOT"`, `"MEDIUM_DASH_DOT_DOT"`, `"SLANTED_DASH_DOT"` |
+
+Border notes:
+
+- `border` must set at least one of `all`, `top`, `right`, `bottom`, or `left`.
+- `border.all` acts as the default style for every side not explicitly set in the same patch.
+- Explicit side settings override `border.all`.
+- Border colors and diagonal borders are not part of the public contract.
 
 ---
 

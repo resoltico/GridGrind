@@ -1,0 +1,97 @@
+{
+  "protocolVersion": "V1",
+  "source": { "mode": "NEW" },
+  "persistence": {
+    "mode": "SAVE_AS",
+    "path": "cli/build/generated-workbooks/gridgrind-formatting-depth.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Styled Report" },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Styled Report",
+      "range": "A1:D4",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Service" },
+          { "type": "TEXT", "text": "Hours" },
+          { "type": "TEXT", "text": "Rate" },
+          { "type": "TEXT", "text": "Amount" }
+        ],
+        [
+          { "type": "TEXT", "text": "Consulting" },
+          { "type": "NUMBER", "number": 12 },
+          { "type": "NUMBER", "number": 150 },
+          { "type": "FORMULA", "formula": "B2*C2" }
+        ],
+        [
+          { "type": "TEXT", "text": "Training" },
+          { "type": "NUMBER", "number": 6 },
+          { "type": "NUMBER", "number": 120 },
+          { "type": "FORMULA", "formula": "B3*C3" }
+        ],
+        [
+          { "type": "TEXT", "text": "Total" },
+          { "type": "BLANK" },
+          { "type": "BLANK" },
+          { "type": "FORMULA", "formula": "SUM(D2:D3)" }
+        ]
+      ]
+    },
+    {
+      "type": "APPLY_STYLE",
+      "sheetName": "Styled Report",
+      "range": "A1:D1",
+      "style": {
+        "bold": true,
+        "wrapText": true,
+        "horizontalAlignment": "CENTER",
+        "verticalAlignment": "CENTER",
+        "fontName": "Aptos",
+        "fontHeight": { "type": "POINTS", "points": 13 },
+        "fontColor": "#FFFFFF",
+        "fillColor": "#1F4E78",
+        "border": {
+          "all": { "style": "THIN" }
+        }
+      }
+    },
+    {
+      "type": "APPLY_STYLE",
+      "sheetName": "Styled Report",
+      "range": "C2:D4",
+      "style": {
+        "numberFormat": "#,##0.00",
+        "horizontalAlignment": "RIGHT"
+      }
+    },
+    {
+      "type": "APPLY_STYLE",
+      "sheetName": "Styled Report",
+      "range": "A4:D4",
+      "style": {
+        "bold": true,
+        "fontName": "Aptos",
+        "fontHeight": { "type": "TWIPS", "twips": 240 },
+        "fontColor": "#1F1F1F",
+        "fillColor": "#FFF2CC",
+        "border": {
+          "all": { "style": "THIN" },
+          "top": { "style": "DOUBLE" }
+        }
+      }
+    },
+    { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Styled Report" },
+    { "type": "EVALUATE_FORMULAS" }
+  ],
+  "analysis": {
+    "sheets": [
+      {
+        "sheetName": "Styled Report",
+        "cells": ["A1", "D4"],
+        "previewRowCount": 4,
+        "previewColumnCount": 4
+      }
+    ]
+  }
+}

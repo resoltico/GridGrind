@@ -27,12 +27,18 @@ replay_pid*
 *.ipr
 *.iws
 
-# Temporary and scratch directories from other projects
+# Temporary and scratch directories
 .tmp-*/
+/jazzer/.local/
 
 # OS and local scratch files
+.claude/
+AGENTS.md
 .DS_Store
-*.orig
 *.swp
 *.swo
 *~
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
