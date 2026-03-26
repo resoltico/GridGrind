@@ -2,9 +2,11 @@ package dev.erst.gridgrind.protocol;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -253,6 +255,57 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void readsFormattingDepthStylePatchesFromJson() throws IOException {
+    GridGrindRequest request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "source": { "mode": "NEW" },
+              "operations": [
+                {
+                  "type": "APPLY_STYLE",
+                  "sheetName": "Budget",
+                  "range": "A1",
+                  "style": {
+                    "bold": true,
+                    "wrapText": true,
+                    "horizontalAlignment": "CENTER",
+                    "verticalAlignment": "TOP",
+                    "fontName": "Aptos",
+                    "fontHeight": { "type": "POINTS", "points": 11.5 },
+                    "fontColor": "#1f4e78",
+                    "underline": true,
+                    "strikeout": true,
+                    "fillColor": "#fff2cc",
+                    "border": {
+                      "all": { "style": "THIN" },
+                      "right": { "style": "DOUBLE" }
+                    }
+                  }
+                }
+              ],
+              "analysis": { "sheets": [] }
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    assertEquals(1, request.operations().size());
+    assertInstanceOf(WorkbookOperation.ApplyStyle.class, request.operations().getFirst());
+    WorkbookOperation.ApplyStyle applyStyle =
+        (WorkbookOperation.ApplyStyle) request.operations().getFirst();
+
+    assertEquals("Aptos", applyStyle.style().fontName());
+    assertEquals(
+        new BigDecimal("11.5"), applyStyle.style().fontHeight().toExcelFontHeight().points());
+    assertEquals("#1F4E78", applyStyle.style().fontColor());
+    assertTrue(applyStyle.style().underline());
+    assertTrue(applyStyle.style().strikeout());
+    assertEquals("#FFF2CC", applyStyle.style().fillColor());
+    assertEquals(ExcelBorderStyle.THIN, applyStyle.style().border().all().style());
+    assertEquals(ExcelBorderStyle.DOUBLE, applyStyle.style().border().right().style());
+  }
+
+  @Test
   void wrapsRecordConstructionFailureAsInvalidPayloadError() {
     // Parsing a response where CellStyleReport.numberFormat is null triggers a NullPointerException
     // inside the record compact constructor. Jackson catches and wraps it as a JacksonException.
@@ -267,7 +320,10 @@ class GridGrindJsonTest {
                     "sheets":[{"sheetName":"X","physicalRowCount":0,"lastRowIndex":0,"lastColumnIndex":0,\
                     "requestedCells":[{"effectiveType":"BLANK","address":"A1","declaredType":"BLANK",\
                     "displayValue":"","style":{"numberFormat":null,"bold":false,"italic":false,\
-                    "wrapText":false,"horizontalAlignment":"GENERAL","verticalAlignment":"BOTTOM"}}],\
+                    "wrapText":false,"horizontalAlignment":"GENERAL","verticalAlignment":"BOTTOM",\
+                    "fontName":"Calibri","fontHeight":{"twips":220,"points":11},"fontColor":null,"underline":false,\
+                    "strikeout":false,"fillColor":null,"topBorderStyle":"NONE",\
+                    "rightBorderStyle":"NONE","bottomBorderStyle":"NONE","leftBorderStyle":"NONE"}}],\
                     "previewRows":[]}]}"""
                         .getBytes(StandardCharsets.UTF_8)));
 

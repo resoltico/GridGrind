@@ -3,6 +3,9 @@ package dev.erst.gridgrind.protocol;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import java.util.List;
 import java.util.Objects;
 
@@ -282,12 +285,28 @@ public sealed interface GridGrindResponse {
       boolean bold,
       boolean italic,
       boolean wrapText,
-      String horizontalAlignment,
-      String verticalAlignment) {
+      ExcelHorizontalAlignment horizontalAlignment,
+      ExcelVerticalAlignment verticalAlignment,
+      String fontName,
+      FontHeightReport fontHeight,
+      String fontColor,
+      boolean underline,
+      boolean strikeout,
+      String fillColor,
+      ExcelBorderStyle topBorderStyle,
+      ExcelBorderStyle rightBorderStyle,
+      ExcelBorderStyle bottomBorderStyle,
+      ExcelBorderStyle leftBorderStyle) {
     public CellStyleReport {
       Objects.requireNonNull(numberFormat, "numberFormat must not be null");
       Objects.requireNonNull(horizontalAlignment, "horizontalAlignment must not be null");
       Objects.requireNonNull(verticalAlignment, "verticalAlignment must not be null");
+      Objects.requireNonNull(fontName, "fontName must not be null");
+      Objects.requireNonNull(fontHeight, "fontHeight must not be null");
+      Objects.requireNonNull(topBorderStyle, "topBorderStyle must not be null");
+      Objects.requireNonNull(rightBorderStyle, "rightBorderStyle must not be null");
+      Objects.requireNonNull(bottomBorderStyle, "bottomBorderStyle must not be null");
+      Objects.requireNonNull(leftBorderStyle, "leftBorderStyle must not be null");
     }
   }
 

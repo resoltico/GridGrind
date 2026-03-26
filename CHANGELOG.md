@@ -3,6 +3,67 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-03-26
+
+### Added
+- Local-only Jazzer fuzzing layer in a separate nested Gradle build under `jazzer/`, including
+  protocol request fuzzing, structured workflow fuzzing, engine command-sequence fuzzing, and
+  `.xlsx` round-trip fuzzing.
+- Convenience wrapper scripts under `jazzer/bin/` for regression replay, per-harness fuzzing,
+  aggregate fuzzing, and local cleanup.
+- Task-specific local corpus storage under `jazzer/.local/runs/*/.cifuzz-corpus/`.
+- Jazzer operator commands for latest-summary status/report views, corpus inspection, finding
+  listing, one-off input replay, and seed promotion.
+- Per-target Jazzer run history with latest-summary JSON/text artifacts, per-harness telemetry,
+  and replayed local finding artifacts.
+- Committed custom seed floor for all four current Jazzer harnesses, including readable public
+  request examples and replay-verified binary workflow seeds, plus promotion metadata under
+  `jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/`.
+- Deterministic Jazzer support tests for summary parsing, summary rendering, and `.xlsx`
+  round-trip verifier behavior inside the nested `jazzer/` build.
+- Richer `.xlsx` style authoring through `APPLY_STYLE`, including `fontName`,
+  typed `fontHeight`, `fontColor`, `underline`, `strikeout`, `fillColor`, and side-aware border
+  patches with `all` defaults plus top/right/bottom/left overrides.
+- Effective style analysis and `.xlsx` round-trip verification for font, fill, and border facts,
+  plus a dedicated formatting-depth example request.
+
+### Changed
+- Developer documentation now includes an authoritative Jazzer architecture and operations
+  reference in `docs/DEVELOPER_JAZZER.md`.
+- The Jazzer workflow now uses lock-protected wrapper scripts so only one local Jazzer command
+  runs at a time, avoiding concurrent runtime-initialization failures.
+- Jazzer documentation is now split into architecture, operations, and coverage references so the
+  local fuzzing layer, command surface, and current harness inventory can be read independently.
+- `jazzer/bin/fuzz-all` now runs the four active harness scripts sequentially so every harness
+  still gets its own lock, run history, summary, and telemetry artifacts.
+- Jazzer workflow fuzzing now exercises `NEW` and `EXISTING` source modes together with `NONE`,
+  `SAVE_AS`, and `OVERWRITE` persistence modes instead of staying on new-workbook, no-persistence
+  flows only.
+- Root project-file formatting now excludes local-only instruction and scratch directories, keeping
+  local workspace state outside the canonical quality gates.
+- `jazzer/bin/list-corpus` now reports generated local corpus and committed custom seeds
+  separately, making the active-fuzz seed floor easier to interpret.
+- The committed Jazzer regression seed floor now includes the formerly crashing malformed-formula
+  engine command sequence as an expected-invalid replay case.
+- Public operation and quick-reference docs now describe the expanded style contract, including
+  RGB color normalization, solid-fill semantics, border-style enums, and analyzed effective style
+  output.
+- The public style contract now uses typed `fontHeight` objects instead of the old integer
+  `fontSizePoints` field. Requests can express font height as exact points or exact twips, and
+  analyzed style reports now return both `fontHeight.points` and `fontHeight.twips`.
+
+### Fixed
+- Malformed formulas that trigger Apache POI parser-state `IllegalStateException`s are now
+  surfaced as `INVALID_FORMULA` instead of leaking as `INTERNAL_ERROR`.
+- Jazzer `.xlsx` round-trip fuzzing now validates persisted formatting-depth style state
+  accurately instead of relying on coarse style heuristics, so alignment-only and exact
+  `fontHeight` round-trips no longer produce false positives.
+- Jazzer latest-summary status and report views now distinguish active findings from expected-
+  invalid and replay-clean local artifacts, preventing stale local crash files from being
+  misreported as current failures.
+- Jazzer summary parsing now handles active-fuzz corpus-size output that uses `Kb` units, keeping
+  latest-summary metrics accurate for longer local fuzzing runs.
+
 ## [0.5.0] - 2026-03-25
 
 ### Added
@@ -107,7 +168,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.6.0...HEAD
+[0.6.0]: https://github.com/resoltico/GridGrind/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/resoltico/GridGrind/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/resoltico/GridGrind/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/resoltico/GridGrind/compare/v0.3.0...v0.4.0

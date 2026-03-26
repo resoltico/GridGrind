@@ -1,0 +1,8 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/examples/budget-request.json",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/budget_request.json",
+  "replayOutcome" : "SUCCESS",
+  "promotedAt" : "2026-03-26T04:15:53.571758Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/budget_request.txt"
+}

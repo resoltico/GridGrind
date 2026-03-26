@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.5.0"
+version: "0.6.0"
 domain: DEVELOPER
-updated: "2026-03-25"
+updated: "2026-03-26"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -12,6 +12,11 @@ route:
 
 **Purpose**: Build, test, architecture, and quality gate reference for GridGrind contributors.
 **Prerequisites**: Java 26 (auto-provisioned via Gradle toolchains), Gradle wrapper.
+
+Local-only Jazzer architecture, operations, and coverage inventories live in:
+- [DEVELOPER_JAZZER.md](./DEVELOPER_JAZZER.md)
+- [DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md)
+- [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md)
 
 ---
 
@@ -106,6 +111,8 @@ Structural analysis. Two rulesets:
 
 Google Java Format 1.35.0. Removes unused imports. Run `./gradlew spotlessApply` to auto-format
 before committing; `./gradlew spotlessCheck` (run by `check`) will fail if formatting is off.
+Project-file formatting intentionally excludes local-only instruction and scratch areas,
+so personal workspace state cannot destabilize the canonical quality gates.
 
 ### JaCoCo
 
@@ -140,6 +147,7 @@ These runnable examples cover the core operation surface:
 | File | What It Tests |
 |:-----|:-------------|
 | `examples/budget-request.json` | Range write, style, formula, analysis in one request |
+| `examples/formatting-depth-request.json` | Font, fill, and border styling with analyzed style output |
 | `examples/live-workflow-create.json` | Multi-sheet workbook with cross-sheet formulas and aggregations |
 | `examples/live-workflow-revise.json` | Reopen, revise, recalculate, reanalyze |
 | `examples/sheet-management-request.json` | Sheet rename, delete, and reorder semantics |

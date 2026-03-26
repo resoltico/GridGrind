@@ -21,24 +21,23 @@ final class FormulaExceptions {
    */
   static RuntimeException wrap(
       String sheetName, String address, String formula, RuntimeException exception) {
-    String className = exception.getClass().getName();
-    if (className.contains(".ss.formula.eval.")) {
-      if (className.contains("NotImplemented")) {
-        return new UnsupportedFormulaException(
-            sheetName,
-            address,
-            formula,
-            "Unsupported formula"
-                + functionLabel(formula)
-                + " at "
-                + location(sheetName, address)
-                + ": "
-                + formula,
-            exception);
-      }
+    if (isUnsupportedFormulaFailure(exception)) {
+      return new UnsupportedFormulaException(
+          sheetName,
+          address,
+          formula,
+          "Unsupported formula"
+              + functionLabel(formula)
+              + " at "
+              + location(sheetName, address)
+              + ": "
+              + formula,
+          exception);
+    }
+    if (isUnhandledFormulaEvaluationFailure(exception)) {
       return exception;
     }
-    if (className.startsWith("org.apache.poi.ss.formula.")) {
+    if (isInvalidFormulaFailure(exception)) {
       return new InvalidFormulaException(
           sheetName,
           address,
@@ -47,6 +46,49 @@ final class FormulaExceptions {
           exception);
     }
     return exception;
+  }
+
+  private static boolean isUnsupportedFormulaFailure(Throwable exception) {
+    return hasTypeNameContaining(exception, ".ss.formula.eval.")
+        && hasTypeNameContaining(exception, "NotImplemented");
+  }
+
+  private static boolean isUnhandledFormulaEvaluationFailure(Throwable exception) {
+    return hasTypeNameContaining(exception, ".ss.formula.eval.");
+  }
+
+  private static boolean isInvalidFormulaFailure(Throwable exception) {
+    return hasTypeNameStartingWith(exception, "org.apache.poi.ss.formula.")
+        || hasStackFrameStartingWith(exception, "org.apache.poi.ss.formula.");
+  }
+
+  private static boolean hasTypeNameContaining(Throwable exception, String fragment) {
+    for (Throwable current = exception; current != null; current = current.getCause()) {
+      if (current.getClass().getName().contains(fragment)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean hasTypeNameStartingWith(Throwable exception, String prefix) {
+    for (Throwable current = exception; current != null; current = current.getCause()) {
+      if (current.getClass().getName().startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean hasStackFrameStartingWith(Throwable exception, String prefix) {
+    for (Throwable current = exception; current != null; current = current.getCause()) {
+      for (StackTraceElement frame : current.getStackTrace()) {
+        if (frame.getClassName().startsWith(prefix)) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private static String location(String sheetName, String address) {

@@ -1,0 +1,9 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/examples/sheet-management-request.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 1223
+Decode Outcome: PARSED
+Operation Count: 8
+Analysis Sheet Count: 2
+Operation Kinds: ENSURE_SHEET=3, SET_CELL=2, DELETE_SHEET=1, RENAME_SHEET=1, MOVE_SHEET=1

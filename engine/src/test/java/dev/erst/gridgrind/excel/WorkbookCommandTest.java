@@ -24,7 +24,14 @@ class WorkbookCommandTest {
             false,
             true,
             ExcelHorizontalAlignment.RIGHT,
-            ExcelVerticalAlignment.CENTER);
+            ExcelVerticalAlignment.CENTER,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
 
     WorkbookCommand.CreateSheet createSheet = new WorkbookCommand.CreateSheet("Budget");
     WorkbookCommand.RenameSheet renameSheet = new WorkbookCommand.RenameSheet("Budget", "Summary");

@@ -1,0 +1,14 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_font_height_request.json
+Harness: protocol-request
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestException
+Message: points must resolve exactly to whole twips (1/20 points)
+Input Bytes: 367
+Decode Outcome: INVALID_REQUEST
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
+Analysis Sheet Count: 0
+Style Kinds: (none)
+Operation Kinds: (none)

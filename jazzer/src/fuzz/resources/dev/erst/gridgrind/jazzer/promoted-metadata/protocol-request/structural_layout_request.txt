@@ -1,0 +1,9 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/examples/structural-layout-request.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 981
+Decode Outcome: PARSED
+Operation Count: 6
+Analysis Sheet Count: 1
+Operation Kinds: SET_CELL=1, SET_COLUMN_WIDTH=1, MERGE_CELLS=1, SET_ROW_HEIGHT=1, FREEZE_PANES=1, ENSURE_SHEET=1

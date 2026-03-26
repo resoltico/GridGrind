@@ -2,13 +2,18 @@ package dev.erst.gridgrind.excel;
 
 import java.util.HashMap;
 import java.util.Map;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataFormat;
-import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.FontUnderline;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
  * Caches and creates POI CellStyle and Font instances for a single workbook, merging protocol style
@@ -17,14 +22,14 @@ import org.apache.poi.ss.usermodel.Workbook;
 final class WorkbookStyleRegistry {
   private static final String DEFAULT_NUMBER_FORMAT = "General";
 
-  private final Workbook workbook;
+  private final XSSFWorkbook workbook;
   private final DataFormat dataFormat;
-  private final Map<ResolvedCellStyle, CellStyle> cellStyles;
-  private final Map<ResolvedFontStyle, Font> fonts;
+  private final Map<MergedCellStyleKey, XSSFCellStyle> cellStyles;
+  private final Map<MergedFontKey, XSSFFont> fonts;
   private CellStyle localDateStyle;
   private CellStyle localDateTimeStyle;
 
-  WorkbookStyleRegistry(Workbook workbook) {
+  WorkbookStyleRegistry(XSSFWorkbook workbook) {
     this.workbook = workbook;
     this.dataFormat = workbook.createDataFormat();
     this.cellStyles = new HashMap<>();
@@ -34,15 +39,7 @@ final class WorkbookStyleRegistry {
   /** Returns the shared date cell style for {@code yyyy-mm-dd} formatted date values. */
   CellStyle localDateStyle() {
     if (localDateStyle == null) {
-      localDateStyle =
-          styleFor(
-              new ResolvedCellStyle(
-                  "yyyy-mm-dd",
-                  false,
-                  false,
-                  false,
-                  ExcelHorizontalAlignment.GENERAL,
-                  ExcelVerticalAlignment.BOTTOM));
+      localDateStyle = styleFor(defaultStyleRecord(), ExcelCellStyle.numberFormat("yyyy-mm-dd"));
     }
     return localDateStyle;
   }
@@ -51,21 +48,14 @@ final class WorkbookStyleRegistry {
   CellStyle localDateTimeStyle() {
     if (localDateTimeStyle == null) {
       localDateTimeStyle =
-          styleFor(
-              new ResolvedCellStyle(
-                  "yyyy-mm-dd hh:mm:ss",
-                  false,
-                  false,
-                  false,
-                  ExcelHorizontalAlignment.GENERAL,
-                  ExcelVerticalAlignment.BOTTOM));
+          styleFor(defaultStyleRecord(), ExcelCellStyle.numberFormat("yyyy-mm-dd hh:mm:ss"));
     }
     return localDateTimeStyle;
   }
 
   /** Returns the workbook's default cell style (index 0). */
   CellStyle defaultStyle() {
-    return workbook.getCellStyleAt(0);
+    return defaultStyleRecord();
   }
 
   /**
@@ -73,34 +63,30 @@ final class WorkbookStyleRegistry {
    * cached or newly created {@link CellStyle}.
    */
   CellStyle mergedStyle(Cell cell, ExcelCellStyle stylePatch) {
-    return styleFor(resolvedStyle(cell).merge(stylePatch));
+    return styleFor(styleRecord(cell), stylePatch);
   }
 
   /** Captures a read-only snapshot of the effective style applied to the given cell. */
   ExcelCellStyleSnapshot snapshot(Cell cell) {
-    ResolvedCellStyle style = resolvedStyle(cell);
+    XSSFCellStyle style = styleRecord(cell);
+    XSSFFont font = style.getFont();
     return new ExcelCellStyleSnapshot(
-        style.numberFormat(),
-        style.bold(),
-        style.italic(),
-        style.wrapText(),
-        style.horizontalAlignment(),
-        style.verticalAlignment());
-  }
-
-  private ResolvedCellStyle resolvedStyle(Cell cell) {
-    return resolvedStyle(cell.getCellStyle());
-  }
-
-  private ResolvedCellStyle resolvedStyle(CellStyle cellStyle) {
-    Font font = workbook.getFontAt(cellStyle.getFontIndex());
-    return new ResolvedCellStyle(
-        resolveNumberFormat(cellStyle.getDataFormatString()),
+        resolveNumberFormat(style.getDataFormatString()),
         font.getBold(),
         font.getItalic(),
-        cellStyle.getWrapText(),
-        fromPoi(cellStyle.getAlignment()),
-        fromPoi(cellStyle.getVerticalAlignment()));
+        style.getWrapText(),
+        fromPoi(style.getAlignment()),
+        fromPoi(style.getVerticalAlignment()),
+        font.getFontName(),
+        new ExcelFontHeight(font.getFontHeight()),
+        toRgbHex(font.getXSSFColor()),
+        font.getUnderline() != FontUnderline.NONE.getByteValue(),
+        font.getStrikeout(),
+        fillColor(style),
+        fromPoi(style.getBorderTop()),
+        fromPoi(style.getBorderRight()),
+        fromPoi(style.getBorderBottom()),
+        fromPoi(style.getBorderLeft()));
   }
 
   /**
@@ -111,54 +97,158 @@ final class WorkbookStyleRegistry {
     return numberFormat == null || numberFormat.isBlank() ? DEFAULT_NUMBER_FORMAT : numberFormat;
   }
 
-  private CellStyle styleFor(ResolvedCellStyle style) {
+  private XSSFCellStyle defaultStyleRecord() {
+    return workbook.getCellStyleAt(0);
+  }
+
+  private XSSFCellStyle styleRecord(Cell cell) {
+    return (XSSFCellStyle) cell.getCellStyle();
+  }
+
+  private XSSFCellStyle styleFor(XSSFCellStyle baseStyle, ExcelCellStyle stylePatch) {
     return cellStyles.computeIfAbsent(
-        style,
-        key -> {
-          CellStyle cellStyle = workbook.createCellStyle();
-          cellStyle.setDataFormat(dataFormat.getFormat(key.numberFormat()));
-          cellStyle.setWrapText(key.wrapText());
-          cellStyle.setAlignment(toPoi(key.horizontalAlignment()));
-          cellStyle.setVerticalAlignment(toPoi(key.verticalAlignment()));
-          cellStyle.setFont(fontFor(new ResolvedFontStyle(key.bold(), key.italic())));
-          return cellStyle;
-        });
+        new MergedCellStyleKey(baseStyle.getIndex(), stylePatch),
+        key -> createMergedStyle(baseStyle, stylePatch));
   }
 
-  private Font fontFor(ResolvedFontStyle fontStyle) {
+  private XSSFCellStyle createMergedStyle(XSSFCellStyle baseStyle, ExcelCellStyle stylePatch) {
+    XSSFCellStyle cellStyle = workbook.createCellStyle();
+    cellStyle.cloneStyleFrom(baseStyle);
+
+    if (stylePatch.numberFormat() != null) {
+      cellStyle.setDataFormat(dataFormat.getFormat(stylePatch.numberFormat()));
+    }
+    if (stylePatch.wrapText() != null) {
+      cellStyle.setWrapText(stylePatch.wrapText());
+    }
+    if (stylePatch.horizontalAlignment() != null) {
+      cellStyle.setAlignment(toPoi(stylePatch.horizontalAlignment()));
+    }
+    if (stylePatch.verticalAlignment() != null) {
+      cellStyle.setVerticalAlignment(toPoi(stylePatch.verticalAlignment()));
+    }
+    if (stylePatch.fillColor() != null) {
+      cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+      cellStyle.setFillForegroundColor(toXssfColor(stylePatch.fillColor()));
+    }
+    if (stylePatch.border() != null) {
+      applyBorderPatch(cellStyle, stylePatch.border());
+    }
+    if (hasFontChanges(stylePatch)) {
+      cellStyle.setFont(fontFor(baseStyle.getFont(), fontPatch(stylePatch)));
+    }
+    return cellStyle;
+  }
+
+  private XSSFFont fontFor(XSSFFont baseFont, FontPatch fontPatch) {
     return fonts.computeIfAbsent(
-        fontStyle,
-        key -> {
-          Font font = workbook.createFont();
-          font.setBold(key.bold());
-          font.setItalic(key.italic());
-          return font;
-        });
+        new MergedFontKey(baseFont.getIndex(), fontPatch),
+        key -> createMergedFont(baseFont, fontPatch));
   }
 
-  private record ResolvedCellStyle(
-      String numberFormat,
-      boolean bold,
-      boolean italic,
-      boolean wrapText,
-      ExcelHorizontalAlignment horizontalAlignment,
-      ExcelVerticalAlignment verticalAlignment) {
-    private ResolvedCellStyle merge(ExcelCellStyle stylePatch) {
-      return new ResolvedCellStyle(
-          stylePatch.numberFormat() == null ? numberFormat : stylePatch.numberFormat(),
-          stylePatch.bold() == null ? bold : stylePatch.bold(),
-          stylePatch.italic() == null ? italic : stylePatch.italic(),
-          stylePatch.wrapText() == null ? wrapText : stylePatch.wrapText(),
-          stylePatch.horizontalAlignment() == null
-              ? horizontalAlignment
-              : stylePatch.horizontalAlignment(),
-          stylePatch.verticalAlignment() == null
-              ? verticalAlignment
-              : stylePatch.verticalAlignment());
+  private XSSFFont createMergedFont(XSSFFont baseFont, FontPatch fontPatch) {
+    XSSFFont font = workbook.createFont();
+    font.getCTFont().set(baseFont.getCTFont());
+    if (fontPatch.bold() != null) {
+      font.setBold(fontPatch.bold());
+    }
+    if (fontPatch.italic() != null) {
+      font.setItalic(fontPatch.italic());
+    }
+    if (fontPatch.fontName() != null) {
+      font.setFontName(fontPatch.fontName());
+    }
+    if (fontPatch.fontHeight() != null) {
+      font.setFontHeight(fontPatch.fontHeight().points().doubleValue());
+    }
+    if (fontPatch.fontColor() != null) {
+      font.setColor(toXssfColor(fontPatch.fontColor()));
+    }
+    if (fontPatch.underline() != null) {
+      font.setUnderline(fontPatch.underline() ? FontUnderline.SINGLE : FontUnderline.NONE);
+    }
+    if (fontPatch.strikeout() != null) {
+      font.setStrikeout(fontPatch.strikeout());
+    }
+    return font;
+  }
+
+  private void applyBorderPatch(XSSFCellStyle cellStyle, ExcelBorder border) {
+    ExcelBorderStyle topStyle = borderStyle(border.all(), border.top());
+    ExcelBorderStyle rightStyle = borderStyle(border.all(), border.right());
+    ExcelBorderStyle bottomStyle = borderStyle(border.all(), border.bottom());
+    ExcelBorderStyle leftStyle = borderStyle(border.all(), border.left());
+
+    if (topStyle != null) {
+      cellStyle.setBorderTop(toPoi(topStyle));
+    }
+    if (rightStyle != null) {
+      cellStyle.setBorderRight(toPoi(rightStyle));
+    }
+    if (bottomStyle != null) {
+      cellStyle.setBorderBottom(toPoi(bottomStyle));
+    }
+    if (leftStyle != null) {
+      cellStyle.setBorderLeft(toPoi(leftStyle));
     }
   }
 
-  private record ResolvedFontStyle(boolean bold, boolean italic) {}
+  private static ExcelBorderStyle borderStyle(
+      ExcelBorderSide defaultSide, ExcelBorderSide explicitSide) {
+    if (explicitSide != null) {
+      return explicitSide.style();
+    }
+    return defaultSide == null ? null : defaultSide.style();
+  }
+
+  private static boolean hasFontChanges(ExcelCellStyle stylePatch) {
+    return stylePatch.bold() != null
+        || stylePatch.italic() != null
+        || stylePatch.fontName() != null
+        || stylePatch.fontHeight() != null
+        || stylePatch.fontColor() != null
+        || stylePatch.underline() != null
+        || stylePatch.strikeout() != null;
+  }
+
+  private static FontPatch fontPatch(ExcelCellStyle stylePatch) {
+    return new FontPatch(
+        stylePatch.bold(),
+        stylePatch.italic(),
+        stylePatch.fontName(),
+        stylePatch.fontHeight(),
+        stylePatch.fontColor(),
+        stylePatch.underline(),
+        stylePatch.strikeout());
+  }
+
+  private static String fillColor(XSSFCellStyle style) {
+    if (style.getFillPattern() != FillPatternType.SOLID_FOREGROUND) {
+      return null;
+    }
+    return toRgbHex(style.getFillForegroundColorColor());
+  }
+
+  private static String toRgbHex(XSSFColor color) {
+    if (color == null) {
+      return null;
+    }
+    byte[] rgb = color.getRGB();
+    if (rgb == null || rgb.length != 3) {
+      return null;
+    }
+    return "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
+  }
+
+  private XSSFColor toXssfColor(String color) {
+    return new XSSFColor(
+        new byte[] {
+          (byte) Integer.parseInt(color.substring(1, 3), 16),
+          (byte) Integer.parseInt(color.substring(3, 5), 16),
+          (byte) Integer.parseInt(color.substring(5, 7), 16)
+        },
+        workbook.getStylesSource().getIndexedColors());
+  }
 
   private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {
     return ExcelHorizontalAlignment.valueOf(alignment.name());
@@ -168,6 +258,10 @@ final class WorkbookStyleRegistry {
     return ExcelVerticalAlignment.valueOf(alignment.name());
   }
 
+  private static ExcelBorderStyle fromPoi(BorderStyle borderStyle) {
+    return ExcelBorderStyle.valueOf(borderStyle.name());
+  }
+
   private static HorizontalAlignment toPoi(ExcelHorizontalAlignment alignment) {
     return HorizontalAlignment.valueOf(alignment.name());
   }
@@ -175,4 +269,21 @@ final class WorkbookStyleRegistry {
   private static VerticalAlignment toPoi(ExcelVerticalAlignment alignment) {
     return VerticalAlignment.valueOf(alignment.name());
   }
+
+  private static BorderStyle toPoi(ExcelBorderStyle borderStyle) {
+    return BorderStyle.valueOf(borderStyle.name());
+  }
+
+  private record MergedCellStyleKey(int baseStyleIndex, ExcelCellStyle stylePatch) {}
+
+  private record MergedFontKey(int baseFontIndex, FontPatch fontPatch) {}
+
+  private record FontPatch(
+      Boolean bold,
+      Boolean italic,
+      String fontName,
+      ExcelFontHeight fontHeight,
+      String fontColor,
+      Boolean underline,
+      Boolean strikeout) {}
 }

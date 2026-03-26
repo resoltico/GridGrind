@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.5.0"
+version: "0.6.0"
 domain: QUICK_REFERENCE
-updated: "2026-03-25"
+updated: "2026-03-26"
 route:
   keywords: [gridgrind, quick-reference, snippets, json, operations, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, apply-style, append-row, clear-range, evaluate-formulas]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind operation examples"]
@@ -165,14 +165,27 @@ GridGrind supports `.xlsx` workbooks only. Use `.xlsx` paths for `source.path` a
     "italic": false,
     "wrapText": true,
     "numberFormat": "#,##0.00",
+    "fontName": "Aptos",
+    "fontHeight": { "type": "POINTS", "points": 13 },
+    "fontColor": "#1F4E78",
+    "underline": true,
+    "strikeout": false,
+    "fillColor": "#FFF2CC",
     "horizontalAlignment": "CENTER",
-    "verticalAlignment": "CENTER"
+    "verticalAlignment": "CENTER",
+    "border": {
+      "all": { "style": "THIN" },
+      "right": { "style": "DOUBLE" }
+    }
   }
 }
 ```
 
 `horizontalAlignment` values: `"LEFT"` `"CENTER"` `"RIGHT"` `"GENERAL"`
 `verticalAlignment` values:   `"TOP"` `"CENTER"` `"BOTTOM"`
+`fontColor` and `fillColor` use `#RRGGBB`.
+`fontHeight` accepts either `{ "type": "POINTS", "points": 11.5 }` or `{ "type": "TWIPS", "twips": 230 }`.
+`border.all` sets the default side style; explicit sides override it.
 
 ## APPEND_ROW
 

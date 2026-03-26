@@ -25,7 +25,14 @@ class WorkbookOperationTest {
             null,
             true,
             ExcelHorizontalAlignment.RIGHT,
-            ExcelVerticalAlignment.CENTER);
+            ExcelVerticalAlignment.CENTER,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
 
     WorkbookOperation.EnsureSheet ensureSheet = new WorkbookOperation.EnsureSheet("Budget");
     WorkbookOperation.RenameSheet renameSheet =
@@ -255,7 +262,9 @@ class WorkbookOperationTest {
   @Test
   void operationTypeCoversAllSubtypes() {
     CellInput textValue = new CellInput.Text("x");
-    CellStyleInput style = new CellStyleInput(null, false, null, false, null, null);
+    CellStyleInput style =
+        new CellStyleInput(
+            null, false, null, false, null, null, null, null, null, null, null, null, null);
 
     assertEquals("ENSURE_SHEET", new WorkbookOperation.EnsureSheet("Budget").operationType());
     assertEquals(

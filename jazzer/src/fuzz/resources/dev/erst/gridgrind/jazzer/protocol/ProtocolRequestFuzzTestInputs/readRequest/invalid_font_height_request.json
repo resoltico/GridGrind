@@ -1,0 +1,16 @@
+{
+  "protocolVersion": "V1",
+  "source": { "mode": "NEW" },
+  "persistence": { "mode": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Styled Report" },
+    {
+      "type": "APPLY_STYLE",
+      "sheetName": "Styled Report",
+      "range": "A1",
+      "style": {
+        "fontHeight": { "type": "POINTS", "points": 11.333 }
+      }
+    }
+  ]
+}

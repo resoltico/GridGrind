@@ -110,7 +110,7 @@ deterministic failure semantics instead of "error after side effect."
 | `SET_CELL` | Write a typed value to a single cell |
 | `SET_RANGE` | Write a rectangular grid of typed values |
 | `CLEAR_RANGE` | Remove all values and styles from a rectangular range |
-| `APPLY_STYLE` | Apply number format, bold, italic, alignment, or wrap to a range |
+| `APPLY_STYLE` | Apply number formats, font styling, fills, borders, alignment, or wrap to a range |
 | `APPEND_ROW` | Append a row of typed values after the last populated row |
 | `AUTO_SIZE_COLUMNS` | Size columns to fit their contents |
 | `EVALUATE_FORMULAS` | Force formula recalculation before save |
@@ -126,6 +126,12 @@ Structural layout operations are also strict: `MERGE_CELLS` uses A1-style ranges
 requires an exact merged-region match, `SET_COLUMN_WIDTH.widthCharacters` is converted to POI
 width units with `round(widthCharacters * 256)`, `SET_ROW_HEIGHT.heightPoints` is passed through
 as Excel point units, and `FREEZE_PANES` uses explicit split plus visible-origin coordinates.
+
+`APPLY_STYLE` supports number formats, bold/italic, wrap, horizontal and vertical alignment,
+`fontName`, typed `fontHeight`, `fontColor`, `underline`, `strikeout`, `fillColor`, and per-side
+border styles through a nested `border` patch. `fontHeight` accepts either point units or exact
+twips. Style analysis reports `fontHeight.twips` and `fontHeight.points` alongside the other
+effective font, fill, and border facts.
 
 See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the full reference with all fields and examples.
 
@@ -175,7 +181,18 @@ A request that builds Alice's green coffee inventory sheet:
       "type": "APPLY_STYLE",
       "sheetName": "Inventory",
       "range": "A1:C1",
-      "style": { "bold": true }
+      "style": {
+        "bold": true,
+        "fontName": "Aptos",
+        "fontHeight": { "type": "POINTS", "points": 13 },
+        "fontColor": "#FFFFFF",
+        "fillColor": "#1F4E78",
+        "horizontalAlignment": "CENTER",
+        "verticalAlignment": "CENTER",
+        "border": {
+          "all": { "style": "THIN" }
+        }
+      }
     },
     { "type": "EVALUATE_FORMULAS" }
   ],
@@ -192,7 +209,9 @@ A request that builds Alice's green coffee inventory sheet:
 ## Responses
 
 A successful response carries `"status": "SUCCESS"` and a structured workbook summary including
-effective cell values and styles for every cell requested in `analysis`.
+effective cell values and styles for every cell requested in `analysis`, including effective
+font name, font size, font color, underline, strikeout, fill color, and all four border sides
+when those style facts can be normalized from the workbook.
 
 A failed response carries `"status": "ERROR"` and a structured `problem` object with:
 

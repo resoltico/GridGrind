@@ -1,0 +1,8 @@
+{
+  "targetKey" : "engine-command-sequence",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest/applyCommands/dad9428ad8832f92261a8f5aed9d6aba94627a03",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/invalid_cell_address_case.bin",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "promotedAt" : "2026-03-26T03:21:47.499993Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/invalid_cell_address_case.txt"
+}

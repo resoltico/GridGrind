@@ -2,6 +2,10 @@ package dev.erst.gridgrind.protocol;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -48,8 +52,7 @@ class GridGrindResponseTest {
   @Test
   void copiesAndValidatesNestedCollections() {
     List<String> sheetNames = new ArrayList<>(List.of("Budget"));
-    GridGrindResponse.CellStyleReport cellStyle =
-        new GridGrindResponse.CellStyleReport("General", false, false, false, "GENERAL", "BOTTOM");
+    GridGrindResponse.CellStyleReport cellStyle = defaultCellStyleReport();
     List<GridGrindResponse.CellReport> cells =
         new ArrayList<>(
             List.of(
@@ -82,7 +85,23 @@ class GridGrindResponseTest {
     assertThrows(
         NullPointerException.class,
         () ->
-            new GridGrindResponse.CellStyleReport(null, false, false, false, "GENERAL", "BOTTOM"));
+            new GridGrindResponse.CellStyleReport(
+                null,
+                false,
+                false,
+                false,
+                ExcelHorizontalAlignment.GENERAL,
+                ExcelVerticalAlignment.BOTTOM,
+                "Calibri",
+                new FontHeightReport(220, new BigDecimal("11")),
+                null,
+                false,
+                false,
+                null,
+                ExcelBorderStyle.NONE,
+                ExcelBorderStyle.NONE,
+                ExcelBorderStyle.NONE,
+                ExcelBorderStyle.NONE));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -238,8 +257,7 @@ class GridGrindResponseTest {
 
   @Test
   void cellReportSubtypesExposeTypedGettersAndDefaultNulls() {
-    GridGrindResponse.CellStyleReport style =
-        new GridGrindResponse.CellStyleReport("General", false, false, false, "GENERAL", "BOTTOM");
+    GridGrindResponse.CellStyleReport style = defaultCellStyleReport();
 
     GridGrindResponse.CellReport.BlankReport blankReport =
         new GridGrindResponse.CellReport.BlankReport("A1", "BLANK", "", style);
@@ -301,5 +319,25 @@ class GridGrindResponseTest {
     GridGrindResponse.ProblemContext.ValidateRequest validateRequest =
         new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE");
     assertNull(validateRequest.argument());
+  }
+
+  private GridGrindResponse.CellStyleReport defaultCellStyleReport() {
+    return new GridGrindResponse.CellStyleReport(
+        "General",
+        false,
+        false,
+        false,
+        ExcelHorizontalAlignment.GENERAL,
+        ExcelVerticalAlignment.BOTTOM,
+        "Calibri",
+        new FontHeightReport(220, new BigDecimal("11")),
+        null,
+        false,
+        false,
+        null,
+        ExcelBorderStyle.NONE,
+        ExcelBorderStyle.NONE,
+        ExcelBorderStyle.NONE,
+        ExcelBorderStyle.NONE);
   }
 }

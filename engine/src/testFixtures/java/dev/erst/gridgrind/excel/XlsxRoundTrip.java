@@ -7,8 +7,17 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.PaneInformation;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -89,6 +98,45 @@ public final class XlsxRoundTrip {
         });
   }
 
+  /** Returns the effective style captured at one A1-style cell address in the saved workbook. */
+  public static ExcelCellStyleSnapshot cellStyle(
+      Path workbookPath, String sheetName, String address) throws IOException {
+    requireNonBlank(address, "address");
+    CellReference cellReference = new CellReference(address);
+    return readSheet(
+        workbookPath,
+        sheetName,
+        sheet -> {
+          Row row = sheet.getRow(cellReference.getRow());
+          if (row == null) {
+            throw new CellNotFoundException(address);
+          }
+          XSSFCell cell = (XSSFCell) row.getCell(cellReference.getCol());
+          if (cell == null) {
+            throw new CellNotFoundException(address);
+          }
+          XSSFCellStyle style = cell.getCellStyle();
+          XSSFFont font = style.getFont();
+          return new ExcelCellStyleSnapshot(
+              WorkbookStyleRegistry.resolveNumberFormat(style.getDataFormatString()),
+              font.getBold(),
+              font.getItalic(),
+              style.getWrapText(),
+              fromPoi(style.getAlignment()),
+              fromPoi(style.getVerticalAlignment()),
+              font.getFontName(),
+              new ExcelFontHeight(font.getFontHeight()),
+              toRgbHex(font.getXSSFColor()),
+              font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
+              font.getStrikeout(),
+              fillColor(style),
+              fromPoi(style.getBorderTop()),
+              fromPoi(style.getBorderRight()),
+              fromPoi(style.getBorderBottom()),
+              fromPoi(style.getBorderLeft()));
+        });
+  }
+
   private static <T> T readSheet(Path workbookPath, String sheetName, SheetReader<T> sheetReader)
       throws IOException {
     requireNonBlank(sheetName, "sheetName");
@@ -149,6 +197,36 @@ public final class XlsxRoundTrip {
   private interface SheetReader<T> {
     /** Reads the sheet and returns the derived value. */
     T read(XSSFSheet sheet);
+  }
+
+  private static String fillColor(XSSFCellStyle style) {
+    if (style.getFillPattern() != FillPatternType.SOLID_FOREGROUND) {
+      return null;
+    }
+    return toRgbHex(style.getFillForegroundColorColor());
+  }
+
+  private static String toRgbHex(XSSFColor color) {
+    if (color == null) {
+      return null;
+    }
+    byte[] rgb = color.getRGB();
+    if (rgb == null || rgb.length != 3) {
+      return null;
+    }
+    return "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
+  }
+
+  private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {
+    return ExcelHorizontalAlignment.valueOf(alignment.name());
+  }
+
+  private static ExcelVerticalAlignment fromPoi(VerticalAlignment alignment) {
+    return ExcelVerticalAlignment.valueOf(alignment.name());
+  }
+
+  private static ExcelBorderStyle fromPoi(BorderStyle borderStyle) {
+    return ExcelBorderStyle.valueOf(borderStyle.name());
   }
 
   /** Represents the freeze-pane state stored on a sheet. */

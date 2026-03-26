@@ -41,6 +41,29 @@ class FormulaExceptionsTest {
   }
 
   @Test
+  void classifiesJdkRuntimeExceptionsWithPoiFormulaStackAsInvalid() {
+    IllegalStateException parserFailure =
+        new IllegalStateException(
+            "Parsed past the end of the formula, pos: 15, length: 14, formula: [^owe_e`ffffff");
+    parserFailure.setStackTrace(
+        new StackTraceElement[] {
+          new StackTraceElement(
+              "org.apache.poi.ss.formula.FormulaParser", "nextChar", "FormulaParser.java", 231),
+          new StackTraceElement(
+              "org.apache.poi.xssf.usermodel.XSSFCell", "setFormula", "XSSFCell.java", 496)
+        });
+
+    RuntimeException invalid =
+        FormulaExceptions.wrap("Budget", "C7", "[^owe_e`ffffff", parserFailure);
+
+    assertInstanceOf(InvalidFormulaException.class, invalid);
+    assertEquals("Budget", ((InvalidFormulaException) invalid).sheetName());
+    assertEquals("C7", ((InvalidFormulaException) invalid).address());
+    assertEquals("[^owe_e`ffffff", ((InvalidFormulaException) invalid).formula());
+    assertSame(parserFailure, invalid.getCause());
+  }
+
+  @Test
   void leavesUnclassifiedRuntimeExceptionsUntouched() {
     RuntimeException original = new RuntimeException("boom");
     RuntimeException evalFailure = new org.apache.poi.ss.formula.eval.FakeEvalFailure("eval boom");

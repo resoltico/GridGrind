@@ -1,0 +1,8 @@
+{
+  "targetKey" : "engine-command-sequence",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/crash-2f13d11ff7f3014d6023755bd957eccfbbc39d86",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/invalid_formula_parser_state_case.bin",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "promotedAt" : "2026-03-26T12:45:04.112748Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/invalid_formula_parser_state_case.txt"
+}

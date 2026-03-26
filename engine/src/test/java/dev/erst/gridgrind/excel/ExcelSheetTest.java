@@ -267,7 +267,14 @@ class ExcelSheetTest {
               null,
               true,
               ExcelHorizontalAlignment.CENTER,
-              ExcelVerticalAlignment.TOP));
+              ExcelVerticalAlignment.TOP,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null));
       sheet.applyStyle("C1", ExcelCellStyle.emphasis(null, true));
 
       ExcelCellSnapshot styledValue = sheet.snapshotCell("A1");
@@ -276,6 +283,16 @@ class ExcelSheetTest {
       assertTrue(styledValue.style().wrapText());
       assertEquals(ExcelHorizontalAlignment.CENTER, styledValue.style().horizontalAlignment());
       assertEquals(ExcelVerticalAlignment.TOP, styledValue.style().verticalAlignment());
+      assertEquals("Calibri", styledValue.style().fontName());
+      assertEquals(220, styledValue.style().fontHeight().twips());
+      assertFalse(styledValue.style().underline());
+      assertFalse(styledValue.style().strikeout());
+      assertEquals("#000000", styledValue.style().fontColor());
+      assertNull(styledValue.style().fillColor());
+      assertEquals(ExcelBorderStyle.NONE, styledValue.style().topBorderStyle());
+      assertEquals(ExcelBorderStyle.NONE, styledValue.style().rightBorderStyle());
+      assertEquals(ExcelBorderStyle.NONE, styledValue.style().bottomBorderStyle());
+      assertEquals(ExcelBorderStyle.NONE, styledValue.style().leftBorderStyle());
 
       List<ExcelPreviewRow> preview = sheet.preview(2, 3);
       assertTrue(preview.getFirst().cells().stream().anyMatch(cell -> "C1".equals(cell.address())));
@@ -290,6 +307,16 @@ class ExcelSheetTest {
       assertFalse(cleared.style().bold());
       assertEquals(ExcelHorizontalAlignment.GENERAL, cleared.style().horizontalAlignment());
       assertEquals(ExcelVerticalAlignment.BOTTOM, cleared.style().verticalAlignment());
+      assertEquals("Calibri", cleared.style().fontName());
+      assertEquals(220, cleared.style().fontHeight().twips());
+      assertEquals("#000000", cleared.style().fontColor());
+      assertFalse(cleared.style().underline());
+      assertFalse(cleared.style().strikeout());
+      assertNull(cleared.style().fillColor());
+      assertEquals(ExcelBorderStyle.NONE, cleared.style().topBorderStyle());
+      assertEquals(ExcelBorderStyle.NONE, cleared.style().rightBorderStyle());
+      assertEquals(ExcelBorderStyle.NONE, cleared.style().bottomBorderStyle());
+      assertEquals(ExcelBorderStyle.NONE, cleared.style().leftBorderStyle());
 
       assertThrows(
           IllegalArgumentException.class,
@@ -316,6 +343,68 @@ class ExcelSheetTest {
       rowWithNull.add(null);
       rowsWithNull.add(rowWithNull);
       assertThrows(NullPointerException.class, () -> sheet.setRange("A1", rowsWithNull));
+    }
+  }
+
+  @Test
+  void mergesFormattingDepthStylesAndPreservesExistingAttributes() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setCell("A1", ExcelCellValue.text("Item"));
+      sheet.applyStyle(
+          "A1",
+          new ExcelCellStyle(
+              null,
+              true,
+              false,
+              true,
+              ExcelHorizontalAlignment.CENTER,
+              ExcelVerticalAlignment.TOP,
+              "Aptos",
+              new ExcelFontHeight(280),
+              "#1F4E78",
+              true,
+              false,
+              "#FFF2CC",
+              new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null)));
+      sheet.applyStyle(
+          "A1",
+          new ExcelCellStyle(
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              true,
+              null,
+              new ExcelBorder(
+                  null, null, new ExcelBorderSide(ExcelBorderStyle.DOUBLE), null, null)));
+
+      ExcelCellSnapshot styled = sheet.snapshotCell("A1");
+      assertTrue(styled.style().bold());
+      assertFalse(styled.style().italic());
+      assertTrue(styled.style().wrapText());
+      assertEquals(ExcelHorizontalAlignment.CENTER, styled.style().horizontalAlignment());
+      assertEquals(ExcelVerticalAlignment.TOP, styled.style().verticalAlignment());
+      assertEquals("Aptos", styled.style().fontName());
+      assertEquals(280, styled.style().fontHeight().twips());
+      assertEquals("#1F4E78", styled.style().fontColor());
+      assertTrue(styled.style().underline());
+      assertTrue(styled.style().strikeout());
+      assertEquals("#FFF2CC", styled.style().fillColor());
+      assertEquals(ExcelBorderStyle.THIN, styled.style().topBorderStyle());
+      assertEquals(ExcelBorderStyle.DOUBLE, styled.style().rightBorderStyle());
+      assertEquals(ExcelBorderStyle.THIN, styled.style().bottomBorderStyle());
+      assertEquals(ExcelBorderStyle.THIN, styled.style().leftBorderStyle());
     }
   }
 
@@ -446,6 +535,11 @@ class ExcelSheetTest {
               InvalidFormulaException.class,
               () -> writeFailureSheet.setCell("B1", ExcelCellValue.formula("SUM(")));
       assertEquals("SUM(", invalidWrite.formula());
+      InvalidFormulaException parserStateWrite =
+          assertThrows(
+              InvalidFormulaException.class,
+              () -> writeFailureSheet.setCell("C1", ExcelCellValue.formula("[^owe_e`ffffff")));
+      assertEquals("[^owe_e`ffffff", parserStateWrite.formula());
 
       FormulaEvaluator baseEvaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
       ExcelSheet invalidFormulaSheet =

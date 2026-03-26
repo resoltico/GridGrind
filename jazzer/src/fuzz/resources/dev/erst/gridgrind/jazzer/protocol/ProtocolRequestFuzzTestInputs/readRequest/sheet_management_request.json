@@ -1,0 +1,54 @@
+{
+  "protocolVersion": "V1",
+  "source": {
+    "mode": "NEW"
+  },
+  "persistence": {
+    "mode": "SAVE_AS",
+    "path": "generated/sheet-management.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Budget" },
+    { "type": "ENSURE_SHEET", "sheetName": "Archive" },
+    { "type": "ENSURE_SHEET", "sheetName": "Scratch" },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Archive",
+      "address": "A1",
+      "value": { "type": "TEXT", "text": "Archived numbers" }
+    },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Budget",
+      "address": "A1",
+      "value": { "type": "TEXT", "text": "Current numbers" }
+    },
+    {
+      "type": "RENAME_SHEET",
+      "sheetName": "Archive",
+      "newSheetName": "History"
+    },
+    {
+      "type": "MOVE_SHEET",
+      "sheetName": "History",
+      "targetIndex": 0
+    },
+    { "type": "DELETE_SHEET", "sheetName": "Scratch" }
+  ],
+  "analysis": {
+    "sheets": [
+      {
+        "sheetName": "History",
+        "cells": ["A1"],
+        "previewRowCount": 2,
+        "previewColumnCount": 2
+      },
+      {
+        "sheetName": "Budget",
+        "cells": ["A1"],
+        "previewRowCount": 2,
+        "previewColumnCount": 2
+      }
+    ]
+  }
+}
