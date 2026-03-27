@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.7.0"
+version: "0.8.0"
 domain: DEVELOPER
-updated: "2026-03-26"
+updated: "2026-03-27"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -28,8 +28,9 @@ GridGrind is a three-module Gradle project:
 engine/     Workbook-core abstractions on top of Apache POI.
             No JSON, no transport, no protocol concerns.
 
-protocol/   The AI-agent-facing contract: request and response models,
-            protocol versioning, structured failures, JSON encoding,
+protocol/   The external GridGrind contract and execution layer:
+            request and response models, the request-executor port,
+            the default executor, structured failures, JSON encoding,
             and execution semantics.
 
 cli/        Thin transport adapter. Reads a protocol request from stdin
@@ -133,9 +134,9 @@ so personal workspace state cannot destabilize the canonical quality gates.
 
 ## Execution Semantics
 
-Operations run first. Analysis runs second. Persistence happens last.
+Operations run first. Reads run second. Persistence happens last.
 
-If analysis fails, the request returns a structured error and no workbook is written. This gives
+If a read fails, the request returns a structured error and no workbook is written. This gives
 agents deterministic failure semantics: a failure never leaves a partially-written file behind.
 
 ---
@@ -146,13 +147,14 @@ These runnable examples cover the core operation surface:
 
 | File | What It Tests |
 |:-----|:-------------|
-| `examples/budget-request.json` | Range write, style, formula, analysis in one request |
-| `examples/excel-authoring-essentials-request.json` | Hyperlink, comment, named-range authoring plus workbook-level named-range analysis |
-| `examples/formatting-depth-request.json` | Font, fill, and border styling with analyzed style output |
+| `examples/budget-request.json` | Range write, style, formula, workbook summary, cells, window, and schema reads |
+| `examples/excel-authoring-essentials-request.json` | Hyperlink, comment, named-range authoring plus explicit metadata and named-range reads |
+| `examples/formatting-depth-request.json` | Font, fill, and border styling with explicit post-mutation cell and window reads |
+| `examples/introspection-analysis-request.json` | Read-heavy workbook showcasing introspection and insight operations together |
 | `examples/live-workflow-create.json` | Multi-sheet workbook with cross-sheet formulas and aggregations |
-| `examples/live-workflow-revise.json` | Reopen, revise, recalculate, reanalyze |
+| `examples/live-workflow-revise.json` | Reopen, revise, recalculate, and reread |
 | `examples/sheet-management-request.json` | Sheet rename, delete, and reorder semantics |
-| `examples/structural-layout-request.json` | Merge, size, and freeze-pane document shaping |
+| `examples/structural-layout-request.json` | Merge, size, freeze-pane shaping, and layout reads |
 
 Run any fixture with:
 

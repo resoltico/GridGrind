@@ -1,11 +1,11 @@
 ---
 afad: "3.4"
-version: "0.7.0"
+version: "0.8.0"
 domain: QUICK_REFERENCE
-updated: "2026-03-26"
+updated: "2026-03-27"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind named range example"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, analyze-sheet-schema]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind named range example", "what do gridgrind reads look like"]
 ---
 
 # Quick Reference
@@ -26,7 +26,7 @@ GridGrind supports `.xlsx` workbooks only. Use `.xlsx` paths for `source.path` a
   "source": { "mode": "NEW" },
   "persistence": { "mode": "SAVE_AS", "path": "output.xlsx" },
   "operations": [],
-  "analysis": { "sheets": [] }
+  "reads": []
 }
 ```
 
@@ -293,26 +293,193 @@ accepted and stored as `"A1:B4"`.
 
 ---
 
-## Analysis
+## Reads
+
+Each read is a standalone object for use inside the top-level `reads` array. Every read must have
+a caller-defined `requestId`.
+
+## GET_WORKBOOK_SUMMARY
+
+```json
+{ "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" }
+```
+
+## GET_NAMED_RANGES
 
 ```json
 {
-  "sheets": [
-    {
-      "sheetName": "Sheet1",
-      "cells": ["A1", "B4", "C10"],
-      "previewRowCount": 5,
-      "previewColumnCount": 4
-    }
-  ],
-  "namedRanges": { "mode": "ALL" }
+  "type": "GET_NAMED_RANGES",
+  "requestId": "named-ranges",
+  "selection": { "mode": "ALL" }
+}
+{
+  "type": "GET_NAMED_RANGES",
+  "requestId": "selected-named-ranges",
+  "selection": {
+    "mode": "SELECTED",
+    "selectors": [
+      { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
+      { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
+    ]
+  }
 }
 ```
 
-Named-range analysis snippets:
+## GET_SHEET_SUMMARY
 
 ```json
-{ "mode": "NONE" }
+{ "type": "GET_SHEET_SUMMARY", "requestId": "sheet-summary", "sheetName": "Sheet1" }
+```
+
+## GET_CELLS
+
+```json
+{
+  "type": "GET_CELLS",
+  "requestId": "cells",
+  "sheetName": "Sheet1",
+  "addresses": ["A1", "B4", "C10"]
+}
+```
+
+## GET_WINDOW
+
+```json
+{
+  "type": "GET_WINDOW",
+  "requestId": "window",
+  "sheetName": "Sheet1",
+  "topLeftAddress": "A1",
+  "rowCount": 5,
+  "columnCount": 4
+}
+```
+
+## GET_MERGED_REGIONS
+
+```json
+{ "type": "GET_MERGED_REGIONS", "requestId": "merged", "sheetName": "Sheet1" }
+```
+
+## GET_HYPERLINKS
+
+```json
+{
+  "type": "GET_HYPERLINKS",
+  "requestId": "hyperlinks",
+  "sheetName": "Sheet1",
+  "selection": { "mode": "ALL_USED_CELLS" }
+}
+{
+  "type": "GET_HYPERLINKS",
+  "requestId": "selected-hyperlinks",
+  "sheetName": "Sheet1",
+  "selection": {
+    "mode": "SELECTED",
+    "addresses": ["A1", "B4"]
+  }
+}
+```
+
+## GET_COMMENTS
+
+```json
+{
+  "type": "GET_COMMENTS",
+  "requestId": "comments",
+  "sheetName": "Sheet1",
+  "selection": { "mode": "ALL_USED_CELLS" }
+}
+{
+  "type": "GET_COMMENTS",
+  "requestId": "selected-comments",
+  "sheetName": "Sheet1",
+  "selection": {
+    "mode": "SELECTED",
+    "addresses": ["A1", "B4"]
+  }
+}
+```
+
+## GET_SHEET_LAYOUT
+
+```json
+{ "type": "GET_SHEET_LAYOUT", "requestId": "layout", "sheetName": "Sheet1" }
+```
+
+## ANALYZE_FORMULA_SURFACE
+
+```json
+{
+  "type": "ANALYZE_FORMULA_SURFACE",
+  "requestId": "formula-surface",
+  "selection": {
+    "mode": "ALL"
+  }
+}
+{
+  "type": "ANALYZE_FORMULA_SURFACE",
+  "requestId": "selected-formula-surface",
+  "selection": {
+    "mode": "SELECTED",
+    "sheetNames": ["Sheet1", "Sheet2"]
+  }
+}
+```
+
+## ANALYZE_SHEET_SCHEMA
+
+```json
+{
+  "type": "ANALYZE_SHEET_SCHEMA",
+  "requestId": "schema",
+  "sheetName": "Sheet1",
+  "topLeftAddress": "A1",
+  "rowCount": 5,
+  "columnCount": 4
+}
+```
+
+## ANALYZE_NAMED_RANGE_SURFACE
+
+```json
+{
+  "type": "ANALYZE_NAMED_RANGE_SURFACE",
+  "requestId": "named-range-surface",
+  "selection": { "mode": "ALL" }
+}
+{
+  "type": "ANALYZE_NAMED_RANGE_SURFACE",
+  "requestId": "selected-named-range-surface",
+  "selection": {
+    "mode": "SELECTED",
+    "selectors": [
+      { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
+      { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
+    ]
+  }
+}
+```
+
+Selection snippets:
+
+```json
+{ "mode": "ALL_USED_CELLS" }
+{
+  "mode": "SELECTED",
+  "addresses": ["A1", "B4", "C10"]
+}
+```
+
+```json
+{ "mode": "ALL" }
+{
+  "mode": "SELECTED",
+  "sheetNames": ["Sheet1", "Sheet2"]
+}
+```
+
+```json
 { "mode": "ALL" }
 {
   "mode": "SELECTED",
@@ -321,4 +488,5 @@ Named-range analysis snippets:
     { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
   ]
 }
+```
 ```

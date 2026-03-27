@@ -1,16 +1,19 @@
 package dev.erst.gridgrind.protocol;
 
+import dev.erst.gridgrind.excel.ExcelCellSelection;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
+import dev.erst.gridgrind.excel.ExcelNamedRangeSelection;
+import dev.erst.gridgrind.excel.ExcelNamedRangeSelector;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
-import dev.erst.gridgrind.excel.ExcelPreviewRow;
-import dev.erst.gridgrind.excel.ExcelSheet;
+import dev.erst.gridgrind.excel.ExcelSheetSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
+import dev.erst.gridgrind.excel.WorkbookReadCommand;
+import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -18,24 +21,30 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/** Orchestrates protocol requests against the workbook core and returns structured responses. */
-public final class GridGrindService {
+/** Default request executor that applies the GridGrind workflow against the workbook core. */
+public final class DefaultGridGrindRequestExecutor implements GridGrindRequestExecutor {
   private final WorkbookCommandExecutor commandExecutor;
+  private final WorkbookReadExecutor readExecutor;
   private final WorkbookCloser workbookCloser;
 
-  /** Creates the production GridGrindService with the default command executor and closer. */
-  public GridGrindService() {
-    this(new WorkbookCommandExecutor(), ExcelWorkbook::close);
+  /** Creates the production request executor with the default workbook executors and closer. */
+  public DefaultGridGrindRequestExecutor() {
+    this(new WorkbookCommandExecutor(), new WorkbookReadExecutor(), ExcelWorkbook::close);
   }
 
-  /** Constructor for testing, allowing injection of a custom executor and closer. */
-  GridGrindService(WorkbookCommandExecutor commandExecutor, WorkbookCloser workbookCloser) {
+  /** Constructor for testing, allowing injection of custom executors and closer. */
+  DefaultGridGrindRequestExecutor(
+      WorkbookCommandExecutor commandExecutor,
+      WorkbookReadExecutor readExecutor,
+      WorkbookCloser workbookCloser) {
     this.commandExecutor =
         Objects.requireNonNull(commandExecutor, "commandExecutor must not be null");
+    this.readExecutor = Objects.requireNonNull(readExecutor, "readExecutor must not be null");
     this.workbookCloser = Objects.requireNonNull(workbookCloser, "workbookCloser must not be null");
   }
 
   /** Executes one complete GridGrind request. */
+  @Override
   public GridGrindResponse execute(GridGrindRequest request) {
     GridGrindProtocolVersion protocolVersion =
         request == null ? GridGrindProtocolVersion.current() : request.protocolVersion();
@@ -70,77 +79,62 @@ public final class GridGrindService {
         protocolVersion,
         request,
         workbook,
-        () -> {
-          GridGrindResponse response;
-          for (int operationIndex = 0;
-              operationIndex < request.operations().size();
-              operationIndex++) {
-            WorkbookOperation operation = request.operations().get(operationIndex);
-            try {
-              commandExecutor.apply(workbook, toCommand(operation));
-            } catch (Exception exception) {
-              response =
-                  operationFailure(protocolVersion, request, operationIndex, operation, exception);
-              return closeWorkbook(workbook, response, request);
-            }
-          }
-
-          List<GridGrindResponse.SheetReport> reports =
-              new ArrayList<>(request.analysis().sheets().size());
-          for (GridGrindRequest.SheetInspectionRequest sheetRequest : request.analysis().sheets()) {
-            try {
-              reports.add(analyzeSheet(workbook, sheetRequest));
-            } catch (AnalysisException exception) {
-              response = analysisFailure(protocolVersion, request, exception);
-              return closeWorkbook(workbook, response, request);
-            }
-          }
-
-          List<GridGrindResponse.NamedRangeReport> namedRanges;
-          try {
-            namedRanges = analyzeNamedRanges(workbook, request.analysis().namedRanges());
-          } catch (AnalysisException exception) {
-            response = analysisFailure(protocolVersion, request, exception);
-            return closeWorkbook(workbook, response, request);
-          }
-
-          String savedWorkbookPath;
-          try {
-            savedWorkbookPath =
-                persistWorkbook(workbook, request.persistence(), reqSourcePath(request));
-          } catch (Exception exception) {
-            response =
-                new GridGrindResponse.Failure(
-                    protocolVersion,
-                    GridGrindProblems.fromException(
-                        exception,
-                        new GridGrindResponse.ProblemContext.PersistWorkbook(
-                            reqSourceMode(request),
-                            reqPersistenceMode(request),
-                            reqSourcePath(request),
-                            persistencePath(request.source(), request.persistence()))));
-            return closeWorkbook(workbook, response, request);
-          }
-
-          response =
-              new GridGrindResponse.Success(
-                  protocolVersion,
-                  savedWorkbookPath,
-                  new GridGrindResponse.WorkbookSummary(
-                      workbook.sheetCount(),
-                      workbook.sheetNames(),
-                      workbook.namedRangeCount(),
-                      workbook.forceFormulaRecalculationOnOpenEnabled()),
-                  namedRanges,
-                  reports);
-          return closeWorkbook(workbook, response, request);
-        });
+        () -> executeWorkbookWorkflow(protocolVersion, request, workbook));
   }
 
-  /**
-   * Validates cross-field constraints that cannot be enforced at the record level. Returns a
-   * failure response if the request is invalid, or empty if validation passes.
-   */
+  private GridGrindResponse executeWorkbookWorkflow(
+      GridGrindProtocolVersion protocolVersion, GridGrindRequest request, ExcelWorkbook workbook) {
+    for (int operationIndex = 0; operationIndex < request.operations().size(); operationIndex++) {
+      WorkbookOperation operation = request.operations().get(operationIndex);
+      try {
+        commandExecutor.apply(workbook, toCommand(operation));
+      } catch (Exception exception) {
+        return closeWorkbook(
+            workbook,
+            operationFailure(protocolVersion, request, operationIndex, operation, exception),
+            request);
+      }
+    }
+
+    List<WorkbookReadResult> reads = new ArrayList<>(request.reads().size());
+    for (int readIndex = 0; readIndex < request.reads().size(); readIndex++) {
+      WorkbookReadOperation read = request.reads().get(readIndex);
+      try {
+        WorkbookReadCommand command = toReadCommand(read);
+        dev.erst.gridgrind.excel.WorkbookReadResult result =
+            readExecutor.apply(workbook, command).getFirst();
+        reads.add(toReadResult(result));
+      } catch (Exception exception) {
+        return closeWorkbook(
+            workbook, readFailure(protocolVersion, request, readIndex, read, exception), request);
+      }
+    }
+
+    GridGrindResponse.PersistenceOutcome persistence;
+    try {
+      persistence = persistWorkbook(workbook, request.persistence(), reqSourcePath(request));
+    } catch (Exception exception) {
+      return closeWorkbook(
+          workbook,
+          new GridGrindResponse.Failure(
+              protocolVersion,
+              GridGrindProblems.fromException(
+                  exception,
+                  new GridGrindResponse.ProblemContext.PersistWorkbook(
+                      reqSourceMode(request),
+                      reqPersistenceMode(request),
+                      reqSourcePath(request),
+                      persistencePath(request.source(), request.persistence())))),
+          request);
+    }
+
+    return closeWorkbook(
+        workbook,
+        new GridGrindResponse.Success(protocolVersion, persistence, List.copyOf(reads)),
+        request);
+  }
+
+  /** Validates cross-field constraints that cannot be enforced at the record level. */
   private Optional<GridGrindResponse> validateRequest(
       GridGrindProtocolVersion protocolVersion, GridGrindRequest request) {
     return switch (request.persistence()) {
@@ -236,89 +230,296 @@ public final class GridGrindService {
     };
   }
 
-  /**
-   * Persists the workbook according to the persistence mode. For OverwriteSource, sourcePath is
-   * guaranteed non-null by validateRequest (ExistingFile always paired with OverwriteSource).
-   */
-  private String persistWorkbook(
+  /** Converts one protocol read into the matching workbook-core read command. */
+  static WorkbookReadCommand toReadCommand(WorkbookReadOperation read) {
+    return switch (read) {
+      case WorkbookReadOperation.GetWorkbookSummary op ->
+          new WorkbookReadCommand.GetWorkbookSummary(op.requestId());
+      case WorkbookReadOperation.GetNamedRanges op ->
+          new WorkbookReadCommand.GetNamedRanges(
+              op.requestId(), toExcelNamedRangeSelection(op.selection()));
+      case WorkbookReadOperation.GetSheetSummary op ->
+          new WorkbookReadCommand.GetSheetSummary(op.requestId(), op.sheetName());
+      case WorkbookReadOperation.GetCells op ->
+          new WorkbookReadCommand.GetCells(op.requestId(), op.sheetName(), op.addresses());
+      case WorkbookReadOperation.GetWindow op ->
+          new WorkbookReadCommand.GetWindow(
+              op.requestId(), op.sheetName(), op.topLeftAddress(), op.rowCount(), op.columnCount());
+      case WorkbookReadOperation.GetMergedRegions op ->
+          new WorkbookReadCommand.GetMergedRegions(op.requestId(), op.sheetName());
+      case WorkbookReadOperation.GetHyperlinks op ->
+          new WorkbookReadCommand.GetHyperlinks(
+              op.requestId(), op.sheetName(), toExcelCellSelection(op.selection()));
+      case WorkbookReadOperation.GetComments op ->
+          new WorkbookReadCommand.GetComments(
+              op.requestId(), op.sheetName(), toExcelCellSelection(op.selection()));
+      case WorkbookReadOperation.GetSheetLayout op ->
+          new WorkbookReadCommand.GetSheetLayout(op.requestId(), op.sheetName());
+      case WorkbookReadOperation.AnalyzeFormulaSurface op ->
+          new WorkbookReadCommand.AnalyzeFormulaSurface(
+              op.requestId(), toExcelSheetSelection(op.selection()));
+      case WorkbookReadOperation.AnalyzeSheetSchema op ->
+          new WorkbookReadCommand.AnalyzeSheetSchema(
+              op.requestId(), op.sheetName(), op.topLeftAddress(), op.rowCount(), op.columnCount());
+      case WorkbookReadOperation.AnalyzeNamedRangeSurface op ->
+          new WorkbookReadCommand.AnalyzeNamedRangeSurface(
+              op.requestId(), toExcelNamedRangeSelection(op.selection()));
+    };
+  }
+
+  private GridGrindResponse.PersistenceOutcome persistWorkbook(
       ExcelWorkbook workbook, GridGrindRequest.WorkbookPersistence persistence, String sourcePath)
       throws IOException {
     return switch (persistence) {
-      case GridGrindRequest.WorkbookPersistence.None _ -> null;
+      case GridGrindRequest.WorkbookPersistence.None _ ->
+          new GridGrindResponse.PersistenceOutcome.NotSaved();
       case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> {
         Path path = Path.of(sourcePath);
         workbook.save(path);
-        yield path.toAbsolutePath().toString();
+        yield new GridGrindResponse.PersistenceOutcome.Saved(path.toAbsolutePath().toString());
       }
       case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> {
         Path path = Path.of(saveAs.path());
         workbook.save(path);
-        yield path.toAbsolutePath().toString();
+        yield new GridGrindResponse.PersistenceOutcome.Saved(path.toAbsolutePath().toString());
       }
     };
   }
 
-  private GridGrindResponse.PreviewRowReport toPreviewRowReport(ExcelPreviewRow previewRow) {
-    return new GridGrindResponse.PreviewRowReport(
-        previewRow.rowIndex(), previewRow.cells().stream().map(this::toCellReport).toList());
+  /** Converts one workbook-core read result into the protocol response shape. */
+  static WorkbookReadResult toReadResult(dev.erst.gridgrind.excel.WorkbookReadResult result) {
+    return switch (result) {
+      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult workbookSummary ->
+          new WorkbookReadResult.WorkbookSummaryResult(
+              workbookSummary.requestId(),
+              new GridGrindResponse.WorkbookSummary(
+                  workbookSummary.workbook().sheetCount(),
+                  workbookSummary.workbook().sheetNames(),
+                  workbookSummary.workbook().namedRangeCount(),
+                  workbookSummary.workbook().forceFormulaRecalculationOnOpen()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangesResult namedRanges ->
+          new WorkbookReadResult.NamedRangesResult(
+              namedRanges.requestId(),
+              namedRanges.namedRanges().stream()
+                  .map(DefaultGridGrindRequestExecutor::toNamedRangeReport)
+                  .toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult sheetSummary ->
+          new WorkbookReadResult.SheetSummaryResult(
+              sheetSummary.requestId(),
+              new GridGrindResponse.SheetSummaryReport(
+                  sheetSummary.sheet().sheetName(),
+                  sheetSummary.sheet().physicalRowCount(),
+                  sheetSummary.sheet().lastRowIndex(),
+                  sheetSummary.sheet().lastColumnIndex()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.CellsResult cells ->
+          new WorkbookReadResult.CellsResult(
+              cells.requestId(),
+              cells.sheetName(),
+              cells.cells().stream().map(DefaultGridGrindRequestExecutor::toCellReport).toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.WindowResult window ->
+          new WorkbookReadResult.WindowResult(window.requestId(), toWindowReport(window.window()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.MergedRegionsResult mergedRegions ->
+          new WorkbookReadResult.MergedRegionsResult(
+              mergedRegions.requestId(),
+              mergedRegions.sheetName(),
+              mergedRegions.mergedRegions().stream()
+                  .map(region -> new GridGrindResponse.MergedRegionReport(region.range()))
+                  .toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.HyperlinksResult hyperlinks ->
+          new WorkbookReadResult.HyperlinksResult(
+              hyperlinks.requestId(),
+              hyperlinks.sheetName(),
+              hyperlinks.hyperlinks().stream()
+                  .map(DefaultGridGrindRequestExecutor::toCellHyperlinkReport)
+                  .toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.CommentsResult comments ->
+          new WorkbookReadResult.CommentsResult(
+              comments.requestId(),
+              comments.sheetName(),
+              comments.comments().stream()
+                  .map(DefaultGridGrindRequestExecutor::toCellCommentReport)
+                  .toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayoutResult sheetLayout ->
+          new WorkbookReadResult.SheetLayoutResult(
+              sheetLayout.requestId(), toSheetLayoutReport(sheetLayout.layout()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.FormulaSurfaceResult formulaSurface ->
+          new WorkbookReadResult.FormulaSurfaceResult(
+              formulaSurface.requestId(), toFormulaSurfaceReport(formulaSurface.analysis()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetSchemaResult sheetSchema ->
+          new WorkbookReadResult.SheetSchemaResult(
+              sheetSchema.requestId(), toSheetSchemaReport(sheetSchema.analysis()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangeSurfaceResult namedRangeSurface ->
+          new WorkbookReadResult.NamedRangeSurfaceResult(
+              namedRangeSurface.requestId(),
+              toNamedRangeSurfaceReport(namedRangeSurface.analysis()));
+    };
   }
 
-  private GridGrindResponse.SheetReport analyzeSheet(
-      ExcelWorkbook workbook, GridGrindRequest.SheetInspectionRequest sheetRequest) {
-    ExcelSheet sheet;
-    try {
-      sheet = workbook.sheet(sheetRequest.sheetName());
-    } catch (Exception exception) {
-      throw new AnalysisException(sheetRequest.sheetName(), null, null, exception);
-    }
-
-    List<GridGrindResponse.CellReport> requestedCells =
-        new ArrayList<>(sheetRequest.cells().size());
-    for (String address : sheetRequest.cells()) {
-      try {
-        requestedCells.add(toCellReport(sheet.snapshotCell(address)));
-      } catch (Exception exception) {
-        throw new AnalysisException(sheetRequest.sheetName(), address, null, exception);
-      }
-    }
-
-    List<GridGrindResponse.PreviewRowReport> previewRows = List.of();
-    if (sheetRequest.previewRowCount() != null) {
-      previewRows =
-          sheet.preview(sheetRequest.previewRowCount(), sheetRequest.previewColumnCount()).stream()
-              .map(this::toPreviewRowReport)
-              .toList();
-    }
-
-    return new GridGrindResponse.SheetReport(
-        sheet.name(),
-        sheet.physicalRowCount(),
-        sheet.lastRowIndex(),
-        sheet.lastColumnIndex(),
-        requestedCells,
-        previewRows);
+  private static GridGrindResponse.WindowReport toWindowReport(
+      dev.erst.gridgrind.excel.WorkbookReadResult.Window window) {
+    return new GridGrindResponse.WindowReport(
+        window.sheetName(),
+        window.topLeftAddress(),
+        window.rowCount(),
+        window.columnCount(),
+        window.rows().stream()
+            .map(
+                row ->
+                    new GridGrindResponse.WindowRowReport(
+                        row.rowIndex(),
+                        row.cells().stream()
+                            .map(DefaultGridGrindRequestExecutor::toCellReport)
+                            .toList()))
+            .toList());
   }
 
-  /** Returns the named-range analysis slice requested by the protocol analysis settings. */
-  static List<GridGrindResponse.NamedRangeReport> analyzeNamedRanges(
-      ExcelWorkbook workbook,
-      GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection inspection) {
-    try {
-      return switch (inspection) {
-        case GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.None _ -> List.of();
-        case GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.All _ ->
-            workbook.namedRanges().stream().map(GridGrindService::toNamedRangeReport).toList();
-        case GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected selected ->
-            selectedNamedRanges(workbook.namedRanges(), selected.selectors()).stream()
-                .map(GridGrindService::toNamedRangeReport)
-                .toList();
-      };
-    } catch (NamedRangeNotFoundException exception) {
-      throw new AnalysisException(null, null, exception.name(), exception);
-    }
+  private static GridGrindResponse.CellHyperlinkReport toCellHyperlinkReport(
+      dev.erst.gridgrind.excel.WorkbookReadResult.CellHyperlink hyperlink) {
+    return new GridGrindResponse.CellHyperlinkReport(
+        hyperlink.address(), toHyperlinkReport(hyperlink.hyperlink()));
   }
 
-  private GridGrindResponse.CellReport toCellReport(ExcelCellSnapshot snapshot) {
+  private static GridGrindResponse.CellCommentReport toCellCommentReport(
+      dev.erst.gridgrind.excel.WorkbookReadResult.CellComment comment) {
+    return new GridGrindResponse.CellCommentReport(
+        comment.address(), toCommentReport(comment.comment()));
+  }
+
+  private static GridGrindResponse.SheetLayoutReport toSheetLayoutReport(
+      dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout layout) {
+    return new GridGrindResponse.SheetLayoutReport(
+        layout.sheetName(),
+        toFreezePaneReport(layout.freezePanes()),
+        layout.columns().stream()
+            .map(
+                column ->
+                    new GridGrindResponse.ColumnLayoutReport(
+                        column.columnIndex(), column.widthCharacters()))
+            .toList(),
+        layout.rows().stream()
+            .map(row -> new GridGrindResponse.RowLayoutReport(row.rowIndex(), row.heightPoints()))
+            .toList());
+  }
+
+  private static GridGrindResponse.FreezePaneReport toFreezePaneReport(
+      dev.erst.gridgrind.excel.WorkbookReadResult.FreezePane freezePane) {
+    return switch (freezePane) {
+      case dev.erst.gridgrind.excel.WorkbookReadResult.FreezePane.None _ ->
+          new GridGrindResponse.FreezePaneReport.None();
+      case dev.erst.gridgrind.excel.WorkbookReadResult.FreezePane.Frozen frozen ->
+          new GridGrindResponse.FreezePaneReport.Frozen(
+              frozen.splitColumn(), frozen.splitRow(), frozen.leftmostColumn(), frozen.topRow());
+    };
+  }
+
+  private static GridGrindResponse.FormulaSurfaceReport toFormulaSurfaceReport(
+      dev.erst.gridgrind.excel.WorkbookReadResult.FormulaSurface analysis) {
+    return new GridGrindResponse.FormulaSurfaceReport(
+        analysis.totalFormulaCellCount(),
+        analysis.sheets().stream()
+            .map(
+                sheet ->
+                    new GridGrindResponse.SheetFormulaSurfaceReport(
+                        sheet.sheetName(),
+                        sheet.formulaCellCount(),
+                        sheet.distinctFormulaCount(),
+                        sheet.formulas().stream()
+                            .map(
+                                formula ->
+                                    new GridGrindResponse.FormulaPatternReport(
+                                        formula.formula(),
+                                        formula.occurrenceCount(),
+                                        formula.addresses()))
+                            .toList()))
+            .toList());
+  }
+
+  private static GridGrindResponse.SheetSchemaReport toSheetSchemaReport(
+      dev.erst.gridgrind.excel.WorkbookReadResult.SheetSchema analysis) {
+    return new GridGrindResponse.SheetSchemaReport(
+        analysis.sheetName(),
+        analysis.topLeftAddress(),
+        analysis.rowCount(),
+        analysis.columnCount(),
+        analysis.dataRowCount(),
+        analysis.columns().stream()
+            .map(
+                column ->
+                    new GridGrindResponse.SchemaColumnReport(
+                        column.columnIndex(),
+                        column.columnAddress(),
+                        column.headerDisplayValue(),
+                        column.populatedCellCount(),
+                        column.blankCellCount(),
+                        column.observedTypes().stream()
+                            .map(
+                                typeCount ->
+                                    new GridGrindResponse.TypeCountReport(
+                                        typeCount.type(), typeCount.count()))
+                            .toList(),
+                        column.dominantType()))
+            .toList());
+  }
+
+  private static GridGrindResponse.NamedRangeSurfaceReport toNamedRangeSurfaceReport(
+      dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangeSurface analysis) {
+    return new GridGrindResponse.NamedRangeSurfaceReport(
+        analysis.workbookScopedCount(),
+        analysis.sheetScopedCount(),
+        analysis.rangeBackedCount(),
+        analysis.formulaBackedCount(),
+        analysis.namedRanges().stream()
+            .map(
+                entry ->
+                    new GridGrindResponse.NamedRangeSurfaceEntryReport(
+                        entry.name(),
+                        toNamedRangeScope(entry.scope()),
+                        entry.refersToFormula(),
+                        switch (entry.kind()) {
+                          case RANGE -> GridGrindResponse.NamedRangeBackingKind.RANGE;
+                          case FORMULA -> GridGrindResponse.NamedRangeBackingKind.FORMULA;
+                        }))
+            .toList());
+  }
+
+  private static ExcelNamedRangeSelection toExcelNamedRangeSelection(
+      NamedRangeSelection selection) {
+    return switch (selection) {
+      case NamedRangeSelection.All _ -> new ExcelNamedRangeSelection.All();
+      case NamedRangeSelection.Selected selected ->
+          new ExcelNamedRangeSelection.Selected(
+              selected.selectors().stream()
+                  .map(DefaultGridGrindRequestExecutor::toExcelNamedRangeSelector)
+                  .toList());
+    };
+  }
+
+  private static ExcelNamedRangeSelector toExcelNamedRangeSelector(NamedRangeSelector selector) {
+    return switch (selector) {
+      case NamedRangeSelector.ByName byName -> new ExcelNamedRangeSelector.ByName(byName.name());
+      case NamedRangeSelector.WorkbookScope workbookScope ->
+          new ExcelNamedRangeSelector.WorkbookScope(workbookScope.name());
+      case NamedRangeSelector.SheetScope sheetScope ->
+          new ExcelNamedRangeSelector.SheetScope(sheetScope.name(), sheetScope.sheetName());
+    };
+  }
+
+  private static ExcelSheetSelection toExcelSheetSelection(SheetSelection selection) {
+    return switch (selection) {
+      case SheetSelection.All _ -> new ExcelSheetSelection.All();
+      case SheetSelection.Selected selected ->
+          new ExcelSheetSelection.Selected(selected.sheetNames());
+    };
+  }
+
+  private static ExcelCellSelection toExcelCellSelection(CellSelection selection) {
+    return switch (selection) {
+      case CellSelection.AllUsedCells _ -> new ExcelCellSelection.AllUsedCells();
+      case CellSelection.Selected selected -> new ExcelCellSelection.Selected(selected.addresses());
+    };
+  }
+
+  private static GridGrindResponse.CellReport toCellReport(ExcelCellSnapshot snapshot) {
     GridGrindResponse.CellStyleReport style =
         new GridGrindResponse.CellStyleReport(
             snapshot.style().numberFormat(),
@@ -438,61 +639,6 @@ public final class GridGrindService {
     };
   }
 
-  /**
-   * Returns the named ranges matched by the explicit selectors, preserving selector order and
-   * deduplicating matches.
-   */
-  static List<ExcelNamedRangeSnapshot> selectedNamedRanges(
-      List<ExcelNamedRangeSnapshot> namedRanges, List<NamedRangeSelector> selectors) {
-    List<ExcelNamedRangeSnapshot> selected = new ArrayList<>();
-    for (NamedRangeSelector selector : selectors) {
-      List<ExcelNamedRangeSnapshot> matches =
-          namedRanges.stream().filter(namedRange -> matches(selector, namedRange)).toList();
-      if (matches.isEmpty()) {
-        throw missingNamedRange(selector);
-      }
-      for (ExcelNamedRangeSnapshot match : matches) {
-        if (!selected.contains(match)) {
-          selected.add(match);
-        }
-      }
-    }
-    return selected;
-  }
-
-  /**
-   * Returns whether the selector matches the named-range snapshot under GridGrind scope semantics.
-   */
-  static boolean matches(NamedRangeSelector selector, ExcelNamedRangeSnapshot namedRange) {
-    return switch (selector) {
-      case NamedRangeSelector.ByName byName -> namedRange.name().equalsIgnoreCase(byName.name());
-      case NamedRangeSelector.WorkbookScope workbookScope ->
-          namedRange.name().equalsIgnoreCase(workbookScope.name())
-              && namedRange.scope() instanceof ExcelNamedRangeScope.WorkbookScope;
-      case NamedRangeSelector.SheetScope sheetScope ->
-          namedRange.name().equalsIgnoreCase(sheetScope.name())
-              && namedRange.scope() instanceof ExcelNamedRangeScope.SheetScope namedRangeScope
-              && namedRangeScope.sheetName().equals(sheetScope.sheetName());
-    };
-  }
-
-  /**
-   * Builds the precise missing-named-range exception for the selector that failed to match
-   * anything.
-   */
-  static NamedRangeNotFoundException missingNamedRange(NamedRangeSelector selector) {
-    return switch (selector) {
-      case NamedRangeSelector.ByName byName ->
-          new NamedRangeNotFoundException(byName.name(), new ExcelNamedRangeScope.WorkbookScope());
-      case NamedRangeSelector.WorkbookScope workbookScope ->
-          new NamedRangeNotFoundException(
-              workbookScope.name(), new ExcelNamedRangeScope.WorkbookScope());
-      case NamedRangeSelector.SheetScope sheetScope ->
-          new NamedRangeNotFoundException(
-              sheetScope.name(), new ExcelNamedRangeScope.SheetScope(sheetScope.sheetName()));
-    };
-  }
-
   /** Delegates to GridGrindProblems to classify the exception into a problem code. */
   static GridGrindProblemCode problemCodeFor(Exception exception) {
     return GridGrindProblems.codeFor(exception);
@@ -514,11 +660,11 @@ public final class GridGrindService {
       return response;
     } catch (IOException exception) {
       return switch (response) {
-        case GridGrindResponse.Failure f ->
+        case GridGrindResponse.Failure failure ->
             new GridGrindResponse.Failure(
-                f.protocolVersion(),
+                failure.protocolVersion(),
                 GridGrindProblems.appendCause(
-                    f.problem(),
+                    failure.problem(),
                     GridGrindProblems.supplementalCause(
                         "EXECUTE_REQUEST",
                         exception,
@@ -542,14 +688,15 @@ public final class GridGrindService {
     try {
       return execution.get();
     } catch (RuntimeException exception) {
-      GridGrindResponse response =
+      return closeWorkbook(
+          workbook,
           new GridGrindResponse.Failure(
               protocolVersion,
               GridGrindProblems.fromException(
                   exception,
                   new GridGrindResponse.ProblemContext.ExecuteRequest(
-                      reqSourceMode(request), reqPersistenceMode(request))));
-      return closeWorkbook(workbook, response, request);
+                      reqSourceMode(request), reqPersistenceMode(request)))),
+          request);
     }
   }
 
@@ -590,9 +737,133 @@ public final class GridGrindService {
     };
   }
 
+  private GridGrindResponse operationFailure(
+      GridGrindProtocolVersion protocolVersion,
+      GridGrindRequest request,
+      int operationIndex,
+      WorkbookOperation operation,
+      Exception exception) {
+    return new GridGrindResponse.Failure(
+        protocolVersion,
+        GridGrindProblems.fromException(
+            exception,
+            new GridGrindResponse.ProblemContext.ApplyOperation(
+                reqSourceMode(request),
+                reqPersistenceMode(request),
+                operationIndex,
+                operation.operationType(),
+                sheetNameFor(operation, exception),
+                addressFor(operation, exception),
+                rangeFor(operation, exception),
+                formulaFor(operation, exception),
+                namedRangeNameFor(operation, exception))));
+  }
+
+  private GridGrindResponse readFailure(
+      GridGrindProtocolVersion protocolVersion,
+      GridGrindRequest request,
+      int readIndex,
+      WorkbookReadOperation read,
+      Exception exception) {
+    return new GridGrindResponse.Failure(
+        protocolVersion,
+        GridGrindProblems.fromException(
+            exception,
+            new GridGrindResponse.ProblemContext.ExecuteRead(
+                reqSourceMode(request),
+                reqPersistenceMode(request),
+                readIndex,
+                readType(read),
+                read.requestId(),
+                sheetNameFor(read),
+                addressFor(read, exception),
+                GridGrindProblems.formulaFor(exception),
+                namedRangeNameFor(read, exception))));
+  }
+
+  /** Returns the SCREAMING_SNAKE_CASE discriminator for one read operation. */
+  static String readType(WorkbookReadOperation read) {
+    return switch (read) {
+      case WorkbookReadOperation.GetWorkbookSummary _ -> "GET_WORKBOOK_SUMMARY";
+      case WorkbookReadOperation.GetNamedRanges _ -> "GET_NAMED_RANGES";
+      case WorkbookReadOperation.GetSheetSummary _ -> "GET_SHEET_SUMMARY";
+      case WorkbookReadOperation.GetCells _ -> "GET_CELLS";
+      case WorkbookReadOperation.GetWindow _ -> "GET_WINDOW";
+      case WorkbookReadOperation.GetMergedRegions _ -> "GET_MERGED_REGIONS";
+      case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
+      case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
+      case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
+      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> "ANALYZE_FORMULA_SURFACE";
+      case WorkbookReadOperation.AnalyzeSheetSchema _ -> "ANALYZE_SHEET_SCHEMA";
+      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> "ANALYZE_NAMED_RANGE_SURFACE";
+    };
+  }
+
+  /** Returns the sheet name associated with one read operation. */
+  static String sheetNameFor(WorkbookReadOperation read) {
+    return switch (read) {
+      case WorkbookReadOperation.GetSheetSummary op -> op.sheetName();
+      case WorkbookReadOperation.GetCells op -> op.sheetName();
+      case WorkbookReadOperation.GetWindow op -> op.sheetName();
+      case WorkbookReadOperation.GetMergedRegions op -> op.sheetName();
+      case WorkbookReadOperation.GetHyperlinks op -> op.sheetName();
+      case WorkbookReadOperation.GetComments op -> op.sheetName();
+      case WorkbookReadOperation.GetSheetLayout op -> op.sheetName();
+      case WorkbookReadOperation.AnalyzeSheetSchema op -> op.sheetName();
+      case WorkbookReadOperation.GetWorkbookSummary _ -> null;
+      case WorkbookReadOperation.GetNamedRanges _ -> null;
+      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> null;
+      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> null;
+    };
+  }
+
+  /** Returns the address associated with one read operation or exception. */
+  static String addressFor(WorkbookReadOperation read, Exception exception) {
+    String fromException = GridGrindProblems.addressFor(exception);
+    if (fromException != null) {
+      return fromException;
+    }
+    return switch (read) {
+      case WorkbookReadOperation.GetWindow op -> op.topLeftAddress();
+      case WorkbookReadOperation.AnalyzeSheetSchema op -> op.topLeftAddress();
+      case WorkbookReadOperation.GetWorkbookSummary _ -> null;
+      case WorkbookReadOperation.GetNamedRanges _ -> null;
+      case WorkbookReadOperation.GetSheetSummary _ -> null;
+      case WorkbookReadOperation.GetCells _ -> null;
+      case WorkbookReadOperation.GetMergedRegions _ -> null;
+      case WorkbookReadOperation.GetHyperlinks _ -> null;
+      case WorkbookReadOperation.GetComments _ -> null;
+      case WorkbookReadOperation.GetSheetLayout _ -> null;
+      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> null;
+      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> null;
+    };
+  }
+
+  /** Returns the named-range name associated with one read operation or exception. */
+  static String namedRangeNameFor(WorkbookReadOperation read, Exception exception) {
+    String fromException = GridGrindProblems.namedRangeNameFor(exception);
+    if (fromException != null) {
+      return fromException;
+    }
+    return switch (read) {
+      case WorkbookReadOperation.GetWorkbookSummary _ -> null;
+      case WorkbookReadOperation.GetNamedRanges _ -> null;
+      case WorkbookReadOperation.GetSheetSummary _ -> null;
+      case WorkbookReadOperation.GetCells _ -> null;
+      case WorkbookReadOperation.GetWindow _ -> null;
+      case WorkbookReadOperation.GetMergedRegions _ -> null;
+      case WorkbookReadOperation.GetHyperlinks _ -> null;
+      case WorkbookReadOperation.GetComments _ -> null;
+      case WorkbookReadOperation.GetSheetLayout _ -> null;
+      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> null;
+      case WorkbookReadOperation.AnalyzeSheetSchema _ -> null;
+      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> null;
+    };
+  }
+
   /**
-   * Returns the formula string for the failure context: checks the exception first (e.g.,
-   * FormulaException), then falls back to the operation record for SetCell with a formula value.
+   * Returns the formula string for the failure context: checks the exception first, then falls back
+   * to the write operation when it directly carries a formula.
    */
   static String formulaFor(WorkbookOperation operation, Exception exception) {
     String fromException = GridGrindProblems.formulaFor(exception);
@@ -602,7 +873,7 @@ public final class GridGrindService {
     return switch (operation) {
       case WorkbookOperation.SetCell op ->
           switch (op.value()) {
-            case CellInput.Formula f -> f.formula();
+            case CellInput.Formula formula -> formula.formula();
             case CellInput.Blank _ -> null;
             case CellInput.Text _ -> null;
             case CellInput.Numeric _ -> null;
@@ -635,12 +906,9 @@ public final class GridGrindService {
     };
   }
 
-  /**
-   * Returns the sheet name for the failure context: checks the operation record first, then falls
-   * back to the exception (e.g., FormulaException carrying sheet context).
-   */
+  /** Returns the sheet name associated with one write operation or exception. */
   static String sheetNameFor(WorkbookOperation operation, Exception exception) {
-    String fromOp =
+    String fromOperation =
         switch (operation) {
           case WorkbookOperation.EnsureSheet op -> op.sheetName();
           case WorkbookOperation.RenameSheet op -> op.sheetName();
@@ -670,15 +938,12 @@ public final class GridGrindService {
           case WorkbookOperation.EvaluateFormulas _ -> null;
           case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
         };
-    return fromOp != null ? fromOp : GridGrindProblems.sheetNameFor(exception);
+    return fromOperation != null ? fromOperation : GridGrindProblems.sheetNameFor(exception);
   }
 
-  /**
-   * Returns the cell address for the failure context: checks the operation record first, then falls
-   * back to the exception (e.g., FormulaException carrying address context).
-   */
+  /** Returns the cell address associated with one write operation or exception. */
   static String addressFor(WorkbookOperation operation, Exception exception) {
-    String fromOp =
+    String fromOperation =
         switch (operation) {
           case WorkbookOperation.SetCell op -> op.address();
           case WorkbookOperation.SetHyperlink op -> op.address();
@@ -704,15 +969,12 @@ public final class GridGrindService {
           case WorkbookOperation.EvaluateFormulas _ -> null;
           case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
         };
-    return fromOp != null ? fromOp : GridGrindProblems.addressFor(exception);
+    return fromOperation != null ? fromOperation : GridGrindProblems.addressFor(exception);
   }
 
-  /**
-   * Returns the range string for the failure context: checks the operation record first, then falls
-   * back to the exception (e.g., InvalidRangeAddressException carrying the range).
-   */
+  /** Returns the range string associated with one write operation or exception. */
   static String rangeFor(WorkbookOperation operation, Exception exception) {
-    String fromOp =
+    String fromOperation =
         switch (operation) {
           case WorkbookOperation.SetRange op -> op.range();
           case WorkbookOperation.ClearRange op -> op.range();
@@ -738,15 +1000,12 @@ public final class GridGrindService {
           case WorkbookOperation.EvaluateFormulas _ -> null;
           case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
         };
-    return fromOp != null ? fromOp : GridGrindProblems.rangeFor(exception);
+    return fromOperation != null ? fromOperation : GridGrindProblems.rangeFor(exception);
   }
 
-  /**
-   * Returns the named-range identifier for the failure context: checks the operation record first,
-   * then falls back to the exception when available.
-   */
+  /** Returns the named-range identifier associated with one write operation or exception. */
   static String namedRangeNameFor(WorkbookOperation operation, Exception exception) {
-    String fromOp =
+    String fromOperation =
         switch (operation) {
           case WorkbookOperation.SetNamedRange op -> op.name();
           case WorkbookOperation.DeleteNamedRange op -> op.name();
@@ -772,47 +1031,7 @@ public final class GridGrindService {
           case WorkbookOperation.EvaluateFormulas _ -> null;
           case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
         };
-    return fromOp != null ? fromOp : GridGrindProblems.namedRangeNameFor(exception);
-  }
-
-  private GridGrindResponse operationFailure(
-      GridGrindProtocolVersion protocolVersion,
-      GridGrindRequest request,
-      int operationIndex,
-      WorkbookOperation operation,
-      Exception exception) {
-    return new GridGrindResponse.Failure(
-        protocolVersion,
-        GridGrindProblems.fromException(
-            exception,
-            new GridGrindResponse.ProblemContext.ApplyOperation(
-                reqSourceMode(request),
-                reqPersistenceMode(request),
-                operationIndex,
-                operation.operationType(),
-                sheetNameFor(operation, exception),
-                addressFor(operation, exception),
-                rangeFor(operation, exception),
-                formulaFor(operation, exception),
-                namedRangeNameFor(operation, exception))));
-  }
-
-  private GridGrindResponse analysisFailure(
-      GridGrindProtocolVersion protocolVersion,
-      GridGrindRequest request,
-      AnalysisException exception) {
-    Exception cause = exception.cause();
-    return new GridGrindResponse.Failure(
-        protocolVersion,
-        GridGrindProblems.fromException(
-            cause,
-            new GridGrindResponse.ProblemContext.AnalyzeWorkbook(
-                reqSourceMode(request),
-                reqPersistenceMode(request),
-                exception.sheetName(),
-                exception.address(),
-                GridGrindProblems.formulaFor(cause),
-                exception.namedRangeName())));
+    return fromOperation != null ? fromOperation : GridGrindProblems.namedRangeNameFor(exception);
   }
 
   /** Functional interface for closing an ExcelWorkbook after request execution. */
@@ -820,38 +1039,5 @@ public final class GridGrindService {
   interface WorkbookCloser {
     /** Closes the workbook, releasing any held resources. */
     void close(ExcelWorkbook workbook) throws IOException;
-  }
-
-  /** Wraps a sheet-level analysis failure with its location for propagation out of the lambda. */
-  private static final class AnalysisException extends RuntimeException {
-    private static final long serialVersionUID = 1L;
-
-    private final String sheetName;
-    private final String address;
-    private final String namedRangeName;
-
-    private AnalysisException(
-        String sheetName, String address, String namedRangeName, Exception cause) {
-      super(cause);
-      this.sheetName = sheetName;
-      this.address = address;
-      this.namedRangeName = namedRangeName;
-    }
-
-    private String sheetName() {
-      return sheetName;
-    }
-
-    private String address() {
-      return address;
-    }
-
-    private String namedRangeName() {
-      return namedRangeName;
-    }
-
-    private Exception cause() {
-      return (Exception) getCause();
-    }
   }
 }

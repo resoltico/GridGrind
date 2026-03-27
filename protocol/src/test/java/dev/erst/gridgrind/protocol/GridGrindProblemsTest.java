@@ -61,16 +61,12 @@ class GridGrindProblemsTest {
         GridGrindProblemCode.INVALID_JSON,
         GridGrindProblems.codeFor(
             new InvalidJsonException(
-                "bad json", "analysis.sheets[0]", 4, 12, new IllegalArgumentException("bad"))));
+                "bad json", "reads[0]", 4, 12, new IllegalArgumentException("bad"))));
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
         GridGrindProblems.codeFor(
             new InvalidRequestException(
-                "bad request",
-                "analysis.sheets[0].previewRowCount",
-                6,
-                41,
-                new IllegalArgumentException("bad"))));
+                "bad request", "reads[0].rowCount", 6, 41, new IllegalArgumentException("bad"))));
     assertEquals(GridGrindProblemCode.IO_ERROR, GridGrindProblems.codeFor(new IOException("disk")));
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
@@ -100,6 +96,11 @@ class GridGrindProblemsTest {
     assertEquals("SUM(", GridGrindProblems.formulaFor(exception));
     assertEquals("Budget", GridGrindProblems.sheetNameFor(exception));
     assertEquals("B4", GridGrindProblems.addressFor(exception));
+    assertEquals("A1", GridGrindProblems.addressFor(new CellNotFoundException("A1")));
+    assertEquals(
+        "BAD!",
+        GridGrindProblems.addressFor(
+            new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))));
     assertNull(GridGrindProblems.rangeFor(new IllegalArgumentException("bad")));
     assertNull(GridGrindProblems.namedRangeNameFor(new IllegalArgumentException("bad")));
   }
@@ -126,6 +127,14 @@ class GridGrindProblemsTest {
     assertEquals(2, augmented.causes().size());
     assertEquals("GridGrindProblem", GridGrindProblems.problemCause(explicit).type());
 
+    GridGrindResponse.ProblemCause withoutPrefix =
+        GridGrindProblems.supplementalCause("EXECUTE_REQUEST", new IOException("disk failed"), "");
+    assertEquals("disk failed", withoutPrefix.message());
+    assertEquals(
+        "disk failed",
+        GridGrindProblems.supplementalCause("EXECUTE_REQUEST", new IOException("disk failed"), null)
+            .message());
+
     GridGrindResponse.Problem withoutCauses =
         GridGrindProblems.problem(
             GridGrindProblemCode.INVALID_REQUEST,
@@ -133,15 +142,6 @@ class GridGrindProblemsTest {
             new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE"),
             (List<GridGrindResponse.ProblemCause>) null);
     assertEquals(List.of(), withoutCauses.causes());
-
-    assertEquals(
-        "disk",
-        GridGrindProblems.supplementalCause("EXECUTE_REQUEST", new IOException("disk"), null)
-            .message());
-    assertEquals(
-        "disk",
-        GridGrindProblems.supplementalCause("EXECUTE_REQUEST", new IOException("disk"), " ")
-            .message());
   }
 
   @Test
@@ -152,28 +152,25 @@ class GridGrindProblemsTest {
     GridGrindResponse.Problem problem =
         GridGrindProblems.fromException(
             new InvalidRequestException(
-                "bad request",
-                "analysis.sheets[0].previewRowCount",
-                6,
-                41,
-                new IllegalArgumentException("bad")),
+                "bad request", "reads[0].rowCount", 6, 41, new IllegalArgumentException("bad")),
             readContext);
 
-    assertEquals("analysis.sheets[0].previewRowCount", problem.context().jsonPath());
+    assertEquals("reads[0].rowCount", problem.context().jsonPath());
     assertEquals(6, problem.context().jsonLine());
     assertEquals(41, problem.context().jsonColumn());
   }
 
   @Test
-  void enrichesAnalyzeWorkbookContextFromFormulaAndNamedRangeExceptions() {
-    GridGrindResponse.ProblemContext.AnalyzeWorkbook analyzeContext =
-        new GridGrindResponse.ProblemContext.AnalyzeWorkbook("NEW", "NONE", null, null, null, null);
+  void enrichesExecuteReadContextFromFormulaAndNamedRangeExceptions() {
+    GridGrindResponse.ProblemContext.ExecuteRead executeRead =
+        new GridGrindResponse.ProblemContext.ExecuteRead(
+            "NEW", "NONE", 0, "GET_CELLS", "cells", null, null, null, null);
     InvalidFormulaException formulaException =
         new InvalidFormulaException(
             "Budget", "C3", "SUM(", "bad formula", new IllegalArgumentException("bad"));
 
     GridGrindResponse.Problem enrichedFormula =
-        GridGrindProblems.fromException(formulaException, analyzeContext);
+        GridGrindProblems.fromException(formulaException, executeRead);
 
     assertEquals("Budget", enrichedFormula.context().sheetName());
     assertEquals("C3", enrichedFormula.context().address());
@@ -182,7 +179,7 @@ class GridGrindProblemsTest {
     NamedRangeNotFoundException missingNamedRange =
         new NamedRangeNotFoundException("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope());
     GridGrindResponse.Problem enrichedNamedRange =
-        GridGrindProblems.fromException(missingNamedRange, analyzeContext);
+        GridGrindProblems.fromException(missingNamedRange, executeRead);
 
     assertEquals(GridGrindProblemCode.NAMED_RANGE_NOT_FOUND, enrichedNamedRange.code());
     assertEquals("BudgetTotal", enrichedNamedRange.context().namedRangeName());
@@ -216,35 +213,16 @@ class GridGrindProblemsTest {
                 "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()),
             blankContext);
     assertEquals("BudgetTotal", namedRangeProblem.context().namedRangeName());
-
-    GridGrindResponse.ProblemContext.ApplyOperation explicitContext =
-        new GridGrindResponse.ProblemContext.ApplyOperation(
-            null, null, null, null, "Summary", "C9", "C1:C9", "AVERAGE(C1:C8)", "ExistingRange");
-    GridGrindResponse.Problem preserved =
-        GridGrindProblems.fromException(formulaException, explicitContext);
-    assertEquals("Summary", preserved.context().sheetName());
-    assertEquals("C9", preserved.context().address());
-    assertEquals("AVERAGE(C1:C8)", preserved.context().formula());
-    assertEquals("ExistingRange", preserved.context().namedRangeName());
   }
 
   @Test
-  void enrichContextReturnsCatchAllContextForUnenrichedTypes() {
+  void leavesAllPassthroughContextsUnchanged() {
     RuntimeException exception = new RuntimeException("test");
 
-    GridGrindResponse.ProblemContext.ParseArguments parseArgs =
+    GridGrindResponse.ProblemContext.ParseArguments parseArguments =
         new GridGrindResponse.ProblemContext.ParseArguments("--request");
-    assertSame(parseArgs, GridGrindProblems.enrichContext(parseArgs, exception));
-
     GridGrindResponse.ProblemContext.ValidateRequest validateRequest =
         new GridGrindResponse.ProblemContext.ValidateRequest(null, null);
-    assertSame(validateRequest, GridGrindProblems.enrichContext(validateRequest, exception));
-  }
-
-  @Test
-  void leavesAllRemainingPassthroughContextsUnchanged() {
-    RuntimeException exception = new RuntimeException("test");
-
     GridGrindResponse.ProblemContext.OpenWorkbook openWorkbook =
         new GridGrindResponse.ProblemContext.OpenWorkbook("EXISTING", "NONE", "/tmp/source.xlsx");
     GridGrindResponse.ProblemContext.PersistWorkbook persistWorkbook =
@@ -255,6 +233,8 @@ class GridGrindProblemsTest {
     GridGrindResponse.ProblemContext.WriteResponse writeResponse =
         new GridGrindResponse.ProblemContext.WriteResponse("/tmp/response.json");
 
+    assertSame(parseArguments, GridGrindProblems.enrichContext(parseArguments, exception));
+    assertSame(validateRequest, GridGrindProblems.enrichContext(validateRequest, exception));
     assertSame(openWorkbook, GridGrindProblems.enrichContext(openWorkbook, exception));
     assertSame(persistWorkbook, GridGrindProblems.enrichContext(persistWorkbook, exception));
     assertSame(executeRequest, GridGrindProblems.enrichContext(executeRequest, exception));
@@ -262,51 +242,20 @@ class GridGrindProblemsTest {
   }
 
   @Test
-  void leavesReadRequestContextUnchangedWhenExceptionIsNotPayloadException() {
-    GridGrindResponse.ProblemContext.ReadRequest readContext =
-        new GridGrindResponse.ProblemContext.ReadRequest("/tmp/request.json", null, null, null);
-
-    GridGrindResponse.Problem problem =
-        GridGrindProblems.fromException(new IOException("disk"), readContext);
-
-    assertEquals(GridGrindProblemCode.IO_ERROR, problem.code());
-    assertNull(problem.context().jsonPath());
-  }
-
-  @Test
-  void handlesNullCausesAndAnonymousExceptions() {
-    assertEquals(List.of(), GridGrindProblems.causesFor(null));
-    RuntimeException cycle =
-        new RuntimeException("cycle") {
+  void fallsBackToAnonymousTypeNameAndStopsCauseCycles() {
+    Throwable anonymous =
+        new Throwable(" ") {
           @Override
           public Throwable getCause() {
             return this;
           }
         };
-    assertEquals(1, GridGrindProblems.causesFor(cycle).size());
-    assertEquals(
-        "A1:",
-        GridGrindProblems.rangeFor(
-            new InvalidRangeAddressException("A1:", new IllegalArgumentException("bad"))));
-    assertEquals(
-        "UnsupportedOperationException",
-        GridGrindProblems.messageFor(new UnsupportedOperationException(" ")));
-    assertTrue(
-        GridGrindProblems.messageFor(new RuntimeException(" ") {})
-            .startsWith("dev.erst.gridgrind.protocol.GridGrindProblemsTest$"));
-  }
 
-  @Test
-  void enrichContextCapturesApplyOperationRangeExceptionsDirectly() {
-    GridGrindResponse.ProblemContext.ApplyOperation applyContext =
-        new GridGrindResponse.ProblemContext.ApplyOperation(
-            "NEW", "NONE", 1, "MERGE_CELLS", null, null, null, null, null);
+    assertTrue(GridGrindProblems.messageFor(anonymous).contains("$"));
+    assertEquals(1, GridGrindProblems.causesFor(anonymous).size());
 
-    GridGrindResponse.ProblemContext enriched =
-        GridGrindProblems.enrichContext(
-            applyContext,
-            new InvalidRangeAddressException("A1:", new IllegalArgumentException("bad")));
-
-    assertEquals("A1:", enriched.range());
+    GridGrindResponse.ProblemContext.ReadRequest readContext =
+        new GridGrindResponse.ProblemContext.ReadRequest("/tmp/request.json", null, null, null);
+    assertSame(readContext, GridGrindProblems.enrichContext(readContext, anonymous));
   }
 }

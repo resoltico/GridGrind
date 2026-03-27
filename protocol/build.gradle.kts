@@ -3,7 +3,7 @@ plugins {
     id("gridgrind.java-conventions")
 }
 
-description = "Agent-facing GridGrind protocol and execution layer"
+description = "Structured GridGrind protocol and request execution layer"
 
 dependencies {
     api(project(":engine"))

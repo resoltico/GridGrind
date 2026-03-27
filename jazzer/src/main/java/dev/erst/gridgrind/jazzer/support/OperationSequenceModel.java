@@ -8,11 +8,15 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.protocol.CommentInput;
+import dev.erst.gridgrind.protocol.CellSelection;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.HyperlinkTarget;
+import dev.erst.gridgrind.protocol.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.NamedRangeScope;
 import dev.erst.gridgrind.protocol.NamedRangeSelector;
 import dev.erst.gridgrind.protocol.NamedRangeTarget;
+import dev.erst.gridgrind.protocol.SheetSelection;
+import dev.erst.gridgrind.protocol.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.WorkbookOperation;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -35,6 +39,7 @@ public final class OperationSequenceModel {
     String primarySheet = FuzzDataDecoders.nextSheetName(data, true);
     String secondarySheet = FuzzDataDecoders.nextSheetName(data, true);
     List<WorkbookOperation> operations = new ArrayList<>();
+    List<WorkbookReadOperation> reads = new ArrayList<>();
     String workbookNamedRange = nextNamedRangeName(data, true);
     String sheetNamedRange = nextNamedRangeName(data, true);
 
@@ -43,26 +48,19 @@ public final class OperationSequenceModel {
       operations.add(
           nextOperation(data, primarySheet, secondarySheet, workbookNamedRange, sheetNamedRange));
     }
-
-    List<GridGrindRequest.SheetInspectionRequest> sheets = new ArrayList<>();
-    if (data.consumeBoolean()) {
-      sheets.add(
-          new GridGrindRequest.SheetInspectionRequest(
-              data.consumeBoolean() ? primarySheet : secondarySheet,
-              List.of(FuzzDataDecoders.nextNonBlankCellAddress(data, data.consumeBoolean())),
-              null,
-              null));
+    int readCount = data.consumeInt(0, 6);
+    for (int index = 0; index < readCount; index++) {
+      reads.add(
+          nextRead(
+              data, index, primarySheet, secondarySheet, workbookNamedRange, sheetNamedRange));
     }
-
-    GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection namedRanges =
-        nextNamedRangeInspection(data, primarySheet, workbookNamedRange, sheetNamedRange);
     WorkflowStorage workflowStorage = nextWorkflowStorage(primarySheet, secondarySheet, data);
     return new GeneratedProtocolWorkflow(
         new GridGrindRequest(
             workflowStorage.source(),
             workflowStorage.persistence(),
             List.copyOf(operations),
-            new GridGrindRequest.WorkbookAnalysisRequest(List.copyOf(sheets), namedRanges)),
+            List.copyOf(reads)),
         List.of(workflowStorage.cleanupRoot()));
   }
 
@@ -297,18 +295,112 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection nextNamedRangeInspection(
-      FuzzedDataProvider data, String sheetName, String workbookNamedRange, String sheetNamedRange) {
-    return switch (data.consumeInt(0, 2)) {
-      case 0 -> new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.None();
-      case 1 -> new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.All();
+  private static WorkbookReadOperation nextRead(
+      FuzzedDataProvider data,
+      int index,
+      String primarySheet,
+      String secondarySheet,
+      String workbookNamedRange,
+      String sheetNamedRange) {
+    String requestId = "read-" + index;
+    String targetSheet = data.consumeBoolean() ? primarySheet : secondarySheet;
+    boolean validAddress = data.consumeBoolean();
+    boolean validRange = data.consumeBoolean();
+    boolean validName = data.consumeBoolean();
+
+    return switch (data.consumeInt(0, 11)) {
+      case 0 -> new WorkbookReadOperation.GetWorkbookSummary(requestId);
+      case 1 ->
+          new WorkbookReadOperation.GetNamedRanges(
+              requestId,
+              nextNamedRangeSelection(
+                  data, targetSheet, workbookNamedRange, sheetNamedRange, validName));
+      case 2 -> new WorkbookReadOperation.GetSheetSummary(requestId, targetSheet);
+      case 3 ->
+          new WorkbookReadOperation.GetCells(
+              requestId,
+              targetSheet,
+              nextReadAddresses(data, validAddress));
+      case 4 ->
+          new WorkbookReadOperation.GetWindow(
+              requestId,
+              targetSheet,
+              FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
+              data.consumeInt(1, 4),
+              data.consumeInt(1, 4));
+      case 5 -> new WorkbookReadOperation.GetMergedRegions(requestId, targetSheet);
+      case 6 ->
+          new WorkbookReadOperation.GetHyperlinks(
+              requestId, targetSheet, nextCellSelection(data, validAddress));
+      case 7 ->
+          new WorkbookReadOperation.GetComments(
+              requestId, targetSheet, nextCellSelection(data, validAddress));
+      case 8 -> new WorkbookReadOperation.GetSheetLayout(requestId, targetSheet);
+      case 9 ->
+          new WorkbookReadOperation.AnalyzeFormulaSurface(
+              requestId, nextSheetSelection(data, primarySheet, secondarySheet));
+      case 10 ->
+          new WorkbookReadOperation.AnalyzeSheetSchema(
+              requestId,
+              targetSheet,
+              validAddress ? "A1" : FuzzDataDecoders.nextNonBlankCellAddress(data, false),
+              data.consumeInt(1, 5),
+              data.consumeInt(1, 4));
       default ->
-          new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected(
+          new WorkbookReadOperation.AnalyzeNamedRangeSurface(
+              requestId,
+              nextNamedRangeSelection(
+                  data, targetSheet, workbookNamedRange, sheetNamedRange, validName));
+    };
+  }
+
+  private static NamedRangeSelection nextNamedRangeSelection(
+      FuzzedDataProvider data,
+      String sheetName,
+      String workbookNamedRange,
+      String sheetNamedRange,
+      boolean validName) {
+    return switch (data.consumeInt(0, 2)) {
+      case 0 -> new NamedRangeSelection.All();
+      default ->
+          new NamedRangeSelection.Selected(
               List.of(
                   data.consumeBoolean()
-                      ? new NamedRangeSelector.WorkbookScope(workbookNamedRange)
-                      : new NamedRangeSelector.SheetScope(sheetNamedRange, sheetName)));
+                      ? new NamedRangeSelector.WorkbookScope(
+                          validName ? workbookNamedRange : nextNamedRangeName(data, false))
+                      : new NamedRangeSelector.SheetScope(
+                          validName ? sheetNamedRange : nextNamedRangeName(data, false), sheetName)));
     };
+  }
+
+  private static CellSelection nextCellSelection(FuzzedDataProvider data, boolean validAddress) {
+    return switch (data.consumeInt(0, 1)) {
+      case 0 -> new CellSelection.AllUsedCells();
+      default ->
+          new CellSelection.Selected(
+              nextReadAddresses(data, validAddress));
+    };
+  }
+
+  private static SheetSelection nextSheetSelection(
+      FuzzedDataProvider data, String primarySheet, String secondarySheet) {
+    return switch (data.consumeInt(0, 1)) {
+      case 0 -> new SheetSelection.All();
+      default ->
+          new SheetSelection.Selected(
+              data.consumeBoolean()
+                  ? List.of(primarySheet, secondarySheet)
+                  : List.of(secondarySheet, primarySheet));
+    };
+  }
+
+  private static List<String> nextReadAddresses(FuzzedDataProvider data, boolean validAddress) {
+    String first = FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress);
+    String second = FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress);
+    if (first.equals(second)) {
+      second = validAddress ? ("A1".equals(first) ? "B2" : "A1") : "ZZZ999999";
+    }
+    return List.of(first, second);
   }
 
   private static IndexSpan nextIndexSpan(FuzzedDataProvider data, int upperBound) {
@@ -384,7 +476,9 @@ public final class OperationSequenceModel {
       Path sourcePath, String primarySheet, String secondarySheet, FuzzedDataProvider data)
       throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      workbook.createSheet(primarySheet).createRow(0).createCell(0).setCellValue("seed");
+      var primary = workbook.createSheet(primarySheet);
+      primary.createRow(0).createCell(0).setCellValue("seed");
+      primary.getRow(0).createCell(1).setCellFormula("1+1");
       if (data.consumeBoolean()) {
         workbook.createSheet(secondarySheet).createRow(0).createCell(0).setCellValue("seed");
       }

@@ -12,7 +12,7 @@ public final class App {
 
   /** Creates the production App wired to the default CLI factory and {@code System::exit}. */
   public App() {
-    this(() -> new AgentCli()::run, System::exit);
+    this(() -> new GridGrindCli()::run, System::exit);
   }
 
   App(CliFactory cliFactory, ExitHandler exitHandler) {

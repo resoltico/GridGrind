@@ -65,14 +65,37 @@
     { "type": "EVALUATE_FORMULAS" },
     { "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
   ],
-  "analysis": {
-    "sheets": [
-      {
-        "sheetName": "Budget",
-        "cells": ["A1", "B4", "C2"],
-        "previewRowCount": 4,
-        "previewColumnCount": 3
+  "reads": [
+    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
+    {
+      "type": "GET_CELLS",
+      "requestId": "cells",
+      "sheetName": "Budget",
+      "addresses": ["A1", "B4", "C2"]
+    },
+    {
+      "type": "GET_WINDOW",
+      "requestId": "window",
+      "sheetName": "Budget",
+      "topLeftAddress": "A1",
+      "rowCount": 4,
+      "columnCount": 3
+    },
+    {
+      "type": "ANALYZE_FORMULA_SURFACE",
+      "requestId": "formula-surface",
+      "selection": {
+        "mode": "SELECTED",
+        "sheetNames": ["Budget"]
       }
-    ]
-  }
+    },
+    {
+      "type": "ANALYZE_SHEET_SCHEMA",
+      "requestId": "schema",
+      "sheetName": "Budget",
+      "topLeftAddress": "A1",
+      "rowCount": 4,
+      "columnCount": 3
+    }
+  ]
 }

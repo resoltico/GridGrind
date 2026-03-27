@@ -9,9 +9,13 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.protocol.CommentInput;
+import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.HyperlinkTarget;
+import dev.erst.gridgrind.protocol.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.NamedRangeScope;
 import dev.erst.gridgrind.protocol.NamedRangeTarget;
+import dev.erst.gridgrind.protocol.SheetSelection;
+import dev.erst.gridgrind.protocol.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.WorkbookOperation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -97,5 +101,29 @@ class SequenceIntrospectionTest {
                     new WorkbookCommand.SetComment(
                         "Budget", "A1", new ExcelComment("Review", "GridGrind", false))))
             .get("SET_COMMENT"));
+  }
+
+  @Test
+  void reportsReadKindsAndReadCount() {
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.None(),
+            List.of(),
+            List.of(
+                new WorkbookReadOperation.GetWorkbookSummary("summary"),
+                new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
+                new WorkbookReadOperation.AnalyzeFormulaSurface(
+                    "formulas", new SheetSelection.All()),
+                new WorkbookReadOperation.AnalyzeNamedRangeSurface(
+                    "ranges", new NamedRangeSelection.All())));
+
+    assertEquals(4, SequenceIntrospection.readCount(request));
+    assertEquals(
+        1L,
+        SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
+    assertEquals(
+        1L,
+        SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_FORMULA_SURFACE"));
   }
 }

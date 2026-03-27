@@ -16,6 +16,7 @@ public record HarnessTelemetrySnapshot(
     long successfulOutcomes,
     long unexpectedFailures,
     Map<String, Long> sequenceKinds,
+    Map<String, Long> readKinds,
     Map<String, Long> styleKinds,
     Map<String, Long> sourceKinds,
     Map<String, Long> persistenceKinds,
@@ -26,6 +27,7 @@ public record HarnessTelemetrySnapshot(
   /** Normalizes deserialized telemetry so older local history remains readable as the schema grows. */
   public HarnessTelemetrySnapshot {
     sequenceKinds = Map.copyOf(sequenceKinds == null ? Map.of() : sequenceKinds);
+    readKinds = Map.copyOf(readKinds == null ? Map.of() : readKinds);
     styleKinds = Map.copyOf(styleKinds == null ? Map.of() : styleKinds);
     sourceKinds = Map.copyOf(sourceKinds == null ? Map.of() : sourceKinds);
     persistenceKinds = Map.copyOf(persistenceKinds == null ? Map.of() : persistenceKinds);

@@ -15,34 +15,20 @@ import org.junit.jupiter.api.Test;
 class GridGrindResponseTest {
   @Test
   void createsSuccessAndFailureResponses() {
-    List<GridGrindResponse.SheetReport> sheets = new ArrayList<>();
-    sheets.add(new GridGrindResponse.SheetReport("Budget", 1, 0, 1, List.of(), List.of()));
-    List<GridGrindResponse.NamedRangeReport> namedRanges =
-        new ArrayList<>(
-            List.of(
-                new GridGrindResponse.NamedRangeReport.RangeReport(
-                    "BudgetTotal",
-                    new NamedRangeScope.Workbook(),
-                    "Budget!$B$4",
-                    new NamedRangeTarget("Budget", "B4"))));
+    List<WorkbookReadResult> reads = new ArrayList<>();
+    reads.add(
+        new WorkbookReadResult.WorkbookSummaryResult(
+            "workbook", new GridGrindResponse.WorkbookSummary(1, List.of("Budget"), 1, true)));
 
     GridGrindResponse.Success success =
         new GridGrindResponse.Success(
-            null,
-            "/tmp/budget.xlsx",
-            new GridGrindResponse.WorkbookSummary(1, List.of("Budget"), 1, true),
-            namedRanges,
-            sheets);
-    sheets.clear();
-    namedRanges.clear();
+            null, new GridGrindResponse.PersistenceOutcome.Saved("/tmp/budget.xlsx"), reads);
+    reads.clear();
 
     assertInstanceOf(GridGrindResponse.Success.class, success);
     assertEquals(GridGrindProtocolVersion.V1, success.protocolVersion());
-    assertEquals("/tmp/budget.xlsx", success.savedWorkbookPath());
-    assertEquals(List.of("Budget"), success.workbook().sheetNames());
-    assertEquals(1, success.workbook().namedRangeCount());
-    assertEquals(1, success.namedRanges().size());
-    assertEquals(1, success.sheets().size());
+    assertInstanceOf(GridGrindResponse.PersistenceOutcome.Saved.class, success.persistence());
+    assertEquals(1, success.reads().size());
 
     GridGrindResponse.Failure failure =
         new GridGrindResponse.Failure(
@@ -60,37 +46,21 @@ class GridGrindResponseTest {
   @Test
   void copiesAndValidatesNestedCollections() {
     List<String> sheetNames = new ArrayList<>(List.of("Budget"));
-    List<GridGrindResponse.NamedRangeReport> namedRanges =
-        new ArrayList<>(
-            List.of(
-                new GridGrindResponse.NamedRangeReport.FormulaReport(
-                    "BudgetTotal", new NamedRangeScope.Workbook(), "SUM(Budget!$B$2:$B$3)")));
-    GridGrindResponse.CellStyleReport style = defaultCellStyleReport();
-    List<GridGrindResponse.CellReport> cells =
-        new ArrayList<>(List.of(textReport("A1", "Item", style)));
-    List<GridGrindResponse.PreviewRowReport> previewRows =
-        new ArrayList<>(List.of(new GridGrindResponse.PreviewRowReport(0, cells)));
-
     GridGrindResponse.WorkbookSummary workbook =
         new GridGrindResponse.WorkbookSummary(1, sheetNames, 1, true);
-    GridGrindResponse.SheetReport report =
-        new GridGrindResponse.SheetReport("Budget", 1, 0, 0, cells, previewRows);
-    GridGrindResponse.Success success =
-        new GridGrindResponse.Success(null, null, workbook, namedRanges, List.of(report));
+    List<WorkbookReadResult> reads =
+        new ArrayList<>(
+            List.of(new WorkbookReadResult.WorkbookSummaryResult("workbook", workbook)));
 
+    GridGrindResponse.Success success = new GridGrindResponse.Success(null, null, reads);
     sheetNames.clear();
-    namedRanges.clear();
-    cells.clear();
-    previewRows.clear();
+    reads.clear();
 
     assertEquals(List.of("Budget"), workbook.sheetNames());
-    assertEquals(1, success.namedRanges().size());
-    assertEquals(1, report.requestedCells().size());
-    assertEquals(1, report.previewRows().size());
+    assertInstanceOf(GridGrindResponse.PersistenceOutcome.NotSaved.class, success.persistence());
+    assertEquals(1, success.reads().size());
 
-    assertThrows(
-        NullPointerException.class,
-        () -> new GridGrindResponse.Success(null, null, null, null, null));
+    assertThrows(NullPointerException.class, () -> new GridGrindResponse.Success(null, null, null));
     assertThrows(
         NullPointerException.class, () -> new GridGrindResponse.WorkbookSummary(1, null, 0, true));
     assertThrows(
@@ -103,27 +73,21 @@ class GridGrindResponseTest {
         () ->
             new GridGrindResponse.NamedRangeReport.RangeReport(
                 "BudgetTotal", new NamedRangeScope.Workbook(), "Budget!$B$4", null));
-
-    GridGrindResponse.Success emptySuccess =
-        new GridGrindResponse.Success(
-            null, null, new GridGrindResponse.WorkbookSummary(0, List.of(), 0, false), null, null);
-    assertEquals(List.of(), emptySuccess.namedRanges());
-    assertEquals(List.of(), emptySuccess.sheets());
+    assertThrows(
+        NullPointerException.class, () -> new GridGrindResponse.PersistenceOutcome.Saved(null));
   }
 
   @Test
   void problemContextRecordsReturnCorrectStages() {
-    GridGrindResponse.ProblemContext.ParseArguments parseArgs =
+    GridGrindResponse.ProblemContext.ParseArguments parseArguments =
         new GridGrindResponse.ProblemContext.ParseArguments("--response");
-    assertEquals("PARSE_ARGUMENTS", parseArgs.stage());
-    assertEquals("--response", parseArgs.argument());
+    assertEquals("PARSE_ARGUMENTS", parseArguments.stage());
+    assertEquals("--response", parseArguments.argument());
 
     GridGrindResponse.ProblemContext.ReadRequest readRequest =
-        new GridGrindResponse.ProblemContext.ReadRequest(
-            "/tmp/request.json", "analysis.sheets[0]", 7, 21);
+        new GridGrindResponse.ProblemContext.ReadRequest("/tmp/request.json", "reads[0]", 7, 21);
     assertEquals("READ_REQUEST", readRequest.stage());
     assertEquals("/tmp/request.json", readRequest.requestPath());
-    assertNull(new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE").argument());
 
     GridGrindResponse.ProblemContext.ApplyOperation applyOperation =
         new GridGrindResponse.ProblemContext.ApplyOperation(
@@ -131,11 +95,12 @@ class GridGrindResponseTest {
     assertEquals("APPLY_OPERATION", applyOperation.stage());
     assertEquals("BudgetTotal", applyOperation.namedRangeName());
 
-    GridGrindResponse.ProblemContext.AnalyzeWorkbook analyzeWorkbook =
-        new GridGrindResponse.ProblemContext.AnalyzeWorkbook(
-            "NEW", "SAVE_AS", "Budget", "B4", "SUM(B2:B3)", "BudgetTotal");
-    assertEquals("ANALYZE_WORKBOOK", analyzeWorkbook.stage());
-    assertEquals("BudgetTotal", analyzeWorkbook.namedRangeName());
+    GridGrindResponse.ProblemContext.ExecuteRead executeRead =
+        new GridGrindResponse.ProblemContext.ExecuteRead(
+            "NEW", "SAVE_AS", 2, "GET_CELLS", "cells", "Budget", "B4", "SUM(B2:B3)", "BudgetTotal");
+    assertEquals("EXECUTE_READ", executeRead.stage());
+    assertEquals("cells", executeRead.requestId());
+    assertEquals("BudgetTotal", executeRead.namedRangeName());
   }
 
   @Test
@@ -151,47 +116,57 @@ class GridGrindResponseTest {
     assertEquals("SUM(B2:B3)", enrichedApply.formula());
     assertEquals("BudgetTotal", enrichedApply.namedRangeName());
 
-    GridGrindResponse.ProblemContext.AnalyzeWorkbook analyzeBase =
-        new GridGrindResponse.ProblemContext.AnalyzeWorkbook("NEW", "NONE", null, null, null, null);
-    GridGrindResponse.ProblemContext.AnalyzeWorkbook enrichedAnalyze =
-        analyzeBase.withExceptionData("Budget", "C1", "SUM(B1:B3)", "BudgetTotal");
+    GridGrindResponse.ProblemContext.ExecuteRead readBase =
+        new GridGrindResponse.ProblemContext.ExecuteRead(
+            "NEW", "NONE", 0, "GET_CELLS", "cells", null, null, null, null);
+    GridGrindResponse.ProblemContext.ExecuteRead enrichedRead =
+        readBase.withExceptionData("Budget", "C1", "SUM(B1:B3)", "BudgetTotal");
 
-    assertEquals("Budget", enrichedAnalyze.sheetName());
-    assertEquals("C1", enrichedAnalyze.address());
-    assertEquals("SUM(B1:B3)", enrichedAnalyze.formula());
-    assertEquals("BudgetTotal", enrichedAnalyze.namedRangeName());
+    assertEquals("Budget", enrichedRead.sheetName());
+    assertEquals("C1", enrichedRead.address());
+    assertEquals("SUM(B1:B3)", enrichedRead.formula());
+    assertEquals("BudgetTotal", enrichedRead.namedRangeName());
 
-    GridGrindResponse.ProblemContext.AnalyzeWorkbook populatedAnalyze =
-        new GridGrindResponse.ProblemContext.AnalyzeWorkbook(
-            "NEW", "NONE", "Sheet1", "A1", "SUM(B1:B2)", "ExistingRange");
-    GridGrindResponse.ProblemContext.AnalyzeWorkbook preservedAnalyze =
-        populatedAnalyze.withExceptionData("OtherSheet", "B2", "OTHER()", "OtherRange");
-    assertEquals("Sheet1", preservedAnalyze.sheetName());
-    assertEquals("A1", preservedAnalyze.address());
-    assertEquals("SUM(B1:B2)", preservedAnalyze.formula());
-    assertEquals("ExistingRange", preservedAnalyze.namedRangeName());
+    GridGrindResponse.ProblemContext.ApplyOperation preservedApply =
+        new GridGrindResponse.ProblemContext.ApplyOperation(
+                "NEW", "NONE", 0, "SET_CELL", "Budget", "A1", "A1:B2", "SUM(A1:A2)", "BudgetTotal")
+            .withExceptionData("Other", "C3", "C3:D4", "NOW()", "OtherRange");
+    assertEquals("Budget", preservedApply.sheetName());
+    assertEquals("A1", preservedApply.address());
+    assertEquals("A1:B2", preservedApply.range());
+    assertEquals("SUM(A1:A2)", preservedApply.formula());
+    assertEquals("BudgetTotal", preservedApply.namedRangeName());
+
+    GridGrindResponse.ProblemContext.ExecuteRead preservedRead =
+        new GridGrindResponse.ProblemContext.ExecuteRead(
+                "NEW", "NONE", 0, "GET_CELLS", "cells", "Budget", "A1", "SUM(A1:A2)", "BudgetTotal")
+            .withExceptionData("Other", "C3", "NOW()", "OtherRange");
+    assertEquals("Budget", preservedRead.sheetName());
+    assertEquals("A1", preservedRead.address());
+    assertEquals("SUM(A1:A2)", preservedRead.formula());
+    assertEquals("BudgetTotal", preservedRead.namedRangeName());
   }
 
   @Test
   void readRequestWithJsonPopulatesAndPreservesJsonLocationFields() {
     GridGrindResponse.ProblemContext.ReadRequest blank =
         new GridGrindResponse.ProblemContext.ReadRequest("/tmp/request.json", null, null, null);
-    GridGrindResponse.ProblemContext.ReadRequest enriched = blank.withJson("$.analysis", 4, 12);
+    GridGrindResponse.ProblemContext.ReadRequest enriched = blank.withJson("$.reads", 4, 12);
 
-    assertEquals("$.analysis", enriched.jsonPath());
+    assertEquals("$.reads", enriched.jsonPath());
     assertEquals(4, enriched.jsonLine());
     assertEquals(12, enriched.jsonColumn());
 
-    GridGrindResponse.ProblemContext.ReadRequest populated =
-        new GridGrindResponse.ProblemContext.ReadRequest("/tmp/request.json", "$.existing", 1, 2);
-    GridGrindResponse.ProblemContext.ReadRequest preserved = populated.withJson("$.other", 9, 10);
-    assertEquals("$.existing", preserved.jsonPath());
+    GridGrindResponse.ProblemContext.ReadRequest preserved =
+        new GridGrindResponse.ProblemContext.ReadRequest("/tmp/request.json", "$.source", 1, 2)
+            .withJson("$.reads", 4, 12);
+    assertEquals("$.source", preserved.jsonPath());
     assertEquals(1, preserved.jsonLine());
     assertEquals(2, preserved.jsonColumn());
   }
 
   @Test
-  void cellReportSubtypesExposeTypedGettersAndMetadataDefaults() {
+  void cellReportAndReadPayloadSubtypesExposeTypedGettersAndMetadataDefaults() {
     GridGrindResponse.CellStyleReport style = defaultCellStyleReport();
     GridGrindResponse.HyperlinkReport hyperlink =
         new GridGrindResponse.HyperlinkReport(ExcelHyperlinkType.URL, "https://example.com");
@@ -200,38 +175,49 @@ class GridGrindResponseTest {
 
     GridGrindResponse.CellReport.BlankReport blankReport =
         new GridGrindResponse.CellReport.BlankReport("A1", "BLANK", "", style, null, null);
-    GridGrindResponse.CellReport.TextReport textReport =
-        new GridGrindResponse.CellReport.TextReport(
-            "A2", "STRING", "Hello", style, hyperlink, comment, "Hello");
-    GridGrindResponse.CellReport.NumberReport numberReport =
-        new GridGrindResponse.CellReport.NumberReport(
-            "B1", "NUMERIC", "42", style, null, null, 42.0);
-    GridGrindResponse.CellReport.BooleanReport booleanReport =
-        new GridGrindResponse.CellReport.BooleanReport(
-            "C1", "BOOLEAN", "TRUE", style, null, null, true);
-    GridGrindResponse.CellReport.ErrorReport errorReport =
-        new GridGrindResponse.CellReport.ErrorReport(
-            "D1", "ERROR", "#DIV/0!", style, null, null, "#DIV/0!");
     GridGrindResponse.CellReport.FormulaReport formulaReport =
         new GridGrindResponse.CellReport.FormulaReport(
             "E1",
             "FORMULA",
             "85",
             style,
-            null,
-            null,
+            hyperlink,
+            comment,
             "SUM(B1:B2)",
             new GridGrindResponse.CellReport.NumberReport(
                 "E1", "NUMERIC", "85", style, null, null, 85.0));
 
-    assertEquals("BLANK", blankReport.effectiveType());
-    assertEquals("STRING", textReport.effectiveType());
-    assertEquals("NUMERIC", numberReport.effectiveType());
-    assertEquals("BOOLEAN", booleanReport.effectiveType());
-    assertEquals("ERROR", errorReport.effectiveType());
+    GridGrindResponse.WindowReport window =
+        new GridGrindResponse.WindowReport(
+            "Budget",
+            "A1",
+            1,
+            1,
+            List.of(new GridGrindResponse.WindowRowReport(0, List.of(blankReport))));
+    GridGrindResponse.SheetLayoutReport layout =
+        new GridGrindResponse.SheetLayoutReport(
+            "Budget",
+            new GridGrindResponse.FreezePaneReport.Frozen(1, 1, 1, 1),
+            List.of(new GridGrindResponse.ColumnLayoutReport(0, 12.5d)),
+            List.of(new GridGrindResponse.RowLayoutReport(0, 18.0d)));
+
     assertEquals("FORMULA", formulaReport.effectiveType());
-    assertEquals(ExcelHyperlinkType.URL, textReport.hyperlink().type());
-    assertEquals("Review", textReport.comment().text());
+    assertEquals(
+        "STRING",
+        new GridGrindResponse.CellReport.TextReport("B1", "STRING", "x", style, null, null, "x")
+            .effectiveType());
+    assertEquals(
+        "NUMERIC",
+        new GridGrindResponse.CellReport.NumberReport(
+                "B2", "NUMERIC", "12", style, null, null, 12.0)
+            .effectiveType());
+    assertEquals(
+        "BOOLEAN",
+        new GridGrindResponse.CellReport.BooleanReport(
+                "B3", "BOOLEAN", "TRUE", style, null, null, true)
+            .effectiveType());
+    assertEquals(ExcelHyperlinkType.URL, formulaReport.hyperlink().type());
+    assertEquals("Review", formulaReport.comment().text());
     assertNull(blankReport.formula());
     assertNull(blankReport.hyperlink());
     assertNull(blankReport.comment());
@@ -239,47 +225,222 @@ class GridGrindResponseTest {
     assertNull(blankReport.numberValue());
     assertNull(blankReport.booleanValue());
     assertNull(blankReport.errorValue());
-    assertNull(numberReport.stringValue());
-    assertNull(booleanReport.numberValue());
-    assertNull(errorReport.booleanValue());
-    assertNull(formulaReport.errorValue());
+    assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
+    assertInstanceOf(GridGrindResponse.FreezePaneReport.Frozen.class, layout.freezePanes());
   }
 
   @Test
-  void namedRangeFormulaReportReturnsNullTargetByDefault() {
+  void namedRangeAndInsightReportsExposeExpectedDefaults() {
     GridGrindResponse.NamedRangeReport.FormulaReport formulaReport =
         new GridGrindResponse.NamedRangeReport.FormulaReport(
             "BudgetRollup", new NamedRangeScope.Workbook(), "SUM(Budget!$B$2:$B$3)");
+    GridGrindResponse.NamedRangeSurfaceReport surface =
+        new GridGrindResponse.NamedRangeSurfaceReport(
+            1,
+            0,
+            0,
+            1,
+            List.of(
+                new GridGrindResponse.NamedRangeSurfaceEntryReport(
+                    "BudgetRollup",
+                    new NamedRangeScope.Workbook(),
+                    "SUM(Budget!$B$2:$B$3)",
+                    GridGrindResponse.NamedRangeBackingKind.FORMULA)));
+    GridGrindResponse.FormulaSurfaceReport formulaSurface =
+        new GridGrindResponse.FormulaSurfaceReport(
+            1,
+            List.of(
+                new GridGrindResponse.SheetFormulaSurfaceReport(
+                    "Budget",
+                    1,
+                    1,
+                    List.of(
+                        new GridGrindResponse.FormulaPatternReport(
+                            "SUM(B2:B3)", 1, List.of("B4"))))));
+    GridGrindResponse.SheetSchemaReport schema =
+        new GridGrindResponse.SheetSchemaReport(
+            "Budget",
+            "A1",
+            3,
+            2,
+            2,
+            List.of(
+                new GridGrindResponse.SchemaColumnReport(
+                    0,
+                    "A1",
+                    "Item",
+                    2,
+                    0,
+                    List.of(new GridGrindResponse.TypeCountReport("STRING", 2)),
+                    "STRING")));
 
     assertNull(formulaReport.target());
+    assertEquals(1, surface.formulaBackedCount());
+    assertEquals(1, formulaSurface.totalFormulaCellCount());
+    assertEquals("STRING", schema.columns().getFirst().dominantType());
   }
 
   @Test
   void problemContextDefaultNullsReturnNullForNonApplicableSubtypes() {
-    GridGrindResponse.ProblemContext.ParseArguments parseArgs =
+    GridGrindResponse.ProblemContext.ParseArguments parseArguments =
         new GridGrindResponse.ProblemContext.ParseArguments("--help");
+    GridGrindResponse.ProblemContext.ValidateRequest validateRequest =
+        new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE");
 
-    assertNull(parseArgs.sourceMode());
-    assertNull(parseArgs.persistenceMode());
-    assertNull(parseArgs.requestPath());
-    assertNull(parseArgs.jsonPath());
-    assertNull(parseArgs.jsonLine());
-    assertNull(parseArgs.jsonColumn());
-    assertNull(parseArgs.responsePath());
-    assertNull(parseArgs.sourceWorkbookPath());
-    assertNull(parseArgs.persistencePath());
-    assertNull(parseArgs.operationIndex());
-    assertNull(parseArgs.operationType());
-    assertNull(parseArgs.sheetName());
-    assertNull(parseArgs.address());
-    assertNull(parseArgs.range());
-    assertNull(parseArgs.formula());
-    assertNull(parseArgs.namedRangeName());
-    assertEquals("--help", parseArgs.argument());
+    assertNull(parseArguments.sourceMode());
+    assertNull(parseArguments.persistenceMode());
+    assertNull(parseArguments.requestPath());
+    assertNull(parseArguments.jsonPath());
+    assertNull(parseArguments.responsePath());
+    assertNull(parseArguments.sourceWorkbookPath());
+    assertNull(parseArguments.persistencePath());
+    assertNull(parseArguments.operationIndex());
+    assertNull(parseArguments.operationType());
+    assertNull(parseArguments.readIndex());
+    assertNull(parseArguments.readType());
+    assertNull(parseArguments.requestId());
+    assertNull(parseArguments.sheetName());
+    assertNull(parseArguments.address());
+    assertNull(parseArguments.range());
+    assertNull(parseArguments.formula());
+    assertNull(parseArguments.namedRangeName());
+    assertNull(parseArguments.jsonLine());
+    assertNull(parseArguments.jsonColumn());
+    assertEquals("--help", parseArguments.argument());
+    assertNull(validateRequest.argument());
   }
 
   @Test
-  void problemCopiesNullCauseListsToEmptyLists() {
+  void responseRecordsRejectBlankAndInvalidValues() {
+    assertThrows(
+        IllegalArgumentException.class, () -> new GridGrindResponse.PersistenceOutcome.Saved(" "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SheetSummaryReport(" ", 0, 0, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.WindowReport("Budget", " ", 1, 1, List.of()));
+    assertThrows(
+        IllegalArgumentException.class, () -> new GridGrindResponse.MergedRegionReport(" "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.CellHyperlinkReport(
+                " ",
+                new GridGrindResponse.HyperlinkReport(
+                    ExcelHyperlinkType.URL, "https://example.com")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.CellCommentReport(
+                " ", new GridGrindResponse.CommentReport("Review", "GridGrind", false)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.SheetLayoutReport(
+                " ", new GridGrindResponse.FreezePaneReport.None(), List.of(), List.of()));
+    assertThrows(
+        IllegalArgumentException.class, () -> new GridGrindResponse.ColumnLayoutReport(-1, 12.0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.ColumnLayoutReport(0, Double.NaN));
+    assertThrows(
+        IllegalArgumentException.class, () -> new GridGrindResponse.ColumnLayoutReport(0, 0.0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.ColumnLayoutReport(0, Double.POSITIVE_INFINITY));
+    assertThrows(
+        IllegalArgumentException.class, () -> new GridGrindResponse.RowLayoutReport(-1, 12.0));
+    assertThrows(
+        IllegalArgumentException.class, () -> new GridGrindResponse.RowLayoutReport(0, 0.0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.RowLayoutReport(0, Double.POSITIVE_INFINITY));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.FormulaSurfaceReport(-1, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SheetFormulaSurfaceReport(" ", 0, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SheetFormulaSurfaceReport("Budget", -1, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SheetFormulaSurfaceReport("Budget", 0, -1, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.FormulaPatternReport(" ", 1, List.of("A1")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.FormulaPatternReport("SUM(A1)", 0, List.of("A1")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SheetSchemaReport("Budget", " ", 1, 1, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.WindowReport(" ", "A1", 1, 1, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.WindowReport("Budget", "A1", 0, 1, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.WindowReport("Budget", "A1", 1, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SheetSchemaReport(" ", "A1", 1, 1, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SheetSchemaReport("Budget", "A1", 0, 1, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SheetSchemaReport("Budget", "A1", 1, 0, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SheetSchemaReport("Budget", "A1", 1, 1, -1, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SchemaColumnReport(-1, "A1", "Header", 0, 0, List.of(), null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SchemaColumnReport(0, " ", "Header", 0, 0, List.of(), null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SchemaColumnReport(0, "A1", "Header", -1, 0, List.of(), null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.SchemaColumnReport(0, "A1", "Header", 0, -1, List.of(), null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new GridGrindResponse.TypeCountReport(" ", 1));
+    assertThrows(
+        IllegalArgumentException.class, () -> new GridGrindResponse.TypeCountReport("STRING", 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.NamedRangeSurfaceReport(-1, 0, 0, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.NamedRangeSurfaceReport(0, -1, 0, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.NamedRangeSurfaceReport(0, 0, -1, 0, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.NamedRangeSurfaceReport(0, 0, 0, -1, List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.NamedRangeSurfaceEntryReport(
+                " ",
+                new NamedRangeScope.Workbook(),
+                "Budget!$B$4",
+                GridGrindResponse.NamedRangeBackingKind.RANGE));
+  }
+
+  @Test
+  void freezePaneNoneAndProblemCauseCopyPathsRemainUsable() {
+    GridGrindResponse.FreezePaneReport.None none = new GridGrindResponse.FreezePaneReport.None();
+    assertInstanceOf(GridGrindResponse.FreezePaneReport.None.class, none);
+
     GridGrindResponse.Problem problem =
         new GridGrindResponse.Problem(
             GridGrindProblemCode.INVALID_REQUEST,
@@ -287,36 +448,42 @@ class GridGrindResponseTest {
             GridGrindProblemRecovery.CHANGE_REQUEST,
             "Invalid request",
             "bad request",
-            "Fix the request and retry.",
+            "Fix the request.",
             new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE"),
             null);
-
     assertEquals(List.of(), problem.causes());
+
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new GridGrindResponse.Problem(
+                GridGrindProblemCode.INVALID_REQUEST,
+                GridGrindProblemCategory.REQUEST,
+                GridGrindProblemRecovery.CHANGE_REQUEST,
+                "Invalid request",
+                "bad request",
+                "Fix the request.",
+                new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE"),
+                java.util.Arrays.asList((GridGrindResponse.ProblemCause) null)));
   }
 
-  private GridGrindResponse.CellReport.TextReport textReport(
-      String address, String value, GridGrindResponse.CellStyleReport style) {
-    return new GridGrindResponse.CellReport.TextReport(
-        address, "STRING", value, style, null, null, value);
-  }
-
-  private GridGrindResponse.CellStyleReport defaultCellStyleReport() {
+  private static GridGrindResponse.CellStyleReport defaultCellStyleReport() {
     return new GridGrindResponse.CellStyleReport(
         "General",
+        true,
         false,
+        true,
+        ExcelHorizontalAlignment.CENTER,
+        ExcelVerticalAlignment.TOP,
+        "Aptos",
+        new FontHeightReport(230, new BigDecimal("11.5")),
+        "#1F4E78",
+        true,
         false,
-        false,
-        ExcelHorizontalAlignment.GENERAL,
-        ExcelVerticalAlignment.BOTTOM,
-        "Calibri",
-        new FontHeightReport(220, new BigDecimal("11")),
-        null,
-        false,
-        false,
-        null,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE);
+        "#FFF2CC",
+        ExcelBorderStyle.THIN,
+        ExcelBorderStyle.DOUBLE,
+        ExcelBorderStyle.THIN,
+        ExcelBorderStyle.THIN);
   }
 }

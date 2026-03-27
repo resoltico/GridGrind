@@ -46,6 +46,7 @@ class JazzerTextRendererTest {
                     null,
                     null,
                     null,
+                    null,
                     null)),
             List.of(
                 new FindingArtifact(

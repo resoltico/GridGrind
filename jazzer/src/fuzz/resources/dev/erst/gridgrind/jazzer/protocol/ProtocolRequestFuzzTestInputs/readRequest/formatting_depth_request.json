@@ -84,14 +84,28 @@
     { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Styled Report" },
     { "type": "EVALUATE_FORMULAS" }
   ],
-  "analysis": {
-    "sheets": [
-      {
-        "sheetName": "Styled Report",
-        "cells": ["A1", "D4"],
-        "previewRowCount": 4,
-        "previewColumnCount": 4
+  "reads": [
+    {
+      "type": "GET_CELLS",
+      "requestId": "cells",
+      "sheetName": "Styled Report",
+      "addresses": ["A1", "D4"]
+    },
+    {
+      "type": "GET_WINDOW",
+      "requestId": "window",
+      "sheetName": "Styled Report",
+      "topLeftAddress": "A1",
+      "rowCount": 4,
+      "columnCount": 4
+    },
+    {
+      "type": "ANALYZE_FORMULA_SURFACE",
+      "requestId": "formula-surface",
+      "selection": {
+        "mode": "SELECTED",
+        "sheetNames": ["Styled Report"]
       }
-    ]
-  }
+    }
+  ]
 }

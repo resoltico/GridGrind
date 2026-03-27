@@ -35,20 +35,35 @@
     },
     { "type": "DELETE_SHEET", "sheetName": "Scratch" }
   ],
-  "analysis": {
-    "sheets": [
-      {
-        "sheetName": "History",
-        "cells": ["A1"],
-        "previewRowCount": 2,
-        "previewColumnCount": 2
-      },
-      {
-        "sheetName": "Budget",
-        "cells": ["A1"],
-        "previewRowCount": 2,
-        "previewColumnCount": 2
-      }
-    ]
-  }
+  "reads": [
+    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
+    {
+      "type": "GET_CELLS",
+      "requestId": "history-cells",
+      "sheetName": "History",
+      "addresses": ["A1"]
+    },
+    {
+      "type": "GET_WINDOW",
+      "requestId": "history-window",
+      "sheetName": "History",
+      "topLeftAddress": "A1",
+      "rowCount": 2,
+      "columnCount": 2
+    },
+    {
+      "type": "GET_CELLS",
+      "requestId": "budget-cells",
+      "sheetName": "Budget",
+      "addresses": ["A1"]
+    },
+    {
+      "type": "GET_WINDOW",
+      "requestId": "budget-window",
+      "sheetName": "Budget",
+      "topLeftAddress": "A1",
+      "rowCount": 2,
+      "columnCount": 2
+    }
+  ]
 }

@@ -10,7 +10,7 @@ import dev.erst.gridgrind.jazzer.support.SequenceIntrospection;
 import dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
-import dev.erst.gridgrind.protocol.GridGrindService;
+import dev.erst.gridgrind.protocol.DefaultGridGrindRequestExecutor;
 
 /** Fuzzes ordered protocol workflows against the production service entrypoint. */
 class OperationWorkflowFuzzTest {
@@ -34,10 +34,11 @@ class OperationWorkflowFuzzTest {
     TELEMETRY.recordSourceKind(SequenceIntrospection.sourceKind(request));
     TELEMETRY.recordPersistenceKind(SequenceIntrospection.persistenceKind(request));
     TELEMETRY.recordSequenceKinds(SequenceIntrospection.operationKinds(request.operations()));
+    TELEMETRY.recordReadKinds(SequenceIntrospection.readKinds(request.reads()));
     TELEMETRY.recordStyleKinds(SequenceIntrospection.styleKinds(request.operations()));
     try {
       try {
-        GridGrindResponse response = new GridGrindService().execute(request);
+        GridGrindResponse response = new DefaultGridGrindRequestExecutor().execute(request);
         WorkbookInvariantChecks.requireResponseShape(response);
         WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response);
         TELEMETRY.recordResponseKind(SequenceIntrospection.responseKind(response));

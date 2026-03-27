@@ -109,6 +109,7 @@ configurations.named(fuzzSourceSet.runtimeOnlyConfigurationName) {
 
 dependencies {
     add("implementation", platform("org.junit:junit-bom:6.0.3"))
+    add("implementation", "org.junit.platform:junit-platform-launcher")
     add("implementation", "com.code-intelligence:jazzer-api:0.30.0")
     add("implementation", "com.code-intelligence:jazzer:0.30.0")
     add("implementation", "org.apache.poi:poi-ooxml:5.5.1")
@@ -139,14 +140,11 @@ fun requiredGradleProperty(name: String): String =
     providers.gradleProperty(name).orNull
         ?: throw IllegalArgumentException("Missing Gradle property: $name")
 
-fun Test.configureFuzzSourceSet() {
-    testClassesDirs = fuzzSourceSet.output.classesDirs
+fun JavaExec.configureHarnessRuntime() {
     classpath = fuzzSourceSet.runtimeClasspath
-    useJUnitPlatform {
-        includeTags("jazzer")
-    }
-    maxParallelForks = 1
+    mainClass.set("dev.erst.gridgrind.jazzer.tool.JazzerHarnessRunner")
     outputs.upToDateWhen { false }
+    workingDir = layout.projectDirectory.asFile
     jvmArgs("--enable-native-access=ALL-UNNAMED")
     if (jazzerMaxDuration != null) {
         systemProperty("jazzer.max_duration", jazzerMaxDuration)
@@ -185,13 +183,11 @@ fun registerFuzzTask(
     className: String,
     workingDirectory: String,
     fuzzing: Boolean
-) = tasks.register<Test>(name) {
+) = tasks.register<JavaExec>(name) {
     description = descriptionText
     group = "verification"
-    configureFuzzSourceSet()
-    filter {
-        includeTestsMatching(className)
-    }
+    configureHarnessRuntime()
+    args("--class", className)
     workingDir = runDirectory(workingDirectory)
     doFirst {
         workingDir.mkdirs()
@@ -201,15 +197,64 @@ fun registerFuzzTask(
     }
 }
 
+fun registerRegressionTask(
+    name: String,
+    descriptionText: String,
+    className: String,
+    workingDirectory: String
+) = tasks.register<JavaExec>(name) {
+    description = descriptionText
+    group = "verification"
+    configureHarnessRuntime()
+    args("--class", className)
+    workingDir = runDirectory(workingDirectory)
+    doFirst {
+        workingDir.mkdirs()
+    }
+}
+
+val regressionProtocolRequest =
+    registerRegressionTask(
+        "regressionProtocolRequest",
+        "Replays committed protocol-request Jazzer inputs in regression mode.",
+        "dev.erst.gridgrind.jazzer.protocol.ProtocolRequestFuzzTest",
+        ".local/runs/regression/protocol-request"
+    )
+
+val regressionProtocolWorkflow =
+    registerRegressionTask(
+        "regressionProtocolWorkflow",
+        "Replays committed protocol-workflow Jazzer inputs in regression mode.",
+        "dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest",
+        ".local/runs/regression/protocol-workflow"
+    )
+
+val regressionEngineCommandSequence =
+    registerRegressionTask(
+        "regressionEngineCommandSequence",
+        "Replays committed engine-command-sequence Jazzer inputs in regression mode.",
+        "dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest",
+        ".local/runs/regression/engine-command-sequence"
+    )
+
+val regressionXlsxRoundTrip =
+    registerRegressionTask(
+        "regressionXlsxRoundTrip",
+        "Replays committed xlsx-roundtrip Jazzer inputs in regression mode.",
+        "dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest",
+        ".local/runs/regression/xlsx-roundtrip"
+    )
+
 val jazzerRegression =
-    tasks.register<Test>("jazzerRegression") {
+    tasks.register("jazzerRegression") {
         description = "Runs all Jazzer harnesses in regression mode."
         group = "verification"
-        configureFuzzSourceSet()
-        workingDir = runDirectory(".local/runs/regression")
-        doFirst {
-            workingDir.mkdirs()
-        }
+        dependsOn(
+            regressionProtocolRequest,
+            regressionProtocolWorkflow,
+            regressionEngineCommandSequence,
+            regressionXlsxRoundTrip
+        )
     }
 
 val fuzzProtocolRequest =
@@ -257,7 +302,6 @@ tasks.named<Test>("test") {
 }
 
 tasks.named("check") {
-    dependsOn(tasks.named("test"))
     dependsOn(jazzerRegression)
 }
 
@@ -282,6 +326,27 @@ fuzzEngineCommandSequence.configure {
 
 fuzzXlsxRoundTrip.configure {
     mustRunAfter(fuzzEngineCommandSequence)
+}
+
+val jazzerSupportTests = tasks.named<Test>("test")
+
+regressionProtocolRequest.configure {
+    mustRunAfter(jazzerSupportTests)
+}
+
+regressionProtocolWorkflow.configure {
+    mustRunAfter(regressionProtocolRequest)
+    mustRunAfter(jazzerSupportTests)
+}
+
+regressionEngineCommandSequence.configure {
+    mustRunAfter(regressionProtocolWorkflow)
+    mustRunAfter(jazzerSupportTests)
+}
+
+regressionXlsxRoundTrip.configure {
+    mustRunAfter(regressionEngineCommandSequence)
+    mustRunAfter(jazzerSupportTests)
 }
 
 tasks.register<CleanLocalCorpusTask>("cleanLocalCorpus") {

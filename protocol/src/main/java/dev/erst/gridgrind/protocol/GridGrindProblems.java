@@ -156,7 +156,12 @@ public final class GridGrindProblems {
   }
 
   static String addressFor(Throwable exception) {
-    return exception instanceof FormulaException fe ? fe.address() : null;
+    return switch (exception) {
+      case FormulaException fe -> fe.address();
+      case CellNotFoundException cnf -> cnf.address();
+      case InvalidCellAddressException ica -> ica.address();
+      default -> null;
+    };
   }
 
   static String rangeFor(Throwable exception) {
@@ -198,13 +203,13 @@ public final class GridGrindProblems {
         }
         yield context;
       }
-      case GridGrindResponse.ProblemContext.AnalyzeWorkbook aw -> {
+      case GridGrindResponse.ProblemContext.ExecuteRead executeRead -> {
         if (exception instanceof FormulaException fe) {
-          yield aw.withExceptionData(
+          yield executeRead.withExceptionData(
               fe.sheetName(), fe.address(), fe.formula(), namedRangeNameFor(exception));
         }
         if (exception instanceof NamedRangeNotFoundException) {
-          yield aw.withExceptionData(null, null, null, namedRangeNameFor(exception));
+          yield executeRead.withExceptionData(null, null, null, namedRangeNameFor(exception));
         }
         yield context;
       }

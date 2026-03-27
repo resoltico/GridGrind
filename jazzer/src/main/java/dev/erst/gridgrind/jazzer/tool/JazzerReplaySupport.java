@@ -13,7 +13,7 @@ import dev.erst.gridgrind.jazzer.support.XlsxRoundTripVerifier;
 import dev.erst.gridgrind.protocol.GridGrindJson;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
-import dev.erst.gridgrind.protocol.GridGrindService;
+import dev.erst.gridgrind.protocol.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.protocol.InvalidJsonException;
 import dev.erst.gridgrind.protocol.InvalidRequestException;
 import java.io.IOException;
@@ -54,12 +54,21 @@ public final class JazzerReplaySupport {
               request.operations().size(),
               SequenceIntrospection.operationKinds(request.operations()),
               SequenceIntrospection.styleKinds(request.operations()),
-              SequenceIntrospection.analysisSheetCount(request));
+              SequenceIntrospection.readCount(request),
+              SequenceIntrospection.readKinds(request.reads()));
       return new ReplayOutcome.Success(JazzerHarness.PROTOCOL_REQUEST.key(), details);
     } catch (InvalidJsonException expected) {
       ProtocolRequestDetails details =
           new ProtocolRequestDetails(
-              input.length, "INVALID_JSON", "NOT_PARSED", "NOT_PARSED", 0, Map.of(), Map.of(), 0);
+              input.length,
+              "INVALID_JSON",
+              "NOT_PARSED",
+              "NOT_PARSED",
+              0,
+              Map.of(),
+              Map.of(),
+              0,
+              Map.of());
       return new ReplayOutcome.ExpectedInvalid(
           JazzerHarness.PROTOCOL_REQUEST.key(),
           expected.getClass().getSimpleName(),
@@ -75,7 +84,8 @@ public final class JazzerReplaySupport {
               0,
               Map.of(),
               Map.of(),
-              0);
+              0,
+              Map.of());
       return new ReplayOutcome.ExpectedInvalid(
           JazzerHarness.PROTOCOL_REQUEST.key(),
           expected.getClass().getSimpleName(),
@@ -84,7 +94,15 @@ public final class JazzerReplaySupport {
     } catch (IOException unexpected) {
       ProtocolRequestDetails details =
           new ProtocolRequestDetails(
-              input.length, "IO_ERROR", "NOT_PARSED", "NOT_PARSED", 0, Map.of(), Map.of(), 0);
+              input.length,
+              "IO_ERROR",
+              "NOT_PARSED",
+              "NOT_PARSED",
+              0,
+              Map.of(),
+              Map.of(),
+              0,
+              Map.of());
       return unexpectedFailure(JazzerHarness.PROTOCOL_REQUEST, unexpected, details);
     } catch (RuntimeException unexpected) {
       ProtocolRequestDetails details =
@@ -96,7 +114,8 @@ public final class JazzerReplaySupport {
               0,
               Map.of(),
               Map.of(),
-              0);
+              0,
+              Map.of());
       return unexpectedFailure(JazzerHarness.PROTOCOL_REQUEST, unexpected, details);
     }
   }
@@ -109,7 +128,7 @@ public final class JazzerReplaySupport {
     try {
       workflow = OperationSequenceModel.nextProtocolWorkflow(data);
       request = workflow.request();
-      response = new GridGrindService().execute(request);
+      response = new DefaultGridGrindRequestExecutor().execute(request);
       WorkbookInvariantChecks.requireResponseShape(response);
       WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response);
       ProtocolWorkflowDetails details = workflowDetails(input.length, request, response);
@@ -218,6 +237,7 @@ public final class JazzerReplaySupport {
           Map.of(),
           Map.of(),
           0,
+          Map.of(),
           response == null ? "NOT_EXECUTED" : SequenceIntrospection.responseKind(response));
     }
     return new ProtocolWorkflowDetails(
@@ -227,7 +247,8 @@ public final class JazzerReplaySupport {
         request.operations().size(),
         SequenceIntrospection.operationKinds(request.operations()),
         SequenceIntrospection.styleKinds(request.operations()),
-        SequenceIntrospection.analysisSheetCount(request),
+        SequenceIntrospection.readCount(request),
+        SequenceIntrospection.readKinds(request.reads()),
         response == null ? "NOT_EXECUTED" : SequenceIntrospection.responseKind(response));
   }
 

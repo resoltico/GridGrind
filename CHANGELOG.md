@@ -3,6 +3,31 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.8.0] - 2026-03-27
+
+### Changed
+- The CLI and protocol architecture now expose a transport-neutral request-executor port and a
+  thinner CLI transport boundary, keeping argument parsing, protocol I/O, and execution concerns
+  more cleanly separated.
+- Public product wording now describes GridGrind as agent-first but not agent-only, matching the
+  shipped JSON protocol, CLI/container transport, and current non-MCP distribution model.
+- Local Jazzer regression verification now replays committed seeds through four isolated
+  per-harness launcher tasks before producing the aggregate regression summary, and local Jazzer
+  harness execution no longer depends on Gradle's flaky binary test-results pipeline.
+- The request and success protocol now use ordered `reads` and `persistence` outcomes instead of
+  the old aggregated `analysis` and nullable saved-path model, making post-mutation workbook
+  introspection and insights explicit, typed, and request-correlated.
+
+### Added
+- Read operations for workbook summary, named ranges, sheet summary, cells, windows,
+  merged regions, hyperlinks, comments, sheet layout, formula surface, sheet schema, and
+  named-range surface.
+- Public read-heavy example request in `examples/introspection-analysis-request.json`.
+- Jazzer request-seed coverage for the new read-heavy public example and the broader `reads`
+  protocol shape.
+
 ## [0.7.0] - 2026-03-27
 
 ### Added
@@ -195,7 +220,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/resoltico/GridGrind/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/resoltico/GridGrind/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/resoltico/GridGrind/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/resoltico/GridGrind/compare/v0.4.1...v0.5.0

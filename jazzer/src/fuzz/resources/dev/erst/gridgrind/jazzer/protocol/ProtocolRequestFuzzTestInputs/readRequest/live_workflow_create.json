@@ -130,20 +130,51 @@
     { "type": "EVALUATE_FORMULAS" },
     { "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
   ],
-  "analysis": {
-    "sheets": [
-      {
-        "sheetName": "Rates",
-        "cells": ["A2", "B5", "C5"],
-        "previewRowCount": 5,
-        "previewColumnCount": 3
-      },
-      {
-        "sheetName": "Sales",
-        "cells": ["C2", "F2", "F7", "G7", "H7"],
-        "previewRowCount": 7,
-        "previewColumnCount": 8
+  "reads": [
+    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
+    {
+      "type": "GET_CELLS",
+      "requestId": "rates-cells",
+      "sheetName": "Rates",
+      "addresses": ["A2", "B5", "C5"]
+    },
+    {
+      "type": "GET_WINDOW",
+      "requestId": "rates-window",
+      "sheetName": "Rates",
+      "topLeftAddress": "A1",
+      "rowCount": 5,
+      "columnCount": 3
+    },
+    {
+      "type": "GET_CELLS",
+      "requestId": "sales-cells",
+      "sheetName": "Sales",
+      "addresses": ["C2", "F2", "F7", "G7", "H7"]
+    },
+    {
+      "type": "GET_WINDOW",
+      "requestId": "sales-window",
+      "sheetName": "Sales",
+      "topLeftAddress": "A1",
+      "rowCount": 7,
+      "columnCount": 8
+    },
+    {
+      "type": "ANALYZE_FORMULA_SURFACE",
+      "requestId": "sales-formula-surface",
+      "selection": {
+        "mode": "SELECTED",
+        "sheetNames": ["Sales"]
       }
-    ]
-  }
+    },
+    {
+      "type": "ANALYZE_SHEET_SCHEMA",
+      "requestId": "sales-schema",
+      "sheetName": "Sales",
+      "topLeftAddress": "A1",
+      "rowCount": 7,
+      "columnCount": 8
+    }
+  ]
 }

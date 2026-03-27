@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.7.0"
+version: "0.8.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-03-27"
 route:
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 8 |
-| `protocol-workflow` | `GridGrindService.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 10 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 9 |
+| `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 10 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 7 |
 | `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 8 |
-| `regression` | all committed `*Inputs` resources | replay of the committed custom seed floor | N/A | Yes | 33 total across harnesses |
+| `regression` | four isolated per-harness regression tasks over all committed `*Inputs` resources | replay of the committed custom seed floor | N/A | Yes | 34 total across harnesses |
 
 ---
 
@@ -37,6 +37,7 @@ Surface:
 - raw request bytes
 - JSON decoding
 - request-model validation
+- ordered `reads` payloads, selectors, and request/result correlation IDs
 - style payloads including typed `fontHeight`, fill, color, and border input shapes
 - hyperlink, comment, and named-range payload shapes
 
@@ -49,6 +50,7 @@ Telemetry signals:
 - iteration count
 - success vs expected-invalid counts
 - error families
+- read-kind coverage for successfully parsed request payloads
 - style-kind coverage for style-bearing requests that parse successfully
 
 What it does not cover:
@@ -60,8 +62,9 @@ What it does not cover:
 
 Surface:
 - ordered operation sequences generated from raw bytes
-- `GridGrindService.execute(...)`
+- `DefaultGridGrindRequestExecutor.execute(...)`
 - response-shape invariants
+- explicit read execution and ordered read-result shaping
 - source-mode and persistence-mode combinations for `.xlsx` workflows
 - hyperlink, comment, and named-range operations in protocol execution paths
 
@@ -77,12 +80,13 @@ Telemetry signals:
 - style-kind counts
 - source-kind counts
 - persistence-kind counts
+- read-kind counts
 - success vs generated-invalid counts
 - response-family counts
 - unexpected failure families
 
 What it does not cover:
-- direct engine-only paths bypassing `GridGrindService`
+- direct engine-only paths bypassing `DefaultGridGrindRequestExecutor`
 - `.xlsx` reopen after save
 
 ### `engine-command-sequence`
@@ -166,12 +170,13 @@ Committed custom seeds currently in source control:
 | Harness | Input | Meaning |
 |:--------|:------|:--------|
 | `protocol-request` | `sheet_management_request.json` | readable valid request seed taken from the public sheet-management example |
-| `protocol-request` | `budget_request.json` | readable budget workflow seed with range writes, style, formulas, and analysis |
-| `protocol-request` | `excel_authoring_essentials_request.json` | readable authoring seed covering hyperlinks, comments, named ranges, and workbook-level named-range analysis |
+| `protocol-request` | `budget_request.json` | readable budget workflow seed with range writes, style, formulas, and explicit workbook/cell/window/schema reads |
+| `protocol-request` | `excel_authoring_essentials_request.json` | readable authoring seed covering hyperlinks, comments, named ranges, and explicit metadata plus named-range reads |
 | `protocol-request` | `live_workflow_create.json` | readable multi-sheet finance workflow with append-row and formula authoring |
 | `protocol-request` | `live_workflow_revise.json` | readable existing-workbook revision seed with overwrite persistence |
 | `protocol-request` | `structural_layout_request.json` | readable structural-layout seed covering merge, sizing, and freeze panes |
 | `protocol-request` | `formatting_depth_request.json` | readable formatting-depth seed covering typed `fontHeight`, fill, color, and border patches |
+| `protocol-request` | `introspection_analysis_request.json` | readable read-heavy seed covering workbook summary, metadata reads, layout reads, and all three insight operations |
 | `protocol-request` | `invalid_font_height_request.json` | readable expected-invalid seed covering typed `fontHeight` validation |
 | `protocol-workflow` | `set_cell_failure_case.bin` | structured workflow seed that replays to a protocol `FAILURE` response with one `SET_CELL` operation |
 | `protocol-workflow` | `ensure_sheet_set_range_success.bin` | structured workflow seed that replays to a protocol `SUCCESS` response with `ENSURE_SHEET` plus `SET_RANGE` |

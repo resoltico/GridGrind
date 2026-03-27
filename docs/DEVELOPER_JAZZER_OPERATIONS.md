@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.7.0"
+version: "0.8.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-03-26"
+updated: "2026-03-27"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -22,7 +22,7 @@ route:
 |:-------|:--------|
 | `jazzer/bin/regression` | replay all committed regression inputs |
 | `jazzer/bin/fuzz-protocol-request` | fuzz raw request parsing and validation |
-| `jazzer/bin/fuzz-protocol-workflow` | fuzz ordered `GridGrindService` workflows |
+| `jazzer/bin/fuzz-protocol-workflow` | fuzz ordered `DefaultGridGrindRequestExecutor` workflows |
 | `jazzer/bin/fuzz-engine-command-sequence` | fuzz direct workbook-command execution |
 | `jazzer/bin/fuzz-xlsx-roundtrip` | fuzz `.xlsx` save and reopen invariants |
 | `jazzer/bin/fuzz-all` | run all four active fuzz scripts sequentially |
@@ -87,6 +87,10 @@ jazzer/bin/regression --console=plain
 This runs all committed `*Inputs` resources in regression mode and writes the regression summary to
 `jazzer/.local/runs/regression/`.
 
+Under the hood, regression replay is isolated per harness. The public `jazzer/bin/regression`
+command drives four separate regression launcher tasks and then records one aggregate regression
+summary. This avoids relying on Gradle's `Test` result store for the entire committed seed floor.
+
 ### Inspect the Current State
 
 ```bash
@@ -108,8 +112,9 @@ This does not fuzz. It replays the exact raw bytes and prints a structured summa
 - input path
 - harness
 - success vs expected-invalid vs unexpected-failure
-- decoded operation or command counts
+- decoded operation, command, or read counts
 - style kinds, source mode, and persistence mode where applicable
+- read kinds where applicable
 - response classification where applicable
 
 ### Promote One Input
@@ -154,6 +159,8 @@ jazzer/.local/runs/<target>/
 ```
 
 `regression/` has the same summary and telemetry model but no active corpus tree.
+Its working tree also contains per-harness regression subdirectories used only during isolated
+regression replay runs.
 
 ---
 
@@ -174,8 +181,8 @@ jazzer/.local/runs/<target>/
 `telemetry/*.json`
 - per-harness semantic metrics collected during the run
 - includes iteration counts, outcome counts, operation/command-kind counts, style-kind counts,
-  protocol source/persistence-mode counts where applicable, error families, and protocol response
-  families
+  protocol source/persistence-mode counts where applicable, read-kind counts where applicable,
+  error families, and protocol response families
 
 `findings/*.json` and `findings/*.txt`
 - replayed local finding artifacts derived from raw `crash-*`, `timeout-*`, `oom-*`, or `leak-*`
@@ -198,6 +205,14 @@ jazzer/.local/runs/<target>/
 `Recommended dictionary`
 - is advisory output from libFuzzer, not a finding and not a required follow-up
 - must not be copied into the repo directly from one run
+
+Expected warning noise during local runs:
+- `sun.misc.Unsafe` deprecation warnings from Jazzer `0.30.0` on Java 26
+- `JUnit arguments ... can not be serialized as fuzzing inputs. Skipped.` for `FuzzedDataProvider`
+  active-fuzz harnesses launched through the JUnit Platform
+
+These warnings are upstream-tooling noise. They do not indicate a GridGrind workbook defect and
+do not invalidate replay, promotion, status, or report output.
 
 ---
 

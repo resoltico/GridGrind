@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.7.0"
+version: "0.8.0"
 domain: ERRORS
-updated: "2026-03-26"
+updated: "2026-03-27"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, causes, context]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context"]
@@ -78,9 +78,9 @@ route:
 | Code | Trigger |
 |:-----|:--------|
 | `WORKBOOK_NOT_FOUND` | `source.mode=EXISTING` path does not exist. |
-| `SHEET_NOT_FOUND` | An operation or analysis references a sheet that does not exist, including sheet-management and structural-layout operations such as `RENAME_SHEET`, `DELETE_SHEET`, `MOVE_SHEET`, `MERGE_CELLS`, `UNMERGE_CELLS`, `SET_COLUMN_WIDTH`, `SET_ROW_HEIGHT`, or `FREEZE_PANES`. |
-| `NAMED_RANGE_NOT_FOUND` | A named-range analysis selector or delete request references a workbook- or sheet-scoped name that does not exist. |
-| `CELL_NOT_FOUND` | An analysis `cells` entry references a cell that has not been written. |
+| `SHEET_NOT_FOUND` | An operation or read references a sheet that does not exist, including sheet-management and structural-layout operations such as `RENAME_SHEET`, `DELETE_SHEET`, `MOVE_SHEET`, `MERGE_CELLS`, `UNMERGE_CELLS`, `SET_COLUMN_WIDTH`, `SET_ROW_HEIGHT`, or `FREEZE_PANES`. |
+| `NAMED_RANGE_NOT_FOUND` | A named-range read selector or delete request references a workbook- or sheet-scoped name that does not exist. |
+| `CELL_NOT_FOUND` | A `GET_CELLS` read references a cell that has not been written. |
 
 ### I/O (`IO` category)
 
@@ -125,9 +125,12 @@ The `context` block provides structured metadata about where the failure occurre
 
 | Field | Description |
 |:------|:------------|
-| `stage` | `READ_REQUEST`, `VALIDATE_REQUEST`, `OPEN_WORKBOOK`, `APPLY_OPERATION`, `PERSIST_WORKBOOK`, `ANALYZE_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
+| `stage` | `PARSE_ARGUMENTS`, `READ_REQUEST`, `VALIDATE_REQUEST`, `OPEN_WORKBOOK`, `APPLY_OPERATION`, `EXECUTE_READ`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
 | `operationIndex` | Zero-based index of the failing operation in `operations`. |
 | `operationType` | The `type` field of the failing operation (e.g. `SET_CELL`). |
+| `readIndex` | Zero-based index of the failing read in `reads`. |
+| `readType` | The `type` field of the failing read (e.g. `GET_CELLS`). |
+| `requestId` | Caller-defined read correlation ID when the failure occurred during `EXECUTE_READ`. |
 | `sheetName` | Sheet referenced by the failing operation, if applicable. |
 | `address` | Cell address, if applicable. |
 | `range` | Range, if applicable. |

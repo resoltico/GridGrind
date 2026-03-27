@@ -6,20 +6,20 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
-/** Complete agent request for workbook source, mutations, persistence, and analysis. */
+/** Complete GridGrind request for workbook source, mutations, reads, and persistence. */
 public record GridGrindRequest(
     GridGrindProtocolVersion protocolVersion,
     WorkbookSource source,
     WorkbookPersistence persistence,
     List<WorkbookOperation> operations,
-    WorkbookAnalysisRequest analysis) {
+    List<WorkbookReadOperation> reads) {
   public GridGrindRequest {
     protocolVersion =
         protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
     Objects.requireNonNull(source, "source must not be null");
     persistence = persistence == null ? new WorkbookPersistence.None() : persistence;
     operations = copyOperations(operations);
-    analysis = analysis == null ? new WorkbookAnalysisRequest(List.of(), null) : analysis;
+    reads = copyReads(reads);
   }
 
   /** Creates a request with the current protocol version and the given parameters. */
@@ -27,8 +27,8 @@ public record GridGrindRequest(
       WorkbookSource source,
       WorkbookPersistence persistence,
       List<WorkbookOperation> operations,
-      WorkbookAnalysisRequest analysis) {
-    this(GridGrindProtocolVersion.current(), source, persistence, operations, analysis);
+      List<WorkbookReadOperation> reads) {
+    this(GridGrindProtocolVersion.current(), source, persistence, operations, reads);
   }
 
   /** Describes where the input workbook comes from. */
@@ -38,8 +38,10 @@ public record GridGrindRequest(
     @JsonSubTypes.Type(value = WorkbookSource.ExistingFile.class, name = "EXISTING")
   })
   public sealed interface WorkbookSource {
+    /** Creates a brand-new empty workbook in memory. */
     record New() implements WorkbookSource {}
 
+    /** Opens an existing workbook file from disk. */
     record ExistingFile(String path) implements WorkbookSource {
       public ExistingFile {
         requireXlsxWorkbookPath(path);
@@ -55,79 +57,16 @@ public record GridGrindRequest(
     @JsonSubTypes.Type(value = WorkbookPersistence.SaveAs.class, name = "SAVE_AS")
   })
   public sealed interface WorkbookPersistence {
+    /** Leaves the workbook in memory only and does not persist it. */
     record None() implements WorkbookPersistence {}
 
+    /** Saves the workbook back to the exact path it was opened from. */
     record OverwriteSource() implements WorkbookPersistence {}
 
+    /** Saves the workbook to a new `.xlsx` path. */
     record SaveAs(String path) implements WorkbookPersistence {
       public SaveAs {
         requireXlsxWorkbookPath(path);
-      }
-    }
-  }
-
-  /** Declares which workbook content should be inspected after mutations are applied. */
-  public record WorkbookAnalysisRequest(
-      List<SheetInspectionRequest> sheets, NamedRangeInspection namedRanges) {
-    public WorkbookAnalysisRequest {
-      sheets = copySheets(sheets);
-      namedRanges = namedRanges == null ? new NamedRangeInspection.None() : namedRanges;
-    }
-
-    /** Creates an analysis request that inspects only sheets and skips named ranges. */
-    public WorkbookAnalysisRequest(List<SheetInspectionRequest> sheets) {
-      this(sheets, null);
-    }
-
-    /** Describes which named ranges should be returned in workbook analysis. */
-    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
-    @JsonSubTypes({
-      @JsonSubTypes.Type(value = NamedRangeInspection.None.class, name = "NONE"),
-      @JsonSubTypes.Type(value = NamedRangeInspection.All.class, name = "ALL"),
-      @JsonSubTypes.Type(value = NamedRangeInspection.Selected.class, name = "SELECTED")
-    })
-    public sealed interface NamedRangeInspection
-        permits NamedRangeInspection.None, NamedRangeInspection.All, NamedRangeInspection.Selected {
-
-      /** Skips named-range analysis entirely. */
-      record None() implements NamedRangeInspection {}
-
-      /** Returns every analyzable named range in the workbook. */
-      record All() implements NamedRangeInspection {}
-
-      /** Returns only the exact named ranges matched by the provided selectors. */
-      record Selected(List<NamedRangeSelector> selectors) implements NamedRangeInspection {
-        public Selected {
-          selectors = selectors == null ? List.of() : List.copyOf(selectors);
-          if (selectors.isEmpty()) {
-            throw new IllegalArgumentException("selectors must not be empty");
-          }
-          for (NamedRangeSelector selector : selectors) {
-            Objects.requireNonNull(selector, "selectors must not contain nulls");
-          }
-        }
-      }
-    }
-  }
-
-  /** Declares how one sheet should be inspected after mutations finish. */
-  public record SheetInspectionRequest(
-      String sheetName, List<String> cells, Integer previewRowCount, Integer previewColumnCount) {
-    public SheetInspectionRequest {
-      requireNonBlank(sheetName, "sheetName");
-      cells = cells == null ? List.of() : List.copyOf(cells);
-      for (String cell : cells) {
-        requireNonBlank(cell, "cell");
-      }
-      if ((previewRowCount == null) != (previewColumnCount == null)) {
-        throw new IllegalArgumentException(
-            "previewRowCount and previewColumnCount must both be set or both be null");
-      }
-      if (previewRowCount != null && previewRowCount <= 0) {
-        throw new IllegalArgumentException("previewRowCount must be greater than 0");
-      }
-      if (previewColumnCount != null && previewColumnCount <= 0) {
-        throw new IllegalArgumentException("previewColumnCount must be greater than 0");
       }
     }
   }
@@ -143,13 +82,13 @@ public record GridGrindRequest(
     return copy;
   }
 
-  private static List<SheetInspectionRequest> copySheets(List<SheetInspectionRequest> sheets) {
-    if (sheets == null) {
+  private static List<WorkbookReadOperation> copyReads(List<WorkbookReadOperation> reads) {
+    if (reads == null) {
       return List.of();
     }
-    List<SheetInspectionRequest> copy = List.copyOf(sheets);
-    for (SheetInspectionRequest sheet : copy) {
-      Objects.requireNonNull(sheet, "sheets must not contain nulls");
+    List<WorkbookReadOperation> copy = List.copyOf(reads);
+    for (WorkbookReadOperation read : copy) {
+      Objects.requireNonNull(read, "reads must not contain nulls");
     }
     return copy;
   }

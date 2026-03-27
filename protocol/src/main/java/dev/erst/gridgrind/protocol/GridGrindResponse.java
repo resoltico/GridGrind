@@ -25,17 +25,14 @@ public sealed interface GridGrindResponse {
   /** Successful workbook execution result. */
   record Success(
       GridGrindProtocolVersion protocolVersion,
-      String savedWorkbookPath,
-      WorkbookSummary workbook,
-      List<NamedRangeReport> namedRanges,
-      List<SheetReport> sheets)
+      PersistenceOutcome persistence,
+      List<WorkbookReadResult> reads)
       implements GridGrindResponse {
     public Success {
       protocolVersion =
           protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
-      Objects.requireNonNull(workbook, "workbook must not be null");
-      namedRanges = copyNamedRanges(namedRanges);
-      sheets = copySheets(sheets);
+      persistence = persistence == null ? new PersistenceOutcome.NotSaved() : persistence;
+      reads = copyValues(reads, "reads");
     }
   }
 
@@ -46,6 +43,29 @@ public sealed interface GridGrindResponse {
       protocolVersion =
           protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
       Objects.requireNonNull(problem, "problem must not be null");
+    }
+  }
+
+  /** Reports whether the workbook was persisted during successful execution. */
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = PersistenceOutcome.NotSaved.class, name = "NOT_SAVED"),
+    @JsonSubTypes.Type(value = PersistenceOutcome.Saved.class, name = "SAVED")
+  })
+  sealed interface PersistenceOutcome
+      permits PersistenceOutcome.NotSaved, PersistenceOutcome.Saved {
+
+    /** Workbook remained in memory only and was not written to disk. */
+    record NotSaved() implements PersistenceOutcome {}
+
+    /** Workbook was written to the provided absolute `.xlsx` path. */
+    record Saved(String path) implements PersistenceOutcome {
+      public Saved {
+        Objects.requireNonNull(path, "path must not be null");
+        if (path.isBlank()) {
+          throw new IllegalArgumentException("path must not be blank");
+        }
+      }
     }
   }
 
@@ -109,18 +129,14 @@ public sealed interface GridGrindResponse {
     }
   }
 
-  /** Analysis report for one inspected sheet. */
-  record SheetReport(
-      String sheetName,
-      int physicalRowCount,
-      int lastRowIndex,
-      int lastColumnIndex,
-      List<CellReport> requestedCells,
-      List<PreviewRowReport> previewRows) {
-    public SheetReport {
+  /** Structural summary facts for one sheet. */
+  record SheetSummaryReport(
+      String sheetName, int physicalRowCount, int lastRowIndex, int lastColumnIndex) {
+    public SheetSummaryReport {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
-      requestedCells = copyReports(requestedCells, "requestedCells");
-      previewRows = copyPreviewRows(previewRows);
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
     }
   }
 
@@ -402,11 +418,286 @@ public sealed interface GridGrindResponse {
     }
   }
 
-  /** One preview row returned during sheet inspection. */
-  record PreviewRowReport(int rowIndex, List<CellReport> cells) {
-    public PreviewRowReport {
-      cells = copyReports(cells, "cells");
+  /** Rectangular window of cells anchored at one top-left address. */
+  record WindowReport(
+      String sheetName,
+      String topLeftAddress,
+      int rowCount,
+      int columnCount,
+      List<WindowRowReport> rows) {
+    public WindowReport {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (topLeftAddress.isBlank()) {
+        throw new IllegalArgumentException("topLeftAddress must not be blank");
+      }
+      if (rowCount <= 0) {
+        throw new IllegalArgumentException("rowCount must be greater than 0");
+      }
+      if (columnCount <= 0) {
+        throw new IllegalArgumentException("columnCount must be greater than 0");
+      }
+      rows = copyValues(rows, "rows");
     }
+  }
+
+  /** One row inside a rectangular window of cell snapshots. */
+  record WindowRowReport(int rowIndex, List<CellReport> cells) {
+    public WindowRowReport {
+      cells = copyValues(cells, "cells");
+    }
+  }
+
+  /** One merged region captured from a sheet. */
+  record MergedRegionReport(String range) {
+    public MergedRegionReport {
+      Objects.requireNonNull(range, "range must not be null");
+      if (range.isBlank()) {
+        throw new IllegalArgumentException("range must not be blank");
+      }
+    }
+  }
+
+  /** Hyperlink metadata associated with one concrete cell address. */
+  record CellHyperlinkReport(String address, HyperlinkReport hyperlink) {
+    public CellHyperlinkReport {
+      Objects.requireNonNull(address, "address must not be null");
+      Objects.requireNonNull(hyperlink, "hyperlink must not be null");
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+    }
+  }
+
+  /** Comment metadata associated with one concrete cell address. */
+  record CellCommentReport(String address, CommentReport comment) {
+    public CellCommentReport {
+      Objects.requireNonNull(address, "address must not be null");
+      Objects.requireNonNull(comment, "comment must not be null");
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+    }
+  }
+
+  /** Layout metadata such as freeze panes and visible row and column sizing for one sheet. */
+  record SheetLayoutReport(
+      String sheetName,
+      FreezePaneReport freezePanes,
+      List<ColumnLayoutReport> columns,
+      List<RowLayoutReport> rows) {
+    public SheetLayoutReport {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(freezePanes, "freezePanes must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      columns = copyValues(columns, "columns");
+      rows = copyValues(rows, "rows");
+    }
+  }
+
+  /** Freeze-pane state captured from a sheet layout read. */
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = FreezePaneReport.None.class, name = "NONE"),
+    @JsonSubTypes.Type(value = FreezePaneReport.Frozen.class, name = "FROZEN")
+  })
+  sealed interface FreezePaneReport permits FreezePaneReport.None, FreezePaneReport.Frozen {
+
+    /** Sheet has no active freeze panes. */
+    record None() implements FreezePaneReport {}
+
+    /** Sheet is frozen at the provided split and visible-origin coordinates. */
+    record Frozen(int splitColumn, int splitRow, int leftmostColumn, int topRow)
+        implements FreezePaneReport {}
+  }
+
+  /** Width metadata for one sheet column. */
+  record ColumnLayoutReport(int columnIndex, double widthCharacters) {
+    public ColumnLayoutReport {
+      if (columnIndex < 0) {
+        throw new IllegalArgumentException("columnIndex must not be negative");
+      }
+      if (!Double.isFinite(widthCharacters) || widthCharacters <= 0.0d) {
+        throw new IllegalArgumentException("widthCharacters must be finite and greater than 0");
+      }
+    }
+  }
+
+  /** Height metadata for one sheet row. */
+  record RowLayoutReport(int rowIndex, double heightPoints) {
+    public RowLayoutReport {
+      if (rowIndex < 0) {
+        throw new IllegalArgumentException("rowIndex must not be negative");
+      }
+      if (!Double.isFinite(heightPoints) || heightPoints <= 0.0d) {
+        throw new IllegalArgumentException("heightPoints must be finite and greater than 0");
+      }
+    }
+  }
+
+  /** Grouped formula usage facts across one or more sheets. */
+  record FormulaSurfaceReport(int totalFormulaCellCount, List<SheetFormulaSurfaceReport> sheets) {
+    public FormulaSurfaceReport {
+      sheets = copyValues(sheets, "sheets");
+      if (totalFormulaCellCount < 0) {
+        throw new IllegalArgumentException("totalFormulaCellCount must not be negative");
+      }
+    }
+  }
+
+  /** Formula usage facts for one sheet. */
+  record SheetFormulaSurfaceReport(
+      String sheetName,
+      int formulaCellCount,
+      int distinctFormulaCount,
+      List<FormulaPatternReport> formulas) {
+    public SheetFormulaSurfaceReport {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (formulaCellCount < 0) {
+        throw new IllegalArgumentException("formulaCellCount must not be negative");
+      }
+      if (distinctFormulaCount < 0) {
+        throw new IllegalArgumentException("distinctFormulaCount must not be negative");
+      }
+      formulas = copyValues(formulas, "formulas");
+    }
+  }
+
+  /** One grouped formula pattern and the addresses where it appears. */
+  record FormulaPatternReport(String formula, int occurrenceCount, List<String> addresses) {
+    public FormulaPatternReport {
+      Objects.requireNonNull(formula, "formula must not be null");
+      if (formula.isBlank()) {
+        throw new IllegalArgumentException("formula must not be blank");
+      }
+      if (occurrenceCount <= 0) {
+        throw new IllegalArgumentException("occurrenceCount must be greater than 0");
+      }
+      addresses = copyStrings(addresses, "addresses");
+    }
+  }
+
+  /** Inferred schema facts for one rectangular sheet window. */
+  record SheetSchemaReport(
+      String sheetName,
+      String topLeftAddress,
+      int rowCount,
+      int columnCount,
+      int dataRowCount,
+      List<SchemaColumnReport> columns) {
+    public SheetSchemaReport {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(topLeftAddress, "topLeftAddress must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (topLeftAddress.isBlank()) {
+        throw new IllegalArgumentException("topLeftAddress must not be blank");
+      }
+      if (rowCount <= 0) {
+        throw new IllegalArgumentException("rowCount must be greater than 0");
+      }
+      if (columnCount <= 0) {
+        throw new IllegalArgumentException("columnCount must be greater than 0");
+      }
+      if (dataRowCount < 0) {
+        throw new IllegalArgumentException("dataRowCount must not be negative");
+      }
+      columns = copyValues(columns, "columns");
+    }
+  }
+
+  /** One inferred schema column with header text and observed value-type counts. */
+  record SchemaColumnReport(
+      int columnIndex,
+      String columnAddress,
+      String headerDisplayValue,
+      int populatedCellCount,
+      int blankCellCount,
+      List<TypeCountReport> observedTypes,
+      String dominantType) {
+    public SchemaColumnReport {
+      if (columnIndex < 0) {
+        throw new IllegalArgumentException("columnIndex must not be negative");
+      }
+      Objects.requireNonNull(columnAddress, "columnAddress must not be null");
+      Objects.requireNonNull(headerDisplayValue, "headerDisplayValue must not be null");
+      if (columnAddress.isBlank()) {
+        throw new IllegalArgumentException("columnAddress must not be blank");
+      }
+      if (populatedCellCount < 0) {
+        throw new IllegalArgumentException("populatedCellCount must not be negative");
+      }
+      if (blankCellCount < 0) {
+        throw new IllegalArgumentException("blankCellCount must not be negative");
+      }
+      observedTypes = copyValues(observedTypes, "observedTypes");
+    }
+  }
+
+  /** Count of one observed cell value type inside a schema column. */
+  record TypeCountReport(String type, int count) {
+    public TypeCountReport {
+      Objects.requireNonNull(type, "type must not be null");
+      if (type.isBlank()) {
+        throw new IllegalArgumentException("type must not be blank");
+      }
+      if (count <= 0) {
+        throw new IllegalArgumentException("count must be greater than 0");
+      }
+    }
+  }
+
+  /** High-level characterization of the named ranges selected by one analysis read. */
+  record NamedRangeSurfaceReport(
+      int workbookScopedCount,
+      int sheetScopedCount,
+      int rangeBackedCount,
+      int formulaBackedCount,
+      List<NamedRangeSurfaceEntryReport> namedRanges) {
+    public NamedRangeSurfaceReport {
+      if (workbookScopedCount < 0) {
+        throw new IllegalArgumentException("workbookScopedCount must not be negative");
+      }
+      if (sheetScopedCount < 0) {
+        throw new IllegalArgumentException("sheetScopedCount must not be negative");
+      }
+      if (rangeBackedCount < 0) {
+        throw new IllegalArgumentException("rangeBackedCount must not be negative");
+      }
+      if (formulaBackedCount < 0) {
+        throw new IllegalArgumentException("formulaBackedCount must not be negative");
+      }
+      namedRanges = copyValues(namedRanges, "namedRanges");
+    }
+  }
+
+  /** One named-range surface entry classified by scope and backing kind. */
+  record NamedRangeSurfaceEntryReport(
+      String name, NamedRangeScope scope, String refersToFormula, NamedRangeBackingKind kind) {
+    public NamedRangeSurfaceEntryReport {
+      Objects.requireNonNull(name, "name must not be null");
+      Objects.requireNonNull(scope, "scope must not be null");
+      Objects.requireNonNull(refersToFormula, "refersToFormula must not be null");
+      Objects.requireNonNull(kind, "kind must not be null");
+      if (name.isBlank()) {
+        throw new IllegalArgumentException("name must not be blank");
+      }
+    }
+  }
+
+  /** Distinguishes range-backed named ranges from formula-backed named ranges. */
+  enum NamedRangeBackingKind {
+    RANGE,
+    FORMULA
   }
 
   /** Deterministic failure payload returned for unsuccessful executions. */
@@ -455,8 +746,8 @@ public sealed interface GridGrindResponse {
     @JsonSubTypes.Type(value = ProblemContext.ValidateRequest.class, name = "VALIDATE_REQUEST"),
     @JsonSubTypes.Type(value = ProblemContext.OpenWorkbook.class, name = "OPEN_WORKBOOK"),
     @JsonSubTypes.Type(value = ProblemContext.ApplyOperation.class, name = "APPLY_OPERATION"),
+    @JsonSubTypes.Type(value = ProblemContext.ExecuteRead.class, name = "EXECUTE_READ"),
     @JsonSubTypes.Type(value = ProblemContext.PersistWorkbook.class, name = "PERSIST_WORKBOOK"),
-    @JsonSubTypes.Type(value = ProblemContext.AnalyzeWorkbook.class, name = "ANALYZE_WORKBOOK"),
     @JsonSubTypes.Type(value = ProblemContext.ExecuteRequest.class, name = "EXECUTE_REQUEST"),
     @JsonSubTypes.Type(value = ProblemContext.WriteResponse.class, name = "WRITE_RESPONSE")
   })
@@ -573,6 +864,17 @@ public sealed interface GridGrindResponse {
     }
 
     /**
+     * Zero-based index of the read that failed; populated by ExecuteRead. Null for all other
+     * subtypes.
+     *
+     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
+     * interface used for wire serialization; internal code must use a switch expression instead.
+     */
+    default Integer readIndex() {
+      return null;
+    }
+
+    /**
      * SCREAMING_SNAKE_CASE type name of the failing operation; populated by ApplyOperation. Null
      * for all other subtypes.
      *
@@ -584,8 +886,29 @@ public sealed interface GridGrindResponse {
     }
 
     /**
-     * Name of the sheet involved in the failure; populated by ApplyOperation and AnalyzeWorkbook.
-     * Null for all other subtypes.
+     * SCREAMING_SNAKE_CASE type name of the failing read; populated by ExecuteRead. Null for all
+     * other subtypes.
+     *
+     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
+     * interface used for wire serialization; internal code must use a switch expression instead.
+     */
+    default String readType() {
+      return null;
+    }
+
+    /**
+     * Stable read request identifier; populated by ExecuteRead. Null for all other subtypes.
+     *
+     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
+     * interface used for wire serialization; internal code must use a switch expression instead.
+     */
+    default String requestId() {
+      return null;
+    }
+
+    /**
+     * Name of the sheet involved in the failure; populated by ApplyOperation and ExecuteRead. Null
+     * for all other subtypes.
      *
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
@@ -596,7 +919,7 @@ public sealed interface GridGrindResponse {
 
     /**
      * Cell address in A1 notation where the failure occurred; populated by ApplyOperation and
-     * AnalyzeWorkbook. Null for all other subtypes.
+     * ExecuteRead. Null for all other subtypes.
      *
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
@@ -617,8 +940,8 @@ public sealed interface GridGrindResponse {
     }
 
     /**
-     * Formula text associated with the failure; populated by ApplyOperation and AnalyzeWorkbook.
-     * Null for all other subtypes.
+     * Formula text associated with the failure; populated by ApplyOperation and ExecuteRead. Null
+     * for all other subtypes.
      *
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
@@ -628,8 +951,8 @@ public sealed interface GridGrindResponse {
     }
 
     /**
-     * Named-range identifier involved in the failure; populated by ApplyOperation and
-     * AnalyzeWorkbook. Null for all other subtypes.
+     * Named-range identifier involved in the failure; populated by ApplyOperation and ExecuteRead.
+     * Null for all other subtypes.
      *
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
@@ -744,12 +1067,13 @@ public sealed interface GridGrindResponse {
       }
     }
 
-    /**
-     * Context for failures that occur while analyzing the workbook after operations are applied.
-     */
-    record AnalyzeWorkbook(
+    /** Context for failures that occur while executing one typed read after mutations finish. */
+    record ExecuteRead(
         String sourceMode,
         String persistenceMode,
+        Integer readIndex,
+        String readType,
+        String requestId,
         String sheetName,
         String address,
         String formula,
@@ -757,18 +1081,21 @@ public sealed interface GridGrindResponse {
         implements ProblemContext {
       @Override
       public String stage() {
-        return "ANALYZE_WORKBOOK";
+        return "EXECUTE_READ";
       }
 
       /**
-       * Returns a new AnalyzeWorkbook with exception-derived location details merged in, keeping
-       * any existing non-null values.
+       * Returns a new ExecuteRead with exception-derived location details merged in, keeping any
+       * existing non-null values.
        */
-      public AnalyzeWorkbook withExceptionData(
+      public ExecuteRead withExceptionData(
           String sheetName, String address, String formula, String namedRangeName) {
-        return new AnalyzeWorkbook(
+        return new ExecuteRead(
             sourceMode,
             persistenceMode,
+            readIndex,
+            readType,
+            requestId,
             this.sheetName != null ? this.sheetName : sheetName,
             this.address != null ? this.address : address,
             this.formula != null ? this.formula : formula,
@@ -802,28 +1129,6 @@ public sealed interface GridGrindResponse {
     }
   }
 
-  private static List<SheetReport> copySheets(List<SheetReport> sheets) {
-    if (sheets == null) {
-      return List.of();
-    }
-    List<SheetReport> copy = List.copyOf(sheets);
-    for (SheetReport sheet : copy) {
-      Objects.requireNonNull(sheet, "sheets must not contain nulls");
-    }
-    return copy;
-  }
-
-  private static List<NamedRangeReport> copyNamedRanges(List<NamedRangeReport> namedRanges) {
-    if (namedRanges == null) {
-      return List.of();
-    }
-    List<NamedRangeReport> copy = List.copyOf(namedRanges);
-    for (NamedRangeReport namedRange : copy) {
-      Objects.requireNonNull(namedRange, "namedRanges must not contain nulls");
-    }
-    return copy;
-  }
-
   private static List<String> copyStrings(List<String> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
     List<String> copy = List.copyOf(values);
@@ -833,20 +1138,11 @@ public sealed interface GridGrindResponse {
     return copy;
   }
 
-  private static List<CellReport> copyReports(List<CellReport> reports, String fieldName) {
-    Objects.requireNonNull(reports, fieldName + " must not be null");
-    List<CellReport> copy = List.copyOf(reports);
-    for (CellReport report : copy) {
-      Objects.requireNonNull(report, fieldName + " must not contain nulls");
-    }
-    return copy;
-  }
-
-  private static List<PreviewRowReport> copyPreviewRows(List<PreviewRowReport> previewRows) {
-    Objects.requireNonNull(previewRows, "previewRows must not be null");
-    List<PreviewRowReport> copy = List.copyOf(previewRows);
-    for (PreviewRowReport previewRow : copy) {
-      Objects.requireNonNull(previewRow, "previewRows must not contain nulls");
+  private static <T> List<T> copyValues(List<T> values, String fieldName) {
+    Objects.requireNonNull(values, fieldName + " must not be null");
+    List<T> copy = List.copyOf(values);
+    for (T value : copy) {
+      Objects.requireNonNull(value, fieldName + " must not contain nulls");
     }
     return copy;
   }

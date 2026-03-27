@@ -14,7 +14,7 @@ plugins {
     alias(libs.plugins.shadow) apply false
 }
 
-description = "AI-friendly workbook automation engine built on Apache POI"
+description = "Structured .xlsx workbook automation engine with an agent-friendly JSON protocol"
 
 // Root-level JaCoCo configuration for the aggregated report task.
 repositories {

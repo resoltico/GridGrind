@@ -3,6 +3,7 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
+import dev.erst.gridgrind.protocol.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.WorkbookOperation;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -26,6 +27,14 @@ public final class SequenceIntrospection {
     Objects.requireNonNull(commands, "commands must not be null");
     LinkedHashMap<String, Long> counts = new LinkedHashMap<>();
     commands.forEach(command -> increment(counts, commandKind(command)));
+    return Map.copyOf(counts);
+  }
+
+  /** Counts workbook read kinds by stable wire-facing name. */
+  public static Map<String, Long> readKinds(List<WorkbookReadOperation> reads) {
+    Objects.requireNonNull(reads, "reads must not be null");
+    LinkedHashMap<String, Long> counts = new LinkedHashMap<>();
+    reads.forEach(read -> increment(counts, readKind(read)));
     return Map.copyOf(counts);
   }
 
@@ -66,10 +75,10 @@ public final class SequenceIntrospection {
     };
   }
 
-  /** Counts analysis sheet inspections requested by the protocol workflow generator. */
-  public static int analysisSheetCount(GridGrindRequest request) {
+  /** Counts ordered workbook reads requested by the protocol workflow generator. */
+  public static int readCount(GridGrindRequest request) {
     Objects.requireNonNull(request, "request must not be null");
-    return request.analysis().sheets().size();
+    return request.reads().size();
   }
 
   /** Returns the stable workbook source-mode label for one request. */
@@ -150,6 +159,25 @@ public final class SequenceIntrospection {
       case WorkbookCommand.EvaluateAllFormulas _ -> "EVALUATE_ALL_FORMULAS";
       case WorkbookCommand.ForceFormulaRecalculationOnOpen _ ->
           "FORCE_FORMULA_RECALCULATION_ON_OPEN";
+    };
+  }
+
+  /** Returns the stable wire-facing name for one workbook read variant. */
+  static String readKind(WorkbookReadOperation read) {
+    Objects.requireNonNull(read, "read must not be null");
+    return switch (read) {
+      case WorkbookReadOperation.GetWorkbookSummary _ -> "GET_WORKBOOK_SUMMARY";
+      case WorkbookReadOperation.GetNamedRanges _ -> "GET_NAMED_RANGES";
+      case WorkbookReadOperation.GetSheetSummary _ -> "GET_SHEET_SUMMARY";
+      case WorkbookReadOperation.GetCells _ -> "GET_CELLS";
+      case WorkbookReadOperation.GetWindow _ -> "GET_WINDOW";
+      case WorkbookReadOperation.GetMergedRegions _ -> "GET_MERGED_REGIONS";
+      case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
+      case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
+      case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
+      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> "ANALYZE_FORMULA_SURFACE";
+      case WorkbookReadOperation.AnalyzeSheetSchema _ -> "ANALYZE_SHEET_SCHEMA";
+      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> "ANALYZE_NAMED_RANGE_SURFACE";
     };
   }
 

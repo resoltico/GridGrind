@@ -16,6 +16,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.ss.util.PaneInformation;
 
 /** High-level sheet wrapper for typed reads, writes, and previews. */
 public final class ExcelSheet {
@@ -329,6 +330,17 @@ public final class ExcelSheet {
     return snapshot(address, requiredCell(address));
   }
 
+  /** Captures exact snapshots for the provided ordered A1 addresses. */
+  public List<ExcelCellSnapshot> snapshotCells(List<String> addresses) {
+    Objects.requireNonNull(addresses, "addresses must not be null");
+    List<ExcelCellSnapshot> cells = new ArrayList<>(addresses.size());
+    for (String address : List.copyOf(addresses)) {
+      requireNonBlank(address, "address");
+      cells.add(snapshotCell(address));
+    }
+    return List.copyOf(cells);
+  }
+
   /** Returns a compact preview of the top-left portion of the sheet. */
   public List<ExcelPreviewRow> preview(int maxRows, int maxColumns) {
     if (maxRows <= 0) {
@@ -346,6 +358,84 @@ public final class ExcelSheet {
     return List.copyOf(previewRows);
   }
 
+  /** Returns an exact rectangular window of cell snapshots anchored at one top-left address. */
+  @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
+  public WorkbookReadResult.Window window(String topLeftAddress, int rowCount, int columnCount) {
+    requireNonBlank(topLeftAddress, "topLeftAddress");
+    if (rowCount <= 0) {
+      throw new IllegalArgumentException("rowCount must be greater than 0");
+    }
+    if (columnCount <= 0) {
+      throw new IllegalArgumentException("columnCount must be greater than 0");
+    }
+
+    CellReference topLeft = parseCellReference(topLeftAddress);
+    List<WorkbookReadResult.WindowRow> rows = new ArrayList<>(rowCount);
+    for (int rowOffset = 0; rowOffset < rowCount; rowOffset++) {
+      int rowIndex = topLeft.getRow() + rowOffset;
+      List<ExcelCellSnapshot> cells = new ArrayList<>(columnCount);
+      for (int columnOffset = 0; columnOffset < columnCount; columnOffset++) {
+        int columnIndex = topLeft.getCol() + columnOffset;
+        String address = new CellReference(rowIndex, columnIndex).formatAsString();
+        cells.add(snapshotCellOrBlank(address, rowIndex, columnIndex));
+      }
+      rows.add(new WorkbookReadResult.WindowRow(rowIndex, List.copyOf(cells)));
+    }
+    return new WorkbookReadResult.Window(
+        name(), topLeftAddress, rowCount, columnCount, List.copyOf(rows));
+  }
+
+  /** Returns every merged region currently defined on the sheet. */
+  public List<WorkbookReadResult.MergedRegion> mergedRegions() {
+    List<WorkbookReadResult.MergedRegion> mergedRegions =
+        new ArrayList<>(sheet.getNumMergedRegions());
+    for (int regionIndex = 0; regionIndex < sheet.getNumMergedRegions(); regionIndex++) {
+      mergedRegions.add(
+          new WorkbookReadResult.MergedRegion(sheet.getMergedRegion(regionIndex).formatAsString()));
+    }
+    return List.copyOf(mergedRegions);
+  }
+
+  /** Returns hyperlink metadata for the selected cells on this sheet. */
+  public List<WorkbookReadResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
+    Objects.requireNonNull(selection, "selection must not be null");
+    return switch (selection) {
+      case ExcelCellSelection.AllUsedCells _ -> allUsedHyperlinks();
+      case ExcelCellSelection.Selected selected -> selectedHyperlinks(selected.addresses());
+    };
+  }
+
+  /** Returns comment metadata for the selected cells on this sheet. */
+  public List<WorkbookReadResult.CellComment> comments(ExcelCellSelection selection) {
+    Objects.requireNonNull(selection, "selection must not be null");
+    return switch (selection) {
+      case ExcelCellSelection.AllUsedCells _ -> allUsedComments();
+      case ExcelCellSelection.Selected selected -> selectedComments(selected.addresses());
+    };
+  }
+
+  /** Returns layout metadata such as freeze panes and visible sizing. */
+  public WorkbookReadResult.SheetLayout layout() {
+    return new WorkbookReadResult.SheetLayout(name(), freezePane(), columnLayouts(), rowLayouts());
+  }
+
+  /** Returns every formula cell currently present on the sheet. */
+  public List<ExcelCellSnapshot.FormulaSnapshot> formulaCells() {
+    List<ExcelCellSnapshot.FormulaSnapshot> formulas = new ArrayList<>();
+    for (Row row : sheet) {
+      for (Cell cell : row) {
+        if (cell.getCellType() == CellType.FORMULA) {
+          formulas.add(
+              (ExcelCellSnapshot.FormulaSnapshot)
+                  snapshot(
+                      new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
+                      cell));
+        }
+      }
+    }
+    return List.copyOf(formulas);
+  }
+
   private List<ExcelCellSnapshot> previewRow(int rowIndex, int maxColumns) {
     Row row = sheet.getRow(rowIndex);
     List<ExcelCellSnapshot> cells = new ArrayList<>();
@@ -358,6 +448,18 @@ public final class ExcelSheet {
       }
     }
     return List.copyOf(cells);
+  }
+
+  private ExcelCellSnapshot snapshotCellOrBlank(String address, int rowIndex, int columnIndex) {
+    Row row = sheet.getRow(rowIndex);
+    if (row == null) {
+      return blankSnapshot(address);
+    }
+    Cell cell = row.getCell(columnIndex);
+    if (cell == null) {
+      return blankSnapshot(address);
+    }
+    return snapshot(address, cell);
   }
 
   private void setCell(int rowIndex, int columnIndex, ExcelCellValue value) {
@@ -525,6 +627,11 @@ public final class ExcelSheet {
     cell.setCellStyle(styleRegistry.defaultStyle());
   }
 
+  private ExcelCellSnapshot blankSnapshot(String address) {
+    return new ExcelCellSnapshot.BlankSnapshot(
+        address, "BLANK", "", styleRegistry.defaultSnapshot(), ExcelCellMetadataSnapshot.empty());
+  }
+
   private CellReference parseCellReference(String address) {
     try {
       return new CellReference(address);
@@ -669,6 +776,115 @@ public final class ExcelSheet {
 
   private ExcelCellMetadataSnapshot metadata(Cell cell) {
     return ExcelCellMetadataSnapshot.of(hyperlink(cell), comment(cell));
+  }
+
+  private List<WorkbookReadResult.CellHyperlink> allUsedHyperlinks() {
+    List<WorkbookReadResult.CellHyperlink> hyperlinks = new ArrayList<>();
+    for (Row row : sheet) {
+      for (Cell cell : row) {
+        ExcelHyperlink hyperlink = hyperlink(cell);
+        if (hyperlink != null) {
+          hyperlinks.add(
+              new WorkbookReadResult.CellHyperlink(
+                  new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
+                  hyperlink));
+        }
+      }
+    }
+    return List.copyOf(hyperlinks);
+  }
+
+  private List<WorkbookReadResult.CellHyperlink> selectedHyperlinks(List<String> addresses) {
+    List<WorkbookReadResult.CellHyperlink> hyperlinks = new ArrayList<>();
+    for (String address : addresses) {
+      Cell cell = cellOrNull(address);
+      if (cell == null) {
+        continue;
+      }
+      ExcelHyperlink hyperlink = hyperlink(cell);
+      if (hyperlink != null) {
+        hyperlinks.add(new WorkbookReadResult.CellHyperlink(address, hyperlink));
+      }
+    }
+    return List.copyOf(hyperlinks);
+  }
+
+  private List<WorkbookReadResult.CellComment> allUsedComments() {
+    List<WorkbookReadResult.CellComment> comments = new ArrayList<>();
+    for (Row row : sheet) {
+      for (Cell cell : row) {
+        ExcelComment comment = comment(cell);
+        if (comment != null) {
+          comments.add(
+              new WorkbookReadResult.CellComment(
+                  new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
+                  comment));
+        }
+      }
+    }
+    return List.copyOf(comments);
+  }
+
+  private List<WorkbookReadResult.CellComment> selectedComments(List<String> addresses) {
+    List<WorkbookReadResult.CellComment> comments = new ArrayList<>();
+    for (String address : addresses) {
+      Cell cell = cellOrNull(address);
+      if (cell == null) {
+        continue;
+      }
+      ExcelComment comment = comment(cell);
+      if (comment != null) {
+        comments.add(new WorkbookReadResult.CellComment(address, comment));
+      }
+    }
+    return List.copyOf(comments);
+  }
+
+  private Cell cellOrNull(String address) {
+    CellReference reference = parseCellReference(address);
+    Row row = sheet.getRow(reference.getRow());
+    return row == null ? null : row.getCell(reference.getCol());
+  }
+
+  private WorkbookReadResult.FreezePane freezePane() {
+    PaneInformation paneInformation = sheet.getPaneInformation();
+    if (paneInformation == null || !paneInformation.isFreezePane()) {
+      return new WorkbookReadResult.FreezePane.None();
+    }
+    return new WorkbookReadResult.FreezePane.Frozen(
+        paneInformation.getVerticalSplitPosition(),
+        paneInformation.getHorizontalSplitPosition(),
+        paneInformation.getVerticalSplitLeftColumn(),
+        paneInformation.getHorizontalSplitTopRow());
+  }
+
+  private List<WorkbookReadResult.ColumnLayout> columnLayouts() {
+    int lastColumnIndex = lastColumnIndex();
+    if (lastColumnIndex < 0) {
+      return List.of();
+    }
+    List<WorkbookReadResult.ColumnLayout> columns = new ArrayList<>(lastColumnIndex + 1);
+    for (int columnIndex = 0; columnIndex <= lastColumnIndex; columnIndex++) {
+      columns.add(
+          new WorkbookReadResult.ColumnLayout(
+              columnIndex, sheet.getColumnWidth(columnIndex) / 256.0d));
+    }
+    return List.copyOf(columns);
+  }
+
+  private List<WorkbookReadResult.RowLayout> rowLayouts() {
+    int lastRowIndex = lastRowIndex();
+    if (lastRowIndex < 0) {
+      return List.of();
+    }
+    List<WorkbookReadResult.RowLayout> rows = new ArrayList<>(lastRowIndex + 1);
+    for (int rowIndex = 0; rowIndex <= lastRowIndex; rowIndex++) {
+      Row row = sheet.getRow(rowIndex);
+      double heightPoints =
+          row == null ? sheet.getDefaultRowHeightInPoints() : row.getHeightInPoints();
+      rows.add(new WorkbookReadResult.RowLayout(rowIndex, heightPoints));
+    }
+    return List.copyOf(rows);
   }
 
   /**

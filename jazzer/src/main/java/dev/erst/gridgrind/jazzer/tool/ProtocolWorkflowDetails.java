@@ -10,6 +10,7 @@ public record ProtocolWorkflowDetails(
     int operationCount,
     Map<String, Long> operationKinds,
     Map<String, Long> styleKinds,
-    int analysisSheetCount,
+    int readCount,
+    Map<String, Long> readKinds,
     String responseKind)
     implements ReplayDetails {}

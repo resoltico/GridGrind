@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.7.0"
+version: "0.8.0"
 domain: DEVELOPER_JAZZER
 updated: "2026-03-27"
 route:
@@ -36,7 +36,7 @@ Implemented now:
 - replay and promotion tooling
 - committed custom seed floor made of promoted regression inputs and readable example requests
 - style-aware `.xlsx` round-trip verification for formatting depth, hyperlink/comment metadata,
-  named-range persistence, and named-range normalization
+  named-range persistence, named-range normalization, and the explicit `reads` pipeline
 - local-only corpora, logs, finding artifacts, and cleanup commands
 
 Deliberately not implemented:
@@ -84,6 +84,8 @@ Seed policy:
 
 Target-specific strategy:
 - `protocol-request` favors human-readable `.json` seeds promoted from public example requests
+- readable request seeds should follow the current public example contract exactly, including the
+  current `reads` shape
 - `protocol-workflow`, `engine-command-sequence`, and `xlsx-roundtrip` favor replay-verified
   binary seeds promoted from local corpus entries
 - engine command seeds may be reused for `.xlsx` round-trip seeds when replay confirms they persist
@@ -95,11 +97,11 @@ The operator goal is not to maximize seed count. The goal is to preserve a stabl
 - representative feature-family coverage
 
 Current floor:
-- `protocol-request`: 8 committed seeds
+- `protocol-request`: 9 committed seeds
 - `protocol-workflow`: 10 committed seeds
 - `engine-command-sequence`: 7 committed seeds
 - `xlsx-roundtrip`: 8 committed seeds
-- total committed seed floor: 33 inputs
+- total committed seed floor: 34 inputs
 
 ---
 
@@ -147,7 +149,7 @@ Until those criteria are met, the correct action for recommended-dictionary outp
 In scope:
 - `.xlsx` only
 - protocol JSON parsing and validation
-- ordered `GridGrindService` workflows
+- ordered `DefaultGridGrindRequestExecutor` workflows
 - direct workbook-command execution
 - `.xlsx` save and reopen invariants
 
@@ -245,8 +247,10 @@ local `engine` and `protocol` modules without publishing snapshots.
 - standard `test` source set for deterministic support tests
 - custom `fuzz` source set for Jazzer harness classes and committed regression inputs
 - explicit JUnit 6, Jazzer 0.30.0, Jackson 3.0.3, Apache POI 5.5.1, and local module dependencies
-- `JavaExec` tasks for local operator commands
-- `Test` tasks for regression replay and active fuzzing
+- `JavaExec` tasks for local operator commands and per-harness Jazzer execution
+- one explicit JUnit Platform launcher entrypoint for running Jazzer harnesses outside Gradle's
+  `Test` result pipeline
+- one aggregate `jazzerRegression` lifecycle task over the four per-harness regression tasks
 - local cleanup tasks
 - nested-build `check` coverage for deterministic Jazzer support tests plus regression replay only
 
@@ -257,7 +261,8 @@ Important boundary:
 
 Nested-build verification model:
 - `./gradlew --project-dir jazzer test` runs deterministic support tests only
-- `./gradlew --project-dir jazzer jazzerRegression` replays the committed seed floor
+- `./gradlew --project-dir jazzer jazzerRegression` replays the committed seed floor through four
+  isolated per-harness regression tasks
 - `./gradlew --project-dir jazzer check` runs `test` plus `jazzerRegression`
 - active fuzz tasks remain explicit opt-in local commands and are never dependencies of nested-build
   `check`
@@ -286,6 +291,15 @@ Operator rule:
 
 `jazzer/bin/fuzz-all` is intentionally a shell sequencer over the four per-harness scripts so
 each harness still gets its own lock, run history, summary, and telemetry artifacts.
+
+`jazzer/bin/regression` follows the same isolation principle inside the nested build:
+- one public command
+- four isolated per-harness regression launcher tasks
+- one aggregate `regression` summary under `jazzer/.local/runs/regression/`
+
+This design is intentional. The regression seed floor is replayed one harness at a time so the
+Jazzer build never depends on Gradle's `Test` binary-results store for fuzz-harness execution.
+Deterministic support tests still run through the standard Gradle `test` task.
 
 ---
 

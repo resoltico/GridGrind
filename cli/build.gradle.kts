@@ -4,7 +4,7 @@ plugins {
     alias(libs.plugins.shadow)
 }
 
-description = "CLI adapter for the GridGrind engine"
+description = "CLI transport adapter for the GridGrind protocol"
 
 dependencies {
     implementation(project(":protocol"))

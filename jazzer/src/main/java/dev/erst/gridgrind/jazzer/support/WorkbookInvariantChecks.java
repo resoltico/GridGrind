@@ -5,9 +5,12 @@ import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.protocol.FontHeightReport;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
+import dev.erst.gridgrind.protocol.WorkbookReadOperation;
+import dev.erst.gridgrind.protocol.WorkbookReadResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 
 /** Validates protocol responses and workbook state without depending on JUnit assertions. */
@@ -21,17 +24,10 @@ public final class WorkbookInvariantChecks {
 
     switch (response) {
       case GridGrindResponse.Success success -> {
-        require(success.workbook() != null, "workbook summary must not be null");
-        require(success.namedRanges() != null, "namedRanges must not be null");
-        require(success.sheets() != null, "sheet reports must not be null");
-        require(
-            success.workbook().sheetCount() == success.workbook().sheetNames().size(),
-            "sheetCount must match sheetNames size");
-        require(
-            success.workbook().namedRangeCount() >= success.namedRanges().size(),
-            "namedRangeCount must be greater than or equal to namedRanges size");
-        success.namedRanges().forEach(WorkbookInvariantChecks::requireNamedRangeShape);
-        success.sheets().forEach(WorkbookInvariantChecks::requireSheetReportShape);
+        require(success.persistence() != null, "persistence must not be null");
+        requirePersistenceOutcomeShape(success.persistence());
+        require(success.reads() != null, "reads must not be null");
+        success.reads().forEach(WorkbookInvariantChecks::requireReadResultShape);
       }
       case GridGrindResponse.Failure failure -> {
         require(failure.problem() != null, "problem must not be null");
@@ -46,36 +42,25 @@ public final class WorkbookInvariantChecks {
     }
   }
 
-  /** Requires the response shape to agree with the request's source and persistence contract. */
+  /** Requires the response shape to agree with the request's source, reads, and persistence contract. */
   public static void requireWorkflowOutcomeShape(
       GridGrindRequest request, GridGrindResponse response) {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(response, "response must not be null");
 
-    if (!(response instanceof GridGrindResponse.Success success)) {
-      return;
-    }
-
-    switch (request.persistence()) {
-      case GridGrindRequest.WorkbookPersistence.None _ ->
-          require(success.savedWorkbookPath() == null, "NONE persistence must not return a saved path");
-      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ ->
-          requireSavedWorkbookPath(success.savedWorkbookPath());
-      case GridGrindRequest.WorkbookPersistence.SaveAs _ ->
-          requireSavedWorkbookPath(success.savedWorkbookPath());
-    }
-
-    switch (request.analysis().namedRanges()) {
-      case GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.None _ ->
-          require(success.namedRanges().isEmpty(), "NONE named-range analysis must return no named ranges");
-      case GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.All _ ->
-          require(
-              success.workbook().namedRangeCount() == success.namedRanges().size(),
-              "ALL named-range analysis must return every named range");
-      case GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected _ ->
-          require(
-              success.workbook().namedRangeCount() >= success.namedRanges().size(),
-              "SELECTED named-range analysis must not exceed total named-range count");
+    switch (response) {
+      case GridGrindResponse.Failure _ -> {
+        return;
+      }
+      case GridGrindResponse.Success success -> {
+        requirePersistenceMatchesRequest(request.persistence(), success.persistence());
+        require(
+            success.reads().size() == request.reads().size(),
+            "reads size must match the requested read count");
+        for (int index = 0; index < request.reads().size(); index++) {
+          requireReadMatchesRequest(request.reads().get(index), success.reads().get(index));
+        }
+      }
     }
   }
 
@@ -89,27 +74,363 @@ public final class WorkbookInvariantChecks {
     require(
         workbook.sheetNames().size() == new HashSet<>(workbook.sheetNames()).size(),
         "sheet names must be unique");
-    workbook.sheetNames().forEach(sheetName -> require(!sheetName.isBlank(), "sheetName must not be blank"));
+    workbook
+        .sheetNames()
+        .forEach(sheetName -> require(!sheetName.isBlank(), "sheetName must not be blank"));
+  }
+
+  private static void requirePersistenceMatchesRequest(
+      GridGrindRequest.WorkbookPersistence requestPersistence,
+      GridGrindResponse.PersistenceOutcome persistenceOutcome) {
+    switch (requestPersistence) {
+      case GridGrindRequest.WorkbookPersistence.None _ -> {
+        switch (persistenceOutcome) {
+          case GridGrindResponse.PersistenceOutcome.NotSaved _ -> {}
+          case GridGrindResponse.PersistenceOutcome.Saved _ ->
+              throw new IllegalStateException("NONE persistence must return NOT_SAVED");
+        }
+      }
+      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ ->
+          requireSavedPersistenceOutcome(persistenceOutcome);
+      case GridGrindRequest.WorkbookPersistence.SaveAs _ ->
+          requireSavedPersistenceOutcome(persistenceOutcome);
+    }
+  }
+
+  private static void requirePersistenceOutcomeShape(
+      GridGrindResponse.PersistenceOutcome persistenceOutcome) {
+    switch (persistenceOutcome) {
+      case GridGrindResponse.PersistenceOutcome.NotSaved _ -> {}
+      case GridGrindResponse.PersistenceOutcome.Saved saved -> requireSavedWorkbookPath(saved.path());
+    }
+  }
+
+  private static void requireSavedPersistenceOutcome(
+      GridGrindResponse.PersistenceOutcome persistenceOutcome) {
+    switch (persistenceOutcome) {
+      case GridGrindResponse.PersistenceOutcome.NotSaved _ ->
+          throw new IllegalStateException("saved persistence must return SAVED");
+      case GridGrindResponse.PersistenceOutcome.Saved saved -> requireSavedWorkbookPath(saved.path());
+    }
   }
 
   private static void requireSavedWorkbookPath(String savedWorkbookPath) {
-    require(savedWorkbookPath != null, "savedWorkbookPath must not be null");
-    require(savedWorkbookPath.endsWith(".xlsx"), "savedWorkbookPath must point to .xlsx");
-    require(Files.exists(Path.of(savedWorkbookPath)), "savedWorkbookPath must exist");
+    require(savedWorkbookPath != null, "saved workbook path must not be null");
+    require(savedWorkbookPath.endsWith(".xlsx"), "saved workbook path must point to .xlsx");
+    require(Files.exists(Path.of(savedWorkbookPath)), "saved workbook path must exist");
   }
 
-  private static void requireSheetReportShape(GridGrindResponse.SheetReport sheetReport) {
-    require(sheetReport.sheetName() != null, "sheetName must not be null");
-    require(!sheetReport.sheetName().isBlank(), "sheetName must not be blank");
-    require(sheetReport.requestedCells() != null, "requestedCells must not be null");
-    require(sheetReport.previewRows() != null, "previewRows must not be null");
-    sheetReport.requestedCells().forEach(WorkbookInvariantChecks::requireCellReportShape);
-    sheetReport.previewRows()
+  private static void requireReadMatchesRequest(
+      WorkbookReadOperation readOperation, WorkbookReadResult readResult) {
+    require(
+        readOperation.requestId().equals(readResult.requestId()),
+        "read result requestId must match the request");
+    require(
+        SequenceIntrospection.readKind(readOperation).equals(readResultKind(readResult)),
+        "read result kind must match the requested read kind");
+
+    switch (readOperation) {
+      case WorkbookReadOperation.GetWorkbookSummary _ -> {
+        WorkbookReadResult.WorkbookSummaryResult result =
+            (WorkbookReadResult.WorkbookSummaryResult) readResult;
+        requireWorkbookSummaryShape(result.workbook());
+      }
+      case WorkbookReadOperation.GetNamedRanges _ -> {
+        WorkbookReadResult.NamedRangesResult result = (WorkbookReadResult.NamedRangesResult) readResult;
+        result.namedRanges().forEach(WorkbookInvariantChecks::requireNamedRangeShape);
+      }
+      case WorkbookReadOperation.GetSheetSummary expected -> {
+        WorkbookReadResult.SheetSummaryResult result =
+            (WorkbookReadResult.SheetSummaryResult) readResult;
+        require(expected.sheetName().equals(result.sheet().sheetName()), "sheet summary sheet mismatch");
+      }
+      case WorkbookReadOperation.GetCells expected -> {
+        WorkbookReadResult.CellsResult result = (WorkbookReadResult.CellsResult) readResult;
+        require(expected.sheetName().equals(result.sheetName()), "cells sheet mismatch");
+        require(
+            result.cells().size() == expected.addresses().size(),
+            "cells result size must match requested addresses");
+      }
+      case WorkbookReadOperation.GetWindow expected -> {
+        WorkbookReadResult.WindowResult result = (WorkbookReadResult.WindowResult) readResult;
+        require(expected.sheetName().equals(result.window().sheetName()), "window sheet mismatch");
+        require(
+            expected.topLeftAddress().equals(result.window().topLeftAddress()),
+            "window topLeftAddress mismatch");
+        require(
+            expected.rowCount() == result.window().rowCount(),
+            "window rowCount mismatch");
+        require(
+            expected.columnCount() == result.window().columnCount(),
+            "window columnCount mismatch");
+      }
+      case WorkbookReadOperation.GetMergedRegions expected -> {
+        WorkbookReadResult.MergedRegionsResult result =
+            (WorkbookReadResult.MergedRegionsResult) readResult;
+        require(
+            expected.sheetName().equals(result.sheetName()), "merged regions sheet mismatch");
+      }
+      case WorkbookReadOperation.GetHyperlinks expected -> {
+        WorkbookReadResult.HyperlinksResult result = (WorkbookReadResult.HyperlinksResult) readResult;
+        require(expected.sheetName().equals(result.sheetName()), "hyperlinks sheet mismatch");
+      }
+      case WorkbookReadOperation.GetComments expected -> {
+        WorkbookReadResult.CommentsResult result = (WorkbookReadResult.CommentsResult) readResult;
+        require(expected.sheetName().equals(result.sheetName()), "comments sheet mismatch");
+      }
+      case WorkbookReadOperation.GetSheetLayout expected -> {
+        WorkbookReadResult.SheetLayoutResult result =
+            (WorkbookReadResult.SheetLayoutResult) readResult;
+        require(expected.sheetName().equals(result.layout().sheetName()), "layout sheet mismatch");
+      }
+      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> {
+        WorkbookReadResult.FormulaSurfaceResult result =
+            (WorkbookReadResult.FormulaSurfaceResult) readResult;
+        require(result.analysis().sheets() != null, "formula surface sheets must not be null");
+      }
+      case WorkbookReadOperation.AnalyzeSheetSchema expected -> {
+        WorkbookReadResult.SheetSchemaResult result = (WorkbookReadResult.SheetSchemaResult) readResult;
+        require(expected.sheetName().equals(result.analysis().sheetName()), "schema sheet mismatch");
+        require(
+            expected.topLeftAddress().equals(result.analysis().topLeftAddress()),
+            "schema topLeftAddress mismatch");
+      }
+      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> {
+        WorkbookReadResult.NamedRangeSurfaceResult result =
+            (WorkbookReadResult.NamedRangeSurfaceResult) readResult;
+        require(
+            result.analysis().namedRanges() != null, "named range surface entries must not be null");
+      }
+    }
+  }
+
+  private static String readResultKind(WorkbookReadResult readResult) {
+    return switch (readResult) {
+      case WorkbookReadResult.WorkbookSummaryResult _ -> "GET_WORKBOOK_SUMMARY";
+      case WorkbookReadResult.NamedRangesResult _ -> "GET_NAMED_RANGES";
+      case WorkbookReadResult.SheetSummaryResult _ -> "GET_SHEET_SUMMARY";
+      case WorkbookReadResult.CellsResult _ -> "GET_CELLS";
+      case WorkbookReadResult.WindowResult _ -> "GET_WINDOW";
+      case WorkbookReadResult.MergedRegionsResult _ -> "GET_MERGED_REGIONS";
+      case WorkbookReadResult.HyperlinksResult _ -> "GET_HYPERLINKS";
+      case WorkbookReadResult.CommentsResult _ -> "GET_COMMENTS";
+      case WorkbookReadResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
+      case WorkbookReadResult.FormulaSurfaceResult _ -> "ANALYZE_FORMULA_SURFACE";
+      case WorkbookReadResult.SheetSchemaResult _ -> "ANALYZE_SHEET_SCHEMA";
+      case WorkbookReadResult.NamedRangeSurfaceResult _ -> "ANALYZE_NAMED_RANGE_SURFACE";
+    };
+  }
+
+  private static void requireReadResultShape(WorkbookReadResult readResult) {
+    require(readResult.requestId() != null, "read requestId must not be null");
+    require(!readResult.requestId().isBlank(), "read requestId must not be blank");
+
+    switch (readResult) {
+      case WorkbookReadResult.WorkbookSummaryResult result ->
+          requireWorkbookSummaryShape(result.workbook());
+      case WorkbookReadResult.NamedRangesResult result ->
+          result.namedRanges().forEach(WorkbookInvariantChecks::requireNamedRangeShape);
+      case WorkbookReadResult.SheetSummaryResult result -> requireSheetSummaryShape(result.sheet());
+      case WorkbookReadResult.CellsResult result -> {
+        require(result.sheetName() != null, "cells sheetName must not be null");
+        require(!result.sheetName().isBlank(), "cells sheetName must not be blank");
+        result.cells().forEach(WorkbookInvariantChecks::requireCellReportShape);
+      }
+      case WorkbookReadResult.WindowResult result -> requireWindowShape(result.window());
+      case WorkbookReadResult.MergedRegionsResult result -> {
+        require(result.sheetName() != null, "merged regions sheetName must not be null");
+        require(!result.sheetName().isBlank(), "merged regions sheetName must not be blank");
+        result.mergedRegions().forEach(region -> require(!region.range().isBlank(), "merged region range must not be blank"));
+      }
+      case WorkbookReadResult.HyperlinksResult result -> {
+        require(result.sheetName() != null, "hyperlinks sheetName must not be null");
+        require(!result.sheetName().isBlank(), "hyperlinks sheetName must not be blank");
+        result.hyperlinks().forEach(WorkbookInvariantChecks::requireHyperlinkEntryShape);
+      }
+      case WorkbookReadResult.CommentsResult result -> {
+        require(result.sheetName() != null, "comments sheetName must not be null");
+        require(!result.sheetName().isBlank(), "comments sheetName must not be blank");
+        result.comments().forEach(WorkbookInvariantChecks::requireCommentEntryShape);
+      }
+      case WorkbookReadResult.SheetLayoutResult result -> requireSheetLayoutShape(result.layout());
+      case WorkbookReadResult.FormulaSurfaceResult result -> requireFormulaSurfaceShape(result.analysis());
+      case WorkbookReadResult.SheetSchemaResult result -> requireSheetSchemaShape(result.analysis());
+      case WorkbookReadResult.NamedRangeSurfaceResult result ->
+          requireNamedRangeSurfaceShape(result.analysis());
+    }
+  }
+
+  private static void requireWorkbookSummaryShape(GridGrindResponse.WorkbookSummary workbook) {
+    require(workbook != null, "workbook summary must not be null");
+    require(workbook.sheetCount() >= 0, "sheetCount must not be negative");
+    require(workbook.namedRangeCount() >= 0, "namedRangeCount must not be negative");
+    require(workbook.sheetNames() != null, "sheetNames must not be null");
+    require(
+        workbook.sheetCount() == workbook.sheetNames().size(),
+        "sheetCount must match sheetNames size");
+    workbook
+        .sheetNames()
+        .forEach(sheetName -> require(sheetName != null && !sheetName.isBlank(), "sheetName must not be blank"));
+  }
+
+  private static void requireSheetSummaryShape(GridGrindResponse.SheetSummaryReport sheet) {
+    require(sheet.sheetName() != null, "sheetName must not be null");
+    require(!sheet.sheetName().isBlank(), "sheetName must not be blank");
+    require(sheet.physicalRowCount() >= 0, "physicalRowCount must not be negative");
+    require(sheet.lastRowIndex() >= -1, "lastRowIndex must be greater than or equal to -1");
+    require(sheet.lastColumnIndex() >= -1, "lastColumnIndex must be greater than or equal to -1");
+  }
+
+  private static void requireWindowShape(GridGrindResponse.WindowReport window) {
+    require(window.sheetName() != null, "window sheetName must not be null");
+    require(!window.sheetName().isBlank(), "window sheetName must not be blank");
+    require(window.topLeftAddress() != null, "window topLeftAddress must not be null");
+    require(!window.topLeftAddress().isBlank(), "window topLeftAddress must not be blank");
+    require(window.rows() != null, "window rows must not be null");
+    require(window.rows().size() == window.rowCount(), "window rows size must match rowCount");
+    window.rows()
         .forEach(
-            previewRow -> {
-              require(previewRow.rowIndex() >= 0, "preview row index must not be negative");
-              require(previewRow.cells() != null, "preview row cells must not be null");
-              previewRow.cells().forEach(WorkbookInvariantChecks::requireCellReportShape);
+            row -> {
+              require(row.rowIndex() >= 0, "window row index must not be negative");
+              require(row.cells() != null, "window row cells must not be null");
+              require(
+                  row.cells().size() == window.columnCount(),
+                  "window row cells size must match columnCount");
+              row.cells().forEach(WorkbookInvariantChecks::requireCellReportShape);
+            });
+  }
+
+  private static void requireHyperlinkEntryShape(GridGrindResponse.CellHyperlinkReport hyperlink) {
+    require(hyperlink.address() != null, "hyperlink address must not be null");
+    require(!hyperlink.address().isBlank(), "hyperlink address must not be blank");
+    require(hyperlink.hyperlink() != null, "hyperlink metadata must not be null");
+    require(hyperlink.hyperlink().type() != null, "hyperlink type must not be null");
+    require(hyperlink.hyperlink().target() != null, "hyperlink target must not be null");
+    require(!hyperlink.hyperlink().target().isBlank(), "hyperlink target must not be blank");
+  }
+
+  private static void requireCommentEntryShape(GridGrindResponse.CellCommentReport comment) {
+    require(comment.address() != null, "comment address must not be null");
+    require(!comment.address().isBlank(), "comment address must not be blank");
+    require(comment.comment() != null, "comment metadata must not be null");
+    require(comment.comment().text() != null, "comment text must not be null");
+    require(comment.comment().author() != null, "comment author must not be null");
+    require(!comment.comment().text().isBlank(), "comment text must not be blank");
+    require(!comment.comment().author().isBlank(), "comment author must not be blank");
+  }
+
+  private static void requireSheetLayoutShape(GridGrindResponse.SheetLayoutReport layout) {
+    require(layout.sheetName() != null, "layout sheetName must not be null");
+    require(!layout.sheetName().isBlank(), "layout sheetName must not be blank");
+    require(layout.freezePanes() != null, "freezePanes must not be null");
+    switch (layout.freezePanes()) {
+      case GridGrindResponse.FreezePaneReport.None _ -> {}
+      case GridGrindResponse.FreezePaneReport.Frozen frozen -> {
+        require(frozen.splitColumn() >= 0, "splitColumn must not be negative");
+        require(frozen.splitRow() >= 0, "splitRow must not be negative");
+        require(frozen.leftmostColumn() >= 0, "leftmostColumn must not be negative");
+        require(frozen.topRow() >= 0, "topRow must not be negative");
+      }
+    }
+    layout
+        .columns()
+        .forEach(
+            column -> {
+              require(column.columnIndex() >= 0, "columnIndex must not be negative");
+              require(
+                  Double.isFinite(column.widthCharacters()) && column.widthCharacters() > 0.0d,
+                  "column width must be finite and greater than 0");
+            });
+    layout
+        .rows()
+        .forEach(
+            row -> {
+              require(row.rowIndex() >= 0, "rowIndex must not be negative");
+              require(
+                  Double.isFinite(row.heightPoints()) && row.heightPoints() > 0.0d,
+                  "row height must be finite and greater than 0");
+            });
+  }
+
+  private static void requireFormulaSurfaceShape(GridGrindResponse.FormulaSurfaceReport analysis) {
+    require(analysis.totalFormulaCellCount() >= 0, "totalFormulaCellCount must not be negative");
+    analysis
+        .sheets()
+        .forEach(
+            sheet -> {
+              require(sheet.sheetName() != null, "formula surface sheetName must not be null");
+              require(!sheet.sheetName().isBlank(), "formula surface sheetName must not be blank");
+              require(sheet.formulaCellCount() >= 0, "formulaCellCount must not be negative");
+              require(
+                  sheet.distinctFormulaCount() >= 0,
+                  "distinctFormulaCount must not be negative");
+              sheet
+                  .formulas()
+                  .forEach(
+                      formula -> {
+                        require(formula.formula() != null, "formula pattern must not be null");
+                        require(
+                            !formula.formula().isBlank(),
+                            "formula pattern must not be blank");
+                        require(
+                            formula.occurrenceCount() > 0,
+                            "occurrenceCount must be greater than 0");
+                        require(formula.addresses() != null, "formula addresses must not be null");
+                      });
+            });
+  }
+
+  private static void requireSheetSchemaShape(GridGrindResponse.SheetSchemaReport analysis) {
+    require(analysis.sheetName() != null, "schema sheetName must not be null");
+    require(!analysis.sheetName().isBlank(), "schema sheetName must not be blank");
+    require(analysis.topLeftAddress() != null, "schema topLeftAddress must not be null");
+    require(!analysis.topLeftAddress().isBlank(), "schema topLeftAddress must not be blank");
+    require(analysis.rowCount() > 0, "schema rowCount must be greater than 0");
+    require(analysis.columnCount() > 0, "schema columnCount must be greater than 0");
+    require(analysis.dataRowCount() >= 0, "schema dataRowCount must not be negative");
+    analysis
+        .columns()
+        .forEach(
+            column -> {
+              require(column.columnIndex() >= 0, "schema columnIndex must not be negative");
+              require(column.columnAddress() != null, "schema columnAddress must not be null");
+              require(!column.columnAddress().isBlank(), "schema columnAddress must not be blank");
+              require(
+                  column.headerDisplayValue() != null,
+                  "schema headerDisplayValue must not be null");
+              require(
+                  column.populatedCellCount() >= 0,
+                  "schema populatedCellCount must not be negative");
+              require(column.blankCellCount() >= 0, "schema blankCellCount must not be negative");
+              column
+                  .observedTypes()
+                  .forEach(
+                      typeCount -> {
+                        require(typeCount.type() != null, "type count type must not be null");
+                        require(!typeCount.type().isBlank(), "type count type must not be blank");
+                        require(typeCount.count() > 0, "type count must be greater than 0");
+                      });
+            });
+  }
+
+  private static void requireNamedRangeSurfaceShape(
+      GridGrindResponse.NamedRangeSurfaceReport analysis) {
+    require(
+        analysis.workbookScopedCount() >= 0, "workbookScopedCount must not be negative");
+    require(analysis.sheetScopedCount() >= 0, "sheetScopedCount must not be negative");
+    require(analysis.rangeBackedCount() >= 0, "rangeBackedCount must not be negative");
+    require(analysis.formulaBackedCount() >= 0, "formulaBackedCount must not be negative");
+    analysis
+        .namedRanges()
+        .forEach(
+            namedRange -> {
+              require(namedRange.name() != null, "named range name must not be null");
+              require(!namedRange.name().isBlank(), "named range name must not be blank");
+              require(namedRange.scope() != null, "named range scope must not be null");
+              require(
+                  namedRange.refersToFormula() != null,
+                  "named range refersToFormula must not be null");
+              require(namedRange.kind() != null, "named range kind must not be null");
             });
   }
 
@@ -160,7 +481,9 @@ public final class WorkbookInvariantChecks {
         require(range.target() != null, "namedRange target must not be null");
         require(range.target().sheetName() != null, "namedRange target sheet must not be null");
         require(range.target().range() != null, "namedRange target range must not be null");
-        require(!range.target().sheetName().isBlank(), "namedRange target sheet must not be blank");
+        require(
+            !range.target().sheetName().isBlank(),
+            "namedRange target sheet must not be blank");
         require(!range.target().range().isBlank(), "namedRange target range must not be blank");
       }
       case GridGrindResponse.NamedRangeReport.FormulaReport _ -> {}
@@ -185,7 +508,8 @@ public final class WorkbookInvariantChecks {
     require(fontHeight != null, "fontHeight must not be null");
     ExcelFontHeight expected = new ExcelFontHeight(fontHeight.twips());
     require(
-        expected.points().compareTo(fontHeight.points()) == 0, "fontHeight points must match twips");
+        expected.points().compareTo(fontHeight.points()) == 0,
+        "fontHeight points must match twips");
   }
 
   private static void require(boolean condition, String message) {
