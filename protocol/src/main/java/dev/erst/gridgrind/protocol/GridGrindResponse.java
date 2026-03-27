@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelHyperlinkType;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import java.util.List;
 import java.util.Objects;
@@ -26,12 +27,14 @@ public sealed interface GridGrindResponse {
       GridGrindProtocolVersion protocolVersion,
       String savedWorkbookPath,
       WorkbookSummary workbook,
+      List<NamedRangeReport> namedRanges,
       List<SheetReport> sheets)
       implements GridGrindResponse {
     public Success {
       protocolVersion =
           protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
       Objects.requireNonNull(workbook, "workbook must not be null");
+      namedRanges = copyNamedRanges(namedRanges);
       sheets = copySheets(sheets);
     }
   }
@@ -48,9 +51,61 @@ public sealed interface GridGrindResponse {
 
   /** High-level workbook facts returned on success. */
   record WorkbookSummary(
-      int sheetCount, List<String> sheetNames, boolean forceFormulaRecalculationOnOpen) {
+      int sheetCount,
+      List<String> sheetNames,
+      int namedRangeCount,
+      boolean forceFormulaRecalculationOnOpen) {
     public WorkbookSummary {
       sheetNames = copyStrings(sheetNames, "sheetNames");
+    }
+  }
+
+  /** Structured workbook-level analysis report for one defined name. */
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = NamedRangeReport.RangeReport.class, name = "RANGE"),
+    @JsonSubTypes.Type(value = NamedRangeReport.FormulaReport.class, name = "FORMULA")
+  })
+  sealed interface NamedRangeReport {
+    /** Defined-name identifier. */
+    String name();
+
+    /** Workbook or sheet scope of the defined name. */
+    NamedRangeScope scope();
+
+    /** Exact formula text stored in the workbook for this defined name. */
+    String refersToFormula();
+
+    /**
+     * Resolved typed target; populated only by RangeReport, null for FormulaReport.
+     *
+     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
+     * interface used for wire serialization; internal code must use a switch expression instead.
+     */
+    default NamedRangeTarget target() {
+      return null;
+    }
+
+    /** Named range that resolves cleanly to a sheet-qualified cell or rectangular range target. */
+    record RangeReport(
+        String name, NamedRangeScope scope, String refersToFormula, NamedRangeTarget target)
+        implements NamedRangeReport {
+      public RangeReport {
+        Objects.requireNonNull(name, "name must not be null");
+        Objects.requireNonNull(scope, "scope must not be null");
+        Objects.requireNonNull(refersToFormula, "refersToFormula must not be null");
+        Objects.requireNonNull(target, "target must not be null");
+      }
+    }
+
+    /** Defined name whose formula cannot be normalized to a typed range target. */
+    record FormulaReport(String name, NamedRangeScope scope, String refersToFormula)
+        implements NamedRangeReport {
+      public FormulaReport {
+        Objects.requireNonNull(name, "name must not be null");
+        Objects.requireNonNull(scope, "scope must not be null");
+        Objects.requireNonNull(refersToFormula, "refersToFormula must not be null");
+      }
     }
   }
 
@@ -97,6 +152,12 @@ public sealed interface GridGrindResponse {
 
     /** Style snapshot captured for this cell. */
     CellStyleReport style();
+
+    /** Hyperlink metadata; null when the cell has no hyperlink. */
+    HyperlinkReport hyperlink();
+
+    /** Comment metadata; null when the cell has no comment. */
+    CommentReport comment();
 
     /**
      * Formula text; populated only by FormulaReport, null for all other subtypes.
@@ -150,7 +211,12 @@ public sealed interface GridGrindResponse {
 
     /** CellReport for a cell with no value or formula. */
     record BlankReport(
-        String address, String declaredType, String displayValue, CellStyleReport style)
+        String address,
+        String declaredType,
+        String displayValue,
+        CellStyleReport style,
+        HyperlinkReport hyperlink,
+        CommentReport comment)
         implements CellReport {
       public BlankReport {
         Objects.requireNonNull(address, "address must not be null");
@@ -172,6 +238,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
+        HyperlinkReport hyperlink,
+        CommentReport comment,
         String stringValue)
         implements CellReport {
       public TextReport {
@@ -194,6 +262,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
+        HyperlinkReport hyperlink,
+        CommentReport comment,
         Double numberValue)
         implements CellReport {
       public NumberReport {
@@ -216,6 +286,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
+        HyperlinkReport hyperlink,
+        CommentReport comment,
         Boolean booleanValue)
         implements CellReport {
       public BooleanReport {
@@ -238,6 +310,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
+        HyperlinkReport hyperlink,
+        CommentReport comment,
         String errorValue)
         implements CellReport {
       public ErrorReport {
@@ -260,6 +334,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
+        HyperlinkReport hyperlink,
+        CommentReport comment,
         String formula,
         CellReport evaluation)
         implements CellReport {
@@ -276,6 +352,22 @@ public sealed interface GridGrindResponse {
       public String effectiveType() {
         return "FORMULA";
       }
+    }
+  }
+
+  /** Hyperlink facts returned for analyzed cells that carry a hyperlink. */
+  record HyperlinkReport(ExcelHyperlinkType type, String target) {
+    public HyperlinkReport {
+      Objects.requireNonNull(type, "type must not be null");
+      Objects.requireNonNull(target, "target must not be null");
+    }
+  }
+
+  /** Plain-text comment facts returned for analyzed cells that carry a comment. */
+  record CommentReport(String text, String author, boolean visible) {
+    public CommentReport {
+      Objects.requireNonNull(text, "text must not be null");
+      Objects.requireNonNull(author, "author must not be null");
     }
   }
 
@@ -536,6 +628,17 @@ public sealed interface GridGrindResponse {
     }
 
     /**
+     * Named-range identifier involved in the failure; populated by ApplyOperation and
+     * AnalyzeWorkbook. Null for all other subtypes.
+     *
+     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
+     * interface used for wire serialization; internal code must use a switch expression instead.
+     */
+    default String namedRangeName() {
+      return null;
+    }
+
+    /**
      * CLI argument that triggered the failure; populated by ParseArguments. Null for all other
      * subtypes.
      *
@@ -601,7 +704,8 @@ public sealed interface GridGrindResponse {
         String sheetName,
         String address,
         String range,
-        String formula)
+        String formula,
+        String namedRangeName)
         implements ProblemContext {
       @Override
       public String stage() {
@@ -613,7 +717,7 @@ public sealed interface GridGrindResponse {
        * existing non-null values.
        */
       public ApplyOperation withExceptionData(
-          String sheetName, String address, String range, String formula) {
+          String sheetName, String address, String range, String formula, String namedRangeName) {
         return new ApplyOperation(
             sourceMode,
             persistenceMode,
@@ -622,7 +726,8 @@ public sealed interface GridGrindResponse {
             this.sheetName != null ? this.sheetName : sheetName,
             this.address != null ? this.address : address,
             this.range != null ? this.range : range,
-            this.formula != null ? this.formula : formula);
+            this.formula != null ? this.formula : formula,
+            this.namedRangeName != null ? this.namedRangeName : namedRangeName);
       }
     }
 
@@ -643,7 +748,12 @@ public sealed interface GridGrindResponse {
      * Context for failures that occur while analyzing the workbook after operations are applied.
      */
     record AnalyzeWorkbook(
-        String sourceMode, String persistenceMode, String sheetName, String address, String formula)
+        String sourceMode,
+        String persistenceMode,
+        String sheetName,
+        String address,
+        String formula,
+        String namedRangeName)
         implements ProblemContext {
       @Override
       public String stage() {
@@ -654,13 +764,15 @@ public sealed interface GridGrindResponse {
        * Returns a new AnalyzeWorkbook with exception-derived location details merged in, keeping
        * any existing non-null values.
        */
-      public AnalyzeWorkbook withExceptionData(String sheetName, String address, String formula) {
+      public AnalyzeWorkbook withExceptionData(
+          String sheetName, String address, String formula, String namedRangeName) {
         return new AnalyzeWorkbook(
             sourceMode,
             persistenceMode,
             this.sheetName != null ? this.sheetName : sheetName,
             this.address != null ? this.address : address,
-            this.formula != null ? this.formula : formula);
+            this.formula != null ? this.formula : formula,
+            this.namedRangeName != null ? this.namedRangeName : namedRangeName);
       }
     }
 
@@ -697,6 +809,17 @@ public sealed interface GridGrindResponse {
     List<SheetReport> copy = List.copyOf(sheets);
     for (SheetReport sheet : copy) {
       Objects.requireNonNull(sheet, "sheets must not contain nulls");
+    }
+    return copy;
+  }
+
+  private static List<NamedRangeReport> copyNamedRanges(List<NamedRangeReport> namedRanges) {
+    if (namedRanges == null) {
+      return List.of();
+    }
+    List<NamedRangeReport> copy = List.copyOf(namedRanges);
+    for (NamedRangeReport namedRange : copy) {
+      Objects.requireNonNull(namedRange, "namedRanges must not contain nulls");
     }
     return copy;
   }

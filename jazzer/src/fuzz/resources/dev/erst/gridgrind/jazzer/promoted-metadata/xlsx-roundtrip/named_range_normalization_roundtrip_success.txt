@@ -1,0 +1,8 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-8532f5071c334f5dc337c8a2dd48d4ca837d0343
+Harness: xlsx-roundtrip
+Outcome: SUCCESS
+Input Bytes: 28
+Command Count: 9
+Style Kinds: (none)
+Command Kinds: CREATE_SHEET=8, SET_NAMED_RANGE=1

@@ -86,7 +86,8 @@ or other non-`.xlsx` workbook paths are rejected as `INVALID_REQUEST`.
 Every request follows the same pipeline:
 
 1. **Operations** run in order — create sheets, write cells, apply styles, evaluate formulas.
-2. **Analysis** runs after all operations succeed — inspect sheets, read cell values and styles.
+2. **Analysis** runs after all operations succeed — inspect sheets, read cell metadata and styles,
+   and optionally inspect workbook named ranges.
 3. **Persistence** happens last — the workbook is written only after analysis succeeds.
 
 If any step fails, GridGrind returns a structured error and no file is written. Agents get
@@ -110,7 +111,13 @@ deterministic failure semantics instead of "error after side effect."
 | `SET_CELL` | Write a typed value to a single cell |
 | `SET_RANGE` | Write a rectangular grid of typed values |
 | `CLEAR_RANGE` | Remove all values and styles from a rectangular range |
+| `SET_HYPERLINK` | Attach a hyperlink to a single cell |
+| `CLEAR_HYPERLINK` | Remove a hyperlink from a single existing cell |
+| `SET_COMMENT` | Attach a plain-text comment to a single cell |
+| `CLEAR_COMMENT` | Remove a comment from a single existing cell |
 | `APPLY_STYLE` | Apply number formats, font styling, fills, borders, alignment, or wrap to a range |
+| `SET_NAMED_RANGE` | Create or replace one workbook- or sheet-scoped named range |
+| `DELETE_NAMED_RANGE` | Remove one existing workbook- or sheet-scoped named range |
 | `APPEND_ROW` | Append a row of typed values after the last populated row |
 | `AUTO_SIZE_COLUMNS` | Size columns to fit their contents |
 | `EVALUATE_FORMULAS` | Force formula recalculation before save |
@@ -132,6 +139,15 @@ as Excel point units, and `FREEZE_PANES` uses explicit split plus visible-origin
 border styles through a nested `border` patch. `fontHeight` accepts either point units or exact
 twips. Style analysis reports `fontHeight.twips` and `fontHeight.points` alongside the other
 effective font, fill, and border facts.
+
+Authoring metadata is also supported directly. `SET_HYPERLINK` and `CLEAR_HYPERLINK`
+work on one cell at a time with typed `URL`, `EMAIL`, `FILE`, or `DOCUMENT` targets.
+`SET_COMMENT` and `CLEAR_COMMENT` work on one cell at a time with plain-text comment content,
+author, and visible state. `SET_NAMED_RANGE` and `DELETE_NAMED_RANGE` work on workbook or sheet
+scope with explicit sheet-qualified cell or range targets. Analysis can now return cell
+`hyperlink()` and `comment()` metadata plus workbook-level `namedRanges`.
+
+`CLEAR_RANGE` removes value, style, hyperlink, and comment state from the addressed rectangle.
 
 See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the full reference with all fields and examples.
 
@@ -209,9 +225,10 @@ A request that builds Alice's green coffee inventory sheet:
 ## Responses
 
 A successful response carries `"status": "SUCCESS"` and a structured workbook summary including
-effective cell values and styles for every cell requested in `analysis`, including effective
-font name, font size, font color, underline, strikeout, fill color, and all four border sides
-when those style facts can be normalized from the workbook.
+effective cell values, hyperlink metadata, comment metadata, and styles for every requested or
+previewed cell, plus optional workbook-level named-range reports when requested in `analysis`.
+Style output includes effective font name, font size, font color, underline, strikeout, fill
+color, and all four border sides when those style facts can be normalized from the workbook.
 
 A failed response carries `"status": "ERROR"` and a structured `problem` object with:
 

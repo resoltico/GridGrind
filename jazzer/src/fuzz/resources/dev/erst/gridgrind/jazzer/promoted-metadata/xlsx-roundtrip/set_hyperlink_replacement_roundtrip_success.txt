@@ -1,0 +1,8 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-08186b9e501c003407c08ae9cc9268976d5c0f1e
+Harness: xlsx-roundtrip
+Outcome: SUCCESS
+Input Bytes: 82
+Command Count: 4
+Style Kinds: (none)
+Command Kinds: SET_HYPERLINK=4

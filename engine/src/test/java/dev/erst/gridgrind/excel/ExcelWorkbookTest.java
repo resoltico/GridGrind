@@ -13,6 +13,7 @@ import java.util.Objects;
 import java.util.UUID;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -291,6 +292,190 @@ class ExcelWorkbookTest {
     assertEquals(ExcelBorderStyle.THIN, style.leftBorderStyle());
   }
 
+  @Test
+  void persistsHyperlinksCommentsAndNamedRangesAcrossSaves() throws Exception {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-authoring-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet budget = workbook.getOrCreateSheet("Budget");
+      budget.setCell("A1", ExcelCellValue.text("Report"));
+      budget.setCell("B4", ExcelCellValue.number(61.0));
+      budget.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      budget.setComment("A1", new ExcelComment("Review", "GridGrind", true));
+      workbook.setNamedRange(
+          new ExcelNamedRangeDefinition(
+              "BudgetTotal",
+              new ExcelNamedRangeScope.WorkbookScope(),
+              new ExcelNamedRangeTarget("Budget", "B4")));
+      workbook.setNamedRange(
+          new ExcelNamedRangeDefinition(
+              "LocalItem",
+              new ExcelNamedRangeScope.SheetScope("Budget"),
+              new ExcelNamedRangeTarget("Budget", "A1:B2")));
+      workbook.save(workbookPath);
+    }
+
+    ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1");
+    assertEquals(
+        new ExcelHyperlink.Url("https://example.com/report"), metadata.hyperlink().orElseThrow());
+    assertEquals(new ExcelComment("Review", "GridGrind", true), metadata.comment().orElseThrow());
+    List<ExcelNamedRangeSnapshot> namedRanges = XlsxRoundTrip.namedRanges(workbookPath);
+    assertEquals(2, namedRanges.size());
+    assertTrue(
+        namedRanges.contains(
+            new ExcelNamedRangeSnapshot.RangeSnapshot(
+                "BudgetTotal",
+                new ExcelNamedRangeScope.WorkbookScope(),
+                namedRanges.stream()
+                    .filter(namedRange -> "BudgetTotal".equals(namedRange.name()))
+                    .findFirst()
+                    .orElseThrow()
+                    .refersToFormula(),
+                new ExcelNamedRangeTarget("Budget", "B4"))));
+    assertTrue(
+        namedRanges.contains(
+            new ExcelNamedRangeSnapshot.RangeSnapshot(
+                "LocalItem",
+                new ExcelNamedRangeScope.SheetScope("Budget"),
+                namedRanges.stream()
+                    .filter(namedRange -> "LocalItem".equals(namedRange.name()))
+                    .findFirst()
+                    .orElseThrow()
+                    .refersToFormula(),
+                new ExcelNamedRangeTarget("Budget", "A1:B2"))));
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      assertEquals(2, workbook.namedRangeCount());
+      assertEquals(2, workbook.namedRanges().size());
+      workbook.deleteNamedRange("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope());
+      assertEquals(1, workbook.namedRangeCount());
+    }
+  }
+
+  @Test
+  void persistsLatestHyperlinkTargetAfterRepeatedWrites() throws Exception {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-hyperlink-replace-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("C");
+      sheet.setHyperlink("F18", new ExcelHyperlink.Email("Report_Value@example.com"));
+      sheet.setHyperlink("F18", new ExcelHyperlink.Email("Summary.Total@example.com"));
+      workbook.save(workbookPath);
+    }
+
+    ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "C", "F18");
+    assertEquals(
+        new ExcelHyperlink.Email("Summary.Total@example.com"), metadata.hyperlink().orElseThrow());
+  }
+
+  @Test
+  void replacesNamedRangesAndExposesOnlySupportedNamedRangeSnapshots() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook();
+        ExcelWorkbook workbook =
+            new ExcelWorkbook(
+                poiWorkbook, poiWorkbook.getCreationHelper().createFormulaEvaluator())) {
+      poiWorkbook.createSheet("Budget");
+
+      workbook.setNamedRange(
+          new ExcelNamedRangeDefinition(
+              "BudgetTotal",
+              new ExcelNamedRangeScope.WorkbookScope(),
+              new ExcelNamedRangeTarget("Budget", "B4")));
+      workbook.setNamedRange(
+          new ExcelNamedRangeDefinition(
+              "BudgetTotal",
+              new ExcelNamedRangeScope.WorkbookScope(),
+              new ExcelNamedRangeTarget("Budget", "C1")));
+
+      Name formulaName = poiWorkbook.createName();
+      formulaName.setNameName("BudgetRollup");
+      formulaName.setRefersToFormula("SUM(Budget!$B$2:$B$3)");
+      Name internalLowerDefinedName = poiWorkbook.createName();
+      internalLowerDefinedName.setNameName("_xlnm.Print_Area");
+      internalLowerDefinedName.setRefersToFormula("Budget!$A$1");
+      Name internalUpperDefinedName = poiWorkbook.createName();
+      internalUpperDefinedName.setNameName("_XLNM.PRINT_TITLES");
+      internalUpperDefinedName.setRefersToFormula("Budget!$A$1");
+
+      Name workbookScoped = poiWorkbook.getName("BudgetTotal");
+      Name hidden = syntheticName("HiddenBudgetTotal", false, true);
+      Name internalLower = syntheticName("_xlnm.Print_Area", false, false);
+      Name internalUpper = syntheticName("_XLNM.PRINT_TITLES", false, false);
+      Name function = syntheticName("BudgetFn", true, false);
+      Name sheetScoped = poiWorkbook.createName();
+      sheetScoped.setNameName("LocalItem");
+      sheetScoped.setSheetIndex(poiWorkbook.getSheetIndex("Budget"));
+      sheetScoped.setRefersToFormula("Budget!$A$1");
+
+      assertTrue(ExcelWorkbook.shouldExpose(workbookScoped));
+      assertFalse(ExcelWorkbook.shouldExpose(syntheticName(null, false, false)));
+      assertFalse(ExcelWorkbook.shouldExpose(hidden));
+      assertFalse(ExcelWorkbook.shouldExpose(internalLower));
+      assertFalse(ExcelWorkbook.shouldExpose(internalUpper));
+      assertFalse(ExcelWorkbook.shouldExpose(function));
+
+      assertTrue(workbook.scopeMatches(workbookScoped, new ExcelNamedRangeScope.WorkbookScope()));
+      assertFalse(
+          workbook.scopeMatches(workbookScoped, new ExcelNamedRangeScope.SheetScope("Budget")));
+      assertTrue(workbook.scopeMatches(sheetScoped, new ExcelNamedRangeScope.SheetScope("Budget")));
+      assertFalse(workbook.scopeMatches(sheetScoped, new ExcelNamedRangeScope.WorkbookScope()));
+      assertThrows(
+          SheetNotFoundException.class,
+          () -> workbook.scopeMatches(sheetScoped, new ExcelNamedRangeScope.SheetScope("Missing")));
+
+      assertEquals(
+          List.of(
+              new ExcelNamedRangeSnapshot.RangeSnapshot(
+                  "BudgetTotal",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  "Budget!$C$1",
+                  new ExcelNamedRangeTarget("Budget", "C1")),
+              new ExcelNamedRangeSnapshot.FormulaSnapshot(
+                  "BudgetRollup",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  "SUM(Budget!$B$2:$B$3)"),
+              new ExcelNamedRangeSnapshot.RangeSnapshot(
+                  "LocalItem",
+                  new ExcelNamedRangeScope.SheetScope("Budget"),
+                  "Budget!$A$1",
+                  new ExcelNamedRangeTarget("Budget", "A1"))),
+          workbook.namedRanges());
+    }
+  }
+
+  @Test
+  void validatesNamedRangeOperations() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget");
+
+      assertThrows(NullPointerException.class, () -> workbook.setNamedRange(null));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              workbook.setNamedRange(
+                  new ExcelNamedRangeDefinition(
+                      "A1",
+                      new ExcelNamedRangeScope.WorkbookScope(),
+                      new ExcelNamedRangeTarget("Budget", "B4"))));
+      assertThrows(
+          NullPointerException.class,
+          () -> workbook.deleteNamedRange(null, new ExcelNamedRangeScope.WorkbookScope()));
+      assertThrows(
+          NullPointerException.class, () -> workbook.deleteNamedRange("BudgetTotal", null));
+      assertThrows(
+          NamedRangeNotFoundException.class,
+          () -> workbook.deleteNamedRange("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              workbook.setNamedRange(
+                  new ExcelNamedRangeDefinition(
+                      "BudgetTotal",
+                      new ExcelNamedRangeScope.SheetScope("Missing"),
+                      new ExcelNamedRangeTarget("Missing", "A1"))));
+    }
+  }
+
   private FormulaEvaluator failingEvaluator(FormulaEvaluator delegate) {
     InvocationHandler handler =
         new InvocationHandler() {
@@ -329,5 +514,25 @@ class ExcelWorkbookTest {
       return false;
     }
     return Objects.equals(Proxy.getInvocationHandler(args[0]), handler);
+  }
+
+  private Name syntheticName(String nameName, boolean functionName, boolean hidden) {
+    InvocationHandler handler =
+        new InvocationHandler() {
+          @Override
+          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
+            return switch (method.getName()) {
+              case "getNameName" -> nameName;
+              case "isFunctionName" -> functionName;
+              case "isHidden" -> hidden;
+              case "toString" -> "syntheticName[" + nameName + "]";
+              case "hashCode" -> Objects.hash(nameName, functionName, hidden);
+              case "equals" -> false;
+              default -> throw new UnsupportedOperationException(method.getName());
+            };
+          }
+        };
+    return (Name)
+        Proxy.newProxyInstance(formulaEvaluatorClassLoader(), new Class<?>[] {Name.class}, handler);
   }
 }

@@ -20,8 +20,15 @@ public sealed interface ExcelCellSnapshot {
   /** Formatting style applied to the cell at the time of the snapshot. */
   ExcelCellStyleSnapshot style();
 
+  /** Hyperlink and comment metadata captured for the cell at snapshot time. */
+  ExcelCellMetadataSnapshot metadata();
+
   record BlankSnapshot(
-      String address, String declaredType, String displayValue, ExcelCellStyleSnapshot style)
+      String address,
+      String declaredType,
+      String displayValue,
+      ExcelCellStyleSnapshot style,
+      ExcelCellMetadataSnapshot metadata)
       implements ExcelCellSnapshot {
     @Override
     public String effectiveType() {
@@ -34,6 +41,7 @@ public sealed interface ExcelCellSnapshot {
       String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
+      ExcelCellMetadataSnapshot metadata,
       String stringValue)
       implements ExcelCellSnapshot {
     @Override
@@ -47,6 +55,7 @@ public sealed interface ExcelCellSnapshot {
       String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
+      ExcelCellMetadataSnapshot metadata,
       Double numberValue)
       implements ExcelCellSnapshot {
     @Override
@@ -60,6 +69,7 @@ public sealed interface ExcelCellSnapshot {
       String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
+      ExcelCellMetadataSnapshot metadata,
       Boolean booleanValue)
       implements ExcelCellSnapshot {
     @Override
@@ -73,6 +83,7 @@ public sealed interface ExcelCellSnapshot {
       String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
+      ExcelCellMetadataSnapshot metadata,
       String errorValue)
       implements ExcelCellSnapshot {
     @Override
@@ -86,6 +97,7 @@ public sealed interface ExcelCellSnapshot {
       String declaredType,
       String displayValue,
       ExcelCellStyleSnapshot style,
+      ExcelCellMetadataSnapshot metadata,
       String formula,
       ExcelCellSnapshot evaluation)
       implements ExcelCellSnapshot {

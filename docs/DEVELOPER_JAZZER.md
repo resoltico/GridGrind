@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.6.0"
+version: "0.7.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-03-26"
+updated: "2026-03-27"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -25,7 +25,7 @@ route:
 
 This document is the canonical source of truth for Jazzer in GridGrind.
 
-As of `2026-03-26`, the Jazzer layer is implemented and working end to end.
+As of `2026-03-27`, the Jazzer layer is implemented and working end to end.
 
 Implemented now:
 - standalone nested Gradle build at `jazzer/`
@@ -35,7 +35,8 @@ Implemented now:
 - per-target run history, latest-summary artifacts, and per-harness telemetry
 - replay and promotion tooling
 - committed custom seed floor made of promoted regression inputs and readable example requests
-- style-aware `.xlsx` round-trip verification for formatting-depth features
+- style-aware `.xlsx` round-trip verification for formatting depth, hyperlink/comment metadata,
+  named-range persistence, and named-range normalization
 - local-only corpora, logs, finding artifacts, and cleanup commands
 
 Deliberately not implemented:
@@ -94,11 +95,11 @@ The operator goal is not to maximize seed count. The goal is to preserve a stabl
 - representative feature-family coverage
 
 Current floor:
-- `protocol-request`: 7 committed seeds
-- `protocol-workflow`: 7 committed seeds
-- `engine-command-sequence`: 6 committed seeds
-- `xlsx-roundtrip`: 5 committed seeds
-- total committed seed floor: 25 inputs
+- `protocol-request`: 8 committed seeds
+- `protocol-workflow`: 10 committed seeds
+- `engine-command-sequence`: 7 committed seeds
+- `xlsx-roundtrip`: 8 committed seeds
+- total committed seed floor: 33 inputs
 
 ---
 
@@ -260,6 +261,11 @@ Nested-build verification model:
 - `./gradlew --project-dir jazzer check` runs `test` plus `jazzerRegression`
 - active fuzz tasks remain explicit opt-in local commands and are never dependencies of nested-build
   `check`
+
+Execution discipline:
+- do not run root Gradle builds and nested Jazzer Gradle builds in parallel
+- run root verification and Jazzer verification sequentially
+- shared workspace outputs and caches can otherwise produce stale classpath or runtime state
 
 ---
 

@@ -22,10 +22,15 @@ public final class WorkbookInvariantChecks {
     switch (response) {
       case GridGrindResponse.Success success -> {
         require(success.workbook() != null, "workbook summary must not be null");
+        require(success.namedRanges() != null, "namedRanges must not be null");
         require(success.sheets() != null, "sheet reports must not be null");
         require(
             success.workbook().sheetCount() == success.workbook().sheetNames().size(),
             "sheetCount must match sheetNames size");
+        require(
+            success.workbook().namedRangeCount() >= success.namedRanges().size(),
+            "namedRangeCount must be greater than or equal to namedRanges size");
+        success.namedRanges().forEach(WorkbookInvariantChecks::requireNamedRangeShape);
         success.sheets().forEach(WorkbookInvariantChecks::requireSheetReportShape);
       }
       case GridGrindResponse.Failure failure -> {
@@ -58,6 +63,19 @@ public final class WorkbookInvariantChecks {
           requireSavedWorkbookPath(success.savedWorkbookPath());
       case GridGrindRequest.WorkbookPersistence.SaveAs _ ->
           requireSavedWorkbookPath(success.savedWorkbookPath());
+    }
+
+    switch (request.analysis().namedRanges()) {
+      case GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.None _ ->
+          require(success.namedRanges().isEmpty(), "NONE named-range analysis must return no named ranges");
+      case GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.All _ ->
+          require(
+              success.workbook().namedRangeCount() == success.namedRanges().size(),
+              "ALL named-range analysis must return every named range");
+      case GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected _ ->
+          require(
+              success.workbook().namedRangeCount() >= success.namedRanges().size(),
+              "SELECTED named-range analysis must not exceed total named-range count");
     }
   }
 
@@ -117,6 +135,35 @@ public final class WorkbookInvariantChecks {
         require(formula.formula() != null, "formula must not be null");
         requireCellReportShape(formula.evaluation());
       }
+    }
+    if (cellReport.hyperlink() != null) {
+      require(cellReport.hyperlink().type() != null, "hyperlink type must not be null");
+      require(cellReport.hyperlink().target() != null, "hyperlink target must not be null");
+      require(!cellReport.hyperlink().target().isBlank(), "hyperlink target must not be blank");
+    }
+    if (cellReport.comment() != null) {
+      require(cellReport.comment().text() != null, "comment text must not be null");
+      require(cellReport.comment().author() != null, "comment author must not be null");
+      require(!cellReport.comment().text().isBlank(), "comment text must not be blank");
+      require(!cellReport.comment().author().isBlank(), "comment author must not be blank");
+    }
+  }
+
+  private static void requireNamedRangeShape(GridGrindResponse.NamedRangeReport namedRange) {
+    require(namedRange.name() != null, "namedRange name must not be null");
+    require(!namedRange.name().isBlank(), "namedRange name must not be blank");
+    require(namedRange.scope() != null, "namedRange scope must not be null");
+    require(namedRange.refersToFormula() != null, "namedRange formula must not be null");
+
+    switch (namedRange) {
+      case GridGrindResponse.NamedRangeReport.RangeReport range -> {
+        require(range.target() != null, "namedRange target must not be null");
+        require(range.target().sheetName() != null, "namedRange target sheet must not be null");
+        require(range.target().range() != null, "namedRange target range must not be null");
+        require(!range.target().sheetName().isBlank(), "namedRange target sheet must not be blank");
+        require(!range.target().range().isBlank(), "namedRange target range must not be blank");
+      }
+      case GridGrindResponse.NamedRangeReport.FormulaReport _ -> {}
     }
   }
 

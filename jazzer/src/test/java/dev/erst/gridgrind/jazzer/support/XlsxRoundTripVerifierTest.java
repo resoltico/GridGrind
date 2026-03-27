@@ -5,10 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelHyperlink;
+import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
+import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
+import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
@@ -99,6 +104,96 @@ class XlsxRoundTripVerifierTest {
         List.of(
             new WorkbookCommand.CreateSheet("Sheet1"),
             new WorkbookCommand.ApplyStyle("Sheet1", "B2", style));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Preserves hyperlink, comment, and named-range state through save and reopen. */
+  @Test
+  void requireRoundTripReadable_preservesExcelAuthoringMetadata(@TempDir Path tempDirectory)
+      throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Sheet1"),
+            new WorkbookCommand.SetCell("Sheet1", "A1", ExcelCellValue.text("Report")),
+            new WorkbookCommand.SetHyperlink(
+                "Sheet1", "A1", new ExcelHyperlink.Url("https://example.com/report")),
+            new WorkbookCommand.SetComment(
+                "Sheet1", "A1", new ExcelComment("Review", "GridGrind", true)),
+            new WorkbookCommand.SetNamedRange(
+                new ExcelNamedRangeDefinition(
+                    "BudgetTotal",
+                    new ExcelNamedRangeScope.WorkbookScope(),
+                    new ExcelNamedRangeTarget("Sheet1", "A1"))),
+            new WorkbookCommand.SetNamedRange(
+                new ExcelNamedRangeDefinition(
+                    "BudgetTable",
+                    new ExcelNamedRangeScope.SheetScope("Sheet1"),
+                    new ExcelNamedRangeTarget("Sheet1", "A1:B2"))));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Preserves the last hyperlink written to a cell through save and reopen. */
+  @Test
+  void requireRoundTripReadable_preservesLatestRepeatedHyperlinkWrite(@TempDir Path tempDirectory)
+      throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.SetHyperlink(
+                "C", "F18", new ExcelHyperlink.Email("Report_Value@example.com")),
+            new WorkbookCommand.SetHyperlink(
+                "C", "F18", new ExcelHyperlink.Email("Summary.Total@example.com")));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Accepts named-range targets that are normalized during persistence and reopen. */
+  @Test
+  void requireRoundTripReadable_normalizesReversedNamedRangeTargets(@TempDir Path tempDirectory)
+      throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Sheet1"),
+            new WorkbookCommand.SetNamedRange(
+                new ExcelNamedRangeDefinition(
+                    "BudgetTotal",
+                    new ExcelNamedRangeScope.WorkbookScope(),
+                    new ExcelNamedRangeTarget("Sheet1", "B2:A1"))));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Tracks renamed sheets and later metadata removals without keeping stale expectations. */
+  @Test
+  void requireRoundTripReadable_tracksRenamesAndMetadataDeletes(@TempDir Path tempDirectory)
+      throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Sheet1"),
+            new WorkbookCommand.SetCell("Sheet1", "A1", ExcelCellValue.text("Report")),
+            new WorkbookCommand.SetHyperlink(
+                "Sheet1", "A1", new ExcelHyperlink.Document("Sheet1!A1")),
+            new WorkbookCommand.SetComment(
+                "Sheet1", "A1", new ExcelComment("Review", "GridGrind", false)),
+            new WorkbookCommand.SetNamedRange(
+                new ExcelNamedRangeDefinition(
+                    "BudgetTotal",
+                    new ExcelNamedRangeScope.WorkbookScope(),
+                    new ExcelNamedRangeTarget("Sheet1", "A1"))),
+            new WorkbookCommand.RenameSheet("Sheet1", "Summary"),
+            new WorkbookCommand.ClearHyperlink("Summary", "A1"),
+            new WorkbookCommand.ClearComment("Summary", "A1"),
+            new WorkbookCommand.DeleteNamedRange(
+                "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 

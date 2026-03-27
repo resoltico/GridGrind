@@ -1,0 +1,8 @@
+{
+  "targetKey" : "protocol-workflow",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/61e0a48fe9c7b87a7fb1cdaaa275fa5ae1e9cdd4",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/save_as_named_range_failure.bin",
+  "replayOutcome" : "SUCCESS",
+  "promotedAt" : "2026-03-26T16:46:35.402673Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/save_as_named_range_failure.txt"
+}

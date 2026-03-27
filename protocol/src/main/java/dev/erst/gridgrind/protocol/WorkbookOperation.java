@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import java.util.List;
 import java.util.Objects;
 
@@ -20,7 +21,13 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = WorkbookOperation.SetCell.class, name = "SET_CELL"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetRange.class, name = "SET_RANGE"),
   @JsonSubTypes.Type(value = WorkbookOperation.ClearRange.class, name = "CLEAR_RANGE"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetHyperlink.class, name = "SET_HYPERLINK"),
+  @JsonSubTypes.Type(value = WorkbookOperation.ClearHyperlink.class, name = "CLEAR_HYPERLINK"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetComment.class, name = "SET_COMMENT"),
+  @JsonSubTypes.Type(value = WorkbookOperation.ClearComment.class, name = "CLEAR_COMMENT"),
   @JsonSubTypes.Type(value = WorkbookOperation.ApplyStyle.class, name = "APPLY_STYLE"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetNamedRange.class, name = "SET_NAMED_RANGE"),
+  @JsonSubTypes.Type(value = WorkbookOperation.DeleteNamedRange.class, name = "DELETE_NAMED_RANGE"),
   @JsonSubTypes.Type(value = WorkbookOperation.AppendRow.class, name = "APPEND_ROW"),
   @JsonSubTypes.Type(value = WorkbookOperation.AutoSizeColumns.class, name = "AUTO_SIZE_COLUMNS"),
   @JsonSubTypes.Type(value = WorkbookOperation.EvaluateFormulas.class, name = "EVALUATE_FORMULAS"),
@@ -160,6 +167,42 @@ public sealed interface WorkbookOperation {
     }
   }
 
+  /** Replaces the hyperlink attached to a single cell. */
+  record SetHyperlink(String sheetName, String address, HyperlinkTarget target)
+      implements WorkbookOperation {
+    public SetHyperlink {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireNonBlank(address, "address");
+      Objects.requireNonNull(target, "target must not be null");
+    }
+  }
+
+  /** Removes any hyperlink attached to a single existing cell. */
+  record ClearHyperlink(String sheetName, String address) implements WorkbookOperation {
+    public ClearHyperlink {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireNonBlank(address, "address");
+    }
+  }
+
+  /** Replaces the plain-text comment attached to a single cell. */
+  record SetComment(String sheetName, String address, CommentInput comment)
+      implements WorkbookOperation {
+    public SetComment {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireNonBlank(address, "address");
+      Objects.requireNonNull(comment, "comment must not be null");
+    }
+  }
+
+  /** Removes any comment attached to a single existing cell. */
+  record ClearComment(String sheetName, String address) implements WorkbookOperation {
+    public ClearComment {
+      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireNonBlank(address, "address");
+    }
+  }
+
   /** Applies a style patch to every cell in the specified range. */
   record ApplyStyle(String sheetName, String range, CellStyleInput style)
       implements WorkbookOperation {
@@ -167,6 +210,24 @@ public sealed interface WorkbookOperation {
       Validation.requireNonBlank(sheetName, "sheetName");
       Validation.requireNonBlank(range, "range");
       Objects.requireNonNull(style, "style must not be null");
+    }
+  }
+
+  /** Creates or replaces one typed named range in workbook or sheet scope. */
+  record SetNamedRange(String name, NamedRangeScope scope, NamedRangeTarget target)
+      implements WorkbookOperation {
+    public SetNamedRange {
+      Objects.requireNonNull(scope, "scope must not be null");
+      Objects.requireNonNull(target, "target must not be null");
+      Validation.requireNamedRangeName(name);
+    }
+  }
+
+  /** Deletes one existing named range from workbook or sheet scope. */
+  record DeleteNamedRange(String name, NamedRangeScope scope) implements WorkbookOperation {
+    public DeleteNamedRange {
+      Objects.requireNonNull(scope, "scope must not be null");
+      Validation.requireNamedRangeName(name);
     }
   }
 
@@ -212,7 +273,13 @@ public sealed interface WorkbookOperation {
       case SetCell _ -> "SET_CELL";
       case SetRange _ -> "SET_RANGE";
       case ClearRange _ -> "CLEAR_RANGE";
+      case SetHyperlink _ -> "SET_HYPERLINK";
+      case ClearHyperlink _ -> "CLEAR_HYPERLINK";
+      case SetComment _ -> "SET_COMMENT";
+      case ClearComment _ -> "CLEAR_COMMENT";
       case ApplyStyle _ -> "APPLY_STYLE";
+      case SetNamedRange _ -> "SET_NAMED_RANGE";
+      case DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case AppendRow _ -> "APPEND_ROW";
       case AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
       case EvaluateFormulas _ -> "EVALUATE_FORMULAS";
@@ -289,6 +356,10 @@ public sealed interface WorkbookOperation {
       if (splitRow > 0 && topRow < splitRow) {
         throw new IllegalArgumentException("topRow must be greater than or equal to splitRow");
       }
+    }
+
+    static void requireNamedRangeName(String name) {
+      ExcelNamedRangeDefinition.validateName(name);
     }
 
     static void requireFinitePositive(double value, String fieldName) {
