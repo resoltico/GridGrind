@@ -29,6 +29,7 @@ class ProtocolRequestFuzzTest {
       TELEMETRY.recordSourceKind(SequenceIntrospection.sourceKind(request));
       TELEMETRY.recordPersistenceKind(SequenceIntrospection.persistenceKind(request));
       TELEMETRY.recordSequenceKinds(SequenceIntrospection.operationKinds(request.operations()));
+      TELEMETRY.recordReadKinds(SequenceIntrospection.readKinds(request.reads()));
       TELEMETRY.recordStyleKinds(SequenceIntrospection.styleKinds(request.operations()));
       TELEMETRY.recordSuccess();
     } catch (InvalidJsonException | InvalidRequestException expected) {

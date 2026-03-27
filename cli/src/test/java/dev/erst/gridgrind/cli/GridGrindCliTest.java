@@ -6,6 +6,7 @@ import dev.erst.gridgrind.protocol.GridGrindJson;
 import dev.erst.gridgrind.protocol.GridGrindProblemCategory;
 import dev.erst.gridgrind.protocol.GridGrindProblemCode;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
+import dev.erst.gridgrind.protocol.WorkbookReadResult;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -16,8 +17,8 @@ import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
-/** Integration tests for AgentCli command-line invocation. */
-class AgentCliTest {
+/** Integration tests for GridGrindCli command-line invocation. */
+class GridGrindCliTest {
   @Test
   void readsJsonRequestFromStdinAndWritesJsonResponse() throws IOException {
     String request =
@@ -38,17 +39,16 @@ class AgentCliTest {
                 { "type": "SET_CELL", "sheetName": "Budget", "address": "B3", "value": { "type": "FORMULA", "formula": "SUM(B2:B2)" } },
                 { "type": "EVALUATE_FORMULAS" }
               ],
-              "analysis": {
-                "sheets": [
-                  { "sheetName": "Budget", "cells": ["A1", "B3"], "previewRowCount": 3, "previewColumnCount": 2 }
-                ]
-              }
+              "reads": [
+                { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
+                { "type": "GET_CELLS", "requestId": "cells", "sheetName": "Budget", "addresses": ["A1", "B3"] }
+              ]
             }
             """;
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[0],
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
@@ -59,10 +59,12 @@ class AgentCliTest {
     assertEquals(0, exitCode);
     assertInstanceOf(GridGrindResponse.Success.class, response);
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
-    assertEquals("Budget", success.workbook().sheetNames().get(0));
+    GridGrindResponse.WorkbookSummary workbook =
+        ((WorkbookReadResult.WorkbookSummaryResult) success.reads().get(0)).workbook();
+    assertEquals("Budget", workbook.sheetNames().get(0));
+    WorkbookReadResult.CellsResult cells = (WorkbookReadResult.CellsResult) success.reads().get(1);
     GridGrindResponse.CellReport.FormulaReport b3Cell =
-        (GridGrindResponse.CellReport.FormulaReport)
-            success.sheets().get(0).requestedCells().get(1);
+        (GridGrindResponse.CellReport.FormulaReport) cells.cells().get(1);
     assertEquals("SUM(B2:B2)", b3Cell.formula());
     assertEquals(
         49.0, ((GridGrindResponse.CellReport.NumberReport) b3Cell.evaluation()).numberValue());
@@ -76,13 +78,13 @@ class AgentCliTest {
               "source": { "mode": "EXISTING", "path": "/tmp/does-not-exist.xlsx" },
               "persistence": { "mode": "NONE" },
               "operations": [],
-              "analysis": { "sheets": [] }
+              "reads": []
             }
             """;
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[0],
                 new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
@@ -113,13 +115,15 @@ class AgentCliTest {
               "operations": [
                 { "type": "ENSURE_SHEET", "sheetName": "Budget" }
               ],
-              "analysis": { "sheets": [] }
+              "reads": [
+                { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" }
+              ]
             }
             """);
 
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[] {
                   "--request", requestPath.toString(), "--response", responsePath.toString()
@@ -133,17 +137,21 @@ class AgentCliTest {
     assertEquals(0, stdout.size());
     assertInstanceOf(GridGrindResponse.Success.class, response);
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
-    assertEquals(List.of("Budget"), success.workbook().sheetNames());
+    assertEquals(
+        List.of("Budget"),
+        ((WorkbookReadResult.WorkbookSummaryResult) success.reads().getFirst())
+            .workbook()
+            .sheetNames());
   }
 
   @Test
   void versionFrom_returnsUnknown_whenImplementationVersionIsAbsent() {
-    assertEquals("unknown", AgentCli.versionFrom(null));
+    assertEquals("unknown", GridGrindCli.versionFrom(null));
   }
 
   @Test
   void versionFrom_returnsVersion_whenImplementationVersionIsPresent() {
-    assertEquals("0.4.1", AgentCli.versionFrom("0.4.1"));
+    assertEquals("0.4.1", GridGrindCli.versionFrom("0.4.1"));
   }
 
   @Test
@@ -151,7 +159,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(new String[] {"--version"}, new ByteArrayInputStream(new byte[0]), stdout);
 
     assertEquals(0, exitCode);
@@ -165,7 +173,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[] {"--version", "--request", "ignored.json"},
                 new ByteArrayInputStream(new byte[0]),
@@ -180,7 +188,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(new String[] {"--unknown"}, new ByteArrayInputStream(new byte[0]), stdout);
 
     GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
@@ -199,7 +207,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(new String[] {"--request"}, new ByteArrayInputStream(new byte[0]), stdout);
 
     GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
@@ -218,7 +226,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[] {"--request", "a.json", "--request", "b.json"},
                 new ByteArrayInputStream(new byte[0]),
@@ -238,7 +246,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[] {"--response", "a.json", "--response", "b.json"},
                 new ByteArrayInputStream(new byte[0]),
@@ -258,7 +266,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(new String[] {"--request", "\0"}, new ByteArrayInputStream(new byte[0]), stdout);
 
     GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
@@ -275,7 +283,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[] {"--request", "/tmp/does-not-exist.json"},
                 new ByteArrayInputStream(new byte[0]),
@@ -296,8 +304,8 @@ class AgentCliTest {
         Files.createTempDirectory("gridgrind-execution-error-")
             .resolve("nested")
             .resolve("response.json");
-    AgentCli cli =
-        new AgentCli(
+    GridGrindCli cli =
+        new GridGrindCli(
             request -> {
               throw new UnsupportedOperationException("boom");
             });
@@ -310,7 +318,7 @@ class AgentCliTest {
                 {
                   "source": { "mode": "NEW" },
                   "operations": [],
-                  "analysis": { "sheets": [] }
+                  "reads": []
                 }
                 """
                     .getBytes(StandardCharsets.UTF_8)),
@@ -330,8 +338,8 @@ class AgentCliTest {
   @Test
   void fallsBackToExceptionTypeWhenExecutionErrorHasNoMessage() throws IOException {
     Path responsePath = Path.of("gridgrind-cli-response-" + UUID.randomUUID() + ".json");
-    AgentCli cli =
-        new AgentCli(
+    GridGrindCli cli =
+        new GridGrindCli(
             request -> {
               throw new UnsupportedOperationException();
             });
@@ -345,7 +353,7 @@ class AgentCliTest {
                     {
                       "source": { "mode": "NEW" },
                       "operations": [],
-                      "analysis": { "sheets": [] }
+                      "reads": []
                     }
                     """
                       .getBytes(StandardCharsets.UTF_8)),
@@ -369,7 +377,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[0],
                 new ByteArrayInputStream("{".getBytes(StandardCharsets.UTF_8)),
@@ -392,7 +400,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[0],
                 new ByteArrayInputStream(
@@ -400,11 +408,16 @@ class AgentCliTest {
                 {
                   "source": { "mode": "NEW" },
                   "operations": [],
-                  "analysis": {
-                    "sheets": [
-                      { "sheetName": "Budget", "previewRowCount": 0, "previewColumnCount": 1 }
-                    ]
-                  }
+                  "reads": [
+                    {
+                      "type": "GET_WINDOW",
+                      "requestId": "window",
+                      "sheetName": "Budget",
+                      "topLeftAddress": "A1",
+                      "rowCount": 0,
+                      "columnCount": 1
+                    }
+                  ]
                 }
                 """
                         .getBytes(StandardCharsets.UTF_8)),
@@ -417,8 +430,8 @@ class AgentCliTest {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals("analysis.sheets[0]", failure.problem().context().jsonPath());
-    assertEquals(6, failure.problem().context().jsonLine());
+    assertEquals("reads[0]", failure.problem().context().jsonPath());
+    assertEquals(12, failure.problem().context().jsonLine());
     assertNotNull(failure.problem().context().jsonColumn());
   }
 
@@ -428,7 +441,7 @@ class AgentCliTest {
 
     try {
       int exitCode =
-          new AgentCli()
+          new GridGrindCli()
               .run(
                   new String[] {"--response", responsePath.toString()},
                   new ByteArrayInputStream(
@@ -436,7 +449,7 @@ class AgentCliTest {
                     {
                       "source": { "mode": "NEW" },
                       "operations": [],
-                      "analysis": { "sheets": [] }
+                      "reads": []
                     }
                     """
                           .getBytes(StandardCharsets.UTF_8)),
@@ -457,7 +470,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[] {"--response", responseDirectory.toString()},
                 new ByteArrayInputStream(
@@ -465,7 +478,7 @@ class AgentCliTest {
                 {
                   "source": { "mode": "NEW" },
                   "operations": [],
-                  "analysis": { "sheets": [] }
+                  "reads": []
                 }
                 """
                         .getBytes(StandardCharsets.UTF_8)),
@@ -486,8 +499,8 @@ class AgentCliTest {
   void preservesOriginalProblemWhenFallbackResponseWriteAlsoFails() throws IOException {
     Path responseDirectory = Files.createTempDirectory("gridgrind-response-dir-error-");
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    AgentCli cli =
-        new AgentCli(
+    GridGrindCli cli =
+        new GridGrindCli(
             request -> {
               throw new UnsupportedOperationException("boom");
             });
@@ -500,7 +513,7 @@ class AgentCliTest {
                 {
                   "source": { "mode": "NEW" },
                   "operations": [],
-                  "analysis": { "sheets": [] }
+                  "reads": []
                 }
                 """
                     .getBytes(StandardCharsets.UTF_8)),
@@ -523,7 +536,7 @@ class AgentCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new AgentCli()
+        new GridGrindCli()
             .run(
                 new String[0],
                 new ByteArrayInputStream(
@@ -536,7 +549,7 @@ class AgentCliTest {
                     { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "FORMULA", "formula": "SUM(" } },
                     { "type": "EVALUATE_FORMULAS" }
                   ],
-                  "analysis": { "sheets": [] }
+                  "reads": []
                 }
                 """
                         .getBytes(StandardCharsets.UTF_8)),
@@ -563,11 +576,11 @@ class AgentCliTest {
             {
               "source": { "mode": "NEW" },
               "operations": [],
-              "analysis": { "sheets": [] }
+              "reads": []
             }
             """
                 .getBytes(StandardCharsets.UTF_8))) {
-      int exitCode = new AgentCli().run(new String[0], stdin, stdout);
+      int exitCode = new GridGrindCli().run(new String[0], stdin, stdout);
 
       assertEquals(0, exitCode);
       assertFalse(stdin.closed);

@@ -9,9 +9,10 @@ RETRIEVAL_HINTS:
 
 **A fresh grind for every workbook.**
 
-GridGrind gives AI agents a typed, structured, deterministic way to create, edit, calculate,
-inspect, and save `.xlsx` workbooks. Send a JSON request. Get a JSON response. No low-level
-library calls, no ad hoc scripting, no brittle string parsing.
+GridGrind is a typed, structured, deterministic `.xlsx` workbook engine with an agent-friendly
+JSON protocol. It is designed first for AI-agent and automation workflows, but it is not
+agent-only: any caller that can send a JSON request and consume a JSON response can use it.
+No low-level library calls, no ad hoc scripting, no brittle string parsing.
 
 ---
 
@@ -21,6 +22,9 @@ Monday, her AI agent updates those sheets — new arrivals logged, prices recalc
 reports drafted and filed. The agent does not write code to manipulate cells. It sends GridGrind
 a JSON request. High Ground's numbers are always current, always correct, always where they need
 to be.
+
+Today GridGrind ships as a CLI/container transport around that JSON protocol. It does not yet
+ship an MCP server. In other words: GridGrind is already agent-first, but not yet MCP-native.
 
 ---
 
@@ -37,7 +41,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 Pipe a JSON request to stdin, receive a JSON response on stdout:
 
 ```bash
-echo '{"source":{"mode":"NEW"},"operations":[],"analysis":{"sheets":[]}}' \
+echo '{"source":{"mode":"NEW"},"operations":[],"reads":[]}' \
   | docker run -i ghcr.io/resoltico/gridgrind:latest
 ```
 
@@ -69,7 +73,7 @@ Download the self-contained JAR from the
 way as the container — stdin/stdout or explicit file paths:
 
 ```bash
-echo '{"source":{"mode":"NEW"},"operations":[],"analysis":{"sheets":[]}}' \
+echo '{"source":{"mode":"NEW"},"operations":[],"reads":[]}' \
   | java -jar gridgrind.jar
 
 java -jar gridgrind.jar --request request.json --response response.json
@@ -86,12 +90,12 @@ or other non-`.xlsx` workbook paths are rejected as `INVALID_REQUEST`.
 Every request follows the same pipeline:
 
 1. **Operations** run in order — create sheets, write cells, apply styles, evaluate formulas.
-2. **Analysis** runs after all operations succeed — inspect sheets, read cell metadata and styles,
-   and optionally inspect workbook named ranges.
-3. **Persistence** happens last — the workbook is written only after analysis succeeds.
+2. **Reads** run after all operations succeed — explicit post-mutation introspection and insight
+   operations return only the workbook facts the caller requested.
+3. **Persistence** happens last — the workbook is written only after reads succeed.
 
-If any step fails, GridGrind returns a structured error and no file is written. Agents get
-deterministic failure semantics instead of "error after side effect."
+If any step fails, GridGrind returns a structured error and no file is written. That gives
+autonomous callers deterministic failure semantics instead of "error after side effect."
 
 ---
 
@@ -150,6 +154,32 @@ scope with explicit sheet-qualified cell or range targets. Analysis can now retu
 `CLEAR_RANGE` removes value, style, hyperlink, and comment state from the addressed rectangle.
 
 See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the full reference with all fields and examples.
+
+---
+
+## Reads
+
+Reads are explicit, ordered post-mutation requests. GridGrind does not return an implicit
+analysis bundle anymore; callers request exactly the workbook facts or insights they want.
+
+Introspection reads:
+- `GET_WORKBOOK_SUMMARY`
+- `GET_NAMED_RANGES`
+- `GET_SHEET_SUMMARY`
+- `GET_CELLS`
+- `GET_WINDOW`
+- `GET_MERGED_REGIONS`
+- `GET_HYPERLINKS`
+- `GET_COMMENTS`
+- `GET_SHEET_LAYOUT`
+
+Insight reads:
+- `ANALYZE_FORMULA_SURFACE`
+- `ANALYZE_SHEET_SCHEMA`
+- `ANALYZE_NAMED_RANGE_SURFACE`
+
+Every read carries a caller-defined `requestId`, and every result echoes that `requestId` back so
+agents can correlate repeated or similar reads deterministically.
 
 ---
 
@@ -212,11 +242,25 @@ A request that builds Alice's green coffee inventory sheet:
     },
     { "type": "EVALUATE_FORMULAS" }
   ],
-  "analysis": {
-    "sheets": [
-      { "sheetName": "Inventory", "previewRowCount": 3, "previewColumnCount": 3 }
-    ]
-  }
+  "reads": [
+    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
+    {
+      "type": "GET_WINDOW",
+      "requestId": "inventory-window",
+      "sheetName": "Inventory",
+      "topLeftAddress": "A1",
+      "rowCount": 3,
+      "columnCount": 3
+    },
+    {
+      "type": "ANALYZE_SHEET_SCHEMA",
+      "requestId": "inventory-schema",
+      "sheetName": "Inventory",
+      "topLeftAddress": "A1",
+      "rowCount": 3,
+      "columnCount": 3
+    }
+  ]
 }
 ```
 
@@ -224,17 +268,18 @@ A request that builds Alice's green coffee inventory sheet:
 
 ## Responses
 
-A successful response carries `"status": "SUCCESS"` and a structured workbook summary including
-effective cell values, hyperlink metadata, comment metadata, and styles for every requested or
-previewed cell, plus optional workbook-level named-range reports when requested in `analysis`.
-Style output includes effective font name, font size, font color, underline, strikeout, fill
-color, and all four border sides when those style facts can be normalized from the workbook.
+A successful response carries `"status": "SUCCESS"`, a typed `persistence` outcome, and an ordered
+`reads` array. Each read result returns only the payload requested by the matching read
+operation, correlated by `requestId`. Cell and window reads still carry effective cell values,
+hyperlink metadata, comment metadata, and styles. Style output includes effective font name, font
+size, font color, underline, strikeout, fill color, and all four border sides when those style
+facts can be normalized from the workbook.
 
 A failed response carries `"status": "ERROR"` and a structured `problem` object with:
 
 - a stable `code` (`INVALID_CELL_ADDRESS`, `INVALID_FORMULA`, `SHEET_NOT_FOUND`, and others)
 - a `category` and recommended `recovery` strategy
-- a `title`, `message`, and `resolution` — all written for agent consumption
+- a `title`, `message`, and `resolution` — all written for autonomous caller consumption
 - a `context` block with stage, operation index, sheet name, address, formula, and JSON path
   coordinates so an agent can locate the exact source of failure
 - a `causes` chain for inspecting the underlying exception family

@@ -69,6 +69,15 @@ final class WorkbookStyleRegistry {
   /** Captures a read-only snapshot of the effective style applied to the given cell. */
   ExcelCellStyleSnapshot snapshot(Cell cell) {
     XSSFCellStyle style = styleRecord(cell);
+    return snapshot(style);
+  }
+
+  /** Captures a read-only snapshot of the workbook's default cell style. */
+  ExcelCellStyleSnapshot defaultSnapshot() {
+    return snapshot(defaultStyleRecord());
+  }
+
+  private ExcelCellStyleSnapshot snapshot(XSSFCellStyle style) {
     XSSFFont font = style.getFont();
     return new ExcelCellStyleSnapshot(
         resolveNumberFormat(style.getDataFormatString()),

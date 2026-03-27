@@ -44,7 +44,8 @@ Run the nested Jazzer verification baseline:
 ```
 
 This runs the deterministic Jazzer support tests plus regression replay of the committed seed
-floor. It does not start active fuzzing.
+floor. Regression replay is isolated per harness under the hood rather than running all four
+Jazzer harnesses through one Gradle `Test` task. It does not start active fuzzing.
 
 Run one harness:
 
@@ -83,6 +84,10 @@ Replay the committed seed floor:
 jazzer/bin/regression --console=plain
 ```
 
+`jazzer/bin/regression` keeps a single public operator command, but the nested build now executes
+the four harnesses as isolated regression launcher tasks before writing the aggregate `regression`
+summary.
+
 Inspect active findings versus expected-invalid and replay-clean artifacts:
 
 ```bash
@@ -109,6 +114,17 @@ Active fuzz scripts support:
 
 If neither is set, Jazzer's default `@FuzzTest` duration applies.
 
+## Expected Warning Noise
+
+Two warning families are currently expected from upstream tooling during local Jazzer runs:
+
+- `sun.misc.Unsafe` deprecation warnings from Jazzer `0.30.0` on Java 26
+- `JUnit arguments ... can not be serialized as fuzzing inputs. Skipped.` during active fuzzing of
+  `FuzzedDataProvider` harnesses
+
+These warnings do not indicate a GridGrind workbook bug and do not affect replay, promotion, or
+latest-summary correctness.
+
 ## Storage
 
 Generated local state stays under:
@@ -129,7 +145,7 @@ Committed regression inputs and promotion metadata live under:
 - `jazzer/src/fuzz/resources/.../*Inputs/...`
 - `jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/`
 
-The committed custom seed floor currently contains 33 inputs across the four replayable harnesses.
+The committed custom seed floor currently contains 34 inputs across the four replayable harnesses.
 
 Run root Gradle verification and nested Jazzer verification sequentially, not in parallel.
 They share the same workspace and composite-build outputs, and parallel runs can create stale or

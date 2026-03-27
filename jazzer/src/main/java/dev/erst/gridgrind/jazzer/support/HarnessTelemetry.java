@@ -32,6 +32,7 @@ public final class HarnessTelemetry {
   private long unexpectedFailures;
   private Instant lastUpdatedAt;
   private final Map<String, Long> sequenceKinds = new LinkedHashMap<>();
+  private final Map<String, Long> readKinds = new LinkedHashMap<>();
   private final Map<String, Long> styleKinds = new LinkedHashMap<>();
   private final Map<String, Long> sourceKinds = new LinkedHashMap<>();
   private final Map<String, Long> persistenceKinds = new LinkedHashMap<>();
@@ -65,6 +66,13 @@ public final class HarnessTelemetry {
   public synchronized void recordSequenceKinds(Map<String, Long> kinds) {
     Objects.requireNonNull(kinds, "kinds must not be null");
     kinds.forEach((key, value) -> sequenceKinds.merge(key, value, Long::sum));
+    touch();
+  }
+
+  /** Records the workbook read mix observed for the current fuzz case. */
+  public synchronized void recordReadKinds(Map<String, Long> kinds) {
+    Objects.requireNonNull(kinds, "kinds must not be null");
+    kinds.forEach((key, value) -> readKinds.merge(key, value, Long::sum));
     touch();
   }
 
@@ -141,6 +149,7 @@ public final class HarnessTelemetry {
         successfulOutcomes,
         unexpectedFailures,
         Map.copyOf(sequenceKinds),
+        Map.copyOf(readKinds),
         Map.copyOf(styleKinds),
         Map.copyOf(sourceKinds),
         Map.copyOf(persistenceKinds),

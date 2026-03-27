@@ -257,6 +257,7 @@ public final class JazzerTextRenderer {
         .append(snapshot.unexpectedFailures())
         .append(System.lineSeparator());
     appendTopMap(builder, "  sequenceKinds", snapshot.sequenceKinds());
+    appendTopMap(builder, "  readKinds", snapshot.readKinds());
     appendTopMap(builder, "  styleKinds", snapshot.styleKinds());
     appendTopMap(builder, "  sourceKinds", snapshot.sourceKinds());
     appendTopMap(builder, "  persistenceKinds", snapshot.persistenceKinds());
@@ -283,8 +284,11 @@ public final class JazzerTextRenderer {
               + "Operation Count: "
               + request.operationCount()
               + System.lineSeparator()
-              + "Analysis Sheet Count: "
-              + request.analysisSheetCount()
+              + "Read Count: "
+              + request.readCount()
+              + System.lineSeparator()
+              + "Read Kinds: "
+              + renderMapInline(request.readKinds())
               + System.lineSeparator()
               + "Style Kinds: "
               + renderMapInline(request.styleKinds())
@@ -304,8 +308,11 @@ public final class JazzerTextRenderer {
               + "Operation Count: "
               + workflow.operationCount()
               + System.lineSeparator()
-              + "Analysis Sheet Count: "
-              + workflow.analysisSheetCount()
+              + "Read Count: "
+              + workflow.readCount()
+              + System.lineSeparator()
+              + "Read Kinds: "
+              + renderMapInline(workflow.readKinds())
               + System.lineSeparator()
               + "Response Kind: "
               + workflow.responseKind()

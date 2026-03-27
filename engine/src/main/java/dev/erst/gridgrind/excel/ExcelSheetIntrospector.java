@@ -1,0 +1,55 @@
+package dev.erst.gridgrind.excel;
+
+import java.util.List;
+import java.util.Objects;
+
+/** Reads reusable introspection facts from one sheet wrapper. */
+final class ExcelSheetIntrospector {
+  /** Returns structural summary facts for one sheet. */
+  WorkbookReadResult.SheetSummary summarize(ExcelSheet sheet) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return new WorkbookReadResult.SheetSummary(
+        sheet.name(), sheet.physicalRowCount(), sheet.lastRowIndex(), sheet.lastColumnIndex());
+  }
+
+  /** Returns exact cell snapshots for the provided ordered addresses on one sheet. */
+  List<ExcelCellSnapshot> cells(ExcelSheet sheet, List<String> addresses) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    Objects.requireNonNull(addresses, "addresses must not be null");
+    return sheet.snapshotCells(addresses);
+  }
+
+  /** Returns a rectangular window of cell snapshots anchored at one top-left address. */
+  WorkbookReadResult.Window window(
+      ExcelSheet sheet, String topLeftAddress, int rowCount, int columnCount) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return sheet.window(topLeftAddress, rowCount, columnCount);
+  }
+
+  /** Returns every merged region currently defined on the sheet. */
+  List<WorkbookReadResult.MergedRegion> mergedRegions(ExcelSheet sheet) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return sheet.mergedRegions();
+  }
+
+  /** Returns hyperlink metadata for the selected cells on one sheet. */
+  List<WorkbookReadResult.CellHyperlink> hyperlinks(
+      ExcelSheet sheet, ExcelCellSelection selection) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+    return sheet.hyperlinks(selection);
+  }
+
+  /** Returns comment metadata for the selected cells on one sheet. */
+  List<WorkbookReadResult.CellComment> comments(ExcelSheet sheet, ExcelCellSelection selection) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+    return sheet.comments(selection);
+  }
+
+  /** Returns layout metadata such as freeze panes and visible sizing. */
+  WorkbookReadResult.SheetLayout layout(ExcelSheet sheet) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return sheet.layout();
+  }
+}

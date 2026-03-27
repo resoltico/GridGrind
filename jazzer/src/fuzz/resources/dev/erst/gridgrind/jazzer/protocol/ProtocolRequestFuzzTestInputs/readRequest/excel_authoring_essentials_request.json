@@ -63,15 +63,48 @@
     },
     { "type": "EVALUATE_FORMULAS" }
   ],
-  "analysis": {
-    "sheets": [
-      {
-        "sheetName": "Budget",
-        "cells": ["A1", "B4"],
-        "previewRowCount": 4,
-        "previewColumnCount": 2
+  "reads": [
+    {
+      "type": "GET_CELLS",
+      "requestId": "cells",
+      "sheetName": "Budget",
+      "addresses": ["A1", "B4"]
+    },
+    {
+      "type": "GET_WINDOW",
+      "requestId": "window",
+      "sheetName": "Budget",
+      "topLeftAddress": "A1",
+      "rowCount": 4,
+      "columnCount": 2
+    },
+    {
+      "type": "GET_HYPERLINKS",
+      "requestId": "hyperlinks",
+      "sheetName": "Budget",
+      "selection": {
+        "mode": "SELECTED",
+        "addresses": ["A1", "B4"]
       }
-    ],
-    "namedRanges": { "mode": "ALL" }
-  }
+    },
+    {
+      "type": "GET_COMMENTS",
+      "requestId": "comments",
+      "sheetName": "Budget",
+      "selection": {
+        "mode": "SELECTED",
+        "addresses": ["A1", "B4"]
+      }
+    },
+    {
+      "type": "GET_NAMED_RANGES",
+      "requestId": "named-ranges",
+      "selection": { "mode": "ALL" }
+    },
+    {
+      "type": "ANALYZE_NAMED_RANGE_SURFACE",
+      "requestId": "named-range-surface",
+      "selection": { "mode": "ALL" }
+    }
+  ]
 }

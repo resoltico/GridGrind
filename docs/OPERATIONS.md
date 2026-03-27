@@ -1,11 +1,11 @@
 ---
 afad: "3.4"
-version: "0.7.0"
+version: "0.8.0"
 domain: OPERATIONS
-updated: "2026-03-26"
+updated: "2026-03-27"
 route:
-  keywords: [gridgrind, operations, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, append-row, clear-range, evaluate-formulas, auto-size-columns, request, json, protocol]
-  questions: ["what operations does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept"]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-sheet-layout, analyze-sheet-schema, request, json, protocol]
+  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
 ---
 
 # Operations Reference
@@ -23,7 +23,7 @@ route:
   "source":      { ... },
   "persistence": { ... },
   "operations":  [ ... ],
-  "analysis":    { ... }
+  "reads":       [ ... ]
 }
 ```
 
@@ -33,7 +33,7 @@ route:
 | `source` | Yes | Where the workbook comes from. |
 | `persistence` | No | Where and whether to save. Omit to run operations without saving. |
 | `operations` | No | Ordered list of workbook mutations. |
-| `analysis` | No | Which sheets and named ranges to inspect after operations complete. |
+| `reads` | No | Ordered post-mutation introspection and insight operations. |
 
 ---
 
@@ -68,7 +68,7 @@ The save path must end in `.xlsx`.
 ```
 Overwrite the source file (requires `source.mode=EXISTING`).
 
-Omit `persistence` entirely to run a read-only analysis without saving.
+Omit `persistence` entirely to run mutations and reads without saving.
 
 ---
 
@@ -638,49 +638,287 @@ Delete one existing named range from workbook scope or sheet scope.
 
 ---
 
-## Analysis
+## Reads
+
+Reads are ordered, explicit post-mutation requests. Every read must include a caller-defined
+`requestId`, and every result echoes that `requestId` back in the successful response.
+
+Read categories:
+
+- Introspection: exact workbook facts with no higher-level interpretation.
+- Insight: derived workbook analysis built on top of introspection.
 
 ```json
 {
-  "analysis": {
-    "sheets": [
-      {
-        "sheetName": "Inventory",
-        "cells": ["A1", "B4"],
-        "previewRowCount": 5,
-        "previewColumnCount": 3
-      }
-    ],
-    "namedRanges": { "mode": "ALL" }
+  "reads": [
+    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
+    {
+      "type": "GET_WINDOW",
+      "requestId": "inventory-window",
+      "sheetName": "Inventory",
+      "topLeftAddress": "A1",
+      "rowCount": 5,
+      "columnCount": 3
+    },
+    {
+      "type": "ANALYZE_SHEET_SCHEMA",
+      "requestId": "inventory-schema",
+      "sheetName": "Inventory",
+      "topLeftAddress": "A1",
+      "rowCount": 5,
+      "columnCount": 3
+    }
+  ]
+}
+```
+
+### GET_WORKBOOK_SUMMARY
+
+Returns workbook-level summary facts such as sheet order, named-range count, and the workbook
+force-recalculation flag.
+
+```json
+{ "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" }
+```
+
+### GET_NAMED_RANGES
+
+Returns exact named-range reports selected by workbook-wide or exact-selector input.
+
+```json
+{
+  "type": "GET_NAMED_RANGES",
+  "requestId": "named-ranges",
+  "selection": { "mode": "ALL" }
+}
+```
+
+```json
+{
+  "type": "GET_NAMED_RANGES",
+  "requestId": "selected-named-ranges",
+  "selection": {
+    "mode": "SELECTED",
+    "selectors": [
+      { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
+      { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
+    ]
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheets` | No | List of sheet analysis requests. |
-| `namedRanges` | No | Workbook named-range analysis request. |
-| `sheetName` | Yes | Sheet to analyze. |
-| `cells` | No | Specific A1-notation cells to include in the response with full detail. |
-| `previewRowCount` | No | Number of rows to include in the sheet preview. |
-| `previewColumnCount` | No | Number of columns to include in the sheet preview. |
+| `requestId` | Yes | Stable caller-defined correlation identifier. |
+| `selection` | Yes | `ALL` or exact named-range selectors. |
 
-The preview includes styled blank cells so template-like workbooks remain visible to agents.
+Selected named-range reads fail with `NAMED_RANGE_NOT_FOUND` when any selector does not match an
+existing named range.
 
-Named-range analysis requests:
+### GET_SHEET_SUMMARY
+
+Returns structural summary facts for one sheet.
 
 ```json
-{ "mode": "NONE" }
-{ "mode": "ALL" }
 {
-  "mode": "SELECTED",
-  "selectors": [
-    { "type": "BY_NAME", "name": "BudgetTotal" },
-    { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
-    { "type": "SHEET_SCOPE", "name": "BudgetTable", "sheetName": "Budget" }
-  ]
+  "type": "GET_SHEET_SUMMARY",
+  "requestId": "sheet-summary",
+  "sheetName": "Inventory"
 }
 ```
 
-Selected named-range analysis fails with `NAMED_RANGE_NOT_FOUND` when any selector does not match
-an existing named range.
+### GET_CELLS
+
+Returns exact cell snapshots for one sheet and an ordered list of A1 addresses.
+
+```json
+{
+  "type": "GET_CELLS",
+  "requestId": "cells",
+  "sheetName": "Inventory",
+  "addresses": ["A1", "B4", "C10"]
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `requestId` | Yes | Stable caller-defined correlation identifier. |
+| `sheetName` | Yes | Sheet that owns the requested cells. |
+| `addresses` | Yes | Ordered non-empty list of unique A1 cell addresses. |
+
+`GET_CELLS` fails with `CELL_NOT_FOUND` when any requested address does not refer to a physically
+present cell.
+
+### GET_WINDOW
+
+Returns a rectangular top-left-anchored window of cell snapshots. The window includes styled blank
+cells so template-like workbooks remain visible.
+
+```json
+{
+  "type": "GET_WINDOW",
+  "requestId": "window",
+  "sheetName": "Inventory",
+  "topLeftAddress": "A1",
+  "rowCount": 5,
+  "columnCount": 3
+}
+```
+
+### GET_MERGED_REGIONS
+
+Returns the exact merged regions defined on one sheet.
+
+```json
+{
+  "type": "GET_MERGED_REGIONS",
+  "requestId": "merged",
+  "sheetName": "Inventory"
+}
+```
+
+### GET_HYPERLINKS
+
+Returns hyperlink metadata for selected cells on one sheet.
+
+```json
+{
+  "type": "GET_HYPERLINKS",
+  "requestId": "hyperlinks",
+  "sheetName": "Inventory",
+  "selection": { "mode": "ALL_USED_CELLS" }
+}
+```
+
+```json
+{
+  "type": "GET_HYPERLINKS",
+  "requestId": "selected-hyperlinks",
+  "sheetName": "Inventory",
+  "selection": {
+    "mode": "SELECTED",
+    "addresses": ["A1", "B4"]
+  }
+}
+```
+
+### GET_COMMENTS
+
+Returns comment metadata for selected cells on one sheet.
+
+```json
+{
+  "type": "GET_COMMENTS",
+  "requestId": "comments",
+  "sheetName": "Inventory",
+  "selection": { "mode": "ALL_USED_CELLS" }
+}
+```
+
+```json
+{
+  "type": "GET_COMMENTS",
+  "requestId": "selected-comments",
+  "sheetName": "Inventory",
+  "selection": {
+    "mode": "SELECTED",
+    "addresses": ["A1", "B4"]
+  }
+}
+```
+
+Cell-selection payloads use:
+
+```json
+{ "mode": "ALL_USED_CELLS" }
+{
+  "mode": "SELECTED",
+  "addresses": ["A1", "B4"]
+}
+```
+
+### GET_SHEET_LAYOUT
+
+Returns freeze-pane state plus explicit row-height and column-width facts for one sheet.
+
+```json
+{
+  "type": "GET_SHEET_LAYOUT",
+  "requestId": "layout",
+  "sheetName": "Inventory"
+}
+```
+
+### ANALYZE_FORMULA_SURFACE
+
+Groups formula usage across one or more sheets.
+
+```json
+{
+  "type": "ANALYZE_FORMULA_SURFACE",
+  "requestId": "formula-surface",
+  "selection": { "mode": "ALL" }
+}
+```
+
+```json
+{
+  "type": "ANALYZE_FORMULA_SURFACE",
+  "requestId": "selected-formula-surface",
+  "selection": {
+    "mode": "SELECTED",
+    "sheetNames": ["Inventory", "Summary"]
+  }
+}
+```
+
+Sheet-selection payloads use:
+
+```json
+{ "mode": "ALL" }
+{
+  "mode": "SELECTED",
+  "sheetNames": ["Inventory", "Summary"]
+}
+```
+
+### ANALYZE_SHEET_SCHEMA
+
+Infers a simple schema from one rectangular sheet window.
+
+```json
+{
+  "type": "ANALYZE_SHEET_SCHEMA",
+  "requestId": "schema",
+  "sheetName": "Inventory",
+  "topLeftAddress": "A1",
+  "rowCount": 5,
+  "columnCount": 3
+}
+```
+
+### ANALYZE_NAMED_RANGE_SURFACE
+
+Summarizes the scope and backing kind of selected named ranges.
+
+```json
+{
+  "type": "ANALYZE_NAMED_RANGE_SURFACE",
+  "requestId": "named-range-surface",
+  "selection": { "mode": "ALL" }
+}
+```
+
+```json
+{
+  "type": "ANALYZE_NAMED_RANGE_SURFACE",
+  "requestId": "selected-named-range-surface",
+  "selection": {
+    "mode": "SELECTED",
+    "selectors": [
+      { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
+      { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
+    ]
+  }
+}
+```

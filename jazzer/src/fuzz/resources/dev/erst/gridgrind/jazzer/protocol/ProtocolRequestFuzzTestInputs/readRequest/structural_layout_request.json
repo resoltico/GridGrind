@@ -13,14 +13,30 @@
     { "type": "SET_ROW_HEIGHT", "sheetName": "Summary", "firstRowIndex": 0, "lastRowIndex": 0, "heightPoints": 28.5 },
     { "type": "FREEZE_PANES", "sheetName": "Summary", "splitColumn": 0, "splitRow": 1, "leftmostColumn": 0, "topRow": 1 }
   ],
-  "analysis": {
-    "sheets": [
-      {
-        "sheetName": "Summary",
-        "cells": ["A1"],
-        "previewRowCount": 3,
-        "previewColumnCount": 3
-      }
-    ]
-  }
+  "reads": [
+    {
+      "type": "GET_CELLS",
+      "requestId": "cells",
+      "sheetName": "Summary",
+      "addresses": ["A1"]
+    },
+    {
+      "type": "GET_WINDOW",
+      "requestId": "window",
+      "sheetName": "Summary",
+      "topLeftAddress": "A1",
+      "rowCount": 3,
+      "columnCount": 3
+    },
+    {
+      "type": "GET_MERGED_REGIONS",
+      "requestId": "merged",
+      "sheetName": "Summary"
+    },
+    {
+      "type": "GET_SHEET_LAYOUT",
+      "requestId": "layout",
+      "sheetName": "Summary"
+    }
+  ]
 }

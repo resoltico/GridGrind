@@ -15,6 +15,7 @@ import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.PaneType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -470,6 +471,66 @@ class ExcelSheetTest {
 
       assertThrows(CellNotFoundException.class, () -> sheet.clearHyperlink("B2"));
       assertThrows(CellNotFoundException.class, () -> sheet.clearComment("B2"));
+    }
+  }
+
+  @Test
+  void introspectsWindowsSelectionsAndLayoutAcrossSparseMetadata() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      WorkbookReadResult.SheetLayout emptyLayout = sheet.layout();
+      assertInstanceOf(WorkbookReadResult.FreezePane.None.class, emptyLayout.freezePanes());
+      assertEquals(List.of(), emptyLayout.columns());
+      assertEquals(List.of(), emptyLayout.rows());
+
+      sheet.setCell("B2", ExcelCellValue.text("Center"));
+      sheet.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      sheet.setComment("C3", new ExcelComment("Review", "GridGrind", false));
+      sheet.setColumnWidth(0, 0, 12.5);
+      sheet.setRowHeight(0, 0, 19.5);
+
+      WorkbookReadResult.Window window = sheet.window("A1", 3, 3);
+      assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
+      assertEquals("B2", window.rows().get(1).cells().get(1).address());
+      assertEquals("Center", window.rows().get(1).cells().get(1).displayValue());
+      assertEquals("C3", window.rows().get(2).cells().get(2).address());
+      assertThrows(IllegalArgumentException.class, () -> sheet.window("A1", 0, 1));
+      assertThrows(IllegalArgumentException.class, () -> sheet.window("A1", 1, 0));
+
+      List<WorkbookReadResult.CellHyperlink> allHyperlinks =
+          sheet.hyperlinks(new ExcelCellSelection.AllUsedCells());
+      assertEquals(1, allHyperlinks.size());
+      assertEquals("A1", allHyperlinks.getFirst().address());
+
+      List<WorkbookReadResult.CellHyperlink> selectedHyperlinks =
+          sheet.hyperlinks(new ExcelCellSelection.Selected(List.of("A1", "B2", "B9", "D3")));
+      assertEquals(1, selectedHyperlinks.size());
+      assertEquals("A1", selectedHyperlinks.getFirst().address());
+
+      List<WorkbookReadResult.CellComment> selectedComments =
+          sheet.comments(new ExcelCellSelection.Selected(List.of("C3", "B2", "A9", "D3")));
+      assertEquals(1, selectedComments.size());
+      assertEquals("C3", selectedComments.getFirst().address());
+
+      WorkbookReadResult.SheetLayout unfrozenLayout = sheet.layout();
+      assertInstanceOf(WorkbookReadResult.FreezePane.None.class, unfrozenLayout.freezePanes());
+      assertEquals(3, unfrozenLayout.columns().size());
+      assertEquals(3, unfrozenLayout.rows().size());
+
+      sheet.freezePanes(1, 1, 1, 1);
+      WorkbookReadResult.SheetLayout frozenLayout = sheet.layout();
+      WorkbookReadResult.FreezePane.Frozen freezePane =
+          assertInstanceOf(WorkbookReadResult.FreezePane.Frozen.class, frozenLayout.freezePanes());
+      assertEquals(1, freezePane.splitColumn());
+      assertEquals(1, freezePane.splitRow());
+
+      poiSheet.createSplitPane(2000, 2000, 0, 0, PaneType.LOWER_RIGHT);
+      WorkbookReadResult.SheetLayout splitLayout = sheet.layout();
+      assertInstanceOf(WorkbookReadResult.FreezePane.None.class, splitLayout.freezePanes());
     }
   }
 

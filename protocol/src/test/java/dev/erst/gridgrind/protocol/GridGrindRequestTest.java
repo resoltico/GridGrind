@@ -14,60 +14,39 @@ class GridGrindRequestTest {
         new GridGrindRequest(new GridGrindRequest.WorkbookSource.New(), null, null, null);
 
     assertEquals(GridGrindProtocolVersion.V1, request.protocolVersion());
-    assertTrue(request.source() instanceof GridGrindRequest.WorkbookSource.New);
-    assertTrue(request.persistence() instanceof GridGrindRequest.WorkbookPersistence.None);
+    assertInstanceOf(GridGrindRequest.WorkbookSource.New.class, request.source());
+    assertInstanceOf(GridGrindRequest.WorkbookPersistence.None.class, request.persistence());
     assertEquals(List.of(), request.operations());
-    assertEquals(List.of(), request.analysis().sheets());
-    assertInstanceOf(
-        GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.None.class,
-        request.analysis().namedRanges());
-
-    GridGrindRequest.WorkbookAnalysisRequest analysisRequest =
-        new GridGrindRequest.WorkbookAnalysisRequest(null);
-    assertEquals(List.of(), analysisRequest.sheets());
-    assertInstanceOf(
-        GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.None.class,
-        analysisRequest.namedRanges());
+    assertEquals(List.of(), request.reads());
   }
 
   @Test
   void copiesAndValidatesNestedCollections() {
     List<WorkbookOperation> operations =
         new ArrayList<>(List.of(new WorkbookOperation.EnsureSheet("Budget")));
-    List<GridGrindRequest.SheetInspectionRequest> sheets =
+    List<WorkbookReadOperation> reads =
         new ArrayList<>(
             List.of(
-                new GridGrindRequest.SheetInspectionRequest("Budget", List.of("A1"), null, null)));
-    List<NamedRangeSelector> selectors =
-        new ArrayList<>(List.of(new NamedRangeSelector.ByName("BudgetTotal")));
+                new WorkbookReadOperation.GetWorkbookSummary("workbook"),
+                new WorkbookReadOperation.GetSheetSummary("sheet-summary", "Budget")));
 
     GridGrindRequest request =
         new GridGrindRequest(
             new GridGrindRequest.WorkbookSource.New(),
             new GridGrindRequest.WorkbookPersistence.None(),
             operations,
-            new GridGrindRequest.WorkbookAnalysisRequest(
-                sheets,
-                new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected(
-                    selectors)));
+            reads);
 
     operations.clear();
-    sheets.clear();
-    selectors.clear();
+    reads.clear();
 
     assertEquals(1, request.operations().size());
-    assertEquals(1, request.analysis().sheets().size());
-    GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected namedRangeInspection =
-        (GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected)
-            request.analysis().namedRanges();
-    assertEquals(1, namedRangeInspection.selectors().size());
+    assertEquals(2, request.reads().size());
 
     List<WorkbookOperation> nullOperationList = new ArrayList<>();
     nullOperationList.add(null);
-    List<GridGrindRequest.SheetInspectionRequest> nullSheetList = new ArrayList<>();
-    nullSheetList.add(null);
-    List<NamedRangeSelector> nullSelectorList = new ArrayList<>();
-    nullSelectorList.add(null);
+    List<WorkbookReadOperation> nullReadList = new ArrayList<>();
+    nullReadList.add(null);
 
     assertThrows(
         NullPointerException.class,
@@ -76,16 +55,13 @@ class GridGrindRequestTest {
                 new GridGrindRequest.WorkbookSource.New(), null, nullOperationList, null));
     assertThrows(
         NullPointerException.class,
-        () -> new GridGrindRequest.WorkbookAnalysisRequest(nullSheetList));
-    assertThrows(
-        NullPointerException.class,
         () ->
-            new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected(
-                nullSelectorList));
+            new GridGrindRequest(
+                new GridGrindRequest.WorkbookSource.New(), null, null, nullReadList));
   }
 
   @Test
-  void validatesRequiredSourcePersistenceAndAnalysisFields() {
+  void validatesRequiredSourcePersistenceAndReadFields() {
     assertThrows(NullPointerException.class, () -> new GridGrindRequest(null, null, null, null));
     assertEquals(
         GridGrindProtocolVersion.V1,
@@ -123,31 +99,40 @@ class GridGrindRequestTest {
         "report.XLSX", new GridGrindRequest.WorkbookPersistence.SaveAs("report.XLSX").path());
 
     assertThrows(
-        NullPointerException.class,
-        () -> new GridGrindRequest.SheetInspectionRequest(null, null, null, null));
+        NullPointerException.class, () -> new WorkbookReadOperation.GetWorkbookSummary(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookReadOperation.GetWorkbookSummary(" "));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookReadOperation.GetNamedRanges("ranges", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindRequest.SheetInspectionRequest("Budget", List.of(" "), null, null));
+        () -> new WorkbookReadOperation.GetCells("cells", "Budget", List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindRequest.SheetInspectionRequest("Budget", List.of(), 3, null));
+        () -> new WorkbookReadOperation.GetWindow("window", "Budget", "A1", 0, 2));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindRequest.SheetInspectionRequest("Budget", List.of(), 0, 2));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new GridGrindRequest.SheetInspectionRequest("Budget", List.of(), 2, 0));
+        () -> new WorkbookReadOperation.GetWindow("window", "Budget", "A1", 2, 0));
+    assertThrows(IllegalArgumentException.class, () -> new NamedRangeSelection.Selected(List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected(List.of()));
+            new NamedRangeSelection.Selected(
+                List.of(
+                    new NamedRangeSelector.ByName("Budget"),
+                    new NamedRangeSelector.ByName("Budget"))));
+    assertThrows(IllegalArgumentException.class, () -> new SheetSelection.Selected(List.of()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected(null));
+        () -> new SheetSelection.Selected(List.of("Budget", "Budget")));
+    assertThrows(IllegalArgumentException.class, () -> new CellSelection.Selected(List.of()));
+    assertThrows(
+        IllegalArgumentException.class, () -> new CellSelection.Selected(List.of("A1", "A1")));
     assertDoesNotThrow(
         () ->
-            new GridGrindRequest.WorkbookAnalysisRequest(
-                List.of(),
-                new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.All()));
+            new WorkbookReadOperation.AnalyzeNamedRangeSurface(
+                "surface",
+                new NamedRangeSelection.Selected(
+                    List.of(new NamedRangeSelector.WorkbookScope("BudgetTotal")))));
   }
 }
