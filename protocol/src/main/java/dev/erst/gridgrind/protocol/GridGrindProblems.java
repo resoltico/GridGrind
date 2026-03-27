@@ -5,6 +5,7 @@ import dev.erst.gridgrind.excel.FormulaException;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
 import dev.erst.gridgrind.excel.InvalidRangeAddressException;
+import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnsupportedFormulaException;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
@@ -108,6 +109,7 @@ public final class GridGrindProblems {
     return switch (exception) {
       case WorkbookNotFoundException _ -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
       case SheetNotFoundException _ -> GridGrindProblemCode.SHEET_NOT_FOUND;
+      case NamedRangeNotFoundException _ -> GridGrindProblemCode.NAMED_RANGE_NOT_FOUND;
       case CellNotFoundException _ -> GridGrindProblemCode.CELL_NOT_FOUND;
       case InvalidCellAddressException _ -> GridGrindProblemCode.INVALID_CELL_ADDRESS;
       case InvalidRangeAddressException _ -> GridGrindProblemCode.INVALID_RANGE_ADDRESS;
@@ -161,6 +163,10 @@ public final class GridGrindProblems {
     return exception instanceof InvalidRangeAddressException ire ? ire.range() : null;
   }
 
+  static String namedRangeNameFor(Throwable exception) {
+    return exception instanceof NamedRangeNotFoundException nnf ? nnf.name() : null;
+  }
+
   private static String simpleName(Throwable exception) {
     String simpleName = exception.getClass().getSimpleName();
     return simpleName.isBlank() ? exception.getClass().getName() : simpleName;
@@ -181,16 +187,24 @@ public final class GridGrindProblems {
       }
       case GridGrindResponse.ProblemContext.ApplyOperation ac -> {
         if (exception instanceof FormulaException fe) {
-          yield ac.withExceptionData(fe.sheetName(), fe.address(), null, fe.formula());
+          yield ac.withExceptionData(
+              fe.sheetName(), fe.address(), null, fe.formula(), namedRangeNameFor(exception));
         }
         if (exception instanceof InvalidRangeAddressException ire) {
-          yield ac.withExceptionData(null, null, ire.range(), null);
+          yield ac.withExceptionData(null, null, ire.range(), null, namedRangeNameFor(exception));
+        }
+        if (exception instanceof NamedRangeNotFoundException) {
+          yield ac.withExceptionData(null, null, null, null, namedRangeNameFor(exception));
         }
         yield context;
       }
       case GridGrindResponse.ProblemContext.AnalyzeWorkbook aw -> {
         if (exception instanceof FormulaException fe) {
-          yield aw.withExceptionData(fe.sheetName(), fe.address(), fe.formula());
+          yield aw.withExceptionData(
+              fe.sheetName(), fe.address(), fe.formula(), namedRangeNameFor(exception));
+        }
+        if (exception instanceof NamedRangeNotFoundException) {
+          yield aw.withExceptionData(null, null, null, namedRangeNameFor(exception));
         }
         yield context;
       }

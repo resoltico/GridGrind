@@ -19,7 +19,7 @@ public record GridGrindRequest(
     Objects.requireNonNull(source, "source must not be null");
     persistence = persistence == null ? new WorkbookPersistence.None() : persistence;
     operations = copyOperations(operations);
-    analysis = analysis == null ? new WorkbookAnalysisRequest(List.of()) : analysis;
+    analysis = analysis == null ? new WorkbookAnalysisRequest(List.of(), null) : analysis;
   }
 
   /** Creates a request with the current protocol version and the given parameters. */
@@ -67,9 +67,46 @@ public record GridGrindRequest(
   }
 
   /** Declares which workbook content should be inspected after mutations are applied. */
-  public record WorkbookAnalysisRequest(List<SheetInspectionRequest> sheets) {
+  public record WorkbookAnalysisRequest(
+      List<SheetInspectionRequest> sheets, NamedRangeInspection namedRanges) {
     public WorkbookAnalysisRequest {
       sheets = copySheets(sheets);
+      namedRanges = namedRanges == null ? new NamedRangeInspection.None() : namedRanges;
+    }
+
+    /** Creates an analysis request that inspects only sheets and skips named ranges. */
+    public WorkbookAnalysisRequest(List<SheetInspectionRequest> sheets) {
+      this(sheets, null);
+    }
+
+    /** Describes which named ranges should be returned in workbook analysis. */
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
+    @JsonSubTypes({
+      @JsonSubTypes.Type(value = NamedRangeInspection.None.class, name = "NONE"),
+      @JsonSubTypes.Type(value = NamedRangeInspection.All.class, name = "ALL"),
+      @JsonSubTypes.Type(value = NamedRangeInspection.Selected.class, name = "SELECTED")
+    })
+    public sealed interface NamedRangeInspection
+        permits NamedRangeInspection.None, NamedRangeInspection.All, NamedRangeInspection.Selected {
+
+      /** Skips named-range analysis entirely. */
+      record None() implements NamedRangeInspection {}
+
+      /** Returns every analyzable named range in the workbook. */
+      record All() implements NamedRangeInspection {}
+
+      /** Returns only the exact named ranges matched by the provided selectors. */
+      record Selected(List<NamedRangeSelector> selectors) implements NamedRangeInspection {
+        public Selected {
+          selectors = selectors == null ? List.of() : List.copyOf(selectors);
+          if (selectors.isEmpty()) {
+            throw new IllegalArgumentException("selectors must not be empty");
+          }
+          for (NamedRangeSelector selector : selectors) {
+            Objects.requireNonNull(selector, "selectors must not contain nulls");
+          }
+        }
+      }
     }
   }
 

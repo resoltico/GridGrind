@@ -3,9 +3,12 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
@@ -90,9 +93,51 @@ public final class ExcelSheet {
           columnIndex++) {
         Cell cell = getOrCreateCell(rowIndex, columnIndex);
         resetToDefaultStyle(cell);
+        cell.removeHyperlink();
+        cell.removeCellComment();
         cell.setBlank();
       }
     }
+    return this;
+  }
+
+  /** Replaces the hyperlink attached to one cell, creating the cell if necessary. */
+  public ExcelSheet setHyperlink(String address, ExcelHyperlink hyperlink) {
+    requireNonBlank(address, "address");
+    Objects.requireNonNull(hyperlink, "hyperlink must not be null");
+
+    CellReference cellReference = parseCellReference(address);
+    Cell cell = getOrCreateCell(cellReference.getRow(), cellReference.getCol());
+    cell.removeHyperlink();
+    org.apache.poi.ss.usermodel.Hyperlink poiHyperlink =
+        sheet.getWorkbook().getCreationHelper().createHyperlink(toPoi(hyperlink.type()));
+    poiHyperlink.setAddress(toPoiTarget(hyperlink));
+    cell.setHyperlink(poiHyperlink);
+    return this;
+  }
+
+  /** Removes any hyperlink attached to one existing cell. */
+  public ExcelSheet clearHyperlink(String address) {
+    requireNonBlank(address, "address");
+    requiredCell(address).removeHyperlink();
+    return this;
+  }
+
+  /** Replaces the plain-text comment attached to one cell, creating the cell if necessary. */
+  public ExcelSheet setComment(String address, ExcelComment comment) {
+    requireNonBlank(address, "address");
+    Objects.requireNonNull(comment, "comment must not be null");
+
+    CellReference cellReference = parseCellReference(address);
+    Cell cell = getOrCreateCell(cellReference.getRow(), cellReference.getCol());
+    cell.setCellComment(newComment(cellReference.getRow(), cellReference.getCol(), comment));
+    return this;
+  }
+
+  /** Removes any comment attached to one existing cell. */
+  public ExcelSheet clearComment(String address) {
+    requireNonBlank(address, "address");
+    requiredCell(address).removeCellComment();
     return this;
   }
 
@@ -399,6 +444,7 @@ public final class ExcelSheet {
       throw FormulaExceptions.wrap(name(), address, formulaExpression, exception);
     }
     ExcelCellStyleSnapshot style = styleRegistry.snapshot(cell);
+    ExcelCellMetadataSnapshot metadata = metadata(cell);
 
     if (declaredType == CellType.FORMULA) {
       String formula = cell.getCellFormula();
@@ -414,45 +460,64 @@ public final class ExcelSheet {
           switch (evalType) {
             case STRING ->
                 new ExcelCellSnapshot.TextSnapshot(
-                    address, "STRING", displayValue, style, evaluatedCell.getStringValue());
+                    address,
+                    "STRING",
+                    displayValue,
+                    style,
+                    metadata,
+                    evaluatedCell.getStringValue());
             case NUMERIC ->
                 new ExcelCellSnapshot.NumberSnapshot(
-                    address, "NUMERIC", displayValue, style, evaluatedCell.getNumberValue());
+                    address,
+                    "NUMERIC",
+                    displayValue,
+                    style,
+                    metadata,
+                    evaluatedCell.getNumberValue());
             case BOOLEAN ->
                 new ExcelCellSnapshot.BooleanSnapshot(
-                    address, "BOOLEAN", displayValue, style, evaluatedCell.getBooleanValue());
+                    address,
+                    "BOOLEAN",
+                    displayValue,
+                    style,
+                    metadata,
+                    evaluatedCell.getBooleanValue());
             case ERROR ->
                 new ExcelCellSnapshot.ErrorSnapshot(
                     address,
                     "ERROR",
                     displayValue,
                     style,
+                    metadata,
                     FormulaError.forInt(evaluatedCell.getErrorValue()).getString());
-            default -> new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style);
+            default ->
+                new ExcelCellSnapshot.BlankSnapshot(
+                    address, "BLANK", displayValue, style, metadata);
           };
       return new ExcelCellSnapshot.FormulaSnapshot(
-          address, "FORMULA", displayValue, style, formula, evaluation);
+          address, "FORMULA", displayValue, style, metadata, formula, evaluation);
     }
 
     return switch (declaredType) {
       case STRING ->
           new ExcelCellSnapshot.TextSnapshot(
-              address, "STRING", displayValue, style, cell.getStringCellValue());
+              address, "STRING", displayValue, style, metadata, cell.getStringCellValue());
       case NUMERIC ->
           new ExcelCellSnapshot.NumberSnapshot(
-              address, "NUMERIC", displayValue, style, cell.getNumericCellValue());
+              address, "NUMERIC", displayValue, style, metadata, cell.getNumericCellValue());
       case BOOLEAN ->
           new ExcelCellSnapshot.BooleanSnapshot(
-              address, "BOOLEAN", displayValue, style, cell.getBooleanCellValue());
+              address, "BOOLEAN", displayValue, style, metadata, cell.getBooleanCellValue());
       case ERROR ->
           new ExcelCellSnapshot.ErrorSnapshot(
               address,
               "ERROR",
               displayValue,
               style,
+              metadata,
               FormulaError.forInt(cell.getErrorCellValue()).getString());
       case BLANK, _NONE, FORMULA ->
-          new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style);
+          new ExcelCellSnapshot.BlankSnapshot(address, "BLANK", displayValue, style, metadata);
     };
   }
 
@@ -576,9 +641,97 @@ public final class ExcelSheet {
     }
   }
 
-  private boolean shouldPreview(Cell cell) {
+  /**
+   * Returns whether the cell should appear in preview output because it carries visible content or
+   * metadata.
+   */
+  static boolean shouldPreview(Cell cell) {
     return cell != null
-        && (cell.getCellType() != CellType.BLANK || cell.getCellStyle().getIndex() != 0);
+        && (cell.getCellType() != CellType.BLANK
+            || cell.getCellStyle().getIndex() != 0
+            || cell.getHyperlink() != null
+            || cell.getCellComment() != null);
+  }
+
+  private Comment newComment(int rowIndex, int columnIndex, ExcelComment comment) {
+    ClientAnchor anchor = sheet.getWorkbook().getCreationHelper().createClientAnchor();
+    anchor.setRow1(rowIndex);
+    anchor.setRow2(rowIndex + 3);
+    anchor.setCol1(columnIndex);
+    anchor.setCol2(columnIndex + 3);
+    Comment poiComment = sheet.createDrawingPatriarch().createCellComment(anchor);
+    poiComment.setAuthor(comment.author());
+    poiComment.setVisible(comment.visible());
+    poiComment.setString(
+        sheet.getWorkbook().getCreationHelper().createRichTextString(comment.text()));
+    return poiComment;
+  }
+
+  private ExcelCellMetadataSnapshot metadata(Cell cell) {
+    return ExcelCellMetadataSnapshot.of(hyperlink(cell), comment(cell));
+  }
+
+  /**
+   * Returns the normalized workbook-core hyperlink for the cell, or null when no usable hyperlink
+   * exists.
+   */
+  static ExcelHyperlink hyperlink(Cell cell) {
+    org.apache.poi.ss.usermodel.Hyperlink hyperlink = cell.getHyperlink();
+    if (hyperlink == null || hyperlink.getType() == null) {
+      return null;
+    }
+    String target = hyperlink.getAddress();
+    if (target == null || target.isBlank()) {
+      return null;
+    }
+    try {
+      return switch (hyperlink.getType()) {
+        case URL -> new ExcelHyperlink.Url(target);
+        case EMAIL -> new ExcelHyperlink.Email(target);
+        case FILE -> new ExcelHyperlink.File(target);
+        case DOCUMENT -> new ExcelHyperlink.Document(target);
+        case NONE -> null;
+      };
+    } catch (IllegalArgumentException exception) {
+      return null;
+    }
+  }
+
+  /**
+   * Returns the normalized workbook-core comment for the cell, or null when the POI comment is
+   * incomplete.
+   */
+  static ExcelComment comment(Cell cell) {
+    Comment comment = cell.getCellComment();
+    if (comment == null || comment.getString() == null) {
+      return null;
+    }
+    String text = comment.getString().getString();
+    String author = comment.getAuthor();
+    if (text == null || text.isBlank() || author == null || author.isBlank()) {
+      return null;
+    }
+    return new ExcelComment(text, author, comment.isVisible());
+  }
+
+  /** Converts the workbook-core hyperlink type into the matching Apache POI hyperlink type. */
+  static HyperlinkType toPoi(ExcelHyperlinkType hyperlinkType) {
+    return switch (hyperlinkType) {
+      case URL -> HyperlinkType.URL;
+      case EMAIL -> HyperlinkType.EMAIL;
+      case FILE -> HyperlinkType.FILE;
+      case DOCUMENT -> HyperlinkType.DOCUMENT;
+    };
+  }
+
+  /** Converts the workbook-core hyperlink target into the exact Apache POI address string. */
+  static String toPoiTarget(ExcelHyperlink hyperlink) {
+    return switch (hyperlink) {
+      case ExcelHyperlink.Url url -> url.target();
+      case ExcelHyperlink.Email email -> "mailto:" + email.target();
+      case ExcelHyperlink.File file -> file.target();
+      case ExcelHyperlink.Document document -> document.target();
+    };
   }
 
   private List<List<ExcelCellValue>> copyRows(List<List<ExcelCellValue>> rows) {

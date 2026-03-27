@@ -3,6 +3,7 @@ package dev.erst.gridgrind.protocol;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,8 +53,23 @@ class WorkbookOperationTest {
         new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("Item"));
     WorkbookOperation.SetRange setRange = new WorkbookOperation.SetRange("Budget", "A1:B2", rows);
     WorkbookOperation.ClearRange clearRange = new WorkbookOperation.ClearRange("Budget", "C1:C4");
+    WorkbookOperation.SetHyperlink setHyperlink =
+        new WorkbookOperation.SetHyperlink(
+            "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report"));
+    WorkbookOperation.ClearHyperlink clearHyperlink =
+        new WorkbookOperation.ClearHyperlink("Budget", "A1");
+    WorkbookOperation.SetComment setComment =
+        new WorkbookOperation.SetComment(
+            "Budget", "A1", new CommentInput("Review", "GridGrind", null));
+    WorkbookOperation.ClearComment clearComment =
+        new WorkbookOperation.ClearComment("Budget", "A1");
     WorkbookOperation.ApplyStyle applyStyle =
         new WorkbookOperation.ApplyStyle("Budget", "B1:B2", style);
+    WorkbookOperation.SetNamedRange setNamedRange =
+        new WorkbookOperation.SetNamedRange(
+            "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"));
+    WorkbookOperation.DeleteNamedRange deleteNamedRange =
+        new WorkbookOperation.DeleteNamedRange("BudgetTotal", new NamedRangeScope.Sheet("Budget"));
     WorkbookOperation.AppendRow appendRow = new WorkbookOperation.AppendRow("Budget", rowValues);
     WorkbookOperation.AutoSizeColumns autoSizeColumns =
         new WorkbookOperation.AutoSizeColumns("Budget");
@@ -77,7 +93,15 @@ class WorkbookOperationTest {
     assertEquals("A1:B2", setRange.range());
     assertEquals(2, setRange.rows().size());
     assertEquals("C1:C4", clearRange.range());
+    assertEquals(
+        new ExcelHyperlink.Url("https://example.com/report"),
+        setHyperlink.target().toExcelHyperlink());
+    assertEquals("A1", clearHyperlink.address());
+    assertFalse(setComment.comment().visible());
+    assertEquals("A1", clearComment.address());
     assertEquals(style, applyStyle.style());
+    assertEquals("BudgetTotal", setNamedRange.name());
+    assertEquals("Budget", ((NamedRangeScope.Sheet) deleteNamedRange.scope()).sheetName());
     assertEquals(1, appendRow.values().size());
     assertEquals("Budget", autoSizeColumns.sheetName());
     assertEquals("EVALUATE_FORMULAS", evaluateFormulas.operationType());
@@ -137,6 +161,18 @@ class WorkbookOperationTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookOperation.FreezePanes("Budget", 0, 1, 1, 1));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.SetHyperlink("Budget", "A1", null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.SetComment("Budget", "A1", null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookOperation.SetNamedRange(
+                "BudgetTotal", null, new NamedRangeTarget("Budget", "B4")));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.DeleteNamedRange("BudgetTotal", null));
   }
 
   @Test
@@ -202,6 +238,26 @@ class WorkbookOperationTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookOperation.ApplyStyle("Budget", "A1:A2", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.SetHyperlink(
+                "Budget", "A1", new HyperlinkTarget.Url("relative")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.SetComment(
+                "Budget", "A1", new CommentInput(" ", "GridGrind", null)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.SetNamedRange(
+                "A1", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.DeleteNamedRange(
+                "_xlnm.Print_Area", new NamedRangeScope.Workbook()));
 
     List<CellInput> valuesWithNull = new ArrayList<>();
     valuesWithNull.add(null);
@@ -290,7 +346,30 @@ class WorkbookOperationTest {
             .operationType());
     assertEquals("CLEAR_RANGE", new WorkbookOperation.ClearRange("Budget", "A1").operationType());
     assertEquals(
+        "SET_HYPERLINK",
+        new WorkbookOperation.SetHyperlink(
+                "Budget", "A1", new HyperlinkTarget.Url("https://example.com"))
+            .operationType());
+    assertEquals(
+        "CLEAR_HYPERLINK", new WorkbookOperation.ClearHyperlink("Budget", "A1").operationType());
+    assertEquals(
+        "SET_COMMENT",
+        new WorkbookOperation.SetComment(
+                "Budget", "A1", new CommentInput("Review", "GridGrind", null))
+            .operationType());
+    assertEquals(
+        "CLEAR_COMMENT", new WorkbookOperation.ClearComment("Budget", "A1").operationType());
+    assertEquals(
         "APPLY_STYLE", new WorkbookOperation.ApplyStyle("Budget", "A1", style).operationType());
+    assertEquals(
+        "SET_NAMED_RANGE",
+        new WorkbookOperation.SetNamedRange(
+                "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"))
+            .operationType());
+    assertEquals(
+        "DELETE_NAMED_RANGE",
+        new WorkbookOperation.DeleteNamedRange("BudgetTotal", new NamedRangeScope.Workbook())
+            .operationType());
     assertEquals(
         "APPEND_ROW",
         new WorkbookOperation.AppendRow("Budget", List.of(textValue)).operationType());

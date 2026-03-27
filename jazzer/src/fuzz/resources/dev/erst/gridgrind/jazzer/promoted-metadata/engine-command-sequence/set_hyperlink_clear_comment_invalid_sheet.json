@@ -1,0 +1,8 @@
+{
+  "targetKey" : "engine-command-sequence",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest/applyCommands/fe21d0d656a7904372613d7f0cd63f650d57e348",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/set_hyperlink_clear_comment_invalid_sheet.bin",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "promotedAt" : "2026-03-26T16:46:47.557531Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/set_hyperlink_clear_comment_invalid_sheet.txt"
+}

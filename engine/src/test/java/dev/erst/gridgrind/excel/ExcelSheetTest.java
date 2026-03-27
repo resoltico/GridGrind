@@ -9,7 +9,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.ClientAnchor;
+import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
@@ -169,6 +172,24 @@ class ExcelSheetTest {
           IllegalArgumentException.class,
           () -> sheet.applyStyle(" ", ExcelCellStyle.numberFormat("0")));
       assertThrows(NullPointerException.class, () -> sheet.applyStyle("A1", null));
+      assertThrows(
+          NullPointerException.class,
+          () -> sheet.setHyperlink(null, new ExcelHyperlink.Url("https://example.com")));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.setHyperlink(" ", new ExcelHyperlink.Url("https://example.com")));
+      assertThrows(NullPointerException.class, () -> sheet.setHyperlink("A1", null));
+      assertThrows(NullPointerException.class, () -> sheet.clearHyperlink(null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.clearHyperlink(" "));
+      assertThrows(
+          NullPointerException.class,
+          () -> sheet.setComment(null, new ExcelComment("Review", "GridGrind", false)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.setComment(" ", new ExcelComment("Review", "GridGrind", false)));
+      assertThrows(NullPointerException.class, () -> sheet.setComment("A1", null));
+      assertThrows(NullPointerException.class, () -> sheet.clearComment(null));
+      assertThrows(IllegalArgumentException.class, () -> sheet.clearComment(" "));
       assertThrows(NullPointerException.class, () -> sheet.appendRow((ExcelCellValue[]) null));
       assertThrows(
           NullPointerException.class, () -> sheet.appendRow(ExcelCellValue.text("x"), null));
@@ -409,6 +430,69 @@ class ExcelSheetTest {
   }
 
   @Test
+  void snapshotsAndClearsHyperlinksAndComments() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      sheet.setComment("A1", new ExcelComment("Review", "GridGrind", true));
+
+      ExcelCellSnapshot.BlankSnapshot snapshot =
+          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A1");
+      assertEquals(
+          new ExcelHyperlink.Url("https://example.com/report"),
+          snapshot.metadata().hyperlink().orElseThrow());
+      assertEquals(
+          new ExcelComment("Review", "GridGrind", true),
+          snapshot.metadata().comment().orElseThrow());
+
+      List<ExcelPreviewRow> preview = sheet.preview(1, 1);
+      assertEquals(1, preview.size());
+      assertEquals("A1", preview.getFirst().cells().getFirst().address());
+
+      sheet.clearHyperlink("A1");
+      sheet.clearComment("A1");
+      ExcelCellSnapshot.BlankSnapshot clearedMetadata =
+          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A1");
+      assertTrue(clearedMetadata.metadata().hyperlink().isEmpty());
+      assertTrue(clearedMetadata.metadata().comment().isEmpty());
+
+      sheet.setHyperlink("A1", new ExcelHyperlink.Document("Budget!B4"));
+      sheet.setComment("A1", new ExcelComment("Again", "GridGrind", false));
+      sheet.clearRange("A1");
+      ExcelCellSnapshot.BlankSnapshot clearedRange =
+          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A1");
+      assertTrue(clearedRange.metadata().hyperlink().isEmpty());
+      assertTrue(clearedRange.metadata().comment().isEmpty());
+
+      assertThrows(CellNotFoundException.class, () -> sheet.clearHyperlink("B2"));
+      assertThrows(CellNotFoundException.class, () -> sheet.clearComment("B2"));
+    }
+  }
+
+  @Test
+  void replacesHyperlinksOnRepeatedWrites() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setHyperlink("F18", new ExcelHyperlink.Email("Report_Value@example.com"));
+      sheet.setHyperlink("F18", new ExcelHyperlink.Email("Summary.Total@example.com"));
+
+      ExcelCellSnapshot.BlankSnapshot snapshot =
+          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("F18");
+      assertEquals(
+          new ExcelHyperlink.Email("Summary.Total@example.com"),
+          snapshot.metadata().hyperlink().orElseThrow());
+    }
+  }
+
+  @Test
   void managesMergedRegionsSizingAndFreezePanes() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       Sheet poiSheet = poiWorkbook.createSheet("Budget");
@@ -615,6 +699,81 @@ class ExcelSheetTest {
     }
   }
 
+  @Test
+  void interpretsHyperlinksCommentsAndPreviewHelpersAcrossAllVariants() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      Row row = poiSheet.createRow(0);
+      Cell blankCell = row.createCell(0);
+      Cell urlCell = row.createCell(1);
+      Cell emailCell = row.createCell(2);
+      Cell fileCell = row.createCell(3);
+      Cell documentCell = row.createCell(4);
+      Cell noneCell = hyperlinkOnlyCell(proxyHyperlink(HyperlinkType.NONE, "ignored"));
+      Cell nullTypeCell = hyperlinkOnlyCell(proxyHyperlink(null, "ignored"));
+      Cell nullAddressCell = hyperlinkOnlyCell(proxyHyperlink(HyperlinkType.URL, null));
+      Cell blankTargetCell = hyperlinkOnlyCell(proxyHyperlink(HyperlinkType.URL, " "));
+      Cell invalidEmailCell = hyperlinkOnlyCell(proxyHyperlink(HyperlinkType.EMAIL, "mailto:"));
+      Cell nullTextCommentCell = commentOnlyCell(proxyComment(null, "GridGrind", false));
+      Cell commentCell = row.createCell(5);
+      Cell missingStringCommentCell = row.createCell(6);
+      Cell blankCommentCell = row.createCell(7);
+
+      urlCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.URL, "https://example.com/report"));
+      emailCell.setHyperlink(
+          hyperlink(poiWorkbook, HyperlinkType.EMAIL, "mailto:team@example.com"));
+      fileCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.FILE, "/tmp/report.xlsx"));
+      documentCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.DOCUMENT, "Budget!B4"));
+      commentCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", "GridGrind", false));
+      missingStringCommentCell.setCellComment(emptyComment(poiWorkbook, poiSheet));
+      blankCommentCell.setCellComment(comment(poiWorkbook, poiSheet, " ", " ", false));
+
+      assertFalse(ExcelSheet.shouldPreview(null));
+      assertFalse(ExcelSheet.shouldPreview(blankCell));
+      assertTrue(ExcelSheet.shouldPreview(urlCell));
+      assertTrue(ExcelSheet.shouldPreview(commentCell));
+
+      assertNull(ExcelSheet.hyperlink(blankCell));
+      assertEquals(
+          new ExcelHyperlink.Url("https://example.com/report"), ExcelSheet.hyperlink(urlCell));
+      assertEquals(new ExcelHyperlink.Email("team@example.com"), ExcelSheet.hyperlink(emailCell));
+      assertEquals(new ExcelHyperlink.File("/tmp/report.xlsx"), ExcelSheet.hyperlink(fileCell));
+      assertEquals(new ExcelHyperlink.Document("Budget!B4"), ExcelSheet.hyperlink(documentCell));
+      assertNull(ExcelSheet.hyperlink(noneCell));
+      assertNull(ExcelSheet.hyperlink(nullTypeCell));
+      assertNull(ExcelSheet.hyperlink(nullAddressCell));
+      assertNull(ExcelSheet.hyperlink(blankTargetCell));
+      assertNull(ExcelSheet.hyperlink(invalidEmailCell));
+
+      assertEquals(new ExcelComment("Review", "GridGrind", false), ExcelSheet.comment(commentCell));
+      assertNull(ExcelSheet.comment(blankCell));
+      assertNull(ExcelSheet.comment(missingStringCommentCell));
+      assertNull(ExcelSheet.comment(blankCommentCell));
+      Cell nullAuthorCommentCell = row.createCell(11);
+      nullAuthorCommentCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", null, false));
+      assertNull(ExcelSheet.comment(nullAuthorCommentCell));
+      assertNull(ExcelSheet.comment(nullTextCommentCell));
+      Cell blankAuthorCommentCell = row.createCell(12);
+      blankAuthorCommentCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", " ", false));
+      assertNull(ExcelSheet.comment(blankAuthorCommentCell));
+
+      assertEquals(HyperlinkType.URL, ExcelSheet.toPoi(ExcelHyperlinkType.URL));
+      assertEquals(HyperlinkType.EMAIL, ExcelSheet.toPoi(ExcelHyperlinkType.EMAIL));
+      assertEquals(HyperlinkType.FILE, ExcelSheet.toPoi(ExcelHyperlinkType.FILE));
+      assertEquals(HyperlinkType.DOCUMENT, ExcelSheet.toPoi(ExcelHyperlinkType.DOCUMENT));
+
+      assertEquals(
+          "https://example.com/report",
+          ExcelSheet.toPoiTarget(new ExcelHyperlink.Url("https://example.com/report")));
+      assertEquals(
+          "mailto:team@example.com",
+          ExcelSheet.toPoiTarget(new ExcelHyperlink.Email("team@example.com")));
+      assertEquals(
+          "/tmp/report.xlsx", ExcelSheet.toPoiTarget(new ExcelHyperlink.File("/tmp/report.xlsx")));
+      assertEquals("Budget!B4", ExcelSheet.toPoiTarget(new ExcelHyperlink.Document("Budget!B4")));
+    }
+  }
+
   private FormulaEvaluator throwingEvaluator(RuntimeException exception) {
     InvocationHandler handler =
         new InvocationHandler() {
@@ -701,5 +860,132 @@ class ExcelSheetTest {
       return false;
     }
     return Objects.equals(Proxy.getInvocationHandler(args[0]), handler);
+  }
+
+  private org.apache.poi.ss.usermodel.Hyperlink hyperlink(
+      XSSFWorkbook workbook, HyperlinkType hyperlinkType, String address) {
+    org.apache.poi.ss.usermodel.Hyperlink hyperlink =
+        workbook.getCreationHelper().createHyperlink(hyperlinkType);
+    hyperlink.setAddress(address);
+    return hyperlink;
+  }
+
+  private Comment comment(
+      XSSFWorkbook workbook, Sheet sheet, String text, String author, boolean visible) {
+    Comment comment = emptyComment(workbook, sheet);
+    comment.setString(workbook.getCreationHelper().createRichTextString(text));
+    comment.setAuthor(author);
+    comment.setVisible(visible);
+    return comment;
+  }
+
+  private Comment emptyComment(XSSFWorkbook workbook, Sheet sheet) {
+    ClientAnchor anchor = workbook.getCreationHelper().createClientAnchor();
+    anchor.setRow1(0);
+    anchor.setRow2(3);
+    anchor.setCol1(0);
+    anchor.setCol2(3);
+    return sheet.createDrawingPatriarch().createCellComment(anchor);
+  }
+
+  private Cell hyperlinkOnlyCell(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
+    InvocationHandler handler =
+        new InvocationHandler() {
+          @Override
+          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
+            return switch (method.getName()) {
+              case "getHyperlink" -> hyperlink;
+              case "toString" -> "hyperlinkOnlyCell";
+              case "hashCode" -> System.identityHashCode(proxy);
+              case "equals" -> false;
+              default -> throw new UnsupportedOperationException(method.getName());
+            };
+          }
+        };
+    return (Cell)
+        Proxy.newProxyInstance(formulaEvaluatorClassLoader(), new Class<?>[] {Cell.class}, handler);
+  }
+
+  private org.apache.poi.ss.usermodel.Hyperlink proxyHyperlink(
+      HyperlinkType hyperlinkType, String address) {
+    InvocationHandler handler =
+        new InvocationHandler() {
+          @Override
+          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
+            return switch (method.getName()) {
+              case "getType" -> hyperlinkType;
+              case "getAddress" -> address;
+              case "toString" -> "proxyHyperlink[" + hyperlinkType + "," + address + "]";
+              case "hashCode" -> Objects.hash(hyperlinkType, address);
+              case "equals" -> false;
+              default -> throw new UnsupportedOperationException(method.getName());
+            };
+          }
+        };
+    return (org.apache.poi.ss.usermodel.Hyperlink)
+        Proxy.newProxyInstance(
+            formulaEvaluatorClassLoader(),
+            new Class<?>[] {org.apache.poi.ss.usermodel.Hyperlink.class},
+            handler);
+  }
+
+  private Cell commentOnlyCell(Comment comment) {
+    InvocationHandler handler =
+        new InvocationHandler() {
+          @Override
+          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
+            return switch (method.getName()) {
+              case "getCellComment" -> comment;
+              case "toString" -> "commentOnlyCell";
+              case "hashCode" -> System.identityHashCode(proxy);
+              case "equals" -> false;
+              default -> throw new UnsupportedOperationException(method.getName());
+            };
+          }
+        };
+    return (Cell)
+        Proxy.newProxyInstance(formulaEvaluatorClassLoader(), new Class<?>[] {Cell.class}, handler);
+  }
+
+  private Comment proxyComment(String text, String author, boolean visible) {
+    InvocationHandler handler =
+        new InvocationHandler() {
+          @Override
+          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
+            return switch (method.getName()) {
+              case "getString" -> proxyRichTextString(text);
+              case "getAuthor" -> author;
+              case "isVisible" -> visible;
+              case "toString" -> "proxyComment[" + text + "," + author + "," + visible + "]";
+              case "hashCode" -> Objects.hash(text, author, visible);
+              case "equals" -> false;
+              default -> throw new UnsupportedOperationException(method.getName());
+            };
+          }
+        };
+    return (Comment)
+        Proxy.newProxyInstance(
+            formulaEvaluatorClassLoader(), new Class<?>[] {Comment.class}, handler);
+  }
+
+  private org.apache.poi.ss.usermodel.RichTextString proxyRichTextString(String text) {
+    InvocationHandler handler =
+        new InvocationHandler() {
+          @Override
+          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
+            return switch (method.getName()) {
+              case "getString" -> text;
+              case "toString" -> "proxyRichTextString[" + text + "]";
+              case "hashCode" -> Objects.hashCode(text);
+              case "equals" -> false;
+              default -> throw new UnsupportedOperationException(method.getName());
+            };
+          }
+        };
+    return (org.apache.poi.ss.usermodel.RichTextString)
+        Proxy.newProxyInstance(
+            formulaEvaluatorClassLoader(),
+            new Class<?>[] {org.apache.poi.ss.usermodel.RichTextString.class},
+            handler);
   }
 }

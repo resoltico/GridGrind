@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.6.0"
+version: "0.7.0"
 domain: OPERATIONS
 updated: "2026-03-26"
 route:
@@ -33,7 +33,7 @@ route:
 | `source` | Yes | Where the workbook comes from. |
 | `persistence` | No | Where and whether to save. Omit to run operations without saving. |
 | `operations` | No | Ordered list of workbook mutations. |
-| `analysis` | No | What to inspect after operations complete. |
+| `analysis` | No | Which sheets and named ranges to inspect after operations complete. |
 
 ---
 
@@ -323,7 +323,7 @@ Write a rectangular grid of typed values. The `rows` matrix must exactly match t
 
 ### CLEAR_RANGE
 
-Remove all values and styles from a rectangular range.
+Remove all values, styles, hyperlinks, and comments from a rectangular range.
 
 ```json
 { "type": "CLEAR_RANGE", "sheetName": "Inventory", "range": "A2:C10" }
@@ -333,6 +333,96 @@ Remove all values and styles from a rectangular range.
 |:------|:---------|:------------|
 | `sheetName` | Yes | Target sheet. |
 | `range` | Yes | Range to clear. |
+
+---
+
+### SET_HYPERLINK
+
+Attach or replace a hyperlink on one cell. The cell is created if needed.
+
+```json
+{
+  "type": "SET_HYPERLINK",
+  "sheetName": "Inventory",
+  "address": "A1",
+  "target": {
+    "type": "URL",
+    "target": "https://example.com/catalog"
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Target sheet. |
+| `address` | Yes | A1-notation cell address. |
+| `target` | Yes | Typed hyperlink target payload. |
+
+Supported target variants:
+
+- `{"type":"URL","target":"https://example.com/report"}`
+- `{"type":"EMAIL","email":"team@example.com"}`
+- `{"type":"FILE","target":"shared/report.xlsx"}`
+- `{"type":"DOCUMENT","target":"Inventory!B4"}`
+
+---
+
+### CLEAR_HYPERLINK
+
+Remove any hyperlink attached to one existing cell. The cell value, style, and comment are left
+unchanged.
+
+```json
+{ "type": "CLEAR_HYPERLINK", "sheetName": "Inventory", "address": "A1" }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Target sheet. |
+| `address` | Yes | Existing A1-notation cell address. |
+
+---
+
+### SET_COMMENT
+
+Attach or replace one plain-text comment on one cell. The cell is created if needed.
+
+```json
+{
+  "type": "SET_COMMENT",
+  "sheetName": "Inventory",
+  "address": "B4",
+  "comment": {
+    "text": "Verified by finance.",
+    "author": "GridGrind",
+    "visible": true
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Target sheet. |
+| `address` | Yes | A1-notation cell address. |
+| `comment` | Yes | Plain-text comment payload. |
+
+`comment.visible` defaults to `false` when omitted.
+
+---
+
+### CLEAR_COMMENT
+
+Remove any comment attached to one existing cell. The cell value, style, and hyperlink are left
+unchanged.
+
+```json
+{ "type": "CLEAR_COMMENT", "sheetName": "Inventory", "address": "B4" }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Target sheet. |
+| `address` | Yes | Existing A1-notation cell address. |
 
 ---
 
@@ -498,6 +588,56 @@ No additional fields.
 
 ---
 
+### SET_NAMED_RANGE
+
+Create or replace one named range in workbook scope or sheet scope. Targets are explicit
+sheet-qualified cells or rectangular ranges.
+
+```json
+{
+  "type": "SET_NAMED_RANGE",
+  "name": "BudgetTotal",
+  "scope": { "type": "WORKBOOK" },
+  "target": { "sheetName": "Budget", "range": "B4" }
+}
+```
+
+```json
+{
+  "type": "SET_NAMED_RANGE",
+  "name": "BudgetTable",
+  "scope": { "type": "SHEET", "sheetName": "Budget" },
+  "target": { "sheetName": "Budget", "range": "A1:B4" }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `name` | Yes | Defined-name identifier. Must not collide with A1 or R1C1 reference syntax and must not use the reserved `_xlnm.` prefix. |
+| `scope` | Yes | Workbook or sheet scope payload. |
+| `target` | Yes | Explicit sheet-qualified cell or rectangular range target. Reversed range endpoints are normalized to top-left:`bottom-right`. |
+
+---
+
+### DELETE_NAMED_RANGE
+
+Delete one existing named range from workbook scope or sheet scope.
+
+```json
+{
+  "type": "DELETE_NAMED_RANGE",
+  "name": "BudgetTotal",
+  "scope": { "type": "WORKBOOK" }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `name` | Yes | Defined-name identifier to delete. |
+| `scope` | Yes | Workbook or sheet scope of the exact name to delete. |
+
+---
+
 ## Analysis
 
 ```json
@@ -510,17 +650,37 @@ No additional fields.
         "previewRowCount": 5,
         "previewColumnCount": 3
       }
-    ]
+    ],
+    "namedRanges": { "mode": "ALL" }
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheets` | Yes | List of sheet analysis requests. |
+| `sheets` | No | List of sheet analysis requests. |
+| `namedRanges` | No | Workbook named-range analysis request. |
 | `sheetName` | Yes | Sheet to analyze. |
 | `cells` | No | Specific A1-notation cells to include in the response with full detail. |
 | `previewRowCount` | No | Number of rows to include in the sheet preview. |
 | `previewColumnCount` | No | Number of columns to include in the sheet preview. |
 
 The preview includes styled blank cells so template-like workbooks remain visible to agents.
+
+Named-range analysis requests:
+
+```json
+{ "mode": "NONE" }
+{ "mode": "ALL" }
+{
+  "mode": "SELECTED",
+  "selectors": [
+    { "type": "BY_NAME", "name": "BudgetTotal" },
+    { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
+    { "type": "SHEET_SCOPE", "name": "BudgetTable", "sheetName": "Budget" }
+  ]
+}
+```
+
+Selected named-range analysis fails with `NAMED_RANGE_NOT_FOUND` when any selector does not match
+an existing named range.

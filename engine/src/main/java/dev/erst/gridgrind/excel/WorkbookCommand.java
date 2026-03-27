@@ -19,7 +19,13 @@ public sealed interface WorkbookCommand
         WorkbookCommand.SetCell,
         WorkbookCommand.SetRange,
         WorkbookCommand.ClearRange,
+        WorkbookCommand.SetHyperlink,
+        WorkbookCommand.ClearHyperlink,
+        WorkbookCommand.SetComment,
+        WorkbookCommand.ClearComment,
         WorkbookCommand.ApplyStyle,
+        WorkbookCommand.SetNamedRange,
+        WorkbookCommand.DeleteNamedRange,
         WorkbookCommand.AppendRow,
         WorkbookCommand.AutoSizeColumns,
         WorkbookCommand.EvaluateAllFormulas,
@@ -231,6 +237,66 @@ public sealed interface WorkbookCommand
     }
   }
 
+  /** Replaces the hyperlink attached to a single cell. */
+  record SetHyperlink(String sheetName, String address, ExcelHyperlink target)
+      implements WorkbookCommand {
+    public SetHyperlink {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(address, "address must not be null");
+      Objects.requireNonNull(target, "target must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+    }
+  }
+
+  /** Removes any hyperlink attached to a single existing cell. */
+  record ClearHyperlink(String sheetName, String address) implements WorkbookCommand {
+    public ClearHyperlink {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(address, "address must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+    }
+  }
+
+  /** Replaces the plain-text comment attached to a single cell. */
+  record SetComment(String sheetName, String address, ExcelComment comment)
+      implements WorkbookCommand {
+    public SetComment {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(address, "address must not be null");
+      Objects.requireNonNull(comment, "comment must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+    }
+  }
+
+  /** Removes any comment attached to a single existing cell. */
+  record ClearComment(String sheetName, String address) implements WorkbookCommand {
+    public ClearComment {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(address, "address must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+    }
+  }
+
   record ApplyStyle(String sheetName, String range, ExcelCellStyle style)
       implements WorkbookCommand {
     public ApplyStyle {
@@ -243,6 +309,21 @@ public sealed interface WorkbookCommand
       if (range.isBlank()) {
         throw new IllegalArgumentException("range must not be blank");
       }
+    }
+  }
+
+  /** Creates or replaces one named range in workbook or sheet scope. */
+  record SetNamedRange(ExcelNamedRangeDefinition definition) implements WorkbookCommand {
+    public SetNamedRange {
+      Objects.requireNonNull(definition, "definition must not be null");
+    }
+  }
+
+  /** Deletes one existing named range from workbook or sheet scope. */
+  record DeleteNamedRange(String name, ExcelNamedRangeScope scope) implements WorkbookCommand {
+    public DeleteNamedRange {
+      name = ExcelNamedRangeDefinition.validateName(name);
+      Objects.requireNonNull(scope, "scope must not be null");
     }
   }
 

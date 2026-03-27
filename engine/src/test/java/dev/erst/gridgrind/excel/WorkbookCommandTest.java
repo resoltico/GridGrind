@@ -48,8 +48,26 @@ class WorkbookCommandTest {
         new WorkbookCommand.SetCell("Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23)));
     WorkbookCommand.SetRange setRange = new WorkbookCommand.SetRange("Budget", "A1:B2", rows);
     WorkbookCommand.ClearRange clearRange = new WorkbookCommand.ClearRange("Budget", "C1:C2");
+    WorkbookCommand.SetHyperlink setHyperlink =
+        new WorkbookCommand.SetHyperlink(
+            "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report"));
+    WorkbookCommand.ClearHyperlink clearHyperlink =
+        new WorkbookCommand.ClearHyperlink("Budget", "A1");
+    WorkbookCommand.SetComment setComment =
+        new WorkbookCommand.SetComment(
+            "Budget", "A1", new ExcelComment("Review", "GridGrind", false));
+    WorkbookCommand.ClearComment clearComment = new WorkbookCommand.ClearComment("Budget", "A1");
     WorkbookCommand.ApplyStyle applyStyle =
         new WorkbookCommand.ApplyStyle("Budget", "A1:B1", style);
+    WorkbookCommand.SetNamedRange setNamedRange =
+        new WorkbookCommand.SetNamedRange(
+            new ExcelNamedRangeDefinition(
+                "BudgetTotal",
+                new ExcelNamedRangeScope.WorkbookScope(),
+                new ExcelNamedRangeTarget("Budget", "B4")));
+    WorkbookCommand.DeleteNamedRange deleteNamedRange =
+        new WorkbookCommand.DeleteNamedRange(
+            "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget"));
     WorkbookCommand.AppendRow appendRow = new WorkbookCommand.AppendRow("Budget", values);
     WorkbookCommand.AutoSizeColumns autoSizeColumns = new WorkbookCommand.AutoSizeColumns("Budget");
     WorkbookCommand.EvaluateAllFormulas evaluate = new WorkbookCommand.EvaluateAllFormulas();
@@ -72,7 +90,14 @@ class WorkbookCommandTest {
     assertEquals("A1:B2", setRange.range());
     assertEquals(2, setRange.rows().size());
     assertEquals("C1:C2", clearRange.range());
+    assertEquals(ExcelHyperlinkType.URL, setHyperlink.target().type());
+    assertEquals("A1", clearHyperlink.address());
+    assertEquals("Review", setComment.comment().text());
+    assertEquals("A1", clearComment.address());
     assertEquals(style, applyStyle.style());
+    assertEquals("BudgetTotal", setNamedRange.definition().name());
+    assertEquals(
+        "Budget", ((ExcelNamedRangeScope.SheetScope) deleteNamedRange.scope()).sheetName());
     assertEquals(1, appendRow.values().size());
     assertEquals("Budget", autoSizeColumns.sheetName());
     assertNotNull(evaluate);
@@ -239,6 +264,63 @@ class WorkbookCommandTest {
         IllegalArgumentException.class, () -> new WorkbookCommand.ClearRange("Budget", " "));
     assertThrows(
         NullPointerException.class,
+        () ->
+            new WorkbookCommand.SetHyperlink(
+                null, "A1", new ExcelHyperlink.Url("https://example.com")));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookCommand.SetHyperlink(
+                "Budget", null, new ExcelHyperlink.Url("https://example.com")));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.SetHyperlink("Budget", "A1", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookCommand.SetHyperlink(
+                " ", "A1", new ExcelHyperlink.Url("https://example.com")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookCommand.SetHyperlink(
+                "Budget", " ", new ExcelHyperlink.Url("https://example.com")));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearHyperlink(null, "A1"));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.ClearHyperlink("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.ClearHyperlink(" ", "A1"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.ClearHyperlink("Budget", " "));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookCommand.SetComment(
+                null, "A1", new ExcelComment("Review", "GridGrind", false)));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookCommand.SetComment(
+                "Budget", null, new ExcelComment("Review", "GridGrind", false)));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.SetComment("Budget", "A1", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookCommand.SetComment(
+                " ", "A1", new ExcelComment("Review", "GridGrind", false)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookCommand.SetComment(
+                "Budget", " ", new ExcelComment("Review", "GridGrind", false)));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearComment(null, "A1"));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.ClearComment("Budget", null));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.ClearComment(" ", "A1"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.ClearComment("Budget", " "));
+    assertThrows(
+        NullPointerException.class,
         () -> new WorkbookCommand.ApplyStyle(null, "A1", ExcelCellStyle.numberFormat("0")));
     assertThrows(
         NullPointerException.class,
@@ -251,6 +333,18 @@ class WorkbookCommandTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookCommand.ApplyStyle("Budget", " ", ExcelCellStyle.numberFormat("0")));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetNamedRange(null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.DeleteNamedRange(null, new ExcelNamedRangeScope.WorkbookScope()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.DeleteNamedRange("BudgetTotal", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookCommand.DeleteNamedRange(
+                "_XLNM.PRINT_AREA", new ExcelNamedRangeScope.WorkbookScope()));
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.AppendRow(null, List.of()));
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookCommand.AppendRow(" ", List.of()));

@@ -1,0 +1,8 @@
+{
+  "targetKey" : "xlsx-roundtrip",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest/roundTrip/fa22f1f3081f0dd143c52e61323411ed8703a751",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/hyperlink_comment_invalid_row_case.bin",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "promotedAt" : "2026-03-26T16:47:54.346368Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/hyperlink_comment_invalid_row_case.txt"
+}

@@ -47,6 +47,11 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Sheet not found",
       "Create the sheet first or correct the sheet name."),
+  NAMED_RANGE_NOT_FOUND(
+      GridGrindProblemCategory.RESOURCE,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Named range not found",
+      "Create the named range first or correct the requested scope and name."),
   CELL_NOT_FOUND(
       GridGrindProblemCategory.RESOURCE,
       GridGrindProblemRecovery.CHANGE_REQUEST,

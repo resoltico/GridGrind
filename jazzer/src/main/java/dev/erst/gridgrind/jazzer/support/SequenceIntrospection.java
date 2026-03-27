@@ -107,7 +107,13 @@ public final class SequenceIntrospection {
       case WorkbookOperation.SetCell _ -> "SET_CELL";
       case WorkbookOperation.SetRange _ -> "SET_RANGE";
       case WorkbookOperation.ClearRange _ -> "CLEAR_RANGE";
+      case WorkbookOperation.SetHyperlink _ -> "SET_HYPERLINK";
+      case WorkbookOperation.ClearHyperlink _ -> "CLEAR_HYPERLINK";
+      case WorkbookOperation.SetComment _ -> "SET_COMMENT";
+      case WorkbookOperation.ClearComment _ -> "CLEAR_COMMENT";
       case WorkbookOperation.ApplyStyle _ -> "APPLY_STYLE";
+      case WorkbookOperation.SetNamedRange _ -> "SET_NAMED_RANGE";
+      case WorkbookOperation.DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case WorkbookOperation.AppendRow _ -> "APPEND_ROW";
       case WorkbookOperation.AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
       case WorkbookOperation.EvaluateFormulas _ -> "EVALUATE_FORMULAS";
@@ -132,7 +138,13 @@ public final class SequenceIntrospection {
       case WorkbookCommand.SetCell _ -> "SET_CELL";
       case WorkbookCommand.SetRange _ -> "SET_RANGE";
       case WorkbookCommand.ClearRange _ -> "CLEAR_RANGE";
+      case WorkbookCommand.SetHyperlink _ -> "SET_HYPERLINK";
+      case WorkbookCommand.ClearHyperlink _ -> "CLEAR_HYPERLINK";
+      case WorkbookCommand.SetComment _ -> "SET_COMMENT";
+      case WorkbookCommand.ClearComment _ -> "CLEAR_COMMENT";
       case WorkbookCommand.ApplyStyle _ -> "APPLY_STYLE";
+      case WorkbookCommand.SetNamedRange _ -> "SET_NAMED_RANGE";
+      case WorkbookCommand.DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case WorkbookCommand.AppendRow _ -> "APPEND_ROW";
       case WorkbookCommand.AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
       case WorkbookCommand.EvaluateAllFormulas _ -> "EVALUATE_ALL_FORMULAS";

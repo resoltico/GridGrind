@@ -4,13 +4,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelHyperlink;
+import dev.erst.gridgrind.excel.ExcelHyperlinkType;
+import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
+import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
+import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
+import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
+import dev.erst.gridgrind.excel.InvalidRangeAddressException;
+import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnsupportedFormulaException;
+import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
 import dev.erst.gridgrind.excel.XlsxRoundTrip;
@@ -192,6 +202,75 @@ class GridGrindServiceTest {
   }
 
   @Test
+  void executesExcelAuthoringWorkflowAndReturnsMetadataAndNamedRanges() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-authoring-ops-");
+
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            List.of(
+                new WorkbookOperation.EnsureSheet("Budget"),
+                new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("Report")),
+                new WorkbookOperation.SetCell("Budget", "B4", new CellInput.Numeric(61.0)),
+                new WorkbookOperation.SetHyperlink(
+                    "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report")),
+                new WorkbookOperation.SetComment(
+                    "Budget", "A1", new CommentInput("Review", "GridGrind", true)),
+                new WorkbookOperation.SetNamedRange(
+                    "BudgetTotal",
+                    new NamedRangeScope.Workbook(),
+                    new NamedRangeTarget("Budget", "B4")),
+                new WorkbookOperation.SetNamedRange(
+                    "LocalItem",
+                    new NamedRangeScope.Sheet("Budget"),
+                    new NamedRangeTarget("Budget", "A1:B2"))),
+            new GridGrindRequest.WorkbookAnalysisRequest(
+                List.of(
+                    new GridGrindRequest.SheetInspectionRequest(
+                        "Budget", List.of("A1", "B4"), null, null)),
+                new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.All()));
+
+    GridGrindResponse response = new GridGrindService().execute(request);
+
+    assertInstanceOf(GridGrindResponse.Success.class, response);
+    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    assertEquals(2, success.workbook().namedRangeCount());
+    assertEquals(2, success.namedRanges().size());
+    assertTrue(
+        success
+            .namedRanges()
+            .contains(
+                new GridGrindResponse.NamedRangeReport.RangeReport(
+                    "BudgetTotal",
+                    new NamedRangeScope.Workbook(),
+                    "Budget!$B$4",
+                    new NamedRangeTarget("Budget", "B4"))));
+    assertTrue(
+        success
+            .namedRanges()
+            .contains(
+                new GridGrindResponse.NamedRangeReport.RangeReport(
+                    "LocalItem",
+                    new NamedRangeScope.Sheet("Budget"),
+                    "Budget!$A$1:Budget!$B$2",
+                    new NamedRangeTarget("Budget", "A1:B2"))));
+    GridGrindResponse.CellReport.TextReport linkedCell =
+        (GridGrindResponse.CellReport.TextReport)
+            success.sheets().getFirst().requestedCells().getFirst();
+    assertEquals(ExcelHyperlinkType.URL, linkedCell.hyperlink().type());
+    assertEquals("https://example.com/report", linkedCell.hyperlink().target());
+    assertEquals("Review", linkedCell.comment().text());
+    assertEquals(
+        new ExcelHyperlink.Url("https://example.com/report"),
+        XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1").hyperlink().orElseThrow());
+    assertEquals(
+        new ExcelComment("Review", "GridGrind", true),
+        XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1").comment().orElseThrow());
+    assertEquals(2, XlsxRoundTrip.namedRanges(workbookPath).size());
+  }
+
+  @Test
   void returnsStructuredFailureWhenMoveSheetTargetsMissingSheet() {
     GridGrindResponse response =
         new GridGrindService()
@@ -319,6 +398,27 @@ class GridGrindServiceTest {
     assertEquals("APPLY_OPERATION", failure.problem().context().stage());
     assertEquals("FREEZE_PANES", failure.problem().context().operationType());
     assertEquals("Missing", failure.problem().context().sheetName());
+  }
+
+  @Test
+  void returnsStructuredFailureForMissingNamedRangeDuringAnalysis() {
+    GridGrindResponse response =
+        new GridGrindService()
+            .execute(
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(new WorkbookOperation.EnsureSheet("Budget")),
+                    new GridGrindRequest.WorkbookAnalysisRequest(
+                        List.of(),
+                        new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected(
+                            List.of(new NamedRangeSelector.WorkbookScope("BudgetTotal"))))));
+
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.NAMED_RANGE_NOT_FOUND, failure.problem().code());
+    assertEquals("ANALYZE_WORKBOOK", failure.problem().context().stage());
+    assertEquals("BudgetTotal", failure.problem().context().namedRangeName());
   }
 
   @Test
@@ -1220,5 +1320,326 @@ class GridGrindServiceTest {
     assertEquals("Budget", GridGrindService.sheetNameFor(freezePanes, ex));
     assertNull(GridGrindService.addressFor(freezePanes, ex));
     assertNull(GridGrindService.rangeFor(freezePanes, ex));
+  }
+
+  @Test
+  void convertsWaveThreeOperationsIntoWorkbookCommands() {
+    WorkbookCommand setHyperlink =
+        GridGrindService.toCommand(
+            new WorkbookOperation.SetHyperlink(
+                "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report")));
+    WorkbookCommand clearHyperlink =
+        GridGrindService.toCommand(new WorkbookOperation.ClearHyperlink("Budget", "A1"));
+    WorkbookCommand setComment =
+        GridGrindService.toCommand(
+            new WorkbookOperation.SetComment(
+                "Budget", "A1", new CommentInput("Review", "GridGrind", false)));
+    WorkbookCommand clearComment =
+        GridGrindService.toCommand(new WorkbookOperation.ClearComment("Budget", "A1"));
+    WorkbookCommand setNamedRange =
+        GridGrindService.toCommand(
+            new WorkbookOperation.SetNamedRange(
+                "BudgetTotal",
+                new NamedRangeScope.Workbook(),
+                new NamedRangeTarget("Budget", "B4")));
+    WorkbookCommand deleteNamedRange =
+        GridGrindService.toCommand(
+            new WorkbookOperation.DeleteNamedRange(
+                "BudgetTotal", new NamedRangeScope.Sheet("Budget")));
+
+    assertInstanceOf(WorkbookCommand.SetHyperlink.class, setHyperlink);
+    assertInstanceOf(WorkbookCommand.ClearHyperlink.class, clearHyperlink);
+    assertInstanceOf(WorkbookCommand.SetComment.class, setComment);
+    assertInstanceOf(WorkbookCommand.ClearComment.class, clearComment);
+    assertInstanceOf(WorkbookCommand.SetNamedRange.class, setNamedRange);
+    assertInstanceOf(WorkbookCommand.DeleteNamedRange.class, deleteNamedRange);
+    assertEquals(
+        new ExcelHyperlink.Url("https://example.com/report"),
+        ((WorkbookCommand.SetHyperlink) setHyperlink).target());
+    assertEquals(
+        new ExcelComment("Review", "GridGrind", false),
+        ((WorkbookCommand.SetComment) setComment).comment());
+    assertEquals(
+        new ExcelNamedRangeDefinition(
+            "BudgetTotal",
+            new ExcelNamedRangeScope.WorkbookScope(),
+            new ExcelNamedRangeTarget("Budget", "B4")),
+        ((WorkbookCommand.SetNamedRange) setNamedRange).definition());
+    assertEquals(
+        new ExcelNamedRangeScope.SheetScope("Budget"),
+        ((WorkbookCommand.DeleteNamedRange) deleteNamedRange).scope());
+  }
+
+  @Test
+  void analyzesNamedRangesAndConvertsReportsDirectly() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget").setCell("B4", ExcelCellValue.number(61.0));
+      workbook.setNamedRange(
+          new ExcelNamedRangeDefinition(
+              "BudgetTotal",
+              new ExcelNamedRangeScope.WorkbookScope(),
+              new ExcelNamedRangeTarget("Budget", "B4")));
+
+      List<GridGrindResponse.NamedRangeReport> none =
+          GridGrindService.analyzeNamedRanges(
+              workbook, new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.None());
+      List<GridGrindResponse.NamedRangeReport> all =
+          GridGrindService.analyzeNamedRanges(
+              workbook, new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.All());
+      List<GridGrindResponse.NamedRangeReport> selected =
+          GridGrindService.analyzeNamedRanges(
+              workbook,
+              new GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected(
+                  List.of(new NamedRangeSelector.ByName("BudgetTotal"))));
+
+      assertEquals(List.of(), none);
+      assertEquals(all, selected);
+
+      GridGrindResponse.NamedRangeReport rangeReport =
+          GridGrindService.toNamedRangeReport(
+              new ExcelNamedRangeSnapshot.RangeSnapshot(
+                  "BudgetTotal",
+                  new ExcelNamedRangeScope.WorkbookScope(),
+                  "Budget!$B$4",
+                  new ExcelNamedRangeTarget("Budget", "B4")));
+      GridGrindResponse.NamedRangeReport formulaReport =
+          GridGrindService.toNamedRangeReport(
+              new ExcelNamedRangeSnapshot.FormulaSnapshot(
+                  "BudgetRollup",
+                  new ExcelNamedRangeScope.SheetScope("Budget"),
+                  "SUM(Budget!$B$2:$B$3)"));
+
+      assertEquals(
+          new GridGrindResponse.NamedRangeReport.RangeReport(
+              "BudgetTotal",
+              new NamedRangeScope.Workbook(),
+              "Budget!$B$4",
+              new NamedRangeTarget("Budget", "B4")),
+          rangeReport);
+      assertEquals(
+          new GridGrindResponse.NamedRangeReport.FormulaReport(
+              "BudgetRollup", new NamedRangeScope.Sheet("Budget"), "SUM(Budget!$B$2:$B$3)"),
+          formulaReport);
+    }
+  }
+
+  @Test
+  void selectsAndMatchesNamedRangesWithPreciseMissingSelectorSemantics() {
+    List<ExcelNamedRangeSnapshot> namedRanges =
+        List.of(
+            new ExcelNamedRangeSnapshot.RangeSnapshot(
+                "BudgetTotal",
+                new ExcelNamedRangeScope.WorkbookScope(),
+                "Budget!$B$4",
+                new ExcelNamedRangeTarget("Budget", "B4")),
+            new ExcelNamedRangeSnapshot.RangeSnapshot(
+                "LocalItem",
+                new ExcelNamedRangeScope.SheetScope("Budget"),
+                "Budget!$A$1",
+                new ExcelNamedRangeTarget("Budget", "A1")));
+
+    assertTrue(
+        GridGrindService.matches(
+            new NamedRangeSelector.ByName("budgettotal"), namedRanges.getFirst()));
+    assertTrue(
+        GridGrindService.matches(
+            new NamedRangeSelector.WorkbookScope("BudgetTotal"), namedRanges.getFirst()));
+    assertTrue(
+        GridGrindService.matches(
+            new NamedRangeSelector.SheetScope("LocalItem", "Budget"), namedRanges.get(1)));
+    assertFalse(
+        GridGrindService.matches(
+            new NamedRangeSelector.WorkbookScope("LocalItem"), namedRanges.get(1)));
+    assertFalse(
+        GridGrindService.matches(
+            new NamedRangeSelector.SheetScope("LocalItem", "Archive"), namedRanges.get(1)));
+    assertFalse(
+        GridGrindService.matches(
+            new NamedRangeSelector.ByName("MissingRange"), namedRanges.getFirst()));
+    assertFalse(
+        GridGrindService.matches(
+            new NamedRangeSelector.WorkbookScope("MissingRange"), namedRanges.getFirst()));
+    assertFalse(
+        GridGrindService.matches(
+            new NamedRangeSelector.SheetScope("BudgetTotal", "Budget"), namedRanges.getFirst()));
+
+    assertEquals(
+        List.of(namedRanges.getFirst(), namedRanges.get(1)),
+        GridGrindService.selectedNamedRanges(
+            namedRanges,
+            List.of(
+                new NamedRangeSelector.ByName("BudgetTotal"),
+                new NamedRangeSelector.ByName("BudgetTotal"),
+                new NamedRangeSelector.SheetScope("LocalItem", "Budget"))));
+
+    NamedRangeNotFoundException workbookMissing =
+        GridGrindService.missingNamedRange(new NamedRangeSelector.WorkbookScope("BudgetTotal"));
+    NamedRangeNotFoundException sheetMissing =
+        GridGrindService.missingNamedRange(
+            new NamedRangeSelector.SheetScope("LocalItem", "Budget"));
+    assertEquals(new ExcelNamedRangeScope.WorkbookScope(), workbookMissing.scope());
+    assertEquals(new ExcelNamedRangeScope.SheetScope("Budget"), sheetMissing.scope());
+
+    NamedRangeNotFoundException missing =
+        assertThrows(
+            NamedRangeNotFoundException.class,
+            () ->
+                GridGrindService.selectedNamedRanges(
+                    namedRanges, List.of(new NamedRangeSelector.ByName("MissingRange"))));
+    assertEquals("MissingRange", missing.name());
+  }
+
+  @Test
+  void extractsContextForAuthoringMetadataAndNamedRangeOperations() {
+    RuntimeException ex = new RuntimeException("test");
+    WorkbookOperation setHyperlink =
+        new WorkbookOperation.SetHyperlink(
+            "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report"));
+    WorkbookOperation clearHyperlink = new WorkbookOperation.ClearHyperlink("Budget", "A1");
+    WorkbookOperation setComment =
+        new WorkbookOperation.SetComment(
+            "Budget", "A1", new CommentInput("Review", "GridGrind", false));
+    WorkbookOperation clearComment = new WorkbookOperation.ClearComment("Budget", "A1");
+    WorkbookOperation applyStyle =
+        new WorkbookOperation.ApplyStyle(
+            "Budget",
+            "A1:B2",
+            new CellStyleInput(
+                null, true, null, null, null, null, null, null, null, null, null, null, null));
+    WorkbookOperation setNamedRange =
+        new WorkbookOperation.SetNamedRange(
+            "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"));
+    WorkbookOperation deleteNamedRangeWorkbook =
+        new WorkbookOperation.DeleteNamedRange("BudgetTotal", new NamedRangeScope.Workbook());
+    WorkbookOperation deleteNamedRangeSheet =
+        new WorkbookOperation.DeleteNamedRange("LocalItem", new NamedRangeScope.Sheet("Budget"));
+
+    assertNull(GridGrindService.formulaFor(setHyperlink, ex));
+    assertNull(GridGrindService.formulaFor(clearHyperlink, ex));
+    assertNull(GridGrindService.formulaFor(setComment, ex));
+    assertNull(GridGrindService.formulaFor(clearComment, ex));
+    assertNull(GridGrindService.formulaFor(applyStyle, ex));
+    assertNull(GridGrindService.formulaFor(setNamedRange, ex));
+    assertNull(GridGrindService.formulaFor(deleteNamedRangeWorkbook, ex));
+
+    assertEquals("Budget", GridGrindService.sheetNameFor(setHyperlink, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(clearHyperlink, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(setComment, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(clearComment, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(applyStyle, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(setNamedRange, ex));
+    assertNull(GridGrindService.sheetNameFor(deleteNamedRangeWorkbook, ex));
+    assertEquals("Budget", GridGrindService.sheetNameFor(deleteNamedRangeSheet, ex));
+
+    assertEquals("A1", GridGrindService.addressFor(setHyperlink, ex));
+    assertEquals("A1", GridGrindService.addressFor(clearHyperlink, ex));
+    assertEquals("A1", GridGrindService.addressFor(setComment, ex));
+    assertEquals("A1", GridGrindService.addressFor(clearComment, ex));
+    assertNull(GridGrindService.addressFor(setNamedRange, ex));
+
+    assertEquals("A1:B2", GridGrindService.rangeFor(applyStyle, ex));
+    assertEquals("B4", GridGrindService.rangeFor(setNamedRange, ex));
+    assertNull(GridGrindService.rangeFor(deleteNamedRangeWorkbook, ex));
+
+    assertEquals("BudgetTotal", GridGrindService.namedRangeNameFor(setNamedRange, ex));
+    assertEquals("BudgetTotal", GridGrindService.namedRangeNameFor(deleteNamedRangeWorkbook, ex));
+    assertEquals("LocalItem", GridGrindService.namedRangeNameFor(deleteNamedRangeSheet, ex));
+    assertEquals(
+        "BudgetTotal",
+        GridGrindService.namedRangeNameFor(
+            new WorkbookOperation.EnsureSheet("Budget"),
+            new NamedRangeNotFoundException(
+                "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
+  }
+
+  @Test
+  void extractsAddressAndRangeFallbacksAndExhaustsNamedRangeNullArms() {
+    InvalidFormulaException invalidFormula =
+        new InvalidFormulaException(
+            "Budget", "C3", "SUM(", "bad formula", new IllegalArgumentException("bad"));
+    NamedRangeNotFoundException missingNamedRange =
+        new NamedRangeNotFoundException("BudgetTotal", new ExcelNamedRangeScope.WorkbookScope());
+    InvalidCellAddressException invalidAddress =
+        new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"));
+    InvalidRangeAddressException invalidRange =
+        new InvalidRangeAddressException("A1:", new IllegalArgumentException("bad"));
+
+    assertEquals(
+        "C3",
+        GridGrindService.addressFor(new WorkbookOperation.EnsureSheet("Budget"), invalidFormula));
+    assertNull(
+        GridGrindService.addressFor(
+            new WorkbookOperation.DeleteNamedRange("BudgetTotal", new NamedRangeScope.Workbook()),
+            invalidAddress));
+
+    assertEquals(
+        "C1:D2",
+        GridGrindService.rangeFor(
+            new WorkbookOperation.SetRange(
+                "Budget", "C1:D2", List.of(List.of(new CellInput.Text("x")))),
+            invalidFormula));
+    assertEquals(
+        "E1:E2",
+        GridGrindService.rangeFor(
+            new WorkbookOperation.ClearRange("Budget", "E1:E2"), invalidFormula));
+    assertNull(
+        GridGrindService.rangeFor(
+            new WorkbookOperation.SetHyperlink(
+                "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report")),
+            invalidFormula));
+    assertNull(
+        GridGrindService.rangeFor(
+            new WorkbookOperation.ClearHyperlink("Budget", "A1"), invalidFormula));
+    assertNull(
+        GridGrindService.rangeFor(
+            new WorkbookOperation.SetComment(
+                "Budget", "A1", new CommentInput("Review", "GridGrind", false)),
+            invalidFormula));
+    assertNull(
+        GridGrindService.rangeFor(
+            new WorkbookOperation.ClearComment("Budget", "A1"), invalidFormula));
+    assertEquals(
+        "A1:",
+        GridGrindService.rangeFor(new WorkbookOperation.EnsureSheet("Budget"), invalidRange));
+
+    List<WorkbookOperation> operationsWithoutNamedRanges =
+        List.of(
+            new WorkbookOperation.EnsureSheet("Budget"),
+            new WorkbookOperation.RenameSheet("Budget", "Summary"),
+            new WorkbookOperation.DeleteSheet("Budget"),
+            new WorkbookOperation.MoveSheet("Budget", 0),
+            new WorkbookOperation.MergeCells("Budget", "A1:B2"),
+            new WorkbookOperation.UnmergeCells("Budget", "A1:B2"),
+            new WorkbookOperation.SetColumnWidth("Budget", 0, 1, 16.0),
+            new WorkbookOperation.SetRowHeight("Budget", 0, 1, 28.5),
+            new WorkbookOperation.FreezePanes("Budget", 1, 1, 1, 1),
+            new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("x")),
+            new WorkbookOperation.SetRange(
+                "Budget", "A1:B1", List.of(List.of(new CellInput.Text("x")))),
+            new WorkbookOperation.ClearRange("Budget", "A1:B1"),
+            new WorkbookOperation.SetHyperlink(
+                "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report")),
+            new WorkbookOperation.ClearHyperlink("Budget", "A1"),
+            new WorkbookOperation.SetComment(
+                "Budget", "A1", new CommentInput("Review", "GridGrind", false)),
+            new WorkbookOperation.ClearComment("Budget", "A1"),
+            new WorkbookOperation.ApplyStyle(
+                "Budget",
+                "A1:B2",
+                new CellStyleInput(
+                    null, true, null, null, null, null, null, null, null, null, null, null, null)),
+            new WorkbookOperation.AppendRow("Budget", List.of(new CellInput.Text("x"))),
+            new WorkbookOperation.AutoSizeColumns("Budget"),
+            new WorkbookOperation.EvaluateFormulas(),
+            new WorkbookOperation.ForceFormulaRecalculationOnOpen());
+
+    for (WorkbookOperation operation : operationsWithoutNamedRanges) {
+      assertNull(GridGrindService.namedRangeNameFor(operation, invalidFormula));
+    }
+
+    assertEquals(
+        "BudgetTotal",
+        GridGrindService.namedRangeNameFor(
+            new WorkbookOperation.FreezePanes("Budget", 1, 1, 1, 1), missingNamedRange));
   }
 }

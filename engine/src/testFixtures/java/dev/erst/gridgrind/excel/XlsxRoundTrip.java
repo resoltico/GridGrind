@@ -18,6 +18,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -137,6 +138,54 @@ public final class XlsxRoundTrip {
         });
   }
 
+  /** Returns the optional hyperlink and comment facts stored at one saved cell address. */
+  public static ExcelCellMetadataSnapshot cellMetadata(
+      Path workbookPath, String sheetName, String address) throws IOException {
+    requireNonBlank(address, "address");
+    CellReference cellReference = new CellReference(address);
+    return readSheet(
+        workbookPath,
+        sheetName,
+        sheet -> {
+          Row row = sheet.getRow(cellReference.getRow());
+          if (row == null) {
+            throw new CellNotFoundException(address);
+          }
+          XSSFCell cell = (XSSFCell) row.getCell(cellReference.getCol());
+          if (cell == null) {
+            throw new CellNotFoundException(address);
+          }
+          return ExcelCellMetadataSnapshot.of(hyperlink(cell), comment(cell));
+        });
+  }
+
+  /** Returns every analyzable named range stored in the saved workbook. */
+  public static List<ExcelNamedRangeSnapshot> namedRanges(Path workbookPath) throws IOException {
+    return readWorkbook(
+        workbookPath,
+        workbook -> {
+          List<ExcelNamedRangeSnapshot> namedRanges = new ArrayList<>();
+          for (var name : workbook.getAllNames()) {
+            if (!shouldExpose(name)) {
+              continue;
+            }
+            ExcelNamedRangeScope scope = toScope(workbook, name.getSheetIndex());
+            String refersToFormula = Objects.requireNonNullElse(name.getRefersToFormula(), "");
+            var target = ExcelNamedRangeTargets.resolveTarget(refersToFormula, scope);
+            if (target.isEmpty()) {
+              namedRanges.add(
+                  new ExcelNamedRangeSnapshot.FormulaSnapshot(
+                      name.getNameName(), scope, refersToFormula));
+            } else {
+              namedRanges.add(
+                  new ExcelNamedRangeSnapshot.RangeSnapshot(
+                      name.getNameName(), scope, refersToFormula, target.orElseThrow()));
+            }
+          }
+          return List.copyOf(namedRanges);
+        });
+  }
+
   private static <T> T readSheet(Path workbookPath, String sheetName, SheetReader<T> sheetReader)
       throws IOException {
     requireNonBlank(sheetName, "sheetName");
@@ -204,6 +253,57 @@ public final class XlsxRoundTrip {
       return null;
     }
     return toRgbHex(style.getFillForegroundColorColor());
+  }
+
+  private static ExcelHyperlink hyperlink(XSSFCell cell) {
+    XSSFHyperlink hyperlink = cell.getHyperlink();
+    if (hyperlink == null || hyperlink.getType() == null) {
+      return null;
+    }
+    String address = hyperlink.getAddress();
+    if (address == null || address.isBlank()) {
+      return null;
+    }
+    try {
+      return switch (hyperlink.getType()) {
+        case URL -> new ExcelHyperlink.Url(address);
+        case EMAIL -> new ExcelHyperlink.Email(address);
+        case FILE -> new ExcelHyperlink.File(address);
+        case DOCUMENT -> new ExcelHyperlink.Document(address);
+        case NONE -> null;
+      };
+    } catch (IllegalArgumentException exception) {
+      return null;
+    }
+  }
+
+  private static ExcelComment comment(XSSFCell cell) {
+    var comment = cell.getCellComment();
+    if (comment == null || comment.getString() == null) {
+      return null;
+    }
+    String text = comment.getString().getString();
+    String author = comment.getAuthor();
+    if (text == null || text.isBlank() || author == null || author.isBlank()) {
+      return null;
+    }
+    return new ExcelComment(text, author, comment.isVisible());
+  }
+
+  private static boolean shouldExpose(org.apache.poi.ss.usermodel.Name name) {
+    String nameName = name.getNameName();
+    return !name.isFunctionName()
+        && !name.isHidden()
+        && nameName != null
+        && !nameName.startsWith("_xlnm.")
+        && !nameName.startsWith("_XLNM.");
+  }
+
+  private static ExcelNamedRangeScope toScope(XSSFWorkbook workbook, int sheetIndex) {
+    if (sheetIndex < 0) {
+      return new ExcelNamedRangeScope.WorkbookScope();
+    }
+    return new ExcelNamedRangeScope.SheetScope(workbook.getSheetName(sheetIndex));
   }
 
   private static String toRgbHex(XSSFColor color) {

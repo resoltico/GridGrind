@@ -55,7 +55,13 @@ class GridGrindJsonTest {
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             "/tmp/budget.xlsx",
-            new GridGrindResponse.WorkbookSummary(1, List.of("Budget"), true),
+            new GridGrindResponse.WorkbookSummary(1, List.of("Budget"), 1, true),
+            List.of(
+                new GridGrindResponse.NamedRangeReport.RangeReport(
+                    "BudgetTotal",
+                    new NamedRangeScope.Workbook(),
+                    "Budget!$B$4",
+                    new NamedRangeTarget("Budget", "B4"))),
             List.of(new GridGrindResponse.SheetReport("Budget", 1, 0, 1, List.of(), List.of())));
 
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -303,6 +309,66 @@ class GridGrindJsonTest {
     assertEquals("#FFF2CC", applyStyle.style().fillColor());
     assertEquals(ExcelBorderStyle.THIN, applyStyle.style().border().all().style());
     assertEquals(ExcelBorderStyle.DOUBLE, applyStyle.style().border().right().style());
+  }
+
+  @Test
+  void readsExcelAuthoringOperationsAndNamedRangeAnalysisFromJson() throws IOException {
+    GridGrindRequest request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "source": { "mode": "NEW" },
+              "operations": [
+                {
+                  "type": "SET_HYPERLINK",
+                  "sheetName": "Budget",
+                  "address": "A1",
+                  "target": { "type": "URL", "target": "https://example.com/report" }
+                },
+                {
+                  "type": "SET_COMMENT",
+                  "sheetName": "Budget",
+                  "address": "A1",
+                  "comment": { "text": "Review", "author": "GridGrind", "visible": true }
+                },
+                {
+                  "type": "SET_NAMED_RANGE",
+                  "name": "BudgetTotal",
+                  "scope": { "type": "WORKBOOK" },
+                  "target": { "sheetName": "Budget", "range": "B4" }
+                }
+              ],
+              "analysis": {
+                "sheets": [],
+                "namedRanges": {
+                  "mode": "SELECTED",
+                  "selectors": [
+                    { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" }
+                  ]
+                }
+              }
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    assertEquals(3, request.operations().size());
+    assertInstanceOf(WorkbookOperation.SetHyperlink.class, request.operations().get(0));
+    assertInstanceOf(WorkbookOperation.SetComment.class, request.operations().get(1));
+    assertInstanceOf(WorkbookOperation.SetNamedRange.class, request.operations().get(2));
+    assertInstanceOf(
+        GridGrindRequest.WorkbookAnalysisRequest.NamedRangeInspection.Selected.class,
+        request.analysis().namedRanges());
+
+    WorkbookOperation.SetHyperlink setHyperlink =
+        (WorkbookOperation.SetHyperlink) request.operations().get(0);
+    WorkbookOperation.SetComment setComment =
+        (WorkbookOperation.SetComment) request.operations().get(1);
+    WorkbookOperation.SetNamedRange setNamedRange =
+        (WorkbookOperation.SetNamedRange) request.operations().get(2);
+    assertEquals(
+        "https://example.com/report", ((HyperlinkTarget.Url) setHyperlink.target()).target());
+    assertTrue(setComment.comment().visible());
+    assertEquals("BudgetTotal", setNamedRange.name());
   }
 
   @Test

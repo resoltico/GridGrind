@@ -1,11 +1,11 @@
 ---
 afad: "3.4"
-version: "0.6.0"
+version: "0.7.0"
 domain: QUICK_REFERENCE
 updated: "2026-03-26"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, apply-style, append-row, clear-range, evaluate-formulas]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind operation examples"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind named range example"]
 ---
 
 # Quick Reference
@@ -153,6 +153,46 @@ GridGrind supports `.xlsx` workbooks only. Use `.xlsx` paths for `source.path` a
 { "type": "CLEAR_RANGE", "sheetName": "Sheet1", "range": "A1:Z100" }
 ```
 
+`CLEAR_RANGE` removes value, style, hyperlink, and comment state from every cell in the range.
+
+## SET_HYPERLINK
+
+```json
+{ "type": "SET_HYPERLINK", "sheetName": "Sheet1", "address": "A1", "target": { "type": "URL", "target": "https://example.com/report" } }
+{ "type": "SET_HYPERLINK", "sheetName": "Sheet1", "address": "A2", "target": { "type": "EMAIL", "email": "team@example.com" } }
+{ "type": "SET_HYPERLINK", "sheetName": "Sheet1", "address": "A3", "target": { "type": "FILE", "target": "reports/monthly.xlsx" } }
+{ "type": "SET_HYPERLINK", "sheetName": "Sheet1", "address": "A4", "target": { "type": "DOCUMENT", "target": "Summary!B4" } }
+```
+
+## CLEAR_HYPERLINK
+
+```json
+{ "type": "CLEAR_HYPERLINK", "sheetName": "Sheet1", "address": "A1" }
+```
+
+## SET_COMMENT
+
+```json
+{
+  "type": "SET_COMMENT",
+  "sheetName": "Sheet1",
+  "address": "B2",
+  "comment": {
+    "text": "Reviewed by finance.",
+    "author": "GridGrind",
+    "visible": true
+  }
+}
+```
+
+If `visible` is omitted, it defaults to `false`.
+
+## CLEAR_COMMENT
+
+```json
+{ "type": "CLEAR_COMMENT", "sheetName": "Sheet1", "address": "B2" }
+```
+
 ## APPLY_STYLE
 
 ```json
@@ -206,6 +246,36 @@ GridGrind supports `.xlsx` workbooks only. Use `.xlsx` paths for `source.path` a
 { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Sheet1" }
 ```
 
+## SET_NAMED_RANGE
+
+```json
+{
+  "type": "SET_NAMED_RANGE",
+  "name": "BudgetTotal",
+  "scope": { "type": "WORKBOOK" },
+  "target": { "sheetName": "Budget", "range": "B4" }
+}
+{
+  "type": "SET_NAMED_RANGE",
+  "name": "BudgetTable",
+  "scope": { "type": "SHEET", "sheetName": "Budget" },
+  "target": { "sheetName": "Budget", "range": "A1:B4" }
+}
+```
+
+Named-range targets are normalized to top-left:`bottom-right` order. For example, `"B4:A1"` is
+accepted and stored as `"A1:B4"`.
+
+## DELETE_NAMED_RANGE
+
+```json
+{
+  "type": "DELETE_NAMED_RANGE",
+  "name": "BudgetTotal",
+  "scope": { "type": "WORKBOOK" }
+}
+```
+
 `SET_COLUMN_WIDTH.widthCharacters` is converted to POI width units with `round(widthCharacters * 256)`.
 `SET_ROW_HEIGHT.heightPoints` uses Excel point units. `UNMERGE_CELLS` requires an exact merged-range match.
 
@@ -234,6 +304,21 @@ GridGrind supports `.xlsx` workbooks only. Use `.xlsx` paths for `source.path` a
       "previewRowCount": 5,
       "previewColumnCount": 4
     }
+  ],
+  "namedRanges": { "mode": "ALL" }
+}
+```
+
+Named-range analysis snippets:
+
+```json
+{ "mode": "NONE" }
+{ "mode": "ALL" }
+{
+  "mode": "SELECTED",
+  "selectors": [
+    { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
+    { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
   ]
 }
 ```

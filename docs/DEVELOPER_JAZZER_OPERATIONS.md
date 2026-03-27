@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.6.0"
+version: "0.7.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
 updated: "2026-03-26"
 route:
@@ -234,7 +234,7 @@ Seed-quality rules:
 - for the binary harnesses, prefer replay-verified promoted corpus entries
 - keep at least one successful seed in every binary harness, not only invalid ones
 - keep the seed floor broad enough to preserve sheet management, structural layout, formatting
-  depth, and source/persistence-mode coverage together
+  depth, authoring metadata, named-range behavior, and source/persistence-mode coverage together
 
 Dictionary-evaluation rules:
 - only evaluate dictionary promotion after repeated similar recommendations from the same harness
@@ -301,8 +301,14 @@ Not expected:
 - missing promotion metadata after a successful `promote` command
 - expected-invalid or replay-clean artifacts being counted as active findings in `status` or
   `report`
+- running root Gradle verification and nested Jazzer verification in parallel without flakiness
 
 If one of those expectations fails, treat it as a Jazzer-layer bug.
+
+Operator discipline:
+1. Finish any root `./gradlew ...` or `./check.sh` run before starting a nested Jazzer build.
+2. Finish any nested Jazzer run before restarting a root Gradle build.
+3. Treat parallel root-plus-nested execution as unsupported local operator behavior.
 
 If a recommended dictionary appears interesting, use this procedure:
 1. Save the run log.

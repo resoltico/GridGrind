@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.6.0"
+version: "0.7.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-03-26"
+updated: "2026-03-27"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 7 |
-| `protocol-workflow` | `GridGrindService.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 7 |
-| `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 6 |
-| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 5 |
-| `regression` | all committed `*Inputs` resources | replay of the committed custom seed floor | N/A | Yes | 25 total across harnesses |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 8 |
+| `protocol-workflow` | `GridGrindService.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 10 |
+| `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 7 |
+| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 8 |
+| `regression` | all committed `*Inputs` resources | replay of the committed custom seed floor | N/A | Yes | 33 total across harnesses |
 
 ---
 
@@ -38,6 +38,7 @@ Surface:
 - JSON decoding
 - request-model validation
 - style payloads including typed `fontHeight`, fill, color, and border input shapes
+- hyperlink, comment, and named-range payload shapes
 
 What it asserts:
 - no unexpected crash during parsing
@@ -62,6 +63,7 @@ Surface:
 - `GridGrindService.execute(...)`
 - response-shape invariants
 - source-mode and persistence-mode combinations for `.xlsx` workflows
+- hyperlink, comment, and named-range operations in protocol execution paths
 
 What it asserts:
 - generated workflows remain constructor-valid or are rejected as generated-invalid inputs
@@ -89,6 +91,7 @@ Surface:
 - ordered `WorkbookCommand` sequences generated from raw bytes
 - direct `WorkbookCommandExecutor.apply(...)`
 - workbook structural invariants
+- hyperlink, comment, and named-range command execution paths
 
 What it asserts:
 - workbook shape remains coherent after successful execution
@@ -117,6 +120,9 @@ What it asserts:
 - successful command sequences can be saved and reopened
 - reopened workbook exposes coherent structural metadata
 - style-bearing command effects survive reopen for supported formatting-depth fields
+- hyperlink and comment metadata remain coherent after reopen when those commands succeed
+- named ranges remain coherent after reopen, including normalized target ordering for reversed
+  input ranges
 
 Telemetry signals:
 - command-kind counts
@@ -144,8 +150,10 @@ Current deterministic support scope:
 - `JazzerReportSupportTest`: latest-summary parsing, including active-fuzz corpus-size parsing
 - `JazzerTextRendererTest`: summary rendering semantics for active findings vs replay-clean
   artifacts
-- `XlsxRoundTripVerifierTest`: targeted style-aware round-trip verifier behavior outside the fuzz
+- `WorkbookInvariantChecksTest`: protocol-workflow and response-shape invariants outside the fuzz
   loop
+- `XlsxRoundTripVerifierTest`: targeted style-aware and authoring-metadata round-trip verifier
+  behavior outside the fuzz loop
 
 These tests are not fuzz harnesses. They protect the Jazzer infrastructure itself.
 
@@ -159,6 +167,7 @@ Committed custom seeds currently in source control:
 |:--------|:------|:--------|
 | `protocol-request` | `sheet_management_request.json` | readable valid request seed taken from the public sheet-management example |
 | `protocol-request` | `budget_request.json` | readable budget workflow seed with range writes, style, formulas, and analysis |
+| `protocol-request` | `excel_authoring_essentials_request.json` | readable authoring seed covering hyperlinks, comments, named ranges, and workbook-level named-range analysis |
 | `protocol-request` | `live_workflow_create.json` | readable multi-sheet finance workflow with append-row and formula authoring |
 | `protocol-request` | `live_workflow_revise.json` | readable existing-workbook revision seed with overwrite persistence |
 | `protocol-request` | `structural_layout_request.json` | readable structural-layout seed covering merge, sizing, and freeze panes |
@@ -170,18 +179,25 @@ Committed custom seeds currently in source control:
 | `protocol-workflow` | `append_row_failure.bin` | structured workflow seed that replays to a protocol `FAILURE` response dominated by `APPEND_ROW` |
 | `protocol-workflow` | `auto_size_failure.bin` | structured workflow seed that replays to a protocol `FAILURE` response dominated by `AUTO_SIZE_COLUMNS` |
 | `protocol-workflow` | `existing_overwrite_apply_style_success.bin` | structured workflow seed that replays through `EXISTING` plus `OVERWRITE` with style application |
+| `protocol-workflow` | `existing_overwrite_hyperlink_failure.bin` | structured workflow seed that replays through `EXISTING` plus `OVERWRITE` with hyperlink operations in a protocol failure path |
 | `protocol-workflow` | `save_as_apply_style_failure.bin` | structured workflow seed that exercises `SAVE_AS` plus style-bearing protocol failure handling |
+| `protocol-workflow` | `save_as_named_range_failure.bin` | structured workflow seed that exercises `SAVE_AS` plus repeated named-range operations in a protocol failure path |
+| `protocol-workflow` | `set_comment_clear_range_failure.bin` | structured workflow seed that exercises comment mutation together with later range clearing in a protocol failure path |
 | `engine-command-sequence` | `invalid_cell_address_case.bin` | direct engine seed that replays to an expected `InvalidCellAddressException` |
 | `engine-command-sequence` | `create_sheet_only_success.bin` | direct engine seed that replays to successful repeated `CREATE_SHEET` commands |
 | `engine-command-sequence` | `create_sheet_set_range_success.bin` | direct engine seed that replays to successful `CREATE_SHEET` plus `SET_RANGE` commands |
 | `engine-command-sequence` | `apply_style_alignment_success.bin` | direct engine seed that replays to successful alignment-only style application |
 | `engine-command-sequence` | `apply_style_formatting_depth_success.bin` | direct engine seed that replays to successful formatting-depth style application |
 | `engine-command-sequence` | `invalid_formula_parser_state_case.bin` | direct engine seed that replays to the expected-invalid malformed-formula parser-state case fixed from a former Jazzer finding |
+| `engine-command-sequence` | `set_hyperlink_clear_comment_invalid_sheet.bin` | direct engine seed that replays to an expected-invalid mixed hyperlink/comment command case against a missing sheet |
 | `xlsx-roundtrip` | `create_sheet_roundtrip_case.bin` | successful round-trip seed dominated by repeated `CREATE_SHEET` commands |
 | `xlsx-roundtrip` | `single_sheet_roundtrip_case.bin` | minimal successful round-trip seed that creates one sheet and persists cleanly |
 | `xlsx-roundtrip` | `create_sheet_set_range_roundtrip_case.bin` | successful round-trip seed that persists `CREATE_SHEET` plus `SET_RANGE` commands |
 | `xlsx-roundtrip` | `apply_style_alignment_roundtrip_success.bin` | successful round-trip seed that preserves alignment-only style state after reopen |
 | `xlsx-roundtrip` | `apply_style_formatting_depth_roundtrip_success.bin` | successful round-trip seed that preserves formatting-depth style state after reopen |
+| `xlsx-roundtrip` | `named_range_normalization_roundtrip_success.bin` | successful round-trip seed that preserves named-range state while normalizing reversed target ordering |
+| `xlsx-roundtrip` | `hyperlink_comment_invalid_row_case.bin` | expected-invalid round-trip seed that exercises hyperlink and comment commands alongside invalid row mutation input |
+| `xlsx-roundtrip` | `set_hyperlink_replacement_roundtrip_success.bin` | successful round-trip seed that preserves the latest hyperlink target after repeated writes to the same cell |
 
 Matching promotion metadata lives under:
 
@@ -205,7 +221,8 @@ The current Jazzer layer is strongest at:
   pane coordinates
 - a committed custom seed floor that now includes readable public example requests and replay-
   verified binary workflow seeds
-- style-aware `.xlsx` round-trip verification for formatting-depth features
+- style-aware `.xlsx` round-trip verification for formatting depth, authoring metadata, and
+  named-range normalization
 - explicit source/persistence-mode telemetry for service-level workflow fuzzing
 - deterministic tests that protect the Jazzer reporting and verifier infrastructure itself
 - regression preservation of real discovered local inputs
@@ -230,6 +247,8 @@ Still outside the current Jazzer surface:
 - extremely large-workbook or streaming-strategy fuzzing
 - cross-run corpus-health scoring beyond counts and newest-entry inspection
 - automatic conversion of promoted inputs into deterministic main-suite tests
+- a replay-verified `.xlsx` round-trip success seed that isolates successful hyperlink/comment
+  persistence without unrelated command noise
 - committed libFuzzer dictionaries
 
 These are real gaps. The current layer is good, but it is not full project fuzzing coverage.

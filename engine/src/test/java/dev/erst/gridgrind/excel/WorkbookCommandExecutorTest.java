@@ -39,9 +39,27 @@ class WorkbookCommandExecutorTest {
                   "Budget",
                   List.of(ExcelCellValue.text("Total"), ExcelCellValue.formula("SUM(B1:B2)"))),
               new WorkbookCommand.ClearRange("Budget", "A2"),
+              new WorkbookCommand.SetHyperlink(
+                  "Budget", "A1", new ExcelHyperlink.Document("Budget!B3")),
+              new WorkbookCommand.ClearHyperlink("Budget", "A1"),
+              new WorkbookCommand.SetComment(
+                  "Budget", "B1", new ExcelComment("Review", "GridGrind", false)),
+              new WorkbookCommand.ClearComment("Budget", "B1"),
               new WorkbookCommand.RenameSheet("Archive", "History"),
               new WorkbookCommand.MoveSheet("History", 0),
               new WorkbookCommand.DeleteSheet("Scratch"),
+              new WorkbookCommand.SetNamedRange(
+                  new ExcelNamedRangeDefinition(
+                      "BudgetTotal",
+                      new ExcelNamedRangeScope.WorkbookScope(),
+                      new ExcelNamedRangeTarget("Budget", "B3"))),
+              new WorkbookCommand.SetNamedRange(
+                  new ExcelNamedRangeDefinition(
+                      "HistoryCell",
+                      new ExcelNamedRangeScope.SheetScope("History"),
+                      new ExcelNamedRangeTarget("History", "A1"))),
+              new WorkbookCommand.DeleteNamedRange(
+                  "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()),
               new WorkbookCommand.AutoSizeColumns("Budget"),
               new WorkbookCommand.SetColumnWidth("Budget", 0, 1, 16.0),
               new WorkbookCommand.SetRowHeight("Budget", 0, 0, 28.5),
@@ -52,6 +70,9 @@ class WorkbookCommandExecutorTest {
       assertEquals(List.of("History", "Budget"), workbook.sheetNames());
       assertEquals("Item", workbook.sheet("Budget").text("A1"));
       assertEquals(54.0, workbook.sheet("Budget").number("B3"));
+      assertTrue(workbook.sheet("Budget").snapshotCell("A1").metadata().hyperlink().isEmpty());
+      assertTrue(workbook.sheet("Budget").snapshotCell("B1").metadata().comment().isEmpty());
+      assertEquals(1, workbook.namedRangeCount());
       assertEquals(
           ExcelHorizontalAlignment.CENTER,
           workbook.sheet("Budget").snapshotCell("A1").style().horizontalAlignment());
@@ -67,6 +88,14 @@ class WorkbookCommandExecutorTest {
     assertEquals(
         new XlsxRoundTrip.FreezePaneState.Frozen(1, 1, 1, 1),
         XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+    assertEquals(
+        List.of(
+            new ExcelNamedRangeSnapshot.RangeSnapshot(
+                "HistoryCell",
+                new ExcelNamedRangeScope.SheetScope("History"),
+                "History!$A$1",
+                new ExcelNamedRangeTarget("History", "A1"))),
+        XlsxRoundTrip.namedRanges(workbookPath));
   }
 
   @Test

@@ -1,0 +1,12 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/examples/excel-authoring-essentials-request.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 1913
+Decode Outcome: PARSED
+Source Kind: NEW
+Persistence Kind: SAVE_AS
+Operation Count: 7
+Analysis Sheet Count: 1
+Style Kinds: (none)
+Operation Kinds: SET_NAMED_RANGE=2, SET_COMMENT=1, ENSURE_SHEET=1, EVALUATE_FORMULAS=1, SET_HYPERLINK=1, SET_RANGE=1

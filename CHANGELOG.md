@@ -3,6 +3,33 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-03-27
+
+### Added
+- Cell-metadata authoring with `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`, and
+  `CLEAR_COMMENT`, plus typed hyperlink and comment analysis in cell reports and previews.
+- Workbook named-range authoring with `SET_NAMED_RANGE` and `DELETE_NAMED_RANGE`, plus requested
+  workbook-level named-range analysis and named-range counts in workbook summaries.
+- Public example request for hyperlink, comment, and named-range workflows in
+  `examples/excel-authoring-essentials-request.json`.
+- Jazzer regression seeds covering the public authoring example, hyperlink/comment workflow
+  failures, named-range workflow failures, named-range normalization round-trips, and additional
+  authoring-metadata replay cases.
+
+### Changed
+- Named-range targets are now canonicalized to top-left:`bottom-right` order on input, so shapes
+  such as `B2:A1` are stored and reported as `A1:B2`.
+- `CLEAR_RANGE` now documents its full effect on cell metadata: it clears hyperlink and comment
+  state in addition to values and styles.
+- Jazzer coverage and operator docs now describe the expanded authoring surface and the larger
+  committed seed floor.
+
+### Fixed
+- Repeated `SET_HYPERLINK` writes on the same cell now preserve the latest hyperlink target after
+  `.xlsx` save and reopen instead of leaking an older target through the persisted workbook.
+- `.xlsx` round-trip verification no longer treats named-range target normalization as a failure
+  after save and reopen.
+
 ## [0.6.0] - 2026-03-26
 
 ### Added
@@ -168,7 +195,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/resoltico/GridGrind/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/resoltico/GridGrind/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/resoltico/GridGrind/compare/v0.4.1...v0.5.0
 [0.4.1]: https://github.com/resoltico/GridGrind/compare/v0.4.0...v0.4.1

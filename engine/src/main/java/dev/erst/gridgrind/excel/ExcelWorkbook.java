@@ -12,6 +12,7 @@ import org.apache.poi.openxml4j.exceptions.NotOfficeXmlFileException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
+import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellReference;
@@ -110,6 +111,27 @@ public final class ExcelWorkbook implements AutoCloseable {
     return this;
   }
 
+  /** Creates or replaces one named range in workbook or sheet scope. */
+  public ExcelWorkbook setNamedRange(ExcelNamedRangeDefinition definition) {
+    Objects.requireNonNull(definition, "definition must not be null");
+
+    Name name = existingName(definition.name(), definition.scope());
+    if (name == null) {
+      name = workbook.createName();
+    }
+    applyScope(name, definition.scope());
+    name.setNameName(definition.name());
+    name.setRefersToFormula(definition.target().refersToFormula());
+    return this;
+  }
+
+  /** Deletes one named range from workbook or sheet scope. */
+  public ExcelWorkbook deleteNamedRange(String name, ExcelNamedRangeScope scope) {
+    Name existingName = requiredName(name, scope);
+    workbook.removeName(existingName);
+    return this;
+  }
+
   /** Evaluates every formula cell currently present in the workbook. */
   public ExcelWorkbook evaluateAllFormulas() {
     for (Sheet sheet : workbook) {
@@ -147,6 +169,11 @@ public final class ExcelWorkbook implements AutoCloseable {
     return workbook.getNumberOfSheets();
   }
 
+  /** Returns the number of analyzable named ranges currently present in the workbook. */
+  public int namedRangeCount() {
+    return namedRanges().size();
+  }
+
   /** Returns an ordered list of all sheet names in the workbook. */
   public List<String> sheetNames() {
     List<String> sheetNames = new ArrayList<>(workbook.getNumberOfSheets());
@@ -154,6 +181,29 @@ public final class ExcelWorkbook implements AutoCloseable {
       sheetNames.add(workbook.getSheetName(sheetIndex));
     }
     return List.copyOf(sheetNames);
+  }
+
+  /** Returns every analyzable named range currently present in the workbook. */
+  public List<ExcelNamedRangeSnapshot> namedRanges() {
+    List<ExcelNamedRangeSnapshot> namedRanges = new ArrayList<>();
+    for (Name name : workbook.getAllNames()) {
+      if (!shouldExpose(name)) {
+        continue;
+      }
+      ExcelNamedRangeScope scope = toScope(name);
+      String refersToFormula = Objects.requireNonNullElse(name.getRefersToFormula(), "");
+      var target = ExcelNamedRangeTargets.resolveTarget(refersToFormula, scope);
+      if (target.isEmpty()) {
+        namedRanges.add(
+            new ExcelNamedRangeSnapshot.FormulaSnapshot(
+                name.getNameName(), scope, refersToFormula));
+      } else {
+        namedRanges.add(
+            new ExcelNamedRangeSnapshot.RangeSnapshot(
+                name.getNameName(), scope, refersToFormula, target.orElseThrow()));
+      }
+    }
+    return List.copyOf(namedRanges);
   }
 
   /** Returns whether the workbook is marked to recalculate formulas when opened in Excel. */
@@ -201,6 +251,60 @@ public final class ExcelWorkbook implements AutoCloseable {
       throw new SheetNotFoundException(sheetName);
     }
     return sheetIndex;
+  }
+
+  private Name requiredName(String name, ExcelNamedRangeScope scope) {
+    Name existingName = existingName(name, scope);
+    if (existingName == null) {
+      throw new NamedRangeNotFoundException(name, scope);
+    }
+    return existingName;
+  }
+
+  private Name existingName(String name, ExcelNamedRangeScope scope) {
+    String validatedName = ExcelNamedRangeDefinition.validateName(name);
+    Objects.requireNonNull(scope, "scope must not be null");
+
+    return workbook.getAllNames().stream()
+        .filter(candidate -> candidate.getNameName().equalsIgnoreCase(validatedName))
+        .filter(candidate -> scopeMatches(candidate, scope))
+        .findFirst()
+        .orElse(null);
+  }
+
+  /** Returns whether the POI defined name belongs to the requested workbook or sheet scope. */
+  boolean scopeMatches(Name candidate, ExcelNamedRangeScope scope) {
+    return switch (scope) {
+      case ExcelNamedRangeScope.WorkbookScope _ -> candidate.getSheetIndex() < 0;
+      case ExcelNamedRangeScope.SheetScope sheetScope ->
+          candidate.getSheetIndex() == requiredSheetIndex(sheetScope.sheetName());
+    };
+  }
+
+  private void applyScope(Name name, ExcelNamedRangeScope scope) {
+    switch (scope) {
+      case ExcelNamedRangeScope.WorkbookScope _ -> name.setSheetIndex(-1);
+      case ExcelNamedRangeScope.SheetScope sheetScope ->
+          name.setSheetIndex(requiredSheetIndex(sheetScope.sheetName()));
+    }
+  }
+
+  /** Returns whether the POI defined name is a user-facing range that GridGrind should analyze. */
+  static boolean shouldExpose(Name name) {
+    String nameName = name.getNameName();
+    return !name.isFunctionName()
+        && !name.isHidden()
+        && nameName != null
+        && !nameName.startsWith("_xlnm.")
+        && !nameName.startsWith("_XLNM.");
+  }
+
+  private ExcelNamedRangeScope toScope(Name name) {
+    int sheetIndex = name.getSheetIndex();
+    if (sheetIndex < 0) {
+      return new ExcelNamedRangeScope.WorkbookScope();
+    }
+    return new ExcelNamedRangeScope.SheetScope(workbook.getSheetName(sheetIndex));
   }
 
   private void requireSheetNameAvailable(String newSheetName, int currentSheetIndex) {
