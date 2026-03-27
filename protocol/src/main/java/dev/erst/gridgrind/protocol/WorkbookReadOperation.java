@@ -26,17 +26,27 @@ import java.util.Set;
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetComments.class, name = "GET_COMMENTS"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetSheetLayout.class, name = "GET_SHEET_LAYOUT"),
   @JsonSubTypes.Type(
-      value = WorkbookReadOperation.AnalyzeFormulaSurface.class,
-      name = "ANALYZE_FORMULA_SURFACE"),
+      value = WorkbookReadOperation.GetFormulaSurface.class,
+      name = "GET_FORMULA_SURFACE"),
+  @JsonSubTypes.Type(value = WorkbookReadOperation.GetSheetSchema.class, name = "GET_SHEET_SCHEMA"),
   @JsonSubTypes.Type(
-      value = WorkbookReadOperation.AnalyzeSheetSchema.class,
-      name = "ANALYZE_SHEET_SCHEMA"),
+      value = WorkbookReadOperation.GetNamedRangeSurface.class,
+      name = "GET_NAMED_RANGE_SURFACE"),
   @JsonSubTypes.Type(
-      value = WorkbookReadOperation.AnalyzeNamedRangeSurface.class,
-      name = "ANALYZE_NAMED_RANGE_SURFACE")
+      value = WorkbookReadOperation.AnalyzeFormulaHealth.class,
+      name = "ANALYZE_FORMULA_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadOperation.AnalyzeHyperlinkHealth.class,
+      name = "ANALYZE_HYPERLINK_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadOperation.AnalyzeNamedRangeHealth.class,
+      name = "ANALYZE_NAMED_RANGE_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadOperation.AnalyzeWorkbookFindings.class,
+      name = "ANALYZE_WORKBOOK_FINDINGS")
 })
 public sealed interface WorkbookReadOperation
-    permits WorkbookReadOperation.Introspection, WorkbookReadOperation.Insight {
+    permits WorkbookReadOperation.Introspection, WorkbookReadOperation.Analysis {
 
   /** Stable caller-provided identifier used to correlate this read with its result. */
   String requestId();
@@ -51,11 +61,17 @@ public sealed interface WorkbookReadOperation
           GetMergedRegions,
           GetHyperlinks,
           GetComments,
-          GetSheetLayout {}
+          GetSheetLayout,
+          GetFormulaSurface,
+          GetSheetSchema,
+          GetNamedRangeSurface {}
 
   /** Marker for derived workbook analysis built on top of introspection primitives. */
-  sealed interface Insight extends WorkbookReadOperation
-      permits AnalyzeFormulaSurface, AnalyzeSheetSchema, AnalyzeNamedRangeSurface {}
+  sealed interface Analysis extends WorkbookReadOperation
+      permits AnalyzeFormulaHealth,
+          AnalyzeHyperlinkHealth,
+          AnalyzeNamedRangeHealth,
+          AnalyzeWorkbookFindings {}
 
   /** Returns workbook-level summary facts such as sheet order and recalculation flag. */
   record GetWorkbookSummary(String requestId) implements Introspection {
@@ -140,18 +156,18 @@ public sealed interface WorkbookReadOperation
   }
 
   /** Groups formula usage patterns across one or more sheets. */
-  record AnalyzeFormulaSurface(String requestId, SheetSelection selection) implements Insight {
-    public AnalyzeFormulaSurface {
+  record GetFormulaSurface(String requestId, SheetSelection selection) implements Introspection {
+    public GetFormulaSurface {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(selection, "selection must not be null");
     }
   }
 
   /** Infers a simple column schema from a rectangular window on one sheet. */
-  record AnalyzeSheetSchema(
+  record GetSheetSchema(
       String requestId, String sheetName, String topLeftAddress, int rowCount, int columnCount)
-      implements Insight {
-    public AnalyzeSheetSchema {
+      implements Introspection {
+    public GetSheetSchema {
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       topLeftAddress = requireNonBlank(topLeftAddress, "topLeftAddress");
@@ -161,11 +177,43 @@ public sealed interface WorkbookReadOperation
   }
 
   /** Summarizes the scope and backing kind of selected named ranges. */
-  record AnalyzeNamedRangeSurface(String requestId, NamedRangeSelection selection)
-      implements Insight {
-    public AnalyzeNamedRangeSurface {
+  record GetNamedRangeSurface(String requestId, NamedRangeSelection selection)
+      implements Introspection {
+    public GetNamedRangeSurface {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports formula findings such as error results and volatile usage. */
+  record AnalyzeFormulaHealth(String requestId, SheetSelection selection) implements Analysis {
+    public AnalyzeFormulaHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports hyperlink findings such as malformed targets and missing document destinations. */
+  record AnalyzeHyperlinkHealth(String requestId, SheetSelection selection) implements Analysis {
+    public AnalyzeHyperlinkHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports named-range findings such as broken references and scope shadowing. */
+  record AnalyzeNamedRangeHealth(String requestId, NamedRangeSelection selection)
+      implements Analysis {
+    public AnalyzeNamedRangeHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Runs the first analysis family across the workbook and aggregates their findings. */
+  record AnalyzeWorkbookFindings(String requestId) implements Analysis {
+    public AnalyzeWorkbookFindings {
+      requestId = requireNonBlank(requestId, "requestId");
     }
   }
 

@@ -37,7 +37,8 @@ class WorkbookInvariantChecksTest {
     GridGrindResponse.Success response =
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponse.PersistenceOutcome.Saved(workbookPath.toString()),
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                "result.xlsx", workbookPath.toString()),
             List.of(
                 new WorkbookReadResult.WorkbookSummaryResult(
                     "summary",
@@ -149,7 +150,22 @@ class WorkbookInvariantChecksTest {
                                 "BudgetTotal",
                                 new NamedRangeScope.Workbook(),
                                 "Budget!$B$4",
-                                GridGrindResponse.NamedRangeBackingKind.RANGE))))));
+                                GridGrindResponse.NamedRangeBackingKind.RANGE)))),
+                new WorkbookReadResult.FormulaHealthResult(
+                    "formula-health",
+                    new GridGrindResponse.FormulaHealthReport(
+                        1,
+                        new GridGrindResponse.AnalysisSummaryReport(1, 0, 0, 1),
+                        List.of(
+                            new GridGrindResponse.AnalysisFindingReport(
+                                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                                    .FORMULA_VOLATILE_FUNCTION,
+                                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+                                "Volatile formula",
+                                "Formula uses NOW().",
+                                new GridGrindResponse.AnalysisLocationReport.Cell(
+                                    "Budget", "B4"),
+                                List.of("NOW()")))))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
   }
@@ -169,12 +185,13 @@ class WorkbookInvariantChecksTest {
                 new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
                 new WorkbookReadOperation.GetHyperlinks(
                     "hyperlinks", "Budget", new CellSelection.AllUsedCells()),
-                new WorkbookReadOperation.AnalyzeNamedRangeSurface(
-                    "surface", new NamedRangeSelection.All())));
+                new WorkbookReadOperation.AnalyzeNamedRangeHealth(
+                    "named-range-health", new NamedRangeSelection.All())));
     GridGrindResponse.Success response =
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponse.PersistenceOutcome.Saved(workbookPath.toString()),
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                workbookPath.toString(), workbookPath.toString()),
             List.of(
                 new WorkbookReadResult.WorkbookSummaryResult(
                     "summary",
@@ -189,19 +206,12 @@ class WorkbookInvariantChecksTest {
                             "A1",
                             new GridGrindResponse.HyperlinkReport(
                                 ExcelHyperlinkType.URL, "https://example.com/report")))),
-                new WorkbookReadResult.NamedRangeSurfaceResult(
-                    "surface",
-                    new GridGrindResponse.NamedRangeSurfaceReport(
+                new WorkbookReadResult.NamedRangeHealthResult(
+                    "named-range-health",
+                    new GridGrindResponse.NamedRangeHealthReport(
                         1,
-                        0,
-                        1,
-                        0,
-                        List.of(
-                            new GridGrindResponse.NamedRangeSurfaceEntryReport(
-                                "BudgetTotal",
-                                new NamedRangeScope.Workbook(),
-                                "Budget!$B$4",
-                                GridGrindResponse.NamedRangeBackingKind.RANGE))))));
+                        new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0),
+                        List.of()))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
   }

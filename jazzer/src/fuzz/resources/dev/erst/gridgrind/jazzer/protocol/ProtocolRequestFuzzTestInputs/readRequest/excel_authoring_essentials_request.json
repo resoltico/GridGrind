@@ -102,7 +102,7 @@
       "selection": { "mode": "ALL" }
     },
     {
-      "type": "ANALYZE_NAMED_RANGE_SURFACE",
+      "type": "GET_NAMED_RANGE_SURFACE",
       "requestId": "named-range-surface",
       "selection": { "mode": "ALL" }
     }

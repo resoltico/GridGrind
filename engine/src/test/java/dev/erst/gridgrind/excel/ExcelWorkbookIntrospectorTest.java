@@ -16,7 +16,12 @@ class ExcelWorkbookIntrospectorTest {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       ExcelSheet budget = workbook.getOrCreateSheet("Budget");
       budget.setCell("A1", ExcelCellValue.text("Report"));
+      budget.setCell("A2", ExcelCellValue.text("Hosting"));
+      budget.setCell("B2", ExcelCellValue.number(49.0));
+      budget.setCell("A3", ExcelCellValue.text("Domain"));
+      budget.setCell("B3", ExcelCellValue.number(12.0));
       budget.setCell("B4", ExcelCellValue.number(61.0));
+      budget.setCell("B5", ExcelCellValue.formula("SUM(B2:B3)"));
       budget.mergeCells("A1:B1");
       budget.setColumnWidth(0, 0, 12.5);
       budget.setRowHeight(0, 0, 18.0);
@@ -83,6 +88,26 @@ class ExcelWorkbookIntrospectorTest {
               WorkbookReadResult.SheetLayoutResult.class,
               introspector.execute(
                   workbook, new WorkbookReadCommand.GetSheetLayout("layout", "Budget")));
+      WorkbookReadResult.FormulaSurfaceResult formulaSurface =
+          cast(
+              WorkbookReadResult.FormulaSurfaceResult.class,
+              introspector.execute(
+                  workbook,
+                  new WorkbookReadCommand.GetFormulaSurface(
+                      "formula", new ExcelSheetSelection.All())));
+      WorkbookReadResult.SheetSchemaResult schema =
+          cast(
+              WorkbookReadResult.SheetSchemaResult.class,
+              introspector.execute(
+                  workbook,
+                  new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 5, 2)));
+      WorkbookReadResult.NamedRangeSurfaceResult namedRangeSurface =
+          cast(
+              WorkbookReadResult.NamedRangeSurfaceResult.class,
+              introspector.execute(
+                  workbook,
+                  new WorkbookReadCommand.GetNamedRangeSurface(
+                      "namedRangeSurface", new ExcelNamedRangeSelection.All())));
 
       assertEquals(List.of("Budget"), workbookSummary.workbook().sheetNames());
       assertEquals("BudgetTotal", namedRanges.namedRanges().getFirst().name());
@@ -94,6 +119,14 @@ class ExcelWorkbookIntrospectorTest {
           "https://example.com/report", hyperlinks.hyperlinks().getFirst().hyperlink().target());
       assertEquals("Review", comments.comments().getFirst().comment().text());
       assertInstanceOf(WorkbookReadResult.FreezePane.Frozen.class, layout.layout().freezePanes());
+      assertEquals(1, formulaSurface.analysis().totalFormulaCellCount());
+      assertEquals(
+          "SUM(B2:B3)",
+          formulaSurface.analysis().sheets().getFirst().formulas().getFirst().formula());
+      assertEquals("Budget", schema.analysis().sheetName());
+      assertEquals(4, schema.analysis().dataRowCount());
+      assertEquals(1, namedRangeSurface.analysis().rangeBackedCount());
+      assertEquals(0, namedRangeSurface.analysis().formulaBackedCount());
     }
   }
 
@@ -229,6 +262,91 @@ class ExcelWorkbookIntrospectorTest {
     assertThrows(
         NullPointerException.class,
         () -> introspector.selectNamedRanges(ExcelWorkbook.create(), null));
+  }
+
+  @Test
+  void getFormulaSurfaceAndNamedRangeSurfaceRespectSelections() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-introspector-surface-", ".xlsx");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var budget = workbook.createSheet("Budget");
+      budget.createRow(0).createCell(0).setCellValue("Item");
+      budget.getRow(0).createCell(1).setCellValue("Amount");
+      budget.createRow(1).createCell(0).setCellValue("Hosting");
+      budget.getRow(1).createCell(1).setCellFormula("1+1");
+
+      var forecast = workbook.createSheet("Forecast");
+      forecast.createRow(0).createCell(0).setCellValue("Item");
+      forecast.getRow(0).createCell(1).setCellValue("Amount");
+      forecast.createRow(1).createCell(0).setCellValue("Domain");
+      forecast.getRow(1).createCell(1).setCellFormula("2+2");
+
+      var workbookName = workbook.createName();
+      workbookName.setNameName("BudgetRollup");
+      workbookName.setRefersToFormula("SUM(Budget!$B$2:$B$2)");
+      var sheetName = workbook.createName();
+      sheetName.setNameName("LocalItem");
+      sheetName.setSheetIndex(0);
+      sheetName.setRefersToFormula("Budget!$A$2");
+
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
+
+      WorkbookReadResult.FormulaSurfaceResult formulaSurface =
+          cast(
+              WorkbookReadResult.FormulaSurfaceResult.class,
+              introspector.execute(
+                  workbook,
+                  new WorkbookReadCommand.GetFormulaSurface(
+                      "formula", new ExcelSheetSelection.Selected(List.of("Forecast")))));
+      assertEquals(1, formulaSurface.analysis().totalFormulaCellCount());
+      assertEquals(
+          List.of("Forecast"),
+          formulaSurface.analysis().sheets().stream()
+              .map(WorkbookReadResult.SheetFormulaSurface::sheetName)
+              .toList());
+
+      WorkbookReadResult.NamedRangeSurfaceResult namedRangeSurface =
+          cast(
+              WorkbookReadResult.NamedRangeSurfaceResult.class,
+              introspector.execute(
+                  workbook,
+                  new WorkbookReadCommand.GetNamedRangeSurface(
+                      "namedRangeSurface",
+                      new ExcelNamedRangeSelection.Selected(
+                          List.of(
+                              new ExcelNamedRangeSelector.WorkbookScope("BudgetRollup"),
+                              new ExcelNamedRangeSelector.SheetScope("LocalItem", "Budget"))))));
+      assertEquals(1, namedRangeSurface.analysis().workbookScopedCount());
+      assertEquals(1, namedRangeSurface.analysis().sheetScopedCount());
+      assertEquals(1, namedRangeSurface.analysis().formulaBackedCount());
+      assertEquals(1, namedRangeSurface.analysis().rangeBackedCount());
+    }
+  }
+
+  @Test
+  void getSheetSchemaReturnsNullDominantTypeOnTies() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Budget");
+      sheet.setCell("A1", ExcelCellValue.text("Mixed"));
+      sheet.setCell("A2", ExcelCellValue.text("text"));
+      sheet.setCell("A3", ExcelCellValue.number(1.0));
+
+      WorkbookReadResult.SheetSchemaResult schema =
+          cast(
+              WorkbookReadResult.SheetSchemaResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 3, 1)));
+
+      assertNull(schema.analysis().columns().getFirst().dominantType());
+    }
   }
 
   private static <T> T cast(Class<T> type, Object value) {

@@ -113,17 +113,24 @@ class SequenceIntrospectionTest {
             List.of(
                 new WorkbookReadOperation.GetWorkbookSummary("summary"),
                 new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
-                new WorkbookReadOperation.AnalyzeFormulaSurface(
+                new WorkbookReadOperation.GetFormulaSurface(
                     "formulas", new SheetSelection.All()),
-                new WorkbookReadOperation.AnalyzeNamedRangeSurface(
-                    "ranges", new NamedRangeSelection.All())));
+                new WorkbookReadOperation.AnalyzeNamedRangeHealth(
+                    "named-range-health", new NamedRangeSelection.All()),
+                new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings")));
 
-    assertEquals(4, SequenceIntrospection.readCount(request));
+    assertEquals(5, SequenceIntrospection.readCount(request));
     assertEquals(
         1L,
         SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
     assertEquals(
         1L,
-        SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_FORMULA_SURFACE"));
+        SequenceIntrospection.readKinds(request.reads()).get("GET_FORMULA_SURFACE"));
+    assertEquals(
+        1L,
+        SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_NAMED_RANGE_HEALTH"));
+    assertEquals(
+        1L,
+        SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_WORKBOOK_FINDINGS"));
   }
 }

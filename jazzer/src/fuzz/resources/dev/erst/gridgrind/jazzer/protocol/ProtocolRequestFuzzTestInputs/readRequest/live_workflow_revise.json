@@ -60,7 +60,7 @@
       "columnCount": 8
     },
     {
-      "type": "ANALYZE_FORMULA_SURFACE",
+      "type": "GET_FORMULA_SURFACE",
       "requestId": "sales-formula-surface",
       "selection": {
         "mode": "SELECTED",

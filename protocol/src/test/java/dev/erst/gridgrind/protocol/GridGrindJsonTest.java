@@ -54,7 +54,7 @@ class GridGrindJsonTest {
     GridGrindResponse expected =
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
-            new GridGrindResponse.PersistenceOutcome.Saved("/tmp/budget.xlsx"),
+            new GridGrindResponse.PersistenceOutcome.SavedAs("budget.xlsx", "/tmp/budget.xlsx"),
             List.of(
                 new WorkbookReadResult.WorkbookSummaryResult(
                     "workbook",
@@ -257,20 +257,25 @@ class GridGrindJsonTest {
                   "columnCount": 3
                 },
                 {
-                  "type": "ANALYZE_FORMULA_SURFACE",
+                  "type": "GET_FORMULA_SURFACE",
                   "requestId": "formula-surface",
                   "selection": { "mode": "ALL" }
+                },
+                {
+                  "type": "ANALYZE_WORKBOOK_FINDINGS",
+                  "requestId": "workbook-findings"
                 }
               ]
             }
             """
                 .getBytes(StandardCharsets.UTF_8));
 
-    assertEquals(4, request.reads().size());
+    assertEquals(5, request.reads().size());
     assertInstanceOf(WorkbookReadOperation.GetWorkbookSummary.class, request.reads().get(0));
     assertInstanceOf(WorkbookReadOperation.GetNamedRanges.class, request.reads().get(1));
     assertInstanceOf(WorkbookReadOperation.GetWindow.class, request.reads().get(2));
-    assertInstanceOf(WorkbookReadOperation.AnalyzeFormulaSurface.class, request.reads().get(3));
+    assertInstanceOf(WorkbookReadOperation.GetFormulaSurface.class, request.reads().get(3));
+    assertInstanceOf(WorkbookReadOperation.AnalyzeWorkbookFindings.class, request.reads().get(4));
   }
 
   @Test

@@ -5,7 +5,7 @@ import java.util.Objects;
 
 /** Immutable workbook-core result produced by one read command. */
 public sealed interface WorkbookReadResult
-    permits WorkbookReadResult.Introspection, WorkbookReadResult.Insight {
+    permits WorkbookReadResult.Introspection, WorkbookReadResult.Analysis {
 
   /** Stable caller-provided identifier copied from the originating read command. */
   String requestId();
@@ -20,11 +20,17 @@ public sealed interface WorkbookReadResult
           MergedRegionsResult,
           HyperlinksResult,
           CommentsResult,
-          SheetLayoutResult {}
+          SheetLayoutResult,
+          FormulaSurfaceResult,
+          SheetSchemaResult,
+          NamedRangeSurfaceResult {}
 
   /** Marker for derived workbook analysis results. */
-  sealed interface Insight extends WorkbookReadResult
-      permits FormulaSurfaceResult, SheetSchemaResult, NamedRangeSurfaceResult {}
+  sealed interface Analysis extends WorkbookReadResult
+      permits FormulaHealthResult,
+          HyperlinkHealthResult,
+          NamedRangeHealthResult,
+          WorkbookFindingsResult {}
 
   /** Returns workbook-level summary facts. */
   record WorkbookSummaryResult(String requestId, WorkbookSummary workbook)
@@ -109,7 +115,7 @@ public sealed interface WorkbookReadResult
   }
 
   /** Returns grouped formula usage facts across one or more sheets. */
-  record FormulaSurfaceResult(String requestId, FormulaSurface analysis) implements Insight {
+  record FormulaSurfaceResult(String requestId, FormulaSurface analysis) implements Introspection {
     public FormulaSurfaceResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
@@ -117,7 +123,7 @@ public sealed interface WorkbookReadResult
   }
 
   /** Returns inferred schema facts for one rectangular sheet window. */
-  record SheetSchemaResult(String requestId, SheetSchema analysis) implements Insight {
+  record SheetSchemaResult(String requestId, SheetSchema analysis) implements Introspection {
     public SheetSchemaResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
@@ -125,8 +131,45 @@ public sealed interface WorkbookReadResult
   }
 
   /** Returns high-level characterization of selected named ranges. */
-  record NamedRangeSurfaceResult(String requestId, NamedRangeSurface analysis) implements Insight {
+  record NamedRangeSurfaceResult(String requestId, NamedRangeSurface analysis)
+      implements Introspection {
     public NamedRangeSurfaceResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns formula-health findings for one analysis read. */
+  record FormulaHealthResult(String requestId, WorkbookAnalysis.FormulaHealth analysis)
+      implements Analysis {
+    public FormulaHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns hyperlink-health findings for one analysis read. */
+  record HyperlinkHealthResult(String requestId, WorkbookAnalysis.HyperlinkHealth analysis)
+      implements Analysis {
+    public HyperlinkHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns named-range-health findings for one analysis read. */
+  record NamedRangeHealthResult(String requestId, WorkbookAnalysis.NamedRangeHealth analysis)
+      implements Analysis {
+    public NamedRangeHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns the aggregated workbook findings from the first analysis family. */
+  record WorkbookFindingsResult(String requestId, WorkbookAnalysis.WorkbookFindings analysis)
+      implements Analysis {
+    public WorkbookFindingsResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }

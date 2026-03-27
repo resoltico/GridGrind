@@ -17,6 +17,9 @@ final class CliArguments {
     while (index < args.length) {
       String argument = args[index];
       switch (argument) {
+        case "--help", "-h" -> {
+          return new CliCommand.Help();
+        }
         case "--version" -> {
           return new CliCommand.Version();
         }

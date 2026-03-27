@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.8.0"
+version: "0.9.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-03-27"
 route:
@@ -176,7 +176,7 @@ Committed custom seeds currently in source control:
 | `protocol-request` | `live_workflow_revise.json` | readable existing-workbook revision seed with overwrite persistence |
 | `protocol-request` | `structural_layout_request.json` | readable structural-layout seed covering merge, sizing, and freeze panes |
 | `protocol-request` | `formatting_depth_request.json` | readable formatting-depth seed covering typed `fontHeight`, fill, color, and border patches |
-| `protocol-request` | `introspection_analysis_request.json` | readable read-heavy seed covering workbook summary, metadata reads, layout reads, and all three insight operations |
+| `protocol-request` | `introspection_analysis_request.json` | readable read-heavy seed covering workbook summary, metadata reads, layout reads, factual surface reads, and the first analysis family |
 | `protocol-request` | `invalid_font_height_request.json` | readable expected-invalid seed covering typed `fontHeight` validation |
 | `protocol-workflow` | `set_cell_failure_case.bin` | structured workflow seed that replays to a protocol `FAILURE` response with one `SET_CELL` operation |
 | `protocol-workflow` | `ensure_sheet_set_range_success.bin` | structured workflow seed that replays to a protocol `SUCCESS` response with `ENSURE_SHEET` plus `SET_RANGE` |

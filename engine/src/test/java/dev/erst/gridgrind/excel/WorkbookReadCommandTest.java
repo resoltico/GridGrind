@@ -30,14 +30,24 @@ class WorkbookReadCommandTest {
             "comments", "Budget", new ExcelCellSelection.Selected(List.of("A1")));
     WorkbookReadCommand.GetSheetLayout layout =
         new WorkbookReadCommand.GetSheetLayout("layout", "Budget");
-    WorkbookReadCommand.AnalyzeFormulaSurface formulaSurface =
-        new WorkbookReadCommand.AnalyzeFormulaSurface(
+    WorkbookReadCommand.GetFormulaSurface formulaSurface =
+        new WorkbookReadCommand.GetFormulaSurface(
             "formula", new ExcelSheetSelection.Selected(List.of("Budget")));
-    WorkbookReadCommand.AnalyzeSheetSchema schema =
-        new WorkbookReadCommand.AnalyzeSheetSchema("schema", "Budget", "A1", 3, 2);
-    WorkbookReadCommand.AnalyzeNamedRangeSurface namedRangeSurface =
-        new WorkbookReadCommand.AnalyzeNamedRangeSurface(
-            "surface", new ExcelNamedRangeSelection.All());
+    WorkbookReadCommand.GetSheetSchema schema =
+        new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 3, 2);
+    WorkbookReadCommand.GetNamedRangeSurface namedRangeSurface =
+        new WorkbookReadCommand.GetNamedRangeSurface("surface", new ExcelNamedRangeSelection.All());
+    WorkbookReadCommand.AnalyzeFormulaHealth formulaHealth =
+        new WorkbookReadCommand.AnalyzeFormulaHealth(
+            "formulaHealth", new ExcelSheetSelection.All());
+    WorkbookReadCommand.AnalyzeHyperlinkHealth hyperlinkHealth =
+        new WorkbookReadCommand.AnalyzeHyperlinkHealth(
+            "hyperlinkHealth", new ExcelSheetSelection.All());
+    WorkbookReadCommand.AnalyzeNamedRangeHealth namedRangeHealth =
+        new WorkbookReadCommand.AnalyzeNamedRangeHealth(
+            "namedRangeHealth", new ExcelNamedRangeSelection.All());
+    WorkbookReadCommand.AnalyzeWorkbookFindings workbookFindings =
+        new WorkbookReadCommand.AnalyzeWorkbookFindings("workbookFindings");
 
     assertEquals("workbook", workbookSummary.requestId());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRanges.selection());
@@ -51,6 +61,10 @@ class WorkbookReadCommandTest {
     assertInstanceOf(ExcelSheetSelection.Selected.class, formulaSurface.selection());
     assertEquals(3, schema.rowCount());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeSurface.selection());
+    assertInstanceOf(ExcelSheetSelection.All.class, formulaHealth.selection());
+    assertInstanceOf(ExcelSheetSelection.All.class, hyperlinkHealth.selection());
+    assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeHealth.selection());
+    assertEquals("workbookFindings", workbookFindings.requestId());
   }
 
   @Test
@@ -93,12 +107,21 @@ class WorkbookReadCommandTest {
         () -> new WorkbookReadCommand.GetComments("comments", "Budget", null));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.AnalyzeFormulaSurface("formula", null));
+        () -> new WorkbookReadCommand.GetFormulaSurface("formula", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadCommand.AnalyzeSheetSchema("schema", "Budget", "A1", 0, 1));
+        () -> new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 0, 1));
     assertThrows(
         NullPointerException.class,
-        () -> new WorkbookReadCommand.AnalyzeNamedRangeSurface("surface", null));
+        () -> new WorkbookReadCommand.GetNamedRangeSurface("surface", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.AnalyzeFormulaHealth("formulaHealth", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.AnalyzeHyperlinkHealth("hyperlinkHealth", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.AnalyzeNamedRangeHealth("namedRangeHealth", null));
   }
 }

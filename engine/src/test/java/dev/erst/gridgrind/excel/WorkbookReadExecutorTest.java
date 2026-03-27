@@ -27,7 +27,7 @@ class WorkbookReadExecutorTest {
               workbook,
               new WorkbookReadCommand.GetWorkbookSummary("workbook"),
               new WorkbookReadCommand.GetCells("cells", "Budget", List.of("A1")),
-              new WorkbookReadCommand.AnalyzeNamedRangeSurface(
+              new WorkbookReadCommand.GetNamedRangeSurface(
                   "ranges", new ExcelNamedRangeSelection.All()));
       List<WorkbookReadResult> iterableResults =
           executor.apply(
@@ -65,6 +65,15 @@ class WorkbookReadExecutorTest {
               executor.apply(
                   workbook,
                   Arrays.asList(new WorkbookReadCommand.GetWorkbookSummary("workbook"), null)));
+
+      List<WorkbookReadResult> analysisResults =
+          executor.apply(
+              workbook,
+              new WorkbookReadCommand.AnalyzeFormulaHealth(
+                  "formulaHealth", new ExcelSheetSelection.All()),
+              new WorkbookReadCommand.AnalyzeWorkbookFindings("workbookFindings"));
+      assertInstanceOf(WorkbookReadResult.FormulaHealthResult.class, analysisResults.get(0));
+      assertInstanceOf(WorkbookReadResult.WorkbookFindingsResult.class, analysisResults.get(1));
     }
   }
 

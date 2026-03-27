@@ -112,7 +112,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
     GridGrindResponse.PersistenceOutcome persistence;
     try {
-      persistence = persistWorkbook(workbook, request.persistence(), reqSourcePath(request));
+      persistence = persistWorkbook(workbook, request.source(), request.persistence());
     } catch (Exception exception) {
       return closeWorkbook(
           workbook,
@@ -255,33 +255,55 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               op.requestId(), op.sheetName(), toExcelCellSelection(op.selection()));
       case WorkbookReadOperation.GetSheetLayout op ->
           new WorkbookReadCommand.GetSheetLayout(op.requestId(), op.sheetName());
-      case WorkbookReadOperation.AnalyzeFormulaSurface op ->
-          new WorkbookReadCommand.AnalyzeFormulaSurface(
+      case WorkbookReadOperation.GetFormulaSurface op ->
+          new WorkbookReadCommand.GetFormulaSurface(
               op.requestId(), toExcelSheetSelection(op.selection()));
-      case WorkbookReadOperation.AnalyzeSheetSchema op ->
-          new WorkbookReadCommand.AnalyzeSheetSchema(
+      case WorkbookReadOperation.GetSheetSchema op ->
+          new WorkbookReadCommand.GetSheetSchema(
               op.requestId(), op.sheetName(), op.topLeftAddress(), op.rowCount(), op.columnCount());
-      case WorkbookReadOperation.AnalyzeNamedRangeSurface op ->
-          new WorkbookReadCommand.AnalyzeNamedRangeSurface(
+      case WorkbookReadOperation.GetNamedRangeSurface op ->
+          new WorkbookReadCommand.GetNamedRangeSurface(
               op.requestId(), toExcelNamedRangeSelection(op.selection()));
+      case WorkbookReadOperation.AnalyzeFormulaHealth op ->
+          new WorkbookReadCommand.AnalyzeFormulaHealth(
+              op.requestId(), toExcelSheetSelection(op.selection()));
+      case WorkbookReadOperation.AnalyzeHyperlinkHealth op ->
+          new WorkbookReadCommand.AnalyzeHyperlinkHealth(
+              op.requestId(), toExcelSheetSelection(op.selection()));
+      case WorkbookReadOperation.AnalyzeNamedRangeHealth op ->
+          new WorkbookReadCommand.AnalyzeNamedRangeHealth(
+              op.requestId(), toExcelNamedRangeSelection(op.selection()));
+      case WorkbookReadOperation.AnalyzeWorkbookFindings op ->
+          new WorkbookReadCommand.AnalyzeWorkbookFindings(op.requestId());
     };
   }
 
-  private GridGrindResponse.PersistenceOutcome persistWorkbook(
-      ExcelWorkbook workbook, GridGrindRequest.WorkbookPersistence persistence, String sourcePath)
+  GridGrindResponse.PersistenceOutcome persistWorkbook(
+      ExcelWorkbook workbook,
+      GridGrindRequest.WorkbookSource source,
+      GridGrindRequest.WorkbookPersistence persistence)
       throws IOException {
     return switch (persistence) {
       case GridGrindRequest.WorkbookPersistence.None _ ->
           new GridGrindResponse.PersistenceOutcome.NotSaved();
       case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> {
-        Path path = Path.of(sourcePath);
+        Path path =
+            switch (source) {
+              case GridGrindRequest.WorkbookSource.ExistingFile existingFile ->
+                  Path.of(existingFile.path());
+              case GridGrindRequest.WorkbookSource.New _ ->
+                  throw new IllegalArgumentException(
+                      "OVERWRITE persistence requires an EXISTING source");
+            };
         workbook.save(path);
-        yield new GridGrindResponse.PersistenceOutcome.Saved(path.toAbsolutePath().toString());
+        yield new GridGrindResponse.PersistenceOutcome.Overwritten(
+            path.toString(), path.toAbsolutePath().toString());
       }
       case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> {
         Path path = Path.of(saveAs.path());
         workbook.save(path);
-        yield new GridGrindResponse.PersistenceOutcome.Saved(path.toAbsolutePath().toString());
+        yield new GridGrindResponse.PersistenceOutcome.SavedAs(
+            saveAs.path(), path.toAbsolutePath().toString());
       }
     };
   }
@@ -352,6 +374,18 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           new WorkbookReadResult.NamedRangeSurfaceResult(
               namedRangeSurface.requestId(),
               toNamedRangeSurfaceReport(namedRangeSurface.analysis()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.FormulaHealthResult formulaHealth ->
+          new WorkbookReadResult.FormulaHealthResult(
+              formulaHealth.requestId(), toFormulaHealthReport(formulaHealth.analysis()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.HyperlinkHealthResult hyperlinkHealth ->
+          new WorkbookReadResult.HyperlinkHealthResult(
+              hyperlinkHealth.requestId(), toHyperlinkHealthReport(hyperlinkHealth.analysis()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangeHealthResult namedRangeHealth ->
+          new WorkbookReadResult.NamedRangeHealthResult(
+              namedRangeHealth.requestId(), toNamedRangeHealthReport(namedRangeHealth.analysis()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookFindingsResult workbookFindings ->
+          new WorkbookReadResult.WorkbookFindingsResult(
+              workbookFindings.requestId(), toWorkbookFindingsReport(workbookFindings.analysis()));
     };
   }
 
@@ -480,6 +514,79 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
                           case FORMULA -> GridGrindResponse.NamedRangeBackingKind.FORMULA;
                         }))
             .toList());
+  }
+
+  private static GridGrindResponse.FormulaHealthReport toFormulaHealthReport(
+      dev.erst.gridgrind.excel.WorkbookAnalysis.FormulaHealth analysis) {
+    return new GridGrindResponse.FormulaHealthReport(
+        analysis.checkedFormulaCellCount(),
+        toAnalysisSummaryReport(analysis.summary()),
+        analysis.findings().stream()
+            .map(DefaultGridGrindRequestExecutor::toAnalysisFindingReport)
+            .toList());
+  }
+
+  private static GridGrindResponse.HyperlinkHealthReport toHyperlinkHealthReport(
+      dev.erst.gridgrind.excel.WorkbookAnalysis.HyperlinkHealth analysis) {
+    return new GridGrindResponse.HyperlinkHealthReport(
+        analysis.checkedHyperlinkCount(),
+        toAnalysisSummaryReport(analysis.summary()),
+        analysis.findings().stream()
+            .map(DefaultGridGrindRequestExecutor::toAnalysisFindingReport)
+            .toList());
+  }
+
+  private static GridGrindResponse.NamedRangeHealthReport toNamedRangeHealthReport(
+      dev.erst.gridgrind.excel.WorkbookAnalysis.NamedRangeHealth analysis) {
+    return new GridGrindResponse.NamedRangeHealthReport(
+        analysis.checkedNamedRangeCount(),
+        toAnalysisSummaryReport(analysis.summary()),
+        analysis.findings().stream()
+            .map(DefaultGridGrindRequestExecutor::toAnalysisFindingReport)
+            .toList());
+  }
+
+  private static GridGrindResponse.WorkbookFindingsReport toWorkbookFindingsReport(
+      dev.erst.gridgrind.excel.WorkbookAnalysis.WorkbookFindings analysis) {
+    return new GridGrindResponse.WorkbookFindingsReport(
+        toAnalysisSummaryReport(analysis.summary()),
+        analysis.findings().stream()
+            .map(DefaultGridGrindRequestExecutor::toAnalysisFindingReport)
+            .toList());
+  }
+
+  private static GridGrindResponse.AnalysisSummaryReport toAnalysisSummaryReport(
+      dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary summary) {
+    return new GridGrindResponse.AnalysisSummaryReport(
+        summary.totalCount(), summary.errorCount(), summary.warningCount(), summary.infoCount());
+  }
+
+  private static GridGrindResponse.AnalysisFindingReport toAnalysisFindingReport(
+      dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding finding) {
+    return new GridGrindResponse.AnalysisFindingReport(
+        finding.code(),
+        finding.severity(),
+        finding.title(),
+        finding.message(),
+        toAnalysisLocationReport(finding.location()),
+        finding.evidence());
+  }
+
+  private static GridGrindResponse.AnalysisLocationReport toAnalysisLocationReport(
+      dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation location) {
+    return switch (location) {
+      case dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Workbook _ ->
+          new GridGrindResponse.AnalysisLocationReport.Workbook();
+      case dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Sheet sheet ->
+          new GridGrindResponse.AnalysisLocationReport.Sheet(sheet.sheetName());
+      case dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Cell cell ->
+          new GridGrindResponse.AnalysisLocationReport.Cell(cell.sheetName(), cell.address());
+      case dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Range range ->
+          new GridGrindResponse.AnalysisLocationReport.Range(range.sheetName(), range.range());
+      case dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.NamedRange namedRange ->
+          new GridGrindResponse.AnalysisLocationReport.NamedRange(
+              namedRange.name(), toNamedRangeScope(namedRange.scope()));
+    };
   }
 
   private static ExcelNamedRangeSelection toExcelNamedRangeSelection(
@@ -793,9 +900,13 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
-      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> "ANALYZE_FORMULA_SURFACE";
-      case WorkbookReadOperation.AnalyzeSheetSchema _ -> "ANALYZE_SHEET_SCHEMA";
-      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> "ANALYZE_NAMED_RANGE_SURFACE";
+      case WorkbookReadOperation.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
+      case WorkbookReadOperation.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
+      case WorkbookReadOperation.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
+      case WorkbookReadOperation.AnalyzeFormulaHealth _ -> "ANALYZE_FORMULA_HEALTH";
+      case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> "ANALYZE_HYPERLINK_HEALTH";
+      case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> "ANALYZE_NAMED_RANGE_HEALTH";
+      case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> "ANALYZE_WORKBOOK_FINDINGS";
     };
   }
 
@@ -809,11 +920,15 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks op -> op.sheetName();
       case WorkbookReadOperation.GetComments op -> op.sheetName();
       case WorkbookReadOperation.GetSheetLayout op -> op.sheetName();
-      case WorkbookReadOperation.AnalyzeSheetSchema op -> op.sheetName();
+      case WorkbookReadOperation.GetSheetSchema op -> op.sheetName();
+      case WorkbookReadOperation.GetFormulaSurface op -> singleSheetName(op.selection());
+      case WorkbookReadOperation.AnalyzeFormulaHealth op -> singleSheetName(op.selection());
+      case WorkbookReadOperation.AnalyzeHyperlinkHealth op -> singleSheetName(op.selection());
       case WorkbookReadOperation.GetWorkbookSummary _ -> null;
       case WorkbookReadOperation.GetNamedRanges _ -> null;
-      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> null;
-      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> null;
+      case WorkbookReadOperation.GetNamedRangeSurface _ -> null;
+      case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> null;
+      case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> null;
     };
   }
 
@@ -825,7 +940,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     }
     return switch (read) {
       case WorkbookReadOperation.GetWindow op -> op.topLeftAddress();
-      case WorkbookReadOperation.AnalyzeSheetSchema op -> op.topLeftAddress();
+      case WorkbookReadOperation.GetSheetSchema op -> op.topLeftAddress();
       case WorkbookReadOperation.GetWorkbookSummary _ -> null;
       case WorkbookReadOperation.GetNamedRanges _ -> null;
       case WorkbookReadOperation.GetSheetSummary _ -> null;
@@ -834,8 +949,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> null;
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
-      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> null;
-      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> null;
+      case WorkbookReadOperation.GetFormulaSurface _ -> null;
+      case WorkbookReadOperation.GetNamedRangeSurface _ -> null;
+      case WorkbookReadOperation.AnalyzeFormulaHealth _ -> null;
+      case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> null;
+      case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> null;
+      case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> null;
     };
   }
 
@@ -855,9 +974,35 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> null;
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
-      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> null;
-      case WorkbookReadOperation.AnalyzeSheetSchema _ -> null;
-      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> null;
+      case WorkbookReadOperation.GetFormulaSurface _ -> null;
+      case WorkbookReadOperation.GetSheetSchema _ -> null;
+      case WorkbookReadOperation.GetNamedRangeSurface op -> singleNamedRangeName(op.selection());
+      case WorkbookReadOperation.AnalyzeFormulaHealth _ -> null;
+      case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> null;
+      case WorkbookReadOperation.AnalyzeNamedRangeHealth op -> singleNamedRangeName(op.selection());
+      case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> null;
+    };
+  }
+
+  private static String singleSheetName(SheetSelection selection) {
+    return switch (selection) {
+      case SheetSelection.All _ -> null;
+      case SheetSelection.Selected selected ->
+          selected.sheetNames().size() == 1 ? selected.sheetNames().getFirst() : null;
+    };
+  }
+
+  private static String singleNamedRangeName(NamedRangeSelection selection) {
+    return switch (selection) {
+      case NamedRangeSelection.All _ -> null;
+      case NamedRangeSelection.Selected selected ->
+          selected.selectors().size() == 1
+              ? switch (selected.selectors().getFirst()) {
+                case NamedRangeSelector.ByName byName -> byName.name();
+                case NamedRangeSelector.WorkbookScope workbookScope -> workbookScope.name();
+                case NamedRangeSelector.SheetScope sheetScope -> sheetScope.name();
+              }
+              : null;
     };
   }
 

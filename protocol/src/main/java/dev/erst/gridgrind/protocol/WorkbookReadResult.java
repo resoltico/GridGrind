@@ -25,10 +25,20 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = WorkbookReadResult.SheetSchemaResult.class, name = "SHEET_SCHEMA"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.NamedRangeSurfaceResult.class,
-      name = "NAMED_RANGE_SURFACE")
+      name = "NAMED_RANGE_SURFACE"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.FormulaHealthResult.class, name = "FORMULA_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.HyperlinkHealthResult.class,
+      name = "HYPERLINK_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.NamedRangeHealthResult.class,
+      name = "NAMED_RANGE_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.WorkbookFindingsResult.class,
+      name = "WORKBOOK_FINDINGS")
 })
 public sealed interface WorkbookReadResult
-    permits WorkbookReadResult.Introspection, WorkbookReadResult.Insight {
+    permits WorkbookReadResult.Introspection, WorkbookReadResult.Analysis {
 
   /** Stable caller-provided identifier copied from the matching read operation. */
   String requestId();
@@ -43,11 +53,17 @@ public sealed interface WorkbookReadResult
           MergedRegionsResult,
           HyperlinksResult,
           CommentsResult,
-          SheetLayoutResult {}
+          SheetLayoutResult,
+          FormulaSurfaceResult,
+          SheetSchemaResult,
+          NamedRangeSurfaceResult {}
 
   /** Marker for derived workbook analysis results. */
-  sealed interface Insight extends WorkbookReadResult
-      permits FormulaSurfaceResult, SheetSchemaResult, NamedRangeSurfaceResult {}
+  sealed interface Analysis extends WorkbookReadResult
+      permits FormulaHealthResult,
+          HyperlinkHealthResult,
+          NamedRangeHealthResult,
+          WorkbookFindingsResult {}
 
   /** Returns workbook-level summary facts. */
   record WorkbookSummaryResult(String requestId, GridGrindResponse.WorkbookSummary workbook)
@@ -139,7 +155,7 @@ public sealed interface WorkbookReadResult
 
   /** Returns grouped formula usage facts across one or more sheets. */
   record FormulaSurfaceResult(String requestId, GridGrindResponse.FormulaSurfaceReport analysis)
-      implements Insight {
+      implements Introspection {
     public FormulaSurfaceResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
@@ -148,7 +164,7 @@ public sealed interface WorkbookReadResult
 
   /** Returns inferred schema facts for one sheet window. */
   record SheetSchemaResult(String requestId, GridGrindResponse.SheetSchemaReport analysis)
-      implements Insight {
+      implements Introspection {
     public SheetSchemaResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
@@ -157,8 +173,45 @@ public sealed interface WorkbookReadResult
 
   /** Returns high-level characterization of named ranges. */
   record NamedRangeSurfaceResult(
-      String requestId, GridGrindResponse.NamedRangeSurfaceReport analysis) implements Insight {
+      String requestId, GridGrindResponse.NamedRangeSurfaceReport analysis)
+      implements Introspection {
     public NamedRangeSurfaceResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns formula-health findings. */
+  record FormulaHealthResult(String requestId, GridGrindResponse.FormulaHealthReport analysis)
+      implements Analysis {
+    public FormulaHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns hyperlink-health findings. */
+  record HyperlinkHealthResult(String requestId, GridGrindResponse.HyperlinkHealthReport analysis)
+      implements Analysis {
+    public HyperlinkHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns named-range-health findings. */
+  record NamedRangeHealthResult(String requestId, GridGrindResponse.NamedRangeHealthReport analysis)
+      implements Analysis {
+    public NamedRangeHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns aggregated workbook findings. */
+  record WorkbookFindingsResult(String requestId, GridGrindResponse.WorkbookFindingsReport analysis)
+      implements Analysis {
+    public WorkbookFindingsResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }

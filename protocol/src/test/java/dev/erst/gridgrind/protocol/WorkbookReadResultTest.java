@@ -32,6 +32,53 @@ class WorkbookReadResultTest {
     assertEquals("A1", result.cells().getFirst().address());
   }
 
+  @Test
+  void analysisReadResultsRejectBlankRequestIdAndNullAnalysis() {
+    GridGrindResponse.AnalysisSummaryReport summary =
+        new GridGrindResponse.AnalysisSummaryReport(1, 0, 0, 1);
+    GridGrindResponse.AnalysisFindingReport finding =
+        new GridGrindResponse.AnalysisFindingReport(
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+            "Volatile formula",
+            "Formula uses NOW().",
+            new GridGrindResponse.AnalysisLocationReport.Workbook(),
+            List.of("NOW()"));
+    GridGrindResponse.HyperlinkHealthReport hyperlinkHealth =
+        new GridGrindResponse.HyperlinkHealthReport(1, summary, List.of(finding));
+    GridGrindResponse.NamedRangeHealthReport namedRangeHealth =
+        new GridGrindResponse.NamedRangeHealthReport(1, summary, List.of(finding));
+    GridGrindResponse.WorkbookFindingsReport workbookFindings =
+        new GridGrindResponse.WorkbookFindingsReport(summary, List.of(finding));
+
+    assertEquals(
+        1,
+        new WorkbookReadResult.HyperlinkHealthResult("hyperlink-health", hyperlinkHealth)
+            .analysis()
+            .checkedHyperlinkCount());
+    assertEquals(
+        1,
+        new WorkbookReadResult.NamedRangeHealthResult("named-range-health", namedRangeHealth)
+            .analysis()
+            .checkedNamedRangeCount());
+    assertEquals(
+        1,
+        new WorkbookReadResult.WorkbookFindingsResult("workbook-findings", workbookFindings)
+            .analysis()
+            .summary()
+            .totalCount());
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.HyperlinkHealthResult(" ", hyperlinkHealth));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.NamedRangeHealthResult("named-range-health", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.WorkbookFindingsResult(" ", workbookFindings));
+  }
+
   private static GridGrindResponse.CellStyleReport defaultStyle() {
     return new GridGrindResponse.CellStyleReport(
         "General",

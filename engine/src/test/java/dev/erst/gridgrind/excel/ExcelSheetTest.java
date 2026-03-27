@@ -835,6 +835,246 @@ class ExcelSheetTest {
     }
   }
 
+  @Test
+  void derivesFormulaHealthFindingsAcrossExternalVolatileErrorAndFailureCases() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setCell("A1", ExcelCellValue.formula("INDIRECT(\"[External.xlsx]Sheet1!A1\")"));
+      sheet.setCell("A2", ExcelCellValue.formula("NOW()"));
+      sheet.setCell("A3", ExcelCellValue.formula("1/0"));
+
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+
+      assertEquals(3, sheet.formulaCellCount());
+      assertTrue(
+          findings.stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .toList()
+              .containsAll(
+                  List.of(
+                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_EXTERNAL_REFERENCE,
+                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_ERROR_RESULT)));
+    }
+  }
+
+  @Test
+  void derivesFormulaEvaluationFailureFindingWithFallbackExceptionMessage() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiSheet.createRow(0).createCell(0).setCellFormula("1+1");
+      ExcelSheet sheet =
+          new ExcelSheet(
+              poiSheet,
+              new WorkbookStyleRegistry(poiWorkbook),
+              throwingEvaluator(new IllegalStateException()));
+
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      WorkbookAnalysis.AnalysisFinding finding = findings.getFirst();
+      assertEquals(WorkbookAnalysis.AnalysisFindingCode.FORMULA_EVALUATION_FAILURE, finding.code());
+      assertEquals(List.of("1+1", "IllegalStateException"), finding.evidence());
+      assertEquals("Formula evaluation failed: IllegalStateException", finding.message());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsIgnoreSuccessfulAndNullEvaluations() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet successSheet = poiWorkbook.createSheet("Success");
+      successSheet.createRow(0).createCell(0).setCellFormula("1+1");
+      ExcelSheet successful =
+          new ExcelSheet(
+              successSheet,
+              new WorkbookStyleRegistry(poiWorkbook),
+              poiWorkbook.getCreationHelper().createFormulaEvaluator());
+      assertEquals(List.of(), successful.formulaHealthFindings());
+
+      Sheet nullSheet = poiWorkbook.createSheet("NullEval");
+      nullSheet.createRow(0).createCell(0).setCellFormula("1+1");
+      FormulaEvaluator baseEvaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet nullEvaluated =
+          new ExcelSheet(
+              nullSheet,
+              new WorkbookStyleRegistry(poiWorkbook),
+              nullEvaluatingFormulaEvaluator(baseEvaluator));
+      assertEquals(List.of(), nullEvaluated.formulaHealthFindings());
+    }
+  }
+
+  @Test
+  void derivesHyperlinkHealthFindingsAcrossMalformedAndDocumentTargets() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiWorkbook.createSheet("Quarter 1");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      Cell invalidUrlCell = poiSheet.createRow(0).createCell(0);
+      invalidUrlCell.setHyperlink(proxyHyperlink(HyperlinkType.URL, "example.com/report"));
+      Cell invalidEmailCell = poiSheet.createRow(1).createCell(0);
+      invalidEmailCell.setHyperlink(proxyHyperlink(HyperlinkType.EMAIL, "mailto:"));
+      Cell blankFileCell = poiSheet.createRow(2).createCell(0);
+      blankFileCell.setHyperlink(proxyHyperlink(HyperlinkType.FILE, " "));
+      Cell validFileCell = poiSheet.createRow(3).createCell(0);
+      validFileCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.FILE, "/tmp/report.xlsx"));
+      Cell missingSheetCell = poiSheet.createRow(4).createCell(0);
+      missingSheetCell.setHyperlink(proxyHyperlink(HyperlinkType.DOCUMENT, "Missing!A1"));
+      Cell invalidDocumentCell = poiSheet.createRow(5).createCell(0);
+      invalidDocumentCell.setHyperlink(proxyHyperlink(HyperlinkType.DOCUMENT, "Budget!"));
+      Cell invalidDocumentRangeCell = poiSheet.createRow(6).createCell(0);
+      invalidDocumentRangeCell.setHyperlink(proxyHyperlink(HyperlinkType.DOCUMENT, "Budget!A1:"));
+      Cell quotedDocumentCell = poiSheet.createRow(7).createCell(0);
+      quotedDocumentCell.setHyperlink(
+          hyperlink(poiWorkbook, HyperlinkType.DOCUMENT, "'Quarter 1'!A1"));
+
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.hyperlinkHealthFindings();
+
+      assertEquals(8, sheet.hyperlinkCount());
+      assertTrue(
+          findings.stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .toList()
+              .containsAll(
+                  List.of(
+                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
+                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
+                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET)));
+      assertTrue(
+          findings.stream()
+              .noneMatch(
+                  finding ->
+                      finding.location() instanceof WorkbookAnalysis.AnalysisLocation.Cell cell
+                          && "A8".equals(cell.address())));
+    }
+  }
+
+  @Test
+  void normalizesSparseWindowsAndInvalidHyperlinkHelpers() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Sparse");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setCell("A1", ExcelCellValue.text("first"));
+      sheet.setCell("A3", ExcelCellValue.text("third"));
+
+      WorkbookReadResult.Window window = sheet.window("A1", 3, 1);
+      assertEquals("A2", window.rows().get(1).cells().getFirst().address());
+      assertEquals("BLANK", window.rows().get(1).cells().getFirst().effectiveType());
+
+      WorkbookReadResult.SheetLayout layout = sheet.layout();
+      assertEquals(3, layout.rows().size());
+      assertEquals(poiSheet.getDefaultRowHeightInPoints(), layout.rows().get(1).heightPoints());
+
+      Cell invalidUrlCell =
+          hyperlinkOnlyCell(proxyHyperlink(HyperlinkType.URL, "example.com/report"));
+      assertNull(ExcelSheet.hyperlink(invalidUrlCell));
+    }
+  }
+
+  @Test
+  void helperMethodsHandleFormulaAndHyperlinkEdgeCases() throws Exception {
+    assertTrue(ExcelSheet.containsExternalWorkbookReference("[Book.xlsx]Sheet1!A1"));
+    assertFalse(ExcelSheet.containsExternalWorkbookReference("SUM(A1:A2)"));
+    assertFalse(ExcelSheet.containsExternalWorkbookReference("[Book.xlsx"));
+    assertFalse(ExcelSheet.containsExternalWorkbookReference("Book.xlsx]"));
+
+    assertEquals(
+        List.of("NOW", "INDIRECT"), ExcelSheet.volatileFunctions("NOW()+INDIRECT(\"A1\")"));
+    assertEquals(List.of(), ExcelSheet.volatileFunctions("SUM(A1:A2)"));
+
+    assertEquals("Quarter 1", ExcelSheet.unquoteSheetName("'Quarter 1'"));
+    assertEquals("Budget", ExcelSheet.unquoteSheetName("Budget"));
+    assertEquals("'", ExcelSheet.unquoteSheetName("'"));
+    assertEquals("'Budget", ExcelSheet.unquoteSheetName("'Budget"));
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      ExcelSheet sheet =
+          new ExcelSheet(
+              poiWorkbook.createSheet("Helpers"),
+              new WorkbookStyleRegistry(poiWorkbook),
+              poiWorkbook.getCreationHelper().createFormulaEvaluator());
+      assertEquals("IllegalStateException", sheet.exceptionMessage(new IllegalStateException()));
+      assertEquals(
+          "display failure", sheet.exceptionMessage(new IllegalStateException("display failure")));
+    }
+
+    assertFalse(ExcelSheet.hasUsableHyperlink(null));
+    assertFalse(ExcelSheet.hasUsableHyperlink(proxyHyperlink(null, "ignored")));
+    assertFalse(ExcelSheet.hasUsableHyperlink(proxyHyperlink(HyperlinkType.NONE, "ignored")));
+    assertTrue(
+        ExcelSheet.hasUsableHyperlink(proxyHyperlink(HyperlinkType.URL, "https://example.com")));
+
+    assertTrue(ExcelSheet.hasMissingHyperlinkTarget(null));
+    assertTrue(ExcelSheet.hasMissingHyperlinkTarget(" "));
+    assertFalse(ExcelSheet.hasMissingHyperlinkTarget("Budget!A1"));
+  }
+
+  @Test
+  void validateDocumentHyperlinkTargetHandlesMalformedMissingAndRangeTargets() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiWorkbook.createSheet("Quarter 1");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+      WorkbookAnalysis.AnalysisLocation.Cell location =
+          new WorkbookAnalysis.AnalysisLocation.Cell("Budget", "A1");
+
+      List<WorkbookAnalysis.AnalysisFinding> invalidStructure = new ArrayList<>();
+      sheet.validateDocumentHyperlinkTarget(location, "!A1", invalidStructure);
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
+          invalidStructure.getFirst().code());
+
+      List<WorkbookAnalysis.AnalysisFinding> missingSheet = new ArrayList<>();
+      sheet.validateDocumentHyperlinkTarget(location, "Missing!A1", missingSheet);
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
+          missingSheet.getFirst().code());
+
+      List<WorkbookAnalysis.AnalysisFinding> invalidRange = new ArrayList<>();
+      sheet.validateDocumentHyperlinkTarget(location, "Budget!A1:", invalidRange);
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
+          invalidRange.getFirst().code());
+
+      List<WorkbookAnalysis.AnalysisFinding> validRange = new ArrayList<>();
+      sheet.validateDocumentHyperlinkTarget(location, "Budget!A1:B2", validRange);
+      assertEquals(List.of(), validRange);
+
+      List<WorkbookAnalysis.AnalysisFinding> quotedValid = new ArrayList<>();
+      sheet.validateDocumentHyperlinkTarget(location, "'Quarter 1'!A1", quotedValid);
+      assertEquals(List.of(), quotedValid);
+    }
+  }
+
+  @Test
+  void hyperlinkHealthTreatsEmptyCellsAndNoneLinksAsNonFindings() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      poiSheet.createRow(0).createCell(0).setCellValue("plain");
+      Cell noneCell = poiSheet.createRow(1).createCell(0);
+      noneCell.setHyperlink(proxyHyperlink(HyperlinkType.NONE, "ignored"));
+      Cell validUrlCell = poiSheet.createRow(2).createCell(0);
+      validUrlCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.URL, "https://example.com"));
+
+      assertEquals(1, sheet.hyperlinkCount());
+      assertEquals(List.of(), sheet.hyperlinkHealthFindings());
+    }
+  }
+
   private FormulaEvaluator throwingEvaluator(RuntimeException exception) {
     InvocationHandler handler =
         new InvocationHandler() {
@@ -976,6 +1216,8 @@ class ExcelSheetTest {
             return switch (method.getName()) {
               case "getType" -> hyperlinkType;
               case "getAddress" -> address;
+              case "getLabel", "getTooltip" -> null;
+              case "getFirstRow", "getLastRow", "getFirstColumn", "getLastColumn" -> 0;
               case "toString" -> "proxyHyperlink[" + hyperlinkType + "," + address + "]";
               case "hashCode" -> Objects.hash(hyperlinkType, address);
               case "equals" -> false;
