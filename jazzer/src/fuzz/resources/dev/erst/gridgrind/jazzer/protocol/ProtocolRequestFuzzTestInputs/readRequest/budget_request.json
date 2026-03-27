@@ -82,7 +82,7 @@
       "columnCount": 3
     },
     {
-      "type": "ANALYZE_FORMULA_SURFACE",
+      "type": "GET_FORMULA_SURFACE",
       "requestId": "formula-surface",
       "selection": {
         "mode": "SELECTED",
@@ -90,7 +90,7 @@
       }
     },
     {
-      "type": "ANALYZE_SHEET_SCHEMA",
+      "type": "GET_SHEET_SCHEMA",
       "requestId": "schema",
       "sheetName": "Budget",
       "topLeftAddress": "A1",

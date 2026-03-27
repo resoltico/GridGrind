@@ -1,10 +1,10 @@
 ---
 afad: "3.4"
-version: "0.8.0"
+version: "0.9.0"
 domain: OPERATIONS
 updated: "2026-03-27"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-sheet-layout, analyze-sheet-schema, request, json, protocol]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-sheet-layout, get-sheet-schema, analyze-workbook-findings, request, json, protocol]
   questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
 ---
 
@@ -33,7 +33,7 @@ route:
 | `source` | Yes | Where the workbook comes from. |
 | `persistence` | No | Where and whether to save. Omit to run operations without saving. |
 | `operations` | No | Ordered list of workbook mutations. |
-| `reads` | No | Ordered post-mutation introspection and insight operations. |
+| `reads` | No | Ordered post-mutation introspection and analysis operations. |
 
 ---
 
@@ -646,7 +646,7 @@ Reads are ordered, explicit post-mutation requests. Every read must include a ca
 Read categories:
 
 - Introspection: exact workbook facts with no higher-level interpretation.
-- Insight: derived workbook analysis built on top of introspection.
+- Analysis: finding-bearing workbook conclusions built on top of introspection.
 
 ```json
 {
@@ -661,7 +661,7 @@ Read categories:
       "columnCount": 3
     },
     {
-      "type": "ANALYZE_SHEET_SCHEMA",
+      "type": "GET_SHEET_SCHEMA",
       "requestId": "inventory-schema",
       "sheetName": "Inventory",
       "topLeftAddress": "A1",
@@ -849,13 +849,13 @@ Returns freeze-pane state plus explicit row-height and column-width facts for on
 }
 ```
 
-### ANALYZE_FORMULA_SURFACE
+### GET_FORMULA_SURFACE
 
 Groups formula usage across one or more sheets.
 
 ```json
 {
-  "type": "ANALYZE_FORMULA_SURFACE",
+  "type": "GET_FORMULA_SURFACE",
   "requestId": "formula-surface",
   "selection": { "mode": "ALL" }
 }
@@ -863,7 +863,7 @@ Groups formula usage across one or more sheets.
 
 ```json
 {
-  "type": "ANALYZE_FORMULA_SURFACE",
+  "type": "GET_FORMULA_SURFACE",
   "requestId": "selected-formula-surface",
   "selection": {
     "mode": "SELECTED",
@@ -882,13 +882,13 @@ Sheet-selection payloads use:
 }
 ```
 
-### ANALYZE_SHEET_SCHEMA
+### GET_SHEET_SCHEMA
 
 Infers a simple schema from one rectangular sheet window.
 
 ```json
 {
-  "type": "ANALYZE_SHEET_SCHEMA",
+  "type": "GET_SHEET_SCHEMA",
   "requestId": "schema",
   "sheetName": "Inventory",
   "topLeftAddress": "A1",
@@ -897,13 +897,13 @@ Infers a simple schema from one rectangular sheet window.
 }
 ```
 
-### ANALYZE_NAMED_RANGE_SURFACE
+### GET_NAMED_RANGE_SURFACE
 
 Summarizes the scope and backing kind of selected named ranges.
 
 ```json
 {
-  "type": "ANALYZE_NAMED_RANGE_SURFACE",
+  "type": "GET_NAMED_RANGE_SURFACE",
   "requestId": "named-range-surface",
   "selection": { "mode": "ALL" }
 }
@@ -911,7 +911,7 @@ Summarizes the scope and backing kind of selected named ranges.
 
 ```json
 {
-  "type": "ANALYZE_NAMED_RANGE_SURFACE",
+  "type": "GET_NAMED_RANGE_SURFACE",
   "requestId": "selected-named-range-surface",
   "selection": {
     "mode": "SELECTED",
@@ -920,5 +920,57 @@ Summarizes the scope and backing kind of selected named ranges.
       { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
     ]
   }
+}
+```
+
+### ANALYZE_FORMULA_HEALTH
+
+Reports finding-bearing formula health across one or more sheets. This is where volatile
+functions, formula-error results, and evaluation failures surface.
+
+```json
+{
+  "type": "ANALYZE_FORMULA_HEALTH",
+  "requestId": "formula-health",
+  "selection": { "mode": "ALL" }
+}
+```
+
+### ANALYZE_HYPERLINK_HEALTH
+
+Reports hyperlink findings such as malformed external targets or broken document destinations.
+
+```json
+{
+  "type": "ANALYZE_HYPERLINK_HEALTH",
+  "requestId": "hyperlink-health",
+  "selection": {
+    "mode": "SELECTED",
+    "sheetNames": ["Inventory", "Summary"]
+  }
+}
+```
+
+### ANALYZE_NAMED_RANGE_HEALTH
+
+Reports named-range findings such as broken references, unresolved targets, and scope shadowing.
+
+```json
+{
+  "type": "ANALYZE_NAMED_RANGE_HEALTH",
+  "requestId": "named-range-health",
+  "selection": { "mode": "ALL" }
+}
+```
+
+### ANALYZE_WORKBOOK_FINDINGS
+
+Runs the first finding-bearing analysis family across the workbook and returns one aggregated
+finding list.
+
+```json
+{
+  "type": "ANALYZE_WORKBOOK_FINDINGS",
+  "requestId": "workbook-findings"
 }
 ```

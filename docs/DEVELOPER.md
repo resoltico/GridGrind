@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.8.0"
+version: "0.9.0"
 domain: DEVELOPER
 updated: "2026-03-27"
 route:
@@ -150,7 +150,7 @@ These runnable examples cover the core operation surface:
 | `examples/budget-request.json` | Range write, style, formula, workbook summary, cells, window, and schema reads |
 | `examples/excel-authoring-essentials-request.json` | Hyperlink, comment, named-range authoring plus explicit metadata and named-range reads |
 | `examples/formatting-depth-request.json` | Font, fill, and border styling with explicit post-mutation cell and window reads |
-| `examples/introspection-analysis-request.json` | Read-heavy workbook showcasing introspection and insight operations together |
+| `examples/introspection-analysis-request.json` | Read-heavy workbook showcasing factual reads plus finding-bearing analysis operations together |
 | `examples/live-workflow-create.json` | Multi-sheet workbook with cross-sheet formulas and aggregations |
 | `examples/live-workflow-revise.json` | Reopen, revise, recalculate, and reread |
 | `examples/sheet-management-request.json` | Sheet rename, delete, and reorder semantics |

@@ -86,14 +86,23 @@ public final class WorkbookInvariantChecks {
       case GridGrindRequest.WorkbookPersistence.None _ -> {
         switch (persistenceOutcome) {
           case GridGrindResponse.PersistenceOutcome.NotSaved _ -> {}
-          case GridGrindResponse.PersistenceOutcome.Saved _ ->
+          case GridGrindResponse.PersistenceOutcome.SavedAs _,
+              GridGrindResponse.PersistenceOutcome.Overwritten _ ->
               throw new IllegalStateException("NONE persistence must return NOT_SAVED");
         }
       }
-      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ ->
-          requireSavedPersistenceOutcome(persistenceOutcome);
-      case GridGrindRequest.WorkbookPersistence.SaveAs _ ->
-          requireSavedPersistenceOutcome(persistenceOutcome);
+      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> {
+        requirePersistenceOutcomeShape(persistenceOutcome);
+        require(
+            persistenceOutcome instanceof GridGrindResponse.PersistenceOutcome.Overwritten,
+            "OVERWRITE persistence must return OVERWRITTEN");
+      }
+      case GridGrindRequest.WorkbookPersistence.SaveAs _ -> {
+        requirePersistenceOutcomeShape(persistenceOutcome);
+        require(
+            persistenceOutcome instanceof GridGrindResponse.PersistenceOutcome.SavedAs,
+            "SAVE_AS persistence must return SAVED_AS");
+      }
     }
   }
 
@@ -101,23 +110,21 @@ public final class WorkbookInvariantChecks {
       GridGrindResponse.PersistenceOutcome persistenceOutcome) {
     switch (persistenceOutcome) {
       case GridGrindResponse.PersistenceOutcome.NotSaved _ -> {}
-      case GridGrindResponse.PersistenceOutcome.Saved saved -> requireSavedWorkbookPath(saved.path());
+      case GridGrindResponse.PersistenceOutcome.SavedAs savedAs -> {
+        requireNonBlank(savedAs.requestedPath(), "requestedPath");
+        requireExecutionWorkbookPath(savedAs.executionPath());
+      }
+      case GridGrindResponse.PersistenceOutcome.Overwritten overwritten -> {
+        requireNonBlank(overwritten.sourcePath(), "sourcePath");
+        requireExecutionWorkbookPath(overwritten.executionPath());
+      }
     }
   }
 
-  private static void requireSavedPersistenceOutcome(
-      GridGrindResponse.PersistenceOutcome persistenceOutcome) {
-    switch (persistenceOutcome) {
-      case GridGrindResponse.PersistenceOutcome.NotSaved _ ->
-          throw new IllegalStateException("saved persistence must return SAVED");
-      case GridGrindResponse.PersistenceOutcome.Saved saved -> requireSavedWorkbookPath(saved.path());
-    }
-  }
-
-  private static void requireSavedWorkbookPath(String savedWorkbookPath) {
-    require(savedWorkbookPath != null, "saved workbook path must not be null");
-    require(savedWorkbookPath.endsWith(".xlsx"), "saved workbook path must point to .xlsx");
-    require(Files.exists(Path.of(savedWorkbookPath)), "saved workbook path must exist");
+  private static void requireExecutionWorkbookPath(String executionPath) {
+    require(executionPath != null, "executionPath must not be null");
+    require(executionPath.endsWith(".xlsx"), "executionPath must point to .xlsx");
+    require(Files.exists(Path.of(executionPath)), "executionPath must exist");
   }
 
   private static void requireReadMatchesRequest(
@@ -183,24 +190,35 @@ public final class WorkbookInvariantChecks {
             (WorkbookReadResult.SheetLayoutResult) readResult;
         require(expected.sheetName().equals(result.layout().sheetName()), "layout sheet mismatch");
       }
-      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> {
+      case WorkbookReadOperation.GetFormulaSurface _ -> {
         WorkbookReadResult.FormulaSurfaceResult result =
             (WorkbookReadResult.FormulaSurfaceResult) readResult;
         require(result.analysis().sheets() != null, "formula surface sheets must not be null");
       }
-      case WorkbookReadOperation.AnalyzeSheetSchema expected -> {
+      case WorkbookReadOperation.GetSheetSchema expected -> {
         WorkbookReadResult.SheetSchemaResult result = (WorkbookReadResult.SheetSchemaResult) readResult;
         require(expected.sheetName().equals(result.analysis().sheetName()), "schema sheet mismatch");
         require(
             expected.topLeftAddress().equals(result.analysis().topLeftAddress()),
             "schema topLeftAddress mismatch");
       }
-      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> {
+      case WorkbookReadOperation.GetNamedRangeSurface _ -> {
         WorkbookReadResult.NamedRangeSurfaceResult result =
             (WorkbookReadResult.NamedRangeSurfaceResult) readResult;
         require(
             result.analysis().namedRanges() != null, "named range surface entries must not be null");
       }
+      case WorkbookReadOperation.AnalyzeFormulaHealth _ ->
+          requireFormulaHealthShape(((WorkbookReadResult.FormulaHealthResult) readResult).analysis());
+      case WorkbookReadOperation.AnalyzeHyperlinkHealth _ ->
+          requireHyperlinkHealthShape(
+              ((WorkbookReadResult.HyperlinkHealthResult) readResult).analysis());
+      case WorkbookReadOperation.AnalyzeNamedRangeHealth _ ->
+          requireNamedRangeHealthShape(
+              ((WorkbookReadResult.NamedRangeHealthResult) readResult).analysis());
+      case WorkbookReadOperation.AnalyzeWorkbookFindings _ ->
+          requireWorkbookFindingsShape(
+              ((WorkbookReadResult.WorkbookFindingsResult) readResult).analysis());
     }
   }
 
@@ -215,9 +233,13 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.HyperlinksResult _ -> "GET_HYPERLINKS";
       case WorkbookReadResult.CommentsResult _ -> "GET_COMMENTS";
       case WorkbookReadResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
-      case WorkbookReadResult.FormulaSurfaceResult _ -> "ANALYZE_FORMULA_SURFACE";
-      case WorkbookReadResult.SheetSchemaResult _ -> "ANALYZE_SHEET_SCHEMA";
-      case WorkbookReadResult.NamedRangeSurfaceResult _ -> "ANALYZE_NAMED_RANGE_SURFACE";
+      case WorkbookReadResult.FormulaSurfaceResult _ -> "GET_FORMULA_SURFACE";
+      case WorkbookReadResult.SheetSchemaResult _ -> "GET_SHEET_SCHEMA";
+      case WorkbookReadResult.NamedRangeSurfaceResult _ -> "GET_NAMED_RANGE_SURFACE";
+      case WorkbookReadResult.FormulaHealthResult _ -> "ANALYZE_FORMULA_HEALTH";
+      case WorkbookReadResult.HyperlinkHealthResult _ -> "ANALYZE_HYPERLINK_HEALTH";
+      case WorkbookReadResult.NamedRangeHealthResult _ -> "ANALYZE_NAMED_RANGE_HEALTH";
+      case WorkbookReadResult.WorkbookFindingsResult _ -> "ANALYZE_WORKBOOK_FINDINGS";
     };
   }
 
@@ -257,6 +279,14 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.SheetSchemaResult result -> requireSheetSchemaShape(result.analysis());
       case WorkbookReadResult.NamedRangeSurfaceResult result ->
           requireNamedRangeSurfaceShape(result.analysis());
+      case WorkbookReadResult.FormulaHealthResult result ->
+          requireFormulaHealthShape(result.analysis());
+      case WorkbookReadResult.HyperlinkHealthResult result ->
+          requireHyperlinkHealthShape(result.analysis());
+      case WorkbookReadResult.NamedRangeHealthResult result ->
+          requireNamedRangeHealthShape(result.analysis());
+      case WorkbookReadResult.WorkbookFindingsResult result ->
+          requireWorkbookFindingsShape(result.analysis());
     }
   }
 
@@ -434,6 +464,80 @@ public final class WorkbookInvariantChecks {
             });
   }
 
+  private static void requireFormulaHealthShape(GridGrindResponse.FormulaHealthReport analysis) {
+    require(
+        analysis.checkedFormulaCellCount() >= 0,
+        "checkedFormulaCellCount must not be negative");
+    requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
+  }
+
+  private static void requireHyperlinkHealthShape(
+      GridGrindResponse.HyperlinkHealthReport analysis) {
+    require(
+        analysis.checkedHyperlinkCount() >= 0,
+        "checkedHyperlinkCount must not be negative");
+    requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
+  }
+
+  private static void requireNamedRangeHealthShape(
+      GridGrindResponse.NamedRangeHealthReport analysis) {
+    require(
+        analysis.checkedNamedRangeCount() >= 0,
+        "checkedNamedRangeCount must not be negative");
+    requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
+  }
+
+  private static void requireWorkbookFindingsShape(
+      GridGrindResponse.WorkbookFindingsReport analysis) {
+    requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
+  }
+
+  private static void requireAnalysisSummaryShape(
+      GridGrindResponse.AnalysisSummaryReport summary,
+      List<GridGrindResponse.AnalysisFindingReport> findings) {
+    require(summary != null, "analysis summary must not be null");
+    require(findings != null, "analysis findings must not be null");
+    require(summary.totalCount() >= 0, "analysis totalCount must not be negative");
+    require(summary.errorCount() >= 0, "analysis errorCount must not be negative");
+    require(summary.warningCount() >= 0, "analysis warningCount must not be negative");
+    require(summary.infoCount() >= 0, "analysis infoCount must not be negative");
+    require(
+        summary.totalCount() == findings.size(),
+        "analysis totalCount must match findings size");
+    require(
+        summary.totalCount() == summary.errorCount() + summary.warningCount() + summary.infoCount(),
+        "analysis totalCount must equal error + warning + info");
+    findings.forEach(WorkbookInvariantChecks::requireAnalysisFindingShape);
+  }
+
+  private static void requireAnalysisFindingShape(GridGrindResponse.AnalysisFindingReport finding) {
+    require(finding.code() != null, "analysis finding code must not be null");
+    require(finding.severity() != null, "analysis finding severity must not be null");
+    requireNonBlank(finding.title(), "analysis title");
+    requireNonBlank(finding.message(), "analysis message");
+    require(finding.location() != null, "analysis location must not be null");
+    require(finding.evidence() != null, "analysis evidence must not be null");
+    finding.evidence().forEach(evidence -> requireNonBlank(evidence, "analysis evidence"));
+
+    switch (finding.location()) {
+      case GridGrindResponse.AnalysisLocationReport.Workbook _ -> {}
+      case GridGrindResponse.AnalysisLocationReport.Sheet sheet ->
+          requireNonBlank(sheet.sheetName(), "analysis sheetName");
+      case GridGrindResponse.AnalysisLocationReport.Cell cell -> {
+        requireNonBlank(cell.sheetName(), "analysis sheetName");
+        requireNonBlank(cell.address(), "analysis address");
+      }
+      case GridGrindResponse.AnalysisLocationReport.Range range -> {
+        requireNonBlank(range.sheetName(), "analysis sheetName");
+        requireNonBlank(range.range(), "analysis range");
+      }
+      case GridGrindResponse.AnalysisLocationReport.NamedRange namedRange -> {
+        requireNonBlank(namedRange.name(), "analysis named range");
+        require(namedRange.scope() != null, "analysis named range scope must not be null");
+      }
+    }
+  }
+
   private static void requireCellReportShape(GridGrindResponse.CellReport cellReport) {
     require(cellReport.address() != null, "cell address must not be null");
     require(!cellReport.address().isBlank(), "cell address must not be blank");
@@ -516,5 +620,10 @@ public final class WorkbookInvariantChecks {
     if (!condition) {
       throw new IllegalStateException(message);
     }
+  }
+
+  private static void requireNonBlank(String value, String fieldName) {
+    require(value != null, fieldName + " must not be null");
+    require(!value.isBlank(), fieldName + " must not be blank");
   }
 }

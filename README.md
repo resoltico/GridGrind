@@ -90,7 +90,7 @@ or other non-`.xlsx` workbook paths are rejected as `INVALID_REQUEST`.
 Every request follows the same pipeline:
 
 1. **Operations** run in order — create sheets, write cells, apply styles, evaluate formulas.
-2. **Reads** run after all operations succeed — explicit post-mutation introspection and insight
+2. **Reads** run after all operations succeed — explicit post-mutation introspection and analysis
    operations return only the workbook facts the caller requested.
 3. **Persistence** happens last — the workbook is written only after reads succeed.
 
@@ -160,7 +160,7 @@ See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the full reference with all fie
 ## Reads
 
 Reads are explicit, ordered post-mutation requests. GridGrind does not return an implicit
-analysis bundle anymore; callers request exactly the workbook facts or insights they want.
+analysis bundle anymore; callers request exactly the workbook facts or analyses they want.
 
 Introspection reads:
 - `GET_WORKBOOK_SUMMARY`
@@ -172,11 +172,15 @@ Introspection reads:
 - `GET_HYPERLINKS`
 - `GET_COMMENTS`
 - `GET_SHEET_LAYOUT`
+- `GET_FORMULA_SURFACE`
+- `GET_SHEET_SCHEMA`
+- `GET_NAMED_RANGE_SURFACE`
 
-Insight reads:
-- `ANALYZE_FORMULA_SURFACE`
-- `ANALYZE_SHEET_SCHEMA`
-- `ANALYZE_NAMED_RANGE_SURFACE`
+Analysis reads:
+- `ANALYZE_FORMULA_HEALTH`
+- `ANALYZE_HYPERLINK_HEALTH`
+- `ANALYZE_NAMED_RANGE_HEALTH`
+- `ANALYZE_WORKBOOK_FINDINGS`
 
 Every read carries a caller-defined `requestId`, and every result echoes that `requestId` back so
 agents can correlate repeated or similar reads deterministically.
@@ -253,12 +257,16 @@ A request that builds Alice's green coffee inventory sheet:
       "columnCount": 3
     },
     {
-      "type": "ANALYZE_SHEET_SCHEMA",
+      "type": "GET_SHEET_SCHEMA",
       "requestId": "inventory-schema",
       "sheetName": "Inventory",
       "topLeftAddress": "A1",
       "rowCount": 3,
       "columnCount": 3
+    },
+    {
+      "type": "ANALYZE_WORKBOOK_FINDINGS",
+      "requestId": "inventory-findings"
     }
   ]
 }
@@ -273,7 +281,11 @@ A successful response carries `"status": "SUCCESS"`, a typed `persistence` outco
 operation, correlated by `requestId`. Cell and window reads still carry effective cell values,
 hyperlink metadata, comment metadata, and styles. Style output includes effective font name, font
 size, font color, underline, strikeout, fill color, and all four border sides when those style
-facts can be normalized from the workbook.
+facts can be normalized from the workbook. Persistence is now explicit too:
+
+- `NOT_SAVED`: the workbook stayed in memory only
+- `SAVED_AS`: includes both the caller-provided `requestedPath` and the actual `executionPath`
+- `OVERWRITTEN`: includes both the original `sourcePath` token and the actual `executionPath`
 
 A failed response carries `"status": "ERROR"` and a structured `problem` object with:
 
@@ -285,6 +297,9 @@ A failed response carries `"status": "ERROR"` and a structured `problem` object 
 - a `causes` chain for inspecting the underlying exception family
 
 See [docs/ERRORS.md](docs/ERRORS.md) for all problem codes and the full error model.
+
+The CLI supports `--help` / `-h` for inline usage guidance and `--version` for the packaged
+version string.
 
 ---
 

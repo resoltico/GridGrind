@@ -175,9 +175,13 @@ public final class SequenceIntrospection {
       case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
-      case WorkbookReadOperation.AnalyzeFormulaSurface _ -> "ANALYZE_FORMULA_SURFACE";
-      case WorkbookReadOperation.AnalyzeSheetSchema _ -> "ANALYZE_SHEET_SCHEMA";
-      case WorkbookReadOperation.AnalyzeNamedRangeSurface _ -> "ANALYZE_NAMED_RANGE_SURFACE";
+      case WorkbookReadOperation.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
+      case WorkbookReadOperation.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
+      case WorkbookReadOperation.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
+      case WorkbookReadOperation.AnalyzeFormulaHealth _ -> "ANALYZE_FORMULA_HEALTH";
+      case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> "ANALYZE_HYPERLINK_HEALTH";
+      case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> "ANALYZE_NAMED_RANGE_HEALTH";
+      case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> "ANALYZE_WORKBOOK_FINDINGS";
     };
   }
 

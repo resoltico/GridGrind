@@ -70,6 +70,11 @@ public final class GridGrindCli {
     }
 
     return switch (command) {
+      case CliCommand.Help _ -> {
+        stdout.write(helpText().getBytes(StandardCharsets.UTF_8));
+        stdout.flush();
+        yield 0;
+      }
       case CliCommand.Version _ -> {
         stdout.write(("gridgrind " + version() + "\n").getBytes(StandardCharsets.UTF_8));
         stdout.flush();
@@ -132,6 +137,28 @@ public final class GridGrindCli {
 
   private static String version() {
     return versionFrom(GridGrindCli.class.getPackage().getImplementationVersion());
+  }
+
+  private static String helpText() {
+    return """
+        GridGrind CLI
+
+        Usage:
+          gridgrind [--request <path>] [--response <path>]
+          gridgrind --help | -h
+          gridgrind --version
+
+        Behavior:
+          With no --request flag, GridGrind reads one JSON request from stdin.
+          With no --response flag, GridGrind writes one JSON response to stdout.
+          Execution remains atomic: operations run first, then reads, then persistence.
+
+        Flags:
+          --request <path>   Read the JSON request from a file instead of stdin.
+          --response <path>  Write the JSON response to a file instead of stdout.
+          --help, -h         Print this help text.
+          --version          Print the GridGrind version.
+        """;
   }
 
   /**

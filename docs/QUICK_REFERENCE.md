@@ -1,10 +1,10 @@
 ---
 afad: "3.4"
-version: "0.8.0"
+version: "0.9.0"
 domain: QUICK_REFERENCE
 updated: "2026-03-27"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, analyze-sheet-schema]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-sheet-schema, analyze-workbook-findings]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind named range example", "what do gridgrind reads look like"]
 ---
 
@@ -407,18 +407,18 @@ a caller-defined `requestId`.
 { "type": "GET_SHEET_LAYOUT", "requestId": "layout", "sheetName": "Sheet1" }
 ```
 
-## ANALYZE_FORMULA_SURFACE
+## GET_FORMULA_SURFACE
 
 ```json
 {
-  "type": "ANALYZE_FORMULA_SURFACE",
+  "type": "GET_FORMULA_SURFACE",
   "requestId": "formula-surface",
   "selection": {
     "mode": "ALL"
   }
 }
 {
-  "type": "ANALYZE_FORMULA_SURFACE",
+  "type": "GET_FORMULA_SURFACE",
   "requestId": "selected-formula-surface",
   "selection": {
     "mode": "SELECTED",
@@ -427,11 +427,11 @@ a caller-defined `requestId`.
 }
 ```
 
-## ANALYZE_SHEET_SCHEMA
+## GET_SHEET_SCHEMA
 
 ```json
 {
-  "type": "ANALYZE_SHEET_SCHEMA",
+  "type": "GET_SHEET_SCHEMA",
   "requestId": "schema",
   "sheetName": "Sheet1",
   "topLeftAddress": "A1",
@@ -440,16 +440,16 @@ a caller-defined `requestId`.
 }
 ```
 
-## ANALYZE_NAMED_RANGE_SURFACE
+## GET_NAMED_RANGE_SURFACE
 
 ```json
 {
-  "type": "ANALYZE_NAMED_RANGE_SURFACE",
+  "type": "GET_NAMED_RANGE_SURFACE",
   "requestId": "named-range-surface",
   "selection": { "mode": "ALL" }
 }
 {
-  "type": "ANALYZE_NAMED_RANGE_SURFACE",
+  "type": "GET_NAMED_RANGE_SURFACE",
   "requestId": "selected-named-range-surface",
   "selection": {
     "mode": "SELECTED",
@@ -458,6 +458,48 @@ a caller-defined `requestId`.
       { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
     ]
   }
+}
+```
+
+## ANALYZE_FORMULA_HEALTH
+
+```json
+{
+  "type": "ANALYZE_FORMULA_HEALTH",
+  "requestId": "formula-health",
+  "selection": { "mode": "ALL" }
+}
+```
+
+## ANALYZE_HYPERLINK_HEALTH
+
+```json
+{
+  "type": "ANALYZE_HYPERLINK_HEALTH",
+  "requestId": "hyperlink-health",
+  "selection": {
+    "mode": "SELECTED",
+    "sheetNames": ["Sheet1", "Sheet2"]
+  }
+}
+```
+
+## ANALYZE_NAMED_RANGE_HEALTH
+
+```json
+{
+  "type": "ANALYZE_NAMED_RANGE_HEALTH",
+  "requestId": "named-range-health",
+  "selection": { "mode": "ALL" }
+}
+```
+
+## ANALYZE_WORKBOOK_FINDINGS
+
+```json
+{
+  "type": "ANALYZE_WORKBOOK_FINDINGS",
+  "requestId": "workbook-findings"
 }
 ```
 

@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.excel;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Objects;
 
 /** Immutable workbook-core hyperlink target used for cell hyperlink authoring and analysis. */
@@ -18,7 +16,9 @@ public sealed interface ExcelHyperlink
   record Url(String target) implements ExcelHyperlink {
     public Url {
       target = requireNonBlank(target, "target");
-      requireAbsoluteUri(target);
+      if (!ExcelHyperlinkValidation.isValidUrlTarget(target)) {
+        throw new IllegalArgumentException("target must be an absolute URI with a scheme");
+      }
     }
 
     @Override
@@ -30,7 +30,7 @@ public sealed interface ExcelHyperlink
   /** Email hyperlink target stored without the {@code mailto:} prefix. */
   record Email(String target) implements ExcelHyperlink {
     public Email {
-      target = normalizeEmail(target);
+      target = normalizeEmailTarget(target);
     }
 
     @Override
@@ -71,22 +71,9 @@ public sealed interface ExcelHyperlink
     return value;
   }
 
-  private static void requireAbsoluteUri(String target) {
-    try {
-      URI uri = new URI(target);
-      if (!uri.isAbsolute()) {
-        throw new IllegalArgumentException("target must be an absolute URI with a scheme");
-      }
-    } catch (URISyntaxException exception) {
-      throw new IllegalArgumentException("target must be a valid absolute URI", exception);
-    }
-  }
-
-  private static String normalizeEmail(String email) {
-    String normalized = requireNonBlank(email, "target");
-    if (normalized.regionMatches(true, 0, "mailto:", 0, 7)) {
-      normalized = normalized.substring(7);
-    }
+  private static String normalizeEmailTarget(String email) {
+    String normalized =
+        ExcelHyperlinkValidation.stripMailtoPrefix(requireNonBlank(email, "target"));
     if (normalized.isBlank()) {
       throw new IllegalArgumentException("target must not be blank");
     }

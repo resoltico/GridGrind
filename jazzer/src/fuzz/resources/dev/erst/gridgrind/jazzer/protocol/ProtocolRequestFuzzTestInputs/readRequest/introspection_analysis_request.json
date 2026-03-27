@@ -127,7 +127,7 @@
       "selection": { "mode": "ALL" }
     },
     {
-      "type": "ANALYZE_FORMULA_SURFACE",
+      "type": "GET_FORMULA_SURFACE",
       "requestId": "formula-surface",
       "selection": {
         "mode": "SELECTED",
@@ -135,7 +135,7 @@
       }
     },
     {
-      "type": "ANALYZE_SHEET_SCHEMA",
+      "type": "GET_SHEET_SCHEMA",
       "requestId": "schema",
       "sheetName": "Dashboard",
       "topLeftAddress": "A1",
@@ -143,9 +143,34 @@
       "columnCount": 3
     },
     {
-      "type": "ANALYZE_NAMED_RANGE_SURFACE",
+      "type": "GET_NAMED_RANGE_SURFACE",
       "requestId": "named-range-surface",
       "selection": { "mode": "ALL" }
+    },
+    {
+      "type": "ANALYZE_FORMULA_HEALTH",
+      "requestId": "formula-health",
+      "selection": {
+        "mode": "SELECTED",
+        "sheetNames": ["Dashboard"]
+      }
+    },
+    {
+      "type": "ANALYZE_HYPERLINK_HEALTH",
+      "requestId": "hyperlink-health",
+      "selection": {
+        "mode": "SELECTED",
+        "sheetNames": ["Dashboard"]
+      }
+    },
+    {
+      "type": "ANALYZE_NAMED_RANGE_HEALTH",
+      "requestId": "named-range-health",
+      "selection": { "mode": "ALL" }
+    },
+    {
+      "type": "ANALYZE_WORKBOOK_FINDINGS",
+      "requestId": "workbook-findings"
     }
   ]
 }

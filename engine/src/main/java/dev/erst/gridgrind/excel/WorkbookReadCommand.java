@@ -7,7 +7,7 @@ import java.util.Set;
 
 /** Workbook-core read commands executed after mutations and before persistence. */
 public sealed interface WorkbookReadCommand
-    permits WorkbookReadCommand.Introspection, WorkbookReadCommand.Insight {
+    permits WorkbookReadCommand.Introspection, WorkbookReadCommand.Analysis {
 
   /** Stable caller-provided identifier used to correlate one read command with its result. */
   String requestId();
@@ -22,11 +22,17 @@ public sealed interface WorkbookReadCommand
           GetMergedRegions,
           GetHyperlinks,
           GetComments,
-          GetSheetLayout {}
+          GetSheetLayout,
+          GetFormulaSurface,
+          GetSheetSchema,
+          GetNamedRangeSurface {}
 
   /** Marker for derived analysis commands. */
-  sealed interface Insight extends WorkbookReadCommand
-      permits AnalyzeFormulaSurface, AnalyzeSheetSchema, AnalyzeNamedRangeSurface {}
+  sealed interface Analysis extends WorkbookReadCommand
+      permits AnalyzeFormulaHealth,
+          AnalyzeHyperlinkHealth,
+          AnalyzeNamedRangeHealth,
+          AnalyzeWorkbookFindings {}
 
   /** Returns workbook-level summary facts. */
   record GetWorkbookSummary(String requestId) implements Introspection {
@@ -112,18 +118,19 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Groups formula usage patterns across one or more sheets. */
-  record AnalyzeFormulaSurface(String requestId, ExcelSheetSelection selection) implements Insight {
-    public AnalyzeFormulaSurface {
+  record GetFormulaSurface(String requestId, ExcelSheetSelection selection)
+      implements Introspection {
+    public GetFormulaSurface {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(selection, "selection must not be null");
     }
   }
 
   /** Infers a simple column schema from a rectangular window on one sheet. */
-  record AnalyzeSheetSchema(
+  record GetSheetSchema(
       String requestId, String sheetName, String topLeftAddress, int rowCount, int columnCount)
-      implements Insight {
-    public AnalyzeSheetSchema {
+      implements Introspection {
+    public GetSheetSchema {
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       topLeftAddress = requireNonBlank(topLeftAddress, "topLeftAddress");
@@ -133,11 +140,44 @@ public sealed interface WorkbookReadCommand
   }
 
   /** Summarizes the scope and backing kind of selected named ranges. */
-  record AnalyzeNamedRangeSurface(String requestId, ExcelNamedRangeSelection selection)
-      implements Insight {
-    public AnalyzeNamedRangeSurface {
+  record GetNamedRangeSurface(String requestId, ExcelNamedRangeSelection selection)
+      implements Introspection {
+    public GetNamedRangeSurface {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports formula findings such as error results and volatile usage. */
+  record AnalyzeFormulaHealth(String requestId, ExcelSheetSelection selection) implements Analysis {
+    public AnalyzeFormulaHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports hyperlink findings such as malformed targets and missing document destinations. */
+  record AnalyzeHyperlinkHealth(String requestId, ExcelSheetSelection selection)
+      implements Analysis {
+    public AnalyzeHyperlinkHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports named-range findings such as broken references and scope shadowing. */
+  record AnalyzeNamedRangeHealth(String requestId, ExcelNamedRangeSelection selection)
+      implements Analysis {
+    public AnalyzeNamedRangeHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Runs the first analysis family across the whole workbook and aggregates their findings. */
+  record AnalyzeWorkbookFindings(String requestId) implements Analysis {
+    public AnalyzeWorkbookFindings {
+      requestId = requireNonBlank(requestId, "requestId");
     }
   }
 

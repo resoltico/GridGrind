@@ -308,7 +308,7 @@ public final class OperationSequenceModel {
     boolean validRange = data.consumeBoolean();
     boolean validName = data.consumeBoolean();
 
-    return switch (data.consumeInt(0, 11)) {
+    return switch (data.consumeInt(0, 15)) {
       case 0 -> new WorkbookReadOperation.GetWorkbookSummary(requestId);
       case 1 ->
           new WorkbookReadOperation.GetNamedRanges(
@@ -337,20 +337,32 @@ public final class OperationSequenceModel {
               requestId, targetSheet, nextCellSelection(data, validAddress));
       case 8 -> new WorkbookReadOperation.GetSheetLayout(requestId, targetSheet);
       case 9 ->
-          new WorkbookReadOperation.AnalyzeFormulaSurface(
+          new WorkbookReadOperation.GetFormulaSurface(
               requestId, nextSheetSelection(data, primarySheet, secondarySheet));
       case 10 ->
-          new WorkbookReadOperation.AnalyzeSheetSchema(
+          new WorkbookReadOperation.GetSheetSchema(
               requestId,
               targetSheet,
               validAddress ? "A1" : FuzzDataDecoders.nextNonBlankCellAddress(data, false),
               data.consumeInt(1, 5),
               data.consumeInt(1, 4));
-      default ->
-          new WorkbookReadOperation.AnalyzeNamedRangeSurface(
+      case 11 ->
+          new WorkbookReadOperation.GetNamedRangeSurface(
               requestId,
               nextNamedRangeSelection(
                   data, targetSheet, workbookNamedRange, sheetNamedRange, validName));
+      case 12 ->
+          new WorkbookReadOperation.AnalyzeFormulaHealth(
+              requestId, nextSheetSelection(data, primarySheet, secondarySheet));
+      case 13 ->
+          new WorkbookReadOperation.AnalyzeHyperlinkHealth(
+              requestId, nextSheetSelection(data, primarySheet, secondarySheet));
+      case 14 ->
+          new WorkbookReadOperation.AnalyzeNamedRangeHealth(
+              requestId,
+              nextNamedRangeSelection(
+                  data, targetSheet, workbookNamedRange, sheetNamedRange, validName));
+      default -> new WorkbookReadOperation.AnalyzeWorkbookFindings(requestId);
     };
   }
 

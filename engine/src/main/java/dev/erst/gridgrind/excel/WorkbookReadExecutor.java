@@ -8,19 +8,17 @@ import java.util.Objects;
 /** Executes validated workbook read commands in order against one workbook instance. */
 public final class WorkbookReadExecutor {
   private final ExcelWorkbookIntrospector workbookIntrospector;
-  private final WorkbookInsightAnalyzer insightAnalyzer;
+  private final WorkbookAnalyzer analyzer;
 
   /** Creates the production workbook read executor. */
   public WorkbookReadExecutor() {
-    this(new ExcelWorkbookIntrospector(), new WorkbookInsightAnalyzer());
+    this(new ExcelWorkbookIntrospector(), new WorkbookAnalyzer());
   }
 
-  WorkbookReadExecutor(
-      ExcelWorkbookIntrospector workbookIntrospector, WorkbookInsightAnalyzer insightAnalyzer) {
+  WorkbookReadExecutor(ExcelWorkbookIntrospector workbookIntrospector, WorkbookAnalyzer analyzer) {
     this.workbookIntrospector =
         Objects.requireNonNull(workbookIntrospector, "workbookIntrospector must not be null");
-    this.insightAnalyzer =
-        Objects.requireNonNull(insightAnalyzer, "insightAnalyzer must not be null");
+    this.analyzer = Objects.requireNonNull(analyzer, "analyzer must not be null");
   }
 
   /** Executes one or more read commands in order and returns their immutable results. */
@@ -47,7 +45,7 @@ public final class WorkbookReadExecutor {
     return switch (command) {
       case WorkbookReadCommand.Introspection introspection ->
           workbookIntrospector.execute(workbook, introspection);
-      case WorkbookReadCommand.Insight insight -> insightAnalyzer.execute(workbook, insight);
+      case WorkbookReadCommand.Analysis analysis -> analyzer.execute(workbook, analysis);
     };
   }
 }

@@ -169,6 +169,29 @@ class GridGrindCliTest {
   }
 
   @Test
+  void helpFlagsPrintUsageAndReturnExitCodeZero() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int longExitCode =
+        new GridGrindCli()
+            .run(new String[] {"--help"}, new ByteArrayInputStream(new byte[0]), stdout);
+
+    assertEquals(0, longExitCode);
+    String help = stdout.toString(StandardCharsets.UTF_8);
+    assertTrue(help.contains("GridGrind CLI"));
+    assertTrue(help.contains("Usage:"));
+    assertTrue(help.contains("--request <path>"));
+    assertTrue(help.contains("--help, -h"));
+
+    ByteArrayOutputStream shortStdout = new ByteArrayOutputStream();
+    int shortExitCode =
+        new GridGrindCli()
+            .run(new String[] {"-h"}, new ByteArrayInputStream(new byte[0]), shortStdout);
+    assertEquals(0, shortExitCode);
+    assertEquals(help, shortStdout.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
   void versionFlagTakesPrecedenceOverOtherFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
@@ -181,6 +204,21 @@ class GridGrindCliTest {
 
     assertEquals(0, exitCode);
     assertEquals("gridgrind unknown\n", stdout.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void helpFlagTakesPrecedenceOverOtherFlags() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--help", "--request", "ignored.json"},
+                new ByteArrayInputStream(new byte[0]),
+                stdout);
+
+    assertEquals(0, exitCode);
+    assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("GridGrind CLI"));
   }
 
   @Test

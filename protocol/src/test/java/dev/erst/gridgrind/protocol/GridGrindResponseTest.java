@@ -22,12 +22,14 @@ class GridGrindResponseTest {
 
     GridGrindResponse.Success success =
         new GridGrindResponse.Success(
-            null, new GridGrindResponse.PersistenceOutcome.Saved("/tmp/budget.xlsx"), reads);
+            null,
+            new GridGrindResponse.PersistenceOutcome.SavedAs("budget.xlsx", "/tmp/budget.xlsx"),
+            reads);
     reads.clear();
 
     assertInstanceOf(GridGrindResponse.Success.class, success);
     assertEquals(GridGrindProtocolVersion.V1, success.protocolVersion());
-    assertInstanceOf(GridGrindResponse.PersistenceOutcome.Saved.class, success.persistence());
+    assertInstanceOf(GridGrindResponse.PersistenceOutcome.SavedAs.class, success.persistence());
     assertEquals(1, success.reads().size());
 
     GridGrindResponse.Failure failure =
@@ -74,7 +76,11 @@ class GridGrindResponseTest {
             new GridGrindResponse.NamedRangeReport.RangeReport(
                 "BudgetTotal", new NamedRangeScope.Workbook(), "Budget!$B$4", null));
     assertThrows(
-        NullPointerException.class, () -> new GridGrindResponse.PersistenceOutcome.Saved(null));
+        NullPointerException.class,
+        () -> new GridGrindResponse.PersistenceOutcome.SavedAs(null, "/tmp/budget.xlsx"));
+    assertThrows(
+        NullPointerException.class,
+        () -> new GridGrindResponse.PersistenceOutcome.SavedAs("budget.xlsx", null));
   }
 
   @Test
@@ -230,7 +236,7 @@ class GridGrindResponseTest {
   }
 
   @Test
-  void namedRangeAndInsightReportsExposeExpectedDefaults() {
+  void namedRangeAndAnalysisReportsExposeExpectedDefaults() {
     GridGrindResponse.NamedRangeReport.FormulaReport formulaReport =
         new GridGrindResponse.NamedRangeReport.FormulaReport(
             "BudgetRollup", new NamedRangeScope.Workbook(), "SUM(Budget!$B$2:$B$3)");
@@ -273,11 +279,30 @@ class GridGrindResponseTest {
                     0,
                     List.of(new GridGrindResponse.TypeCountReport("STRING", 2)),
                     "STRING")));
+    GridGrindResponse.FormulaHealthReport formulaHealth =
+        new GridGrindResponse.FormulaHealthReport(
+            1,
+            new GridGrindResponse.AnalysisSummaryReport(1, 0, 0, 1),
+            List.of(
+                new GridGrindResponse.AnalysisFindingReport(
+                    dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                        .FORMULA_VOLATILE_FUNCTION,
+                    dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+                    "Volatile formula",
+                    "Formula uses NOW().",
+                    new GridGrindResponse.AnalysisLocationReport.Cell("Budget", "B4"),
+                    List.of("NOW()"))));
 
     assertNull(formulaReport.target());
     assertEquals(1, surface.formulaBackedCount());
     assertEquals(1, formulaSurface.totalFormulaCellCount());
     assertEquals("STRING", schema.columns().getFirst().dominantType());
+    assertEquals(1, formulaHealth.summary().infoCount());
+    assertEquals(
+        "Budget",
+        ((GridGrindResponse.AnalysisLocationReport.Cell)
+                formulaHealth.findings().getFirst().location())
+            .sheetName());
   }
 
   @Test
@@ -313,7 +338,11 @@ class GridGrindResponseTest {
   @Test
   void responseRecordsRejectBlankAndInvalidValues() {
     assertThrows(
-        IllegalArgumentException.class, () -> new GridGrindResponse.PersistenceOutcome.Saved(" "));
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.PersistenceOutcome.SavedAs(" ", "/tmp/budget.xlsx"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.PersistenceOutcome.SavedAs("budget.xlsx", " "));
     assertThrows(
         IllegalArgumentException.class,
         () -> new GridGrindResponse.SheetSummaryReport(" ", 0, 0, 0));
@@ -434,6 +463,147 @@ class GridGrindResponseTest {
                 new NamedRangeScope.Workbook(),
                 "Budget!$B$4",
                 GridGrindResponse.NamedRangeBackingKind.RANGE));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.PersistenceOutcome.Overwritten(" ", "/tmp/budget.xlsx"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.PersistenceOutcome.Overwritten("budget.xlsx", " "));
+  }
+
+  @Test
+  void analysisReportsValidateAndCopyCollections() {
+    List<String> evidence = new ArrayList<>(List.of("NOW()"));
+    GridGrindResponse.AnalysisFindingReport workbookFinding =
+        new GridGrindResponse.AnalysisFindingReport(
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+            "Volatile formula",
+            "Formula uses NOW().",
+            new GridGrindResponse.AnalysisLocationReport.Workbook(),
+            evidence);
+    GridGrindResponse.AnalysisFindingReport sheetFinding =
+        new GridGrindResponse.AnalysisFindingReport(
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                .FORMULA_EXTERNAL_REFERENCE,
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.WARNING,
+            "External reference",
+            "Formula references another workbook.",
+            new GridGrindResponse.AnalysisLocationReport.Sheet("Budget"),
+            List.of("[Book.xlsx]Sheet1!A1"));
+    GridGrindResponse.AnalysisFindingReport rangeFinding =
+        new GridGrindResponse.AnalysisFindingReport(
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                .NAMED_RANGE_BROKEN_REFERENCE,
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.ERROR,
+            "Broken named range",
+            "Named range contains #REF!.",
+            new GridGrindResponse.AnalysisLocationReport.Range("Budget", "A1:B2"),
+            List.of("#REF!"));
+    GridGrindResponse.AnalysisFindingReport namedRangeFinding =
+        new GridGrindResponse.AnalysisFindingReport(
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                .NAMED_RANGE_SCOPE_SHADOWING,
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+            "Scope shadowing",
+            "Name exists in multiple scopes.",
+            new GridGrindResponse.AnalysisLocationReport.NamedRange(
+                "BudgetTotal", new NamedRangeScope.Sheet("Budget")),
+            List.of("Budget!$B$4"));
+    GridGrindResponse.AnalysisSummaryReport summary =
+        new GridGrindResponse.AnalysisSummaryReport(4, 1, 1, 2);
+    GridGrindResponse.HyperlinkHealthReport hyperlinkHealth =
+        new GridGrindResponse.HyperlinkHealthReport(
+            2, summary, List.of(workbookFinding, sheetFinding));
+    GridGrindResponse.NamedRangeHealthReport namedRangeHealth =
+        new GridGrindResponse.NamedRangeHealthReport(2, summary, List.of(rangeFinding));
+    GridGrindResponse.WorkbookFindingsReport workbookFindings =
+        new GridGrindResponse.WorkbookFindingsReport(summary, List.of(namedRangeFinding));
+    evidence.clear();
+
+    assertEquals(1, hyperlinkHealth.findings().getFirst().evidence().size());
+    assertEquals(
+        "Budget",
+        ((GridGrindResponse.AnalysisLocationReport.Sheet) sheetFinding.location()).sheetName());
+    assertEquals(
+        "A1:B2",
+        ((GridGrindResponse.AnalysisLocationReport.Range) rangeFinding.location()).range());
+    assertEquals(
+        "BudgetTotal",
+        ((GridGrindResponse.AnalysisLocationReport.NamedRange) namedRangeFinding.location())
+            .name());
+    assertEquals(1, namedRangeHealth.findings().size());
+    assertEquals(1, workbookFindings.findings().size());
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.AnalysisSummaryReport(-1, 0, 0, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.AnalysisSummaryReport(1, -1, 1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.AnalysisSummaryReport(1, 1, -1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.AnalysisSummaryReport(1, 1, 1, -1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.AnalysisSummaryReport(1, 1, 1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.AnalysisLocationReport.Sheet(" "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.AnalysisLocationReport.Cell("Budget", " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.AnalysisLocationReport.Cell(" ", "A1"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.AnalysisLocationReport.Range(" ", "A1:B2"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.AnalysisLocationReport.Range("Budget", " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.AnalysisLocationReport.NamedRange(
+                " ", new NamedRangeScope.Workbook()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.AnalysisFindingReport(
+                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                    .FORMULA_VOLATILE_FUNCTION,
+                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+                " ",
+                "message",
+                new GridGrindResponse.AnalysisLocationReport.Workbook(),
+                List.of("NOW()")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.AnalysisFindingReport(
+                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                    .FORMULA_VOLATILE_FUNCTION,
+                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+                "title",
+                " ",
+                new GridGrindResponse.AnalysisLocationReport.Workbook(),
+                List.of("NOW()")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.FormulaHealthReport(-1, summary, List.of(workbookFinding)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.HyperlinkHealthReport(-1, summary, List.of(workbookFinding)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.NamedRangeHealthReport(-1, summary, List.of(workbookFinding)));
+    assertThrows(
+        NullPointerException.class,
+        () -> new GridGrindResponse.WorkbookFindingsReport(null, List.of(workbookFinding)));
   }
 
   @Test

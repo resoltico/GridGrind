@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
@@ -434,6 +435,143 @@ public final class ExcelSheet {
       }
     }
     return List.copyOf(formulas);
+  }
+
+  /** Returns the number of formula cells currently present on the sheet. */
+  int formulaCellCount() {
+    int count = 0;
+    for (Row row : sheet) {
+      for (Cell cell : row) {
+        if (cell.getCellType() == CellType.FORMULA) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  /** Returns derived findings for formula health on this sheet. */
+  List<WorkbookAnalysis.AnalysisFinding> formulaHealthFindings() {
+    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    for (Row row : sheet) {
+      for (Cell cell : row) {
+        if (cell.getCellType() != CellType.FORMULA) {
+          continue;
+        }
+        String address = cellAddress(cell);
+        String formula = cell.getCellFormula();
+        WorkbookAnalysis.AnalysisLocation.Cell location = cellLocation(address);
+        if (containsExternalWorkbookReference(formula)) {
+          findings.add(
+              new WorkbookAnalysis.AnalysisFinding(
+                  WorkbookAnalysis.AnalysisFindingCode.FORMULA_EXTERNAL_REFERENCE,
+                  WorkbookAnalysis.AnalysisSeverity.WARNING,
+                  "External workbook reference",
+                  "Formula references an external workbook and may not evaluate deterministically.",
+                  location,
+                  List.of(formula)));
+        }
+        volatileFunctions(formula)
+            .forEach(
+                functionName ->
+                    findings.add(
+                        new WorkbookAnalysis.AnalysisFinding(
+                            WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+                            WorkbookAnalysis.AnalysisSeverity.INFO,
+                            "Volatile formula function",
+                            "Formula uses volatile function " + functionName + ".",
+                            location,
+                            List.of(formula, functionName))));
+        try {
+          CellValue evaluated = formulaEvaluator.evaluate(cell);
+          if (evaluated != null && evaluated.getCellType() == CellType.ERROR) {
+            findings.add(
+                new WorkbookAnalysis.AnalysisFinding(
+                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_ERROR_RESULT,
+                    WorkbookAnalysis.AnalysisSeverity.ERROR,
+                    "Formula evaluates to an error",
+                    "Formula currently evaluates to "
+                        + FormulaError.forInt(evaluated.getErrorValue()).getString()
+                        + ".",
+                    location,
+                    List.of(formula)));
+          }
+        } catch (RuntimeException exception) {
+          findings.add(
+              new WorkbookAnalysis.AnalysisFinding(
+                  WorkbookAnalysis.AnalysisFindingCode.FORMULA_EVALUATION_FAILURE,
+                  WorkbookAnalysis.AnalysisSeverity.ERROR,
+                  "Formula evaluation failed",
+                  "Formula evaluation failed: " + exceptionMessage(exception),
+                  location,
+                  List.of(formula, exception.getClass().getSimpleName())));
+        }
+      }
+    }
+    return List.copyOf(findings);
+  }
+
+  /** Returns the number of raw hyperlinks currently present on the sheet. */
+  int hyperlinkCount() {
+    int count = 0;
+    for (Row row : sheet) {
+      for (Cell cell : row) {
+        if (hasUsableHyperlink(cell.getHyperlink())) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  /** Returns derived findings for hyperlink health on this sheet. */
+  List<WorkbookAnalysis.AnalysisFinding> hyperlinkHealthFindings() {
+    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    for (Row row : sheet) {
+      for (Cell cell : row) {
+        org.apache.poi.ss.usermodel.Hyperlink hyperlink = cell.getHyperlink();
+        if (!hasUsableHyperlink(hyperlink)) {
+          continue;
+        }
+        HyperlinkType hyperlinkType = hyperlink.getType();
+        String address = cellAddress(cell);
+        WorkbookAnalysis.AnalysisLocation.Cell location = cellLocation(address);
+        String target = hyperlink.getAddress();
+        if (hasMissingHyperlinkTarget(target)) {
+          findings.add(
+              malformedHyperlinkFinding(
+                  location,
+                  "Hyperlink target is blank or missing.",
+                  List.of(hyperlinkType.name())));
+          continue;
+        }
+        if (hyperlinkType == HyperlinkType.URL) {
+          validateExternalHyperlinkTarget(
+              location,
+              target,
+              ExcelHyperlinkType.URL.name(),
+              ExcelHyperlinkValidation.isValidUrlTarget(target),
+              findings);
+        } else if (hyperlinkType == HyperlinkType.EMAIL) {
+          validateExternalHyperlinkTarget(
+              location,
+              target,
+              ExcelHyperlinkType.EMAIL.name(),
+              ExcelHyperlinkValidation.isValidEmailTarget(target),
+              findings);
+        } else if (hyperlinkType == HyperlinkType.FILE) {
+          validateExternalHyperlinkTarget(
+              location,
+              target,
+              ExcelHyperlinkType.FILE.name(),
+              ExcelHyperlinkValidation.isValidFileTarget(target),
+              findings);
+        } else {
+          validateDocumentHyperlinkTarget(location, target, findings);
+        }
+      }
+    }
+    return List.copyOf(findings);
   }
 
   private List<ExcelCellSnapshot> previewRow(int rowIndex, int maxColumns) {
@@ -900,17 +1038,17 @@ public final class ExcelSheet {
     if (target == null || target.isBlank()) {
       return null;
     }
-    try {
-      return switch (hyperlink.getType()) {
-        case URL -> new ExcelHyperlink.Url(target);
-        case EMAIL -> new ExcelHyperlink.Email(target);
-        case FILE -> new ExcelHyperlink.File(target);
-        case DOCUMENT -> new ExcelHyperlink.Document(target);
-        case NONE -> null;
-      };
-    } catch (IllegalArgumentException exception) {
-      return null;
-    }
+    return switch (hyperlink.getType()) {
+      case URL ->
+          ExcelHyperlinkValidation.isValidUrlTarget(target) ? new ExcelHyperlink.Url(target) : null;
+      case EMAIL ->
+          ExcelHyperlinkValidation.isValidEmailTarget(target)
+              ? new ExcelHyperlink.Email(target)
+              : null;
+      case FILE -> new ExcelHyperlink.File(target);
+      case DOCUMENT -> new ExcelHyperlink.Document(target);
+      case NONE -> null;
+    };
   }
 
   /**
@@ -948,6 +1086,135 @@ public final class ExcelSheet {
       case ExcelHyperlink.File file -> file.target();
       case ExcelHyperlink.Document document -> document.target();
     };
+  }
+
+  private void validateExternalHyperlinkTarget(
+      WorkbookAnalysis.AnalysisLocation.Cell location,
+      String target,
+      String expectedShape,
+      boolean valid,
+      List<WorkbookAnalysis.AnalysisFinding> findings) {
+    if (!valid) {
+      findings.add(
+          malformedHyperlinkFinding(
+              location,
+              "target does not match the expected " + expectedShape + " shape",
+              List.of(target)));
+    }
+  }
+
+  void validateDocumentHyperlinkTarget(
+      WorkbookAnalysis.AnalysisLocation.Cell location,
+      String target,
+      List<WorkbookAnalysis.AnalysisFinding> findings) {
+    int bangIndex = target.indexOf('!');
+    if (bangIndex <= 0 || bangIndex >= target.length() - 1) {
+      findings.add(
+          new WorkbookAnalysis.AnalysisFinding(
+              WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
+              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              "Invalid document hyperlink target",
+              "Document hyperlink target must include a sheet and cell or range reference.",
+              location,
+              List.of(target)));
+      return;
+    }
+
+    String targetSheetName = unquoteSheetName(target.substring(0, bangIndex));
+    String targetAddress = target.substring(bangIndex + 1);
+    if (sheet.getWorkbook().getSheet(targetSheetName) == null) {
+      findings.add(
+          new WorkbookAnalysis.AnalysisFinding(
+              WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
+              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              "Document hyperlink targets a missing sheet",
+              "Document hyperlink target sheet does not exist: " + targetSheetName,
+              location,
+              List.of(target)));
+      return;
+    }
+
+    try {
+      if (targetAddress.contains(":")) {
+        ExcelRange.parse(targetAddress);
+      } else {
+        new CellReference(targetAddress);
+      }
+    } catch (IllegalArgumentException exception) {
+      findings.add(
+          new WorkbookAnalysis.AnalysisFinding(
+              WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET,
+              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              "Invalid document hyperlink target",
+              "Document hyperlink target is not a valid cell or range reference.",
+              location,
+              List.of(target)));
+    }
+  }
+
+  private WorkbookAnalysis.AnalysisLocation.Cell cellLocation(String address) {
+    return new WorkbookAnalysis.AnalysisLocation.Cell(name(), address);
+  }
+
+  private String cellAddress(Cell cell) {
+    return cell.getAddress().formatAsString();
+  }
+
+  private WorkbookAnalysis.AnalysisFinding malformedHyperlinkFinding(
+      WorkbookAnalysis.AnalysisLocation.Cell location, String message, List<String> evidence) {
+    return new WorkbookAnalysis.AnalysisFinding(
+        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
+        WorkbookAnalysis.AnalysisSeverity.ERROR,
+        "Malformed hyperlink target",
+        "Hyperlink target is malformed: " + message,
+        location,
+        evidence);
+  }
+
+  String exceptionMessage(Exception exception) {
+    if (exception.getMessage() == null) {
+      return exception.getClass().getSimpleName();
+    }
+    return exception.getMessage();
+  }
+
+  static boolean hasUsableHyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
+    return hyperlink != null
+        && hyperlink.getType() != null
+        && hyperlink.getType() != HyperlinkType.NONE;
+  }
+
+  static boolean hasMissingHyperlinkTarget(String target) {
+    return target == null || target.isBlank();
+  }
+
+  static String unquoteSheetName(String sheetName) {
+    if (!sheetName.startsWith("'")) {
+      return sheetName;
+    }
+    if (!sheetName.endsWith("'")) {
+      return sheetName;
+    }
+    if (sheetName.length() < 2) {
+      return sheetName;
+    }
+    return sheetName.substring(1, sheetName.length() - 1).replace("''", "'");
+  }
+
+  static boolean containsExternalWorkbookReference(String formula) {
+    return formula.contains("[") && formula.contains("]");
+  }
+
+  static List<String> volatileFunctions(String formula) {
+    String upper = formula.toUpperCase(Locale.ROOT);
+    List<String> functions = new ArrayList<>();
+    for (String candidate :
+        List.of("NOW", "TODAY", "RAND", "RANDBETWEEN", "OFFSET", "INDIRECT", "CELL", "INFO")) {
+      if (upper.contains(candidate + "(")) {
+        functions.add(candidate);
+      }
+    }
+    return List.copyOf(functions);
   }
 
   private List<List<ExcelCellValue>> copyRows(List<List<ExcelCellValue>> rows) {

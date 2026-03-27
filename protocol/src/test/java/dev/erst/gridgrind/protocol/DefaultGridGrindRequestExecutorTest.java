@@ -298,7 +298,7 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
-  void returnsInsightReadResults() {
+  void returnsFactualAndAnalysisReadResults() {
     GridGrindResponse response =
         new DefaultGridGrindRequestExecutor()
             .execute(
@@ -322,11 +322,13 @@ class DefaultGridGrindRequestExecutorTest {
                             "BudgetTotal",
                             new NamedRangeScope.Workbook(),
                             new NamedRangeTarget("Budget", "B4"))),
-                    new WorkbookReadOperation.AnalyzeFormulaSurface(
+                    new WorkbookReadOperation.GetFormulaSurface(
                         "formula", new SheetSelection.All()),
-                    new WorkbookReadOperation.AnalyzeSheetSchema("schema", "Budget", "A1", 4, 2),
-                    new WorkbookReadOperation.AnalyzeNamedRangeSurface(
-                        "ranges", new NamedRangeSelection.All())));
+                    new WorkbookReadOperation.GetSheetSchema("schema", "Budget", "A1", 4, 2),
+                    new WorkbookReadOperation.GetNamedRangeSurface(
+                        "ranges", new NamedRangeSelection.All()),
+                    new WorkbookReadOperation.AnalyzeFormulaHealth(
+                        "formula-health", new SheetSelection.All())));
 
     GridGrindResponse.Success success = success(response);
     GridGrindResponse.FormulaSurfaceReport formula =
@@ -335,6 +337,8 @@ class DefaultGridGrindRequestExecutorTest {
         read(success, "schema", WorkbookReadResult.SheetSchemaResult.class).analysis();
     GridGrindResponse.NamedRangeSurfaceReport ranges =
         read(success, "ranges", WorkbookReadResult.NamedRangeSurfaceResult.class).analysis();
+    GridGrindResponse.FormulaHealthReport formulaHealth =
+        read(success, "formula-health", WorkbookReadResult.FormulaHealthResult.class).analysis();
 
     assertEquals(1, formula.totalFormulaCellCount());
     assertEquals("Budget", formula.sheets().getFirst().sheetName());
@@ -356,6 +360,8 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals("BudgetTotal", ranges.namedRanges().getFirst().name());
     assertEquals(
         GridGrindResponse.NamedRangeBackingKind.RANGE, ranges.namedRanges().getFirst().kind());
+    assertEquals(1, formulaHealth.checkedFormulaCellCount());
+    assertEquals(0, formulaHealth.summary().totalCount());
   }
 
   @Test
@@ -1076,6 +1082,24 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
+  void persistWorkbookRejectsOverwriteForNewSources() throws Exception {
+    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      IllegalArgumentException exception =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  executor.persistWorkbook(
+                      workbook,
+                      new GridGrindRequest.WorkbookSource.New(),
+                      new GridGrindRequest.WorkbookPersistence.OverwriteSource()));
+
+      assertEquals("OVERWRITE persistence requires an EXISTING source", exception.getMessage());
+    }
+  }
+
+  @Test
   void guardsCatastrophicRuntimeExceptionsAndProducesExecuteRequestFailure() {
     int[] callCount = {0};
     DefaultGridGrindRequestExecutor executor =
@@ -1462,15 +1486,30 @@ class DefaultGridGrindRequestExecutorTest {
             new WorkbookReadOperation.GetSheetLayout("layout", "Budget"));
     WorkbookReadCommand formulaSurface =
         DefaultGridGrindRequestExecutor.toReadCommand(
-            new WorkbookReadOperation.AnalyzeFormulaSurface(
+            new WorkbookReadOperation.GetFormulaSurface(
                 "formula", new SheetSelection.Selected(List.of("Budget"))));
     WorkbookReadCommand schema =
         DefaultGridGrindRequestExecutor.toReadCommand(
-            new WorkbookReadOperation.AnalyzeSheetSchema("schema", "Budget", "A1", 3, 2));
+            new WorkbookReadOperation.GetSheetSchema("schema", "Budget", "A1", 3, 2));
     WorkbookReadCommand namedRangeSurface =
         DefaultGridGrindRequestExecutor.toReadCommand(
-            new WorkbookReadOperation.AnalyzeNamedRangeSurface(
+            new WorkbookReadOperation.GetNamedRangeSurface(
                 "surface", new NamedRangeSelection.All()));
+    WorkbookReadCommand formulaHealth =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.AnalyzeFormulaHealth(
+                "formulaHealth", new SheetSelection.All()));
+    WorkbookReadCommand hyperlinkHealth =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.AnalyzeHyperlinkHealth(
+                "hyperlinkHealth", new SheetSelection.All()));
+    WorkbookReadCommand namedRangeHealth =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.AnalyzeNamedRangeHealth(
+                "namedRangeHealth", new NamedRangeSelection.All()));
+    WorkbookReadCommand workbookFindings =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.AnalyzeWorkbookFindings("workbookFindings"));
 
     assertInstanceOf(WorkbookReadCommand.GetWorkbookSummary.class, workbookSummary);
     assertInstanceOf(WorkbookReadCommand.GetNamedRanges.class, namedRanges);
@@ -1481,9 +1520,13 @@ class DefaultGridGrindRequestExecutorTest {
     assertInstanceOf(WorkbookReadCommand.GetHyperlinks.class, hyperlinks);
     assertInstanceOf(WorkbookReadCommand.GetComments.class, comments);
     assertInstanceOf(WorkbookReadCommand.GetSheetLayout.class, layout);
-    assertInstanceOf(WorkbookReadCommand.AnalyzeFormulaSurface.class, formulaSurface);
-    assertInstanceOf(WorkbookReadCommand.AnalyzeSheetSchema.class, schema);
-    assertInstanceOf(WorkbookReadCommand.AnalyzeNamedRangeSurface.class, namedRangeSurface);
+    assertInstanceOf(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface);
+    assertInstanceOf(WorkbookReadCommand.GetSheetSchema.class, schema);
+    assertInstanceOf(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface);
+    assertInstanceOf(WorkbookReadCommand.AnalyzeFormulaHealth.class, formulaHealth);
+    assertInstanceOf(WorkbookReadCommand.AnalyzeHyperlinkHealth.class, hyperlinkHealth);
+    assertInstanceOf(WorkbookReadCommand.AnalyzeNamedRangeHealth.class, namedRangeHealth);
+    assertInstanceOf(WorkbookReadCommand.AnalyzeWorkbookFindings.class, workbookFindings);
     assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelNamedRangeSelection.Selected.class,
         cast(WorkbookReadCommand.GetNamedRanges.class, namedRanges).selection());
@@ -1495,10 +1538,10 @@ class DefaultGridGrindRequestExecutorTest {
         cast(WorkbookReadCommand.GetComments.class, comments).selection());
     assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelSheetSelection.Selected.class,
-        cast(WorkbookReadCommand.AnalyzeFormulaSurface.class, formulaSurface).selection());
+        cast(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface).selection());
     assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelNamedRangeSelection.All.class,
-        cast(WorkbookReadCommand.AnalyzeNamedRangeSurface.class, namedRangeSurface).selection());
+        cast(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface).selection());
   }
 
   @Test
@@ -1626,6 +1669,23 @@ class DefaultGridGrindRequestExecutorTest {
                             "Budget!$B$4",
                             dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangeBackingKind
                                 .RANGE)))));
+    WorkbookReadResult formulaHealth =
+        DefaultGridGrindRequestExecutor.toReadResult(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.FormulaHealthResult(
+                "formula-health",
+                new dev.erst.gridgrind.excel.WorkbookAnalysis.FormulaHealth(
+                    1,
+                    new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 0, 1),
+                    List.of(
+                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                                .FORMULA_VOLATILE_FUNCTION,
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+                            "Volatile formula",
+                            "Formula uses NOW().",
+                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Cell(
+                                "Budget", "B4"),
+                            List.of("NOW()"))))));
 
     assertInstanceOf(WorkbookReadResult.WorkbookSummaryResult.class, workbookSummary);
     assertInstanceOf(WorkbookReadResult.NamedRangesResult.class, namedRanges);
@@ -1639,6 +1699,7 @@ class DefaultGridGrindRequestExecutorTest {
     assertInstanceOf(WorkbookReadResult.FormulaSurfaceResult.class, formulaSurface);
     assertInstanceOf(WorkbookReadResult.SheetSchemaResult.class, schema);
     assertInstanceOf(WorkbookReadResult.NamedRangeSurfaceResult.class, namedRangeSurface);
+    assertInstanceOf(WorkbookReadResult.FormulaHealthResult.class, formulaHealth);
     assertEquals(
         "Budget",
         cast(WorkbookReadResult.WorkbookSummaryResult.class, workbookSummary)
@@ -1707,6 +1768,111 @@ class DefaultGridGrindRequestExecutorTest {
             .namedRanges()
             .getFirst()
             .kind());
+    assertEquals(
+        1,
+        cast(WorkbookReadResult.FormulaHealthResult.class, formulaHealth)
+            .analysis()
+            .summary()
+            .infoCount());
+  }
+
+  @Test
+  void convertsRemainingAnalysisReadResultsIntoProtocolReadResults() {
+    WorkbookReadResult hyperlinkHealth =
+        DefaultGridGrindRequestExecutor.toReadResult(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.HyperlinkHealthResult(
+                "hyperlink-health",
+                new dev.erst.gridgrind.excel.WorkbookAnalysis.HyperlinkHealth(
+                    2,
+                    new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(2, 1, 1, 0),
+                    List.of(
+                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                                .HYPERLINK_MALFORMED_TARGET,
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.ERROR,
+                            "Malformed hyperlink target",
+                            "Hyperlink target is malformed.",
+                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation
+                                .Workbook(),
+                            List.of("mailto:")),
+                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                                .HYPERLINK_MISSING_DOCUMENT_SHEET,
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.WARNING,
+                            "Missing target sheet",
+                            "Sheet is missing.",
+                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Sheet(
+                                "Budget"),
+                            List.of("Missing!A1"))))));
+    WorkbookReadResult namedRangeHealth =
+        DefaultGridGrindRequestExecutor.toReadResult(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangeHealthResult(
+                "named-range-health",
+                new dev.erst.gridgrind.excel.WorkbookAnalysis.NamedRangeHealth(
+                    1,
+                    new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0),
+                    List.of(
+                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                                .NAMED_RANGE_BROKEN_REFERENCE,
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.WARNING,
+                            "Broken named range",
+                            "Named range contains #REF!.",
+                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Range(
+                                "Budget", "A1:B2"),
+                            List.of("#REF!"))))));
+    WorkbookReadResult workbookFindings =
+        DefaultGridGrindRequestExecutor.toReadResult(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookFindingsResult(
+                "workbook-findings",
+                new dev.erst.gridgrind.excel.WorkbookAnalysis.WorkbookFindings(
+                    new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 0, 0, 1),
+                    List.of(
+                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                                .NAMED_RANGE_SCOPE_SHADOWING,
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+                            "Scope shadowing",
+                            "Name exists in more than one scope.",
+                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation
+                                .NamedRange(
+                                "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
+                            List.of("Budget!$B$4"))))));
+
+    GridGrindResponse.AnalysisLocationReport workbookLocation =
+        cast(WorkbookReadResult.HyperlinkHealthResult.class, hyperlinkHealth)
+            .analysis()
+            .findings()
+            .getFirst()
+            .location();
+    GridGrindResponse.AnalysisLocationReport sheetLocation =
+        cast(WorkbookReadResult.HyperlinkHealthResult.class, hyperlinkHealth)
+            .analysis()
+            .findings()
+            .get(1)
+            .location();
+    GridGrindResponse.AnalysisLocationReport rangeLocation =
+        cast(WorkbookReadResult.NamedRangeHealthResult.class, namedRangeHealth)
+            .analysis()
+            .findings()
+            .getFirst()
+            .location();
+    GridGrindResponse.AnalysisLocationReport namedRangeLocation =
+        cast(WorkbookReadResult.WorkbookFindingsResult.class, workbookFindings)
+            .analysis()
+            .findings()
+            .getFirst()
+            .location();
+
+    assertInstanceOf(GridGrindResponse.AnalysisLocationReport.Workbook.class, workbookLocation);
+    assertEquals(
+        "Budget",
+        cast(GridGrindResponse.AnalysisLocationReport.Sheet.class, sheetLocation).sheetName());
+    assertEquals(
+        "A1:B2", cast(GridGrindResponse.AnalysisLocationReport.Range.class, rangeLocation).range());
+    assertEquals(
+        "BudgetTotal",
+        cast(GridGrindResponse.AnalysisLocationReport.NamedRange.class, namedRangeLocation).name());
   }
 
   @Test
@@ -1771,9 +1937,13 @@ class DefaultGridGrindRequestExecutorTest {
             "GET_HYPERLINKS",
             "GET_COMMENTS",
             "GET_SHEET_LAYOUT",
-            "ANALYZE_FORMULA_SURFACE",
-            "ANALYZE_SHEET_SCHEMA",
-            "ANALYZE_NAMED_RANGE_SURFACE"),
+            "GET_FORMULA_SURFACE",
+            "GET_SHEET_SCHEMA",
+            "GET_NAMED_RANGE_SURFACE",
+            "ANALYZE_FORMULA_HEALTH",
+            "ANALYZE_HYPERLINK_HEALTH",
+            "ANALYZE_NAMED_RANGE_HEALTH",
+            "ANALYZE_WORKBOOK_FINDINGS"),
         List.of(
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetWorkbookSummary("workbook")),
@@ -1796,13 +1966,23 @@ class DefaultGridGrindRequestExecutorTest {
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetSheetLayout("layout", "Budget")),
             DefaultGridGrindRequestExecutor.readType(
-                new WorkbookReadOperation.AnalyzeFormulaSurface(
-                    "formula", new SheetSelection.All())),
+                new WorkbookReadOperation.GetFormulaSurface("formula", new SheetSelection.All())),
             DefaultGridGrindRequestExecutor.readType(
-                new WorkbookReadOperation.AnalyzeSheetSchema("schema", "Budget", "A1", 1, 1)),
+                new WorkbookReadOperation.GetSheetSchema("schema", "Budget", "A1", 1, 1)),
             DefaultGridGrindRequestExecutor.readType(
-                new WorkbookReadOperation.AnalyzeNamedRangeSurface(
-                    "surface", new NamedRangeSelection.All()))));
+                new WorkbookReadOperation.GetNamedRangeSurface(
+                    "surface", new NamedRangeSelection.All())),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.AnalyzeFormulaHealth(
+                    "formula-health", new SheetSelection.All())),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.AnalyzeHyperlinkHealth(
+                    "hyperlink-health", new SheetSelection.All())),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.AnalyzeNamedRangeHealth(
+                    "named-range-health", new NamedRangeSelection.All())),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings"))));
   }
 
   @Test
@@ -1830,67 +2010,88 @@ class DefaultGridGrindRequestExecutorTest {
             "comments", "Budget", new CellSelection.Selected(List.of("A1")));
     WorkbookReadOperation layout = new WorkbookReadOperation.GetSheetLayout("layout", "Budget");
     WorkbookReadOperation formula =
-        new WorkbookReadOperation.AnalyzeFormulaSurface("formula", new SheetSelection.All());
+        new WorkbookReadOperation.GetFormulaSurface("formula", new SheetSelection.All());
     WorkbookReadOperation schema =
-        new WorkbookReadOperation.AnalyzeSheetSchema("schema", "Budget", "C3", 2, 2);
+        new WorkbookReadOperation.GetSheetSchema("schema", "Budget", "C3", 2, 2);
     WorkbookReadOperation surface =
-        new WorkbookReadOperation.AnalyzeNamedRangeSurface(
-            "surface", new NamedRangeSelection.All());
+        new WorkbookReadOperation.GetNamedRangeSurface("surface", new NamedRangeSelection.All());
+    WorkbookReadOperation formulaHealth =
+        new WorkbookReadOperation.AnalyzeFormulaHealth(
+            "formula-health", new SheetSelection.Selected(List.of("Budget")));
+    WorkbookReadOperation hyperlinkHealth =
+        new WorkbookReadOperation.AnalyzeHyperlinkHealth(
+            "hyperlink-health", new SheetSelection.All());
+    WorkbookReadOperation namedRangeHealth =
+        new WorkbookReadOperation.AnalyzeNamedRangeHealth(
+            "named-range-health",
+            new NamedRangeSelection.Selected(
+                List.of(new NamedRangeSelector.WorkbookScope("BudgetTotal"))));
+    WorkbookReadOperation workbookFindings =
+        new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings");
 
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(workbook));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(workbook, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(workbook, runtimeException));
+    assertReadContext(workbook, null, null, null, runtimeException);
+    assertReadContext(namedRanges, null, null, null, runtimeException);
+    assertReadContext(sheet, "Budget", null, null, runtimeException);
+    assertReadContext(cells, "Budget", null, null, runtimeException);
+    assertReadContext(window, "Budget", "B2", null, runtimeException);
+    assertReadContext(merged, "Budget", null, null, runtimeException);
+    assertReadContext(hyperlinks, "Budget", null, null, runtimeException);
+    assertReadContext(comments, "Budget", null, null, runtimeException);
+    assertReadContext(layout, "Budget", null, null, runtimeException);
+    assertReadContext(formula, null, null, null, runtimeException);
+    assertReadContext(schema, "Budget", "C3", null, runtimeException);
+    assertReadContext(surface, null, null, null, runtimeException);
+    assertReadContext(formulaHealth, "Budget", null, null, runtimeException);
+    assertReadContext(hyperlinkHealth, null, null, null, runtimeException);
+    assertReadContext(namedRangeHealth, null, null, "BudgetTotal", runtimeException);
+    assertReadContext(workbookFindings, null, null, null, runtimeException);
+
     assertEquals(
         "BudgetTotal",
         DefaultGridGrindRequestExecutor.namedRangeNameFor(workbook, missingNamedRange));
-
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(namedRanges));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(namedRanges, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(namedRanges, runtimeException));
     assertEquals(
         "BudgetTotal",
         DefaultGridGrindRequestExecutor.namedRangeNameFor(namedRanges, missingNamedRange));
-
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(sheet));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(sheet, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(sheet, runtimeException));
-
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(cells));
     assertEquals("BAD!", DefaultGridGrindRequestExecutor.addressFor(cells, invalidAddress));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(cells, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(cells, runtimeException));
+  }
 
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(window));
-    assertEquals("B2", DefaultGridGrindRequestExecutor.addressFor(window, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(window, runtimeException));
+  @Test
+  void extractsSingleSheetAndNamedRangeContextOnlyWhenSelectionsAreUnambiguous() {
+    assertEquals(
+        "Budget",
+        DefaultGridGrindRequestExecutor.sheetNameFor(
+            new WorkbookReadOperation.GetFormulaSurface(
+                "formula", new SheetSelection.Selected(List.of("Budget")))));
+    assertNull(
+        DefaultGridGrindRequestExecutor.sheetNameFor(
+            new WorkbookReadOperation.AnalyzeHyperlinkHealth(
+                "hyperlink-health", new SheetSelection.Selected(List.of("Budget", "Forecast")))));
 
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(merged));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(merged, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(merged, runtimeException));
-
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(hyperlinks));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(hyperlinks, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(hyperlinks, runtimeException));
-
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(comments));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(comments, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(comments, runtimeException));
-
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(layout));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(layout, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(layout, runtimeException));
-
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(formula));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(formula, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(formula, runtimeException));
-
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(schema));
-    assertEquals("C3", DefaultGridGrindRequestExecutor.addressFor(schema, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(schema, runtimeException));
-
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(surface));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(surface, runtimeException));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(surface, runtimeException));
+    assertEquals(
+        "BudgetTotal",
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(
+            new WorkbookReadOperation.GetNamedRangeSurface(
+                "surface",
+                new NamedRangeSelection.Selected(
+                    List.of(new NamedRangeSelector.ByName("BudgetTotal")))),
+            new RuntimeException("x")));
+    assertEquals(
+        "BudgetTotal",
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(
+            new WorkbookReadOperation.GetNamedRangeSurface(
+                "surface",
+                new NamedRangeSelection.Selected(
+                    List.of(new NamedRangeSelector.SheetScope("BudgetTotal", "Budget")))),
+            new RuntimeException("x")));
+    assertNull(
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(
+            new WorkbookReadOperation.GetNamedRangeSurface(
+                "surface",
+                new NamedRangeSelection.Selected(
+                    List.of(
+                        new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                        new NamedRangeSelector.WorkbookScope("ForecastTotal")))),
+            new RuntimeException("x")));
   }
 
   @Test
@@ -1903,12 +2104,12 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(
         "BAD!",
         DefaultGridGrindRequestExecutor.addressFor(
-            new WorkbookReadOperation.AnalyzeSheetSchema("schema", "Budget", "C3", 2, 2),
+            new WorkbookReadOperation.GetSheetSchema("schema", "Budget", "C3", 2, 2),
             invalidAddress));
     assertEquals(
         "BudgetTotal",
         DefaultGridGrindRequestExecutor.namedRangeNameFor(
-            new WorkbookReadOperation.AnalyzeNamedRangeSurface(
+            new WorkbookReadOperation.GetNamedRangeSurface(
                 "surface", new NamedRangeSelection.All()),
             missingNamedRange));
   }
@@ -2093,7 +2294,13 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   private static String savedPath(GridGrindResponse.Success success) {
-    return cast(GridGrindResponse.PersistenceOutcome.Saved.class, success.persistence()).path();
+    return switch (success.persistence()) {
+      case GridGrindResponse.PersistenceOutcome.SavedAs savedAs -> savedAs.executionPath();
+      case GridGrindResponse.PersistenceOutcome.Overwritten overwritten ->
+          overwritten.executionPath();
+      case GridGrindResponse.PersistenceOutcome.NotSaved _ ->
+          throw new AssertionError("expected persisted workbook");
+    };
   }
 
   private static List<String> requestIds(GridGrindResponse.Success success) {
@@ -2102,6 +2309,21 @@ class DefaultGridGrindRequestExecutorTest {
 
   private static <T> T cast(Class<T> type, Object value) {
     return type.cast(assertInstanceOf(type, value));
+  }
+
+  private static void assertReadContext(
+      WorkbookReadOperation operation,
+      String expectedSheetName,
+      String expectedRuntimeAddress,
+      String expectedNamedRangeName,
+      RuntimeException runtimeException) {
+    assertEquals(expectedSheetName, DefaultGridGrindRequestExecutor.sheetNameFor(operation));
+    assertEquals(
+        expectedRuntimeAddress,
+        DefaultGridGrindRequestExecutor.addressFor(operation, runtimeException));
+    assertEquals(
+        expectedNamedRangeName,
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(operation, runtimeException));
   }
 
   private static <T extends WorkbookReadResult> T read(

@@ -130,7 +130,7 @@ class GridGrindRequestTest {
         IllegalArgumentException.class, () -> new CellSelection.Selected(List.of("A1", "A1")));
     assertDoesNotThrow(
         () ->
-            new WorkbookReadOperation.AnalyzeNamedRangeSurface(
+            new WorkbookReadOperation.GetNamedRangeSurface(
                 "surface",
                 new NamedRangeSelection.Selected(
                     List.of(new NamedRangeSelector.WorkbookScope("BudgetTotal")))));
