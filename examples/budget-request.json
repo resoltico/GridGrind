@@ -1,8 +1,8 @@
 {
   "protocolVersion": "V1",
-  "source": { "mode": "NEW" },
+  "source": { "type": "NEW" },
   "persistence": {
-    "mode": "SAVE_AS",
+    "type": "SAVE_AS",
     "path": "cli/build/generated-workbooks/gridgrind-budget.xlsx"
   },
   "operations": [
@@ -85,7 +85,7 @@
       "type": "GET_FORMULA_SURFACE",
       "requestId": "formula-surface",
       "selection": {
-        "mode": "SELECTED",
+        "type": "SELECTED",
         "sheetNames": ["Budget"]
       }
     },

@@ -1,8 +1,8 @@
 {
   "protocolVersion": "V1",
-  "source": { "mode": "NEW" },
+  "source": { "type": "NEW" },
   "persistence": {
-    "mode": "SAVE_AS",
+    "type": "SAVE_AS",
     "path": "reports/structural-layout.xlsx"
   },
   "operations": [

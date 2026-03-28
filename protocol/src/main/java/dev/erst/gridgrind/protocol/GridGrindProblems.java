@@ -116,6 +116,7 @@ public final class GridGrindProblems {
       case UnsupportedFormulaException _ -> GridGrindProblemCode.UNSUPPORTED_FORMULA;
       case InvalidFormulaException _ -> GridGrindProblemCode.INVALID_FORMULA;
       case InvalidJsonException _ -> GridGrindProblemCode.INVALID_JSON;
+      case InvalidRequestShapeException _ -> GridGrindProblemCode.INVALID_REQUEST_SHAPE;
       case InvalidRequestException _ -> GridGrindProblemCode.INVALID_REQUEST;
       case IOException _ -> GridGrindProblemCode.IO_ERROR;
       case IllegalArgumentException _ -> GridGrindProblemCode.INVALID_REQUEST;

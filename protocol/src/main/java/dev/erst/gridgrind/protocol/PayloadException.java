@@ -5,7 +5,8 @@ package dev.erst.gridgrind.protocol;
  * Each permitted subtype is a concrete exception class carrying the JSON path and line/column
  * coordinates directly.
  */
-public sealed interface PayloadException permits InvalidJsonException, InvalidRequestException {
+public sealed interface PayloadException
+    permits InvalidJsonException, InvalidRequestException, InvalidRequestShapeException {
   /** JSON pointer path to the element that triggered the failure. */
   String jsonPath();
 

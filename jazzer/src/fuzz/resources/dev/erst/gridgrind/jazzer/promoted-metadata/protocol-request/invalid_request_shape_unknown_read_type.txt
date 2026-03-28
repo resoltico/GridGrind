@@ -1,0 +1,15 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_unknown_read_type.json
+Harness: protocol-request
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestShapeException
+Message: Could not resolve type id 'GET_NOT_A_REAL_READ' as a subtype of `dev.erst.gridgrind.protocol.WorkbookReadOperation`: known type ids = [ANALYZE_FORMULA_HEALTH, ANALYZE_HYPERLINK_HEALTH, ANALYZE_NAMED_RANGE_HEALTH, ANALYZE_WORKBOOK_FINDINGS, GET_CELLS, GET_COMMENTS, GET_FORMULA_SURFACE, GET_HYPERLINKS, GET_MERGED_REGIONS, GET_NAMED_RANGES, GET_NAMED_RANGE_SURFACE, GET_SHEET_LAYOUT, GET_SHEET_SCHEMA, GET_SHEET_SUMMARY, GET_WINDOW, GET_WORKBOOK_SUMMARY] (for POJO property 'reads')
+Input Bytes: 199
+Decode Outcome: INVALID_REQUEST_SHAPE
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
+Read Count: 0
+Read Kinds: (none)
+Style Kinds: (none)
+Operation Kinds: (none)

@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.9.0"
+version: "0.10.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-03-27"
+updated: "2026-03-28"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -113,7 +113,7 @@ This does not fuzz. It replays the exact raw bytes and prints a structured summa
 - harness
 - success vs expected-invalid vs unexpected-failure
 - decoded operation, command, or read counts
-- style kinds, source mode, and persistence mode where applicable
+- style kinds, source type, and persistence type where applicable
 - read kinds where applicable
 - response classification where applicable
 
@@ -181,7 +181,7 @@ regression replay runs.
 `telemetry/*.json`
 - per-harness semantic metrics collected during the run
 - includes iteration counts, outcome counts, operation/command-kind counts, style-kind counts,
-  protocol source/persistence-mode counts where applicable, read-kind counts where applicable,
+  protocol source/persistence-type counts where applicable, read-kind counts where applicable,
   error families, and protocol response families
 
 `findings/*.json` and `findings/*.txt`
@@ -249,7 +249,7 @@ Seed-quality rules:
 - for the binary harnesses, prefer replay-verified promoted corpus entries
 - keep at least one successful seed in every binary harness, not only invalid ones
 - keep the seed floor broad enough to preserve sheet management, structural layout, formatting
-  depth, authoring metadata, named-range behavior, and source/persistence-mode coverage together
+  depth, authoring metadata, named-range behavior, and source/persistence-type coverage together
 
 Dictionary-evaluation rules:
 - only evaluate dictionary promotion after repeated similar recommendations from the same harness

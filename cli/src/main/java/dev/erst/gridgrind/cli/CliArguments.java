@@ -23,6 +23,12 @@ final class CliArguments {
         case "--version" -> {
           return new CliCommand.Version();
         }
+        case "--print-request-template" -> {
+          return new CliCommand.PrintRequestTemplate();
+        }
+        case "--print-protocol-catalog" -> {
+          return new CliCommand.PrintProtocolCatalog();
+        }
         case "--request" -> {
           if (requestPath != null) {
             throw new CliArgumentsException("--request", "Duplicate argument: --request");

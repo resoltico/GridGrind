@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /** Selects which named ranges a read operation should inspect or analyze. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = NamedRangeSelection.All.class, name = "ALL"),
   @JsonSubTypes.Type(value = NamedRangeSelection.Selected.class, name = "SELECTED")

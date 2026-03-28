@@ -1,11 +1,11 @@
 {
   "protocolVersion": "V1",
   "source": {
-    "mode": "EXISTING",
+    "type": "EXISTING",
     "path": "cli/build/generated-workbooks/live-finance-workbook.xlsx"
   },
   "persistence": {
-    "mode": "OVERWRITE"
+    "type": "OVERWRITE"
   },
   "operations": [
     {
@@ -63,7 +63,7 @@
       "type": "GET_FORMULA_SURFACE",
       "requestId": "sales-formula-surface",
       "selection": {
-        "mode": "SELECTED",
+        "type": "SELECTED",
         "sheetNames": ["Sales"]
       }
     }

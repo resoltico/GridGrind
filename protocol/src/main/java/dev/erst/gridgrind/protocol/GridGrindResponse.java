@@ -49,7 +49,7 @@ public sealed interface GridGrindResponse {
   }
 
   /** Reports whether the workbook was persisted during successful execution. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({
     @JsonSubTypes.Type(value = PersistenceOutcome.NotSaved.class, name = "NOT_SAVED"),
     @JsonSubTypes.Type(value = PersistenceOutcome.SavedAs.class, name = "SAVED_AS"),
@@ -945,24 +945,24 @@ public sealed interface GridGrindResponse {
     String stage();
 
     /**
-     * Source mode string; populated by ValidateRequest, OpenWorkbook, ApplyOperation,
+     * Source type string; populated by ValidateRequest, OpenWorkbook, ApplyOperation,
      * PersistWorkbook, AnalyzeWorkbook, and ExecuteRequest. Null for all other subtypes.
      *
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String sourceMode() {
+    default String sourceType() {
       return null;
     }
 
     /**
-     * Persistence mode string; populated by ValidateRequest, OpenWorkbook, ApplyOperation,
+     * Persistence type string; populated by ValidateRequest, OpenWorkbook, ApplyOperation,
      * PersistWorkbook, AnalyzeWorkbook, and ExecuteRequest. Null for all other subtypes.
      *
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
      */
-    default String persistenceMode() {
+    default String persistenceType() {
       return null;
     }
 
@@ -1191,7 +1191,7 @@ public sealed interface GridGrindResponse {
     }
 
     /** Context for failures that occur while validating request fields before execution. */
-    record ValidateRequest(String sourceMode, String persistenceMode) implements ProblemContext {
+    record ValidateRequest(String sourceType, String persistenceType) implements ProblemContext {
       @Override
       public String stage() {
         return "VALIDATE_REQUEST";
@@ -1199,7 +1199,7 @@ public sealed interface GridGrindResponse {
     }
 
     /** Context for failures that occur while opening the source workbook. */
-    record OpenWorkbook(String sourceMode, String persistenceMode, String sourceWorkbookPath)
+    record OpenWorkbook(String sourceType, String persistenceType, String sourceWorkbookPath)
         implements ProblemContext {
       @Override
       public String stage() {
@@ -1209,8 +1209,8 @@ public sealed interface GridGrindResponse {
 
     /** Context for failures that occur while applying a single workbook operation. */
     record ApplyOperation(
-        String sourceMode,
-        String persistenceMode,
+        String sourceType,
+        String persistenceType,
         Integer operationIndex,
         String operationType,
         String sheetName,
@@ -1231,8 +1231,8 @@ public sealed interface GridGrindResponse {
       public ApplyOperation withExceptionData(
           String sheetName, String address, String range, String formula, String namedRangeName) {
         return new ApplyOperation(
-            sourceMode,
-            persistenceMode,
+            sourceType,
+            persistenceType,
             operationIndex,
             operationType,
             this.sheetName != null ? this.sheetName : sheetName,
@@ -1245,8 +1245,8 @@ public sealed interface GridGrindResponse {
 
     /** Context for failures that occur while persisting the workbook to its destination path. */
     record PersistWorkbook(
-        String sourceMode,
-        String persistenceMode,
+        String sourceType,
+        String persistenceType,
         String sourceWorkbookPath,
         String persistencePath)
         implements ProblemContext {
@@ -1258,8 +1258,8 @@ public sealed interface GridGrindResponse {
 
     /** Context for failures that occur while executing one typed read after mutations finish. */
     record ExecuteRead(
-        String sourceMode,
-        String persistenceMode,
+        String sourceType,
+        String persistenceType,
         Integer readIndex,
         String readType,
         String requestId,
@@ -1280,8 +1280,8 @@ public sealed interface GridGrindResponse {
       public ExecuteRead withExceptionData(
           String sheetName, String address, String formula, String namedRangeName) {
         return new ExecuteRead(
-            sourceMode,
-            persistenceMode,
+            sourceType,
+            persistenceType,
             readIndex,
             readType,
             requestId,
@@ -1293,7 +1293,7 @@ public sealed interface GridGrindResponse {
     }
 
     /** Context for top-level execution failures not attributed to a specific pipeline stage. */
-    record ExecuteRequest(String sourceMode, String persistenceMode) implements ProblemContext {
+    record ExecuteRequest(String sourceType, String persistenceType) implements ProblemContext {
       @Override
       public String stage() {
         return "EXECUTE_REQUEST";

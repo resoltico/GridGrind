@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.9.0"
+version: "0.10.0"
 domain: DEVELOPER
-updated: "2026-03-27"
+updated: "2026-03-28"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -31,10 +31,11 @@ engine/     Workbook-core abstractions on top of Apache POI.
 protocol/   The external GridGrind contract and execution layer:
             request and response models, the request-executor port,
             the default executor, structured failures, JSON encoding,
-            and execution semantics.
+            protocol discovery metadata, and execution semantics.
 
 cli/        Thin transport adapter. Reads a protocol request from stdin
-            or --request file, delegates to protocol, writes the response.
+            or --request file, delegates to protocol, writes the response,
+            and exposes help/template/catalog discovery commands.
 ```
 
 The CLI is not the core. The foundation is `engine` plus `protocol`. The CLI is one adapter on
@@ -76,6 +77,8 @@ before every commit.
 ./gradlew :cli:shadowJar
 ./gradlew :cli:run --args="--request examples/budget-request.json"
 ./gradlew :cli:run --args="--version"
+./gradlew :cli:run --args="--print-request-template"
+./gradlew :cli:run --args="--print-protocol-catalog"
 ```
 
 ---

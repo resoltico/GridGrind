@@ -6,10 +6,14 @@ import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import tools.jackson.core.JacksonException;
+import tools.jackson.core.TokenStreamLocation;
+import tools.jackson.core.io.ContentReference;
 
 /** Tests for GridGrindJson serialization and deserialization. */
 class GridGrindJsonTest {
@@ -19,7 +23,7 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
-              "source": { "mode": "NEW" },
+              "source": { "type": "NEW" },
               "operations": [],
               "reads": []
             }
@@ -36,7 +40,7 @@ class GridGrindJsonTest {
             """
             {
               "protocolVersion": "V1",
-              "source": { "mode": "NEW" },
+              "source": { "type": "NEW" },
               "operations": [],
               "reads": []
             }
@@ -47,6 +51,32 @@ class GridGrindJsonTest {
       assertEquals(GridGrindProtocolVersion.V1, request.protocolVersion());
       assertFalse(inputStream.closed);
     }
+  }
+
+  @Test
+  void readsProtocolCatalogsFromInputStreamsWithoutClosingThem() throws IOException {
+    byte[] bytes = GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog());
+
+    try (TrackingInputStream inputStream = new TrackingInputStream(bytes)) {
+      GridGrindProtocolCatalog.Catalog catalog = GridGrindJson.readProtocolCatalog(inputStream);
+
+      assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
+      assertFalse(inputStream.closed);
+    }
+  }
+
+  @Test
+  void roundTripsRequestTemplatesAndProtocolCatalogs() throws IOException {
+    GridGrindRequest template = GridGrindProtocolCatalog.requestTemplate();
+    GridGrindProtocolCatalog.Catalog catalog = GridGrindProtocolCatalog.catalog();
+
+    GridGrindRequest decodedTemplate =
+        GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(template));
+    GridGrindProtocolCatalog.Catalog decodedCatalog =
+        GridGrindJson.readProtocolCatalog(GridGrindJson.writeProtocolCatalogBytes(catalog));
+
+    assertEquals(template, decodedTemplate);
+    assertEquals(catalog, decodedCatalog);
   }
 
   @Test
@@ -120,6 +150,23 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void wrapsMalformedProtocolCatalogJsonAsInvalidPayloadErrors() {
+    InvalidJsonException byteFailure =
+        assertThrows(
+            InvalidJsonException.class,
+            () -> GridGrindJson.readProtocolCatalog("{".getBytes(StandardCharsets.UTF_8)));
+    InvalidJsonException streamFailure =
+        assertThrows(
+            InvalidJsonException.class,
+            () ->
+                GridGrindJson.readProtocolCatalog(
+                    new ByteArrayInputStream("{".getBytes(StandardCharsets.UTF_8))));
+
+    assertNotNull(byteFailure.getMessage());
+    assertNotNull(streamFailure.getMessage());
+  }
+
+  @Test
   void wrapsRequestValidationFailuresAsInvalidRequestErrors() {
     InvalidRequestException requestFailure =
         assertThrows(
@@ -128,7 +175,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                 {
-                  "source": { "mode": "NEW" },
+                  "source": { "type": "NEW" },
                   "operations": [],
                   "reads": [
                     {
@@ -157,7 +204,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "source": { "mode": "EXISTING", "path": "budget.xlsm" },
+                      "source": { "type": "EXISTING", "path": "budget.xlsm" },
                       "operations": [],
                       "reads": []
                     }
@@ -175,7 +222,7 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
-              "source": { "mode": "NEW" },
+              "source": { "type": "NEW" },
               "operations": [
                 { "type": "RENAME_SHEET", "sheetName": "Budget", "newSheetName": "Summary" },
                 { "type": "MERGE_CELLS", "sheetName": "Summary", "range": "A1:B2" },
@@ -234,7 +281,7 @@ class GridGrindJsonTest {
         GridGrindJson.readRequest(
             """
             {
-              "source": { "mode": "NEW" },
+              "source": { "type": "NEW" },
               "operations": [],
               "reads": [
                 { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
@@ -242,7 +289,7 @@ class GridGrindJsonTest {
                   "type": "GET_NAMED_RANGES",
                   "requestId": "named-ranges",
                   "selection": {
-                    "mode": "SELECTED",
+                    "type": "SELECTED",
                     "selectors": [
                       { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" }
                     ]
@@ -259,7 +306,7 @@ class GridGrindJsonTest {
                 {
                   "type": "GET_FORMULA_SURFACE",
                   "requestId": "formula-surface",
-                  "selection": { "mode": "ALL" }
+                  "selection": { "type": "ALL" }
                 },
                 {
                   "type": "ANALYZE_WORKBOOK_FINDINGS",
@@ -279,14 +326,14 @@ class GridGrindJsonTest {
   }
 
   @Test
-  void wrapsRecordConstructionFailureAsInvalidPayloadError() {
-    InvalidJsonException failure =
+  void wrapsResponseShapeFailuresAsInvalidRequestShapeErrors() {
+    InvalidRequestShapeException failure =
         assertThrows(
-            InvalidJsonException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readResponse(
                     """
-                    {"status":"SUCCESS","protocolVersion":"V1","persistence":{"mode":"NOT_SAVED"},\
+                    {"status":"SUCCESS","protocolVersion":"V1","persistence":{"type":"NOT_SAVED"},\
                     "reads":[{"type":"WORKBOOK_SUMMARY","requestId":"workbook","workbook":{"sheetCount":0,\
                     "sheetNames":[],"namedRangeCount":0,"forceFormulaRecalculationOnOpen":false}},\
                     {"type":"WINDOW","requestId":"window","window":{"sheetName":"Budget","topLeftAddress":"A1",\
@@ -304,6 +351,117 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void wrapsProtocolCatalogShapeFailuresAsInvalidRequestShapeErrors() {
+    InvalidRequestShapeException byteFailure =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readProtocolCatalog(
+                    """
+                    {
+                      "protocolVersion": "V1",
+                      "sourceTypes": [],
+                      "persistenceTypes": [],
+                      "operationTypes": [],
+                      "readTypes": [],
+                      "nestedTypes": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException streamFailure =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readProtocolCatalog(
+                    new ByteArrayInputStream(
+                        """
+                        {
+                          "protocolVersion": "V1",
+                          "sourceTypes": [],
+                          "persistenceTypes": [],
+                          "operationTypes": [],
+                          "readTypes": [],
+                          "nestedTypes": []
+                        }
+                        """
+                            .getBytes(StandardCharsets.UTF_8))));
+
+    assertNull(byteFailure.jsonPath());
+    assertNull(streamFailure.jsonPath());
+  }
+
+  @Test
+  void wrapsUnknownDiscriminatorsAsInvalidRequestShapeErrors() {
+    InvalidRequestShapeException failure =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "operations": [],
+                      "reads": [
+                        { "type": "GET_NOT_A_REAL_READ", "requestId": "workbook" }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertNotNull(failure.getMessage());
+    assertEquals("reads[0]", failure.jsonPath());
+  }
+
+  @Test
+  void wrapsMissingRequiredFieldsAsInvalidRequestShapeErrors() {
+    InvalidRequestShapeException failure =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "operations": [],
+                      "reads": [
+                        { "type": "GET_WORKBOOK_SUMMARY" }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertNotNull(failure.getMessage());
+    assertEquals("reads[0]", failure.jsonPath());
+  }
+
+  @Test
+  void wrapsWrongTokenShapesAsInvalidRequestShapeErrors() {
+    InvalidRequestShapeException failure =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "operations": [
+                        {
+                          "type": "SET_CELL",
+                          "sheetName": { "value": "Budget" },
+                          "address": "A1",
+                          "value": { "type": "TEXT", "text": "Report" }
+                        }
+                      ],
+                      "reads": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertNotNull(failure.getMessage());
+    assertEquals("operations[0].sheetName", failure.jsonPath());
+  }
+
+  @Test
   void wrapsDateTimeParseFailuresAsInvalidRequestErrors() {
     InvalidRequestException failure =
         assertThrows(
@@ -312,7 +470,7 @@ class GridGrindJsonTest {
                 GridGrindJson.readRequest(
                     """
                     {
-                      "source": { "mode": "NEW" },
+                      "source": { "type": "NEW" },
                       "operations": [
                         {
                           "type": "SET_CELL",
@@ -330,16 +488,16 @@ class GridGrindJsonTest {
   }
 
   @Test
-  void stripsJacksonSourceLocationFromInvalidEnumValueMessages() {
-    InvalidJsonException failure =
+  void stripsJacksonSourceLocationFromInvalidRequestShapeMessages() {
+    InvalidRequestShapeException failure =
         assertThrows(
-            InvalidJsonException.class,
+            InvalidRequestShapeException.class,
             () ->
                 GridGrindJson.readRequest(
                     """
                     {
                       "protocolVersion": "INVALID_VERSION",
-                      "source": { "mode": "NEW" },
+                      "source": { "type": "NEW" },
                       "operations": [],
                       "reads": []
                     }
@@ -348,6 +506,39 @@ class GridGrindJsonTest {
 
     assertNotNull(failure.getMessage());
     assertFalse(failure.getMessage().contains("[Source:"));
+  }
+
+  @Test
+  void wrapsUnexpectedJacksonExceptionsAsInvalidJsonErrors() {
+    InvalidJsonException failure =
+        assertThrows(
+            InvalidJsonException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    new ThrowingJacksonInputStream(unexpectedJacksonException())));
+
+    assertEquals("synthetic failure", failure.getMessage());
+    assertEquals("source", failure.jsonPath());
+    assertEquals(7, failure.jsonLine());
+    assertEquals(9, failure.jsonColumn());
+  }
+
+  @Test
+  void writesRequestsAndProtocolCatalogsToStreamsWithoutClosingThem() throws IOException {
+    try (TrackingOutputStream requestOutput = new TrackingOutputStream();
+        TrackingOutputStream catalogOutput = new TrackingOutputStream()) {
+      GridGrindJson.writeRequest(requestOutput, GridGrindProtocolCatalog.requestTemplate());
+      GridGrindJson.writeProtocolCatalog(catalogOutput, GridGrindProtocolCatalog.catalog());
+
+      assertEquals(
+          GridGrindProtocolCatalog.requestTemplate(),
+          GridGrindJson.readRequest(requestOutput.toByteArray()));
+      assertEquals(
+          GridGrindProtocolCatalog.catalog(),
+          GridGrindJson.readProtocolCatalog(catalogOutput.toByteArray()));
+      assertFalse(requestOutput.closed);
+      assertFalse(catalogOutput.closed);
+    }
   }
 
   @Test
@@ -366,7 +557,17 @@ class GridGrindJsonTest {
     assertThrows(NullPointerException.class, () -> GridGrindJson.readResponse((byte[]) null));
     assertThrows(
         NullPointerException.class, () -> GridGrindJson.readResponse((ByteArrayInputStream) null));
+    assertThrows(
+        NullPointerException.class, () -> GridGrindJson.readProtocolCatalog((byte[]) null));
+    assertThrows(
+        NullPointerException.class,
+        () -> GridGrindJson.readProtocolCatalog((ByteArrayInputStream) null));
+    assertThrows(NullPointerException.class, () -> GridGrindJson.writeRequestBytes(null));
     assertThrows(NullPointerException.class, () -> GridGrindJson.writeResponseBytes(null));
+    assertThrows(NullPointerException.class, () -> GridGrindJson.writeProtocolCatalogBytes(null));
+    assertThrows(
+        NullPointerException.class,
+        () -> GridGrindJson.writeRequest(null, GridGrindProtocolCatalog.requestTemplate()));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -381,6 +582,12 @@ class GridGrindJsonTest {
     assertThrows(
         NullPointerException.class,
         () -> GridGrindJson.writeResponse(new ByteArrayOutputStream(), null));
+    assertThrows(
+        NullPointerException.class,
+        () -> GridGrindJson.writeProtocolCatalog(null, GridGrindProtocolCatalog.catalog()));
+    assertThrows(
+        NullPointerException.class,
+        () -> GridGrindJson.writeProtocolCatalog(new ByteArrayOutputStream(), null));
   }
 
   /** ByteArrayInputStream that records whether {@code close()} was called. */
@@ -395,6 +602,54 @@ class GridGrindJsonTest {
     public void close() throws IOException {
       closed = true;
       super.close();
+    }
+  }
+
+  /** ByteArrayOutputStream that records whether {@code close()} was called. */
+  private static final class TrackingOutputStream extends ByteArrayOutputStream {
+    private boolean closed;
+
+    @Override
+    public void close() throws IOException {
+      closed = true;
+      super.close();
+    }
+  }
+
+  /** InputStream that throws a caller-supplied JacksonException on first read. */
+  private static final class ThrowingJacksonInputStream extends InputStream {
+    private final JacksonException exception;
+
+    private ThrowingJacksonInputStream(JacksonException exception) {
+      this.exception = exception;
+    }
+
+    @Override
+    public int read() {
+      throw exception;
+    }
+
+    @Override
+    public int read(byte[] destination, int offset, int length) {
+      throw exception;
+    }
+  }
+
+  private static JacksonException unexpectedJacksonException() {
+    SyntheticJacksonException exception =
+        new SyntheticJacksonException(
+            "synthetic failure",
+            new TokenStreamLocation(ContentReference.rawReference("request.json"), 13L, 7, 9));
+    exception.prependPath(GridGrindJsonTest.class, "source");
+    return exception;
+  }
+
+  /** Synthetic Jackson exception used to exercise the fallback classifier path. */
+  private static final class SyntheticJacksonException extends JacksonException {
+    private static final long serialVersionUID = 1L;
+
+    private SyntheticJacksonException(String message, TokenStreamLocation location) {
+      super(message, location, null);
     }
   }
 }

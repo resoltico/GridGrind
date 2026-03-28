@@ -63,6 +63,11 @@ class GridGrindProblemsTest {
             new InvalidJsonException(
                 "bad json", "reads[0]", 4, 12, new IllegalArgumentException("bad"))));
     assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST_SHAPE,
+        GridGrindProblems.codeFor(
+            new InvalidRequestShapeException(
+                "bad shape", "reads[0]", 4, 12, new IllegalArgumentException("bad"))));
+    assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
         GridGrindProblems.codeFor(
             new InvalidRequestException(

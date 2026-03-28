@@ -41,7 +41,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 Pipe a JSON request to stdin, receive a JSON response on stdout:
 
 ```bash
-echo '{"source":{"mode":"NEW"},"operations":[],"reads":[]}' \
+echo '{"source":{"type":"NEW"},"operations":[],"reads":[]}' \
   | docker run -i ghcr.io/resoltico/gridgrind:latest
 ```
 
@@ -49,6 +49,14 @@ To check the version:
 
 ```bash
 docker run --rm ghcr.io/resoltico/gridgrind:latest --version
+```
+
+To ask the artifact for the current contract directly:
+
+```bash
+docker run --rm ghcr.io/resoltico/gridgrind:latest --help
+docker run --rm ghcr.io/resoltico/gridgrind:latest --print-request-template
+docker run --rm ghcr.io/resoltico/gridgrind:latest --print-protocol-catalog
 ```
 
 To read a request file and write response and `.xlsx` files back to the host,
@@ -63,8 +71,9 @@ docker run -i \
   --response response.json
 ```
 
-File paths in `persistence.path` are resolved relative to the container working directory
-(`/workdir` above), so the generated `.xlsx` lands in `$(pwd)` on the host.
+Paths passed in `--request`, `--response`, `source.path`, and `persistence.path` are resolved in
+the current execution environment. In the Docker example above, that means container-visible paths
+under `/workdir`, so generated `.xlsx` files land back in `$(pwd)` on the host.
 
 ### Fat JAR (requires Java 26)
 
@@ -73,19 +82,23 @@ Download the self-contained JAR from the
 way as the container — stdin/stdout or explicit file paths:
 
 ```bash
-echo '{"source":{"mode":"NEW"},"operations":[],"reads":[]}' \
+echo '{"source":{"type":"NEW"},"operations":[],"reads":[]}' \
   | java -jar gridgrind.jar
 
 java -jar gridgrind.jar --request request.json --response response.json
 java -jar gridgrind.jar --version
+java -jar gridgrind.jar --print-request-template
+java -jar gridgrind.jar --print-protocol-catalog
 ```
 
 ---
 
 ## How It Works
 
-GridGrind currently supports `.xlsx` workbooks only. Requests that use `.xls`, `.xlsm`, `.xlsb`,
-or other non-`.xlsx` workbook paths are rejected as `INVALID_REQUEST`.
+GridGrind currently supports `.xlsx` workbooks only. Malformed JSON is rejected as
+`INVALID_JSON`. Syntactically valid JSON that does not match the protocol model is rejected as
+`INVALID_REQUEST_SHAPE`. Parsed requests with invalid business data, such as `.xls`, `.xlsm`,
+`.xlsb`, or other non-`.xlsx` workbook paths, are rejected as `INVALID_REQUEST`.
 
 Every request follows the same pipeline:
 
@@ -193,9 +206,9 @@ A request that builds Alice's green coffee inventory sheet:
 
 ```json
 {
-  "source": { "mode": "NEW" },
+  "source": { "type": "NEW" },
   "persistence": {
-    "mode": "SAVE_AS",
+    "type": "SAVE_AS",
     "path": "roastery/green-coffee.xlsx"
   },
   "operations": [

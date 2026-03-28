@@ -9,6 +9,8 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.core.StreamReadFeature;
 import tools.jackson.core.StreamWriteFeature;
 import tools.jackson.core.TokenStreamLocation;
+import tools.jackson.core.exc.StreamReadException;
+import tools.jackson.databind.DatabindException;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -63,10 +65,52 @@ public final class GridGrindJson {
     }
   }
 
+  /** Reads a protocol catalog from an input stream without closing the caller-owned stream. */
+  public static GridGrindProtocolCatalog.Catalog readProtocolCatalog(InputStream inputStream)
+      throws IOException {
+    Objects.requireNonNull(inputStream, "inputStream must not be null");
+    try {
+      return JSON_MAPPER.readValue(inputStream, GridGrindProtocolCatalog.Catalog.class);
+    } catch (JacksonException exception) {
+      throw invalidPayload(exception);
+    }
+  }
+
+  /** Reads a protocol catalog from a byte array. */
+  public static GridGrindProtocolCatalog.Catalog readProtocolCatalog(byte[] bytes)
+      throws IOException {
+    Objects.requireNonNull(bytes, "bytes must not be null");
+    try {
+      return JSON_MAPPER.readValue(bytes, GridGrindProtocolCatalog.Catalog.class);
+    } catch (JacksonException exception) {
+      throw invalidPayload(exception);
+    }
+  }
+
+  /** Serializes a request to bytes. */
+  public static byte[] writeRequestBytes(GridGrindRequest request) throws IOException {
+    Objects.requireNonNull(request, "request must not be null");
+    return writeBytes(request);
+  }
+
   /** Serializes a response to bytes. */
   public static byte[] writeResponseBytes(GridGrindResponse response) throws IOException {
     Objects.requireNonNull(response, "response must not be null");
-    return JSON_MAPPER.writeValueAsBytes(response);
+    return writeBytes(response);
+  }
+
+  /** Serializes a protocol catalog to bytes. */
+  public static byte[] writeProtocolCatalogBytes(GridGrindProtocolCatalog.Catalog catalog)
+      throws IOException {
+    Objects.requireNonNull(catalog, "catalog must not be null");
+    return writeBytes(catalog);
+  }
+
+  /** Writes a request to an output stream without closing the caller-owned stream. */
+  public static void writeRequest(OutputStream outputStream, GridGrindRequest request)
+      throws IOException {
+    Objects.requireNonNull(outputStream, "outputStream must not be null");
+    outputStream.write(writeRequestBytes(request));
   }
 
   /** Writes a response to an output stream without closing the caller-owned stream. */
@@ -76,12 +120,35 @@ public final class GridGrindJson {
     outputStream.write(writeResponseBytes(response));
   }
 
+  /** Writes a protocol catalog to an output stream without closing the caller-owned stream. */
+  public static void writeProtocolCatalog(
+      OutputStream outputStream, GridGrindProtocolCatalog.Catalog catalog) throws IOException {
+    Objects.requireNonNull(outputStream, "outputStream must not be null");
+    outputStream.write(writeProtocolCatalogBytes(catalog));
+  }
+
   private static IllegalArgumentException invalidPayload(JacksonException exception) {
     PayloadMetadata metadata = payloadMetadata(exception);
     Throwable validationCause = validationCause(exception);
+    if (exception instanceof StreamReadException) {
+      return new InvalidJsonException(
+          message(exception),
+          metadata.jsonPath(),
+          metadata.jsonLine(),
+          metadata.jsonColumn(),
+          exception);
+    }
     if (validationCause != null) {
       return new InvalidRequestException(
           message(validationCause),
+          metadata.jsonPath(),
+          metadata.jsonLine(),
+          metadata.jsonColumn(),
+          exception);
+    }
+    if (exception instanceof DatabindException) {
+      return new InvalidRequestShapeException(
+          message(exception),
           metadata.jsonPath(),
           metadata.jsonLine(),
           metadata.jsonColumn(),
@@ -161,6 +228,10 @@ public final class GridGrindJson {
     }
     int column = location.getColumnNr();
     return column > 0 ? column : null;
+  }
+
+  private static byte[] writeBytes(Object value) throws IOException {
+    return JSON_MAPPER.writeValueAsBytes(value);
   }
 
   private record PayloadMetadata(String jsonPath, Integer jsonLine, Integer jsonColumn) {}
