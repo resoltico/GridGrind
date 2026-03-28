@@ -32,7 +32,7 @@ public record GridGrindRequest(
   }
 
   /** Describes where the input workbook comes from. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({
     @JsonSubTypes.Type(value = WorkbookSource.New.class, name = "NEW"),
     @JsonSubTypes.Type(value = WorkbookSource.ExistingFile.class, name = "EXISTING")
@@ -50,7 +50,7 @@ public record GridGrindRequest(
   }
 
   /** Describes whether and where the resulting workbook should be saved. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({
     @JsonSubTypes.Type(value = WorkbookPersistence.None.class, name = "NONE"),
     @JsonSubTypes.Type(value = WorkbookPersistence.OverwriteSource.class, name = "OVERWRITE"),

@@ -1,14 +1,17 @@
 package dev.erst.gridgrind.cli;
 
 import dev.erst.gridgrind.protocol.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.protocol.GridGrindJson;
 import dev.erst.gridgrind.protocol.GridGrindProblemCode;
 import dev.erst.gridgrind.protocol.GridGrindProblems;
+import dev.erst.gridgrind.protocol.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.protocol.GridGrindProtocolVersion;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindRequestExecutor;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
 import dev.erst.gridgrind.protocol.InvalidJsonException;
 import dev.erst.gridgrind.protocol.InvalidRequestException;
+import dev.erst.gridgrind.protocol.InvalidRequestShapeException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -71,12 +74,24 @@ public final class GridGrindCli {
 
     return switch (command) {
       case CliCommand.Help _ -> {
-        stdout.write(helpText().getBytes(StandardCharsets.UTF_8));
+        stdout.write(helpText(version()).getBytes(StandardCharsets.UTF_8));
         stdout.flush();
         yield 0;
       }
       case CliCommand.Version _ -> {
         stdout.write(("gridgrind " + version() + "\n").getBytes(StandardCharsets.UTF_8));
+        stdout.flush();
+        yield 0;
+      }
+      case CliCommand.PrintRequestTemplate _ -> {
+        GridGrindJson.writeRequest(stdout, GridGrindProtocolCatalog.requestTemplate());
+        stdout.write('\n');
+        stdout.flush();
+        yield 0;
+      }
+      case CliCommand.PrintProtocolCatalog _ -> {
+        GridGrindJson.writeProtocolCatalog(stdout, GridGrindProtocolCatalog.catalog());
+        stdout.write('\n');
         stdout.flush();
         yield 0;
       }
@@ -89,17 +104,9 @@ public final class GridGrindCli {
     GridGrindRequest request;
     try {
       request = requestReader.read(command.requestPath(), stdin);
-    } catch (InvalidRequestException exception) {
-      return responseWriter.write(
-          command.responsePath(),
-          stdout,
-          new GridGrindResponse.Failure(
-              GridGrindProtocolVersion.current(),
-              GridGrindProblems.fromException(
-                  exception,
-                  new GridGrindResponse.ProblemContext.ReadRequest(
-                      pathString(command.requestPath()), null, null, null))));
-    } catch (InvalidJsonException exception) {
+    } catch (InvalidJsonException
+        | InvalidRequestShapeException
+        | InvalidRequestException exception) {
       return responseWriter.write(
           command.responsePath(),
           stdout,
@@ -139,26 +146,70 @@ public final class GridGrindCli {
     return versionFrom(GridGrindCli.class.getPackage().getImplementationVersion());
   }
 
-  private static String helpText() {
+  /**
+   * Returns the full help text rendered for the given implementation version string.
+   *
+   * <p>Tests call this directly so doc routing and discovery guidance can be validated without a
+   * packaged JAR manifest.
+   */
+  static String helpText(String implementationVersion) {
+    String version = versionFrom(implementationVersion);
+    String requestTemplate = requestTemplateText();
+    String documentRef = documentRef(version);
     return """
-        GridGrind CLI
+        GridGrind CLI %s
 
         Usage:
           gridgrind [--request <path>] [--response <path>]
+          gridgrind --print-request-template
+          gridgrind --print-protocol-catalog
           gridgrind --help | -h
           gridgrind --version
 
-        Behavior:
-          With no --request flag, GridGrind reads one JSON request from stdin.
-          With no --response flag, GridGrind writes one JSON response to stdout.
-          Execution remains atomic: operations run first, then reads, then persistence.
+        Execution:
+          GridGrind runs operations first, then reads, then persistence; if any step fails, no workbook is written.
+
+        Minimal Valid Request:
+        %s
+
+        stdin Example:
+          gridgrind --print-request-template | gridgrind
+
+        Docker File Example:
+          docker run --rm -i \\
+            -v "$(pwd)":/workdir \\
+            -w /workdir \\
+            ghcr.io/resoltico/gridgrind:%s \\
+            --request request.json \\
+            --response response.json
+
+          Paths passed in --request, --response, source.path, and persistence.path are resolved in
+          the current execution environment. In Docker, use mounted container paths.
+
+        Discovery:
+          gridgrind --print-request-template
+          gridgrind --print-protocol-catalog
+
+        Docs:
+          Quick reference: %s/docs/QUICK_REFERENCE.md
+          Operations reference: %s/docs/OPERATIONS.md
+          Error reference: %s/docs/ERRORS.md
 
         Flags:
-          --request <path>   Read the JSON request from a file instead of stdin.
-          --response <path>  Write the JSON response to a file instead of stdout.
-          --help, -h         Print this help text.
-          --version          Print the GridGrind version.
-        """;
+          --request <path>           Read the JSON request from a file instead of stdin.
+          --response <path>          Write the JSON response to a file instead of stdout.
+          --print-request-template   Print a minimal valid request JSON document.
+          --print-protocol-catalog   Print the machine-readable protocol catalog.
+          --help, -h                 Print this help text.
+          --version                  Print the GridGrind version.
+        """
+        .formatted(
+            version,
+            indentBlock(requestTemplate),
+            containerTag(version),
+            documentRef,
+            documentRef,
+            documentRef);
   }
 
   /**
@@ -170,6 +221,38 @@ public final class GridGrindCli {
       return "unknown";
     }
     return implementationVersion;
+  }
+
+  private static String requestTemplateText() {
+    return requestTemplateText(
+        () -> GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()));
+  }
+
+  /**
+   * Returns the built-in request template rendered as UTF-8 text via the supplied byte producer.
+   *
+   * <p>Tests call this directly to assert the failure path without mocking static codec methods.
+   */
+  static String requestTemplateText(RequestTemplateBytesSupplier supplier) {
+    Objects.requireNonNull(supplier, "supplier must not be null");
+    try {
+      return new String(supplier.get(), StandardCharsets.UTF_8);
+    } catch (IOException exception) {
+      throw new IllegalStateException("Failed to render the built-in request template", exception);
+    }
+  }
+
+  private static String indentBlock(String value) {
+    return value.indent(2).stripTrailing();
+  }
+
+  private static String containerTag(String version) {
+    return "unknown".equals(version) ? "latest" : version;
+  }
+
+  private static String documentRef(String version) {
+    String gitRef = "unknown".equals(version) ? "main" : "v" + version;
+    return "https://github.com/resoltico/GridGrind/blob/" + gitRef;
   }
 
   private GridGrindResponse.Failure failure(
@@ -188,5 +271,12 @@ public final class GridGrindCli {
 
   private String pathString(Path path) {
     return path == null ? null : path.toAbsolutePath().toString();
+  }
+
+  /** Supplies request-template bytes for help rendering. */
+  @FunctionalInterface
+  interface RequestTemplateBytesSupplier {
+    /** Returns the UTF-8 bytes that should be embedded into the help text. */
+    byte[] get() throws IOException;
   }
 }

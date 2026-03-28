@@ -83,14 +83,14 @@ public final class HarnessTelemetry {
     touch();
   }
 
-  /** Records the workbook source mode observed for the current fuzz case. */
+  /** Records the workbook source type observed for the current fuzz case. */
   public synchronized void recordSourceKind(String sourceKind) {
     Objects.requireNonNull(sourceKind, "sourceKind must not be null");
     sourceKinds.merge(sourceKind, 1L, Long::sum);
     touch();
   }
 
-  /** Records the workbook persistence mode observed for the current fuzz case. */
+  /** Records the workbook persistence type observed for the current fuzz case. */
   public synchronized void recordPersistenceKind(String persistenceKind) {
     Objects.requireNonNull(persistenceKind, "persistenceKind must not be null");
     persistenceKinds.merge(persistenceKind, 1L, Long::sum);

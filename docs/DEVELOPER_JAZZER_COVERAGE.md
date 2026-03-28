@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.9.0"
+version: "0.10.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-03-27"
+updated: "2026-03-28"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 9 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 11 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 10 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 7 |
 | `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 8 |
-| `regression` | four isolated per-harness regression tasks over all committed `*Inputs` resources | replay of the committed custom seed floor | N/A | Yes | 34 total across harnesses |
+| `regression` | four isolated per-harness regression tasks over all committed `*Inputs` resources | replay of the committed custom seed floor | N/A | Yes | 36 total across harnesses |
 
 ---
 
@@ -65,7 +65,7 @@ Surface:
 - `DefaultGridGrindRequestExecutor.execute(...)`
 - response-shape invariants
 - explicit read execution and ordered read-result shaping
-- source-mode and persistence-mode combinations for `.xlsx` workflows
+- source-type and persistence-type combinations for `.xlsx` workflows
 - hyperlink, comment, and named-range operations in protocol execution paths
 
 What it asserts:
@@ -178,6 +178,8 @@ Committed custom seeds currently in source control:
 | `protocol-request` | `formatting_depth_request.json` | readable formatting-depth seed covering typed `fontHeight`, fill, color, and border patches |
 | `protocol-request` | `introspection_analysis_request.json` | readable read-heavy seed covering workbook summary, metadata reads, layout reads, factual surface reads, and the first analysis family |
 | `protocol-request` | `invalid_font_height_request.json` | readable expected-invalid seed covering typed `fontHeight` validation |
+| `protocol-request` | `invalid_request_shape_missing_request_id.json` | readable expected-invalid seed covering missing required read fields and `INVALID_REQUEST_SHAPE` replay classification |
+| `protocol-request` | `invalid_request_shape_unknown_read_type.json` | readable expected-invalid seed covering unknown read discriminators and `INVALID_REQUEST_SHAPE` replay classification |
 | `protocol-workflow` | `set_cell_failure_case.bin` | structured workflow seed that replays to a protocol `FAILURE` response with one `SET_CELL` operation |
 | `protocol-workflow` | `ensure_sheet_set_range_success.bin` | structured workflow seed that replays to a protocol `SUCCESS` response with `ENSURE_SHEET` plus `SET_RANGE` |
 | `protocol-workflow` | `apply_style_success.bin` | structured workflow seed that replays to a protocol `SUCCESS` response dominated by `APPLY_STYLE` |
@@ -228,7 +230,7 @@ The current Jazzer layer is strongest at:
   verified binary workflow seeds
 - style-aware `.xlsx` round-trip verification for formatting depth, authoring metadata, and
   named-range normalization
-- explicit source/persistence-mode telemetry for service-level workflow fuzzing
+- explicit source/persistence-type telemetry for service-level workflow fuzzing
 - deterministic tests that protect the Jazzer reporting and verifier infrastructure itself
 - regression preservation of real discovered local inputs
 - local operator observability after every supported fuzz run

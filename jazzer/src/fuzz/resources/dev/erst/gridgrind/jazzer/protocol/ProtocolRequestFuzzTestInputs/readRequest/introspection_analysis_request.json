@@ -1,8 +1,8 @@
 {
   "protocolVersion": "V1",
-  "source": { "mode": "NEW" },
+  "source": { "type": "NEW" },
   "persistence": {
-    "mode": "SAVE_AS",
+    "type": "SAVE_AS",
     "path": "cli/build/generated-workbooks/gridgrind-introspection-analysis.xlsx"
   },
   "operations": [
@@ -98,7 +98,7 @@
       "requestId": "hyperlinks",
       "sheetName": "Dashboard",
       "selection": {
-        "mode": "SELECTED",
+        "type": "SELECTED",
         "addresses": ["A1", "B4"]
       }
     },
@@ -107,7 +107,7 @@
       "requestId": "comments",
       "sheetName": "Dashboard",
       "selection": {
-        "mode": "SELECTED",
+        "type": "SELECTED",
         "addresses": ["A1", "B4"]
       }
     },
@@ -124,13 +124,13 @@
     {
       "type": "GET_NAMED_RANGES",
       "requestId": "named-ranges",
-      "selection": { "mode": "ALL" }
+      "selection": { "type": "ALL" }
     },
     {
       "type": "GET_FORMULA_SURFACE",
       "requestId": "formula-surface",
       "selection": {
-        "mode": "SELECTED",
+        "type": "SELECTED",
         "sheetNames": ["Dashboard"]
       }
     },
@@ -145,13 +145,13 @@
     {
       "type": "GET_NAMED_RANGE_SURFACE",
       "requestId": "named-range-surface",
-      "selection": { "mode": "ALL" }
+      "selection": { "type": "ALL" }
     },
     {
       "type": "ANALYZE_FORMULA_HEALTH",
       "requestId": "formula-health",
       "selection": {
-        "mode": "SELECTED",
+        "type": "SELECTED",
         "sheetNames": ["Dashboard"]
       }
     },
@@ -159,14 +159,14 @@
       "type": "ANALYZE_HYPERLINK_HEALTH",
       "requestId": "hyperlink-health",
       "selection": {
-        "mode": "SELECTED",
+        "type": "SELECTED",
         "sheetNames": ["Dashboard"]
       }
     },
     {
       "type": "ANALYZE_NAMED_RANGE_HEALTH",
       "requestId": "named-range-health",
-      "selection": { "mode": "ALL" }
+      "selection": { "type": "ALL" }
     },
     {
       "type": "ANALYZE_WORKBOOK_FINDINGS",

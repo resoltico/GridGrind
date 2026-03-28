@@ -1,10 +1,10 @@
 ---
 afad: "3.4"
-version: "0.9.0"
+version: "0.10.0"
 domain: ERRORS
-updated: "2026-03-27"
+updated: "2026-03-28"
 route:
-  keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, causes, context]
+  keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, causes, context]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context"]
 ---
 
@@ -61,8 +61,9 @@ route:
 
 | Code | Trigger |
 |:-----|:--------|
-| `INVALID_JSON` | Request payload is not valid JSON. |
-| `INVALID_REQUEST` | JSON is valid but the payload shape violates the protocol schema, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. |
+| `INVALID_JSON` | Request payload is not syntactically valid JSON. |
+| `INVALID_REQUEST_SHAPE` | JSON is syntactically valid, but fields, discriminator IDs, or token shapes do not match the GridGrind protocol schema. |
+| `INVALID_REQUEST` | JSON is valid and binds successfully, but the parsed request violates GridGrind business or cross-field validation, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. |
 | `INVALID_CELL_ADDRESS` | A1-notation cell address is malformed. |
 | `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or its dimensions do not match `rows`, including invalid `MERGE_CELLS` or `UNMERGE_CELLS` ranges. |
 
@@ -77,7 +78,7 @@ route:
 
 | Code | Trigger |
 |:-----|:--------|
-| `WORKBOOK_NOT_FOUND` | `source.mode=EXISTING` path does not exist. |
+| `WORKBOOK_NOT_FOUND` | `source.type=EXISTING` path does not exist. |
 | `SHEET_NOT_FOUND` | An operation or read references a sheet that does not exist, including sheet-management and structural-layout operations such as `RENAME_SHEET`, `DELETE_SHEET`, `MOVE_SHEET`, `MERGE_CELLS`, `UNMERGE_CELLS`, `SET_COLUMN_WIDTH`, `SET_ROW_HEIGHT`, or `FREEZE_PANES`. |
 | `NAMED_RANGE_NOT_FOUND` | A named-range read selector or delete request references a workbook- or sheet-scoped name that does not exist. |
 | `CELL_NOT_FOUND` | A `GET_CELLS` read references a cell that has not been written. |
@@ -101,7 +102,7 @@ route:
 | Category | Meaning |
 |:---------|:--------|
 | `ARGUMENTS` | CLI argument was unrecognized or malformed. Fix the command invocation. |
-| `REQUEST` | Request JSON is invalid or violates the protocol schema. Fix the request. |
+| `REQUEST` | Request JSON is malformed, does not match the protocol shape, or violates semantic validation. Fix the request. |
 | `FORMULA` | Formula is syntactically invalid or unsupported by Apache POI. Fix the formula. |
 | `RESOURCE` | Referenced workbook, sheet, or cell does not exist. Fix the path or name. |
 | `IO` | Filesystem failure reading or writing a file. Check paths, permissions, and disk state. |
@@ -126,6 +127,8 @@ The `context` block provides structured metadata about where the failure occurre
 | Field | Description |
 |:------|:------------|
 | `stage` | `PARSE_ARGUMENTS`, `READ_REQUEST`, `VALIDATE_REQUEST`, `OPEN_WORKBOOK`, `APPLY_OPERATION`, `EXECUTE_READ`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
+| `sourceType` | Request `source.type` when the failure occurred after request parsing. |
+| `persistenceType` | Request `persistence.type` when the failure occurred after request parsing. |
 | `operationIndex` | Zero-based index of the failing operation in `operations`. |
 | `operationType` | The `type` field of the failing operation (e.g. `SET_CELL`). |
 | `readIndex` | Zero-based index of the failing read in `reads`. |

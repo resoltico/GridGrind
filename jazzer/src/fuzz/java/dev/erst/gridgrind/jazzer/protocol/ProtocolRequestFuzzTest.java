@@ -9,6 +9,7 @@ import dev.erst.gridgrind.protocol.GridGrindJson;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.InvalidJsonException;
 import dev.erst.gridgrind.protocol.InvalidRequestException;
+import dev.erst.gridgrind.protocol.InvalidRequestShapeException;
 import java.io.IOException;
 
 /** Fuzzes protocol request decoding and validation from raw JSON payloads. */
@@ -32,7 +33,7 @@ class ProtocolRequestFuzzTest {
       TELEMETRY.recordReadKinds(SequenceIntrospection.readKinds(request.reads()));
       TELEMETRY.recordStyleKinds(SequenceIntrospection.styleKinds(request.operations()));
       TELEMETRY.recordSuccess();
-    } catch (InvalidJsonException | InvalidRequestException expected) {
+    } catch (InvalidJsonException | InvalidRequestShapeException | InvalidRequestException expected) {
       // Expected invalid-payload classifications are the normal outcome for many fuzz inputs.
       TELEMETRY.recordExpectedInvalid(expected);
     } catch (IOException | RuntimeException unexpected) {

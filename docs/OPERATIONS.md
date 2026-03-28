@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.9.0"
+version: "0.10.0"
 domain: OPERATIONS
-updated: "2026-03-27"
+updated: "2026-03-28"
 route:
   keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-sheet-layout, get-sheet-schema, analyze-workbook-findings, request, json, protocol]
   questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
@@ -12,6 +12,13 @@ route:
 
 **Purpose**: Complete reference for all GridGrind request fields and operation types.
 **Prerequisites**: Familiarity with the [README](../README.md) quick start.
+
+The CLI can emit the current minimal request and the full machine-readable protocol inventory:
+
+```bash
+gridgrind --print-request-template
+gridgrind --print-protocol-catalog
+```
 
 ---
 
@@ -35,17 +42,20 @@ route:
 | `operations` | No | Ordered list of workbook mutations. |
 | `reads` | No | Ordered post-mutation introspection and analysis operations. |
 
+Every tagged request union uses `type` as its discriminator field: `source`, `persistence`,
+`operations`, `reads`, cell values, hyperlink targets, selections, and named-range scopes.
+
 ---
 
 ## Source
 
 ```json
-{ "mode": "NEW" }
+{ "type": "NEW" }
 ```
 Create a new blank `.xlsx` workbook.
 
 ```json
-{ "mode": "EXISTING", "path": "path/to/workbook.xlsx" }
+{ "type": "EXISTING", "path": "path/to/workbook.xlsx" }
 ```
 Open an existing `.xlsx` file.
 
@@ -57,16 +67,16 @@ non-`.xlsx` extension are rejected as invalid requests.
 ## Persistence
 
 ```json
-{ "mode": "SAVE_AS", "path": "path/to/output.xlsx" }
+{ "type": "SAVE_AS", "path": "path/to/output.xlsx" }
 ```
 Write the workbook to the given path, creating parent directories as needed.
 
 The save path must end in `.xlsx`.
 
 ```json
-{ "mode": "OVERWRITE" }
+{ "type": "OVERWRITE" }
 ```
-Overwrite the source file (requires `source.mode=EXISTING`).
+Overwrite the source file (requires `source.type=EXISTING`).
 
 Omit `persistence` entirely to run mutations and reads without saving.
 
@@ -689,7 +699,7 @@ Returns exact named-range reports selected by workbook-wide or exact-selector in
 {
   "type": "GET_NAMED_RANGES",
   "requestId": "named-ranges",
-  "selection": { "mode": "ALL" }
+  "selection": { "type": "ALL" }
 }
 ```
 
@@ -698,7 +708,7 @@ Returns exact named-range reports selected by workbook-wide or exact-selector in
   "type": "GET_NAMED_RANGES",
   "requestId": "selected-named-ranges",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "selectors": [
       { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
       { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
@@ -786,7 +796,7 @@ Returns hyperlink metadata for selected cells on one sheet.
   "type": "GET_HYPERLINKS",
   "requestId": "hyperlinks",
   "sheetName": "Inventory",
-  "selection": { "mode": "ALL_USED_CELLS" }
+  "selection": { "type": "ALL_USED_CELLS" }
 }
 ```
 
@@ -796,7 +806,7 @@ Returns hyperlink metadata for selected cells on one sheet.
   "requestId": "selected-hyperlinks",
   "sheetName": "Inventory",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "addresses": ["A1", "B4"]
   }
 }
@@ -811,7 +821,7 @@ Returns comment metadata for selected cells on one sheet.
   "type": "GET_COMMENTS",
   "requestId": "comments",
   "sheetName": "Inventory",
-  "selection": { "mode": "ALL_USED_CELLS" }
+  "selection": { "type": "ALL_USED_CELLS" }
 }
 ```
 
@@ -821,7 +831,7 @@ Returns comment metadata for selected cells on one sheet.
   "requestId": "selected-comments",
   "sheetName": "Inventory",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "addresses": ["A1", "B4"]
   }
 }
@@ -830,9 +840,9 @@ Returns comment metadata for selected cells on one sheet.
 Cell-selection payloads use:
 
 ```json
-{ "mode": "ALL_USED_CELLS" }
+{ "type": "ALL_USED_CELLS" }
 {
-  "mode": "SELECTED",
+  "type": "SELECTED",
   "addresses": ["A1", "B4"]
 }
 ```
@@ -857,7 +867,7 @@ Groups formula usage across one or more sheets.
 {
   "type": "GET_FORMULA_SURFACE",
   "requestId": "formula-surface",
-  "selection": { "mode": "ALL" }
+  "selection": { "type": "ALL" }
 }
 ```
 
@@ -866,7 +876,7 @@ Groups formula usage across one or more sheets.
   "type": "GET_FORMULA_SURFACE",
   "requestId": "selected-formula-surface",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "sheetNames": ["Inventory", "Summary"]
   }
 }
@@ -875,9 +885,9 @@ Groups formula usage across one or more sheets.
 Sheet-selection payloads use:
 
 ```json
-{ "mode": "ALL" }
+{ "type": "ALL" }
 {
-  "mode": "SELECTED",
+  "type": "SELECTED",
   "sheetNames": ["Inventory", "Summary"]
 }
 ```
@@ -905,7 +915,7 @@ Summarizes the scope and backing kind of selected named ranges.
 {
   "type": "GET_NAMED_RANGE_SURFACE",
   "requestId": "named-range-surface",
-  "selection": { "mode": "ALL" }
+  "selection": { "type": "ALL" }
 }
 ```
 
@@ -914,7 +924,7 @@ Summarizes the scope and backing kind of selected named ranges.
   "type": "GET_NAMED_RANGE_SURFACE",
   "requestId": "selected-named-range-surface",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "selectors": [
       { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
       { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
@@ -932,7 +942,7 @@ functions, formula-error results, and evaluation failures surface.
 {
   "type": "ANALYZE_FORMULA_HEALTH",
   "requestId": "formula-health",
-  "selection": { "mode": "ALL" }
+  "selection": { "type": "ALL" }
 }
 ```
 
@@ -945,7 +955,7 @@ Reports hyperlink findings such as malformed external targets or broken document
   "type": "ANALYZE_HYPERLINK_HEALTH",
   "requestId": "hyperlink-health",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "sheetNames": ["Inventory", "Summary"]
   }
 }
@@ -959,7 +969,7 @@ Reports named-range findings such as broken references, unresolved targets, and 
 {
   "type": "ANALYZE_NAMED_RANGE_HEALTH",
   "requestId": "named-range-health",
-  "selection": { "mode": "ALL" }
+  "selection": { "type": "ALL" }
 }
 ```
 

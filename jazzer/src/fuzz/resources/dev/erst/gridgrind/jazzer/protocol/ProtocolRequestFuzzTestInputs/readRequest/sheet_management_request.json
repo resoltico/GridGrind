@@ -1,10 +1,10 @@
 {
   "protocolVersion": "V1",
   "source": {
-    "mode": "NEW"
+    "type": "NEW"
   },
   "persistence": {
-    "mode": "SAVE_AS",
+    "type": "SAVE_AS",
     "path": "generated/sheet-management.xlsx"
   },
   "operations": [

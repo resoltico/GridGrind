@@ -72,7 +72,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           GridGrindProblems.fromException(
               exception,
               new GridGrindResponse.ProblemContext.OpenWorkbook(
-                  reqSourceMode(request), reqPersistenceMode(request), reqSourcePath(request))));
+                  reqSourceType(request), reqPersistenceType(request), reqSourcePath(request))));
     }
 
     return guardUnexpectedRuntime(
@@ -121,8 +121,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               GridGrindProblems.fromException(
                   exception,
                   new GridGrindResponse.ProblemContext.PersistWorkbook(
-                      reqSourceMode(request),
-                      reqPersistenceMode(request),
+                      reqSourceType(request),
+                      reqPersistenceType(request),
                       reqSourcePath(request),
                       persistencePath(request.source(), request.persistence())))),
           request);
@@ -149,7 +149,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
                             "OVERWRITE persistence requires an EXISTING source; "
                                 + "a NEW workbook has no source file to overwrite",
                             new GridGrindResponse.ProblemContext.ValidateRequest(
-                                reqSourceMode(request), reqPersistenceMode(request)),
+                                reqSourceType(request), reqPersistenceType(request)),
                             (Throwable) null)));
             case GridGrindRequest.WorkbookSource.ExistingFile _ -> Optional.empty();
           };
@@ -782,7 +782,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
                 GridGrindProblems.fromException(
                     exception,
                     new GridGrindResponse.ProblemContext.ExecuteRequest(
-                        reqSourceMode(request), reqPersistenceMode(request))));
+                        reqSourceType(request), reqPersistenceType(request))));
       };
     }
   }
@@ -802,19 +802,19 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               GridGrindProblems.fromException(
                   exception,
                   new GridGrindResponse.ProblemContext.ExecuteRequest(
-                      reqSourceMode(request), reqPersistenceMode(request)))),
+                      reqSourceType(request), reqPersistenceType(request)))),
           request);
     }
   }
 
-  private String reqSourceMode(GridGrindRequest request) {
+  private String reqSourceType(GridGrindRequest request) {
     return switch (request.source()) {
       case GridGrindRequest.WorkbookSource.New _ -> "NEW";
       case GridGrindRequest.WorkbookSource.ExistingFile _ -> "EXISTING";
     };
   }
 
-  private String reqPersistenceMode(GridGrindRequest request) {
+  private String reqPersistenceType(GridGrindRequest request) {
     return switch (request.persistence()) {
       case GridGrindRequest.WorkbookPersistence.None _ -> "NONE";
       case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
@@ -855,8 +855,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
         GridGrindProblems.fromException(
             exception,
             new GridGrindResponse.ProblemContext.ApplyOperation(
-                reqSourceMode(request),
-                reqPersistenceMode(request),
+                reqSourceType(request),
+                reqPersistenceType(request),
                 operationIndex,
                 operation.operationType(),
                 sheetNameFor(operation, exception),
@@ -877,8 +877,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
         GridGrindProblems.fromException(
             exception,
             new GridGrindResponse.ProblemContext.ExecuteRead(
-                reqSourceMode(request),
-                reqPersistenceMode(request),
+                reqSourceType(request),
+                reqPersistenceType(request),
                 readIndex,
                 readType(read),
                 read.requestId(),

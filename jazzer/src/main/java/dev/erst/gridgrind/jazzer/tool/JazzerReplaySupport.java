@@ -16,6 +16,7 @@ import dev.erst.gridgrind.protocol.GridGrindResponse;
 import dev.erst.gridgrind.protocol.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.protocol.InvalidJsonException;
 import dev.erst.gridgrind.protocol.InvalidRequestException;
+import dev.erst.gridgrind.protocol.InvalidRequestShapeException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -62,6 +63,23 @@ public final class JazzerReplaySupport {
           new ProtocolRequestDetails(
               input.length,
               "INVALID_JSON",
+              "NOT_PARSED",
+              "NOT_PARSED",
+              0,
+              Map.of(),
+              Map.of(),
+              0,
+              Map.of());
+      return new ReplayOutcome.ExpectedInvalid(
+          JazzerHarness.PROTOCOL_REQUEST.key(),
+          expected.getClass().getSimpleName(),
+          expected.getMessage(),
+          details);
+    } catch (InvalidRequestShapeException expected) {
+      ProtocolRequestDetails details =
+          new ProtocolRequestDetails(
+              input.length,
+              "INVALID_REQUEST_SHAPE",
               "NOT_PARSED",
               "NOT_PARSED",
               0,

@@ -11,7 +11,12 @@ public enum GridGrindProblemCode {
       GridGrindProblemCategory.REQUEST,
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid JSON payload",
-      "Send syntactically valid JSON that matches the GridGrind protocol."),
+      "Send syntactically valid JSON."),
+  INVALID_REQUEST_SHAPE(
+      GridGrindProblemCategory.REQUEST,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Invalid request shape",
+      "Send a payload whose fields and discriminator IDs match the GridGrind protocol."),
   INVALID_REQUEST(
       GridGrindProblemCategory.REQUEST,
       GridGrindProblemRecovery.CHANGE_REQUEST,

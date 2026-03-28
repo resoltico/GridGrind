@@ -312,8 +312,8 @@ class GridGrindResponseTest {
     GridGrindResponse.ProblemContext.ValidateRequest validateRequest =
         new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE");
 
-    assertNull(parseArguments.sourceMode());
-    assertNull(parseArguments.persistenceMode());
+    assertNull(parseArguments.sourceType());
+    assertNull(parseArguments.persistenceType());
     assertNull(parseArguments.requestPath());
     assertNull(parseArguments.jsonPath());
     assertNull(parseArguments.responsePath());

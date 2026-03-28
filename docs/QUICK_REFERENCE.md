@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.9.0"
+version: "0.10.0"
 domain: QUICK_REFERENCE
-updated: "2026-03-27"
+updated: "2026-03-28"
 route:
   keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-sheet-schema, analyze-workbook-findings]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind named range example", "what do gridgrind reads look like"]
@@ -16,6 +16,13 @@ standalone operation objects for use inside the `operations` array.
 GridGrind supports `.xlsx` workbooks only. Use `.xlsx` paths for `source.path` and
 `persistence.path`; `.xls`, `.xlsm`, and `.xlsb` are rejected.
 
+The artifact can emit the current contract directly:
+
+```bash
+gridgrind --print-request-template
+gridgrind --print-protocol-catalog
+```
+
 ---
 
 ## Request Skeleton
@@ -23,8 +30,8 @@ GridGrind supports `.xlsx` workbooks only. Use `.xlsx` paths for `source.path` a
 ```json
 {
   "protocolVersion": "V1",
-  "source": { "mode": "NEW" },
-  "persistence": { "mode": "SAVE_AS", "path": "output.xlsx" },
+  "source": { "type": "NEW" },
+  "persistence": { "type": "SAVE_AS", "path": "output.xlsx" },
   "operations": [],
   "reads": []
 }
@@ -35,15 +42,15 @@ GridGrind supports `.xlsx` workbooks only. Use `.xlsx` paths for `source.path` a
 ## Source
 
 ```json
-{ "mode": "NEW" }
-{ "mode": "EXISTING", "path": "path/to/file.xlsx" }
+{ "type": "NEW" }
+{ "type": "EXISTING", "path": "path/to/file.xlsx" }
 ```
 
 ## Persistence
 
 ```json
-{ "mode": "SAVE_AS",   "path": "path/to/output.xlsx" }
-{ "mode": "OVERWRITE" }
+{ "type": "SAVE_AS",   "path": "path/to/output.xlsx" }
+{ "type": "OVERWRITE" }
 ```
 
 ---
@@ -310,13 +317,13 @@ a caller-defined `requestId`.
 {
   "type": "GET_NAMED_RANGES",
   "requestId": "named-ranges",
-  "selection": { "mode": "ALL" }
+  "selection": { "type": "ALL" }
 }
 {
   "type": "GET_NAMED_RANGES",
   "requestId": "selected-named-ranges",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "selectors": [
       { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
       { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
@@ -368,14 +375,14 @@ a caller-defined `requestId`.
   "type": "GET_HYPERLINKS",
   "requestId": "hyperlinks",
   "sheetName": "Sheet1",
-  "selection": { "mode": "ALL_USED_CELLS" }
+  "selection": { "type": "ALL_USED_CELLS" }
 }
 {
   "type": "GET_HYPERLINKS",
   "requestId": "selected-hyperlinks",
   "sheetName": "Sheet1",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "addresses": ["A1", "B4"]
   }
 }
@@ -388,14 +395,14 @@ a caller-defined `requestId`.
   "type": "GET_COMMENTS",
   "requestId": "comments",
   "sheetName": "Sheet1",
-  "selection": { "mode": "ALL_USED_CELLS" }
+  "selection": { "type": "ALL_USED_CELLS" }
 }
 {
   "type": "GET_COMMENTS",
   "requestId": "selected-comments",
   "sheetName": "Sheet1",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "addresses": ["A1", "B4"]
   }
 }
@@ -414,14 +421,14 @@ a caller-defined `requestId`.
   "type": "GET_FORMULA_SURFACE",
   "requestId": "formula-surface",
   "selection": {
-    "mode": "ALL"
+    "type": "ALL"
   }
 }
 {
   "type": "GET_FORMULA_SURFACE",
   "requestId": "selected-formula-surface",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "sheetNames": ["Sheet1", "Sheet2"]
   }
 }
@@ -446,13 +453,13 @@ a caller-defined `requestId`.
 {
   "type": "GET_NAMED_RANGE_SURFACE",
   "requestId": "named-range-surface",
-  "selection": { "mode": "ALL" }
+  "selection": { "type": "ALL" }
 }
 {
   "type": "GET_NAMED_RANGE_SURFACE",
   "requestId": "selected-named-range-surface",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "selectors": [
       { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
       { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
@@ -467,7 +474,7 @@ a caller-defined `requestId`.
 {
   "type": "ANALYZE_FORMULA_HEALTH",
   "requestId": "formula-health",
-  "selection": { "mode": "ALL" }
+  "selection": { "type": "ALL" }
 }
 ```
 
@@ -478,7 +485,7 @@ a caller-defined `requestId`.
   "type": "ANALYZE_HYPERLINK_HEALTH",
   "requestId": "hyperlink-health",
   "selection": {
-    "mode": "SELECTED",
+    "type": "SELECTED",
     "sheetNames": ["Sheet1", "Sheet2"]
   }
 }
@@ -490,7 +497,7 @@ a caller-defined `requestId`.
 {
   "type": "ANALYZE_NAMED_RANGE_HEALTH",
   "requestId": "named-range-health",
-  "selection": { "mode": "ALL" }
+  "selection": { "type": "ALL" }
 }
 ```
 
@@ -506,25 +513,25 @@ a caller-defined `requestId`.
 Selection snippets:
 
 ```json
-{ "mode": "ALL_USED_CELLS" }
+{ "type": "ALL_USED_CELLS" }
 {
-  "mode": "SELECTED",
+  "type": "SELECTED",
   "addresses": ["A1", "B4", "C10"]
 }
 ```
 
 ```json
-{ "mode": "ALL" }
+{ "type": "ALL" }
 {
-  "mode": "SELECTED",
+  "type": "SELECTED",
   "sheetNames": ["Sheet1", "Sheet2"]
 }
 ```
 
 ```json
-{ "mode": "ALL" }
+{ "type": "ALL" }
 {
-  "mode": "SELECTED",
+  "type": "SELECTED",
   "selectors": [
     { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
     { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }

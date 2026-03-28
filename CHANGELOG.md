@@ -5,6 +5,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-03-28
+
+### Added
+
+- Artifact-emitted discovery commands: `--print-request-template` for a minimal valid request and
+  `--print-protocol-catalog` for the machine-readable protocol inventory.
+- Protocol-owned catalog metadata covering source types, persistence types, operations, reads, and
+  nested tagged request unions.
+- Request-shape error classification via the new `INVALID_REQUEST_SHAPE` problem code.
+
+### Changed
+
+- All tagged request unions now use `type` as the discriminator field, including `source`,
+  `persistence`, selections, and success-side persistence outcomes.
+- CLI help is now first-success capable: it prints the current version, a minimal valid request,
+  stdin and Docker-mounted examples, discovery commands, Docker path semantics, and version-routed
+  public doc links.
+- Failure contexts now surface `sourceType` and `persistenceType` fields, matching the request
+  contract terminology.
+- Public docs, runnable examples, and committed Jazzer request seeds now use the unified `type`
+  contract and describe the new discovery and error-taxonomy behavior.
+- Jazzer protocol-request replay and assertions now distinguish syntax failures from request-shape
+  failures and semantic validation failures.
+
+### Fixed
+
+- Syntactically valid payloads with missing required fields, unknown discriminator IDs, or wrong
+  token shapes are no longer mislabeled as `INVALID_JSON`.
+
 ## [0.9.0] - 2026-03-27
 
 ### Added
@@ -243,7 +272,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.9.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/resoltico/GridGrind/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/resoltico/GridGrind/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/resoltico/GridGrind/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/resoltico/GridGrind/compare/v0.6.0...v0.7.0

@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.9.0"
+version: "0.10.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-03-27"
+updated: "2026-03-28"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -97,11 +97,11 @@ The operator goal is not to maximize seed count. The goal is to preserve a stabl
 - representative feature-family coverage
 
 Current floor:
-- `protocol-request`: 9 committed seeds
+- `protocol-request`: 11 committed seeds
 - `protocol-workflow`: 10 committed seeds
 - `engine-command-sequence`: 7 committed seeds
 - `xlsx-roundtrip`: 8 committed seeds
-- total committed seed floor: 34 inputs
+- total committed seed floor: 36 inputs
 
 ---
 
@@ -365,7 +365,7 @@ Telemetry semantics:
 - sequence telemetry records operation kinds or command kinds per harness
 - style telemetry records formatting-family usage such as font height, fill, font color,
   underline, strikeout, and border shapes
-- protocol workflow telemetry also records source-mode and persistence-mode coverage
+- protocol workflow telemetry also records source-type and persistence-type coverage
 - response and error telemetry remain the primary triage signal for unexpected outcomes
 
 ---

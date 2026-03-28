@@ -81,7 +81,7 @@ public final class SequenceIntrospection {
     return request.reads().size();
   }
 
-  /** Returns the stable workbook source-mode label for one request. */
+  /** Returns the stable workbook source-type label for one request. */
   public static String sourceKind(GridGrindRequest request) {
     Objects.requireNonNull(request, "request must not be null");
     return switch (request.source()) {
@@ -90,7 +90,7 @@ public final class SequenceIntrospection {
     };
   }
 
-  /** Returns the stable workbook persistence-mode label for one request. */
+  /** Returns the stable workbook persistence-type label for one request. */
   public static String persistenceKind(GridGrindRequest request) {
     Objects.requireNonNull(request, "request must not be null");
     return switch (request.persistence()) {

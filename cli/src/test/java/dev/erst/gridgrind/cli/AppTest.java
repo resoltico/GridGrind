@@ -51,7 +51,7 @@ class AppTest {
   @SuppressWarnings("PMD.CloseResource")
   void mainMethodRunsEndToEndWithValidRequestOnStdin() throws IOException {
     byte[] jsonRequest =
-        "{\"source\":{\"mode\":\"NEW\"},\"operations\":[],\"analysis\":{\"sheets\":[]}}"
+        "{\"protocolVersion\":\"V1\",\"source\":{\"type\":\"NEW\"},\"persistence\":{\"type\":\"NONE\"},\"operations\":[],\"reads\":[]}"
             .getBytes(StandardCharsets.UTF_8);
     java.io.ByteArrayOutputStream capturedOut = new java.io.ByteArrayOutputStream();
     InputStream originalIn = System.in;

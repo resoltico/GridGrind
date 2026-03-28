@@ -1,7 +1,7 @@
 {
   "protocolVersion": "V1",
-  "source": { "mode": "NEW" },
-  "persistence": { "mode": "NONE" },
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
   "operations": [
     { "type": "ENSURE_SHEET", "sheetName": "Styled Report" },
     {

@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /** Selects which cells a metadata read operation should inspect. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = CellSelection.AllUsedCells.class, name = "ALL_USED_CELLS"),
   @JsonSubTypes.Type(value = CellSelection.Selected.class, name = "SELECTED")

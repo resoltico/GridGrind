@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 
 /** Selects which sheets a read operation should inspect or analyze. */
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "mode")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = SheetSelection.All.class, name = "ALL"),
   @JsonSubTypes.Type(value = SheetSelection.Selected.class, name = "SELECTED")

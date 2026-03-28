@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.protocol.GridGrindJson;
 import dev.erst.gridgrind.protocol.GridGrindProblemCategory;
 import dev.erst.gridgrind.protocol.GridGrindProblemCode;
+import dev.erst.gridgrind.protocol.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
 import dev.erst.gridgrind.protocol.WorkbookReadResult;
 import java.io.ByteArrayInputStream;
@@ -24,8 +26,8 @@ class GridGrindCliTest {
     String request =
         """
             {
-              "source": { "mode": "NEW" },
-              "persistence": { "mode": "NONE" },
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
               "operations": [
                 { "type": "ENSURE_SHEET", "sheetName": "Budget" },
                 { "type": "APPEND_ROW", "sheetName": "Budget", "values": [
@@ -75,8 +77,8 @@ class GridGrindCliTest {
     String request =
         """
             {
-              "source": { "mode": "EXISTING", "path": "/tmp/does-not-exist.xlsx" },
-              "persistence": { "mode": "NONE" },
+              "source": { "type": "EXISTING", "path": "/tmp/does-not-exist.xlsx" },
+              "persistence": { "type": "NONE" },
               "operations": [],
               "reads": []
             }
@@ -110,8 +112,8 @@ class GridGrindCliTest {
         requestPath,
         """
             {
-              "source": { "mode": "NEW" },
-              "persistence": { "mode": "NONE" },
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
               "operations": [
                 { "type": "ENSURE_SHEET", "sheetName": "Budget" }
               ],
@@ -180,8 +182,12 @@ class GridGrindCliTest {
     String help = stdout.toString(StandardCharsets.UTF_8);
     assertTrue(help.contains("GridGrind CLI"));
     assertTrue(help.contains("Usage:"));
+    assertTrue(help.contains("Minimal Valid Request:"));
     assertTrue(help.contains("--request <path>"));
+    assertTrue(help.contains("--print-request-template"));
+    assertTrue(help.contains("--print-protocol-catalog"));
     assertTrue(help.contains("--help, -h"));
+    assertTrue(help.contains("blob/main/docs/QUICK_REFERENCE.md"));
 
     ByteArrayOutputStream shortStdout = new ByteArrayOutputStream();
     int shortExitCode =
@@ -189,6 +195,67 @@ class GridGrindCliTest {
             .run(new String[] {"-h"}, new ByteArrayInputStream(new byte[0]), shortStdout);
     assertEquals(0, shortExitCode);
     assertEquals(help, shortStdout.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void helpTextUsesVersionedDocumentationRoutesWhenVersionKnown() {
+    String help = GridGrindCli.helpText("0.9.0");
+
+    assertTrue(help.contains("GridGrind CLI 0.9.0"));
+    assertTrue(help.contains("ghcr.io/resoltico/gridgrind:0.9.0"));
+    assertTrue(help.contains("blob/v0.9.0/docs/QUICK_REFERENCE.md"));
+    assertTrue(help.contains("blob/v0.9.0/docs/OPERATIONS.md"));
+    assertTrue(help.contains("blob/v0.9.0/docs/ERRORS.md"));
+  }
+
+  @Test
+  void requestTemplateTextWrapsTemplateSerializationFailures() {
+    IllegalStateException failure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                GridGrindCli.requestTemplateText(
+                    () -> {
+                      throw new IOException("synthetic failure");
+                    }));
+
+    assertEquals("Failed to render the built-in request template", failure.getMessage());
+    assertEquals("synthetic failure", failure.getCause().getMessage());
+  }
+
+  @Test
+  void printRequestTemplateFlagPrintsValidRequestAndReturnsExitCodeZero() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-request-template"},
+                new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    GridGrindRequest request = GridGrindJson.readRequest(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertEquals(GridGrindProtocolCatalog.requestTemplate(), request);
+  }
+
+  @Test
+  void printProtocolCatalogFlagPrintsCurrentCatalogAndReturnsExitCodeZero() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog"},
+                new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    GridGrindProtocolCatalog.Catalog catalog =
+        GridGrindJson.readProtocolCatalog(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
   }
 
   @Test
@@ -219,6 +286,23 @@ class GridGrindCliTest {
 
     assertEquals(0, exitCode);
     assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("GridGrind CLI"));
+  }
+
+  @Test
+  void printRequestTemplateFlagTakesPrecedenceOverOtherFlags() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-request-template", "--request", "ignored.json"},
+                new ByteArrayInputStream(new byte[0]),
+                stdout);
+
+    GridGrindRequest request = GridGrindJson.readRequest(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertEquals(GridGrindProtocolCatalog.requestTemplate(), request);
   }
 
   @Test
@@ -354,7 +438,7 @@ class GridGrindCliTest {
             new ByteArrayInputStream(
                 """
                 {
-                  "source": { "mode": "NEW" },
+                  "source": { "type": "NEW" },
                   "operations": [],
                   "reads": []
                 }
@@ -389,7 +473,7 @@ class GridGrindCliTest {
               new ByteArrayInputStream(
                   """
                     {
-                      "source": { "mode": "NEW" },
+                      "source": { "type": "NEW" },
                       "operations": [],
                       "reads": []
                     }
@@ -411,7 +495,7 @@ class GridGrindCliTest {
   }
 
   @Test
-  void returnsInvalidRequestForMalformedJson() throws IOException {
+  void returnsInvalidJsonForMalformedJson() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -434,6 +518,37 @@ class GridGrindCliTest {
   }
 
   @Test
+  void classifiesRequestShapeFailuresAsReadRequest() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[0],
+                new ByteArrayInputStream(
+                    """
+                {
+                  "source": { "type": "NEW" },
+                  "operations": [],
+                  "reads": [
+                    { "type": "GET_WORKBOOK_SUMMARY" }
+                  ]
+                }
+                """
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+
+    assertEquals(1, exitCode);
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
+    assertEquals("READ_REQUEST", failure.problem().context().stage());
+    assertEquals("reads[0]", failure.problem().context().jsonPath());
+  }
+
+  @Test
   void classifiesSemanticRequestValidationAsReadRequest() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
@@ -444,7 +559,7 @@ class GridGrindCliTest {
                 new ByteArrayInputStream(
                     """
                 {
-                  "source": { "mode": "NEW" },
+                  "source": { "type": "NEW" },
                   "operations": [],
                   "reads": [
                     {
@@ -485,7 +600,7 @@ class GridGrindCliTest {
                   new ByteArrayInputStream(
                       """
                     {
-                      "source": { "mode": "NEW" },
+                      "source": { "type": "NEW" },
                       "operations": [],
                       "reads": []
                     }
@@ -514,7 +629,7 @@ class GridGrindCliTest {
                 new ByteArrayInputStream(
                     """
                 {
-                  "source": { "mode": "NEW" },
+                  "source": { "type": "NEW" },
                   "operations": [],
                   "reads": []
                 }
@@ -549,7 +664,7 @@ class GridGrindCliTest {
             new ByteArrayInputStream(
                 """
                 {
-                  "source": { "mode": "NEW" },
+                  "source": { "type": "NEW" },
                   "operations": [],
                   "reads": []
                 }
@@ -581,8 +696,8 @@ class GridGrindCliTest {
                     """
                 {
                   "protocolVersion": "V1",
-                  "source": { "mode": "NEW" },
-                  "persistence": { "mode": "NONE" },
+                  "source": { "type": "NEW" },
+                  "persistence": { "type": "NONE" },
                   "operations": [
                     { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "FORMULA", "formula": "SUM(" } },
                     { "type": "EVALUATE_FORMULAS" }
@@ -612,7 +727,7 @@ class GridGrindCliTest {
         new TrackingInputStream(
             """
             {
-              "source": { "mode": "NEW" },
+              "source": { "type": "NEW" },
               "operations": [],
               "reads": []
             }
