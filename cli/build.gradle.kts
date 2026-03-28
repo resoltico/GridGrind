@@ -53,6 +53,13 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     }
 }
 
+tasks.named<ProcessResources>("processResources") {
+    val description: String = providers.gradleProperty("gridgrindDescription").get()
+    filesMatching("gridgrind.properties") {
+        expand(mapOf("gridgrindDescription" to description))
+    }
+}
+
 tasks.named("assemble") {
     dependsOn("shadowJar")
 }

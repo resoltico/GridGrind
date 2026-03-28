@@ -50,6 +50,53 @@ class GridGrindProtocolCatalogTest {
         catalog.nestedTypes().stream()
             .map(GridGrindProtocolCatalog.NestedTypeGroup::group)
             .toList());
+    assertEquals(
+        List.of(
+            "commentInputType",
+            "namedRangeTargetType",
+            "cellStyleInputType",
+            "cellBorderInputType",
+            "cellBorderSideInputType"),
+        catalog.plainTypes().stream().map(GridGrindProtocolCatalog.PlainTypeGroup::group).toList());
+
+    GridGrindProtocolCatalog.TypeEntry formulaEntry =
+        catalog.nestedTypes().stream()
+            .filter(g -> "cellInputTypes".equals(g.group()))
+            .findFirst()
+            .orElseThrow()
+            .types()
+            .stream()
+            .filter(t -> "FORMULA".equals(t.id()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(
+        formulaEntry.summary().contains("Omit the leading = sign"),
+        "FORMULA summary should mention omitting leading = sign");
+
+    GridGrindProtocolCatalog.PlainTypeGroup commentGroup =
+        catalog.plainTypes().stream()
+            .filter(g -> "commentInputType".equals(g.group()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(commentGroup.type().requiredFields().contains("text"));
+    assertTrue(commentGroup.type().requiredFields().contains("author"));
+    assertTrue(commentGroup.type().optionalFields().contains("visible"));
+
+    GridGrindProtocolCatalog.PlainTypeGroup namedRangeGroup =
+        catalog.plainTypes().stream()
+            .filter(g -> "namedRangeTargetType".equals(g.group()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(namedRangeGroup.type().requiredFields().contains("sheetName"));
+    assertTrue(namedRangeGroup.type().requiredFields().contains("range"));
+
+    GridGrindProtocolCatalog.PlainTypeGroup borderSideGroup =
+        catalog.plainTypes().stream()
+            .filter(g -> "cellBorderSideInputType".equals(g.group()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(borderSideGroup.type().requiredFields().contains("style"));
+
     assertEquals(catalog, decoded);
   }
 
@@ -195,6 +242,8 @@ class GridGrindProtocolCatalogTest {
         new GridGrindProtocolCatalog.TypeEntry("NEW", "Create", List.of("type"), List.of("notes"));
     GridGrindProtocolCatalog.NestedTypeGroup nestedTypeGroup =
         new GridGrindProtocolCatalog.NestedTypeGroup("cellInputTypes", List.of(sourceType));
+    GridGrindProtocolCatalog.PlainTypeGroup plainTypeGroup =
+        new GridGrindProtocolCatalog.PlainTypeGroup("commentInputType", sourceType);
 
     GridGrindProtocolCatalog.Catalog catalog =
         new GridGrindProtocolCatalog.Catalog(
@@ -204,10 +253,13 @@ class GridGrindProtocolCatalogTest {
             List.of(sourceType),
             List.of(sourceType),
             List.of(sourceType),
-            List.of(nestedTypeGroup));
+            List.of(nestedTypeGroup),
+            List.of(plainTypeGroup));
 
     assertEquals(GridGrindProtocolVersion.current(), catalog.protocolVersion());
     assertThrows(UnsupportedOperationException.class, () -> catalog.sourceTypes().add(sourceType));
+    assertThrows(
+        UnsupportedOperationException.class, () -> catalog.plainTypes().add(plainTypeGroup));
   }
 
   @Test
@@ -241,7 +293,33 @@ class GridGrindProtocolCatalogTest {
                 List.of(),
                 List.of(),
                 List.of(),
-                Arrays.asList((GridGrindProtocolCatalog.NestedTypeGroup) null)));
+                Arrays.asList((GridGrindProtocolCatalog.NestedTypeGroup) null),
+                List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new GridGrindProtocolCatalog.Catalog(
+                GridGrindProtocolVersion.current(),
+                "type",
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                Arrays.asList((GridGrindProtocolCatalog.PlainTypeGroup) null)));
+    assertEquals(
+        "group must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new GridGrindProtocolCatalog.PlainTypeGroup(
+                        " ",
+                        new GridGrindProtocolCatalog.TypeEntry(
+                            "ID", "Summary", List.of(), List.of())))
+            .getMessage());
+    assertThrows(
+        NullPointerException.class,
+        () -> new GridGrindProtocolCatalog.PlainTypeGroup("commentInputType", null));
   }
 
   private static List<String> ids(List<GridGrindProtocolCatalog.TypeEntry> entries) {

@@ -100,6 +100,11 @@ public sealed interface HyperlinkTarget
     if (normalized.isBlank()) {
       throw new IllegalArgumentException("email must not be blank");
     }
+    int atIndex = normalized.indexOf('@');
+    if (atIndex < 1 || atIndex == normalized.length() - 1) {
+      throw new IllegalArgumentException(
+          "email must contain '@' with a non-empty local part and domain");
+    }
     return normalized;
   }
 }

@@ -135,4 +135,21 @@ class GridGrindRequestTest {
                 new NamedRangeSelection.Selected(
                     List.of(new NamedRangeSelector.WorkbookScope("BudgetTotal")))));
   }
+
+  @Test
+  void rejectsDuplicateRequestIds() {
+    List<WorkbookReadOperation> duplicateReads =
+        List.of(
+            new WorkbookReadOperation.GetWorkbookSummary("summary"),
+            new WorkbookReadOperation.GetSheetSummary("summary", "Budget"));
+
+    IllegalArgumentException failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(), null, null, duplicateReads));
+
+    assertTrue(failure.getMessage().contains("summary"));
+  }
 }

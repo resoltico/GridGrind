@@ -11,6 +11,7 @@ import tools.jackson.core.StreamWriteFeature;
 import tools.jackson.core.TokenStreamLocation;
 import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.databind.DatabindException;
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -21,6 +22,7 @@ public final class GridGrindJson {
           .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
           .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
           .enable(SerializationFeature.INDENT_OUTPUT)
+          .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
           .build();
 
   private GridGrindJson() {}

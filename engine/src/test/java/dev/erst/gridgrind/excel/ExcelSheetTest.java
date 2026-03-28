@@ -1291,4 +1291,26 @@ class ExcelSheetTest {
             new Class<?>[] {org.apache.poi.ss.usermodel.RichTextString.class},
             handler);
   }
+
+  @Test
+  void snapshotCellReturnsBlankForUnwrittenCells() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setCell("A1", ExcelCellValue.text("Header"));
+
+      // A cell in a non-existent row returns blank.
+      ExcelCellSnapshot blankInNewRow = sheet.snapshotCell("C5");
+      assertInstanceOf(ExcelCellSnapshot.BlankSnapshot.class, blankInNewRow);
+      assertEquals("C5", blankInNewRow.address());
+
+      // A cell in a row that exists but in a column that has not been written returns blank.
+      ExcelCellSnapshot blankInExistingRow = sheet.snapshotCell("B1");
+      assertInstanceOf(ExcelCellSnapshot.BlankSnapshot.class, blankInExistingRow);
+      assertEquals("B1", blankInExistingRow.address());
+    }
+  }
 }

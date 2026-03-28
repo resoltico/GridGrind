@@ -60,38 +60,32 @@ public final class WorkbookCommandExecutor {
                   freezePanes.leftmostColumn(),
                   freezePanes.topRow());
       case WorkbookCommand.SetCell setCell ->
-          workbook
-              .getOrCreateSheet(setCell.sheetName())
-              .setCell(setCell.address(), setCell.value());
+          workbook.sheet(setCell.sheetName()).setCell(setCell.address(), setCell.value());
       case WorkbookCommand.SetRange setRange ->
-          workbook
-              .getOrCreateSheet(setRange.sheetName())
-              .setRange(setRange.range(), setRange.rows());
+          workbook.sheet(setRange.sheetName()).setRange(setRange.range(), setRange.rows());
       case WorkbookCommand.ClearRange clearRange ->
           workbook.sheet(clearRange.sheetName()).clearRange(clearRange.range());
       case WorkbookCommand.SetHyperlink setHyperlink ->
           workbook
-              .getOrCreateSheet(setHyperlink.sheetName())
+              .sheet(setHyperlink.sheetName())
               .setHyperlink(setHyperlink.address(), setHyperlink.target());
       case WorkbookCommand.ClearHyperlink clearHyperlink ->
           workbook.sheet(clearHyperlink.sheetName()).clearHyperlink(clearHyperlink.address());
       case WorkbookCommand.SetComment setComment ->
           workbook
-              .getOrCreateSheet(setComment.sheetName())
+              .sheet(setComment.sheetName())
               .setComment(setComment.address(), setComment.comment());
       case WorkbookCommand.ClearComment clearComment ->
           workbook.sheet(clearComment.sheetName()).clearComment(clearComment.address());
       case WorkbookCommand.ApplyStyle applyStyle ->
-          workbook
-              .getOrCreateSheet(applyStyle.sheetName())
-              .applyStyle(applyStyle.range(), applyStyle.style());
+          workbook.sheet(applyStyle.sheetName()).applyStyle(applyStyle.range(), applyStyle.style());
       case WorkbookCommand.SetNamedRange setNamedRange ->
           workbook.setNamedRange(setNamedRange.definition());
       case WorkbookCommand.DeleteNamedRange deleteNamedRange ->
           workbook.deleteNamedRange(deleteNamedRange.name(), deleteNamedRange.scope());
       case WorkbookCommand.AppendRow appendRow ->
           workbook
-              .getOrCreateSheet(appendRow.sheetName())
+              .sheet(appendRow.sheetName())
               .appendRow(appendRow.values().toArray(ExcelCellValue[]::new));
       case WorkbookCommand.AutoSizeColumns autoSizeColumns ->
           workbook.sheet(autoSizeColumns.sheetName()).autoSizeColumns();

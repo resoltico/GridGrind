@@ -11,6 +11,9 @@ public record ExcelNamedRangeTarget(String sheetName, String range) {
     if (sheetName.isBlank()) {
       throw new IllegalArgumentException("sheetName must not be blank");
     }
+    if (sheetName.length() > 31) {
+      throw new IllegalArgumentException("sheetName must not exceed 31 characters: " + sheetName);
+    }
     if (range.isBlank()) {
       throw new IllegalArgumentException("range must not be blank");
     }

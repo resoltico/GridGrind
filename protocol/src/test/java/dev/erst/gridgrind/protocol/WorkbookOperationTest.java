@@ -316,6 +316,68 @@ class WorkbookOperationTest {
   }
 
   @Test
+  void rejectsSheetNamesExceeding31Characters() {
+    String tooLong = "A".repeat(32);
+    String exactly31 = "A".repeat(31);
+
+    assertDoesNotThrow(() -> new WorkbookOperation.EnsureSheet(exactly31));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.EnsureSheet(tooLong));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.RenameSheet("Budget", tooLong));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.RenameSheet(tooLong, "NewName"));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.DeleteSheet(tooLong));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.MoveSheet(tooLong, 0));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.MergeCells(tooLong, "A1:B2"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.SetColumnWidth(tooLong, 0, 0, 16.0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.SetRowHeight(tooLong, 0, 0, 28.5));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.FreezePanes(tooLong, 1, 0, 1, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.SetCell(tooLong, "A1", new CellInput.Text("x")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.SetRange(
+                tooLong, "A1", List.of(List.of(new CellInput.Text("x")))));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.ClearRange(tooLong, "A1:B2"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.SetHyperlink(
+                tooLong, "A1", new HyperlinkTarget.Url("https://example.com")));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.ClearHyperlink(tooLong, "A1"));
+    CellStyleInput style =
+        new CellStyleInput(
+            null, false, null, false, null, null, null, null, null, null, null, null, null);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.ApplyStyle(tooLong, "A1:B2", style));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.SetComment(
+                tooLong, "A1", new CommentInput("Review", "GridGrind", null)));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.ClearComment(tooLong, "A1"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.AppendRow(tooLong, List.of(new CellInput.Text("x"))));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.AutoSizeColumns(tooLong));
+  }
+
+  @Test
   void operationTypeCoversAllSubtypes() {
     CellInput textValue = new CellInput.Text("x");
     CellStyleInput style =

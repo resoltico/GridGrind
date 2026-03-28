@@ -14,7 +14,7 @@ plugins {
     alias(libs.plugins.shadow) apply false
 }
 
-description = "Structured .xlsx workbook automation engine with an agent-friendly JSON protocol"
+description = providers.gradleProperty("gridgrindDescription").get()
 
 // Root-level JaCoCo configuration for the aggregated report task.
 repositories {

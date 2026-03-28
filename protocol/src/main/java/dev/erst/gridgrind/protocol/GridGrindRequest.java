@@ -2,9 +2,11 @@ package dev.erst.gridgrind.protocol;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Set;
 
 /** Complete GridGrind request for workbook source, mutations, reads, and persistence. */
 public record GridGrindRequest(
@@ -87,8 +89,13 @@ public record GridGrindRequest(
       return List.of();
     }
     List<WorkbookReadOperation> copy = List.copyOf(reads);
+    Set<String> seen = new HashSet<>();
     for (WorkbookReadOperation read : copy) {
       Objects.requireNonNull(read, "reads must not contain nulls");
+      if (!seen.add(read.requestId())) {
+        throw new IllegalArgumentException(
+            "reads must not contain duplicate requestId values: " + read.requestId());
+      }
     }
     return copy;
   }

@@ -595,12 +595,12 @@ class DefaultGridGrindRequestExecutorTest {
                     request(
                         new GridGrindRequest.WorkbookSource.New(),
                         new GridGrindRequest.WorkbookPersistence.None(),
-                        List.of(new WorkbookOperation.EnsureSheet("Budget")),
-                        new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")))));
+                        List.of(),
+                        new WorkbookReadOperation.GetWindow("cells", "Budget", "A1", 5, 5))));
 
-    assertEquals(GridGrindProblemCode.CELL_NOT_FOUND, failure.problem().code());
+    assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("EXECUTE_READ", failure.problem().context().stage());
-    assertEquals("GET_CELLS", failure.problem().context().readType());
+    assertEquals("GET_WINDOW", failure.problem().context().readType());
     assertEquals("cells", failure.problem().context().requestId());
     assertEquals("Budget", failure.problem().context().sheetName());
     assertEquals("A1", failure.problem().context().address());
@@ -657,10 +657,10 @@ class DefaultGridGrindRequestExecutorTest {
                     request(
                         new GridGrindRequest.WorkbookSource.New(),
                         new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
-                        List.of(new WorkbookOperation.EnsureSheet("Budget")),
-                        new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")))));
+                        List.of(),
+                        new WorkbookReadOperation.GetCells("cells", "Missing", List.of("A1")))));
 
-    assertEquals(GridGrindProblemCode.CELL_NOT_FOUND, failure.problem().code());
+    assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertFalse(Files.exists(workbookPath));
   }
 
@@ -689,6 +689,7 @@ class DefaultGridGrindRequestExecutorTest {
                         new GridGrindRequest.WorkbookSource.New(),
                         new GridGrindRequest.WorkbookPersistence.None(),
                         List.of(
+                            new WorkbookOperation.EnsureSheet("Data"),
                             new WorkbookOperation.SetCell(
                                 "Data", "A1", new CellInput.Formula("SUM(")),
                             new WorkbookOperation.EvaluateFormulas()))));
@@ -711,6 +712,7 @@ class DefaultGridGrindRequestExecutorTest {
                         new GridGrindRequest.WorkbookSource.New(),
                         new GridGrindRequest.WorkbookPersistence.None(),
                         List.of(
+                            new WorkbookOperation.EnsureSheet("Data"),
                             new WorkbookOperation.SetCell(
                                 "Data", "A1", new CellInput.Formula("[^owe_e`ffffff"))))));
 
@@ -739,6 +741,7 @@ class DefaultGridGrindRequestExecutorTest {
                         new GridGrindRequest.WorkbookSource.New(),
                         new GridGrindRequest.WorkbookPersistence.None(),
                         List.of(
+                            new WorkbookOperation.EnsureSheet("Data"),
                             new WorkbookOperation.SetCell("Data", "A1", new CellInput.Numeric(1.0)),
                             new WorkbookOperation.SetCell("Data", "B1", new CellInput.Numeric(2.0)),
                             new WorkbookOperation.SetCell(

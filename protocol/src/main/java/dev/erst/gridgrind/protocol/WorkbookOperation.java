@@ -40,29 +40,29 @@ public sealed interface WorkbookOperation {
   /** Ensures a sheet with the given name exists, creating it if absent. */
   record EnsureSheet(String sheetName) implements WorkbookOperation {
     public EnsureSheet {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
     }
   }
 
   /** Renames an existing sheet to a new destination name. */
   record RenameSheet(String sheetName, String newSheetName) implements WorkbookOperation {
     public RenameSheet {
-      Validation.requireNonBlank(sheetName, "sheetName");
-      Validation.requireNonBlank(newSheetName, "newSheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
+      Validation.requireSheetName(newSheetName, "newSheetName");
     }
   }
 
   /** Deletes an existing sheet from the workbook. */
   record DeleteSheet(String sheetName) implements WorkbookOperation {
     public DeleteSheet {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
     }
   }
 
   /** Moves an existing sheet to a zero-based workbook position. */
   record MoveSheet(String sheetName, Integer targetIndex) implements WorkbookOperation {
     public MoveSheet {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Objects.requireNonNull(targetIndex, "targetIndex must not be null");
       Validation.requireNonNegative(targetIndex, "targetIndex");
     }
@@ -71,7 +71,7 @@ public sealed interface WorkbookOperation {
   /** Merges an A1-style rectangular range into one displayed cell region. */
   record MergeCells(String sheetName, String range) implements WorkbookOperation {
     public MergeCells {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(range, "range");
     }
   }
@@ -79,7 +79,7 @@ public sealed interface WorkbookOperation {
   /** Removes the merged region whose coordinates exactly match the given range. */
   record UnmergeCells(String sheetName, String range) implements WorkbookOperation {
     public UnmergeCells {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(range, "range");
     }
   }
@@ -89,7 +89,7 @@ public sealed interface WorkbookOperation {
       String sheetName, Integer firstColumnIndex, Integer lastColumnIndex, Double widthCharacters)
       implements WorkbookOperation {
     public SetColumnWidth {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Objects.requireNonNull(firstColumnIndex, "firstColumnIndex must not be null");
       Objects.requireNonNull(lastColumnIndex, "lastColumnIndex must not be null");
       Objects.requireNonNull(widthCharacters, "widthCharacters must not be null");
@@ -106,7 +106,7 @@ public sealed interface WorkbookOperation {
       String sheetName, Integer firstRowIndex, Integer lastRowIndex, Double heightPoints)
       implements WorkbookOperation {
     public SetRowHeight {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Objects.requireNonNull(firstRowIndex, "firstRowIndex must not be null");
       Objects.requireNonNull(lastRowIndex, "lastRowIndex must not be null");
       Objects.requireNonNull(heightPoints, "heightPoints must not be null");
@@ -126,7 +126,7 @@ public sealed interface WorkbookOperation {
       Integer topRow)
       implements WorkbookOperation {
     public FreezePanes {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Objects.requireNonNull(splitColumn, "splitColumn must not be null");
       Objects.requireNonNull(splitRow, "splitRow must not be null");
       Objects.requireNonNull(leftmostColumn, "leftmostColumn must not be null");
@@ -142,7 +142,7 @@ public sealed interface WorkbookOperation {
   /** Sets a single cell to the given value. */
   record SetCell(String sheetName, String address, CellInput value) implements WorkbookOperation {
     public SetCell {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(address, "address");
       Objects.requireNonNull(value, "value must not be null");
     }
@@ -152,7 +152,7 @@ public sealed interface WorkbookOperation {
   record SetRange(String sheetName, String range, List<List<CellInput>> rows)
       implements WorkbookOperation {
     public SetRange {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(range, "range");
       rows = Validation.copyRows(rows);
       Validation.requireRectangularRows(rows);
@@ -162,7 +162,7 @@ public sealed interface WorkbookOperation {
   /** Clears all cell values and styles within the specified range. */
   record ClearRange(String sheetName, String range) implements WorkbookOperation {
     public ClearRange {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(range, "range");
     }
   }
@@ -171,7 +171,7 @@ public sealed interface WorkbookOperation {
   record SetHyperlink(String sheetName, String address, HyperlinkTarget target)
       implements WorkbookOperation {
     public SetHyperlink {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(address, "address");
       Objects.requireNonNull(target, "target must not be null");
     }
@@ -180,7 +180,7 @@ public sealed interface WorkbookOperation {
   /** Removes any hyperlink attached to a single existing cell. */
   record ClearHyperlink(String sheetName, String address) implements WorkbookOperation {
     public ClearHyperlink {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(address, "address");
     }
   }
@@ -189,7 +189,7 @@ public sealed interface WorkbookOperation {
   record SetComment(String sheetName, String address, CommentInput comment)
       implements WorkbookOperation {
     public SetComment {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(address, "address");
       Objects.requireNonNull(comment, "comment must not be null");
     }
@@ -198,7 +198,7 @@ public sealed interface WorkbookOperation {
   /** Removes any comment attached to a single existing cell. */
   record ClearComment(String sheetName, String address) implements WorkbookOperation {
     public ClearComment {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(address, "address");
     }
   }
@@ -207,7 +207,7 @@ public sealed interface WorkbookOperation {
   record ApplyStyle(String sheetName, String range, CellStyleInput style)
       implements WorkbookOperation {
     public ApplyStyle {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(range, "range");
       Objects.requireNonNull(style, "style must not be null");
     }
@@ -234,7 +234,7 @@ public sealed interface WorkbookOperation {
   /** Appends a new row of values after the last occupied row on the sheet. */
   record AppendRow(String sheetName, List<CellInput> values) implements WorkbookOperation {
     public AppendRow {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
       values = values == null ? List.of() : List.copyOf(values);
       if (values.isEmpty()) {
         throw new IllegalArgumentException("values must not be empty");
@@ -248,7 +248,7 @@ public sealed interface WorkbookOperation {
   /** Auto-sizes all populated columns on the sheet to fit their content. */
   record AutoSizeColumns(String sheetName) implements WorkbookOperation {
     public AutoSizeColumns {
-      Validation.requireNonBlank(sheetName, "sheetName");
+      Validation.requireSheetName(sheetName, "sheetName");
     }
   }
 
@@ -295,6 +295,13 @@ public sealed interface WorkbookOperation {
       Objects.requireNonNull(value, fieldName + " must not be null");
       if (value.isBlank()) {
         throw new IllegalArgumentException(fieldName + " must not be blank");
+      }
+    }
+
+    static void requireSheetName(String value, String fieldName) {
+      requireNonBlank(value, fieldName);
+      if (value.length() > 31) {
+        throw new IllegalArgumentException(fieldName + " must not exceed 31 characters: " + value);
       }
     }
 

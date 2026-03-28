@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.10.0"
+version: "0.11.0"
 domain: QUICK_REFERENCE
 updated: "2026-03-28"
 route:
@@ -139,6 +139,8 @@ gridgrind --print-protocol-catalog
 { "type": "SET_CELL", "sheetName": "Sheet1", "address": "F1", "value": { "type": "DATE_TIME", "dateTime": "2026-03-25T10:15:30"      } }
 { "type": "SET_CELL", "sheetName": "Sheet1", "address": "G1", "value": { "type": "BLANK"                                             } }
 ```
+
+The `FORMULA` value must omit the leading `=` sign; the engine adds it internally.
 
 ## SET_RANGE
 
