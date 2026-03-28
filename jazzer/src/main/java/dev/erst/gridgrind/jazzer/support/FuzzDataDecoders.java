@@ -29,12 +29,13 @@ public final class FuzzDataDecoders {
     Objects.requireNonNull(data, "data must not be null");
 
     if (!valid) {
-      return switch (data.consumeInt(0, 4)) {
+      return switch (data.consumeInt(0, 5)) {
         case 0 -> "";
         case 1 -> " ";
         case 2 -> "Bad/Name";
         case 3 -> "Bad*Name";
-        default -> "Bad[Name]";
+        case 4 -> "Bad[Name]";
+        default -> "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEF"; // 32 chars, exceeds the 31-char limit
       };
     }
 

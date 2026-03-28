@@ -1,0 +1,9 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "ABCDEFGHIJKLMNOPQRSTUVWXYZABCDEF" }
+  ],
+  "reads": []
+}

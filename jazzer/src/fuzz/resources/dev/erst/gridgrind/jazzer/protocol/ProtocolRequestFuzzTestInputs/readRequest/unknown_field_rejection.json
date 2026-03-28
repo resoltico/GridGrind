@@ -1,0 +1,8 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "dataFormat": "unknown",
+  "operations": [],
+  "reads": []
+}

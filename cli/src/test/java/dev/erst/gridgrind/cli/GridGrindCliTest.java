@@ -12,6 +12,7 @@ import dev.erst.gridgrind.protocol.WorkbookReadResult;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -206,6 +207,71 @@ class GridGrindCliTest {
     assertTrue(help.contains("blob/v0.9.0/docs/QUICK_REFERENCE.md"));
     assertTrue(help.contains("blob/v0.9.0/docs/OPERATIONS.md"));
     assertTrue(help.contains("blob/v0.9.0/docs/ERRORS.md"));
+  }
+
+  @Test
+  void helpTextContainsProductDescription() {
+    String help = GridGrindCli.helpText("1.0.0");
+
+    // The description is either the default fallback or the value from the properties resource.
+    // Either way the version line and description line must both be present.
+    assertTrue(help.contains("GridGrind CLI 1.0.0"), "help must contain the version line");
+    // The description line appears immediately after the version line.
+    int versionLineEnd = help.indexOf("GridGrind CLI 1.0.0") + "GridGrind CLI 1.0.0".length();
+    String afterVersion = help.substring(versionLineEnd).stripLeading();
+    assertFalse(
+        afterVersion.startsWith("Usage:"),
+        "A description line must appear between the version and Usage:");
+  }
+
+  @Test
+  void helpTextDockerExampleUsesAbsoluteContainerPaths() {
+    String help = GridGrindCli.helpText("1.0.0");
+
+    assertFalse(help.contains("-w /workdir"), "Docker example must not use -w /workdir");
+    assertTrue(
+        help.contains("/workdir/request.json"), "Docker example must use absolute /workdir/ paths");
+    assertTrue(
+        help.contains("/workdir/response.json"),
+        "Docker example must use absolute /workdir/ paths");
+  }
+
+  @Test
+  void descriptionFrom_returnsFallback_whenResourceAbsent() {
+    // Object.class lives in the bootstrap classloader which has no gridgrind.properties.
+    assertEquals("GridGrind", GridGrindCli.descriptionFrom(Object.class));
+  }
+
+  @Test
+  void descriptionFrom_returnsFallback_whenStreamIsNull() {
+    assertEquals("GridGrind", GridGrindCli.descriptionFrom((InputStream) null));
+  }
+
+  @Test
+  void descriptionFrom_returnsDescription_fromInputStream() {
+    InputStream stream =
+        new ByteArrayInputStream("description=Custom Description".getBytes(StandardCharsets.UTF_8));
+    assertEquals("Custom Description", GridGrindCli.descriptionFrom(stream));
+  }
+
+  @Test
+  void descriptionFrom_returnsFallback_whenDescriptionIsBlank() {
+    InputStream stream =
+        new ByteArrayInputStream("description=   ".getBytes(StandardCharsets.UTF_8));
+    assertEquals("GridGrind", GridGrindCli.descriptionFrom(stream));
+  }
+
+  @Test
+  void descriptionFrom_returnsFallback_whenStreamThrowsOnRead() throws IOException {
+    try (InputStream broken =
+        new InputStream() {
+          @Override
+          public int read() throws IOException {
+            throw new IOException("simulated read failure");
+          }
+        }) {
+      assertEquals("GridGrind", GridGrindCli.descriptionFrom(broken));
+    }
   }
 
   @Test
@@ -699,6 +765,7 @@ class GridGrindCliTest {
                   "source": { "type": "NEW" },
                   "persistence": { "type": "NONE" },
                   "operations": [
+                    { "type": "ENSURE_SHEET", "sheetName": "Data" },
                     { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "FORMULA", "formula": "SUM(" } },
                     { "type": "EVALUATE_FORMULAS" }
                   ],

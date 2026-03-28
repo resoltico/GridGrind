@@ -476,6 +476,18 @@ class ExcelWorkbookTest {
     }
   }
 
+  @Test
+  void rejectsSheetNamesExceeding31Characters() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      String exactly31 = "A".repeat(31);
+      String tooLong = "A".repeat(32);
+
+      assertDoesNotThrow(() -> workbook.getOrCreateSheet(exactly31));
+      assertThrows(IllegalArgumentException.class, () -> workbook.getOrCreateSheet(tooLong));
+      assertThrows(IllegalArgumentException.class, () -> workbook.sheet(tooLong));
+    }
+  }
+
   private FormulaEvaluator failingEvaluator(FormulaEvaluator delegate) {
     InvocationHandler handler =
         new InvocationHandler() {

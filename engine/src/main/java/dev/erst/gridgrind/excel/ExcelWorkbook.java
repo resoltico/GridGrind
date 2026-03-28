@@ -63,7 +63,7 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   /** Returns the named sheet, creating it if necessary. */
   public ExcelSheet getOrCreateSheet(String sheetName) {
-    requireNonBlank(sheetName, "sheetName");
+    requireSheetName(sheetName, "sheetName");
 
     Sheet sheet = workbook.getSheet(sheetName);
     if (sheet == null) {
@@ -75,7 +75,7 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   /** Returns an existing sheet. */
   public ExcelSheet sheet(String sheetName) {
-    requireNonBlank(sheetName, "sheetName");
+    requireSheetName(sheetName, "sheetName");
 
     return new ExcelSheet(requiredSheet(sheetName), styleRegistry, formulaEvaluator);
   }
@@ -232,6 +232,13 @@ public final class ExcelWorkbook implements AutoCloseable {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
+    }
+  }
+
+  private static void requireSheetName(String value, String fieldName) {
+    requireNonBlank(value, fieldName);
+    if (value.length() > 31) {
+      throw new IllegalArgumentException(fieldName + " must not exceed 31 characters: " + value);
     }
   }
 

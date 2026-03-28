@@ -18,6 +18,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Properties;
 
 /** Thin command-line transport for the GridGrind protocol. */
 public final class GridGrindCli {
@@ -154,10 +155,12 @@ public final class GridGrindCli {
    */
   static String helpText(String implementationVersion) {
     String version = versionFrom(implementationVersion);
+    String description = descriptionFrom(GridGrindCli.class);
     String requestTemplate = requestTemplateText();
     String documentRef = documentRef(version);
     return """
         GridGrind CLI %s
+        %s
 
         Usage:
           gridgrind [--request <path>] [--response <path>]
@@ -178,13 +181,12 @@ public final class GridGrindCli {
         Docker File Example:
           docker run --rm -i \\
             -v "$(pwd)":/workdir \\
-            -w /workdir \\
             ghcr.io/resoltico/gridgrind:%s \\
-            --request request.json \\
-            --response response.json
+            --request /workdir/request.json \\
+            --response /workdir/response.json
 
           Paths passed in --request, --response, source.path, and persistence.path are resolved in
-          the current execution environment. In Docker, use mounted container paths.
+          the current execution environment. In Docker, use absolute mounted container paths.
 
         Discovery:
           gridgrind --print-request-template
@@ -205,6 +207,7 @@ public final class GridGrindCli {
         """
         .formatted(
             version,
+            description,
             indentBlock(requestTemplate),
             containerTag(version),
             documentRef,
@@ -221,6 +224,33 @@ public final class GridGrindCli {
       return "unknown";
     }
     return implementationVersion;
+  }
+
+  /**
+   * Loads the product description from the {@code gridgrind.properties} classpath resource bundled
+   * by the build, falling back to {@code "GridGrind"} when the resource is absent (e.g. when
+   * running from the test classpath before resources are processed).
+   */
+  static String descriptionFrom(Class<?> anchor) {
+    return descriptionFrom(anchor.getResourceAsStream("/gridgrind.properties"));
+  }
+
+  /**
+   * Loads the product description from the supplied stream, falling back to {@code "GridGrind"}
+   * when the stream is null, blank, or unreadable.
+   */
+  static String descriptionFrom(InputStream stream) {
+    if (stream == null) {
+      return "GridGrind";
+    }
+    try (stream) {
+      Properties properties = new Properties();
+      properties.load(stream);
+      String description = properties.getProperty("description", "");
+      return description.isBlank() ? "GridGrind" : description;
+    } catch (IOException exception) {
+      return "GridGrind";
+    }
   }
 
   private static String requestTemplateText() {

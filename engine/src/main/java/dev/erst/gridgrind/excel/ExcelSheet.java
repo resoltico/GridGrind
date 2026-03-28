@@ -325,10 +325,11 @@ public final class ExcelSheet {
     return cell.getCellFormula();
   }
 
-  /** Captures a formatted, typed snapshot of a single cell. */
+  /** Captures a formatted, typed snapshot of a single cell, returning blank for unwritten cells. */
   public ExcelCellSnapshot snapshotCell(String address) {
     requireNonBlank(address, "address");
-    return snapshot(address, requiredCell(address));
+    CellReference cellReference = parseCellReference(address);
+    return snapshotCellOrBlank(address, cellReference.getRow(), cellReference.getCol());
   }
 
   /** Captures exact snapshots for the provided ordered A1 addresses. */

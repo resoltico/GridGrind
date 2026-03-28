@@ -590,6 +590,39 @@ class GridGrindJsonTest {
         () -> GridGrindJson.writeProtocolCatalog(new ByteArrayOutputStream(), null));
   }
 
+  @Test
+  void rejectsUnknownJsonFieldsInRequest() {
+    assertThrows(
+        InvalidRequestShapeException.class,
+        () ->
+            GridGrindJson.readRequest(
+                """
+                {
+                  "source": { "type": "NEW" },
+                  "operations": [],
+                  "reads": [],
+                  "unknownTopLevelField": "surprise"
+                }
+                """
+                    .getBytes(StandardCharsets.UTF_8)));
+    assertThrows(
+        InvalidRequestShapeException.class,
+        () ->
+            GridGrindJson.readRequest(
+                """
+                {
+                  "source": { "type": "NEW" },
+                  "operations": [
+                    { "type": "SET_CELL", "sheetName": "Budget", "address": "A1",
+                      "value": { "type": "TEXT", "text": "hi" },
+                      "dataFormat": "#,##0" }
+                  ],
+                  "reads": []
+                }
+                """
+                    .getBytes(StandardCharsets.UTF_8)));
+  }
+
   /** ByteArrayInputStream that records whether {@code close()} was called. */
   private static final class TrackingInputStream extends ByteArrayInputStream {
     private boolean closed;

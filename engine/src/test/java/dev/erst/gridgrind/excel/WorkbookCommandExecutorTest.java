@@ -99,6 +99,57 @@ class WorkbookCommandExecutorTest {
   }
 
   @Test
+  void rejectsMutationCommandsWhenSheetDoesNotExist() throws IOException {
+    WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
+                  new WorkbookCommand.SetCell("Missing", "A1", ExcelCellValue.text("x"))));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
+                  new WorkbookCommand.SetRange(
+                      "Missing", "A1", List.of(List.of(ExcelCellValue.text("x"))))));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
+                  new WorkbookCommand.SetHyperlink(
+                      "Missing", "A1", new ExcelHyperlink.Document("Budget!A1"))));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
+                  new WorkbookCommand.SetComment(
+                      "Missing", "A1", new ExcelComment("Review", "GridGrind", false))));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
+                  new WorkbookCommand.ApplyStyle(
+                      "Missing",
+                      "A1",
+                      ExcelCellStyle.alignment(
+                          ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP))));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
+                  new WorkbookCommand.AppendRow("Missing", List.of(ExcelCellValue.text("x")))));
+    }
+  }
+
+  @Test
   void validatesNullWorkbooksCommandsAndCommandEntries() throws IOException {
     WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 

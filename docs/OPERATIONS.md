@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.10.0"
+version: "0.11.0"
 domain: OPERATIONS
 updated: "2026-03-28"
 route:
@@ -104,13 +104,17 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 
 Create a sheet if it does not already exist. Does nothing if the sheet exists.
 
+All mutation operations (`SET_CELL`, `SET_RANGE`, `CLEAR_RANGE`, `APPLY_STYLE`, `SET_HYPERLINK`,
+`CLEAR_HYPERLINK`, `SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the
+target sheet to already exist. Use `ENSURE_SHEET` before the first write to any sheet.
+
 ```json
 { "type": "ENSURE_SHEET", "sheetName": "Inventory" }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Name of the sheet to create. |
+| `sheetName` | Yes | Name of the sheet to create. Maximum 31 characters. |
 
 ---
 
@@ -756,8 +760,9 @@ Returns exact cell snapshots for one sheet and an ordered list of A1 addresses.
 | `sheetName` | Yes | Sheet that owns the requested cells. |
 | `addresses` | Yes | Ordered non-empty list of unique A1 cell addresses. |
 
-`GET_CELLS` fails with `CELL_NOT_FOUND` when any requested address does not refer to a physically
-present cell.
+`GET_CELLS` returns a blank-typed snapshot for any requested address that has never been written.
+Empty cells are valid cells; the read never fails with `CELL_NOT_FOUND` for addresses within a
+valid sheet. It does fail with `SHEET_NOT_FOUND` when the target sheet does not exist.
 
 ### GET_WINDOW
 

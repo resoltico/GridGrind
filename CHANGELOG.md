@@ -5,6 +5,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0] - 2026-03-28
+
+### Added
+
+- `--help` output now includes a one-line product description sourced from `gradle.properties`
+  as the single canonical definition.
+- Protocol catalog now enumerates five plain (non-polymorphic) request types:
+  `CommentInput`, `NamedRangeTarget`, `CellStyleInput`, `CellBorderInput`, and
+  `CellBorderSideInput`, with their required and optional fields listed.
+- Sheet name length validation: `ENSURE_SHEET`, `RENAME_SHEET`, `SET_NAMED_RANGE`, and every
+  other operation that accepts a `sheetName` now rejects names longer than 31 characters with
+  `INVALID_REQUEST` before any workbook state is touched.
+- Duplicate `requestId` detection in `GridGrindRequest`: construction fails at protocol
+  deserialization time when two or more reads share the same `requestId`.
+- Email hyperlink address validation: `HyperlinkTarget.Email` now rejects addresses that lack
+  `@`, have an empty local part, or have an empty domain with `INVALID_REQUEST`.
+
+### Changed
+
+- Unknown JSON fields in requests are now rejected with `INVALID_REQUEST_SHAPE` instead of
+  being silently ignored (`FAIL_ON_UNKNOWN_PROPERTIES` enabled on the protocol mapper).
+- Mutation operations (`SET_CELL`, `SET_RANGE`, `APPLY_STYLE`, `SET_HYPERLINK`, `SET_COMMENT`,
+  `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) now require the target sheet to exist; they no longer
+  auto-create it. Use `ENSURE_SHEET` before the first write to a sheet.
+- `GET_CELLS` now returns a blank-typed cell snapshot for addresses that have never been written
+  rather than returning `CELL_NOT_FOUND`. Empty cells are valid cells.
+- `FORMULA` cell input type description in `--print-protocol-catalog` now notes that the
+  leading `=` must be omitted; the engine adds it internally.
+
 ## [0.10.0] - 2026-03-28
 
 ### Added
@@ -272,7 +301,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.10.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.11.0...HEAD
+[0.11.0]: https://github.com/resoltico/GridGrind/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/resoltico/GridGrind/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/resoltico/GridGrind/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/resoltico/GridGrind/compare/v0.7.0...v0.8.0

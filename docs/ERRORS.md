@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.10.0"
+version: "0.11.0"
 domain: ERRORS
 updated: "2026-03-28"
 route:
@@ -79,9 +79,9 @@ route:
 | Code | Trigger |
 |:-----|:--------|
 | `WORKBOOK_NOT_FOUND` | `source.type=EXISTING` path does not exist. |
-| `SHEET_NOT_FOUND` | An operation or read references a sheet that does not exist, including sheet-management and structural-layout operations such as `RENAME_SHEET`, `DELETE_SHEET`, `MOVE_SHEET`, `MERGE_CELLS`, `UNMERGE_CELLS`, `SET_COLUMN_WIDTH`, `SET_ROW_HEIGHT`, or `FREEZE_PANES`. |
+| `SHEET_NOT_FOUND` | An operation or read references a sheet that does not exist. All mutation operations (`SET_CELL`, `SET_RANGE`, `APPLY_STYLE`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the sheet to exist; use `ENSURE_SHEET` first. |
 | `NAMED_RANGE_NOT_FOUND` | A named-range read selector or delete request references a workbook- or sheet-scoped name that does not exist. |
-| `CELL_NOT_FOUND` | A `GET_CELLS` read references a cell that has not been written. |
+| `CELL_NOT_FOUND` | A clear-hyperlink or clear-comment operation targets a cell that has not been written. `GET_CELLS` does not raise this error; it returns blank snapshots for unwritten cells. |
 
 ### I/O (`IO` category)
 

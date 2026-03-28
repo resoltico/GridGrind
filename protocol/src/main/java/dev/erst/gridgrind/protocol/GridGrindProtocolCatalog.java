@@ -216,7 +216,10 @@ public final class GridGrindProtocolCatalog {
                   descriptor(CellInput.Date.class, "DATE", "Write an ISO-8601 date value."),
                   descriptor(
                       CellInput.DateTime.class, "DATE_TIME", "Write an ISO-8601 date-time value."),
-                  descriptor(CellInput.Formula.class, "FORMULA", "Write an Excel formula."))),
+                  descriptor(
+                      CellInput.Formula.class,
+                      "FORMULA",
+                      "Write an Excel formula. Omit the leading = sign; the engine adds it internally."))),
           nestedTypeGroup(
               "hyperlinkTargetTypes",
               HyperlinkTarget.class,
@@ -297,6 +300,58 @@ public final class GridGrindProtocolCatalog {
                       FontHeightInput.Twips.class,
                       "TWIPS",
                       "Specify font height in exact twips."))));
+  private static final List<PlainTypeGroup> PLAIN_TYPE_GROUPS =
+      List.of(
+          plainTypeGroup(
+              "commentInputType",
+              plainDescriptor(
+                  CommentInput.class,
+                  "CommentInput",
+                  "Plain-text comment payload attached to one cell.",
+                  List.of("visible"))),
+          plainTypeGroup(
+              "namedRangeTargetType",
+              plainDescriptor(
+                  NamedRangeTarget.class,
+                  "NamedRangeTarget",
+                  "Explicit sheet name and A1-style range address for named-range authoring.",
+                  List.of())),
+          plainTypeGroup(
+              "cellStyleInputType",
+              plainDescriptor(
+                  CellStyleInput.class,
+                  "CellStyleInput",
+                  "Style patch applied to a cell or range; at least one field must be set."
+                      + " Colors use #RRGGBB hex.",
+                  List.of(
+                      "numberFormat",
+                      "bold",
+                      "italic",
+                      "wrapText",
+                      "horizontalAlignment",
+                      "verticalAlignment",
+                      "fontName",
+                      "fontHeight",
+                      "fontColor",
+                      "underline",
+                      "strikeout",
+                      "fillColor",
+                      "border"))),
+          plainTypeGroup(
+              "cellBorderInputType",
+              plainDescriptor(
+                  CellBorderInput.class,
+                  "CellBorderInput",
+                  "Border patch for cell styling; at least one side must be set."
+                      + " Use 'all' as shorthand for all four sides.",
+                  List.of("all", "top", "right", "bottom", "left"))),
+          plainTypeGroup(
+              "cellBorderSideInputType",
+              plainDescriptor(
+                  CellBorderSideInput.class,
+                  "CellBorderSideInput",
+                  "One border side defined by its border style.",
+                  List.of())));
   private static final Catalog CATALOG = buildCatalog();
 
   private GridGrindProtocolCatalog() {}
@@ -326,7 +381,8 @@ public final class GridGrindProtocolCatalog {
         publicEntries(PERSISTENCE_TYPES),
         publicEntries(OPERATION_TYPES),
         publicEntries(READ_TYPES),
-        NESTED_TYPE_GROUPS.stream().map(GridGrindProtocolCatalog::publicGroup).toList());
+        NESTED_TYPE_GROUPS.stream().map(GridGrindProtocolCatalog::publicGroup).toList(),
+        List.copyOf(PLAIN_TYPE_GROUPS));
   }
 
   private static NestedTypeGroup publicGroup(NestedTypeDescriptor descriptor) {
@@ -340,6 +396,16 @@ public final class GridGrindProtocolCatalog {
   private static NestedTypeDescriptor nestedTypeGroup(
       String group, Class<?> sealedType, List<TypeDescriptor> typeDescriptors) {
     return new NestedTypeDescriptor(group, sealedType, typeDescriptors);
+  }
+
+  private static PlainTypeGroup plainTypeGroup(String group, TypeEntry typeEntry) {
+    return new PlainTypeGroup(group, typeEntry);
+  }
+
+  private static TypeEntry plainDescriptor(
+      Class<? extends Record> recordType, String id, String summary, List<String> optionalFields) {
+    return new TypeEntry(
+        id, summary, requiredFields(recordType, optionalFields), List.copyOf(optionalFields));
   }
 
   private static TypeDescriptor descriptor(
@@ -459,7 +525,8 @@ public final class GridGrindProtocolCatalog {
       List<TypeEntry> persistenceTypes,
       List<TypeEntry> operationTypes,
       List<TypeEntry> readTypes,
-      List<NestedTypeGroup> nestedTypes) {
+      List<NestedTypeGroup> nestedTypes,
+      List<PlainTypeGroup> plainTypes) {
     public Catalog {
       protocolVersion =
           protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
@@ -469,6 +536,7 @@ public final class GridGrindProtocolCatalog {
       operationTypes = copyEntries(operationTypes, "operationTypes");
       readTypes = copyEntries(readTypes, "readTypes");
       nestedTypes = copyGroups(nestedTypes, "nestedTypes");
+      plainTypes = copyPlainGroups(plainTypes, "plainTypes");
     }
   }
 
@@ -491,6 +559,14 @@ public final class GridGrindProtocolCatalog {
     }
   }
 
+  /** JSON-serializable named group describing one plain record type with its field shape. */
+  public record PlainTypeGroup(String group, TypeEntry type) {
+    public PlainTypeGroup {
+      group = requireNonBlank(group, "group");
+      Objects.requireNonNull(type, "type must not be null");
+    }
+  }
+
   private static List<TypeEntry> copyEntries(List<TypeEntry> entries, String fieldName) {
     Objects.requireNonNull(entries, fieldName + " must not be null");
     List<TypeEntry> copy = List.copyOf(entries);
@@ -504,6 +580,16 @@ public final class GridGrindProtocolCatalog {
     Objects.requireNonNull(groups, fieldName + " must not be null");
     List<NestedTypeGroup> copy = List.copyOf(groups);
     for (NestedTypeGroup group : copy) {
+      Objects.requireNonNull(group, fieldName + " must not contain nulls");
+    }
+    return copy;
+  }
+
+  private static List<PlainTypeGroup> copyPlainGroups(
+      List<PlainTypeGroup> groups, String fieldName) {
+    Objects.requireNonNull(groups, fieldName + " must not be null");
+    List<PlainTypeGroup> copy = List.copyOf(groups);
+    for (PlainTypeGroup group : copy) {
       Objects.requireNonNull(group, fieldName + " must not contain nulls");
     }
     return copy;

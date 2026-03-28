@@ -1,0 +1,15 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Data" },
+    {
+      "type": "SET_HYPERLINK",
+      "sheetName": "Data",
+      "address": "A1",
+      "target": { "type": "EMAIL", "email": "notanemail" }
+    }
+  ],
+  "reads": []
+}

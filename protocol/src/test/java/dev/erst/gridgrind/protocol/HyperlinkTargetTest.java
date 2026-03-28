@@ -35,4 +35,17 @@ class HyperlinkTargetTest {
     assertThrows(NullPointerException.class, () -> new HyperlinkTarget.Document(null));
     assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.Document(" "));
   }
+
+  @Test
+  void emailRejectsAddressWithoutAtSign() {
+    assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.Email("notanemail"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new HyperlinkTarget.Email("mailto:notanemail"));
+  }
+
+  @Test
+  void emailRejectsAddressWithEmptyLocalPartOrDomain() {
+    assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.Email("@example.com"));
+    assertThrows(IllegalArgumentException.class, () -> new HyperlinkTarget.Email("user@"));
+  }
 }
