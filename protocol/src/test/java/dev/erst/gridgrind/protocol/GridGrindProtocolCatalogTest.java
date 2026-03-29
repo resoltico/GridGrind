@@ -96,6 +96,86 @@ class GridGrindProtocolCatalogTest {
             .findFirst()
             .orElseThrow();
     assertTrue(borderSideGroup.type().requiredFields().contains("style"));
+    assertFalse(
+        borderSideGroup.type().fieldEnumValues().isEmpty(),
+        "cellBorderSideInputType should expose enum values for 'style'");
+    assertTrue(
+        borderSideGroup.type().fieldEnumValues().get("style").contains("THIN"),
+        "border style enum values should include THIN");
+    assertTrue(
+        borderSideGroup.type().fieldEnumValues().get("style").contains("NONE"),
+        "border style enum values should include NONE");
+
+    GridGrindProtocolCatalog.PlainTypeGroup styleGroup =
+        catalog.plainTypes().stream()
+            .filter(g -> "cellStyleInputType".equals(g.group()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(
+        styleGroup.type().fieldEnumValues().get("horizontalAlignment").contains("GENERAL"),
+        "horizontalAlignment enum values should include GENERAL");
+    assertTrue(
+        styleGroup.type().fieldEnumValues().get("verticalAlignment").contains("BOTTOM"),
+        "verticalAlignment enum values should include BOTTOM");
+
+    GridGrindProtocolCatalog.TypeEntry newSourceEntry =
+        catalog.sourceTypes().stream().filter(e -> "NEW".equals(e.id())).findFirst().orElseThrow();
+    assertTrue(
+        newSourceEntry.summary().contains("zero sheets"),
+        "NEW source summary must mention zero sheets");
+    assertTrue(
+        newSourceEntry.summary().contains("ENSURE_SHEET"),
+        "NEW source summary must mention ENSURE_SHEET");
+
+    GridGrindProtocolCatalog.TypeEntry getWindowEntry =
+        catalog.readTypes().stream()
+            .filter(e -> "GET_WINDOW".equals(e.id()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(
+        getWindowEntry.summary().contains("250000"),
+        "GET_WINDOW summary must state the max cell limit");
+
+    GridGrindProtocolCatalog.TypeEntry ensureSheetEntry =
+        catalog.operationTypes().stream()
+            .filter(e -> "ENSURE_SHEET".equals(e.id()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(
+        ensureSheetEntry.summary().contains("31"),
+        "ENSURE_SHEET summary must state the 31-character sheet name limit");
+
+    GridGrindProtocolCatalog.TypeEntry setColumnWidthEntry =
+        catalog.operationTypes().stream()
+            .filter(e -> "SET_COLUMN_WIDTH".equals(e.id()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(
+        setColumnWidthEntry.summary().contains("255"),
+        "SET_COLUMN_WIDTH summary must state the 255-unit column width limit");
+
+    GridGrindProtocolCatalog.TypeEntry setRowHeightEntry =
+        catalog.operationTypes().stream()
+            .filter(e -> "SET_ROW_HEIGHT".equals(e.id()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(
+        setRowHeightEntry.summary().contains("1638"),
+        "SET_ROW_HEIGHT summary must state the row height limit");
+
+    GridGrindProtocolCatalog.TypeEntry dateEntry =
+        catalog.nestedTypes().stream()
+            .filter(g -> "cellInputTypes".equals(g.group()))
+            .findFirst()
+            .orElseThrow()
+            .types()
+            .stream()
+            .filter(t -> "DATE".equals(t.id()))
+            .findFirst()
+            .orElseThrow();
+    assertTrue(
+        dateEntry.summary().contains("NUMERIC"),
+        "DATE summary must note that read-back declaredType is NUMERIC");
 
     assertEquals(catalog, decoded);
   }
@@ -320,6 +400,9 @@ class GridGrindProtocolCatalogTest {
     assertThrows(
         NullPointerException.class,
         () -> new GridGrindProtocolCatalog.PlainTypeGroup("commentInputType", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new GridGrindProtocolCatalog.TypeEntry("ID", "Summary", List.of(), List.of(), null));
   }
 
   private static List<String> ids(List<GridGrindProtocolCatalog.TypeEntry> entries) {

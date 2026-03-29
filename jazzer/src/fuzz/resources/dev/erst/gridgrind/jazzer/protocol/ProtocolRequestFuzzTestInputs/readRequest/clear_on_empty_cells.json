@@ -1,0 +1,15 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Data" },
+    { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "TEXT", "text": "anchor" } },
+    { "type": "CLEAR_RANGE", "sheetName": "Data", "range": "B2:E5" },
+    { "type": "CLEAR_HYPERLINK", "sheetName": "Data", "address": "Z100" },
+    { "type": "CLEAR_COMMENT", "sheetName": "Data", "address": "Z100" }
+  ],
+  "reads": [
+    { "type": "GET_SHEET_SUMMARY", "requestId": "summary", "sheetName": "Data" }
+  ]
+}

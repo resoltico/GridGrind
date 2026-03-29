@@ -2,6 +2,9 @@ package dev.erst.gridgrind.protocol;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import java.lang.reflect.RecordComponent;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -27,7 +30,8 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               GridGrindRequest.WorkbookSource.New.class,
               "NEW",
-              "Create a brand-new empty workbook."),
+              "Create a brand-new empty workbook. A new workbook starts with zero sheets;"
+                  + " use ENSURE_SHEET to create the first sheet."),
           descriptor(
               GridGrindRequest.WorkbookSource.ExistingFile.class,
               "EXISTING",
@@ -45,15 +49,23 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               GridGrindRequest.WorkbookPersistence.SaveAs.class,
               "SAVE_AS",
-              "Save the workbook to a new .xlsx path."));
+              "Save the workbook to a new .xlsx path."
+                  + " The response includes requestedPath (the literal path from the request)"
+                  + " and executionPath (the absolute normalized path where the file was written);"
+                  + " they differ when a relative path or a path with .. segments is supplied."
+                  + " Missing parent directories are created automatically."));
   private static final List<TypeDescriptor> OPERATION_TYPES =
       List.of(
           descriptor(
               WorkbookOperation.EnsureSheet.class,
               "ENSURE_SHEET",
-              "Create the sheet if it does not already exist."),
+              "Create the sheet if it does not already exist."
+                  + " Sheet names must not exceed 31 characters (Excel limit)."),
           descriptor(
-              WorkbookOperation.RenameSheet.class, "RENAME_SHEET", "Rename an existing sheet."),
+              WorkbookOperation.RenameSheet.class,
+              "RENAME_SHEET",
+              "Rename an existing sheet."
+                  + " The new name must not exceed 31 characters (Excel limit)."),
           descriptor(
               WorkbookOperation.DeleteSheet.class, "DELETE_SHEET", "Delete an existing sheet."),
           descriptor(
@@ -71,11 +83,13 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookOperation.SetColumnWidth.class,
               "SET_COLUMN_WIDTH",
-              "Set one or more column widths in Excel character units."),
+              "Set one or more column widths in Excel character units."
+                  + " widthCharacters must be > 0 and <= 255 (Excel column width limit)."),
           descriptor(
               WorkbookOperation.SetRowHeight.class,
               "SET_ROW_HEIGHT",
-              "Set one or more row heights in Excel point units."),
+              "Set one or more row heights in Excel point units."
+                  + " heightPoints must be > 0 and <= 1638.35 (Excel row height limit: 32767 twips)."),
           descriptor(
               WorkbookOperation.FreezePanes.class,
               "FREEZE_PANES",
@@ -99,7 +113,7 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookOperation.ClearHyperlink.class,
               "CLEAR_HYPERLINK",
-              "Remove the hyperlink from one existing cell."),
+              "Remove the hyperlink from one cell; no-op when the cell does not physically exist."),
           descriptor(
               WorkbookOperation.SetComment.class,
               "SET_COMMENT",
@@ -107,7 +121,7 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookOperation.ClearComment.class,
               "CLEAR_COMMENT",
-              "Remove the comment from one existing cell."),
+              "Remove the comment from one cell; no-op when the cell does not physically exist."),
           descriptor(
               WorkbookOperation.ApplyStyle.class,
               "APPLY_STYLE",
@@ -149,15 +163,30 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.GetSheetSummary.class,
               "GET_SHEET_SUMMARY",
-              "Return structural summary facts for one sheet."),
+              "Return structural summary facts for one sheet."
+                  + " physicalRowCount is the number of physically materialized rows (sparse)."
+                  + " lastRowIndex is the 0-based index of the last populated row (-1 when empty)."
+                  + " lastColumnIndex is the 0-based index of the last populated column"
+                  + " in any row (-1 when empty)."),
           descriptor(
               WorkbookReadOperation.GetCells.class,
               "GET_CELLS",
-              "Return exact cell snapshots for explicit addresses."),
+              "Return exact cell snapshots for explicit addresses."
+                  + " Each snapshot includes address, declaredType, effectiveType, displayValue,"
+                  + " style, and metadata fields. Type-specific fields: stringValue (STRING),"
+                  + " numberValue (NUMERIC), booleanValue (BOOLEAN), errorValue (ERROR),"
+                  + " formula and evaluation (FORMULA). style.fontHeight is a plain object with"
+                  + " both twips and points fields, not the discriminated FontHeightInput write"
+                  + " format."),
           descriptor(
               WorkbookReadOperation.GetWindow.class,
               "GET_WINDOW",
-              "Return a rectangular window of cell snapshots."),
+              "Return a rectangular window of cell snapshots."
+                  + " rowCount * columnCount must not exceed "
+                  + WorkbookReadOperation.MAX_WINDOW_CELLS
+                  + ". Each cell snapshot has the same shape as GET_CELLS: address,"
+                  + " declaredType, effectiveType, displayValue, style, metadata,"
+                  + " and type-specific value fields."),
           descriptor(
               WorkbookReadOperation.GetMergedRegions.class,
               "GET_MERGED_REGIONS",
@@ -181,7 +210,12 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.GetSheetSchema.class,
               "GET_SHEET_SCHEMA",
-              "Infer a simple schema from a rectangular sheet window."),
+              "Infer a simple schema from a rectangular sheet window."
+                  + " rowCount * columnCount must not exceed "
+                  + WorkbookReadOperation.MAX_WINDOW_CELLS
+                  + "."
+                  + " The first row is treated as the header; dataRowCount is 0 when all header"
+                  + " cells are blank."),
           descriptor(
               WorkbookReadOperation.GetNamedRangeSurface.class,
               "GET_NAMED_RANGE_SURFACE",
@@ -213,9 +247,16 @@ public final class GridGrindProtocolCatalog {
                   descriptor(CellInput.Numeric.class, "NUMBER", "Write a numeric cell value."),
                   descriptor(
                       CellInput.BooleanValue.class, "BOOLEAN", "Write a boolean cell value."),
-                  descriptor(CellInput.Date.class, "DATE", "Write an ISO-8601 date value."),
                   descriptor(
-                      CellInput.DateTime.class, "DATE_TIME", "Write an ISO-8601 date-time value."),
+                      CellInput.Date.class,
+                      "DATE",
+                      "Write an ISO-8601 date value."
+                          + " Stored as an Excel serial number; GET_CELLS returns declaredType=NUMERIC with a formatted displayValue."),
+                  descriptor(
+                      CellInput.DateTime.class,
+                      "DATE_TIME",
+                      "Write an ISO-8601 date-time value."
+                          + " Stored as an Excel serial number; GET_CELLS returns declaredType=NUMERIC with a formatted displayValue."),
                   descriptor(
                       CellInput.Formula.class,
                       "FORMULA",
@@ -295,11 +336,17 @@ public final class GridGrindProtocolCatalog {
                   descriptor(
                       FontHeightInput.Points.class,
                       "POINTS",
-                      "Specify font height in point units."),
+                      "Specify font height in point units."
+                          + " Write format: {\"type\":\"POINTS\",\"points\":13}."
+                          + " Read-back (GET_CELLS, GET_WINDOW): style.fontHeight is"
+                          + " {\"twips\":260,\"points\":13} with both fields present,"
+                          + " not this discriminated type format."),
                   descriptor(
                       FontHeightInput.Twips.class,
                       "TWIPS",
-                      "Specify font height in exact twips."))));
+                      "Specify font height in exact twips (20 twips = 1 point)."
+                          + " Write format: {\"type\":\"TWIPS\",\"twips\":260}."
+                          + " Read-back returns the same plain object shape as POINTS."))));
   private static final List<PlainTypeGroup> PLAIN_TYPE_GROUPS =
       List.of(
           plainTypeGroup(
@@ -336,7 +383,12 @@ public final class GridGrindProtocolCatalog {
                       "underline",
                       "strikeout",
                       "fillColor",
-                      "border"))),
+                      "border"),
+                  Map.of(
+                      "horizontalAlignment",
+                      enumNames(ExcelHorizontalAlignment.values()),
+                      "verticalAlignment",
+                      enumNames(ExcelVerticalAlignment.values())))),
           plainTypeGroup(
               "cellBorderInputType",
               plainDescriptor(
@@ -351,7 +403,8 @@ public final class GridGrindProtocolCatalog {
                   CellBorderSideInput.class,
                   "CellBorderSideInput",
                   "One border side defined by its border style.",
-                  List.of())));
+                  List.of(),
+                  Map.of("style", enumNames(ExcelBorderStyle.values())))));
   private static final Catalog CATALOG = buildCatalog();
 
   private GridGrindProtocolCatalog() {}
@@ -406,6 +459,20 @@ public final class GridGrindProtocolCatalog {
       Class<? extends Record> recordType, String id, String summary, List<String> optionalFields) {
     return new TypeEntry(
         id, summary, requiredFields(recordType, optionalFields), List.copyOf(optionalFields));
+  }
+
+  private static TypeEntry plainDescriptor(
+      Class<? extends Record> recordType,
+      String id,
+      String summary,
+      List<String> optionalFields,
+      Map<String, List<String>> fieldEnumValues) {
+    return new TypeEntry(
+        id,
+        summary,
+        requiredFields(recordType, optionalFields),
+        List.copyOf(optionalFields),
+        fieldEnumValues);
   }
 
   private static TypeDescriptor descriptor(
@@ -540,14 +607,30 @@ public final class GridGrindProtocolCatalog {
     }
   }
 
-  /** JSON-serializable type entry describing one request or nested union variant. */
+  /**
+   * JSON-serializable type entry describing one request or nested union variant.
+   *
+   * <p>{@code fieldEnumValues} maps optional and required field names to their valid string values
+   * for fields that accept a finite enumerated set. Empty when no fields have enumerated values.
+   */
   public record TypeEntry(
-      String id, String summary, List<String> requiredFields, List<String> optionalFields) {
+      String id,
+      String summary,
+      List<String> requiredFields,
+      List<String> optionalFields,
+      Map<String, List<String>> fieldEnumValues) {
     public TypeEntry {
       id = requireNonBlank(id, "id");
       summary = requireNonBlank(summary, "summary");
       requiredFields = copyStrings(requiredFields, "requiredFields");
       optionalFields = copyStrings(optionalFields, "optionalFields");
+      fieldEnumValues = copyEnumValues(fieldEnumValues, "fieldEnumValues");
+    }
+
+    /** Convenience constructor for entries with no enumerated field constraints. */
+    public TypeEntry(
+        String id, String summary, List<String> requiredFields, List<String> optionalFields) {
+      this(id, summary, requiredFields, optionalFields, Map.of());
     }
   }
 
@@ -602,6 +685,27 @@ public final class GridGrindProtocolCatalog {
       requireNonBlank(value, fieldName);
     }
     return copy;
+  }
+
+  private static List<String> enumNames(Enum<?>[] values) {
+    return Arrays.stream(values).map(Enum::name).toList();
+  }
+
+  private static Map<String, List<String>> copyEnumValues(
+      Map<String, List<String>> values, String fieldName) {
+    Objects.requireNonNull(values, fieldName + " must not be null");
+    return values.entrySet().stream()
+        .collect(
+            Collectors.toUnmodifiableMap(
+                e -> {
+                  Objects.requireNonNull(e.getKey(), fieldName + " keys must not be null");
+                  return e.getKey();
+                },
+                e -> {
+                  Objects.requireNonNull(
+                      e.getValue(), fieldName + " values must not be null for key: " + e.getKey());
+                  return List.copyOf(e.getValue());
+                }));
   }
 
   private static String requireNonBlank(String value, String fieldName) {

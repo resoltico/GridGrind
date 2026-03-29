@@ -216,7 +216,10 @@ final class ExcelWorkbookIntrospector {
     WorkbookReadResult.Window window =
         sheetIntrospector.window(sheet, topLeftAddress, rowCount, columnCount);
     int topLeftColumn = new CellReference(topLeftAddress).getCol();
-    int dataRowCount = Math.max(0, rowCount - 1);
+    boolean headerRowIsBlank =
+        window.rows().getFirst().cells().stream()
+            .allMatch(cell -> "BLANK".equals(cell.effectiveType()));
+    int dataRowCount = headerRowIsBlank ? 0 : Math.max(0, rowCount - 1);
 
     List<WorkbookReadResult.SchemaColumn> columns = new ArrayList<>(columnCount);
     for (int columnOffset = 0; columnOffset < columnCount; columnOffset++) {

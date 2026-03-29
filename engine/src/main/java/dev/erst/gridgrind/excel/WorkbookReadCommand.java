@@ -68,6 +68,13 @@ public sealed interface WorkbookReadCommand
     }
   }
 
+  /**
+   * Maximum number of cells ({@code rowCount * columnCount}) permitted in a single window command.
+   * Enforced in both the protocol and engine layers to prevent out-of-memory failures during
+   * cell-grid serialization. See docs/LIMITATIONS.md LIM-001.
+   */
+  int MAX_WINDOW_CELLS = 250_000; // LIM-001
+
   /** Returns a rectangular window of cell snapshots anchored at the provided top-left address. */
   record GetWindow(
       String requestId, String sheetName, String topLeftAddress, int rowCount, int columnCount)
@@ -78,6 +85,7 @@ public sealed interface WorkbookReadCommand
       topLeftAddress = requireNonBlank(topLeftAddress, "topLeftAddress");
       requirePositive(rowCount, "rowCount");
       requirePositive(columnCount, "columnCount");
+      requireWindowSize(rowCount, columnCount);
     }
   }
 
@@ -136,6 +144,7 @@ public sealed interface WorkbookReadCommand
       topLeftAddress = requireNonBlank(topLeftAddress, "topLeftAddress");
       requirePositive(rowCount, "rowCount");
       requirePositive(columnCount, "columnCount");
+      requireWindowSize(rowCount, columnCount);
     }
   }
 
@@ -192,6 +201,14 @@ public sealed interface WorkbookReadCommand
   private static void requirePositive(int value, String fieldName) {
     if (value <= 0) {
       throw new IllegalArgumentException(fieldName + " must be greater than 0");
+    }
+  }
+
+  private static void requireWindowSize(int rowCount, int columnCount) {
+    long cells = (long) rowCount * columnCount;
+    if (cells > MAX_WINDOW_CELLS) {
+      throw new IllegalArgumentException(
+          "rowCount * columnCount must not exceed " + MAX_WINDOW_CELLS + " but was " + cells);
     }
   }
 

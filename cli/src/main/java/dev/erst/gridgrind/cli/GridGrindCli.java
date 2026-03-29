@@ -170,7 +170,17 @@ public final class GridGrindCli {
           gridgrind --version
 
         Execution:
-          GridGrind runs operations first, then reads, then persistence; if any step fails, no workbook is written.
+          GridGrind runs operations first, then reads, then saves the workbook (unless persistence is NONE); if any step fails, no workbook is written.
+          A NEW workbook starts with zero sheets; use ENSURE_SHEET to create the first sheet.
+
+        Limits:
+          File format:              .xlsx only; .xls, .xlsm, and .xlsb are rejected.
+          Sheet names:              1 to 31 characters (Excel limit).
+          GET_WINDOW cell count:    rowCount * columnCount must not exceed 250,000.
+          GET_SHEET_SCHEMA cells:   rowCount * columnCount must not exceed 250,000.
+          Column widthCharacters:   > 0 and <= 255 (Excel limit).
+          Row heightPoints:         > 0 and <= 1638.35 (Excel limit: 32767 twips).
+          DATE / DATE_TIME inputs:  stored as numeric serial; GET_CELLS returns declaredType=NUMERIC.
 
         Minimal Valid Request:
         %s

@@ -90,10 +90,17 @@ public final class ExcelSheet {
     requireNonBlank(range, "range");
     ExcelRange excelRange = parseRange(range);
     for (int rowIndex = excelRange.firstRow(); rowIndex <= excelRange.lastRow(); rowIndex++) {
+      Row row = sheet.getRow(rowIndex);
+      if (row == null) {
+        continue;
+      }
       for (int columnIndex = excelRange.firstColumn();
           columnIndex <= excelRange.lastColumn();
           columnIndex++) {
-        Cell cell = getOrCreateCell(rowIndex, columnIndex);
+        Cell cell = row.getCell(columnIndex);
+        if (cell == null) {
+          continue;
+        }
         resetToDefaultStyle(cell);
         cell.removeHyperlink();
         cell.removeCellComment();
@@ -118,10 +125,13 @@ public final class ExcelSheet {
     return this;
   }
 
-  /** Removes any hyperlink attached to one existing cell. */
+  /** Removes any hyperlink attached to one cell; no-op when the cell does not physically exist. */
   public ExcelSheet clearHyperlink(String address) {
     requireNonBlank(address, "address");
-    requiredCell(address).removeHyperlink();
+    Cell cell = optionalCell(address);
+    if (cell != null) {
+      cell.removeHyperlink();
+    }
     return this;
   }
 
@@ -136,10 +146,13 @@ public final class ExcelSheet {
     return this;
   }
 
-  /** Removes any comment attached to one existing cell. */
+  /** Removes any comment attached to one cell; no-op when the cell does not physically exist. */
   public ExcelSheet clearComment(String address) {
     requireNonBlank(address, "address");
-    requiredCell(address).removeCellComment();
+    Cell cell = optionalCell(address);
+    if (cell != null) {
+      cell.removeCellComment();
+    }
     return this;
   }
 
@@ -657,6 +670,16 @@ public final class ExcelSheet {
     }
 
     return cell;
+  }
+
+  // Returns the cell at the given address, or null when the row or cell does not physically exist.
+  private Cell optionalCell(String address) {
+    CellReference cellReference = parseCellReference(address);
+    Row row = sheet.getRow(cellReference.getRow());
+    if (row == null) {
+      return null;
+    }
+    return row.getCell(cellReference.getCol());
   }
 
   private Cell getOrCreateCell(int rowIndex, int columnIndex) {

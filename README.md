@@ -38,6 +38,15 @@ No install required beyond Docker. Works on macOS, Linux, and Windows across bot
 docker pull ghcr.io/resoltico/gridgrind:latest
 ```
 
+To pin to a specific release instead of tracking `latest`:
+
+```bash
+docker pull ghcr.io/resoltico/gridgrind:0.12.0
+```
+
+The container registry retains the last 5 releases. For older versions, download the fat JAR
+directly from the [Releases page](https://github.com/resoltico/GridGrind/releases).
+
 Pipe a JSON request to stdin, receive a JSON response on stdout:
 
 ```bash
@@ -129,9 +138,9 @@ autonomous callers deterministic failure semantics instead of "error after side 
 | `SET_RANGE` | Write a rectangular grid of typed values |
 | `CLEAR_RANGE` | Remove all values and styles from a rectangular range |
 | `SET_HYPERLINK` | Attach a hyperlink to a single cell |
-| `CLEAR_HYPERLINK` | Remove a hyperlink from a single existing cell |
+| `CLEAR_HYPERLINK` | Remove a hyperlink from a cell; no-op when the cell does not exist |
 | `SET_COMMENT` | Attach a plain-text comment to a single cell |
-| `CLEAR_COMMENT` | Remove a comment from a single existing cell |
+| `CLEAR_COMMENT` | Remove a comment from a cell; no-op when the cell does not exist |
 | `APPLY_STYLE` | Apply number formats, font styling, fills, borders, alignment, or wrap to a range |
 | `SET_NAMED_RANGE` | Create or replace one workbook- or sheet-scoped named range |
 | `DELETE_NAMED_RANGE` | Remove one existing workbook- or sheet-scoped named range |
@@ -164,7 +173,9 @@ author, and visible state. `SET_NAMED_RANGE` and `DELETE_NAMED_RANGE` work on wo
 scope with explicit sheet-qualified cell or range targets. Analysis can now return cell
 `hyperlink()` and `comment()` metadata plus workbook-level `namedRanges`.
 
-`CLEAR_RANGE` removes value, style, hyperlink, and comment state from the addressed rectangle.
+`CLEAR_RANGE` removes value, style, hyperlink, and comment state from the addressed rectangle;
+cells that have never been written are silently skipped. `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are
+no-ops when the addressed cell does not physically exist.
 
 See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the full reference with all fields and examples.
 
@@ -197,6 +208,12 @@ Analysis reads:
 
 Every read carries a caller-defined `requestId`, and every result echoes that `requestId` back so
 agents can correlate repeated or similar reads deterministically.
+
+`GET_WINDOW` and `GET_SHEET_SCHEMA` require `rowCount * columnCount` ≤ 250,000. This is a
+GridGrind operational limit (not an Excel or Apache POI limit) to prevent out-of-memory failures
+during JSON serialization in bounded-heap environments. For large sheets, use `GET_SHEET_SUMMARY`
+to discover the populated region and tile it with multiple bounded window reads. See
+[docs/LIMITATIONS.md](docs/LIMITATIONS.md) for the full limit reference.
 
 ---
 
@@ -324,6 +341,7 @@ version string.
 | [docs/OPERATIONS.md](docs/OPERATIONS.md) | Complete operation reference with all fields |
 | [docs/ERRORS.md](docs/ERRORS.md) | Problem codes, categories, and error model |
 | [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) | Copy-paste JSON for every operation type |
+| [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | All hard limits: window size, Excel maximums, memory |
 | [examples/](examples/) | Runnable request files |
 
 ---

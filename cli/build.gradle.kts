@@ -23,6 +23,7 @@ tasks.named<JavaExec>("run") {
 
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     archiveBaseName = "gridgrind"
+    archiveVersion = ""
     archiveClassifier = ""
 
     // Merge ServiceLoader registrations from all bundled JARs.

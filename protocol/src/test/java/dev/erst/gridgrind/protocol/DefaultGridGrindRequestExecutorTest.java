@@ -1074,10 +1074,10 @@ class DefaultGridGrindRequestExecutorTest {
         new GridGrindRequest.WorkbookPersistence.SaveAs("/tmp/out.xlsx");
 
     assertEquals(
-        Path.of("/tmp/out.xlsx").toAbsolutePath().toString(),
+        Path.of("/tmp/out.xlsx").toAbsolutePath().normalize().toString(),
         executor.persistencePath(newSource, saveAs));
     assertEquals(
-        Path.of("/tmp/source.xlsx").toAbsolutePath().toString(),
+        Path.of("/tmp/source.xlsx").toAbsolutePath().normalize().toString(),
         executor.persistencePath(existingFile, overwrite));
     assertNull(executor.persistencePath(newSource, overwrite));
     assertNull(executor.persistencePath(newSource, none));
@@ -1099,6 +1099,41 @@ class DefaultGridGrindRequestExecutorTest {
                       new GridGrindRequest.WorkbookPersistence.OverwriteSource()));
 
       assertEquals("OVERWRITE persistence requires an EXISTING source", exception.getMessage());
+    }
+  }
+
+  @Test
+  void persistencePathNormalizesDoubleDotSegments() {
+    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    GridGrindRequest.WorkbookSource newSource = new GridGrindRequest.WorkbookSource.New();
+    GridGrindRequest.WorkbookPersistence saveAs =
+        new GridGrindRequest.WorkbookPersistence.SaveAs("/tmp/subdir/../out.xlsx");
+
+    assertEquals("/tmp/out.xlsx", executor.persistencePath(newSource, saveAs));
+  }
+
+  @Test
+  void persistWorkbookSaveAsReportsNormalizedExecutionPath() throws Exception {
+    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    Path tempDir = Files.createTempDirectory("gridgrind-normalize-test-");
+    Path subDir = Files.createDirectory(tempDir.resolve("subdir"));
+    String pathWithDotDot = subDir + "/../out.xlsx";
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      GridGrindResponse.PersistenceOutcome outcome =
+          executor.persistWorkbook(
+              workbook,
+              new GridGrindRequest.WorkbookSource.New(),
+              new GridGrindRequest.WorkbookPersistence.SaveAs(pathWithDotDot));
+
+      GridGrindResponse.PersistenceOutcome.SavedAs savedAs =
+          assertInstanceOf(GridGrindResponse.PersistenceOutcome.SavedAs.class, outcome);
+      assertEquals(pathWithDotDot, savedAs.requestedPath());
+      assertEquals(tempDir.resolve("out.xlsx").toString(), savedAs.executionPath());
+    } finally {
+      Files.deleteIfExists(tempDir.resolve("out.xlsx"));
+      Files.deleteIfExists(subDir);
+      Files.deleteIfExists(tempDir);
     }
   }
 

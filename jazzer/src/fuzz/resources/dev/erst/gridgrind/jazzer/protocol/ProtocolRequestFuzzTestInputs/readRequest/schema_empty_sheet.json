@@ -1,0 +1,18 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Empty" }
+  ],
+  "reads": [
+    {
+      "type": "GET_SHEET_SCHEMA",
+      "requestId": "schema",
+      "sheetName": "Empty",
+      "topLeftAddress": "A1",
+      "rowCount": 5,
+      "columnCount": 3
+    }
+  ]
+}

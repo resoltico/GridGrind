@@ -298,7 +298,7 @@ public sealed interface WorkbookOperation {
       }
     }
 
-    static void requireSheetName(String value, String fieldName) {
+    static void requireSheetName(String value, String fieldName) { // LIM-003
       requireNonBlank(value, fieldName);
       if (value.length() > 31) {
         throw new IllegalArgumentException(fieldName + " must not exceed 31 characters: " + value);
@@ -319,7 +319,7 @@ public sealed interface WorkbookOperation {
       }
     }
 
-    static void requireColumnWidthCharacters(double widthCharacters) {
+    static void requireColumnWidthCharacters(double widthCharacters) { // LIM-004
       requireFinitePositive(widthCharacters, "widthCharacters");
       if (widthCharacters > 255.0d) {
         throw new IllegalArgumentException(
@@ -332,7 +332,7 @@ public sealed interface WorkbookOperation {
       }
     }
 
-    static void requireRowHeightPoints(double heightPoints) {
+    static void requireRowHeightPoints(double heightPoints) { // LIM-005
       requireFinitePositive(heightPoints, "heightPoints");
       if (Math.round(heightPoints * 20.0d) > Short.MAX_VALUE) {
         throw new IllegalArgumentException(

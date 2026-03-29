@@ -106,6 +106,13 @@ public sealed interface WorkbookReadOperation
     }
   }
 
+  /**
+   * Maximum number of cells ({@code rowCount * columnCount}) permitted in a single window request.
+   * Requests exceeding this limit are rejected at parse time to prevent out-of-memory failures
+   * during serialization of large cell grids. See docs/LIMITATIONS.md LIM-001.
+   */
+  int MAX_WINDOW_CELLS = 250_000; // LIM-001
+
   /** Returns a rectangular window of cell snapshots anchored at the provided top-left address. */
   record GetWindow(
       String requestId, String sheetName, String topLeftAddress, int rowCount, int columnCount)
@@ -116,6 +123,7 @@ public sealed interface WorkbookReadOperation
       topLeftAddress = requireNonBlank(topLeftAddress, "topLeftAddress");
       requirePositive(rowCount, "rowCount");
       requirePositive(columnCount, "columnCount");
+      requireWindowSize(rowCount, columnCount);
     }
   }
 
@@ -173,6 +181,7 @@ public sealed interface WorkbookReadOperation
       topLeftAddress = requireNonBlank(topLeftAddress, "topLeftAddress");
       requirePositive(rowCount, "rowCount");
       requirePositive(columnCount, "columnCount");
+      requireWindowSize(rowCount, columnCount);
     }
   }
 
@@ -231,7 +240,15 @@ public sealed interface WorkbookReadOperation
     }
   }
 
-  private static List<String> copyAddresses(List<String> addresses) {
+  private static void requireWindowSize(int rowCount, int columnCount) {
+    long cells = (long) rowCount * columnCount;
+    if (cells > MAX_WINDOW_CELLS) {
+      throw new IllegalArgumentException(
+          "rowCount * columnCount must not exceed " + MAX_WINDOW_CELLS + " but was " + cells);
+    }
+  }
+
+  private static List<String> copyAddresses(List<String> addresses) { // LIM-007
     Objects.requireNonNull(addresses, "addresses must not be null");
     List<String> copy = List.copyOf(addresses);
     if (copy.isEmpty()) {
