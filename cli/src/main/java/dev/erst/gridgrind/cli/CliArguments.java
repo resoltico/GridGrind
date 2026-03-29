@@ -49,6 +49,13 @@ final class CliArguments {
       }
     }
 
+    if (requestPath != null
+        && responsePath != null
+        && requestPath.toAbsolutePath().equals(responsePath.toAbsolutePath())) {
+      throw new CliArgumentsException(
+          "--response", "--request and --response must not point to the same path");
+    }
+
     return new CliCommand.Execute(requestPath, responsePath);
   }
 

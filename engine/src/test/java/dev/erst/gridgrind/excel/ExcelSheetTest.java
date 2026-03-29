@@ -469,8 +469,54 @@ class ExcelSheetTest {
       assertTrue(clearedRange.metadata().hyperlink().isEmpty());
       assertTrue(clearedRange.metadata().comment().isEmpty());
 
-      assertThrows(CellNotFoundException.class, () -> sheet.clearHyperlink("B2"));
-      assertThrows(CellNotFoundException.class, () -> sheet.clearComment("B2"));
+      // clearHyperlink and clearComment are no-ops on cells that do not physically exist
+      assertDoesNotThrow(() -> sheet.clearHyperlink("B2"));
+      assertDoesNotThrow(() -> sheet.clearComment("B2"));
+      // calling again on B2 (still non-existent) must still be a no-op, not throw
+      assertDoesNotThrow(() -> sheet.clearHyperlink("B2"));
+      assertDoesNotThrow(() -> sheet.clearComment("B2"));
+    }
+  }
+
+  @Test
+  void clearRangeIsNoOpOnNeverWrittenCells() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Data");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setCell("A1", ExcelCellValue.text("anchor"));
+
+      int rowsBefore = sheet.physicalRowCount();
+      int lastRowBefore = sheet.lastRowIndex();
+      int lastColBefore = sheet.lastColumnIndex();
+
+      // clear a range that has never been written
+      sheet.clearRange("B2:E5");
+
+      // physicalRowCount, lastRowIndex, and lastColumnIndex must not change
+      assertEquals(rowsBefore, sheet.physicalRowCount(), "physicalRowCount must not increase");
+      assertEquals(lastRowBefore, sheet.lastRowIndex(), "lastRowIndex must not change");
+      assertEquals(lastColBefore, sheet.lastColumnIndex(), "lastColumnIndex must not change");
+    }
+  }
+
+  @Test
+  void clearRangeSkipsAbsentCellsInExistingRows() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Data");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      // Row 2 exists (B2 is written) but C2 has never been written.
+      // Clearing B2:C2 must not throw even though C2 is absent.
+      sheet.setCell("B2", ExcelCellValue.text("present"));
+      assertDoesNotThrow(() -> sheet.clearRange("B2:C2"));
+      // B2 must now be blank after the clear
+      ExcelCellSnapshot b2 = sheet.snapshotCell("B2");
+      assertEquals("BLANK", b2.effectiveType());
     }
   }
 

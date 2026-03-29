@@ -100,6 +100,12 @@ class WorkbookReadCommandTest {
         IllegalArgumentException.class,
         () -> new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 1, 0));
     assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 1000, 1000));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 1000, 1000));
+    assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadCommand.GetHyperlinks("links", "Budget", null));
     assertThrows(

@@ -63,7 +63,13 @@ public sealed interface GridGrindResponse {
     /** Workbook remained in memory only and was not written to disk. */
     record NotSaved() implements PersistenceOutcome {}
 
-    /** Workbook was saved through SAVE_AS using the caller-provided path token. */
+    /**
+     * Workbook was written to the path supplied in the SAVE_AS persistence field.
+     *
+     * <p>{@code requestedPath} is the literal string from the request. {@code executionPath} is the
+     * absolute normalized path where the file was actually written. They differ when the request
+     * supplies a relative path (e.g. {@code "report.xlsx"}) or a path with {@code ..} segments.
+     */
     record SavedAs(String requestedPath, String executionPath) implements PersistenceOutcome {
       public SavedAs {
         Objects.requireNonNull(requestedPath, "requestedPath must not be null");
@@ -77,7 +83,12 @@ public sealed interface GridGrindResponse {
       }
     }
 
-    /** Workbook was saved by overwriting the opened source workbook path. */
+    /**
+     * Workbook was saved by overwriting the opened source workbook path.
+     *
+     * <p>{@code sourcePath} is the path string from the EXISTING source as supplied in the request.
+     * {@code executionPath} is the absolute normalized path where the file was written.
+     */
     record Overwritten(String sourcePath, String executionPath) implements PersistenceOutcome {
       public Overwritten {
         Objects.requireNonNull(sourcePath, "sourcePath must not be null");

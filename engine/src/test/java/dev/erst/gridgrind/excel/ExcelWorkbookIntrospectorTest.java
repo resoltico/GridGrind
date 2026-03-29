@@ -349,6 +349,49 @@ class ExcelWorkbookIntrospectorTest {
     }
   }
 
+  @Test
+  void schemaDataRowCountIsZeroWhenHeaderRowIsEntirelyBlank() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      // empty sheet — every cell in the header row is blank
+      workbook.getOrCreateSheet("Empty");
+
+      WorkbookReadResult.SheetSchemaResult schema =
+          cast(
+              WorkbookReadResult.SheetSchemaResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetSheetSchema("schema", "Empty", "A1", 5, 3)));
+
+      assertEquals(
+          0,
+          schema.analysis().dataRowCount(),
+          "dataRowCount must be 0 when all header cells are blank");
+      assertEquals(3, schema.analysis().columns().size());
+    }
+  }
+
+  @Test
+  void schemaDataRowCountIsRowCountMinusOneWhenHeaderIsPopulated() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Data");
+      sheet.setCell("A1", ExcelCellValue.text("Name"));
+      sheet.setCell("B1", ExcelCellValue.text("Score"));
+      sheet.setCell("A2", ExcelCellValue.text("Alice"));
+      sheet.setCell("B2", ExcelCellValue.number(95.0));
+
+      WorkbookReadResult.SheetSchemaResult schema =
+          cast(
+              WorkbookReadResult.SheetSchemaResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 3, 2)));
+
+      assertEquals(2, schema.analysis().dataRowCount(), "dataRowCount must be rowCount - 1");
+    }
+  }
+
   private static <T> T cast(Class<T> type, Object value) {
     return type.cast(assertInstanceOf(type, value));
   }

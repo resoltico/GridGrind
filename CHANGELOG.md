@@ -5,6 +5,101 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0] - 2026-03-29
+
+### Fixed
+
+- `SAVE_AS` and `OVERWRITE` persistence now normalize the save path to its absolute canonical
+  form before writing. Paths containing `..` segments (e.g. `/workdir/../out.xlsx`) are resolved
+  to their canonical equivalents (`/out.xlsx`) before the file is written. `executionPath` in
+  the response now always reflects the true path on disk. Previously, `..` segments were
+  preserved in `executionPath` and the file was written to the un-normalized location.
+- `GET_WINDOW` and `GET_SHEET_SCHEMA` now reject requests where `rowCount * columnCount` exceeds
+  250,000 cells with `INVALID_REQUEST` before any workbook work occurs. Previously, large windows
+  (e.g., 1000x1000) could crash the process with `OutOfMemoryError` and produce an empty response
+  file. The 250,000-cell limit is a GridGrind operational constraint (not an Excel or Apache POI
+  limit; Excel supports up to 1,048,576 rows x 16,384 columns) calibrated to prevent heap
+  exhaustion during JSON response serialization in bounded-heap container environments.
+- `CLEAR_RANGE` is now a no-op on rows and cells that do not physically exist. Previously it
+  materialized phantom rows and cells into the sheet, inflating `physicalRowCount` and distorting
+  `GET_SHEET_SUMMARY` results.
+- `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are now no-ops when the target cell does not physically
+  exist, matching the idempotent behavior of `CLEAR_RANGE`. Previously they returned
+  `CELL_NOT_FOUND`.
+- `GET_SHEET_SCHEMA` now returns `dataRowCount = 0` when every cell in the inferred header row is
+  blank. Previously it returned `rowCount - 1` even for empty sheets with no header data.
+- `--request` and `--response` that resolve to the same path are now rejected at argument parse
+  time with `INVALID_ARGUMENTS`. Previously the response write silently overwrote the request.
+
+### Changed
+
+- `Execution:` section of `--help` now reads "saves the workbook (unless persistence is NONE)"
+  instead of the ambiguous word "persistence", which could be confused with the `persistence`
+  JSON field.
+- `--help` now includes a `Limits:` section listing all hard constraints upfront: `.xlsx`-only
+  format, 31-character sheet names, 250,000-cell window cap, 255-unit column width ceiling,
+  1,638-point row height ceiling, and the `DATE`/`DATE_TIME` write-only note. Agents and users
+  can now read every hard constraint before constructing any request.
+- `--help` now explicitly states that a NEW workbook starts with zero sheets and that
+  `ENSURE_SHEET` must be used to create the first sheet.
+- `ENSURE_SHEET` and `RENAME_SHEET` summaries in `--print-protocol-catalog` now state the
+  31-character sheet name limit.
+- `SET_COLUMN_WIDTH` summary in `--print-protocol-catalog` now states `widthCharacters` must
+  be > 0 and ≤ 255.
+- `SET_ROW_HEIGHT` summary in `--print-protocol-catalog` now states `heightPoints` must be > 0
+  and ≤ 1,638.35 (32,767 twips).
+- `DATE` and `DATE_TIME` cell input summaries in `--print-protocol-catalog` now note that these
+  are write-only type hints stored as Excel serial numbers; `GET_CELLS` returns
+  `declaredType=NUMERIC` with a formatted `displayValue`.
+- `CLEAR_HYPERLINK` and `CLEAR_COMMENT` summaries in `--print-protocol-catalog` updated to
+  reflect the no-op behavior on non-existent cells.
+- `GET_WINDOW` and `GET_SHEET_SCHEMA` summaries in `--print-protocol-catalog` now state the
+  250,000-cell limit.
+- `GET_SHEET_SCHEMA` summary notes that `dataRowCount` is 0 when the header row is entirely blank.
+- `NEW` source type summary now notes that a new workbook starts with zero sheets.
+- `SAVE_AS` persistence type summary in `--print-protocol-catalog` now documents `requestedPath`
+  (the literal path from the request) vs `executionPath` (the absolute normalized path where the
+  file was written), and states that missing parent directories are created automatically.
+- `GET_SHEET_SUMMARY` summary in `--print-protocol-catalog` now states the semantics of
+  `physicalRowCount` (sparse materialized row count), `lastRowIndex` (0-based, -1 when empty),
+  and `lastColumnIndex` (0-based, -1 when empty).
+- `GET_CELLS` summary now documents the cell snapshot response shape: `address`, `declaredType`,
+  `effectiveType`, `displayValue`, `style`, `metadata`, and type-specific value fields
+  (`stringValue`, `numberValue`, `booleanValue`, `errorValue`, `formula`, `evaluation`).
+- `GET_CELLS` summary now explicitly states that `style.fontHeight` in read responses is a plain
+  object with both `twips` and `points` fields, not the discriminated `FontHeightInput` write
+  format. `GET_WINDOW` summary cross-references the `GET_CELLS` cell snapshot shape.
+- `fontHeightTypes` entries in `--print-protocol-catalog` now document the write format and the
+  read-back shape asymmetry so agents can round-trip font height without format confusion.
+
+### Added
+
+- Protocol catalog `TypeEntry` now includes a `fieldEnumValues` map enumerating valid string
+  values for fields that accept a finite enumerated set. `CellStyleInput.horizontalAlignment`
+  lists all `ExcelHorizontalAlignment` values, `CellStyleInput.verticalAlignment` lists all
+  `ExcelVerticalAlignment` values, and `CellBorderSideInput.style` lists all `ExcelBorderStyle`
+  values. Agents can now discover valid alignment and border-style values from the catalog
+  without trial-and-error.
+- `docs/OPERATIONS.md` now includes a "Cell snapshot shape" subsection under `GET_CELLS`
+  documenting all common and type-specific fields, the `fontHeight` read-vs-write asymmetry,
+  and a field-level table for `GET_SHEET_SUMMARY` response semantics (`physicalRowCount`,
+  `lastRowIndex`, `lastColumnIndex`). The `SAVE_AS` section now documents `requestedPath` vs
+  `executionPath`.
+- `docs/LIMITATIONS.md`: new reference document structured as a numbered registry (`LIM-001`
+  through `LIM-015`). Each entry carries a stable ID, the enforced limit value, the error code
+  and message raised on violation, the applicable operations, a code reference, and a UX
+  reference. Covers the GridGrind operational window limit (250,000 cells), all Excel/Apache POI
+  structural limits (rows, columns, text length, cell styles, hyperlinks, formula length,
+  nested functions, function arguments), and protocol-level limits (sheet name length, column
+  width, row height). Links to Apache POI `SpreadsheetVersion` apidocs and the Microsoft Excel
+  specifications page.
+- All limit enforcement sites in source code now carry a trailing `// LIM-NNN` comment
+  cross-referencing the corresponding registry entry in `docs/LIMITATIONS.md`: `LIM-001` on
+  `MAX_WINDOW_CELLS` in both protocol and engine, `LIM-002` on the `.xlsx` path check,
+  `LIM-003` on the sheet name length check, `LIM-004` on the column width check, `LIM-005`
+  on the row height check, `LIM-006` on the duplicate read request ID check, and `LIM-007` on
+  the `GET_CELLS` address list validation.
+
 ## [0.11.0] - 2026-03-28
 
 ### Added
@@ -301,7 +396,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.11.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/resoltico/GridGrind/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/resoltico/GridGrind/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/resoltico/GridGrind/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/resoltico/GridGrind/compare/v0.8.0...v0.9.0

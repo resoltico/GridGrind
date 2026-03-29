@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.11.0"
+version: "0.12.0"
 domain: ERRORS
-updated: "2026-03-28"
+updated: "2026-03-29"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, causes, context]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context"]
@@ -81,7 +81,7 @@ route:
 | `WORKBOOK_NOT_FOUND` | `source.type=EXISTING` path does not exist. |
 | `SHEET_NOT_FOUND` | An operation or read references a sheet that does not exist. All mutation operations (`SET_CELL`, `SET_RANGE`, `APPLY_STYLE`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the sheet to exist; use `ENSURE_SHEET` first. |
 | `NAMED_RANGE_NOT_FOUND` | A named-range read selector or delete request references a workbook- or sheet-scoped name that does not exist. |
-| `CELL_NOT_FOUND` | A clear-hyperlink or clear-comment operation targets a cell that has not been written. `GET_CELLS` does not raise this error; it returns blank snapshots for unwritten cells. |
+| `CELL_NOT_FOUND` | Reserved. No current operation raises this code; `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are no-ops when the cell does not physically exist, and `GET_CELLS` returns blank snapshots for unwritten cells. |
 
 ### I/O (`IO` category)
 

@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.11.0"
+version: "0.12.0"
 domain: OPERATIONS
-updated: "2026-03-28"
+updated: "2026-03-29"
 route:
   keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-sheet-layout, get-sheet-schema, analyze-workbook-findings, request, json, protocol]
   questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
@@ -12,6 +12,7 @@ route:
 
 **Purpose**: Complete reference for all GridGrind request fields and operation types.
 **Prerequisites**: Familiarity with the [README](../README.md) quick start.
+**Limits**: See [LIMITATIONS.md](LIMITATIONS.md) for all hard ceilings — window cell count, Excel maximums, and memory constraints.
 
 The CLI can emit the current minimal request and the full machine-readable protocol inventory:
 
@@ -52,7 +53,8 @@ Every tagged request union uses `type` as its discriminator field: `source`, `pe
 ```json
 { "type": "NEW" }
 ```
-Create a new blank `.xlsx` workbook.
+Create a new blank `.xlsx` workbook. The workbook starts with zero sheets; use `ENSURE_SHEET` to
+create the first sheet before writing any cells.
 
 ```json
 { "type": "EXISTING", "path": "path/to/workbook.xlsx" }
@@ -72,6 +74,13 @@ non-`.xlsx` extension are rejected as invalid requests.
 Write the workbook to the given path, creating parent directories as needed.
 
 The save path must end in `.xlsx`.
+
+The response includes two path fields:
+- `requestedPath` — the literal `path` string from the request.
+- `executionPath` — the absolute normalized path where the file was actually written.
+
+They are identical when an absolute path with no `..` segments is supplied. They differ when a
+relative path (e.g. `"report.xlsx"`) or a path containing `..` segments is used.
 
 ```json
 { "type": "OVERWRITE" }
@@ -337,7 +346,9 @@ Write a rectangular grid of typed values. The `rows` matrix must exactly match t
 
 ### CLEAR_RANGE
 
-Remove all values, styles, hyperlinks, and comments from a rectangular range.
+Remove all values, styles, hyperlinks, and comments from a rectangular range. Cells that have
+never been written are silently skipped; this operation never fails because a cell does not
+physically exist.
 
 ```json
 { "type": "CLEAR_RANGE", "sheetName": "Inventory", "range": "A2:C10" }
@@ -383,8 +394,8 @@ Supported target variants:
 
 ### CLEAR_HYPERLINK
 
-Remove any hyperlink attached to one existing cell. The cell value, style, and comment are left
-unchanged.
+Remove any hyperlink attached to one cell. The cell value, style, and comment are left unchanged.
+No-op when the cell does not physically exist.
 
 ```json
 { "type": "CLEAR_HYPERLINK", "sheetName": "Inventory", "address": "A1" }
@@ -393,7 +404,7 @@ unchanged.
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `sheetName` | Yes | Target sheet. |
-| `address` | Yes | Existing A1-notation cell address. |
+| `address` | Yes | A1-notation cell address. |
 
 ---
 
@@ -426,8 +437,8 @@ Attach or replace one plain-text comment on one cell. The cell is created if nee
 
 ### CLEAR_COMMENT
 
-Remove any comment attached to one existing cell. The cell value, style, and hyperlink are left
-unchanged.
+Remove any comment attached to one cell. The cell value, style, and hyperlink are left unchanged.
+No-op when the cell does not physically exist.
 
 ```json
 { "type": "CLEAR_COMMENT", "sheetName": "Inventory", "address": "B4" }
@@ -436,7 +447,7 @@ unchanged.
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `sheetName` | Yes | Target sheet. |
-| `address` | Yes | Existing A1-notation cell address. |
+| `address` | Yes | A1-notation cell address. |
 
 ---
 
@@ -509,7 +520,10 @@ Fill notes:
 
 - `fillColor` always means a solid foreground fill.
 - Non-solid patterns and background-fill authoring are not part of the public contract.
-- Style analysis reports `fontHeight` as an object with both `twips` and `points`.
+- Cell snapshot reads (GET_CELLS, GET_WINDOW, GET_SHEET_SCHEMA) report `style.fontHeight` as a
+  plain object with both `twips` and `points` fields: `{"twips": 260, "points": 13}`. This is
+  not the same as the write-side `FontHeightInput` discriminated format. See the Cell snapshot
+  shape section under GET_CELLS for the full write-vs-read comparison.
 
 Border patch:
 
@@ -741,6 +755,14 @@ Returns structural summary facts for one sheet.
 }
 ```
 
+Response field semantics:
+
+| Field | Description |
+|:------|:------------|
+| `physicalRowCount` | Number of physically materialized rows in the sheet. Rows are sparse; a sheet with data only in row 1 and row 100 has `physicalRowCount=2`. |
+| `lastRowIndex` | Zero-based index of the last populated row. `-1` when the sheet is empty. Not the same as `physicalRowCount - 1` when rows are sparse. |
+| `lastColumnIndex` | Zero-based index of the last populated column across all rows. `-1` when the sheet is empty. |
+
 ### GET_CELLS
 
 Returns exact cell snapshots for one sheet and an ordered list of A1 addresses.
@@ -764,10 +786,44 @@ Returns exact cell snapshots for one sheet and an ordered list of A1 addresses.
 Empty cells are valid cells; the read never fails with `CELL_NOT_FOUND` for addresses within a
 valid sheet. It does fail with `SHEET_NOT_FOUND` when the target sheet does not exist.
 
+#### Cell snapshot shape
+
+Every cell in a `GET_CELLS`, `GET_WINDOW`, or `GET_SHEET_SCHEMA` response has the following
+common fields:
+
+| Field | Description |
+|:------|:------------|
+| `address` | A1-style cell address. |
+| `declaredType` | Raw Excel cell type: `BLANK`, `STRING`, `NUMERIC`, `BOOLEAN`, `FORMULA`, or `ERROR`. |
+| `effectiveType` | Resolved type after formula evaluation. Same as `declaredType` for non-formula cells; for formula cells: the result type (`STRING`, `NUMERIC`, `BOOLEAN`, `ERROR`). |
+| `displayValue` | Formatted string as Excel would render it. |
+| `style` | Style snapshot: `numberFormat`, `bold`, `italic`, `wrapText`, `horizontalAlignment`, `verticalAlignment`, `fontName`, `fontHeight`, `fontColor`, `underline`, `strikeout`, `fillColor`, border sides. |
+| `metadata` | Hyperlink and comment metadata attached at snapshot time. |
+
+Type-specific value fields (present only on matching `effectiveType`):
+
+| Field | Present when | Description |
+|:------|:-------------|:------------|
+| `stringValue` | `effectiveType=STRING` | The string content. |
+| `numberValue` | `effectiveType=NUMERIC` | The numeric value as a double. |
+| `booleanValue` | `effectiveType=BOOLEAN` | `true` or `false`. |
+| `errorValue` | `effectiveType=ERROR` | The error string (e.g. `#DIV/0!`). |
+| `formula` | `declaredType=FORMULA` | The formula text without the leading `=`. |
+| `evaluation` | `declaredType=FORMULA` | Nested cell snapshot of the evaluated result. |
+
+**fontHeight read-back shape:** `style.fontHeight` is a plain object with both `twips` and
+`points` fields: `{"twips": 260, "points": 13}`. This differs from the write-side
+`FontHeightInput` format which uses a discriminated `{"type": "POINTS", "points": 13}` object.
+Agents that read a font height and want to write it back must use the `FontHeightInput` write
+format, not the read-back shape.
+
 ### GET_WINDOW
 
 Returns a rectangular top-left-anchored window of cell snapshots. The window includes styled blank
 cells so template-like workbooks remain visible.
+
+`rowCount * columnCount` must not exceed 250,000. Requests that exceed this limit are rejected
+with `INVALID_REQUEST`.
 
 ```json
 {
@@ -899,7 +955,12 @@ Sheet-selection payloads use:
 
 ### GET_SHEET_SCHEMA
 
-Infers a simple schema from one rectangular sheet window.
+Infers a simple schema from one rectangular sheet window. The first row of the window is treated
+as a header row; `dataRowCount` in the response is `rowCount - 1`. When the header row is
+entirely blank, `dataRowCount` is `0`.
+
+`rowCount * columnCount` must not exceed 250,000. Requests that exceed this limit are rejected
+with `INVALID_REQUEST`.
 
 ```json
 {

@@ -807,6 +807,98 @@ class GridGrindCliTest {
     }
   }
 
+  @Test
+  void rejectsSamePathForRequestAndResponse() throws IOException {
+    Path path = Files.createTempFile("gridgrind-same-path-", ".json");
+
+    try {
+      ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+      int exitCode =
+          new GridGrindCli()
+              .run(
+                  new String[] {"--request", path.toString(), "--response", path.toString()},
+                  new ByteArrayInputStream(new byte[0]),
+                  stdout);
+
+      GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+
+      assertEquals(2, exitCode);
+      assertInstanceOf(GridGrindResponse.Failure.class, response);
+      GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+      assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+      assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
+      assertEquals(
+          "--request and --response must not point to the same path", failure.problem().message());
+    } finally {
+      Files.deleteIfExists(path);
+    }
+  }
+
+  @Test
+  void rejectsGetWindowWhenCellCountExceedsLimit() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[0],
+                new ByteArrayInputStream(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "operations": [ { "type": "ENSURE_SHEET", "sheetName": "S" } ],
+                      "reads": [
+                        {
+                          "type": "GET_WINDOW",
+                          "requestId": "w",
+                          "sheetName": "S",
+                          "topLeftAddress": "A1",
+                          "rowCount": 1000,
+                          "columnCount": 1000
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+
+    assertEquals(1, exitCode);
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertTrue(
+        failure.problem().message().contains("rowCount * columnCount must not exceed"),
+        "message should state the limit");
+  }
+
+  @Test
+  void helpTextMentionsZeroSheetsForNewWorkbook() {
+    String help = GridGrindCli.helpText("1.0.0");
+
+    assertTrue(
+        help.contains("zero sheets"),
+        "help must mention that a NEW workbook starts with zero sheets");
+    assertTrue(help.contains("ENSURE_SHEET"), "help must mention ENSURE_SHEET as the remedy");
+  }
+
+  @Test
+  void helpTextListsKeyLimitsUpfront() {
+    String help = GridGrindCli.helpText("1.0.0");
+
+    assertTrue(help.contains(".xlsx"), "help must state the .xlsx-only file format limit");
+    assertTrue(help.contains("31"), "help must state the 31-character sheet name limit");
+    assertTrue(
+        help.contains("250,000"), "help must state the GET_WINDOW / GET_SHEET_SCHEMA cell limit");
+    assertTrue(help.contains("255"), "help must state the column width limit");
+    assertTrue(help.contains("1638"), "help must state the row height limit");
+    assertTrue(
+        help.contains("NUMERIC"),
+        "help must note that DATE/DATE_TIME inputs are stored as NUMERIC on read-back");
+  }
+
   /** ByteArrayInputStream that records whether {@code close()} was called. */
   private static final class TrackingInputStream extends ByteArrayInputStream {
     private boolean closed;

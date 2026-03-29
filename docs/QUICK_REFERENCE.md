@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.11.0"
+version: "0.12.0"
 domain: QUICK_REFERENCE
-updated: "2026-03-28"
+updated: "2026-03-29"
 route:
   keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-sheet-schema, analyze-workbook-findings]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind named range example", "what do gridgrind reads look like"]
@@ -163,6 +163,7 @@ The `FORMULA` value must omit the leading `=` sign; the engine adds it internall
 ```
 
 `CLEAR_RANGE` removes value, style, hyperlink, and comment state from every cell in the range.
+Cells that have never been written are silently skipped.
 
 ## SET_HYPERLINK
 
@@ -364,6 +365,8 @@ a caller-defined `requestId`.
 }
 ```
 
+`rowCount * columnCount` must not exceed 250,000.
+
 ## GET_MERGED_REGIONS
 
 ```json
@@ -448,6 +451,9 @@ a caller-defined `requestId`.
   "columnCount": 4
 }
 ```
+
+`rowCount * columnCount` must not exceed 250,000. When the first row is entirely blank,
+`dataRowCount` in the response is `0`.
 
 ## GET_NAMED_RANGE_SURFACE
 

@@ -287,7 +287,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case GridGrindRequest.WorkbookPersistence.None _ ->
           new GridGrindResponse.PersistenceOutcome.NotSaved();
       case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> {
-        Path path =
+        Path rawPath =
             switch (source) {
               case GridGrindRequest.WorkbookSource.ExistingFile existingFile ->
                   Path.of(existingFile.path());
@@ -295,15 +295,16 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
                   throw new IllegalArgumentException(
                       "OVERWRITE persistence requires an EXISTING source");
             };
-        workbook.save(path);
+        Path normalizedPath = rawPath.toAbsolutePath().normalize();
+        workbook.save(normalizedPath);
         yield new GridGrindResponse.PersistenceOutcome.Overwritten(
-            path.toString(), path.toAbsolutePath().toString());
+            rawPath.toString(), normalizedPath.toString());
       }
       case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> {
-        Path path = Path.of(saveAs.path());
-        workbook.save(path);
+        Path normalizedPath = Path.of(saveAs.path()).toAbsolutePath().normalize();
+        workbook.save(normalizedPath);
         yield new GridGrindResponse.PersistenceOutcome.SavedAs(
-            saveAs.path(), path.toAbsolutePath().toString());
+            saveAs.path(), normalizedPath.toString());
       }
     };
   }
@@ -757,7 +758,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   }
 
   private String absolutePath(String path) {
-    return Path.of(path).toAbsolutePath().toString();
+    return Path.of(path).toAbsolutePath().normalize().toString();
   }
 
   private GridGrindResponse closeWorkbook(

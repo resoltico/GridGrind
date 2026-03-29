@@ -92,7 +92,7 @@ public record GridGrindRequest(
     Set<String> seen = new HashSet<>();
     for (WorkbookReadOperation read : copy) {
       Objects.requireNonNull(read, "reads must not contain nulls");
-      if (!seen.add(read.requestId())) {
+      if (!seen.add(read.requestId())) { // LIM-006
         throw new IllegalArgumentException(
             "reads must not contain duplicate requestId values: " + read.requestId());
       }
@@ -107,7 +107,7 @@ public record GridGrindRequest(
     }
   }
 
-  private static void requireXlsxWorkbookPath(String path) {
+  private static void requireXlsxWorkbookPath(String path) { // LIM-002
     requireNonBlank(path, "path");
     if (!path.toLowerCase(Locale.ROOT).endsWith(".xlsx")) {
       throw new IllegalArgumentException(

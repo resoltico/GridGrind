@@ -9,6 +9,43 @@ import org.junit.jupiter.api.Test;
 /** Tests for workbook-read operation invariants. */
 class WorkbookReadOperationTest {
   @Test
+  void getWindowAcceptsWindowAtTheMaximumCellLimit() {
+    // 500 * 500 = 250,000 == MAX_WINDOW_CELLS — must not throw
+    assertDoesNotThrow(() -> new WorkbookReadOperation.GetWindow("w", "Sheet1", "A1", 500, 500));
+  }
+
+  @Test
+  void getWindowRejectsWindowExceedingMaximumCellLimit() {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new WorkbookReadOperation.GetWindow("w", "Sheet1", "A1", 501, 500));
+
+    assertTrue(
+        exception.getMessage().contains("rowCount * columnCount must not exceed"),
+        "message should state the limit");
+    assertTrue(
+        exception.getMessage().contains("250500"), "message should include the actual cell count");
+  }
+
+  @Test
+  void getSheetSchemaAcceptsWindowAtTheMaximumCellLimit() {
+    assertDoesNotThrow(
+        () -> new WorkbookReadOperation.GetSheetSchema("s", "Sheet1", "A1", 500, 500));
+  }
+
+  @Test
+  void getSheetSchemaRejectsWindowExceedingMaximumCellLimit() {
+    IllegalArgumentException exception =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new WorkbookReadOperation.GetSheetSchema("s", "Sheet1", "A1", 1000, 1000));
+
+    assertTrue(exception.getMessage().contains("rowCount * columnCount must not exceed"));
+    assertTrue(exception.getMessage().contains("1000000"));
+  }
+
+  @Test
   void getCellsRejectsBlankAddresses() {
     IllegalArgumentException exception =
         assertThrows(
