@@ -72,8 +72,8 @@ class ExcelSheetTest {
 
       ExcelCellSnapshot.NumberSnapshot numberSnapshot =
           (ExcelCellSnapshot.NumberSnapshot) sheet.snapshotCell("B1");
-      assertEquals("NUMERIC", numberSnapshot.declaredType());
-      assertEquals("NUMERIC", numberSnapshot.effectiveType());
+      assertEquals("NUMBER", numberSnapshot.declaredType());
+      assertEquals("NUMBER", numberSnapshot.effectiveType());
       assertEquals(42.5, numberSnapshot.numberValue());
 
       ExcelCellSnapshot.BooleanSnapshot booleanSnapshot =

@@ -182,7 +182,7 @@ public sealed interface GridGrindResponse {
   @JsonSubTypes({
     @JsonSubTypes.Type(value = CellReport.BlankReport.class, name = "BLANK"),
     @JsonSubTypes.Type(value = CellReport.TextReport.class, name = "STRING"),
-    @JsonSubTypes.Type(value = CellReport.NumberReport.class, name = "NUMERIC"),
+    @JsonSubTypes.Type(value = CellReport.NumberReport.class, name = "NUMBER"),
     @JsonSubTypes.Type(value = CellReport.BooleanReport.class, name = "BOOLEAN"),
     @JsonSubTypes.Type(value = CellReport.ErrorReport.class, name = "ERROR"),
     @JsonSubTypes.Type(value = CellReport.FormulaReport.class, name = "FORMULA")
@@ -326,7 +326,7 @@ public sealed interface GridGrindResponse {
       @Override
       @JsonProperty
       public String effectiveType() {
-        return "NUMERIC";
+        return "NUMBER";
       }
     }
 

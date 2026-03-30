@@ -129,6 +129,16 @@ public final class GridGrindJson {
     outputStream.write(writeProtocolCatalogBytes(catalog));
   }
 
+  /**
+   * Writes a single catalog type entry to an output stream without closing the caller-owned stream.
+   */
+  public static void writeTypeEntry(
+      OutputStream outputStream, GridGrindProtocolCatalog.TypeEntry entry) throws IOException {
+    Objects.requireNonNull(outputStream, "outputStream must not be null");
+    Objects.requireNonNull(entry, "entry must not be null");
+    outputStream.write(JSON_MAPPER.writeValueAsBytes(entry));
+  }
+
   private static IllegalArgumentException invalidPayload(JacksonException exception) {
     PayloadMetadata metadata = payloadMetadata(exception);
     Throwable validationCause = validationCause(exception);

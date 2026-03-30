@@ -5,7 +5,7 @@ public sealed interface ExcelCellSnapshot {
   /** A1-style address of the cell, such as {@code B4}. */
   String address();
 
-  /** Raw cell type as reported by Excel: STRING, NUMERIC, BOOLEAN, FORMULA, BLANK, or ERROR. */
+  /** Raw cell type as reported by Excel: STRING, NUMBER, BOOLEAN, FORMULA, BLANK, or ERROR. */
   String declaredType();
 
   /**
@@ -60,7 +60,7 @@ public sealed interface ExcelCellSnapshot {
       implements ExcelCellSnapshot {
     @Override
     public String effectiveType() {
-      return "NUMERIC";
+      return "NUMBER";
     }
   }
 

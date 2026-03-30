@@ -590,6 +590,25 @@ class GridGrindJsonTest {
     assertThrows(
         NullPointerException.class,
         () -> GridGrindJson.writeProtocolCatalog(new ByteArrayOutputStream(), null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            GridGrindJson.writeTypeEntry(
+                null, GridGrindProtocolCatalog.catalog().operationTypes().getFirst()));
+    assertThrows(
+        NullPointerException.class,
+        () -> GridGrindJson.writeTypeEntry(new ByteArrayOutputStream(), null));
+  }
+
+  @Test
+  void writeTypeEntrySerializesASingleCatalogEntry() throws Exception {
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    GridGrindProtocolCatalog.TypeEntry entry =
+        GridGrindProtocolCatalog.entryFor("SET_CELL").orElseThrow();
+    GridGrindJson.writeTypeEntry(out, entry);
+    String json = out.toString(java.nio.charset.StandardCharsets.UTF_8);
+    assertTrue(json.contains("\"SET_CELL\""), "output must contain the entry id");
+    assertTrue(json.contains("\"summary\""), "output must contain the summary field");
   }
 
   @Test

@@ -1,0 +1,19 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Data" },
+    { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "NUMBER", "number": 10.0 } },
+    { "type": "SET_CELL", "sheetName": "Data", "address": "A2", "value": { "type": "NUMBER", "number": 20.0 } },
+    { "type": "SET_CELL", "sheetName": "Data", "address": "A3", "value": { "type": "FORMULA", "formula": "=SUM(A1:A2)" } }
+  ],
+  "reads": [
+    {
+      "type": "GET_CELLS",
+      "requestId": "result",
+      "sheetName": "Data",
+      "addresses": ["A1", "A2", "A3"]
+    }
+  ]
+}

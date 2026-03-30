@@ -66,10 +66,16 @@ public sealed interface CellInput {
     }
   }
 
-  /** Excel formula cell input. */
+  /** Excel formula cell input. A leading {@code =} sign is stripped automatically if present. */
   record Formula(String formula) implements CellInput {
     public Formula {
       Validation.required(formula, "formula");
+      if (formula.startsWith("=")) {
+        formula = formula.substring(1);
+      }
+      if (formula.isBlank()) {
+        throw new IllegalArgumentException("formula must not be blank after stripping leading =");
+      }
     }
 
     @Override

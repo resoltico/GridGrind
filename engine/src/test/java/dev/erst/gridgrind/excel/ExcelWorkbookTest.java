@@ -178,6 +178,11 @@ class ExcelWorkbookTest {
       assertThrows(NullPointerException.class, () -> workbook.deleteSheet(null));
       assertThrows(IllegalArgumentException.class, () -> workbook.deleteSheet(" "));
       assertThrows(SheetNotFoundException.class, () -> workbook.deleteSheet("Missing"));
+      workbook.deleteSheet("Archive"); // leaves only Budget; next delete must be rejected
+      IllegalArgumentException lastSheet =
+          assertThrows(IllegalArgumentException.class, () -> workbook.deleteSheet("Budget"));
+      assertTrue(lastSheet.getMessage().contains("at least one sheet"));
+      workbook.getOrCreateSheet("Archive"); // restore two-sheet state for moveSheet tests
       assertThrows(NullPointerException.class, () -> workbook.moveSheet(null, 0));
       assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet(" ", 0));
       assertThrows(SheetNotFoundException.class, () -> workbook.moveSheet("Missing", 0));

@@ -748,7 +748,7 @@ public final class ExcelSheet {
             case NUMERIC ->
                 new ExcelCellSnapshot.NumberSnapshot(
                     address,
-                    "NUMERIC",
+                    "NUMBER",
                     displayValue,
                     style,
                     metadata,
@@ -783,7 +783,7 @@ public final class ExcelSheet {
               address, "STRING", displayValue, style, metadata, cell.getStringCellValue());
       case NUMERIC ->
           new ExcelCellSnapshot.NumberSnapshot(
-              address, "NUMERIC", displayValue, style, metadata, cell.getNumericCellValue());
+              address, "NUMBER", displayValue, style, metadata, cell.getNumericCellValue());
       case BOOLEAN ->
           new ExcelCellSnapshot.BooleanSnapshot(
               address, "BOOLEAN", displayValue, style, metadata, cell.getBooleanCellValue());
@@ -889,12 +889,13 @@ public final class ExcelSheet {
     requireFinitePositive(widthCharacters, "widthCharacters");
     if (widthCharacters > 255.0d) {
       throw new IllegalArgumentException(
-          "widthCharacters must be less than or equal to 255.0: " + widthCharacters);
+          "widthCharacters must not exceed 255.0 (Excel column width limit): got "
+              + widthCharacters);
     }
     int widthUnits = (int) Math.round(widthCharacters * 256.0d);
     if (widthUnits <= 0) {
       throw new IllegalArgumentException(
-          "widthCharacters is too small to produce a visible Excel column width: "
+          "widthCharacters is too small to produce a visible Excel column width: got "
               + widthCharacters);
     }
     return widthUnits;
@@ -905,7 +906,8 @@ public final class ExcelSheet {
     requireFinitePositive(heightPoints, "heightPoints");
     if (heightPoints > Short.MAX_VALUE / 20.0d) {
       throw new IllegalArgumentException(
-          "heightPoints is too large for Excel row height storage: " + heightPoints);
+          "heightPoints must not exceed 1638.35 (Excel storage limit: 32767 twips): got "
+              + heightPoints);
     }
     if ((long) (heightPoints * 20.0d) <= 0L) {
       throw new IllegalArgumentException(

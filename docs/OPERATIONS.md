@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.14.0"
+version: "0.15.0"
 domain: OPERATIONS
 updated: "2026-03-29"
 route:
@@ -106,7 +106,7 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 { "type": "TEXT",      "text": "Origin"              }
 { "type": "NUMBER",    "number": 8.40                }
 { "type": "BOOLEAN",   "bool": true                  }
-{ "type": "FORMULA",   "formula": "SUM(B2:B3)"       }
+{ "type": "FORMULA",   "formula": "SUM(B2:B3)"       }  // leading = is accepted and stripped
 { "type": "DATE",      "date": "2026-03-25"           }
 { "type": "DATE_TIME", "dateTime": "2026-03-25T10:15:30" }
 { "type": "BLANK"                                     }
@@ -156,7 +156,8 @@ Excel sheet name and must not conflict with another sheet name.
 
 ### DELETE_SHEET
 
-Delete an existing sheet.
+Delete an existing sheet. A workbook must contain at least one sheet; attempting to delete the
+last remaining sheet returns `INVALID_REQUEST`.
 
 ```json
 { "type": "DELETE_SHEET", "sheetName": "Scratch" }
@@ -164,7 +165,7 @@ Delete an existing sheet.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing sheet to delete. |
+| `sheetName` | Yes | Existing sheet to delete. Must not be the only remaining sheet. |
 
 ---
 
@@ -241,7 +242,7 @@ units with `round(widthCharacters * 256)`.
 | `sheetName` | Yes | Existing target sheet. |
 | `firstColumnIndex` | Yes | Zero-based first column index. |
 | `lastColumnIndex` | Yes | Zero-based last column index. Must be greater than or equal to `firstColumnIndex`. |
-| `widthCharacters` | Yes | Positive Excel character width. Must be finite and at most `255.0`. |
+| `widthCharacters` | Yes | Positive Excel character width. Must be finite and > 0 and ≤ 255.0 (Excel column width limit). |
 
 ---
 
@@ -265,7 +266,7 @@ Set the height of one or more contiguous rows. Row indexes are zero-based and in
 | `sheetName` | Yes | Existing target sheet. |
 | `firstRowIndex` | Yes | Zero-based first row index. |
 | `lastRowIndex` | Yes | Zero-based last row index. Must be greater than or equal to `firstRowIndex`. |
-| `heightPoints` | Yes | Positive Excel row height in points. Must be finite. |
+| `heightPoints` | Yes | Positive Excel row height in points. Must be finite and > 0 and ≤ 1,638.35 (Excel storage limit: 32,767 twips). |
 
 ---
 
@@ -316,6 +317,9 @@ Write a typed value to a single cell using A1 notation.
   "value": { "type": "FORMULA", "formula": "SUM(B2:B3)" }
 }
 ```
+
+FORMULA note: a leading `=` is accepted and stripped automatically. `"=SUM(B2:B3)"` and
+`"SUM(B2:B3)"` are equivalent.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
@@ -554,6 +558,10 @@ Border notes:
 - `border.all` acts as the default style for every side not explicitly set in the same patch.
 - Explicit side settings override `border.all`.
 - Border colors and diagonal borders are not part of the public contract.
+
+**Border write vs. read shape:** the `border` write object is not mirrored in cell snapshot
+responses. `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` return four flat fields instead:
+`topBorderStyle`, `rightBorderStyle`, `bottomBorderStyle`, and `leftBorderStyle`.
 
 ---
 
@@ -803,7 +811,7 @@ common fields:
 | Field | Description |
 |:------|:------------|
 | `address` | A1-style cell address. |
-| `declaredType` | Raw Excel cell type: `BLANK`, `STRING`, `NUMERIC`, `BOOLEAN`, `FORMULA`, or `ERROR`. |
+| `declaredType` | Raw Excel cell type: `BLANK`, `STRING`, `NUMBER`, `BOOLEAN`, `FORMULA`, or `ERROR`. |
 | `effectiveType` | For non-formula cells: same as `declaredType`. For formula cells: always `FORMULA` — the evaluated result type is in `evaluation.effectiveType`. |
 | `displayValue` | Formatted string as Excel would render it. |
 | `style` | Style snapshot: `numberFormat`, `bold`, `italic`, `wrapText`, `horizontalAlignment`, `verticalAlignment`, `fontName`, `fontHeight`, `fontColor`, `underline`, `strikeout`, `fillColor`, border sides. |
@@ -814,7 +822,7 @@ Type-specific value fields (present only on matching `effectiveType`):
 | Field | Present when | Description |
 |:------|:-------------|:------------|
 | `stringValue` | `effectiveType=STRING` | The string content. |
-| `numberValue` | `effectiveType=NUMERIC` | The numeric value as a double. |
+| `numberValue` | `effectiveType=NUMBER` | The numeric value as a double. |
 | `booleanValue` | `effectiveType=BOOLEAN` | `true` or `false`. |
 | `errorValue` | `effectiveType=ERROR` | The error string (e.g. `#DIV/0!`). |
 | `formula` | `declaredType=FORMULA` | The formula text without the leading `=`. |
@@ -977,7 +985,7 @@ entirely blank, `dataRowCount` is `0`.
 with `INVALID_REQUEST`.
 
 `dominantType` per column is `null` when all data cells are blank, or when two or more types tie
-for the highest count. Formula cells contribute their evaluated result type (e.g. `NUMERIC`,
+for the highest count. Formula cells contribute their evaluated result type (e.g. `NUMBER`,
 `STRING`) to `observedTypes` and `dominantType`, not `FORMULA`.
 
 ```json

@@ -628,6 +628,26 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
+  void returnsStructuredFailureWhenDeletingLastSheet() {
+    GridGrindResponse.Failure failure =
+        failure(
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request(
+                        new GridGrindRequest.WorkbookSource.New(),
+                        new GridGrindRequest.WorkbookPersistence.None(),
+                        List.of(
+                            new WorkbookOperation.EnsureSheet("Budget"),
+                            new WorkbookOperation.DeleteSheet("Budget")))));
+
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals(1, failure.problem().context().operationIndex());
+    assertEquals("DELETE_SHEET", failure.problem().context().operationType());
+    assertTrue(failure.problem().message().contains("at least one sheet"));
+  }
+
+  @Test
   void returnsStructuredFailureForInvalidPersistTarget() throws IOException {
     Path parentFile = Files.createTempFile("gridgrind-persist-target-", ".tmp");
     Path workbookPath = parentFile.resolve("book.xlsx");

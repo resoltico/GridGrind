@@ -191,7 +191,7 @@ class GridGrindResponseTest {
             comment,
             "SUM(B1:B2)",
             new GridGrindResponse.CellReport.NumberReport(
-                "E1", "NUMERIC", "85", style, null, null, 85.0));
+                "E1", "NUMBER", "85", style, null, null, 85.0));
 
     GridGrindResponse.WindowReport window =
         new GridGrindResponse.WindowReport(
@@ -213,9 +213,8 @@ class GridGrindResponseTest {
         new GridGrindResponse.CellReport.TextReport("B1", "STRING", "x", style, null, null, "x")
             .effectiveType());
     assertEquals(
-        "NUMERIC",
-        new GridGrindResponse.CellReport.NumberReport(
-                "B2", "NUMERIC", "12", style, null, null, 12.0)
+        "NUMBER",
+        new GridGrindResponse.CellReport.NumberReport("B2", "NUMBER", "12", style, null, null, 12.0)
             .effectiveType());
     assertEquals(
         "BOOLEAN",

@@ -34,6 +34,13 @@ class CellInputTest {
             new CellInput.Formula("SUM(B2:B4)").toExcelCellValue());
     assertEquals("SUM(B2:B4)", formulaValue.expression());
 
+    // Leading = is stripped automatically so callers can use Excel-native syntax
+    ExcelCellValue.FormulaValue strippedFormulaValue =
+        assertInstanceOf(
+            ExcelCellValue.FormulaValue.class,
+            new CellInput.Formula("=SUM(B2:B4)").toExcelCellValue());
+    assertEquals("SUM(B2:B4)", strippedFormulaValue.expression());
+
     ExcelCellValue.DateValue dateValue =
         assertInstanceOf(
             ExcelCellValue.DateValue.class,
@@ -53,6 +60,8 @@ class CellInputTest {
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Numeric(null));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.BooleanValue(null));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Formula(null));
+    assertThrows(IllegalArgumentException.class, () -> new CellInput.Formula("="));
+    assertThrows(IllegalArgumentException.class, () -> new CellInput.Formula("=   "));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Date(null));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.DateTime(null));
   }
