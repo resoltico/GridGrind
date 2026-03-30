@@ -41,7 +41,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.12.0
+docker pull ghcr.io/resoltico/gridgrind:0.13.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -313,9 +313,9 @@ hyperlink metadata, comment metadata, and styles. Style output includes effectiv
 size, font color, underline, strikeout, fill color, and all four border sides when those style
 facts can be normalized from the workbook. Persistence is now explicit too:
 
-- `NOT_SAVED`: the workbook stayed in memory only
-- `SAVED_AS`: includes both the caller-provided `requestedPath` and the actual `executionPath`
-- `OVERWRITTEN`: includes both the original `sourcePath` token and the actual `executionPath`
+- `NONE`: the workbook stayed in memory only
+- `SAVE_AS`: includes both the caller-provided `requestedPath` and the actual `executionPath`
+- `OVERWRITE`: includes both the original `sourcePath` token and the actual `executionPath`
 
 A failed response carries `"status": "ERROR"` and a structured `problem` object with:
 

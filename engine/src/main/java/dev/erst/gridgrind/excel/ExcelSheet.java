@@ -342,6 +342,7 @@ public final class ExcelSheet {
   public ExcelCellSnapshot snapshotCell(String address) {
     requireNonBlank(address, "address");
     CellReference cellReference = parseCellReference(address);
+    requireValidCellReference(address, cellReference);
     return snapshotCellOrBlank(address, cellReference.getRow(), cellReference.getCol());
   }
 
@@ -802,6 +803,13 @@ public final class ExcelSheet {
     }
   }
 
+  private void requireValidCellReference(String address, CellReference cellReference) {
+    if (cellReference.getRow() < 0 || cellReference.getCol() < 0) {
+      throw new InvalidCellAddressException(
+          address, new IllegalArgumentException("not a valid A1-style cell address: " + address));
+    }
+  }
+
   private ExcelRange parseRange(String range) {
     return ExcelRange.parse(range);
   }
@@ -876,12 +884,11 @@ public final class ExcelSheet {
   /** Converts row-height input to POI points after validating Excel storage constraints. */
   static float toRowHeightPoints(double heightPoints) {
     requireFinitePositive(heightPoints, "heightPoints");
-    long heightTwips = Math.round(heightPoints * 20.0d);
-    if (heightTwips > Short.MAX_VALUE) {
+    if (heightPoints > Short.MAX_VALUE / 20.0d) {
       throw new IllegalArgumentException(
           "heightPoints is too large for Excel row height storage: " + heightPoints);
     }
-    if (heightTwips <= 0L) {
+    if ((long) (heightPoints * 20.0d) <= 0L) {
       throw new IllegalArgumentException(
           "heightPoints is too small to produce a visible Excel row height: " + heightPoints);
     }

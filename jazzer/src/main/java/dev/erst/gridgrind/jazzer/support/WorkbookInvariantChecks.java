@@ -86,22 +86,23 @@ public final class WorkbookInvariantChecks {
       case GridGrindRequest.WorkbookPersistence.None _ -> {
         switch (persistenceOutcome) {
           case GridGrindResponse.PersistenceOutcome.NotSaved _ -> {}
-          case GridGrindResponse.PersistenceOutcome.SavedAs _,
-              GridGrindResponse.PersistenceOutcome.Overwritten _ ->
-              throw new IllegalStateException("NONE persistence must return NOT_SAVED");
+          case GridGrindResponse.PersistenceOutcome.SavedAs _ ->
+              throw new IllegalStateException("NONE persistence must return NONE outcome");
+          case GridGrindResponse.PersistenceOutcome.Overwritten _ ->
+              throw new IllegalStateException("NONE persistence must return NONE outcome");
         }
       }
       case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> {
         requirePersistenceOutcomeShape(persistenceOutcome);
         require(
             persistenceOutcome instanceof GridGrindResponse.PersistenceOutcome.Overwritten,
-            "OVERWRITE persistence must return OVERWRITTEN");
+            "OVERWRITE persistence must return OVERWRITE outcome");
       }
       case GridGrindRequest.WorkbookPersistence.SaveAs _ -> {
         requirePersistenceOutcomeShape(persistenceOutcome);
         require(
             persistenceOutcome instanceof GridGrindResponse.PersistenceOutcome.SavedAs,
-            "SAVE_AS persistence must return SAVED_AS");
+            "SAVE_AS persistence must return SAVE_AS outcome");
       }
     }
   }

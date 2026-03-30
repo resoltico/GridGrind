@@ -51,9 +51,9 @@ public sealed interface GridGrindResponse {
   /** Reports whether the workbook was persisted during successful execution. */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({
-    @JsonSubTypes.Type(value = PersistenceOutcome.NotSaved.class, name = "NOT_SAVED"),
-    @JsonSubTypes.Type(value = PersistenceOutcome.SavedAs.class, name = "SAVED_AS"),
-    @JsonSubTypes.Type(value = PersistenceOutcome.Overwritten.class, name = "OVERWRITTEN")
+    @JsonSubTypes.Type(value = PersistenceOutcome.NotSaved.class, name = "NONE"),
+    @JsonSubTypes.Type(value = PersistenceOutcome.SavedAs.class, name = "SAVE_AS"),
+    @JsonSubTypes.Type(value = PersistenceOutcome.Overwritten.class, name = "OVERWRITE")
   })
   sealed interface PersistenceOutcome
       permits PersistenceOutcome.NotSaved,

@@ -41,18 +41,21 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               GridGrindRequest.WorkbookPersistence.None.class,
               "NONE",
-              "Keep the workbook in memory only."),
+              "Keep the workbook in memory only." + " The response persistence.type echoes NONE."),
           descriptor(
               GridGrindRequest.WorkbookPersistence.OverwriteSource.class,
               "OVERWRITE",
-              "Overwrite the opened source workbook."),
+              "Overwrite the opened source workbook."
+                  + " The response persistence.type echoes OVERWRITE and includes sourcePath"
+                  + " (the original source path string) and executionPath (absolute normalized)."),
           descriptor(
               GridGrindRequest.WorkbookPersistence.SaveAs.class,
               "SAVE_AS",
               "Save the workbook to a new .xlsx path."
-                  + " The response includes requestedPath (the literal path from the request)"
-                  + " and executionPath (the absolute normalized path where the file was written);"
-                  + " they differ when a relative path or a path with .. segments is supplied."
+                  + " The response persistence.type echoes SAVE_AS and includes requestedPath"
+                  + " (the literal path from the request) and executionPath (the absolute"
+                  + " normalized path where the file was written); they differ when a relative"
+                  + " path or a path with .. segments is supplied."
                   + " Missing parent directories are created automatically."));
   private static final List<TypeDescriptor> OPERATION_TYPES =
       List.of(
@@ -155,7 +158,8 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.GetWorkbookSummary.class,
               "GET_WORKBOOK_SUMMARY",
-              "Return workbook-level summary facts."),
+              "Return workbook-level summary facts including sheet count, sheet names,"
+                  + " named range count, and formula recalculation flag."),
           descriptor(
               WorkbookReadOperation.GetNamedRanges.class,
               "GET_NAMED_RANGES",
@@ -172,12 +176,14 @@ public final class GridGrindProtocolCatalog {
               WorkbookReadOperation.GetCells.class,
               "GET_CELLS",
               "Return exact cell snapshots for explicit addresses."
+                  + " An invalid or out-of-range address returns INVALID_CELL_ADDRESS, not a blank."
                   + " Each snapshot includes address, declaredType, effectiveType, displayValue,"
                   + " style, and metadata fields. Type-specific fields: stringValue (STRING),"
                   + " numberValue (NUMERIC), booleanValue (BOOLEAN), errorValue (ERROR),"
-                  + " formula and evaluation (FORMULA). style.fontHeight is a plain object with"
-                  + " both twips and points fields, not the discriminated FontHeightInput write"
-                  + " format."),
+                  + " formula and evaluation (FORMULA). For FORMULA cells, effectiveType is FORMULA"
+                  + " and the evaluated result type is in evaluation.effectiveType."
+                  + " style.fontHeight is a plain object with both twips and points fields,"
+                  + " not the discriminated FontHeightInput write format."),
           descriptor(
               WorkbookReadOperation.GetWindow.class,
               "GET_WINDOW",
@@ -186,7 +192,9 @@ public final class GridGrindProtocolCatalog {
                   + WorkbookReadOperation.MAX_WINDOW_CELLS
                   + ". Each cell snapshot has the same shape as GET_CELLS: address,"
                   + " declaredType, effectiveType, displayValue, style, metadata,"
-                  + " and type-specific value fields."),
+                  + " and type-specific value fields."
+                  + " For FORMULA cells, effectiveType is FORMULA and the evaluated result type"
+                  + " is in evaluation.effectiveType."),
           descriptor(
               WorkbookReadOperation.GetMergedRegions.class,
               "GET_MERGED_REGIONS",
