@@ -10,32 +10,38 @@ import java.util.Objects;
 @JsonSubTypes({
   @JsonSubTypes.Type(
       value = WorkbookReadResult.WorkbookSummaryResult.class,
-      name = "WORKBOOK_SUMMARY"),
-  @JsonSubTypes.Type(value = WorkbookReadResult.NamedRangesResult.class, name = "NAMED_RANGES"),
-  @JsonSubTypes.Type(value = WorkbookReadResult.SheetSummaryResult.class, name = "SHEET_SUMMARY"),
-  @JsonSubTypes.Type(value = WorkbookReadResult.CellsResult.class, name = "CELLS"),
-  @JsonSubTypes.Type(value = WorkbookReadResult.WindowResult.class, name = "WINDOW"),
-  @JsonSubTypes.Type(value = WorkbookReadResult.MergedRegionsResult.class, name = "MERGED_REGIONS"),
-  @JsonSubTypes.Type(value = WorkbookReadResult.HyperlinksResult.class, name = "HYPERLINKS"),
-  @JsonSubTypes.Type(value = WorkbookReadResult.CommentsResult.class, name = "COMMENTS"),
-  @JsonSubTypes.Type(value = WorkbookReadResult.SheetLayoutResult.class, name = "SHEET_LAYOUT"),
+      name = "GET_WORKBOOK_SUMMARY"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.NamedRangesResult.class, name = "GET_NAMED_RANGES"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.SheetSummaryResult.class,
+      name = "GET_SHEET_SUMMARY"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.CellsResult.class, name = "GET_CELLS"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.WindowResult.class, name = "GET_WINDOW"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.MergedRegionsResult.class,
+      name = "GET_MERGED_REGIONS"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.HyperlinksResult.class, name = "GET_HYPERLINKS"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.CommentsResult.class, name = "GET_COMMENTS"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.SheetLayoutResult.class, name = "GET_SHEET_LAYOUT"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.FormulaSurfaceResult.class,
-      name = "FORMULA_SURFACE"),
-  @JsonSubTypes.Type(value = WorkbookReadResult.SheetSchemaResult.class, name = "SHEET_SCHEMA"),
+      name = "GET_FORMULA_SURFACE"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.SheetSchemaResult.class, name = "GET_SHEET_SCHEMA"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.NamedRangeSurfaceResult.class,
-      name = "NAMED_RANGE_SURFACE"),
-  @JsonSubTypes.Type(value = WorkbookReadResult.FormulaHealthResult.class, name = "FORMULA_HEALTH"),
+      name = "GET_NAMED_RANGE_SURFACE"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.FormulaHealthResult.class,
+      name = "ANALYZE_FORMULA_HEALTH"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.HyperlinkHealthResult.class,
-      name = "HYPERLINK_HEALTH"),
+      name = "ANALYZE_HYPERLINK_HEALTH"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.NamedRangeHealthResult.class,
-      name = "NAMED_RANGE_HEALTH"),
+      name = "ANALYZE_NAMED_RANGE_HEALTH"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.WorkbookFindingsResult.class,
-      name = "WORKBOOK_FINDINGS")
+      name = "ANALYZE_WORKBOOK_FINDINGS")
 })
 public sealed interface WorkbookReadResult
     permits WorkbookReadResult.Introspection, WorkbookReadResult.Analysis {

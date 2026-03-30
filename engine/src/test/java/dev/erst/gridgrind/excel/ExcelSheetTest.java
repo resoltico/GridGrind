@@ -215,6 +215,15 @@ class ExcelSheetTest {
       InvalidCellAddressException invalidSnapshotCell =
           assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell(":"));
       assertEquals(":", invalidSnapshotCell.address());
+      InvalidCellAddressException badAddrSnapshot =
+          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("BADADDR"));
+      assertEquals("BADADDR", badAddrSnapshot.address());
+      InvalidCellAddressException a0Snapshot =
+          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("A0"));
+      assertEquals("A0", a0Snapshot.address());
+      InvalidCellAddressException numericOnlySnapshot =
+          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("1"));
+      assertEquals("1", numericOnlySnapshot.address());
       InvalidRangeAddressException invalidRangeSet =
           assertThrows(
               InvalidRangeAddressException.class,
@@ -667,6 +676,10 @@ class ExcelSheetTest {
         IllegalArgumentException.class, () -> ExcelSheet.toColumnWidthUnits(Double.MIN_VALUE));
 
     assertEquals(28.5f, ExcelSheet.toRowHeightPoints(28.5d));
+    assertDoesNotThrow(() -> ExcelSheet.toRowHeightPoints(Short.MAX_VALUE / 20.0d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ExcelSheet.toRowHeightPoints(Math.nextUp(Short.MAX_VALUE / 20.0d)));
     assertThrows(
         IllegalArgumentException.class,
         () -> ExcelSheet.toRowHeightPoints((Short.MAX_VALUE / 20.0d) + 1.0d));

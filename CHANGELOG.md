@@ -5,6 +5,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.0] - 2026-03-30
+
+### Fixed
+
+- `GET_CELLS` no longer silently returns a blank cell snapshot for a malformed address (e.g.
+  `BADADDR`, `A0`). Requests containing any address that Apache POI cannot resolve to valid row
+  and column indices now fail immediately with `INVALID_CELL_ADDRESS`. Previously, `CellReference`
+  returned row index `-1` for unparseable addresses, and the engine treated that as an absent cell
+  and returned a `BLANK` snapshot with no error.
+- Row height validation now enforces the exact documented boundary of 1,638.35 points
+  (32,767 twips). Previously, `Math.round`-based twips conversion accepted values up to
+  approximately 1,638.37 because `Math.round(1638.37 × 20) = 32767`. The validation now uses a
+  direct floating-point comparison `heightPoints > Short.MAX_VALUE / 20.0` so that any value above
+  1,638.35 is rejected regardless of rounding.
+
+### Changed
+
+- All response `type` discriminator values now echo the corresponding request `type` exactly. This
+  is a **wire format breaking change** for any client that inspects the `type` field in read results
+  or persistence outcomes. The full mapping from old to new discriminator values:
+
+  Read result discriminators:
+  - `WORKBOOK_SUMMARY` → `GET_WORKBOOK_SUMMARY`
+  - `NAMED_RANGES` → `GET_NAMED_RANGES`
+  - `SHEET_SUMMARY` → `GET_SHEET_SUMMARY`
+  - `CELLS` → `GET_CELLS`
+  - `WINDOW` → `GET_WINDOW`
+  - `MERGED_REGIONS` → `GET_MERGED_REGIONS`
+  - `HYPERLINKS` → `GET_HYPERLINKS`
+  - `COMMENTS` → `GET_COMMENTS`
+  - `SHEET_LAYOUT` → `GET_SHEET_LAYOUT`
+  - `FORMULA_SURFACE` → `GET_FORMULA_SURFACE`
+  - `SHEET_SCHEMA` → `GET_SHEET_SCHEMA`
+  - `NAMED_RANGE_SURFACE` → `GET_NAMED_RANGE_SURFACE`
+  - `FORMULA_HEALTH` → `ANALYZE_FORMULA_HEALTH`
+  - `HYPERLINK_HEALTH` → `ANALYZE_HYPERLINK_HEALTH`
+  - `NAMED_RANGE_HEALTH` → `ANALYZE_NAMED_RANGE_HEALTH`
+  - `WORKBOOK_FINDINGS` → `ANALYZE_WORKBOOK_FINDINGS`
+
+  Persistence outcome discriminators:
+  - `NOT_SAVED` → `NONE`
+  - `SAVED_AS` → `SAVE_AS`
+  - `OVERWRITTEN` → `OVERWRITE`
+
+  With symmetric naming, the response `type` field directly identifies which read or persistence
+  operation produced it, eliminating any need for a client-side translation table.
+- `GET_WORKBOOK_SUMMARY` catalog summary now states that the response includes the list of sheet
+  names in the workbook.
+- `GET_CELLS` catalog summary now documents that invalid cell addresses (malformed or out-of-range)
+  produce `INVALID_CELL_ADDRESS`, and that `effectiveType` is always `FORMULA` for formula cells
+  regardless of the evaluated result type.
+- `GET_WINDOW` catalog summary now notes that `effectiveType` is always `FORMULA` for formula
+  cells.
+- Persistence outcome summaries in `--print-protocol-catalog` now state that the response `type`
+  echoes the request persistence `type` exactly (e.g. `NONE` persistence returns `type: "NONE"`).
+- The container cleanup workflow now prunes GHCR package versions through GitHub's Packages API
+  via `gh api`, anchored to the five newest tagged releases, instead of using the stale
+  `actions/delete-package-versions` wrapper. This removes the Node20 deprecation warning and
+  keeps complete multi-arch release groups together even when GitHub emits multiple untagged
+  platform and attestation manifests per release.
+
 ## [0.12.0] - 2026-03-29
 
 ### Fixed
@@ -396,7 +457,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.12.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.13.0...HEAD
+[0.13.0]: https://github.com/resoltico/GridGrind/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/resoltico/GridGrind/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/resoltico/GridGrind/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/resoltico/GridGrind/compare/v0.9.0...v0.10.0

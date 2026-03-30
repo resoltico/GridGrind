@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.12.0"
+version: "0.13.0"
 domain: OPERATIONS
 updated: "2026-03-29"
 route:
@@ -68,6 +68,11 @@ non-`.xlsx` extension are rejected as invalid requests.
 
 ## Persistence
 
+The response `persistence.type` field always echoes the request `persistence.type` value, making
+it straightforward to correlate request and response: a `SAVE_AS` request yields a `SAVE_AS`
+response, an `OVERWRITE` request yields an `OVERWRITE` response, and a `NONE` request yields a
+`NONE` response.
+
 ```json
 { "type": "SAVE_AS", "path": "path/to/output.xlsx" }
 ```
@@ -85,9 +90,11 @@ relative path (e.g. `"report.xlsx"`) or a path containing `..` segments is used.
 ```json
 { "type": "OVERWRITE" }
 ```
-Overwrite the source file (requires `source.type=EXISTING`).
+Overwrite the source file (requires `source.type=EXISTING`). The response includes `sourcePath`
+(the original source path string) and `executionPath` (the absolute normalized path).
 
-Omit `persistence` entirely to run mutations and reads without saving.
+Omit `persistence` entirely or use `{ "type": "NONE" }` to run mutations and reads without
+saving.
 
 ---
 
@@ -782,9 +789,9 @@ Returns exact cell snapshots for one sheet and an ordered list of A1 addresses.
 | `sheetName` | Yes | Sheet that owns the requested cells. |
 | `addresses` | Yes | Ordered non-empty list of unique A1 cell addresses. |
 
-`GET_CELLS` returns a blank-typed snapshot for any requested address that has never been written.
-Empty cells are valid cells; the read never fails with `CELL_NOT_FOUND` for addresses within a
-valid sheet. It does fail with `SHEET_NOT_FOUND` when the target sheet does not exist.
+`GET_CELLS` returns a blank-typed snapshot for any valid address that has never been written.
+An address that is not valid A1 notation (e.g. `BADADDR`, `A0`) returns `INVALID_CELL_ADDRESS`,
+not a blank. It fails with `SHEET_NOT_FOUND` when the target sheet does not exist.
 
 #### Cell snapshot shape
 
@@ -795,7 +802,7 @@ common fields:
 |:------|:------------|
 | `address` | A1-style cell address. |
 | `declaredType` | Raw Excel cell type: `BLANK`, `STRING`, `NUMERIC`, `BOOLEAN`, `FORMULA`, or `ERROR`. |
-| `effectiveType` | Resolved type after formula evaluation. Same as `declaredType` for non-formula cells; for formula cells: the result type (`STRING`, `NUMERIC`, `BOOLEAN`, `ERROR`). |
+| `effectiveType` | For non-formula cells: same as `declaredType`. For formula cells: always `FORMULA` — the evaluated result type is in `evaluation.effectiveType`. |
 | `displayValue` | Formatted string as Excel would render it. |
 | `style` | Style snapshot: `numberFormat`, `bold`, `italic`, `wrapText`, `horizontalAlignment`, `verticalAlignment`, `fontName`, `fontHeight`, `fontColor`, `underline`, `strikeout`, `fillColor`, border sides. |
 | `metadata` | Hyperlink and comment metadata attached at snapshot time. |

@@ -333,10 +333,10 @@ class GridGrindJsonTest {
             () ->
                 GridGrindJson.readResponse(
                     """
-                    {"status":"SUCCESS","protocolVersion":"V1","persistence":{"type":"NOT_SAVED"},\
-                    "reads":[{"type":"WORKBOOK_SUMMARY","requestId":"workbook","workbook":{"sheetCount":0,\
+                    {"status":"SUCCESS","protocolVersion":"V1","persistence":{"type":"NONE"},\
+                    "reads":[{"type":"GET_WORKBOOK_SUMMARY","requestId":"workbook","workbook":{"sheetCount":0,\
                     "sheetNames":[],"namedRangeCount":0,"forceFormulaRecalculationOnOpen":false}},\
-                    {"type":"WINDOW","requestId":"window","window":{"sheetName":"Budget","topLeftAddress":"A1",\
+                    {"type":"GET_WINDOW","requestId":"window","window":{"sheetName":"Budget","topLeftAddress":"A1",\
                     "rowCount":1,"columnCount":1,"rows":[{"rowIndex":0,"cells":[{"effectiveType":"BLANK",\
                     "address":"A1","declaredType":"BLANK","displayValue":"","style":{"numberFormat":null,\
                     "bold":false,"italic":false,"wrapText":false,"horizontalAlignment":"GENERAL",\

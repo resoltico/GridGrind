@@ -665,6 +665,41 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
+  void returnsInvalidCellAddressForGetCellsWithMalformedAddress() {
+    GridGrindResponse.Failure failure =
+        failure(
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request(
+                        new GridGrindRequest.WorkbookSource.New(),
+                        new GridGrindRequest.WorkbookPersistence.None(),
+                        List.of(new WorkbookOperation.EnsureSheet("Data")),
+                        new WorkbookReadOperation.GetCells(
+                            "cells", "Data", List.of("A1", "BADADDR")))));
+
+    assertEquals(GridGrindProblemCode.INVALID_CELL_ADDRESS, failure.problem().code());
+    assertEquals("EXECUTE_READ", failure.problem().context().stage());
+    assertEquals("BADADDR", failure.problem().context().address());
+  }
+
+  @Test
+  void returnsInvalidCellAddressForGetCellsWithZeroRowAddress() {
+    GridGrindResponse.Failure failure =
+        failure(
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request(
+                        new GridGrindRequest.WorkbookSource.New(),
+                        new GridGrindRequest.WorkbookPersistence.None(),
+                        List.of(new WorkbookOperation.EnsureSheet("Data")),
+                        new WorkbookReadOperation.GetCells("cells", "Data", List.of("A0")))));
+
+    assertEquals(GridGrindProblemCode.INVALID_CELL_ADDRESS, failure.problem().code());
+    assertEquals("EXECUTE_READ", failure.problem().context().stage());
+    assertEquals("A0", failure.problem().context().address());
+  }
+
+  @Test
   void returnsStructuredFailureForInvalidOverwriteSourceUsage() {
     GridGrindResponse.Failure failure =
         failure(

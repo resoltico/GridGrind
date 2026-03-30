@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.12.0"
+version: "0.13.0"
 domain: DEVELOPER
-updated: "2026-03-28"
+updated: "2026-03-29"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -80,6 +80,27 @@ before every commit.
 ./gradlew :cli:run --args="--print-request-template"
 ./gradlew :cli:run --args="--print-protocol-catalog"
 ```
+
+---
+
+## GitHub Workflows
+
+Release automation is split across three workflows:
+
+- `CI` runs the same quality gates as `./check.sh`.
+- `Release` builds the fat JAR and publishes the GitHub Release when a `v*` tag is pushed.
+- `Container` builds and publishes the multi-arch GHCR image and then prunes older container
+  package versions.
+
+The container cleanup step intentionally uses `gh api` against GitHub Packages instead of
+`actions/delete-package-versions`. That action still runs on Node20, while GitHub is moving
+JavaScript actions to Node24, and raw count-based cleanup is incorrect for GHCR multi-arch
+images because one release produces several package-version records: the tagged OCI index plus
+multiple untagged platform and attestation manifests.
+
+The workflow therefore keeps the five newest tagged releases (`X.Y.Z`) as anchors and deletes
+only package-version records older than the oldest retained anchor. This preserves complete
+release groups instead of splitting a release across the retention boundary.
 
 ---
 

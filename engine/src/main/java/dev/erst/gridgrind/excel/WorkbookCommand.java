@@ -373,11 +373,11 @@ public sealed interface WorkbookCommand
 
   private static void requireRowHeightPoints(double heightPoints) {
     requireFinitePositive(heightPoints, "heightPoints");
-    if (Math.round(heightPoints * 20.0d) > Short.MAX_VALUE) {
+    if (heightPoints > Short.MAX_VALUE / 20.0d) {
       throw new IllegalArgumentException(
           "heightPoints is too large for Excel row height storage: " + heightPoints);
     }
-    if (Math.round(heightPoints * 20.0d) <= 0) {
+    if ((long) (heightPoints * 20.0d) <= 0) {
       throw new IllegalArgumentException(
           "heightPoints is too small to produce a visible Excel row height: " + heightPoints);
     }
