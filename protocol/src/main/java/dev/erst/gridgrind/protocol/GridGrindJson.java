@@ -185,10 +185,12 @@ public final class GridGrindJson {
 
   private static String cleanJacksonMessage(String message) {
     int startMarkerIndex = message.indexOf(" (start marker at [Source:");
-    if (startMarkerIndex >= 0) {
-      return message.substring(0, startMarkerIndex);
-    }
-    return message;
+    String trimmed = startMarkerIndex >= 0 ? message.substring(0, startMarkerIndex) : message;
+    // Strip fully-qualified class names from type-resolution error messages so that internal
+    // implementation details are not surfaced to callers.
+    return trimmed
+        .replaceAll(" as a subtype of `[^`]+`", "")
+        .replaceAll(" \\(for POJO property '[^']+'\\)", "");
   }
 
   private static PayloadMetadata payloadMetadata(JacksonException exception) {

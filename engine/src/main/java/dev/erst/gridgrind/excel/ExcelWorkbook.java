@@ -326,11 +326,14 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   private void requireTargetIndex(int targetIndex) {
-    if (targetIndex < 0 || targetIndex >= workbook.getNumberOfSheets()) {
+    int sheetCount = workbook.getNumberOfSheets();
+    if (targetIndex < 0 || targetIndex >= sheetCount) {
       throw new IllegalArgumentException(
-          "targetIndex must be between 0 and "
-              + (workbook.getNumberOfSheets() - 1)
-              + " (inclusive): "
+          "targetIndex out of range: workbook has "
+              + sheetCount
+              + " sheet(s), valid positions are 0 to "
+              + (sheetCount - 1)
+              + "; got "
               + targetIndex);
     }
   }

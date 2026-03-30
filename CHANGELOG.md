@@ -5,6 +5,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0] - 2026-03-30
+
+### Fixed
+
+- `GET_CELLS` and `GET_WINDOW` now reject cell addresses that exceed the Excel 2007 sheet
+  boundary (row > 1,048,575 or column > 16,383). Previously, addresses like `XFE1` (column
+  16,384) were accepted by `CellReference` with non-negative indices and returned a blank
+  snapshot instead of failing with `INVALID_CELL_ADDRESS`.
+- `GET_WINDOW` now rejects window dimensions that would extend the window beyond the Excel
+  2007 sheet boundary. Previously, a window starting at a valid address could silently overflow
+  if `topLeft.row + rowCount - 1 > 1,048,575` or `topLeft.col + columnCount - 1 > 16,383`.
+- Row height read-back from `GET_SHEET_LAYOUT` now returns an exact value for heights stored as
+  twips. Previously, `row.getHeightInPoints()` returned a `float` which introduced floating-point
+  imprecision (e.g., 1,638.35 points stored as 32,767 twips read back as 1,638.3499755859375).
+  Heights are now read as integer twips divided by 20.0, eliminating the imprecision.
+- Error messages from Jackson for unknown `type` discriminators no longer include internal
+  fully-qualified class names (e.g., `dev.erst.gridgrind.protocol.WorkbookReadOperation`) or
+  Jackson-internal POJO property annotations. The message now contains only the unknown
+  discriminator value and the list of known type IDs.
+- `MOVE_SHEET` error message for an out-of-range `targetIndex` now clearly states the workbook's
+  sheet count and the valid 0-based index range. Previously the message said
+  "between 0 and N (inclusive)" without clarifying what N represented.
+
+### Changed
+
+- `GET_SHEET_SCHEMA` now counts formula cells by their evaluated result type (NUMERIC, STRING,
+  BOOLEAN, ERROR) in `observedTypes` and `dominantType`, rather than as FORMULA. This makes
+  the schema reflect the data a consumer actually reads, not the cell's internal storage type.
+
 ## [0.13.0] - 2026-03-30
 
 ### Fixed
@@ -457,7 +486,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.13.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.14.0...HEAD
+[0.14.0]: https://github.com/resoltico/GridGrind/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/resoltico/GridGrind/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/resoltico/GridGrind/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/resoltico/GridGrind/compare/v0.10.0...v0.11.0

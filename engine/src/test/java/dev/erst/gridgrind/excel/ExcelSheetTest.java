@@ -224,6 +224,12 @@ class ExcelSheetTest {
       InvalidCellAddressException numericOnlySnapshot =
           assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("1"));
       assertEquals("1", numericOnlySnapshot.address());
+      InvalidCellAddressException outOfBoundsRow =
+          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("A1048577"));
+      assertEquals("A1048577", outOfBoundsRow.address());
+      InvalidCellAddressException outOfBoundsCol =
+          assertThrows(InvalidCellAddressException.class, () -> sheet.snapshotCell("XFE1"));
+      assertEquals("XFE1", outOfBoundsCol.address());
       InvalidRangeAddressException invalidRangeSet =
           assertThrows(
               InvalidRangeAddressException.class,
@@ -555,6 +561,8 @@ class ExcelSheetTest {
       assertEquals("C3", window.rows().get(2).cells().get(2).address());
       assertThrows(IllegalArgumentException.class, () -> sheet.window("A1", 0, 1));
       assertThrows(IllegalArgumentException.class, () -> sheet.window("A1", 1, 0));
+      assertThrows(IllegalArgumentException.class, () -> sheet.window("A1", 1048577, 1));
+      assertThrows(IllegalArgumentException.class, () -> sheet.window("A1", 1, 16385));
 
       List<WorkbookReadResult.CellHyperlink> allHyperlinks =
           sheet.hyperlinks(new ExcelCellSelection.AllUsedCells());
@@ -630,6 +638,8 @@ class ExcelSheetTest {
       assertSame(sheet, sheet.setRowHeight(0, 1, 28.5));
       assertEquals((short) 570, poiSheet.getRow(0).getHeight());
       assertEquals((short) 570, poiSheet.getRow(1).getHeight());
+      sheet.setRowHeight(0, 0, 1638.35);
+      assertEquals(32767 / 20.0, sheet.layout().rows().get(0).heightPoints());
 
       assertSame(sheet, sheet.freezePanes(1, 2, 3, 4));
       assertNotNull(poiSheet.getPaneInformation());

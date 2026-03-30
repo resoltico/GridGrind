@@ -1,0 +1,12 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Data" },
+    { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "TEXT", "text": "hello" } }
+  ],
+  "reads": [
+    { "type": "GET_CELLS", "requestId": "cells", "sheetName": "Data", "addresses": ["XFE1"] }
+  ]
+}

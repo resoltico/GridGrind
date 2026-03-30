@@ -182,6 +182,10 @@ public final class GridGrindCli {
           Row heightPoints:         > 0 and <= 1638.35 (Excel limit: 32767 twips).
           DATE / DATE_TIME inputs:  stored as numeric serial; GET_CELLS returns declaredType=NUMERIC.
 
+        Request:
+          protocolVersion is optional; omit it and the current version is assumed.
+          operations run before reads; reads are non-mutating and run last.
+
         Minimal Valid Request:
         %s
 

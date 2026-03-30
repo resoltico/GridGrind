@@ -229,12 +229,29 @@ final class ExcelWorkbookIntrospector {
       int blankCellCount = 0;
       for (int rowIndex = 1; rowIndex < window.rows().size(); rowIndex++) {
         ExcelCellSnapshot cell = window.rows().get(rowIndex).cells().get(columnOffset);
-        if ("BLANK".equals(cell.effectiveType())) {
-          blankCellCount++;
-          continue;
+        switch (cell) {
+          case ExcelCellSnapshot.BlankSnapshot _ -> blankCellCount++;
+          case ExcelCellSnapshot.FormulaSnapshot f -> {
+            populatedCellCount++;
+            typeCounts.merge(f.evaluation().effectiveType(), 1, Integer::sum);
+          }
+          case ExcelCellSnapshot.TextSnapshot _ -> {
+            populatedCellCount++;
+            typeCounts.merge(cell.effectiveType(), 1, Integer::sum);
+          }
+          case ExcelCellSnapshot.NumberSnapshot _ -> {
+            populatedCellCount++;
+            typeCounts.merge(cell.effectiveType(), 1, Integer::sum);
+          }
+          case ExcelCellSnapshot.BooleanSnapshot _ -> {
+            populatedCellCount++;
+            typeCounts.merge(cell.effectiveType(), 1, Integer::sum);
+          }
+          case ExcelCellSnapshot.ErrorSnapshot _ -> {
+            populatedCellCount++;
+            typeCounts.merge(cell.effectiveType(), 1, Integer::sum);
+          }
         }
-        populatedCellCount++;
-        typeCounts.merge(cell.effectiveType(), 1, Integer::sum);
       }
 
       List<WorkbookReadResult.TypeCount> observedTypes = new ArrayList<>(typeCounts.size());

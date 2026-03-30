@@ -409,6 +409,8 @@ class GridGrindJsonTest {
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertNotNull(failure.getMessage());
+    assertFalse(failure.getMessage().contains("dev.erst.gridgrind"));
+    assertFalse(failure.getMessage().contains("for POJO property"));
     assertEquals("reads[0]", failure.jsonPath());
   }
 

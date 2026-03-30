@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import org.apache.poi.common.usermodel.HyperlinkType;
+import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
@@ -386,6 +387,19 @@ public final class ExcelSheet {
     }
 
     CellReference topLeft = parseCellReference(topLeftAddress);
+    requireValidCellReference(topLeftAddress, topLeft);
+    int lastRow = topLeft.getRow() + rowCount - 1;
+    int lastCol = topLeft.getCol() + columnCount - 1;
+    if (lastRow > SpreadsheetVersion.EXCEL2007.getLastRowIndex()
+        || lastCol > SpreadsheetVersion.EXCEL2007.getLastColumnIndex()) {
+      throw new IllegalArgumentException(
+          "window extends beyond the Excel sheet boundary: topLeft="
+              + topLeftAddress
+              + " rowCount="
+              + rowCount
+              + " columnCount="
+              + columnCount);
+    }
     List<WorkbookReadResult.WindowRow> rows = new ArrayList<>(rowCount);
     for (int rowOffset = 0; rowOffset < rowCount; rowOffset++) {
       int rowIndex = topLeft.getRow() + rowOffset;
@@ -803,8 +817,13 @@ public final class ExcelSheet {
     }
   }
 
-  private void requireValidCellReference(String address, CellReference cellReference) {
-    if (cellReference.getRow() < 0 || cellReference.getCol() < 0) {
+  private static void requireValidCellReference(String address, CellReference cellReference) {
+    int row = cellReference.getRow();
+    int col = cellReference.getCol();
+    if (row < 0
+        || col < 0
+        || row > SpreadsheetVersion.EXCEL2007.getLastRowIndex()
+        || col > SpreadsheetVersion.EXCEL2007.getLastColumnIndex()) {
       throw new InvalidCellAddressException(
           address, new IllegalArgumentException("not a valid A1-style cell address: " + address));
     }
@@ -1050,7 +1069,7 @@ public final class ExcelSheet {
     for (int rowIndex = 0; rowIndex <= lastRowIndex; rowIndex++) {
       Row row = sheet.getRow(rowIndex);
       double heightPoints =
-          row == null ? sheet.getDefaultRowHeightInPoints() : row.getHeightInPoints();
+          row == null ? sheet.getDefaultRowHeight() / 20.0 : row.getHeight() / 20.0;
       rows.add(new WorkbookReadResult.RowLayout(rowIndex, heightPoints));
     }
     return List.copyOf(rows);

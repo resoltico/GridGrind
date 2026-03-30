@@ -41,7 +41,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.13.0
+docker pull ghcr.io/resoltico/gridgrind:0.14.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -209,11 +209,14 @@ Analysis reads:
 Every read carries a caller-defined `requestId`, and every result echoes that `requestId` back so
 agents can correlate repeated or similar reads deterministically.
 
-`GET_WINDOW` and `GET_SHEET_SCHEMA` require `rowCount * columnCount` ≤ 250,000. This is a
-GridGrind operational limit (not an Excel or Apache POI limit) to prevent out-of-memory failures
-during JSON serialization in bounded-heap environments. For large sheets, use `GET_SHEET_SUMMARY`
-to discover the populated region and tile it with multiple bounded window reads. See
-[docs/LIMITATIONS.md](docs/LIMITATIONS.md) for the full limit reference.
+`GET_WINDOW` and `GET_SHEET_SCHEMA` require `rowCount * columnCount` ≤ 250,000. `GET_WINDOW`
+additionally rejects windows that extend beyond the Excel 2007 sheet boundary
+(1,048,576 rows, 16,384 columns). `GET_CELLS` rejects any address that is not valid A1 notation
+or that exceeds the sheet boundary (e.g. `A1048577`, `XFE1`). These are GridGrind operational
+limits to prevent out-of-memory failures during JSON serialization in bounded-heap environments.
+For large sheets, use `GET_SHEET_SUMMARY` to discover the populated region and tile it with
+multiple bounded window reads. See [docs/LIMITATIONS.md](docs/LIMITATIONS.md) for the full limit
+reference.
 
 ---
 

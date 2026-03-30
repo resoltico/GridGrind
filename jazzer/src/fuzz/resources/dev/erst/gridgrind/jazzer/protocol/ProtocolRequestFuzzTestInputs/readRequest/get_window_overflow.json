@@ -1,0 +1,18 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Data" }
+  ],
+  "reads": [
+    {
+      "type": "GET_WINDOW",
+      "requestId": "window",
+      "sheetName": "Data",
+      "topLeftAddress": "A1",
+      "rowCount": 1048577,
+      "columnCount": 1
+    }
+  ]
+}

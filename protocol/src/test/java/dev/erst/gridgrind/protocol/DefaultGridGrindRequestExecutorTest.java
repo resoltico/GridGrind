@@ -419,7 +419,9 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("MOVE_SHEET", failure.problem().context().operationType());
     assertEquals("Budget", failure.problem().context().sheetName());
-    assertEquals("targetIndex must be between 0 and 0 (inclusive): 1", failure.problem().message());
+    assertEquals(
+        "targetIndex out of range: workbook has 1 sheet(s), valid positions are 0 to 0; got 1",
+        failure.problem().message());
   }
 
   @Test
