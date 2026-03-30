@@ -13,8 +13,13 @@ sealed interface CliCommand {
   /** Requests that a minimal valid request JSON document be printed to stdout. */
   record PrintRequestTemplate() implements CliCommand {}
 
-  /** Requests that the machine-readable protocol catalog be printed to stdout. */
-  record PrintProtocolCatalog() implements CliCommand {}
+  /**
+   * Requests that the machine-readable protocol catalog be printed to stdout.
+   *
+   * <p>When {@code operationFilter} is non-null, only the entry matching that operation id is
+   * printed. When null, the full catalog is printed.
+   */
+  record PrintProtocolCatalog(String operationFilter) implements CliCommand {}
 
   /** Requests protocol execution using stdin/stdout or explicit request/response file paths. */
   record Execute(Path requestPath, Path responsePath) implements CliCommand {}

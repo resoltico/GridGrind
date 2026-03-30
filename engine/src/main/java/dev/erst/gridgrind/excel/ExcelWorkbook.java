@@ -95,9 +95,14 @@ public final class ExcelWorkbook implements AutoCloseable {
     return this;
   }
 
-  /** Deletes an existing sheet from the workbook. */
+  /** Deletes an existing sheet from the workbook. A workbook must retain at least one sheet. */
   public ExcelWorkbook deleteSheet(String sheetName) {
-    workbook.removeSheetAt(requiredSheetIndex(sheetName));
+    int index = requiredSheetIndex(sheetName);
+    if (workbook.getNumberOfSheets() == 1) {
+      throw new IllegalArgumentException(
+          "cannot delete sheet '" + sheetName + "': a workbook must contain at least one sheet");
+    }
+    workbook.removeSheetAt(index);
     return this;
   }
 

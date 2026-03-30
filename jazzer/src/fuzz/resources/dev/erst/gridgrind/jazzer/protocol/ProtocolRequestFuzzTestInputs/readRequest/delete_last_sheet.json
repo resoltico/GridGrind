@@ -1,0 +1,10 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "OnlySheet" },
+    { "type": "DELETE_SHEET", "sheetName": "Sheet1" },
+    { "type": "DELETE_SHEET", "sheetName": "OnlySheet" }
+  ]
+}

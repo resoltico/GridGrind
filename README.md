@@ -41,7 +41,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.14.0
+docker pull ghcr.io/resoltico/gridgrind:0.15.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -127,7 +127,7 @@ autonomous callers deterministic failure semantics instead of "error after side 
 |:----------|:-------------|
 | `ENSURE_SHEET` | Create a sheet if it does not already exist |
 | `RENAME_SHEET` | Rename an existing sheet to a new name |
-| `DELETE_SHEET` | Remove an existing sheet |
+| `DELETE_SHEET` | Remove an existing sheet (the last remaining sheet cannot be deleted) |
 | `MOVE_SHEET` | Move an existing sheet to a zero-based position |
 | `MERGE_CELLS` | Merge a rectangular A1-style range |
 | `UNMERGE_CELLS` | Remove a merged region by exact range match |

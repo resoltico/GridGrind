@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.14.0"
+version: "0.15.0"
 domain: QUICK_REFERENCE
 updated: "2026-03-29"
 route:
@@ -140,7 +140,7 @@ gridgrind --print-protocol-catalog
 { "type": "SET_CELL", "sheetName": "Sheet1", "address": "G1", "value": { "type": "BLANK"                                             } }
 ```
 
-The `FORMULA` value must omit the leading `=` sign; the engine adds it internally.
+A leading `=` in `FORMULA` values is accepted and stripped automatically. `"=SUM(B1:B10)"` and `"SUM(B1:B10)"` are equivalent.
 
 ## SET_RANGE
 
@@ -286,8 +286,9 @@ accepted and stored as `"A1:B4"`.
 }
 ```
 
-`SET_COLUMN_WIDTH.widthCharacters` is converted to POI width units with `round(widthCharacters * 256)`.
-`SET_ROW_HEIGHT.heightPoints` uses Excel point units. `UNMERGE_CELLS` requires an exact merged-range match.
+`SET_COLUMN_WIDTH.widthCharacters` is converted to POI width units with `round(widthCharacters * 256)`. Must be > 0 and ≤ 255.0.
+`SET_ROW_HEIGHT.heightPoints` uses Excel point units. Must be > 0 and ≤ 1,638.35 (32,767 twips). `UNMERGE_CELLS` requires an exact merged-range match.
+`DELETE_SHEET` returns `INVALID_REQUEST` when the sheet to delete is the only remaining sheet in the workbook.
 
 ## EVALUATE_FORMULAS
 

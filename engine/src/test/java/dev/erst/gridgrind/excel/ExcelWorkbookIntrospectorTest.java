@@ -410,8 +410,8 @@ class ExcelWorkbookIntrospectorTest {
 
       WorkbookReadResult.SchemaColumn column = schema.analysis().columns().getFirst();
       assertEquals(1, column.observedTypes().size());
-      assertEquals("NUMERIC", column.observedTypes().getFirst().type());
-      assertEquals("NUMERIC", column.dominantType());
+      assertEquals("NUMBER", column.observedTypes().getFirst().type());
+      assertEquals("NUMBER", column.dominantType());
     }
   }
 

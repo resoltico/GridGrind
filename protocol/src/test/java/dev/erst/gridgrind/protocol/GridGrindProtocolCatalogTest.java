@@ -174,8 +174,8 @@ class GridGrindProtocolCatalogTest {
             .findFirst()
             .orElseThrow();
     assertTrue(
-        dateEntry.summary().contains("NUMERIC"),
-        "DATE summary must note that read-back declaredType is NUMERIC");
+        dateEntry.summary().contains("NUMBER"),
+        "DATE summary must note that read-back declaredType is NUMBER");
 
     assertEquals(catalog, decoded);
   }
@@ -403,6 +403,28 @@ class GridGrindProtocolCatalogTest {
     assertThrows(
         NullPointerException.class,
         () -> new GridGrindProtocolCatalog.TypeEntry("ID", "Summary", List.of(), List.of(), null));
+  }
+
+  @Test
+  void entryForReturnsMatchingEntryByOperationId() {
+    assertTrue(GridGrindProtocolCatalog.entryFor("SET_CELL").isPresent());
+    assertEquals("SET_CELL", GridGrindProtocolCatalog.entryFor("SET_CELL").get().id());
+    assertTrue(GridGrindProtocolCatalog.entryFor("GET_WINDOW").isPresent());
+    assertTrue(GridGrindProtocolCatalog.entryFor("NEW").isPresent());
+    assertTrue(GridGrindProtocolCatalog.entryFor("SAVE_AS").isPresent());
+    assertTrue(GridGrindProtocolCatalog.entryFor("FORMULA").isPresent());
+    assertTrue(GridGrindProtocolCatalog.entryFor("UNKNOWN_XYZ").isEmpty());
+  }
+
+  @Test
+  void duplicateEntryThrowsIllegalState() {
+    IllegalStateException failure =
+        assertThrows(
+            IllegalStateException.class,
+            () -> GridGrindProtocolCatalog.duplicateEntry("test label", "LEFT", "RIGHT"));
+    assertTrue(failure.getMessage().contains("test label"));
+    assertTrue(failure.getMessage().contains("LEFT"));
+    assertTrue(failure.getMessage().contains("RIGHT"));
   }
 
   private static List<String> ids(List<GridGrindProtocolCatalog.TypeEntry> entries) {

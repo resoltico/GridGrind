@@ -70,7 +70,11 @@ public final class GridGrindProtocolCatalog {
               "Rename an existing sheet."
                   + " The new name must not exceed 31 characters (Excel limit)."),
           descriptor(
-              WorkbookOperation.DeleteSheet.class, "DELETE_SHEET", "Delete an existing sheet."),
+              WorkbookOperation.DeleteSheet.class,
+              "DELETE_SHEET",
+              "Delete an existing sheet."
+                  + " A workbook must retain at least one sheet;"
+                  + " deleting the last sheet returns INVALID_REQUEST."),
           descriptor(
               WorkbookOperation.MoveSheet.class,
               "MOVE_SHEET",
@@ -130,7 +134,12 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookOperation.ApplyStyle.class,
               "APPLY_STYLE",
-              "Apply a style patch to every cell in a range."),
+              "Apply a style patch to every cell in a range."
+                  + " Write shape: style.border is a nested object"
+                  + " { \"all\": { \"style\": \"THIN\" } } or per-side top/right/bottom/left."
+                  + " Read shape (GET_CELLS, GET_WINDOW): borders are flat properties"
+                  + " topBorderStyle, rightBorderStyle, bottomBorderStyle, leftBorderStyle;"
+                  + " the nested border object is write-only."),
           descriptor(
               WorkbookOperation.SetNamedRange.class,
               "SET_NAMED_RANGE",
@@ -181,7 +190,7 @@ public final class GridGrindProtocolCatalog {
                   + " An invalid or out-of-range address returns INVALID_CELL_ADDRESS, not a blank."
                   + " Each snapshot includes address, declaredType, effectiveType, displayValue,"
                   + " style, and metadata fields. Type-specific fields: stringValue (STRING),"
-                  + " numberValue (NUMERIC), booleanValue (BOOLEAN), errorValue (ERROR),"
+                  + " numberValue (NUMBER), booleanValue (BOOLEAN), errorValue (ERROR),"
                   + " formula and evaluation (FORMULA). For FORMULA cells, effectiveType is FORMULA"
                   + " and the evaluated result type is in evaluation.effectiveType."
                   + " style.fontHeight is a plain object with both twips and points fields,"
@@ -232,7 +241,7 @@ public final class GridGrindProtocolCatalog {
                   + " cells are blank."
                   + " dominantType is null when all data cells are blank, or when two or more types"
                   + " tie for the highest count."
-                  + " Formula cells contribute their evaluated result type (NUMERIC, STRING, etc.)"
+                  + " Formula cells contribute their evaluated result type (NUMBER, STRING, etc.)"
                   + " to dominantType and observedTypes, not FORMULA."),
           descriptor(
               WorkbookReadOperation.GetNamedRangeSurface.class,
@@ -272,12 +281,12 @@ public final class GridGrindProtocolCatalog {
                       CellInput.Date.class,
                       "DATE",
                       "Write an ISO-8601 date value."
-                          + " Stored as an Excel serial number; GET_CELLS returns declaredType=NUMERIC with a formatted displayValue."),
+                          + " Stored as an Excel serial number; GET_CELLS returns declaredType=NUMBER with a formatted displayValue."),
                   descriptor(
                       CellInput.DateTime.class,
                       "DATE_TIME",
                       "Write an ISO-8601 date-time value."
-                          + " Stored as an Excel serial number; GET_CELLS returns declaredType=NUMERIC with a formatted displayValue."),
+                          + " Stored as an Excel serial number; GET_CELLS returns declaredType=NUMBER with a formatted displayValue."),
                   descriptor(
                       CellInput.Formula.class,
                       "FORMULA",
@@ -440,6 +449,26 @@ public final class GridGrindProtocolCatalog {
     return CATALOG;
   }
 
+  /**
+   * Returns the single catalog entry matching the given operation id, or empty when no entry with
+   * that id exists. Searches sourceTypes, persistenceTypes, operationTypes, and readTypes.
+   */
+  public static java.util.Optional<TypeEntry> entryFor(String id) {
+    return allEntries().stream().filter(e -> e.id().equals(id)).findFirst();
+  }
+
+  private static List<TypeEntry> allEntries() {
+    List<TypeEntry> all = new java.util.ArrayList<>();
+    all.addAll(CATALOG.sourceTypes());
+    all.addAll(CATALOG.persistenceTypes());
+    all.addAll(CATALOG.operationTypes());
+    all.addAll(CATALOG.readTypes());
+    for (NestedTypeGroup group : CATALOG.nestedTypes()) {
+      all.addAll(group.types());
+    }
+    return all;
+  }
+
   private static Catalog buildCatalog() {
     validateCoverage(GridGrindRequest.WorkbookSource.class, SOURCE_TYPES);
     validateCoverage(GridGrindRequest.WorkbookPersistence.class, PERSISTENCE_TYPES);
@@ -595,14 +624,18 @@ public final class GridGrindProtocolCatalog {
                 keyExtractor, valueExtractor, duplicateEntryHandler(label), LinkedHashMap::new));
   }
 
-  private static <T> BinaryOperator<T> duplicateEntryHandler(String label) {
-    return (left, right) -> duplicateEntry(label, left, right);
-  }
-
-  private static <T> T duplicateEntry(String label, T left, T right) {
+  /**
+   * Throws IllegalStateException for a duplicate entry detected during catalog construction.
+   * Package-private for direct unit testing of the unreachable-in-integration duplicate path.
+   */
+  static <T> T duplicateEntry(String label, T left, T right) {
     throw new IllegalStateException(
         "Duplicate %s detected while building the protocol catalog: %s / %s"
             .formatted(label, left, right));
+  }
+
+  private static <T> BinaryOperator<T> duplicateEntryHandler(String label) {
+    return (left, right) -> duplicateEntry(label, left, right);
   }
 
   /** JSON-serializable top-level catalog emitted by {@code --print-protocol-catalog}. */

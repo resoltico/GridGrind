@@ -27,7 +27,12 @@ final class CliArguments {
           return new CliCommand.PrintRequestTemplate();
         }
         case "--print-protocol-catalog" -> {
-          return new CliCommand.PrintProtocolCatalog();
+          String operationFilter = null;
+          if (index + 1 < args.length && "--operation".equals(args[index + 1])) {
+            int valueIndex = nextValueIndex(args, index + 1, "--operation");
+            operationFilter = args[valueIndex];
+          }
+          return new CliCommand.PrintProtocolCatalog(operationFilter);
         }
         case "--request" -> {
           if (requestPath != null) {

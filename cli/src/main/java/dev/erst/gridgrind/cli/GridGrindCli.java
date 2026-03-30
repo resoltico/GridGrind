@@ -90,8 +90,25 @@ public final class GridGrindCli {
         stdout.flush();
         yield 0;
       }
-      case CliCommand.PrintProtocolCatalog _ -> {
-        GridGrindJson.writeProtocolCatalog(stdout, GridGrindProtocolCatalog.catalog());
+      case CliCommand.PrintProtocolCatalog cmd -> {
+        if (cmd.operationFilter() == null) {
+          GridGrindJson.writeProtocolCatalog(stdout, GridGrindProtocolCatalog.catalog());
+          stdout.write('\n');
+          stdout.flush();
+          yield 0;
+        }
+        var entry = GridGrindProtocolCatalog.entryFor(cmd.operationFilter());
+        if (entry.isEmpty()) {
+          responseWriter.write(
+              stdout,
+              failure(
+                  GridGrindProblemCode.INVALID_ARGUMENTS,
+                  "Unknown operation: " + cmd.operationFilter(),
+                  new GridGrindResponse.ProblemContext.ParseArguments("--operation"),
+                  new IllegalArgumentException("Unknown operation: " + cmd.operationFilter())));
+          yield 2;
+        }
+        GridGrindJson.writeTypeEntry(stdout, entry.get());
         stdout.write('\n');
         stdout.flush();
         yield 0;
@@ -165,7 +182,7 @@ public final class GridGrindCli {
         Usage:
           gridgrind [--request <path>] [--response <path>]
           gridgrind --print-request-template
-          gridgrind --print-protocol-catalog
+          gridgrind --print-protocol-catalog [--operation <id>]
           gridgrind --help | -h
           gridgrind --version
 
@@ -180,10 +197,13 @@ public final class GridGrindCli {
           GET_SHEET_SCHEMA cells:   rowCount * columnCount must not exceed 250,000.
           Column widthCharacters:   > 0 and <= 255 (Excel limit).
           Row heightPoints:         > 0 and <= 1638.35 (Excel limit: 32767 twips).
-          DATE / DATE_TIME inputs:  stored as numeric serial; GET_CELLS returns declaredType=NUMERIC.
+          DATE / DATE_TIME inputs:  stored as numeric serial; GET_CELLS returns declaredType=NUMBER.
 
         Request:
           protocolVersion is optional; omit it and the current version is assumed.
+          persistence is optional; omit it and the workbook stays in memory only (NONE).
+          operations is optional; omit or send [] to skip mutations.
+          reads is optional; omit or send [] to skip introspection.
           operations run before reads; reads are non-mutating and run last.
 
         Minimal Valid Request:
@@ -214,10 +234,12 @@ public final class GridGrindCli {
         Flags:
           --request <path>           Read the JSON request from a file instead of stdin.
           --response <path>          Write the JSON response to a file instead of stdout.
-          --print-request-template   Print a minimal valid request JSON document.
-          --print-protocol-catalog   Print the machine-readable protocol catalog.
-          --help, -h                 Print this help text.
-          --version                  Print the GridGrind version.
+          --print-request-template          Print a minimal valid request JSON document.
+          --print-protocol-catalog          Print the machine-readable protocol catalog.
+          --print-protocol-catalog          Print a single entry from the catalog.
+            --operation <id>
+          --help, -h                        Print this help text.
+          --version                         Print the GridGrind version.
         """
         .formatted(
             version,

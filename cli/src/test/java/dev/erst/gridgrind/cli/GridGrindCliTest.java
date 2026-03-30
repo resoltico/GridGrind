@@ -895,16 +895,71 @@ class GridGrindCliTest {
     assertTrue(help.contains("255"), "help must state the column width limit");
     assertTrue(help.contains("1638"), "help must state the row height limit");
     assertTrue(
-        help.contains("NUMERIC"),
-        "help must note that DATE/DATE_TIME inputs are stored as NUMERIC on read-back");
+        help.contains("NUMBER"),
+        "help must note that DATE/DATE_TIME inputs are stored as NUMBER on read-back");
   }
 
   @Test
-  void helpTextMentionsProtocolVersionOptional() {
+  void printProtocolCatalogWithNonOperationTrailingArgReturnsFullCatalog() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--version"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    // --version after --print-protocol-catalog is not --operation so filter stays null;
+    // full catalog is returned (--version is silently ignored as a trailing arg)
+    assertEquals(0, exitCode);
+    String output = stdout.toString(StandardCharsets.UTF_8).trim();
+    assertTrue(output.contains("operationTypes"), "full catalog must contain operationTypes key");
+  }
+
+  @Test
+  void printProtocolCatalogWithOperationFilterReturnsMatchingEntry() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--operation", "SET_CELL"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(0, exitCode);
+    String output = stdout.toString(StandardCharsets.UTF_8).trim();
+    assertTrue(output.contains("\"SET_CELL\""), "output must contain the entry id");
+  }
+
+  @Test
+  void printProtocolCatalogWithUnknownOperationReturnsError() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--operation", "BOGUS_XYZ"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(2, exitCode);
+    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertTrue(failure.problem().message().contains("BOGUS_XYZ"));
+  }
+
+  @Test
+  void helpTextMentionsOptionalRequestFields() {
     String help = GridGrindCli.helpText("1.0.0");
 
     assertTrue(
         help.contains("protocolVersion"), "help must mention that protocolVersion is optional");
+    assertTrue(
+        help.contains("persistence is optional"), "help must mention that persistence is optional");
+    assertTrue(
+        help.contains("operations is optional"), "help must mention that operations is optional");
+    assertTrue(help.contains("reads is optional"), "help must mention that reads is optional");
   }
 
   /** ByteArrayInputStream that records whether {@code close()} was called. */

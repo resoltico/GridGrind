@@ -5,6 +5,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0] - 2026-03-31
+
+### Fixed
+
+- Number cells in `GET_CELLS` and `GET_WINDOW` responses now return `declaredType` and
+  `effectiveType` as `NUMBER` instead of `NUMERIC`. This is a **wire format breaking change**:
+  any client that matched on `"NUMERIC"` must be updated to `"NUMBER"`. The value `NUMERIC` was
+  an Apache POI internal enum name leaking into the wire vocabulary; `NUMBER` matches the input
+  side and is self-explanatory.
+- `SET_CELL` and `SET_RANGE` now accept a leading `=` in `FORMULA` cell input. Previously, a
+  formula like `"=SUM(A1:A3)"` was sent to Apache POI with the `=` retained, causing an
+  `InvalidFormulaException`. The leading `=` is now stripped automatically before handing the
+  expression to the engine.
+- `DELETE_SHEET` now returns `INVALID_REQUEST` when the operation would delete the last remaining
+  sheet in the workbook. Previously the request was forwarded to Apache POI, which threw an
+  unclassified `IllegalStateException`; the error is now proactively detected and surfaced with a
+  clear message before any workbook state is modified.
+- Validation error messages for `SET_ROW_HEIGHT` and `SET_COLUMN_WIDTH` now include both the
+  enforced limit and the supplied value so the caller can identify the violation without
+  re-reading the protocol catalog. For example: `"heightPoints must not exceed 1638.35 (Excel
+  storage limit: 32767 twips): got 2000.0"` instead of `"must be less than or equal to 1638.35"`.
+
+### Changed
+
+- `--print-protocol-catalog` now accepts an optional `--operation <id>` flag. When supplied, the
+  output contains only the single catalog entry matching that operation ID. Unknown IDs produce
+  an `INVALID_ARGUMENTS` error. Without `--operation`, the full catalog is returned unchanged.
+- `APPLY_STYLE` catalog summary now documents the write vs. read shape asymmetry for borders:
+  the `border` write object (with `all`, `top`, `right`, `bottom`, `left` sub-objects) is not
+  mirrored in the cell snapshot; read responses use flat top-level fields `topBorderStyle`,
+  `rightBorderStyle`, `bottomBorderStyle`, and `leftBorderStyle`.
+- `DELETE_SHEET` catalog summary now states that deleting the last sheet in a workbook returns
+  `INVALID_REQUEST`.
+- `DATE` and `DATE_TIME` cell input summaries in `--print-protocol-catalog` and `--help` now
+  correctly state that `GET_CELLS` returns `declaredType=NUMBER` (not `declaredType=NUMERIC`) for
+  these cells. The help text `Limits:` section is updated accordingly.
+
 ## [0.14.0] - 2026-03-30
 
 ### Fixed
@@ -486,8 +523,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.14.0...HEAD
-[0.14.0]: https://github.com/resoltico/GridGrind/compare/v0.13.0...v0.14.0
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.15.0...HEAD
+[0.15.0]: https://github.com/resoltico/GridGrind/compare/v0.14.0...v0.15.0
 [0.13.0]: https://github.com/resoltico/GridGrind/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/resoltico/GridGrind/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/resoltico/GridGrind/compare/v0.10.0...v0.11.0
