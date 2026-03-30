@@ -392,6 +392,89 @@ class ExcelWorkbookIntrospectorTest {
     }
   }
 
+  @Test
+  void schemaUsesEvaluatedTypeForFormulaCells() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Data");
+      sheet.setCell("A1", ExcelCellValue.text("Total"));
+      sheet.setCell("A2", ExcelCellValue.formula("1+1"));
+      sheet.setCell("A3", ExcelCellValue.formula("2+2"));
+
+      WorkbookReadResult.SheetSchemaResult schema =
+          cast(
+              WorkbookReadResult.SheetSchemaResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 3, 1)));
+
+      WorkbookReadResult.SchemaColumn column = schema.analysis().columns().getFirst();
+      assertEquals(1, column.observedTypes().size());
+      assertEquals("NUMERIC", column.observedTypes().getFirst().type());
+      assertEquals("NUMERIC", column.dominantType());
+    }
+  }
+
+  @Test
+  void schemaCountsBooleanAndErrorCellTypes() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-introspector-types-", ".xlsx");
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      var poiSheet = poiWorkbook.createSheet("Data");
+      poiSheet.createRow(0).createCell(0).setCellValue("Flag");
+      poiSheet.getRow(0).createCell(1).setCellValue("Err");
+      poiSheet.createRow(1).createCell(0).setCellValue(true);
+      poiSheet
+          .getRow(1)
+          .createCell(1)
+          .setCellErrorValue(org.apache.poi.ss.usermodel.FormulaError.DIV0.getCode());
+      poiSheet.createRow(2).createCell(0).setCellValue(false);
+      poiSheet
+          .getRow(2)
+          .createCell(1)
+          .setCellErrorValue(org.apache.poi.ss.usermodel.FormulaError.DIV0.getCode());
+      try (var out = Files.newOutputStream(workbookPath)) {
+        poiWorkbook.write(out);
+      }
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      WorkbookReadResult.SheetSchemaResult schema =
+          cast(
+              WorkbookReadResult.SheetSchemaResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 3, 2)));
+
+      WorkbookReadResult.SchemaColumn boolCol = schema.analysis().columns().get(0);
+      assertEquals("BOOLEAN", boolCol.dominantType());
+
+      WorkbookReadResult.SchemaColumn errCol = schema.analysis().columns().get(1);
+      assertEquals("ERROR", errCol.dominantType());
+    }
+  }
+
+  @Test
+  void schemaDominantTypeIsNullWhenMinorityTypeExistsButTieDoesNot() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Data");
+      sheet.setCell("A1", ExcelCellValue.text("Col"));
+      sheet.setCell("A2", ExcelCellValue.text("a"));
+      sheet.setCell("A3", ExcelCellValue.text("b"));
+      sheet.setCell("A4", ExcelCellValue.number(1.0));
+
+      WorkbookReadResult.SheetSchemaResult schema =
+          cast(
+              WorkbookReadResult.SheetSchemaResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetSheetSchema("schema", "Data", "A1", 4, 1)));
+
+      assertEquals("STRING", schema.analysis().columns().getFirst().dominantType());
+    }
+  }
+
   private static <T> T cast(Class<T> type, Object value) {
     return type.cast(assertInstanceOf(type, value));
   }

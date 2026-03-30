@@ -899,6 +899,14 @@ class GridGrindCliTest {
         "help must note that DATE/DATE_TIME inputs are stored as NUMERIC on read-back");
   }
 
+  @Test
+  void helpTextMentionsProtocolVersionOptional() {
+    String help = GridGrindCli.helpText("1.0.0");
+
+    assertTrue(
+        help.contains("protocolVersion"), "help must mention that protocolVersion is optional");
+  }
+
   /** ByteArrayInputStream that records whether {@code close()} was called. */
   private static final class TrackingInputStream extends ByteArrayInputStream {
     private boolean closed;

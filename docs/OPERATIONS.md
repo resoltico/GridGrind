@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.13.0"
+version: "0.14.0"
 domain: OPERATIONS
 updated: "2026-03-29"
 route:
@@ -790,8 +790,10 @@ Returns exact cell snapshots for one sheet and an ordered list of A1 addresses.
 | `addresses` | Yes | Ordered non-empty list of unique A1 cell addresses. |
 
 `GET_CELLS` returns a blank-typed snapshot for any valid address that has never been written.
-An address that is not valid A1 notation (e.g. `BADADDR`, `A0`) returns `INVALID_CELL_ADDRESS`,
-not a blank. It fails with `SHEET_NOT_FOUND` when the target sheet does not exist.
+An address that is not valid A1 notation (e.g. `BADADDR`, `A0`) or that exceeds the Excel 2007
+sheet boundary (row > 1,048,575 or column > 16,383, e.g. `A1048577`, `XFE1`) returns
+`INVALID_CELL_ADDRESS`, not a blank. It fails with `SHEET_NOT_FOUND` when the target sheet does
+not exist.
 
 #### Cell snapshot shape
 
@@ -829,7 +831,8 @@ format, not the read-back shape.
 Returns a rectangular top-left-anchored window of cell snapshots. The window includes styled blank
 cells so template-like workbooks remain visible.
 
-`rowCount * columnCount` must not exceed 250,000. Requests that exceed this limit are rejected
+`rowCount * columnCount` must not exceed 250,000. The window must not extend beyond the Excel
+2007 sheet boundary (rows 0–1,048,575, columns 0–16,383); requests that overflow are rejected
 with `INVALID_REQUEST`.
 
 ```json
@@ -842,6 +845,10 @@ with `INVALID_REQUEST`.
   "columnCount": 3
 }
 ```
+
+Response shape: `{ "window": { "sheetName": "...", "rows": [ { "cells": [...] } ] } }`. The
+top-level key is `window` and cells are nested under `window.rows[N].cells`. This differs from
+`GET_CELLS` where cells are directly under the top-level `cells` key.
 
 ### GET_MERGED_REGIONS
 
@@ -968,6 +975,10 @@ entirely blank, `dataRowCount` is `0`.
 
 `rowCount * columnCount` must not exceed 250,000. Requests that exceed this limit are rejected
 with `INVALID_REQUEST`.
+
+`dominantType` per column is `null` when all data cells are blank, or when two or more types tie
+for the highest count. Formula cells contribute their evaluated result type (e.g. `NUMERIC`,
+`STRING`) to `observedTypes` and `dominantType`, not `FORMULA`.
 
 ```json
 {

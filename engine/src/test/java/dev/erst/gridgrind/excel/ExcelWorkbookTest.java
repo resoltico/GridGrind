@@ -181,8 +181,12 @@ class ExcelWorkbookTest {
       assertThrows(NullPointerException.class, () -> workbook.moveSheet(null, 0));
       assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet(" ", 0));
       assertThrows(SheetNotFoundException.class, () -> workbook.moveSheet("Missing", 0));
-      assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet("Budget", -1));
-      assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet("Budget", 2));
+      IllegalArgumentException negativeIndex =
+          assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet("Budget", -1));
+      assertTrue(negativeIndex.getMessage().contains("workbook has"));
+      IllegalArgumentException tooLargeIndex =
+          assertThrows(IllegalArgumentException.class, () -> workbook.moveSheet("Budget", 2));
+      assertTrue(tooLargeIndex.getMessage().contains("valid positions are 0 to 1"));
       assertThrows(NullPointerException.class, () -> workbook.save(null));
     }
   }

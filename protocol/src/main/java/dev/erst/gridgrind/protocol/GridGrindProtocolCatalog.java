@@ -74,7 +74,9 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookOperation.MoveSheet.class,
               "MOVE_SHEET",
-              "Move a sheet to a zero-based workbook position."),
+              "Move a sheet to a zero-based workbook position."
+                  + " targetIndex is 0-based: 0 moves the sheet to the front,"
+                  + " sheetCount-1 moves it to the back."),
           descriptor(
               WorkbookOperation.MergeCells.class,
               "MERGE_CELLS",
@@ -194,7 +196,11 @@ public final class GridGrindProtocolCatalog {
                   + " declaredType, effectiveType, displayValue, style, metadata,"
                   + " and type-specific value fields."
                   + " For FORMULA cells, effectiveType is FORMULA and the evaluated result type"
-                  + " is in evaluation.effectiveType."),
+                  + " is in evaluation.effectiveType."
+                  + " Response shape: { \"window\": { \"rows\": [ { \"cells\": [...] } ] } }."
+                  + " Note: the top-level key is \"window\" and cells are nested under"
+                  + " window.rows[N].cells, unlike GET_CELLS which places cells directly"
+                  + " under the top-level \"cells\" key."),
           descriptor(
               WorkbookReadOperation.GetMergedRegions.class,
               "GET_MERGED_REGIONS",
@@ -223,7 +229,11 @@ public final class GridGrindProtocolCatalog {
                   + WorkbookReadOperation.MAX_WINDOW_CELLS
                   + "."
                   + " The first row is treated as the header; dataRowCount is 0 when all header"
-                  + " cells are blank."),
+                  + " cells are blank."
+                  + " dominantType is null when all data cells are blank, or when two or more types"
+                  + " tie for the highest count."
+                  + " Formula cells contribute their evaluated result type (NUMERIC, STRING, etc.)"
+                  + " to dominantType and observedTypes, not FORMULA."),
           descriptor(
               WorkbookReadOperation.GetNamedRangeSurface.class,
               "GET_NAMED_RANGE_SURFACE",
@@ -243,7 +253,10 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.AnalyzeWorkbookFindings.class,
               "ANALYZE_WORKBOOK_FINDINGS",
-              "Aggregate the first analysis family across the workbook."));
+              "Run all analysis families (formula health, hyperlink health, named-range health)"
+                  + " across the entire workbook and aggregate findings in a single response."
+                  + " Equivalent to issuing ANALYZE_FORMULA_HEALTH, ANALYZE_HYPERLINK_HEALTH,"
+                  + " and ANALYZE_NAMED_RANGE_HEALTH in one request."));
   private static final List<NestedTypeDescriptor> NESTED_TYPE_GROUPS =
       List.of(
           nestedTypeGroup(
