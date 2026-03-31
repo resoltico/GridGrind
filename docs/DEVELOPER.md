@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.17.0"
+version: "0.18.0"
 domain: DEVELOPER
 updated: "2026-03-31"
 route:
@@ -60,8 +60,9 @@ top. Future adapters (HTTP, gRPC, library embedding) can be added without touchi
 
 `./gradlew check` remains the root-project CI gate: Spotless formatting, Error Prone, PMD, tests,
 and JaCoCo coverage verification. `./check.sh` is the local full-stack gate: root `check`
-plus `coverage`, nested Jazzer `check`, and `:cli:shadowJar`. Both should be clean before a
-release-quality change is considered done.
+plus `coverage`, nested Jazzer `check`, `:cli:shadowJar`, and a Docker smoke test that runs the
+image from a non-default working directory with weird request/response/save paths. Both should be
+clean before a release-quality change is considered done.
 
 ```bash
 # Run the local full-stack gate
@@ -83,6 +84,7 @@ release-quality change is considered done.
 ./gradlew :cli:run --args="--version"
 ./gradlew :cli:run --args="--print-request-template"
 ./gradlew :cli:run --args="--print-protocol-catalog"
+./scripts/docker-smoke.sh
 ```
 
 ---
@@ -91,10 +93,11 @@ release-quality change is considered done.
 
 Release automation is split across three workflows:
 
-- `CI` runs the root-project `./gradlew check` gate.
+- `CI` runs the root-project `./gradlew check` gate and a separate Docker smoke job that builds
+  the fat JAR and verifies the Docker image from a non-default working directory.
 - `Release` builds the fat JAR and publishes the GitHub Release when a `v*` tag is pushed.
-- `Container` builds and publishes the multi-arch GHCR image and then prunes older container
-  package versions.
+- `Container` first runs the same Docker smoke script against the local Dockerfile build, then
+  builds and publishes the multi-arch GHCR image and prunes older container package versions.
 
 The container cleanup step intentionally uses `gh api` against GitHub Packages instead of
 `actions/delete-package-versions`. That action still runs on Node20, while GitHub is moving
@@ -111,8 +114,8 @@ release groups instead of splitting a release across the retention boundary.
 ## Quality Gates
 
 `./gradlew check` runs each of the following root-project gates. Any failure fails the build.
-`./check.sh` runs these same root-project gates, then runs nested Jazzer verification, then
-builds the CLI fat JAR.
+`./check.sh` runs these same root-project gates, then runs nested Jazzer verification, builds the
+CLI fat JAR, and finally runs the Docker smoke script.
 
 ### Error Prone
 

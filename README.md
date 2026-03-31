@@ -41,7 +41,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.17.0
+docker pull ghcr.io/resoltico/gridgrind:0.18.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -99,6 +99,22 @@ java -jar gridgrind.jar --version
 java -jar gridgrind.jar --print-request-template
 java -jar gridgrind.jar --print-protocol-catalog
 ```
+
+### File Workflow
+
+GridGrind has one path model across the CLI, Docker, and the JSON protocol:
+
+- No `--request`: read the JSON request from stdin.
+- `--request <path>`: read the JSON request from that file.
+- No `--response`: write the JSON response to stdout.
+- `--response <path>`: write the JSON response to that file; parent directories are created.
+- `source.path`: open an existing workbook from that path.
+- `persistence: { "type": "SAVE_AS", "path": ... }`: write a new workbook to that path; parent directories are created.
+- `persistence: { "type": "OVERWRITE" }`: write back to `source.path`; `OVERWRITE` does not accept its own path field.
+
+Relative paths in `--request`, `--response`, `source.path`, and `persistence.path` always resolve
+from the current working directory. In Docker, that means the container working directory, so the
+most predictable workflow is to mount a host directory and set `-w` to that mount point.
 
 ---
 
