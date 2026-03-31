@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.18.0"
+version: "0.19.0"
 domain: OPERATIONS
 updated: "2026-03-31"
 route:
@@ -20,6 +20,11 @@ The CLI can emit the current minimal request and the full machine-readable proto
 gridgrind --print-request-template
 gridgrind --print-protocol-catalog
 ```
+
+The protocol catalog is designed for black-box consumers. Each published type entry includes field
+descriptors with required/optional status and recursive shape metadata, so fields like
+`selection`, `target`, `value`, `style`, and `scope` point directly at the nested/plain type
+group that defines their accepted JSON structure.
 
 ---
 

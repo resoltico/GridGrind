@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.18.0"
+version: "0.19.0"
 domain: QUICK_REFERENCE
 updated: "2026-03-31"
 route:
@@ -22,6 +22,10 @@ The artifact can emit the current contract directly:
 gridgrind --print-request-template
 gridgrind --print-protocol-catalog
 ```
+
+`--print-protocol-catalog` returns machine-readable field descriptors. Every catalog entry states
+which fields are required or optional and, for polymorphic fields, which nested or plain type
+group supplies the accepted JSON shape.
 
 ---
 

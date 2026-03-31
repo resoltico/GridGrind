@@ -49,6 +49,7 @@ class WorkbookAnalyzerTest {
       ExcelSheet budget = workbook.sheet("Budget");
       budget.setHyperlink("A1", new ExcelHyperlink.Document("Missing!A1"));
       budget.setHyperlink("A2", new ExcelHyperlink.Document("Budget!A1:"));
+      budget.setHyperlink("A3", new ExcelHyperlink.File("missing-supporting-doc.pdf"));
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
@@ -57,6 +58,7 @@ class WorkbookAnalyzerTest {
               WorkbookReadResult.FormulaHealthResult.class,
               analyzer.execute(
                   workbook,
+                  new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeFormulaHealth(
                       "formulaHealth", new ExcelSheetSelection.All())));
       WorkbookReadResult.HyperlinkHealthResult hyperlinkHealth =
@@ -64,6 +66,7 @@ class WorkbookAnalyzerTest {
               WorkbookReadResult.HyperlinkHealthResult.class,
               analyzer.execute(
                   workbook,
+                  new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeHyperlinkHealth(
                       "hyperlinkHealth", new ExcelSheetSelection.All())));
       WorkbookReadResult.NamedRangeHealthResult namedRangeHealth =
@@ -71,13 +74,16 @@ class WorkbookAnalyzerTest {
               WorkbookReadResult.NamedRangeHealthResult.class,
               analyzer.execute(
                   workbook,
+                  new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeNamedRangeHealth(
                       "namedRangeHealth", new ExcelNamedRangeSelection.All())));
       WorkbookReadResult.WorkbookFindingsResult workbookFindings =
           cast(
               WorkbookReadResult.WorkbookFindingsResult.class,
               analyzer.execute(
-                  workbook, new WorkbookReadCommand.AnalyzeWorkbookFindings("workbookFindings")));
+                  workbook,
+                  new WorkbookLocation.StoredWorkbook(workbookPath),
+                  new WorkbookReadCommand.AnalyzeWorkbookFindings("workbookFindings")));
 
       assertEquals(2, formulaHealth.analysis().checkedFormulaCellCount());
       assertTrue(
@@ -89,13 +95,14 @@ class WorkbookAnalyzerTest {
                       WorkbookAnalysis.AnalysisFindingCode.FORMULA_ERROR_RESULT,
                       WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION)));
 
-      assertEquals(2, hyperlinkHealth.analysis().checkedHyperlinkCount());
+      assertEquals(3, hyperlinkHealth.analysis().checkedHyperlinkCount());
       assertTrue(
           hyperlinkHealth.analysis().findings().stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
               .containsAll(
                   List.of(
+                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
                       WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
                       WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET)));
 
@@ -127,6 +134,7 @@ class WorkbookAnalyzerTest {
       ExcelSheet forecast = workbook.getOrCreateSheet("Forecast");
       forecast.setCell("A1", ExcelCellValue.text("Item"));
       forecast.setCell("B1", ExcelCellValue.formula("1+1"));
+      forecast.setHyperlink("C1", new ExcelHyperlink.File("relative-report.xlsx"));
 
       workbook.setNamedRange(
           new ExcelNamedRangeDefinition(
@@ -145,6 +153,17 @@ class WorkbookAnalyzerTest {
           analyzer.hyperlinkHealth(workbook, new ExcelSheetSelection.Selected(List.of("Budget")));
       assertEquals(1, hyperlinkHealth.checkedHyperlinkCount());
       assertEquals(1, hyperlinkHealth.summary().errorCount());
+
+      WorkbookAnalysis.HyperlinkHealth unresolvedFileHealth =
+          analyzer.hyperlinkHealth(
+              workbook,
+              new WorkbookLocation.UnsavedWorkbook(),
+              new ExcelSheetSelection.Selected(List.of("Forecast")));
+      assertEquals(1, unresolvedFileHealth.checkedHyperlinkCount());
+      assertEquals(1, unresolvedFileHealth.summary().warningCount());
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
+          unresolvedFileHealth.findings().getFirst().code());
 
       WorkbookAnalysis.NamedRangeHealth namedRangeHealth =
           analyzer.namedRangeHealth(
@@ -165,9 +184,21 @@ class WorkbookAnalyzerTest {
         () ->
             analyzer.execute(
                 null,
+                new WorkbookLocation.UnsavedWorkbook(),
                 new WorkbookReadCommand.AnalyzeFormulaHealth(
                     "formulaHealth", new ExcelSheetSelection.All())));
-    assertThrows(NullPointerException.class, () -> analyzer.execute(ExcelWorkbook.create(), null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            analyzer.execute(ExcelWorkbook.create(), new WorkbookLocation.UnsavedWorkbook(), null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            analyzer.execute(
+                ExcelWorkbook.create(),
+                null,
+                new WorkbookReadCommand.AnalyzeFormulaHealth(
+                    "formulaHealth", new ExcelSheetSelection.All())));
     assertThrows(
         NullPointerException.class,
         () -> analyzer.formulaHealth(null, new ExcelSheetSelection.All()));
@@ -183,6 +214,31 @@ class WorkbookAnalyzerTest {
         () -> analyzer.namedRangeHealth(null, new ExcelNamedRangeSelection.All()));
     assertThrows(
         NullPointerException.class, () -> analyzer.namedRangeHealth(ExcelWorkbook.create(), null));
+  }
+
+  @Test
+  void workbookFindingsDefaultsToAnUnsavedWorkbookLocation() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook
+          .getOrCreateSheet("Budget")
+          .setHyperlink("A1", new ExcelHyperlink.File("reports/q1.xlsx"));
+
+      WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
+
+      WorkbookAnalysis.HyperlinkHealth hyperlinkHealth =
+          analyzer.hyperlinkHealth(workbook, new ExcelSheetSelection.All());
+      WorkbookAnalysis.WorkbookFindings workbookFindings = analyzer.workbookFindings(workbook);
+
+      assertEquals(1, hyperlinkHealth.findings().size());
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
+          hyperlinkHealth.findings().getFirst().code());
+      assertTrue(
+          workbookFindings.findings().stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .toList()
+              .contains(WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET));
+    }
   }
 
   @Test

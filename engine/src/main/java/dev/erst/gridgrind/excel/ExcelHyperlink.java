@@ -17,6 +17,15 @@ public sealed interface ExcelHyperlink
     public Url {
       target = requireNonBlank(target, "target");
       if (!ExcelHyperlinkValidation.isValidUrlTarget(target)) {
+        String scheme = ExcelHyperlinkValidation.absoluteUriScheme(target);
+        if ("file".equalsIgnoreCase(scheme)) {
+          throw new IllegalArgumentException(
+              "target uses file: scheme; use FILE hyperlinks instead");
+        }
+        if ("mailto".equalsIgnoreCase(scheme)) {
+          throw new IllegalArgumentException(
+              "target uses mailto: scheme; use EMAIL hyperlinks instead");
+        }
         throw new IllegalArgumentException("target must be an absolute URI with a scheme");
       }
     }
@@ -40,14 +49,19 @@ public sealed interface ExcelHyperlink
   }
 
   /** File hyperlink target. */
-  record File(String target) implements ExcelHyperlink {
+  record File(String path) implements ExcelHyperlink {
     public File {
-      target = requireNonBlank(target, "target");
+      path = ExcelHyperlinkValidation.normalizeFileTarget(path);
     }
 
     @Override
     public ExcelHyperlinkType type() {
       return ExcelHyperlinkType.FILE;
+    }
+
+    @Override
+    public String target() {
+      return path;
     }
   }
 
@@ -74,8 +88,8 @@ public sealed interface ExcelHyperlink
   private static String normalizeEmailTarget(String email) {
     String normalized =
         ExcelHyperlinkValidation.stripMailtoPrefix(requireNonBlank(email, "target"));
-    if (normalized.isBlank()) {
-      throw new IllegalArgumentException("target must not be blank");
+    if (!ExcelHyperlinkValidation.isValidEmailTarget(normalized)) {
+      throw new IllegalArgumentException("target must be an email address");
     }
     return normalized;
   }

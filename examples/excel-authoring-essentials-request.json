@@ -40,6 +40,15 @@
       }
     },
     {
+      "type": "SET_HYPERLINK",
+      "sheetName": "Budget",
+      "address": "A2",
+      "target": {
+        "type": "FILE",
+        "path": "support/budget backup.xlsx"
+      }
+    },
+    {
       "type": "SET_COMMENT",
       "sheetName": "Budget",
       "address": "B4",
@@ -68,7 +77,7 @@
       "type": "GET_CELLS",
       "requestId": "cells",
       "sheetName": "Budget",
-      "addresses": ["A1", "B4"]
+      "addresses": ["A1", "A2", "B4"]
     },
     {
       "type": "GET_WINDOW",
@@ -84,7 +93,7 @@
       "sheetName": "Budget",
       "selection": {
         "type": "SELECTED",
-        "addresses": ["A1", "B4"]
+        "addresses": ["A1", "A2", "B4"]
       }
     },
     {

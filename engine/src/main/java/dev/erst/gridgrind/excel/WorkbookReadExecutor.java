@@ -24,28 +24,46 @@ public final class WorkbookReadExecutor {
   /** Executes one or more read commands in order and returns their immutable results. */
   public List<WorkbookReadResult> apply(ExcelWorkbook workbook, WorkbookReadCommand... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
-    return apply(workbook, Arrays.asList(commands));
+    return apply(workbook, new WorkbookLocation.UnsavedWorkbook(), Arrays.asList(commands));
+  }
+
+  /** Executes one or more read commands using the workbook filesystem location for analysis. */
+  public List<WorkbookReadResult> apply(
+      ExcelWorkbook workbook, WorkbookLocation workbookLocation, WorkbookReadCommand... commands) {
+    Objects.requireNonNull(commands, "commands must not be null");
+    return apply(workbook, workbookLocation, Arrays.asList(commands));
   }
 
   /** Executes read commands from any iterable source in order. */
   public List<WorkbookReadResult> apply(
       ExcelWorkbook workbook, Iterable<WorkbookReadCommand> commands) {
+    return apply(workbook, new WorkbookLocation.UnsavedWorkbook(), commands);
+  }
+
+  /** Executes read commands from any iterable source with explicit workbook-location context. */
+  public List<WorkbookReadResult> apply(
+      ExcelWorkbook workbook,
+      WorkbookLocation workbookLocation,
+      Iterable<WorkbookReadCommand> commands) {
     Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
     Objects.requireNonNull(commands, "commands must not be null");
 
     List<WorkbookReadResult> results = new ArrayList<>();
     for (WorkbookReadCommand command : commands) {
       Objects.requireNonNull(command, "command must not be null");
-      results.add(applyOne(workbook, command));
+      results.add(applyOne(workbook, workbookLocation, command));
     }
     return List.copyOf(results);
   }
 
-  private WorkbookReadResult applyOne(ExcelWorkbook workbook, WorkbookReadCommand command) {
+  private WorkbookReadResult applyOne(
+      ExcelWorkbook workbook, WorkbookLocation workbookLocation, WorkbookReadCommand command) {
     return switch (command) {
       case WorkbookReadCommand.Introspection introspection ->
           workbookIntrospector.execute(workbook, introspection);
-      case WorkbookReadCommand.Analysis analysis -> analyzer.execute(workbook, analysis);
+      case WorkbookReadCommand.Analysis analysis ->
+          analyzer.execute(workbook, workbookLocation, analysis);
     };
   }
 }

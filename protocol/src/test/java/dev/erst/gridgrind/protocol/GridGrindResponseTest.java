@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.ExcelHyperlinkType;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -174,8 +173,7 @@ class GridGrindResponseTest {
   @Test
   void cellReportAndReadPayloadSubtypesExposeTypedGettersAndMetadataDefaults() {
     GridGrindResponse.CellStyleReport style = defaultCellStyleReport();
-    GridGrindResponse.HyperlinkReport hyperlink =
-        new GridGrindResponse.HyperlinkReport(ExcelHyperlinkType.URL, "https://example.com");
+    HyperlinkTarget hyperlink = new HyperlinkTarget.Url("https://example.com");
     GridGrindResponse.CommentReport comment =
         new GridGrindResponse.CommentReport("Review", "GridGrind", false);
 
@@ -221,7 +219,7 @@ class GridGrindResponseTest {
         new GridGrindResponse.CellReport.BooleanReport(
                 "B3", "BOOLEAN", "TRUE", style, null, null, true)
             .effectiveType());
-    assertEquals(ExcelHyperlinkType.URL, formulaReport.hyperlink().type());
+    assertEquals(new HyperlinkTarget.Url("https://example.com"), formulaReport.hyperlink());
     assertEquals("Review", formulaReport.comment().text());
     assertNull(blankReport.formula());
     assertNull(blankReport.hyperlink());
@@ -354,9 +352,7 @@ class GridGrindResponseTest {
         IllegalArgumentException.class,
         () ->
             new GridGrindResponse.CellHyperlinkReport(
-                " ",
-                new GridGrindResponse.HyperlinkReport(
-                    ExcelHyperlinkType.URL, "https://example.com")));
+                " ", new HyperlinkTarget.Url("https://example.com")));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -634,6 +630,14 @@ class GridGrindResponseTest {
                 "Fix the request.",
                 new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE"),
                 java.util.Arrays.asList((GridGrindResponse.ProblemCause) null)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.ProblemCause(GridGrindProblemCode.INVALID_REQUEST, " ", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.ProblemCause(
+                GridGrindProblemCode.INVALID_REQUEST, "bad request", " "));
   }
 
   private static GridGrindResponse.CellStyleReport defaultCellStyleReport() {

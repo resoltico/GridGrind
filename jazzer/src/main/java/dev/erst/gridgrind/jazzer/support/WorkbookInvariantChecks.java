@@ -5,6 +5,7 @@ import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.protocol.FontHeightReport;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
+import dev.erst.gridgrind.protocol.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.WorkbookReadResult;
 import java.nio.file.Files;
@@ -335,9 +336,7 @@ public final class WorkbookInvariantChecks {
     require(hyperlink.address() != null, "hyperlink address must not be null");
     require(!hyperlink.address().isBlank(), "hyperlink address must not be blank");
     require(hyperlink.hyperlink() != null, "hyperlink metadata must not be null");
-    require(hyperlink.hyperlink().type() != null, "hyperlink type must not be null");
-    require(hyperlink.hyperlink().target() != null, "hyperlink target must not be null");
-    require(!hyperlink.hyperlink().target().isBlank(), "hyperlink target must not be blank");
+    requireHyperlinkShape(hyperlink.hyperlink());
   }
 
   private static void requireCommentEntryShape(GridGrindResponse.CellCommentReport comment) {
@@ -563,9 +562,7 @@ public final class WorkbookInvariantChecks {
       }
     }
     if (cellReport.hyperlink() != null) {
-      require(cellReport.hyperlink().type() != null, "hyperlink type must not be null");
-      require(cellReport.hyperlink().target() != null, "hyperlink target must not be null");
-      require(!cellReport.hyperlink().target().isBlank(), "hyperlink target must not be blank");
+      requireHyperlinkShape(cellReport.hyperlink());
     }
     if (cellReport.comment() != null) {
       require(cellReport.comment().text() != null, "comment text must not be null");
@@ -592,6 +589,40 @@ public final class WorkbookInvariantChecks {
         require(!range.target().range().isBlank(), "namedRange target range must not be blank");
       }
       case GridGrindResponse.NamedRangeReport.FormulaReport _ -> {}
+    }
+  }
+
+  private static void requireHyperlinkShape(HyperlinkTarget hyperlink) {
+    require(hyperlink != null, "hyperlink must not be null");
+    switch (hyperlink) {
+      case HyperlinkTarget.Url url -> {
+        require(url.target() != null, "hyperlink target must not be null");
+        require(!url.target().isBlank(), "hyperlink target must not be blank");
+        require(
+            !url.target().regionMatches(true, 0, "file:", 0, 5),
+            "URL hyperlink targets must not use file: schemes");
+        require(
+            !url.target().regionMatches(true, 0, "mailto:", 0, 7),
+            "URL hyperlink targets must not use mailto: schemes");
+      }
+      case HyperlinkTarget.Email email -> {
+        require(email.email() != null, "hyperlink email must not be null");
+        require(!email.email().isBlank(), "hyperlink email must not be blank");
+        require(
+            !email.email().regionMatches(true, 0, "mailto:", 0, 7),
+            "EMAIL hyperlink targets must omit the mailto: prefix");
+      }
+      case HyperlinkTarget.File file -> {
+        require(file.path() != null, "hyperlink path must not be null");
+        require(!file.path().isBlank(), "hyperlink path must not be blank");
+        require(
+            !file.path().regionMatches(true, 0, "file:", 0, 5),
+            "FILE hyperlink targets must be normalized path strings");
+      }
+      case HyperlinkTarget.Document document -> {
+        require(document.target() != null, "hyperlink target must not be null");
+        require(!document.target().isBlank(), "hyperlink target must not be blank");
+      }
     }
   }
 

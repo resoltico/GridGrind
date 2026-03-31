@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.ExcelHyperlinkType;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.protocol.CellSelection;
@@ -13,6 +12,7 @@ import dev.erst.gridgrind.protocol.FontHeightReport;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindProtocolVersion;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
+import dev.erst.gridgrind.protocol.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.NamedRangeScope;
 import dev.erst.gridgrind.protocol.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.NamedRangeTarget;
@@ -60,8 +60,7 @@ class WorkbookInvariantChecksTest {
                             "STRING",
                             "Report",
                             style,
-                            new GridGrindResponse.HyperlinkReport(
-                                ExcelHyperlinkType.URL, "https://example.com/report"),
+                            new HyperlinkTarget.Url("https://example.com/report"),
                             new GridGrindResponse.CommentReport("Review", "GridGrind", true),
                             "Report"))),
                 new WorkbookReadResult.WindowResult(
@@ -92,9 +91,7 @@ class WorkbookInvariantChecksTest {
                     "Budget",
                     List.of(
                         new GridGrindResponse.CellHyperlinkReport(
-                            "A1",
-                            new GridGrindResponse.HyperlinkReport(
-                                ExcelHyperlinkType.URL, "https://example.com/report")))),
+                            "A1", new HyperlinkTarget.Url("https://example.com/report")))),
                 new WorkbookReadResult.CommentsResult(
                     "comments",
                     "Budget",
@@ -203,9 +200,7 @@ class WorkbookInvariantChecksTest {
                     "Budget",
                     List.of(
                         new GridGrindResponse.CellHyperlinkReport(
-                            "A1",
-                            new GridGrindResponse.HyperlinkReport(
-                                ExcelHyperlinkType.URL, "https://example.com/report")))),
+                            "A1", new HyperlinkTarget.Url("https://example.com/report")))),
                 new WorkbookReadResult.NamedRangeHealthResult(
                     "named-range-health",
                     new GridGrindResponse.NamedRangeHealthReport(
@@ -214,6 +209,27 @@ class WorkbookInvariantChecksTest {
                         List.of()))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
+  }
+
+  @Test
+  void acceptsNormalizedFileHyperlinkTargets(@TempDir Path tempDirectory) throws IOException {
+    Path workbookPath = tempDirectory.resolve("result.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                workbookPath.toString(), workbookPath.toString()),
+            List.of(
+                new WorkbookReadResult.HyperlinksResult(
+                    "hyperlinks",
+                    "Budget",
+                    List.of(
+                        new GridGrindResponse.CellHyperlinkReport(
+                            "A1", new HyperlinkTarget.File("/tmp/report.xlsx"))))));
+
+    assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
   }
 
   @Test

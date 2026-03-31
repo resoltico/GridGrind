@@ -35,6 +35,11 @@ class WorkbookReadExecutorTest {
               List.of(
                   new WorkbookReadCommand.GetSheetSummary("sheet", "Budget"),
                   new WorkbookReadCommand.GetMergedRegions("merged", "Budget")));
+      List<WorkbookReadResult> explicitLocationResults =
+          executor.apply(
+              workbook,
+              new WorkbookLocation.UnsavedWorkbook(),
+              new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 1, 1));
 
       assertEquals(List.of("workbook", "cells", "ranges"), requestIds(varargsResults));
       assertInstanceOf(WorkbookReadResult.WorkbookSummaryResult.class, varargsResults.get(0));
@@ -43,6 +48,8 @@ class WorkbookReadExecutorTest {
       assertEquals(List.of("sheet", "merged"), requestIds(iterableResults));
       assertInstanceOf(WorkbookReadResult.SheetSummaryResult.class, iterableResults.get(0));
       assertInstanceOf(WorkbookReadResult.MergedRegionsResult.class, iterableResults.get(1));
+      assertEquals(List.of("window"), requestIds(explicitLocationResults));
+      assertInstanceOf(WorkbookReadResult.WindowResult.class, explicitLocationResults.getFirst());
     }
   }
 
@@ -65,6 +72,13 @@ class WorkbookReadExecutorTest {
               executor.apply(
                   workbook,
                   Arrays.asList(new WorkbookReadCommand.GetWorkbookSummary("workbook"), null)));
+      assertThrows(
+          NullPointerException.class,
+          () ->
+              executor.apply(
+                  workbook,
+                  (WorkbookLocation) null,
+                  new WorkbookReadCommand.GetWorkbookSummary("workbook")));
 
       List<WorkbookReadResult> analysisResults =
           executor.apply(

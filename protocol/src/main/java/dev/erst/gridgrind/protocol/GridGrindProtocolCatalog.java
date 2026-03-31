@@ -2,15 +2,15 @@ package dev.erst.gridgrind.protocol;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -25,6 +25,42 @@ public final class GridGrindProtocolCatalog {
           new GridGrindRequest.WorkbookPersistence.None(),
           List.of(),
           List.of());
+  private static final Set<Class<?>> STRING_FIELD_TYPES =
+      Set.of(String.class, java.time.LocalDate.class, java.time.LocalDateTime.class);
+  private static final Set<Class<?>> BOOLEAN_FIELD_TYPES = Set.of(boolean.class, Boolean.class);
+  private static final Set<Class<?>> NUMERIC_FIELD_TYPES =
+      Set.of(
+          byte.class,
+          short.class,
+          int.class,
+          long.class,
+          float.class,
+          double.class,
+          Byte.class,
+          Short.class,
+          Integer.class,
+          Long.class,
+          Float.class,
+          Double.class,
+          java.math.BigDecimal.class,
+          java.math.BigInteger.class);
+  private static final Map<Class<?>, String> NESTED_FIELD_SHAPE_GROUPS =
+      Map.ofEntries(
+          Map.entry(CellInput.class, "cellInputTypes"),
+          Map.entry(HyperlinkTarget.class, "hyperlinkTargetTypes"),
+          Map.entry(CellSelection.class, "cellSelectionTypes"),
+          Map.entry(SheetSelection.class, "sheetSelectionTypes"),
+          Map.entry(NamedRangeSelection.class, "namedRangeSelectionTypes"),
+          Map.entry(NamedRangeScope.class, "namedRangeScopeTypes"),
+          Map.entry(NamedRangeSelector.class, "namedRangeSelectorTypes"),
+          Map.entry(FontHeightInput.class, "fontHeightTypes"));
+  private static final Map<Class<?>, String> PLAIN_FIELD_SHAPE_GROUPS =
+      Map.ofEntries(
+          Map.entry(CommentInput.class, "commentInputType"),
+          Map.entry(NamedRangeTarget.class, "namedRangeTargetType"),
+          Map.entry(CellStyleInput.class, "cellStyleInputType"),
+          Map.entry(CellBorderInput.class, "cellBorderInputType"),
+          Map.entry(CellBorderSideInput.class, "cellBorderSideInputType"));
   private static final List<TypeDescriptor> SOURCE_TYPES =
       List.of(
           descriptor(
@@ -35,7 +71,8 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               GridGrindRequest.WorkbookSource.ExistingFile.class,
               "EXISTING",
-              "Open an existing .xlsx workbook from disk."));
+              "Open an existing .xlsx workbook from disk."
+                  + " Relative paths resolve in the current execution environment."));
   private static final List<TypeDescriptor> PERSISTENCE_TYPES =
       List.of(
           descriptor(
@@ -45,13 +82,17 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               GridGrindRequest.WorkbookPersistence.OverwriteSource.class,
               "OVERWRITE",
-              "Overwrite the opened source workbook."
+              "Overwrite the opened source workbook at source.path."
+                  + " No path field is accepted on OVERWRITE;"
+                  + " the write target is the same path opened by the EXISTING source."
+                  + " Relative source.path values resolve in the current execution environment."
                   + " The response persistence.type echoes OVERWRITE and includes sourcePath"
                   + " (the original source path string) and executionPath (absolute normalized)."),
           descriptor(
               GridGrindRequest.WorkbookPersistence.SaveAs.class,
               "SAVE_AS",
               "Save the workbook to a new .xlsx path."
+                  + " Relative paths resolve in the current execution environment."
                   + " The response persistence.type echoes SAVE_AS and includes requestedPath"
                   + " (the literal path from the request) and executionPath (the absolute"
                   + " normalized path where the file was written); they differ when a relative"
@@ -118,7 +159,9 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookOperation.SetHyperlink.class,
               "SET_HYPERLINK",
-              "Attach a hyperlink to one cell."),
+              "Attach a hyperlink to one cell."
+                  + " FILE targets use the field name path and normalize file: URIs to plain"
+                  + " path strings."),
           descriptor(
               WorkbookOperation.ClearHyperlink.class,
               "CLEAR_HYPERLINK",
@@ -151,11 +194,14 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookOperation.AppendRow.class,
               "APPEND_ROW",
-              "Append a row of typed values after the last populated row."),
+              "Append a row of typed values after the last value-bearing row."
+                  + " Blank rows that carry only style, comment, or hyperlink metadata do not"
+                  + " affect the append position."),
           descriptor(
               WorkbookOperation.AutoSizeColumns.class,
               "AUTO_SIZE_COLUMNS",
-              "Size populated columns to fit their contents."),
+              "Size columns deterministically from displayed cell content so the resulting"
+                  + " widths are stable in headless and container runs."),
           descriptor(
               WorkbookOperation.EvaluateFormulas.class,
               "EVALUATE_FORMULAS",
@@ -180,8 +226,9 @@ public final class GridGrindProtocolCatalog {
               "GET_SHEET_SUMMARY",
               "Return structural summary facts for one sheet."
                   + " physicalRowCount is the number of physically materialized rows (sparse)."
-                  + " lastRowIndex is the 0-based index of the last populated row (-1 when empty)."
-                  + " lastColumnIndex is the 0-based index of the last populated column"
+                  + " lastRowIndex is the 0-based index of the last materialized row"
+                  + " (-1 when empty), including metadata-only rows."
+                  + " lastColumnIndex is the 0-based index of the last materialized column"
                   + " in any row (-1 when empty)."),
           descriptor(
               WorkbookReadOperation.GetCells.class,
@@ -217,7 +264,9 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.GetHyperlinks.class,
               "GET_HYPERLINKS",
-              "Return hyperlink metadata for selected cells."),
+              "Return hyperlink metadata for selected cells in the same discriminated shape used"
+                  + " by SET_HYPERLINK targets. FILE targets are returned as normalized path"
+                  + " strings, not file: URIs."),
           descriptor(
               WorkbookReadOperation.GetComments.class,
               "GET_COMMENTS",
@@ -254,7 +303,10 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.AnalyzeHyperlinkHealth.class,
               "ANALYZE_HYPERLINK_HEALTH",
-              "Report hyperlink findings such as malformed or broken targets."),
+              "Report hyperlink findings such as malformed, missing, unresolved, or broken"
+                  + " targets."
+                  + " Relative FILE targets are resolved against the workbook's persisted path"
+                  + " when one exists."),
           descriptor(
               WorkbookReadOperation.AnalyzeNamedRangeHealth.class,
               "ANALYZE_NAMED_RANGE_HEALTH",
@@ -300,7 +352,12 @@ public final class GridGrindProtocolCatalog {
                       HyperlinkTarget.Email.class,
                       "EMAIL",
                       "Attach an email target without the mailto: prefix."),
-                  descriptor(HyperlinkTarget.File.class, "FILE", "Attach a file-system target."),
+                  descriptor(
+                      HyperlinkTarget.File.class,
+                      "FILE",
+                      "Attach a local or shared file path."
+                          + " Accepts plain paths or file: URIs and normalizes to a plain path"
+                          + " string."),
                   descriptor(
                       HyperlinkTarget.Document.class,
                       "DOCUMENT",
@@ -377,64 +434,53 @@ public final class GridGrindProtocolCatalog {
                       "Specify font height in exact twips (20 twips = 1 point)."
                           + " Write format: {\"type\":\"TWIPS\",\"twips\":260}."
                           + " Read-back returns the same plain object shape as POINTS."))));
-  private static final List<PlainTypeGroup> PLAIN_TYPE_GROUPS =
+  private static final List<PlainTypeDescriptor> PLAIN_TYPE_DESCRIPTORS =
       List.of(
-          plainTypeGroup(
+          plainTypeDescriptor(
               "commentInputType",
-              plainDescriptor(
-                  CommentInput.class,
-                  "CommentInput",
-                  "Plain-text comment payload attached to one cell.",
-                  List.of("visible"))),
-          plainTypeGroup(
+              CommentInput.class,
+              "CommentInput",
+              "Plain-text comment payload attached to one cell.",
+              List.of("visible")),
+          plainTypeDescriptor(
               "namedRangeTargetType",
-              plainDescriptor(
-                  NamedRangeTarget.class,
-                  "NamedRangeTarget",
-                  "Explicit sheet name and A1-style range address for named-range authoring.",
-                  List.of())),
-          plainTypeGroup(
+              NamedRangeTarget.class,
+              "NamedRangeTarget",
+              "Explicit sheet name and A1-style range address for named-range authoring.",
+              List.of()),
+          plainTypeDescriptor(
               "cellStyleInputType",
-              plainDescriptor(
-                  CellStyleInput.class,
-                  "CellStyleInput",
-                  "Style patch applied to a cell or range; at least one field must be set."
-                      + " Colors use #RRGGBB hex.",
-                  List.of(
-                      "numberFormat",
-                      "bold",
-                      "italic",
-                      "wrapText",
-                      "horizontalAlignment",
-                      "verticalAlignment",
-                      "fontName",
-                      "fontHeight",
-                      "fontColor",
-                      "underline",
-                      "strikeout",
-                      "fillColor",
-                      "border"),
-                  Map.of(
-                      "horizontalAlignment",
-                      enumNames(ExcelHorizontalAlignment.values()),
-                      "verticalAlignment",
-                      enumNames(ExcelVerticalAlignment.values())))),
-          plainTypeGroup(
+              CellStyleInput.class,
+              "CellStyleInput",
+              "Style patch applied to a cell or range; at least one field must be set."
+                  + " Colors use #RRGGBB hex.",
+              List.of(
+                  "numberFormat",
+                  "bold",
+                  "italic",
+                  "wrapText",
+                  "horizontalAlignment",
+                  "verticalAlignment",
+                  "fontName",
+                  "fontHeight",
+                  "fontColor",
+                  "underline",
+                  "strikeout",
+                  "fillColor",
+                  "border")),
+          plainTypeDescriptor(
               "cellBorderInputType",
-              plainDescriptor(
-                  CellBorderInput.class,
-                  "CellBorderInput",
-                  "Border patch for cell styling; at least one side must be set."
-                      + " Use 'all' as shorthand for all four sides.",
-                  List.of("all", "top", "right", "bottom", "left"))),
-          plainTypeGroup(
+              CellBorderInput.class,
+              "CellBorderInput",
+              "Border patch for cell styling; at least one side must be set."
+                  + " Use 'all' as shorthand for all four sides.",
+              List.of("all", "top", "right", "bottom", "left")),
+          plainTypeDescriptor(
               "cellBorderSideInputType",
-              plainDescriptor(
-                  CellBorderSideInput.class,
-                  "CellBorderSideInput",
-                  "One border side defined by its border style.",
-                  List.of(),
-                  Map.of("style", enumNames(ExcelBorderStyle.values())))));
+              CellBorderSideInput.class,
+              "CellBorderSideInput",
+              "One border side defined by its border style.",
+              List.of()));
   private static final Catalog CATALOG = buildCatalog();
 
   private GridGrindProtocolCatalog() {}
@@ -470,6 +516,7 @@ public final class GridGrindProtocolCatalog {
   }
 
   private static Catalog buildCatalog() {
+    validateFieldShapeGroupMappings();
     validateCoverage(GridGrindRequest.WorkbookSource.class, SOURCE_TYPES);
     validateCoverage(GridGrindRequest.WorkbookPersistence.class, PERSISTENCE_TYPES);
     validateCoverage(WorkbookOperation.class, OPERATION_TYPES);
@@ -485,11 +532,15 @@ public final class GridGrindProtocolCatalog {
         publicEntries(OPERATION_TYPES),
         publicEntries(READ_TYPES),
         NESTED_TYPE_GROUPS.stream().map(GridGrindProtocolCatalog::publicGroup).toList(),
-        List.copyOf(PLAIN_TYPE_GROUPS));
+        PLAIN_TYPE_DESCRIPTORS.stream().map(GridGrindProtocolCatalog::publicPlainGroup).toList());
   }
 
   private static NestedTypeGroup publicGroup(NestedTypeDescriptor descriptor) {
     return new NestedTypeGroup(descriptor.group(), publicEntries(descriptor.typeDescriptors()));
+  }
+
+  private static PlainTypeGroup publicPlainGroup(PlainTypeDescriptor descriptor) {
+    return new PlainTypeGroup(descriptor.group(), descriptor.typeEntry());
   }
 
   private static List<TypeEntry> publicEntries(List<TypeDescriptor> descriptors) {
@@ -501,39 +552,149 @@ public final class GridGrindProtocolCatalog {
     return new NestedTypeDescriptor(group, sealedType, typeDescriptors);
   }
 
-  private static PlainTypeGroup plainTypeGroup(String group, TypeEntry typeEntry) {
-    return new PlainTypeGroup(group, typeEntry);
-  }
-
-  private static TypeEntry plainDescriptor(
-      Class<? extends Record> recordType, String id, String summary, List<String> optionalFields) {
-    return new TypeEntry(
-        id, summary, requiredFields(recordType, optionalFields), List.copyOf(optionalFields));
-  }
-
-  private static TypeEntry plainDescriptor(
+  private static PlainTypeDescriptor plainTypeDescriptor(
+      String group,
       Class<? extends Record> recordType,
       String id,
       String summary,
-      List<String> optionalFields,
-      Map<String, List<String>> fieldEnumValues) {
-    return new TypeEntry(
-        id,
-        summary,
-        requiredFields(recordType, optionalFields),
-        List.copyOf(optionalFields),
-        fieldEnumValues);
+      List<String> optionalFields) {
+    return new PlainTypeDescriptor(
+        group, recordType, typeEntry(recordType, id, summary, optionalFields));
   }
 
   private static TypeDescriptor descriptor(
       Class<? extends Record> recordType, String id, String summary, String... optionalFields) {
     return new TypeDescriptor(
-        recordType,
-        new TypeEntry(
-            id,
-            summary,
-            requiredFields(recordType, List.of(optionalFields)),
-            List.of(optionalFields)));
+        recordType, typeEntry(recordType, id, summary, List.of(optionalFields)));
+  }
+
+  private static TypeEntry typeEntry(
+      Class<? extends Record> recordType, String id, String summary, List<String> optionalFields) {
+    return new TypeEntry(id, summary, fieldEntries(recordType, optionalFields));
+  }
+
+  private static List<FieldEntry> fieldEntries(
+      Class<? extends Record> recordType, List<String> optionalFields) {
+    requiredFields(recordType, optionalFields);
+    return Arrays.stream(recordType.getRecordComponents())
+        .map(
+            component ->
+                new FieldEntry(
+                    component.getName(),
+                    optionalFields.contains(component.getName())
+                        ? FieldRequirement.OPTIONAL
+                        : FieldRequirement.REQUIRED,
+                    fieldShape(component.getGenericType()),
+                    enumValues(component.getGenericType())))
+        .toList();
+  }
+
+  /** Returns the machine-readable field shape for one record component type. */
+  static FieldShape fieldShape(Type type) {
+    Objects.requireNonNull(type, "type must not be null");
+    if (type instanceof ParameterizedType parameterizedType) {
+      return fieldShape(parameterizedType);
+    }
+    if (type instanceof Class<?> classType) {
+      return fieldShape(classType);
+    }
+    throw new IllegalStateException("Unsupported catalog field type: " + type);
+  }
+
+  /** Returns the machine-readable field shape for one parameterized record component type. */
+  static FieldShape fieldShape(ParameterizedType parameterizedType) {
+    Objects.requireNonNull(parameterizedType, "parameterizedType must not be null");
+    Type rawType = parameterizedType.getRawType();
+    if (rawType == List.class) {
+      Type[] typeArguments = parameterizedType.getActualTypeArguments();
+      if (typeArguments.length != 1) {
+        throw new IllegalStateException(
+            "List field must declare exactly one type argument: " + parameterizedType);
+      }
+      return new FieldShape.ListShape(fieldShape(typeArguments[0]));
+    }
+    throw new IllegalStateException(
+        "Unsupported parameterized catalog field type: " + parameterizedType);
+  }
+
+  /** Returns the machine-readable field shape for one non-parameterized record component type. */
+  static FieldShape fieldShape(Class<?> classType) {
+    Objects.requireNonNull(classType, "classType must not be null");
+    if (STRING_FIELD_TYPES.contains(classType)) {
+      return new FieldShape.Scalar(ScalarType.STRING);
+    }
+    if (BOOLEAN_FIELD_TYPES.contains(classType)) {
+      return new FieldShape.Scalar(ScalarType.BOOLEAN);
+    }
+    if (isNumericType(classType)) {
+      return new FieldShape.Scalar(ScalarType.NUMBER);
+    }
+    if (classType.isEnum()) {
+      return new FieldShape.Scalar(ScalarType.STRING);
+    }
+    String nestedGroup = NESTED_FIELD_SHAPE_GROUPS.get(classType);
+    if (nestedGroup != null) {
+      return new FieldShape.NestedTypeGroupRef(nestedGroup);
+    }
+    String plainGroup = PLAIN_FIELD_SHAPE_GROUPS.get(classType);
+    if (plainGroup != null) {
+      return new FieldShape.PlainTypeGroupRef(plainGroup);
+    }
+    throw new IllegalStateException("Unsupported catalog field type: " + classType.getName());
+  }
+
+  /** Returns whether one non-parameterized record component type is represented as JSON NUMBER. */
+  static boolean isNumericType(Class<?> classType) {
+    Objects.requireNonNull(classType, "classType must not be null");
+    return NUMERIC_FIELD_TYPES.contains(classType);
+  }
+
+  private static void validateFieldShapeGroupMappings() {
+    for (NestedTypeDescriptor descriptor : NESTED_TYPE_GROUPS) {
+      validateNestedTypeGroupMapping(descriptor.sealedType(), descriptor.group());
+    }
+    for (PlainTypeDescriptor descriptor : PLAIN_TYPE_DESCRIPTORS) {
+      validatePlainTypeGroupMapping(descriptor.recordType(), descriptor.group());
+    }
+  }
+
+  /** Validates that one nested sealed input type maps to the published field-shape group. */
+  static void validateNestedTypeGroupMapping(Class<?> sealedType, String expectedGroup) {
+    Objects.requireNonNull(sealedType, "sealedType must not be null");
+    String mappedGroup = NESTED_FIELD_SHAPE_GROUPS.get(sealedType);
+    if (!expectedGroup.equals(mappedGroup)) {
+      throw new IllegalStateException(
+          "Field-shape nested group mapping mismatch for "
+              + sealedType.getName()
+              + ": expected="
+              + expectedGroup
+              + ", mapped="
+              + mappedGroup);
+    }
+  }
+
+  /** Validates that one plain record input type maps to the published field-shape group. */
+  static void validatePlainTypeGroupMapping(Class<?> recordType, String expectedGroup) {
+    Objects.requireNonNull(recordType, "recordType must not be null");
+    String mappedGroup = PLAIN_FIELD_SHAPE_GROUPS.get(recordType);
+    if (!expectedGroup.equals(mappedGroup)) {
+      throw new IllegalStateException(
+          "Field-shape plain group mapping mismatch for "
+              + recordType.getName()
+              + ": expected="
+              + expectedGroup
+              + ", mapped="
+              + mappedGroup);
+    }
+  }
+
+  private static List<String> enumValues(Type type) {
+    if (type instanceof Class<?> classType && classType.isEnum()) {
+      return Arrays.stream(classType.getEnumConstants())
+          .map(value -> ((Enum<?>) value).name())
+          .toList();
+    }
+    return List.of();
   }
 
   /** Returns the required record fields after removing the explicitly optional ones. */
@@ -625,17 +786,27 @@ public final class GridGrindProtocolCatalog {
   }
 
   /**
-   * Throws IllegalStateException for a duplicate entry detected during catalog construction.
+   * Builds the failure used when a duplicate entry is detected during catalog construction.
    * Package-private for direct unit testing of the unreachable-in-integration duplicate path.
    */
-  static <T> T duplicateEntry(String label, T left, T right) {
-    throw new IllegalStateException(
+  @SuppressWarnings("DoNotCallSuggester")
+  static IllegalStateException duplicateEntryFailure(String label, Object left, Object right) {
+    return new IllegalStateException(
         "Duplicate %s detected while building the protocol catalog: %s / %s"
             .formatted(label, left, right));
   }
 
-  private static <T> BinaryOperator<T> duplicateEntryHandler(String label) {
-    return (left, right) -> duplicateEntry(label, left, right);
+  /** Returns the duplicate-entry merge handler used when building ordered protocol maps. */
+  static <T> BinaryOperator<T> duplicateEntryHandler(String label) {
+    return new DuplicateEntryMerger<>(label);
+  }
+
+  /** Merge function that always fails when duplicate ordered-map keys are encountered. */
+  record DuplicateEntryMerger<T>(String label) implements BinaryOperator<T> {
+    @Override
+    public T apply(T left, T right) {
+      throw duplicateEntryFailure(label, left, right);
+    }
   }
 
   /** JSON-serializable top-level catalog emitted by {@code --print-protocol-catalog}. */
@@ -661,30 +832,84 @@ public final class GridGrindProtocolCatalog {
     }
   }
 
-  /**
-   * JSON-serializable type entry describing one request or nested union variant.
-   *
-   * <p>{@code fieldEnumValues} maps optional and required field names to their valid string values
-   * for fields that accept a finite enumerated set. Empty when no fields have enumerated values.
-   */
-  public record TypeEntry(
-      String id,
-      String summary,
-      List<String> requiredFields,
-      List<String> optionalFields,
-      Map<String, List<String>> fieldEnumValues) {
+  /** JSON-serializable type entry describing one request or nested union variant. */
+  public record TypeEntry(String id, String summary, List<FieldEntry> fields) {
     public TypeEntry {
       id = requireNonBlank(id, "id");
       summary = requireNonBlank(summary, "summary");
-      requiredFields = copyStrings(requiredFields, "requiredFields");
-      optionalFields = copyStrings(optionalFields, "optionalFields");
-      fieldEnumValues = copyEnumValues(fieldEnumValues, "fieldEnumValues");
+      fields = copyFieldEntries(fields, "fields");
     }
 
-    /** Convenience constructor for entries with no enumerated field constraints. */
-    public TypeEntry(
-        String id, String summary, List<String> requiredFields, List<String> optionalFields) {
-      this(id, summary, requiredFields, optionalFields, Map.of());
+    /** Returns the field entry with the given name, or null when this type has no such field. */
+    public FieldEntry field(String name) {
+      Objects.requireNonNull(name, "name must not be null");
+      return fields.stream().filter(field -> field.name().equals(name)).findFirst().orElse(null);
+    }
+  }
+
+  /** Whether a catalog field is required or optional in the JSON payload. */
+  public enum FieldRequirement {
+    REQUIRED,
+    OPTIONAL
+  }
+
+  /** Canonical scalar JSON value types used in the machine-readable field catalog. */
+  public enum ScalarType {
+    STRING,
+    NUMBER,
+    BOOLEAN
+  }
+
+  /** JSON-serializable field descriptor for one record component. */
+  public record FieldEntry(
+      String name, FieldRequirement requirement, FieldShape shape, List<String> enumValues) {
+    public FieldEntry {
+      name = requireNonBlank(name, "name");
+      Objects.requireNonNull(requirement, "requirement must not be null");
+      Objects.requireNonNull(shape, "shape must not be null");
+      enumValues = copyStrings(enumValues, "enumValues");
+    }
+  }
+
+  /** JSON-serializable recursive field-shape contract used by protocol discovery output. */
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = FieldShape.Scalar.class, name = "SCALAR"),
+    @JsonSubTypes.Type(value = FieldShape.ListShape.class, name = "LIST"),
+    @JsonSubTypes.Type(value = FieldShape.NestedTypeGroupRef.class, name = "NESTED_TYPE_GROUP"),
+    @JsonSubTypes.Type(value = FieldShape.PlainTypeGroupRef.class, name = "PLAIN_TYPE_GROUP")
+  })
+  public sealed interface FieldShape
+      permits FieldShape.Scalar,
+          FieldShape.ListShape,
+          FieldShape.NestedTypeGroupRef,
+          FieldShape.PlainTypeGroupRef {
+    /** Scalar JSON value type such as STRING, NUMBER, or BOOLEAN. */
+    record Scalar(ScalarType scalarType) implements FieldShape {
+      public Scalar {
+        Objects.requireNonNull(scalarType, "scalarType must not be null");
+      }
+    }
+
+    /** Recursive array shape whose elements all share the same shape. */
+    record ListShape(FieldShape elementShape) implements FieldShape {
+      public ListShape {
+        Objects.requireNonNull(elementShape, "elementShape must not be null");
+      }
+    }
+
+    /** Reference to one nested discriminated union group published elsewhere in the catalog. */
+    record NestedTypeGroupRef(String group) implements FieldShape {
+      public NestedTypeGroupRef {
+        group = requireNonBlank(group, "group");
+      }
+    }
+
+    /** Reference to one plain record-type group published elsewhere in the catalog. */
+    record PlainTypeGroupRef(String group) implements FieldShape {
+      public PlainTypeGroupRef {
+        group = requireNonBlank(group, "group");
+      }
     }
   }
 
@@ -741,25 +966,21 @@ public final class GridGrindProtocolCatalog {
     return copy;
   }
 
-  private static List<String> enumNames(Enum<?>[] values) {
-    return Arrays.stream(values).map(Enum::name).toList();
-  }
-
-  private static Map<String, List<String>> copyEnumValues(
-      Map<String, List<String>> values, String fieldName) {
-    Objects.requireNonNull(values, fieldName + " must not be null");
-    return values.entrySet().stream()
-        .collect(
-            Collectors.toUnmodifiableMap(
-                e -> {
-                  Objects.requireNonNull(e.getKey(), fieldName + " keys must not be null");
-                  return e.getKey();
-                },
-                e -> {
-                  Objects.requireNonNull(
-                      e.getValue(), fieldName + " values must not be null for key: " + e.getKey());
-                  return List.copyOf(e.getValue());
-                }));
+  private static List<FieldEntry> copyFieldEntries(List<FieldEntry> fields, String fieldName) {
+    Objects.requireNonNull(fields, fieldName + " must not be null");
+    List<FieldEntry> copy = List.copyOf(fields);
+    for (int index = 0; index < copy.size(); index++) {
+      FieldEntry field =
+          Objects.requireNonNull(copy.get(index), fieldName + " must not contain nulls");
+      for (int candidateIndex = index + 1; candidateIndex < copy.size(); candidateIndex++) {
+        FieldEntry candidate =
+            Objects.requireNonNull(copy.get(candidateIndex), fieldName + " must not contain nulls");
+        if (field.name().equals(candidate.name())) {
+          throw duplicateEntryFailure(fieldName, field, candidate);
+        }
+      }
+    }
+    return copy;
   }
 
   private static String requireNonBlank(String value, String fieldName) {
@@ -772,6 +993,15 @@ public final class GridGrindProtocolCatalog {
 
   private record TypeDescriptor(Class<? extends Record> recordType, TypeEntry typeEntry) {
     private TypeDescriptor {
+      Objects.requireNonNull(recordType, "recordType must not be null");
+      Objects.requireNonNull(typeEntry, "typeEntry must not be null");
+    }
+  }
+
+  private record PlainTypeDescriptor(
+      String group, Class<? extends Record> recordType, TypeEntry typeEntry) {
+    private PlainTypeDescriptor {
+      group = requireNonBlank(group, "group");
       Objects.requireNonNull(recordType, "recordType must not be null");
       Objects.requireNonNull(typeEntry, "typeEntry must not be null");
     }

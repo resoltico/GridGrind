@@ -3,6 +3,31 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.19.0] - 2026-04-01
+
+### Changed
+
+- `--print-protocol-catalog` now publishes field descriptors instead of loose field-name lists.
+  Every catalog entry states whether a field is required or optional and exposes the exact scalar,
+  list, nested-group, or plain-group shape accepted by that field.
+- The `Release` and `Container` workflows now serialize publication per workflow and tag ref,
+  verify the external GitHub release and GHCR handoff after publishing, and treat publication as
+  a converged public state instead of a one-shot side effect.
+- `./check.sh` now syntax-checks the release-surface shell scripts before the Docker smoke stage,
+  so publication helpers fail fast locally and in CI when a shell edit breaks the release path.
+
+### Fixed
+
+- CLI and docs discovery guidance now explain that the machine-readable protocol catalog is the
+  authoritative black-box contract for field requirements and polymorphic field shapes, so
+  operations such as `SET_HYPERLINK`, `SET_RANGE`, and the selection-based reads can be authored
+  without inference.
+- Duplicate tag-triggered release runs no longer fail spuriously with `Release.tag_name already
+  exists`; GitHub Release publication is now idempotent and asset-safe under duplicate dispatch.
+- Duplicate or delayed tag-triggered container publication now has a built-in pull-and-run
+  verification step, so the workflow confirms the exact version tag and `latest` are both
+  publicly runnable before cleanup proceeds.
+
 ## [0.18.0] - 2026-03-31
 
 ### Added
@@ -608,7 +633,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.18.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.19.0...HEAD
+[0.19.0]: https://github.com/resoltico/GridGrind/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/resoltico/GridGrind/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/resoltico/GridGrind/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/resoltico/GridGrind/compare/v0.15.0...v0.16.0

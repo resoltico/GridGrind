@@ -189,6 +189,9 @@ class GridGrindCliTest {
     assertTrue(help.contains("--print-protocol-catalog"));
     assertTrue(help.contains("--help, -h"));
     assertTrue(help.contains("blob/main/docs/QUICK_REFERENCE.md"));
+    assertTrue(
+        help.contains("type group accepted by polymorphic fields"),
+        "help must explain what the protocol catalog publishes");
 
     ByteArrayOutputStream shortStdout = new ByteArrayOutputStream();
     int shortExitCode =
@@ -225,15 +228,33 @@ class GridGrindCliTest {
   }
 
   @Test
-  void helpTextDockerExampleUsesAbsoluteContainerPaths() {
+  void helpTextDockerExampleUsesMountedWorkingDirectoryPaths() {
     String help = GridGrindCli.helpText("1.0.0");
 
-    assertFalse(help.contains("-w /workdir"), "Docker example must not use -w /workdir");
+    assertTrue(help.contains("-w /workdir"), "Docker example must show -w /workdir");
     assertTrue(
-        help.contains("/workdir/request.json"), "Docker example must use absolute /workdir/ paths");
+        help.contains("--request request.json"),
+        "Docker example must use request paths relative to the mounted workdir");
     assertTrue(
-        help.contains("/workdir/response.json"),
-        "Docker example must use absolute /workdir/ paths");
+        help.contains("--response response.json"),
+        "Docker example must use response paths relative to the mounted workdir");
+  }
+
+  @Test
+  void helpTextExplainsFileWorkflow() {
+    String help = GridGrindCli.helpText("1.0.0");
+
+    assertTrue(help.contains("File Workflow:"));
+    assertTrue(help.contains("No --request flag:           read the JSON request from stdin."));
+    assertTrue(
+        help.contains(
+            "--response <path>:           write the JSON response to that file; parent directories are created."));
+    assertTrue(
+        help.contains(
+            "persistence OVERWRITE:       write back to source.path; no path field is supplied."));
+    assertTrue(
+        help.contains(
+            "Relative paths in --request, --response, source.path, and persistence.path resolve from the current working directory."));
   }
 
   @Test
@@ -267,6 +288,11 @@ class GridGrindCliTest {
         new InputStream() {
           @Override
           public int read() throws IOException {
+            throw new IOException("simulated read failure");
+          }
+
+          @Override
+          public int read(byte[] bytes, int offset, int length) throws IOException {
             throw new IOException("simulated read failure");
           }
         }) {
@@ -612,6 +638,11 @@ class GridGrindCliTest {
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
     assertEquals("reads[0]", failure.problem().context().jsonPath());
+    assertEquals(1, failure.problem().causes().size());
+    assertEquals(
+        GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().causes().getFirst().code());
+    assertFalse(failure.problem().causes().getFirst().message().contains("tools.jackson"));
+    assertFalse(failure.problem().causes().getFirst().message().contains("dev.erst.gridgrind"));
   }
 
   @Test
@@ -745,9 +776,8 @@ class GridGrindCliTest {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
     assertEquals(2, failure.problem().causes().size());
-    assertEquals("GridGrindProblem", failure.problem().causes().get(1).type());
-    assertEquals(
-        GridGrindProblemCode.INTERNAL_ERROR.name(), failure.problem().causes().get(1).className());
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().causes().get(1).code());
+    assertEquals("EXECUTE_REQUEST", failure.problem().causes().get(1).stage());
   }
 
   @Test
@@ -929,6 +959,8 @@ class GridGrindCliTest {
     assertEquals(0, exitCode);
     String output = stdout.toString(StandardCharsets.UTF_8).trim();
     assertTrue(output.contains("\"SET_CELL\""), "output must contain the entry id");
+    assertTrue(
+        output.contains("\"fields\""), "filtered catalog output must contain field descriptors");
   }
 
   @Test

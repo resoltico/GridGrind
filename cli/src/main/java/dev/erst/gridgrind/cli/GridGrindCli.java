@@ -206,6 +206,16 @@ public final class GridGrindCli {
           reads is optional; omit or send [] to skip introspection.
           operations run before reads; reads are non-mutating and run last.
 
+        File Workflow:
+          No --request flag:           read the JSON request from stdin.
+          --request <path>:            read the JSON request from that file.
+          No --response flag:          write the JSON response to stdout.
+          --response <path>:           write the JSON response to that file; parent directories are created.
+          source.path:                 open an existing workbook from that path.
+          persistence SAVE_AS.path:    write a new workbook to that path; parent directories are created.
+          persistence OVERWRITE:       write back to source.path; no path field is supplied.
+          Relative paths in --request, --response, source.path, and persistence.path resolve from the current working directory.
+
         Minimal Valid Request:
         %s
 
@@ -215,16 +225,20 @@ public final class GridGrindCli {
         Docker File Example:
           docker run --rm -i \\
             -v "$(pwd)":/workdir \\
+            -w /workdir \\
             ghcr.io/resoltico/gridgrind:%s \\
-            --request /workdir/request.json \\
-            --response /workdir/response.json
+            --request request.json \\
+            --response response.json
 
-          Paths passed in --request, --response, source.path, and persistence.path are resolved in
-          the current execution environment. In Docker, use absolute mounted container paths.
+          In Docker, mount the host directory that contains your request and workbook files, then
+          set -w to that mount point so every relative path resolves inside the mounted directory.
 
         Discovery:
           gridgrind --print-request-template
           gridgrind --print-protocol-catalog
+          The protocol catalog lists each field, whether it is required, and the nested/plain
+          type group accepted by polymorphic fields such as value, target, selection, style,
+          and scope.
 
         Docs:
           Quick reference: %s/docs/QUICK_REFERENCE.md
@@ -236,8 +250,7 @@ public final class GridGrindCli {
           --response <path>          Write the JSON response to a file instead of stdout.
           --print-request-template          Print a minimal valid request JSON document.
           --print-protocol-catalog          Print the machine-readable protocol catalog.
-          --print-protocol-catalog          Print a single entry from the catalog.
-            --operation <id>
+          --operation <id>                  With --print-protocol-catalog, print one entry.
           --help, -h                        Print this help text.
           --version                         Print the GridGrind version.
         """

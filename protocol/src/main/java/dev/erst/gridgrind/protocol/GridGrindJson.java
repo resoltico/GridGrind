@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.DateTimeException;
 import java.util.Objects;
+import java.util.regex.Pattern;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.StreamReadFeature;
 import tools.jackson.core.StreamWriteFeature;
@@ -13,10 +14,19 @@ import tools.jackson.core.exc.StreamReadException;
 import tools.jackson.databind.DatabindException;
 import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.exc.InvalidTypeIdException;
+import tools.jackson.databind.exc.MismatchedInputException;
+import tools.jackson.databind.exc.UnrecognizedPropertyException;
 import tools.jackson.databind.json.JsonMapper;
 
 /** Shared JSON codec for the GridGrind protocol. */
 public final class GridGrindJson {
+  private static final Pattern MISSING_REQUIRED_FIELD_PATTERN =
+      Pattern.compile("missing required creator property '([^']+)'", Pattern.CASE_INSENSITIVE);
+  private static final Pattern MISSING_TYPE_ID_FIELD_PATTERN =
+      Pattern.compile("missing type id property '([^']+)'", Pattern.CASE_INSENSITIVE);
+  private static final Pattern NULL_FIELD_PROBLEM_PATTERN =
+      Pattern.compile("problem: ([A-Za-z0-9]+) must not be null", Pattern.CASE_INSENSITIVE);
   private static final JsonMapper JSON_MAPPER =
       JsonMapper.builder()
           .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
@@ -185,19 +195,63 @@ public final class GridGrindJson {
     return null;
   }
 
-  private static String message(Throwable throwable) {
+  /**
+   * Returns the public invalid-request-shape message for one parsing failure.
+   *
+   * <p>Package-private so tests can assert the exact public wording of otherwise hard-to-trigger
+   * parser branches.
+   */
+  static String message(Throwable throwable) {
+    if (throwable instanceof InvalidTypeIdException invalidTypeIdException) {
+      return "Unknown type value '" + invalidTypeIdException.getTypeId() + "'";
+    }
+    if (throwable instanceof UnrecognizedPropertyException unrecognizedPropertyException) {
+      return "Unknown field '" + unrecognizedPropertyException.getPropertyName() + "'";
+    }
+    if (throwable instanceof MismatchedInputException mismatchedInputException) {
+      return mismatchedInputMessage(mismatchedInputException);
+    }
     String message =
         throwable instanceof JacksonException jacksonException
             ? jacksonException.getOriginalMessage()
             : throwable.getMessage();
-    return cleanJacksonMessage(message);
+    return productOwnedJacksonMessage(cleanJacksonMessage(message));
   }
 
-  private static String cleanJacksonMessage(String message) {
+  /** Returns the public wording for mismatched JSON token shapes. */
+  static String mismatchedInputMessage(MismatchedInputException exception) {
+    return productOwnedJacksonMessage(cleanJacksonMessage(exception.getOriginalMessage()));
+  }
+
+  private static String productOwnedJacksonMessage(String cleaned) {
+    java.util.regex.Matcher missingRequiredField = MISSING_REQUIRED_FIELD_PATTERN.matcher(cleaned);
+    if (missingRequiredField.find()) {
+      return "Missing required field '" + missingRequiredField.group(1) + "'";
+    }
+    java.util.regex.Matcher missingTypeIdField = MISSING_TYPE_ID_FIELD_PATTERN.matcher(cleaned);
+    if (missingTypeIdField.find()) {
+      return "Missing required field '" + missingTypeIdField.group(1) + "'";
+    }
+    java.util.regex.Matcher nullFieldProblem = NULL_FIELD_PROBLEM_PATTERN.matcher(cleaned);
+    if (nullFieldProblem.find()) {
+      return "Missing required field '" + nullFieldProblem.group(1) + "'";
+    }
+    if (cleaned.startsWith("Cannot deserialize value")) {
+      return "JSON value has the wrong shape for this field";
+    }
+    if (cleaned.startsWith("Cannot construct instance of")) {
+      return "JSON object is missing required fields or has the wrong shape";
+    }
+    return cleaned;
+  }
+
+  /** Removes Jackson-specific suffix noise from one parser message. */
+  static String cleanJacksonMessage(String message) {
+    if (message == null || message.isBlank()) {
+      return "Invalid JSON payload";
+    }
     int startMarkerIndex = message.indexOf(" (start marker at [Source:");
     String trimmed = startMarkerIndex >= 0 ? message.substring(0, startMarkerIndex) : message;
-    // Strip fully-qualified class names from type-resolution error messages so that internal
-    // implementation details are not surfaced to callers.
     return trimmed
         .replaceAll(" as a subtype of `[^`]+`", "")
         .replaceAll(" \\(for POJO property '[^']+'\\)", "");

@@ -6,4 +6,4 @@ WORKDIR /app
 # before docker build is invoked. For local use, run that command first.
 COPY cli/build/libs/gridgrind.jar gridgrind.jar
 
-ENTRYPOINT ["java", "-jar", "gridgrind.jar"]
+ENTRYPOINT ["java", "-jar", "/app/gridgrind.jar"]

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.ExcelHyperlinkType;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity;
@@ -204,7 +203,7 @@ public sealed interface GridGrindResponse {
     CellStyleReport style();
 
     /** Hyperlink metadata; null when the cell has no hyperlink. */
-    HyperlinkReport hyperlink();
+    HyperlinkTarget hyperlink();
 
     /** Comment metadata; null when the cell has no comment. */
     CommentReport comment();
@@ -265,7 +264,7 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkReport hyperlink,
+        HyperlinkTarget hyperlink,
         CommentReport comment)
         implements CellReport {
       public BlankReport {
@@ -288,7 +287,7 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkReport hyperlink,
+        HyperlinkTarget hyperlink,
         CommentReport comment,
         String stringValue)
         implements CellReport {
@@ -312,7 +311,7 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkReport hyperlink,
+        HyperlinkTarget hyperlink,
         CommentReport comment,
         Double numberValue)
         implements CellReport {
@@ -336,7 +335,7 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkReport hyperlink,
+        HyperlinkTarget hyperlink,
         CommentReport comment,
         Boolean booleanValue)
         implements CellReport {
@@ -360,7 +359,7 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkReport hyperlink,
+        HyperlinkTarget hyperlink,
         CommentReport comment,
         String errorValue)
         implements CellReport {
@@ -384,7 +383,7 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkReport hyperlink,
+        HyperlinkTarget hyperlink,
         CommentReport comment,
         String formula,
         CellReport evaluation)
@@ -402,14 +401,6 @@ public sealed interface GridGrindResponse {
       public String effectiveType() {
         return "FORMULA";
       }
-    }
-  }
-
-  /** Hyperlink facts returned for analyzed cells that carry a hyperlink. */
-  record HyperlinkReport(ExcelHyperlinkType type, String target) {
-    public HyperlinkReport {
-      Objects.requireNonNull(type, "type must not be null");
-      Objects.requireNonNull(target, "target must not be null");
     }
   }
 
@@ -496,7 +487,7 @@ public sealed interface GridGrindResponse {
   }
 
   /** Hyperlink metadata associated with one concrete cell address. */
-  record CellHyperlinkReport(String address, HyperlinkReport hyperlink) {
+  record CellHyperlinkReport(String address, HyperlinkTarget hyperlink) {
     public CellHyperlinkReport {
       Objects.requireNonNull(address, "address must not be null");
       Objects.requireNonNull(hyperlink, "hyperlink must not be null");
@@ -1320,12 +1311,19 @@ public sealed interface GridGrindResponse {
     }
   }
 
-  /** Individual diagnostic cause entries preserved for agent-visible troubleshooting. */
-  record ProblemCause(String type, String className, String message, String stage) {
+  /**
+   * Individual GridGrind-classified diagnostic entries preserved for agent-visible troubleshooting.
+   */
+  record ProblemCause(GridGrindProblemCode code, String message, String stage) {
     public ProblemCause {
-      Objects.requireNonNull(type, "type must not be null");
-      Objects.requireNonNull(className, "className must not be null");
+      Objects.requireNonNull(code, "code must not be null");
       Objects.requireNonNull(message, "message must not be null");
+      if (message.isBlank()) {
+        throw new IllegalArgumentException("message must not be blank");
+      }
+      if (stage != null && stage.isBlank()) {
+        throw new IllegalArgumentException("stage must not be blank");
+      }
     }
   }
 

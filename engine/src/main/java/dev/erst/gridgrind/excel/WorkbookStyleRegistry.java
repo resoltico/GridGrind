@@ -21,13 +21,15 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  */
 final class WorkbookStyleRegistry {
   private static final String DEFAULT_NUMBER_FORMAT = "General";
+  private static final ExcelCellStyle LOCAL_DATE_STYLE_PATCH =
+      ExcelCellStyle.numberFormat("yyyy-mm-dd");
+  private static final ExcelCellStyle LOCAL_DATE_TIME_STYLE_PATCH =
+      ExcelCellStyle.numberFormat("yyyy-mm-dd hh:mm:ss");
 
   private final XSSFWorkbook workbook;
   private final DataFormat dataFormat;
   private final Map<MergedCellStyleKey, XSSFCellStyle> cellStyles;
   private final Map<MergedFontKey, XSSFFont> fonts;
-  private CellStyle localDateStyle;
-  private CellStyle localDateTimeStyle;
 
   WorkbookStyleRegistry(XSSFWorkbook workbook) {
     this.workbook = workbook;
@@ -36,21 +38,24 @@ final class WorkbookStyleRegistry {
     this.fonts = new HashMap<>();
   }
 
-  /** Returns the shared date cell style for {@code yyyy-mm-dd} formatted date values. */
-  CellStyle localDateStyle() {
-    if (localDateStyle == null) {
-      localDateStyle = styleFor(defaultStyleRecord(), ExcelCellStyle.numberFormat("yyyy-mm-dd"));
-    }
-    return localDateStyle;
+  /**
+   * Returns the current cell style with the local-date number format merged on top.
+   *
+   * <p>This preserves any existing fill, border, font, alignment, or wrap state already present on
+   * the cell.
+   */
+  CellStyle localDateStyle(Cell cell) {
+    return mergedStyle(cell, LOCAL_DATE_STYLE_PATCH);
   }
 
-  /** Returns the shared date-time cell style for {@code yyyy-mm-dd hh:mm:ss} formatted values. */
-  CellStyle localDateTimeStyle() {
-    if (localDateTimeStyle == null) {
-      localDateTimeStyle =
-          styleFor(defaultStyleRecord(), ExcelCellStyle.numberFormat("yyyy-mm-dd hh:mm:ss"));
-    }
-    return localDateTimeStyle;
+  /**
+   * Returns the current cell style with the local-date-time number format merged on top.
+   *
+   * <p>This preserves any existing fill, border, font, alignment, or wrap state already present on
+   * the cell.
+   */
+  CellStyle localDateTimeStyle(Cell cell) {
+    return mergedStyle(cell, LOCAL_DATE_TIME_STYLE_PATCH);
   }
 
   /** Returns the workbook's default cell style (index 0). */

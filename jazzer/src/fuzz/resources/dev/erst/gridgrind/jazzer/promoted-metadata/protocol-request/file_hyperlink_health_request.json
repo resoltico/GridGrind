@@ -1,0 +1,8 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/examples/file-hyperlink-health-request.json",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/file_hyperlink_health_request.json",
+  "replayOutcome" : "SUCCESS",
+  "promotedAt" : "2026-03-31T11:12:16.960469Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/file_hyperlink_health_request.txt"
+}

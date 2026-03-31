@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 # Run all local verification gates and release packaging checks.
 #
-# Stage 1 runs all quality gates and generates coverage reports for local inspection:
+# This file intentionally lives at the repository root beside gradlew because it is the canonical
+# human-facing project gate entrypoint. The scripts/ directory is reserved for subordinate helper
+# scripts that workflows and this root gate invoke.
+#
+# Stage 1 runs all root-project quality gates and generates coverage reports for local inspection:
 #   check    -> Spotless (format), Error Prone (compile-time checks), PMD (static analysis),
 #               JaCoCo coverage thresholds, and all unit tests
 #   coverage -> per-module and aggregated JaCoCo HTML/XML reports
 #
-# CI runs only the check task (verification without report generation).
+# Stage 2 runs the nested Jazzer verification build:
+#   jazzer check -> deterministic Jazzer support tests plus committed-seed regression replay
 #
-# Stage 2 mirrors the GitHub release/container packaging workflow:
+# CI runs only the root check task (verification without report generation).
+#
+# Stage 3 mirrors the GitHub release packaging workflow:
 #   :cli:shadowJar -> build the distributable fat JAR
+#
+# Stage 4 syntax-checks the release-surface shell scripts:
+#   bash -n check.sh scripts/*.sh
+#
+# Stage 5 exercises the Docker release surface from a non-default working directory:
+#   scripts/docker-smoke.sh -> build the image and verify help/request/response/save behavior
 #
 # The script is location-independent: it always targets the repository that contains this file,
 # even when invoked from another working directory or through a symlink.
@@ -54,9 +67,12 @@ print_usage() {
     printf '%s\n' \
         'Usage: ./check.sh [supported gradle options]' \
         '' \
-        'Runs two fixed stages against the repository that contains this script:' \
+        'Runs five fixed stages against the repository that contains this script:' \
         '  1. check coverage' \
-        '  2. :cli:shadowJar' \
+        '  2. jazzer check' \
+        '  3. :cli:shadowJar' \
+        '  4. bash -n check.sh scripts/*.sh' \
+        '  5. scripts/docker-smoke.sh' \
         '' \
         'Supported options:' \
         '  -h, --help' \
@@ -199,12 +215,39 @@ fi
 run_stage() {
     local stage_id=$1
     local stage_label=$2
+    local project_dir=$3
+    shift 3
+    current_stage_id="${stage_id}"
+    current_stage_label="${stage_label}"
+    printf '%s\n' "${stage_label}"
+    "${gradlew}" --project-dir "${project_dir}" "$@" "${gradle_args[@]}"
+}
+
+run_shell_stage() {
+    local stage_id=$1
+    local stage_label=$2
     shift 2
     current_stage_id="${stage_id}"
     current_stage_label="${stage_label}"
     printf '%s\n' "${stage_label}"
-    "${gradlew}" --project-dir "${repo_root}" "$@" "${gradle_args[@]}"
+    (cd "${repo_root}" && "$@")
 }
 
-run_stage 'quality-gates' 'Stage 1/2: running quality gates' check coverage
-run_stage 'cli-shadowjar' 'Stage 2/2: building CLI fat JAR' :cli:shadowJar
+run_stage 'quality-gates' 'Stage 1/5: running quality gates' "${repo_root}" check coverage
+run_stage \
+    'jazzer-check' \
+    'Stage 2/5: running Jazzer support tests and regression replay' \
+    "${repo_root}/jazzer" \
+    check
+run_stage 'cli-shadowjar' 'Stage 3/5: building CLI fat JAR' "${repo_root}" :cli:shadowJar
+
+shell_syntax_targets=("${repo_root}/check.sh")
+if [[ -d "${repo_root}/scripts" ]]; then
+    while IFS= read -r shell_script_path; do
+        shell_syntax_targets+=("${shell_script_path}")
+    done < <(find "${repo_root}/scripts" -maxdepth 1 -type f -name '*.sh' | sort)
+fi
+
+run_shell_stage 'shell-syntax' 'Stage 4/5: syntax-checking release-surface shell scripts' \
+    bash -n "${shell_syntax_targets[@]}"
+run_shell_stage 'docker-smoke' 'Stage 5/5: running Docker smoke test' "${repo_root}/scripts/docker-smoke.sh"

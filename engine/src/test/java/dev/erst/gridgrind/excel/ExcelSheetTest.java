@@ -2,13 +2,12 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Proxy;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.ClientAnchor;
@@ -494,6 +493,24 @@ class ExcelSheetTest {
   }
 
   @Test
+  void writesAndReadsFileHyperlinksWithSpacesInPlainPaths() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      assertDoesNotThrow(
+          () -> sheet.setHyperlink("A1", new ExcelHyperlink.File("support/budget backup.xlsx")));
+
+      Cell cell = poiSheet.getRow(0).getCell(0);
+      assertEquals("support/budget%20backup.xlsx", cell.getHyperlink().getAddress());
+      assertEquals(
+          new ExcelHyperlink.File("support/budget backup.xlsx"), ExcelSheet.hyperlink(cell));
+    }
+  }
+
+  @Test
   void clearRangeIsNoOpOnNeverWrittenCells() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       Sheet poiSheet = poiWorkbook.createSheet("Data");
@@ -613,6 +630,206 @@ class ExcelSheetTest {
       assertEquals(
           new ExcelHyperlink.Email("Summary.Total@example.com"),
           snapshot.metadata().hyperlink().orElseThrow());
+    }
+  }
+
+  @Test
+  void appendRowIgnoresMetadataOnlyRowsWhenChoosingTheNextDataRow() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setCell("A1", ExcelCellValue.text("Header"));
+      sheet.setHyperlink("A4", new ExcelHyperlink.Document("Budget!A1"));
+      sheet.setComment("B5", new ExcelComment("Note", "GridGrind", false));
+      sheet.appendRow(ExcelCellValue.text("Hosting"), ExcelCellValue.number(49.0));
+
+      assertEquals("Hosting", sheet.text("A2"));
+      assertEquals(49.0, sheet.number("B2"));
+      assertEquals(
+          new ExcelHyperlink.Document("Budget!A1"),
+          sheet.snapshotCell("A4").metadata().hyperlink().orElseThrow());
+      assertEquals(
+          new ExcelComment("Note", "GridGrind", false),
+          sheet.snapshotCell("B5").metadata().comment().orElseThrow());
+    }
+  }
+
+  @Test
+  void setCellPreservesExistingStyleAndMetadataOnStyledBlankCells() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.applyStyle(
+          "A1",
+          new ExcelCellStyle(
+              null,
+              Boolean.TRUE,
+              null,
+              null,
+              ExcelHorizontalAlignment.CENTER,
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              "#AABBCC",
+              new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null)));
+      sheet.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+      sheet.setComment("A1", new ExcelComment("Review", "GridGrind", false));
+
+      ExcelCellSnapshot.TextSnapshot textSnapshot =
+          (ExcelCellSnapshot.TextSnapshot)
+              sheet.setCell("A1", ExcelCellValue.text("Quarterly report")).snapshotCell("A1");
+      assertEquals("Quarterly report", textSnapshot.stringValue());
+      assertEquals("#AABBCC", textSnapshot.style().fillColor());
+      assertEquals(ExcelBorderStyle.THIN, textSnapshot.style().topBorderStyle());
+      assertEquals(ExcelHorizontalAlignment.CENTER, textSnapshot.style().horizontalAlignment());
+      assertEquals(
+          new ExcelHyperlink.Url("https://example.com/report"),
+          textSnapshot.metadata().hyperlink().orElseThrow());
+      assertEquals(
+          new ExcelComment("Review", "GridGrind", false),
+          textSnapshot.metadata().comment().orElseThrow());
+
+      ExcelCellSnapshot.BlankSnapshot blankSnapshot =
+          (ExcelCellSnapshot.BlankSnapshot)
+              sheet.setCell("A1", ExcelCellValue.blank()).snapshotCell("A1");
+      assertEquals("#AABBCC", blankSnapshot.style().fillColor());
+      assertEquals(ExcelBorderStyle.THIN, blankSnapshot.style().topBorderStyle());
+      assertEquals(
+          new ExcelHyperlink.Url("https://example.com/report"),
+          blankSnapshot.metadata().hyperlink().orElseThrow());
+      assertEquals(
+          new ExcelComment("Review", "GridGrind", false),
+          blankSnapshot.metadata().comment().orElseThrow());
+    }
+  }
+
+  @Test
+  void dateValueWritesMergeRequiredNumberFormatsOntoExistingStyle() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      ExcelCellStyle style =
+          new ExcelCellStyle(
+              null,
+              Boolean.TRUE,
+              null,
+              Boolean.TRUE,
+              null,
+              ExcelVerticalAlignment.TOP,
+              null,
+              null,
+              null,
+              null,
+              null,
+              "#DDEBF7",
+              new ExcelBorder(
+                  null, null, new ExcelBorderSide(ExcelBorderStyle.DOUBLE), null, null));
+      sheet.applyStyle("A1:B1", style);
+
+      ExcelCellSnapshot.NumberSnapshot dateSnapshot =
+          (ExcelCellSnapshot.NumberSnapshot)
+              sheet
+                  .setCell("A1", ExcelCellValue.date(LocalDate.of(2026, 3, 31)))
+                  .snapshotCell("A1");
+      ExcelCellSnapshot.NumberSnapshot dateTimeSnapshot =
+          (ExcelCellSnapshot.NumberSnapshot)
+              sheet
+                  .setCell("B1", ExcelCellValue.dateTime(LocalDateTime.of(2026, 3, 31, 9, 45, 0)))
+                  .snapshotCell("B1");
+
+      assertEquals("yyyy-mm-dd", dateSnapshot.style().numberFormat());
+      assertEquals("#DDEBF7", dateSnapshot.style().fillColor());
+      assertTrue(dateSnapshot.style().bold());
+      assertTrue(dateSnapshot.style().wrapText());
+      assertEquals(ExcelVerticalAlignment.TOP, dateSnapshot.style().verticalAlignment());
+      assertEquals(ExcelBorderStyle.DOUBLE, dateSnapshot.style().rightBorderStyle());
+
+      assertEquals("yyyy-mm-dd hh:mm:ss", dateTimeSnapshot.style().numberFormat());
+      assertEquals("#DDEBF7", dateTimeSnapshot.style().fillColor());
+      assertTrue(dateTimeSnapshot.style().bold());
+      assertTrue(dateTimeSnapshot.style().wrapText());
+      assertEquals(ExcelVerticalAlignment.TOP, dateTimeSnapshot.style().verticalAlignment());
+      assertEquals(ExcelBorderStyle.DOUBLE, dateTimeSnapshot.style().rightBorderStyle());
+    }
+  }
+
+  @Test
+  void appendRowPreservesStyleWhenReusingStyledBlankRows() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.applyStyle(
+          "A1:B2",
+          new ExcelCellStyle(
+              null,
+              null,
+              null,
+              null,
+              null,
+              null,
+              "Aptos",
+              ExcelFontHeight.fromPoints(new java.math.BigDecimal("15.2")),
+              "#A3A3A3",
+              null,
+              Boolean.TRUE,
+              "#CDCDCD",
+              new ExcelBorder(
+                  new ExcelBorderSide(ExcelBorderStyle.DASH_DOT), null, null, null, null)));
+
+      sheet.appendRow(ExcelCellValue.number(607.8483822864587), ExcelCellValue.bool(false));
+
+      ExcelCellSnapshot.NumberSnapshot firstCell =
+          (ExcelCellSnapshot.NumberSnapshot) sheet.snapshotCell("A1");
+      ExcelCellSnapshot.BooleanSnapshot secondCell =
+          (ExcelCellSnapshot.BooleanSnapshot) sheet.snapshotCell("B1");
+      ExcelCellSnapshot.BlankSnapshot untouchedStyledCell =
+          (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A2");
+
+      assertEquals("#CDCDCD", firstCell.style().fillColor());
+      assertEquals("#A3A3A3", firstCell.style().fontColor());
+      assertTrue(firstCell.style().strikeout());
+      assertEquals(ExcelBorderStyle.DASH_DOT, firstCell.style().topBorderStyle());
+      assertEquals("#CDCDCD", secondCell.style().fillColor());
+      assertEquals(ExcelBorderStyle.DASH_DOT, secondCell.style().topBorderStyle());
+      assertEquals("#CDCDCD", untouchedStyledCell.style().fillColor());
+      assertEquals(ExcelBorderStyle.DASH_DOT, untouchedStyledCell.style().topBorderStyle());
+    }
+  }
+
+  @Test
+  void autoSizeColumnsProducesDeterministicWidthsFromDisplayedContent() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setCell("A1", ExcelCellValue.text("ID"));
+      sheet.setCell("B1", ExcelCellValue.text("Riga onboarding checklist"));
+      sheet.setCell("C1", ExcelCellValue.text("Q1"));
+      sheet.autoSizeColumns();
+
+      WorkbookReadResult.SheetLayout layout = sheet.layout();
+      assertTrue(
+          layout.columns().get(1).widthCharacters() > layout.columns().get(0).widthCharacters());
+      assertTrue(
+          layout.columns().get(1).widthCharacters() > layout.columns().get(2).widthCharacters());
+      assertTrue(layout.columns().get(1).widthCharacters() >= 20.0d);
     }
   }
 
@@ -760,7 +977,7 @@ class ExcelSheetTest {
           new ExcelSheet(
               poiSheet,
               new WorkbookStyleRegistry(poiWorkbook),
-              evaluateThrowingEvaluator(
+              FormulaRuntimeTestDouble.failingEvaluation(
                   baseEvaluator, new org.apache.poi.ss.formula.FakeFormulaFailure("bad formula")));
 
       InvalidFormulaException invalidSnapshot =
@@ -777,7 +994,7 @@ class ExcelSheetTest {
           new ExcelSheet(
               poiSheet,
               new WorkbookStyleRegistry(poiWorkbook),
-              throwingEvaluator(
+              FormulaRuntimeTestDouble.alwaysFail(
                   new org.apache.poi.ss.formula.FakeFormulaFailure("display failure")));
       InvalidFormulaException displayFailure =
           assertThrows(InvalidFormulaException.class, () -> displayFailureSheet.snapshotCell("A1"));
@@ -787,7 +1004,7 @@ class ExcelSheetTest {
           new ExcelSheet(
               poiSheet,
               new WorkbookStyleRegistry(poiWorkbook),
-              throwingEvaluator(
+              FormulaRuntimeTestDouble.alwaysFail(
                   new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException(
                       "unsupported")));
       UnsupportedFormulaException unsupported =
@@ -799,7 +1016,7 @@ class ExcelSheetTest {
           new ExcelSheet(
               poiSheet,
               new WorkbookStyleRegistry(poiWorkbook),
-              nullEvaluatingFormulaEvaluator(baseEvaluator));
+              FormulaRuntimeTestDouble.nullEvaluation(baseEvaluator));
       ExcelCellSnapshot blankEvaluatedFormula = nullEvaluatedCellSheet.snapshotCell("A1");
       assertEquals("FORMULA", blankEvaluatedFormula.effectiveType());
       assertThrows(IllegalStateException.class, () -> nullEvaluatedCellSheet.number("A1"));
@@ -839,12 +1056,6 @@ class ExcelSheetTest {
       Cell emailCell = row.createCell(2);
       Cell fileCell = row.createCell(3);
       Cell documentCell = row.createCell(4);
-      Cell noneCell = hyperlinkOnlyCell(proxyHyperlink(HyperlinkType.NONE, "ignored"));
-      Cell nullTypeCell = hyperlinkOnlyCell(proxyHyperlink(null, "ignored"));
-      Cell nullAddressCell = hyperlinkOnlyCell(proxyHyperlink(HyperlinkType.URL, null));
-      Cell blankTargetCell = hyperlinkOnlyCell(proxyHyperlink(HyperlinkType.URL, " "));
-      Cell invalidEmailCell = hyperlinkOnlyCell(proxyHyperlink(HyperlinkType.EMAIL, "mailto:"));
-      Cell nullTextCommentCell = commentOnlyCell(proxyComment(null, "GridGrind", false));
       Cell commentCell = row.createCell(5);
       Cell missingStringCommentCell = row.createCell(6);
       Cell blankCommentCell = row.createCell(7);
@@ -869,11 +1080,12 @@ class ExcelSheetTest {
       assertEquals(new ExcelHyperlink.Email("team@example.com"), ExcelSheet.hyperlink(emailCell));
       assertEquals(new ExcelHyperlink.File("/tmp/report.xlsx"), ExcelSheet.hyperlink(fileCell));
       assertEquals(new ExcelHyperlink.Document("Budget!B4"), ExcelSheet.hyperlink(documentCell));
-      assertNull(ExcelSheet.hyperlink(noneCell));
-      assertNull(ExcelSheet.hyperlink(nullTypeCell));
-      assertNull(ExcelSheet.hyperlink(nullAddressCell));
-      assertNull(ExcelSheet.hyperlink(blankTargetCell));
-      assertNull(ExcelSheet.hyperlink(invalidEmailCell));
+      assertNull(ExcelSheet.hyperlink(HyperlinkType.NONE, "ignored"));
+      assertNull(ExcelSheet.hyperlink((HyperlinkType) null, "ignored"));
+      assertNull(ExcelSheet.hyperlink(HyperlinkType.URL, null));
+      assertNull(ExcelSheet.hyperlink(HyperlinkType.URL, " "));
+      assertNull(ExcelSheet.hyperlink(HyperlinkType.EMAIL, "mailto:"));
+      assertNull(ExcelSheet.hyperlink(HyperlinkType.FILE, "https://example.com/report"));
 
       assertEquals(new ExcelComment("Review", "GridGrind", false), ExcelSheet.comment(commentCell));
       assertNull(ExcelSheet.comment(blankCell));
@@ -882,7 +1094,7 @@ class ExcelSheetTest {
       Cell nullAuthorCommentCell = row.createCell(11);
       nullAuthorCommentCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", null, false));
       assertNull(ExcelSheet.comment(nullAuthorCommentCell));
-      assertNull(ExcelSheet.comment(nullTextCommentCell));
+      assertNull(ExcelSheet.comment((String) null, "GridGrind", false));
       Cell blankAuthorCommentCell = row.createCell(12);
       blankAuthorCommentCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", " ", false));
       assertNull(ExcelSheet.comment(blankAuthorCommentCell));
@@ -899,7 +1111,11 @@ class ExcelSheetTest {
           "mailto:team@example.com",
           ExcelSheet.toPoiTarget(new ExcelHyperlink.Email("team@example.com")));
       assertEquals(
-          "/tmp/report.xlsx", ExcelSheet.toPoiTarget(new ExcelHyperlink.File("/tmp/report.xlsx")));
+          Path.of("/tmp/report.xlsx").toUri().toASCIIString(),
+          ExcelSheet.toPoiTarget(new ExcelHyperlink.File("/tmp/report.xlsx")));
+      assertEquals(
+          "support/budget%20backup.xlsx",
+          ExcelSheet.toPoiTarget(new ExcelHyperlink.File("support/budget backup.xlsx")));
       assertEquals("Budget!B4", ExcelSheet.toPoiTarget(new ExcelHyperlink.Document("Budget!B4")));
     }
   }
@@ -940,7 +1156,7 @@ class ExcelSheetTest {
           new ExcelSheet(
               poiSheet,
               new WorkbookStyleRegistry(poiWorkbook),
-              throwingEvaluator(new IllegalStateException()));
+              FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException()));
 
       List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
 
@@ -971,7 +1187,7 @@ class ExcelSheetTest {
           new ExcelSheet(
               nullSheet,
               new WorkbookStyleRegistry(poiWorkbook),
-              nullEvaluatingFormulaEvaluator(baseEvaluator));
+              FormulaRuntimeTestDouble.nullEvaluation(baseEvaluator));
       assertEquals(List.of(), nullEvaluated.formulaHealthFindings());
     }
   }
@@ -985,34 +1201,35 @@ class ExcelSheetTest {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      Cell invalidUrlCell = poiSheet.createRow(0).createCell(0);
-      invalidUrlCell.setHyperlink(proxyHyperlink(HyperlinkType.URL, "example.com/report"));
-      Cell invalidEmailCell = poiSheet.createRow(1).createCell(0);
-      invalidEmailCell.setHyperlink(proxyHyperlink(HyperlinkType.EMAIL, "mailto:"));
-      Cell blankFileCell = poiSheet.createRow(2).createCell(0);
-      blankFileCell.setHyperlink(proxyHyperlink(HyperlinkType.FILE, " "));
-      Cell validFileCell = poiSheet.createRow(3).createCell(0);
-      validFileCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.FILE, "/tmp/report.xlsx"));
-      Cell missingSheetCell = poiSheet.createRow(4).createCell(0);
-      missingSheetCell.setHyperlink(proxyHyperlink(HyperlinkType.DOCUMENT, "Missing!A1"));
-      Cell invalidDocumentCell = poiSheet.createRow(5).createCell(0);
-      invalidDocumentCell.setHyperlink(proxyHyperlink(HyperlinkType.DOCUMENT, "Budget!"));
-      Cell invalidDocumentRangeCell = poiSheet.createRow(6).createCell(0);
-      invalidDocumentRangeCell.setHyperlink(proxyHyperlink(HyperlinkType.DOCUMENT, "Budget!A1:"));
-      Cell quotedDocumentCell = poiSheet.createRow(7).createCell(0);
+      Path reachableFile = Files.createTempFile("gridgrind-hyperlink-health-", ".xlsx");
+      Cell validFileCell = poiSheet.createRow(0).createCell(0);
+      validFileCell.setHyperlink(
+          hyperlink(poiWorkbook, HyperlinkType.FILE, reachableFile.toString()));
+      Cell missingSheetCell = poiSheet.createRow(1).createCell(0);
+      missingSheetCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.DOCUMENT, "Missing!A1"));
+      Cell invalidDocumentCell = poiSheet.createRow(2).createCell(0);
+      invalidDocumentCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.DOCUMENT, "Budget!"));
+      Cell invalidDocumentRangeCell = poiSheet.createRow(3).createCell(0);
+      invalidDocumentRangeCell.setHyperlink(
+          hyperlink(poiWorkbook, HyperlinkType.DOCUMENT, "Budget!A1:"));
+      Cell quotedDocumentCell = poiSheet.createRow(4).createCell(0);
       quotedDocumentCell.setHyperlink(
           hyperlink(poiWorkbook, HyperlinkType.DOCUMENT, "'Quarter 1'!A1"));
 
-      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.hyperlinkHealthFindings();
+      List<WorkbookAnalysis.AnalysisFinding> findings;
+      try {
+        findings = sheet.hyperlinkHealthFindings();
+      } finally {
+        Files.deleteIfExists(reachableFile);
+      }
 
-      assertEquals(8, sheet.hyperlinkCount());
+      assertEquals(5, sheet.hyperlinkCount());
       assertTrue(
           findings.stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
               .containsAll(
                   List.of(
-                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
                       WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_DOCUMENT_SHEET,
                       WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_INVALID_DOCUMENT_TARGET)));
       assertTrue(
@@ -1020,8 +1237,59 @@ class ExcelSheetTest {
               .noneMatch(
                   finding ->
                       finding.location() instanceof WorkbookAnalysis.AnalysisLocation.Cell cell
-                          && "A8".equals(cell.address())));
+                          && "A5".equals(cell.address())));
     }
+  }
+
+  @Test
+  void fileHyperlinkFindingsCoverMalformedMissingAndUnresolvedTargets() {
+    WorkbookAnalysis.AnalysisLocation.Cell location =
+        new WorkbookAnalysis.AnalysisLocation.Cell("Budget", "A1");
+    WorkbookLocation storedWorkbook =
+        new WorkbookLocation.StoredWorkbook(
+            Path.of("tmp", "file-hyperlink-findings", "Budget.xlsx").toAbsolutePath());
+
+    List<WorkbookAnalysis.AnalysisFinding> malformed =
+        ExcelSheet.fileHyperlinkFindings(location, "https://example.com/report", storedWorkbook);
+    assertEquals(1, malformed.size());
+    assertEquals(
+        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
+        malformed.getFirst().code());
+
+    List<WorkbookAnalysis.AnalysisFinding> unresolved =
+        ExcelSheet.fileHyperlinkFindings(
+            location, "reports/q1.xlsx", new WorkbookLocation.UnsavedWorkbook());
+    assertEquals(1, unresolved.size());
+    assertEquals(
+        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
+        unresolved.getFirst().code());
+
+    List<WorkbookAnalysis.AnalysisFinding> missing =
+        ExcelSheet.fileHyperlinkFindings(location, "reports/q1.xlsx", storedWorkbook);
+    assertEquals(1, missing.size());
+    assertEquals(
+        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
+        missing.getFirst().code());
+  }
+
+  @Test
+  void externalHyperlinkFindingsCoverMalformedUrlAndEmailTargets() {
+    WorkbookAnalysis.AnalysisLocation.Cell location =
+        new WorkbookAnalysis.AnalysisLocation.Cell("Budget", "A1");
+
+    List<WorkbookAnalysis.AnalysisFinding> malformedUrl =
+        ExcelSheet.externalHyperlinkFindings(location, "example.com/report", "URL", false);
+    assertEquals(1, malformedUrl.size());
+    assertEquals(
+        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
+        malformedUrl.getFirst().code());
+
+    List<WorkbookAnalysis.AnalysisFinding> malformedEmail =
+        ExcelSheet.externalHyperlinkFindings(location, "mailto:", "EMAIL", false);
+    assertEquals(1, malformedEmail.size());
+    assertEquals(
+        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
+        malformedEmail.getFirst().code());
   }
 
   @Test
@@ -1043,9 +1311,7 @@ class ExcelSheetTest {
       assertEquals(3, layout.rows().size());
       assertEquals(poiSheet.getDefaultRowHeightInPoints(), layout.rows().get(1).heightPoints());
 
-      Cell invalidUrlCell =
-          hyperlinkOnlyCell(proxyHyperlink(HyperlinkType.URL, "example.com/report"));
-      assertNull(ExcelSheet.hyperlink(invalidUrlCell));
+      assertNull(ExcelSheet.hyperlink(HyperlinkType.URL, "example.com/report"));
     }
   }
 
@@ -1073,17 +1339,39 @@ class ExcelSheetTest {
       assertEquals("IllegalStateException", sheet.exceptionMessage(new IllegalStateException()));
       assertEquals(
           "display failure", sheet.exceptionMessage(new IllegalStateException("display failure")));
+      WorkbookAnalysis.AnalysisLocation.Cell location =
+          new WorkbookAnalysis.AnalysisLocation.Cell("Helpers", "A1");
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
+          sheet
+              .hyperlinkTargetFindings(
+                  location, HyperlinkType.URL, " ", new WorkbookLocation.UnsavedWorkbook())
+              .getFirst()
+              .code());
+      assertEquals(
+          List.of(),
+          sheet.hyperlinkTargetFindings(
+              location,
+              HyperlinkType.EMAIL,
+              "team@example.com",
+              new WorkbookLocation.UnsavedWorkbook()));
+      assertEquals(
+          List.of(),
+          sheet.hyperlinkTargetFindings(
+              location, HyperlinkType.NONE, "ignored", new WorkbookLocation.UnsavedWorkbook()));
     }
 
-    assertFalse(ExcelSheet.hasUsableHyperlink(null));
-    assertFalse(ExcelSheet.hasUsableHyperlink(proxyHyperlink(null, "ignored")));
-    assertFalse(ExcelSheet.hasUsableHyperlink(proxyHyperlink(HyperlinkType.NONE, "ignored")));
-    assertTrue(
-        ExcelSheet.hasUsableHyperlink(proxyHyperlink(HyperlinkType.URL, "https://example.com")));
+    assertNull(ExcelSheet.hyperlink((Cell) null));
+    assertFalse(ExcelSheet.hasUsableHyperlink((org.apache.poi.ss.usermodel.Hyperlink) null));
+    assertFalse(ExcelSheet.hasUsableHyperlinkType(null));
+    assertFalse(ExcelSheet.hasUsableHyperlinkType(HyperlinkType.NONE));
+    assertTrue(ExcelSheet.hasUsableHyperlinkType(HyperlinkType.URL));
+    assertNull(ExcelSheet.hyperlink(hyperlinkWithNullType()));
 
     assertTrue(ExcelSheet.hasMissingHyperlinkTarget(null));
     assertTrue(ExcelSheet.hasMissingHyperlinkTarget(" "));
     assertFalse(ExcelSheet.hasMissingHyperlinkTarget("Budget!A1"));
+    assertNull(ExcelSheet.comment((Cell) null));
   }
 
   @Test
@@ -1135,109 +1423,82 @@ class ExcelSheetTest {
 
       poiSheet.createRow(0).createCell(0).setCellValue("plain");
       Cell noneCell = poiSheet.createRow(1).createCell(0);
-      noneCell.setHyperlink(proxyHyperlink(HyperlinkType.NONE, "ignored"));
+      noneCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.NONE, "ignored"));
       Cell validUrlCell = poiSheet.createRow(2).createCell(0);
       validUrlCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.URL, "https://example.com"));
+      Cell validEmailCell = poiSheet.createRow(3).createCell(0);
+      validEmailCell.setHyperlink(hyperlink(poiWorkbook, HyperlinkType.EMAIL, "team@example.com"));
 
-      assertEquals(1, sheet.hyperlinkCount());
+      assertEquals(2, sheet.hyperlinkCount());
       assertEquals(List.of(), sheet.hyperlinkHealthFindings());
     }
-  }
-
-  private FormulaEvaluator throwingEvaluator(RuntimeException exception) {
-    InvocationHandler handler =
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args)
-              throws Throwable {
-            if (method.getDeclaringClass() == Object.class) {
-              return switch (method.getName()) {
-                case "toString" -> "throwingEvaluator";
-                case "hashCode" -> System.identityHashCode(proxy);
-                case "equals" -> sameProxyHandler(args, this);
-                default -> throw new UnsupportedOperationException(method.getName());
-              };
-            }
-            throw exception;
-          }
-        };
-    return (FormulaEvaluator)
-        Proxy.newProxyInstance(
-            formulaEvaluatorClassLoader(), new Class<?>[] {FormulaEvaluator.class}, handler);
-  }
-
-  private FormulaEvaluator evaluateThrowingEvaluator(
-      FormulaEvaluator delegate, RuntimeException exception) {
-    InvocationHandler handler =
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args)
-              throws Throwable {
-            if (method.getDeclaringClass() == Object.class) {
-              return switch (method.getName()) {
-                case "toString" -> "evaluateThrowingEvaluator";
-                case "hashCode" -> System.identityHashCode(proxy);
-                case "equals" -> sameProxyHandler(args, this);
-                default -> throw new UnsupportedOperationException(method.getName());
-              };
-            }
-            if ("evaluate".equals(method.getName())) {
-              throw exception;
-            }
-            return method.invoke(delegate, args);
-          }
-        };
-    return (FormulaEvaluator)
-        Proxy.newProxyInstance(
-            formulaEvaluatorClassLoader(), new Class<?>[] {FormulaEvaluator.class}, handler);
-  }
-
-  private FormulaEvaluator nullEvaluatingFormulaEvaluator(FormulaEvaluator delegate) {
-    InvocationHandler handler =
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args)
-              throws Throwable {
-            if (method.getDeclaringClass() == Object.class) {
-              return switch (method.getName()) {
-                case "toString" -> "nullEvaluatingFormulaEvaluator";
-                case "hashCode" -> System.identityHashCode(proxy);
-                case "equals" -> sameProxyHandler(args, this);
-                default -> throw new UnsupportedOperationException(method.getName());
-              };
-            }
-            if ("evaluate".equals(method.getName())) {
-              return null;
-            }
-            return method.invoke(delegate, args);
-          }
-        };
-    return (FormulaEvaluator)
-        Proxy.newProxyInstance(
-            formulaEvaluatorClassLoader(), new Class<?>[] {FormulaEvaluator.class}, handler);
-  }
-
-  private ClassLoader formulaEvaluatorClassLoader() {
-    return Objects.requireNonNull(
-        Thread.currentThread().getContextClassLoader(), "context class loader must not be null");
-  }
-
-  private boolean sameProxyHandler(Object[] args, InvocationHandler handler) {
-    if (args == null
-        || args.length != 1
-        || args[0] == null
-        || !Proxy.isProxyClass(args[0].getClass())) {
-      return false;
-    }
-    return Objects.equals(Proxy.getInvocationHandler(args[0]), handler);
   }
 
   private org.apache.poi.ss.usermodel.Hyperlink hyperlink(
       XSSFWorkbook workbook, HyperlinkType hyperlinkType, String address) {
     org.apache.poi.ss.usermodel.Hyperlink hyperlink =
         workbook.getCreationHelper().createHyperlink(hyperlinkType);
-    hyperlink.setAddress(address);
+    if (hyperlinkType != HyperlinkType.NONE) {
+      hyperlink.setAddress(address);
+    }
     return hyperlink;
+  }
+
+  private static org.apache.poi.ss.usermodel.Hyperlink hyperlinkWithNullType() {
+    return new org.apache.poi.ss.usermodel.Hyperlink() {
+      @Override
+      public HyperlinkType getType() {
+        return null;
+      }
+
+      @Override
+      public String getAddress() {
+        return "ignored";
+      }
+
+      @Override
+      public void setAddress(String address) {}
+
+      @Override
+      public String getLabel() {
+        return null;
+      }
+
+      @Override
+      public void setLabel(String label) {}
+
+      @Override
+      public int getFirstRow() {
+        return 0;
+      }
+
+      @Override
+      public void setFirstRow(int row) {}
+
+      @Override
+      public int getLastRow() {
+        return 0;
+      }
+
+      @Override
+      public void setLastRow(int row) {}
+
+      @Override
+      public int getFirstColumn() {
+        return 0;
+      }
+
+      @Override
+      public void setFirstColumn(int column) {}
+
+      @Override
+      public int getLastColumn() {
+        return 0;
+      }
+
+      @Override
+      public void setLastColumn(int column) {}
+    };
   }
 
   private Comment comment(
@@ -1256,109 +1517,6 @@ class ExcelSheetTest {
     anchor.setCol1(0);
     anchor.setCol2(3);
     return sheet.createDrawingPatriarch().createCellComment(anchor);
-  }
-
-  private Cell hyperlinkOnlyCell(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
-    InvocationHandler handler =
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
-            return switch (method.getName()) {
-              case "getHyperlink" -> hyperlink;
-              case "toString" -> "hyperlinkOnlyCell";
-              case "hashCode" -> System.identityHashCode(proxy);
-              case "equals" -> false;
-              default -> throw new UnsupportedOperationException(method.getName());
-            };
-          }
-        };
-    return (Cell)
-        Proxy.newProxyInstance(formulaEvaluatorClassLoader(), new Class<?>[] {Cell.class}, handler);
-  }
-
-  private org.apache.poi.ss.usermodel.Hyperlink proxyHyperlink(
-      HyperlinkType hyperlinkType, String address) {
-    InvocationHandler handler =
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
-            return switch (method.getName()) {
-              case "getType" -> hyperlinkType;
-              case "getAddress" -> address;
-              case "getLabel", "getTooltip" -> null;
-              case "getFirstRow", "getLastRow", "getFirstColumn", "getLastColumn" -> 0;
-              case "toString" -> "proxyHyperlink[" + hyperlinkType + "," + address + "]";
-              case "hashCode" -> Objects.hash(hyperlinkType, address);
-              case "equals" -> false;
-              default -> throw new UnsupportedOperationException(method.getName());
-            };
-          }
-        };
-    return (org.apache.poi.ss.usermodel.Hyperlink)
-        Proxy.newProxyInstance(
-            formulaEvaluatorClassLoader(),
-            new Class<?>[] {org.apache.poi.ss.usermodel.Hyperlink.class},
-            handler);
-  }
-
-  private Cell commentOnlyCell(Comment comment) {
-    InvocationHandler handler =
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
-            return switch (method.getName()) {
-              case "getCellComment" -> comment;
-              case "toString" -> "commentOnlyCell";
-              case "hashCode" -> System.identityHashCode(proxy);
-              case "equals" -> false;
-              default -> throw new UnsupportedOperationException(method.getName());
-            };
-          }
-        };
-    return (Cell)
-        Proxy.newProxyInstance(formulaEvaluatorClassLoader(), new Class<?>[] {Cell.class}, handler);
-  }
-
-  private Comment proxyComment(String text, String author, boolean visible) {
-    InvocationHandler handler =
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
-            return switch (method.getName()) {
-              case "getString" -> proxyRichTextString(text);
-              case "getAuthor" -> author;
-              case "isVisible" -> visible;
-              case "toString" -> "proxyComment[" + text + "," + author + "," + visible + "]";
-              case "hashCode" -> Objects.hash(text, author, visible);
-              case "equals" -> false;
-              default -> throw new UnsupportedOperationException(method.getName());
-            };
-          }
-        };
-    return (Comment)
-        Proxy.newProxyInstance(
-            formulaEvaluatorClassLoader(), new Class<?>[] {Comment.class}, handler);
-  }
-
-  private org.apache.poi.ss.usermodel.RichTextString proxyRichTextString(String text) {
-    InvocationHandler handler =
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
-            return switch (method.getName()) {
-              case "getString" -> text;
-              case "toString" -> "proxyRichTextString[" + text + "]";
-              case "hashCode" -> Objects.hashCode(text);
-              case "equals" -> false;
-              default -> throw new UnsupportedOperationException(method.getName());
-            };
-          }
-        };
-    return (org.apache.poi.ss.usermodel.RichTextString)
-        Proxy.newProxyInstance(
-            formulaEvaluatorClassLoader(),
-            new Class<?>[] {org.apache.poi.ss.usermodel.RichTextString.class},
-            handler);
   }
 
   @Test

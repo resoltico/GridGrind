@@ -3,11 +3,8 @@ package dev.erst.gridgrind.protocol;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.Objects;
 
-/** Protocol-facing hyperlink target used by cell hyperlink operations. */
+/** Canonical protocol hyperlink target used consistently across request and response payloads. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = HyperlinkTarget.Url.class, name = "URL"),
@@ -27,8 +24,7 @@ public sealed interface HyperlinkTarget
   /** Absolute URL hyperlink target such as {@code https://example.com/report}. */
   record Url(String target) implements HyperlinkTarget {
     public Url {
-      target = requireNonBlank(target, "target");
-      requireAbsoluteUri(target);
+      target = new ExcelHyperlink.Url(target).target();
     }
 
     @Override
@@ -40,7 +36,7 @@ public sealed interface HyperlinkTarget
   /** Email hyperlink target stored without the {@code mailto:} prefix. */
   record Email(String email) implements HyperlinkTarget {
     public Email {
-      email = normalizeEmail(email);
+      email = new ExcelHyperlink.Email(email).target();
     }
 
     @Override
@@ -49,62 +45,32 @@ public sealed interface HyperlinkTarget
     }
   }
 
-  /** File hyperlink target pointing at a local or shared file-system path. */
-  record File(String target) implements HyperlinkTarget {
+  /**
+   * File hyperlink target pointing at a local or shared file-system path.
+   *
+   * <p>{@code path} accepts either a plain path string or a {@code file:} URI and is normalized to
+   * a plain path string for storage and readback.
+   */
+  record File(String path) implements HyperlinkTarget {
     public File {
-      target = requireNonBlank(target, "target");
+      path = new ExcelHyperlink.File(path).target();
     }
 
     @Override
     public ExcelHyperlink toExcelHyperlink() {
-      return new ExcelHyperlink.File(target);
+      return new ExcelHyperlink.File(path);
     }
   }
 
   /** Internal workbook hyperlink target such as a sheet-and-cell location or defined name. */
   record Document(String target) implements HyperlinkTarget {
     public Document {
-      target = requireNonBlank(target, "target");
+      target = new ExcelHyperlink.Document(target).target();
     }
 
     @Override
     public ExcelHyperlink toExcelHyperlink() {
       return new ExcelHyperlink.Document(target);
     }
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
-  }
-
-  private static void requireAbsoluteUri(String target) {
-    try {
-      URI uri = new URI(target);
-      if (!uri.isAbsolute()) {
-        throw new IllegalArgumentException("target must be an absolute URI with a scheme");
-      }
-    } catch (URISyntaxException exception) {
-      throw new IllegalArgumentException("target must be a valid absolute URI", exception);
-    }
-  }
-
-  private static String normalizeEmail(String email) {
-    String normalized = requireNonBlank(email, "email");
-    if (normalized.regionMatches(true, 0, "mailto:", 0, 7)) {
-      normalized = normalized.substring(7);
-    }
-    if (normalized.isBlank()) {
-      throw new IllegalArgumentException("email must not be blank");
-    }
-    int atIndex = normalized.indexOf('@');
-    if (atIndex < 1 || atIndex == normalized.length() - 1) {
-      throw new IllegalArgumentException(
-          "email must contain '@' with a non-empty local part and domain");
-    }
-    return normalized;
   }
 }

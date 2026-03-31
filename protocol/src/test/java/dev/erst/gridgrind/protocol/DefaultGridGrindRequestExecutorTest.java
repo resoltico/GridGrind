@@ -11,7 +11,6 @@ import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
-import dev.erst.gridgrind.excel.ExcelHyperlinkType;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
@@ -26,6 +25,7 @@ import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnsupportedFormulaException;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
+import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.WorkbookNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
@@ -260,12 +260,12 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookReadResult.NamedRangesResult ranges =
         read(success, "ranges", WorkbookReadResult.NamedRangesResult.class);
 
-    assertEquals(ExcelHyperlinkType.URL, linkedCell.hyperlink().type());
-    assertEquals("https://example.com/report", linkedCell.hyperlink().target());
+    assertEquals(new HyperlinkTarget.Url("https://example.com/report"), linkedCell.hyperlink());
     assertEquals("Review", linkedCell.comment().text());
     assertEquals("A1", hyperlinks.hyperlinks().getFirst().address());
     assertEquals(
-        "https://example.com/report", hyperlinks.hyperlinks().getFirst().hyperlink().target());
+        new HyperlinkTarget.Url("https://example.com/report"),
+        hyperlinks.hyperlinks().getFirst().hyperlink());
     assertEquals("A1", comments.comments().getFirst().address());
     assertEquals("Review", comments.comments().getFirst().comment().text());
     assertEquals(2, ranges.namedRanges().size());
@@ -295,6 +295,53 @@ class DefaultGridGrindRequestExecutorTest {
         new ExcelComment("Review", "GridGrind", true),
         XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1").comment().orElseThrow());
     assertEquals(2, XlsxRoundTrip.namedRanges(workbookPath).size());
+  }
+
+  @Test
+  void returnsFileHyperlinksInCanonicalPathShape() throws IOException {
+    Path linkedFileDirectory = Files.createTempDirectory("gridgrind file links ");
+    Path linkedFile = linkedFileDirectory.resolve("memo final.pdf");
+    Files.writeString(linkedFile, "seed");
+
+    GridGrindResponse response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("Memo")),
+                        new WorkbookOperation.SetHyperlink(
+                            "Budget", "A1", new HyperlinkTarget.File(linkedFile.toString()))),
+                    new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
+                    new WorkbookReadOperation.GetHyperlinks(
+                        "hyperlinks", "Budget", new CellSelection.Selected(List.of("A1")))));
+
+    GridGrindResponse.Success success = success(response);
+    GridGrindResponse.CellReport.TextReport linkedCell =
+        cast(
+            GridGrindResponse.CellReport.TextReport.class,
+            read(success, "cells", WorkbookReadResult.CellsResult.class).cells().getFirst());
+    WorkbookReadResult.HyperlinksResult hyperlinks =
+        read(success, "hyperlinks", WorkbookReadResult.HyperlinksResult.class);
+
+    assertEquals(new HyperlinkTarget.File(linkedFile.toString()), linkedCell.hyperlink());
+    assertEquals(
+        new HyperlinkTarget.File(linkedFile.toString()),
+        hyperlinks.hyperlinks().getFirst().hyperlink());
+  }
+
+  @Test
+  void convertsEmailAndDocumentHyperlinksToCanonicalProtocolTargets() {
+    assertEquals(
+        new HyperlinkTarget.Email("team@example.com"),
+        DefaultGridGrindRequestExecutor.toHyperlinkTarget(
+            new ExcelHyperlink.Email("team@example.com")));
+    assertEquals(
+        new HyperlinkTarget.Document("Budget!B4"),
+        DefaultGridGrindRequestExecutor.toHyperlinkTarget(
+            new ExcelHyperlink.Document("Budget!B4")));
   }
 
   @Test
@@ -782,10 +829,9 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(
         "Invalid formula at Data!A1: [^owe_e`ffffff",
         failure.problem().causes().getFirst().message());
-    assertEquals("InvalidFormulaException", failure.problem().causes().getFirst().type());
     assertEquals(
-        "Parsed past the end of the formula, pos: 15, length: 14, formula: [^owe_e`ffffff",
-        failure.problem().causes().get(1).message());
+        GridGrindProblemCode.INVALID_FORMULA, failure.problem().causes().getFirst().code());
+    assertEquals("APPLY_OPERATION", failure.problem().causes().getFirst().stage());
   }
 
   @Test
@@ -860,6 +906,8 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
     assertEquals("APPLY_OPERATION", failure.problem().context().stage());
     assertEquals(2, failure.problem().causes().size());
+    assertEquals(
+        GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().causes().getFirst().code());
     assertTrue(
         failure
             .problem()
@@ -867,6 +915,7 @@ class DefaultGridGrindRequestExecutorTest {
             .get(1)
             .message()
             .contains("Workbook close failed after the primary problem"));
+    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().causes().get(1).code());
     assertEquals("EXECUTE_REQUEST", failure.problem().causes().get(1).stage());
   }
 
@@ -1828,12 +1877,11 @@ class DefaultGridGrindRequestExecutorTest {
             .getFirst()
             .range());
     assertEquals(
-        "https://example.com/report",
+        new HyperlinkTarget.Url("https://example.com/report"),
         cast(WorkbookReadResult.HyperlinksResult.class, hyperlinks)
             .hyperlinks()
             .getFirst()
-            .hyperlink()
-            .target());
+            .hyperlink());
     assertEquals(
         "Review",
         cast(WorkbookReadResult.CommentsResult.class, comments)
@@ -2419,6 +2467,20 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(
         expectedNamedRangeName,
         DefaultGridGrindRequestExecutor.namedRangeNameFor(operation, runtimeException));
+  }
+
+  @Test
+  void workbookLocationForUsesExistingSourcePathsWhenPersistenceDoesNotSave() {
+    Path existingWorkbookPath = Path.of("tmp", "existing-budget.xlsx").toAbsolutePath();
+
+    WorkbookLocation workbookLocation =
+        DefaultGridGrindRequestExecutor.workbookLocationFor(
+            new GridGrindRequest.WorkbookSource.ExistingFile(existingWorkbookPath.toString()),
+            new GridGrindRequest.WorkbookPersistence.None());
+
+    WorkbookLocation.StoredWorkbook storedWorkbook =
+        assertInstanceOf(WorkbookLocation.StoredWorkbook.class, workbookLocation);
+    assertEquals(existingWorkbookPath.normalize(), storedWorkbook.workbookPath());
   }
 
   private static <T extends WorkbookReadResult> T read(

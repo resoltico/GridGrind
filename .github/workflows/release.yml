@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
 
+concurrency:
+  group: publication-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   release:
     name: Build and publish release
@@ -36,11 +40,12 @@ jobs:
       - name: Build fat JAR
         run: ./gradlew :cli:shadowJar --no-daemon
 
-      - name: Publish GitHub release
+      - name: Publish GitHub release idempotently
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release create "${GITHUB_REF_NAME}" cli/build/libs/*.jar \
-            --title "${GITHUB_REF_NAME}" \
-            --generate-notes \
-            --verify-tag
+        run: ./scripts/publish-github-release.sh
+
+      - name: Verify GitHub release handoff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/verify-github-release.sh
