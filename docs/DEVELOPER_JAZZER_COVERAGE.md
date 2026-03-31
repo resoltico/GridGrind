@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.16.0"
+version: "0.17.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-03-31"
 route:
@@ -203,6 +203,7 @@ Committed custom seeds currently in source control:
 | `xlsx-roundtrip` | `create_sheet_set_range_roundtrip_case.bin` | successful round-trip seed that persists `CREATE_SHEET` plus `SET_RANGE` commands |
 | `xlsx-roundtrip` | `apply_style_alignment_roundtrip_success.bin` | successful round-trip seed that preserves alignment-only style state after reopen |
 | `xlsx-roundtrip` | `apply_style_formatting_depth_roundtrip_success.bin` | successful round-trip seed that preserves formatting-depth style state after reopen |
+| `xlsx-roundtrip` | `append_row_preserves_styled_blank_row_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert style preservation when `APPEND_ROW` reuses styled blank rows |
 | `xlsx-roundtrip` | `named_range_normalization_roundtrip_success.bin` | successful round-trip seed that preserves named-range state while normalizing reversed target ordering |
 | `xlsx-roundtrip` | `hyperlink_comment_invalid_row_case.bin` | expected-invalid round-trip seed that exercises hyperlink and comment commands alongside invalid row mutation input |
 | `xlsx-roundtrip` | `set_hyperlink_replacement_roundtrip_success.bin` | successful round-trip seed that preserves the latest hyperlink target after repeated writes to the same cell |

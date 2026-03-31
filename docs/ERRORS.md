@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.16.0"
+version: "0.17.0"
 domain: ERRORS
 updated: "2026-03-31"
 route:
@@ -37,10 +37,9 @@ route:
     },
     "causes": [
       {
-        "type": "InvalidCellAddressException",
-        "className": "dev.erst.gridgrind.excel.InvalidCellAddressException",
+        "code": "INVALID_CELL_ADDRESS",
         "message": "...",
-        "stage": null
+        "stage": "APPLY_OPERATION"
       }
     ]
   }
@@ -62,7 +61,7 @@ route:
 | Code | Trigger |
 |:-----|:--------|
 | `INVALID_JSON` | Request payload is not syntactically valid JSON. |
-| `INVALID_REQUEST_SHAPE` | JSON is syntactically valid, but fields, discriminator IDs, or token shapes do not match the GridGrind protocol schema. Messages are product-owned and describe unknown fields, unknown type values, or wrong token shapes without leaking Jackson or Java class names. |
+| `INVALID_REQUEST_SHAPE` | JSON is syntactically valid, but fields, discriminator IDs, or token shapes do not match the GridGrind protocol schema. Messages are product-owned and describe unknown fields, unknown type values, missing required fields, or wrong token shapes without leaking Jackson or Java class names. |
 | `INVALID_REQUEST` | JSON is valid and binds successfully, but the parsed request violates GridGrind business or cross-field validation, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. |
 | `INVALID_CELL_ADDRESS` | A1-notation cell address is malformed. |
 | `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or its dimensions do not match `rows`, including invalid `MERGE_CELLS` or `UNMERGE_CELLS` ranges. |
@@ -145,17 +144,19 @@ The `context` block provides structured metadata about where the failure occurre
 
 ---
 
-## Causes Chain
+## Diagnostic Causes
 
-`causes` is an ordered list of underlying exceptions from immediate cause to root cause.
+`causes` is an ordered list of GridGrind-classified diagnostic entries. The first entry describes
+the primary classified failure in GridGrind terms, and later entries capture supplemental failures
+that occurred in other stages while GridGrind was already handling the main problem.
+
 Each entry carries:
 
 | Field | Description |
 |:------|:------------|
-| `type` | Simple class name of the exception (e.g. `InvalidCellAddressException`). |
-| `className` | Fully-qualified class name for precise matching. |
-| `message` | Exception message. |
-| `stage` | Pipeline stage where this cause originated, or `null` if not attributed to a stage. |
+| `code` | Stable GridGrind problem code for this diagnostic entry. |
+| `message` | Product-owned diagnostic message for this entry. |
+| `stage` | Pipeline stage where this diagnostic originated, or `null` if not attributed to a stage. |
 
-Agents can inspect `type` to distinguish between, for example, `InvalidFormulaException` (invalid
-formula syntax) and `UnsupportedFormulaException` (valid formula syntax, unsupported by POI).
+Agents should inspect `code` to distinguish between, for example, `INVALID_FORMULA` and
+`UNSUPPORTED_FORMULA`, without depending on Java exception class names or parser-library details.

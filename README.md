@@ -41,7 +41,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.16.0
+docker pull ghcr.io/resoltico/gridgrind:0.17.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -135,8 +135,8 @@ autonomous callers deterministic failure semantics instead of "error after side 
 | `SET_COLUMN_WIDTH` | Set one or more column widths using character units |
 | `SET_ROW_HEIGHT` | Set one or more row heights using point units |
 | `FREEZE_PANES` | Freeze panes using explicit split and visible-origin coordinates |
-| `SET_CELL` | Write a typed value to a single cell |
-| `SET_RANGE` | Write a rectangular grid of typed values |
+| `SET_CELL` | Write a typed value to a single cell without clearing existing style, hyperlink, or comment state |
+| `SET_RANGE` | Write a rectangular grid of typed values without clearing existing style, hyperlink, or comment state |
 | `CLEAR_RANGE` | Remove values, styles, hyperlinks, and comments from a rectangular range |
 | `SET_HYPERLINK` | Attach a hyperlink to a single cell |
 | `CLEAR_HYPERLINK` | Remove a hyperlink from a cell; no-op when the cell does not exist |
@@ -180,9 +180,15 @@ scope with explicit sheet-qualified cell or range targets. Analysis can now retu
 cells that have never been written are silently skipped. `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are
 no-ops when the addressed cell does not physically exist.
 
+`SET_CELL`, `SET_RANGE`, and `APPEND_ROW` preserve any existing style, hyperlink, and comment
+state already present on the targeted cells. For `DATE` and `DATE_TIME` values, GridGrind layers
+the required number format onto the existing style instead of replacing fill, border, font,
+alignment, or wrap state.
+
 `APPEND_ROW` uses value-bearing row semantics: blank rows that carry only style, comment, or
-hyperlink metadata do not move the append cursor. `AUTO_SIZE_COLUMNS` uses deterministic,
-content-based sizing so headless, Docker, and local runs produce the same widths.
+hyperlink metadata do not move the append cursor, but any existing presentation or metadata state
+on the reused cells is preserved when values are written there. `AUTO_SIZE_COLUMNS` uses
+deterministic, content-based sizing so headless, Docker, and local runs produce the same widths.
 
 See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the full reference with all fields and examples.
 
@@ -216,7 +222,8 @@ Analysis reads:
 Every read carries a caller-defined `requestId`, and every result echoes that `requestId` back so
 agents can correlate repeated or similar reads deterministically.
 
-`GET_HYPERLINKS` returns `FILE` targets in the `path` field as normalized plain path strings.
+`GET_HYPERLINKS` returns hyperlinks in the same discriminated shape used by `SET_HYPERLINK`
+targets. `FILE` targets come back in the `path` field as normalized plain path strings.
 `ANALYZE_HYPERLINK_HEALTH` resolves relative `FILE` targets against the workbook's persisted path
 when one exists; when the workbook has no filesystem location yet, relative `FILE` targets are
 reported as unresolved instead of being silently treated as healthy.
@@ -339,7 +346,8 @@ A failed response carries `"status": "ERROR"` and a structured `problem` object 
 - a `title`, `message`, and `resolution` — all written for autonomous caller consumption
 - a `context` block with stage, operation index, sheet name, address, formula, and JSON path
   coordinates so an agent can locate the exact source of failure
-- a `causes` chain for inspecting the underlying exception family
+- a `causes` list of GridGrind-classified diagnostics, including the primary classified failure
+  and any supplemental stage failures
 
 See [docs/ERRORS.md](docs/ERRORS.md) for all problem codes and the full error model.
 

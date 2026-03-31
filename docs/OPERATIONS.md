@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.16.0"
+version: "0.17.0"
 domain: OPERATIONS
 updated: "2026-03-31"
 route:
@@ -307,7 +307,8 @@ Constraints:
 
 ### SET_CELL
 
-Write a typed value to a single cell using A1 notation.
+Write a typed value to a single cell using A1 notation. Existing style, hyperlink, and comment
+state on the targeted cell is preserved.
 
 ```json
 {
@@ -321,6 +322,9 @@ Write a typed value to a single cell using A1 notation.
 FORMULA note: a leading `=` is accepted and stripped automatically. `"=SUM(B2:B3)"` and
 `"SUM(B2:B3)"` are equivalent.
 
+DATE / DATE_TIME note: the required Excel number format is applied without discarding any existing
+fill, border, font, alignment, or wrap state already present on the cell.
+
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `sheetName` | Yes | Target sheet. |
@@ -332,7 +336,8 @@ FORMULA note: a leading `=` is accepted and stripped automatically. `"=SUM(B2:B3
 ### SET_RANGE
 
 Write a rectangular grid of typed values. The `rows` matrix must exactly match the dimensions of
-`range`. Row count must equal `range` row span; column count of each row must equal `range` column span.
+`range`. Row count must equal `range` row span; column count of each row must equal `range`
+column span. Existing style, hyperlink, and comment state on the targeted cells is preserved.
 
 ```json
 {
@@ -571,6 +576,8 @@ responses. `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` return four flat fi
 ### APPEND_ROW
 
 Append a single row of typed values after the last value-bearing row in a sheet.
+If the next append position lands on cells that already exist because they carry only style,
+hyperlink, or comment state, that existing state is preserved when values are written there.
 
 ```json
 {
@@ -881,8 +888,9 @@ Returns the exact merged regions defined on one sheet.
 
 ### GET_HYPERLINKS
 
-Returns hyperlink metadata for selected cells on one sheet. `FILE` targets come back in the
-`path` field as normalized plain path strings, not `file:` URIs.
+Returns hyperlink metadata for selected cells on one sheet. Response hyperlinks reuse the same
+discriminated shape as `SET_HYPERLINK` targets. `FILE` targets come back in the `path` field as
+normalized plain path strings, not `file:` URIs.
 
 ```json
 {
