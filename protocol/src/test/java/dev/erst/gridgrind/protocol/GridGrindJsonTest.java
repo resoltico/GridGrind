@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.TokenStreamLocation;
 import tools.jackson.core.io.ContentReference;
+import tools.jackson.databind.exc.MismatchedInputException;
 
 /** Tests for GridGrindJson serialization and deserialization. */
 class GridGrindJsonTest {
@@ -326,6 +327,89 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void readsFileHyperlinksFromPathFieldsAndNormalizesFileUris() throws IOException {
+    GridGrindRequest request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "source": { "type": "NEW" },
+              "operations": [
+                {
+                  "type": "SET_HYPERLINK",
+                  "sheetName": "Budget",
+                  "address": "A1",
+                  "target": { "type": "FILE", "path": "file:///tmp/report.xlsx" }
+                }
+              ],
+              "reads": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    WorkbookOperation.SetHyperlink operation =
+        assertInstanceOf(WorkbookOperation.SetHyperlink.class, request.operations().getFirst());
+    assertEquals(new HyperlinkTarget.File("/tmp/report.xlsx"), operation.target());
+  }
+
+  @Test
+  void writesFileHyperlinksToResponsesWithPathFields() throws IOException {
+    GridGrindResponse response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            List.of(
+                new WorkbookReadResult.HyperlinksResult(
+                    "hyperlinks",
+                    "Budget",
+                    List.of(
+                        new GridGrindResponse.CellHyperlinkReport(
+                            "A1", new HyperlinkTarget.File("/tmp/report.xlsx"))))));
+
+    byte[] encoded = GridGrindJson.writeResponseBytes(response);
+    String json = new String(encoded, StandardCharsets.UTF_8);
+    GridGrindResponse decoded = GridGrindJson.readResponse(encoded);
+    WorkbookReadResult.HyperlinksResult hyperlinks =
+        assertInstanceOf(
+            WorkbookReadResult.HyperlinksResult.class,
+            assertInstanceOf(GridGrindResponse.Success.class, decoded).reads().getFirst());
+
+    assertTrue(json.contains("\"path\" : \"/tmp/report.xlsx\""));
+    assertFalse(json.contains("\"target\" : \"/tmp/report.xlsx\""));
+    assertEquals(
+        new HyperlinkTarget.File("/tmp/report.xlsx"),
+        hyperlinks.hyperlinks().getFirst().hyperlink());
+  }
+
+  @Test
+  void writesProblemCausesUsingGridGrindCodesInsteadOfExceptionMetadata() throws IOException {
+    GridGrindResponse response =
+        new GridGrindResponse.Failure(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.Problem(
+                GridGrindProblemCode.INVALID_REQUEST,
+                GridGrindProblemCategory.REQUEST,
+                GridGrindProblemRecovery.CHANGE_REQUEST,
+                "Invalid request",
+                "bad request",
+                "Fix the request.",
+                new GridGrindResponse.ProblemContext.ValidateRequest("NEW", "NONE"),
+                List.of(
+                    new GridGrindResponse.ProblemCause(
+                        GridGrindProblemCode.INTERNAL_ERROR,
+                        "Internal GridGrind failure",
+                        "EXECUTE_REQUEST"))));
+
+    String json = new String(GridGrindJson.writeResponseBytes(response), StandardCharsets.UTF_8);
+    GridGrindResponse decoded = GridGrindJson.readResponse(json.getBytes(StandardCharsets.UTF_8));
+    GridGrindResponse.Failure failure = assertInstanceOf(GridGrindResponse.Failure.class, decoded);
+
+    assertTrue(json.contains("\"code\" : \"INTERNAL_ERROR\""));
+    assertFalse(json.contains("\"className\""));
+    assertFalse(json.contains("\"type\" : \"GridGrindProblem\""));
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().causes().getFirst().code());
+  }
+
+  @Test
   void wrapsResponseShapeFailuresAsInvalidRequestShapeErrors() {
     InvalidRequestShapeException failure =
         assertThrows(
@@ -408,7 +492,7 @@ class GridGrindJsonTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
-    assertNotNull(failure.getMessage());
+    assertEquals("Unknown type value 'GET_NOT_A_REAL_READ'", failure.getMessage());
     assertFalse(failure.getMessage().contains("dev.erst.gridgrind"));
     assertFalse(failure.getMessage().contains("for POJO property"));
     assertEquals("reads[0]", failure.jsonPath());
@@ -432,7 +516,9 @@ class GridGrindJsonTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
-    assertNotNull(failure.getMessage());
+    assertEquals("Missing required field 'requestId'", failure.getMessage());
+    assertFalse(failure.getMessage().contains("tools.jackson"));
+    assertFalse(failure.getMessage().contains("dev.erst.gridgrind"));
     assertEquals("reads[0]", failure.jsonPath());
   }
 
@@ -459,7 +545,7 @@ class GridGrindJsonTest {
                     """
                         .getBytes(StandardCharsets.UTF_8)));
 
-    assertNotNull(failure.getMessage());
+    assertEquals("JSON value has the wrong shape for this field", failure.getMessage());
     assertEquals("operations[0].sheetName", failure.jsonPath());
   }
 
@@ -609,39 +695,90 @@ class GridGrindJsonTest {
     String json = out.toString(java.nio.charset.StandardCharsets.UTF_8);
     assertTrue(json.contains("\"SET_CELL\""), "output must contain the entry id");
     assertTrue(json.contains("\"summary\""), "output must contain the summary field");
+    assertTrue(json.contains("\"fields\""), "output must contain field descriptors");
   }
 
   @Test
   void rejectsUnknownJsonFieldsInRequest() {
-    assertThrows(
-        InvalidRequestShapeException.class,
-        () ->
-            GridGrindJson.readRequest(
-                """
-                {
-                  "source": { "type": "NEW" },
-                  "operations": [],
-                  "reads": [],
-                  "unknownTopLevelField": "surprise"
-                }
-                """
-                    .getBytes(StandardCharsets.UTF_8)));
-    assertThrows(
-        InvalidRequestShapeException.class,
-        () ->
-            GridGrindJson.readRequest(
-                """
-                {
-                  "source": { "type": "NEW" },
-                  "operations": [
-                    { "type": "SET_CELL", "sheetName": "Budget", "address": "A1",
-                      "value": { "type": "TEXT", "text": "hi" },
-                      "dataFormat": "#,##0" }
-                  ],
-                  "reads": []
-                }
-                """
-                    .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException topLevelFailure =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "operations": [],
+                      "reads": [],
+                      "unknownTopLevelField": "surprise"
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    assertEquals("Unknown field 'unknownTopLevelField'", topLevelFailure.getMessage());
+
+    InvalidRequestShapeException operationFailure =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "operations": [
+                        { "type": "SET_CELL", "sheetName": "Budget", "address": "A1",
+                          "value": { "type": "TEXT", "text": "hi" },
+                          "dataFormat": "#,##0" }
+                      ],
+                      "reads": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    assertEquals("Unknown field 'dataFormat'", operationFailure.getMessage());
+  }
+
+  @Test
+  void cleanJacksonMessageFallsBackForBlankMessages() {
+    assertEquals("Invalid JSON payload", GridGrindJson.cleanJacksonMessage(null));
+    assertEquals("Invalid JSON payload", GridGrindJson.cleanJacksonMessage(" "));
+  }
+
+  @Test
+  void mismatchedInputMessageReturnsTheCleanedOriginalWhenItIsAlreadySpecific() {
+    MismatchedInputException exception =
+        MismatchedInputException.from(null, Object.class, "Expected an array value");
+
+    assertEquals("Expected an array value", GridGrindJson.mismatchedInputMessage(exception));
+  }
+
+  @Test
+  void mismatchedInputMessageMapsMissingCreatorPropertiesToMissingFieldMessages() {
+    MismatchedInputException exception =
+        MismatchedInputException.from(
+            null, Object.class, "Missing required creator property 'requestId' (index 0)");
+
+    assertEquals(
+        "Missing required field 'requestId'", GridGrindJson.mismatchedInputMessage(exception));
+  }
+
+  @Test
+  void mismatchedInputMessageMapsMissingTypeIdsToMissingFieldMessages() {
+    MismatchedInputException exception =
+        MismatchedInputException.from(null, Object.class, "Missing type id property 'type'");
+
+    assertEquals("Missing required field 'type'", GridGrindJson.mismatchedInputMessage(exception));
+  }
+
+  @Test
+  void mismatchedInputMessageMapsGenericConstructionFailuresToShapeMessages() {
+    MismatchedInputException exception =
+        MismatchedInputException.from(
+            null,
+            Object.class,
+            "Cannot construct instance of `dev.erst.gridgrind.protocol.Shape`, problem: bad token");
+
+    assertEquals(
+        "JSON object is missing required fields or has the wrong shape",
+        GridGrindJson.mismatchedInputMessage(exception));
   }
 
   /** ByteArrayInputStream that records whether {@code close()} was called. */

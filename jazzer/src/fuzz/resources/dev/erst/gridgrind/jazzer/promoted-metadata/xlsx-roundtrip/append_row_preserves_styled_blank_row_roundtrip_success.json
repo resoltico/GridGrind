@@ -1,0 +1,8 @@
+{
+  "targetKey" : "xlsx-roundtrip",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-0196775dc07e92df7ec0ac3c19d56dd8e26c7c1c",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_preserves_styled_blank_row_roundtrip_success.bin",
+  "replayOutcome" : "SUCCESS",
+  "promotedAt" : "2026-03-31T13:03:51.323419Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/append_row_preserves_styled_blank_row_roundtrip_success.txt"
+}

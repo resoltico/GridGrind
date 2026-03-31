@@ -45,9 +45,9 @@ class XlsxRoundTripVerifierTest {
     assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
-  /** Drops stale style expectations when a later value write resets the targeted cell. */
+  /** Preserves style expectations when a later value write targets an already styled cell. */
   @Test
-  void requireRoundTripReadable_ignoresStylesClearedByLaterValueWrite(@TempDir Path tempDirectory)
+  void requireRoundTripReadable_preservesStylesAcrossLaterValueWrite(@TempDir Path tempDirectory)
       throws IOException {
     List<WorkbookCommand> commands =
         List.of(
@@ -70,6 +70,40 @@ class XlsxRoundTripVerifierTest {
                     "#AABBCC",
                     null)),
             new WorkbookCommand.SetCell("Sheet1", "A1", ExcelCellValue.text("reset")));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Preserves style state when APPEND_ROW writes into a style-only row selected by append semantics. */
+  @Test
+  void requireRoundTripReadable_preservesStylesWhenAppendRowReusesStyledBlankRow(
+      @TempDir Path tempDirectory) throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("X"),
+            new WorkbookCommand.ApplyStyle(
+                "X",
+                "A1:B2",
+                new ExcelCellStyle(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "Aptos",
+                    ExcelFontHeight.fromPoints(new BigDecimal("15.2")),
+                    "#A3A3A3",
+                    null,
+                    Boolean.TRUE,
+                    "#CDCDCD",
+                    new ExcelBorder(
+                        new ExcelBorderSide(ExcelBorderStyle.DASH_DOT), null, null, null, null))),
+            new WorkbookCommand.AppendRow(
+                "X",
+                List.of(ExcelCellValue.number(607.8483822864587), ExcelCellValue.bool(false))));
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
@@ -144,6 +178,7 @@ class XlsxRoundTripVerifierTest {
       throws IOException {
     List<WorkbookCommand> commands =
         List.of(
+            new WorkbookCommand.CreateSheet("C"),
             new WorkbookCommand.SetHyperlink(
                 "C", "F18", new ExcelHyperlink.Email("Report_Value@example.com")),
             new WorkbookCommand.SetHyperlink(

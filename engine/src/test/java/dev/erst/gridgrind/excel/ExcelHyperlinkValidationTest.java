@@ -20,6 +20,11 @@ class ExcelHyperlinkValidationTest {
     assertTrue(ExcelHyperlinkValidation.isValidEmailTarget("MAILTO:team@example.com"));
     assertFalse(ExcelHyperlinkValidation.isValidEmailTarget(null));
     assertFalse(ExcelHyperlinkValidation.isValidEmailTarget("mailto:"));
+    assertFalse(ExcelHyperlinkValidation.isValidEmailTarget("notanemail"));
+    assertFalse(ExcelHyperlinkValidation.isValidEmailTarget("@example.com"));
+    assertFalse(ExcelHyperlinkValidation.isValidEmailTarget("user@"));
+    assertFalse(ExcelHyperlinkValidation.isValidEmailTarget("team @example.com"));
+    assertFalse(ExcelHyperlinkValidation.isValidEmailTarget("team@@example.com"));
 
     assertTrue(ExcelHyperlinkValidation.isValidFileTarget("/tmp/report.xlsx"));
     assertFalse(ExcelHyperlinkValidation.isValidFileTarget(null));
@@ -38,5 +43,12 @@ class ExcelHyperlinkValidationTest {
         "team@example.com", ExcelHyperlinkValidation.stripMailtoPrefix("MAILTO:team@example.com"));
     assertEquals(
         "team@example.com", ExcelHyperlinkValidation.stripMailtoPrefix("team@example.com"));
+  }
+
+  @Test
+  void absoluteUriSchemeReturnsNullForBlankTargetsAndTheSchemeForAbsoluteUris() {
+    assertNull(ExcelHyperlinkValidation.absoluteUriScheme(null));
+    assertNull(ExcelHyperlinkValidation.absoluteUriScheme(" "));
+    assertEquals("https", ExcelHyperlinkValidation.absoluteUriScheme("https://example.com/report"));
   }
 }

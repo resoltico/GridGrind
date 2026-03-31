@@ -25,17 +25,21 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public final class ExcelWorkbook implements AutoCloseable {
   private final XSSFWorkbook workbook;
   private final WorkbookStyleRegistry styleRegistry;
-  private final FormulaEvaluator formulaEvaluator;
+  private final ExcelFormulaRuntime formulaRuntime;
 
   private ExcelWorkbook(XSSFWorkbook workbook) {
-    this(workbook, workbook.getCreationHelper().createFormulaEvaluator());
+    this(workbook, ExcelFormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator()));
   }
 
-  ExcelWorkbook(XSSFWorkbook workbook, FormulaEvaluator formulaEvaluator) {
+  ExcelWorkbook(XSSFWorkbook workbook, ExcelFormulaRuntime formulaRuntime) {
     this.workbook = workbook;
     this.styleRegistry = new WorkbookStyleRegistry(workbook);
-    this.formulaEvaluator =
-        Objects.requireNonNull(formulaEvaluator, "formulaEvaluator must not be null");
+    this.formulaRuntime = Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
+  }
+
+  /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
+  ExcelWorkbook(XSSFWorkbook workbook, FormulaEvaluator formulaEvaluator) {
+    this(workbook, ExcelFormulaRuntime.poi(formulaEvaluator));
   }
 
   /** Creates an empty XLSX workbook. */
@@ -70,14 +74,14 @@ public final class ExcelWorkbook implements AutoCloseable {
       sheet = workbook.createSheet(sheetName);
     }
 
-    return new ExcelSheet(sheet, styleRegistry, formulaEvaluator);
+    return new ExcelSheet(sheet, styleRegistry, formulaRuntime);
   }
 
   /** Returns an existing sheet. */
   public ExcelSheet sheet(String sheetName) {
     requireSheetName(sheetName, "sheetName");
 
-    return new ExcelSheet(requiredSheet(sheetName), styleRegistry, formulaEvaluator);
+    return new ExcelSheet(requiredSheet(sheetName), styleRegistry, formulaRuntime);
   }
 
   /** Renames an existing sheet to a new destination name. */
@@ -153,7 +157,7 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   private void evaluateFormulaCell(String sheetName, Cell cell) {
     try {
-      formulaEvaluator.evaluate(cell);
+      formulaRuntime.evaluate(cell);
     } catch (RuntimeException exception) {
       throw FormulaExceptions.wrap(
           sheetName,
@@ -303,9 +307,13 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   /** Returns whether the POI defined name is a user-facing range that GridGrind should analyze. */
   static boolean shouldExpose(Name name) {
-    String nameName = name.getNameName();
-    return !name.isFunctionName()
-        && !name.isHidden()
+    return shouldExpose(name.getNameName(), name.isFunctionName(), name.isHidden());
+  }
+
+  /** Returns whether a defined-name triple is user-facing and analyzable by GridGrind. */
+  static boolean shouldExpose(String nameName, boolean functionName, boolean hidden) {
+    return !functionName
+        && !hidden
         && nameName != null
         && !nameName.startsWith("_xlnm.")
         && !nameName.startsWith("_XLNM.");

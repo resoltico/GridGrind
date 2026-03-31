@@ -12,6 +12,7 @@ import dev.erst.gridgrind.excel.ExcelSheetSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
+import dev.erst.gridgrind.excel.WorkbookLocation;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import java.io.IOException;
@@ -84,6 +85,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
   private GridGrindResponse executeWorkbookWorkflow(
       GridGrindProtocolVersion protocolVersion, GridGrindRequest request, ExcelWorkbook workbook) {
+    WorkbookLocation workbookLocation =
+        workbookLocationFor(request.source(), request.persistence());
     for (int operationIndex = 0; operationIndex < request.operations().size(); operationIndex++) {
       WorkbookOperation operation = request.operations().get(operationIndex);
       try {
@@ -102,7 +105,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       try {
         WorkbookReadCommand command = toReadCommand(read);
         dev.erst.gridgrind.excel.WorkbookReadResult result =
-            readExecutor.apply(workbook, command).getFirst();
+            readExecutor.apply(workbook, workbookLocation, command).getFirst();
         reads.add(toReadResult(result));
       } catch (Exception exception) {
         return closeWorkbook(
@@ -411,7 +414,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   private static GridGrindResponse.CellHyperlinkReport toCellHyperlinkReport(
       dev.erst.gridgrind.excel.WorkbookReadResult.CellHyperlink hyperlink) {
     return new GridGrindResponse.CellHyperlinkReport(
-        hyperlink.address(), toHyperlinkReport(hyperlink.hyperlink()));
+        hyperlink.address(), toHyperlinkTarget(hyperlink.hyperlink()));
   }
 
   private static GridGrindResponse.CellCommentReport toCellCommentReport(
@@ -646,8 +649,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
             snapshot.style().rightBorderStyle(),
             snapshot.style().bottomBorderStyle(),
             snapshot.style().leftBorderStyle());
-    GridGrindResponse.HyperlinkReport hyperlink =
-        toHyperlinkReport(snapshot.metadata().hyperlink().orElse(null));
+    HyperlinkTarget hyperlink = toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null));
     GridGrindResponse.CommentReport comment =
         toCommentReport(snapshot.metadata().comment().orElse(null));
 
@@ -704,12 +706,17 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     };
   }
 
-  /** Converts workbook-core hyperlink metadata into the protocol response shape. */
-  static GridGrindResponse.HyperlinkReport toHyperlinkReport(ExcelHyperlink hyperlink) {
+  /** Converts workbook-core hyperlink metadata into the canonical protocol hyperlink shape. */
+  static HyperlinkTarget toHyperlinkTarget(ExcelHyperlink hyperlink) {
     if (hyperlink == null) {
       return null;
     }
-    return new GridGrindResponse.HyperlinkReport(hyperlink.type(), hyperlink.target());
+    return switch (hyperlink) {
+      case ExcelHyperlink.Url url -> new HyperlinkTarget.Url(url.target());
+      case ExcelHyperlink.Email email -> new HyperlinkTarget.Email(email.target());
+      case ExcelHyperlink.File file -> new HyperlinkTarget.File(file.path());
+      case ExcelHyperlink.Document document -> new HyperlinkTarget.Document(document.target());
+    };
   }
 
   /** Converts workbook-core comment metadata into the protocol response shape. */
@@ -757,7 +764,27 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     return GridGrindProblems.messageFor(exception);
   }
 
-  private String absolutePath(String path) {
+  /**
+   * Returns the workbook filesystem context implied by the source and persistence selection.
+   *
+   * <p>Package-private so tests can assert persisted-path resolution directly without going through
+   * full request execution.
+   */
+  static WorkbookLocation workbookLocationFor(
+      GridGrindRequest.WorkbookSource source, GridGrindRequest.WorkbookPersistence persistence) {
+    String persistedPath = persistencePath(source, persistence);
+    if (persistedPath != null) {
+      return new WorkbookLocation.StoredWorkbook(Path.of(persistedPath));
+    }
+    return switch (source) {
+      case GridGrindRequest.WorkbookSource.ExistingFile existingFile ->
+          new WorkbookLocation.StoredWorkbook(
+              Path.of(existingFile.path()).toAbsolutePath().normalize());
+      case GridGrindRequest.WorkbookSource.New _ -> new WorkbookLocation.UnsavedWorkbook();
+    };
+  }
+
+  private static String absolutePath(String path) {
     return Path.of(path).toAbsolutePath().normalize().toString();
   }
 
@@ -831,7 +858,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     };
   }
 
-  String persistencePath(
+  static String persistencePath(
       GridGrindRequest.WorkbookSource source, GridGrindRequest.WorkbookPersistence persistence) {
     return switch (persistence) {
       case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> absolutePath(saveAs.path());

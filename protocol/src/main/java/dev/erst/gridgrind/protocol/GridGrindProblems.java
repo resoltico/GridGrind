@@ -12,10 +12,8 @@ import dev.erst.gridgrind.excel.WorkbookNotFoundException;
 import java.io.IOException;
 import java.time.DateTimeException;
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 /** Centralized problem construction and exception classification for all protocol surfaces. */
 public final class GridGrindProblems {
@@ -30,7 +28,7 @@ public final class GridGrindProblems {
         codeFor(exception),
         messageFor(exception),
         enrichContext(context, exception),
-        causesFor(exception));
+        causesFor(exception, context.stage()));
   }
 
   /** Builds a fully populated problem from an explicit code and message. */
@@ -39,7 +37,8 @@ public final class GridGrindProblems {
       String message,
       GridGrindResponse.ProblemContext context,
       Throwable cause) {
-    return problem(code, message, context, causesFor(cause));
+    Objects.requireNonNull(context, "context must not be null");
+    return problem(code, message, context, causesFor(cause, context.stage()));
   }
 
   /**
@@ -90,18 +89,14 @@ public final class GridGrindProblems {
         messagePrefix == null || messagePrefix.isBlank()
             ? messageFor(exception)
             : messagePrefix + ": " + messageFor(exception);
-    return new GridGrindResponse.ProblemCause(
-        simpleName(exception), exception.getClass().getName(), message, stage);
+    return new GridGrindResponse.ProblemCause(codeFor(exception), message, stage);
   }
 
   /** Converts an already-built problem into a synthetic cause entry for fallback reporting. */
   public static GridGrindResponse.ProblemCause problemCause(GridGrindResponse.Problem problem) {
     Objects.requireNonNull(problem, "problem must not be null");
     return new GridGrindResponse.ProblemCause(
-        "GridGrindProblem",
-        problem.code().name(),
-        problem.title() + ": " + problem.message(),
-        problem.context().stage());
+        problem.code(), problem.title() + ": " + problem.message(), problem.context().stage());
   }
 
   static GridGrindProblemCode codeFor(Throwable exception) {
@@ -131,21 +126,11 @@ public final class GridGrindProblems {
     return message == null || message.isBlank() ? simpleName(exception) : message;
   }
 
+  /**
+   * Returns the public diagnostic entries for one failure without exposing raw throwable internals.
+   */
   static List<GridGrindResponse.ProblemCause> causesFor(Throwable exception) {
-    if (exception == null) {
-      return List.of();
-    }
-
-    List<GridGrindResponse.ProblemCause> causes = new ArrayList<>();
-    Set<Throwable> seen = java.util.Collections.newSetFromMap(new IdentityHashMap<>());
-    Throwable current = exception;
-    while (current != null && seen.add(current)) {
-      causes.add(
-          new GridGrindResponse.ProblemCause(
-              simpleName(current), current.getClass().getName(), messageFor(current), null));
-      current = current.getCause();
-    }
-    return List.copyOf(causes);
+    return causesFor(exception, null);
   }
 
   static String formulaFor(Throwable exception) {
@@ -171,6 +156,14 @@ public final class GridGrindProblems {
 
   static String namedRangeNameFor(Throwable exception) {
     return exception instanceof NamedRangeNotFoundException nnf ? nnf.name() : null;
+  }
+
+  private static List<GridGrindResponse.ProblemCause> causesFor(Throwable exception, String stage) {
+    if (exception == null) {
+      return List.of();
+    }
+    return List.of(
+        new GridGrindResponse.ProblemCause(codeFor(exception), messageFor(exception), stage));
   }
 
   private static String simpleName(Throwable exception) {

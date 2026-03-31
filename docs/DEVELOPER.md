@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.18.0"
+version: "0.19.0"
 domain: DEVELOPER
 updated: "2026-03-31"
 route:
@@ -60,9 +60,11 @@ top. Future adapters (HTTP, gRPC, library embedding) can be added without touchi
 
 `./gradlew check` remains the root-project CI gate: Spotless formatting, Error Prone, PMD, tests,
 and JaCoCo coverage verification. `./check.sh` is the local full-stack gate: root `check`
-plus `coverage`, nested Jazzer `check`, `:cli:shadowJar`, and a Docker smoke test that runs the
-image from a non-default working directory with weird request/response/save paths. Both should be
-clean before a release-quality change is considered done.
+plus `coverage`, nested Jazzer `check`, `:cli:shadowJar`, shell syntax checks for the release-
+surface scripts, and a Docker smoke test that runs the image from a non-default working directory
+with weird request/response/save paths. `check.sh` intentionally lives in the repository root as
+the canonical contributor entrypoint, while `scripts/` contains helper scripts invoked by the root
+gate and GitHub workflows. Both should be clean before a release-quality change is considered done.
 
 ```bash
 # Run the local full-stack gate
@@ -87,6 +89,11 @@ clean before a release-quality change is considered done.
 ./scripts/docker-smoke.sh
 ```
 
+The protocol catalog is generated from the protocol record signatures. If you change request
+records, nested tagged unions, or plain input records, update the catalog summaries and keep the
+field-shape output authoritative: every field should still publish required/optional status and
+the exact nested/plain group accepted by polymorphic inputs.
+
 ---
 
 ## GitHub Workflows
@@ -95,9 +102,12 @@ Release automation is split across three workflows:
 
 - `CI` runs the root-project `./gradlew check` gate and a separate Docker smoke job that builds
   the fat JAR and verifies the Docker image from a non-default working directory.
-- `Release` builds the fat JAR and publishes the GitHub Release when a `v*` tag is pushed.
+- `Release` builds the fat JAR, publishes the GitHub Release idempotently when a `v*` tag is
+  pushed, and verifies that the published release object and `gridgrind.jar` asset exist.
 - `Container` first runs the same Docker smoke script against the local Dockerfile build, then
-  builds and publishes the multi-arch GHCR image and prunes older container package versions.
+  builds and publishes the multi-arch GHCR image, verifies with an isolated anonymous Docker
+  config that both the exact version tag and `latest` are publicly pullable and runnable, and
+  prunes older container package versions.
 
 The container cleanup step intentionally uses `gh api` against GitHub Packages instead of
 `actions/delete-package-versions`. That action still runs on Node20, while GitHub is moving
@@ -115,7 +125,8 @@ release groups instead of splitting a release across the retention boundary.
 
 `./gradlew check` runs each of the following root-project gates. Any failure fails the build.
 `./check.sh` runs these same root-project gates, then runs nested Jazzer verification, builds the
-CLI fat JAR, and finally runs the Docker smoke script.
+CLI fat JAR, syntax-checks the release-surface shell scripts, and finally runs the Docker smoke
+script.
 
 ### Error Prone
 

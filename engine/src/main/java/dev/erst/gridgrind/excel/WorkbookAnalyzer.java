@@ -22,8 +22,11 @@ final class WorkbookAnalyzer {
 
   /** Executes one derived analysis command against the workbook. */
   WorkbookReadResult.Analysis execute(
-      ExcelWorkbook workbook, WorkbookReadCommand.Analysis command) {
+      ExcelWorkbook workbook,
+      WorkbookLocation workbookLocation,
+      WorkbookReadCommand.Analysis command) {
     Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
     Objects.requireNonNull(command, "command must not be null");
 
     return switch (command) {
@@ -34,14 +37,14 @@ final class WorkbookAnalyzer {
       case WorkbookReadCommand.AnalyzeHyperlinkHealth analyzeHyperlinkHealth ->
           new WorkbookReadResult.HyperlinkHealthResult(
               analyzeHyperlinkHealth.requestId(),
-              hyperlinkHealth(workbook, analyzeHyperlinkHealth.selection()));
+              hyperlinkHealth(workbook, workbookLocation, analyzeHyperlinkHealth.selection()));
       case WorkbookReadCommand.AnalyzeNamedRangeHealth analyzeNamedRangeHealth ->
           new WorkbookReadResult.NamedRangeHealthResult(
               analyzeNamedRangeHealth.requestId(),
               namedRangeHealth(workbook, analyzeNamedRangeHealth.selection()));
       case WorkbookReadCommand.AnalyzeWorkbookFindings analyzeWorkbookFindings ->
           new WorkbookReadResult.WorkbookFindingsResult(
-              analyzeWorkbookFindings.requestId(), workbookFindings(workbook));
+              analyzeWorkbookFindings.requestId(), workbookFindings(workbook, workbookLocation));
     };
   }
 
@@ -62,8 +65,9 @@ final class WorkbookAnalyzer {
   }
 
   WorkbookAnalysis.HyperlinkHealth hyperlinkHealth(
-      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+      ExcelWorkbook workbook, WorkbookLocation workbookLocation, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
     int checkedHyperlinkCount = 0;
@@ -71,10 +75,16 @@ final class WorkbookAnalyzer {
     for (String sheetName : selectSheets(workbook, selection)) {
       ExcelSheet sheet = workbook.sheet(sheetName);
       checkedHyperlinkCount += sheet.hyperlinkCount();
-      findings.addAll(sheet.hyperlinkHealthFindings());
+      findings.addAll(sheet.hyperlinkHealthFindings(workbookLocation));
     }
     return new WorkbookAnalysis.HyperlinkHealth(
         checkedHyperlinkCount, summary(findings), List.copyOf(findings));
+  }
+
+  /** Runs hyperlink-health analysis assuming the workbook has not yet been saved to disk. */
+  WorkbookAnalysis.HyperlinkHealth hyperlinkHealth(
+      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+    return hyperlinkHealth(workbook, new WorkbookLocation.UnsavedWorkbook(), selection);
   }
 
   WorkbookAnalysis.NamedRangeHealth namedRangeHealth(
@@ -90,17 +100,25 @@ final class WorkbookAnalyzer {
         namedRanges.size(), summary(findings), List.copyOf(findings));
   }
 
-  WorkbookAnalysis.WorkbookFindings workbookFindings(ExcelWorkbook workbook) {
+  WorkbookAnalysis.WorkbookFindings workbookFindings(
+      ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
     Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
 
     List<WorkbookAnalysis.AnalysisFinding> combined = new ArrayList<>();
     combined.addAll(formulaHealth(workbook, new ExcelSheetSelection.All()).findings());
-    combined.addAll(hyperlinkHealth(workbook, new ExcelSheetSelection.All()).findings());
+    combined.addAll(
+        hyperlinkHealth(workbook, workbookLocation, new ExcelSheetSelection.All()).findings());
     combined.addAll(namedRangeHealth(workbook, new ExcelNamedRangeSelection.All()).findings());
 
     List<WorkbookAnalysis.AnalysisFinding> findings =
         List.copyOf(new ArrayList<>(new LinkedHashSet<>(combined)));
     return new WorkbookAnalysis.WorkbookFindings(summary(findings), findings);
+  }
+
+  /** Aggregates workbook findings assuming the workbook has not yet been saved to disk. */
+  WorkbookAnalysis.WorkbookFindings workbookFindings(ExcelWorkbook workbook) {
+    return workbookFindings(workbook, new WorkbookLocation.UnsavedWorkbook());
   }
 
   private List<WorkbookAnalysis.AnalysisFinding> analyzeNamedRangeHealth(

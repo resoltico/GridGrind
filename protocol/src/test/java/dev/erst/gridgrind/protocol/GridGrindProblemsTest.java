@@ -85,7 +85,7 @@ class GridGrindProblemsTest {
   }
 
   @Test
-  void buildsStructuredProblemsAndCauseChains() {
+  void buildsStructuredProblemsAndPublicDiagnostics() {
     GridGrindResponse.ProblemContext context =
         new GridGrindResponse.ProblemContext.ApplyOperation(
             null, null, null, null, "Budget", "B4", null, "SUM(", null);
@@ -97,7 +97,9 @@ class GridGrindProblemsTest {
 
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, problem.code());
     assertEquals(GridGrindProblemCategory.FORMULA, problem.category());
-    assertEquals(2, problem.causes().size());
+    assertEquals(1, problem.causes().size());
+    assertEquals(GridGrindProblemCode.INVALID_FORMULA, problem.causes().getFirst().code());
+    assertEquals("APPLY_OPERATION", problem.causes().getFirst().stage());
     assertEquals("SUM(", GridGrindProblems.formulaFor(exception));
     assertEquals("Budget", GridGrindProblems.sheetNameFor(exception));
     assertEquals("B4", GridGrindProblems.addressFor(exception));
@@ -130,11 +132,12 @@ class GridGrindProblemsTest {
 
     GridGrindResponse.Problem augmented = GridGrindProblems.appendCause(explicit, supplemental);
     assertEquals(2, augmented.causes().size());
-    assertEquals("GridGrindProblem", GridGrindProblems.problemCause(explicit).type());
+    assertEquals(GridGrindProblemCode.IO_ERROR, GridGrindProblems.problemCause(explicit).code());
 
     GridGrindResponse.ProblemCause withoutPrefix =
         GridGrindProblems.supplementalCause("EXECUTE_REQUEST", new IOException("disk failed"), "");
     assertEquals("disk failed", withoutPrefix.message());
+    assertEquals(GridGrindProblemCode.IO_ERROR, withoutPrefix.code());
     assertEquals(
         "disk failed",
         GridGrindProblems.supplementalCause("EXECUTE_REQUEST", new IOException("disk failed"), null)
@@ -247,7 +250,7 @@ class GridGrindProblemsTest {
   }
 
   @Test
-  void fallsBackToAnonymousTypeNameAndStopsCauseCycles() {
+  void fallsBackToAnonymousTypeNameAndReturnsSinglePublicCause() {
     Throwable anonymous =
         new Throwable(" ") {
           @Override
@@ -258,6 +261,9 @@ class GridGrindProblemsTest {
 
     assertTrue(GridGrindProblems.messageFor(anonymous).contains("$"));
     assertEquals(1, GridGrindProblems.causesFor(anonymous).size());
+    assertEquals(
+        GridGrindProblemCode.INTERNAL_ERROR,
+        GridGrindProblems.causesFor(anonymous).getFirst().code());
 
     GridGrindResponse.ProblemContext.ReadRequest readContext =
         new GridGrindResponse.ProblemContext.ReadRequest("/tmp/request.json", null, null, null);

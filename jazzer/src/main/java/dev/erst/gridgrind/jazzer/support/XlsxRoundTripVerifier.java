@@ -394,7 +394,8 @@ public final class XlsxRoundTripVerifier {
           // Named-range deletion is independent of cell-style persistence expectations.
         }
         case WorkbookCommand.AppendRow _ -> {
-          // Append operations create new trailing cells and do not overwrite existing style expectations.
+          // Append operations may reuse style-only rows, but value writes must preserve any
+          // existing style state on those cells.
         }
         case WorkbookCommand.AutoSizeColumns _ -> {
           // Auto-sizing does not affect cell styles.
@@ -479,7 +480,8 @@ public final class XlsxRoundTripVerifier {
           // Named ranges are tracked independently from cell metadata.
         }
         case WorkbookCommand.AppendRow _ -> {
-          // Appended cells start without hyperlink or comment metadata.
+          // Append operations may reuse metadata-only rows, and value writes must preserve any
+          // existing hyperlink or comment state on those cells.
         }
         case WorkbookCommand.AutoSizeColumns _ -> {
           // Auto-sizing does not affect hyperlink or comment persistence.

@@ -5,6 +5,10 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+
+concurrency:
+  group: publication-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository_owner }}/gridgrind
@@ -31,6 +35,9 @@ jobs:
 
       - name: Build fat JAR
         run: ./gradlew :cli:shadowJar --no-daemon
+
+      - name: Smoke test the Docker image before publishing
+        run: ./scripts/docker-smoke.sh
 
       - uses: docker/setup-qemu-action@ce360397dd3f832beb865e1373c09c0e9f86d70a # v4.0.0
 
@@ -59,6 +66,9 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Verify published version and latest container tags
+        run: ./scripts/verify-container-publication.sh "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}" "${GITHUB_REF_NAME#v}"
 
   cleanup:
     name: Prune old container versions

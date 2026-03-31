@@ -3,16 +3,12 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Proxy;
 import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -135,7 +131,9 @@ class ExcelWorkbookTest {
         ExcelWorkbook workbook =
             new ExcelWorkbook(
                 poiWorkbook,
-                failingEvaluator(poiWorkbook.getCreationHelper().createFormulaEvaluator()))) {
+                FormulaRuntimeTestDouble.failingEvaluation(
+                    poiWorkbook.getCreationHelper().createFormulaEvaluator(),
+                    new org.apache.poi.ss.formula.FakeFormulaFailure("bad formula")))) {
       workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
 
       InvalidFormulaException exception =
@@ -143,6 +141,22 @@ class ExcelWorkbookTest {
       assertEquals("Budget", exception.sheetName());
       assertEquals("A1", exception.address());
       assertEquals("1+1", exception.formula());
+    }
+  }
+
+  @Test
+  void adaptsDirectPoiFormulaEvaluatorsForWorkbookWideEvaluation() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook();
+        ExcelWorkbook workbook =
+            new ExcelWorkbook(
+                poiWorkbook, poiWorkbook.getCreationHelper().createFormulaEvaluator())) {
+      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
+
+      workbook.evaluateAllFormulas();
+
+      ExcelCellSnapshot.FormulaSnapshot snapshot =
+          (ExcelCellSnapshot.FormulaSnapshot) workbook.sheet("Budget").snapshotCell("A1");
+      assertEquals("2", snapshot.displayValue());
     }
   }
 
@@ -382,7 +396,9 @@ class ExcelWorkbookTest {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook();
         ExcelWorkbook workbook =
             new ExcelWorkbook(
-                poiWorkbook, poiWorkbook.getCreationHelper().createFormulaEvaluator())) {
+                poiWorkbook,
+                FormulaRuntimeTestDouble.delegating(
+                    poiWorkbook.getCreationHelper().createFormulaEvaluator()))) {
       poiWorkbook.createSheet("Budget");
 
       workbook.setNamedRange(
@@ -407,21 +423,17 @@ class ExcelWorkbookTest {
       internalUpperDefinedName.setRefersToFormula("Budget!$A$1");
 
       Name workbookScoped = poiWorkbook.getName("BudgetTotal");
-      Name hidden = syntheticName("HiddenBudgetTotal", false, true);
-      Name internalLower = syntheticName("_xlnm.Print_Area", false, false);
-      Name internalUpper = syntheticName("_XLNM.PRINT_TITLES", false, false);
-      Name function = syntheticName("BudgetFn", true, false);
       Name sheetScoped = poiWorkbook.createName();
       sheetScoped.setNameName("LocalItem");
       sheetScoped.setSheetIndex(poiWorkbook.getSheetIndex("Budget"));
       sheetScoped.setRefersToFormula("Budget!$A$1");
 
       assertTrue(ExcelWorkbook.shouldExpose(workbookScoped));
-      assertFalse(ExcelWorkbook.shouldExpose(syntheticName(null, false, false)));
-      assertFalse(ExcelWorkbook.shouldExpose(hidden));
-      assertFalse(ExcelWorkbook.shouldExpose(internalLower));
-      assertFalse(ExcelWorkbook.shouldExpose(internalUpper));
-      assertFalse(ExcelWorkbook.shouldExpose(function));
+      assertFalse(ExcelWorkbook.shouldExpose(null, false, false));
+      assertFalse(ExcelWorkbook.shouldExpose("HiddenBudgetTotal", false, true));
+      assertFalse(ExcelWorkbook.shouldExpose("_xlnm.Print_Area", false, false));
+      assertFalse(ExcelWorkbook.shouldExpose("_XLNM.PRINT_TITLES", false, false));
+      assertFalse(ExcelWorkbook.shouldExpose("BudgetFn", true, false));
 
       assertTrue(workbook.scopeMatches(workbookScoped, new ExcelNamedRangeScope.WorkbookScope()));
       assertFalse(
@@ -495,65 +507,5 @@ class ExcelWorkbookTest {
       assertThrows(IllegalArgumentException.class, () -> workbook.getOrCreateSheet(tooLong));
       assertThrows(IllegalArgumentException.class, () -> workbook.sheet(tooLong));
     }
-  }
-
-  private FormulaEvaluator failingEvaluator(FormulaEvaluator delegate) {
-    InvocationHandler handler =
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args)
-              throws Throwable {
-            if (method.getDeclaringClass() == Object.class) {
-              return switch (method.getName()) {
-                case "toString" -> "failingEvaluator";
-                case "hashCode" -> System.identityHashCode(proxy);
-                case "equals" -> sameProxyHandler(args, this);
-                default -> throw new UnsupportedOperationException(method.getName());
-              };
-            }
-            if ("evaluate".equals(method.getName()) || "evaluateAll".equals(method.getName())) {
-              throw new org.apache.poi.ss.formula.FakeFormulaFailure("bad formula");
-            }
-            return method.invoke(delegate, args);
-          }
-        };
-    return (FormulaEvaluator)
-        Proxy.newProxyInstance(
-            formulaEvaluatorClassLoader(), new Class<?>[] {FormulaEvaluator.class}, handler);
-  }
-
-  private ClassLoader formulaEvaluatorClassLoader() {
-    return Objects.requireNonNull(
-        Thread.currentThread().getContextClassLoader(), "context class loader must not be null");
-  }
-
-  private boolean sameProxyHandler(Object[] args, InvocationHandler handler) {
-    if (args == null
-        || args.length != 1
-        || args[0] == null
-        || !Proxy.isProxyClass(args[0].getClass())) {
-      return false;
-    }
-    return Objects.equals(Proxy.getInvocationHandler(args[0]), handler);
-  }
-
-  private Name syntheticName(String nameName, boolean functionName, boolean hidden) {
-    InvocationHandler handler =
-        new InvocationHandler() {
-          @Override
-          public Object invoke(Object proxy, java.lang.reflect.Method method, Object[] args) {
-            return switch (method.getName()) {
-              case "getNameName" -> nameName;
-              case "isFunctionName" -> functionName;
-              case "isHidden" -> hidden;
-              case "toString" -> "syntheticName[" + nameName + "]";
-              case "hashCode" -> Objects.hash(nameName, functionName, hidden);
-              case "equals" -> false;
-              default -> throw new UnsupportedOperationException(method.getName());
-            };
-          }
-        };
-    return (Name)
-        Proxy.newProxyInstance(formulaEvaluatorClassLoader(), new Class<?>[] {Name.class}, handler);
   }
 }

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -24,14 +25,19 @@ import org.apache.poi.ss.util.PaneInformation;
 public final class ExcelSheet {
   private final Sheet sheet;
   private final WorkbookStyleRegistry styleRegistry;
-  private final FormulaEvaluator formulaEvaluator;
+  private final ExcelFormulaRuntime formulaRuntime;
   private final DataFormatter dataFormatter;
 
-  ExcelSheet(Sheet sheet, WorkbookStyleRegistry styleRegistry, FormulaEvaluator formulaEvaluator) {
+  ExcelSheet(Sheet sheet, WorkbookStyleRegistry styleRegistry, ExcelFormulaRuntime formulaRuntime) {
     this.sheet = sheet;
     this.styleRegistry = styleRegistry;
-    this.formulaEvaluator = formulaEvaluator;
+    this.formulaRuntime = formulaRuntime;
     this.dataFormatter = new DataFormatter();
+  }
+
+  /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
+  ExcelSheet(Sheet sheet, WorkbookStyleRegistry styleRegistry, FormulaEvaluator formulaEvaluator) {
+    this(sheet, styleRegistry, ExcelFormulaRuntime.poi(formulaEvaluator));
   }
 
   /** Returns the sheet name as defined in the workbook. */
@@ -181,7 +187,7 @@ public final class ExcelSheet {
       Objects.requireNonNull(value, "values must not contain nulls");
     }
 
-    int rowIndex = sheet.getPhysicalNumberOfRows() == 0 ? 0 : sheet.getLastRowNum() + 1;
+    int rowIndex = nextAppendRowIndex();
     for (int columnIndex = 0; columnIndex < values.length; columnIndex++) {
       setCell(rowIndex, columnIndex, values[columnIndex]);
     }
@@ -278,10 +284,7 @@ public final class ExcelSheet {
 
   /** Auto-sizes all populated columns on this sheet to fit their content. */
   public ExcelSheet autoSizeColumns() {
-    int lastColumn = lastColumnIndex();
-    for (int col = 0; col <= lastColumn; col++) {
-      sheet.autoSizeColumn(col);
-    }
+    DeterministicColumnSizer.autoSize(sheet, name(), dataFormatter, formulaRuntime);
     return this;
   }
 
@@ -298,7 +301,7 @@ public final class ExcelSheet {
     if (cell.getCellType() == CellType.FORMULA) {
       org.apache.poi.ss.usermodel.CellValue evaluatedCell;
       try {
-        evaluatedCell = formulaEvaluator.evaluate(cell);
+        evaluatedCell = formulaRuntime.evaluate(cell);
       } catch (RuntimeException exception) {
         throw FormulaExceptions.wrap(name(), address, cell.getCellFormula(), exception);
       }
@@ -317,7 +320,7 @@ public final class ExcelSheet {
     if (cell.getCellType() == CellType.FORMULA) {
       org.apache.poi.ss.usermodel.CellValue evaluatedCell;
       try {
-        evaluatedCell = formulaEvaluator.evaluate(cell);
+        evaluatedCell = formulaRuntime.evaluate(cell);
       } catch (RuntimeException exception) {
         throw FormulaExceptions.wrap(name(), address, cell.getCellFormula(), exception);
       }
@@ -512,7 +515,7 @@ public final class ExcelSheet {
                             location,
                             List.of(formula, functionName))));
         try {
-          CellValue evaluated = formulaEvaluator.evaluate(cell);
+          CellValue evaluated = formulaRuntime.evaluate(cell);
           if (evaluated != null && evaluated.getCellType() == CellType.ERROR) {
             findings.add(
                 new WorkbookAnalysis.AnalysisFinding(
@@ -554,7 +557,12 @@ public final class ExcelSheet {
   }
 
   /** Returns derived findings for hyperlink health on this sheet. */
-  List<WorkbookAnalysis.AnalysisFinding> hyperlinkHealthFindings() {
+  /**
+   * Returns derived findings for hyperlink health on this sheet using the workbook path context.
+   */
+  List<WorkbookAnalysis.AnalysisFinding> hyperlinkHealthFindings(
+      WorkbookLocation workbookLocation) {
+    Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
@@ -565,42 +573,17 @@ public final class ExcelSheet {
         HyperlinkType hyperlinkType = hyperlink.getType();
         String address = cellAddress(cell);
         WorkbookAnalysis.AnalysisLocation.Cell location = cellLocation(address);
-        String target = hyperlink.getAddress();
-        if (hasMissingHyperlinkTarget(target)) {
-          findings.add(
-              malformedHyperlinkFinding(
-                  location,
-                  "Hyperlink target is blank or missing.",
-                  List.of(hyperlinkType.name())));
-          continue;
-        }
-        if (hyperlinkType == HyperlinkType.URL) {
-          validateExternalHyperlinkTarget(
-              location,
-              target,
-              ExcelHyperlinkType.URL.name(),
-              ExcelHyperlinkValidation.isValidUrlTarget(target),
-              findings);
-        } else if (hyperlinkType == HyperlinkType.EMAIL) {
-          validateExternalHyperlinkTarget(
-              location,
-              target,
-              ExcelHyperlinkType.EMAIL.name(),
-              ExcelHyperlinkValidation.isValidEmailTarget(target),
-              findings);
-        } else if (hyperlinkType == HyperlinkType.FILE) {
-          validateExternalHyperlinkTarget(
-              location,
-              target,
-              ExcelHyperlinkType.FILE.name(),
-              ExcelHyperlinkValidation.isValidFileTarget(target),
-              findings);
-        } else {
-          validateDocumentHyperlinkTarget(location, target, findings);
-        }
+        findings.addAll(
+            hyperlinkTargetFindings(
+                location, hyperlinkType, hyperlink.getAddress(), workbookLocation));
       }
     }
     return List.copyOf(findings);
+  }
+
+  /** Returns hyperlink-health findings assuming the workbook has not yet been saved to disk. */
+  List<WorkbookAnalysis.AnalysisFinding> hyperlinkHealthFindings() {
+    return hyperlinkHealthFindings(new WorkbookLocation.UnsavedWorkbook());
   }
 
   private List<ExcelCellSnapshot> previewRow(int rowIndex, int maxColumns) {
@@ -633,32 +616,19 @@ public final class ExcelSheet {
     Cell cell = getOrCreateCell(rowIndex, columnIndex);
 
     switch (value) {
-      case ExcelCellValue.BlankValue _ -> {
-        resetToDefaultStyle(cell);
-        cell.setBlank();
-      }
-      case ExcelCellValue.TextValue textValue -> {
-        resetToDefaultStyle(cell);
-        cell.setCellValue(textValue.value());
-      }
-      case ExcelCellValue.NumberValue numberValue -> {
-        resetToDefaultStyle(cell);
-        cell.setCellValue(numberValue.value());
-      }
-      case ExcelCellValue.BooleanValue booleanValue -> {
-        resetToDefaultStyle(cell);
-        cell.setCellValue(booleanValue.value());
-      }
+      case ExcelCellValue.BlankValue _ -> cell.setBlank();
+      case ExcelCellValue.TextValue textValue -> cell.setCellValue(textValue.value());
+      case ExcelCellValue.NumberValue numberValue -> cell.setCellValue(numberValue.value());
+      case ExcelCellValue.BooleanValue booleanValue -> cell.setCellValue(booleanValue.value());
       case ExcelCellValue.DateValue dateValue -> {
         cell.setCellValue(dateValue.value());
-        cell.setCellStyle(styleRegistry.localDateStyle());
+        cell.setCellStyle(styleRegistry.localDateStyle(cell));
       }
       case ExcelCellValue.DateTimeValue dateTimeValue -> {
         cell.setCellValue(dateTimeValue.value());
-        cell.setCellStyle(styleRegistry.localDateTimeStyle());
+        cell.setCellStyle(styleRegistry.localDateTimeStyle(cell));
       }
       case ExcelCellValue.FormulaValue formulaValue -> {
-        resetToDefaultStyle(cell);
         try {
           cell.setCellFormula(formulaValue.expression());
         } catch (RuntimeException exception) {
@@ -702,6 +672,25 @@ public final class ExcelSheet {
         .getCell(columnIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
   }
 
+  private int nextAppendRowIndex() {
+    int lastValueBearingRowIndex = -1;
+    for (Row row : sheet) {
+      if (rowHasValueBearingCell(row)) {
+        lastValueBearingRowIndex = row.getRowNum();
+      }
+    }
+    return lastValueBearingRowIndex + 1;
+  }
+
+  private boolean rowHasValueBearingCell(Row row) {
+    for (Cell cell : row) {
+      if (cell.getCellType() != CellType.BLANK) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private Row getOrCreateRow(int rowIndex) {
     Row row = sheet.getRow(rowIndex);
     if (row == null) {
@@ -717,7 +706,7 @@ public final class ExcelSheet {
     try {
       displayValue =
           declaredType == CellType.FORMULA
-              ? dataFormatter.formatCellValue(cell, formulaEvaluator)
+              ? formulaRuntime.displayValue(dataFormatter, cell)
               : dataFormatter.formatCellValue(cell);
     } catch (RuntimeException exception) {
       throw FormulaExceptions.wrap(name(), address, formulaExpression, exception);
@@ -729,7 +718,7 @@ public final class ExcelSheet {
       String formula = cell.getCellFormula();
       CellValue evaluatedCell;
       try {
-        evaluatedCell = formulaEvaluator.evaluate(cell);
+        evaluatedCell = formulaRuntime.evaluate(cell);
       } catch (RuntimeException exception) {
         throw FormulaExceptions.wrap(name(), address, formula, exception);
       }
@@ -944,10 +933,17 @@ public final class ExcelSheet {
    */
   static boolean shouldPreview(Cell cell) {
     return cell != null
-        && (cell.getCellType() != CellType.BLANK
-            || cell.getCellStyle().getIndex() != 0
-            || cell.getHyperlink() != null
-            || cell.getCellComment() != null);
+        && shouldPreview(
+            cell.getCellType(),
+            cell.getCellStyle().getIndex(),
+            cell.getHyperlink() != null,
+            cell.getCellComment() != null);
+  }
+
+  /** Returns whether the supplied cell facts would make a cell visible in preview output. */
+  static boolean shouldPreview(
+      CellType cellType, short styleIndex, boolean hasHyperlink, boolean hasComment) {
+    return cellType != CellType.BLANK || styleIndex != 0 || hasHyperlink || hasComment;
   }
 
   private Comment newComment(int rowIndex, int columnIndex, ExcelComment comment) {
@@ -1082,22 +1078,38 @@ public final class ExcelSheet {
    * exists.
    */
   static ExcelHyperlink hyperlink(Cell cell) {
-    org.apache.poi.ss.usermodel.Hyperlink hyperlink = cell.getHyperlink();
+    return cell == null ? null : hyperlink(cell.getHyperlink());
+  }
+
+  /**
+   * Returns the normalized workbook-core hyperlink for the POI hyperlink, or null when unusable.
+   */
+  static ExcelHyperlink hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
     if (hyperlink == null || hyperlink.getType() == null) {
       return null;
     }
-    String target = hyperlink.getAddress();
-    if (target == null || target.isBlank()) {
+    return hyperlink(hyperlink.getType(), hyperlink.getAddress());
+  }
+
+  /**
+   * Returns the normalized workbook-core hyperlink for the supplied type and target, or null when
+   * unusable.
+   */
+  static ExcelHyperlink hyperlink(HyperlinkType hyperlinkType, String target) {
+    if (hyperlinkType == null || target == null || target.isBlank()) {
       return null;
     }
-    return switch (hyperlink.getType()) {
+    return switch (hyperlinkType) {
       case URL ->
           ExcelHyperlinkValidation.isValidUrlTarget(target) ? new ExcelHyperlink.Url(target) : null;
       case EMAIL ->
           ExcelHyperlinkValidation.isValidEmailTarget(target)
               ? new ExcelHyperlink.Email(target)
               : null;
-      case FILE -> new ExcelHyperlink.File(target);
+      case FILE ->
+          ExcelHyperlinkValidation.isValidFileTarget(target)
+              ? new ExcelHyperlink.File(target)
+              : null;
       case DOCUMENT -> new ExcelHyperlink.Document(target);
       case NONE -> null;
     };
@@ -1108,16 +1120,23 @@ public final class ExcelSheet {
    * incomplete.
    */
   static ExcelComment comment(Cell cell) {
-    Comment comment = cell.getCellComment();
+    return cell == null ? null : comment(cell.getCellComment());
+  }
+
+  /** Returns the normalized workbook-core comment for the POI comment, or null when incomplete. */
+  static ExcelComment comment(Comment comment) {
     if (comment == null || comment.getString() == null) {
       return null;
     }
-    String text = comment.getString().getString();
-    String author = comment.getAuthor();
+    return comment(comment.getString().getString(), comment.getAuthor(), comment.isVisible());
+  }
+
+  /** Returns the normalized workbook-core comment for the supplied fields, or null when invalid. */
+  static ExcelComment comment(String text, String author, boolean visible) {
     if (text == null || text.isBlank() || author == null || author.isBlank()) {
       return null;
     }
-    return new ExcelComment(text, author, comment.isVisible());
+    return new ExcelComment(text, author, visible);
   }
 
   /** Converts the workbook-core hyperlink type into the matching Apache POI hyperlink type. */
@@ -1135,24 +1154,75 @@ public final class ExcelSheet {
     return switch (hyperlink) {
       case ExcelHyperlink.Url url -> url.target();
       case ExcelHyperlink.Email email -> "mailto:" + email.target();
-      case ExcelHyperlink.File file -> file.target();
+      case ExcelHyperlink.File file -> ExcelFileHyperlinkTargets.toPoiAddress(file.path());
       case ExcelHyperlink.Document document -> document.target();
     };
   }
 
-  private void validateExternalHyperlinkTarget(
+  /**
+   * Returns analysis findings for one URL or EMAIL hyperlink target.
+   *
+   * <p>Package-private so tests can cover malformed external-target branches that Apache POI
+   * rejects before they become workbook hyperlinks.
+   */
+  static List<WorkbookAnalysis.AnalysisFinding> externalHyperlinkFindings(
       WorkbookAnalysis.AnalysisLocation.Cell location,
       String target,
       String expectedShape,
-      boolean valid,
-      List<WorkbookAnalysis.AnalysisFinding> findings) {
-    if (!valid) {
-      findings.add(
+      boolean valid) {
+    Objects.requireNonNull(location, "location must not be null");
+    Objects.requireNonNull(target, "target must not be null");
+    Objects.requireNonNull(expectedShape, "expectedShape must not be null");
+    return valid
+        ? List.of()
+        : List.of(
+            malformedHyperlinkFinding(
+                location,
+                "target does not match the expected " + expectedShape + " shape",
+                List.of(target)));
+  }
+
+  /**
+   * Returns analysis findings for one hyperlink target on this sheet.
+   *
+   * <p>Package-private so tests can cover blank and type-specific validation branches that Apache
+   * POI does not always allow to be expressed as persisted workbook hyperlinks.
+   */
+  List<WorkbookAnalysis.AnalysisFinding> hyperlinkTargetFindings(
+      WorkbookAnalysis.AnalysisLocation.Cell location,
+      HyperlinkType hyperlinkType,
+      String target,
+      WorkbookLocation workbookLocation) {
+    Objects.requireNonNull(location, "location must not be null");
+    Objects.requireNonNull(hyperlinkType, "hyperlinkType must not be null");
+    Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
+
+    if (hasMissingHyperlinkTarget(target)) {
+      return List.of(
           malformedHyperlinkFinding(
-              location,
-              "target does not match the expected " + expectedShape + " shape",
-              List.of(target)));
+              location, "Hyperlink target is blank or missing.", List.of(hyperlinkType.name())));
     }
+    return switch (hyperlinkType) {
+      case URL ->
+          externalHyperlinkFindings(
+              location,
+              target,
+              ExcelHyperlinkType.URL.name(),
+              ExcelHyperlinkValidation.isValidUrlTarget(target));
+      case EMAIL ->
+          externalHyperlinkFindings(
+              location,
+              target,
+              ExcelHyperlinkType.EMAIL.name(),
+              ExcelHyperlinkValidation.isValidEmailTarget(target));
+      case FILE -> fileHyperlinkFindings(location, target, workbookLocation);
+      case DOCUMENT -> {
+        List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+        validateDocumentHyperlinkTarget(location, target, findings);
+        yield List.copyOf(findings);
+      }
+      case NONE -> List.of();
+    };
   }
 
   void validateDocumentHyperlinkTarget(
@@ -1212,7 +1282,7 @@ public final class ExcelSheet {
     return cell.getAddress().formatAsString();
   }
 
-  private WorkbookAnalysis.AnalysisFinding malformedHyperlinkFinding(
+  private static WorkbookAnalysis.AnalysisFinding malformedHyperlinkFinding(
       WorkbookAnalysis.AnalysisLocation.Cell location, String message, List<String> evidence) {
     return new WorkbookAnalysis.AnalysisFinding(
         WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MALFORMED_TARGET,
@@ -1223,6 +1293,49 @@ public final class ExcelSheet {
         evidence);
   }
 
+  /**
+   * Returns analysis findings for one FILE hyperlink target in one workbook location context.
+   *
+   * <p>Package-private so tests can cover malformed and unresolved resolver branches that Apache
+   * POI cannot always materialize as persisted hyperlink records.
+   */
+  static List<WorkbookAnalysis.AnalysisFinding> fileHyperlinkFindings(
+      WorkbookAnalysis.AnalysisLocation.Cell location,
+      String target,
+      WorkbookLocation workbookLocation) {
+    Objects.requireNonNull(location, "location must not be null");
+    Objects.requireNonNull(target, "target must not be null");
+    Objects.requireNonNull(workbookLocation, "workbookLocation must not be null");
+
+    return switch (ExcelFileHyperlinkTargets.resolve(target, workbookLocation)) {
+      case FileHyperlinkResolution.MalformedPath malformedPath ->
+          List.of(
+              malformedHyperlinkFinding(
+                  location, malformedPath.reason(), List.of(malformedPath.path())));
+      case FileHyperlinkResolution.UnresolvedRelativePath unresolvedRelativePath ->
+          List.of(
+              new WorkbookAnalysis.AnalysisFinding(
+                  WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_UNRESOLVED_FILE_TARGET,
+                  WorkbookAnalysis.AnalysisSeverity.WARNING,
+                  "Relative file hyperlink cannot be resolved yet",
+                  "Relative file hyperlink targets cannot be validated until the workbook has a"
+                      + " filesystem location.",
+                  location,
+                  List.of(unresolvedRelativePath.path())));
+      case FileHyperlinkResolution.ResolvedPath resolvedPath ->
+          Files.notExists(resolvedPath.resolvedPath())
+              ? List.of(
+                  new WorkbookAnalysis.AnalysisFinding(
+                      WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
+                      WorkbookAnalysis.AnalysisSeverity.ERROR,
+                      "File hyperlink targets a missing path",
+                      "Resolved file hyperlink path does not exist: " + resolvedPath.resolvedPath(),
+                      location,
+                      List.of(resolvedPath.path(), resolvedPath.resolvedPath().toString())))
+              : List.of();
+    };
+  }
+
   String exceptionMessage(Exception exception) {
     if (exception.getMessage() == null) {
       return exception.getClass().getSimpleName();
@@ -1231,9 +1344,12 @@ public final class ExcelSheet {
   }
 
   static boolean hasUsableHyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
-    return hyperlink != null
-        && hyperlink.getType() != null
-        && hyperlink.getType() != HyperlinkType.NONE;
+    return hyperlink != null && hasUsableHyperlinkType(hyperlink.getType());
+  }
+
+  /** Returns whether the supplied POI hyperlink type represents a usable hyperlink payload. */
+  static boolean hasUsableHyperlinkType(HyperlinkType hyperlinkType) {
+    return hyperlinkType != null && hyperlinkType != HyperlinkType.NONE;
   }
 
   static boolean hasMissingHyperlinkTarget(String target) {

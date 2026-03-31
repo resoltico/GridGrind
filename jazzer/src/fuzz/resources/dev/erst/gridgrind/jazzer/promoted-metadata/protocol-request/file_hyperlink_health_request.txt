@@ -1,0 +1,13 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/examples/file-hyperlink-health-request.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 1970
+Decode Outcome: PARSED
+Source Kind: NEW
+Persistence Kind: SAVE_AS
+Operation Count: 5
+Read Count: 2
+Read Kinds: GET_HYPERLINKS=1, ANALYZE_HYPERLINK_HEALTH=1
+Style Kinds: (none)
+Operation Kinds: SET_HYPERLINK=3, ENSURE_SHEET=1, SET_RANGE=1
