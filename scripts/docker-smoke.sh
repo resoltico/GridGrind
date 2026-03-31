@@ -29,7 +29,8 @@ readonly smoke_root="${repo_root}/tmp/docker smoke.$$"
 
 cleanup() {
     local exit_code=$?
-    rm -rf "${smoke_root}"
+    # Files created by the container (root-owned on Linux) may require sudo to delete in CI.
+    rm -rf "${smoke_root}" || sudo rm -rf "${smoke_root}" || true
     docker image rm -f "${image_tag}" >/dev/null 2>&1 || true
     exit "${exit_code}"
 }
