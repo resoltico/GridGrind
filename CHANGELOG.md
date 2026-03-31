@@ -3,6 +3,27 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0] - 2026-03-31
+
+### Fixed
+
+- Response-side hyperlink payloads now reuse the canonical discriminated hyperlink shape used by
+  `SET_HYPERLINK`. `GET_HYPERLINKS`, `GET_CELLS`, and `GET_WINDOW` now return `FILE` targets in
+  the `path` field instead of leaking the legacy `target` field on read.
+- Failure-response `causes` entries now expose stable GridGrind problem codes and product-owned
+  messages instead of raw Java exception class names or parser-library internals. This is a
+  **wire format breaking change** for any client that was matching on the old `type` or
+  `className` fields.
+- `INVALID_REQUEST_SHAPE` now returns product-owned messages for missing required fields as well,
+  so shape failures no longer leak parser or Java type metadata through that branch either.
+- Typed value writes now preserve existing cell style, hyperlink, and comment state instead of
+  resetting presentation when `SET_CELL`, `SET_RANGE`, or `APPEND_ROW` overwrites a styled blank
+  cell.
+- `DATE` and `DATE_TIME` writes now merge their required number formats onto the existing cell
+  style instead of replacing fill, border, font, alignment, or wrap state.
+- Jazzer and deterministic round-trip coverage now assert style preservation when `APPEND_ROW`
+  reuses styled blank rows under value-bearing append semantics.
+
 ## [0.16.0] - 2026-03-31
 
 ### Fixed
@@ -552,9 +573,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.17.0...HEAD
+[0.17.0]: https://github.com/resoltico/GridGrind/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/resoltico/GridGrind/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/resoltico/GridGrind/compare/v0.14.0...v0.15.0
+[0.14.0]: https://github.com/resoltico/GridGrind/compare/v0.13.0...v0.14.0
 [0.13.0]: https://github.com/resoltico/GridGrind/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/resoltico/GridGrind/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/resoltico/GridGrind/compare/v0.10.0...v0.11.0

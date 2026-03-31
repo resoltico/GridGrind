@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.16.0"
+version: "0.17.0"
 domain: QUICK_REFERENCE
 updated: "2026-03-31"
 route:
@@ -141,6 +141,9 @@ gridgrind --print-protocol-catalog
 ```
 
 A leading `=` in `FORMULA` values is accepted and stripped automatically. `"=SUM(B1:B10)"` and `"SUM(B1:B10)"` are equivalent.
+Existing style, hyperlink, and comment state on the targeted cell is preserved. `DATE` and
+`DATE_TIME` writes keep existing presentation state and only layer the required number format on
+top.
 
 ## SET_RANGE
 
@@ -254,6 +257,8 @@ If `visible` is omitted, it defaults to `false`.
 ```
 
 Metadata-only blank rows do not affect the append position.
+If the append lands on cells that already exist only because of style, hyperlink, or comment
+state, that existing state is preserved.
 
 ## AUTO_SIZE_COLUMNS
 
@@ -382,6 +387,9 @@ a caller-defined `requestId`.
 ```
 
 ## GET_HYPERLINKS
+
+Response hyperlinks reuse the same discriminated shape as `SET_HYPERLINK` targets. `FILE`
+responses use the `path` field with a normalized plain path string.
 
 ```json
 {

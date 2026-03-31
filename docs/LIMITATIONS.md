@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.16.0"
+version: "0.17.0"
 domain: LIMITATIONS
 updated: "2026-03-29"
 route:
