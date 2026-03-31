@@ -3,7 +3,36 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.16.0] - 2026-03-31
+
+### Fixed
+
+- The Docker image entrypoint now uses an absolute JAR path, so `docker run ... -w /any/path`
+  works reliably instead of failing before GridGrind starts with `Unable to access jarfile`.
+- `ANALYZE_HYPERLINK_HEALTH` now reports missing local file targets and unresolved relative file
+  targets instead of silently treating those cases as healthy.
+- `INVALID_REQUEST_SHAPE` messages are now product-owned and concise. Unknown fields, unknown
+  type values, and wrong token shapes no longer leak Jackson or Java class names into the public
+  response.
+
+### Changed
+
+- `FILE` hyperlink targets are now written with the field name `path` instead of `target`. The
+  write contract accepts either plain file paths or `file:` URIs, and all read surfaces return
+  normalized plain path strings. This is a **wire format breaking change** for clients that still
+  send or expect `target` on `FILE` hyperlinks.
+- `APPEND_ROW` now appends after the last value-bearing row. Rows that contain only style,
+  comment, or hyperlink metadata no longer shift the append cursor.
+- `AUTO_SIZE_COLUMNS` now uses deterministic content-based sizing instead of host font metrics,
+  so headless, Docker, and local runs produce the same column widths.
+- `./check.sh` now runs nested Jazzer `check` after the root quality gates and before CLI fat-JAR
+  packaging, giving the one-command local gate deterministic support-test and committed-seed
+  regression coverage as well.
+
+### Added
+
+- New public example `examples/file-hyperlink-health-request.json` showcasing `FILE.path`,
+  `file:` URI normalization, hyperlink metadata reads, and hyperlink-health analysis.
 
 ## [0.15.0] - 2026-03-31
 
@@ -523,7 +552,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.15.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.16.0...HEAD
+[0.16.0]: https://github.com/resoltico/GridGrind/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/resoltico/GridGrind/compare/v0.14.0...v0.15.0
 [0.13.0]: https://github.com/resoltico/GridGrind/compare/v0.12.0...v0.13.0
 [0.12.0]: https://github.com/resoltico/GridGrind/compare/v0.11.0...v0.12.0

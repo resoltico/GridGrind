@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.15.0"
+version: "0.16.0"
 domain: QUICK_REFERENCE
-updated: "2026-03-29"
+updated: "2026-03-31"
 route:
   keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-sheet-schema, analyze-workbook-findings]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind named range example", "what do gridgrind reads look like"]
@@ -170,9 +170,12 @@ Cells that have never been written are silently skipped.
 ```json
 { "type": "SET_HYPERLINK", "sheetName": "Sheet1", "address": "A1", "target": { "type": "URL", "target": "https://example.com/report" } }
 { "type": "SET_HYPERLINK", "sheetName": "Sheet1", "address": "A2", "target": { "type": "EMAIL", "email": "team@example.com" } }
-{ "type": "SET_HYPERLINK", "sheetName": "Sheet1", "address": "A3", "target": { "type": "FILE", "target": "reports/monthly.xlsx" } }
+{ "type": "SET_HYPERLINK", "sheetName": "Sheet1", "address": "A3", "target": { "type": "FILE", "path": "reports/monthly.xlsx" } }
 { "type": "SET_HYPERLINK", "sheetName": "Sheet1", "address": "A4", "target": { "type": "DOCUMENT", "target": "Summary!B4" } }
 ```
+
+`FILE.path` accepts either a plain path or a `file:` URI. Reads return a normalized plain path
+string in `path`.
 
 ## CLEAR_HYPERLINK
 
@@ -250,11 +253,15 @@ If `visible` is omitted, it defaults to `false`.
 }
 ```
 
+Metadata-only blank rows do not affect the append position.
+
 ## AUTO_SIZE_COLUMNS
 
 ```json
 { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Sheet1" }
 ```
+
+Sizing is deterministic and content-based, so headless and Docker runs match local runs.
 
 ## SET_NAMED_RANGE
 
@@ -499,6 +506,9 @@ a caller-defined `requestId`.
   }
 }
 ```
+
+Relative `FILE` targets are resolved against the workbook's persisted path when one exists.
+Unsaved workbooks report unresolved relative file targets instead of treating them as healthy.
 
 ## ANALYZE_NAMED_RANGE_HEALTH
 

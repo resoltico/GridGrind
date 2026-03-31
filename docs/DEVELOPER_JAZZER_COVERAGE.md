@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.15.0"
+version: "0.16.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-03-28"
+updated: "2026-03-31"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -171,7 +171,8 @@ Committed custom seeds currently in source control:
 |:--------|:------|:--------|
 | `protocol-request` | `sheet_management_request.json` | readable valid request seed taken from the public sheet-management example |
 | `protocol-request` | `budget_request.json` | readable budget workflow seed with range writes, style, formulas, and explicit workbook/cell/window/schema reads |
-| `protocol-request` | `excel_authoring_essentials_request.json` | readable authoring seed covering hyperlinks, comments, named ranges, and explicit metadata plus named-range reads |
+| `protocol-request` | `excel_authoring_essentials_request.json` | readable authoring seed covering URL and FILE hyperlinks, comments, named ranges, and explicit metadata plus named-range reads |
+| `protocol-request` | `file_hyperlink_health_request.json` | readable hyperlink-analysis seed covering FILE path inputs, `file:` URI normalization, hyperlink metadata reads, and hyperlink-health analysis |
 | `protocol-request` | `live_workflow_create.json` | readable multi-sheet finance workflow with append-row and formula authoring |
 | `protocol-request` | `live_workflow_revise.json` | readable existing-workbook revision seed with overwrite persistence |
 | `protocol-request` | `structural_layout_request.json` | readable structural-layout seed covering merge, sizing, and freeze panes |
@@ -228,6 +229,8 @@ The current Jazzer layer is strongest at:
   pane coordinates
 - a committed custom seed floor that now includes readable public example requests and replay-
   verified binary workflow seeds
+- normalized local-file hyperlink path semantics in request seeds and `.xlsx` round-trip
+  invariants
 - style-aware `.xlsx` round-trip verification for formatting depth, authoring metadata, and
   named-range normalization
 - explicit source/persistence-type telemetry for service-level workflow fuzzing

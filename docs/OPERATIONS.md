@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.15.0"
+version: "0.16.0"
 domain: OPERATIONS
-updated: "2026-03-29"
+updated: "2026-03-31"
 route:
   keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-sheet-layout, get-sheet-schema, analyze-workbook-findings, request, json, protocol]
   questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
@@ -398,8 +398,11 @@ Supported target variants:
 
 - `{"type":"URL","target":"https://example.com/report"}`
 - `{"type":"EMAIL","email":"team@example.com"}`
-- `{"type":"FILE","target":"shared/report.xlsx"}`
+- `{"type":"FILE","path":"shared/report.xlsx"}`
 - `{"type":"DOCUMENT","target":"Inventory!B4"}`
+
+`FILE.path` accepts either a plain relative or absolute file path, or a `file:` URI. Read-side
+metadata always returns a normalized plain path string in `path`, never a `file:` URI.
 
 ---
 
@@ -567,7 +570,7 @@ responses. `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` return four flat fi
 
 ### APPEND_ROW
 
-Append a single row of typed values after the last populated row in a sheet.
+Append a single row of typed values after the last value-bearing row in a sheet.
 
 ```json
 {
@@ -586,6 +589,9 @@ Append a single row of typed values after the last populated row in a sheet.
 | `sheetName` | Yes | Target sheet. |
 | `values` | Yes | Row of typed cell values. |
 
+Rows that contain only style, comment, or hyperlink metadata are ignored when locating the append
+position.
+
 ---
 
 ### AUTO_SIZE_COLUMNS
@@ -602,6 +608,9 @@ Resize columns to fit their content. Applies to all columns with data on the she
 
 Note: `AUTO_SIZE_COLUMNS` and `SET_COLUMN_WIDTH` can be combined in the same request. Since
 operations run in order, whichever appears later wins.
+
+GridGrind uses deterministic content-based sizing rather than host font metrics, so Docker,
+headless, and local runs produce the same widths.
 
 ---
 
@@ -872,7 +881,8 @@ Returns the exact merged regions defined on one sheet.
 
 ### GET_HYPERLINKS
 
-Returns hyperlink metadata for selected cells on one sheet.
+Returns hyperlink metadata for selected cells on one sheet. `FILE` targets come back in the
+`path` field as normalized plain path strings, not `file:` URIs.
 
 ```json
 {
@@ -1040,7 +1050,12 @@ functions, formula-error results, and evaluation failures surface.
 
 ### ANALYZE_HYPERLINK_HEALTH
 
-Reports hyperlink findings such as malformed external targets or broken document destinations.
+Reports hyperlink findings such as malformed external targets, missing local file targets,
+unresolved relative file targets, or broken document destinations.
+
+Relative `FILE` targets are resolved against the workbook's persisted path when `source` or
+`persistence` gives the workbook a filesystem location. When the workbook is still unsaved,
+relative `FILE` targets are reported as `HYPERLINK_UNRESOLVED_FILE_TARGET`.
 
 ```json
 {
