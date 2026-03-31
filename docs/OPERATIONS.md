@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.17.0"
+version: "0.18.0"
 domain: OPERATIONS
 updated: "2026-03-31"
 route:
@@ -61,6 +61,8 @@ create the first sheet before writing any cells.
 ```
 Open an existing `.xlsx` file.
 
+Relative `path` values resolve from the current working directory.
+
 GridGrind supports `.xlsx` only. Paths ending in `.xls`, `.xlsm`, `.xlsb`, or any other
 non-`.xlsx` extension are rejected as invalid requests.
 
@@ -78,6 +80,8 @@ response, an `OVERWRITE` request yields an `OVERWRITE` response, and a `NONE` re
 ```
 Write the workbook to the given path, creating parent directories as needed.
 
+Relative `path` values resolve from the current working directory.
+
 The save path must end in `.xlsx`.
 
 The response includes two path fields:
@@ -90,8 +94,9 @@ relative path (e.g. `"report.xlsx"`) or a path containing `..` segments is used.
 ```json
 { "type": "OVERWRITE" }
 ```
-Overwrite the source file (requires `source.type=EXISTING`). The response includes `sourcePath`
-(the original source path string) and `executionPath` (the absolute normalized path).
+Overwrite the source file (requires `source.type=EXISTING`). `OVERWRITE` does not accept its own
+`path` field; it always writes back to `source.path`. The response includes `sourcePath` (the
+original source path string) and `executionPath` (the absolute normalized path).
 
 Omit `persistence` entirely or use `{ "type": "NONE" }` to run mutations and reads without
 saving.

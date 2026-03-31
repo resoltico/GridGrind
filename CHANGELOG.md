@@ -3,6 +3,41 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.18.0] - 2026-03-31
+
+### Added
+
+- `./check.sh` now runs a fourth stage, `scripts/docker-smoke.sh`, which builds the local Docker
+  image and verifies `--help`, `--version`, request-file loading, response-file writing, and
+  `.xlsx` persistence from a non-default working directory using weird path names.
+- CI now includes a separate `Docker smoke` job, and the `Container` workflow runs the same smoke
+  script before publishing multi-arch images to GHCR.
+
+### Changed
+
+- `FILE` hyperlinks continue the hard-break path contract: requests use `FILE.path`, plain paths
+  and `file:` URIs normalize to plain paths, read surfaces return plain paths, and hyperlink
+  health resolves relative file targets against the workbook location.
+- `APPEND_ROW` continues to use value-bearing row semantics, so metadata-only rows do not shift
+  the append cursor.
+- `AUTO_SIZE_COLUMNS` continues to use deterministic content-based sizing so container and local
+  runs agree on column widths.
+- CLI `--help`, protocol catalog discovery, `README.md`, and the public reference docs now
+  explain the file workflow explicitly: stdin vs `--request`, stdout vs `--response`, `SAVE_AS`
+  vs `OVERWRITE`, current-working-directory path resolution, and Docker `-w /workdir` usage.
+
+### Fixed
+
+- The Docker image remains workdir-independent: `docker run -w /workdir ... --help` and
+  file-backed request/response flows now have automated regression coverage.
+- Hyperlink health continues to report missing local file targets instead of silently treating
+  them as healthy.
+- Invalid request-shape and invalid cell-address failures continue to expose product-owned
+  diagnostics instead of parser, POI, or Java implementation detail.
+- Typed value writes continue to preserve existing style, hyperlink, and comment state, and
+  `DATE` / `DATE_TIME` writes continue to merge their formats onto the existing style instead of
+  replacing it.
+
 ## [0.17.0] - 2026-03-31
 
 ### Fixed
@@ -573,7 +608,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.18.0...HEAD
+[0.18.0]: https://github.com/resoltico/GridGrind/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/resoltico/GridGrind/compare/v0.16.0...v0.17.0
 [0.16.0]: https://github.com/resoltico/GridGrind/compare/v0.15.0...v0.16.0
 [0.15.0]: https://github.com/resoltico/GridGrind/compare/v0.14.0...v0.15.0

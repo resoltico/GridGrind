@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.17.0"
+version: "0.18.0"
 domain: QUICK_REFERENCE
 updated: "2026-03-31"
 route:
@@ -37,6 +37,13 @@ gridgrind --print-protocol-catalog
 }
 ```
 
+Path model:
+- `source.path` opens an existing workbook from that path.
+- `SAVE_AS.path` writes a new workbook to that path and creates missing parent directories.
+- `OVERWRITE` writes back to `source.path`; it does not accept its own `path` field.
+- Relative paths in `--request`, `--response`, `source.path`, and `persistence.path` resolve from
+  the current working directory.
+
 ---
 
 ## Source
@@ -46,12 +53,17 @@ gridgrind --print-protocol-catalog
 { "type": "EXISTING", "path": "path/to/file.xlsx" }
 ```
 
+Relative `path` values resolve from the current working directory.
+
 ## Persistence
 
 ```json
 { "type": "SAVE_AS",   "path": "path/to/output.xlsx" }
 { "type": "OVERWRITE" }
 ```
+
+`SAVE_AS.path` writes a new file. `OVERWRITE` writes back to `source.path` and does not accept a
+separate `path` field. `SAVE_AS` creates missing parent directories automatically.
 
 ---
 
