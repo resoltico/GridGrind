@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.15.0"
+version: "0.16.0"
 domain: DEVELOPER
-updated: "2026-03-29"
+updated: "2026-03-31"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -58,12 +58,16 @@ top. Future adapters (HTTP, gRPC, library embedding) can be added without touchi
 
 ## Commands
 
-`./gradlew check` is the single command that runs every quality gate: Spotless formatting,
-Error Prone, PMD, tests, and JaCoCo coverage verification. This is what CI runs. It must pass
-before every commit.
+`./gradlew check` remains the root-project CI gate: Spotless formatting, Error Prone, PMD, tests,
+and JaCoCo coverage verification. `./check.sh` is the local full-stack gate: root `check`
+plus `coverage`, nested Jazzer `check`, and `:cli:shadowJar`. Both should be clean before a
+release-quality change is considered done.
 
 ```bash
-# Run every quality gate (what CI runs — the only command that matters for correctness)
+# Run the local full-stack gate
+./check.sh
+
+# Run the root-project CI gate
 ./gradlew check
 
 # Targeted iteration during development
@@ -87,7 +91,7 @@ before every commit.
 
 Release automation is split across three workflows:
 
-- `CI` runs the same quality gates as `./check.sh`.
+- `CI` runs the root-project `./gradlew check` gate.
 - `Release` builds the fat JAR and publishes the GitHub Release when a `v*` tag is pushed.
 - `Container` builds and publishes the multi-arch GHCR image and then prunes older container
   package versions.
@@ -106,7 +110,9 @@ release groups instead of splitting a release across the retention boundary.
 
 ## Quality Gates
 
-`./gradlew check` runs each of the following gates. Any failure fails the build.
+`./gradlew check` runs each of the following root-project gates. Any failure fails the build.
+`./check.sh` runs these same root-project gates, then runs nested Jazzer verification, then
+builds the CLI fat JAR.
 
 ### Error Prone
 
@@ -173,6 +179,7 @@ These runnable examples cover the core operation surface:
 |:-----|:-------------|
 | `examples/budget-request.json` | Range write, style, formula, workbook summary, cells, window, and schema reads |
 | `examples/excel-authoring-essentials-request.json` | Hyperlink, comment, named-range authoring plus explicit metadata and named-range reads |
+| `examples/file-hyperlink-health-request.json` | File-hyperlink authoring plus explicit hyperlink metadata and hyperlink-health analysis |
 | `examples/formatting-depth-request.json` | Font, fill, and border styling with explicit post-mutation cell and window reads |
 | `examples/introspection-analysis-request.json` | Read-heavy workbook showcasing factual reads plus finding-bearing analysis operations together |
 | `examples/live-workflow-create.json` | Multi-sheet workbook with cross-sheet formulas and aggregations |

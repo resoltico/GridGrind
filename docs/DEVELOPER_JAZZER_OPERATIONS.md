@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.15.0"
+version: "0.16.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-03-28"
+updated: "2026-03-31"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -41,6 +41,16 @@ command runs at a time.
 ---
 
 ## Common Workflows
+
+### Run the Full Local Gate
+
+```bash
+./check.sh --console=plain
+```
+
+This runs the root quality gates and coverage reports first, then the nested Jazzer `check`
+workflow, then the CLI fat-JAR packaging step. It is the supported one-command local verification
+path when a change touches both the main codebase and the Jazzer layer.
 
 ### Run the Deterministic Jazzer Support Tests
 
@@ -321,9 +331,10 @@ Not expected:
 If one of those expectations fails, treat it as a Jazzer-layer bug.
 
 Operator discipline:
-1. Finish any root `./gradlew ...` or `./check.sh` run before starting a nested Jazzer build.
-2. Finish any nested Jazzer run before restarting a root Gradle build.
-3. Treat parallel root-plus-nested execution as unsupported local operator behavior.
+1. Prefer `./check.sh` when you want the supported sequential root-plus-nested verification flow.
+2. Finish any root `./gradlew ...` or `./check.sh` run before starting a nested Jazzer build.
+3. Finish any nested Jazzer run before restarting a root Gradle build.
+4. Treat parallel root-plus-nested execution as unsupported local operator behavior.
 
 If a recommended dictionary appears interesting, use this procedure:
 1. Save the run log.

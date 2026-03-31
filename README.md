@@ -41,7 +41,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.15.0
+docker pull ghcr.io/resoltico/gridgrind:0.16.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -106,8 +106,9 @@ java -jar gridgrind.jar --print-protocol-catalog
 
 GridGrind currently supports `.xlsx` workbooks only. Malformed JSON is rejected as
 `INVALID_JSON`. Syntactically valid JSON that does not match the protocol model is rejected as
-`INVALID_REQUEST_SHAPE`. Parsed requests with invalid business data, such as `.xls`, `.xlsm`,
-`.xlsb`, or other non-`.xlsx` workbook paths, are rejected as `INVALID_REQUEST`.
+`INVALID_REQUEST_SHAPE` with product-owned messages such as unknown field, unknown type, or wrong
+value shape. Parsed requests with invalid business data, such as `.xls`, `.xlsm`, `.xlsb`, or
+other non-`.xlsx` workbook paths, are rejected as `INVALID_REQUEST`.
 
 Every request follows the same pipeline:
 
@@ -136,7 +137,7 @@ autonomous callers deterministic failure semantics instead of "error after side 
 | `FREEZE_PANES` | Freeze panes using explicit split and visible-origin coordinates |
 | `SET_CELL` | Write a typed value to a single cell |
 | `SET_RANGE` | Write a rectangular grid of typed values |
-| `CLEAR_RANGE` | Remove all values and styles from a rectangular range |
+| `CLEAR_RANGE` | Remove values, styles, hyperlinks, and comments from a rectangular range |
 | `SET_HYPERLINK` | Attach a hyperlink to a single cell |
 | `CLEAR_HYPERLINK` | Remove a hyperlink from a cell; no-op when the cell does not exist |
 | `SET_COMMENT` | Attach a plain-text comment to a single cell |
@@ -144,8 +145,8 @@ autonomous callers deterministic failure semantics instead of "error after side 
 | `APPLY_STYLE` | Apply number formats, font styling, fills, borders, alignment, or wrap to a range |
 | `SET_NAMED_RANGE` | Create or replace one workbook- or sheet-scoped named range |
 | `DELETE_NAMED_RANGE` | Remove one existing workbook- or sheet-scoped named range |
-| `APPEND_ROW` | Append a row of typed values after the last populated row |
-| `AUTO_SIZE_COLUMNS` | Size columns to fit their contents |
+| `APPEND_ROW` | Append a row of typed values after the last value-bearing row |
+| `AUTO_SIZE_COLUMNS` | Deterministically size columns to fit their contents |
 | `EVALUATE_FORMULAS` | Force formula recalculation before save |
 | `FORCE_FORMULA_RECALCULATION_ON_OPEN` | Mark the workbook to recalculate when opened in Excel |
 
@@ -167,7 +168,9 @@ twips. Style analysis reports `fontHeight.twips` and `fontHeight.points` alongsi
 effective font, fill, and border facts.
 
 Authoring metadata is also supported directly. `SET_HYPERLINK` and `CLEAR_HYPERLINK`
-work on one cell at a time with typed `URL`, `EMAIL`, `FILE`, or `DOCUMENT` targets.
+work on one cell at a time with typed `URL`, `EMAIL`, `FILE`, or `DOCUMENT` targets. `FILE`
+targets now use the field name `path`, accept either plain file paths or `file:` URIs on write,
+and are returned as normalized plain path strings on read.
 `SET_COMMENT` and `CLEAR_COMMENT` work on one cell at a time with plain-text comment content,
 author, and visible state. `SET_NAMED_RANGE` and `DELETE_NAMED_RANGE` work on workbook or sheet
 scope with explicit sheet-qualified cell or range targets. Analysis can now return cell
@@ -176,6 +179,10 @@ scope with explicit sheet-qualified cell or range targets. Analysis can now retu
 `CLEAR_RANGE` removes value, style, hyperlink, and comment state from the addressed rectangle;
 cells that have never been written are silently skipped. `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are
 no-ops when the addressed cell does not physically exist.
+
+`APPEND_ROW` uses value-bearing row semantics: blank rows that carry only style, comment, or
+hyperlink metadata do not move the append cursor. `AUTO_SIZE_COLUMNS` uses deterministic,
+content-based sizing so headless, Docker, and local runs produce the same widths.
 
 See [docs/OPERATIONS.md](docs/OPERATIONS.md) for the full reference with all fields and examples.
 
@@ -208,6 +215,11 @@ Analysis reads:
 
 Every read carries a caller-defined `requestId`, and every result echoes that `requestId` back so
 agents can correlate repeated or similar reads deterministically.
+
+`GET_HYPERLINKS` returns `FILE` targets in the `path` field as normalized plain path strings.
+`ANALYZE_HYPERLINK_HEALTH` resolves relative `FILE` targets against the workbook's persisted path
+when one exists; when the workbook has no filesystem location yet, relative `FILE` targets are
+reported as unresolved instead of being silently treated as healthy.
 
 `GET_WINDOW` and `GET_SHEET_SCHEMA` require `rowCount * columnCount` ≤ 250,000. `GET_WINDOW`
 additionally rejects windows that extend beyond the Excel 2007 sheet boundary

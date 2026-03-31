@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.15.0"
+version: "0.16.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-03-28"
+updated: "2026-03-31"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -32,6 +32,8 @@ Implemented now:
 - local-only wrapper-script entrypoints under `jazzer/bin/`
 - deterministic nested-build support tests under `jazzer/src/test/java/`
 - four active fuzz harnesses plus a regression-mode replay run
+- local full-gate orchestration through root `./check.sh`, which runs root verification and
+  nested Jazzer `check` sequentially
 - per-target run history, latest-summary artifacts, and per-harness telemetry
 - replay and promotion tooling
 - committed custom seed floor made of promoted regression inputs and readable example requests
@@ -56,8 +58,9 @@ GridGrind uses Jazzer as a separate, local-only fuzzing layer.
 
 The non-negotiable decisions are:
 - `jazzer/` is a nested build, not a root subproject.
-- Root `./gradlew check`, root coverage, [check.sh](./DEVELOPER.md), and GitHub CI stay
-  independent of Jazzer.
+- Root `./gradlew check`, root coverage, and GitHub CI stay independent of Jazzer.
+- Root `./check.sh` is the supported local orchestrator for sequential root-plus-nested
+  verification.
 - Root project-file formatting excludes local-only instruction and scratch areas,
   so local workspace state cannot break the canonical quality gates.
 - The root Gradle wrapper is reused; there is no second wrapper.
@@ -97,11 +100,11 @@ The operator goal is not to maximize seed count. The goal is to preserve a stabl
 - representative feature-family coverage
 
 Current floor:
-- `protocol-request`: 11 committed seeds
+- `protocol-request`: 12 committed seeds
 - `protocol-workflow`: 10 committed seeds
 - `engine-command-sequence`: 7 committed seeds
 - `xlsx-roundtrip`: 8 committed seeds
-- total committed seed floor: 36 inputs
+- total committed seed floor: 37 inputs
 
 ---
 
@@ -264,6 +267,8 @@ Nested-build verification model:
 - `./gradlew --project-dir jazzer jazzerRegression` replays the committed seed floor through four
   isolated per-harness regression tasks
 - `./gradlew --project-dir jazzer check` runs `test` plus `jazzerRegression`
+- root `./check.sh` runs root-project verification first, then nested Jazzer `check`, then
+  release-packaging smoke verification
 - active fuzz tasks remain explicit opt-in local commands and are never dependencies of nested-build
   `check`
 
