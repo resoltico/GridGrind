@@ -192,6 +192,11 @@ public final class WorkbookInvariantChecks {
             (WorkbookReadResult.SheetLayoutResult) readResult;
         require(expected.sheetName().equals(result.layout().sheetName()), "layout sheet mismatch");
       }
+      case WorkbookReadOperation.GetDataValidations expected -> {
+        WorkbookReadResult.DataValidationsResult result =
+            (WorkbookReadResult.DataValidationsResult) readResult;
+        require(expected.sheetName().equals(result.sheetName()), "data validations sheet mismatch");
+      }
       case WorkbookReadOperation.GetFormulaSurface _ -> {
         WorkbookReadResult.FormulaSurfaceResult result =
             (WorkbookReadResult.FormulaSurfaceResult) readResult;
@@ -212,6 +217,9 @@ public final class WorkbookInvariantChecks {
       }
       case WorkbookReadOperation.AnalyzeFormulaHealth _ ->
           requireFormulaHealthShape(((WorkbookReadResult.FormulaHealthResult) readResult).analysis());
+      case WorkbookReadOperation.AnalyzeDataValidationHealth _ ->
+          requireDataValidationHealthShape(
+              ((WorkbookReadResult.DataValidationHealthResult) readResult).analysis());
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ ->
           requireHyperlinkHealthShape(
               ((WorkbookReadResult.HyperlinkHealthResult) readResult).analysis());
@@ -235,10 +243,12 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.HyperlinksResult _ -> "GET_HYPERLINKS";
       case WorkbookReadResult.CommentsResult _ -> "GET_COMMENTS";
       case WorkbookReadResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
+      case WorkbookReadResult.DataValidationsResult _ -> "GET_DATA_VALIDATIONS";
       case WorkbookReadResult.FormulaSurfaceResult _ -> "GET_FORMULA_SURFACE";
       case WorkbookReadResult.SheetSchemaResult _ -> "GET_SHEET_SCHEMA";
       case WorkbookReadResult.NamedRangeSurfaceResult _ -> "GET_NAMED_RANGE_SURFACE";
       case WorkbookReadResult.FormulaHealthResult _ -> "ANALYZE_FORMULA_HEALTH";
+      case WorkbookReadResult.DataValidationHealthResult _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
       case WorkbookReadResult.HyperlinkHealthResult _ -> "ANALYZE_HYPERLINK_HEALTH";
       case WorkbookReadResult.NamedRangeHealthResult _ -> "ANALYZE_NAMED_RANGE_HEALTH";
       case WorkbookReadResult.WorkbookFindingsResult _ -> "ANALYZE_WORKBOOK_FINDINGS";
@@ -277,12 +287,19 @@ public final class WorkbookInvariantChecks {
         result.comments().forEach(WorkbookInvariantChecks::requireCommentEntryShape);
       }
       case WorkbookReadResult.SheetLayoutResult result -> requireSheetLayoutShape(result.layout());
+      case WorkbookReadResult.DataValidationsResult result -> {
+        require(result.sheetName() != null, "data validations sheetName must not be null");
+        require(!result.sheetName().isBlank(), "data validations sheetName must not be blank");
+        result.validations().forEach(WorkbookInvariantChecks::requireDataValidationEntryShape);
+      }
       case WorkbookReadResult.FormulaSurfaceResult result -> requireFormulaSurfaceShape(result.analysis());
       case WorkbookReadResult.SheetSchemaResult result -> requireSheetSchemaShape(result.analysis());
       case WorkbookReadResult.NamedRangeSurfaceResult result ->
           requireNamedRangeSurfaceShape(result.analysis());
       case WorkbookReadResult.FormulaHealthResult result ->
           requireFormulaHealthShape(result.analysis());
+      case WorkbookReadResult.DataValidationHealthResult result ->
+          requireDataValidationHealthShape(result.analysis());
       case WorkbookReadResult.HyperlinkHealthResult result ->
           requireHyperlinkHealthShape(result.analysis());
       case WorkbookReadResult.NamedRangeHealthResult result ->
@@ -382,6 +399,64 @@ public final class WorkbookInvariantChecks {
             });
   }
 
+  private static void requireDataValidationEntryShape(
+      dev.erst.gridgrind.protocol.DataValidationEntryReport validation) {
+    require(validation.ranges() != null, "data validation ranges must not be null");
+    require(!validation.ranges().isEmpty(), "data validation ranges must not be empty");
+    validation.ranges().forEach(range -> requireNonBlank(range, "data validation range"));
+
+    switch (validation) {
+      case dev.erst.gridgrind.protocol.DataValidationEntryReport.Supported supported ->
+          requireSupportedDataValidationShape(supported.validation());
+      case dev.erst.gridgrind.protocol.DataValidationEntryReport.Unsupported unsupported -> {
+        requireNonBlank(unsupported.kind(), "data validation kind");
+        requireNonBlank(unsupported.detail(), "data validation detail");
+      }
+    }
+  }
+
+  private static void requireSupportedDataValidationShape(
+      dev.erst.gridgrind.protocol.DataValidationEntryReport.DataValidationDefinitionReport
+          validation) {
+    require(validation != null, "data validation definition must not be null");
+    require(validation.rule() != null, "data validation rule must not be null");
+    switch (validation.rule()) {
+      case dev.erst.gridgrind.protocol.DataValidationRuleInput.ExplicitList explicitList -> {
+        require(explicitList.values() != null, "explicit list values must not be null");
+        require(!explicitList.values().isEmpty(), "explicit list values must not be empty");
+        explicitList.values().forEach(value -> requireNonBlank(value, "explicit list value"));
+      }
+      case dev.erst.gridgrind.protocol.DataValidationRuleInput.FormulaList formulaList ->
+          requireNonBlank(formulaList.formula(), "formula list formula");
+      case dev.erst.gridgrind.protocol.DataValidationRuleInput.WholeNumber wholeNumber ->
+          requireComparisonRuleShape(wholeNumber.operator(), wholeNumber.formula1());
+      case dev.erst.gridgrind.protocol.DataValidationRuleInput.DecimalNumber decimalNumber ->
+          requireComparisonRuleShape(decimalNumber.operator(), decimalNumber.formula1());
+      case dev.erst.gridgrind.protocol.DataValidationRuleInput.DateRule dateRule ->
+          requireComparisonRuleShape(dateRule.operator(), dateRule.formula1());
+      case dev.erst.gridgrind.protocol.DataValidationRuleInput.TimeRule timeRule ->
+          requireComparisonRuleShape(timeRule.operator(), timeRule.formula1());
+      case dev.erst.gridgrind.protocol.DataValidationRuleInput.TextLength textLength ->
+          requireComparisonRuleShape(textLength.operator(), textLength.formula1());
+      case dev.erst.gridgrind.protocol.DataValidationRuleInput.CustomFormula customFormula ->
+          requireNonBlank(customFormula.formula(), "custom validation formula");
+    }
+    if (validation.prompt() != null) {
+      requireNonBlank(validation.prompt().title(), "data validation prompt title");
+      requireNonBlank(validation.prompt().text(), "data validation prompt text");
+    }
+    if (validation.errorAlert() != null) {
+      require(validation.errorAlert().style() != null, "data validation error style must not be null");
+      requireNonBlank(validation.errorAlert().title(), "data validation error title");
+      requireNonBlank(validation.errorAlert().text(), "data validation error text");
+    }
+  }
+
+  private static void requireComparisonRuleShape(Object operator, String formula1) {
+    require(operator != null, "comparison operator must not be null");
+    requireNonBlank(formula1, "comparison formula1");
+  }
+
   private static void requireFormulaSurfaceShape(GridGrindResponse.FormulaSurfaceReport analysis) {
     require(analysis.totalFormulaCellCount() >= 0, "totalFormulaCellCount must not be negative");
     analysis
@@ -468,6 +543,14 @@ public final class WorkbookInvariantChecks {
     require(
         analysis.checkedFormulaCellCount() >= 0,
         "checkedFormulaCellCount must not be negative");
+    requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
+  }
+
+  private static void requireDataValidationHealthShape(
+      dev.erst.gridgrind.protocol.DataValidationHealthReport analysis) {
+    require(
+        analysis.checkedValidationCount() >= 0,
+        "checkedValidationCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 

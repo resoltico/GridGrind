@@ -8,6 +8,7 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSelection;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSelector;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
+import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSheetSelection;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
@@ -214,6 +215,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           new WorkbookCommand.ClearComment(op.sheetName(), op.address());
       case WorkbookOperation.ApplyStyle op ->
           new WorkbookCommand.ApplyStyle(op.sheetName(), op.range(), op.style().toExcelCellStyle());
+      case WorkbookOperation.SetDataValidation op ->
+          new WorkbookCommand.SetDataValidation(
+              op.sheetName(), op.range(), op.validation().toExcelDataValidationDefinition());
+      case WorkbookOperation.ClearDataValidations op ->
+          new WorkbookCommand.ClearDataValidations(
+              op.sheetName(), toExcelRangeSelection(op.selection()));
       case WorkbookOperation.SetNamedRange op ->
           new WorkbookCommand.SetNamedRange(
               new dev.erst.gridgrind.excel.ExcelNamedRangeDefinition(
@@ -258,6 +265,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               op.requestId(), op.sheetName(), toExcelCellSelection(op.selection()));
       case WorkbookReadOperation.GetSheetLayout op ->
           new WorkbookReadCommand.GetSheetLayout(op.requestId(), op.sheetName());
+      case WorkbookReadOperation.GetDataValidations op ->
+          new WorkbookReadCommand.GetDataValidations(
+              op.requestId(), op.sheetName(), toExcelRangeSelection(op.selection()));
       case WorkbookReadOperation.GetFormulaSurface op ->
           new WorkbookReadCommand.GetFormulaSurface(
               op.requestId(), toExcelSheetSelection(op.selection()));
@@ -269,6 +279,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               op.requestId(), toExcelNamedRangeSelection(op.selection()));
       case WorkbookReadOperation.AnalyzeFormulaHealth op ->
           new WorkbookReadCommand.AnalyzeFormulaHealth(
+              op.requestId(), toExcelSheetSelection(op.selection()));
+      case WorkbookReadOperation.AnalyzeDataValidationHealth op ->
+          new WorkbookReadCommand.AnalyzeDataValidationHealth(
               op.requestId(), toExcelSheetSelection(op.selection()));
       case WorkbookReadOperation.AnalyzeHyperlinkHealth op ->
           new WorkbookReadCommand.AnalyzeHyperlinkHealth(
@@ -368,6 +381,13 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayoutResult sheetLayout ->
           new WorkbookReadResult.SheetLayoutResult(
               sheetLayout.requestId(), toSheetLayoutReport(sheetLayout.layout()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.DataValidationsResult dataValidations ->
+          new WorkbookReadResult.DataValidationsResult(
+              dataValidations.requestId(),
+              dataValidations.sheetName(),
+              dataValidations.validations().stream()
+                  .map(DefaultGridGrindRequestExecutor::toDataValidationEntryReport)
+                  .toList());
       case dev.erst.gridgrind.excel.WorkbookReadResult.FormulaSurfaceResult formulaSurface ->
           new WorkbookReadResult.FormulaSurfaceResult(
               formulaSurface.requestId(), toFormulaSurfaceReport(formulaSurface.analysis()));
@@ -381,6 +401,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case dev.erst.gridgrind.excel.WorkbookReadResult.FormulaHealthResult formulaHealth ->
           new WorkbookReadResult.FormulaHealthResult(
               formulaHealth.requestId(), toFormulaHealthReport(formulaHealth.analysis()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.DataValidationHealthResult
+              dataValidationHealth ->
+          new WorkbookReadResult.DataValidationHealthResult(
+              dataValidationHealth.requestId(),
+              toDataValidationHealthReport(dataValidationHealth.analysis()));
       case dev.erst.gridgrind.excel.WorkbookReadResult.HyperlinkHealthResult hyperlinkHealth ->
           new WorkbookReadResult.HyperlinkHealthResult(
               hyperlinkHealth.requestId(), toHyperlinkHealthReport(hyperlinkHealth.analysis()));
@@ -530,6 +555,16 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
             .toList());
   }
 
+  private static DataValidationHealthReport toDataValidationHealthReport(
+      dev.erst.gridgrind.excel.WorkbookAnalysis.DataValidationHealth analysis) {
+    return new DataValidationHealthReport(
+        analysis.checkedValidationCount(),
+        toAnalysisSummaryReport(analysis.summary()),
+        analysis.findings().stream()
+            .map(DefaultGridGrindRequestExecutor::toAnalysisFindingReport)
+            .toList());
+  }
+
   private static GridGrindResponse.HyperlinkHealthReport toHyperlinkHealthReport(
       dev.erst.gridgrind.excel.WorkbookAnalysis.HyperlinkHealth analysis) {
     return new GridGrindResponse.HyperlinkHealthReport(
@@ -593,6 +628,20 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     };
   }
 
+  private static DataValidationEntryReport toDataValidationEntryReport(
+      dev.erst.gridgrind.excel.ExcelDataValidationSnapshot snapshot) {
+    return switch (snapshot) {
+      case dev.erst.gridgrind.excel.ExcelDataValidationSnapshot.Supported supported ->
+          new DataValidationEntryReport.Supported(
+              supported.ranges(),
+              DataValidationEntryReport.DataValidationDefinitionReport.fromExcel(
+                  supported.validation()));
+      case dev.erst.gridgrind.excel.ExcelDataValidationSnapshot.Unsupported unsupported ->
+          new DataValidationEntryReport.Unsupported(
+              unsupported.ranges(), unsupported.kind(), unsupported.detail());
+    };
+  }
+
   private static ExcelNamedRangeSelection toExcelNamedRangeSelection(
       NamedRangeSelection selection) {
     return switch (selection) {
@@ -620,6 +669,13 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case SheetSelection.All _ -> new ExcelSheetSelection.All();
       case SheetSelection.Selected selected ->
           new ExcelSheetSelection.Selected(selected.sheetNames());
+    };
+  }
+
+  private static ExcelRangeSelection toExcelRangeSelection(RangeSelection selection) {
+    return switch (selection) {
+      case RangeSelection.All _ -> new ExcelRangeSelection.All();
+      case RangeSelection.Selected selected -> new ExcelRangeSelection.Selected(selected.ranges());
     };
   }
 
@@ -928,10 +984,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
+      case WorkbookReadOperation.GetDataValidations _ -> "GET_DATA_VALIDATIONS";
       case WorkbookReadOperation.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
       case WorkbookReadOperation.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
       case WorkbookReadOperation.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
       case WorkbookReadOperation.AnalyzeFormulaHealth _ -> "ANALYZE_FORMULA_HEALTH";
+      case WorkbookReadOperation.AnalyzeDataValidationHealth _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> "ANALYZE_HYPERLINK_HEALTH";
       case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> "ANALYZE_NAMED_RANGE_HEALTH";
       case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> "ANALYZE_WORKBOOK_FINDINGS";
@@ -948,9 +1006,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks op -> op.sheetName();
       case WorkbookReadOperation.GetComments op -> op.sheetName();
       case WorkbookReadOperation.GetSheetLayout op -> op.sheetName();
+      case WorkbookReadOperation.GetDataValidations op -> op.sheetName();
       case WorkbookReadOperation.GetSheetSchema op -> op.sheetName();
       case WorkbookReadOperation.GetFormulaSurface op -> singleSheetName(op.selection());
       case WorkbookReadOperation.AnalyzeFormulaHealth op -> singleSheetName(op.selection());
+      case WorkbookReadOperation.AnalyzeDataValidationHealth op -> singleSheetName(op.selection());
       case WorkbookReadOperation.AnalyzeHyperlinkHealth op -> singleSheetName(op.selection());
       case WorkbookReadOperation.GetWorkbookSummary _ -> null;
       case WorkbookReadOperation.GetNamedRanges _ -> null;
@@ -977,9 +1037,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> null;
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
+      case WorkbookReadOperation.GetDataValidations _ -> null;
       case WorkbookReadOperation.GetFormulaSurface _ -> null;
       case WorkbookReadOperation.GetNamedRangeSurface _ -> null;
       case WorkbookReadOperation.AnalyzeFormulaHealth _ -> null;
+      case WorkbookReadOperation.AnalyzeDataValidationHealth _ -> null;
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> null;
       case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> null;
       case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> null;
@@ -1002,10 +1064,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> null;
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
+      case WorkbookReadOperation.GetDataValidations _ -> null;
       case WorkbookReadOperation.GetFormulaSurface _ -> null;
       case WorkbookReadOperation.GetSheetSchema _ -> null;
       case WorkbookReadOperation.GetNamedRangeSurface op -> singleNamedRangeName(op.selection());
       case WorkbookReadOperation.AnalyzeFormulaHealth _ -> null;
+      case WorkbookReadOperation.AnalyzeDataValidationHealth _ -> null;
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> null;
       case WorkbookReadOperation.AnalyzeNamedRangeHealth op -> singleNamedRangeName(op.selection());
       case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> null;
@@ -1070,6 +1134,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.SetComment _ -> null;
       case WorkbookOperation.ClearComment _ -> null;
       case WorkbookOperation.ApplyStyle _ -> null;
+      case WorkbookOperation.SetDataValidation _ -> null;
+      case WorkbookOperation.ClearDataValidations _ -> null;
       case WorkbookOperation.SetNamedRange _ -> null;
       case WorkbookOperation.DeleteNamedRange _ -> null;
       case WorkbookOperation.AppendRow _ -> null;
@@ -1100,6 +1166,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.SetComment op -> op.sheetName();
           case WorkbookOperation.ClearComment op -> op.sheetName();
           case WorkbookOperation.ApplyStyle op -> op.sheetName();
+          case WorkbookOperation.SetDataValidation op -> op.sheetName();
+          case WorkbookOperation.ClearDataValidations op -> op.sheetName();
           case WorkbookOperation.SetNamedRange op -> op.target().sheetName();
           case WorkbookOperation.DeleteNamedRange op ->
               switch (op.scope()) {
@@ -1135,6 +1203,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.SetRange _ -> null;
           case WorkbookOperation.ClearRange _ -> null;
           case WorkbookOperation.ApplyStyle _ -> null;
+          case WorkbookOperation.SetDataValidation _ -> null;
+          case WorkbookOperation.ClearDataValidations _ -> null;
           case WorkbookOperation.SetNamedRange _ -> null;
           case WorkbookOperation.DeleteNamedRange _ -> null;
           case WorkbookOperation.AppendRow _ -> null;
@@ -1152,6 +1222,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.SetRange op -> op.range();
           case WorkbookOperation.ClearRange op -> op.range();
           case WorkbookOperation.ApplyStyle op -> op.range();
+          case WorkbookOperation.SetDataValidation op -> op.range();
           case WorkbookOperation.MergeCells op -> op.range();
           case WorkbookOperation.UnmergeCells op -> op.range();
           case WorkbookOperation.SetNamedRange op -> op.target().range();
@@ -1168,6 +1239,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.SetComment _ -> null;
           case WorkbookOperation.ClearComment _ -> null;
           case WorkbookOperation.AppendRow _ -> null;
+          case WorkbookOperation.ClearDataValidations _ -> null;
           case WorkbookOperation.DeleteNamedRange _ -> null;
           case WorkbookOperation.AutoSizeColumns _ -> null;
           case WorkbookOperation.EvaluateFormulas _ -> null;
@@ -1199,6 +1271,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.SetComment _ -> null;
           case WorkbookOperation.ClearComment _ -> null;
           case WorkbookOperation.ApplyStyle _ -> null;
+          case WorkbookOperation.SetDataValidation _ -> null;
+          case WorkbookOperation.ClearDataValidations _ -> null;
           case WorkbookOperation.AppendRow _ -> null;
           case WorkbookOperation.AutoSizeColumns _ -> null;
           case WorkbookOperation.EvaluateFormulas _ -> null;

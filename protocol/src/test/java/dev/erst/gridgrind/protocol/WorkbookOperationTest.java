@@ -2,6 +2,8 @@ package dev.erst.gridgrind.protocol;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
@@ -12,29 +14,7 @@ import org.junit.jupiter.api.Test;
 /** Tests for WorkbookOperation record construction and operationType behavior. */
 class WorkbookOperationTest {
   @Test
-  void buildsSupportedOperationsAndCopiesCollections() {
-    List<CellInput> rowValues = new ArrayList<>(List.of(new CellInput.Text("Item")));
-    List<List<CellInput>> rows =
-        new ArrayList<>(
-            List.of(
-                new ArrayList<>(List.of(new CellInput.Text("Item"), new CellInput.Numeric(12.0))),
-                new ArrayList<>(List.of(new CellInput.Text("Tax"), new CellInput.Numeric(3.0)))));
-    CellStyleInput style =
-        new CellStyleInput(
-            "#,##0.00",
-            true,
-            null,
-            true,
-            ExcelHorizontalAlignment.RIGHT,
-            ExcelVerticalAlignment.CENTER,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null);
-
+  void buildsSheetAndLayoutOperations() {
     WorkbookOperation.EnsureSheet ensureSheet = new WorkbookOperation.EnsureSheet("Budget");
     WorkbookOperation.RenameSheet renameSheet =
         new WorkbookOperation.RenameSheet("Budget", "Summary");
@@ -49,6 +29,22 @@ class WorkbookOperationTest {
         new WorkbookOperation.SetRowHeight("Budget", 0, 3, 28.5);
     WorkbookOperation.FreezePanes freezePanes =
         new WorkbookOperation.FreezePanes("Budget", 1, 2, 1, 2);
+
+    assertEquals("Budget", ensureSheet.sheetName());
+    assertEquals("Summary", renameSheet.newSheetName());
+    assertEquals("Archive", deleteSheet.sheetName());
+    assertEquals(1, moveSheet.targetIndex());
+    assertEquals("A1:B2", mergeCells.range());
+    assertEquals("A1:B2", unmergeCells.range());
+    assertEquals(16.0, setColumnWidth.widthCharacters());
+    assertEquals(28.5, setRowHeight.heightPoints());
+    assertEquals(2, freezePanes.topRow());
+  }
+
+  @Test
+  void buildsCellAndMetadataOperationsAndCopiesCollections() {
+    List<List<CellInput>> rows = protocolRows();
+    CellStyleInput style = protocolStyle();
     WorkbookOperation.SetCell setCell =
         new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("Item"));
     WorkbookOperation.SetRange setRange = new WorkbookOperation.SetRange("Budget", "A1:B2", rows);
@@ -65,6 +61,30 @@ class WorkbookOperationTest {
         new WorkbookOperation.ClearComment("Budget", "A1");
     WorkbookOperation.ApplyStyle applyStyle =
         new WorkbookOperation.ApplyStyle("Budget", "B1:B2", style);
+
+    rows.clear();
+
+    assertEquals("A1", setCell.address());
+    assertEquals("A1:B2", setRange.range());
+    assertEquals(2, setRange.rows().size());
+    assertEquals("C1:C4", clearRange.range());
+    assertEquals(
+        new ExcelHyperlink.Url("https://example.com/report"),
+        setHyperlink.target().toExcelHyperlink());
+    assertEquals("A1", clearHyperlink.address());
+    assertFalse(setComment.comment().visible());
+    assertEquals("A1", clearComment.address());
+    assertEquals(style, applyStyle.style());
+  }
+
+  @Test
+  void buildsValidationNamedRangeAndTerminalOperationsAndCopiesCollections() {
+    List<CellInput> rowValues = protocolRowValues();
+    WorkbookOperation.SetDataValidation setDataValidation =
+        new WorkbookOperation.SetDataValidation("Budget", "B2:B5", protocolValidation());
+    WorkbookOperation.ClearDataValidations clearDataValidations =
+        new WorkbookOperation.ClearDataValidations(
+            "Budget", new RangeSelection.Selected(List.of("C2:D4")));
     WorkbookOperation.SetNamedRange setNamedRange =
         new WorkbookOperation.SetNamedRange(
             "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"));
@@ -78,32 +98,18 @@ class WorkbookOperationTest {
         new WorkbookOperation.ForceFormulaRecalculationOnOpen();
 
     rowValues.clear();
-    rows.clear();
 
-    assertEquals("Budget", ensureSheet.sheetName());
-    assertEquals("Summary", renameSheet.newSheetName());
-    assertEquals("Archive", deleteSheet.sheetName());
-    assertEquals(1, moveSheet.targetIndex());
-    assertEquals("A1:B2", mergeCells.range());
-    assertEquals("A1:B2", unmergeCells.range());
-    assertEquals(16.0, setColumnWidth.widthCharacters());
-    assertEquals(28.5, setRowHeight.heightPoints());
-    assertEquals(2, freezePanes.topRow());
-    assertEquals("A1", setCell.address());
-    assertEquals("A1:B2", setRange.range());
-    assertEquals(2, setRange.rows().size());
-    assertEquals("C1:C4", clearRange.range());
+    assertEquals("B2:B5", setDataValidation.range());
+    assertInstanceOf(
+        DataValidationRuleInput.TextLength.class, setDataValidation.validation().rule());
     assertEquals(
-        new ExcelHyperlink.Url("https://example.com/report"),
-        setHyperlink.target().toExcelHyperlink());
-    assertEquals("A1", clearHyperlink.address());
-    assertFalse(setComment.comment().visible());
-    assertEquals("A1", clearComment.address());
-    assertEquals(style, applyStyle.style());
+        List.of("C2:D4"), ((RangeSelection.Selected) clearDataValidations.selection()).ranges());
     assertEquals("BudgetTotal", setNamedRange.name());
     assertEquals("Budget", ((NamedRangeScope.Sheet) deleteNamedRange.scope()).sheetName());
     assertEquals(1, appendRow.values().size());
     assertEquals("Budget", autoSizeColumns.sheetName());
+    assertEquals("SET_DATA_VALIDATION", setDataValidation.operationType());
+    assertEquals("CLEAR_DATA_VALIDATIONS", clearDataValidations.operationType());
     assertEquals("EVALUATE_FORMULAS", evaluateFormulas.operationType());
     assertEquals("FORCE_FORMULA_RECALCULATION_ON_OPEN", recalcOnOpen.operationType());
   }
@@ -165,6 +171,12 @@ class WorkbookOperationTest {
         NullPointerException.class, () -> new WorkbookOperation.SetHyperlink("Budget", "A1", null));
     assertThrows(
         NullPointerException.class, () -> new WorkbookOperation.SetComment("Budget", "A1", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.SetDataValidation("Budget", "A1", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.ClearDataValidations("Budget", null));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -248,6 +260,18 @@ class WorkbookOperationTest {
         () ->
             new WorkbookOperation.SetComment(
                 "Budget", "A1", new CommentInput(" ", "GridGrind", null)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.SetDataValidation(
+                "Budget",
+                " ",
+                new DataValidationInput(
+                    new DataValidationRuleInput.CustomFormula("LEN(A1)>0"),
+                    false,
+                    false,
+                    null,
+                    null)));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -424,6 +448,14 @@ class WorkbookOperationTest {
     assertEquals(
         "APPLY_STYLE", new WorkbookOperation.ApplyStyle("Budget", "A1", style).operationType());
     assertEquals(
+        "SET_DATA_VALIDATION",
+        new WorkbookOperation.SetDataValidation("Budget", "A1", protocolValidation())
+            .operationType());
+    assertEquals(
+        "CLEAR_DATA_VALIDATIONS",
+        new WorkbookOperation.ClearDataValidations("Budget", new RangeSelection.All())
+            .operationType());
+    assertEquals(
         "SET_NAMED_RANGE",
         new WorkbookOperation.SetNamedRange(
                 "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"))
@@ -441,5 +473,43 @@ class WorkbookOperationTest {
     assertEquals(
         "FORCE_FORMULA_RECALCULATION_ON_OPEN",
         new WorkbookOperation.ForceFormulaRecalculationOnOpen().operationType());
+  }
+
+  private static List<CellInput> protocolRowValues() {
+    return new ArrayList<>(List.of(new CellInput.Text("Item")));
+  }
+
+  private static List<List<CellInput>> protocolRows() {
+    return new ArrayList<>(
+        List.of(
+            new ArrayList<>(List.of(new CellInput.Text("Item"), new CellInput.Numeric(12.0))),
+            new ArrayList<>(List.of(new CellInput.Text("Tax"), new CellInput.Numeric(3.0)))));
+  }
+
+  private static CellStyleInput protocolStyle() {
+    return new CellStyleInput(
+        "#,##0.00",
+        true,
+        null,
+        true,
+        ExcelHorizontalAlignment.RIGHT,
+        ExcelVerticalAlignment.CENTER,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  private static DataValidationInput protocolValidation() {
+    return new DataValidationInput(
+        new DataValidationRuleInput.TextLength(ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+        true,
+        false,
+        new DataValidationPromptInput("Reason", "Keep the reason concise.", true),
+        new DataValidationErrorAlertInput(
+            ExcelDataValidationErrorStyle.STOP, "Too long", "Use 20 characters or fewer.", true));
   }
 }

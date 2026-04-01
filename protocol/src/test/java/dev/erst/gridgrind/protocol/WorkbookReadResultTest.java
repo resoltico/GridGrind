@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -77,6 +78,70 @@ class WorkbookReadResultTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookReadResult.WorkbookFindingsResult(" ", workbookFindings));
+  }
+
+  @Test
+  void dataValidationResultsCopyEntriesAndRejectInvalidState() {
+    WorkbookReadResult.DataValidationsResult result =
+        new WorkbookReadResult.DataValidationsResult(
+            "validations",
+            "Budget",
+            List.of(
+                new DataValidationEntryReport.Supported(
+                    List.of("A2:A5"),
+                    new DataValidationEntryReport.DataValidationDefinitionReport(
+                        new DataValidationRuleInput.WholeNumber(
+                            ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                        true,
+                        false,
+                        new DataValidationPromptInput("Priority", "Use 1 or greater.", true),
+                        null))));
+
+    assertEquals("A2:A5", result.validations().getFirst().ranges().getFirst());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.DataValidationsResult(" ", "Budget", List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.DataValidationsResult("validations", "Budget", null));
+  }
+
+  @Test
+  void dataValidationHealthResultsRejectBlankRequestIdAndNullAnalysis() {
+    GridGrindResponse.AnalysisSummaryReport summary =
+        new GridGrindResponse.AnalysisSummaryReport(2, 1, 1, 0);
+    GridGrindResponse.AnalysisFindingReport finding =
+        new GridGrindResponse.AnalysisFindingReport(
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                .DATA_VALIDATION_OVERLAPPING_RULES,
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.WARNING,
+            "Overlapping data validations",
+            "Rules overlap on the same cells.",
+            new GridGrindResponse.AnalysisLocationReport.Range("Budget", "A3:A4"),
+            List.of("A1:A5", "A3:A4"));
+    DataValidationHealthReport health =
+        new DataValidationHealthReport(2, summary, List.of(finding));
+
+    assertEquals(
+        2,
+        new WorkbookReadResult.DataValidationHealthResult("validation-health", health)
+            .analysis()
+            .checkedValidationCount());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.DataValidationHealthResult(" ", health));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.DataValidationHealthResult("validation-health", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DataValidationHealthReport(-1, summary, List.of(finding)));
+    assertThrows(
+        NullPointerException.class,
+        () -> new DataValidationHealthReport(1, null, List.of(finding)));
+    assertThrows(
+        NullPointerException.class,
+        () -> new DataValidationHealthReport(1, summary, List.of(finding, null)));
   }
 
   private static GridGrindResponse.CellStyleReport defaultStyle() {

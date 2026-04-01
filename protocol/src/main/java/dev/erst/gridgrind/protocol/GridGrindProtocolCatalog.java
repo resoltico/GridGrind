@@ -49,10 +49,12 @@ public final class GridGrindProtocolCatalog {
           Map.entry(CellInput.class, "cellInputTypes"),
           Map.entry(HyperlinkTarget.class, "hyperlinkTargetTypes"),
           Map.entry(CellSelection.class, "cellSelectionTypes"),
+          Map.entry(RangeSelection.class, "rangeSelectionTypes"),
           Map.entry(SheetSelection.class, "sheetSelectionTypes"),
           Map.entry(NamedRangeSelection.class, "namedRangeSelectionTypes"),
           Map.entry(NamedRangeScope.class, "namedRangeScopeTypes"),
           Map.entry(NamedRangeSelector.class, "namedRangeSelectorTypes"),
+          Map.entry(DataValidationRuleInput.class, "dataValidationRuleTypes"),
           Map.entry(FontHeightInput.class, "fontHeightTypes"));
   private static final Map<Class<?>, String> PLAIN_FIELD_SHAPE_GROUPS =
       Map.ofEntries(
@@ -60,7 +62,10 @@ public final class GridGrindProtocolCatalog {
           Map.entry(NamedRangeTarget.class, "namedRangeTargetType"),
           Map.entry(CellStyleInput.class, "cellStyleInputType"),
           Map.entry(CellBorderInput.class, "cellBorderInputType"),
-          Map.entry(CellBorderSideInput.class, "cellBorderSideInputType"));
+          Map.entry(CellBorderSideInput.class, "cellBorderSideInputType"),
+          Map.entry(DataValidationInput.class, "dataValidationInputType"),
+          Map.entry(DataValidationPromptInput.class, "dataValidationPromptInputType"),
+          Map.entry(DataValidationErrorAlertInput.class, "dataValidationErrorAlertInputType"));
   private static final List<TypeDescriptor> SOURCE_TYPES =
       List.of(
           descriptor(
@@ -184,6 +189,18 @@ public final class GridGrindProtocolCatalog {
                   + " topBorderStyle, rightBorderStyle, bottomBorderStyle, leftBorderStyle;"
                   + " the nested border object is write-only."),
           descriptor(
+              WorkbookOperation.SetDataValidation.class,
+              "SET_DATA_VALIDATION",
+              "Create or replace one data-validation rule over the supplied sheet range."
+                  + " Overlapping existing rules are normalized so the written rule becomes"
+                  + " authoritative on its target range."),
+          descriptor(
+              WorkbookOperation.ClearDataValidations.class,
+              "CLEAR_DATA_VALIDATIONS",
+              "Remove data-validation structures from the selected ranges on one sheet."
+                  + " SELECTED removes only intersecting coverage; ALL clears every rule"
+                  + " on the sheet."),
+          descriptor(
               WorkbookOperation.SetNamedRange.class,
               "SET_NAMED_RANGE",
               "Create or replace one workbook- or sheet-scoped named range."),
@@ -276,6 +293,13 @@ public final class GridGrindProtocolCatalog {
               "GET_SHEET_LAYOUT",
               "Return freeze-pane, row-height, and column-width metadata."),
           descriptor(
+              WorkbookReadOperation.GetDataValidations.class,
+              "GET_DATA_VALIDATIONS",
+              "Return factual data-validation structures for the selected sheet ranges."
+                  + " Supported rules include explicit lists, formula lists, comparison rules,"
+                  + " and custom formulas; unsupported rules are surfaced explicitly with typed"
+                  + " detail."),
+          descriptor(
               WorkbookReadOperation.GetFormulaSurface.class,
               "GET_FORMULA_SURFACE",
               "Summarize formula usage patterns across the selected sheets."),
@@ -300,6 +324,11 @@ public final class GridGrindProtocolCatalog {
               WorkbookReadOperation.AnalyzeFormulaHealth.class,
               "ANALYZE_FORMULA_HEALTH",
               "Report formula findings such as errors and volatile usage."),
+          descriptor(
+              WorkbookReadOperation.AnalyzeDataValidationHealth.class,
+              "ANALYZE_DATA_VALIDATION_HEALTH",
+              "Report data-validation findings such as unsupported, overlapping, or"
+                  + " broken-formula rules."),
           descriptor(
               WorkbookReadOperation.AnalyzeHyperlinkHealth.class,
               "ANALYZE_HYPERLINK_HEALTH",
@@ -375,6 +404,16 @@ public final class GridGrindProtocolCatalog {
                       "SELECTED",
                       "Select only the supplied ordered cell addresses."))),
           nestedTypeGroup(
+              "rangeSelectionTypes",
+              RangeSelection.class,
+              List.of(
+                  descriptor(RangeSelection.All.class, "ALL", "Select every matching range."),
+                  descriptor(
+                      RangeSelection.Selected.class,
+                      "SELECTED",
+                      "Select only structures whose stored ranges intersect the supplied"
+                          + " ordered A1-style ranges."))),
+          nestedTypeGroup(
               "sheetSelectionTypes",
               SheetSelection.class,
               List.of(
@@ -433,7 +472,55 @@ public final class GridGrindProtocolCatalog {
                       "TWIPS",
                       "Specify font height in exact twips (20 twips = 1 point)."
                           + " Write format: {\"type\":\"TWIPS\",\"twips\":260}."
-                          + " Read-back returns the same plain object shape as POINTS."))));
+                          + " Read-back returns the same plain object shape as POINTS."))),
+          nestedTypeGroup(
+              "dataValidationRuleTypes",
+              DataValidationRuleInput.class,
+              List.of(
+                  descriptor(
+                      DataValidationRuleInput.ExplicitList.class,
+                      "EXPLICIT_LIST",
+                      "Allow only one of the supplied explicit values."),
+                  descriptor(
+                      DataValidationRuleInput.FormulaList.class,
+                      "FORMULA_LIST",
+                      "Allow values from a formula-driven list expression."
+                          + " Omit the leading = sign."),
+                  descriptor(
+                      DataValidationRuleInput.WholeNumber.class,
+                      "WHOLE_NUMBER",
+                      "Apply a whole-number comparison rule."
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN.",
+                      "formula2"),
+                  descriptor(
+                      DataValidationRuleInput.DecimalNumber.class,
+                      "DECIMAL_NUMBER",
+                      "Apply a decimal-number comparison rule."
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN.",
+                      "formula2"),
+                  descriptor(
+                      DataValidationRuleInput.DateRule.class,
+                      "DATE",
+                      "Apply a date comparison rule."
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN.",
+                      "formula2"),
+                  descriptor(
+                      DataValidationRuleInput.TimeRule.class,
+                      "TIME",
+                      "Apply a time comparison rule."
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN.",
+                      "formula2"),
+                  descriptor(
+                      DataValidationRuleInput.TextLength.class,
+                      "TEXT_LENGTH",
+                      "Apply a text-length comparison rule."
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN.",
+                      "formula2"),
+                  descriptor(
+                      DataValidationRuleInput.CustomFormula.class,
+                      "CUSTOM_FORMULA",
+                      "Allow values that satisfy a custom formula."
+                          + " Omit the leading = sign."))));
   private static final List<PlainTypeDescriptor> PLAIN_TYPE_DESCRIPTORS =
       List.of(
           plainTypeDescriptor(
@@ -480,7 +567,25 @@ public final class GridGrindProtocolCatalog {
               CellBorderSideInput.class,
               "CellBorderSideInput",
               "One border side defined by its border style.",
-              List.of()));
+              List.of()),
+          plainTypeDescriptor(
+              "dataValidationInputType",
+              DataValidationInput.class,
+              "DataValidationInput",
+              "Supported data-validation definition attached to one sheet range.",
+              List.of("allowBlank", "suppressDropDownArrow", "prompt", "errorAlert")),
+          plainTypeDescriptor(
+              "dataValidationPromptInputType",
+              DataValidationPromptInput.class,
+              "DataValidationPromptInput",
+              "Optional prompt-box configuration shown when a validated cell is selected.",
+              List.of("showPromptBox")),
+          plainTypeDescriptor(
+              "dataValidationErrorAlertInputType",
+              DataValidationErrorAlertInput.class,
+              "DataValidationErrorAlertInput",
+              "Optional error-box configuration shown when invalid data is entered.",
+              List.of("showErrorBox")));
   private static final Catalog CATALOG = buildCatalog();
 
   private GridGrindProtocolCatalog() {}

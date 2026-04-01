@@ -10,14 +10,18 @@ import java.util.Set;
 /** Derives conclusion-bearing workbook findings from reusable workbook and sheet facts. */
 final class WorkbookAnalyzer {
   private final ExcelWorkbookIntrospector workbookIntrospector;
+  private final ExcelDocumentAnalyzer documentAnalyzer;
 
   WorkbookAnalyzer() {
-    this(new ExcelWorkbookIntrospector());
+    this(new ExcelWorkbookIntrospector(), new ExcelDocumentAnalyzer());
   }
 
-  WorkbookAnalyzer(ExcelWorkbookIntrospector workbookIntrospector) {
+  WorkbookAnalyzer(
+      ExcelWorkbookIntrospector workbookIntrospector, ExcelDocumentAnalyzer documentAnalyzer) {
     this.workbookIntrospector =
         Objects.requireNonNull(workbookIntrospector, "workbookIntrospector must not be null");
+    this.documentAnalyzer =
+        Objects.requireNonNull(documentAnalyzer, "documentAnalyzer must not be null");
   }
 
   /** Executes one derived analysis command against the workbook. */
@@ -34,6 +38,10 @@ final class WorkbookAnalyzer {
           new WorkbookReadResult.FormulaHealthResult(
               analyzeFormulaHealth.requestId(),
               formulaHealth(workbook, analyzeFormulaHealth.selection()));
+      case WorkbookReadCommand.AnalyzeDataValidationHealth analyzeDataValidationHealth ->
+          new WorkbookReadResult.DataValidationHealthResult(
+              analyzeDataValidationHealth.requestId(),
+              dataValidationHealth(workbook, analyzeDataValidationHealth.selection()));
       case WorkbookReadCommand.AnalyzeHyperlinkHealth analyzeHyperlinkHealth ->
           new WorkbookReadResult.HyperlinkHealthResult(
               analyzeHyperlinkHealth.requestId(),
@@ -62,6 +70,13 @@ final class WorkbookAnalyzer {
     }
     return new WorkbookAnalysis.FormulaHealth(
         checkedFormulaCellCount, summary(findings), List.copyOf(findings));
+  }
+
+  WorkbookAnalysis.DataValidationHealth dataValidationHealth(
+      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+    return documentAnalyzer.dataValidationHealth(workbook, selection);
   }
 
   WorkbookAnalysis.HyperlinkHealth hyperlinkHealth(
@@ -107,6 +122,7 @@ final class WorkbookAnalyzer {
 
     List<WorkbookAnalysis.AnalysisFinding> combined = new ArrayList<>();
     combined.addAll(formulaHealth(workbook, new ExcelSheetSelection.All()).findings());
+    combined.addAll(dataValidationHealth(workbook, new ExcelSheetSelection.All()).findings());
     combined.addAll(
         hyperlinkHealth(workbook, workbookLocation, new ExcelSheetSelection.All()).findings());
     combined.addAll(namedRangeHealth(workbook, new ExcelNamedRangeSelection.All()).findings());

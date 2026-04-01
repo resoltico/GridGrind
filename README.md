@@ -41,7 +41,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.19.0
+docker pull ghcr.io/resoltico/gridgrind:0.20.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -163,6 +163,8 @@ autonomous callers deterministic failure semantics instead of "error after side 
 | `SET_COMMENT` | Attach a plain-text comment to a single cell |
 | `CLEAR_COMMENT` | Remove a comment from a cell; no-op when the cell does not exist |
 | `APPLY_STYLE` | Apply number formats, font styling, fills, borders, alignment, or wrap to a range |
+| `SET_DATA_VALIDATION` | Create or replace one data-validation rule over a sheet range |
+| `CLEAR_DATA_VALIDATIONS` | Remove data-validation coverage from selected ranges or an entire sheet |
 | `SET_NAMED_RANGE` | Create or replace one workbook- or sheet-scoped named range |
 | `DELETE_NAMED_RANGE` | Remove one existing workbook- or sheet-scoped named range |
 | `APPEND_ROW` | Append a row of typed values after the last value-bearing row |
@@ -195,6 +197,15 @@ and are returned as normalized plain path strings on read.
 author, and visible state. `SET_NAMED_RANGE` and `DELETE_NAMED_RANGE` work on workbook or sheet
 scope with explicit sheet-qualified cell or range targets. Analysis can now return cell
 `hyperlink()` and `comment()` metadata plus workbook-level `namedRanges`.
+
+GridGrind now also supports Excel data validation directly. `SET_DATA_VALIDATION` creates or
+replaces one rule over an A1-style range, normalizing any overlapping existing rules so the new
+rule is authoritative on its target cells. `CLEAR_DATA_VALIDATIONS` removes either the whole
+sheet's validation state or just the parts intersecting a selected set of ranges. Supported rule
+families include explicit lists, formula-driven lists, whole-number and decimal comparisons,
+date/time comparisons, text-length comparisons, and custom formulas. `GET_DATA_VALIDATIONS`
+returns either fully modeled definitions or typed `UNSUPPORTED` entries with `kind` and `detail`
+metadata when a workbook rule can be detected but not represented as a supported definition.
 
 `CLEAR_RANGE` removes value, style, hyperlink, and comment state from the addressed rectangle;
 cells that have never been written are silently skipped. `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are
@@ -229,12 +240,14 @@ Introspection reads:
 - `GET_HYPERLINKS`
 - `GET_COMMENTS`
 - `GET_SHEET_LAYOUT`
+- `GET_DATA_VALIDATIONS`
 - `GET_FORMULA_SURFACE`
 - `GET_SHEET_SCHEMA`
 - `GET_NAMED_RANGE_SURFACE`
 
 Analysis reads:
 - `ANALYZE_FORMULA_HEALTH`
+- `ANALYZE_DATA_VALIDATION_HEALTH`
 - `ANALYZE_HYPERLINK_HEALTH`
 - `ANALYZE_NAMED_RANGE_HEALTH`
 - `ANALYZE_WORKBOOK_FINDINGS`
@@ -244,9 +257,14 @@ agents can correlate repeated or similar reads deterministically.
 
 `GET_HYPERLINKS` returns hyperlinks in the same discriminated shape used by `SET_HYPERLINK`
 targets. `FILE` targets come back in the `path` field as normalized plain path strings.
+`GET_DATA_VALIDATIONS` returns supported validation entries plus typed unsupported entries for the
+selected ranges, preserving the normalized stored coverage ranges for each rule.
 `ANALYZE_HYPERLINK_HEALTH` resolves relative `FILE` targets against the workbook's persisted path
 when one exists; when the workbook has no filesystem location yet, relative `FILE` targets are
 reported as unresolved instead of being silently treated as healthy.
+`ANALYZE_DATA_VALIDATION_HEALTH` reports unsupported, broken-formula, and overlapping validation
+findings, and `ANALYZE_WORKBOOK_FINDINGS` now aggregates that family
+alongside formula, hyperlink, and named-range findings.
 
 `GET_WINDOW` and `GET_SHEET_SCHEMA` require `rowCount * columnCount` ≤ 250,000. `GET_WINDOW`
 additionally rejects windows that extend beyond the Excel 2007 sheet boundary

@@ -100,6 +100,9 @@ class WorkbookAnalysisTest {
         IllegalArgumentException.class,
         () -> new WorkbookAnalysis.NamedRangeHealth(-1, summary, List.of(finding)));
     assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookAnalysis.DataValidationHealth(-1, summary, List.of(finding)));
+    assertThrows(
         NullPointerException.class,
         () -> new WorkbookAnalysis.FormulaHealth(1, null, List.of(finding)));
     assertThrows(

@@ -45,6 +45,9 @@ class WorkbookCommandExecutorTest {
               new WorkbookCommand.SetComment(
                   "Budget", "B1", new ExcelComment("Review", "GridGrind", false)),
               new WorkbookCommand.ClearComment("Budget", "B1"),
+              new WorkbookCommand.SetDataValidation("Budget", "C1:C3", validationDefinition()),
+              new WorkbookCommand.ClearDataValidations(
+                  "Budget", new ExcelRangeSelection.Selected(List.of("C2"))),
               new WorkbookCommand.RenameSheet("Archive", "History"),
               new WorkbookCommand.MoveSheet("History", 0),
               new WorkbookCommand.DeleteSheet("Scratch"),
@@ -88,6 +91,10 @@ class WorkbookCommandExecutorTest {
     assertEquals(
         new XlsxRoundTrip.FreezePaneState.Frozen(1, 1, 1, 1),
         XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+    assertEquals(
+        List.of(
+            new ExcelDataValidationSnapshot.Supported(List.of("C1", "C3"), validationDefinition())),
+        XlsxRoundTrip.dataValidations(workbookPath, "Budget"));
     assertEquals(
         List.of(
             new ExcelNamedRangeSnapshot.RangeSnapshot(
@@ -145,6 +152,19 @@ class WorkbookCommandExecutorTest {
           () ->
               executor.apply(
                   workbook,
+                  new WorkbookCommand.SetDataValidation("Missing", "A1", validationDefinition())));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
+                  new WorkbookCommand.ClearDataValidations(
+                      "Missing", new ExcelRangeSelection.All())));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
                   new WorkbookCommand.AppendRow("Missing", List.of(ExcelCellValue.text("x")))));
     }
   }
@@ -164,5 +184,18 @@ class WorkbookCommandExecutorTest {
           NullPointerException.class,
           () -> executor.apply(workbook, Arrays.asList((WorkbookCommand) null)));
     }
+  }
+
+  private static ExcelDataValidationDefinition validationDefinition() {
+    return new ExcelDataValidationDefinition(
+        new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
+        true,
+        false,
+        new ExcelDataValidationPrompt("Status", "Pick one workflow state.", true),
+        new ExcelDataValidationErrorAlert(
+            ExcelDataValidationErrorStyle.STOP,
+            "Invalid status",
+            "Use one of the allowed values.",
+            true));
   }
 }

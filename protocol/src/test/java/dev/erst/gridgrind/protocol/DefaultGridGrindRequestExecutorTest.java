@@ -8,6 +8,8 @@ import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelComment;
+import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -23,6 +25,7 @@ import dev.erst.gridgrind.excel.InvalidRangeAddressException;
 import dev.erst.gridgrind.excel.NamedRangeNotFoundException;
 import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnsupportedFormulaException;
+import dev.erst.gridgrind.excel.WorkbookAnalysis;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.excel.WorkbookLocation;
@@ -40,6 +43,8 @@ import java.util.List;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationType;
 
 /** Integration and helper tests for DefaultGridGrindRequestExecutor. */
 class DefaultGridGrindRequestExecutorTest {
@@ -295,6 +300,120 @@ class DefaultGridGrindRequestExecutorTest {
         new ExcelComment("Review", "GridGrind", true),
         XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1").comment().orElseThrow());
     assertEquals(2, XlsxRoundTrip.namedRanges(workbookPath).size());
+  }
+
+  @Test
+  void returnsDataValidationReadResultsAndPersistsNormalizedRules() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-data-validation-ops-");
+
+    GridGrindResponse response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.SetDataValidation(
+                            "Budget",
+                            "A2:C5",
+                            new DataValidationInput(
+                                new DataValidationRuleInput.ExplicitList(List.of("Queued", "Done")),
+                                true,
+                                false,
+                                new DataValidationPromptInput(
+                                    "Status", "Pick one workflow state.", true),
+                                new DataValidationErrorAlertInput(
+                                    ExcelDataValidationErrorStyle.STOP,
+                                    "Invalid status",
+                                    "Use one of the allowed values.",
+                                    true))),
+                        new WorkbookOperation.ClearDataValidations(
+                            "Budget", new RangeSelection.Selected(List.of("B3"))),
+                        new WorkbookOperation.SetDataValidation(
+                            "Budget",
+                            "E2:E5",
+                            new DataValidationInput(
+                                new DataValidationRuleInput.FormulaList("#REF!"),
+                                false,
+                                false,
+                                null,
+                                null))),
+                    new WorkbookReadOperation.GetDataValidations(
+                        "validations", "Budget", new RangeSelection.All()),
+                    new WorkbookReadOperation.AnalyzeDataValidationHealth(
+                        "health", new SheetSelection.Selected(List.of("Budget")))));
+
+    GridGrindResponse.Success success = success(response);
+    WorkbookReadResult.DataValidationsResult validations =
+        read(success, "validations", WorkbookReadResult.DataValidationsResult.class);
+    WorkbookReadResult.DataValidationHealthResult health =
+        read(success, "health", WorkbookReadResult.DataValidationHealthResult.class);
+    List<ExcelDataValidationSnapshot> persisted =
+        XlsxRoundTrip.dataValidations(workbookPath, "Budget");
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(2, validations.validations().size());
+    DataValidationEntryReport.Supported explicitList =
+        assertInstanceOf(
+            DataValidationEntryReport.Supported.class, validations.validations().getFirst());
+    DataValidationEntryReport.Supported brokenFormula =
+        assertInstanceOf(
+            DataValidationEntryReport.Supported.class, validations.validations().get(1));
+    assertEquals(List.of("A2:C2", "A4:C5", "A3", "C3"), explicitList.ranges());
+    assertInstanceOf(DataValidationRuleInput.ExplicitList.class, explicitList.validation().rule());
+    assertEquals(List.of("E2:E5"), brokenFormula.ranges());
+    assertEquals(
+        "#REF!",
+        cast(DataValidationRuleInput.FormulaList.class, brokenFormula.validation().rule())
+            .formula());
+    assertEquals(2, health.analysis().checkedValidationCount());
+    assertEquals(1, health.analysis().summary().errorCount());
+    assertEquals(
+        WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_BROKEN_FORMULA,
+        health.analysis().findings().getFirst().code());
+    assertEquals(2, persisted.size());
+    assertEquals(List.of("A2:C2", "A4:C5", "A3", "C3"), persisted.getFirst().ranges());
+  }
+
+  @Test
+  void returnsUnsupportedDataValidationReadEntries() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-data-validation-unsupported-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      workbook.createSheet("Budget");
+      CTDataValidation validation =
+          workbook
+              .getSheet("Budget")
+              .getCTWorksheet()
+              .addNewDataValidations()
+              .addNewDataValidation();
+      validation.setType(STDataValidationType.NONE);
+      validation.setSqref(List.of("A1"));
+      workbook.getSheet("Budget").getCTWorksheet().getDataValidations().setCount(1L);
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    GridGrindResponse response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.ExistingFile(workbookPath.toString()),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(),
+                    new WorkbookReadOperation.GetDataValidations(
+                        "validations", "Budget", new RangeSelection.All())));
+
+    WorkbookReadResult.DataValidationsResult validations =
+        read(success(response), "validations", WorkbookReadResult.DataValidationsResult.class);
+    DataValidationEntryReport.Unsupported unsupported =
+        assertInstanceOf(
+            DataValidationEntryReport.Unsupported.class, validations.validations().getFirst());
+
+    assertEquals(List.of("A1"), unsupported.ranges());
+    assertEquals("ANY", unsupported.kind());
   }
 
   @Test
@@ -2080,10 +2199,12 @@ class DefaultGridGrindRequestExecutorTest {
             "GET_HYPERLINKS",
             "GET_COMMENTS",
             "GET_SHEET_LAYOUT",
+            "GET_DATA_VALIDATIONS",
             "GET_FORMULA_SURFACE",
             "GET_SHEET_SCHEMA",
             "GET_NAMED_RANGE_SURFACE",
             "ANALYZE_FORMULA_HEALTH",
+            "ANALYZE_DATA_VALIDATION_HEALTH",
             "ANALYZE_HYPERLINK_HEALTH",
             "ANALYZE_NAMED_RANGE_HEALTH",
             "ANALYZE_WORKBOOK_FINDINGS"),
@@ -2109,6 +2230,9 @@ class DefaultGridGrindRequestExecutorTest {
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetSheetLayout("layout", "Budget")),
             DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.GetDataValidations(
+                    "validations", "Budget", new RangeSelection.All())),
+            DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetFormulaSurface("formula", new SheetSelection.All())),
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetSheetSchema("schema", "Budget", "A1", 1, 1)),
@@ -2118,6 +2242,9 @@ class DefaultGridGrindRequestExecutorTest {
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.AnalyzeFormulaHealth(
                     "formula-health", new SheetSelection.All())),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.AnalyzeDataValidationHealth(
+                    "validation-health", new SheetSelection.All())),
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.AnalyzeHyperlinkHealth(
                     "hyperlink-health", new SheetSelection.All())),
@@ -2152,6 +2279,9 @@ class DefaultGridGrindRequestExecutorTest {
         new WorkbookReadOperation.GetComments(
             "comments", "Budget", new CellSelection.Selected(List.of("A1")));
     WorkbookReadOperation layout = new WorkbookReadOperation.GetSheetLayout("layout", "Budget");
+    WorkbookReadOperation validations =
+        new WorkbookReadOperation.GetDataValidations(
+            "validations", "Budget", new RangeSelection.Selected(List.of("A1:A3")));
     WorkbookReadOperation formula =
         new WorkbookReadOperation.GetFormulaSurface("formula", new SheetSelection.All());
     WorkbookReadOperation schema =
@@ -2161,6 +2291,9 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookReadOperation formulaHealth =
         new WorkbookReadOperation.AnalyzeFormulaHealth(
             "formula-health", new SheetSelection.Selected(List.of("Budget")));
+    WorkbookReadOperation validationHealth =
+        new WorkbookReadOperation.AnalyzeDataValidationHealth(
+            "validation-health", new SheetSelection.Selected(List.of("Budget")));
     WorkbookReadOperation hyperlinkHealth =
         new WorkbookReadOperation.AnalyzeHyperlinkHealth(
             "hyperlink-health", new SheetSelection.All());
@@ -2181,10 +2314,12 @@ class DefaultGridGrindRequestExecutorTest {
     assertReadContext(hyperlinks, "Budget", null, null, runtimeException);
     assertReadContext(comments, "Budget", null, null, runtimeException);
     assertReadContext(layout, "Budget", null, null, runtimeException);
+    assertReadContext(validations, "Budget", null, null, runtimeException);
     assertReadContext(formula, null, null, null, runtimeException);
     assertReadContext(schema, "Budget", "C3", null, runtimeException);
     assertReadContext(surface, null, null, null, runtimeException);
     assertReadContext(formulaHealth, "Budget", null, null, runtimeException);
+    assertReadContext(validationHealth, "Budget", null, null, runtimeException);
     assertReadContext(hyperlinkHealth, null, null, null, runtimeException);
     assertReadContext(namedRangeHealth, null, null, "BudgetTotal", runtimeException);
     assertReadContext(workbookFindings, null, null, null, runtimeException);
@@ -2274,6 +2409,19 @@ class DefaultGridGrindRequestExecutorTest {
             "A1:B2",
             new CellStyleInput(
                 null, true, null, null, null, null, null, null, null, null, null, null, null));
+    WorkbookOperation setDataValidation =
+        new WorkbookOperation.SetDataValidation(
+            "Budget",
+            "B2:B5",
+            new DataValidationInput(
+                new DataValidationRuleInput.TextLength(
+                    dev.erst.gridgrind.excel.ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+                true,
+                false,
+                new DataValidationPromptInput("Reason", "Use 20 characters or fewer.", true),
+                null));
+    WorkbookOperation clearDataValidations =
+        new WorkbookOperation.ClearDataValidations("Budget", new RangeSelection.All());
     WorkbookOperation setNamedRange =
         new WorkbookOperation.SetNamedRange(
             "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"));
@@ -2287,6 +2435,8 @@ class DefaultGridGrindRequestExecutorTest {
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(setComment, exception));
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(clearComment, exception));
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(applyStyle, exception));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setDataValidation, exception));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(clearDataValidations, exception));
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(setNamedRange, exception));
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(deleteNamedRangeWorkbook, exception));
 
@@ -2295,6 +2445,10 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setComment, exception));
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(clearComment, exception));
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(applyStyle, exception));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setDataValidation, exception));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(clearDataValidations, exception));
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setNamedRange, exception));
     assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(deleteNamedRangeWorkbook, exception));
     assertEquals(
@@ -2304,9 +2458,13 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals("A1", DefaultGridGrindRequestExecutor.addressFor(clearHyperlink, exception));
     assertEquals("A1", DefaultGridGrindRequestExecutor.addressFor(setComment, exception));
     assertEquals("A1", DefaultGridGrindRequestExecutor.addressFor(clearComment, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setDataValidation, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(clearDataValidations, exception));
     assertNull(DefaultGridGrindRequestExecutor.addressFor(setNamedRange, exception));
 
     assertEquals("A1:B2", DefaultGridGrindRequestExecutor.rangeFor(applyStyle, exception));
+    assertEquals("B2:B5", DefaultGridGrindRequestExecutor.rangeFor(setDataValidation, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(clearDataValidations, exception));
     assertEquals("B4", DefaultGridGrindRequestExecutor.rangeFor(setNamedRange, exception));
     assertNull(DefaultGridGrindRequestExecutor.rangeFor(deleteNamedRangeWorkbook, exception));
 
@@ -2405,6 +2563,17 @@ class DefaultGridGrindRequestExecutorTest {
                 "A1:B2",
                 new CellStyleInput(
                     null, true, null, null, null, null, null, null, null, null, null, null, null)),
+            new WorkbookOperation.SetDataValidation(
+                "Budget",
+                "B2:B5",
+                new DataValidationInput(
+                    new DataValidationRuleInput.TextLength(
+                        dev.erst.gridgrind.excel.ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+                    true,
+                    false,
+                    null,
+                    null)),
+            new WorkbookOperation.ClearDataValidations("Budget", new RangeSelection.All()),
             new WorkbookOperation.AppendRow("Budget", List.of(new CellInput.Text("x"))),
             new WorkbookOperation.AutoSizeColumns("Budget"),
             new WorkbookOperation.EvaluateFormulas(),

@@ -59,6 +59,11 @@ class WorkbookCommandTest {
     WorkbookCommand.ClearComment clearComment = new WorkbookCommand.ClearComment("Budget", "A1");
     WorkbookCommand.ApplyStyle applyStyle =
         new WorkbookCommand.ApplyStyle("Budget", "A1:B1", style);
+    WorkbookCommand.SetDataValidation setDataValidation =
+        new WorkbookCommand.SetDataValidation("Budget", "B2:B5", validationDefinition());
+    WorkbookCommand.ClearDataValidations clearDataValidations =
+        new WorkbookCommand.ClearDataValidations(
+            "Budget", new ExcelRangeSelection.Selected(List.of("C2:D4")));
     WorkbookCommand.SetNamedRange setNamedRange =
         new WorkbookCommand.SetNamedRange(
             new ExcelNamedRangeDefinition(
@@ -95,6 +100,10 @@ class WorkbookCommandTest {
     assertEquals("Review", setComment.comment().text());
     assertEquals("A1", clearComment.address());
     assertEquals(style, applyStyle.style());
+    assertEquals("B2:B5", setDataValidation.range());
+    assertEquals(
+        List.of("C2:D4"),
+        ((ExcelRangeSelection.Selected) clearDataValidations.selection()).ranges());
     assertEquals("BudgetTotal", setNamedRange.definition().name());
     assertEquals(
         "Budget", ((ExcelNamedRangeScope.SheetScope) deleteNamedRange.scope()).sheetName());
@@ -215,7 +224,7 @@ class WorkbookCommandTest {
   }
 
   @Test
-  void validatesCellRangeStyleAndAppendCommandInputs() {
+  void validatesCellRangeAndLinkCommentCommandInputs() {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookCommand.SetCell(null, "A1", ExcelCellValue.text("x")));
@@ -339,6 +348,33 @@ class WorkbookCommandTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookCommand.ApplyStyle("Budget", " ", ExcelCellStyle.numberFormat("0")));
+  }
+
+  @Test
+  void validatesValidationNamedRangeAndAppendCommandInputs() {
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.SetDataValidation("Budget", "A1", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.SetDataValidation(null, "A1", validationDefinition()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.SetDataValidation("Budget", null, validationDefinition()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.SetDataValidation(" ", "A1", validationDefinition()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.SetDataValidation("Budget", " ", validationDefinition()));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.ClearDataValidations("Budget", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.ClearDataValidations(null, new ExcelRangeSelection.All()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.ClearDataValidations(" ", new ExcelRangeSelection.All()));
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetNamedRange(null));
     assertThrows(
         NullPointerException.class,
@@ -363,5 +399,15 @@ class WorkbookCommandTest {
         NullPointerException.class, () -> new WorkbookCommand.AppendRow("Budget", valuesWithNull));
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.AutoSizeColumns(null));
     assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.AutoSizeColumns(" "));
+  }
+
+  private static ExcelDataValidationDefinition validationDefinition() {
+    return new ExcelDataValidationDefinition(
+        new ExcelDataValidationRule.TextLength(ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+        true,
+        false,
+        new ExcelDataValidationPrompt("Reason", "Use 20 characters or fewer.", true),
+        new ExcelDataValidationErrorAlert(
+            ExcelDataValidationErrorStyle.STOP, "Too long", "Use a shorter reason.", true));
   }
 }

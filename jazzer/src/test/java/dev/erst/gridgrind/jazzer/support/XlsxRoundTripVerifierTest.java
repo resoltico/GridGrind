@@ -8,12 +8,16 @@ import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
+import dev.erst.gridgrind.excel.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
@@ -110,6 +114,51 @@ class XlsxRoundTripVerifierTest {
     assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
+  /** Accepts date-time append writes that relayer the required number format onto styled blank rows. */
+  @Test
+  void requireRoundTripReadable_acceptsDateTimeStyleRelayerOnStyledBlankAppendRow(
+      @TempDir Path tempDirectory) throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("E"),
+            new WorkbookCommand.AppendRow(
+                "E",
+                List.of(
+                    ExcelCellValue.dateTime(java.time.LocalDateTime.of(2026, 2, 6, 13, 1, 1)),
+                    ExcelCellValue.dateTime(java.time.LocalDateTime.of(2026, 2, 6, 13, 58, 1)))),
+            new WorkbookCommand.ApplyStyle(
+                "E",
+                "A1:B2",
+                new ExcelCellStyle(
+                    "0.00",
+                    Boolean.TRUE,
+                    null,
+                    Boolean.TRUE,
+                    null,
+                    ExcelVerticalAlignment.CENTER,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "#603A79",
+                    new ExcelBorder(
+                        new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
+                        null,
+                        new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
+                        null,
+                        null))),
+            new WorkbookCommand.AppendRow(
+                "E",
+                List.of(
+                    ExcelCellValue.dateTime(java.time.LocalDateTime.of(2026, 2, 6, 13, 1, 58)),
+                    ExcelCellValue.dateTime(java.time.LocalDateTime.of(2026, 2, 6, 13, 1, 1)))));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
   /** Preserves richer Wave 2 formatting depth patches through save and reopen. */
   @Test
   void requireRoundTripReadable_preservesFormattingDepthStyle(@TempDir Path tempDirectory)
@@ -183,6 +232,40 @@ class XlsxRoundTripVerifierTest {
                 "C", "F18", new ExcelHyperlink.Email("Report_Value@example.com")),
             new WorkbookCommand.SetHyperlink(
                 "C", "F18", new ExcelHyperlink.Email("Summary.Total@example.com")));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Preserves normalized data-validation state through save and reopen. */
+  @Test
+  void requireRoundTripReadable_preservesDataValidationAuthoring(@TempDir Path tempDirectory)
+      throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Budget"),
+            new WorkbookCommand.SetDataValidation(
+                "Budget",
+                "A2:C5",
+                new ExcelDataValidationDefinition(
+                    new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
+                    true,
+                    false,
+                    null,
+                    null)),
+            new WorkbookCommand.ClearDataValidations(
+                "Budget", new ExcelRangeSelection.Selected(List.of("B3"))),
+            new WorkbookCommand.SetDataValidation(
+                "Budget",
+                "E2:E5",
+                new ExcelDataValidationDefinition(
+                    new ExcelDataValidationRule.WholeNumber(
+                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                    false,
+                    false,
+                    null,
+                    null)));
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 

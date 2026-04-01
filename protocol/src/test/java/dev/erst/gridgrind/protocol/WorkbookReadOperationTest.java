@@ -73,4 +73,33 @@ class WorkbookReadOperationTest {
 
     assertEquals(List.of("A1", "B4"), operation.addresses());
   }
+
+  @Test
+  void getDataValidationsRequiresSheetNameAndSelection() {
+    WorkbookReadOperation.GetDataValidations operation =
+        new WorkbookReadOperation.GetDataValidations(
+            "validations", "Budget", new RangeSelection.Selected(List.of("A1:B2")));
+
+    assertEquals("Budget", operation.sheetName());
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadOperation.GetDataValidations("validations", "Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadOperation.GetDataValidations(
+                "validations", " ", new RangeSelection.All()));
+  }
+
+  @Test
+  void analyzeDataValidationHealthRequiresSelection() {
+    WorkbookReadOperation.AnalyzeDataValidationHealth operation =
+        new WorkbookReadOperation.AnalyzeDataValidationHealth(
+            "health", new SheetSelection.Selected(List.of("Budget")));
+
+    assertEquals("health", operation.requestId());
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadOperation.AnalyzeDataValidationHealth("health", null));
+  }
 }

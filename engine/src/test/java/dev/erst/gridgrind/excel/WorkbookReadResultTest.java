@@ -42,6 +42,19 @@ class WorkbookReadResultTest {
         new ArrayList<>(List.of(new WorkbookReadResult.ColumnLayout(0, 12.5)));
     List<WorkbookReadResult.RowLayout> resultRows =
         new ArrayList<>(List.of(new WorkbookReadResult.RowLayout(0, 18.0)));
+    List<ExcelDataValidationSnapshot> validations =
+        new ArrayList<>(
+            List.of(
+                new ExcelDataValidationSnapshot.Supported(
+                    List.of("A2:A5"),
+                    new ExcelDataValidationDefinition(
+                        new ExcelDataValidationRule.TextLength(
+                            ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+                        true,
+                        false,
+                        new ExcelDataValidationPrompt(
+                            "Reason", "Use 20 characters or fewer.", true),
+                        null))));
     List<WorkbookReadResult.FormulaPattern> formulas =
         new ArrayList<>(
             List.of(new WorkbookReadResult.FormulaPattern("SUM(B2:B3)", 1, List.of("B4"))));
@@ -92,6 +105,8 @@ class WorkbookReadResultTest {
                 new WorkbookReadResult.FreezePane.Frozen(1, 1, 1, 1),
                 columns,
                 resultRows));
+    WorkbookReadResult.DataValidationsResult dataValidationsResult =
+        new WorkbookReadResult.DataValidationsResult("validations", "Budget", validations);
     WorkbookReadResult.FormulaSurfaceResult formulaSurfaceResult =
         new WorkbookReadResult.FormulaSurfaceResult(
             "formula",
@@ -113,6 +128,7 @@ class WorkbookReadResultTest {
     comments.clear();
     columns.clear();
     resultRows.clear();
+    validations.clear();
     formulas.clear();
     schemaColumns.clear();
     namedRangeEntries.clear();
@@ -129,6 +145,7 @@ class WorkbookReadResultTest {
     assertEquals("Review", commentsResult.comments().getFirst().comment().text());
     assertInstanceOf(
         WorkbookReadResult.FreezePane.Frozen.class, layoutResult.layout().freezePanes());
+    assertEquals("A2:A5", dataValidationsResult.validations().getFirst().ranges().getFirst());
     assertEquals(1, formulaSurfaceResult.analysis().totalFormulaCellCount());
     assertEquals("STRING", sheetSchemaResult.analysis().columns().getFirst().dominantType());
     assertEquals(
@@ -181,6 +198,9 @@ class WorkbookReadResultTest {
     assertThrows(
         NullPointerException.class, () -> new WorkbookReadResult.CellHyperlink("A1", null));
     assertThrows(NullPointerException.class, () -> new WorkbookReadResult.CellComment("A1", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.DataValidationsResult("validations", "Budget", null));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookReadResult.FreezePane.Frozen(-1, 0, 0, 0));

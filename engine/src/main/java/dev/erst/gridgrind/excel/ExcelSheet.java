@@ -20,6 +20,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.PaneInformation;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 /** High-level sheet wrapper for typed reads, writes, and previews. */
 public final class ExcelSheet {
@@ -27,12 +28,14 @@ public final class ExcelSheet {
   private final WorkbookStyleRegistry styleRegistry;
   private final ExcelFormulaRuntime formulaRuntime;
   private final DataFormatter dataFormatter;
+  private final ExcelDataValidationController dataValidationController;
 
   ExcelSheet(Sheet sheet, WorkbookStyleRegistry styleRegistry, ExcelFormulaRuntime formulaRuntime) {
     this.sheet = sheet;
     this.styleRegistry = styleRegistry;
     this.formulaRuntime = formulaRuntime;
     this.dataFormatter = new DataFormatter();
+    this.dataValidationController = new ExcelDataValidationController();
   }
 
   /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
@@ -177,6 +180,21 @@ public final class ExcelSheet {
         cell.setCellStyle(styleRegistry.mergedStyle(cell, style));
       }
     }
+    return this;
+  }
+
+  /** Creates or replaces one data-validation rule over the requested sheet range. */
+  public ExcelSheet setDataValidation(String range, ExcelDataValidationDefinition validation) {
+    requireNonBlank(range, "range");
+    Objects.requireNonNull(validation, "validation must not be null");
+    dataValidationController.setDataValidation(xssfSheet(), range, validation);
+    return this;
+  }
+
+  /** Removes data-validation structures on the sheet that match the provided range selection. */
+  public ExcelSheet clearDataValidations(ExcelRangeSelection selection) {
+    Objects.requireNonNull(selection, "selection must not be null");
+    dataValidationController.clearDataValidations(xssfSheet(), selection);
     return this;
   }
 
@@ -452,6 +470,12 @@ public final class ExcelSheet {
     return new WorkbookReadResult.SheetLayout(name(), freezePane(), columnLayouts(), rowLayouts());
   }
 
+  /** Returns data-validation metadata for the selected ranges on this sheet. */
+  public List<ExcelDataValidationSnapshot> dataValidations(ExcelRangeSelection selection) {
+    Objects.requireNonNull(selection, "selection must not be null");
+    return dataValidationController.dataValidations(xssfSheet(), selection);
+  }
+
   /** Returns every formula cell currently present on the sheet. */
   public List<ExcelCellSnapshot.FormulaSnapshot> formulaCells() {
     List<ExcelCellSnapshot.FormulaSnapshot> formulas = new ArrayList<>();
@@ -670,6 +694,10 @@ public final class ExcelSheet {
   private Cell getOrCreateCell(int rowIndex, int columnIndex) {
     return getOrCreateRow(rowIndex)
         .getCell(columnIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
+  }
+
+  XSSFSheet xssfSheet() {
+    return (XSSFSheet) sheet;
   }
 
   private int nextAppendRowIndex() {

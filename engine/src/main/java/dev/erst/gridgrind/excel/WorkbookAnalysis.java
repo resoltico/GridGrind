@@ -6,6 +6,7 @@ import java.util.Objects;
 /** Shared engine-side analysis payload model reused across finding-bearing read results. */
 public sealed interface WorkbookAnalysis
     permits WorkbookAnalysis.FormulaHealth,
+        WorkbookAnalysis.DataValidationHealth,
         WorkbookAnalysis.HyperlinkHealth,
         WorkbookAnalysis.NamedRangeHealth,
         WorkbookAnalysis.WorkbookFindings {
@@ -23,6 +24,9 @@ public sealed interface WorkbookAnalysis
     FORMULA_EVALUATION_FAILURE,
     FORMULA_EXTERNAL_REFERENCE,
     FORMULA_VOLATILE_FUNCTION,
+    DATA_VALIDATION_UNSUPPORTED_RULE,
+    DATA_VALIDATION_BROKEN_FORMULA,
+    DATA_VALIDATION_OVERLAPPING_RULES,
     HYPERLINK_MALFORMED_TARGET,
     HYPERLINK_MISSING_FILE_TARGET,
     HYPERLINK_MISSING_DOCUMENT_SHEET,
@@ -123,6 +127,19 @@ public sealed interface WorkbookAnalysis
     public FormulaHealth {
       if (checkedFormulaCellCount < 0) {
         throw new IllegalArgumentException("checkedFormulaCellCount must not be negative");
+      }
+      Objects.requireNonNull(summary, "summary must not be null");
+      findings = copyValues(findings, "findings");
+    }
+  }
+
+  /** Data-validation-health analysis for one selected sheet set. */
+  record DataValidationHealth(
+      int checkedValidationCount, AnalysisSummary summary, List<AnalysisFinding> findings)
+      implements WorkbookAnalysis {
+    public DataValidationHealth {
+      if (checkedValidationCount < 0) {
+        throw new IllegalArgumentException("checkedValidationCount must not be negative");
       }
       Objects.requireNonNull(summary, "summary must not be null");
       findings = copyValues(findings, "findings");

@@ -1,0 +1,19 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Intake" },
+    {
+      "type": "SET_DATA_VALIDATION",
+      "sheetName": "Intake",
+      "range": "A2:A20",
+      "validation": {
+        "rule": {
+          "type": "EXPLICIT_LIST",
+          "values": []
+        }
+      }
+    }
+  ]
+}
