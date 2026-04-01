@@ -2,10 +2,15 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.protocol.AutofilterEntryReport;
+import dev.erst.gridgrind.protocol.AutofilterHealthReport;
 import dev.erst.gridgrind.protocol.FontHeightReport;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
 import dev.erst.gridgrind.protocol.HyperlinkTarget;
+import dev.erst.gridgrind.protocol.TableEntryReport;
+import dev.erst.gridgrind.protocol.TableHealthReport;
+import dev.erst.gridgrind.protocol.TableStyleReport;
 import dev.erst.gridgrind.protocol.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.WorkbookReadResult;
 import java.nio.file.Files;
@@ -197,6 +202,15 @@ public final class WorkbookInvariantChecks {
             (WorkbookReadResult.DataValidationsResult) readResult;
         require(expected.sheetName().equals(result.sheetName()), "data validations sheet mismatch");
       }
+      case WorkbookReadOperation.GetAutofilters expected -> {
+        WorkbookReadResult.AutofiltersResult result =
+            (WorkbookReadResult.AutofiltersResult) readResult;
+        require(expected.sheetName().equals(result.sheetName()), "autofilters sheet mismatch");
+      }
+      case WorkbookReadOperation.GetTables _ -> {
+        WorkbookReadResult.TablesResult result = (WorkbookReadResult.TablesResult) readResult;
+        result.tables().forEach(WorkbookInvariantChecks::requireTableEntryShape);
+      }
       case WorkbookReadOperation.GetFormulaSurface _ -> {
         WorkbookReadResult.FormulaSurfaceResult result =
             (WorkbookReadResult.FormulaSurfaceResult) readResult;
@@ -220,6 +234,11 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadOperation.AnalyzeDataValidationHealth _ ->
           requireDataValidationHealthShape(
               ((WorkbookReadResult.DataValidationHealthResult) readResult).analysis());
+      case WorkbookReadOperation.AnalyzeAutofilterHealth _ ->
+          requireAutofilterHealthShape(
+              ((WorkbookReadResult.AutofilterHealthResult) readResult).analysis());
+      case WorkbookReadOperation.AnalyzeTableHealth _ ->
+          requireTableHealthShape(((WorkbookReadResult.TableHealthResult) readResult).analysis());
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ ->
           requireHyperlinkHealthShape(
               ((WorkbookReadResult.HyperlinkHealthResult) readResult).analysis());
@@ -244,11 +263,15 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.CommentsResult _ -> "GET_COMMENTS";
       case WorkbookReadResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadResult.DataValidationsResult _ -> "GET_DATA_VALIDATIONS";
+      case WorkbookReadResult.AutofiltersResult _ -> "GET_AUTOFILTERS";
+      case WorkbookReadResult.TablesResult _ -> "GET_TABLES";
       case WorkbookReadResult.FormulaSurfaceResult _ -> "GET_FORMULA_SURFACE";
       case WorkbookReadResult.SheetSchemaResult _ -> "GET_SHEET_SCHEMA";
       case WorkbookReadResult.NamedRangeSurfaceResult _ -> "GET_NAMED_RANGE_SURFACE";
       case WorkbookReadResult.FormulaHealthResult _ -> "ANALYZE_FORMULA_HEALTH";
       case WorkbookReadResult.DataValidationHealthResult _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
+      case WorkbookReadResult.AutofilterHealthResult _ -> "ANALYZE_AUTOFILTER_HEALTH";
+      case WorkbookReadResult.TableHealthResult _ -> "ANALYZE_TABLE_HEALTH";
       case WorkbookReadResult.HyperlinkHealthResult _ -> "ANALYZE_HYPERLINK_HEALTH";
       case WorkbookReadResult.NamedRangeHealthResult _ -> "ANALYZE_NAMED_RANGE_HEALTH";
       case WorkbookReadResult.WorkbookFindingsResult _ -> "ANALYZE_WORKBOOK_FINDINGS";
@@ -292,6 +315,13 @@ public final class WorkbookInvariantChecks {
         require(!result.sheetName().isBlank(), "data validations sheetName must not be blank");
         result.validations().forEach(WorkbookInvariantChecks::requireDataValidationEntryShape);
       }
+      case WorkbookReadResult.AutofiltersResult result -> {
+        require(result.sheetName() != null, "autofilters sheetName must not be null");
+        require(!result.sheetName().isBlank(), "autofilters sheetName must not be blank");
+        result.autofilters().forEach(WorkbookInvariantChecks::requireAutofilterEntryShape);
+      }
+      case WorkbookReadResult.TablesResult result ->
+          result.tables().forEach(WorkbookInvariantChecks::requireTableEntryShape);
       case WorkbookReadResult.FormulaSurfaceResult result -> requireFormulaSurfaceShape(result.analysis());
       case WorkbookReadResult.SheetSchemaResult result -> requireSheetSchemaShape(result.analysis());
       case WorkbookReadResult.NamedRangeSurfaceResult result ->
@@ -300,6 +330,9 @@ public final class WorkbookInvariantChecks {
           requireFormulaHealthShape(result.analysis());
       case WorkbookReadResult.DataValidationHealthResult result ->
           requireDataValidationHealthShape(result.analysis());
+      case WorkbookReadResult.AutofilterHealthResult result ->
+          requireAutofilterHealthShape(result.analysis());
+      case WorkbookReadResult.TableHealthResult result -> requireTableHealthShape(result.analysis());
       case WorkbookReadResult.HyperlinkHealthResult result ->
           requireHyperlinkHealthShape(result.analysis());
       case WorkbookReadResult.NamedRangeHealthResult result ->
@@ -412,6 +445,34 @@ public final class WorkbookInvariantChecks {
         requireNonBlank(unsupported.kind(), "data validation kind");
         requireNonBlank(unsupported.detail(), "data validation detail");
       }
+    }
+  }
+
+  private static void requireAutofilterEntryShape(AutofilterEntryReport autofilter) {
+    requireNonBlank(autofilter.range(), "autofilter range");
+    switch (autofilter) {
+      case AutofilterEntryReport.SheetOwned _ -> {}
+      case AutofilterEntryReport.TableOwned tableOwned ->
+          requireNonBlank(tableOwned.tableName(), "autofilter table name");
+    }
+  }
+
+  private static void requireTableEntryShape(TableEntryReport table) {
+    requireNonBlank(table.name(), "table name");
+    requireNonBlank(table.sheetName(), "table sheetName");
+    requireNonBlank(table.range(), "table range");
+    require(table.headerRowCount() >= 0, "table headerRowCount must not be negative");
+    require(table.totalsRowCount() >= 0, "table totalsRowCount must not be negative");
+    require(table.columnNames() != null, "table columnNames must not be null");
+    table.columnNames().forEach(columnName -> require(columnName != null, "table column name must not be null"));
+    require(table.style() != null, "table style must not be null");
+    requireTableStyleShape(table.style());
+  }
+
+  private static void requireTableStyleShape(TableStyleReport style) {
+    switch (style) {
+      case TableStyleReport.None _ -> {}
+      case TableStyleReport.Named named -> requireNonBlank(named.name(), "table style name");
     }
   }
 
@@ -551,6 +612,18 @@ public final class WorkbookInvariantChecks {
     require(
         analysis.checkedValidationCount() >= 0,
         "checkedValidationCount must not be negative");
+    requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
+  }
+
+  private static void requireAutofilterHealthShape(AutofilterHealthReport analysis) {
+    require(
+        analysis.checkedAutofilterCount() >= 0,
+        "checkedAutofilterCount must not be negative");
+    requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
+  }
+
+  private static void requireTableHealthShape(TableHealthReport analysis) {
+    require(analysis.checkedTableCount() >= 0, "checkedTableCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 

@@ -3,6 +3,33 @@
   "sourcePath" : "/Users/erst/Tools/GridGrind/examples/structural-layout-request.json",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/structural_layout_request.json",
   "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 1330,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 6,
+      "operationKinds" : {
+        "MERGE_CELLS" : 1,
+        "SET_COLUMN_WIDTH" : 1,
+        "SET_CELL" : 1,
+        "ENSURE_SHEET" : 1,
+        "FREEZE_PANES" : 1,
+        "SET_ROW_HEIGHT" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 4,
+      "readKinds" : {
+        "GET_MERGED_REGIONS" : 1,
+        "GET_SHEET_LAYOUT" : 1,
+        "GET_WINDOW" : 1,
+        "GET_CELLS" : 1
+      }
+    }
+  },
   "promotedAt" : "2026-03-26T04:15:55.791946Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/structural_layout_request.txt"
 }

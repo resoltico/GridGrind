@@ -1,11 +1,11 @@
 ---
 afad: "3.4"
-version: "0.20.0"
+version: "0.21.0"
 domain: QUICK_REFERENCE
-updated: "2026-03-31"
+updated: "2026-04-01"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-sheet-schema, analyze-workbook-findings]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind named range example", "what do gridgrind reads look like"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like"]
 ---
 
 # Quick Reference
@@ -319,6 +319,72 @@ range.
 }
 ```
 
+## SET_AUTOFILTER
+
+```json
+{
+  "type": "SET_AUTOFILTER",
+  "sheetName": "Sheet1",
+  "range": "A1:C20"
+}
+```
+
+The range must include a nonblank header row and must not overlap any existing table range.
+
+## CLEAR_AUTOFILTER
+
+```json
+{ "type": "CLEAR_AUTOFILTER", "sheetName": "Sheet1" }
+```
+
+This clears only the sheet-level autofilter. Table-owned autofilters remain attached to their
+tables.
+
+## SET_TABLE
+
+```json
+{
+  "type": "SET_TABLE",
+  "table": {
+    "name": "DispatchQueue",
+    "sheetName": "Sheet1",
+    "range": "A1:C20",
+    "showTotalsRow": false,
+    "style": { "type": "NONE" }
+  }
+}
+{
+  "type": "SET_TABLE",
+  "table": {
+    "name": "DispatchQueue",
+    "sheetName": "Sheet1",
+    "range": "A1:C20",
+    "showTotalsRow": true,
+    "style": {
+      "type": "NAMED",
+      "name": "TableStyleMedium2",
+      "showFirstColumn": false,
+      "showLastColumn": false,
+      "showRowStripes": true,
+      "showColumnStripes": false
+    }
+  }
+}
+```
+
+Table names are workbook-global. Header cells in the first row of the range must be nonblank and
+unique case-insensitively. Overlapping different-name tables are rejected.
+
+## DELETE_TABLE
+
+```json
+{
+  "type": "DELETE_TABLE",
+  "name": "DispatchQueue",
+  "sheetName": "Sheet1"
+}
+```
+
 ## APPEND_ROW
 
 ```json
@@ -531,6 +597,36 @@ responses use the `path` field with a normalized plain path string.
 }
 ```
 
+## GET_AUTOFILTERS
+
+```json
+{
+  "type": "GET_AUTOFILTERS",
+  "requestId": "autofilters",
+  "sheetName": "Sheet1"
+}
+```
+
+Entries are `SHEET` or `TABLE`.
+
+## GET_TABLES
+
+```json
+{
+  "type": "GET_TABLES",
+  "requestId": "tables",
+  "selection": { "type": "ALL" }
+}
+{
+  "type": "GET_TABLES",
+  "requestId": "selected-tables",
+  "selection": {
+    "type": "BY_NAMES",
+    "names": ["DispatchQueue", "Trips"]
+  }
+}
+```
+
 ## GET_FORMULA_SURFACE
 
 ```json
@@ -611,6 +707,37 @@ responses use the `path` field with a normalized plain path string.
 }
 ```
 
+## ANALYZE_AUTOFILTER_HEALTH
+
+```json
+{
+  "type": "ANALYZE_AUTOFILTER_HEALTH",
+  "requestId": "autofilter-health",
+  "selection": {
+    "type": "SELECTED",
+    "sheetNames": ["Sheet1", "Sheet2"]
+  }
+}
+```
+
+## ANALYZE_TABLE_HEALTH
+
+```json
+{
+  "type": "ANALYZE_TABLE_HEALTH",
+  "requestId": "table-health",
+  "selection": { "type": "ALL" }
+}
+{
+  "type": "ANALYZE_TABLE_HEALTH",
+  "requestId": "selected-table-health",
+  "selection": {
+    "type": "BY_NAMES",
+    "names": ["DispatchQueue", "Trips"]
+  }
+}
+```
+
 ## ANALYZE_HYPERLINK_HEALTH
 
 ```json
@@ -646,6 +773,9 @@ Unsaved workbooks report unresolved relative file targets instead of treating th
 }
 ```
 
+`ANALYZE_WORKBOOK_FINDINGS` aggregates every shipped health family: formula, data validation,
+autofilter, table, hyperlink, and named range.
+
 Selection snippets:
 
 ```json
@@ -672,6 +802,14 @@ Selection snippets:
     { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
     { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
   ]
+}
+```
+
+```json
+{ "type": "ALL" }
+{
+  "type": "BY_NAMES",
+  "names": ["DispatchQueue", "Trips"]
 }
 ```
 ```

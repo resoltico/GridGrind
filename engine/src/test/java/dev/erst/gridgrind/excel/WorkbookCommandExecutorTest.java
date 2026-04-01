@@ -23,6 +23,7 @@ class WorkbookCommandExecutorTest {
               new WorkbookCommand.CreateSheet("Budget"),
               new WorkbookCommand.CreateSheet("Archive"),
               new WorkbookCommand.CreateSheet("Scratch"),
+              new WorkbookCommand.CreateSheet("Ops"),
               new WorkbookCommand.SetRange(
                   "Budget",
                   "A1:B2",
@@ -48,6 +49,41 @@ class WorkbookCommandExecutorTest {
               new WorkbookCommand.SetDataValidation("Budget", "C1:C3", validationDefinition()),
               new WorkbookCommand.ClearDataValidations(
                   "Budget", new ExcelRangeSelection.Selected(List.of("C2"))),
+              new WorkbookCommand.SetAutofilter("Budget", "A1:B3"),
+              new WorkbookCommand.ClearAutofilter("Budget"),
+              new WorkbookCommand.SetRange(
+                  "Ops",
+                  "A1:B3",
+                  List.of(
+                      List.of(ExcelCellValue.text("Owner"), ExcelCellValue.text("Task")),
+                      List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queue")),
+                      List.of(ExcelCellValue.text("Lin"), ExcelCellValue.text("Pack")))),
+              new WorkbookCommand.SetRange(
+                  "Ops",
+                  "D1:E3",
+                  List.of(
+                      List.of(ExcelCellValue.text("Region"), ExcelCellValue.text("Desk")),
+                      List.of(ExcelCellValue.text("North"), ExcelCellValue.text("A1")),
+                      List.of(ExcelCellValue.text("South"), ExcelCellValue.text("B1")))),
+              new WorkbookCommand.SetRange(
+                  "Ops",
+                  "G1:H3",
+                  List.of(
+                      List.of(ExcelCellValue.text("Stage"), ExcelCellValue.text("Team")),
+                      List.of(ExcelCellValue.text("Review"), ExcelCellValue.text("Docs")),
+                      List.of(ExcelCellValue.text("Ship"), ExcelCellValue.text("Ops")))),
+              new WorkbookCommand.SetAutofilter("Ops", "D1:E3"),
+              new WorkbookCommand.SetTable(
+                  new ExcelTableDefinition(
+                      "Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None())),
+              new WorkbookCommand.SetTable(
+                  new ExcelTableDefinition(
+                      "Stages",
+                      "Ops",
+                      "G1:H3",
+                      false,
+                      new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))),
+              new WorkbookCommand.DeleteTable("Stages", "Ops"),
               new WorkbookCommand.RenameSheet("Archive", "History"),
               new WorkbookCommand.MoveSheet("History", 0),
               new WorkbookCommand.DeleteSheet("Scratch"),
@@ -70,7 +106,7 @@ class WorkbookCommandExecutorTest {
               new WorkbookCommand.UnmergeCells("Budget", "A1:B1"),
               new WorkbookCommand.EvaluateAllFormulas(),
               new WorkbookCommand.ForceFormulaRecalculationOnOpen()));
-      assertEquals(List.of("History", "Budget"), workbook.sheetNames());
+      assertEquals(List.of("History", "Budget", "Ops"), workbook.sheetNames());
       assertEquals("Item", workbook.sheet("Budget").text("A1"));
       assertEquals(54.0, workbook.sheet("Budget").number("B3"));
       assertTrue(workbook.sheet("Budget").snapshotCell("A1").metadata().hyperlink().isEmpty());
@@ -82,6 +118,25 @@ class WorkbookCommandExecutorTest {
       assertEquals("BLANK", workbook.sheet("Budget").snapshotCell("A2").effectiveType());
       assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Scratch"));
       assertTrue(workbook.forceFormulaRecalculationOnOpenEnabled());
+      WorkbookReadResult.AutofiltersResult autofilters =
+          assertInstanceOf(
+              WorkbookReadResult.AutofiltersResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(workbook, new WorkbookReadCommand.GetAutofilters("autofilters", "Ops")));
+      WorkbookReadResult.TablesResult tables =
+          assertInstanceOf(
+              WorkbookReadResult.TablesResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All())));
+      assertEquals(
+          List.of(
+              new ExcelAutofilterSnapshot.SheetOwned("D1:E3"),
+              new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
+          autofilters.autofilters());
+      assertEquals(
+          List.of("Queue"), tables.tables().stream().map(ExcelTableSnapshot::name).toList());
       workbook.save(workbookPath);
     }
 
@@ -103,6 +158,28 @@ class WorkbookCommandExecutorTest {
                 "History!$A$1",
                 new ExcelNamedRangeTarget("History", "A1"))),
         XlsxRoundTrip.namedRanges(workbookPath));
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      WorkbookReadResult.AutofiltersResult autofilters =
+          assertInstanceOf(
+              WorkbookReadResult.AutofiltersResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(reopened, new WorkbookReadCommand.GetAutofilters("autofilters", "Ops")));
+      WorkbookReadResult.TablesResult tables =
+          assertInstanceOf(
+              WorkbookReadResult.TablesResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      reopened,
+                      new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All())));
+      assertEquals(
+          List.of(
+              new ExcelAutofilterSnapshot.SheetOwned("D1:E3"),
+              new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
+          autofilters.autofilters());
+      assertEquals(1, tables.tables().size());
+      assertEquals("Queue", tables.tables().getFirst().name());
+      assertTrue(tables.tables().getFirst().hasAutofilter());
+    }
   }
 
   @Test
@@ -160,6 +237,23 @@ class WorkbookCommandExecutorTest {
                   workbook,
                   new WorkbookCommand.ClearDataValidations(
                       "Missing", new ExcelRangeSelection.All())));
+      assertThrows(
+          SheetNotFoundException.class,
+          () -> executor.apply(workbook, new WorkbookCommand.SetAutofilter("Missing", "A1:B2")));
+      assertThrows(
+          SheetNotFoundException.class,
+          () -> executor.apply(workbook, new WorkbookCommand.ClearAutofilter("Missing")));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
+                  new WorkbookCommand.SetTable(
+                      new ExcelTableDefinition(
+                          "Queue", "Missing", "A1:B2", false, new ExcelTableStyle.None()))));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> executor.apply(workbook, new WorkbookCommand.DeleteTable("Queue", "Missing")));
       assertThrows(
           SheetNotFoundException.class,
           () ->

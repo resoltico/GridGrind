@@ -3,6 +3,21 @@
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_missing_request_id.json",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_missing_request_id.json",
   "replayOutcome" : "EXPECTED_INVALID",
+  "expectation" : {
+    "outcomeKind" : "EXPECTED_INVALID",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 175,
+      "decodeOutcome" : "INVALID_REQUEST_SHAPE",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
+      "styleKinds" : { },
+      "readCount" : 0,
+      "readKinds" : { }
+    }
+  },
   "promotedAt" : "2026-03-28T00:14:23.568344Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/invalid_request_shape_missing_request_id.txt"
 }

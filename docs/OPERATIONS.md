@@ -1,11 +1,11 @@
 ---
 afad: "3.4"
-version: "0.20.0"
+version: "0.21.0"
 domain: OPERATIONS
-updated: "2026-03-31"
+updated: "2026-04-01"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-sheet-layout, get-sheet-schema, analyze-workbook-findings, request, json, protocol]
-  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-data-validations, get-autofilters, get-tables, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol]
+  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
 ---
 
 # Operations Reference
@@ -132,8 +132,9 @@ Create a sheet if it does not already exist. Does nothing if the sheet exists.
 
 All mutation operations (`SET_CELL`, `SET_RANGE`, `CLEAR_RANGE`, `APPLY_STYLE`,
 `SET_DATA_VALIDATION`, `CLEAR_DATA_VALIDATIONS`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`,
-`SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the target sheet to
-already exist. Use `ENSURE_SHEET` before the first write to any sheet.
+`SET_COMMENT`, `CLEAR_COMMENT`, `SET_AUTOFILTER`, `CLEAR_AUTOFILTER`, `APPEND_ROW`,
+`AUTO_SIZE_COLUMNS`) require the target sheet to already exist. `SET_TABLE` also requires the
+target `table.sheetName` to exist. Use `ENSURE_SHEET` before the first write to any sheet.
 
 ```json
 { "type": "ENSURE_SHEET", "sheetName": "Inventory" }
@@ -696,6 +697,129 @@ ranges, preserving any remaining coverage fragments around the cleared area.
 
 ---
 
+### SET_AUTOFILTER
+
+Create or replace one sheet-level autofilter range. The range must be rectangular, include a
+nonblank header row, and must not overlap any existing table range on the same sheet.
+
+```json
+{
+  "type": "SET_AUTOFILTER",
+  "sheetName": "Inventory",
+  "range": "A1:C200"
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `range` | Yes | Rectangular A1-style range. The first row is treated as the filter header row. |
+
+If a sheet already has a sheet-level autofilter, the new range replaces it. This operation does
+not create filter criteria or sort metadata.
+
+---
+
+### CLEAR_AUTOFILTER
+
+Remove the sheet-level autofilter range from one sheet. Table-owned autofilters remain attached to
+their tables.
+
+```json
+{ "type": "CLEAR_AUTOFILTER", "sheetName": "Inventory" }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+
+---
+
+### SET_TABLE
+
+Create or replace one workbook-global table definition. The first row of `table.range` supplies
+the table's header cells, which must be nonblank and unique case-insensitively. Same-name tables
+on the same sheet are replaced. Same-name tables on a different sheet are rejected. Overlapping
+different-name tables are rejected. If the new table overlaps a sheet-level autofilter, the
+sheet-level filter is cleared so the table-owned autofilter becomes authoritative on that range.
+
+```json
+{
+  "type": "SET_TABLE",
+  "table": {
+    "name": "InventoryTable",
+    "sheetName": "Inventory",
+    "range": "A1:C200",
+    "showTotalsRow": false,
+    "style": { "type": "NONE" }
+  }
+}
+```
+
+```json
+{
+  "type": "SET_TABLE",
+  "table": {
+    "name": "InventoryTable",
+    "sheetName": "Inventory",
+    "range": "A1:C200",
+    "showTotalsRow": true,
+    "style": {
+      "type": "NAMED",
+      "name": "TableStyleMedium2",
+      "showFirstColumn": false,
+      "showLastColumn": false,
+      "showRowStripes": true,
+      "showColumnStripes": false
+    }
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `table` | Yes | One workbook-global table definition payload. |
+
+`table` payload:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `name` | Yes | Workbook-global table identifier. Must be a valid defined-name token and must not conflict with an existing defined name. |
+| `sheetName` | Yes | Existing sheet that owns the table. |
+| `range` | Yes | Rectangular A1-style table range. Must include at least a header row plus one data row; with `showTotalsRow=true`, it must include one additional totals row. |
+| `showTotalsRow` | No | Whether the table includes a totals row. Defaults to `false`. |
+| `style` | Yes | Table style definition: `NONE` or `NAMED`. |
+
+Supported table-style variants:
+
+- `{"type":"NONE"}`
+- `{"type":"NAMED","name":"TableStyleMedium2","showFirstColumn":false,"showLastColumn":false,"showRowStripes":true,"showColumnStripes":false}`
+
+Named styles must exist in the workbook style source or the write fails.
+
+---
+
+### DELETE_TABLE
+
+Delete one existing workbook-global table by name and expected sheet.
+
+```json
+{
+  "type": "DELETE_TABLE",
+  "name": "InventoryTable",
+  "sheetName": "Inventory"
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `name` | Yes | Workbook-global table name to delete. |
+| `sheetName` | Yes | Sheet that must own the table. |
+
+The request fails if the table does not exist on the expected sheet.
+
+---
+
 ### APPEND_ROW
 
 Append a single row of typed values after the last value-bearing row in a sheet.
@@ -1123,6 +1247,65 @@ Range-selection payloads use:
 }
 ```
 
+### GET_AUTOFILTERS
+
+Returns factual autofilter metadata for one sheet. The result may include:
+
+- `SHEET`: one sheet-owned autofilter stored directly on the worksheet
+- `TABLE`: one table-owned autofilter stored on a table definition, including `tableName`
+
+```json
+{
+  "type": "GET_AUTOFILTERS",
+  "requestId": "autofilters",
+  "sheetName": "Inventory"
+}
+```
+
+### GET_TABLES
+
+Returns factual table metadata selected by workbook-global table name or all tables.
+
+```json
+{
+  "type": "GET_TABLES",
+  "requestId": "tables",
+  "selection": { "type": "ALL" }
+}
+```
+
+```json
+{
+  "type": "GET_TABLES",
+  "requestId": "selected-tables",
+  "selection": {
+    "type": "BY_NAMES",
+    "names": ["InventoryTable", "Trips"]
+  }
+}
+```
+
+Each returned table includes:
+
+- `name`
+- `sheetName`
+- `range`
+- `headerRowCount`
+- `totalsRowCount`
+- `columnNames`
+- `style`
+- `hasAutofilter`
+
+Table-selection payloads use:
+
+```json
+{ "type": "ALL" }
+{
+  "type": "BY_NAMES",
+  "names": ["InventoryTable", "Trips"]
+}
+```
+
 ### GET_FORMULA_SURFACE
 
 Groups formula usage across one or more sheets.
@@ -1235,6 +1418,46 @@ unsupported rules, broken formulas, and overlapping validation coverage.
 }
 ```
 
+### ANALYZE_AUTOFILTER_HEALTH
+
+Reports autofilter findings such as invalid ranges, blank header rows, or ownership mismatches
+between sheet-level filters and tables.
+
+```json
+{
+  "type": "ANALYZE_AUTOFILTER_HEALTH",
+  "requestId": "autofilter-health",
+  "selection": {
+    "type": "SELECTED",
+    "sheetNames": ["Inventory", "Summary"]
+  }
+}
+```
+
+### ANALYZE_TABLE_HEALTH
+
+Reports table findings such as overlaps, broken ranges, blank or duplicate headers, or style
+mismatches.
+
+```json
+{
+  "type": "ANALYZE_TABLE_HEALTH",
+  "requestId": "table-health",
+  "selection": { "type": "ALL" }
+}
+```
+
+```json
+{
+  "type": "ANALYZE_TABLE_HEALTH",
+  "requestId": "selected-table-health",
+  "selection": {
+    "type": "BY_NAMES",
+    "names": ["InventoryTable", "Trips"]
+  }
+}
+```
+
 ### ANALYZE_HYPERLINK_HEALTH
 
 Reports hyperlink findings such as malformed external targets, missing local file targets,
@@ -1269,8 +1492,8 @@ Reports named-range findings such as broken references, unresolved targets, and 
 
 ### ANALYZE_WORKBOOK_FINDINGS
 
-Runs the first finding-bearing analysis family across the workbook and returns one aggregated
-finding list.
+Runs every shipped finding-bearing analysis family across the workbook and returns one aggregated
+flat finding list.
 
 ```json
 {

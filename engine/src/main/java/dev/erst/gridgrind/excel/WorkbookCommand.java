@@ -26,6 +26,10 @@ public sealed interface WorkbookCommand
         WorkbookCommand.ApplyStyle,
         WorkbookCommand.SetDataValidation,
         WorkbookCommand.ClearDataValidations,
+        WorkbookCommand.SetAutofilter,
+        WorkbookCommand.ClearAutofilter,
+        WorkbookCommand.SetTable,
+        WorkbookCommand.DeleteTable,
         WorkbookCommand.SetNamedRange,
         WorkbookCommand.DeleteNamedRange,
         WorkbookCommand.AppendRow,
@@ -336,6 +340,48 @@ public sealed interface WorkbookCommand
     public ClearDataValidations {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(selection, "selection must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Creates or replaces one sheet-level autofilter range. */
+  record SetAutofilter(String sheetName, String range) implements WorkbookCommand {
+    public SetAutofilter {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(range, "range must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (range.isBlank()) {
+        throw new IllegalArgumentException("range must not be blank");
+      }
+    }
+  }
+
+  /** Clears the sheet-level autofilter range on one sheet. */
+  record ClearAutofilter(String sheetName) implements WorkbookCommand {
+    public ClearAutofilter {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Creates or replaces one workbook-global table definition. */
+  record SetTable(ExcelTableDefinition definition) implements WorkbookCommand {
+    public SetTable {
+      Objects.requireNonNull(definition, "definition must not be null");
+    }
+  }
+
+  /** Deletes one existing table by workbook-global name and expected sheet. */
+  record DeleteTable(String name, String sheetName) implements WorkbookCommand {
+    public DeleteTable {
+      name = ExcelTableDefinition.validateName(name);
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }

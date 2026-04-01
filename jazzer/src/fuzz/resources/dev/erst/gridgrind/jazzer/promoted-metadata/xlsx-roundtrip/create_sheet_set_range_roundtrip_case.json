@@ -3,6 +3,18 @@
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest/applyCommands/fed8f48b6074bdef648e7d027c1ace4c7192ba1b",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/create_sheet_set_range_roundtrip_case.bin",
   "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "XLSX_ROUND_TRIP",
+      "inputBytes" : 17,
+      "commandCount" : 6,
+      "commandKinds" : {
+        "CREATE_SHEET" : 6
+      },
+      "styleKinds" : { }
+    }
+  },
   "promotedAt" : "2026-03-26T04:16:05.368955Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/create_sheet_set_range_roundtrip_case.txt"
 }

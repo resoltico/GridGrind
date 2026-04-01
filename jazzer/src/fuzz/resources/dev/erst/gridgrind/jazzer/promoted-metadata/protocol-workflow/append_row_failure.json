@@ -3,6 +3,26 @@
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/feb194449eb0bc7f9dd0bcc4ac8e4b1aecbe069c",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/append_row_failure.bin",
   "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_WORKFLOW",
+      "inputBytes" : 67,
+      "sourceKind" : "EXISTING",
+      "persistenceKind" : "OVERWRITE",
+      "operationCount" : 1,
+      "operationKinds" : {
+        "CLEAR_HYPERLINK" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 6,
+      "readKinds" : {
+        "GET_SHEET_SCHEMA" : 5,
+        "GET_WORKBOOK_SUMMARY" : 1
+      },
+      "responseKind" : "FAILURE"
+    }
+  },
   "promotedAt" : "2026-03-26T04:15:59.580999Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/append_row_failure.txt"
 }

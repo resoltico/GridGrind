@@ -26,6 +26,8 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = WorkbookReadResult.DataValidationsResult.class,
       name = "GET_DATA_VALIDATIONS"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.AutofiltersResult.class, name = "GET_AUTOFILTERS"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.TablesResult.class, name = "GET_TABLES"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.FormulaSurfaceResult.class,
       name = "GET_FORMULA_SURFACE"),
@@ -39,6 +41,12 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = WorkbookReadResult.DataValidationHealthResult.class,
       name = "ANALYZE_DATA_VALIDATION_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.AutofilterHealthResult.class,
+      name = "ANALYZE_AUTOFILTER_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.TableHealthResult.class,
+      name = "ANALYZE_TABLE_HEALTH"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.HyperlinkHealthResult.class,
       name = "ANALYZE_HYPERLINK_HEALTH"),
@@ -67,6 +75,8 @@ public sealed interface WorkbookReadResult
           CommentsResult,
           SheetLayoutResult,
           DataValidationsResult,
+          AutofiltersResult,
+          TablesResult,
           FormulaSurfaceResult,
           SheetSchemaResult,
           NamedRangeSurfaceResult {}
@@ -75,6 +85,8 @@ public sealed interface WorkbookReadResult
   sealed interface Analysis extends WorkbookReadResult
       permits FormulaHealthResult,
           DataValidationHealthResult,
+          AutofilterHealthResult,
+          TableHealthResult,
           HyperlinkHealthResult,
           NamedRangeHealthResult,
           WorkbookFindingsResult {}
@@ -178,6 +190,25 @@ public sealed interface WorkbookReadResult
     }
   }
 
+  /** Returns sheet- and table-owned autofilter metadata for one sheet. */
+  record AutofiltersResult(
+      String requestId, String sheetName, List<AutofilterEntryReport> autofilters)
+      implements Introspection {
+    public AutofiltersResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      autofilters = copyValues(autofilters, "autofilters");
+    }
+  }
+
+  /** Returns factual table metadata selected by workbook-global table name or all tables. */
+  record TablesResult(String requestId, List<TableEntryReport> tables) implements Introspection {
+    public TablesResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      tables = copyValues(tables, "tables");
+    }
+  }
+
   /** Returns grouped formula usage facts across one or more sheets. */
   record FormulaSurfaceResult(String requestId, GridGrindResponse.FormulaSurfaceReport analysis)
       implements Introspection {
@@ -219,6 +250,23 @@ public sealed interface WorkbookReadResult
   record DataValidationHealthResult(String requestId, DataValidationHealthReport analysis)
       implements Analysis {
     public DataValidationHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns autofilter-health findings. */
+  record AutofilterHealthResult(String requestId, AutofilterHealthReport analysis)
+      implements Analysis {
+    public AutofilterHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns table-health findings. */
+  record TableHealthResult(String requestId, TableHealthReport analysis) implements Analysis {
+    public TableHealthResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }

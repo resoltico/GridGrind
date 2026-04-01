@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.20.0"
+version: "0.21.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-04-01"
 route:
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 13 |
-| `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 10 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 14 |
+| `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 7 |
-| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 10 |
-| `regression` | four isolated per-harness regression tasks over all committed `*Inputs` resources | replay of the committed custom seed floor | N/A | Yes | 39 total across harnesses |
+| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 11 |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 43 total across harnesses |
 
 ---
 
@@ -39,7 +39,7 @@ Surface:
 - request-model validation
 - ordered `reads` payloads, selectors, and request/result correlation IDs
 - style payloads including typed `fontHeight`, fill, color, and border input shapes
-- hyperlink, comment, named-range, and data-validation payload shapes
+- hyperlink, comment, named-range, data-validation, table, and autofilter payload shapes
 
 What it asserts:
 - no unexpected crash during parsing
@@ -95,7 +95,7 @@ Surface:
 - ordered `WorkbookCommand` sequences generated from raw bytes
 - direct `WorkbookCommandExecutor.apply(...)`
 - workbook structural invariants
-- hyperlink, comment, named-range, and data-validation command execution paths
+- hyperlink, comment, named-range, data-validation, table, and autofilter command execution paths
 
 What it asserts:
 - workbook shape remains coherent after successful execution
@@ -119,6 +119,7 @@ Surface:
 - ordered `WorkbookCommand` sequences
 - save to `.xlsx`
 - reopen with Apache POI `XSSFWorkbook`
+- table and autofilter persistence boundaries after bounded command sequences
 
 What it asserts:
 - successful command sequences can be saved and reopened
@@ -128,6 +129,8 @@ What it asserts:
 - named ranges remain coherent after reopen, including normalized target ordering for reversed
   input ranges
 - data-validation state remains readable and normalized after reopen when those commands succeed
+- table and autofilter commands remain structurally coherent after reopen when those commands
+  succeed or are classified as expected-invalid
 
 Telemetry signals:
 - command-kind counts
@@ -159,6 +162,7 @@ Current deterministic support scope:
 - `XlsxRoundTripVerifierTest`: targeted style-aware and authoring-metadata round-trip verifier
   behavior outside the fuzz loop, including expectation derivation from the real pre-save workbook
   state
+- `PromotionMetadataTest`: replay-expectation verification for every promoted metadata entry
 
 These tests are not fuzz harnesses. They protect the Jazzer infrastructure itself.
 
@@ -173,13 +177,13 @@ Committed custom seeds currently in source control:
 | `protocol-request` | `sheet_management_request.json` | readable valid request seed taken from the public sheet-management example |
 | `protocol-request` | `budget_request.json` | readable budget workflow seed with range writes, style, formulas, and explicit workbook/cell/window/schema reads |
 | `protocol-request` | `data_validation_request.json` | readable validation workflow seed covering validation authoring, partial clearing, factual validation reads, and validation-health analysis |
+| `protocol-request` | `table_autofilter_request.json` | readable table-and-autofilter workflow seed covering sheet filters, table authoring, factual reads, and both health-analysis families |
 | `protocol-request` | `excel_authoring_essentials_request.json` | readable authoring seed covering URL and FILE hyperlinks, comments, named ranges, and explicit metadata plus named-range reads |
 | `protocol-request` | `file_hyperlink_health_request.json` | readable hyperlink-analysis seed covering FILE path inputs, `file:` URI normalization, hyperlink metadata reads, and hyperlink-health analysis |
 | `protocol-request` | `live_workflow_create.json` | readable multi-sheet finance workflow with append-row and formula authoring |
 | `protocol-request` | `live_workflow_revise.json` | readable existing-workbook revision seed with overwrite persistence |
 | `protocol-request` | `structural_layout_request.json` | readable structural-layout seed covering merge, sizing, and freeze panes |
 | `protocol-request` | `formatting_depth_request.json` | readable formatting-depth seed covering typed `fontHeight`, fill, color, and border patches |
-| `protocol-request` | `introspection_analysis_request.json` | readable read-heavy seed covering workbook summary, metadata reads, layout reads, factual surface reads, and the first analysis family |
 | `protocol-request` | `invalid_data_validation_empty_explicit_list.json` | readable expected-invalid seed covering empty explicit-list validation rejection |
 | `protocol-request` | `invalid_font_height_request.json` | readable expected-invalid seed covering typed `fontHeight` validation |
 | `protocol-request` | `invalid_request_shape_missing_request_id.json` | readable expected-invalid seed covering missing required read fields and `INVALID_REQUEST_SHAPE` replay classification |
@@ -194,6 +198,7 @@ Committed custom seeds currently in source control:
 | `protocol-workflow` | `save_as_apply_style_failure.bin` | structured workflow seed that exercises `SAVE_AS` plus style-bearing protocol failure handling |
 | `protocol-workflow` | `save_as_named_range_failure.bin` | structured workflow seed that exercises `SAVE_AS` plus repeated named-range operations in a protocol failure path |
 | `protocol-workflow` | `set_comment_clear_range_failure.bin` | structured workflow seed that exercises comment mutation together with later range clearing in a protocol failure path |
+| `protocol-workflow` | `existing_overwrite_set_autofilter_failure.bin` | structured workflow seed that replays through `EXISTING` plus `OVERWRITE` with autofilter operations in a protocol failure path |
 | `engine-command-sequence` | `invalid_cell_address_case.bin` | direct engine seed that replays to an expected `InvalidCellAddressException` |
 | `engine-command-sequence` | `create_sheet_only_success.bin` | direct engine seed that replays to successful repeated `CREATE_SHEET` commands |
 | `engine-command-sequence` | `create_sheet_set_range_success.bin` | direct engine seed that replays to successful `CREATE_SHEET` plus `SET_RANGE` commands |
@@ -211,6 +216,7 @@ Committed custom seeds currently in source control:
 | `xlsx-roundtrip` | `named_range_normalization_roundtrip_success.bin` | successful round-trip seed that preserves named-range state while normalizing reversed target ordering |
 | `xlsx-roundtrip` | `hyperlink_comment_invalid_row_case.bin` | expected-invalid round-trip seed that exercises hyperlink and comment commands alongside invalid row mutation input |
 | `xlsx-roundtrip` | `set_hyperlink_replacement_roundtrip_success.bin` | successful round-trip seed that preserves the latest hyperlink target after repeated writes to the same cell |
+| `xlsx-roundtrip` | `set_table_missing_sheet_invalid_roundtrip.bin` | expected-invalid round-trip seed that exercises table authoring across missing-sheet failure classification |
 
 Matching promotion metadata lives under:
 
@@ -222,6 +228,7 @@ Those metadata files document:
 - source artifact path
 - promoted input path
 - replay outcome kind
+- replay expectation
 - replay text artifact path
 
 ---
@@ -235,12 +242,14 @@ The current Jazzer layer is strongest at:
 - a committed custom seed floor that now includes readable public example requests and replay-
   verified binary workflow seeds
 - validation-aware request and round-trip coverage for the data-validation authoring family
+- validation-aware request and round-trip coverage for the table and autofilter authoring family
 - normalized local-file hyperlink path semantics in request seeds and `.xlsx` round-trip
   invariants
 - style-aware `.xlsx` round-trip verification for formatting depth, authoring metadata, and
-  named-range normalization plus data-validation persistence
+  named-range normalization plus data-validation and table/autofilter persistence boundaries
 - explicit source/persistence-type telemetry for service-level workflow fuzzing
 - deterministic tests that protect the Jazzer reporting and verifier infrastructure itself
+- replay-expectation verification that prevents promoted binary-seed semantics from drifting
 - regression preservation of real discovered local inputs
 - local operator observability after every supported fuzz run
 
@@ -259,7 +268,7 @@ The most important architectural strength is not just the harnesses. It is the f
 Still outside the current Jazzer surface:
 - CLI transport fuzzing
 - file-path and filesystem persistence boundary fuzzing
-- conditional-formatting, table, chart, picture, and pivot coverage
+- conditional-formatting, chart, picture, and pivot coverage
 - extremely large-workbook or streaming-strategy fuzzing
 - cross-run corpus-health scoring beyond counts and newest-entry inspection
 - automatic conversion of promoted inputs into deterministic main-suite tests

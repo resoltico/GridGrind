@@ -51,10 +51,12 @@ public final class GridGrindProtocolCatalog {
           Map.entry(CellSelection.class, "cellSelectionTypes"),
           Map.entry(RangeSelection.class, "rangeSelectionTypes"),
           Map.entry(SheetSelection.class, "sheetSelectionTypes"),
+          Map.entry(TableSelection.class, "tableSelectionTypes"),
           Map.entry(NamedRangeSelection.class, "namedRangeSelectionTypes"),
           Map.entry(NamedRangeScope.class, "namedRangeScopeTypes"),
           Map.entry(NamedRangeSelector.class, "namedRangeSelectorTypes"),
           Map.entry(DataValidationRuleInput.class, "dataValidationRuleTypes"),
+          Map.entry(TableStyleInput.class, "tableStyleTypes"),
           Map.entry(FontHeightInput.class, "fontHeightTypes"));
   private static final Map<Class<?>, String> PLAIN_FIELD_SHAPE_GROUPS =
       Map.ofEntries(
@@ -65,7 +67,8 @@ public final class GridGrindProtocolCatalog {
           Map.entry(CellBorderSideInput.class, "cellBorderSideInputType"),
           Map.entry(DataValidationInput.class, "dataValidationInputType"),
           Map.entry(DataValidationPromptInput.class, "dataValidationPromptInputType"),
-          Map.entry(DataValidationErrorAlertInput.class, "dataValidationErrorAlertInputType"));
+          Map.entry(DataValidationErrorAlertInput.class, "dataValidationErrorAlertInputType"),
+          Map.entry(TableInput.class, "tableInputType"));
   private static final List<TypeDescriptor> SOURCE_TYPES =
       List.of(
           descriptor(
@@ -201,6 +204,30 @@ public final class GridGrindProtocolCatalog {
                   + " SELECTED removes only intersecting coverage; ALL clears every rule"
                   + " on the sheet."),
           descriptor(
+              WorkbookOperation.SetAutofilter.class,
+              "SET_AUTOFILTER",
+              "Create or replace one sheet-level autofilter range."
+                  + " The range must include a nonblank header row and must not overlap"
+                  + " an existing table range."),
+          descriptor(
+              WorkbookOperation.ClearAutofilter.class,
+              "CLEAR_AUTOFILTER",
+              "Clear the sheet-level autofilter range on one sheet."
+                  + " Table-owned autofilters remain attached to their tables."),
+          descriptor(
+              WorkbookOperation.SetTable.class,
+              "SET_TABLE",
+              "Create or replace one workbook-global table definition."
+                  + " Table names are workbook-global and case-insensitive."
+                  + " Header cells must be nonblank and unique (case-insensitive)."
+                  + " Overlapping existing tables are rejected."
+                  + " Any overlapping sheet-level autofilter is cleared so the table-owned"
+                  + " autofilter becomes authoritative on that range."),
+          descriptor(
+              WorkbookOperation.DeleteTable.class,
+              "DELETE_TABLE",
+              "Delete one existing workbook-global table by name and expected sheet name."),
+          descriptor(
               WorkbookOperation.SetNamedRange.class,
               "SET_NAMED_RANGE",
               "Create or replace one workbook- or sheet-scoped named range."),
@@ -300,6 +327,17 @@ public final class GridGrindProtocolCatalog {
                   + " and custom formulas; unsupported rules are surfaced explicitly with typed"
                   + " detail."),
           descriptor(
+              WorkbookReadOperation.GetAutofilters.class,
+              "GET_AUTOFILTERS",
+              "Return sheet- and table-owned autofilter metadata for one sheet."
+                  + " Each entry is typed as SHEET or TABLE so ownership is explicit."),
+          descriptor(
+              WorkbookReadOperation.GetTables.class,
+              "GET_TABLES",
+              "Return factual table metadata selected by workbook-global table name or ALL."
+                  + " Each table includes range, header and totals row counts, column names,"
+                  + " style metadata, and whether a table-owned autofilter is present."),
+          descriptor(
               WorkbookReadOperation.GetFormulaSurface.class,
               "GET_FORMULA_SURFACE",
               "Summarize formula usage patterns across the selected sheets."),
@@ -330,6 +368,16 @@ public final class GridGrindProtocolCatalog {
               "Report data-validation findings such as unsupported, overlapping, or"
                   + " broken-formula rules."),
           descriptor(
+              WorkbookReadOperation.AnalyzeAutofilterHealth.class,
+              "ANALYZE_AUTOFILTER_HEALTH",
+              "Report autofilter findings such as invalid ranges, blank header rows,"
+                  + " or ownership mismatches between sheet-level filters and tables."),
+          descriptor(
+              WorkbookReadOperation.AnalyzeTableHealth.class,
+              "ANALYZE_TABLE_HEALTH",
+              "Report table findings such as overlaps, broken references,"
+                  + " blank or duplicate headers, and unresolved styles."),
+          descriptor(
               WorkbookReadOperation.AnalyzeHyperlinkHealth.class,
               "ANALYZE_HYPERLINK_HEALTH",
               "Report hyperlink findings such as malformed, missing, unresolved, or broken"
@@ -343,10 +391,9 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.AnalyzeWorkbookFindings.class,
               "ANALYZE_WORKBOOK_FINDINGS",
-              "Run all analysis families (formula health, hyperlink health, named-range health)"
-                  + " across the entire workbook and aggregate findings in a single response."
-                  + " Equivalent to issuing ANALYZE_FORMULA_HEALTH, ANALYZE_HYPERLINK_HEALTH,"
-                  + " and ANALYZE_NAMED_RANGE_HEALTH in one request."));
+              "Run all analysis families (formula health, data-validation health,"
+                  + " autofilter health, table health, hyperlink health, and named-range health)"
+                  + " across the entire workbook and aggregate findings in a single response."));
   private static final List<NestedTypeDescriptor> NESTED_TYPE_GROUPS =
       List.of(
           nestedTypeGroup(
@@ -423,6 +470,16 @@ public final class GridGrindProtocolCatalog {
                       SheetSelection.Selected.class,
                       "SELECTED",
                       "Select only the supplied ordered sheet names."))),
+          nestedTypeGroup(
+              "tableSelectionTypes",
+              TableSelection.class,
+              List.of(
+                  descriptor(
+                      TableSelection.All.class, "ALL", "Select every table in workbook order."),
+                  descriptor(
+                      TableSelection.ByNames.class,
+                      "BY_NAMES",
+                      "Select only the supplied workbook-global table names."))),
           nestedTypeGroup(
               "namedRangeSelectionTypes",
               NamedRangeSelection.class,
@@ -520,7 +577,17 @@ public final class GridGrindProtocolCatalog {
                       DataValidationRuleInput.CustomFormula.class,
                       "CUSTOM_FORMULA",
                       "Allow values that satisfy a custom formula."
-                          + " Omit the leading = sign."))));
+                          + " Omit the leading = sign."))),
+          nestedTypeGroup(
+              "tableStyleTypes",
+              TableStyleInput.class,
+              List.of(
+                  descriptor(TableStyleInput.None.class, "NONE", "Clear table style metadata."),
+                  descriptor(
+                      TableStyleInput.Named.class,
+                      "NAMED",
+                      "Apply one named workbook table style with explicit stripe and emphasis"
+                          + " flags."))));
   private static final List<PlainTypeDescriptor> PLAIN_TYPE_DESCRIPTORS =
       List.of(
           plainTypeDescriptor(
@@ -585,7 +652,13 @@ public final class GridGrindProtocolCatalog {
               DataValidationErrorAlertInput.class,
               "DataValidationErrorAlertInput",
               "Optional error-box configuration shown when invalid data is entered.",
-              List.of("showErrorBox")));
+              List.of("showErrorBox")),
+          plainTypeDescriptor(
+              "tableInputType",
+              TableInput.class,
+              "TableInput",
+              "Workbook-global table definition for one SET_TABLE request.",
+              List.of("showTotalsRow")));
   private static final Catalog CATALOG = buildCatalog();
 
   private GridGrindProtocolCatalog() {}

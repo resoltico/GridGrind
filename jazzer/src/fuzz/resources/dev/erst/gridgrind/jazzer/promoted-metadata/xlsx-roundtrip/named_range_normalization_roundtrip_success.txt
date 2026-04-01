@@ -1,8 +1,10 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-8532f5071c334f5dc337c8a2dd48d4ca837d0343
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/named_range_normalization_roundtrip_success.bin
 Harness: xlsx-roundtrip
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: SheetNotFoundException
+Message: Sheet does not exist: K
 Input Bytes: 28
 Command Count: 9
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=8, SET_NAMED_RANGE=1
+Command Kinds: CREATE_SHEET=8, CLEAR_DATA_VALIDATIONS=1

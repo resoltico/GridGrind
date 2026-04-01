@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
@@ -17,6 +18,8 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
+import dev.erst.gridgrind.excel.ExcelTableSelection;
+import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -374,6 +377,163 @@ class DefaultGridGrindRequestExecutorTest {
         health.analysis().findings().getFirst().code());
     assertEquals(2, persisted.size());
     assertEquals(List.of("A2:C2", "A4:C5", "A3", "C3"), persisted.getFirst().ranges());
+  }
+
+  @Test
+  void returnsAutofilterAndTableReadResultsAndPersistsDefinitions() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-table-autofilter-");
+
+    GridGrindResponse response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.SetRange(
+                            "Budget",
+                            "A1:C4",
+                            List.of(
+                                List.of(
+                                    new CellInput.Text("Item"),
+                                    new CellInput.Text("Amount"),
+                                    new CellInput.Text("Billable")),
+                                List.of(
+                                    new CellInput.Text("Hosting"),
+                                    new CellInput.Numeric(49.0),
+                                    new CellInput.BooleanValue(true)),
+                                List.of(
+                                    new CellInput.Text("Domain"),
+                                    new CellInput.Numeric(12.0),
+                                    new CellInput.BooleanValue(false)),
+                                List.of(
+                                    new CellInput.Text("Support"),
+                                    new CellInput.Numeric(18.0),
+                                    new CellInput.BooleanValue(true)))),
+                        new WorkbookOperation.SetRange(
+                            "Budget",
+                            "E1:F3",
+                            List.of(
+                                List.of(new CellInput.Text("Queue"), new CellInput.Text("Owner")),
+                                List.of(
+                                    new CellInput.Text("Late invoices"),
+                                    new CellInput.Text("Marta")),
+                                List.of(
+                                    new CellInput.Text("Badge orders"),
+                                    new CellInput.Text("Rihards")))),
+                        new WorkbookOperation.SetAutofilter("Budget", "E1:F3"),
+                        new WorkbookOperation.SetTable(
+                            new TableInput(
+                                "BudgetTable",
+                                "Budget",
+                                "A1:C4",
+                                false,
+                                new TableStyleInput.Named(
+                                    "TableStyleMedium2", false, false, true, false)))),
+                    new WorkbookReadOperation.GetAutofilters("filters", "Budget"),
+                    new WorkbookReadOperation.GetTables("tables", new TableSelection.All()),
+                    new WorkbookReadOperation.AnalyzeAutofilterHealth(
+                        "autofilter-health", new SheetSelection.Selected(List.of("Budget"))),
+                    new WorkbookReadOperation.AnalyzeTableHealth(
+                        "table-health", new TableSelection.All())));
+
+    GridGrindResponse.Success success = success(response);
+    WorkbookReadResult.AutofiltersResult filters =
+        read(success, "filters", WorkbookReadResult.AutofiltersResult.class);
+    WorkbookReadResult.TablesResult tables =
+        read(success, "tables", WorkbookReadResult.TablesResult.class);
+    WorkbookReadResult.AutofilterHealthResult autofilterHealth =
+        read(success, "autofilter-health", WorkbookReadResult.AutofilterHealthResult.class);
+    WorkbookReadResult.TableHealthResult tableHealth =
+        read(success, "table-health", WorkbookReadResult.TableHealthResult.class);
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(
+        List.of(
+            new AutofilterEntryReport.SheetOwned("E1:F3"),
+            new AutofilterEntryReport.TableOwned("A1:C4", "BudgetTable")),
+        filters.autofilters());
+    assertEquals(1, tables.tables().size());
+    TableEntryReport table = tables.tables().getFirst();
+    assertEquals("BudgetTable", table.name());
+    assertEquals(List.of("Item", "Amount", "Billable"), table.columnNames());
+    assertEquals(
+        new TableStyleReport.Named("TableStyleMedium2", false, false, true, false), table.style());
+    assertTrue(table.hasAutofilter());
+    assertEquals(2, autofilterHealth.analysis().checkedAutofilterCount());
+    assertEquals(List.of(), autofilterHealth.analysis().findings());
+    assertEquals(1, tableHealth.analysis().checkedTableCount());
+    assertEquals(List.of(), tableHealth.analysis().findings());
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+      dev.erst.gridgrind.excel.WorkbookReadResult.AutofiltersResult reopenedFilters =
+          (dev.erst.gridgrind.excel.WorkbookReadResult.AutofiltersResult)
+              readExecutor
+                  .apply(workbook, new WorkbookReadCommand.GetAutofilters("filters", "Budget"))
+                  .getFirst();
+      dev.erst.gridgrind.excel.WorkbookReadResult.TablesResult reopenedTables =
+          (dev.erst.gridgrind.excel.WorkbookReadResult.TablesResult)
+              readExecutor
+                  .apply(
+                      workbook,
+                      new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All()))
+                  .getFirst();
+
+      assertEquals(
+          List.of(
+              new ExcelAutofilterSnapshot.SheetOwned("E1:F3"),
+              new ExcelAutofilterSnapshot.TableOwned("A1:C4", "BudgetTable")),
+          reopenedFilters.autofilters());
+      assertEquals(
+          List.of(
+              new ExcelTableSnapshot(
+                  "BudgetTable",
+                  "Budget",
+                  "A1:C4",
+                  1,
+                  0,
+                  List.of("Item", "Amount", "Billable"),
+                  new dev.erst.gridgrind.excel.ExcelTableStyleSnapshot.Named(
+                      "TableStyleMedium2", false, false, true, false),
+                  true)),
+          reopenedTables.tables());
+    }
+  }
+
+  @Test
+  void returnsTableReadResultsForByNameSelectionAndNoneStyle() {
+    GridGrindResponse response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.SetRange(
+                            "Budget",
+                            "A1:B2",
+                            List.of(
+                                List.of(new CellInput.Text("Item"), new CellInput.Text("Amount")),
+                                List.of(
+                                    new CellInput.Text("Hosting"), new CellInput.Numeric(49.0)))),
+                        new WorkbookOperation.SetTable(
+                            new TableInput(
+                                "BudgetTable",
+                                "Budget",
+                                "A1:B2",
+                                false,
+                                new TableStyleInput.None()))),
+                    new WorkbookReadOperation.GetTables(
+                        "tables", new TableSelection.ByNames(List.of("BudgetTable")))));
+
+    WorkbookReadResult.TablesResult tables =
+        read(success(response), "tables", WorkbookReadResult.TablesResult.class);
+
+    assertEquals(1, tables.tables().size());
+    assertEquals(new TableStyleReport.None(), tables.tables().getFirst().style());
   }
 
   @Test
@@ -1696,6 +1856,23 @@ class DefaultGridGrindRequestExecutorTest {
         DefaultGridGrindRequestExecutor.toCommand(
             new WorkbookOperation.ClearRange("Budget", "A1:B1")));
     assertInstanceOf(
+        WorkbookCommand.SetAutofilter.class,
+        DefaultGridGrindRequestExecutor.toCommand(
+            new WorkbookOperation.SetAutofilter("Budget", "A1:B4")));
+    assertInstanceOf(
+        WorkbookCommand.ClearAutofilter.class,
+        DefaultGridGrindRequestExecutor.toCommand(new WorkbookOperation.ClearAutofilter("Budget")));
+    assertInstanceOf(
+        WorkbookCommand.SetTable.class,
+        DefaultGridGrindRequestExecutor.toCommand(
+            new WorkbookOperation.SetTable(
+                new TableInput(
+                    "BudgetTable", "Budget", "A1:B4", false, new TableStyleInput.None()))));
+    assertInstanceOf(
+        WorkbookCommand.DeleteTable.class,
+        DefaultGridGrindRequestExecutor.toCommand(
+            new WorkbookOperation.DeleteTable("BudgetTable", "Budget")));
+    assertInstanceOf(
         WorkbookCommand.AppendRow.class,
         DefaultGridGrindRequestExecutor.toCommand(
             new WorkbookOperation.AppendRow("Budget", List.of(new CellInput.Text("x")))));
@@ -1747,6 +1924,17 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookReadCommand layout =
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.GetSheetLayout("layout", "Budget"));
+    WorkbookReadCommand validations =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.GetDataValidations(
+                "validations", "Budget", new RangeSelection.All()));
+    WorkbookReadCommand autofilters =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.GetAutofilters("autofilters", "Budget"));
+    WorkbookReadCommand tables =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.GetTables(
+                "tables", new TableSelection.ByNames(List.of("BudgetTable"))));
     WorkbookReadCommand formulaSurface =
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.GetFormulaSurface(
@@ -1762,6 +1950,18 @@ class DefaultGridGrindRequestExecutorTest {
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.AnalyzeFormulaHealth(
                 "formulaHealth", new SheetSelection.All()));
+    WorkbookReadCommand validationHealth =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.AnalyzeDataValidationHealth(
+                "validationHealth", new SheetSelection.All()));
+    WorkbookReadCommand autofilterHealth =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.AnalyzeAutofilterHealth(
+                "autofilterHealth", new SheetSelection.Selected(List.of("Budget"))));
+    WorkbookReadCommand tableHealth =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.AnalyzeTableHealth(
+                "tableHealth", new TableSelection.ByNames(List.of("BudgetTable"))));
     WorkbookReadCommand hyperlinkHealth =
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.AnalyzeHyperlinkHealth(
@@ -1783,10 +1983,16 @@ class DefaultGridGrindRequestExecutorTest {
     assertInstanceOf(WorkbookReadCommand.GetHyperlinks.class, hyperlinks);
     assertInstanceOf(WorkbookReadCommand.GetComments.class, comments);
     assertInstanceOf(WorkbookReadCommand.GetSheetLayout.class, layout);
+    assertInstanceOf(WorkbookReadCommand.GetDataValidations.class, validations);
+    assertInstanceOf(WorkbookReadCommand.GetAutofilters.class, autofilters);
+    assertInstanceOf(WorkbookReadCommand.GetTables.class, tables);
     assertInstanceOf(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface);
     assertInstanceOf(WorkbookReadCommand.GetSheetSchema.class, schema);
     assertInstanceOf(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface);
     assertInstanceOf(WorkbookReadCommand.AnalyzeFormulaHealth.class, formulaHealth);
+    assertInstanceOf(WorkbookReadCommand.AnalyzeDataValidationHealth.class, validationHealth);
+    assertInstanceOf(WorkbookReadCommand.AnalyzeAutofilterHealth.class, autofilterHealth);
+    assertInstanceOf(WorkbookReadCommand.AnalyzeTableHealth.class, tableHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeHyperlinkHealth.class, hyperlinkHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeNamedRangeHealth.class, namedRangeHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeWorkbookFindings.class, workbookFindings);
@@ -1799,6 +2005,12 @@ class DefaultGridGrindRequestExecutorTest {
     assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelCellSelection.Selected.class,
         cast(WorkbookReadCommand.GetComments.class, comments).selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelRangeSelection.All.class,
+        cast(WorkbookReadCommand.GetDataValidations.class, validations).selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelTableSelection.ByNames.class,
+        cast(WorkbookReadCommand.GetTables.class, tables).selection());
     assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelSheetSelection.Selected.class,
         cast(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface).selection());
@@ -2200,11 +2412,15 @@ class DefaultGridGrindRequestExecutorTest {
             "GET_COMMENTS",
             "GET_SHEET_LAYOUT",
             "GET_DATA_VALIDATIONS",
+            "GET_AUTOFILTERS",
+            "GET_TABLES",
             "GET_FORMULA_SURFACE",
             "GET_SHEET_SCHEMA",
             "GET_NAMED_RANGE_SURFACE",
             "ANALYZE_FORMULA_HEALTH",
             "ANALYZE_DATA_VALIDATION_HEALTH",
+            "ANALYZE_AUTOFILTER_HEALTH",
+            "ANALYZE_TABLE_HEALTH",
             "ANALYZE_HYPERLINK_HEALTH",
             "ANALYZE_NAMED_RANGE_HEALTH",
             "ANALYZE_WORKBOOK_FINDINGS"),
@@ -2233,6 +2449,11 @@ class DefaultGridGrindRequestExecutorTest {
                 new WorkbookReadOperation.GetDataValidations(
                     "validations", "Budget", new RangeSelection.All())),
             DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.GetAutofilters("autofilters", "Budget")),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.GetTables(
+                    "tables", new TableSelection.ByNames(List.of("BudgetTable")))),
+            DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetFormulaSurface("formula", new SheetSelection.All())),
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetSheetSchema("schema", "Budget", "A1", 1, 1)),
@@ -2245,6 +2466,12 @@ class DefaultGridGrindRequestExecutorTest {
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.AnalyzeDataValidationHealth(
                     "validation-health", new SheetSelection.All())),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.AnalyzeAutofilterHealth(
+                    "autofilter-health", new SheetSelection.All())),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.AnalyzeTableHealth(
+                    "table-health", new TableSelection.All())),
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.AnalyzeHyperlinkHealth(
                     "hyperlink-health", new SheetSelection.All())),
@@ -2282,6 +2509,11 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookReadOperation validations =
         new WorkbookReadOperation.GetDataValidations(
             "validations", "Budget", new RangeSelection.Selected(List.of("A1:A3")));
+    WorkbookReadOperation autofilters =
+        new WorkbookReadOperation.GetAutofilters("autofilters", "Budget");
+    WorkbookReadOperation tables =
+        new WorkbookReadOperation.GetTables(
+            "tables", new TableSelection.ByNames(List.of("BudgetTable")));
     WorkbookReadOperation formula =
         new WorkbookReadOperation.GetFormulaSurface("formula", new SheetSelection.All());
     WorkbookReadOperation schema =
@@ -2294,6 +2526,12 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookReadOperation validationHealth =
         new WorkbookReadOperation.AnalyzeDataValidationHealth(
             "validation-health", new SheetSelection.Selected(List.of("Budget")));
+    WorkbookReadOperation autofilterHealth =
+        new WorkbookReadOperation.AnalyzeAutofilterHealth(
+            "autofilter-health", new SheetSelection.Selected(List.of("Budget")));
+    WorkbookReadOperation tableHealth =
+        new WorkbookReadOperation.AnalyzeTableHealth(
+            "table-health", new TableSelection.ByNames(List.of("BudgetTable")));
     WorkbookReadOperation hyperlinkHealth =
         new WorkbookReadOperation.AnalyzeHyperlinkHealth(
             "hyperlink-health", new SheetSelection.All());
@@ -2315,11 +2553,15 @@ class DefaultGridGrindRequestExecutorTest {
     assertReadContext(comments, "Budget", null, null, runtimeException);
     assertReadContext(layout, "Budget", null, null, runtimeException);
     assertReadContext(validations, "Budget", null, null, runtimeException);
+    assertReadContext(autofilters, "Budget", null, null, runtimeException);
+    assertReadContext(tables, null, null, null, runtimeException);
     assertReadContext(formula, null, null, null, runtimeException);
     assertReadContext(schema, "Budget", "C3", null, runtimeException);
     assertReadContext(surface, null, null, null, runtimeException);
     assertReadContext(formulaHealth, "Budget", null, null, runtimeException);
     assertReadContext(validationHealth, "Budget", null, null, runtimeException);
+    assertReadContext(autofilterHealth, "Budget", null, null, runtimeException);
+    assertReadContext(tableHealth, null, null, null, runtimeException);
     assertReadContext(hyperlinkHealth, null, null, null, runtimeException);
     assertReadContext(namedRangeHealth, null, null, "BudgetTotal", runtimeException);
     assertReadContext(workbookFindings, null, null, null, runtimeException);
@@ -2395,21 +2637,43 @@ class DefaultGridGrindRequestExecutorTest {
   @Test
   void extractsContextForAuthoringMetadataAndNamedRangeOperations() {
     RuntimeException exception = new RuntimeException("test");
-    WorkbookOperation setHyperlink =
+    assertWriteContext(
         new WorkbookOperation.SetHyperlink(
-            "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report"));
-    WorkbookOperation clearHyperlink = new WorkbookOperation.ClearHyperlink("Budget", "A1");
-    WorkbookOperation setComment =
+            "Budget", "A1", new HyperlinkTarget.Url("https://example.com/report")),
+        exception,
+        "Budget",
+        "A1",
+        null,
+        null);
+    assertWriteContext(
+        new WorkbookOperation.ClearHyperlink("Budget", "A1"),
+        exception,
+        "Budget",
+        "A1",
+        null,
+        null);
+    assertWriteContext(
         new WorkbookOperation.SetComment(
-            "Budget", "A1", new CommentInput("Review", "GridGrind", false));
-    WorkbookOperation clearComment = new WorkbookOperation.ClearComment("Budget", "A1");
-    WorkbookOperation applyStyle =
+            "Budget", "A1", new CommentInput("Review", "GridGrind", false)),
+        exception,
+        "Budget",
+        "A1",
+        null,
+        null);
+    assertWriteContext(
+        new WorkbookOperation.ClearComment("Budget", "A1"), exception, "Budget", "A1", null, null);
+    assertWriteContext(
         new WorkbookOperation.ApplyStyle(
             "Budget",
             "A1:B2",
             new CellStyleInput(
-                null, true, null, null, null, null, null, null, null, null, null, null, null));
-    WorkbookOperation setDataValidation =
+                null, true, null, null, null, null, null, null, null, null, null, null, null)),
+        exception,
+        "Budget",
+        null,
+        "A1:B2",
+        null);
+    assertWriteContext(
         new WorkbookOperation.SetDataValidation(
             "Budget",
             "B2:B5",
@@ -2419,63 +2683,65 @@ class DefaultGridGrindRequestExecutorTest {
                 true,
                 false,
                 new DataValidationPromptInput("Reason", "Use 20 characters or fewer.", true),
-                null));
-    WorkbookOperation clearDataValidations =
-        new WorkbookOperation.ClearDataValidations("Budget", new RangeSelection.All());
-    WorkbookOperation setNamedRange =
+                null)),
+        exception,
+        "Budget",
+        null,
+        "B2:B5",
+        null);
+    assertWriteContext(
+        new WorkbookOperation.ClearDataValidations("Budget", new RangeSelection.All()),
+        exception,
+        "Budget",
+        null,
+        null,
+        null);
+    assertWriteContext(
+        new WorkbookOperation.SetAutofilter("Budget", "A1:C4"),
+        exception,
+        "Budget",
+        null,
+        "A1:C4",
+        null);
+    assertWriteContext(
+        new WorkbookOperation.ClearAutofilter("Budget"), exception, "Budget", null, null, null);
+    assertWriteContext(
+        new WorkbookOperation.SetTable(
+            new TableInput("BudgetTable", "Budget", "A1:C4", false, new TableStyleInput.None())),
+        exception,
+        "Budget",
+        null,
+        "A1:C4",
+        null);
+    assertWriteContext(
+        new WorkbookOperation.DeleteTable("BudgetTable", "Budget"),
+        exception,
+        "Budget",
+        null,
+        null,
+        null);
+    assertWriteContext(
         new WorkbookOperation.SetNamedRange(
-            "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"));
-    WorkbookOperation deleteNamedRangeWorkbook =
-        new WorkbookOperation.DeleteNamedRange("BudgetTotal", new NamedRangeScope.Workbook());
-    WorkbookOperation deleteNamedRangeSheet =
-        new WorkbookOperation.DeleteNamedRange("LocalItem", new NamedRangeScope.Sheet("Budget"));
-
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setHyperlink, exception));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(clearHyperlink, exception));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setComment, exception));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(clearComment, exception));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(applyStyle, exception));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setDataValidation, exception));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(clearDataValidations, exception));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setNamedRange, exception));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(deleteNamedRangeWorkbook, exception));
-
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setHyperlink, exception));
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(clearHyperlink, exception));
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setComment, exception));
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(clearComment, exception));
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(applyStyle, exception));
-    assertEquals(
-        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setDataValidation, exception));
-    assertEquals(
-        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(clearDataValidations, exception));
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setNamedRange, exception));
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(deleteNamedRangeWorkbook, exception));
-    assertEquals(
-        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(deleteNamedRangeSheet, exception));
-
-    assertEquals("A1", DefaultGridGrindRequestExecutor.addressFor(setHyperlink, exception));
-    assertEquals("A1", DefaultGridGrindRequestExecutor.addressFor(clearHyperlink, exception));
-    assertEquals("A1", DefaultGridGrindRequestExecutor.addressFor(setComment, exception));
-    assertEquals("A1", DefaultGridGrindRequestExecutor.addressFor(clearComment, exception));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(setDataValidation, exception));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(clearDataValidations, exception));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(setNamedRange, exception));
-
-    assertEquals("A1:B2", DefaultGridGrindRequestExecutor.rangeFor(applyStyle, exception));
-    assertEquals("B2:B5", DefaultGridGrindRequestExecutor.rangeFor(setDataValidation, exception));
-    assertNull(DefaultGridGrindRequestExecutor.rangeFor(clearDataValidations, exception));
-    assertEquals("B4", DefaultGridGrindRequestExecutor.rangeFor(setNamedRange, exception));
-    assertNull(DefaultGridGrindRequestExecutor.rangeFor(deleteNamedRangeWorkbook, exception));
-
-    assertEquals(
-        "BudgetTotal", DefaultGridGrindRequestExecutor.namedRangeNameFor(setNamedRange, exception));
-    assertEquals(
-        "BudgetTotal",
-        DefaultGridGrindRequestExecutor.namedRangeNameFor(deleteNamedRangeWorkbook, exception));
-    assertEquals(
-        "LocalItem",
-        DefaultGridGrindRequestExecutor.namedRangeNameFor(deleteNamedRangeSheet, exception));
+            "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4")),
+        exception,
+        "Budget",
+        null,
+        "B4",
+        "BudgetTotal");
+    assertWriteContext(
+        new WorkbookOperation.DeleteNamedRange("BudgetTotal", new NamedRangeScope.Workbook()),
+        exception,
+        null,
+        null,
+        null,
+        "BudgetTotal");
+    assertWriteContext(
+        new WorkbookOperation.DeleteNamedRange("LocalItem", new NamedRangeScope.Sheet("Budget")),
+        exception,
+        "Budget",
+        null,
+        null,
+        "LocalItem");
     assertEquals(
         "BudgetTotal",
         DefaultGridGrindRequestExecutor.namedRangeNameFor(
@@ -2574,6 +2840,12 @@ class DefaultGridGrindRequestExecutorTest {
                     null,
                     null)),
             new WorkbookOperation.ClearDataValidations("Budget", new RangeSelection.All()),
+            new WorkbookOperation.SetAutofilter("Budget", "A1:C4"),
+            new WorkbookOperation.ClearAutofilter("Budget"),
+            new WorkbookOperation.SetTable(
+                new TableInput(
+                    "BudgetTable", "Budget", "A1:C4", false, new TableStyleInput.None())),
+            new WorkbookOperation.DeleteTable("BudgetTable", "Budget"),
             new WorkbookOperation.AppendRow("Budget", List.of(new CellInput.Text("x"))),
             new WorkbookOperation.AutoSizeColumns("Budget"),
             new WorkbookOperation.EvaluateFormulas(),
@@ -2636,6 +2908,23 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(
         expectedNamedRangeName,
         DefaultGridGrindRequestExecutor.namedRangeNameFor(operation, runtimeException));
+  }
+
+  private static void assertWriteContext(
+      WorkbookOperation operation,
+      Exception exception,
+      String expectedSheetName,
+      String expectedAddress,
+      String expectedRange,
+      String expectedNamedRangeName) {
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(operation, exception));
+    assertEquals(
+        expectedSheetName, DefaultGridGrindRequestExecutor.sheetNameFor(operation, exception));
+    assertEquals(expectedAddress, DefaultGridGrindRequestExecutor.addressFor(operation, exception));
+    assertEquals(expectedRange, DefaultGridGrindRequestExecutor.rangeFor(operation, exception));
+    assertEquals(
+        expectedNamedRangeName,
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(operation, exception));
   }
 
   @Test

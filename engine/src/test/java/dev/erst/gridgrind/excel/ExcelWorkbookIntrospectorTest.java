@@ -14,119 +14,39 @@ class ExcelWorkbookIntrospectorTest {
   @Test
   void executesEveryIntrospectionCommandAgainstWorkbookState() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      ExcelSheet budget = workbook.getOrCreateSheet("Budget");
-      budget.setCell("A1", ExcelCellValue.text("Report"));
-      budget.setCell("A2", ExcelCellValue.text("Hosting"));
-      budget.setCell("B2", ExcelCellValue.number(49.0));
-      budget.setCell("A3", ExcelCellValue.text("Domain"));
-      budget.setCell("B3", ExcelCellValue.number(12.0));
-      budget.setCell("B4", ExcelCellValue.number(61.0));
-      budget.setCell("B5", ExcelCellValue.formula("SUM(B2:B3)"));
-      budget.mergeCells("A1:B1");
-      budget.setColumnWidth(0, 0, 12.5);
-      budget.setRowHeight(0, 0, 18.0);
-      budget.freezePanes(1, 1, 1, 1);
-      budget.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
-      budget.setComment("A1", new ExcelComment("Review", "GridGrind", false));
-      workbook.setNamedRange(
-          new ExcelNamedRangeDefinition(
-              "BudgetTotal",
-              new ExcelNamedRangeScope.WorkbookScope(),
-              new ExcelNamedRangeTarget("Budget", "B4")));
+      populateWorkbookForFullIntrospection(workbook);
 
-      ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
+      IntrospectionReadResults results =
+          readEveryIntrospectionResult(workbook, new ExcelWorkbookIntrospector());
 
-      WorkbookReadResult.WorkbookSummaryResult workbookSummary =
-          cast(
-              WorkbookReadResult.WorkbookSummaryResult.class,
-              introspector.execute(
-                  workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook")));
-      WorkbookReadResult.NamedRangesResult namedRanges =
-          cast(
-              WorkbookReadResult.NamedRangesResult.class,
-              introspector.execute(
-                  workbook,
-                  new WorkbookReadCommand.GetNamedRanges(
-                      "ranges", new ExcelNamedRangeSelection.All())));
-      WorkbookReadResult.SheetSummaryResult sheetSummary =
-          cast(
-              WorkbookReadResult.SheetSummaryResult.class,
-              introspector.execute(
-                  workbook, new WorkbookReadCommand.GetSheetSummary("sheet", "Budget")));
-      WorkbookReadResult.CellsResult cells =
-          cast(
-              WorkbookReadResult.CellsResult.class,
-              introspector.execute(
-                  workbook,
-                  new WorkbookReadCommand.GetCells("cells", "Budget", List.of("A1", "B4"))));
-      WorkbookReadResult.WindowResult window =
-          cast(
-              WorkbookReadResult.WindowResult.class,
-              introspector.execute(
-                  workbook, new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 2, 2)));
-      WorkbookReadResult.MergedRegionsResult mergedRegions =
-          cast(
-              WorkbookReadResult.MergedRegionsResult.class,
-              introspector.execute(
-                  workbook, new WorkbookReadCommand.GetMergedRegions("merged", "Budget")));
-      WorkbookReadResult.HyperlinksResult hyperlinks =
-          cast(
-              WorkbookReadResult.HyperlinksResult.class,
-              introspector.execute(
-                  workbook,
-                  new WorkbookReadCommand.GetHyperlinks(
-                      "hyperlinks", "Budget", new ExcelCellSelection.Selected(List.of("A1")))));
-      WorkbookReadResult.CommentsResult comments =
-          cast(
-              WorkbookReadResult.CommentsResult.class,
-              introspector.execute(
-                  workbook,
-                  new WorkbookReadCommand.GetComments(
-                      "comments", "Budget", new ExcelCellSelection.AllUsedCells())));
-      WorkbookReadResult.SheetLayoutResult layout =
-          cast(
-              WorkbookReadResult.SheetLayoutResult.class,
-              introspector.execute(
-                  workbook, new WorkbookReadCommand.GetSheetLayout("layout", "Budget")));
-      WorkbookReadResult.FormulaSurfaceResult formulaSurface =
-          cast(
-              WorkbookReadResult.FormulaSurfaceResult.class,
-              introspector.execute(
-                  workbook,
-                  new WorkbookReadCommand.GetFormulaSurface(
-                      "formula", new ExcelSheetSelection.All())));
-      WorkbookReadResult.SheetSchemaResult schema =
-          cast(
-              WorkbookReadResult.SheetSchemaResult.class,
-              introspector.execute(
-                  workbook,
-                  new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 5, 2)));
-      WorkbookReadResult.NamedRangeSurfaceResult namedRangeSurface =
-          cast(
-              WorkbookReadResult.NamedRangeSurfaceResult.class,
-              introspector.execute(
-                  workbook,
-                  new WorkbookReadCommand.GetNamedRangeSurface(
-                      "namedRangeSurface", new ExcelNamedRangeSelection.All())));
-
-      assertEquals(List.of("Budget"), workbookSummary.workbook().sheetNames());
-      assertEquals("BudgetTotal", namedRanges.namedRanges().getFirst().name());
-      assertEquals("Budget", sheetSummary.sheet().sheetName());
-      assertEquals("A1", cells.cells().getFirst().address());
-      assertEquals("A1", window.window().rows().getFirst().cells().getFirst().address());
-      assertEquals("A1:B1", mergedRegions.mergedRegions().getFirst().range());
+      assertEquals(List.of("Budget", "Ops"), results.workbookSummary().workbook().sheetNames());
+      assertEquals("BudgetTotal", results.namedRanges().namedRanges().getFirst().name());
+      assertEquals("Budget", results.sheetSummary().sheet().sheetName());
+      assertEquals("A1", results.cells().cells().getFirst().address());
+      assertEquals("A1", results.window().window().rows().getFirst().cells().getFirst().address());
+      assertEquals("A1:B1", results.mergedRegions().mergedRegions().getFirst().range());
       assertEquals(
-          "https://example.com/report", hyperlinks.hyperlinks().getFirst().hyperlink().target());
-      assertEquals("Review", comments.comments().getFirst().comment().text());
-      assertInstanceOf(WorkbookReadResult.FreezePane.Frozen.class, layout.layout().freezePanes());
-      assertEquals(1, formulaSurface.analysis().totalFormulaCellCount());
+          "https://example.com/report",
+          results.hyperlinks().hyperlinks().getFirst().hyperlink().target());
+      assertEquals("Review", results.comments().comments().getFirst().comment().text());
+      assertInstanceOf(
+          WorkbookReadResult.FreezePane.Frozen.class, results.layout().layout().freezePanes());
+      assertEquals(1, results.formulaSurface().analysis().totalFormulaCellCount());
       assertEquals(
           "SUM(B2:B3)",
-          formulaSurface.analysis().sheets().getFirst().formulas().getFirst().formula());
-      assertEquals("Budget", schema.analysis().sheetName());
-      assertEquals(4, schema.analysis().dataRowCount());
-      assertEquals(1, namedRangeSurface.analysis().rangeBackedCount());
-      assertEquals(0, namedRangeSurface.analysis().formulaBackedCount());
+          results.formulaSurface().analysis().sheets().getFirst().formulas().getFirst().formula());
+      assertEquals("Budget", results.schema().analysis().sheetName());
+      assertEquals(4, results.schema().analysis().dataRowCount());
+      assertEquals(1, results.namedRangeSurface().analysis().rangeBackedCount());
+      assertEquals(0, results.namedRangeSurface().analysis().formulaBackedCount());
+      assertEquals(
+          List.of(
+              new ExcelAutofilterSnapshot.SheetOwned("D1:E3"),
+              new ExcelAutofilterSnapshot.TableOwned("A1:B3", "Queue")),
+          results.autofilters().autofilters());
+      assertEquals(1, results.tables().tables().size());
+      assertEquals("Queue", results.tables().tables().getFirst().name());
+      assertTrue(results.tables().tables().getFirst().hasAutofilter());
     }
   }
 
@@ -475,7 +395,134 @@ class ExcelWorkbookIntrospectorTest {
     }
   }
 
+  private void populateWorkbookForFullIntrospection(ExcelWorkbook workbook) {
+    ExcelSheet budget = workbook.getOrCreateSheet("Budget");
+    budget.setCell("A1", ExcelCellValue.text("Report"));
+    budget.setCell("A2", ExcelCellValue.text("Hosting"));
+    budget.setCell("B2", ExcelCellValue.number(49.0));
+    budget.setCell("A3", ExcelCellValue.text("Domain"));
+    budget.setCell("B3", ExcelCellValue.number(12.0));
+    budget.setCell("B4", ExcelCellValue.number(61.0));
+    budget.setCell("B5", ExcelCellValue.formula("SUM(B2:B3)"));
+    budget.mergeCells("A1:B1");
+    budget.setColumnWidth(0, 0, 12.5);
+    budget.setRowHeight(0, 0, 18.0);
+    budget.freezePanes(1, 1, 1, 1);
+    budget.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
+    budget.setComment("A1", new ExcelComment("Review", "GridGrind", false));
+    workbook.setNamedRange(
+        new ExcelNamedRangeDefinition(
+            "BudgetTotal",
+            new ExcelNamedRangeScope.WorkbookScope(),
+            new ExcelNamedRangeTarget("Budget", "B4")));
+
+    ExcelSheet ops = workbook.getOrCreateSheet("Ops");
+    ops.setCell("A1", ExcelCellValue.text("Owner"));
+    ops.setCell("B1", ExcelCellValue.text("Task"));
+    ops.setCell("A2", ExcelCellValue.text("Ada"));
+    ops.setCell("B2", ExcelCellValue.text("Queue"));
+    ops.setCell("A3", ExcelCellValue.text("Lin"));
+    ops.setCell("B3", ExcelCellValue.text("Pack"));
+    ops.setCell("D1", ExcelCellValue.text("Region"));
+    ops.setCell("E1", ExcelCellValue.text("Desk"));
+    ops.setCell("D2", ExcelCellValue.text("North"));
+    ops.setCell("E2", ExcelCellValue.text("A1"));
+    ops.setCell("D3", ExcelCellValue.text("South"));
+    ops.setCell("E3", ExcelCellValue.text("B1"));
+    ops.setAutofilter("D1:E3");
+    workbook.setTable(
+        new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+  }
+
+  private IntrospectionReadResults readEveryIntrospectionResult(
+      ExcelWorkbook workbook, ExcelWorkbookIntrospector introspector) {
+    return new IntrospectionReadResults(
+        cast(
+            WorkbookReadResult.WorkbookSummaryResult.class,
+            introspector.execute(workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook"))),
+        cast(
+            WorkbookReadResult.NamedRangesResult.class,
+            introspector.execute(
+                workbook,
+                new WorkbookReadCommand.GetNamedRanges(
+                    "ranges", new ExcelNamedRangeSelection.All()))),
+        cast(
+            WorkbookReadResult.SheetSummaryResult.class,
+            introspector.execute(
+                workbook, new WorkbookReadCommand.GetSheetSummary("sheet", "Budget"))),
+        cast(
+            WorkbookReadResult.CellsResult.class,
+            introspector.execute(
+                workbook,
+                new WorkbookReadCommand.GetCells("cells", "Budget", List.of("A1", "B4")))),
+        cast(
+            WorkbookReadResult.WindowResult.class,
+            introspector.execute(
+                workbook, new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 2, 2))),
+        cast(
+            WorkbookReadResult.MergedRegionsResult.class,
+            introspector.execute(
+                workbook, new WorkbookReadCommand.GetMergedRegions("merged", "Budget"))),
+        cast(
+            WorkbookReadResult.HyperlinksResult.class,
+            introspector.execute(
+                workbook,
+                new WorkbookReadCommand.GetHyperlinks(
+                    "hyperlinks", "Budget", new ExcelCellSelection.Selected(List.of("A1"))))),
+        cast(
+            WorkbookReadResult.CommentsResult.class,
+            introspector.execute(
+                workbook,
+                new WorkbookReadCommand.GetComments(
+                    "comments", "Budget", new ExcelCellSelection.AllUsedCells()))),
+        cast(
+            WorkbookReadResult.SheetLayoutResult.class,
+            introspector.execute(
+                workbook, new WorkbookReadCommand.GetSheetLayout("layout", "Budget"))),
+        cast(
+            WorkbookReadResult.FormulaSurfaceResult.class,
+            introspector.execute(
+                workbook,
+                new WorkbookReadCommand.GetFormulaSurface(
+                    "formula", new ExcelSheetSelection.All()))),
+        cast(
+            WorkbookReadResult.SheetSchemaResult.class,
+            introspector.execute(
+                workbook, new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 5, 2))),
+        cast(
+            WorkbookReadResult.NamedRangeSurfaceResult.class,
+            introspector.execute(
+                workbook,
+                new WorkbookReadCommand.GetNamedRangeSurface(
+                    "namedRangeSurface", new ExcelNamedRangeSelection.All()))),
+        cast(
+            WorkbookReadResult.AutofiltersResult.class,
+            introspector.execute(
+                workbook, new WorkbookReadCommand.GetAutofilters("autofilters", "Ops"))),
+        cast(
+            WorkbookReadResult.TablesResult.class,
+            introspector.execute(
+                workbook,
+                new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All()))));
+  }
+
   private static <T> T cast(Class<T> type, Object value) {
     return type.cast(assertInstanceOf(type, value));
   }
+
+  private record IntrospectionReadResults(
+      WorkbookReadResult.WorkbookSummaryResult workbookSummary,
+      WorkbookReadResult.NamedRangesResult namedRanges,
+      WorkbookReadResult.SheetSummaryResult sheetSummary,
+      WorkbookReadResult.CellsResult cells,
+      WorkbookReadResult.WindowResult window,
+      WorkbookReadResult.MergedRegionsResult mergedRegions,
+      WorkbookReadResult.HyperlinksResult hyperlinks,
+      WorkbookReadResult.CommentsResult comments,
+      WorkbookReadResult.SheetLayoutResult layout,
+      WorkbookReadResult.FormulaSurfaceResult formulaSurface,
+      WorkbookReadResult.SheetSchemaResult schema,
+      WorkbookReadResult.NamedRangeSurfaceResult namedRangeSurface,
+      WorkbookReadResult.AutofiltersResult autofilters,
+      WorkbookReadResult.TablesResult tables) {}
 }

@@ -24,6 +24,8 @@ public sealed interface WorkbookReadCommand
           GetComments,
           GetSheetLayout,
           GetDataValidations,
+          GetAutofilters,
+          GetTables,
           GetFormulaSurface,
           GetSheetSchema,
           GetNamedRangeSurface {}
@@ -32,6 +34,8 @@ public sealed interface WorkbookReadCommand
   sealed interface Analysis extends WorkbookReadCommand
       permits AnalyzeFormulaHealth,
           AnalyzeDataValidationHealth,
+          AnalyzeAutofilterHealth,
+          AnalyzeTableHealth,
           AnalyzeHyperlinkHealth,
           AnalyzeNamedRangeHealth,
           AnalyzeWorkbookFindings {}
@@ -137,6 +141,22 @@ public sealed interface WorkbookReadCommand
     }
   }
 
+  /** Returns sheet- and table-owned autofilter metadata for one sheet. */
+  record GetAutofilters(String requestId, String sheetName) implements Introspection {
+    public GetAutofilters {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Returns factual table metadata selected by workbook-global table name or all tables. */
+  record GetTables(String requestId, ExcelTableSelection selection) implements Introspection {
+    public GetTables {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
   /** Groups formula usage patterns across one or more sheets. */
   record GetFormulaSurface(String requestId, ExcelSheetSelection selection)
       implements Introspection {
@@ -181,6 +201,23 @@ public sealed interface WorkbookReadCommand
   record AnalyzeDataValidationHealth(String requestId, ExcelSheetSelection selection)
       implements Analysis {
     public AnalyzeDataValidationHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports autofilter findings such as invalid ranges or table-ownership mismatches. */
+  record AnalyzeAutofilterHealth(String requestId, ExcelSheetSelection selection)
+      implements Analysis {
+    public AnalyzeAutofilterHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports table findings such as overlaps, broken ranges, or invalid headers. */
+  record AnalyzeTableHealth(String requestId, ExcelTableSelection selection) implements Analysis {
+    public AnalyzeTableHealth {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(selection, "selection must not be null");
     }

@@ -87,6 +87,13 @@ public final class WorkbookCommandExecutor {
           workbook
               .sheet(clearDataValidations.sheetName())
               .clearDataValidations(clearDataValidations.selection());
+      case WorkbookCommand.SetAutofilter setAutofilter ->
+          workbook.sheet(setAutofilter.sheetName()).setAutofilter(setAutofilter.range());
+      case WorkbookCommand.ClearAutofilter clearAutofilter ->
+          workbook.sheet(clearAutofilter.sheetName()).clearAutofilter();
+      case WorkbookCommand.SetTable setTable -> workbook.setTable(setTable.definition());
+      case WorkbookCommand.DeleteTable deleteTable ->
+          workbook.deleteTable(deleteTable.name(), deleteTable.sheetName());
       case WorkbookCommand.SetNamedRange setNamedRange ->
           workbook.setNamedRange(setNamedRange.definition());
       case WorkbookCommand.DeleteNamedRange deleteNamedRange ->

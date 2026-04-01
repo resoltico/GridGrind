@@ -3,7 +3,7 @@ Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
-Message: Cannot construct instance of `dev.erst.gridgrind.protocol.WorkbookReadOperation$GetWorkbookSummary`, problem: requestId must not be null
+Message: Missing required field 'requestId'
 Input Bytes: 175
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED

@@ -79,6 +79,10 @@ class WorkbookAnalysisTest {
         new WorkbookAnalysis.FormulaHealth(2, summary, mutable);
     WorkbookAnalysis.HyperlinkHealth hyperlinkHealth =
         new WorkbookAnalysis.HyperlinkHealth(2, summary, mutable);
+    WorkbookAnalysis.AutofilterHealth autofilterHealth =
+        new WorkbookAnalysis.AutofilterHealth(2, summary, mutable);
+    WorkbookAnalysis.TableHealth tableHealth =
+        new WorkbookAnalysis.TableHealth(2, summary, mutable);
     WorkbookAnalysis.NamedRangeHealth namedRangeHealth =
         new WorkbookAnalysis.NamedRangeHealth(2, summary, mutable);
     WorkbookAnalysis.WorkbookFindings workbookFindings =
@@ -87,6 +91,8 @@ class WorkbookAnalysisTest {
 
     assertEquals(3, formulaHealth.findings().size());
     assertEquals(3, hyperlinkHealth.findings().size());
+    assertEquals(3, autofilterHealth.findings().size());
+    assertEquals(3, tableHealth.findings().size());
     assertEquals(3, namedRangeHealth.findings().size());
     assertEquals(3, workbookFindings.findings().size());
 
@@ -98,6 +104,12 @@ class WorkbookAnalysisTest {
         () -> new WorkbookAnalysis.HyperlinkHealth(-1, summary, List.of(finding)));
     assertThrows(
         IllegalArgumentException.class,
+        () -> new WorkbookAnalysis.AutofilterHealth(-1, summary, List.of(finding)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookAnalysis.TableHealth(-1, summary, List.of(finding)));
+    assertThrows(
+        IllegalArgumentException.class,
         () -> new WorkbookAnalysis.NamedRangeHealth(-1, summary, List.of(finding)));
     assertThrows(
         IllegalArgumentException.class,
@@ -107,6 +119,11 @@ class WorkbookAnalysisTest {
         () -> new WorkbookAnalysis.FormulaHealth(1, null, List.of(finding)));
     assertThrows(
         NullPointerException.class, () -> new WorkbookAnalysis.HyperlinkHealth(1, summary, null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookAnalysis.AutofilterHealth(1, summary, null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookAnalysis.TableHealth(1, summary, List.of(finding, null)));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookAnalysis.NamedRangeHealth(1, summary, List.of(finding, null)));

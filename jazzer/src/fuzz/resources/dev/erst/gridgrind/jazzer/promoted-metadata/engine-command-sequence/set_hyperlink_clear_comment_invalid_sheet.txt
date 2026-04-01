@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest/applyCommands/fe21d0d656a7904372613d7f0cd63f650d57e348
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/set_hyperlink_clear_comment_invalid_sheet.bin
 Harness: engine-command-sequence
 Outcome: EXPECTED_INVALID
 Kind: SheetNotFoundException
@@ -7,4 +7,4 @@ Message: Sheet does not exist: C
 Input Bytes: 64
 Command Count: 3
 Style Kinds: (none)
-Command Kinds: SET_HYPERLINK=1, CLEAR_COMMENT=1, MOVE_SHEET=1
+Command Kinds: CLEAR_AUTOFILTER=2, CLEAR_COMMENT=1

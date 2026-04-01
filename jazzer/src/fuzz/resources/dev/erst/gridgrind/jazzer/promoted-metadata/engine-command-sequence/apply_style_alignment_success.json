@@ -3,6 +3,18 @@
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest/roundTrip/8ce473f3b51e807c3e755a6dc341df86236186e0",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/apply_style_alignment_success.bin",
   "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "ENGINE_COMMAND_SEQUENCE",
+      "inputBytes" : 16,
+      "commandCount" : 4,
+      "commandKinds" : {
+        "CREATE_SHEET" : 4
+      },
+      "styleKinds" : { }
+    }
+  },
   "promotedAt" : "2026-03-26T11:37:34.151151Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/apply_style_alignment_success.txt"
 }

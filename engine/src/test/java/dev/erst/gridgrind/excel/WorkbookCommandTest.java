@@ -17,100 +17,97 @@ class WorkbookCommandTest {
             List.of(
                 new ArrayList<>(List.of(ExcelCellValue.text("Item"), ExcelCellValue.number(49.0))),
                 new ArrayList<>(List.of(ExcelCellValue.text("Tax"), ExcelCellValue.number(10.0)))));
-    ExcelCellStyle style =
-        new ExcelCellStyle(
-            "#,##0.00",
-            true,
-            false,
-            true,
-            ExcelHorizontalAlignment.RIGHT,
-            ExcelVerticalAlignment.CENTER,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null);
-
-    WorkbookCommand.CreateSheet createSheet = new WorkbookCommand.CreateSheet("Budget");
-    WorkbookCommand.RenameSheet renameSheet = new WorkbookCommand.RenameSheet("Budget", "Summary");
-    WorkbookCommand.DeleteSheet deleteSheet = new WorkbookCommand.DeleteSheet("Archive");
-    WorkbookCommand.MoveSheet moveSheet = new WorkbookCommand.MoveSheet("Budget", 1);
-    WorkbookCommand.MergeCells mergeCells = new WorkbookCommand.MergeCells("Budget", "A1:B2");
-    WorkbookCommand.UnmergeCells unmergeCells = new WorkbookCommand.UnmergeCells("Budget", "A1:B2");
-    WorkbookCommand.SetColumnWidth setColumnWidth =
-        new WorkbookCommand.SetColumnWidth("Budget", 0, 1, 16.0);
-    WorkbookCommand.SetRowHeight setRowHeight =
-        new WorkbookCommand.SetRowHeight("Budget", 0, 2, 28.5);
-    WorkbookCommand.FreezePanes freezePanes = new WorkbookCommand.FreezePanes("Budget", 1, 2, 1, 2);
-    WorkbookCommand.SetCell setCell =
-        new WorkbookCommand.SetCell("Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23)));
-    WorkbookCommand.SetRange setRange = new WorkbookCommand.SetRange("Budget", "A1:B2", rows);
-    WorkbookCommand.ClearRange clearRange = new WorkbookCommand.ClearRange("Budget", "C1:C2");
-    WorkbookCommand.SetHyperlink setHyperlink =
-        new WorkbookCommand.SetHyperlink(
-            "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report"));
-    WorkbookCommand.ClearHyperlink clearHyperlink =
-        new WorkbookCommand.ClearHyperlink("Budget", "A1");
-    WorkbookCommand.SetComment setComment =
-        new WorkbookCommand.SetComment(
-            "Budget", "A1", new ExcelComment("Review", "GridGrind", false));
-    WorkbookCommand.ClearComment clearComment = new WorkbookCommand.ClearComment("Budget", "A1");
-    WorkbookCommand.ApplyStyle applyStyle =
-        new WorkbookCommand.ApplyStyle("Budget", "A1:B1", style);
-    WorkbookCommand.SetDataValidation setDataValidation =
-        new WorkbookCommand.SetDataValidation("Budget", "B2:B5", validationDefinition());
-    WorkbookCommand.ClearDataValidations clearDataValidations =
-        new WorkbookCommand.ClearDataValidations(
-            "Budget", new ExcelRangeSelection.Selected(List.of("C2:D4")));
-    WorkbookCommand.SetNamedRange setNamedRange =
-        new WorkbookCommand.SetNamedRange(
-            new ExcelNamedRangeDefinition(
-                "BudgetTotal",
-                new ExcelNamedRangeScope.WorkbookScope(),
-                new ExcelNamedRangeTarget("Budget", "B4")));
-    WorkbookCommand.DeleteNamedRange deleteNamedRange =
-        new WorkbookCommand.DeleteNamedRange(
-            "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget"));
-    WorkbookCommand.AppendRow appendRow = new WorkbookCommand.AppendRow("Budget", values);
-    WorkbookCommand.AutoSizeColumns autoSizeColumns = new WorkbookCommand.AutoSizeColumns("Budget");
-    WorkbookCommand.EvaluateAllFormulas evaluate = new WorkbookCommand.EvaluateAllFormulas();
-    WorkbookCommand.ForceFormulaRecalculationOnOpen recalc =
-        new WorkbookCommand.ForceFormulaRecalculationOnOpen();
+    CreatedCommands commands = createSupportedCommands(values, rows, defaultStyle());
 
     values.clear();
     rows.clear();
 
-    assertEquals("Budget", createSheet.sheetName());
-    assertEquals("Summary", renameSheet.newSheetName());
-    assertEquals("Archive", deleteSheet.sheetName());
-    assertEquals(1, moveSheet.targetIndex());
-    assertEquals("A1:B2", mergeCells.range());
-    assertEquals("A1:B2", unmergeCells.range());
-    assertEquals(16.0, setColumnWidth.widthCharacters());
-    assertEquals(28.5, setRowHeight.heightPoints());
-    assertEquals(2, freezePanes.topRow());
-    assertEquals("A1", setCell.address());
-    assertEquals("A1:B2", setRange.range());
-    assertEquals(2, setRange.rows().size());
-    assertEquals("C1:C2", clearRange.range());
-    assertEquals(ExcelHyperlinkType.URL, setHyperlink.target().type());
-    assertEquals("A1", clearHyperlink.address());
-    assertEquals("Review", setComment.comment().text());
-    assertEquals("A1", clearComment.address());
-    assertEquals(style, applyStyle.style());
-    assertEquals("B2:B5", setDataValidation.range());
+    assertCreatedCommands(commands, defaultStyle());
+  }
+
+  private CreatedCommands createSupportedCommands(
+      List<ExcelCellValue> values, List<List<ExcelCellValue>> rows, ExcelCellStyle style) {
+    return new CreatedCommands(
+        new WorkbookCommand.CreateSheet("Budget"),
+        new WorkbookCommand.RenameSheet("Budget", "Summary"),
+        new WorkbookCommand.DeleteSheet("Archive"),
+        new WorkbookCommand.MoveSheet("Budget", 1),
+        new WorkbookCommand.MergeCells("Budget", "A1:B2"),
+        new WorkbookCommand.UnmergeCells("Budget", "A1:B2"),
+        new WorkbookCommand.SetColumnWidth("Budget", 0, 1, 16.0),
+        new WorkbookCommand.SetRowHeight("Budget", 0, 2, 28.5),
+        new WorkbookCommand.FreezePanes("Budget", 1, 2, 1, 2),
+        new WorkbookCommand.SetCell("Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23))),
+        new WorkbookCommand.SetRange("Budget", "A1:B2", rows),
+        new WorkbookCommand.ClearRange("Budget", "C1:C2"),
+        new WorkbookCommand.SetHyperlink(
+            "Budget", "A1", new ExcelHyperlink.Url("https://example.com/report")),
+        new WorkbookCommand.ClearHyperlink("Budget", "A1"),
+        new WorkbookCommand.SetComment(
+            "Budget", "A1", new ExcelComment("Review", "GridGrind", false)),
+        new WorkbookCommand.ClearComment("Budget", "A1"),
+        new WorkbookCommand.ApplyStyle("Budget", "A1:B1", style),
+        new WorkbookCommand.SetDataValidation("Budget", "B2:B5", validationDefinition()),
+        new WorkbookCommand.ClearDataValidations(
+            "Budget", new ExcelRangeSelection.Selected(List.of("C2:D4"))),
+        new WorkbookCommand.SetAutofilter("Budget", "A1:C4"),
+        new WorkbookCommand.ClearAutofilter("Budget"),
+        new WorkbookCommand.SetTable(
+            new ExcelTableDefinition(
+                "BudgetTable",
+                "Budget",
+                "A1:C4",
+                true,
+                new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))),
+        new WorkbookCommand.DeleteTable("BudgetTable", "Budget"),
+        new WorkbookCommand.SetNamedRange(
+            new ExcelNamedRangeDefinition(
+                "BudgetTotal",
+                new ExcelNamedRangeScope.WorkbookScope(),
+                new ExcelNamedRangeTarget("Budget", "B4"))),
+        new WorkbookCommand.DeleteNamedRange(
+            "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
+        new WorkbookCommand.AppendRow("Budget", values),
+        new WorkbookCommand.AutoSizeColumns("Budget"),
+        new WorkbookCommand.EvaluateAllFormulas(),
+        new WorkbookCommand.ForceFormulaRecalculationOnOpen());
+  }
+
+  private void assertCreatedCommands(CreatedCommands commands, ExcelCellStyle style) {
+    assertEquals("Budget", commands.createSheet().sheetName());
+    assertEquals("Summary", commands.renameSheet().newSheetName());
+    assertEquals("Archive", commands.deleteSheet().sheetName());
+    assertEquals(1, commands.moveSheet().targetIndex());
+    assertEquals("A1:B2", commands.mergeCells().range());
+    assertEquals("A1:B2", commands.unmergeCells().range());
+    assertEquals(16.0, commands.setColumnWidth().widthCharacters());
+    assertEquals(28.5, commands.setRowHeight().heightPoints());
+    assertEquals(2, commands.freezePanes().topRow());
+    assertEquals("A1", commands.setCell().address());
+    assertEquals("A1:B2", commands.setRange().range());
+    assertEquals(2, commands.setRange().rows().size());
+    assertEquals("C1:C2", commands.clearRange().range());
+    assertEquals(ExcelHyperlinkType.URL, commands.setHyperlink().target().type());
+    assertEquals("A1", commands.clearHyperlink().address());
+    assertEquals("Review", commands.setComment().comment().text());
+    assertEquals("A1", commands.clearComment().address());
+    assertEquals(style, commands.applyStyle().style());
+    assertEquals("B2:B5", commands.setDataValidation().range());
     assertEquals(
         List.of("C2:D4"),
-        ((ExcelRangeSelection.Selected) clearDataValidations.selection()).ranges());
-    assertEquals("BudgetTotal", setNamedRange.definition().name());
+        ((ExcelRangeSelection.Selected) commands.clearDataValidations().selection()).ranges());
+    assertEquals("A1:C4", commands.setAutofilter().range());
+    assertEquals("Budget", commands.clearAutofilter().sheetName());
+    assertEquals("BudgetTable", commands.setTable().definition().name());
+    assertEquals("Budget", commands.deleteTable().sheetName());
+    assertEquals("BudgetTotal", commands.setNamedRange().definition().name());
     assertEquals(
-        "Budget", ((ExcelNamedRangeScope.SheetScope) deleteNamedRange.scope()).sheetName());
-    assertEquals(1, appendRow.values().size());
-    assertEquals("Budget", autoSizeColumns.sheetName());
-    assertNotNull(evaluate);
-    assertNotNull(recalc);
+        "Budget",
+        ((ExcelNamedRangeScope.SheetScope) commands.deleteNamedRange().scope()).sheetName());
+    assertEquals(1, commands.appendRow().values().size());
+    assertEquals("Budget", commands.autoSizeColumns().sheetName());
+    assertNotNull(commands.evaluate());
+    assertNotNull(commands.recalc());
   }
 
   @Test
@@ -375,6 +372,30 @@ class WorkbookCommandTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookCommand.ClearDataValidations(" ", new ExcelRangeSelection.All()));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.SetAutofilter(null, "A1:B2"));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.SetAutofilter("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.SetAutofilter(" ", "A1:B2"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.SetAutofilter("Budget", " "));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearAutofilter(null));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.ClearAutofilter(" "));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetTable(null));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.DeleteTable(null, "Budget"));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.DeleteTable("BudgetTable", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.DeleteTable(" ", "Budget"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.DeleteTable("BudgetTable", " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookCommand.SetTable(
+                new ExcelTableDefinition(
+                    "A1", "Budget", "A1:B2", false, new ExcelTableStyle.None())));
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetNamedRange(null));
     assertThrows(
         NullPointerException.class,
@@ -387,6 +408,8 @@ class WorkbookCommandTest {
         () ->
             new WorkbookCommand.DeleteNamedRange(
                 "_XLNM.PRINT_AREA", new ExcelNamedRangeScope.WorkbookScope()));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.DeleteTable("A1", "Budget"));
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.AppendRow(null, List.of()));
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookCommand.AppendRow(" ", List.of()));
@@ -410,4 +433,52 @@ class WorkbookCommandTest {
         new ExcelDataValidationErrorAlert(
             ExcelDataValidationErrorStyle.STOP, "Too long", "Use a shorter reason.", true));
   }
+
+  private ExcelCellStyle defaultStyle() {
+    return new ExcelCellStyle(
+        "#,##0.00",
+        true,
+        false,
+        true,
+        ExcelHorizontalAlignment.RIGHT,
+        ExcelVerticalAlignment.CENTER,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  private record CreatedCommands(
+      WorkbookCommand.CreateSheet createSheet,
+      WorkbookCommand.RenameSheet renameSheet,
+      WorkbookCommand.DeleteSheet deleteSheet,
+      WorkbookCommand.MoveSheet moveSheet,
+      WorkbookCommand.MergeCells mergeCells,
+      WorkbookCommand.UnmergeCells unmergeCells,
+      WorkbookCommand.SetColumnWidth setColumnWidth,
+      WorkbookCommand.SetRowHeight setRowHeight,
+      WorkbookCommand.FreezePanes freezePanes,
+      WorkbookCommand.SetCell setCell,
+      WorkbookCommand.SetRange setRange,
+      WorkbookCommand.ClearRange clearRange,
+      WorkbookCommand.SetHyperlink setHyperlink,
+      WorkbookCommand.ClearHyperlink clearHyperlink,
+      WorkbookCommand.SetComment setComment,
+      WorkbookCommand.ClearComment clearComment,
+      WorkbookCommand.ApplyStyle applyStyle,
+      WorkbookCommand.SetDataValidation setDataValidation,
+      WorkbookCommand.ClearDataValidations clearDataValidations,
+      WorkbookCommand.SetAutofilter setAutofilter,
+      WorkbookCommand.ClearAutofilter clearAutofilter,
+      WorkbookCommand.SetTable setTable,
+      WorkbookCommand.DeleteTable deleteTable,
+      WorkbookCommand.SetNamedRange setNamedRange,
+      WorkbookCommand.DeleteNamedRange deleteNamedRange,
+      WorkbookCommand.AppendRow appendRow,
+      WorkbookCommand.AutoSizeColumns autoSizeColumns,
+      WorkbookCommand.EvaluateAllFormulas evaluate,
+      WorkbookCommand.ForceFormulaRecalculationOnOpen recalc) {}
 }

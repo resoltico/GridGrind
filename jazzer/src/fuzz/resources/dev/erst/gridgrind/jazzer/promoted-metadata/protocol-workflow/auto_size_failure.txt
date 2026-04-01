@@ -1,9 +1,15 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/ffbeeade11fe37088d3bb32892ea09f429c48731
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/auto_size_failure.bin
 Harness: protocol-workflow
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: IllegalArgumentException
+Message: name must not be blank
 Input Bytes: 38
-Operation Count: 3
-Analysis Sheet Count: 0
-Response Kind: FAILURE
-Operation Kinds: AUTO_SIZE_COLUMNS=3
+Source Kind: NOT_GENERATED
+Persistence Kind: NOT_GENERATED
+Operation Count: 0
+Read Count: 0
+Read Kinds: (none)
+Response Kind: NOT_EXECUTED
+Style Kinds: (none)
+Operation Kinds: (none)

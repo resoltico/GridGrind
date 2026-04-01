@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
@@ -14,10 +15,14 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
+import dev.erst.gridgrind.excel.ExcelTableSelection;
+import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
+import dev.erst.gridgrind.excel.WorkbookReadCommand;
+import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -83,6 +88,8 @@ public final class XlsxRoundTripVerifier {
       requireExpectedNamedRanges(expectedWorkbookState.expectedNamedRanges(), workbook);
     }
     requireExpectedDataValidations(expectedWorkbookState.expectedDataValidations(), workbookPath);
+    requireExpectedAutofilters(expectedWorkbookState.expectedAutofilters(), workbookPath);
+    requireExpectedTables(expectedWorkbookState.expectedTables(), workbookPath);
   }
 
   private static void requireSheetShape(org.apache.poi.xssf.usermodel.XSSFSheet sheet) {
@@ -348,7 +355,9 @@ public final class XlsxRoundTripVerifier {
           expectedStyles(candidateSnapshots, defaultStyleSnapshot()),
           expectedMetadata(candidateSnapshots),
           expectedNamedRanges(workbook),
-          expectedDataValidations(workbook));
+          expectedDataValidations(workbook),
+          expectedAutofilters(workbook),
+          expectedTables(workbook));
     }
   }
 
@@ -456,6 +465,18 @@ public final class XlsxRoundTripVerifier {
         }
         case WorkbookCommand.ClearDataValidations _ -> {
           // Data validations are tracked independently from cell-style and metadata expectations.
+        }
+        case WorkbookCommand.SetAutofilter _ -> {
+          // Autofilters are tracked independently from cell-style and metadata expectations.
+        }
+        case WorkbookCommand.ClearAutofilter _ -> {
+          // Autofilters are tracked independently from cell-style and metadata expectations.
+        }
+        case WorkbookCommand.SetTable _ -> {
+          // Tables are tracked independently from cell-style and metadata expectations.
+        }
+        case WorkbookCommand.DeleteTable _ -> {
+          // Tables are tracked independently from cell-style and metadata expectations.
         }
         case WorkbookCommand.SetNamedRange _ -> {
           // Named ranges are derived directly from the applied workbook state.
@@ -579,6 +600,35 @@ public final class XlsxRoundTripVerifier {
     return Map.copyOf(expected);
   }
 
+  private static Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters(
+      ExcelWorkbook workbook) {
+    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    LinkedHashMap<String, List<ExcelAutofilterSnapshot>> expected = new LinkedHashMap<>();
+    for (String sheetName : workbook.sheetNames()) {
+      var result =
+          (dev.erst.gridgrind.excel.WorkbookReadResult.AutofiltersResult)
+              readExecutor
+                  .apply(workbook, new WorkbookReadCommand.GetAutofilters("autofilters", sheetName))
+                  .getFirst();
+      if (!result.autofilters().isEmpty()) {
+        expected.put(sheetName, result.autofilters());
+      }
+    }
+    return Map.copyOf(expected);
+  }
+
+  private static List<ExcelTableSnapshot> expectedTables(ExcelWorkbook workbook) {
+    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    var result =
+        (dev.erst.gridgrind.excel.WorkbookReadResult.TablesResult)
+            readExecutor
+                .apply(
+                    workbook,
+                    new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All()))
+                .getFirst();
+    return List.copyOf(result.tables());
+  }
+
   private static void requireExpectedDataValidations(
       Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations, Path workbookPath)
       throws IOException {
@@ -599,6 +649,63 @@ public final class XlsxRoundTripVerifier {
                   + " but was "
                   + actual);
         }
+      }
+    }
+  }
+
+  private static void requireExpectedAutofilters(
+      Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters, Path workbookPath)
+      throws IOException {
+    if (expectedAutofilters.isEmpty()) {
+      return;
+    }
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+      for (Map.Entry<String, List<ExcelAutofilterSnapshot>> entry : expectedAutofilters.entrySet()) {
+        var actual =
+            ((dev.erst.gridgrind.excel.WorkbookReadResult.AutofiltersResult)
+                    readExecutor
+                        .apply(
+                            workbook,
+                            new WorkbookReadCommand.GetAutofilters(
+                                "autofilters", entry.getKey()))
+                        .getFirst())
+                .autofilters();
+        if (!entry.getValue().equals(actual)) {
+          throw new IllegalStateException(
+              "autofilters changed across round-trip for sheet "
+                  + entry.getKey()
+                  + ": expected "
+                  + entry.getValue()
+                  + " but was "
+                  + actual);
+        }
+      }
+    }
+  }
+
+  private static void requireExpectedTables(
+      List<ExcelTableSnapshot> expectedTables, Path workbookPath) throws IOException {
+    if (expectedTables.isEmpty()) {
+      return;
+    }
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+      var actual =
+          ((dev.erst.gridgrind.excel.WorkbookReadResult.TablesResult)
+                  readExecutor
+                      .apply(
+                          workbook,
+                          new WorkbookReadCommand.GetTables(
+                              "tables", new ExcelTableSelection.All()))
+                      .getFirst())
+              .tables();
+      if (!expectedTables.equals(actual)) {
+        throw new IllegalStateException(
+            "tables changed across round-trip: expected "
+                + expectedTables
+                + " but was "
+                + actual);
       }
     }
   }
@@ -809,7 +916,9 @@ public final class XlsxRoundTripVerifier {
       Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStyles,
       Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadata,
       Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges,
-      Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations) {}
+      Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations,
+      Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters,
+      List<ExcelTableSnapshot> expectedTables) {}
 
   private record ExpectedWorkbookFootprint(Map<String, List<CellCoordinate>> candidateCoordinatesBySheet) {}
 

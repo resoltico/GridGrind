@@ -28,6 +28,8 @@ import java.util.Set;
   @JsonSubTypes.Type(
       value = WorkbookReadOperation.GetDataValidations.class,
       name = "GET_DATA_VALIDATIONS"),
+  @JsonSubTypes.Type(value = WorkbookReadOperation.GetAutofilters.class, name = "GET_AUTOFILTERS"),
+  @JsonSubTypes.Type(value = WorkbookReadOperation.GetTables.class, name = "GET_TABLES"),
   @JsonSubTypes.Type(
       value = WorkbookReadOperation.GetFormulaSurface.class,
       name = "GET_FORMULA_SURFACE"),
@@ -41,6 +43,12 @@ import java.util.Set;
   @JsonSubTypes.Type(
       value = WorkbookReadOperation.AnalyzeDataValidationHealth.class,
       name = "ANALYZE_DATA_VALIDATION_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadOperation.AnalyzeAutofilterHealth.class,
+      name = "ANALYZE_AUTOFILTER_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadOperation.AnalyzeTableHealth.class,
+      name = "ANALYZE_TABLE_HEALTH"),
   @JsonSubTypes.Type(
       value = WorkbookReadOperation.AnalyzeHyperlinkHealth.class,
       name = "ANALYZE_HYPERLINK_HEALTH"),
@@ -69,6 +77,8 @@ public sealed interface WorkbookReadOperation
           GetComments,
           GetSheetLayout,
           GetDataValidations,
+          GetAutofilters,
+          GetTables,
           GetFormulaSurface,
           GetSheetSchema,
           GetNamedRangeSurface {}
@@ -77,6 +87,8 @@ public sealed interface WorkbookReadOperation
   sealed interface Analysis extends WorkbookReadOperation
       permits AnalyzeFormulaHealth,
           AnalyzeDataValidationHealth,
+          AnalyzeAutofilterHealth,
+          AnalyzeTableHealth,
           AnalyzeHyperlinkHealth,
           AnalyzeNamedRangeHealth,
           AnalyzeWorkbookFindings {}
@@ -181,6 +193,22 @@ public sealed interface WorkbookReadOperation
     }
   }
 
+  /** Returns sheet- and table-owned autofilter metadata for one sheet. */
+  record GetAutofilters(String requestId, String sheetName) implements Introspection {
+    public GetAutofilters {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Returns factual table metadata selected by workbook-global table name or all tables. */
+  record GetTables(String requestId, TableSelection selection) implements Introspection {
+    public GetTables {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
   /** Groups formula usage patterns across one or more sheets. */
   record GetFormulaSurface(String requestId, SheetSelection selection) implements Introspection {
     public GetFormulaSurface {
@@ -224,6 +252,22 @@ public sealed interface WorkbookReadOperation
   record AnalyzeDataValidationHealth(String requestId, SheetSelection selection)
       implements Analysis {
     public AnalyzeDataValidationHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports autofilter findings such as invalid ranges or table-ownership mismatches. */
+  record AnalyzeAutofilterHealth(String requestId, SheetSelection selection) implements Analysis {
+    public AnalyzeAutofilterHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports table findings such as overlaps, broken ranges, or invalid headers. */
+  record AnalyzeTableHealth(String requestId, TableSelection selection) implements Analysis {
+    public AnalyzeTableHealth {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(selection, "selection must not be null");
     }

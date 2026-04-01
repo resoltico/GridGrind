@@ -8,6 +8,8 @@ import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.protocol.CellSelection;
+import dev.erst.gridgrind.protocol.AutofilterEntryReport;
+import dev.erst.gridgrind.protocol.AutofilterHealthReport;
 import dev.erst.gridgrind.protocol.DataValidationEntryReport;
 import dev.erst.gridgrind.protocol.DataValidationHealthReport;
 import dev.erst.gridgrind.protocol.DataValidationRuleInput;
@@ -21,6 +23,10 @@ import dev.erst.gridgrind.protocol.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.RangeSelection;
 import dev.erst.gridgrind.protocol.SheetSelection;
+import dev.erst.gridgrind.protocol.TableEntryReport;
+import dev.erst.gridgrind.protocol.TableHealthReport;
+import dev.erst.gridgrind.protocol.TableSelection;
+import dev.erst.gridgrind.protocol.TableStyleReport;
 import dev.erst.gridgrind.protocol.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.WorkbookReadResult;
 import java.io.IOException;
@@ -296,6 +302,109 @@ class WorkbookInvariantChecksTest {
 
       assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
     }
+  }
+
+  @Test
+  void acceptsSuccessResponsesWithAutofilterAndTableReads(@TempDir Path tempDirectory)
+      throws IOException {
+    Path workbookPath = tempDirectory.resolve("result.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                "result.xlsx", workbookPath.toString()),
+            List.of(
+                new WorkbookReadResult.AutofiltersResult(
+                    "autofilters",
+                    "Budget",
+                    List.of(
+                        new AutofilterEntryReport.SheetOwned("E1:F3"),
+                        new AutofilterEntryReport.TableOwned("A1:C4", "BudgetTable"))),
+                new WorkbookReadResult.TablesResult(
+                    "tables",
+                    List.of(
+                        new TableEntryReport(
+                            "BudgetTable",
+                            "Budget",
+                            "A1:C4",
+                            1,
+                            0,
+                            List.of("Item", "Amount", "Billable"),
+                            new TableStyleReport.Named(
+                                "TableStyleMedium2", false, false, true, false),
+                            true))),
+                new WorkbookReadResult.AutofilterHealthResult(
+                    "autofilter-health",
+                    new AutofilterHealthReport(
+                        2,
+                        new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0),
+                        List.of())),
+                new WorkbookReadResult.TableHealthResult(
+                    "table-health",
+                    new TableHealthReport(
+                        1,
+                        new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0),
+                        List.of()))));
+
+    assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
+  }
+
+  @Test
+  void acceptsWorkflowOutcomeShapeForAutofilterAndTableReads(@TempDir Path tempDirectory)
+      throws IOException {
+    Path workbookPath = tempDirectory.resolve("result.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadOperation.GetAutofilters("autofilters", "Budget"),
+                new WorkbookReadOperation.GetTables("tables", new TableSelection.All()),
+                new WorkbookReadOperation.AnalyzeAutofilterHealth(
+                    "autofilter-health", new SheetSelection.All()),
+                new WorkbookReadOperation.AnalyzeTableHealth(
+                    "table-health", new TableSelection.All())));
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                workbookPath.toString(), workbookPath.toString()),
+            List.of(
+                new WorkbookReadResult.AutofiltersResult(
+                    "autofilters",
+                    "Budget",
+                    List.of(new AutofilterEntryReport.SheetOwned("E1:F3"))),
+                new WorkbookReadResult.TablesResult(
+                    "tables",
+                    List.of(
+                        new TableEntryReport(
+                            "BudgetTable",
+                            "Budget",
+                            "A1:C4",
+                            1,
+                            0,
+                            List.of("Item", "Amount", "Billable"),
+                            new TableStyleReport.None(),
+                            true))),
+                new WorkbookReadResult.AutofilterHealthResult(
+                    "autofilter-health",
+                    new AutofilterHealthReport(
+                        1,
+                        new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0),
+                        List.of())),
+                new WorkbookReadResult.TableHealthResult(
+                    "table-health",
+                    new TableHealthReport(
+                        1,
+                        new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0),
+                        List.of()))));
+
+    assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
   }
 
   private static GridGrindResponse.CellStyleReport defaultStyle() {

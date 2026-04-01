@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.20.0"
+version: "0.21.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-03-31"
+updated: "2026-04-01"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -32,6 +32,7 @@ route:
 | `jazzer/bin/list-corpus` | list generated local corpus state and committed custom seeds |
 | `jazzer/bin/replay` | replay one local input against one harness |
 | `jazzer/bin/promote` | promote one input into committed regression resources |
+| `jazzer/bin/refresh-promoted-metadata` | replay every promoted seed and refresh its stored replay metadata |
 | `jazzer/bin/clean-local-findings` | remove local logs, summaries, telemetry, and findings |
 | `jazzer/bin/clean-local-corpus` | remove local corpora |
 
@@ -140,7 +141,23 @@ Promotion writes:
 - the committed regression input under `jazzer/src/fuzz/resources/.../*Inputs/...`
 - promotion metadata under `jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/...`
 
+Promotion metadata includes:
+- the replay outcome kind
+- a stable replay expectation
+- typed replay details
+- the replay text artifact path
+
 Promote after replay, not blindly.
+
+### Refresh Promoted Metadata
+
+```bash
+jazzer/bin/refresh-promoted-metadata --console=plain
+```
+
+Use this after an intentional replay-shape change, such as a new command family or an expanded
+sequence-introspection model. The command replays every promoted input, rewrites the replay text,
+and refreshes the stored replay outcome plus replay expectation metadata.
 
 ---
 

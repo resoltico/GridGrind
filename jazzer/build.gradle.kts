@@ -466,3 +466,18 @@ registerToolTask("jazzerPromote", "Promotes one local input into committed Jazze
         requiredGradleProperty("jazzerName")
     )
 }
+
+registerToolTask(
+    "jazzerRefreshPromotedMetadata",
+    "Refreshes promoted Jazzer metadata and replay text from the current replay contract."
+) {
+    buildList {
+        add("refresh-promoted-metadata")
+        add("--project-dir")
+        add(layout.projectDirectory.asFile.absolutePath)
+        providers.gradleProperty("jazzerTarget").orNull?.let {
+            add("--target")
+            add(it)
+        }
+    }
+}

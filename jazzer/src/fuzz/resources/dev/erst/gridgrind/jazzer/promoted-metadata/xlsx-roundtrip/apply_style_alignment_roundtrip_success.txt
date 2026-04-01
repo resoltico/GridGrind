@@ -1,8 +1,8 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest/roundTrip/8ce473f3b51e807c3e755a6dc341df86236186e0
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/apply_style_alignment_roundtrip_success.bin
 Harness: xlsx-roundtrip
 Outcome: SUCCESS
 Input Bytes: 16
 Command Count: 4
-Style Kinds: vertical_alignment=1, horizontal_alignment=1
-Command Kinds: CREATE_SHEET=3, APPLY_STYLE=1
+Style Kinds: (none)
+Command Kinds: CREATE_SHEET=4

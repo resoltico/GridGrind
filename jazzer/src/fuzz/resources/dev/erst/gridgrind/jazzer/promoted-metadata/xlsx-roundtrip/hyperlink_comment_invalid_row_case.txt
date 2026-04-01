@@ -1,10 +1,10 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest/roundTrip/fa22f1f3081f0dd143c52e61323411ed8703a751
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/hyperlink_comment_invalid_row_case.bin
 Harness: xlsx-roundtrip
 Outcome: EXPECTED_INVALID
 Kind: IllegalArgumentException
-Message: Invalid row number (-1) outside allowable range (0..1048575)
+Message: name must start with a letter or underscore and contain only letters, digits, underscore, or period
 Input Bytes: 97
-Command Count: 6
+Command Count: 0
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=1, SET_ROW_HEIGHT=1, SET_HYPERLINK=1, SET_COMMENT=1, SET_COLUMN_WIDTH=1, SET_CELL=1
+Command Kinds: (none)

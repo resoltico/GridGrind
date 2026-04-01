@@ -50,6 +50,15 @@ class WorkbookAnalyzerTest {
       budget.setHyperlink("A1", new ExcelHyperlink.Document("Missing!A1"));
       budget.setHyperlink("A2", new ExcelHyperlink.Document("Budget!A1:"));
       budget.setHyperlink("A3", new ExcelHyperlink.File("missing-supporting-doc.pdf"));
+      budget.setCell("D1", ExcelCellValue.text("Owner"));
+      budget.setCell("E1", ExcelCellValue.text("Task"));
+      budget.setCell("D2", ExcelCellValue.text("Ada"));
+      budget.setCell("E2", ExcelCellValue.text("Queue"));
+      budget.setCell("D3", ExcelCellValue.text("Lin"));
+      budget.setCell("E3", ExcelCellValue.text("Pack"));
+      workbook.setTable(
+          new ExcelTableDefinition("Queue", "Budget", "D1:E3", false, new ExcelTableStyle.None()));
+      budget.xssfSheet().getTables().getFirst().getCTTable().getAutoFilter().setRef("D1:E2");
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
@@ -77,6 +86,22 @@ class WorkbookAnalyzerTest {
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeNamedRangeHealth(
                       "namedRangeHealth", new ExcelNamedRangeSelection.All())));
+      WorkbookReadResult.AutofilterHealthResult autofilterHealth =
+          cast(
+              WorkbookReadResult.AutofilterHealthResult.class,
+              analyzer.execute(
+                  workbook,
+                  new WorkbookLocation.StoredWorkbook(workbookPath),
+                  new WorkbookReadCommand.AnalyzeAutofilterHealth(
+                      "autofilterHealth", new ExcelSheetSelection.All())));
+      WorkbookReadResult.TableHealthResult tableHealth =
+          cast(
+              WorkbookReadResult.TableHealthResult.class,
+              analyzer.execute(
+                  workbook,
+                  new WorkbookLocation.StoredWorkbook(workbookPath),
+                  new WorkbookReadCommand.AnalyzeTableHealth(
+                      "tableHealth", new ExcelTableSelection.All())));
       WorkbookReadResult.WorkbookFindingsResult workbookFindings =
           cast(
               WorkbookReadResult.WorkbookFindingsResult.class,
@@ -116,10 +141,23 @@ class WorkbookAnalyzerTest {
                       WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
                       WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_UNRESOLVED_TARGET)));
 
-      assertTrue(workbookFindings.analysis().summary().totalCount() >= 6);
+      assertEquals(1, autofilterHealth.analysis().checkedAutofilterCount());
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
+          autofilterHealth.analysis().findings().getFirst().code());
+
+      assertEquals(1, tableHealth.analysis().checkedTableCount());
+      assertEquals(0, tableHealth.analysis().summary().totalCount());
+
+      assertTrue(workbookFindings.analysis().summary().totalCount() >= 7);
       assertEquals(
           workbookFindings.analysis().summary().totalCount(),
           workbookFindings.analysis().findings().size());
+      assertTrue(
+          workbookFindings.analysis().findings().stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .toList()
+              .contains(WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH));
     }
   }
 

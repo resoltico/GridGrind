@@ -41,7 +41,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.20.0
+docker pull ghcr.io/resoltico/gridgrind:0.21.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -165,6 +165,10 @@ autonomous callers deterministic failure semantics instead of "error after side 
 | `APPLY_STYLE` | Apply number formats, font styling, fills, borders, alignment, or wrap to a range |
 | `SET_DATA_VALIDATION` | Create or replace one data-validation rule over a sheet range |
 | `CLEAR_DATA_VALIDATIONS` | Remove data-validation coverage from selected ranges or an entire sheet |
+| `SET_AUTOFILTER` | Create or replace one sheet-level autofilter range |
+| `CLEAR_AUTOFILTER` | Remove the sheet-level autofilter range from one sheet |
+| `SET_TABLE` | Create or replace one workbook-global table definition |
+| `DELETE_TABLE` | Remove one existing workbook-global table by name and expected sheet |
 | `SET_NAMED_RANGE` | Create or replace one workbook- or sheet-scoped named range |
 | `DELETE_NAMED_RANGE` | Remove one existing workbook- or sheet-scoped named range |
 | `APPEND_ROW` | Append a row of typed values after the last value-bearing row |
@@ -207,6 +211,15 @@ date/time comparisons, text-length comparisons, and custom formulas. `GET_DATA_V
 returns either fully modeled definitions or typed `UNSUPPORTED` entries with `kind` and `detail`
 metadata when a workbook rule can be detected but not represented as a supported definition.
 
+Autofilters and tables are now first-class too. `SET_AUTOFILTER` creates or replaces one
+sheet-level filter range, requires a nonblank header row, and rejects overlap with any existing
+table range. `CLEAR_AUTOFILTER` removes only the sheet-level filter. `SET_TABLE` creates or
+replaces one workbook-global table definition, requires nonblank unique header cells, rejects
+overlap with other tables, and clears any overlapping sheet-level autofilter so the table-owned
+autofilter becomes authoritative on that range. `DELETE_TABLE` removes one existing table by
+name and expected sheet. `style` is either `{ "type": "NONE" }` or a named table style with
+explicit stripe and emphasis flags.
+
 `CLEAR_RANGE` removes value, style, hyperlink, and comment state from the addressed rectangle;
 cells that have never been written are silently skipped. `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are
 no-ops when the addressed cell does not physically exist.
@@ -241,6 +254,8 @@ Introspection reads:
 - `GET_COMMENTS`
 - `GET_SHEET_LAYOUT`
 - `GET_DATA_VALIDATIONS`
+- `GET_AUTOFILTERS`
+- `GET_TABLES`
 - `GET_FORMULA_SURFACE`
 - `GET_SHEET_SCHEMA`
 - `GET_NAMED_RANGE_SURFACE`
@@ -248,6 +263,8 @@ Introspection reads:
 Analysis reads:
 - `ANALYZE_FORMULA_HEALTH`
 - `ANALYZE_DATA_VALIDATION_HEALTH`
+- `ANALYZE_AUTOFILTER_HEALTH`
+- `ANALYZE_TABLE_HEALTH`
 - `ANALYZE_HYPERLINK_HEALTH`
 - `ANALYZE_NAMED_RANGE_HEALTH`
 - `ANALYZE_WORKBOOK_FINDINGS`
@@ -259,12 +276,18 @@ agents can correlate repeated or similar reads deterministically.
 targets. `FILE` targets come back in the `path` field as normalized plain path strings.
 `GET_DATA_VALIDATIONS` returns supported validation entries plus typed unsupported entries for the
 selected ranges, preserving the normalized stored coverage ranges for each rule.
+`GET_AUTOFILTERS` returns one factual entry per sheet-owned or table-owned autofilter on the
+requested sheet. `GET_TABLES` returns workbook-global table facts including range, header and
+totals row counts, column names, style metadata, and whether the table owns an autofilter.
 `ANALYZE_HYPERLINK_HEALTH` resolves relative `FILE` targets against the workbook's persisted path
 when one exists; when the workbook has no filesystem location yet, relative `FILE` targets are
 reported as unresolved instead of being silently treated as healthy.
 `ANALYZE_DATA_VALIDATION_HEALTH` reports unsupported, broken-formula, and overlapping validation
-findings, and `ANALYZE_WORKBOOK_FINDINGS` now aggregates that family
-alongside formula, hyperlink, and named-range findings.
+findings. `ANALYZE_AUTOFILTER_HEALTH` reports invalid ranges, blank headers, and sheet-versus-
+table ownership mismatches. `ANALYZE_TABLE_HEALTH` reports broken ranges, overlapping tables,
+blank or duplicate headers, and style mismatches. `ANALYZE_WORKBOOK_FINDINGS` now aggregates all
+shipped analysis families: formula, data validation, autofilter, table, hyperlink, and
+named-range health.
 
 `GET_WINDOW` and `GET_SHEET_SCHEMA` require `rowCount * columnCount` ≤ 250,000. `GET_WINDOW`
 additionally rejects windows that extend beyond the Excel 2007 sheet boundary

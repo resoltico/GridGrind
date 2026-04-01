@@ -4,10 +4,25 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Tests for replay-time classification of raw protocol-request fuzz inputs. */
 class JazzerReplaySupportTest {
+  @Test
+  void expectationForCapturesStableOutcomeKindAndReplayDetails() {
+    ReplayOutcome outcome =
+        JazzerReplaySupport.replay(
+            JazzerHarness.PROTOCOL_REQUEST, "{".getBytes(StandardCharsets.UTF_8));
+
+    assertEquals(
+        new ReplayExpectation(
+            "EXPECTED_INVALID",
+            new ProtocolRequestDetails(
+                1, "INVALID_JSON", "NOT_PARSED", "NOT_PARSED", 0, Map.of(), Map.of(), 0, Map.of())),
+        JazzerReplaySupport.expectationFor(outcome));
+  }
+
   @Test
   void replayClassifiesMalformedJsonAsInvalidJson() {
     ReplayOutcome outcome =

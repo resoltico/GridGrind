@@ -10,6 +10,8 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelTableDefinition;
+import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.protocol.CommentInput;
 import dev.erst.gridgrind.protocol.DataValidationInput;
@@ -21,6 +23,9 @@ import dev.erst.gridgrind.protocol.NamedRangeScope;
 import dev.erst.gridgrind.protocol.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.RangeSelection;
 import dev.erst.gridgrind.protocol.SheetSelection;
+import dev.erst.gridgrind.protocol.TableInput;
+import dev.erst.gridgrind.protocol.TableSelection;
+import dev.erst.gridgrind.protocol.TableStyleInput;
 import dev.erst.gridgrind.protocol.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.WorkbookOperation;
 import java.util.List;
@@ -76,6 +81,27 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.operationKind(
             new WorkbookOperation.ClearDataValidations(
                 "Budget", new RangeSelection.Selected(List.of("A2:A5")))));
+    assertEquals(
+        "SET_AUTOFILTER",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetAutofilter("Budget", "E1:F4")));
+    assertEquals(
+        "CLEAR_AUTOFILTER",
+        SequenceIntrospection.operationKind(new WorkbookOperation.ClearAutofilter("Budget")));
+    assertEquals(
+        "SET_TABLE",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetTable(
+                new TableInput(
+                    "BudgetTable",
+                    "Budget",
+                    "A1:C4",
+                    false,
+                    new TableStyleInput.Named("TableStyleMedium2", false, false, true, false)))));
+    assertEquals(
+        "DELETE_TABLE",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.DeleteTable("BudgetTable", "Budget")));
 
     assertEquals(
         1L,
@@ -135,6 +161,27 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.commandKind(
             new WorkbookCommand.ClearDataValidations(
                 "Budget", new dev.erst.gridgrind.excel.ExcelRangeSelection.All())));
+    assertEquals(
+        "SET_AUTOFILTER",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetAutofilter("Budget", "E1:F4")));
+    assertEquals(
+        "CLEAR_AUTOFILTER",
+        SequenceIntrospection.commandKind(new WorkbookCommand.ClearAutofilter("Budget")));
+    assertEquals(
+        "SET_TABLE",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetTable(
+                new ExcelTableDefinition(
+                    "BudgetTable",
+                    "Budget",
+                    "A1:C4",
+                    false,
+                    new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false)))));
+    assertEquals(
+        "DELETE_TABLE",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.DeleteTable("BudgetTable", "Budget")));
 
     assertEquals(
         1L,
@@ -157,27 +204,39 @@ class SequenceIntrospectionTest {
                 new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
                 new WorkbookReadOperation.GetDataValidations(
                     "validations", "Budget", new RangeSelection.All()),
+                new WorkbookReadOperation.GetAutofilters("autofilters", "Budget"),
+                new WorkbookReadOperation.GetTables("tables", new TableSelection.All()),
                 new WorkbookReadOperation.GetFormulaSurface(
                     "formulas", new SheetSelection.All()),
                 new WorkbookReadOperation.AnalyzeDataValidationHealth(
                     "data-validation-health", new SheetSelection.All()),
+                new WorkbookReadOperation.AnalyzeAutofilterHealth(
+                    "autofilter-health", new SheetSelection.All()),
+                new WorkbookReadOperation.AnalyzeTableHealth(
+                    "table-health", new TableSelection.All()),
                 new WorkbookReadOperation.AnalyzeNamedRangeHealth(
                     "named-range-health", new NamedRangeSelection.All()),
                 new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings")));
 
-    assertEquals(7, SequenceIntrospection.readCount(request));
+    assertEquals(11, SequenceIntrospection.readCount(request));
     assertEquals(
         1L,
         SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
     assertEquals(
         1L,
         SequenceIntrospection.readKinds(request.reads()).get("GET_DATA_VALIDATIONS"));
+    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_AUTOFILTERS"));
+    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_TABLES"));
     assertEquals(
         1L,
         SequenceIntrospection.readKinds(request.reads()).get("GET_FORMULA_SURFACE"));
     assertEquals(
         1L,
         SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_DATA_VALIDATION_HEALTH"));
+    assertEquals(
+        1L,
+        SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_AUTOFILTER_HEALTH"));
+    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_TABLE_HEALTH"));
     assertEquals(
         1L,
         SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_NAMED_RANGE_HEALTH"));

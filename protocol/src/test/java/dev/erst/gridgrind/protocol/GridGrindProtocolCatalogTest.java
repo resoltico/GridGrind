@@ -471,8 +471,8 @@ class GridGrindProtocolCatalogTest {
     assertEquals("type", catalog.discriminatorField());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
-    assertEquals(25, catalog.operationTypes().size());
-    assertEquals(18, catalog.readTypes().size());
+    assertEquals(29, catalog.operationTypes().size());
+    assertEquals(22, catalog.readTypes().size());
     assertEquals(
         List.of(
             "cellInputTypes",
@@ -480,11 +480,13 @@ class GridGrindProtocolCatalogTest {
             "cellSelectionTypes",
             "rangeSelectionTypes",
             "sheetSelectionTypes",
+            "tableSelectionTypes",
             "namedRangeSelectionTypes",
             "namedRangeScopeTypes",
             "namedRangeSelectorTypes",
             "fontHeightTypes",
-            "dataValidationRuleTypes"),
+            "dataValidationRuleTypes",
+            "tableStyleTypes"),
         catalog.nestedTypes().stream()
             .map(GridGrindProtocolCatalog.NestedTypeGroup::group)
             .toList());
@@ -497,7 +499,8 @@ class GridGrindProtocolCatalogTest {
             "cellBorderSideInputType",
             "dataValidationInputType",
             "dataValidationPromptInputType",
-            "dataValidationErrorAlertInputType"),
+            "dataValidationErrorAlertInputType",
+            "tableInputType"),
         catalog.plainTypes().stream().map(GridGrindProtocolCatalog.PlainTypeGroup::group).toList());
   }
 
@@ -580,6 +583,28 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         dataValidationOperatorField.enumValues().contains("BETWEEN"),
         "comparison-operator enum values should include BETWEEN");
+
+    GridGrindProtocolCatalog.PlainTypeGroup tableGroup = plainGroup(catalog, "tableInputType");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("tableStyleTypes"),
+        fieldNamed(tableGroup.type(), "style").shape());
+    assertEquals(
+        GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
+        fieldNamed(tableGroup.type(), "name").requirement());
+
+    GridGrindProtocolCatalog.FieldEntry tableSelectionNames =
+        fieldNamed(nestedTypeEntry(catalog, "tableSelectionTypes", "BY_NAMES"), "names");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.ListShape(
+            new GridGrindProtocolCatalog.FieldShape.Scalar(
+                GridGrindProtocolCatalog.ScalarType.STRING)),
+        tableSelectionNames.shape());
+
+    GridGrindProtocolCatalog.FieldEntry tableStyleName =
+        fieldNamed(nestedTypeEntry(catalog, "tableStyleTypes", "NAMED"), "name");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.Scalar(GridGrindProtocolCatalog.ScalarType.STRING),
+        tableStyleName.shape());
   }
 
   private static void assertCatalogSummaries(GridGrindProtocolCatalog.Catalog catalog) {
@@ -645,6 +670,30 @@ class GridGrindProtocolCatalogTest {
             .contains("overlapping"),
         "ANALYZE_DATA_VALIDATION_HEALTH summary must mention overlapping rules");
     assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_AUTOFILTER")
+            .summary()
+            .contains("must not overlap"),
+        "SET_AUTOFILTER summary must describe overlap rejection");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_TABLE").summary().contains("workbook-global"),
+        "SET_TABLE summary must describe workbook-global table names");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_AUTOFILTERS")
+            .summary()
+            .contains("sheet- and table-owned"),
+        "GET_AUTOFILTERS summary must describe both ownership families");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_TABLES").summary().contains("workbook-global"),
+        "GET_TABLES summary must describe workbook-global selection");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_AUTOFILTER_HEALTH")
+            .summary()
+            .contains("ownership"),
+        "ANALYZE_AUTOFILTER_HEALTH summary must mention ownership mismatches");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_TABLE_HEALTH").summary().contains("overlaps"),
+        "ANALYZE_TABLE_HEALTH summary must mention table overlaps");
+    assertTrue(
         entryNamed(catalog.readTypes(), "ANALYZE_HYPERLINK_HEALTH")
             .summary()
             .contains("persisted path"),
@@ -700,6 +749,23 @@ class GridGrindProtocolCatalogTest {
         fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_DATA_VALIDATION_HEALTH"), "selection")
             .shape(),
         "ANALYZE_DATA_VALIDATION_HEALTH.selection must point to sheetSelectionTypes");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef("tableInputType"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_TABLE"), "table").shape(),
+        "SET_TABLE.table must point to tableInputType");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("tableSelectionTypes"),
+        fieldNamed(entryNamed(catalog.readTypes(), "GET_TABLES"), "selection").shape(),
+        "GET_TABLES.selection must point to tableSelectionTypes");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("tableSelectionTypes"),
+        fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_TABLE_HEALTH"), "selection").shape(),
+        "ANALYZE_TABLE_HEALTH.selection must point to tableSelectionTypes");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
+        fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_AUTOFILTER_HEALTH"), "selection")
+            .shape(),
+        "ANALYZE_AUTOFILTER_HEALTH.selection must point to sheetSelectionTypes");
   }
 
   private static List<String> ids(List<GridGrindProtocolCatalog.TypeEntry> entries) {

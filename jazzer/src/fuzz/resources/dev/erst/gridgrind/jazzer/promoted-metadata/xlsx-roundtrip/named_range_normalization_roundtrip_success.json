@@ -2,7 +2,20 @@
   "targetKey" : "xlsx-roundtrip",
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-8532f5071c334f5dc337c8a2dd48d4ca837d0343",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/named_range_normalization_roundtrip_success.bin",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "expectation" : {
+    "outcomeKind" : "EXPECTED_INVALID",
+    "details" : {
+      "type" : "XLSX_ROUND_TRIP",
+      "inputBytes" : 28,
+      "commandCount" : 9,
+      "commandKinds" : {
+        "CREATE_SHEET" : 8,
+        "CLEAR_DATA_VALIDATIONS" : 1
+      },
+      "styleKinds" : { }
+    }
+  },
   "promotedAt" : "2026-03-26T16:46:59.937878Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/named_range_normalization_roundtrip_success.txt"
 }

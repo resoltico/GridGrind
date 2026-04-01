@@ -3,7 +3,8 @@
 Local-only Jazzer fuzzing layer for GridGrind.
 
 This nested build is intentionally separate from the main product build. It is not part of root
-`check`, root coverage, [check.sh](../check.sh), or GitHub CI.
+Gradle `check`, root coverage, or GitHub CI. Root [check.sh](../check.sh) does invoke the nested
+Jazzer `check` workflow sequentially as the supported whole-repo local gate.
 
 ## Supported Scripts
 
@@ -19,6 +20,7 @@ This nested build is intentionally separate from the main product build. It is n
 - `jazzer/bin/list-corpus`
 - `jazzer/bin/replay`
 - `jazzer/bin/promote`
+- `jazzer/bin/refresh-promoted-metadata`
 - `jazzer/bin/clean-local-findings`
 - `jazzer/bin/clean-local-corpus`
 
@@ -76,6 +78,7 @@ Replay and promote:
 ```bash
 jazzer/bin/replay protocol-workflow <input-path> --console=plain
 jazzer/bin/promote protocol-workflow <input-path> set_cell_failure_case --console=plain
+jazzer/bin/refresh-promoted-metadata --console=plain
 ```
 
 Replay the committed seed floor:
@@ -145,7 +148,8 @@ Committed regression inputs and promotion metadata live under:
 - `jazzer/src/fuzz/resources/.../*Inputs/...`
 - `jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/`
 
-The committed custom seed floor currently contains 34 inputs across the four replayable harnesses.
+The committed promoted seed floor currently contains 43 inputs across the four replayable
+harnesses.
 
 Run root Gradle verification and nested Jazzer verification sequentially, not in parallel.
 They share the same workspace and composite-build outputs, and parallel runs can create stale or

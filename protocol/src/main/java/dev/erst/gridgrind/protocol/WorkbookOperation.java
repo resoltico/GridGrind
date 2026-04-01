@@ -32,6 +32,10 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = WorkbookOperation.ClearDataValidations.class,
       name = "CLEAR_DATA_VALIDATIONS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetAutofilter.class, name = "SET_AUTOFILTER"),
+  @JsonSubTypes.Type(value = WorkbookOperation.ClearAutofilter.class, name = "CLEAR_AUTOFILTER"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetTable.class, name = "SET_TABLE"),
+  @JsonSubTypes.Type(value = WorkbookOperation.DeleteTable.class, name = "DELETE_TABLE"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetNamedRange.class, name = "SET_NAMED_RANGE"),
   @JsonSubTypes.Type(value = WorkbookOperation.DeleteNamedRange.class, name = "DELETE_NAMED_RANGE"),
   @JsonSubTypes.Type(value = WorkbookOperation.AppendRow.class, name = "APPEND_ROW"),
@@ -238,6 +242,36 @@ public sealed interface WorkbookOperation {
     }
   }
 
+  /** Creates or replaces one sheet-level autofilter range. */
+  record SetAutofilter(String sheetName, String range) implements WorkbookOperation {
+    public SetAutofilter {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Validation.requireNonBlank(range, "range");
+    }
+  }
+
+  /** Clears the sheet-level autofilter range on one sheet. */
+  record ClearAutofilter(String sheetName) implements WorkbookOperation {
+    public ClearAutofilter {
+      Validation.requireSheetName(sheetName, "sheetName");
+    }
+  }
+
+  /** Creates or replaces one workbook-global table definition. */
+  record SetTable(TableInput table) implements WorkbookOperation {
+    public SetTable {
+      Objects.requireNonNull(table, "table must not be null");
+    }
+  }
+
+  /** Deletes one existing table by workbook-global name and expected sheet. */
+  record DeleteTable(String name, String sheetName) implements WorkbookOperation {
+    public DeleteTable {
+      Validation.requireTableName(name);
+      Validation.requireSheetName(sheetName, "sheetName");
+    }
+  }
+
   /** Creates or replaces one typed named range in workbook or sheet scope. */
   record SetNamedRange(String name, NamedRangeScope scope, NamedRangeTarget target)
       implements WorkbookOperation {
@@ -305,6 +339,10 @@ public sealed interface WorkbookOperation {
       case ApplyStyle _ -> "APPLY_STYLE";
       case SetDataValidation _ -> "SET_DATA_VALIDATION";
       case ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
+      case SetAutofilter _ -> "SET_AUTOFILTER";
+      case ClearAutofilter _ -> "CLEAR_AUTOFILTER";
+      case SetTable _ -> "SET_TABLE";
+      case DeleteTable _ -> "DELETE_TABLE";
       case SetNamedRange _ -> "SET_NAMED_RANGE";
       case DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case AppendRow _ -> "APPEND_ROW";
@@ -396,6 +434,10 @@ public sealed interface WorkbookOperation {
 
     static void requireNamedRangeName(String name) {
       ExcelNamedRangeDefinition.validateName(name);
+    }
+
+    static void requireTableName(String name) {
+      dev.erst.gridgrind.excel.ExcelTableDefinition.validateName(name);
     }
 
     static void requireFinitePositive(double value, String fieldName) {

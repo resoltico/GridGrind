@@ -42,6 +42,14 @@ final class WorkbookAnalyzer {
           new WorkbookReadResult.DataValidationHealthResult(
               analyzeDataValidationHealth.requestId(),
               dataValidationHealth(workbook, analyzeDataValidationHealth.selection()));
+      case WorkbookReadCommand.AnalyzeAutofilterHealth analyzeAutofilterHealth ->
+          new WorkbookReadResult.AutofilterHealthResult(
+              analyzeAutofilterHealth.requestId(),
+              autofilterHealth(workbook, analyzeAutofilterHealth.selection()));
+      case WorkbookReadCommand.AnalyzeTableHealth analyzeTableHealth ->
+          new WorkbookReadResult.TableHealthResult(
+              analyzeTableHealth.requestId(),
+              tableHealth(workbook, analyzeTableHealth.selection()));
       case WorkbookReadCommand.AnalyzeHyperlinkHealth analyzeHyperlinkHealth ->
           new WorkbookReadResult.HyperlinkHealthResult(
               analyzeHyperlinkHealth.requestId(),
@@ -77,6 +85,19 @@ final class WorkbookAnalyzer {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.dataValidationHealth(workbook, selection);
+  }
+
+  WorkbookAnalysis.AutofilterHealth autofilterHealth(
+      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+    return documentAnalyzer.autofilterHealth(workbook, selection);
+  }
+
+  WorkbookAnalysis.TableHealth tableHealth(ExcelWorkbook workbook, ExcelTableSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+    return documentAnalyzer.tableHealth(workbook, selection);
   }
 
   WorkbookAnalysis.HyperlinkHealth hyperlinkHealth(
@@ -123,6 +144,8 @@ final class WorkbookAnalyzer {
     List<WorkbookAnalysis.AnalysisFinding> combined = new ArrayList<>();
     combined.addAll(formulaHealth(workbook, new ExcelSheetSelection.All()).findings());
     combined.addAll(dataValidationHealth(workbook, new ExcelSheetSelection.All()).findings());
+    combined.addAll(autofilterHealth(workbook, new ExcelSheetSelection.All()).findings());
+    combined.addAll(tableHealth(workbook, new ExcelTableSelection.All()).findings());
     combined.addAll(
         hyperlinkHealth(workbook, workbookLocation, new ExcelSheetSelection.All()).findings());
     combined.addAll(namedRangeHealth(workbook, new ExcelNamedRangeSelection.All()).findings());
@@ -224,22 +247,7 @@ final class WorkbookAnalyzer {
   }
 
   WorkbookAnalysis.AnalysisSummary summary(List<WorkbookAnalysis.AnalysisFinding> findings) {
-    int errorCount = 0;
-    int warningCount = 0;
-    int infoCount = 0;
-    for (WorkbookAnalysis.AnalysisFinding finding : findings) {
-      if (finding.severity() == WorkbookAnalysis.AnalysisSeverity.ERROR) {
-        errorCount++;
-        continue;
-      }
-      if (finding.severity() == WorkbookAnalysis.AnalysisSeverity.WARNING) {
-        warningCount++;
-        continue;
-      }
-      infoCount++;
-    }
-    return new WorkbookAnalysis.AnalysisSummary(
-        findings.size(), errorCount, warningCount, infoCount);
+    return ExcelDocumentAnalyzer.summarizeFindings(findings);
   }
 
   private static WorkbookAnalysis.AnalysisLocation.NamedRange namedRangeLocation(

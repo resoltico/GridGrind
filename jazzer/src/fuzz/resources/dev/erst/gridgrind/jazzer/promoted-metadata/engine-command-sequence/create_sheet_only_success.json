@@ -3,6 +3,18 @@
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest/applyCommands/f5a2a5e3f46a9c9a26f75f9756d075e3e544a1ab",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/create_sheet_only_success.bin",
   "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "ENGINE_COMMAND_SEQUENCE",
+      "inputBytes" : 5,
+      "commandCount" : 1,
+      "commandKinds" : {
+        "CREATE_SHEET" : 1
+      },
+      "styleKinds" : { }
+    }
+  },
   "promotedAt" : "2026-03-26T04:16:01.806956Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/create_sheet_only_success.txt"
 }

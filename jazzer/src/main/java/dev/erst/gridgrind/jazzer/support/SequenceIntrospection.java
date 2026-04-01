@@ -123,6 +123,10 @@ public final class SequenceIntrospection {
       case WorkbookOperation.ApplyStyle _ -> "APPLY_STYLE";
       case WorkbookOperation.SetDataValidation _ -> "SET_DATA_VALIDATION";
       case WorkbookOperation.ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
+      case WorkbookOperation.SetAutofilter _ -> "SET_AUTOFILTER";
+      case WorkbookOperation.ClearAutofilter _ -> "CLEAR_AUTOFILTER";
+      case WorkbookOperation.SetTable _ -> "SET_TABLE";
+      case WorkbookOperation.DeleteTable _ -> "DELETE_TABLE";
       case WorkbookOperation.SetNamedRange _ -> "SET_NAMED_RANGE";
       case WorkbookOperation.DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case WorkbookOperation.AppendRow _ -> "APPEND_ROW";
@@ -156,6 +160,10 @@ public final class SequenceIntrospection {
       case WorkbookCommand.ApplyStyle _ -> "APPLY_STYLE";
       case WorkbookCommand.SetDataValidation _ -> "SET_DATA_VALIDATION";
       case WorkbookCommand.ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
+      case WorkbookCommand.SetAutofilter _ -> "SET_AUTOFILTER";
+      case WorkbookCommand.ClearAutofilter _ -> "CLEAR_AUTOFILTER";
+      case WorkbookCommand.SetTable _ -> "SET_TABLE";
+      case WorkbookCommand.DeleteTable _ -> "DELETE_TABLE";
       case WorkbookCommand.SetNamedRange _ -> "SET_NAMED_RANGE";
       case WorkbookCommand.DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case WorkbookCommand.AppendRow _ -> "APPEND_ROW";
@@ -180,11 +188,15 @@ public final class SequenceIntrospection {
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadOperation.GetDataValidations _ -> "GET_DATA_VALIDATIONS";
+      case WorkbookReadOperation.GetAutofilters _ -> "GET_AUTOFILTERS";
+      case WorkbookReadOperation.GetTables _ -> "GET_TABLES";
       case WorkbookReadOperation.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
       case WorkbookReadOperation.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
       case WorkbookReadOperation.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
       case WorkbookReadOperation.AnalyzeFormulaHealth _ -> "ANALYZE_FORMULA_HEALTH";
       case WorkbookReadOperation.AnalyzeDataValidationHealth _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
+      case WorkbookReadOperation.AnalyzeAutofilterHealth _ -> "ANALYZE_AUTOFILTER_HEALTH";
+      case WorkbookReadOperation.AnalyzeTableHealth _ -> "ANALYZE_TABLE_HEALTH";
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> "ANALYZE_HYPERLINK_HEALTH";
       case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> "ANALYZE_NAMED_RANGE_HEALTH";
       case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> "ANALYZE_WORKBOOK_FINDINGS";
