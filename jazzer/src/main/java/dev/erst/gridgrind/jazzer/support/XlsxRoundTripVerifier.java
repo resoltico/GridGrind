@@ -1,25 +1,29 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.excel.ExcelBorder;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
+import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
-import dev.erst.gridgrind.excel.ExcelCellStyle;
+import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
+import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelHyperlinkType;
-import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
+import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
+import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
+import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
+import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,10 +57,7 @@ public final class XlsxRoundTripVerifier {
     if (!Files.exists(workbookPath)) {
       throw new IllegalStateException("saved workbook must exist");
     }
-    Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStyles = expectedStyles(commands);
-    Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadata =
-        expectedMetadata(commands);
-    Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges = expectedNamedRanges(commands);
+    ExpectedWorkbookState expectedWorkbookState = expectedWorkbookState(commands);
 
     try (InputStream inputStream = Files.newInputStream(workbookPath);
         XSSFWorkbook workbook = new XSSFWorkbook(inputStream)) {
@@ -77,10 +78,11 @@ public final class XlsxRoundTripVerifier {
         }
         requireSheetShape(workbook.getSheetAt(sheetIndex));
       }
-      requireExpectedStyles(expectedStyles, workbook);
-      requireExpectedMetadata(expectedMetadata, workbook);
-      requireExpectedNamedRanges(expectedNamedRanges, workbook);
+      requireExpectedStyles(expectedWorkbookState.expectedStyles(), workbook);
+      requireExpectedMetadata(expectedWorkbookState.expectedMetadata(), workbook);
+      requireExpectedNamedRanges(expectedWorkbookState.expectedNamedRanges(), workbook);
     }
+    requireExpectedDataValidations(expectedWorkbookState.expectedDataValidations(), workbookPath);
   }
 
   private static void requireSheetShape(org.apache.poi.xssf.usermodel.XSSFSheet sheet) {
@@ -335,354 +337,354 @@ public final class XlsxRoundTripVerifier {
     }
   }
 
-  private static Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStyles(
-      List<WorkbookCommand> commands) {
-    LinkedHashMap<String, Map<CellCoordinate, ExpectedStyle>> expectedStylesBySheet =
+  private static ExpectedWorkbookState expectedWorkbookState(List<WorkbookCommand> commands)
+      throws IOException {
+    ExpectedWorkbookFootprint footprint = expectedWorkbookFootprint(commands);
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      new WorkbookCommandExecutor().apply(workbook, commands);
+      Map<String, List<ExcelCellSnapshot>> candidateSnapshots =
+          expectedCellSnapshots(workbook, footprint);
+      return new ExpectedWorkbookState(
+          expectedStyles(candidateSnapshots, defaultStyleSnapshot()),
+          expectedMetadata(candidateSnapshots),
+          expectedNamedRanges(workbook),
+          expectedDataValidations(workbook));
+    }
+  }
+
+  private static ExpectedWorkbookFootprint expectedWorkbookFootprint(List<WorkbookCommand> commands) {
+    LinkedHashMap<String, LinkedHashSet<CellCoordinate>> candidateCoordinatesBySheet =
         new LinkedHashMap<>();
+    LinkedHashMap<String, LinkedHashSet<CellCoordinate>> valueBearingCoordinatesBySheet =
+        new LinkedHashMap<>();
+
     for (WorkbookCommand command : commands) {
       switch (command) {
         case WorkbookCommand.CreateSheet createSheet ->
-            expectedStylesBySheet.putIfAbsent(createSheet.sheetName(), new HashMap<>());
-        case WorkbookCommand.RenameSheet renameSheet ->
-            renameExpectedSheet(
-                expectedStylesBySheet, renameSheet.sheetName(), renameSheet.newSheetName());
-        case WorkbookCommand.DeleteSheet deleteSheet ->
-            expectedStylesBySheet.remove(deleteSheet.sheetName());
+            candidateCoordinatesBySheet.computeIfAbsent(
+                createSheet.sheetName(), sheetKey -> new LinkedHashSet<>());
+        case WorkbookCommand.RenameSheet renameSheet -> {
+          renameExpectedSheetState(
+              candidateCoordinatesBySheet, renameSheet.sheetName(), renameSheet.newSheetName());
+          renameExpectedSheetState(
+              valueBearingCoordinatesBySheet, renameSheet.sheetName(), renameSheet.newSheetName());
+        }
+        case WorkbookCommand.DeleteSheet deleteSheet -> {
+          candidateCoordinatesBySheet.remove(deleteSheet.sheetName());
+          valueBearingCoordinatesBySheet.remove(deleteSheet.sheetName());
+        }
         case WorkbookCommand.MoveSheet _ -> {
-          // Sheet order does not affect cell-level style expectations.
+          // Sheet order does not affect candidate or append-location tracking.
         }
         case WorkbookCommand.MergeCells _ -> {
-          // Merge state does not change style persistence expectations.
+          // Merge state does not add new candidate cells.
         }
         case WorkbookCommand.UnmergeCells _ -> {
-          // Unmerge state does not change style persistence expectations.
+          // Unmerge state does not add new candidate cells.
         }
         case WorkbookCommand.SetColumnWidth _ -> {
-          // Column width changes do not affect cell styles.
+          // Column width does not affect cell-level round-trip expectations.
         }
         case WorkbookCommand.SetRowHeight _ -> {
-          // Row height changes do not affect cell styles.
+          // Row height does not affect cell-level round-trip expectations.
         }
         case WorkbookCommand.FreezePanes _ -> {
-          // Freeze panes do not affect cell styles.
+          // Freeze panes do not affect cell-level round-trip expectations.
         }
-        case WorkbookCommand.SetCell setCell ->
-            clearExpectedRange(expectedStylesBySheet, setCell.sheetName(), setCell.address());
-        case WorkbookCommand.SetRange setRange ->
-            clearExpectedRange(expectedStylesBySheet, setRange.sheetName(), setRange.range());
+        case WorkbookCommand.SetCell setCell -> {
+          CellCoordinate coordinate = CellCoordinate.fromAddress(setCell.address());
+          recordCandidate(candidateCoordinatesBySheet, setCell.sheetName(), coordinate);
+          recordValueBearing(
+              valueBearingCoordinatesBySheet,
+              setCell.sheetName(),
+              coordinate,
+              isValueBearing(setCell.value()));
+        }
+        case WorkbookCommand.SetRange setRange -> {
+          CellRangeAddress range = CellRangeAddress.valueOf(setRange.range());
+          for (int rowOffset = 0; rowOffset < setRange.rows().size(); rowOffset++) {
+            for (int columnOffset = 0;
+                columnOffset < setRange.rows().get(rowOffset).size();
+                columnOffset++) {
+              CellCoordinate coordinate =
+                  new CellCoordinate(
+                      range.getFirstRow() + rowOffset, range.getFirstColumn() + columnOffset);
+              recordCandidate(candidateCoordinatesBySheet, setRange.sheetName(), coordinate);
+              recordValueBearing(
+                  valueBearingCoordinatesBySheet,
+                  setRange.sheetName(),
+                  coordinate,
+                  isValueBearing(setRange.rows().get(rowOffset).get(columnOffset)));
+            }
+          }
+        }
         case WorkbookCommand.ClearRange clearRange ->
-            clearExpectedRange(expectedStylesBySheet, clearRange.sheetName(), clearRange.range());
-        case WorkbookCommand.SetHyperlink _ -> {
-          // Hyperlinks are exercised by separate response and persistence invariants.
-        }
-        case WorkbookCommand.ClearHyperlink _ -> {
-          // Hyperlink removal does not affect cell styles.
-        }
-        case WorkbookCommand.SetComment _ -> {
-          // Comments are exercised by separate response and persistence invariants.
-        }
-        case WorkbookCommand.ClearComment _ -> {
-          // Comment removal does not affect cell styles.
-        }
+            forEachCell(
+                clearRange.range(),
+                coordinate -> {
+                  recordCandidate(candidateCoordinatesBySheet, clearRange.sheetName(), coordinate);
+                  recordValueBearing(
+                      valueBearingCoordinatesBySheet, clearRange.sheetName(), coordinate, false);
+                });
+        case WorkbookCommand.SetHyperlink setHyperlink ->
+            recordCandidate(
+                candidateCoordinatesBySheet,
+                setHyperlink.sheetName(),
+                CellCoordinate.fromAddress(setHyperlink.address()));
+        case WorkbookCommand.ClearHyperlink clearHyperlink ->
+            recordCandidate(
+                candidateCoordinatesBySheet,
+                clearHyperlink.sheetName(),
+                CellCoordinate.fromAddress(clearHyperlink.address()));
+        case WorkbookCommand.SetComment setComment ->
+            recordCandidate(
+                candidateCoordinatesBySheet,
+                setComment.sheetName(),
+                CellCoordinate.fromAddress(setComment.address()));
+        case WorkbookCommand.ClearComment clearComment ->
+            recordCandidate(
+                candidateCoordinatesBySheet,
+                clearComment.sheetName(),
+                CellCoordinate.fromAddress(clearComment.address()));
         case WorkbookCommand.ApplyStyle applyStyle ->
-            applyExpectedStyle(
-                expectedStylesBySheet, applyStyle.sheetName(), applyStyle.range(), applyStyle.style());
+            forEachCell(
+                applyStyle.range(),
+                coordinate ->
+                    recordCandidate(candidateCoordinatesBySheet, applyStyle.sheetName(), coordinate));
+        case WorkbookCommand.SetDataValidation _ -> {
+          // Data validations are tracked independently from cell-style and metadata expectations.
+        }
+        case WorkbookCommand.ClearDataValidations _ -> {
+          // Data validations are tracked independently from cell-style and metadata expectations.
+        }
         case WorkbookCommand.SetNamedRange _ -> {
-          // Named ranges are independent of cell-style persistence expectations.
+          // Named ranges are derived directly from the applied workbook state.
         }
         case WorkbookCommand.DeleteNamedRange _ -> {
-          // Named-range deletion is independent of cell-style persistence expectations.
+          // Named ranges are derived directly from the applied workbook state.
         }
-        case WorkbookCommand.AppendRow _ -> {
-          // Append operations may reuse style-only rows, but value writes must preserve any
-          // existing style state on those cells.
+        case WorkbookCommand.AppendRow appendRow -> {
+          int rowIndex = nextAppendRowIndex(valueBearingCoordinatesBySheet, appendRow.sheetName());
+          for (int columnIndex = 0; columnIndex < appendRow.values().size(); columnIndex++) {
+            CellCoordinate coordinate = new CellCoordinate(rowIndex, columnIndex);
+            recordCandidate(candidateCoordinatesBySheet, appendRow.sheetName(), coordinate);
+            recordValueBearing(
+                valueBearingCoordinatesBySheet,
+                appendRow.sheetName(),
+                coordinate,
+                isValueBearing(appendRow.values().get(columnIndex)));
+          }
         }
         case WorkbookCommand.AutoSizeColumns _ -> {
-          // Auto-sizing does not affect cell styles.
+          // Auto-sizing does not add new candidate cells.
         }
         case WorkbookCommand.EvaluateAllFormulas _ -> {
-          // Formula evaluation does not affect cell styles.
+          // Formula evaluation does not add new candidate cells.
         }
         case WorkbookCommand.ForceFormulaRecalculationOnOpen _ -> {
-          // Force-recalc flags do not affect cell styles.
+          // Force-recalc flags do not add new candidate cells.
         }
       }
     }
-    expectedStylesBySheet.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+
+    LinkedHashMap<String, List<CellCoordinate>> snapshotCoordinatesBySheet = new LinkedHashMap<>();
+    candidateCoordinatesBySheet.forEach(
+        (sheetName, coordinates) -> {
+          if (!coordinates.isEmpty()) {
+            snapshotCoordinatesBySheet.put(sheetName, sortedCoordinates(coordinates));
+          }
+        });
+    return new ExpectedWorkbookFootprint(Map.copyOf(snapshotCoordinatesBySheet));
+  }
+
+  private static Map<String, List<ExcelCellSnapshot>> expectedCellSnapshots(
+      ExcelWorkbook workbook, ExpectedWorkbookFootprint footprint) {
+    LinkedHashMap<String, List<ExcelCellSnapshot>> snapshotsBySheet = new LinkedHashMap<>();
+    for (Map.Entry<String, List<CellCoordinate>> entry :
+        footprint.candidateCoordinatesBySheet().entrySet()) {
+      List<String> addresses =
+          entry.getValue().stream().map(CellCoordinate::a1Address).toList();
+      List<ExcelCellSnapshot> snapshots = workbook.sheet(entry.getKey()).snapshotCells(addresses);
+      if (!snapshots.isEmpty()) {
+        snapshotsBySheet.put(entry.getKey(), snapshots);
+      }
+    }
+    return Map.copyOf(snapshotsBySheet);
+  }
+
+  private static Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStyles(
+      Map<String, List<ExcelCellSnapshot>> candidateSnapshots, ExcelCellStyleSnapshot defaultStyle) {
+    LinkedHashMap<String, Map<CellCoordinate, ExpectedStyle>> expectedStylesBySheet =
+        new LinkedHashMap<>();
+    for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
+      LinkedHashMap<CellCoordinate, ExpectedStyle> expectedStyles = new LinkedHashMap<>();
+      for (ExcelCellSnapshot snapshot : entry.getValue()) {
+        if (!snapshot.style().equals(defaultStyle)) {
+          expectedStyles.put(
+              CellCoordinate.fromAddress(snapshot.address()), ExpectedStyle.from(snapshot.style()));
+        }
+      }
+      if (!expectedStyles.isEmpty()) {
+        expectedStylesBySheet.put(entry.getKey(), Map.copyOf(expectedStyles));
+      }
+    }
     return Map.copyOf(expectedStylesBySheet);
   }
 
   private static Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadata(
-      List<WorkbookCommand> commands) {
+      Map<String, List<ExcelCellSnapshot>> candidateSnapshots) {
     LinkedHashMap<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadataBySheet =
         new LinkedHashMap<>();
-    for (WorkbookCommand command : commands) {
-      switch (command) {
-        case WorkbookCommand.CreateSheet createSheet ->
-            expectedMetadataBySheet.putIfAbsent(createSheet.sheetName(), new HashMap<>());
-        case WorkbookCommand.RenameSheet renameSheet ->
-            renameExpectedSheet(
-                expectedMetadataBySheet, renameSheet.sheetName(), renameSheet.newSheetName());
-        case WorkbookCommand.DeleteSheet deleteSheet ->
-            expectedMetadataBySheet.remove(deleteSheet.sheetName());
-        case WorkbookCommand.MoveSheet _ -> {
-          // Sheet order does not affect cell metadata persistence expectations.
-        }
-        case WorkbookCommand.MergeCells _ -> {
-          // Merge state does not affect hyperlink or comment persistence.
-        }
-        case WorkbookCommand.UnmergeCells _ -> {
-          // Unmerge state does not affect hyperlink or comment persistence.
-        }
-        case WorkbookCommand.SetColumnWidth _ -> {
-          // Column width does not affect hyperlink or comment persistence.
-        }
-        case WorkbookCommand.SetRowHeight _ -> {
-          // Row height does not affect hyperlink or comment persistence.
-        }
-        case WorkbookCommand.FreezePanes _ -> {
-          // Freeze panes do not affect hyperlink or comment persistence.
-        }
-        case WorkbookCommand.SetCell _ -> {
-          // Value writes do not implicitly clear hyperlinks or comments.
-        }
-        case WorkbookCommand.SetRange _ -> {
-          // Matrix writes do not implicitly clear hyperlinks or comments.
-        }
-        case WorkbookCommand.ClearRange clearRange ->
-            clearExpectedMetadataRange(
-                expectedMetadataBySheet, clearRange.sheetName(), clearRange.range());
-        case WorkbookCommand.SetHyperlink setHyperlink ->
-            applyExpectedMetadata(
-                expectedMetadataBySheet,
-                setHyperlink.sheetName(),
-                setHyperlink.address(),
-                ExpectedCellMetadata.withHyperlink(setHyperlink.target()));
-        case WorkbookCommand.ClearHyperlink clearHyperlink ->
-            clearExpectedHyperlink(
-                expectedMetadataBySheet, clearHyperlink.sheetName(), clearHyperlink.address());
-        case WorkbookCommand.SetComment setComment ->
-            applyExpectedMetadata(
-                expectedMetadataBySheet,
-                setComment.sheetName(),
-                setComment.address(),
-                ExpectedCellMetadata.withComment(setComment.comment()));
-        case WorkbookCommand.ClearComment clearComment ->
-            clearExpectedComment(
-                expectedMetadataBySheet, clearComment.sheetName(), clearComment.address());
-        case WorkbookCommand.ApplyStyle _ -> {
-          // Styling does not affect hyperlink or comment persistence.
-        }
-        case WorkbookCommand.SetNamedRange _ -> {
-          // Named ranges are tracked independently from cell metadata.
-        }
-        case WorkbookCommand.DeleteNamedRange _ -> {
-          // Named ranges are tracked independently from cell metadata.
-        }
-        case WorkbookCommand.AppendRow _ -> {
-          // Append operations may reuse metadata-only rows, and value writes must preserve any
-          // existing hyperlink or comment state on those cells.
-        }
-        case WorkbookCommand.AutoSizeColumns _ -> {
-          // Auto-sizing does not affect hyperlink or comment persistence.
-        }
-        case WorkbookCommand.EvaluateAllFormulas _ -> {
-          // Formula evaluation does not affect hyperlink or comment persistence.
-        }
-        case WorkbookCommand.ForceFormulaRecalculationOnOpen _ -> {
-          // Force-recalc flags do not affect hyperlink or comment persistence.
+    for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
+      LinkedHashMap<CellCoordinate, ExpectedCellMetadata> expectedMetadata = new LinkedHashMap<>();
+      for (ExcelCellSnapshot snapshot : entry.getValue()) {
+        if (hasMetadata(snapshot.metadata())) {
+          expectedMetadata.put(
+              CellCoordinate.fromAddress(snapshot.address()),
+              ExpectedCellMetadata.from(snapshot.metadata()));
         }
       }
+      if (!expectedMetadata.isEmpty()) {
+        expectedMetadataBySheet.put(entry.getKey(), Map.copyOf(expectedMetadata));
+      }
     }
-    expectedMetadataBySheet.entrySet().removeIf(entry -> entry.getValue().isEmpty());
     return Map.copyOf(expectedMetadataBySheet);
   }
 
-  private static Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges(
-      List<WorkbookCommand> commands) {
+  private static Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges(ExcelWorkbook workbook) {
     LinkedHashMap<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges = new LinkedHashMap<>();
-    for (WorkbookCommand command : commands) {
-      switch (command) {
-        case WorkbookCommand.CreateSheet _ -> {
-          // Sheet creation alone does not create named ranges.
-        }
-        case WorkbookCommand.RenameSheet renameSheet ->
-            renameExpectedNamedRanges(
-                expectedNamedRanges, renameSheet.sheetName(), renameSheet.newSheetName());
-        case WorkbookCommand.DeleteSheet deleteSheet ->
-            removeExpectedNamedRangesForSheet(expectedNamedRanges, deleteSheet.sheetName());
-        case WorkbookCommand.MoveSheet _ -> {
-          // Sheet order does not affect named-range persistence.
-        }
-        case WorkbookCommand.MergeCells _ -> {
-          // Merge state does not affect named ranges directly.
-        }
-        case WorkbookCommand.UnmergeCells _ -> {
-          // Unmerge state does not affect named ranges directly.
-        }
-        case WorkbookCommand.SetColumnWidth _ -> {
-          // Column width does not affect named ranges.
-        }
-        case WorkbookCommand.SetRowHeight _ -> {
-          // Row height does not affect named ranges.
-        }
-        case WorkbookCommand.FreezePanes _ -> {
-          // Freeze panes do not affect named ranges.
-        }
-        case WorkbookCommand.SetCell _ -> {
-          // Value writes do not affect named-range definitions.
-        }
-        case WorkbookCommand.SetRange _ -> {
-          // Matrix writes do not affect named-range definitions.
-        }
-        case WorkbookCommand.ClearRange _ -> {
-          // Clearing cells does not remove or rewrite named-range definitions.
-        }
-        case WorkbookCommand.SetHyperlink _ -> {
-          // Hyperlinks do not affect named ranges.
-        }
-        case WorkbookCommand.ClearHyperlink _ -> {
-          // Hyperlinks do not affect named ranges.
-        }
-        case WorkbookCommand.SetComment _ -> {
-          // Comments do not affect named ranges.
-        }
-        case WorkbookCommand.ClearComment _ -> {
-          // Comments do not affect named ranges.
-        }
-        case WorkbookCommand.ApplyStyle _ -> {
-          // Styling does not affect named ranges.
-        }
-        case WorkbookCommand.SetNamedRange setNamedRange -> {
-          ExcelNamedRangeDefinition definition = setNamedRange.definition();
-          ExpectedNamedRange expectedNamedRange =
-              new ExpectedNamedRange(
-                  definition.scope(), definition.target().refersToFormula(), definition.target());
-          expectedNamedRanges.put(new NamedRangeKey(definition.name(), definition.scope()), expectedNamedRange);
-        }
-        case WorkbookCommand.DeleteNamedRange deleteNamedRange ->
-            expectedNamedRanges.remove(
-                new NamedRangeKey(deleteNamedRange.name(), deleteNamedRange.scope()));
-        case WorkbookCommand.AppendRow _ -> {
-          // Appending rows does not affect named-range definitions.
-        }
-        case WorkbookCommand.AutoSizeColumns _ -> {
-          // Auto-sizing does not affect named ranges.
-        }
-        case WorkbookCommand.EvaluateAllFormulas _ -> {
-          // Formula evaluation does not affect named-range definitions.
-        }
-        case WorkbookCommand.ForceFormulaRecalculationOnOpen _ -> {
-          // Force-recalc flags do not affect named ranges.
-        }
-      }
+    for (ExcelNamedRangeSnapshot namedRange : workbook.namedRanges()) {
+      ExcelNamedRangeTarget target =
+          switch (namedRange) {
+            case ExcelNamedRangeSnapshot.RangeSnapshot rangeSnapshot -> rangeSnapshot.target();
+            case ExcelNamedRangeSnapshot.FormulaSnapshot _ -> null;
+          };
+      expectedNamedRanges.put(
+          new NamedRangeKey(namedRange.name(), namedRange.scope()),
+          new ExpectedNamedRange(namedRange.scope(), namedRange.refersToFormula(), target));
     }
     return Map.copyOf(expectedNamedRanges);
   }
 
-  private static <T> void renameExpectedSheet(
-      Map<String, Map<CellCoordinate, T>> expectedValuesBySheet,
-      String sheetName,
-      String newSheetName) {
-    Map<CellCoordinate, T> expectedValues = expectedValuesBySheet.remove(sheetName);
-    if (expectedValues != null) {
-      expectedValuesBySheet.put(newSheetName, expectedValues);
+  private static Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations(
+      ExcelWorkbook workbook) {
+    LinkedHashMap<String, List<ExcelDataValidationSnapshot>> expected = new LinkedHashMap<>();
+    for (String sheetName : workbook.sheetNames()) {
+      List<ExcelDataValidationSnapshot> validations =
+          workbook.sheet(sheetName).dataValidations(new ExcelRangeSelection.All());
+      if (!validations.isEmpty()) {
+        expected.put(sheetName, validations);
+      }
     }
+    return Map.copyOf(expected);
   }
 
-  private static void clearExpectedHyperlink(
-      Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadataBySheet,
-      String sheetName,
-      String address) {
-    mutateExpectedMetadata(
-        expectedMetadataBySheet,
-        sheetName,
-        address,
-        metadata -> metadata.clearHyperlink());
-  }
-
-  private static void clearExpectedComment(
-      Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadataBySheet,
-      String sheetName,
-      String address) {
-    mutateExpectedMetadata(
-        expectedMetadataBySheet,
-        sheetName,
-        address,
-        metadata -> metadata.clearComment());
-  }
-
-  private static void clearExpectedRange(
-      Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStylesBySheet,
-      String sheetName,
-      String range) {
-    Map<CellCoordinate, ExpectedStyle> expectedStyles = expectedStylesBySheet.get(sheetName);
-    if (expectedStyles == null) {
+  private static void requireExpectedDataValidations(
+      Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations, Path workbookPath)
+      throws IOException {
+    if (expectedDataValidations.isEmpty()) {
       return;
     }
-    forEachCell(range, expectedStyles::remove);
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      for (Map.Entry<String, List<ExcelDataValidationSnapshot>> entry :
+          expectedDataValidations.entrySet()) {
+        List<ExcelDataValidationSnapshot> actual =
+            workbook.sheet(entry.getKey()).dataValidations(new ExcelRangeSelection.All());
+        if (!entry.getValue().equals(actual)) {
+          throw new IllegalStateException(
+              "data validations changed across round-trip for sheet "
+                  + entry.getKey()
+                  + ": expected "
+                  + entry.getValue()
+                  + " but was "
+                  + actual);
+        }
+      }
+    }
   }
 
-  private static void clearExpectedMetadataRange(
-      Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadataBySheet,
-      String sheetName,
-      String range) {
-    Map<CellCoordinate, ExpectedCellMetadata> expectedMetadata = expectedMetadataBySheet.get(sheetName);
-    if (expectedMetadata == null) {
-      return;
+  private static ExcelCellStyleSnapshot defaultStyleSnapshot() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Default");
+      return workbook.sheet("Default").snapshotCell("A1").style();
     }
-    forEachCell(range, expectedMetadata::remove);
   }
 
-  private static void applyExpectedStyle(
-      Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStylesBySheet,
-      String sheetName,
-      String range,
-      ExcelCellStyle style) {
-    Map<CellCoordinate, ExpectedStyle> expectedStyles =
-        expectedStylesBySheet.computeIfAbsent(sheetName, key -> new HashMap<>());
-    forEachCell(
-        range,
-        coordinate ->
-            expectedStyles.merge(
-                coordinate,
-                ExpectedStyle.from(style),
-                ExpectedStyle::merge));
+  private static <T> void renameExpectedSheetState(
+      Map<String, T> valuesBySheet, String sheetName, String newSheetName) {
+    T values = valuesBySheet.remove(sheetName);
+    if (values != null) {
+      valuesBySheet.put(newSheetName, values);
+    }
   }
 
-  private static void applyExpectedMetadata(
-      Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadataBySheet,
+  private static void recordCandidate(
+      Map<String, LinkedHashSet<CellCoordinate>> candidateCoordinatesBySheet,
       String sheetName,
-      String address,
-      ExpectedCellMetadata metadata) {
-    Map<CellCoordinate, ExpectedCellMetadata> expectedMetadata =
-        expectedMetadataBySheet.computeIfAbsent(sheetName, key -> new HashMap<>());
-    CellReference cellReference = new CellReference(address);
-    CellCoordinate coordinate = new CellCoordinate(cellReference.getRow(), cellReference.getCol());
-    expectedMetadata.merge(coordinate, metadata, ExpectedCellMetadata::merge);
+      CellCoordinate coordinate) {
+    candidateCoordinatesBySheet
+        .computeIfAbsent(sheetName, sheetKey -> new LinkedHashSet<>())
+        .add(coordinate);
   }
 
-  private static void mutateExpectedMetadata(
-      Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadataBySheet,
+  private static void recordValueBearing(
+      Map<String, LinkedHashSet<CellCoordinate>> valueBearingCoordinatesBySheet,
       String sheetName,
-      String address,
-      java.util.function.UnaryOperator<ExpectedCellMetadata> mutation) {
-    Map<CellCoordinate, ExpectedCellMetadata> expectedMetadata = expectedMetadataBySheet.get(sheetName);
-    if (expectedMetadata == null) {
-      return;
+      CellCoordinate coordinate,
+      boolean valueBearing) {
+    LinkedHashSet<CellCoordinate> coordinates =
+        valueBearingCoordinatesBySheet.computeIfAbsent(sheetName, sheetKey -> new LinkedHashSet<>());
+    if (valueBearing) {
+      coordinates.add(coordinate);
+    } else {
+      coordinates.remove(coordinate);
+      if (coordinates.isEmpty()) {
+        valueBearingCoordinatesBySheet.remove(sheetName);
+      }
     }
-    CellReference cellReference = new CellReference(address);
-    CellCoordinate coordinate = new CellCoordinate(cellReference.getRow(), cellReference.getCol());
-    ExpectedCellMetadata existing = expectedMetadata.get(coordinate);
-    if (existing == null) {
-      return;
+  }
+
+  private static int nextAppendRowIndex(
+      Map<String, LinkedHashSet<CellCoordinate>> valueBearingCoordinatesBySheet, String sheetName) {
+    LinkedHashSet<CellCoordinate> coordinates = valueBearingCoordinatesBySheet.get(sheetName);
+    if (coordinates == null || coordinates.isEmpty()) {
+      return 0;
     }
-    ExpectedCellMetadata updated = mutation.apply(existing);
-    if (updated.isEmpty()) {
-      expectedMetadata.remove(coordinate);
-      return;
+    int lastRowIndex = -1;
+    for (CellCoordinate coordinate : coordinates) {
+      if (coordinate.rowIndex() > lastRowIndex) {
+        lastRowIndex = coordinate.rowIndex();
+      }
     }
-    expectedMetadata.put(coordinate, updated);
+    return lastRowIndex + 1;
+  }
+
+  private static boolean isValueBearing(dev.erst.gridgrind.excel.ExcelCellValue value) {
+    return switch (value) {
+      case dev.erst.gridgrind.excel.ExcelCellValue.BlankValue _ -> false;
+      case dev.erst.gridgrind.excel.ExcelCellValue.TextValue _ -> true;
+      case dev.erst.gridgrind.excel.ExcelCellValue.NumberValue _ -> true;
+      case dev.erst.gridgrind.excel.ExcelCellValue.BooleanValue _ -> true;
+      case dev.erst.gridgrind.excel.ExcelCellValue.DateValue _ -> true;
+      case dev.erst.gridgrind.excel.ExcelCellValue.DateTimeValue _ -> true;
+      case dev.erst.gridgrind.excel.ExcelCellValue.FormulaValue _ -> true;
+    };
+  }
+
+  private static List<CellCoordinate> sortedCoordinates(LinkedHashSet<CellCoordinate> coordinates) {
+    java.util.ArrayList<CellCoordinate> sorted = new java.util.ArrayList<>(coordinates);
+    sorted.sort(
+        (left, right) -> {
+          int rowComparison = Integer.compare(left.rowIndex(), right.rowIndex());
+          return rowComparison != 0
+              ? rowComparison
+              : Integer.compare(left.columnIndex(), right.columnIndex());
+        });
+    return List.copyOf(sorted);
+  }
+
+  private static boolean hasMetadata(ExcelCellMetadataSnapshot metadata) {
+    return metadata.hyperlink().isPresent() || metadata.comment().isPresent();
   }
 
   private static void forEachCell(String range, java.util.function.Consumer<CellCoordinate> consumer) {
@@ -787,25 +789,6 @@ public final class XlsxRoundTripVerifier {
     return new ExcelNamedRangeScope.SheetScope(workbook.getSheetName(sheetIndex));
   }
 
-  private static void renameExpectedNamedRanges(
-      Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges, String sheetName, String newSheetName) {
-    LinkedHashMap<NamedRangeKey, ExpectedNamedRange> renamed = new LinkedHashMap<>();
-    expectedNamedRanges.forEach(
-        (key, value) -> {
-          NamedRangeKey renamedKey = key.renamedSheet(sheetName, newSheetName);
-          ExpectedNamedRange renamedValue = value.renamedSheet(sheetName, newSheetName);
-          renamed.put(renamedKey, renamedValue);
-        });
-    expectedNamedRanges.clear();
-    expectedNamedRanges.putAll(renamed);
-  }
-
-  private static void removeExpectedNamedRangesForSheet(
-      Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges, String sheetName) {
-    expectedNamedRanges.entrySet().removeIf(entry -> entry.getKey().referencesSheet(sheetName)
-        || entry.getValue().referencesSheet(sheetName));
-  }
-
   private static void requireEquals(
       String sheetName,
       CellCoordinate coordinate,
@@ -822,37 +805,29 @@ public final class XlsxRoundTripVerifier {
     }
   }
 
+  private record ExpectedWorkbookState(
+      Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStyles,
+      Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadata,
+      Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges,
+      Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations) {}
+
+  private record ExpectedWorkbookFootprint(Map<String, List<CellCoordinate>> candidateCoordinatesBySheet) {}
+
   private record CellCoordinate(int rowIndex, int columnIndex) {
+    private static CellCoordinate fromAddress(String address) {
+      CellReference cellReference = new CellReference(address);
+      return new CellCoordinate(cellReference.getRow(), cellReference.getCol());
+    }
+
     private String a1Address() {
       return new CellReference(rowIndex, columnIndex).formatAsString();
     }
   }
 
   private record ExpectedCellMetadata(ExcelHyperlink hyperlink, ExcelComment comment) {
-    private static ExpectedCellMetadata withHyperlink(ExcelHyperlink hyperlink) {
-      return new ExpectedCellMetadata(Objects.requireNonNull(hyperlink, "hyperlink must not be null"), null);
-    }
-
-    private static ExpectedCellMetadata withComment(ExcelComment comment) {
-      return new ExpectedCellMetadata(null, Objects.requireNonNull(comment, "comment must not be null"));
-    }
-
-    private ExpectedCellMetadata merge(ExpectedCellMetadata overlay) {
+    private static ExpectedCellMetadata from(ExcelCellMetadataSnapshot metadata) {
       return new ExpectedCellMetadata(
-          overlay.hyperlink() == null ? hyperlink : overlay.hyperlink(),
-          overlay.comment() == null ? comment : overlay.comment());
-    }
-
-    private ExpectedCellMetadata clearHyperlink() {
-      return new ExpectedCellMetadata(null, comment);
-    }
-
-    private ExpectedCellMetadata clearComment() {
-      return new ExpectedCellMetadata(hyperlink, null);
-    }
-
-    private boolean isEmpty() {
-      return hyperlink == null && comment == null;
+          metadata.hyperlink().orElse(null), metadata.comment().orElse(null));
     }
   }
 
@@ -864,56 +839,10 @@ public final class XlsxRoundTripVerifier {
             "SHEET:" + sheetScope.sheetName() + ":" + name;
       };
     }
-
-    private NamedRangeKey renamedSheet(String sheetName, String newSheetName) {
-      return switch (scope) {
-        case ExcelNamedRangeScope.WorkbookScope _ -> this;
-        case ExcelNamedRangeScope.SheetScope sheetScope ->
-            sheetScope.sheetName().equals(sheetName)
-                ? new NamedRangeKey(name, new ExcelNamedRangeScope.SheetScope(newSheetName))
-                : this;
-      };
-    }
-
-    private boolean referencesSheet(String sheetName) {
-      return switch (scope) {
-        case ExcelNamedRangeScope.WorkbookScope _ -> false;
-        case ExcelNamedRangeScope.SheetScope sheetScope -> sheetScope.sheetName().equals(sheetName);
-      };
-    }
   }
 
   private record ExpectedNamedRange(
-      ExcelNamedRangeScope scope, String refersToFormula, ExcelNamedRangeTarget target) {
-    private ExpectedNamedRange renamedSheet(String sheetName, String newSheetName) {
-      ExcelNamedRangeScope renamedScope =
-          switch (scope) {
-            case ExcelNamedRangeScope.WorkbookScope _ -> scope;
-            case ExcelNamedRangeScope.SheetScope sheetScope ->
-                sheetScope.sheetName().equals(sheetName)
-                    ? new ExcelNamedRangeScope.SheetScope(newSheetName)
-                    : scope;
-          };
-      ExcelNamedRangeTarget renamedTarget =
-          target != null && target.sheetName().equals(sheetName)
-              ? new ExcelNamedRangeTarget(newSheetName, target.range())
-              : target;
-      String renamedFormula =
-          renamedTarget == null
-              ? refersToFormula
-              : renamedTarget.refersToFormula();
-      return new ExpectedNamedRange(renamedScope, renamedFormula, renamedTarget);
-    }
-
-    private boolean referencesSheet(String sheetName) {
-      boolean scopeReferencesSheet =
-          switch (scope) {
-            case ExcelNamedRangeScope.WorkbookScope _ -> false;
-            case ExcelNamedRangeScope.SheetScope sheetScope -> sheetScope.sheetName().equals(sheetName);
-          };
-      return scopeReferencesSheet || (target != null && target.sheetName().equals(sheetName));
-    }
-  }
+      ExcelNamedRangeScope scope, String refersToFormula, ExcelNamedRangeTarget target) {}
 
   private record ExpectedStyle(
       String numberFormat,
@@ -932,7 +861,7 @@ public final class XlsxRoundTripVerifier {
       ExcelBorderStyle borderRight,
       ExcelBorderStyle borderBottom,
       ExcelBorderStyle borderLeft) {
-    private static ExpectedStyle from(ExcelCellStyle style) {
+    private static ExpectedStyle from(ExcelCellStyleSnapshot style) {
       return new ExpectedStyle(
           style.numberFormat(),
           style.bold(),
@@ -941,62 +870,16 @@ public final class XlsxRoundTripVerifier {
           style.horizontalAlignment(),
           style.verticalAlignment(),
           style.fontName(),
-          style.fontHeight() == null ? null : style.fontHeight().twips(),
+          style.fontHeight().twips(),
           style.fontColor(),
           style.underline(),
           style.strikeout(),
           style.fillColor(),
-          borderStyle(style.border(), BorderEdge.TOP),
-          borderStyle(style.border(), BorderEdge.RIGHT),
-          borderStyle(style.border(), BorderEdge.BOTTOM),
-          borderStyle(style.border(), BorderEdge.LEFT));
+          style.topBorderStyle(),
+          style.rightBorderStyle(),
+          style.bottomBorderStyle(),
+          style.leftBorderStyle());
     }
 
-    private ExpectedStyle merge(ExpectedStyle overlay) {
-      return new ExpectedStyle(
-          overlay.numberFormat() == null ? numberFormat : overlay.numberFormat(),
-          overlay.bold() == null ? bold : overlay.bold(),
-          overlay.italic() == null ? italic : overlay.italic(),
-          overlay.wrapText() == null ? wrapText : overlay.wrapText(),
-          overlay.horizontalAlignment() == null ? horizontalAlignment : overlay.horizontalAlignment(),
-          overlay.verticalAlignment() == null ? verticalAlignment : overlay.verticalAlignment(),
-          overlay.fontName() == null ? fontName : overlay.fontName(),
-          overlay.fontHeightTwips() == null ? fontHeightTwips : overlay.fontHeightTwips(),
-          overlay.fontColor() == null ? fontColor : overlay.fontColor(),
-          overlay.underline() == null ? underline : overlay.underline(),
-          overlay.strikeout() == null ? strikeout : overlay.strikeout(),
-          overlay.fillColor() == null ? fillColor : overlay.fillColor(),
-          overlay.borderTop() == null ? borderTop : overlay.borderTop(),
-          overlay.borderRight() == null ? borderRight : overlay.borderRight(),
-          overlay.borderBottom() == null ? borderBottom : overlay.borderBottom(),
-          overlay.borderLeft() == null ? borderLeft : overlay.borderLeft());
-    }
-
-    private static ExcelBorderStyle borderStyle(ExcelBorder border, BorderEdge edge) {
-      if (border == null) {
-        return null;
-      }
-      return switch (edge) {
-        case TOP -> borderStyle(border.all(), border.top());
-        case RIGHT -> borderStyle(border.all(), border.right());
-        case BOTTOM -> borderStyle(border.all(), border.bottom());
-        case LEFT -> borderStyle(border.all(), border.left());
-      };
-    }
-
-    private static ExcelBorderStyle borderStyle(
-        ExcelBorderSide defaultSide, ExcelBorderSide explicitSide) {
-      if (explicitSide != null) {
-        return explicitSide.style();
-      }
-      return defaultSide == null ? null : defaultSide.style();
-    }
-  }
-
-  private enum BorderEdge {
-    TOP,
-    RIGHT,
-    BOTTOM,
-    LEFT
   }
 }

@@ -26,6 +26,12 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = WorkbookOperation.SetComment.class, name = "SET_COMMENT"),
   @JsonSubTypes.Type(value = WorkbookOperation.ClearComment.class, name = "CLEAR_COMMENT"),
   @JsonSubTypes.Type(value = WorkbookOperation.ApplyStyle.class, name = "APPLY_STYLE"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.SetDataValidation.class,
+      name = "SET_DATA_VALIDATION"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.ClearDataValidations.class,
+      name = "CLEAR_DATA_VALIDATIONS"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetNamedRange.class, name = "SET_NAMED_RANGE"),
   @JsonSubTypes.Type(value = WorkbookOperation.DeleteNamedRange.class, name = "DELETE_NAMED_RANGE"),
   @JsonSubTypes.Type(value = WorkbookOperation.AppendRow.class, name = "APPEND_ROW"),
@@ -213,6 +219,25 @@ public sealed interface WorkbookOperation {
     }
   }
 
+  /** Creates or replaces one data-validation rule over the requested sheet range. */
+  record SetDataValidation(String sheetName, String range, DataValidationInput validation)
+      implements WorkbookOperation {
+    public SetDataValidation {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Validation.requireNonBlank(range, "range");
+      Objects.requireNonNull(validation, "validation must not be null");
+    }
+  }
+
+  /** Removes data-validation structures on the sheet that match the provided range selection. */
+  record ClearDataValidations(String sheetName, RangeSelection selection)
+      implements WorkbookOperation {
+    public ClearDataValidations {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
   /** Creates or replaces one typed named range in workbook or sheet scope. */
   record SetNamedRange(String name, NamedRangeScope scope, NamedRangeTarget target)
       implements WorkbookOperation {
@@ -278,6 +303,8 @@ public sealed interface WorkbookOperation {
       case SetComment _ -> "SET_COMMENT";
       case ClearComment _ -> "CLEAR_COMMENT";
       case ApplyStyle _ -> "APPLY_STYLE";
+      case SetDataValidation _ -> "SET_DATA_VALIDATION";
+      case ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
       case SetNamedRange _ -> "SET_NAMED_RANGE";
       case DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case AppendRow _ -> "APPEND_ROW";

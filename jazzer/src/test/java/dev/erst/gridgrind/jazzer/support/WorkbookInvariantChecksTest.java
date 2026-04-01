@@ -8,6 +8,9 @@ import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.protocol.CellSelection;
+import dev.erst.gridgrind.protocol.DataValidationEntryReport;
+import dev.erst.gridgrind.protocol.DataValidationHealthReport;
+import dev.erst.gridgrind.protocol.DataValidationRuleInput;
 import dev.erst.gridgrind.protocol.FontHeightReport;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindProtocolVersion;
@@ -16,6 +19,8 @@ import dev.erst.gridgrind.protocol.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.NamedRangeScope;
 import dev.erst.gridgrind.protocol.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.NamedRangeTarget;
+import dev.erst.gridgrind.protocol.RangeSelection;
+import dev.erst.gridgrind.protocol.SheetSelection;
 import dev.erst.gridgrind.protocol.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.WorkbookReadResult;
 import java.io.IOException;
@@ -106,6 +111,22 @@ class WorkbookInvariantChecksTest {
                         new GridGrindResponse.FreezePaneReport.Frozen(1, 1, 1, 1),
                         List.of(new GridGrindResponse.ColumnLayoutReport(0, 12.5)),
                         List.of(new GridGrindResponse.RowLayoutReport(0, 18.0)))),
+                new WorkbookReadResult.DataValidationsResult(
+                    "data-validations",
+                    "Budget",
+                    List.of(
+                        new DataValidationEntryReport.Supported(
+                            List.of("A2:A5"),
+                            new DataValidationEntryReport.DataValidationDefinitionReport(
+                                new DataValidationRuleInput.WholeNumber(
+                                    dev.erst.gridgrind.excel.ExcelComparisonOperator
+                                        .GREATER_OR_EQUAL,
+                                    "1",
+                                    null),
+                                true,
+                                false,
+                                null,
+                                null)))),
                 new WorkbookReadResult.FormulaSurfaceResult(
                     "formula-surface",
                     new GridGrindResponse.FormulaSurfaceReport(
@@ -162,7 +183,13 @@ class WorkbookInvariantChecksTest {
                                 "Formula uses NOW().",
                                 new GridGrindResponse.AnalysisLocationReport.Cell(
                                     "Budget", "B4"),
-                                List.of("NOW()")))))));
+                                List.of("NOW()"))))),
+                new WorkbookReadResult.DataValidationHealthResult(
+                    "data-validation-health",
+                    new DataValidationHealthReport(
+                        1,
+                        new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0),
+                        List.of()))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
   }
@@ -180,8 +207,12 @@ class WorkbookInvariantChecksTest {
             List.of(
                 new WorkbookReadOperation.GetWorkbookSummary("summary"),
                 new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
+                new WorkbookReadOperation.GetDataValidations(
+                    "data-validations", "Budget", new RangeSelection.All()),
                 new WorkbookReadOperation.GetHyperlinks(
                     "hyperlinks", "Budget", new CellSelection.AllUsedCells()),
+                new WorkbookReadOperation.AnalyzeDataValidationHealth(
+                    "data-validation-health", new SheetSelection.All()),
                 new WorkbookReadOperation.AnalyzeNamedRangeHealth(
                     "named-range-health", new NamedRangeSelection.All())));
     GridGrindResponse.Success response =
@@ -195,12 +226,33 @@ class WorkbookInvariantChecksTest {
                     new GridGrindResponse.WorkbookSummary(1, List.of("Budget"), 1, false)),
                 new WorkbookReadResult.CellsResult(
                     "cells", "Budget", List.of(textCell("A1", "Report"))),
+                new WorkbookReadResult.DataValidationsResult(
+                    "data-validations",
+                    "Budget",
+                    List.of(
+                        new DataValidationEntryReport.Unsupported(
+                            List.of("A2:A5"), "MISSING_FORMULA", "Formula is missing"))),
                 new WorkbookReadResult.HyperlinksResult(
                     "hyperlinks",
                     "Budget",
                     List.of(
                         new GridGrindResponse.CellHyperlinkReport(
                             "A1", new HyperlinkTarget.Url("https://example.com/report")))),
+                new WorkbookReadResult.DataValidationHealthResult(
+                    "data-validation-health",
+                    new DataValidationHealthReport(
+                        1,
+                        new GridGrindResponse.AnalysisSummaryReport(1, 1, 0, 0),
+                        List.of(
+                            new GridGrindResponse.AnalysisFindingReport(
+                                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                                    .DATA_VALIDATION_UNSUPPORTED_RULE,
+                                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.WARNING,
+                                "Unsupported data-validation rule",
+                                "Formula is missing",
+                                new GridGrindResponse.AnalysisLocationReport.Range(
+                                    "Budget", "A2:A5"),
+                                List.of("A2:A5"))))),
                 new WorkbookReadResult.NamedRangeHealthResult(
                     "named-range-health",
                     new GridGrindResponse.NamedRangeHealthReport(

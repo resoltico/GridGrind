@@ -3,6 +3,44 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.20.0] - 2026-04-01
+
+### Added
+
+- Data validation public surface:
+  `SET_DATA_VALIDATION`, `CLEAR_DATA_VALIDATIONS`, `GET_DATA_VALIDATIONS`, and
+  `ANALYZE_DATA_VALIDATION_HEALTH`.
+- New public example `examples/data-validation-request.json` covering validation authoring,
+  partial clearing, factual reads, and health analysis.
+- Jazzer now has a promoted valid validation workflow seed and a promoted expected-invalid
+  validation seed, so the committed regression floor covers both supported and rejected
+  validation shapes.
+
+### Changed
+
+- `ANALYZE_WORKBOOK_FINDINGS` now aggregates data-validation findings alongside formula,
+  hyperlink, and named-range findings.
+- Protocol discovery now publishes `rangeSelectionTypes`, `dataValidationRuleTypes`,
+  `dataValidationInputType`, `dataValidationPromptInputType`, and
+  `dataValidationErrorAlertInputType`, so black-box consumers can author the full validation
+  workflow without shape inference.
+- Developer docs, the Jazzer coverage inventory, and the Apache POI parity inventory now treat
+  data validation as shipped behavior instead of a planned gap.
+
+### Fixed
+
+- `.xlsx` round-trip verification, executor integration coverage, and Jazzer invariants now assert
+  that normalized data-validation state survives save and reopen instead of silently ignoring the
+  new command family.
+- `.xlsx` round-trip verification no longer duplicates stale command-semantics assumptions for
+  style and metadata persistence. The verifier now snapshots expected pre-save workbook state from
+  the actual in-memory workbook, so `APPEND_ROW` date-time writes onto styled blank rows replay
+  cleanly and stay covered by the committed Jazzer seed floor.
+- `GET_DATA_VALIDATIONS` now exposes only observable public states: `SUPPORTED` and
+  `UNSUPPORTED`. Invalid workbook validation structures that Apache POI refuses to materialize are
+  no longer advertised as a separate `MALFORMED` entry family, so the read contract matches the
+  real workbook-loading seam.
+
 ## [0.19.0] - 2026-04-01
 
 ### Changed
@@ -633,7 +671,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.19.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.20.0...HEAD
+[0.20.0]: https://github.com/resoltico/GridGrind/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/resoltico/GridGrind/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/resoltico/GridGrind/compare/v0.17.0...v0.18.0
 [0.17.0]: https://github.com/resoltico/GridGrind/compare/v0.16.0...v0.17.0

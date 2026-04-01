@@ -186,6 +186,17 @@ public final class XlsxRoundTrip {
         });
   }
 
+  /** Returns normalized data-validation structures stored on one saved sheet. */
+  public static List<ExcelDataValidationSnapshot> dataValidations(
+      Path workbookPath, String sheetName) throws IOException {
+    requireWorkbookPath(workbookPath);
+    requireNonBlank(sheetName, "sheetName");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      return workbook.sheet(sheetName).dataValidations(new ExcelRangeSelection.All());
+    }
+  }
+
   private static <T> T readSheet(Path workbookPath, String sheetName, SheetReader<T> sheetReader)
       throws IOException {
     requireNonBlank(sheetName, "sheetName");

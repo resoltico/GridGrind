@@ -21,6 +21,7 @@ public sealed interface WorkbookReadResult
           HyperlinksResult,
           CommentsResult,
           SheetLayoutResult,
+          DataValidationsResult,
           FormulaSurfaceResult,
           SheetSchemaResult,
           NamedRangeSurfaceResult {}
@@ -28,6 +29,7 @@ public sealed interface WorkbookReadResult
   /** Marker for derived workbook analysis results. */
   sealed interface Analysis extends WorkbookReadResult
       permits FormulaHealthResult,
+          DataValidationHealthResult,
           HyperlinkHealthResult,
           NamedRangeHealthResult,
           WorkbookFindingsResult {}
@@ -114,6 +116,17 @@ public sealed interface WorkbookReadResult
     }
   }
 
+  /** Returns data-validation metadata for the selected ranges on one sheet. */
+  record DataValidationsResult(
+      String requestId, String sheetName, List<ExcelDataValidationSnapshot> validations)
+      implements Introspection {
+    public DataValidationsResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      validations = copyValues(validations, "validations");
+    }
+  }
+
   /** Returns grouped formula usage facts across one or more sheets. */
   record FormulaSurfaceResult(String requestId, FormulaSurface analysis) implements Introspection {
     public FormulaSurfaceResult {
@@ -143,6 +156,15 @@ public sealed interface WorkbookReadResult
   record FormulaHealthResult(String requestId, WorkbookAnalysis.FormulaHealth analysis)
       implements Analysis {
     public FormulaHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns data-validation-health findings for one analysis read. */
+  record DataValidationHealthResult(
+      String requestId, WorkbookAnalysis.DataValidationHealth analysis) implements Analysis {
+    public DataValidationHealthResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }

@@ -812,6 +812,60 @@ class ExcelSheetTest {
   }
 
   @Test
+  void appendRowDateTimeWriteLayersRequiredNumberFormatWhenReusingStyledBlankRows()
+      throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.appendRow(
+          ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 1)),
+          ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 13, 58, 1)));
+      sheet.applyStyle(
+          "A1:B2",
+          new ExcelCellStyle(
+              "0.00",
+              Boolean.TRUE,
+              null,
+              Boolean.TRUE,
+              null,
+              ExcelVerticalAlignment.CENTER,
+              null,
+              null,
+              null,
+              null,
+              null,
+              "#603A79",
+              new ExcelBorder(
+                  new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
+                  null,
+                  new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
+                  null,
+                  null)));
+
+      sheet.appendRow(
+          ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 58)),
+          ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 1)));
+
+      ExcelCellSnapshot.NumberSnapshot appendedFirstCell =
+          (ExcelCellSnapshot.NumberSnapshot) sheet.snapshotCell("A2");
+      ExcelCellSnapshot.NumberSnapshot appendedSecondCell =
+          (ExcelCellSnapshot.NumberSnapshot) sheet.snapshotCell("B2");
+
+      assertEquals("yyyy-mm-dd hh:mm:ss", appendedFirstCell.style().numberFormat());
+      assertEquals("yyyy-mm-dd hh:mm:ss", appendedSecondCell.style().numberFormat());
+      assertEquals("#603A79", appendedFirstCell.style().fillColor());
+      assertTrue(appendedFirstCell.style().bold());
+      assertTrue(appendedFirstCell.style().wrapText());
+      assertEquals(ExcelVerticalAlignment.CENTER, appendedFirstCell.style().verticalAlignment());
+      assertEquals(ExcelBorderStyle.MEDIUM_DASHED, appendedFirstCell.style().topBorderStyle());
+      assertEquals(ExcelBorderStyle.MEDIUM_DASHED, appendedFirstCell.style().rightBorderStyle());
+    }
+  }
+
+  @Test
   void autoSizeColumnsProducesDeterministicWidthsFromDisplayedContent() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       Sheet poiSheet = poiWorkbook.createSheet("Budget");

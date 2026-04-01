@@ -24,6 +24,8 @@ public sealed interface WorkbookCommand
         WorkbookCommand.SetComment,
         WorkbookCommand.ClearComment,
         WorkbookCommand.ApplyStyle,
+        WorkbookCommand.SetDataValidation,
+        WorkbookCommand.ClearDataValidations,
         WorkbookCommand.SetNamedRange,
         WorkbookCommand.DeleteNamedRange,
         WorkbookCommand.AppendRow,
@@ -308,6 +310,34 @@ public sealed interface WorkbookCommand
       }
       if (range.isBlank()) {
         throw new IllegalArgumentException("range must not be blank");
+      }
+    }
+  }
+
+  /** Creates or replaces one data-validation rule over the requested sheet range. */
+  record SetDataValidation(String sheetName, String range, ExcelDataValidationDefinition validation)
+      implements WorkbookCommand {
+    public SetDataValidation {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(range, "range must not be null");
+      Objects.requireNonNull(validation, "validation must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (range.isBlank()) {
+        throw new IllegalArgumentException("range must not be blank");
+      }
+    }
+  }
+
+  /** Removes data-validation structures on the sheet that match the provided range selection. */
+  record ClearDataValidations(String sheetName, ExcelRangeSelection selection)
+      implements WorkbookCommand {
+    public ClearDataValidations {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(selection, "selection must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
       }
     }
   }

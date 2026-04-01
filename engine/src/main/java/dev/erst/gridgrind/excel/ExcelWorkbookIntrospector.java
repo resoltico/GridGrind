@@ -12,14 +12,18 @@ import org.apache.poi.ss.util.CellReference;
 /** Reads workbook facts and sheet introspection data from one workbook wrapper. */
 final class ExcelWorkbookIntrospector {
   private final ExcelSheetIntrospector sheetIntrospector;
+  private final ExcelDocumentIntrospector documentIntrospector;
 
   ExcelWorkbookIntrospector() {
-    this(new ExcelSheetIntrospector());
+    this(new ExcelSheetIntrospector(), new ExcelDocumentIntrospector());
   }
 
-  ExcelWorkbookIntrospector(ExcelSheetIntrospector sheetIntrospector) {
+  ExcelWorkbookIntrospector(
+      ExcelSheetIntrospector sheetIntrospector, ExcelDocumentIntrospector documentIntrospector) {
     this.sheetIntrospector =
         Objects.requireNonNull(sheetIntrospector, "sheetIntrospector must not be null");
+    this.documentIntrospector =
+        Objects.requireNonNull(documentIntrospector, "documentIntrospector must not be null");
   }
 
   /** Executes one fact-only read command against the workbook. */
@@ -78,6 +82,12 @@ final class ExcelWorkbookIntrospector {
           new WorkbookReadResult.SheetLayoutResult(
               getSheetLayout.requestId(),
               sheetIntrospector.layout(workbook.sheet(getSheetLayout.sheetName())));
+      case WorkbookReadCommand.GetDataValidations getDataValidations ->
+          new WorkbookReadResult.DataValidationsResult(
+              getDataValidations.requestId(),
+              getDataValidations.sheetName(),
+              documentIntrospector.dataValidations(
+                  workbook.sheet(getDataValidations.sheetName()), getDataValidations.selection()));
       case WorkbookReadCommand.GetFormulaSurface getFormulaSurface ->
           new WorkbookReadResult.FormulaSurfaceResult(
               getFormulaSurface.requestId(),

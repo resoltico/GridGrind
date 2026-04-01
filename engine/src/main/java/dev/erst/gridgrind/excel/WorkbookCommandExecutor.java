@@ -79,6 +79,14 @@ public final class WorkbookCommandExecutor {
           workbook.sheet(clearComment.sheetName()).clearComment(clearComment.address());
       case WorkbookCommand.ApplyStyle applyStyle ->
           workbook.sheet(applyStyle.sheetName()).applyStyle(applyStyle.range(), applyStyle.style());
+      case WorkbookCommand.SetDataValidation setDataValidation ->
+          workbook
+              .sheet(setDataValidation.sheetName())
+              .setDataValidation(setDataValidation.range(), setDataValidation.validation());
+      case WorkbookCommand.ClearDataValidations clearDataValidations ->
+          workbook
+              .sheet(clearDataValidations.sheetName())
+              .clearDataValidations(clearDataValidations.selection());
       case WorkbookCommand.SetNamedRange setNamedRange ->
           workbook.setNamedRange(setNamedRange.definition());
       case WorkbookCommand.DeleteNamedRange deleteNamedRange ->

@@ -26,6 +26,9 @@ import java.util.Set;
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetComments.class, name = "GET_COMMENTS"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetSheetLayout.class, name = "GET_SHEET_LAYOUT"),
   @JsonSubTypes.Type(
+      value = WorkbookReadOperation.GetDataValidations.class,
+      name = "GET_DATA_VALIDATIONS"),
+  @JsonSubTypes.Type(
       value = WorkbookReadOperation.GetFormulaSurface.class,
       name = "GET_FORMULA_SURFACE"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetSheetSchema.class, name = "GET_SHEET_SCHEMA"),
@@ -35,6 +38,9 @@ import java.util.Set;
   @JsonSubTypes.Type(
       value = WorkbookReadOperation.AnalyzeFormulaHealth.class,
       name = "ANALYZE_FORMULA_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadOperation.AnalyzeDataValidationHealth.class,
+      name = "ANALYZE_DATA_VALIDATION_HEALTH"),
   @JsonSubTypes.Type(
       value = WorkbookReadOperation.AnalyzeHyperlinkHealth.class,
       name = "ANALYZE_HYPERLINK_HEALTH"),
@@ -62,6 +68,7 @@ public sealed interface WorkbookReadOperation
           GetHyperlinks,
           GetComments,
           GetSheetLayout,
+          GetDataValidations,
           GetFormulaSurface,
           GetSheetSchema,
           GetNamedRangeSurface {}
@@ -69,6 +76,7 @@ public sealed interface WorkbookReadOperation
   /** Marker for derived workbook analysis built on top of introspection primitives. */
   sealed interface Analysis extends WorkbookReadOperation
       permits AnalyzeFormulaHealth,
+          AnalyzeDataValidationHealth,
           AnalyzeHyperlinkHealth,
           AnalyzeNamedRangeHealth,
           AnalyzeWorkbookFindings {}
@@ -163,6 +171,16 @@ public sealed interface WorkbookReadOperation
     }
   }
 
+  /** Returns data-validation metadata for the selected ranges on one sheet. */
+  record GetDataValidations(String requestId, String sheetName, RangeSelection selection)
+      implements Introspection {
+    public GetDataValidations {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
   /** Groups formula usage patterns across one or more sheets. */
   record GetFormulaSurface(String requestId, SheetSelection selection) implements Introspection {
     public GetFormulaSurface {
@@ -197,6 +215,15 @@ public sealed interface WorkbookReadOperation
   /** Reports formula findings such as error results and volatile usage. */
   record AnalyzeFormulaHealth(String requestId, SheetSelection selection) implements Analysis {
     public AnalyzeFormulaHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports data-validation findings such as malformed or overlapping rules. */
+  record AnalyzeDataValidationHealth(String requestId, SheetSelection selection)
+      implements Analysis {
+    public AnalyzeDataValidationHealth {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(selection, "selection must not be null");
     }

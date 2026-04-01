@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.19.0"
+version: "0.20.0"
 domain: QUICK_REFERENCE
 updated: "2026-03-31"
 route:
@@ -259,6 +259,66 @@ If `visible` is omitted, it defaults to `false`.
 `fontHeight` accepts either `{ "type": "POINTS", "points": 11.5 }` or `{ "type": "TWIPS", "twips": 230 }`.
 `border.all` sets the default side style; explicit sides override it.
 
+## SET_DATA_VALIDATION
+
+```json
+{
+  "type": "SET_DATA_VALIDATION",
+  "sheetName": "Sheet1",
+  "range": "B2:B20",
+  "validation": {
+    "rule": {
+      "type": "EXPLICIT_LIST",
+      "values": ["Queued", "Done", "Blocked"]
+    },
+    "allowBlank": true,
+    "prompt": {
+      "title": "Status",
+      "text": "Pick one workflow state."
+    },
+    "errorAlert": {
+      "style": "STOP",
+      "title": "Invalid status",
+      "text": "Use one of the allowed values."
+    }
+  }
+}
+{
+  "type": "SET_DATA_VALIDATION",
+  "sheetName": "Sheet1",
+  "range": "C2:C20",
+  "validation": {
+    "rule": {
+      "type": "WHOLE_NUMBER",
+      "operator": "BETWEEN",
+      "formula1": "1",
+      "formula2": "5"
+    }
+  }
+}
+```
+
+Overlapping existing rules are normalized so the written rule becomes authoritative on the target
+range.
+
+## CLEAR_DATA_VALIDATIONS
+
+```json
+{
+  "type": "CLEAR_DATA_VALIDATIONS",
+  "sheetName": "Sheet1",
+  "selection": { "type": "ALL" }
+}
+{
+  "type": "CLEAR_DATA_VALIDATIONS",
+  "sheetName": "Sheet1",
+  "selection": {
+    "type": "SELECTED",
+    "ranges": ["B4", "C8:D10"]
+  }
+}
+```
+
 ## APPEND_ROW
 
 ```json
@@ -451,6 +511,26 @@ responses use the `path` field with a normalized plain path string.
 { "type": "GET_SHEET_LAYOUT", "requestId": "layout", "sheetName": "Sheet1" }
 ```
 
+## GET_DATA_VALIDATIONS
+
+```json
+{
+  "type": "GET_DATA_VALIDATIONS",
+  "requestId": "data-validations",
+  "sheetName": "Sheet1",
+  "selection": { "type": "ALL" }
+}
+{
+  "type": "GET_DATA_VALIDATIONS",
+  "requestId": "selected-data-validations",
+  "sheetName": "Sheet1",
+  "selection": {
+    "type": "SELECTED",
+    "ranges": ["B2:B20", "C2:C20"]
+  }
+}
+```
+
 ## GET_FORMULA_SURFACE
 
 ```json
@@ -515,6 +595,19 @@ responses use the `path` field with a normalized plain path string.
   "type": "ANALYZE_FORMULA_HEALTH",
   "requestId": "formula-health",
   "selection": { "type": "ALL" }
+}
+```
+
+## ANALYZE_DATA_VALIDATION_HEALTH
+
+```json
+{
+  "type": "ANALYZE_DATA_VALIDATION_HEALTH",
+  "requestId": "data-validation-health",
+  "selection": {
+    "type": "SELECTED",
+    "sheetNames": ["Sheet1", "Sheet2"]
+  }
 }
 ```
 

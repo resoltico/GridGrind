@@ -24,6 +24,9 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = WorkbookReadResult.CommentsResult.class, name = "GET_COMMENTS"),
   @JsonSubTypes.Type(value = WorkbookReadResult.SheetLayoutResult.class, name = "GET_SHEET_LAYOUT"),
   @JsonSubTypes.Type(
+      value = WorkbookReadResult.DataValidationsResult.class,
+      name = "GET_DATA_VALIDATIONS"),
+  @JsonSubTypes.Type(
       value = WorkbookReadResult.FormulaSurfaceResult.class,
       name = "GET_FORMULA_SURFACE"),
   @JsonSubTypes.Type(value = WorkbookReadResult.SheetSchemaResult.class, name = "GET_SHEET_SCHEMA"),
@@ -33,6 +36,9 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = WorkbookReadResult.FormulaHealthResult.class,
       name = "ANALYZE_FORMULA_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.DataValidationHealthResult.class,
+      name = "ANALYZE_DATA_VALIDATION_HEALTH"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.HyperlinkHealthResult.class,
       name = "ANALYZE_HYPERLINK_HEALTH"),
@@ -60,6 +66,7 @@ public sealed interface WorkbookReadResult
           HyperlinksResult,
           CommentsResult,
           SheetLayoutResult,
+          DataValidationsResult,
           FormulaSurfaceResult,
           SheetSchemaResult,
           NamedRangeSurfaceResult {}
@@ -67,6 +74,7 @@ public sealed interface WorkbookReadResult
   /** Marker for derived workbook analysis results. */
   sealed interface Analysis extends WorkbookReadResult
       permits FormulaHealthResult,
+          DataValidationHealthResult,
           HyperlinkHealthResult,
           NamedRangeHealthResult,
           WorkbookFindingsResult {}
@@ -159,6 +167,17 @@ public sealed interface WorkbookReadResult
     }
   }
 
+  /** Returns data-validation metadata for the selected ranges on one sheet. */
+  record DataValidationsResult(
+      String requestId, String sheetName, List<DataValidationEntryReport> validations)
+      implements Introspection {
+    public DataValidationsResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      validations = copyValues(validations, "validations");
+    }
+  }
+
   /** Returns grouped formula usage facts across one or more sheets. */
   record FormulaSurfaceResult(String requestId, GridGrindResponse.FormulaSurfaceReport analysis)
       implements Introspection {
@@ -191,6 +210,15 @@ public sealed interface WorkbookReadResult
   record FormulaHealthResult(String requestId, GridGrindResponse.FormulaHealthReport analysis)
       implements Analysis {
     public FormulaHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns data-validation-health findings. */
+  record DataValidationHealthResult(String requestId, DataValidationHealthReport analysis)
+      implements Analysis {
+    public DataValidationHealthResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }

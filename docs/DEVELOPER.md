@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.19.0"
+version: "0.20.0"
 domain: DEVELOPER
 updated: "2026-03-31"
 route:
@@ -192,6 +192,7 @@ These runnable examples cover the core operation surface:
 | File | What It Tests |
 |:-----|:-------------|
 | `examples/budget-request.json` | Range write, style, formula, workbook summary, cells, window, and schema reads |
+| `examples/data-validation-request.json` | Validation authoring, partial clearing, factual validation reads, and validation-health analysis |
 | `examples/excel-authoring-essentials-request.json` | Hyperlink, comment, named-range authoring plus explicit metadata and named-range reads |
 | `examples/file-hyperlink-health-request.json` | File-hyperlink authoring plus explicit hyperlink metadata and hyperlink-health analysis |
 | `examples/formatting-depth-request.json` | Font, fill, and border styling with explicit post-mutation cell and window reads |

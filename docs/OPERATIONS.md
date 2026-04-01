@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.19.0"
+version: "0.20.0"
 domain: OPERATIONS
 updated: "2026-03-31"
 route:
@@ -130,9 +130,10 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 
 Create a sheet if it does not already exist. Does nothing if the sheet exists.
 
-All mutation operations (`SET_CELL`, `SET_RANGE`, `CLEAR_RANGE`, `APPLY_STYLE`, `SET_HYPERLINK`,
-`CLEAR_HYPERLINK`, `SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the
-target sheet to already exist. Use `ENSURE_SHEET` before the first write to any sheet.
+All mutation operations (`SET_CELL`, `SET_RANGE`, `CLEAR_RANGE`, `APPLY_STYLE`,
+`SET_DATA_VALIDATION`, `CLEAR_DATA_VALIDATIONS`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`,
+`SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the target sheet to
+already exist. Use `ENSURE_SHEET` before the first write to any sheet.
 
 ```json
 { "type": "ENSURE_SHEET", "sheetName": "Inventory" }
@@ -583,6 +584,118 @@ responses. `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` return four flat fi
 
 ---
 
+### SET_DATA_VALIDATION
+
+Create or replace one data-validation rule over a rectangular A1-style range. If the new rule
+overlaps existing validation coverage, GridGrind normalizes the sheet so the written rule becomes
+authoritative on its target cells and any remaining fragments are retained around it.
+
+```json
+{
+  "type": "SET_DATA_VALIDATION",
+  "sheetName": "Inventory",
+  "range": "B2:B200",
+  "validation": {
+    "rule": {
+      "type": "EXPLICIT_LIST",
+      "values": ["Queued", "Done", "Blocked"]
+    },
+    "allowBlank": true,
+    "prompt": {
+      "title": "Status",
+      "text": "Pick one workflow state."
+    },
+    "errorAlert": {
+      "style": "STOP",
+      "title": "Invalid status",
+      "text": "Use one of the allowed values."
+    }
+  }
+}
+```
+
+```json
+{
+  "type": "SET_DATA_VALIDATION",
+  "sheetName": "Inventory",
+  "range": "C2:C200",
+  "validation": {
+    "rule": {
+      "type": "WHOLE_NUMBER",
+      "operator": "BETWEEN",
+      "formula1": "1",
+      "formula2": "5"
+    }
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `range` | Yes | Rectangular A1-style target range. |
+| `validation` | Yes | Supported data-validation definition. |
+
+Supported rule families:
+
+| `validation.rule.type` | Required fields | Notes |
+|:-----------------------|:----------------|:------|
+| `EXPLICIT_LIST` | `values` | One or more allowed strings. |
+| `FORMULA_LIST` | `formula` | Formula-driven list. Omit the leading `=`. |
+| `WHOLE_NUMBER` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
+| `DECIMAL_NUMBER` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
+| `DATE` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
+| `TIME` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
+| `TEXT_LENGTH` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
+| `CUSTOM_FORMULA` | `formula` | Omit the leading `=`. |
+
+Optional validation fields:
+
+| Field | Description |
+|:------|:------------|
+| `allowBlank` | Allow empty cells to bypass validation. Defaults to `false`. |
+| `suppressDropDownArrow` | Hide Excel's list dropdown arrow when the rule supports it. Defaults to `false`. |
+| `prompt` | Optional prompt box with `title`, `text`, and optional `showPromptBox` (defaults to `true`). |
+| `errorAlert` | Optional error box with `style`, `title`, `text`, and optional `showErrorBox` (defaults to `true`). |
+
+Comparison operators use the typed string values:
+`BETWEEN`, `NOT_BETWEEN`, `EQUAL`, `NOT_EQUAL`, `GREATER_THAN`, `LESS_THAN`,
+`GREATER_OR_EQUAL`, and `LESS_OR_EQUAL`.
+
+---
+
+### CLEAR_DATA_VALIDATIONS
+
+Remove data-validation coverage from one sheet. `ALL` clears every validation structure on the
+sheet. `SELECTED` removes only the portions whose stored ranges intersect the supplied A1-style
+ranges, preserving any remaining coverage fragments around the cleared area.
+
+```json
+{
+  "type": "CLEAR_DATA_VALIDATIONS",
+  "sheetName": "Inventory",
+  "selection": { "type": "ALL" }
+}
+```
+
+```json
+{
+  "type": "CLEAR_DATA_VALIDATIONS",
+  "sheetName": "Inventory",
+  "selection": {
+    "type": "SELECTED",
+    "ranges": ["B4", "C8:D10"]
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `selection` | Yes | `ALL` or an ordered `SELECTED` range list. |
+
+---
+
 ### APPEND_ROW
 
 Append a single row of typed values after the last value-bearing row in a sheet.
@@ -970,6 +1083,46 @@ Returns freeze-pane state plus explicit row-height and column-width facts for on
 }
 ```
 
+### GET_DATA_VALIDATIONS
+
+Returns factual data-validation structures for one sheet. Each returned entry is one of:
+
+- `SUPPORTED`: a fully modeled validation definition plus its normalized stored ranges
+- `UNSUPPORTED`: a present workbook rule GridGrind can detect but cannot expose as a supported
+  validation definition; the entry includes `kind` and `detail` so callers can distinguish
+  unsupported families from invalid workbook structures that Apache POI still exposes
+
+```json
+{
+  "type": "GET_DATA_VALIDATIONS",
+  "requestId": "data-validations",
+  "sheetName": "Inventory",
+  "selection": { "type": "ALL" }
+}
+```
+
+```json
+{
+  "type": "GET_DATA_VALIDATIONS",
+  "requestId": "selected-data-validations",
+  "sheetName": "Inventory",
+  "selection": {
+    "type": "SELECTED",
+    "ranges": ["B2:B200", "C2:C200"]
+  }
+}
+```
+
+Range-selection payloads use:
+
+```json
+{ "type": "ALL" }
+{
+  "type": "SELECTED",
+  "ranges": ["B2:B200", "C2:C200"]
+}
+```
+
 ### GET_FORMULA_SURFACE
 
 Groups formula usage across one or more sheets.
@@ -1063,6 +1216,22 @@ functions, formula-error results, and evaluation failures surface.
   "type": "ANALYZE_FORMULA_HEALTH",
   "requestId": "formula-health",
   "selection": { "type": "ALL" }
+}
+```
+
+### ANALYZE_DATA_VALIDATION_HEALTH
+
+Reports finding-bearing data-validation health across one or more sheets. Findings include
+unsupported rules, broken formulas, and overlapping validation coverage.
+
+```json
+{
+  "type": "ANALYZE_DATA_VALIDATION_HEALTH",
+  "requestId": "data-validation-health",
+  "selection": {
+    "type": "SELECTED",
+    "sheetNames": ["Inventory", "Summary"]
+  }
 }
 ```
 

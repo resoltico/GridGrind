@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.19.0"
+version: "0.20.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-03-31"
+updated: "2026-04-01"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -25,7 +25,7 @@ route:
 
 This document is the canonical source of truth for Jazzer in GridGrind.
 
-As of `2026-03-27`, the Jazzer layer is implemented and working end to end.
+As of `2026-04-01`, the Jazzer layer is implemented and working end to end.
 
 Implemented now:
 - standalone nested Gradle build at `jazzer/`
@@ -38,7 +38,8 @@ Implemented now:
 - replay and promotion tooling
 - committed custom seed floor made of promoted regression inputs and readable example requests
 - style-aware `.xlsx` round-trip verification for formatting depth, hyperlink/comment metadata,
-  named-range persistence, named-range normalization, and the explicit `reads` pipeline
+  named-range persistence, named-range normalization, data-validation persistence, and the
+  explicit `reads` pipeline
 - local-only corpora, logs, finding artifacts, and cleanup commands
 
 Deliberately not implemented:
@@ -93,18 +94,24 @@ Target-specific strategy:
   binary seeds promoted from local corpus entries
 - engine command seeds may be reused for `.xlsx` round-trip seeds when replay confirms they persist
   cleanly in the round-trip harness
+- the `.xlsx` round-trip verifier is expected to derive style and metadata expectations from the
+  real pre-save workbook state, not from a duplicated command-semantics model
 
 The operator goal is not to maximize seed count. The goal is to preserve a stable minimum floor of:
 - representative success cases
 - representative expected-invalid cases
 - representative feature-family coverage
 
-Current floor:
-- `protocol-request`: 12 committed seeds
+Current promoted floor:
+- `protocol-request`: 13 committed seeds
 - `protocol-workflow`: 10 committed seeds
 - `engine-command-sequence`: 7 committed seeds
-- `xlsx-roundtrip`: 9 committed seeds
-- total committed seed floor: 38 inputs
+- `xlsx-roundtrip`: 10 committed seeds
+- total promoted seed floor: 40 inputs
+
+Additional committed non-floor regression inputs also exist for narrower expected-invalid request
+shapes. The counts above track the intentionally curated promoted floor, not every committed input
+resource.
 
 ---
 
