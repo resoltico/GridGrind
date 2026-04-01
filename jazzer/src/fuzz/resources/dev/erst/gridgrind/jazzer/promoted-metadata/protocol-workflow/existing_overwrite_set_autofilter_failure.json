@@ -1,0 +1,31 @@
+{
+  "targetKey" : "protocol-workflow",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/2863fd39fcb02afb9ec25cdf1d93b614e2600736",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_set_autofilter_failure.bin",
+  "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_WORKFLOW",
+      "inputBytes" : 215,
+      "sourceKind" : "EXISTING",
+      "persistenceKind" : "OVERWRITE",
+      "operationCount" : 8,
+      "operationKinds" : {
+        "ENSURE_SHEET" : 4,
+        "SET_AUTOFILTER" : 1,
+        "DELETE_SHEET" : 2,
+        "SET_DATA_VALIDATION" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 2,
+      "readKinds" : {
+        "ANALYZE_HYPERLINK_HEALTH" : 1,
+        "GET_NAMED_RANGE_SURFACE" : 1
+      },
+      "responseKind" : "FAILURE"
+    }
+  },
+  "promotedAt" : "2026-04-01T04:57:28.175253Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/existing_overwrite_set_autofilter_failure.txt"
+}

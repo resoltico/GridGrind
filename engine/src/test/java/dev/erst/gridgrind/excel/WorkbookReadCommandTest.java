@@ -30,6 +30,13 @@ class WorkbookReadCommandTest {
             "comments", "Budget", new ExcelCellSelection.Selected(List.of("A1")));
     WorkbookReadCommand.GetSheetLayout layout =
         new WorkbookReadCommand.GetSheetLayout("layout", "Budget");
+    WorkbookReadCommand.GetDataValidations dataValidations =
+        new WorkbookReadCommand.GetDataValidations(
+            "validations", "Budget", new ExcelRangeSelection.All());
+    WorkbookReadCommand.GetAutofilters autofilters =
+        new WorkbookReadCommand.GetAutofilters("autofilters", "Budget");
+    WorkbookReadCommand.GetTables tables =
+        new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All());
     WorkbookReadCommand.GetFormulaSurface formulaSurface =
         new WorkbookReadCommand.GetFormulaSurface(
             "formula", new ExcelSheetSelection.Selected(List.of("Budget")));
@@ -40,6 +47,15 @@ class WorkbookReadCommandTest {
     WorkbookReadCommand.AnalyzeFormulaHealth formulaHealth =
         new WorkbookReadCommand.AnalyzeFormulaHealth(
             "formulaHealth", new ExcelSheetSelection.All());
+    WorkbookReadCommand.AnalyzeDataValidationHealth dataValidationHealth =
+        new WorkbookReadCommand.AnalyzeDataValidationHealth(
+            "dataValidationHealth", new ExcelSheetSelection.All());
+    WorkbookReadCommand.AnalyzeAutofilterHealth autofilterHealth =
+        new WorkbookReadCommand.AnalyzeAutofilterHealth(
+            "autofilterHealth", new ExcelSheetSelection.All());
+    WorkbookReadCommand.AnalyzeTableHealth tableHealth =
+        new WorkbookReadCommand.AnalyzeTableHealth(
+            "tableHealth", new ExcelTableSelection.ByNames(List.of("BudgetTable")));
     WorkbookReadCommand.AnalyzeHyperlinkHealth hyperlinkHealth =
         new WorkbookReadCommand.AnalyzeHyperlinkHealth(
             "hyperlinkHealth", new ExcelSheetSelection.All());
@@ -58,10 +74,16 @@ class WorkbookReadCommandTest {
     assertInstanceOf(ExcelCellSelection.AllUsedCells.class, hyperlinks.selection());
     assertInstanceOf(ExcelCellSelection.Selected.class, comments.selection());
     assertEquals("Budget", layout.sheetName());
+    assertEquals("Budget", dataValidations.sheetName());
+    assertEquals("Budget", autofilters.sheetName());
+    assertInstanceOf(ExcelTableSelection.All.class, tables.selection());
     assertInstanceOf(ExcelSheetSelection.Selected.class, formulaSurface.selection());
     assertEquals(3, schema.rowCount());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeSurface.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, formulaHealth.selection());
+    assertInstanceOf(ExcelSheetSelection.All.class, dataValidationHealth.selection());
+    assertInstanceOf(ExcelSheetSelection.All.class, autofilterHealth.selection());
+    assertInstanceOf(ExcelTableSelection.ByNames.class, tableHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, hyperlinkHealth.selection());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeHealth.selection());
     assertEquals("workbookFindings", workbookFindings.requestId());
@@ -113,6 +135,14 @@ class WorkbookReadCommandTest {
         () -> new WorkbookReadCommand.GetComments("comments", "Budget", null));
     assertThrows(
         NullPointerException.class,
+        () -> new WorkbookReadCommand.GetDataValidations("validations", "Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadCommand.GetAutofilters("autofilters", " "));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookReadCommand.GetTables("tables", null));
+    assertThrows(
+        NullPointerException.class,
         () -> new WorkbookReadCommand.GetFormulaSurface("formula", null));
     assertThrows(
         IllegalArgumentException.class,
@@ -123,6 +153,15 @@ class WorkbookReadCommandTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadCommand.AnalyzeFormulaHealth("formulaHealth", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.AnalyzeDataValidationHealth("dataValidationHealth", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.AnalyzeAutofilterHealth("autofilterHealth", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.AnalyzeTableHealth("tableHealth", null));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadCommand.AnalyzeHyperlinkHealth("hyperlinkHealth", null));

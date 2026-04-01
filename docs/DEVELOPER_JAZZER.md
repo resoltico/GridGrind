@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.20.0"
+version: "0.21.0"
 domain: DEVELOPER_JAZZER
 updated: "2026-04-01"
 route:
@@ -36,10 +36,12 @@ Implemented now:
   nested Jazzer `check` sequentially
 - per-target run history, latest-summary artifacts, and per-harness telemetry
 - replay and promotion tooling
+- replay-expectation verification for every promoted metadata entry
+- promoted-metadata refresh tooling for intentional generator and replay-shape changes
 - committed custom seed floor made of promoted regression inputs and readable example requests
 - style-aware `.xlsx` round-trip verification for formatting depth, hyperlink/comment metadata,
-  named-range persistence, named-range normalization, data-validation persistence, and the
-  explicit `reads` pipeline
+  named-range persistence, named-range normalization, data-validation persistence, table and
+  autofilter persistence boundaries, and the explicit `reads` pipeline
 - local-only corpora, logs, finding artifacts, and cleanup commands
 
 Deliberately not implemented:
@@ -85,6 +87,8 @@ Seed policy:
 - the local generated corpus remains the large exploratory pool and stays uncommitted
 - a promoted seed is not automatically a deterministic ordinary test; promote first, then decide
   whether it also deserves a main-suite regression test
+- every promoted metadata entry must carry a stable replay expectation and must remain replay-
+  verified by deterministic support tests
 
 Target-specific strategy:
 - `protocol-request` favors human-readable `.json` seeds promoted from public example requests
@@ -92,6 +96,8 @@ Target-specific strategy:
   current `reads` shape
 - `protocol-workflow`, `engine-command-sequence`, and `xlsx-roundtrip` favor replay-verified
   binary seeds promoted from local corpus entries
+- the meaning of a promoted binary seed is defined by its replay expectation and replay details,
+  not by its filename alone
 - engine command seeds may be reused for `.xlsx` round-trip seeds when replay confirms they persist
   cleanly in the round-trip harness
 - the `.xlsx` round-trip verifier is expected to derive style and metadata expectations from the
@@ -103,11 +109,11 @@ The operator goal is not to maximize seed count. The goal is to preserve a stabl
 - representative feature-family coverage
 
 Current promoted floor:
-- `protocol-request`: 13 committed seeds
-- `protocol-workflow`: 10 committed seeds
+- `protocol-request`: 14 committed seeds
+- `protocol-workflow`: 11 committed seeds
 - `engine-command-sequence`: 7 committed seeds
-- `xlsx-roundtrip`: 10 committed seeds
-- total promoted seed floor: 40 inputs
+- `xlsx-roundtrip`: 11 committed seeds
+- total promoted seed floor: 43 inputs
 
 Additional committed non-floor regression inputs also exist for narrower expected-invalid request
 shapes. The counts above track the intentionally curated promoted floor, not every committed input
@@ -191,6 +197,7 @@ GridGrind/
 │   ├── bin/
 │   │   ├── _run-task
 │   │   ├── regression
+│   │   ├── refresh-promoted-metadata
 │   │   ├── fuzz-protocol-request
 │   │   ├── fuzz-protocol-workflow
 │   │   ├── fuzz-engine-command-sequence
@@ -261,6 +268,7 @@ local `engine` and `protocol` modules without publishing snapshots.
 - one explicit JUnit Platform launcher entrypoint for running Jazzer harnesses outside Gradle's
   `Test` result pipeline
 - one aggregate `jazzerRegression` lifecycle task over the four per-harness regression tasks
+- one dedicated metadata-refresh task for promoted replay artifacts
 - local cleanup tasks
 - nested-build `check` coverage for deterministic Jazzer support tests plus regression replay only
 

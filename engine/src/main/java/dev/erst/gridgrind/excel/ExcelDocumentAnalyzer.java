@@ -7,15 +7,27 @@ import java.util.Objects;
 /** Derives document-intelligence findings from reusable workbook and sheet facts. */
 final class ExcelDocumentAnalyzer {
   private final ExcelDataValidationController dataValidationController;
+  private final ExcelAutofilterController autofilterController;
+  private final ExcelTableController tableController;
 
   ExcelDocumentAnalyzer() {
-    this(new ExcelDataValidationController());
+    this(
+        new ExcelDataValidationController(),
+        new ExcelAutofilterController(),
+        new ExcelTableController());
   }
 
-  ExcelDocumentAnalyzer(ExcelDataValidationController dataValidationController) {
+  ExcelDocumentAnalyzer(
+      ExcelDataValidationController dataValidationController,
+      ExcelAutofilterController autofilterController,
+      ExcelTableController tableController) {
     this.dataValidationController =
         Objects.requireNonNull(
             dataValidationController, "dataValidationController must not be null");
+    this.autofilterController =
+        Objects.requireNonNull(autofilterController, "autofilterController must not be null");
+    this.tableController =
+        Objects.requireNonNull(tableController, "tableController must not be null");
   }
 
   /** Returns data-validation-health findings for the selected sheets. */
@@ -37,6 +49,43 @@ final class ExcelDocumentAnalyzer {
         checkedValidationCount, summary, List.copyOf(findings));
   }
 
+  /** Returns autofilter-health findings for the selected sheets. */
+  WorkbookAnalysis.AutofilterHealth autofilterHealth(
+      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+
+    List<ExcelTableSnapshot> allTables =
+        tableController.tables(workbook, new ExcelTableSelection.All());
+    int checkedAutofilterCount = 0;
+    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    for (String sheetName : selectSheets(workbook, selection)) {
+      ExcelSheet sheet = workbook.sheet(sheetName);
+      checkedAutofilterCount += autofilterController.sheetAutofilterCount(sheet.xssfSheet());
+      checkedAutofilterCount += tableController.tableAutofilterCount(workbook, sheetName);
+      List<ExcelTableSnapshot> tablesOnSheet =
+          allTables.stream().filter(table -> table.sheetName().equals(sheetName)).toList();
+      findings.addAll(
+          autofilterController.sheetAutofilterHealthFindings(
+              sheetName, sheet.xssfSheet(), tablesOnSheet));
+      findings.addAll(tableController.tableAutofilterHealthFindings(workbook, sheetName));
+    }
+    return new WorkbookAnalysis.AutofilterHealth(
+        checkedAutofilterCount, summarizeFindings(findings), List.copyOf(findings));
+  }
+
+  /** Returns table-health findings for the selected workbook-global tables. */
+  WorkbookAnalysis.TableHealth tableHealth(ExcelWorkbook workbook, ExcelTableSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+
+    List<ExcelTableSnapshot> selectedTables = tableController.tables(workbook, selection);
+    List<WorkbookAnalysis.AnalysisFinding> findings =
+        tableController.tableHealthFindings(workbook, selection);
+    return new WorkbookAnalysis.TableHealth(
+        selectedTables.size(), summarizeFindings(findings), List.copyOf(findings));
+  }
+
   private List<String> selectSheets(ExcelWorkbook workbook, ExcelSheetSelection selection) {
     return switch (selection) {
       case ExcelSheetSelection.All _ -> workbook.sheetNames();
@@ -44,6 +93,7 @@ final class ExcelDocumentAnalyzer {
     };
   }
 
+  /** Returns analysis summary counts derived from the provided findings. */
   static WorkbookAnalysis.AnalysisSummary summarizeFindings(
       List<WorkbookAnalysis.AnalysisFinding> findings) {
     int errorCount = 0;

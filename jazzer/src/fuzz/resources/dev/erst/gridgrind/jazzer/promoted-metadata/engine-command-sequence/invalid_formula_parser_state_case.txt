@@ -1,10 +1,8 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/crash-2f13d11ff7f3014d6023755bd957eccfbbc39d86
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/invalid_formula_parser_state_case.bin
 Harness: engine-command-sequence
-Outcome: EXPECTED_INVALID
-Kind: InvalidFormulaException
-Message: Invalid formula at D!E5: [^owe_e`ffffff
+Outcome: SUCCESS
 Input Bytes: 57
-Command Count: 5
+Command Count: 4
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=3, SET_CELL=2
+Command Kinds: CREATE_SHEET=2, FREEZE_PANES=2

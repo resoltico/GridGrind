@@ -144,6 +144,80 @@ class WorkbookReadResultTest {
         () -> new DataValidationHealthReport(1, summary, List.of(finding, null)));
   }
 
+  @Test
+  void autofilterAndTableResultsCopyEntriesAndRejectInvalidState() {
+    WorkbookReadResult.AutofiltersResult autofilters =
+        new WorkbookReadResult.AutofiltersResult(
+            "filters",
+            "Budget",
+            List.of(
+                new AutofilterEntryReport.SheetOwned("E1:F4"),
+                new AutofilterEntryReport.TableOwned("A1:C4", "BudgetTable")));
+    WorkbookReadResult.TablesResult tables =
+        new WorkbookReadResult.TablesResult(
+            "tables",
+            List.of(
+                new TableEntryReport(
+                    "BudgetTable",
+                    "Budget",
+                    "A1:C4",
+                    1,
+                    1,
+                    List.of("Item", "Amount", "Billable"),
+                    new TableStyleReport.Named("TableStyleMedium2", false, false, true, false),
+                    true)));
+
+    assertEquals("E1:F4", autofilters.autofilters().getFirst().range());
+    assertEquals("BudgetTable", tables.tables().getFirst().name());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.AutofiltersResult(" ", "Budget", List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.AutofiltersResult("filters", "Budget", null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookReadResult.TablesResult("tables", null));
+  }
+
+  @Test
+  void autofilterAndTableHealthResultsRejectBlankRequestIdAndNullAnalysis() {
+    GridGrindResponse.AnalysisSummaryReport summary =
+        new GridGrindResponse.AnalysisSummaryReport(1, 0, 1, 0);
+    GridGrindResponse.AnalysisFindingReport finding =
+        new GridGrindResponse.AnalysisFindingReport(
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.WARNING,
+            "Table autofilter does not match table range",
+            "Table-owned autofilter range must match the table range excluding any totals row.",
+            new GridGrindResponse.AnalysisLocationReport.Range("Budget", "A1:C3"),
+            List.of("BudgetTable", "A1:C4", "A1:C3"));
+    AutofilterHealthReport autofilterHealth =
+        new AutofilterHealthReport(2, summary, List.of(finding));
+    TableHealthReport tableHealth = new TableHealthReport(1, summary, List.of(finding));
+
+    assertEquals(
+        2,
+        new WorkbookReadResult.AutofilterHealthResult("autofilter-health", autofilterHealth)
+            .analysis()
+            .checkedAutofilterCount());
+    assertEquals(
+        1,
+        new WorkbookReadResult.TableHealthResult("table-health", tableHealth)
+            .analysis()
+            .checkedTableCount());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.AutofilterHealthResult(" ", autofilterHealth));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.TableHealthResult("table-health", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new AutofilterHealthReport(-1, summary, List.of(finding)));
+    assertThrows(
+        NullPointerException.class, () -> new TableHealthReport(1, null, List.of(finding)));
+  }
+
   private static GridGrindResponse.CellStyleReport defaultStyle() {
     return new GridGrindResponse.CellStyleReport(
         "General",

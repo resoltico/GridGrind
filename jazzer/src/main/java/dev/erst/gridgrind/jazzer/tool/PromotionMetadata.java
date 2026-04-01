@@ -6,5 +6,6 @@ public record PromotionMetadata(
     String sourcePath,
     String promotedInputPath,
     String replayOutcome,
+    ReplayExpectation expectation,
     String promotedAt,
     String replayTextPath) {}

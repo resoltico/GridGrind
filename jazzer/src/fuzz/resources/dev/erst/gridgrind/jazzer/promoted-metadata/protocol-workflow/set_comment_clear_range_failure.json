@@ -3,6 +3,27 @@
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/fdf2b1f4471f81858053a09b22f657b3baa3a974",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/set_comment_clear_range_failure.bin",
   "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_WORKFLOW",
+      "inputBytes" : 173,
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 8,
+      "operationKinds" : {
+        "UNMERGE_CELLS" : 1,
+        "CLEAR_HYPERLINK" : 6,
+        "CLEAR_RANGE" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 1,
+      "readKinds" : {
+        "GET_MERGED_REGIONS" : 1
+      },
+      "responseKind" : "FAILURE"
+    }
+  },
   "promotedAt" : "2026-03-26T16:47:36.732322Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/set_comment_clear_range_failure.txt"
 }

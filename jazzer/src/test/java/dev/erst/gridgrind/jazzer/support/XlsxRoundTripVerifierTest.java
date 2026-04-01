@@ -18,6 +18,8 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
+import dev.erst.gridgrind.excel.ExcelTableDefinition;
+import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
@@ -266,6 +268,56 @@ class XlsxRoundTripVerifierTest {
                     false,
                     null,
                     null)));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Preserves sheet autofilters and workbook tables through save and reopen. */
+  @Test
+  void requireRoundTripReadable_preservesAutofilterAndTableAuthoring(
+      @TempDir Path tempDirectory) throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Budget"),
+            new WorkbookCommand.SetRange(
+                "Budget",
+                "A1:C4",
+                List.of(
+                    List.of(
+                        ExcelCellValue.text("Item"),
+                        ExcelCellValue.text("Amount"),
+                        ExcelCellValue.text("Billable")),
+                    List.of(
+                        ExcelCellValue.text("Hosting"),
+                        ExcelCellValue.number(49.0),
+                        ExcelCellValue.bool(true)),
+                    List.of(
+                        ExcelCellValue.text("Domain"),
+                        ExcelCellValue.number(12.0),
+                        ExcelCellValue.bool(false)),
+                    List.of(
+                        ExcelCellValue.text("Support"),
+                        ExcelCellValue.number(18.0),
+                        ExcelCellValue.bool(true)))),
+            new WorkbookCommand.SetRange(
+                "Budget",
+                "E1:F3",
+                List.of(
+                    List.of(ExcelCellValue.text("Queue"), ExcelCellValue.text("Owner")),
+                    List.of(
+                        ExcelCellValue.text("Late invoices"), ExcelCellValue.text("Marta")),
+                    List.of(
+                        ExcelCellValue.text("Badge orders"), ExcelCellValue.text("Rihards")))),
+            new WorkbookCommand.SetAutofilter("Budget", "E1:F3"),
+            new WorkbookCommand.SetTable(
+                new ExcelTableDefinition(
+                    "BudgetTable",
+                    "Budget",
+                    "A1:C4",
+                    false,
+                    new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))));
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 

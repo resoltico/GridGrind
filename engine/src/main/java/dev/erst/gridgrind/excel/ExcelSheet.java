@@ -29,6 +29,7 @@ public final class ExcelSheet {
   private final ExcelFormulaRuntime formulaRuntime;
   private final DataFormatter dataFormatter;
   private final ExcelDataValidationController dataValidationController;
+  private final ExcelAutofilterController autofilterController;
 
   ExcelSheet(Sheet sheet, WorkbookStyleRegistry styleRegistry, ExcelFormulaRuntime formulaRuntime) {
     this.sheet = sheet;
@@ -36,6 +37,7 @@ public final class ExcelSheet {
     this.formulaRuntime = formulaRuntime;
     this.dataFormatter = new DataFormatter();
     this.dataValidationController = new ExcelDataValidationController();
+    this.autofilterController = new ExcelAutofilterController();
   }
 
   /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
@@ -195,6 +197,19 @@ public final class ExcelSheet {
   public ExcelSheet clearDataValidations(ExcelRangeSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
     dataValidationController.clearDataValidations(xssfSheet(), selection);
+    return this;
+  }
+
+  /** Creates or replaces one sheet-level autofilter range. */
+  public ExcelSheet setAutofilter(String range) {
+    requireNonBlank(range, "range");
+    autofilterController.setSheetAutofilter(xssfSheet(), range);
+    return this;
+  }
+
+  /** Clears the sheet-level autofilter range on this sheet. */
+  public ExcelSheet clearAutofilter() {
+    autofilterController.clearSheetAutofilter(xssfSheet());
     return this;
   }
 

@@ -3,6 +3,41 @@
   "sourcePath" : "/Users/erst/Tools/GridGrind/examples/budget-request.json",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/budget_request.json",
   "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 2495,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 9,
+      "operationKinds" : {
+        "AUTO_SIZE_COLUMNS" : 1,
+        "SET_RANGE" : 1,
+        "EVALUATE_FORMULAS" : 1,
+        "SET_CELL" : 2,
+        "APPLY_STYLE" : 2,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
+        "ENSURE_SHEET" : 1
+      },
+      "styleKinds" : {
+        "vertical_alignment" : 1,
+        "number_format" : 1,
+        "horizontal_alignment" : 2,
+        "wrap_text" : 1,
+        "bold" : 1
+      },
+      "readCount" : 5,
+      "readKinds" : {
+        "GET_CELLS" : 1,
+        "GET_FORMULA_SURFACE" : 1,
+        "GET_WORKBOOK_SUMMARY" : 1,
+        "GET_WINDOW" : 1,
+        "GET_SHEET_SCHEMA" : 1
+      }
+    }
+  },
   "promotedAt" : "2026-03-26T04:15:53.571758Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/budget_request.txt"
 }

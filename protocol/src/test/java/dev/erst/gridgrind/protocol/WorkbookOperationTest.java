@@ -85,6 +85,20 @@ class WorkbookOperationTest {
     WorkbookOperation.ClearDataValidations clearDataValidations =
         new WorkbookOperation.ClearDataValidations(
             "Budget", new RangeSelection.Selected(List.of("C2:D4")));
+    WorkbookOperation.SetAutofilter setAutofilter =
+        new WorkbookOperation.SetAutofilter("Budget", "A1:C4");
+    WorkbookOperation.ClearAutofilter clearAutofilter =
+        new WorkbookOperation.ClearAutofilter("Budget");
+    WorkbookOperation.SetTable setTable =
+        new WorkbookOperation.SetTable(
+            new TableInput(
+                "BudgetTable",
+                "Budget",
+                "A1:C4",
+                true,
+                new TableStyleInput.Named("TableStyleMedium2", false, false, true, false)));
+    WorkbookOperation.DeleteTable deleteTable =
+        new WorkbookOperation.DeleteTable("BudgetTable", "Budget");
     WorkbookOperation.SetNamedRange setNamedRange =
         new WorkbookOperation.SetNamedRange(
             "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"));
@@ -104,12 +118,20 @@ class WorkbookOperationTest {
         DataValidationRuleInput.TextLength.class, setDataValidation.validation().rule());
     assertEquals(
         List.of("C2:D4"), ((RangeSelection.Selected) clearDataValidations.selection()).ranges());
+    assertEquals("A1:C4", setAutofilter.range());
+    assertEquals("Budget", clearAutofilter.sheetName());
+    assertEquals("BudgetTable", setTable.table().name());
+    assertEquals("Budget", deleteTable.sheetName());
     assertEquals("BudgetTotal", setNamedRange.name());
     assertEquals("Budget", ((NamedRangeScope.Sheet) deleteNamedRange.scope()).sheetName());
     assertEquals(1, appendRow.values().size());
     assertEquals("Budget", autoSizeColumns.sheetName());
     assertEquals("SET_DATA_VALIDATION", setDataValidation.operationType());
     assertEquals("CLEAR_DATA_VALIDATIONS", clearDataValidations.operationType());
+    assertEquals("SET_AUTOFILTER", setAutofilter.operationType());
+    assertEquals("CLEAR_AUTOFILTER", clearAutofilter.operationType());
+    assertEquals("SET_TABLE", setTable.operationType());
+    assertEquals("DELETE_TABLE", deleteTable.operationType());
     assertEquals("EVALUATE_FORMULAS", evaluateFormulas.operationType());
     assertEquals("FORCE_FORMULA_RECALCULATION_ON_OPEN", recalcOnOpen.operationType());
   }
@@ -177,6 +199,14 @@ class WorkbookOperationTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookOperation.ClearDataValidations("Budget", null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.SetAutofilter(null, "A1:B2"));
+    assertThrows(NullPointerException.class, () -> new WorkbookOperation.ClearAutofilter(null));
+    assertThrows(NullPointerException.class, () -> new WorkbookOperation.SetTable(null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.DeleteTable(null, "Budget"));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.DeleteTable("BudgetTable", null));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -272,6 +302,15 @@ class WorkbookOperationTest {
                     false,
                     null,
                     null)));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.SetAutofilter("Budget", " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.SetTable(
+                new TableInput("A1", "Budget", "A1:B2", false, new TableStyleInput.None())));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.DeleteTable("A1", "Budget"));
     assertThrows(
         IllegalArgumentException.class,
         () ->

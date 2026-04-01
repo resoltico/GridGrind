@@ -29,6 +29,7 @@ public final class JazzerCli {
       case "list-corpus" -> listCorpus(args.subList(1, args.size()));
       case "replay" -> replay(args.subList(1, args.size()));
       case "promote" -> promote(args.subList(1, args.size()));
+      case "refresh-promoted-metadata" -> refreshPromotedMetadata(args.subList(1, args.size()));
       default -> throw new IllegalArgumentException("Unknown Jazzer subcommand: " + args.getFirst());
     }
   }
@@ -184,7 +185,8 @@ public final class JazzerCli {
             target.key(),
             inputPath.toAbsolutePath().normalize().toString(),
             promotedInputPath.toAbsolutePath().normalize().toString(),
-            outcomeKind(outcome),
+            JazzerReplaySupport.outcomeKind(outcome),
+            JazzerReplaySupport.expectationFor(outcome),
             Instant.now().toString(),
             replayTextPath.toAbsolutePath().normalize().toString()));
 
@@ -193,6 +195,44 @@ public final class JazzerCli {
     if (outcome instanceof ReplayOutcome.UnexpectedFailure) {
       System.out.println("Promoted input currently reproduces an unexpected failure.");
     }
+  }
+
+  private static void refreshPromotedMetadata(List<String> args) throws IOException {
+    Path projectDirectory = projectDirectory(args);
+    String targetKey = optionalValue(args, "--target");
+    List<Path> metadataPaths;
+    try (var stream = Files.walk(promotedMetadataRoot(projectDirectory))) {
+      metadataPaths =
+          stream
+              .filter(path -> path.getFileName().toString().endsWith(".json"))
+              .filter(path -> targetKey == null || path.getParent().getFileName().toString().equals(targetKey))
+              .sorted()
+              .toList();
+    }
+
+    for (Path metadataPath : metadataPaths) {
+      PromotionMetadata metadata = JazzerJson.read(metadataPath, PromotionMetadata.class);
+      JazzerRunTarget target = JazzerRunTarget.fromKey(metadata.targetKey());
+      ReplayOutcome outcome =
+          JazzerReplaySupport.replay(
+              target.replayHarness(), Files.readAllBytes(Path.of(metadata.promotedInputPath())));
+      Files.writeString(
+          Path.of(metadata.replayTextPath()),
+          JazzerTextRenderer.renderReplay(Path.of(metadata.promotedInputPath()), outcome)
+              + System.lineSeparator());
+      JazzerJson.write(
+          metadataPath,
+          new PromotionMetadata(
+              metadata.targetKey(),
+              metadata.sourcePath(),
+              metadata.promotedInputPath(),
+              JazzerReplaySupport.outcomeKind(outcome),
+              JazzerReplaySupport.expectationFor(outcome),
+              metadata.promotedAt(),
+              metadata.replayTextPath()));
+    }
+
+    System.out.println("Refreshed " + metadataPaths.size() + " promoted metadata entries.");
   }
 
   private static List<LocalRunSummary> availableSummaries(Path projectDirectory) throws IOException {
@@ -216,6 +256,10 @@ public final class JazzerCli {
   private static Path projectDirectory(List<String> args) {
     String configured = optionalValue(args, "--project-dir");
     return configured == null ? Path.of("").toAbsolutePath().normalize() : Path.of(configured);
+  }
+
+  private static Path promotedMetadataRoot(Path projectDirectory) {
+    return projectDirectory.resolve("src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata");
   }
 
   private static Path requiredPath(List<String> args, String flag) {
@@ -251,11 +295,4 @@ public final class JazzerCli {
     return separator >= 0 ? fileName.substring(separator) : ".bin";
   }
 
-  private static String outcomeKind(ReplayOutcome outcome) {
-    return switch (outcome) {
-      case ReplayOutcome.Success _ -> "SUCCESS";
-      case ReplayOutcome.ExpectedInvalid _ -> "EXPECTED_INVALID";
-      case ReplayOutcome.UnexpectedFailure _ -> "UNEXPECTED_FAILURE";
-    };
-  }
 }

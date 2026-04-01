@@ -88,6 +88,14 @@ final class ExcelWorkbookIntrospector {
               getDataValidations.sheetName(),
               documentIntrospector.dataValidations(
                   workbook.sheet(getDataValidations.sheetName()), getDataValidations.selection()));
+      case WorkbookReadCommand.GetAutofilters getAutofilters ->
+          new WorkbookReadResult.AutofiltersResult(
+              getAutofilters.requestId(),
+              getAutofilters.sheetName(),
+              documentIntrospector.autofilters(workbook, getAutofilters.sheetName()));
+      case WorkbookReadCommand.GetTables getTables ->
+          new WorkbookReadResult.TablesResult(
+              getTables.requestId(), documentIntrospector.tables(workbook, getTables.selection()));
       case WorkbookReadCommand.GetFormulaSurface getFormulaSurface ->
           new WorkbookReadResult.FormulaSurfaceResult(
               getFormulaSurface.requestId(),

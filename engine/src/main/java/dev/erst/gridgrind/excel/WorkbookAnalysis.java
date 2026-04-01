@@ -7,6 +7,8 @@ import java.util.Objects;
 public sealed interface WorkbookAnalysis
     permits WorkbookAnalysis.FormulaHealth,
         WorkbookAnalysis.DataValidationHealth,
+        WorkbookAnalysis.AutofilterHealth,
+        WorkbookAnalysis.TableHealth,
         WorkbookAnalysis.HyperlinkHealth,
         WorkbookAnalysis.NamedRangeHealth,
         WorkbookAnalysis.WorkbookFindings {
@@ -27,6 +29,14 @@ public sealed interface WorkbookAnalysis
     DATA_VALIDATION_UNSUPPORTED_RULE,
     DATA_VALIDATION_BROKEN_FORMULA,
     DATA_VALIDATION_OVERLAPPING_RULES,
+    AUTOFILTER_INVALID_RANGE,
+    AUTOFILTER_MISSING_HEADER_ROW,
+    AUTOFILTER_TABLE_MISMATCH,
+    TABLE_OVERLAPPING_RANGE,
+    TABLE_BLANK_HEADER,
+    TABLE_DUPLICATE_HEADER,
+    TABLE_BROKEN_REFERENCE,
+    TABLE_STYLE_MISMATCH,
     HYPERLINK_MALFORMED_TARGET,
     HYPERLINK_MISSING_FILE_TARGET,
     HYPERLINK_MISSING_DOCUMENT_SHEET,
@@ -140,6 +150,31 @@ public sealed interface WorkbookAnalysis
     public DataValidationHealth {
       if (checkedValidationCount < 0) {
         throw new IllegalArgumentException("checkedValidationCount must not be negative");
+      }
+      Objects.requireNonNull(summary, "summary must not be null");
+      findings = copyValues(findings, "findings");
+    }
+  }
+
+  /** Autofilter-health analysis for one selected sheet set. */
+  record AutofilterHealth(
+      int checkedAutofilterCount, AnalysisSummary summary, List<AnalysisFinding> findings)
+      implements WorkbookAnalysis {
+    public AutofilterHealth {
+      if (checkedAutofilterCount < 0) {
+        throw new IllegalArgumentException("checkedAutofilterCount must not be negative");
+      }
+      Objects.requireNonNull(summary, "summary must not be null");
+      findings = copyValues(findings, "findings");
+    }
+  }
+
+  /** Table-health analysis for one selected table set. */
+  record TableHealth(int checkedTableCount, AnalysisSummary summary, List<AnalysisFinding> findings)
+      implements WorkbookAnalysis {
+    public TableHealth {
+      if (checkedTableCount < 0) {
+        throw new IllegalArgumentException("checkedTableCount must not be negative");
       }
       Objects.requireNonNull(summary, "summary must not be null");
       findings = copyValues(findings, "findings");

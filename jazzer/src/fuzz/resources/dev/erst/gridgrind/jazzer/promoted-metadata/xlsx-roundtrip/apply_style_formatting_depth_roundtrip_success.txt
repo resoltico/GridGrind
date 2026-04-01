@@ -1,8 +1,8 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-18f533680ff39227fa5f9e35ae8a807a9f4a6342
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/apply_style_formatting_depth_roundtrip_success.bin
 Harness: xlsx-roundtrip
 Outcome: SUCCESS
 Input Bytes: 17
 Command Count: 4
-Style Kinds: vertical_alignment=1, font_color=1, horizontal_alignment=1, font_height=1, fill_color=1
-Command Kinds: CREATE_SHEET=3, APPLY_STYLE=1
+Style Kinds: (none)
+Command Kinds: CREATE_SHEET=4

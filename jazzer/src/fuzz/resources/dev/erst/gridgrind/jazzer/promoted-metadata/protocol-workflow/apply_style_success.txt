@@ -1,9 +1,13 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/fe8fd7ddc3a50cc53ab97727c04c22798cb85c27
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/apply_style_success.bin
 Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 53
-Operation Count: 7
-Analysis Sheet Count: 0
-Response Kind: SUCCESS
-Operation Kinds: ENSURE_SHEET=4, APPLY_STYLE=3
+Source Kind: NEW
+Persistence Kind: NONE
+Operation Count: 3
+Read Count: 0
+Read Kinds: (none)
+Response Kind: FAILURE
+Style Kinds: number_format=1, wrap_text=1, vertical_alignment=1, horizontal_alignment=1
+Operation Kinds: ENSURE_SHEET=1, SET_RANGE=1, APPLY_STYLE=1

@@ -1,0 +1,22 @@
+{
+  "targetKey" : "xlsx-roundtrip",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest/roundTrip/5b251f4cf358fc7dd865fa08f768d186d579757b",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/set_table_missing_sheet_invalid_roundtrip.bin",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "expectation" : {
+    "outcomeKind" : "EXPECTED_INVALID",
+    "details" : {
+      "type" : "XLSX_ROUND_TRIP",
+      "inputBytes" : 60,
+      "commandCount" : 6,
+      "commandKinds" : {
+        "CREATE_SHEET" : 3,
+        "SET_HYPERLINK" : 2,
+        "SET_TABLE" : 1
+      },
+      "styleKinds" : { }
+    }
+  },
+  "promotedAt" : "2026-04-01T04:57:36.039183Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/set_table_missing_sheet_invalid_roundtrip.txt"
+}

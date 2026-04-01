@@ -1,12 +1,13 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/fdf2b1f4471f81858053a09b22f657b3baa3a974
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/set_comment_clear_range_failure.bin
 Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 173
 Source Kind: NEW
-Persistence Kind: NONE
+Persistence Kind: SAVE_AS
 Operation Count: 8
-Analysis Sheet Count: 0
+Read Count: 1
+Read Kinds: GET_MERGED_REGIONS=1
 Response Kind: FAILURE
 Style Kinds: (none)
-Operation Kinds: FREEZE_PANES=3, SET_RANGE=2, ENSURE_SHEET=1, SET_COMMENT=1, CLEAR_RANGE=1
+Operation Kinds: CLEAR_HYPERLINK=6, UNMERGE_CELLS=1, CLEAR_RANGE=1

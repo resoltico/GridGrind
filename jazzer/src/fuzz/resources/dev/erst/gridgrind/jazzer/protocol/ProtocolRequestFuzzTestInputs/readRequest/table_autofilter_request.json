@@ -1,0 +1,106 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "ops/table-autofilter-demo.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Dispatch" },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Dispatch",
+      "range": "A1:C4",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Owner" },
+          { "type": "TEXT", "text": "Task" },
+          { "type": "TEXT", "text": "Status" }
+        ],
+        [
+          { "type": "TEXT", "text": "Ada" },
+          { "type": "TEXT", "text": "Onboarding" },
+          { "type": "TEXT", "text": "Queued" }
+        ],
+        [
+          { "type": "TEXT", "text": "Lin" },
+          { "type": "TEXT", "text": "Badge run" },
+          { "type": "TEXT", "text": "Done" }
+        ],
+        [
+          { "type": "TEXT", "text": "Sam" },
+          { "type": "TEXT", "text": "Desk labels" },
+          { "type": "TEXT", "text": "Blocked" }
+        ]
+      ]
+    },
+    {
+      "type": "SET_AUTOFILTER",
+      "sheetName": "Dispatch",
+      "range": "A1:C4"
+    },
+    {
+      "type": "SET_TABLE",
+      "table": {
+        "name": "DispatchQueue",
+        "sheetName": "Dispatch",
+        "range": "A1:C4",
+        "showTotalsRow": false,
+        "style": { "type": "NONE" }
+      }
+    },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Dispatch",
+      "range": "H1:I4",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Trip" },
+          { "type": "TEXT", "text": "State" }
+        ],
+        [
+          { "type": "TEXT", "text": "Late badge run" },
+          { "type": "TEXT", "text": "Queued" }
+        ],
+        [
+          { "type": "TEXT", "text": "Lobby signs" },
+          { "type": "TEXT", "text": "Done" }
+        ],
+        [
+          { "type": "TEXT", "text": "Desk labels" },
+          { "type": "TEXT", "text": "Queued" }
+        ]
+      ]
+    },
+    {
+      "type": "SET_AUTOFILTER",
+      "sheetName": "Dispatch",
+      "range": "H1:I4"
+    }
+  ],
+  "reads": [
+    {
+      "type": "GET_TABLES",
+      "requestId": "tables",
+      "selection": { "type": "ALL" }
+    },
+    {
+      "type": "GET_AUTOFILTERS",
+      "requestId": "autofilters",
+      "sheetName": "Dispatch"
+    },
+    {
+      "type": "ANALYZE_TABLE_HEALTH",
+      "requestId": "table-health",
+      "selection": { "type": "ALL" }
+    },
+    {
+      "type": "ANALYZE_AUTOFILTER_HEALTH",
+      "requestId": "autofilter-health",
+      "selection": {
+        "type": "SELECTED",
+        "sheetNames": ["Dispatch"]
+      }
+    }
+  ]
+}

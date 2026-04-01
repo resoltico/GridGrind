@@ -30,6 +30,12 @@ import java.util.Objects;
 public final class JazzerReplaySupport {
   private JazzerReplaySupport() {}
 
+  /** Returns the stable replay expectation captured from one replay outcome. */
+  public static ReplayExpectation expectationFor(ReplayOutcome outcome) {
+    Objects.requireNonNull(outcome, "outcome must not be null");
+    return new ReplayExpectation(outcomeKind(outcome), outcome.details());
+  }
+
   /** Replays one raw input against the selected harness and returns a structured outcome. */
   public static ReplayOutcome replay(JazzerHarness harness, byte[] input) {
     Objects.requireNonNull(harness, "harness must not be null");
@@ -242,6 +248,16 @@ public final class JazzerReplaySupport {
         error.getMessage(),
         stackTrace(error),
         details);
+  }
+
+  /** Returns the stable external outcome kind used in metadata and reports. */
+  static String outcomeKind(ReplayOutcome outcome) {
+    Objects.requireNonNull(outcome, "outcome must not be null");
+    return switch (outcome) {
+      case ReplayOutcome.Success _ -> "SUCCESS";
+      case ReplayOutcome.ExpectedInvalid _ -> "EXPECTED_INVALID";
+      case ReplayOutcome.UnexpectedFailure _ -> "UNEXPECTED_FAILURE";
+    };
   }
 
   private static ProtocolWorkflowDetails workflowDetails(

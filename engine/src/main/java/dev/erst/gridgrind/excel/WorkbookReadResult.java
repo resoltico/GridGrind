@@ -3,7 +3,13 @@ package dev.erst.gridgrind.excel;
 import java.util.List;
 import java.util.Objects;
 
-/** Immutable workbook-core result produced by one read command. */
+/**
+ * Immutable workbook-core result produced by one read command.
+ *
+ * <p>The closed result vocabulary and its helper payload records stay co-located so engine-side
+ * read construction and downstream exhaustive switches operate over one deterministic model.
+ */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public sealed interface WorkbookReadResult
     permits WorkbookReadResult.Introspection, WorkbookReadResult.Analysis {
 
@@ -22,6 +28,8 @@ public sealed interface WorkbookReadResult
           CommentsResult,
           SheetLayoutResult,
           DataValidationsResult,
+          AutofiltersResult,
+          TablesResult,
           FormulaSurfaceResult,
           SheetSchemaResult,
           NamedRangeSurfaceResult {}
@@ -30,6 +38,8 @@ public sealed interface WorkbookReadResult
   sealed interface Analysis extends WorkbookReadResult
       permits FormulaHealthResult,
           DataValidationHealthResult,
+          AutofilterHealthResult,
+          TableHealthResult,
           HyperlinkHealthResult,
           NamedRangeHealthResult,
           WorkbookFindingsResult {}
@@ -127,6 +137,25 @@ public sealed interface WorkbookReadResult
     }
   }
 
+  /** Returns sheet- and table-owned autofilter metadata for one sheet. */
+  record AutofiltersResult(
+      String requestId, String sheetName, List<ExcelAutofilterSnapshot> autofilters)
+      implements Introspection {
+    public AutofiltersResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      autofilters = copyValues(autofilters, "autofilters");
+    }
+  }
+
+  /** Returns factual table metadata selected by workbook-global table name or all tables. */
+  record TablesResult(String requestId, List<ExcelTableSnapshot> tables) implements Introspection {
+    public TablesResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      tables = copyValues(tables, "tables");
+    }
+  }
+
   /** Returns grouped formula usage facts across one or more sheets. */
   record FormulaSurfaceResult(String requestId, FormulaSurface analysis) implements Introspection {
     public FormulaSurfaceResult {
@@ -165,6 +194,24 @@ public sealed interface WorkbookReadResult
   record DataValidationHealthResult(
       String requestId, WorkbookAnalysis.DataValidationHealth analysis) implements Analysis {
     public DataValidationHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns autofilter-health findings for one analysis read. */
+  record AutofilterHealthResult(String requestId, WorkbookAnalysis.AutofilterHealth analysis)
+      implements Analysis {
+    public AutofilterHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns table-health findings for one analysis read. */
+  record TableHealthResult(String requestId, WorkbookAnalysis.TableHealth analysis)
+      implements Analysis {
+    public TableHealthResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }

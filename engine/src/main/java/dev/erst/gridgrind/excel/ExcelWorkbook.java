@@ -26,6 +26,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   private final XSSFWorkbook workbook;
   private final WorkbookStyleRegistry styleRegistry;
   private final ExcelFormulaRuntime formulaRuntime;
+  private final ExcelTableController tableController;
 
   private ExcelWorkbook(XSSFWorkbook workbook) {
     this(workbook, ExcelFormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator()));
@@ -35,6 +36,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     this.workbook = workbook;
     this.styleRegistry = new WorkbookStyleRegistry(workbook);
     this.formulaRuntime = Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
+    this.tableController = new ExcelTableController();
   }
 
   /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
@@ -141,6 +143,19 @@ public final class ExcelWorkbook implements AutoCloseable {
     return this;
   }
 
+  /** Creates or replaces one workbook-global table definition. */
+  public ExcelWorkbook setTable(ExcelTableDefinition definition) {
+    Objects.requireNonNull(definition, "definition must not be null");
+    tableController.setTable(this, definition);
+    return this;
+  }
+
+  /** Deletes one existing table by workbook-global name and expected sheet name. */
+  public ExcelWorkbook deleteTable(String name, String sheetName) {
+    tableController.deleteTable(this, name, sheetName);
+    return this;
+  }
+
   /** Evaluates every formula cell currently present in the workbook. */
   public ExcelWorkbook evaluateAllFormulas() {
     for (Sheet sheet : workbook) {
@@ -235,6 +250,11 @@ public final class ExcelWorkbook implements AutoCloseable {
   @Override
   public void close() throws IOException {
     workbook.close();
+  }
+
+  /** Returns the mutable XSSF workbook delegate used by workbook-scoped controllers. */
+  XSSFWorkbook xssfWorkbook() {
+    return workbook;
   }
 
   private static void requireNonBlank(String value, String fieldName) {

@@ -11,146 +11,9 @@ import org.junit.jupiter.api.Test;
 class WorkbookReadResultTest {
   @Test
   void createsEachResultVariantAndCopiesCollections() {
-    ExcelCellSnapshot.BlankSnapshot blank =
-        new ExcelCellSnapshot.BlankSnapshot(
-            "A1", "BLANK", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
-    List<String> sheetNames = new ArrayList<>(List.of("Budget"));
-    List<ExcelNamedRangeSnapshot> namedRanges =
-        new ArrayList<>(
-            List.of(
-                new ExcelNamedRangeSnapshot.RangeSnapshot(
-                    "BudgetTotal",
-                    new ExcelNamedRangeScope.WorkbookScope(),
-                    "Budget!$B$4",
-                    new ExcelNamedRangeTarget("Budget", "B4"))));
-    List<ExcelCellSnapshot> cells = new ArrayList<>(List.of(blank));
-    List<WorkbookReadResult.WindowRow> rows =
-        new ArrayList<>(List.of(new WorkbookReadResult.WindowRow(0, List.of(blank))));
-    List<WorkbookReadResult.MergedRegion> mergedRegions =
-        new ArrayList<>(List.of(new WorkbookReadResult.MergedRegion("A1:B2")));
-    List<WorkbookReadResult.CellHyperlink> hyperlinks =
-        new ArrayList<>(
-            List.of(
-                new WorkbookReadResult.CellHyperlink(
-                    "A1", new ExcelHyperlink.Url("https://example.com/report"))));
-    List<WorkbookReadResult.CellComment> comments =
-        new ArrayList<>(
-            List.of(
-                new WorkbookReadResult.CellComment(
-                    "A1", new ExcelComment("Review", "GridGrind", false))));
-    List<WorkbookReadResult.ColumnLayout> columns =
-        new ArrayList<>(List.of(new WorkbookReadResult.ColumnLayout(0, 12.5)));
-    List<WorkbookReadResult.RowLayout> resultRows =
-        new ArrayList<>(List.of(new WorkbookReadResult.RowLayout(0, 18.0)));
-    List<ExcelDataValidationSnapshot> validations =
-        new ArrayList<>(
-            List.of(
-                new ExcelDataValidationSnapshot.Supported(
-                    List.of("A2:A5"),
-                    new ExcelDataValidationDefinition(
-                        new ExcelDataValidationRule.TextLength(
-                            ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
-                        true,
-                        false,
-                        new ExcelDataValidationPrompt(
-                            "Reason", "Use 20 characters or fewer.", true),
-                        null))));
-    List<WorkbookReadResult.FormulaPattern> formulas =
-        new ArrayList<>(
-            List.of(new WorkbookReadResult.FormulaPattern("SUM(B2:B3)", 1, List.of("B4"))));
-    List<WorkbookReadResult.SchemaColumn> schemaColumns =
-        new ArrayList<>(
-            List.of(
-                new WorkbookReadResult.SchemaColumn(
-                    0,
-                    "A1",
-                    "Item",
-                    2,
-                    0,
-                    List.of(new WorkbookReadResult.TypeCount("STRING", 2)),
-                    "STRING")));
-    List<WorkbookReadResult.NamedRangeSurfaceEntry> namedRangeEntries =
-        new ArrayList<>(
-            List.of(
-                new WorkbookReadResult.NamedRangeSurfaceEntry(
-                    "BudgetTotal",
-                    new ExcelNamedRangeScope.WorkbookScope(),
-                    "Budget!$B$4",
-                    WorkbookReadResult.NamedRangeBackingKind.RANGE)));
-
-    WorkbookReadResult.WorkbookSummaryResult workbookSummary =
-        new WorkbookReadResult.WorkbookSummaryResult(
-            "workbook", new WorkbookReadResult.WorkbookSummary(1, sheetNames, 1, true));
-    WorkbookReadResult.NamedRangesResult namedRangesResult =
-        new WorkbookReadResult.NamedRangesResult("ranges", namedRanges);
-    WorkbookReadResult.SheetSummaryResult sheetSummary =
-        new WorkbookReadResult.SheetSummaryResult(
-            "sheet", new WorkbookReadResult.SheetSummary("Budget", 4, 3, 2));
-    WorkbookReadResult.CellsResult cellsResult =
-        new WorkbookReadResult.CellsResult("cells", "Budget", cells);
-    WorkbookReadResult.WindowResult windowResult =
-        new WorkbookReadResult.WindowResult(
-            "window", new WorkbookReadResult.Window("Budget", "A1", 1, 1, rows));
-    WorkbookReadResult.MergedRegionsResult mergedRegionsResult =
-        new WorkbookReadResult.MergedRegionsResult("merged", "Budget", mergedRegions);
-    WorkbookReadResult.HyperlinksResult hyperlinksResult =
-        new WorkbookReadResult.HyperlinksResult("hyperlinks", "Budget", hyperlinks);
-    WorkbookReadResult.CommentsResult commentsResult =
-        new WorkbookReadResult.CommentsResult("comments", "Budget", comments);
-    WorkbookReadResult.SheetLayoutResult layoutResult =
-        new WorkbookReadResult.SheetLayoutResult(
-            "layout",
-            new WorkbookReadResult.SheetLayout(
-                "Budget",
-                new WorkbookReadResult.FreezePane.Frozen(1, 1, 1, 1),
-                columns,
-                resultRows));
-    WorkbookReadResult.DataValidationsResult dataValidationsResult =
-        new WorkbookReadResult.DataValidationsResult("validations", "Budget", validations);
-    WorkbookReadResult.FormulaSurfaceResult formulaSurfaceResult =
-        new WorkbookReadResult.FormulaSurfaceResult(
-            "formula",
-            new WorkbookReadResult.FormulaSurface(
-                1, List.of(new WorkbookReadResult.SheetFormulaSurface("Budget", 1, 1, formulas))));
-    WorkbookReadResult.SheetSchemaResult sheetSchemaResult =
-        new WorkbookReadResult.SheetSchemaResult(
-            "schema", new WorkbookReadResult.SheetSchema("Budget", "A1", 3, 2, 2, schemaColumns));
-    WorkbookReadResult.NamedRangeSurfaceResult namedRangeSurfaceResult =
-        new WorkbookReadResult.NamedRangeSurfaceResult(
-            "surface", new WorkbookReadResult.NamedRangeSurface(1, 0, 1, 0, namedRangeEntries));
-
-    sheetNames.clear();
-    namedRanges.clear();
-    cells.clear();
-    rows.clear();
-    mergedRegions.clear();
-    hyperlinks.clear();
-    comments.clear();
-    columns.clear();
-    resultRows.clear();
-    validations.clear();
-    formulas.clear();
-    schemaColumns.clear();
-    namedRangeEntries.clear();
-
-    assertEquals(List.of("Budget"), workbookSummary.workbook().sheetNames());
-    assertEquals(1, namedRangesResult.namedRanges().size());
-    assertEquals("Budget", sheetSummary.sheet().sheetName());
-    assertEquals("A1", cellsResult.cells().getFirst().address());
-    assertEquals("A1", windowResult.window().rows().getFirst().cells().getFirst().address());
-    assertEquals("A1:B2", mergedRegionsResult.mergedRegions().getFirst().range());
-    assertEquals(
-        "https://example.com/report",
-        hyperlinksResult.hyperlinks().getFirst().hyperlink().target());
-    assertEquals("Review", commentsResult.comments().getFirst().comment().text());
-    assertInstanceOf(
-        WorkbookReadResult.FreezePane.Frozen.class, layoutResult.layout().freezePanes());
-    assertEquals("A2:A5", dataValidationsResult.validations().getFirst().ranges().getFirst());
-    assertEquals(1, formulaSurfaceResult.analysis().totalFormulaCellCount());
-    assertEquals("STRING", sheetSchemaResult.analysis().columns().getFirst().dominantType());
-    assertEquals(
-        WorkbookReadResult.NamedRangeBackingKind.RANGE,
-        namedRangeSurfaceResult.analysis().namedRanges().getFirst().kind());
+    ReadResultFixture fixture = createReadResultFixture();
+    fixture.clearSources();
+    assertCopiedFixture(fixture);
   }
 
   @Test
@@ -201,6 +64,11 @@ class WorkbookReadResultTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadResult.DataValidationsResult("validations", "Budget", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.AutofiltersResult("autofilters", "Budget", null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookReadResult.TablesResult("tables", null));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookReadResult.FreezePane.Frozen(-1, 0, 0, 0));
@@ -327,5 +195,214 @@ class WorkbookReadResultTest {
         ExcelBorderStyle.NONE,
         ExcelBorderStyle.NONE,
         ExcelBorderStyle.NONE);
+  }
+
+  private ReadResultFixture createReadResultFixture() {
+    ExcelCellSnapshot.BlankSnapshot blank =
+        new ExcelCellSnapshot.BlankSnapshot(
+            "A1", "BLANK", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
+    List<String> sheetNames = new ArrayList<>(List.of("Budget"));
+    List<ExcelNamedRangeSnapshot> namedRanges =
+        new ArrayList<>(
+            List.of(
+                new ExcelNamedRangeSnapshot.RangeSnapshot(
+                    "BudgetTotal",
+                    new ExcelNamedRangeScope.WorkbookScope(),
+                    "Budget!$B$4",
+                    new ExcelNamedRangeTarget("Budget", "B4"))));
+    List<ExcelCellSnapshot> cells = new ArrayList<>(List.of(blank));
+    List<WorkbookReadResult.WindowRow> rows =
+        new ArrayList<>(List.of(new WorkbookReadResult.WindowRow(0, List.of(blank))));
+    List<WorkbookReadResult.MergedRegion> mergedRegions =
+        new ArrayList<>(List.of(new WorkbookReadResult.MergedRegion("A1:B2")));
+    List<WorkbookReadResult.CellHyperlink> hyperlinks =
+        new ArrayList<>(
+            List.of(
+                new WorkbookReadResult.CellHyperlink(
+                    "A1", new ExcelHyperlink.Url("https://example.com/report"))));
+    List<WorkbookReadResult.CellComment> comments =
+        new ArrayList<>(
+            List.of(
+                new WorkbookReadResult.CellComment(
+                    "A1", new ExcelComment("Review", "GridGrind", false))));
+    List<WorkbookReadResult.ColumnLayout> columns =
+        new ArrayList<>(List.of(new WorkbookReadResult.ColumnLayout(0, 12.5)));
+    List<WorkbookReadResult.RowLayout> resultRows =
+        new ArrayList<>(List.of(new WorkbookReadResult.RowLayout(0, 18.0)));
+    List<ExcelDataValidationSnapshot> validations =
+        new ArrayList<>(
+            List.of(
+                new ExcelDataValidationSnapshot.Supported(
+                    List.of("A2:A5"),
+                    new ExcelDataValidationDefinition(
+                        new ExcelDataValidationRule.TextLength(
+                            ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+                        true,
+                        false,
+                        new ExcelDataValidationPrompt(
+                            "Reason", "Use 20 characters or fewer.", true),
+                        null))));
+    List<ExcelAutofilterSnapshot> autofilters =
+        new ArrayList<>(
+            List.of(
+                new ExcelAutofilterSnapshot.SheetOwned("E1:F4"),
+                new ExcelAutofilterSnapshot.TableOwned("A1:C4", "BudgetTable")));
+    List<ExcelTableSnapshot> tables =
+        new ArrayList<>(
+            List.of(
+                new ExcelTableSnapshot(
+                    "BudgetTable",
+                    "Budget",
+                    "A1:C4",
+                    1,
+                    1,
+                    List.of("Item", "Amount", "Billable"),
+                    new ExcelTableStyleSnapshot.Named(
+                        "TableStyleMedium2", false, false, true, false),
+                    true)));
+    List<WorkbookReadResult.FormulaPattern> formulas =
+        new ArrayList<>(
+            List.of(new WorkbookReadResult.FormulaPattern("SUM(B2:B3)", 1, List.of("B4"))));
+    List<WorkbookReadResult.SchemaColumn> schemaColumns =
+        new ArrayList<>(
+            List.of(
+                new WorkbookReadResult.SchemaColumn(
+                    0,
+                    "A1",
+                    "Item",
+                    2,
+                    0,
+                    List.of(new WorkbookReadResult.TypeCount("STRING", 2)),
+                    "STRING")));
+    List<WorkbookReadResult.NamedRangeSurfaceEntry> namedRangeEntries =
+        new ArrayList<>(
+            List.of(
+                new WorkbookReadResult.NamedRangeSurfaceEntry(
+                    "BudgetTotal",
+                    new ExcelNamedRangeScope.WorkbookScope(),
+                    "Budget!$B$4",
+                    WorkbookReadResult.NamedRangeBackingKind.RANGE)));
+
+    return new ReadResultFixture(
+        sheetNames,
+        namedRanges,
+        cells,
+        rows,
+        mergedRegions,
+        hyperlinks,
+        comments,
+        columns,
+        resultRows,
+        validations,
+        autofilters,
+        tables,
+        formulas,
+        schemaColumns,
+        namedRangeEntries,
+        new WorkbookReadResult.WorkbookSummaryResult(
+            "workbook", new WorkbookReadResult.WorkbookSummary(1, sheetNames, 1, true)),
+        new WorkbookReadResult.NamedRangesResult("ranges", namedRanges),
+        new WorkbookReadResult.SheetSummaryResult(
+            "sheet", new WorkbookReadResult.SheetSummary("Budget", 4, 3, 2)),
+        new WorkbookReadResult.CellsResult("cells", "Budget", cells),
+        new WorkbookReadResult.WindowResult(
+            "window", new WorkbookReadResult.Window("Budget", "A1", 1, 1, rows)),
+        new WorkbookReadResult.MergedRegionsResult("merged", "Budget", mergedRegions),
+        new WorkbookReadResult.HyperlinksResult("hyperlinks", "Budget", hyperlinks),
+        new WorkbookReadResult.CommentsResult("comments", "Budget", comments),
+        new WorkbookReadResult.SheetLayoutResult(
+            "layout",
+            new WorkbookReadResult.SheetLayout(
+                "Budget",
+                new WorkbookReadResult.FreezePane.Frozen(1, 1, 1, 1),
+                columns,
+                resultRows)),
+        new WorkbookReadResult.DataValidationsResult("validations", "Budget", validations),
+        new WorkbookReadResult.AutofiltersResult("autofilters", "Budget", autofilters),
+        new WorkbookReadResult.TablesResult("tables", tables),
+        new WorkbookReadResult.FormulaSurfaceResult(
+            "formula",
+            new WorkbookReadResult.FormulaSurface(
+                1, List.of(new WorkbookReadResult.SheetFormulaSurface("Budget", 1, 1, formulas)))),
+        new WorkbookReadResult.SheetSchemaResult(
+            "schema", new WorkbookReadResult.SheetSchema("Budget", "A1", 3, 2, 2, schemaColumns)),
+        new WorkbookReadResult.NamedRangeSurfaceResult(
+            "surface", new WorkbookReadResult.NamedRangeSurface(1, 0, 1, 0, namedRangeEntries)));
+  }
+
+  private void assertCopiedFixture(ReadResultFixture fixture) {
+    assertEquals(List.of("Budget"), fixture.workbookSummary().workbook().sheetNames());
+    assertEquals(1, fixture.namedRangesResult().namedRanges().size());
+    assertEquals("Budget", fixture.sheetSummary().sheet().sheetName());
+    assertEquals("A1", fixture.cellsResult().cells().getFirst().address());
+    assertEquals(
+        "A1", fixture.windowResult().window().rows().getFirst().cells().getFirst().address());
+    assertEquals("A1:B2", fixture.mergedRegionsResult().mergedRegions().getFirst().range());
+    assertEquals(
+        "https://example.com/report",
+        fixture.hyperlinksResult().hyperlinks().getFirst().hyperlink().target());
+    assertEquals("Review", fixture.commentsResult().comments().getFirst().comment().text());
+    assertInstanceOf(
+        WorkbookReadResult.FreezePane.Frozen.class, fixture.layoutResult().layout().freezePanes());
+    assertEquals(
+        "A2:A5", fixture.dataValidationsResult().validations().getFirst().ranges().getFirst());
+    assertEquals("E1:F4", fixture.autofiltersResult().autofilters().getFirst().range());
+    assertEquals("BudgetTable", fixture.tablesResult().tables().getFirst().name());
+    assertEquals(1, fixture.formulaSurfaceResult().analysis().totalFormulaCellCount());
+    assertEquals(
+        "STRING", fixture.sheetSchemaResult().analysis().columns().getFirst().dominantType());
+    assertEquals(
+        WorkbookReadResult.NamedRangeBackingKind.RANGE,
+        fixture.namedRangeSurfaceResult().analysis().namedRanges().getFirst().kind());
+  }
+
+  private record ReadResultFixture(
+      List<String> sheetNames,
+      List<ExcelNamedRangeSnapshot> namedRanges,
+      List<ExcelCellSnapshot> cells,
+      List<WorkbookReadResult.WindowRow> rows,
+      List<WorkbookReadResult.MergedRegion> mergedRegions,
+      List<WorkbookReadResult.CellHyperlink> hyperlinks,
+      List<WorkbookReadResult.CellComment> comments,
+      List<WorkbookReadResult.ColumnLayout> columns,
+      List<WorkbookReadResult.RowLayout> resultRows,
+      List<ExcelDataValidationSnapshot> validations,
+      List<ExcelAutofilterSnapshot> autofilters,
+      List<ExcelTableSnapshot> tables,
+      List<WorkbookReadResult.FormulaPattern> formulas,
+      List<WorkbookReadResult.SchemaColumn> schemaColumns,
+      List<WorkbookReadResult.NamedRangeSurfaceEntry> namedRangeEntries,
+      WorkbookReadResult.WorkbookSummaryResult workbookSummary,
+      WorkbookReadResult.NamedRangesResult namedRangesResult,
+      WorkbookReadResult.SheetSummaryResult sheetSummary,
+      WorkbookReadResult.CellsResult cellsResult,
+      WorkbookReadResult.WindowResult windowResult,
+      WorkbookReadResult.MergedRegionsResult mergedRegionsResult,
+      WorkbookReadResult.HyperlinksResult hyperlinksResult,
+      WorkbookReadResult.CommentsResult commentsResult,
+      WorkbookReadResult.SheetLayoutResult layoutResult,
+      WorkbookReadResult.DataValidationsResult dataValidationsResult,
+      WorkbookReadResult.AutofiltersResult autofiltersResult,
+      WorkbookReadResult.TablesResult tablesResult,
+      WorkbookReadResult.FormulaSurfaceResult formulaSurfaceResult,
+      WorkbookReadResult.SheetSchemaResult sheetSchemaResult,
+      WorkbookReadResult.NamedRangeSurfaceResult namedRangeSurfaceResult) {
+    private void clearSources() {
+      sheetNames.clear();
+      namedRanges.clear();
+      cells.clear();
+      rows.clear();
+      mergedRegions.clear();
+      hyperlinks.clear();
+      comments.clear();
+      columns.clear();
+      resultRows.clear();
+      validations.clear();
+      autofilters.clear();
+      tables.clear();
+      formulas.clear();
+      schemaColumns.clear();
+      namedRangeEntries.clear();
+    }
   }
 }

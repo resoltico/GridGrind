@@ -1,8 +1,10 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-0196775dc07e92df7ec0ac3c19d56dd8e26c7c1c
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_preserves_styled_blank_row_roundtrip_success.bin
 Harness: xlsx-roundtrip
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: SheetNotFoundException
+Message: Sheet does not exist: X
 Input Bytes: 107
 Command Count: 10
-Style Kinds: fill_color=1, font_height=1, font_color=1, border=1, border_all=1, strikeout=1, font_name=1
-Command Kinds: CREATE_SHEET=6, APPLY_STYLE=2, APPEND_ROW=1, CLEAR_RANGE=1
+Style Kinds: (none)
+Command Kinds: CREATE_SHEET=4, CLEAR_DATA_VALIDATIONS=2, DELETE_SHEET=1, CLEAR_RANGE=1, RENAME_SHEET=1, UNMERGE_CELLS=1

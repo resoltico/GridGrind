@@ -1,8 +1,10 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-6723b2566910250fd4dbf8d9e9c01a98cdb2e727
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_datetime_style_patch_roundtrip_success.bin
 Harness: xlsx-roundtrip
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: IllegalArgumentException
+Message: targetIndex out of range: workbook has 1 sheet(s), valid positions are 0 to 0; got 1
 Input Bytes: 228
 Command Count: 10
-Style Kinds: italic=4, bold=3, wrap_text=2, fill_color=2, vertical_alignment=1, font_name=1, font_color=1, border_all=1, border_right=1, font_height=1, horizontal_alignment=1, underline=1, strikeout=1, border=1, number_format=1
-Command Kinds: APPLY_STYLE=6, APPEND_ROW=3, CREATE_SHEET=1
+Style Kinds: (none)
+Command Kinds: MOVE_SHEET=5, UNMERGE_CELLS=4, CREATE_SHEET=1

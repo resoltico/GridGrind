@@ -3,6 +3,34 @@
   "sourcePath" : "/Users/erst/Tools/GridGrind/examples/live-workflow-create.json",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/live_workflow_create.json",
   "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 7551,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 42,
+      "operationKinds" : {
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
+        "APPEND_ROW" : 10,
+        "AUTO_SIZE_COLUMNS" : 2,
+        "SET_CELL" : 26,
+        "ENSURE_SHEET" : 2,
+        "EVALUATE_FORMULAS" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 7,
+      "readKinds" : {
+        "GET_CELLS" : 2,
+        "GET_FORMULA_SURFACE" : 1,
+        "GET_WORKBOOK_SUMMARY" : 1,
+        "GET_WINDOW" : 2,
+        "GET_SHEET_SCHEMA" : 1
+      }
+    }
+  },
   "promotedAt" : "2026-03-26T04:15:54.270022Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/live_workflow_create.txt"
 }

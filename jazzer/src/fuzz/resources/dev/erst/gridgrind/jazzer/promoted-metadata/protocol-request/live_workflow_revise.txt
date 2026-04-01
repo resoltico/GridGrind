@@ -1,9 +1,13 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/examples/live-workflow-revise.json
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/live_workflow_revise.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 1079
+Input Bytes: 1646
 Decode Outcome: PARSED
+Source Kind: EXISTING
+Persistence Kind: OVERWRITE
 Operation Count: 5
-Analysis Sheet Count: 2
+Read Count: 6
+Read Kinds: GET_WINDOW=2, GET_CELLS=2, GET_FORMULA_SURFACE=1, GET_WORKBOOK_SUMMARY=1
+Style Kinds: (none)
 Operation Kinds: SET_CELL=3, EVALUATE_FORMULAS=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1

@@ -102,4 +102,40 @@ class WorkbookReadOperationTest {
         NullPointerException.class,
         () -> new WorkbookReadOperation.AnalyzeDataValidationHealth("health", null));
   }
+
+  @Test
+  void getAutofiltersAndAnalyzeAutofilterHealthRequireSheetSelectionState() {
+    WorkbookReadOperation.GetAutofilters getAutofilters =
+        new WorkbookReadOperation.GetAutofilters("filters", "Budget");
+    WorkbookReadOperation.AnalyzeAutofilterHealth analyzeAutofilterHealth =
+        new WorkbookReadOperation.AnalyzeAutofilterHealth(
+            "autofilter-health", new SheetSelection.All());
+
+    assertEquals("Budget", getAutofilters.sheetName());
+    assertEquals("autofilter-health", analyzeAutofilterHealth.requestId());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadOperation.GetAutofilters("filters", " "));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadOperation.AnalyzeAutofilterHealth("autofilter-health", null));
+  }
+
+  @Test
+  void getTablesAndAnalyzeTableHealthRequireTableSelection() {
+    WorkbookReadOperation.GetTables getTables =
+        new WorkbookReadOperation.GetTables("tables", new TableSelection.All());
+    WorkbookReadOperation.AnalyzeTableHealth analyzeTableHealth =
+        new WorkbookReadOperation.AnalyzeTableHealth(
+            "table-health", new TableSelection.ByNames(List.of("BudgetTable")));
+
+    assertEquals("tables", getTables.requestId());
+    assertEquals(
+        List.of("BudgetTable"), ((TableSelection.ByNames) analyzeTableHealth.selection()).names());
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookReadOperation.GetTables("tables", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadOperation.AnalyzeTableHealth("table-health", null));
+  }
 }

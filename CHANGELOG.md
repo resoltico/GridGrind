@@ -3,6 +3,36 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.21.0] - 2026-04-01
+
+### Added
+
+- Table and autofilter public surface:
+  `SET_AUTOFILTER`, `CLEAR_AUTOFILTER`, `SET_TABLE`, `DELETE_TABLE`, `GET_AUTOFILTERS`,
+  `GET_TABLES`, `ANALYZE_AUTOFILTER_HEALTH`, and `ANALYZE_TABLE_HEALTH`.
+- New public example `examples/table-autofilter-request.json` covering sheet-level autofilters,
+  table authoring, factual reads, and both health-analysis families.
+- Jazzer now has promoted seeds for a readable table-plus-autofilter request, a protocol
+  workflow dominated by autofilter behavior, and an `.xlsx` round-trip invalid-table case.
+- Jazzer promotion metadata now carries a stable replay expectation contract, and the new
+  `jazzer/bin/refresh-promoted-metadata` command refreshes committed replay metadata after
+  intentional generator or replay-shape changes.
+
+### Changed
+
+- `ANALYZE_WORKBOOK_FINDINGS` now aggregates autofilter and table findings alongside formula,
+  data-validation, hyperlink, and named-range findings.
+
+### Fixed
+
+- Table and autofilter logic now share a dedicated sheet-structure support seam instead of
+  coupling controllers through package-private helper methods.
+- Jazzer promoted-seed verification no longer drifts silently when sequence-generation behavior
+  changes; deterministic support tests now replay every promoted metadata entry and assert that
+  its stored replay expectation still matches reality.
+
 ## [0.20.0] - 2026-04-01
 
 ### Added
@@ -671,7 +701,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.20.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.21.0...HEAD
+[0.21.0]: https://github.com/resoltico/GridGrind/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/resoltico/GridGrind/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/resoltico/GridGrind/compare/v0.18.0...v0.19.0
 [0.18.0]: https://github.com/resoltico/GridGrind/compare/v0.17.0...v0.18.0

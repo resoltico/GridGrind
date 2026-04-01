@@ -3,6 +3,28 @@
   "sourcePath" : "/Users/erst/Tools/GridGrind/examples/file-hyperlink-health-request.json",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/file_hyperlink_health_request.json",
   "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 1970,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 5,
+      "operationKinds" : {
+        "SET_RANGE" : 1,
+        "ENSURE_SHEET" : 1,
+        "SET_HYPERLINK" : 3
+      },
+      "styleKinds" : { },
+      "readCount" : 2,
+      "readKinds" : {
+        "GET_HYPERLINKS" : 1,
+        "ANALYZE_HYPERLINK_HEALTH" : 1
+      }
+    }
+  },
   "promotedAt" : "2026-03-31T11:12:16.960469Z",
   "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/file_hyperlink_health_request.txt"
 }

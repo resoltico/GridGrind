@@ -1,9 +1,13 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/fdff3124598e4d12e359a3316a884eb8332b5011
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/ensure_sheet_set_range_success.bin
 Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 30
-Operation Count: 3
-Analysis Sheet Count: 0
-Response Kind: SUCCESS
-Operation Kinds: ENSURE_SHEET=2, SET_RANGE=1
+Source Kind: NEW
+Persistence Kind: NONE
+Operation Count: 5
+Read Count: 0
+Read Kinds: (none)
+Response Kind: FAILURE
+Style Kinds: (none)
+Operation Kinds: ENSURE_SHEET=4, SET_TABLE=1

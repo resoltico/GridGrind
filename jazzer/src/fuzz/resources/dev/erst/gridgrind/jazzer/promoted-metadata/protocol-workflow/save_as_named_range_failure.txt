@@ -1,12 +1,13 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/61e0a48fe9c7b87a7fb1cdaaa275fa5ae1e9cdd4
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/save_as_named_range_failure.bin
 Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 314
-Source Kind: EXISTING
-Persistence Kind: SAVE_AS
+Source Kind: NEW
+Persistence Kind: NONE
 Operation Count: 5
-Analysis Sheet Count: 1
+Read Count: 3
+Read Kinds: ANALYZE_FORMULA_HEALTH=2, GET_WORKBOOK_SUMMARY=1
 Response Kind: FAILURE
 Style Kinds: (none)
-Operation Kinds: SET_NAMED_RANGE=5
+Operation Kinds: RENAME_SHEET=5
