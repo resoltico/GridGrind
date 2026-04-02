@@ -13,7 +13,6 @@ import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.ss.util.PaneInformation;
 import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
@@ -152,23 +151,21 @@ public final class XlsxRoundTrip {
         });
   }
 
-  /** Returns the freeze-pane state stored on the named sheet. */
-  public static FreezePaneState freezePaneState(Path workbookPath, String sheetName)
+  /** Returns the explicit pane state stored on the named sheet. */
+  public static ExcelSheetPane pane(Path workbookPath, String sheetName) throws IOException {
+    return readSheet(workbookPath, sheetName, ExcelSheetViewSupport::pane);
+  }
+
+  /** Returns the effective zoom percentage stored on the named sheet. */
+  public static int zoomPercent(Path workbookPath, String sheetName) throws IOException {
+    return readSheet(workbookPath, sheetName, ExcelSheetViewSupport::zoomPercent);
+  }
+
+  /** Returns the supported print-layout state stored on the named sheet. */
+  public static ExcelPrintLayout printLayout(Path workbookPath, String sheetName)
       throws IOException {
-    return readSheet(
-        workbookPath,
-        sheetName,
-        sheet -> {
-          PaneInformation paneInformation = sheet.getPaneInformation();
-          if (paneInformation == null || !paneInformation.isFreezePane()) {
-            return new FreezePaneState.None();
-          }
-          return new FreezePaneState.Frozen(
-              paneInformation.getVerticalSplitPosition(),
-              paneInformation.getHorizontalSplitPosition(),
-              paneInformation.getVerticalSplitLeftColumn(),
-              paneInformation.getHorizontalSplitTopRow());
-        });
+    ExcelPrintLayoutController controller = new ExcelPrintLayoutController();
+    return readSheet(workbookPath, sheetName, controller::printLayout);
   }
 
   /** Returns the effective style captured at one A1-style cell address in the saved workbook. */
@@ -410,23 +407,5 @@ public final class XlsxRoundTrip {
 
   private static ExcelBorderStyle fromPoi(BorderStyle borderStyle) {
     return ExcelBorderStyle.valueOf(borderStyle.name());
-  }
-
-  /** Represents the freeze-pane state stored on a sheet. */
-  public sealed interface FreezePaneState permits FreezePaneState.None, FreezePaneState.Frozen {
-    /** Represents a sheet without any frozen panes. */
-    record None() implements FreezePaneState {}
-
-    /** Represents a sheet with a frozen pane defined by split and visible-origin coordinates. */
-    record Frozen(int splitColumn, int splitRow, int leftmostColumn, int topRow)
-        implements FreezePaneState {
-      /** Validates the stored freeze-pane coordinates. */
-      public Frozen {
-        requireNonNegative(splitColumn, "splitColumn");
-        requireNonNegative(splitRow, "splitRow");
-        requireNonNegative(leftmostColumn, "leftmostColumn");
-        requireNonNegative(topRow, "topRow");
-      }
-    }
   }
 }

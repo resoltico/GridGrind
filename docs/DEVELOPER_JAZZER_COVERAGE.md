@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.23.0"
+version: "0.24.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-04-02"
 route:
@@ -183,7 +183,7 @@ Committed custom seeds currently in source control:
 | `protocol-request` | `file_hyperlink_health_request.json` | readable hyperlink-analysis seed covering FILE path inputs, `file:` URI normalization, hyperlink metadata reads, and hyperlink-health analysis |
 | `protocol-request` | `live_workflow_create.json` | readable multi-sheet finance workflow with append-row and formula authoring |
 | `protocol-request` | `live_workflow_revise.json` | readable existing-workbook revision seed with overwrite persistence |
-| `protocol-request` | `structural_layout_request.json` | readable structural-layout seed covering merge, sizing, and freeze panes |
+| `protocol-request` | `structural_layout_request.json` | readable structural-layout seed covering merge, sizing, pane state, zoom, and print layout |
 | `protocol-request` | `formatting_depth_request.json` | readable formatting-depth seed covering typed `fontHeight`, fill, color, and border patches |
 | `protocol-request` | `invalid_data_validation_empty_explicit_list.json` | readable expected-invalid seed covering empty explicit-list validation rejection |
 | `protocol-request` | `invalid_font_height_request.json` | readable expected-invalid seed covering typed `fontHeight` validation |
@@ -242,8 +242,8 @@ Those metadata files document:
 
 The current Jazzer layer is strongest at:
 - ordered operation and command interaction coverage
-- validation-boundary discovery for sheet names, ranges, addresses, widths, heights, and freeze
-  pane coordinates
+- validation-boundary discovery for sheet names, ranges, addresses, widths, heights, pane
+  coordinates, zoom percentages, and print-layout bounds
 - a committed custom seed floor that now includes readable public example requests and replay-
   verified binary workflow seeds
 - validation-aware request and round-trip coverage for the data-validation authoring family

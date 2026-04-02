@@ -15,7 +15,12 @@ import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
+import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
+import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
+import dev.erst.gridgrind.excel.ExcelPrintLayout;
+import dev.erst.gridgrind.excel.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
@@ -33,11 +38,18 @@ import dev.erst.gridgrind.protocol.DataValidationPromptInput;
 import dev.erst.gridgrind.protocol.DataValidationRuleInput;
 import dev.erst.gridgrind.protocol.DifferentialStyleInput;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
+import dev.erst.gridgrind.protocol.HeaderFooterTextInput;
 import dev.erst.gridgrind.protocol.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.NamedRangeScope;
 import dev.erst.gridgrind.protocol.NamedRangeSelector;
 import dev.erst.gridgrind.protocol.NamedRangeTarget;
+import dev.erst.gridgrind.protocol.PaneInput;
+import dev.erst.gridgrind.protocol.PrintAreaInput;
+import dev.erst.gridgrind.protocol.PrintLayoutInput;
+import dev.erst.gridgrind.protocol.PrintScalingInput;
+import dev.erst.gridgrind.protocol.PrintTitleColumnsInput;
+import dev.erst.gridgrind.protocol.PrintTitleRowsInput;
 import dev.erst.gridgrind.protocol.RangeSelection;
 import dev.erst.gridgrind.protocol.SheetSelection;
 import dev.erst.gridgrind.protocol.SheetCopyPosition;
@@ -122,7 +134,6 @@ public final class OperationSequenceModel {
     boolean validName = data.consumeBoolean();
     IndexSpan columnSpan = nextIndexSpan(data, 3);
     IndexSpan rowSpan = nextIndexSpan(data, 3);
-    FreezePaneArguments freezePaneArguments = nextFreezePaneArguments(data);
     String namedRangeName = data.consumeBoolean() ? workbookNamedRange : sheetNamedRange;
     String tableName = nextTableName(data, validName, targetSheet);
     int selector = nextSelectorByte(data);
@@ -166,13 +177,12 @@ public final class OperationSequenceModel {
                 rowSpan.first(),
                 rowSpan.last(),
                 data.consumeRegularDouble(5.0d, 40.0d));
-        default ->
-            new WorkbookOperation.FreezePanes(
-                targetSheet,
-                freezePaneArguments.splitColumn(),
-                freezePaneArguments.splitRow(),
-                freezePaneArguments.leftmostColumn(),
-                freezePaneArguments.topRow());
+        case 0x4 -> new WorkbookOperation.SetSheetPane(targetSheet, nextPaneInput(data));
+        case 0x5 ->
+            new WorkbookOperation.SetSheetZoom(targetSheet, data.consumeInt(10, 400));
+        case 0x6 ->
+            new WorkbookOperation.SetPrintLayout(targetSheet, nextPrintLayoutInput(data));
+        default -> new WorkbookOperation.ClearPrintLayout(targetSheet);
       };
       case 0x2 -> switch (selectorSlot(selector)) {
         case 0x0 ->
@@ -277,7 +287,6 @@ public final class OperationSequenceModel {
     boolean validName = data.consumeBoolean();
     IndexSpan columnSpan = nextIndexSpan(data, 3);
     IndexSpan rowSpan = nextIndexSpan(data, 3);
-    FreezePaneArguments freezePaneArguments = nextFreezePaneArguments(data);
     String namedRangeName = data.consumeBoolean() ? workbookNamedRange : sheetNamedRange;
     String tableName = nextTableName(data, validName, targetSheet);
     int selector = nextSelectorByte(data);
@@ -319,13 +328,11 @@ public final class OperationSequenceModel {
                 rowSpan.first(),
                 rowSpan.last(),
                 data.consumeRegularDouble(5.0d, 40.0d));
-        default ->
-            new WorkbookCommand.FreezePanes(
-                targetSheet,
-                freezePaneArguments.splitColumn(),
-                freezePaneArguments.splitRow(),
-                freezePaneArguments.leftmostColumn(),
-                freezePaneArguments.topRow());
+        case 0x4 -> new WorkbookCommand.SetSheetPane(targetSheet, nextExcelSheetPane(data));
+        case 0x5 -> new WorkbookCommand.SetSheetZoom(targetSheet, data.consumeInt(10, 400));
+        case 0x6 ->
+            new WorkbookCommand.SetPrintLayout(targetSheet, nextExcelPrintLayout(data));
+        default -> new WorkbookCommand.ClearPrintLayout(targetSheet);
       };
       case 0x2 -> switch (selectorSlot(selector)) {
         case 0x0 ->
@@ -478,6 +485,8 @@ public final class OperationSequenceModel {
         case 0x2 ->
             new WorkbookReadOperation.GetComments(
                 requestId, targetSheet, nextCellSelection(data, validAddress));
+        case 0x3 -> new WorkbookReadOperation.GetSheetLayout(requestId, targetSheet);
+        case 0x4 -> new WorkbookReadOperation.GetPrintLayout(requestId, targetSheet);
         default ->
             new WorkbookReadOperation.GetFormulaSurface(
                 requestId, nextSheetSelection(data, primarySheet, secondarySheet));
@@ -581,26 +590,109 @@ public final class OperationSequenceModel {
     return new IndexSpan(first, data.consumeInt(first, upperBound));
   }
 
-  private static FreezePaneArguments nextFreezePaneArguments(FuzzedDataProvider data) {
+  private static PaneInput nextPaneInput(FuzzedDataProvider data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> {
-        int splitColumn = data.consumeInt(1, 3);
-        yield new FreezePaneArguments(
-            splitColumn, 0, data.consumeInt(splitColumn, splitColumn + 2), 0);
-      }
+      case 0 -> new PaneInput.None();
       case 1 -> {
-        int splitRow = data.consumeInt(1, 3);
-        yield new FreezePaneArguments(0, splitRow, 0, data.consumeInt(splitRow, splitRow + 2));
+        int splitColumn = data.consumeInt(1, 3);
+        yield new PaneInput.Frozen(splitColumn, 0, data.consumeInt(splitColumn, splitColumn + 2), 0);
       }
-      default -> {
+      case 2 -> {
+        int splitRow = data.consumeInt(1, 3);
+        yield new PaneInput.Frozen(0, splitRow, 0, data.consumeInt(splitRow, splitRow + 2));
+      }
+      case 3 -> {
         int splitColumn = data.consumeInt(1, 3);
         int splitRow = data.consumeInt(1, 3);
-        yield new FreezePaneArguments(
+        yield new PaneInput.Frozen(
             splitColumn,
             splitRow,
             data.consumeInt(splitColumn, splitColumn + 2),
             data.consumeInt(splitRow, splitRow + 2));
       }
+      default ->
+          new PaneInput.Split(
+              data.consumeInt(0, 2400),
+              data.consumeInt(1, 2400),
+              0,
+              data.consumeInt(1, 4),
+              nextPaneRegion(data));
+    };
+  }
+
+  private static ExcelSheetPane nextExcelSheetPane(FuzzedDataProvider data) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> new ExcelSheetPane.None();
+      case 1 -> {
+        int splitColumn = data.consumeInt(1, 3);
+        yield new ExcelSheetPane.Frozen(
+            splitColumn, 0, data.consumeInt(splitColumn, splitColumn + 2), 0);
+      }
+      case 2 -> {
+        int splitRow = data.consumeInt(1, 3);
+        yield new ExcelSheetPane.Frozen(0, splitRow, 0, data.consumeInt(splitRow, splitRow + 2));
+      }
+      case 3 -> {
+        int splitColumn = data.consumeInt(1, 3);
+        int splitRow = data.consumeInt(1, 3);
+        yield new ExcelSheetPane.Frozen(
+            splitColumn,
+            splitRow,
+            data.consumeInt(splitColumn, splitColumn + 2),
+            data.consumeInt(splitRow, splitRow + 2));
+      }
+      default ->
+          new ExcelSheetPane.Split(
+              data.consumeInt(0, 2400),
+              data.consumeInt(1, 2400),
+              0,
+              data.consumeInt(1, 4),
+              nextPaneRegion(data));
+    };
+  }
+
+  private static PrintLayoutInput nextPrintLayoutInput(FuzzedDataProvider data) {
+    return new PrintLayoutInput(
+        data.consumeBoolean() ? new PrintAreaInput.Range("A1:C20") : new PrintAreaInput.None(),
+        data.consumeBoolean() ? ExcelPrintOrientation.LANDSCAPE : ExcelPrintOrientation.PORTRAIT,
+        data.consumeBoolean()
+            ? new PrintScalingInput.Fit(data.consumeInt(0, 2), data.consumeInt(0, 2))
+            : new PrintScalingInput.Automatic(),
+        data.consumeBoolean()
+            ? new PrintTitleRowsInput.Band(0, data.consumeInt(0, 2))
+            : new PrintTitleRowsInput.None(),
+        data.consumeBoolean()
+            ? new PrintTitleColumnsInput.Band(0, data.consumeInt(0, 2))
+            : new PrintTitleColumnsInput.None(),
+        new HeaderFooterTextInput("L" + data.consumeInt(0, 9), "", "R" + data.consumeInt(0, 9)),
+        new HeaderFooterTextInput("", "P" + data.consumeInt(0, 9), ""));
+  }
+
+  private static ExcelPrintLayout nextExcelPrintLayout(FuzzedDataProvider data) {
+    return new ExcelPrintLayout(
+        data.consumeBoolean()
+            ? new ExcelPrintLayout.Area.Range("A1:C20")
+            : new ExcelPrintLayout.Area.None(),
+        data.consumeBoolean() ? ExcelPrintOrientation.LANDSCAPE : ExcelPrintOrientation.PORTRAIT,
+        data.consumeBoolean()
+            ? new ExcelPrintLayout.Scaling.Fit(data.consumeInt(0, 2), data.consumeInt(0, 2))
+            : new ExcelPrintLayout.Scaling.Automatic(),
+        data.consumeBoolean()
+            ? new ExcelPrintLayout.TitleRows.Band(0, data.consumeInt(0, 2))
+            : new ExcelPrintLayout.TitleRows.None(),
+        data.consumeBoolean()
+            ? new ExcelPrintLayout.TitleColumns.Band(0, data.consumeInt(0, 2))
+            : new ExcelPrintLayout.TitleColumns.None(),
+        new ExcelHeaderFooterText("L" + data.consumeInt(0, 9), "", "R" + data.consumeInt(0, 9)),
+        new ExcelHeaderFooterText("", "P" + data.consumeInt(0, 9), ""));
+  }
+
+  private static ExcelPaneRegion nextPaneRegion(FuzzedDataProvider data) {
+    return switch (selectorSlot(nextSelectorByte(data)) & 0x3) {
+      case 0 -> ExcelPaneRegion.UPPER_LEFT;
+      case 1 -> ExcelPaneRegion.UPPER_RIGHT;
+      case 2 -> ExcelPaneRegion.LOWER_LEFT;
+      default -> ExcelPaneRegion.LOWER_RIGHT;
     };
   }
 
@@ -1010,9 +1102,6 @@ public final class OperationSequenceModel {
   }
 
   private record IndexSpan(int first, int last) {}
-
-  private record FreezePaneArguments(
-      int splitColumn, int splitRow, int leftmostColumn, int topRow) {}
 
   private record WorkflowStorage(
       GridGrindRequest.WorkbookSource source,

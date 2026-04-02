@@ -23,6 +23,7 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = WorkbookReadResult.HyperlinksResult.class, name = "GET_HYPERLINKS"),
   @JsonSubTypes.Type(value = WorkbookReadResult.CommentsResult.class, name = "GET_COMMENTS"),
   @JsonSubTypes.Type(value = WorkbookReadResult.SheetLayoutResult.class, name = "GET_SHEET_LAYOUT"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.PrintLayoutResult.class, name = "GET_PRINT_LAYOUT"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.DataValidationsResult.class,
       name = "GET_DATA_VALIDATIONS"),
@@ -80,6 +81,7 @@ public sealed interface WorkbookReadResult
           HyperlinksResult,
           CommentsResult,
           SheetLayoutResult,
+          PrintLayoutResult,
           DataValidationsResult,
           ConditionalFormattingResult,
           AutofiltersResult,
@@ -178,10 +180,18 @@ public sealed interface WorkbookReadResult
     }
   }
 
-  /** Returns layout facts such as freeze panes and explicit sizing. */
+  /** Returns layout facts such as pane state, zoom, and explicit sizing. */
   record SheetLayoutResult(String requestId, GridGrindResponse.SheetLayoutReport layout)
       implements Introspection {
     public SheetLayoutResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(layout, "layout must not be null");
+    }
+  }
+
+  /** Returns supported print-layout facts for one sheet. */
+  record PrintLayoutResult(String requestId, PrintLayoutReport layout) implements Introspection {
+    public PrintLayoutResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(layout, "layout must not be null");
     }

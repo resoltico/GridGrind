@@ -605,37 +605,26 @@ public sealed interface GridGrindResponse {
     }
   }
 
-  /** Layout metadata such as freeze panes and visible row and column sizing for one sheet. */
+  /** Layout metadata such as pane state, zoom, and visible row and column sizing for one sheet. */
   record SheetLayoutReport(
       String sheetName,
-      FreezePaneReport freezePanes,
+      PaneReport pane,
+      int zoomPercent,
       List<ColumnLayoutReport> columns,
       List<RowLayoutReport> rows) {
     public SheetLayoutReport {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
-      Objects.requireNonNull(freezePanes, "freezePanes must not be null");
+      Objects.requireNonNull(pane, "pane must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (zoomPercent < 10 || zoomPercent > 400) {
+        throw new IllegalArgumentException(
+            "zoomPercent must be between 10 and 400 inclusive: " + zoomPercent);
       }
       columns = copyValues(columns, "columns");
       rows = copyValues(rows, "rows");
     }
-  }
-
-  /** Freeze-pane state captured from a sheet layout read. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = FreezePaneReport.None.class, name = "NONE"),
-    @JsonSubTypes.Type(value = FreezePaneReport.Frozen.class, name = "FROZEN")
-  })
-  sealed interface FreezePaneReport permits FreezePaneReport.None, FreezePaneReport.Frozen {
-
-    /** Sheet has no active freeze panes. */
-    record None() implements FreezePaneReport {}
-
-    /** Sheet is frozen at the provided split and visible-origin coordinates. */
-    record Frozen(int splitColumn, int splitRow, int leftmostColumn, int topRow)
-        implements FreezePaneReport {}
   }
 
   /** Width metadata for one sheet column. */

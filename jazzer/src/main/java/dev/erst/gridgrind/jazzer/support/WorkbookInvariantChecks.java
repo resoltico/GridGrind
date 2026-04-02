@@ -17,6 +17,8 @@ import dev.erst.gridgrind.protocol.FontHeightReport;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
 import dev.erst.gridgrind.protocol.HyperlinkTarget;
+import dev.erst.gridgrind.protocol.PaneReport;
+import dev.erst.gridgrind.protocol.PrintLayoutReport;
 import dev.erst.gridgrind.protocol.TableEntryReport;
 import dev.erst.gridgrind.protocol.TableHealthReport;
 import dev.erst.gridgrind.protocol.TableStyleReport;
@@ -217,6 +219,13 @@ public final class WorkbookInvariantChecks {
             (WorkbookReadResult.SheetLayoutResult) readResult;
         require(expected.sheetName().equals(result.layout().sheetName()), "layout sheet mismatch");
       }
+      case WorkbookReadOperation.GetPrintLayout expected -> {
+        WorkbookReadResult.PrintLayoutResult result =
+            (WorkbookReadResult.PrintLayoutResult) readResult;
+        require(
+            expected.sheetName().equals(result.layout().sheetName()),
+            "print layout sheet mismatch");
+      }
       case WorkbookReadOperation.GetDataValidations expected -> {
         WorkbookReadResult.DataValidationsResult result =
             (WorkbookReadResult.DataValidationsResult) readResult;
@@ -292,6 +301,7 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.HyperlinksResult _ -> "GET_HYPERLINKS";
       case WorkbookReadResult.CommentsResult _ -> "GET_COMMENTS";
       case WorkbookReadResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
+      case WorkbookReadResult.PrintLayoutResult _ -> "GET_PRINT_LAYOUT";
       case WorkbookReadResult.DataValidationsResult _ -> "GET_DATA_VALIDATIONS";
       case WorkbookReadResult.ConditionalFormattingResult _ -> "GET_CONDITIONAL_FORMATTING";
       case WorkbookReadResult.AutofiltersResult _ -> "GET_AUTOFILTERS";
@@ -343,6 +353,7 @@ public final class WorkbookInvariantChecks {
         result.comments().forEach(WorkbookInvariantChecks::requireCommentEntryShape);
       }
       case WorkbookReadResult.SheetLayoutResult result -> requireSheetLayoutShape(result.layout());
+      case WorkbookReadResult.PrintLayoutResult result -> requirePrintLayoutShape(result.layout());
       case WorkbookReadResult.DataValidationsResult result -> {
         require(result.sheetName() != null, "data validations sheetName must not be null");
         require(!result.sheetName().isBlank(), "data validations sheetName must not be blank");
@@ -555,14 +566,24 @@ public final class WorkbookInvariantChecks {
   private static void requireSheetLayoutShape(GridGrindResponse.SheetLayoutReport layout) {
     require(layout.sheetName() != null, "layout sheetName must not be null");
     require(!layout.sheetName().isBlank(), "layout sheetName must not be blank");
-    require(layout.freezePanes() != null, "freezePanes must not be null");
-    switch (layout.freezePanes()) {
-      case GridGrindResponse.FreezePaneReport.None _ -> {}
-      case GridGrindResponse.FreezePaneReport.Frozen frozen -> {
+    require(layout.pane() != null, "pane must not be null");
+    require(
+        layout.zoomPercent() >= 10 && layout.zoomPercent() <= 400,
+        "zoomPercent must be between 10 and 400 inclusive");
+    switch (layout.pane()) {
+      case PaneReport.None _ -> {}
+      case PaneReport.Frozen frozen -> {
         require(frozen.splitColumn() >= 0, "splitColumn must not be negative");
         require(frozen.splitRow() >= 0, "splitRow must not be negative");
         require(frozen.leftmostColumn() >= 0, "leftmostColumn must not be negative");
         require(frozen.topRow() >= 0, "topRow must not be negative");
+      }
+      case PaneReport.Split split -> {
+        require(split.xSplitPosition() >= 0, "xSplitPosition must not be negative");
+        require(split.ySplitPosition() >= 0, "ySplitPosition must not be negative");
+        require(split.leftmostColumn() >= 0, "leftmostColumn must not be negative");
+        require(split.topRow() >= 0, "topRow must not be negative");
+        require(split.activePane() != null, "activePane must not be null");
       }
     }
     layout
@@ -583,6 +604,18 @@ public final class WorkbookInvariantChecks {
                   Double.isFinite(row.heightPoints()) && row.heightPoints() > 0.0d,
                   "row height must be finite and greater than 0");
             });
+  }
+
+  private static void requirePrintLayoutShape(PrintLayoutReport layout) {
+    require(layout.sheetName() != null, "print layout sheetName must not be null");
+    require(!layout.sheetName().isBlank(), "print layout sheetName must not be blank");
+    require(layout.printArea() != null, "printArea must not be null");
+    require(layout.orientation() != null, "orientation must not be null");
+    require(layout.scaling() != null, "scaling must not be null");
+    require(layout.repeatingRows() != null, "repeatingRows must not be null");
+    require(layout.repeatingColumns() != null, "repeatingColumns must not be null");
+    require(layout.header() != null, "header must not be null");
+    require(layout.footer() != null, "footer must not be null");
   }
 
   private static void requireDataValidationEntryShape(

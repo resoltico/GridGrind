@@ -254,7 +254,19 @@ class ExcelWorkbookTest {
                           new ExcelDifferentialStyle(
                               "0.00", true, null, null, "#102030", null, null, "#E0F0AA", null)))));
       workbook.sheet("Source").mergeCells("A1:B1");
-      workbook.sheet("Source").freezePanes(1, 1, 1, 1);
+      workbook.sheet("Source").setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+      workbook.sheet("Source").setZoom(140);
+      workbook
+          .sheet("Source")
+          .setPrintLayout(
+              new ExcelPrintLayout(
+                  new ExcelPrintLayout.Area.Range("A1:C20"),
+                  ExcelPrintOrientation.LANDSCAPE,
+                  new ExcelPrintLayout.Scaling.Fit(1, 0),
+                  new ExcelPrintLayout.TitleRows.Band(0, 0),
+                  new ExcelPrintLayout.TitleColumns.None(),
+                  new ExcelHeaderFooterText("Source", "", ""),
+                  new ExcelHeaderFooterText("", "&P", "")));
       workbook.setNamedRange(
           new ExcelNamedRangeDefinition(
               "LocalBudget",
@@ -265,8 +277,11 @@ class ExcelWorkbookTest {
     }
 
     assertEquals(
-        new XlsxRoundTrip.FreezePaneState.Frozen(1, 1, 1, 1),
-        XlsxRoundTrip.freezePaneState(workbookPath, "Replica"));
+        new ExcelSheetPane.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Replica"));
+    assertEquals(140, XlsxRoundTrip.zoomPercent(workbookPath, "Replica"));
+    assertEquals(
+        ExcelPrintOrientation.LANDSCAPE,
+        XlsxRoundTrip.printLayout(workbookPath, "Replica").orientation());
     assertEquals(
         List.of(
             new ExcelNamedRangeSnapshot.RangeSnapshot(
@@ -394,16 +409,28 @@ class ExcelWorkbookTest {
       budget.mergeCells("A1:B1");
       budget.setColumnWidth(0, 1, 16.0);
       budget.setRowHeight(0, 0, 28.5);
-      budget.freezePanes(1, 1, 1, 1);
+      budget.setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+      budget.setZoom(125);
+      budget.setPrintLayout(
+          new ExcelPrintLayout(
+              new ExcelPrintLayout.Area.Range("A1:B12"),
+              ExcelPrintOrientation.LANDSCAPE,
+              new ExcelPrintLayout.Scaling.Fit(1, 0),
+              new ExcelPrintLayout.TitleRows.Band(0, 0),
+              new ExcelPrintLayout.TitleColumns.Band(0, 0),
+              new ExcelHeaderFooterText("Budget", "", ""),
+              new ExcelHeaderFooterText("", "Page &P", "")));
       workbook.save(workbookPath);
     }
 
     assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
+    assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(125, XlsxRoundTrip.zoomPercent(workbookPath, "Budget"));
     assertEquals(
-        new XlsxRoundTrip.FreezePaneState.Frozen(1, 1, 1, 1),
-        XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+        new ExcelPrintLayout.Area.Range("A1:B12"),
+        XlsxRoundTrip.printLayout(workbookPath, "Budget").printArea());
   }
 
   @Test
@@ -541,9 +568,7 @@ class ExcelWorkbookTest {
     assertEquals(List.of("A1:B2"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
-    assertEquals(
-        new XlsxRoundTrip.FreezePaneState.Frozen(1, 2, 3, 4),
-        XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+    assertEquals(new ExcelSheetPane.Frozen(1, 2, 3, 4), XlsxRoundTrip.pane(workbookPath, "Budget"));
   }
 
   @Test

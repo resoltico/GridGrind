@@ -19,10 +19,17 @@ import dev.erst.gridgrind.protocol.FontHeightReport;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindProtocolVersion;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
+import dev.erst.gridgrind.protocol.HeaderFooterTextReport;
 import dev.erst.gridgrind.protocol.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.NamedRangeScope;
 import dev.erst.gridgrind.protocol.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.NamedRangeTarget;
+import dev.erst.gridgrind.protocol.PaneReport;
+import dev.erst.gridgrind.protocol.PrintAreaReport;
+import dev.erst.gridgrind.protocol.PrintLayoutReport;
+import dev.erst.gridgrind.protocol.PrintScalingReport;
+import dev.erst.gridgrind.protocol.PrintTitleColumnsReport;
+import dev.erst.gridgrind.protocol.PrintTitleRowsReport;
 import dev.erst.gridgrind.protocol.RangeSelection;
 import dev.erst.gridgrind.protocol.SheetSelection;
 import dev.erst.gridgrind.protocol.TableEntryReport;
@@ -117,9 +124,21 @@ class WorkbookInvariantChecksTest {
                     "layout",
                     new GridGrindResponse.SheetLayoutReport(
                         "Budget",
-                        new GridGrindResponse.FreezePaneReport.Frozen(1, 1, 1, 1),
+                        new PaneReport.Frozen(1, 1, 1, 1),
+                        125,
                         List.of(new GridGrindResponse.ColumnLayoutReport(0, 12.5)),
                         List.of(new GridGrindResponse.RowLayoutReport(0, 18.0)))),
+                new WorkbookReadResult.PrintLayoutResult(
+                    "print-layout",
+                    new PrintLayoutReport(
+                        "Budget",
+                        new PrintAreaReport.Range("A1:B20"),
+                        dev.erst.gridgrind.excel.ExcelPrintOrientation.LANDSCAPE,
+                        new PrintScalingReport.Fit(1, 0),
+                        new PrintTitleRowsReport.Band(0, 0),
+                        new PrintTitleColumnsReport.Band(0, 0),
+                        new HeaderFooterTextReport("Budget", "", ""),
+                        new HeaderFooterTextReport("", "Page &P", ""))),
                 new WorkbookReadResult.DataValidationsResult(
                     "data-validations",
                     "Budget",

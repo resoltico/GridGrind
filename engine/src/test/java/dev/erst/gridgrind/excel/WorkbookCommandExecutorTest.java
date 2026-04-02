@@ -102,7 +102,18 @@ class WorkbookCommandExecutorTest {
               new WorkbookCommand.AutoSizeColumns("Budget"),
               new WorkbookCommand.SetColumnWidth("Budget", 0, 1, 16.0),
               new WorkbookCommand.SetRowHeight("Budget", 0, 0, 28.5),
-              new WorkbookCommand.FreezePanes("Budget", 1, 1, 1, 1),
+              new WorkbookCommand.SetSheetPane("Budget", new ExcelSheetPane.Frozen(1, 1, 1, 1)),
+              new WorkbookCommand.SetSheetZoom("Budget", 125),
+              new WorkbookCommand.SetPrintLayout(
+                  "Budget",
+                  new ExcelPrintLayout(
+                      new ExcelPrintLayout.Area.Range("A1:B3"),
+                      ExcelPrintOrientation.LANDSCAPE,
+                      new ExcelPrintLayout.Scaling.Fit(1, 0),
+                      new ExcelPrintLayout.TitleRows.Band(0, 0),
+                      new ExcelPrintLayout.TitleColumns.Band(0, 0),
+                      new ExcelHeaderFooterText("Budget", "", ""),
+                      new ExcelHeaderFooterText("", "Confidential", ""))),
               new WorkbookCommand.UnmergeCells("Budget", "A1:B1"),
               new WorkbookCommand.EvaluateAllFormulas(),
               new WorkbookCommand.ForceFormulaRecalculationOnOpen()));
@@ -143,9 +154,11 @@ class WorkbookCommandExecutorTest {
     assertEquals(List.of(), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
+    assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(125, XlsxRoundTrip.zoomPercent(workbookPath, "Budget"));
     assertEquals(
-        new XlsxRoundTrip.FreezePaneState.Frozen(1, 1, 1, 1),
-        XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+        ExcelPrintOrientation.LANDSCAPE,
+        XlsxRoundTrip.printLayout(workbookPath, "Budget").orientation());
     assertEquals(
         List.of(
             new ExcelDataValidationSnapshot.Supported(List.of("C1", "C3"), validationDefinition())),
@@ -282,6 +295,38 @@ class WorkbookCommandExecutorTest {
               executor.apply(
                   workbook,
                   new WorkbookCommand.AppendRow("Missing", List.of(ExcelCellValue.text("x")))));
+    }
+  }
+
+  @Test
+  void appliesClearPrintLayoutThroughIterableCommands() throws IOException {
+    WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget");
+      workbook
+          .sheet("Budget")
+          .setPrintLayout(
+              new ExcelPrintLayout(
+                  new ExcelPrintLayout.Area.Range("A1:B3"),
+                  ExcelPrintOrientation.LANDSCAPE,
+                  new ExcelPrintLayout.Scaling.Fit(1, 0),
+                  new ExcelPrintLayout.TitleRows.Band(0, 0),
+                  new ExcelPrintLayout.TitleColumns.Band(0, 0),
+                  new ExcelHeaderFooterText("Budget", "", ""),
+                  new ExcelHeaderFooterText("", "Confidential", "")));
+
+      assertSame(
+          workbook,
+          executor.apply(workbook, List.of(new WorkbookCommand.ClearPrintLayout("Budget"))));
+      ExcelPrintLayout clearedPrintLayout = workbook.sheet("Budget").printLayout();
+      assertEquals(new ExcelPrintLayout.Area.None(), clearedPrintLayout.printArea());
+      assertEquals(ExcelPrintOrientation.PORTRAIT, clearedPrintLayout.orientation());
+      assertEquals(new ExcelPrintLayout.Scaling.Automatic(), clearedPrintLayout.scaling());
+      assertEquals(new ExcelPrintLayout.TitleRows.None(), clearedPrintLayout.repeatingRows());
+      assertEquals(new ExcelPrintLayout.TitleColumns.None(), clearedPrintLayout.repeatingColumns());
+      assertEquals(ExcelHeaderFooterText.blank(), clearedPrintLayout.header());
+      assertEquals(ExcelHeaderFooterText.blank(), clearedPrintLayout.footer());
     }
   }
 

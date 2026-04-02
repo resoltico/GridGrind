@@ -118,7 +118,10 @@ public final class SequenceIntrospection {
       case WorkbookOperation.UnmergeCells _ -> "UNMERGE_CELLS";
       case WorkbookOperation.SetColumnWidth _ -> "SET_COLUMN_WIDTH";
       case WorkbookOperation.SetRowHeight _ -> "SET_ROW_HEIGHT";
-      case WorkbookOperation.FreezePanes _ -> "FREEZE_PANES";
+      case WorkbookOperation.SetSheetPane _ -> "SET_SHEET_PANE";
+      case WorkbookOperation.SetSheetZoom _ -> "SET_SHEET_ZOOM";
+      case WorkbookOperation.SetPrintLayout _ -> "SET_PRINT_LAYOUT";
+      case WorkbookOperation.ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
       case WorkbookOperation.SetCell _ -> "SET_CELL";
       case WorkbookOperation.SetRange _ -> "SET_RANGE";
       case WorkbookOperation.ClearRange _ -> "CLEAR_RANGE";
@@ -163,7 +166,10 @@ public final class SequenceIntrospection {
       case WorkbookCommand.UnmergeCells _ -> "UNMERGE_CELLS";
       case WorkbookCommand.SetColumnWidth _ -> "SET_COLUMN_WIDTH";
       case WorkbookCommand.SetRowHeight _ -> "SET_ROW_HEIGHT";
-      case WorkbookCommand.FreezePanes _ -> "FREEZE_PANES";
+      case WorkbookCommand.SetSheetPane _ -> "SET_SHEET_PANE";
+      case WorkbookCommand.SetSheetZoom _ -> "SET_SHEET_ZOOM";
+      case WorkbookCommand.SetPrintLayout _ -> "SET_PRINT_LAYOUT";
+      case WorkbookCommand.ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
       case WorkbookCommand.SetCell _ -> "SET_CELL";
       case WorkbookCommand.SetRange _ -> "SET_RANGE";
       case WorkbookCommand.ClearRange _ -> "CLEAR_RANGE";
@@ -203,6 +209,7 @@ public final class SequenceIntrospection {
       case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
+      case WorkbookReadOperation.GetPrintLayout _ -> "GET_PRINT_LAYOUT";
       case WorkbookReadOperation.GetDataValidations _ -> "GET_DATA_VALIDATIONS";
       case WorkbookReadOperation.GetConditionalFormatting _ -> "GET_CONDITIONAL_FORMATTING";
       case WorkbookReadOperation.GetAutofilters _ -> "GET_AUTOFILTERS";

@@ -27,6 +27,7 @@ public sealed interface WorkbookReadResult
           HyperlinksResult,
           CommentsResult,
           SheetLayoutResult,
+          PrintLayoutResult,
           DataValidationsResult,
           ConditionalFormattingResult,
           AutofiltersResult,
@@ -120,11 +121,21 @@ public sealed interface WorkbookReadResult
     }
   }
 
-  /** Returns layout metadata such as freeze panes and visible sizing. */
+  /** Returns layout metadata such as panes, zoom, and visible sizing. */
   record SheetLayoutResult(String requestId, SheetLayout layout) implements Introspection {
     public SheetLayoutResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(layout, "layout must not be null");
+    }
+  }
+
+  /** Returns supported print-layout metadata for one sheet. */
+  record PrintLayoutResult(String requestId, String sheetName, ExcelPrintLayout printLayout)
+      implements Introspection {
+    public PrintLayoutResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(printLayout, "printLayout must not be null");
     }
   }
 
@@ -421,40 +432,19 @@ public sealed interface WorkbookReadResult
     }
   }
 
-  /** Layout metadata such as freeze panes and visible row and column sizing for one sheet. */
+  /** Layout metadata such as pane state, zoom, and visible row and column sizing for one sheet. */
   record SheetLayout(
-      String sheetName, FreezePane freezePanes, List<ColumnLayout> columns, List<RowLayout> rows) {
+      String sheetName,
+      ExcelSheetPane pane,
+      int zoomPercent,
+      List<ColumnLayout> columns,
+      List<RowLayout> rows) {
     public SheetLayout {
       sheetName = requireNonBlank(sheetName, "sheetName");
-      Objects.requireNonNull(freezePanes, "freezePanes must not be null");
+      Objects.requireNonNull(pane, "pane must not be null");
+      ExcelSheetViewSupport.requireZoomPercent(zoomPercent);
       columns = copyValues(columns, "columns");
       rows = copyValues(rows, "rows");
-    }
-  }
-
-  /** Freeze-pane state captured from a sheet layout read. */
-  sealed interface FreezePane permits FreezePane.None, FreezePane.Frozen {
-
-    /** Sheet has no active freeze panes. */
-    record None() implements FreezePane {}
-
-    /** Sheet is frozen at the provided split and visible-origin coordinates. */
-    record Frozen(int splitColumn, int splitRow, int leftmostColumn, int topRow)
-        implements FreezePane {
-      public Frozen {
-        if (splitColumn < 0) {
-          throw new IllegalArgumentException("splitColumn must not be negative");
-        }
-        if (splitRow < 0) {
-          throw new IllegalArgumentException("splitRow must not be negative");
-        }
-        if (leftmostColumn < 0) {
-          throw new IllegalArgumentException("leftmostColumn must not be negative");
-        }
-        if (topRow < 0) {
-          throw new IllegalArgumentException("topRow must not be negative");
-        }
-      }
     }
   }
 

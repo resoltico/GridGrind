@@ -6,8 +6,8 @@ Input Bytes: 25
 Source Kind: NEW
 Persistence Kind: NONE
 Operation Count: 1
-Read Count: 0
-Read Kinds: (none)
+Read Count: 4
+Read Kinds: GET_WORKBOOK_SUMMARY=3, GET_SHEET_SCHEMA=1
 Response Kind: FAILURE
 Style Kinds: (none)
-Operation Kinds: SET_ROW_HEIGHT=1
+Operation Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=1

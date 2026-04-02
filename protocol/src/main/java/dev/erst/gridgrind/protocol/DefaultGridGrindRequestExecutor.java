@@ -203,9 +203,14 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.SetRowHeight op ->
           new WorkbookCommand.SetRowHeight(
               op.sheetName(), op.firstRowIndex(), op.lastRowIndex(), op.heightPoints());
-      case WorkbookOperation.FreezePanes op ->
-          new WorkbookCommand.FreezePanes(
-              op.sheetName(), op.splitColumn(), op.splitRow(), op.leftmostColumn(), op.topRow());
+      case WorkbookOperation.SetSheetPane op ->
+          new WorkbookCommand.SetSheetPane(op.sheetName(), toExcelSheetPane(op.pane()));
+      case WorkbookOperation.SetSheetZoom op ->
+          new WorkbookCommand.SetSheetZoom(op.sheetName(), op.zoomPercent());
+      case WorkbookOperation.SetPrintLayout op ->
+          new WorkbookCommand.SetPrintLayout(op.sheetName(), toExcelPrintLayout(op.printLayout()));
+      case WorkbookOperation.ClearPrintLayout op ->
+          new WorkbookCommand.ClearPrintLayout(op.sheetName());
       case WorkbookOperation.SetCell op ->
           new WorkbookCommand.SetCell(op.sheetName(), op.address(), op.value().toExcelCellValue());
       case WorkbookOperation.SetRange op ->
@@ -294,6 +299,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               op.requestId(), op.sheetName(), toExcelCellSelection(op.selection()));
       case WorkbookReadOperation.GetSheetLayout op ->
           new WorkbookReadCommand.GetSheetLayout(op.requestId(), op.sheetName());
+      case WorkbookReadOperation.GetPrintLayout op ->
+          new WorkbookReadCommand.GetPrintLayout(op.requestId(), op.sheetName());
       case WorkbookReadOperation.GetDataValidations op ->
           new WorkbookReadCommand.GetDataValidations(
               op.requestId(), op.sheetName(), toExcelRangeSelection(op.selection()));
@@ -423,6 +430,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayoutResult sheetLayout ->
           new WorkbookReadResult.SheetLayoutResult(
               sheetLayout.requestId(), toSheetLayoutReport(sheetLayout.layout()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult printLayout ->
+          new WorkbookReadResult.PrintLayoutResult(
+              printLayout.requestId(), toPrintLayoutReport(printLayout));
       case dev.erst.gridgrind.excel.WorkbookReadResult.DataValidationsResult dataValidations ->
           new WorkbookReadResult.DataValidationsResult(
               dataValidations.requestId(),
@@ -526,7 +536,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout layout) {
     return new GridGrindResponse.SheetLayoutReport(
         layout.sheetName(),
-        toFreezePaneReport(layout.freezePanes()),
+        toPaneReport(layout.pane()),
+        layout.zoomPercent(),
         layout.columns().stream()
             .map(
                 column ->
@@ -538,15 +549,77 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
             .toList());
   }
 
-  private static GridGrindResponse.FreezePaneReport toFreezePaneReport(
-      dev.erst.gridgrind.excel.WorkbookReadResult.FreezePane freezePane) {
-    return switch (freezePane) {
-      case dev.erst.gridgrind.excel.WorkbookReadResult.FreezePane.None _ ->
-          new GridGrindResponse.FreezePaneReport.None();
-      case dev.erst.gridgrind.excel.WorkbookReadResult.FreezePane.Frozen frozen ->
-          new GridGrindResponse.FreezePaneReport.Frozen(
+  private static PrintLayoutReport toPrintLayoutReport(
+      dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult printLayout) {
+    return new PrintLayoutReport(
+        printLayout.sheetName(),
+        toPrintAreaReport(printLayout.printLayout().printArea()),
+        printLayout.printLayout().orientation(),
+        toPrintScalingReport(printLayout.printLayout().scaling()),
+        toPrintTitleRowsReport(printLayout.printLayout().repeatingRows()),
+        toPrintTitleColumnsReport(printLayout.printLayout().repeatingColumns()),
+        toHeaderFooterTextReport(printLayout.printLayout().header()),
+        toHeaderFooterTextReport(printLayout.printLayout().footer()));
+  }
+
+  private static PaneReport toPaneReport(dev.erst.gridgrind.excel.ExcelSheetPane pane) {
+    return switch (pane) {
+      case dev.erst.gridgrind.excel.ExcelSheetPane.None _ -> new PaneReport.None();
+      case dev.erst.gridgrind.excel.ExcelSheetPane.Frozen frozen ->
+          new PaneReport.Frozen(
               frozen.splitColumn(), frozen.splitRow(), frozen.leftmostColumn(), frozen.topRow());
+      case dev.erst.gridgrind.excel.ExcelSheetPane.Split split ->
+          new PaneReport.Split(
+              split.xSplitPosition(),
+              split.ySplitPosition(),
+              split.leftmostColumn(),
+              split.topRow(),
+              split.activePane());
     };
+  }
+
+  private static PrintAreaReport toPrintAreaReport(
+      dev.erst.gridgrind.excel.ExcelPrintLayout.Area printArea) {
+    return switch (printArea) {
+      case dev.erst.gridgrind.excel.ExcelPrintLayout.Area.None _ -> new PrintAreaReport.None();
+      case dev.erst.gridgrind.excel.ExcelPrintLayout.Area.Range range ->
+          new PrintAreaReport.Range(range.range());
+    };
+  }
+
+  private static PrintScalingReport toPrintScalingReport(
+      dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling scaling) {
+    return switch (scaling) {
+      case dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Automatic _ ->
+          new PrintScalingReport.Automatic();
+      case dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Fit fit ->
+          new PrintScalingReport.Fit(fit.widthPages(), fit.heightPages());
+    };
+  }
+
+  private static PrintTitleRowsReport toPrintTitleRowsReport(
+      dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows repeatingRows) {
+    return switch (repeatingRows) {
+      case dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.None _ ->
+          new PrintTitleRowsReport.None();
+      case dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.Band band ->
+          new PrintTitleRowsReport.Band(band.firstRowIndex(), band.lastRowIndex());
+    };
+  }
+
+  private static PrintTitleColumnsReport toPrintTitleColumnsReport(
+      dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns repeatingColumns) {
+    return switch (repeatingColumns) {
+      case dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.None _ ->
+          new PrintTitleColumnsReport.None();
+      case dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.Band band ->
+          new PrintTitleColumnsReport.Band(band.firstColumnIndex(), band.lastColumnIndex());
+    };
+  }
+
+  private static HeaderFooterTextReport toHeaderFooterTextReport(
+      dev.erst.gridgrind.excel.ExcelHeaderFooterText text) {
+    return new HeaderFooterTextReport(text.left(), text.center(), text.right());
   }
 
   private static GridGrindResponse.FormulaSurfaceReport toFormulaSurfaceReport(
@@ -831,6 +904,82 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     return switch (selection) {
       case CellSelection.AllUsedCells _ -> new ExcelCellSelection.AllUsedCells();
       case CellSelection.Selected selected -> new ExcelCellSelection.Selected(selected.addresses());
+    };
+  }
+
+  private static dev.erst.gridgrind.excel.ExcelSheetPane toExcelSheetPane(PaneInput pane) {
+    return switch (pane) {
+      case PaneInput.None _ -> new dev.erst.gridgrind.excel.ExcelSheetPane.None();
+      case PaneInput.Frozen frozen ->
+          new dev.erst.gridgrind.excel.ExcelSheetPane.Frozen(
+              frozen.splitColumn(), frozen.splitRow(), frozen.leftmostColumn(), frozen.topRow());
+      case PaneInput.Split split ->
+          new dev.erst.gridgrind.excel.ExcelSheetPane.Split(
+              split.xSplitPosition(),
+              split.ySplitPosition(),
+              split.leftmostColumn(),
+              split.topRow(),
+              split.activePane());
+    };
+  }
+
+  private static dev.erst.gridgrind.excel.ExcelPrintLayout toExcelPrintLayout(
+      PrintLayoutInput printLayout) {
+    return new dev.erst.gridgrind.excel.ExcelPrintLayout(
+        toExcelPrintArea(printLayout.printArea()),
+        printLayout.orientation(),
+        toExcelPrintScaling(printLayout.scaling()),
+        toExcelPrintTitleRows(printLayout.repeatingRows()),
+        toExcelPrintTitleColumns(printLayout.repeatingColumns()),
+        new dev.erst.gridgrind.excel.ExcelHeaderFooterText(
+            printLayout.header().left(),
+            printLayout.header().center(),
+            printLayout.header().right()),
+        new dev.erst.gridgrind.excel.ExcelHeaderFooterText(
+            printLayout.footer().left(),
+            printLayout.footer().center(),
+            printLayout.footer().right()));
+  }
+
+  private static dev.erst.gridgrind.excel.ExcelPrintLayout.Area toExcelPrintArea(
+      PrintAreaInput printArea) {
+    return switch (printArea) {
+      case PrintAreaInput.None _ -> new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.None();
+      case PrintAreaInput.Range range ->
+          new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.Range(range.range());
+    };
+  }
+
+  private static dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling toExcelPrintScaling(
+      PrintScalingInput scaling) {
+    return switch (scaling) {
+      case PrintScalingInput.Automatic _ ->
+          new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Automatic();
+      case PrintScalingInput.Fit fit ->
+          new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Fit(
+              fit.widthPages(), fit.heightPages());
+    };
+  }
+
+  private static dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows toExcelPrintTitleRows(
+      PrintTitleRowsInput repeatingRows) {
+    return switch (repeatingRows) {
+      case PrintTitleRowsInput.None _ ->
+          new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.None();
+      case PrintTitleRowsInput.Band band ->
+          new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.Band(
+              band.firstRowIndex(), band.lastRowIndex());
+    };
+  }
+
+  private static dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns toExcelPrintTitleColumns(
+      PrintTitleColumnsInput repeatingColumns) {
+    return switch (repeatingColumns) {
+      case PrintTitleColumnsInput.None _ ->
+          new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.None();
+      case PrintTitleColumnsInput.Band band ->
+          new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.Band(
+              band.firstColumnIndex(), band.lastColumnIndex());
     };
   }
 
@@ -1164,6 +1313,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
+      case WorkbookReadOperation.GetPrintLayout _ -> "GET_PRINT_LAYOUT";
       case WorkbookReadOperation.GetDataValidations _ -> "GET_DATA_VALIDATIONS";
       case WorkbookReadOperation.GetConditionalFormatting _ -> "GET_CONDITIONAL_FORMATTING";
       case WorkbookReadOperation.GetAutofilters _ -> "GET_AUTOFILTERS";
@@ -1193,6 +1343,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks op -> op.sheetName();
       case WorkbookReadOperation.GetComments op -> op.sheetName();
       case WorkbookReadOperation.GetSheetLayout op -> op.sheetName();
+      case WorkbookReadOperation.GetPrintLayout op -> op.sheetName();
       case WorkbookReadOperation.GetDataValidations op -> op.sheetName();
       case WorkbookReadOperation.GetConditionalFormatting op -> op.sheetName();
       case WorkbookReadOperation.GetAutofilters op -> op.sheetName();
@@ -1231,6 +1382,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> null;
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
+      case WorkbookReadOperation.GetPrintLayout _ -> null;
       case WorkbookReadOperation.GetDataValidations _ -> null;
       case WorkbookReadOperation.GetConditionalFormatting _ -> null;
       case WorkbookReadOperation.GetAutofilters _ -> null;
@@ -1264,6 +1416,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> null;
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
+      case WorkbookReadOperation.GetPrintLayout _ -> null;
       case WorkbookReadOperation.GetDataValidations _ -> null;
       case WorkbookReadOperation.GetConditionalFormatting _ -> null;
       case WorkbookReadOperation.GetAutofilters _ -> null;
@@ -1338,7 +1491,10 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.UnmergeCells _ -> null;
       case WorkbookOperation.SetColumnWidth _ -> null;
       case WorkbookOperation.SetRowHeight _ -> null;
-      case WorkbookOperation.FreezePanes _ -> null;
+      case WorkbookOperation.SetSheetPane _ -> null;
+      case WorkbookOperation.SetSheetZoom _ -> null;
+      case WorkbookOperation.SetPrintLayout _ -> null;
+      case WorkbookOperation.ClearPrintLayout _ -> null;
       case WorkbookOperation.SetRange _ -> null;
       case WorkbookOperation.ClearRange _ -> null;
       case WorkbookOperation.SetHyperlink _ -> null;
@@ -1381,7 +1537,10 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.UnmergeCells op -> op.sheetName();
           case WorkbookOperation.SetColumnWidth op -> op.sheetName();
           case WorkbookOperation.SetRowHeight op -> op.sheetName();
-          case WorkbookOperation.FreezePanes op -> op.sheetName();
+          case WorkbookOperation.SetSheetPane op -> op.sheetName();
+          case WorkbookOperation.SetSheetZoom op -> op.sheetName();
+          case WorkbookOperation.SetPrintLayout op -> op.sheetName();
+          case WorkbookOperation.ClearPrintLayout op -> op.sheetName();
           case WorkbookOperation.SetCell op -> op.sheetName();
           case WorkbookOperation.SetRange op -> op.sheetName();
           case WorkbookOperation.ClearRange op -> op.sheetName();
@@ -1435,7 +1594,10 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.UnmergeCells _ -> null;
           case WorkbookOperation.SetColumnWidth _ -> null;
           case WorkbookOperation.SetRowHeight _ -> null;
-          case WorkbookOperation.FreezePanes _ -> null;
+          case WorkbookOperation.SetSheetPane _ -> null;
+          case WorkbookOperation.SetSheetZoom _ -> null;
+          case WorkbookOperation.SetPrintLayout _ -> null;
+          case WorkbookOperation.ClearPrintLayout _ -> null;
           case WorkbookOperation.SetRange _ -> null;
           case WorkbookOperation.ClearRange _ -> null;
           case WorkbookOperation.ApplyStyle _ -> null;
@@ -1486,7 +1648,10 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.ClearSheetProtection _ -> null;
           case WorkbookOperation.SetColumnWidth _ -> null;
           case WorkbookOperation.SetRowHeight _ -> null;
-          case WorkbookOperation.FreezePanes _ -> null;
+          case WorkbookOperation.SetSheetPane _ -> null;
+          case WorkbookOperation.SetSheetZoom _ -> null;
+          case WorkbookOperation.SetPrintLayout _ -> null;
+          case WorkbookOperation.ClearPrintLayout _ -> null;
           case WorkbookOperation.SetCell _ -> null;
           case WorkbookOperation.SetHyperlink _ -> null;
           case WorkbookOperation.ClearHyperlink _ -> null;
@@ -1525,7 +1690,10 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.UnmergeCells _ -> null;
           case WorkbookOperation.SetColumnWidth _ -> null;
           case WorkbookOperation.SetRowHeight _ -> null;
-          case WorkbookOperation.FreezePanes _ -> null;
+          case WorkbookOperation.SetSheetPane _ -> null;
+          case WorkbookOperation.SetSheetZoom _ -> null;
+          case WorkbookOperation.SetPrintLayout _ -> null;
+          case WorkbookOperation.ClearPrintLayout _ -> null;
           case WorkbookOperation.SetCell _ -> null;
           case WorkbookOperation.SetRange _ -> null;
           case WorkbookOperation.ClearRange _ -> null;

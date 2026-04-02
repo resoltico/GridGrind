@@ -66,14 +66,14 @@ public final class WorkbookCommandExecutor {
                   setRowHeight.firstRowIndex(),
                   setRowHeight.lastRowIndex(),
                   setRowHeight.heightPoints());
-      case WorkbookCommand.FreezePanes freezePanes ->
-          workbook
-              .sheet(freezePanes.sheetName())
-              .freezePanes(
-                  freezePanes.splitColumn(),
-                  freezePanes.splitRow(),
-                  freezePanes.leftmostColumn(),
-                  freezePanes.topRow());
+      case WorkbookCommand.SetSheetPane setSheetPane ->
+          workbook.sheet(setSheetPane.sheetName()).setPane(setSheetPane.pane());
+      case WorkbookCommand.SetSheetZoom setSheetZoom ->
+          workbook.sheet(setSheetZoom.sheetName()).setZoom(setSheetZoom.zoomPercent());
+      case WorkbookCommand.SetPrintLayout setPrintLayout ->
+          workbook.sheet(setPrintLayout.sheetName()).setPrintLayout(setPrintLayout.printLayout());
+      case WorkbookCommand.ClearPrintLayout clearPrintLayout ->
+          workbook.sheet(clearPrintLayout.sheetName()).clearPrintLayout();
       case WorkbookCommand.SetCell setCell ->
           workbook.sheet(setCell.sheetName()).setCell(setCell.address(), setCell.value());
       case WorkbookCommand.SetRange setRange ->

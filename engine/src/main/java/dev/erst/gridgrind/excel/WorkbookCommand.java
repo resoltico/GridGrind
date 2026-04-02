@@ -21,7 +21,10 @@ public sealed interface WorkbookCommand
         WorkbookCommand.UnmergeCells,
         WorkbookCommand.SetColumnWidth,
         WorkbookCommand.SetRowHeight,
-        WorkbookCommand.FreezePanes,
+        WorkbookCommand.SetSheetPane,
+        WorkbookCommand.SetSheetZoom,
+        WorkbookCommand.SetPrintLayout,
+        WorkbookCommand.ClearPrintLayout,
         WorkbookCommand.SetCell,
         WorkbookCommand.SetRange,
         WorkbookCommand.ClearRange,
@@ -243,28 +246,46 @@ public sealed interface WorkbookCommand
     }
   }
 
-  /** Freezes panes using explicit split and visible-origin coordinates. */
-  record FreezePanes(
-      String sheetName, int splitColumn, int splitRow, int leftmostColumn, int topRow)
-      implements WorkbookCommand {
-    public FreezePanes {
+  /** Applies one explicit pane state to a sheet. */
+  record SetSheetPane(String sheetName, ExcelSheetPane pane) implements WorkbookCommand {
+    public SetSheetPane {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(pane, "pane must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Applies one explicit zoom percentage to a sheet. */
+  record SetSheetZoom(String sheetName, int zoomPercent) implements WorkbookCommand {
+    public SetSheetZoom {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }
-      if (splitColumn < 0) {
-        throw new IllegalArgumentException("splitColumn must not be negative");
+      ExcelSheetViewSupport.requireZoomPercent(zoomPercent);
+    }
+  }
+
+  /** Applies one authoritative supported print-layout state to a sheet. */
+  record SetPrintLayout(String sheetName, ExcelPrintLayout printLayout) implements WorkbookCommand {
+    public SetPrintLayout {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(printLayout, "printLayout must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
       }
-      if (splitRow < 0) {
-        throw new IllegalArgumentException("splitRow must not be negative");
+    }
+  }
+
+  /** Clears the supported print-layout state from a sheet. */
+  record ClearPrintLayout(String sheetName) implements WorkbookCommand {
+    public ClearPrintLayout {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
       }
-      if (leftmostColumn < 0) {
-        throw new IllegalArgumentException("leftmostColumn must not be negative");
-      }
-      if (topRow < 0) {
-        throw new IllegalArgumentException("topRow must not be negative");
-      }
-      requireFreezePaneCoordinates(splitColumn, splitRow, leftmostColumn, topRow);
     }
   }
 
@@ -568,27 +589,6 @@ public sealed interface WorkbookCommand
     if ((long) (heightPoints * 20.0d) <= 0) {
       throw new IllegalArgumentException(
           "heightPoints is too small to produce a visible Excel row height: " + heightPoints);
-    }
-  }
-
-  private static void requireFreezePaneCoordinates(
-      int splitColumn, int splitRow, int leftmostColumn, int topRow) {
-    if (splitColumn == 0 && splitRow == 0) {
-      throw new IllegalArgumentException("splitColumn and splitRow must not both be 0");
-    }
-    if (splitColumn == 0 && leftmostColumn != 0) {
-      throw new IllegalArgumentException(
-          "leftmostColumn must be 0 when splitColumn is 0: " + leftmostColumn);
-    }
-    if (splitRow == 0 && topRow != 0) {
-      throw new IllegalArgumentException("topRow must be 0 when splitRow is 0: " + topRow);
-    }
-    if (splitColumn > 0 && leftmostColumn < splitColumn) {
-      throw new IllegalArgumentException(
-          "leftmostColumn must be greater than or equal to splitColumn");
-    }
-    if (splitRow > 0 && topRow < splitRow) {
-      throw new IllegalArgumentException("topRow must be greater than or equal to splitRow");
     }
   }
 

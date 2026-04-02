@@ -1,11 +1,11 @@
 ---
 afad: "3.4"
-version: "0.23.0"
+version: "0.24.0"
 domain: OPERATIONS
 updated: "2026-04-02"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-data-validations, get-autofilters, get-tables, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol]
-  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-data-validations, get-autofilters, get-tables, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol]
+  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
 ---
 
 # Operations Reference
@@ -418,38 +418,157 @@ Set the height of one or more contiguous rows. Row indexes are zero-based and in
 
 ---
 
-### FREEZE_PANES
+### SET_SHEET_PANE
 
-Freeze panes using explicit split and visible-origin coordinates. `splitColumn` and `splitRow`
-define the frozen boundary. `leftmostColumn` and `topRow` define the first visible column and row
-in the scrollable pane after the split.
+Apply one explicit pane state to a sheet. Use `NONE` to clear panes, `FROZEN` for freeze-pane
+behavior, or `SPLIT` for Excel split panes.
 
 ```json
 {
-  "type": "FREEZE_PANES",
+  "type": "SET_SHEET_PANE",
   "sheetName": "Inventory",
-  "splitColumn": 1,
-  "splitRow": 1,
-  "leftmostColumn": 1,
-  "topRow": 1
+  "pane": {
+    "type": "FROZEN",
+    "splitColumn": 1,
+    "splitRow": 1,
+    "leftmostColumn": 1,
+    "topRow": 1
+  }
+}
+```
+
+```json
+{
+  "type": "SET_SHEET_PANE",
+  "sheetName": "Inventory",
+  "pane": {
+    "type": "SPLIT",
+    "xSplitPosition": 2400,
+    "ySplitPosition": 1800,
+    "leftmostColumn": 2,
+    "topRow": 3,
+    "activePane": "LOWER_RIGHT"
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `sheetName` | Yes | Existing target sheet. |
+| `pane` | Yes | Pane payload with `type` `NONE`, `FROZEN`, or `SPLIT`. |
+
+`pane.type = "NONE"` has no nested fields.
+
+`pane.type = "FROZEN"` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
 | `splitColumn` | Yes | Zero-based frozen column count. |
 | `splitRow` | Yes | Zero-based frozen row count. |
 | `leftmostColumn` | Yes | Zero-based first visible column in the scrollable pane. |
 | `topRow` | Yes | Zero-based first visible row in the scrollable pane. |
 
+`pane.type = "SPLIT"` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `xSplitPosition` | Yes | Horizontal split offset in Excel split-pane units (`1/20` of a point). |
+| `ySplitPosition` | Yes | Vertical split offset in Excel split-pane units (`1/20` of a point). |
+| `leftmostColumn` | Yes | Zero-based first visible column in the right pane. |
+| `topRow` | Yes | Zero-based first visible row in the bottom pane. |
+| `activePane` | Yes | One of `UPPER_LEFT`, `UPPER_RIGHT`, `LOWER_LEFT`, or `LOWER_RIGHT`. |
+
 Constraints:
 
-- `splitColumn` and `splitRow` must not both be `0`.
-- If `splitColumn` is `0`, `leftmostColumn` must also be `0`.
-- If `splitRow` is `0`, `topRow` must also be `0`.
-- When `splitColumn > 0`, `leftmostColumn` must be greater than or equal to `splitColumn`.
-- When `splitRow > 0`, `topRow` must be greater than or equal to `splitRow`.
+- `FROZEN.splitColumn` and `FROZEN.splitRow` must not both be `0`.
+- If `FROZEN.splitColumn` is `0`, `FROZEN.leftmostColumn` must also be `0`.
+- If `FROZEN.splitRow` is `0`, `FROZEN.topRow` must also be `0`.
+- When `FROZEN.splitColumn > 0`, `FROZEN.leftmostColumn` must be greater than or equal to
+  `splitColumn`.
+- When `FROZEN.splitRow > 0`, `FROZEN.topRow` must be greater than or equal to `splitRow`.
+- `SPLIT.xSplitPosition` and `SPLIT.ySplitPosition` must not both be `0`.
+- If `SPLIT.xSplitPosition` is `0`, `SPLIT.leftmostColumn` must also be `0`.
+- If `SPLIT.ySplitPosition` is `0`, `SPLIT.topRow` must also be `0`.
+
+### SET_SHEET_ZOOM
+
+Set one explicit zoom percentage for a sheet.
+
+```json
+{
+  "type": "SET_SHEET_ZOOM",
+  "sheetName": "Inventory",
+  "zoomPercent": 125
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `zoomPercent` | Yes | Integer zoom percentage. Must be between `10` and `400` inclusive. |
+
+### SET_PRINT_LAYOUT
+
+Apply one authoritative supported print-layout state to a sheet. Omitted nested fields normalize
+to default or cleared state.
+
+```json
+{
+  "type": "SET_PRINT_LAYOUT",
+  "sheetName": "Inventory",
+  "printLayout": {
+    "printArea": { "type": "RANGE", "range": "A1:F40" },
+    "orientation": "LANDSCAPE",
+    "scaling": { "type": "FIT", "widthPages": 1, "heightPages": 0 },
+    "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 1 },
+    "repeatingColumns": { "type": "BAND", "firstColumnIndex": 0, "lastColumnIndex": 0 },
+    "header": { "left": "Inventory", "center": "Q2", "right": "Internal" },
+    "footer": { "left": "", "center": "Prepared by GridGrind", "right": "Page 1" }
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `printLayout` | Yes | Print-layout payload. |
+
+`printLayout` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `printArea` | No | `NONE` or `RANGE`. Defaults to `NONE`. |
+| `orientation` | No | `PORTRAIT` or `LANDSCAPE`. Defaults to `PORTRAIT`. |
+| `scaling` | No | `AUTOMATIC` or `FIT`. Defaults to `AUTOMATIC`. |
+| `repeatingRows` | No | `NONE` or `BAND`. Defaults to `NONE`. |
+| `repeatingColumns` | No | `NONE` or `BAND`. Defaults to `NONE`. |
+| `header` | No | Plain `left`, `center`, and `right` text segments. Defaults to blank text. |
+| `footer` | No | Plain `left`, `center`, and `right` text segments. Defaults to blank text. |
+
+Nested constraints:
+
+- `printArea.type = "RANGE"` requires a non-blank rectangular A1-style range.
+- `scaling.type = "FIT"` requires non-negative `widthPages` and `heightPages`; `0` leaves one
+  axis unconstrained.
+- `repeatingRows.type = "BAND"` requires a zero-based inclusive row band with
+  `lastRowIndex >= firstRowIndex` and `lastRowIndex <= 1048575`.
+- `repeatingColumns.type = "BAND"` requires a zero-based inclusive column band with
+  `lastColumnIndex >= firstColumnIndex` and `lastColumnIndex <= 16383`.
+
+### CLEAR_PRINT_LAYOUT
+
+Clear the supported print-layout state from a sheet and restore the default supported state.
+
+```json
+{
+  "type": "CLEAR_PRINT_LAYOUT",
+  "sheetName": "Inventory"
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
 
 ---
 
@@ -1430,12 +1549,30 @@ Cell-selection payloads use:
 
 ### GET_SHEET_LAYOUT
 
-Returns freeze-pane state plus explicit row-height and column-width facts for one sheet.
+Returns pane state, effective zoom, and explicit row-height and column-width facts for one sheet.
 
 ```json
 {
   "type": "GET_SHEET_LAYOUT",
   "requestId": "layout",
+  "sheetName": "Inventory"
+}
+```
+
+The returned `layout.pane` is one of:
+
+- `NONE`
+- `FROZEN` with `splitColumn`, `splitRow`, `leftmostColumn`, and `topRow`
+- `SPLIT` with `xSplitPosition`, `ySplitPosition`, `leftmostColumn`, `topRow`, and `activePane`
+
+### GET_PRINT_LAYOUT
+
+Returns the supported print-layout state for one sheet.
+
+```json
+{
+  "type": "GET_PRINT_LAYOUT",
+  "requestId": "print-layout",
   "sheetName": "Inventory"
 }
 ```

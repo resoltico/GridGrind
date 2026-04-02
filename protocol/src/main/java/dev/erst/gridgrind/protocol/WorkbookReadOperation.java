@@ -25,6 +25,7 @@ import java.util.Set;
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetHyperlinks.class, name = "GET_HYPERLINKS"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetComments.class, name = "GET_COMMENTS"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetSheetLayout.class, name = "GET_SHEET_LAYOUT"),
+  @JsonSubTypes.Type(value = WorkbookReadOperation.GetPrintLayout.class, name = "GET_PRINT_LAYOUT"),
   @JsonSubTypes.Type(
       value = WorkbookReadOperation.GetDataValidations.class,
       name = "GET_DATA_VALIDATIONS"),
@@ -82,6 +83,7 @@ public sealed interface WorkbookReadOperation
           GetHyperlinks,
           GetComments,
           GetSheetLayout,
+          GetPrintLayout,
           GetDataValidations,
           GetConditionalFormatting,
           GetAutofilters,
@@ -183,9 +185,17 @@ public sealed interface WorkbookReadOperation
     }
   }
 
-  /** Returns layout metadata such as freeze panes and visible row and column sizing. */
+  /** Returns layout metadata such as pane state, zoom, and visible row and column sizing. */
   record GetSheetLayout(String requestId, String sheetName) implements Introspection {
     public GetSheetLayout {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Returns supported print-layout metadata for one sheet. */
+  record GetPrintLayout(String requestId, String sheetName) implements Introspection {
+    public GetPrintLayout {
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
     }

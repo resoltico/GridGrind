@@ -23,6 +23,7 @@ public sealed interface WorkbookReadCommand
           GetHyperlinks,
           GetComments,
           GetSheetLayout,
+          GetPrintLayout,
           GetDataValidations,
           GetConditionalFormatting,
           GetAutofilters,
@@ -125,9 +126,17 @@ public sealed interface WorkbookReadCommand
     }
   }
 
-  /** Returns layout metadata such as freeze panes and row and column sizing. */
+  /** Returns layout metadata such as pane state, zoom, and row and column sizing. */
   record GetSheetLayout(String requestId, String sheetName) implements Introspection {
     public GetSheetLayout {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Returns supported print-layout metadata for one sheet. */
+  record GetPrintLayout(String requestId, String sheetName) implements Introspection {
+    public GetPrintLayout {
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
     }

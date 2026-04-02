@@ -6,6 +6,8 @@ import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
+import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
@@ -29,8 +31,13 @@ class WorkbookOperationTest {
         new WorkbookOperation.SetColumnWidth("Budget", 0, 2, 16.0);
     WorkbookOperation.SetRowHeight setRowHeight =
         new WorkbookOperation.SetRowHeight("Budget", 0, 3, 28.5);
-    WorkbookOperation.FreezePanes freezePanes =
-        new WorkbookOperation.FreezePanes("Budget", 1, 2, 1, 2);
+    WorkbookOperation.SetSheetPane setSheetPane =
+        new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 2, 1, 2));
+    WorkbookOperation.SetSheetZoom setSheetZoom = new WorkbookOperation.SetSheetZoom("Budget", 135);
+    WorkbookOperation.SetPrintLayout setPrintLayout =
+        new WorkbookOperation.SetPrintLayout("Budget", defaultPrintLayout());
+    WorkbookOperation.ClearPrintLayout clearPrintLayout =
+        new WorkbookOperation.ClearPrintLayout("Budget");
 
     assertEquals("Budget", ensureSheet.sheetName());
     assertEquals("Summary", renameSheet.newSheetName());
@@ -40,7 +47,10 @@ class WorkbookOperationTest {
     assertEquals("A1:B2", unmergeCells.range());
     assertEquals(16.0, setColumnWidth.widthCharacters());
     assertEquals(28.5, setRowHeight.heightPoints());
-    assertEquals(2, freezePanes.topRow());
+    assertEquals(new PaneInput.Frozen(1, 2, 1, 2), setSheetPane.pane());
+    assertEquals(135, setSheetZoom.zoomPercent());
+    assertEquals(defaultPrintLayout(), setPrintLayout.printLayout());
+    assertEquals("Budget", clearPrintLayout.sheetName());
   }
 
   @Test
@@ -252,14 +262,16 @@ class WorkbookOperationTest {
         IllegalArgumentException.class,
         () -> new WorkbookOperation.SetRowHeight("Budget", 0, 0, Double.NaN));
     assertThrows(
-        NullPointerException.class,
-        () -> new WorkbookOperation.FreezePanes("Budget", null, 1, 0, 1));
+        NullPointerException.class, () -> new WorkbookOperation.SetSheetPane("Budget", null));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookOperation.FreezePanes("Budget", 0, 0, 0, 0));
+        NullPointerException.class, () -> new WorkbookOperation.SetSheetZoom("Budget", null));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookOperation.FreezePanes("Budget", 0, 1, 1, 1));
+        IllegalArgumentException.class, () -> new WorkbookOperation.SetSheetZoom("Budget", 9));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.SetSheetZoom("Budget", 401));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.SetPrintLayout("Budget", null));
+    assertThrows(NullPointerException.class, () -> new WorkbookOperation.ClearPrintLayout(null));
     assertThrows(
         NullPointerException.class, () -> new WorkbookOperation.SetHyperlink("Budget", "A1", null));
     assertThrows(
@@ -314,7 +326,7 @@ class WorkbookOperationTest {
         () -> new WorkbookOperation.SetRowHeight("Budget", 0, -1, 28.5));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookOperation.FreezePanes("Budget", 1, 0, 0, 0));
+        () -> new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 0, 0, 0)));
 
     assertThrows(
         NullPointerException.class,
@@ -434,25 +446,22 @@ class WorkbookOperationTest {
   }
 
   @Test
-  void validatesFreezePaneCoordinateHelperBranches() {
-    assertDoesNotThrow(() -> WorkbookOperation.Validation.requireFreezePaneCoordinates(1, 2, 1, 2));
-    assertDoesNotThrow(() -> WorkbookOperation.Validation.requireFreezePaneCoordinates(0, 2, 0, 2));
-    assertDoesNotThrow(() -> WorkbookOperation.Validation.requireFreezePaneCoordinates(2, 0, 2, 0));
+  void validatesPaneAndZoomHelperBranches() {
+    assertDoesNotThrow(() -> new PaneInput.Frozen(1, 2, 1, 2));
+    assertDoesNotThrow(() -> new PaneInput.Frozen(0, 2, 0, 2));
+    assertDoesNotThrow(() -> new PaneInput.Frozen(2, 0, 2, 0));
+    assertDoesNotThrow(() -> new PaneInput.Split(1200, 0, 3, 0, ExcelPaneRegion.UPPER_RIGHT));
+    assertDoesNotThrow(() -> WorkbookOperation.Validation.requireZoomPercent(10));
+    assertDoesNotThrow(() -> WorkbookOperation.Validation.requireZoomPercent(400));
+    assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(0, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(0, 1, 1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(1, 0, 1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(2, 1, 1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(1, 2, 1, 1));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> WorkbookOperation.Validation.requireFreezePaneCoordinates(0, 0, 0, 0));
+        IllegalArgumentException.class, () -> WorkbookOperation.Validation.requireZoomPercent(9));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> WorkbookOperation.Validation.requireFreezePaneCoordinates(0, 1, 1, 1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> WorkbookOperation.Validation.requireFreezePaneCoordinates(1, 0, 1, 1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> WorkbookOperation.Validation.requireFreezePaneCoordinates(2, 1, 1, 1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> WorkbookOperation.Validation.requireFreezePaneCoordinates(1, 2, 1, 1));
+        IllegalArgumentException.class, () -> WorkbookOperation.Validation.requireZoomPercent(401));
   }
 
   @Test
@@ -479,7 +488,14 @@ class WorkbookOperationTest {
         () -> new WorkbookOperation.SetRowHeight(tooLong, 0, 0, 28.5));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookOperation.FreezePanes(tooLong, 1, 0, 1, 0));
+        () -> new WorkbookOperation.SetSheetPane(tooLong, new PaneInput.Frozen(1, 0, 1, 0)));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.SetSheetZoom(tooLong, 100));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.SetPrintLayout(tooLong, defaultPrintLayout()));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.ClearPrintLayout(tooLong));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookOperation.SetCell(tooLong, "A1", new CellInput.Text("x")));
@@ -559,7 +575,16 @@ class WorkbookOperationTest {
     assertEquals(
         "SET_ROW_HEIGHT", new WorkbookOperation.SetRowHeight("Budget", 0, 1, 28.5).operationType());
     assertEquals(
-        "FREEZE_PANES", new WorkbookOperation.FreezePanes("Budget", 1, 2, 1, 2).operationType());
+        "SET_SHEET_PANE",
+        new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 2, 1, 2))
+            .operationType());
+    assertEquals(
+        "SET_SHEET_ZOOM", new WorkbookOperation.SetSheetZoom("Budget", 125).operationType());
+    assertEquals(
+        "SET_PRINT_LAYOUT",
+        new WorkbookOperation.SetPrintLayout("Budget", defaultPrintLayout()).operationType());
+    assertEquals(
+        "CLEAR_PRINT_LAYOUT", new WorkbookOperation.ClearPrintLayout("Budget").operationType());
     assertEquals(
         "SET_CELL", new WorkbookOperation.SetCell("Budget", "A1", textValue).operationType());
     assertEquals(
@@ -653,5 +678,16 @@ class WorkbookOperationTest {
     return new ExcelSheetProtectionSettings(
         false, true, false, true, false, true, false, true, false, true, false, true, false, true,
         false);
+  }
+
+  private static PrintLayoutInput defaultPrintLayout() {
+    return new PrintLayoutInput(
+        new PrintAreaInput.Range("A1:C20"),
+        ExcelPrintOrientation.LANDSCAPE,
+        new PrintScalingInput.Fit(1, 0),
+        new PrintTitleRowsInput.Band(0, 0),
+        new PrintTitleColumnsInput.Band(0, 0),
+        new HeaderFooterTextInput("Budget", "", ""),
+        new HeaderFooterTextInput("", "Page &P", ""));
   }
 }

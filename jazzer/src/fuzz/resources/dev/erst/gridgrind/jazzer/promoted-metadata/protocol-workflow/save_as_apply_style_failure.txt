@@ -3,7 +3,7 @@ Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/
 Harness: protocol-workflow
 Outcome: EXPECTED_INVALID
 Kind: IllegalArgumentException
-Message: The workbook already contains a sheet named 'I'
+Message: sheetNames must not contain duplicates
 Input Bytes: 204
 Source Kind: NOT_GENERATED
 Persistence Kind: NOT_GENERATED

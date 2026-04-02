@@ -1,10 +1,10 @@
 ---
 afad: "3.4"
-version: "0.23.0"
+version: "0.24.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-02"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like"]
 ---
 
@@ -194,17 +194,65 @@ separate `path` field. `SAVE_AS` creates missing parent directories automaticall
 }
 ```
 
-## FREEZE_PANES
+## SET_SHEET_PANE
 
 ```json
 {
-  "type": "FREEZE_PANES",
+  "type": "SET_SHEET_PANE",
   "sheetName": "Sheet1",
-  "splitColumn": 1,
-  "splitRow": 1,
-  "leftmostColumn": 1,
-  "topRow": 1
+  "pane": {
+    "type": "FROZEN",
+    "splitColumn": 1,
+    "splitRow": 1,
+    "leftmostColumn": 1,
+    "topRow": 1
+  }
 }
+```
+
+```json
+{
+  "type": "SET_SHEET_PANE",
+  "sheetName": "Sheet1",
+  "pane": {
+    "type": "SPLIT",
+    "xSplitPosition": 2400,
+    "ySplitPosition": 1800,
+    "leftmostColumn": 2,
+    "topRow": 3,
+    "activePane": "LOWER_RIGHT"
+  }
+}
+```
+
+## SET_SHEET_ZOOM
+
+```json
+{ "type": "SET_SHEET_ZOOM", "sheetName": "Sheet1", "zoomPercent": 125 }
+```
+
+## SET_PRINT_LAYOUT
+
+```json
+{
+  "type": "SET_PRINT_LAYOUT",
+  "sheetName": "Sheet1",
+  "printLayout": {
+    "printArea": { "type": "RANGE", "range": "A1:F40" },
+    "orientation": "LANDSCAPE",
+    "scaling": { "type": "FIT", "widthPages": 1, "heightPages": 0 },
+    "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 1 },
+    "repeatingColumns": { "type": "BAND", "firstColumnIndex": 0, "lastColumnIndex": 0 },
+    "header": { "left": "Inventory", "center": "Q2", "right": "Internal" },
+    "footer": { "left": "", "center": "Prepared by GridGrind", "right": "Page 1" }
+  }
+}
+```
+
+## CLEAR_PRINT_LAYOUT
+
+```json
+{ "type": "CLEAR_PRINT_LAYOUT", "sheetName": "Sheet1" }
 ```
 
 ## SET_CELL
@@ -704,6 +752,12 @@ responses use the `path` field with a normalized plain path string.
 
 ```json
 { "type": "GET_SHEET_LAYOUT", "requestId": "layout", "sheetName": "Sheet1" }
+```
+
+## GET_PRINT_LAYOUT
+
+```json
+{ "type": "GET_PRINT_LAYOUT", "requestId": "print-layout", "sheetName": "Sheet1" }
 ```
 
 ## GET_DATA_VALIDATIONS

@@ -1,13 +1,15 @@
 Replay Result
 Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/apply_style_success.bin
 Harness: protocol-workflow
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: IllegalArgumentException
+Message: name must start with a letter or underscore and contain only letters, digits, underscore, or period
 Input Bytes: 53
-Source Kind: NEW
-Persistence Kind: NONE
-Operation Count: 5
+Source Kind: NOT_GENERATED
+Persistence Kind: NOT_GENERATED
+Operation Count: 0
 Read Count: 0
 Read Kinds: (none)
-Response Kind: FAILURE
+Response Kind: NOT_EXECUTED
 Style Kinds: (none)
-Operation Kinds: ENSURE_SHEET=4, SET_RANGE=1
+Operation Kinds: (none)

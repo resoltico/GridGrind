@@ -102,20 +102,19 @@ class WorkbookReadResultTest {
         () -> new WorkbookReadResult.AutofiltersResult("autofilters", "Budget", null));
     assertThrows(
         NullPointerException.class, () -> new WorkbookReadResult.TablesResult("tables", null));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(-1, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, -1, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, 0, -1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, 0, 0, -1));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.FreezePane.Frozen(-1, 0, 0, 0));
+        () ->
+            new WorkbookReadResult.SheetLayout(
+                "Budget", new ExcelSheetPane.None(), 9, List.of(), List.of()));
+    assertInstanceOf(ExcelSheetPane.None.class, new ExcelSheetPane.None());
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookReadResult.FreezePane.Frozen(0, -1, 0, 0));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookReadResult.FreezePane.Frozen(0, 0, -1, 0));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookReadResult.FreezePane.Frozen(0, 0, 0, -1));
-    assertInstanceOf(
-        WorkbookReadResult.FreezePane.None.class, new WorkbookReadResult.FreezePane.None());
+        NullPointerException.class,
+        () -> new WorkbookReadResult.PrintLayoutResult("print", "Budget", null));
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookReadResult.ColumnLayout(-1, 1.0));
     assertThrows(IllegalArgumentException.class, () -> new WorkbookReadResult.ColumnLayout(0, 0.0));
@@ -407,10 +406,8 @@ class WorkbookReadResultTest {
         new WorkbookReadResult.SheetLayoutResult(
             "layout",
             new WorkbookReadResult.SheetLayout(
-                "Budget",
-                new WorkbookReadResult.FreezePane.Frozen(1, 1, 1, 1),
-                columns,
-                resultRows)),
+                "Budget", new ExcelSheetPane.Frozen(1, 1, 1, 1), 125, columns, resultRows)),
+        new WorkbookReadResult.PrintLayoutResult("print", "Budget", defaultPrintLayout()),
         new WorkbookReadResult.DataValidationsResult("validations", "Budget", validations),
         new WorkbookReadResult.ConditionalFormattingHealthResult(
             "conditionalFormattingHealth",
@@ -440,8 +437,9 @@ class WorkbookReadResultTest {
         "https://example.com/report",
         fixture.hyperlinksResult().hyperlinks().getFirst().hyperlink().target());
     assertEquals("Review", fixture.commentsResult().comments().getFirst().comment().text());
-    assertInstanceOf(
-        WorkbookReadResult.FreezePane.Frozen.class, fixture.layoutResult().layout().freezePanes());
+    assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), fixture.layoutResult().layout().pane());
+    assertEquals(125, fixture.layoutResult().layout().zoomPercent());
+    assertEquals(defaultPrintLayout(), fixture.printLayoutResult().printLayout());
     assertEquals(
         "A2:A5", fixture.dataValidationsResult().validations().getFirst().ranges().getFirst());
     assertEquals(
@@ -481,6 +479,7 @@ class WorkbookReadResultTest {
       WorkbookReadResult.HyperlinksResult hyperlinksResult,
       WorkbookReadResult.CommentsResult commentsResult,
       WorkbookReadResult.SheetLayoutResult layoutResult,
+      WorkbookReadResult.PrintLayoutResult printLayoutResult,
       WorkbookReadResult.DataValidationsResult dataValidationsResult,
       WorkbookReadResult.ConditionalFormattingHealthResult conditionalFormattingHealthResult,
       WorkbookReadResult.AutofiltersResult autofiltersResult,
@@ -505,5 +504,16 @@ class WorkbookReadResultTest {
       schemaColumns.clear();
       namedRangeEntries.clear();
     }
+  }
+
+  private static ExcelPrintLayout defaultPrintLayout() {
+    return new ExcelPrintLayout(
+        new ExcelPrintLayout.Area.Range("A1:B20"),
+        ExcelPrintOrientation.LANDSCAPE,
+        new ExcelPrintLayout.Scaling.Fit(1, 0),
+        new ExcelPrintLayout.TitleRows.Band(0, 0),
+        new ExcelPrintLayout.TitleColumns.Band(0, 0),
+        new ExcelHeaderFooterText("Budget", "", "2026"),
+        new ExcelHeaderFooterText("", "Confidential", ""));
   }
 }

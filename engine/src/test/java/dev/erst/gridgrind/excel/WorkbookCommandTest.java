@@ -43,7 +43,10 @@ class WorkbookCommandTest {
         new WorkbookCommand.UnmergeCells("Budget", "A1:B2"),
         new WorkbookCommand.SetColumnWidth("Budget", 0, 1, 16.0),
         new WorkbookCommand.SetRowHeight("Budget", 0, 2, 28.5),
-        new WorkbookCommand.FreezePanes("Budget", 1, 2, 1, 2),
+        new WorkbookCommand.SetSheetPane("Budget", new ExcelSheetPane.Frozen(1, 2, 1, 2)),
+        new WorkbookCommand.SetSheetZoom("Budget", 135),
+        new WorkbookCommand.SetPrintLayout("Budget", defaultPrintLayout()),
+        new WorkbookCommand.ClearPrintLayout("Budget"),
         new WorkbookCommand.SetCell("Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23))),
         new WorkbookCommand.SetRange("Budget", "A1:B2", rows),
         new WorkbookCommand.ClearRange("Budget", "C1:C2"),
@@ -107,7 +110,10 @@ class WorkbookCommandTest {
     assertEquals("A1:B2", commands.unmergeCells().range());
     assertEquals(16.0, commands.setColumnWidth().widthCharacters());
     assertEquals(28.5, commands.setRowHeight().heightPoints());
-    assertEquals(2, commands.freezePanes().topRow());
+    assertEquals(new ExcelSheetPane.Frozen(1, 2, 1, 2), commands.setSheetPane().pane());
+    assertEquals(135, commands.setSheetZoom().zoomPercent());
+    assertEquals(defaultPrintLayout(), commands.setPrintLayout().printLayout());
+    assertEquals("Budget", commands.clearPrintLayout().sheetName());
     assertEquals("A1", commands.setCell().address());
     assertEquals("A1:B2", commands.setRange().range());
     assertEquals(2, commands.setRange().rows().size());
@@ -278,40 +284,34 @@ class WorkbookCommandTest {
   }
 
   @Test
-  void validatesFreezePaneCommandInputs() {
-    assertDoesNotThrow(() -> new WorkbookCommand.FreezePanes("Budget", 0, 2, 0, 2));
-    assertDoesNotThrow(() -> new WorkbookCommand.FreezePanes("Budget", 2, 0, 2, 0));
+  void validatesPaneZoomAndPrintLayoutCommandInputs() {
+    assertDoesNotThrow(() -> new WorkbookCommand.SetSheetPane("Budget", new ExcelSheetPane.None()));
+    assertDoesNotThrow(
+        () -> new WorkbookCommand.SetSheetPane("Budget", new ExcelSheetPane.Frozen(0, 2, 0, 2)));
+    assertDoesNotThrow(
+        () ->
+            new WorkbookCommand.SetSheetPane(
+                "Budget", new ExcelSheetPane.Split(1200, 0, 3, 0, ExcelPaneRegion.UPPER_RIGHT)));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.SetSheetPane(null, new ExcelSheetPane.None()));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.FreezePanes("Budget", 0, 0, 0, 0));
+        () -> new WorkbookCommand.SetSheetPane(" ", new ExcelSheetPane.None()));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookCommand.FreezePanes(null, 1, 1, 1, 1));
+        NullPointerException.class, () -> new WorkbookCommand.SetSheetPane("Budget", null));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.FreezePanes(" ", 1, 1, 1, 1));
+        IllegalArgumentException.class, () -> new WorkbookCommand.SetSheetZoom("Budget", 9));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.FreezePanes("Budget", -1, 1, 1, 1));
+        IllegalArgumentException.class, () -> new WorkbookCommand.SetSheetZoom("Budget", 401));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.SetSheetZoom(" ", 100));
     assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.FreezePanes("Budget", 1, -1, 1, 1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.FreezePanes("Budget", 1, 1, -1, 1));
+        NullPointerException.class, () -> new WorkbookCommand.SetPrintLayout("Budget", null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.FreezePanes("Budget", 1, 1, 1, -1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.FreezePanes("Budget", 0, 1, 1, 1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.FreezePanes("Budget", 1, 0, 1, 1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.FreezePanes("Budget", 2, 1, 1, 1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new WorkbookCommand.FreezePanes("Budget", 1, 2, 1, 1));
+        () -> new WorkbookCommand.SetPrintLayout(" ", defaultPrintLayout()));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearPrintLayout(null));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.ClearPrintLayout(" "));
   }
 
   @Test
@@ -598,7 +598,10 @@ class WorkbookCommandTest {
       WorkbookCommand.UnmergeCells unmergeCells,
       WorkbookCommand.SetColumnWidth setColumnWidth,
       WorkbookCommand.SetRowHeight setRowHeight,
-      WorkbookCommand.FreezePanes freezePanes,
+      WorkbookCommand.SetSheetPane setSheetPane,
+      WorkbookCommand.SetSheetZoom setSheetZoom,
+      WorkbookCommand.SetPrintLayout setPrintLayout,
+      WorkbookCommand.ClearPrintLayout clearPrintLayout,
       WorkbookCommand.SetCell setCell,
       WorkbookCommand.SetRange setRange,
       WorkbookCommand.ClearRange clearRange,
@@ -621,6 +624,17 @@ class WorkbookCommandTest {
       WorkbookCommand.AutoSizeColumns autoSizeColumns,
       WorkbookCommand.EvaluateAllFormulas evaluate,
       WorkbookCommand.ForceFormulaRecalculationOnOpen recalc) {}
+
+  private static ExcelPrintLayout defaultPrintLayout() {
+    return new ExcelPrintLayout(
+        new ExcelPrintLayout.Area.Range("A1:C20"),
+        ExcelPrintOrientation.LANDSCAPE,
+        new ExcelPrintLayout.Scaling.Fit(1, 0),
+        new ExcelPrintLayout.TitleRows.Band(0, 1),
+        new ExcelPrintLayout.TitleColumns.Band(0, 0),
+        new ExcelHeaderFooterText("Left", "Center", "Right"),
+        new ExcelHeaderFooterText("Footer Left", "", "Footer Right"));
+  }
 
   private static ExcelSheetProtectionSettings protectionSettings() {
     return new ExcelSheetProtectionSettings(

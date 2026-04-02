@@ -2,41 +2,20 @@
   "targetKey" : "protocol-workflow",
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/fdf2b1f4471f81858053a09b22f657b3baa3a974",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/set_comment_clear_range_failure.bin",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_WORKFLOW",
       "inputBytes" : 173,
-      "sourceKind" : "NEW",
-      "persistenceKind" : "NONE",
-      "operationCount" : 8,
-      "operationKinds" : {
-        "ENSURE_SHEET" : 1,
-        "CLEAR_CONDITIONAL_FORMATTING" : 5,
-        "APPLY_STYLE" : 1,
-        "DELETE_NAMED_RANGE" : 1
-      },
-      "styleKinds" : {
-        "font_height_twips" : 1,
-        "border" : 1,
-        "fill_color" : 1,
-        "vertical_alignment" : 1,
-        "bold" : 1,
-        "font_name" : 1,
-        "font_color" : 1,
-        "border_all" : 1,
-        "border_right" : 1,
-        "font_height" : 1,
-        "wrap_text" : 1,
-        "horizontal_alignment" : 1,
-        "italic" : 1,
-        "underline" : 1,
-        "strikeout" : 1
-      },
+      "sourceKind" : "NOT_GENERATED",
+      "persistenceKind" : "NOT_GENERATED",
+      "operationCount" : 0,
+      "operationKinds" : { },
+      "styleKinds" : { },
       "readCount" : 0,
       "readKinds" : { },
-      "responseKind" : "FAILURE"
+      "responseKind" : "NOT_EXECUTED"
     }
   },
   "promotedAt" : "2026-03-26T16:47:36.732322Z",

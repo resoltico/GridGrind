@@ -19,7 +19,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.ss.util.PaneInformation;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 /** High-level sheet wrapper for typed reads, writes, and previews. */
@@ -31,6 +30,7 @@ public final class ExcelSheet {
   private final ExcelDataValidationController dataValidationController;
   private final ExcelConditionalFormattingController conditionalFormattingController;
   private final ExcelAutofilterController autofilterController;
+  private final ExcelPrintLayoutController printLayoutController;
 
   ExcelSheet(Sheet sheet, WorkbookStyleRegistry styleRegistry, ExcelFormulaRuntime formulaRuntime) {
     this.sheet = sheet;
@@ -40,6 +40,7 @@ public final class ExcelSheet {
     this.dataValidationController = new ExcelDataValidationController();
     this.conditionalFormattingController = new ExcelConditionalFormattingController();
     this.autofilterController = new ExcelAutofilterController();
+    this.printLayoutController = new ExcelPrintLayoutController();
   }
 
   /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
@@ -310,15 +311,30 @@ public final class ExcelSheet {
     return this;
   }
 
-  /** Freezes panes using explicit split and visible-origin coordinates. */
-  public ExcelSheet freezePanes(int splitColumn, int splitRow, int leftmostColumn, int topRow) {
-    requireNonNegative(splitColumn, "splitColumn");
-    requireNonNegative(splitRow, "splitRow");
-    requireNonNegative(leftmostColumn, "leftmostColumn");
-    requireNonNegative(topRow, "topRow");
-    requireFreezePaneCoordinates(splitColumn, splitRow, leftmostColumn, topRow);
+  /** Applies one explicit pane state to this sheet. */
+  public ExcelSheet setPane(ExcelSheetPane pane) {
+    Objects.requireNonNull(pane, "pane must not be null");
+    ExcelSheetViewSupport.setPane(xssfSheet(), pane);
+    return this;
+  }
 
-    sheet.createFreezePane(splitColumn, splitRow, leftmostColumn, topRow);
+  /** Applies one explicit zoom percentage to this sheet. */
+  public ExcelSheet setZoom(int zoomPercent) {
+    ExcelSheetViewSupport.requireZoomPercent(zoomPercent);
+    ExcelSheetViewSupport.setZoomPercent(xssfSheet(), zoomPercent);
+    return this;
+  }
+
+  /** Applies the provided print layout as the authoritative supported print state. */
+  public ExcelSheet setPrintLayout(ExcelPrintLayout printLayout) {
+    Objects.requireNonNull(printLayout, "printLayout must not be null");
+    printLayoutController.setPrintLayout(xssfSheet(), printLayout);
+    return this;
+  }
+
+  /** Clears the supported print layout state from this sheet. */
+  public ExcelSheet clearPrintLayout() {
+    printLayoutController.clearPrintLayout(xssfSheet());
     return this;
   }
 
@@ -508,9 +524,19 @@ public final class ExcelSheet {
     };
   }
 
-  /** Returns layout metadata such as freeze panes and visible sizing. */
+  /** Returns layout metadata such as panes, zoom, and visible sizing. */
   public WorkbookReadResult.SheetLayout layout() {
-    return new WorkbookReadResult.SheetLayout(name(), freezePane(), columnLayouts(), rowLayouts());
+    return new WorkbookReadResult.SheetLayout(
+        name(),
+        ExcelSheetViewSupport.pane(xssfSheet()),
+        ExcelSheetViewSupport.zoomPercent(xssfSheet()),
+        columnLayouts(),
+        rowLayouts());
+  }
+
+  /** Returns supported print-layout metadata for this sheet. */
+  public ExcelPrintLayout printLayout() {
+    return printLayoutController.printLayout(xssfSheet());
   }
 
   /** Returns data-validation metadata for the selected ranges on this sheet. */
@@ -997,28 +1023,6 @@ public final class ExcelSheet {
     return (float) heightPoints;
   }
 
-  /** Validates freeze-pane split and visible-origin coordinates before POI mutation. */
-  static void requireFreezePaneCoordinates(
-      int splitColumn, int splitRow, int leftmostColumn, int topRow) {
-    if (splitColumn == 0 && splitRow == 0) {
-      throw new IllegalArgumentException("splitColumn and splitRow must not both be 0");
-    }
-    if (splitColumn == 0 && leftmostColumn != 0) {
-      throw new IllegalArgumentException(
-          "leftmostColumn must be 0 when splitColumn is 0: " + leftmostColumn);
-    }
-    if (splitRow == 0 && topRow != 0) {
-      throw new IllegalArgumentException("topRow must be 0 when splitRow is 0: " + topRow);
-    }
-    if (splitColumn > 0 && leftmostColumn < splitColumn) {
-      throw new IllegalArgumentException(
-          "leftmostColumn must be greater than or equal to splitColumn");
-    }
-    if (splitRow > 0 && topRow < splitRow) {
-      throw new IllegalArgumentException("topRow must be greater than or equal to splitRow");
-    }
-  }
-
   /**
    * Returns whether the cell should appear in preview output because it carries visible content or
    * metadata.
@@ -1122,18 +1126,6 @@ public final class ExcelSheet {
     CellReference reference = parseCellReference(address);
     Row row = sheet.getRow(reference.getRow());
     return row == null ? null : row.getCell(reference.getCol());
-  }
-
-  private WorkbookReadResult.FreezePane freezePane() {
-    PaneInformation paneInformation = sheet.getPaneInformation();
-    if (paneInformation == null || !paneInformation.isFreezePane()) {
-      return new WorkbookReadResult.FreezePane.None();
-    }
-    return new WorkbookReadResult.FreezePane.Frozen(
-        paneInformation.getVerticalSplitPosition(),
-        paneInformation.getHorizontalSplitPosition(),
-        paneInformation.getVerticalSplitLeftColumn(),
-        paneInformation.getHorizontalSplitTopRow());
   }
 
   private List<WorkbookReadResult.ColumnLayout> columnLayouts() {

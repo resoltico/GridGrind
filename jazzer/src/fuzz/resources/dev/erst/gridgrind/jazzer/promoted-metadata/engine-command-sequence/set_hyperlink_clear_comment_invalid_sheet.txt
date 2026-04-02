@@ -2,9 +2,9 @@ Replay Result
 Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/set_hyperlink_clear_comment_invalid_sheet.bin
 Harness: engine-command-sequence
 Outcome: EXPECTED_INVALID
-Kind: NamedRangeNotFoundException
-Message: Named range not found: Name1 (workbook scope)
+Kind: IllegalArgumentException
+Message: name must start with a letter or underscore and contain only letters, digits, underscore, or period
 Input Bytes: 64
-Command Count: 3
+Command Count: 0
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=1, DELETE_NAMED_RANGE=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1
+Command Kinds: (none)

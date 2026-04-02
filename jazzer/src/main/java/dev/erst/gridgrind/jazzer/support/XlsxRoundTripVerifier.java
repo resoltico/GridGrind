@@ -100,12 +100,12 @@ public final class XlsxRoundTripVerifier {
     if (sheet.getNumMergedRegions() < 0) {
       throw new IllegalStateException("merged region count must not be negative");
     }
-    if (sheet.getPaneInformation() != null && sheet.getPaneInformation().isFreezePane()) {
+    if (sheet.getPaneInformation() != null) {
       if (sheet.getPaneInformation().getVerticalSplitPosition() < 0
           || sheet.getPaneInformation().getHorizontalSplitPosition() < 0
           || sheet.getPaneInformation().getVerticalSplitLeftColumn() < 0
           || sheet.getPaneInformation().getHorizontalSplitTopRow() < 0) {
-        throw new IllegalStateException("freeze pane coordinates must not be negative");
+        throw new IllegalStateException("pane coordinates must not be negative");
       }
     }
     for (Row row : sheet) {
@@ -425,8 +425,17 @@ public final class XlsxRoundTripVerifier {
         case WorkbookCommand.SetRowHeight _ -> {
           // Row height does not affect cell-level round-trip expectations.
         }
-        case WorkbookCommand.FreezePanes _ -> {
-          // Freeze panes do not affect cell-level round-trip expectations.
+        case WorkbookCommand.SetSheetPane _ -> {
+          // Pane state does not affect cell-level round-trip expectations.
+        }
+        case WorkbookCommand.SetSheetZoom _ -> {
+          // Zoom state does not affect cell-level round-trip expectations.
+        }
+        case WorkbookCommand.SetPrintLayout _ -> {
+          // Print layout does not affect cell-level round-trip expectations.
+        }
+        case WorkbookCommand.ClearPrintLayout _ -> {
+          // Print layout clearing does not affect cell-level round-trip expectations.
         }
         case WorkbookCommand.SetCell setCell -> {
           CellCoordinate coordinate = CellCoordinate.fromAddress(setCell.address());

@@ -8,12 +8,8 @@
     "details" : {
       "type" : "ENGINE_COMMAND_SEQUENCE",
       "inputBytes" : 64,
-      "commandCount" : 3,
-      "commandKinds" : {
-        "CREATE_SHEET" : 1,
-        "DELETE_NAMED_RANGE" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
-      },
+      "commandCount" : 0,
+      "commandKinds" : { },
       "styleKinds" : { }
     }
   },

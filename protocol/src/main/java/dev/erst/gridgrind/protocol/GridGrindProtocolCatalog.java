@@ -48,6 +48,7 @@ public final class GridGrindProtocolCatalog {
       Map.ofEntries(
           Map.entry(CellInput.class, "cellInputTypes"),
           Map.entry(HyperlinkTarget.class, "hyperlinkTargetTypes"),
+          Map.entry(PaneInput.class, "paneTypes"),
           Map.entry(SheetCopyPosition.class, "sheetCopyPositionTypes"),
           Map.entry(CellSelection.class, "cellSelectionTypes"),
           Map.entry(RangeSelection.class, "rangeSelectionTypes"),
@@ -58,6 +59,10 @@ public final class GridGrindProtocolCatalog {
           Map.entry(NamedRangeSelector.class, "namedRangeSelectorTypes"),
           Map.entry(DataValidationRuleInput.class, "dataValidationRuleTypes"),
           Map.entry(ConditionalFormattingRuleInput.class, "conditionalFormattingRuleTypes"),
+          Map.entry(PrintAreaInput.class, "printAreaTypes"),
+          Map.entry(PrintScalingInput.class, "printScalingTypes"),
+          Map.entry(PrintTitleRowsInput.class, "printTitleRowsTypes"),
+          Map.entry(PrintTitleColumnsInput.class, "printTitleColumnsTypes"),
           Map.entry(TableStyleInput.class, "tableStyleTypes"),
           Map.entry(FontHeightInput.class, "fontHeightTypes"));
   private static final Map<Class<?>, String> PLAIN_FIELD_SHAPE_GROUPS =
@@ -74,9 +79,11 @@ public final class GridGrindProtocolCatalog {
           Map.entry(DataValidationPromptInput.class, "dataValidationPromptInputType"),
           Map.entry(DataValidationErrorAlertInput.class, "dataValidationErrorAlertInputType"),
           Map.entry(ConditionalFormattingBlockInput.class, "conditionalFormattingBlockInputType"),
+          Map.entry(HeaderFooterTextInput.class, "headerFooterTextInputType"),
           Map.entry(DifferentialStyleInput.class, "differentialStyleInputType"),
           Map.entry(DifferentialBorderInput.class, "differentialBorderInputType"),
           Map.entry(DifferentialBorderSideInput.class, "differentialBorderSideInputType"),
+          Map.entry(PrintLayoutInput.class, "printLayoutInputType"),
           Map.entry(TableInput.class, "tableInputType"));
   private static final List<TypeDescriptor> SOURCE_TYPES =
       List.of(
@@ -198,9 +205,26 @@ public final class GridGrindProtocolCatalog {
               "Set one or more row heights in Excel point units."
                   + " heightPoints must be > 0 and <= 1638.35 (Excel row height limit: 32767 twips)."),
           descriptor(
-              WorkbookOperation.FreezePanes.class,
-              "FREEZE_PANES",
-              "Freeze panes using explicit split and visible-origin coordinates."),
+              WorkbookOperation.SetSheetPane.class,
+              "SET_SHEET_PANE",
+              "Apply one explicit pane state."
+                  + " pane.type can be NONE, FROZEN, or SPLIT; use NONE to clear panes."),
+          descriptor(
+              WorkbookOperation.SetSheetZoom.class,
+              "SET_SHEET_ZOOM",
+              "Set the sheet zoom percentage."
+                  + " zoomPercent must be between 10 and 400 inclusive."),
+          descriptor(
+              WorkbookOperation.SetPrintLayout.class,
+              "SET_PRINT_LAYOUT",
+              "Apply one authoritative supported print-layout state to a sheet."
+                  + " Omitted nested fields normalize to default or clear state."
+                  + " The supported surface covers print area, orientation, fit scaling,"
+                  + " repeating rows, repeating columns, and plain header or footer text."),
+          descriptor(
+              WorkbookOperation.ClearPrintLayout.class,
+              "CLEAR_PRINT_LAYOUT",
+              "Clear the supported print-layout state from a sheet."),
           descriptor(
               WorkbookOperation.SetCell.class,
               "SET_CELL",
@@ -386,7 +410,13 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.GetSheetLayout.class,
               "GET_SHEET_LAYOUT",
-              "Return freeze-pane, row-height, and column-width metadata."),
+              "Return pane, zoom, row-height, and column-width metadata."),
+          descriptor(
+              WorkbookReadOperation.GetPrintLayout.class,
+              "GET_PRINT_LAYOUT",
+              "Return supported print-layout metadata for one sheet, including print area,"
+                  + " orientation, scaling, repeating rows or columns, and plain header or"
+                  + " footer text."),
           descriptor(
               WorkbookReadOperation.GetDataValidations.class,
               "GET_DATA_VALIDATIONS",

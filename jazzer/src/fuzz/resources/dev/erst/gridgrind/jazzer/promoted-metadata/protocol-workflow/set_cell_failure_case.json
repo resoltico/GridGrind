@@ -12,11 +12,14 @@
       "persistenceKind" : "NONE",
       "operationCount" : 1,
       "operationKinds" : {
-        "SET_ROW_HEIGHT" : 1
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
       },
       "styleKinds" : { },
-      "readCount" : 0,
-      "readKinds" : { },
+      "readCount" : 4,
+      "readKinds" : {
+        "GET_WORKBOOK_SUMMARY" : 3,
+        "GET_SHEET_SCHEMA" : 1
+      },
       "responseKind" : "FAILURE"
     }
   },

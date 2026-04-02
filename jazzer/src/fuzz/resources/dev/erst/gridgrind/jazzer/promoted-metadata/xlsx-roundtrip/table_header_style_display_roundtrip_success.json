@@ -8,8 +8,12 @@
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 191,
-      "commandCount" : 0,
-      "commandKinds" : { },
+      "commandCount" : 6,
+      "commandKinds" : {
+        "CLEAR_CONDITIONAL_FORMATTING" : 1,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 4,
+        "RENAME_SHEET" : 1
+      },
       "styleKinds" : { }
     }
   },

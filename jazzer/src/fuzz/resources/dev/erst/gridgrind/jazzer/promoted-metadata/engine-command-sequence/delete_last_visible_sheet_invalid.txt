@@ -1,10 +1,10 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/crash-5e90f4c070d4b9cdc09462914c4a852f7dfd3d9b
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/delete_last_visible_sheet_invalid.bin
 Harness: engine-command-sequence
 Outcome: EXPECTED_INVALID
-Kind: IllegalArgumentException
-Message: cannot delete the last visible sheet 'A'
+Kind: SheetNotFoundException
+Message: Sheet does not exist: A
 Input Bytes: 72
 Command Count: 4
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=2, DELETE_SHEET=1, SET_SHEET_VISIBILITY=1
+Command Kinds: SET_SHEET_VISIBILITY=2, FORCE_FORMULA_RECALCULATION_ON_OPEN=1, CREATE_SHEET=1

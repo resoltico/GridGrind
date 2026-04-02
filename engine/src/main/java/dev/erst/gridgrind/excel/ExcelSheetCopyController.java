@@ -39,6 +39,7 @@ final class ExcelSheetCopyController {
     copyComments(snapshot.comments(), targetSheet);
     copyMergedRegions(snapshot.mergedRegions(), targetSheet);
     copyLayout(snapshot.layout(), targetSheet);
+    targetSheet.setPrintLayout(snapshot.printLayout());
     copyDataValidations(snapshot.validations(), targetSheet);
     copyConditionalFormatting(snapshot.conditionalFormattingBlocks(), targetSheet);
     copyAutofilter(snapshot.sheetAutofilterRange(), targetSheet);
@@ -75,6 +76,7 @@ final class ExcelSheetCopyController {
     return new ExcelSheetCopySnapshot(
         copyableLocalRangeNames(namedRanges, sheetName),
         sourceSheet.layout(),
+        sourceSheet.printLayout(),
         sourceSheet.mergedRegions(),
         sourceSheet.comments(new ExcelCellSelection.AllUsedCells()),
         supportedDataValidations(
@@ -128,12 +130,8 @@ final class ExcelSheetCopyController {
     for (WorkbookReadResult.RowLayout row : layout.rows()) {
       targetSheet.setRowHeight(row.rowIndex(), row.rowIndex(), row.heightPoints());
     }
-    switch (layout.freezePanes()) {
-      case WorkbookReadResult.FreezePane.None _ -> {}
-      case WorkbookReadResult.FreezePane.Frozen frozen ->
-          targetSheet.freezePanes(
-              frozen.splitColumn(), frozen.splitRow(), frozen.leftmostColumn(), frozen.topRow());
-    }
+    targetSheet.setPane(layout.pane());
+    targetSheet.setZoom(layout.zoomPercent());
   }
 
   private static void copyDataValidations(
@@ -379,6 +377,7 @@ final class ExcelSheetCopyController {
   private record ExcelSheetCopySnapshot(
       List<ExcelNamedRangeSnapshot.RangeSnapshot> localNamedRanges,
       WorkbookReadResult.SheetLayout layout,
+      ExcelPrintLayout printLayout,
       List<WorkbookReadResult.MergedRegion> mergedRegions,
       List<WorkbookReadResult.CellComment> comments,
       List<ExcelDataValidationSnapshot.Supported> validations,
@@ -388,6 +387,7 @@ final class ExcelSheetCopyController {
     private ExcelSheetCopySnapshot {
       localNamedRanges = List.copyOf(localNamedRanges);
       Objects.requireNonNull(layout, "layout must not be null");
+      Objects.requireNonNull(printLayout, "printLayout must not be null");
       mergedRegions = List.copyOf(mergedRegions);
       comments = List.copyOf(comments);
       validations = List.copyOf(validations);

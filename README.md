@@ -45,7 +45,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.23.0
+docker pull ghcr.io/resoltico/gridgrind:0.24.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -164,7 +164,10 @@ autonomous callers deterministic failure semantics instead of "error after side 
 | `UNMERGE_CELLS` | Remove a merged region by exact range match |
 | `SET_COLUMN_WIDTH` | Set one or more column widths using character units |
 | `SET_ROW_HEIGHT` | Set one or more row heights using point units |
-| `FREEZE_PANES` | Freeze panes using explicit split and visible-origin coordinates |
+| `SET_SHEET_PANE` | Apply an explicit pane state using `NONE`, `FROZEN`, or `SPLIT` |
+| `SET_SHEET_ZOOM` | Set the sheet zoom percentage |
+| `SET_PRINT_LAYOUT` | Apply the supported print-layout state to one sheet |
+| `CLEAR_PRINT_LAYOUT` | Clear the supported print-layout state from one sheet |
 | `SET_CELL` | Write a typed value to a single cell without clearing existing style, hyperlink, or comment state |
 | `SET_RANGE` | Write a rectangular grid of typed values without clearing existing style, hyperlink, or comment state |
 | `CLEAR_RANGE` | Remove values, styles, hyperlinks, and comments from a rectangular range |
@@ -204,7 +207,12 @@ semantics.
 Structural layout operations are also strict: `MERGE_CELLS` uses A1-style ranges, `UNMERGE_CELLS`
 requires an exact merged-region match, `SET_COLUMN_WIDTH.widthCharacters` is converted to POI
 width units with `round(widthCharacters * 256)`, `SET_ROW_HEIGHT.heightPoints` is passed through
-as Excel point units, and `FREEZE_PANES` uses explicit split plus visible-origin coordinates.
+as Excel point units, and `SET_SHEET_PANE` uses one explicit pane family. `FROZEN` panes use
+split counts plus visible-origin coordinates, while `SPLIT` panes use Excel split offsets in
+`1/20` of a point plus visible origin and active-pane state. `SET_SHEET_ZOOM` accepts integers
+from `10` through `400`. `SET_PRINT_LAYOUT` covers print area, portrait or landscape orientation,
+fit scaling, repeating rows, repeating columns, and plain left/center/right header or footer
+text, while `CLEAR_PRINT_LAYOUT` restores the supported default state.
 
 `APPLY_STYLE` supports number formats, bold/italic, wrap, horizontal and vertical alignment,
 `fontName`, typed `fontHeight`, `fontColor`, `underline`, `strikeout`, `fillColor`, and per-side
@@ -284,6 +292,7 @@ Introspection reads:
 - `GET_HYPERLINKS`
 - `GET_COMMENTS`
 - `GET_SHEET_LAYOUT`
+- `GET_PRINT_LAYOUT`
 - `GET_DATA_VALIDATIONS`
 - `GET_CONDITIONAL_FORMATTING`
 - `GET_AUTOFILTERS`
@@ -309,6 +318,9 @@ agents can correlate repeated or similar reads deterministically.
 workbooks and `kind=WITH_SHEETS` when one or more sheets exist. Non-empty workbooks also report
 `activeSheetName` and workbook-ordered `selectedSheetNames`. `GET_SHEET_SUMMARY` now reports
 sheet `visibility` plus typed `protection` state alongside the existing row and column facts.
+`GET_SHEET_LAYOUT` returns pane state plus effective zoom and explicit row-height or column-width
+facts for one sheet. `GET_PRINT_LAYOUT` returns the supported print-area, orientation, scaling,
+repeating-row, repeating-column, and plain header or footer text state for one sheet.
 `GET_HYPERLINKS` returns hyperlinks in the same discriminated shape used by `SET_HYPERLINK`
 targets. `FILE` targets come back in the `path` field as normalized plain path strings.
 `GET_DATA_VALIDATIONS` returns supported validation entries plus typed unsupported entries for the

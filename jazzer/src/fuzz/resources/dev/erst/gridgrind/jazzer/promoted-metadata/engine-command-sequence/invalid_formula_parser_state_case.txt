@@ -2,9 +2,9 @@ Replay Result
 Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/invalid_formula_parser_state_case.bin
 Harness: engine-command-sequence
 Outcome: EXPECTED_INVALID
-Kind: IllegalArgumentException
-Message: table not found on expected sheet: OpsTable@D
+Kind: SheetNotFoundException
+Message: Sheet does not exist: D
 Input Bytes: 57
 Command Count: 4
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=2, FORCE_FORMULA_RECALCULATION_ON_OPEN=1, DELETE_TABLE=1
+Command Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=2, APPEND_ROW=1, CREATE_SHEET=1

@@ -2,18 +2,18 @@
   "targetKey" : "xlsx-roundtrip",
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-0196775dc07e92df7ec0ac3c19d56dd8e26c7c1c",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_preserves_styled_blank_row_roundtrip_success.bin",
-  "replayOutcome" : "EXPECTED_INVALID",
+  "replayOutcome" : "SUCCESS",
   "expectation" : {
-    "outcomeKind" : "EXPECTED_INVALID",
+    "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 107,
       "commandCount" : 6,
       "commandKinds" : {
-        "CREATE_SHEET" : 1,
-        "EVALUATE_ALL_FORMULAS" : 1,
+        "CLEAR_CONDITIONAL_FORMATTING" : 1,
         "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3,
-        "APPEND_ROW" : 1
+        "CREATE_SHEET" : 1,
+        "CLEAR_SHEET_PROTECTION" : 1
       },
       "styleKinds" : { }
     }

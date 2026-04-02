@@ -3,6 +3,29 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.24.0] - 2026-04-03
+
+### Added
+
+- Structural-layout public surface:
+  `SET_SHEET_PANE`, `SET_SHEET_ZOOM`, `SET_PRINT_LAYOUT`, `CLEAR_PRINT_LAYOUT`, and
+  `GET_PRINT_LAYOUT`.
+- New engine seams for sheet-view and print-layout control, including explicit pane-state,
+  zoom, print-area, orientation, fit scaling, repeating rows or columns, and plain
+  header/footer text support.
+
+### Changed
+
+- `GET_SHEET_LAYOUT` now reports a generalized `pane` family plus effective `zoomPercent`
+  instead of the older freeze-only layout contract.
+- The machine-readable protocol catalog, public docs, and Jazzer readable seeds now describe the
+  generalized pane and print-layout contract rather than the superseded `FREEZE_PANES` shape.
+
+### Fixed
+
+- Jazzer read introspection and `.xlsx` round-trip structural invariants now treat pane state as
+  a generalized workbook-view concern instead of a freeze-only special case.
+
 ## [0.23.0] - 2026-04-02
 
 ### Added
@@ -771,7 +794,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.23.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.24.0...HEAD
+[0.24.0]: https://github.com/resoltico/GridGrind/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/resoltico/GridGrind/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/resoltico/GridGrind/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/resoltico/GridGrind/compare/v0.20.0...v0.21.0

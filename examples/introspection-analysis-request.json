@@ -67,12 +67,33 @@
       "value": { "type": "TEXT", "text": "Board Snapshot" }
     },
     {
-      "type": "FREEZE_PANES",
+      "type": "SET_SHEET_PANE",
       "sheetName": "Dashboard",
-      "splitColumn": 0,
-      "splitRow": 1,
-      "leftmostColumn": 0,
-      "topRow": 1
+      "pane": {
+        "type": "FROZEN",
+        "splitColumn": 0,
+        "splitRow": 1,
+        "leftmostColumn": 0,
+        "topRow": 1
+      }
+    },
+    {
+      "type": "SET_SHEET_ZOOM",
+      "sheetName": "Dashboard",
+      "zoomPercent": 115
+    },
+    {
+      "type": "SET_PRINT_LAYOUT",
+      "sheetName": "Dashboard",
+      "printLayout": {
+        "printArea": { "type": "RANGE", "range": "A1:C10" },
+        "orientation": "LANDSCAPE",
+        "scaling": { "type": "FIT", "widthPages": 1, "heightPages": 0 },
+        "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 0 },
+        "repeatingColumns": { "type": "NONE" },
+        "header": { "left": "Dashboard", "center": "Board Snapshot", "right": "" },
+        "footer": { "left": "", "center": "Internal", "right": "Page 1" }
+      }
     },
     { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Dashboard" },
     { "type": "EVALUATE_FORMULAS" }
@@ -119,6 +140,11 @@
     {
       "type": "GET_SHEET_LAYOUT",
       "requestId": "layout",
+      "sheetName": "Dashboard"
+    },
+    {
+      "type": "GET_PRINT_LAYOUT",
+      "requestId": "print-layout",
       "sheetName": "Dashboard"
     },
     {
