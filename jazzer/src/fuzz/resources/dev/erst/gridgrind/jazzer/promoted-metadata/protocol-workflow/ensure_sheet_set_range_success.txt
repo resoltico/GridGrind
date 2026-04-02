@@ -5,9 +5,9 @@ Outcome: SUCCESS
 Input Bytes: 30
 Source Kind: NEW
 Persistence Kind: NONE
-Operation Count: 5
+Operation Count: 3
 Read Count: 0
 Read Kinds: (none)
 Response Kind: FAILURE
 Style Kinds: (none)
-Operation Kinds: ENSURE_SHEET=4, SET_TABLE=1
+Operation Kinds: ENSURE_SHEET=2, SET_COMMENT=1

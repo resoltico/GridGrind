@@ -33,6 +33,21 @@ public final class WorkbookCommandExecutor {
       case WorkbookCommand.DeleteSheet deleteSheet -> workbook.deleteSheet(deleteSheet.sheetName());
       case WorkbookCommand.MoveSheet moveSheet ->
           workbook.moveSheet(moveSheet.sheetName(), moveSheet.targetIndex());
+      case WorkbookCommand.CopySheet copySheet ->
+          workbook.copySheet(
+              copySheet.sourceSheetName(), copySheet.newSheetName(), copySheet.position());
+      case WorkbookCommand.SetActiveSheet setActiveSheet ->
+          workbook.setActiveSheet(setActiveSheet.sheetName());
+      case WorkbookCommand.SetSelectedSheets setSelectedSheets ->
+          workbook.setSelectedSheets(setSelectedSheets.sheetNames());
+      case WorkbookCommand.SetSheetVisibility setSheetVisibility ->
+          workbook.setSheetVisibility(
+              setSheetVisibility.sheetName(), setSheetVisibility.visibility());
+      case WorkbookCommand.SetSheetProtection setSheetProtection ->
+          workbook.setSheetProtection(
+              setSheetProtection.sheetName(), setSheetProtection.protection());
+      case WorkbookCommand.ClearSheetProtection clearSheetProtection ->
+          workbook.clearSheetProtection(clearSheetProtection.sheetName());
       case WorkbookCommand.MergeCells mergeCells ->
           workbook.sheet(mergeCells.sheetName()).mergeCells(mergeCells.range());
       case WorkbookCommand.UnmergeCells unmergeCells ->

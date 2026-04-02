@@ -148,7 +148,7 @@ Committed regression inputs and promotion metadata live under:
 - `jazzer/src/fuzz/resources/.../*Inputs/...`
 - `jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/`
 
-The committed promoted seed floor currently contains 43 inputs across the four replayable
+The committed promoted seed floor currently contains 46 inputs across the four replayable
 harnesses.
 
 Run root Gradle verification and nested Jazzer verification sequentially, not in parallel.

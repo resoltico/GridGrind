@@ -10,8 +10,9 @@
       "inputBytes" : 64,
       "commandCount" : 3,
       "commandKinds" : {
-        "CLEAR_COMMENT" : 1,
-        "CLEAR_AUTOFILTER" : 2
+        "CREATE_SHEET" : 1,
+        "DELETE_NAMED_RANGE" : 1,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
       },
       "styleKinds" : { }
     }

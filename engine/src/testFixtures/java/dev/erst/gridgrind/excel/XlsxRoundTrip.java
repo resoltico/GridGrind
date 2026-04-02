@@ -46,6 +46,78 @@ public final class XlsxRoundTrip {
         });
   }
 
+  /** Returns the active sheet name exactly as stored in the saved workbook. */
+  public static String activeSheetName(Path workbookPath) throws IOException {
+    return readWorkbook(
+        workbookPath,
+        workbook -> {
+          int activeSheetIndex = workbook.getActiveSheetIndex();
+          if (activeSheetIndex < 0 || activeSheetIndex >= workbook.getNumberOfSheets()) {
+            throw new IllegalStateException("active sheet index must reference one saved sheet");
+          }
+          return workbook.getSheetName(activeSheetIndex);
+        });
+  }
+
+  /** Returns the selected sheet names in workbook order exactly as stored in the saved workbook. */
+  public static List<String> selectedSheetNames(Path workbookPath) throws IOException {
+    return readWorkbook(
+        workbookPath,
+        workbook -> {
+          List<String> selectedSheetNames = new ArrayList<>();
+          for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+            if (workbook.getSheetAt(sheetIndex).isSelected()) {
+              selectedSheetNames.add(workbook.getSheetName(sheetIndex));
+            }
+          }
+          return List.copyOf(selectedSheetNames);
+        });
+  }
+
+  /** Returns the saved visibility state for one sheet. */
+  public static ExcelSheetVisibility sheetVisibility(Path workbookPath, String sheetName)
+      throws IOException {
+    return readWorkbook(
+        workbookPath,
+        workbook -> {
+          int sheetIndex = workbook.getSheetIndex(sheetName);
+          if (sheetIndex < 0) {
+            throw new SheetNotFoundException(sheetName);
+          }
+          return ExcelSheetVisibility.fromPoi(workbook.getSheetVisibility(sheetIndex));
+        });
+  }
+
+  /** Returns the saved sheet-protection state for one sheet. */
+  public static WorkbookReadResult.SheetProtection sheetProtection(
+      Path workbookPath, String sheetName) throws IOException {
+    return readSheet(
+        workbookPath,
+        sheetName,
+        sheet -> {
+          if (!sheet.getProtect()) {
+            return new WorkbookReadResult.SheetProtection.Unprotected();
+          }
+          return new WorkbookReadResult.SheetProtection.Protected(
+              new ExcelSheetProtectionSettings(
+                  sheet.isAutoFilterLocked(),
+                  sheet.isDeleteColumnsLocked(),
+                  sheet.isDeleteRowsLocked(),
+                  sheet.isFormatCellsLocked(),
+                  sheet.isFormatColumnsLocked(),
+                  sheet.isFormatRowsLocked(),
+                  sheet.isInsertColumnsLocked(),
+                  sheet.isInsertHyperlinksLocked(),
+                  sheet.isInsertRowsLocked(),
+                  sheet.isObjectsLocked(),
+                  sheet.isPivotTablesLocked(),
+                  sheet.isScenariosLocked(),
+                  sheet.isSelectLockedCellsLocked(),
+                  sheet.isSelectUnlockedCellsLocked(),
+                  sheet.isSortLocked()));
+        });
+  }
+
   /** Returns all merged regions on the named sheet using A1-style range strings. */
   public static List<String> mergedRegions(Path workbookPath, String sheetName) throws IOException {
     return readSheet(

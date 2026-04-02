@@ -1,8 +1,10 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-cf071a5c3fab6142435ab70362296fd72841f102
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/table_header_rewrite_roundtrip_success.bin
 Harness: xlsx-roundtrip
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: IllegalArgumentException
+Message: name must start with a letter or underscore and contain only letters, digits, underscore, or period
 Input Bytes: 231
-Command Count: 10
+Command Count: 0
 Style Kinds: (none)
-Command Kinds: SET_RANGE=3, CREATE_SHEET=2, SET_TABLE=2, MERGE_CELLS=1, SET_COMMENT=1, SET_NAMED_RANGE=1
+Command Kinds: (none)

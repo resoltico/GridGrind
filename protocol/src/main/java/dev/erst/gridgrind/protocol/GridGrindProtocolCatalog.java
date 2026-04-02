@@ -48,6 +48,7 @@ public final class GridGrindProtocolCatalog {
       Map.ofEntries(
           Map.entry(CellInput.class, "cellInputTypes"),
           Map.entry(HyperlinkTarget.class, "hyperlinkTargetTypes"),
+          Map.entry(SheetCopyPosition.class, "sheetCopyPositionTypes"),
           Map.entry(CellSelection.class, "cellSelectionTypes"),
           Map.entry(RangeSelection.class, "rangeSelectionTypes"),
           Map.entry(SheetSelection.class, "sheetSelectionTypes"),
@@ -63,6 +64,9 @@ public final class GridGrindProtocolCatalog {
       Map.ofEntries(
           Map.entry(CommentInput.class, "commentInputType"),
           Map.entry(NamedRangeTarget.class, "namedRangeTargetType"),
+          Map.entry(
+              dev.erst.gridgrind.excel.ExcelSheetProtectionSettings.class,
+              "sheetProtectionSettingsType"),
           Map.entry(CellStyleInput.class, "cellStyleInputType"),
           Map.entry(CellBorderInput.class, "cellBorderInputType"),
           Map.entry(CellBorderSideInput.class, "cellBorderSideInputType"),
@@ -127,14 +131,54 @@ public final class GridGrindProtocolCatalog {
               WorkbookOperation.DeleteSheet.class,
               "DELETE_SHEET",
               "Delete an existing sheet."
-                  + " A workbook must retain at least one sheet;"
-                  + " deleting the last sheet returns INVALID_REQUEST."),
+                  + " A workbook must retain at least one sheet and at least one visible sheet;"
+                  + " deleting the last sheet or the last visible sheet returns INVALID_REQUEST."),
           descriptor(
               WorkbookOperation.MoveSheet.class,
               "MOVE_SHEET",
               "Move a sheet to a zero-based workbook position."
                   + " targetIndex is 0-based: 0 moves the sheet to the front,"
                   + " sheetCount-1 moves it to the back."),
+          descriptor(
+              WorkbookOperation.CopySheet.class,
+              "COPY_SHEET",
+              "Copy one sheet into a new visible, unselected sheet."
+                  + " position defaults to APPEND_AT_END when omitted."
+                  + " The copied sheet preserves supported sheet-local workbook content such as"
+                  + " formulas, validations, conditional formatting, comments, hyperlinks,"
+                  + " merged regions, and layout state."
+                  + " Sheets containing tables, or sheet-scoped formula-defined named ranges,"
+                  + " are rejected explicitly because they are not copyable under the current"
+                  + " product contract.",
+              "position"),
+          descriptor(
+              WorkbookOperation.SetActiveSheet.class,
+              "SET_ACTIVE_SHEET",
+              "Set the active sheet."
+                  + " Hidden sheets cannot be activated."
+                  + " The active sheet is always selected."),
+          descriptor(
+              WorkbookOperation.SetSelectedSheets.class,
+              "SET_SELECTED_SHEETS",
+              "Set the selected visible sheet set."
+                  + " Duplicate or unknown sheet names are rejected."
+                  + " selectedSheetNames read back in workbook order;"
+                  + " activeSheetName preserves the primary selected sheet choice."),
+          descriptor(
+              WorkbookOperation.SetSheetVisibility.class,
+              "SET_SHEET_VISIBILITY",
+              "Set one sheet visibility state."
+                  + " A workbook must retain at least one visible sheet;"
+                  + " hiding the last visible sheet is rejected."),
+          descriptor(
+              WorkbookOperation.SetSheetProtection.class,
+              "SET_SHEET_PROTECTION",
+              "Enable sheet protection with the exact supported lock flags."
+                  + " Password-bearing protection is intentionally out of scope."),
+          descriptor(
+              WorkbookOperation.ClearSheetProtection.class,
+              "CLEAR_SHEET_PROTECTION",
+              "Disable sheet protection entirely."),
           descriptor(
               WorkbookOperation.MergeCells.class,
               "MERGE_CELLS",
@@ -280,7 +324,10 @@ public final class GridGrindProtocolCatalog {
               WorkbookReadOperation.GetWorkbookSummary.class,
               "GET_WORKBOOK_SUMMARY",
               "Return workbook-level summary facts including sheet count, sheet names,"
-                  + " named range count, and formula recalculation flag."),
+                  + " named range count, and formula recalculation flag."
+                  + " Empty workbooks return workbook.kind=EMPTY;"
+                  + " non-empty workbooks return workbook.kind=WITH_SHEETS with activeSheetName"
+                  + " and selectedSheetNames."),
           descriptor(
               WorkbookReadOperation.GetNamedRanges.class,
               "GET_NAMED_RANGES",
@@ -289,6 +336,7 @@ public final class GridGrindProtocolCatalog {
               WorkbookReadOperation.GetSheetSummary.class,
               "GET_SHEET_SUMMARY",
               "Return structural summary facts for one sheet."
+                  + " Includes visibility and sheet protection state."
                   + " physicalRowCount is the number of physically materialized rows (sparse)."
                   + " lastRowIndex is the 0-based index of the last materialized row"
                   + " (-1 when empty), including metadata-only rows."
@@ -472,6 +520,18 @@ public final class GridGrindProtocolCatalog {
                       "DOCUMENT",
                       "Attach an internal workbook target."))),
           nestedTypeGroup(
+              "sheetCopyPositionTypes",
+              SheetCopyPosition.class,
+              List.of(
+                  descriptor(
+                      SheetCopyPosition.AppendAtEnd.class,
+                      "APPEND_AT_END",
+                      "Place the copied sheet after every existing sheet."),
+                  descriptor(
+                      SheetCopyPosition.AtIndex.class,
+                      "AT_INDEX",
+                      "Place the copied sheet at the requested zero-based workbook position."))),
+          nestedTypeGroup(
               "cellSelectionTypes",
               CellSelection.class,
               List.of(
@@ -650,6 +710,12 @@ public final class GridGrindProtocolCatalog {
               NamedRangeTarget.class,
               "NamedRangeTarget",
               "Explicit sheet name and A1-style range address for named-range authoring.",
+              List.of()),
+          plainTypeDescriptor(
+              "sheetProtectionSettingsType",
+              dev.erst.gridgrind.excel.ExcelSheetProtectionSettings.class,
+              "SheetProtectionSettings",
+              "Supported sheet-protection lock flags authored and reported by GridGrind.",
               List.of()),
           plainTypeDescriptor(
               "cellStyleInputType",

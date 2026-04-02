@@ -10,12 +10,18 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
+import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.protocol.CommentInput;
+import dev.erst.gridgrind.protocol.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.protocol.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.protocol.DataValidationInput;
 import dev.erst.gridgrind.protocol.DataValidationRuleInput;
+import dev.erst.gridgrind.protocol.DifferentialStyleInput;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.NamedRangeSelection;
@@ -23,6 +29,7 @@ import dev.erst.gridgrind.protocol.NamedRangeScope;
 import dev.erst.gridgrind.protocol.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.RangeSelection;
 import dev.erst.gridgrind.protocol.SheetSelection;
+import dev.erst.gridgrind.protocol.SheetCopyPosition;
 import dev.erst.gridgrind.protocol.TableInput;
 import dev.erst.gridgrind.protocol.TableSelection;
 import dev.erst.gridgrind.protocol.TableStyleInput;
@@ -35,6 +42,30 @@ import org.junit.jupiter.api.Test;
 class SequenceIntrospectionTest {
   @Test
   void reportsWaveThreeOperationKinds() {
+    assertEquals(
+        "COPY_SHEET",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.CopySheet(
+                "Budget", "Budget Copy", new SheetCopyPosition.AppendAtEnd())));
+    assertEquals(
+        "SET_ACTIVE_SHEET",
+        SequenceIntrospection.operationKind(new WorkbookOperation.SetActiveSheet("Budget")));
+    assertEquals(
+        "SET_SELECTED_SHEETS",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetSelectedSheets(List.of("Budget", "Archive"))));
+    assertEquals(
+        "SET_SHEET_VISIBILITY",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN)));
+    assertEquals(
+        "SET_SHEET_PROTECTION",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetSheetProtection("Budget", protectionSettings())));
+    assertEquals(
+        "CLEAR_SHEET_PROTECTION",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.ClearSheetProtection("Budget")));
     assertEquals(
         "SET_HYPERLINK",
         SequenceIntrospection.operationKind(
@@ -82,6 +113,22 @@ class SequenceIntrospectionTest {
             new WorkbookOperation.ClearDataValidations(
                 "Budget", new RangeSelection.Selected(List.of("A2:A5")))));
     assertEquals(
+        "SET_CONDITIONAL_FORMATTING",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetConditionalFormatting(
+                "Budget",
+                new ConditionalFormattingBlockInput(
+                    List.of("A2:A5"),
+                    List.of(
+                        new ConditionalFormattingRuleInput.FormulaRule(
+                            "A2>0", true, new DifferentialStyleInput("0.00", true, null, null,
+                                null, null, null, null, null)))))));
+    assertEquals(
+        "CLEAR_CONDITIONAL_FORMATTING",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.ClearConditionalFormatting(
+                "Budget", new RangeSelection.Selected(List.of("A2:A5")))));
+    assertEquals(
         "SET_AUTOFILTER",
         SequenceIntrospection.operationKind(
             new WorkbookOperation.SetAutofilter("Budget", "E1:F4")));
@@ -114,6 +161,30 @@ class SequenceIntrospectionTest {
 
   @Test
   void reportsWaveThreeCommandKinds() {
+    assertEquals(
+        "COPY_SHEET",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.CopySheet(
+                "Budget", "Budget Copy", new ExcelSheetCopyPosition.AppendAtEnd())));
+    assertEquals(
+        "SET_ACTIVE_SHEET",
+        SequenceIntrospection.commandKind(new WorkbookCommand.SetActiveSheet("Budget")));
+    assertEquals(
+        "SET_SELECTED_SHEETS",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetSelectedSheets(List.of("Budget", "Archive"))));
+    assertEquals(
+        "SET_SHEET_VISIBILITY",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN)));
+    assertEquals(
+        "SET_SHEET_PROTECTION",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetSheetProtection("Budget", protectionSettings())));
+    assertEquals(
+        "CLEAR_SHEET_PROTECTION",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.ClearSheetProtection("Budget")));
     assertEquals(
         "SET_HYPERLINK",
         SequenceIntrospection.commandKind(
@@ -162,6 +233,24 @@ class SequenceIntrospectionTest {
             new WorkbookCommand.ClearDataValidations(
                 "Budget", new dev.erst.gridgrind.excel.ExcelRangeSelection.All())));
     assertEquals(
+        "SET_CONDITIONAL_FORMATTING",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetConditionalFormatting(
+                "Budget",
+                new dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition(
+                    List.of("A2:A5"),
+                    List.of(
+                        new dev.erst.gridgrind.excel.ExcelConditionalFormattingRule.FormulaRule(
+                            "A2>0",
+                            true,
+                            new dev.erst.gridgrind.excel.ExcelDifferentialStyle(
+                                "0.00", true, null, null, null, null, null, null, null)))))));
+    assertEquals(
+        "CLEAR_CONDITIONAL_FORMATTING",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.ClearConditionalFormatting(
+                "Budget", new dev.erst.gridgrind.excel.ExcelRangeSelection.All())));
+    assertEquals(
         "SET_AUTOFILTER",
         SequenceIntrospection.commandKind(
             new WorkbookCommand.SetAutofilter("Budget", "E1:F4")));
@@ -204,12 +293,16 @@ class SequenceIntrospectionTest {
                 new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
                 new WorkbookReadOperation.GetDataValidations(
                     "validations", "Budget", new RangeSelection.All()),
+                new WorkbookReadOperation.GetConditionalFormatting(
+                    "conditional-formatting", "Budget", new RangeSelection.All()),
                 new WorkbookReadOperation.GetAutofilters("autofilters", "Budget"),
                 new WorkbookReadOperation.GetTables("tables", new TableSelection.All()),
                 new WorkbookReadOperation.GetFormulaSurface(
                     "formulas", new SheetSelection.All()),
                 new WorkbookReadOperation.AnalyzeDataValidationHealth(
                     "data-validation-health", new SheetSelection.All()),
+                new WorkbookReadOperation.AnalyzeConditionalFormattingHealth(
+                    "conditional-formatting-health", new SheetSelection.All()),
                 new WorkbookReadOperation.AnalyzeAutofilterHealth(
                     "autofilter-health", new SheetSelection.All()),
                 new WorkbookReadOperation.AnalyzeTableHealth(
@@ -218,13 +311,16 @@ class SequenceIntrospectionTest {
                     "named-range-health", new NamedRangeSelection.All()),
                 new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings")));
 
-    assertEquals(11, SequenceIntrospection.readCount(request));
+    assertEquals(13, SequenceIntrospection.readCount(request));
     assertEquals(
         1L,
         SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
     assertEquals(
         1L,
         SequenceIntrospection.readKinds(request.reads()).get("GET_DATA_VALIDATIONS"));
+    assertEquals(
+        1L,
+        SequenceIntrospection.readKinds(request.reads()).get("GET_CONDITIONAL_FORMATTING"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_AUTOFILTERS"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_TABLES"));
     assertEquals(
@@ -235,6 +331,10 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_DATA_VALIDATION_HEALTH"));
     assertEquals(
         1L,
+        SequenceIntrospection.readKinds(request.reads())
+            .get("ANALYZE_CONDITIONAL_FORMATTING_HEALTH"));
+    assertEquals(
+        1L,
         SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_AUTOFILTER_HEALTH"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_TABLE_HEALTH"));
     assertEquals(
@@ -243,5 +343,24 @@ class SequenceIntrospectionTest {
     assertEquals(
         1L,
         SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_WORKBOOK_FINDINGS"));
+  }
+
+  private static ExcelSheetProtectionSettings protectionSettings() {
+    return new ExcelSheetProtectionSettings(
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false);
   }
 }

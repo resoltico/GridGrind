@@ -35,19 +35,13 @@ final class ExcelWorkbookIntrospector {
     return switch (command) {
       case WorkbookReadCommand.GetWorkbookSummary getWorkbookSummary ->
           new WorkbookReadResult.WorkbookSummaryResult(
-              getWorkbookSummary.requestId(),
-              new WorkbookReadResult.WorkbookSummary(
-                  workbook.sheetCount(),
-                  workbook.sheetNames(),
-                  workbook.namedRangeCount(),
-                  workbook.forceFormulaRecalculationOnOpenEnabled()));
+              getWorkbookSummary.requestId(), workbook.workbookSummary());
       case WorkbookReadCommand.GetNamedRanges getNamedRanges ->
           new WorkbookReadResult.NamedRangesResult(
               getNamedRanges.requestId(), selectNamedRanges(workbook, getNamedRanges.selection()));
       case WorkbookReadCommand.GetSheetSummary getSheetSummary ->
           new WorkbookReadResult.SheetSummaryResult(
-              getSheetSummary.requestId(),
-              sheetIntrospector.summarize(workbook.sheet(getSheetSummary.sheetName())));
+              getSheetSummary.requestId(), workbook.sheetSummary(getSheetSummary.sheetName()));
       case WorkbookReadCommand.GetCells getCells ->
           new WorkbookReadResult.CellsResult(
               getCells.requestId(),

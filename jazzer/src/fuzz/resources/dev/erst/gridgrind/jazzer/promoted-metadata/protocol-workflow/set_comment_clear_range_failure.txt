@@ -4,10 +4,10 @@ Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 173
 Source Kind: NEW
-Persistence Kind: SAVE_AS
+Persistence Kind: NONE
 Operation Count: 8
-Read Count: 1
-Read Kinds: GET_MERGED_REGIONS=1
+Read Count: 0
+Read Kinds: (none)
 Response Kind: FAILURE
-Style Kinds: (none)
-Operation Kinds: CLEAR_HYPERLINK=6, UNMERGE_CELLS=1, CLEAR_RANGE=1
+Style Kinds: font_height_twips=1, border=1, fill_color=1, vertical_alignment=1, bold=1, font_name=1, font_color=1, border_all=1, border_right=1, font_height=1, wrap_text=1, horizontal_alignment=1, italic=1, underline=1, strikeout=1
+Operation Kinds: CLEAR_CONDITIONAL_FORMATTING=5, ENSURE_SHEET=1, APPLY_STYLE=1, DELETE_NAMED_RANGE=1

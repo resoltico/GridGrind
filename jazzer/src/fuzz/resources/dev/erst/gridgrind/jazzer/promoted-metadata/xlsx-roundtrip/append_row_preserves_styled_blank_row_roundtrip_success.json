@@ -8,14 +8,12 @@
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 107,
-      "commandCount" : 10,
+      "commandCount" : 6,
       "commandKinds" : {
-        "CREATE_SHEET" : 4,
-        "DELETE_SHEET" : 1,
-        "CLEAR_RANGE" : 1,
-        "CLEAR_DATA_VALIDATIONS" : 2,
-        "RENAME_SHEET" : 1,
-        "UNMERGE_CELLS" : 1
+        "CREATE_SHEET" : 1,
+        "EVALUATE_ALL_FORMULAS" : 1,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3,
+        "APPEND_ROW" : 1
       },
       "styleKinds" : { }
     }

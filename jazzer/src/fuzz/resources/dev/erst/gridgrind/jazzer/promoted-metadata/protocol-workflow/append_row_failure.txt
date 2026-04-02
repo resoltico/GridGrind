@@ -4,10 +4,10 @@ Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 67
 Source Kind: EXISTING
-Persistence Kind: OVERWRITE
+Persistence Kind: SAVE_AS
 Operation Count: 1
 Read Count: 6
-Read Kinds: GET_SHEET_SCHEMA=5, GET_WORKBOOK_SUMMARY=1
+Read Kinds: GET_NAMED_RANGE_SURFACE=5, GET_WORKBOOK_SUMMARY=1
 Response Kind: FAILURE
 Style Kinds: (none)
-Operation Kinds: CLEAR_HYPERLINK=1
+Operation Kinds: CLEAR_SHEET_PROTECTION=1

@@ -3,6 +3,6 @@ Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/
 Harness: engine-command-sequence
 Outcome: SUCCESS
 Input Bytes: 20
-Command Count: 7
+Command Count: 4
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=7
+Command Kinds: CREATE_SHEET=4

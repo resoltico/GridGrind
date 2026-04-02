@@ -24,12 +24,19 @@ class WorkbookReadResultTest {
 
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.WorkbookSummary(-1, List.of("Budget"), 0, true));
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                -1, List.of("Budget"), "Budget", List.of("Budget"), 0, true));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.WorkbookSummary(1, List.of("Budget"), -1, true));
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Budget", List.of("Budget"), -1, true));
     assertThrows(
-        NullPointerException.class, () -> new WorkbookReadResult.WorkbookSummary(1, null, 0, true));
+        NullPointerException.class,
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                1, null, "Budget", List.of("Budget"), 0, true));
     assertThrows(
         NullPointerException.class, () -> new WorkbookReadResult.NamedRangesResult("ranges", null));
     assertThrows(
@@ -39,13 +46,34 @@ class WorkbookReadResultTest {
                 "ranges", List.of((ExcelNamedRangeSnapshot) null)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.SheetSummary("Budget", -1, 0, 0));
+        () ->
+            new WorkbookReadResult.SheetSummary(
+                "Budget",
+                ExcelSheetVisibility.VISIBLE,
+                new WorkbookReadResult.SheetProtection.Unprotected(),
+                -1,
+                0,
+                0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.SheetSummary("Budget", 0, -2, 0));
+        () ->
+            new WorkbookReadResult.SheetSummary(
+                "Budget",
+                ExcelSheetVisibility.VISIBLE,
+                new WorkbookReadResult.SheetProtection.Unprotected(),
+                0,
+                -2,
+                0));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.SheetSummary("Budget", 0, 0, -2));
+        () ->
+            new WorkbookReadResult.SheetSummary(
+                "Budget",
+                ExcelSheetVisibility.VISIBLE,
+                new WorkbookReadResult.SheetProtection.Unprotected(),
+                0,
+                0,
+                -2));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadResult.CellsResult("cells", "Budget", null));
@@ -182,6 +210,58 @@ class WorkbookReadResultTest {
                 WorkbookReadResult.NamedRangeBackingKind.RANGE));
   }
 
+  @Test
+  void validatesWorkbookSummaryStateSpecificInvariants() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.WorkbookSummary.Empty(1, List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                2, List.of("Budget"), "Budget", List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                0, List.of(), "Budget", List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Budget", List.of("Budget"), -1, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Missing", List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Budget", List.of(), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Budget", List.of("Missing"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                2, List.of("Budget", "Budget"), "Budget", List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                1, List.of(" "), " ", List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Budget", List.of("Budget", "Budget"), 0, false));
+  }
+
   private static ExcelCellStyleSnapshot defaultStyle() {
     return new ExcelCellStyleSnapshot(
         "",
@@ -305,10 +385,19 @@ class WorkbookReadResultTest {
         schemaColumns,
         namedRangeEntries,
         new WorkbookReadResult.WorkbookSummaryResult(
-            "workbook", new WorkbookReadResult.WorkbookSummary(1, sheetNames, 1, true)),
+            "workbook",
+            new WorkbookReadResult.WorkbookSummary.WithSheets(
+                1, sheetNames, "Budget", List.of("Budget"), 1, true)),
         new WorkbookReadResult.NamedRangesResult("ranges", namedRanges),
         new WorkbookReadResult.SheetSummaryResult(
-            "sheet", new WorkbookReadResult.SheetSummary("Budget", 4, 3, 2)),
+            "sheet",
+            new WorkbookReadResult.SheetSummary(
+                "Budget",
+                ExcelSheetVisibility.VISIBLE,
+                new WorkbookReadResult.SheetProtection.Unprotected(),
+                4,
+                3,
+                2)),
         new WorkbookReadResult.CellsResult("cells", "Budget", cells),
         new WorkbookReadResult.WindowResult(
             "window", new WorkbookReadResult.Window("Budget", "A1", 1, 1, rows)),

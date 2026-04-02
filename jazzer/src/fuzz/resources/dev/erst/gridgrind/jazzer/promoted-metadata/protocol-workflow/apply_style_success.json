@@ -10,18 +10,12 @@
       "inputBytes" : 53,
       "sourceKind" : "NEW",
       "persistenceKind" : "NONE",
-      "operationCount" : 3,
+      "operationCount" : 5,
       "operationKinds" : {
-        "ENSURE_SHEET" : 1,
         "SET_RANGE" : 1,
-        "APPLY_STYLE" : 1
+        "ENSURE_SHEET" : 4
       },
-      "styleKinds" : {
-        "number_format" : 1,
-        "wrap_text" : 1,
-        "vertical_alignment" : 1,
-        "horizontal_alignment" : 1
-      },
+      "styleKinds" : { },
       "readCount" : 0,
       "readKinds" : { },
       "responseKind" : "FAILURE"

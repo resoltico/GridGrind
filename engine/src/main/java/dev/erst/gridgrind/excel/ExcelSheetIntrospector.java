@@ -5,13 +5,6 @@ import java.util.Objects;
 
 /** Reads reusable introspection facts from one sheet wrapper. */
 final class ExcelSheetIntrospector {
-  /** Returns structural summary facts for one sheet. */
-  WorkbookReadResult.SheetSummary summarize(ExcelSheet sheet) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    return new WorkbookReadResult.SheetSummary(
-        sheet.name(), sheet.physicalRowCount(), sheet.lastRowIndex(), sheet.lastColumnIndex());
-  }
-
   /** Returns exact cell snapshots for the provided ordered addresses on one sheet. */
   List<ExcelCellSnapshot> cells(ExcelSheet sheet, List<String> addresses) {
     Objects.requireNonNull(sheet, "sheet must not be null");

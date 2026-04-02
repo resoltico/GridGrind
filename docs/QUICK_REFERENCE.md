@@ -1,11 +1,11 @@
 ---
 afad: "3.4"
-version: "0.22.0"
+version: "0.23.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-01"
+updated: "2026-04-02"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like"]
 ---
 
 # Quick Reference
@@ -89,10 +89,73 @@ separate `path` field. `SAVE_AS` creates missing parent directories automaticall
 { "type": "DELETE_SHEET", "sheetName": "Scratch" }
 ```
 
+`DELETE_SHEET` rejects deleting the last remaining sheet or the last visible sheet in a workbook.
+
 ## MOVE_SHEET
 
 ```json
 { "type": "MOVE_SHEET", "sheetName": "History", "targetIndex": 0 }
+```
+
+## COPY_SHEET
+
+```json
+{
+  "type": "COPY_SHEET",
+  "sourceSheetName": "Budget",
+  "newSheetName": "Budget Review",
+  "position": { "type": "AT_INDEX", "targetIndex": 1 }
+}
+```
+
+## SET_ACTIVE_SHEET
+
+```json
+{ "type": "SET_ACTIVE_SHEET", "sheetName": "Budget Review" }
+```
+
+## SET_SELECTED_SHEETS
+
+```json
+{ "type": "SET_SELECTED_SHEETS", "sheetNames": ["Budget", "Budget Review"] }
+```
+
+## SET_SHEET_VISIBILITY
+
+```json
+{ "type": "SET_SHEET_VISIBILITY", "sheetName": "Archive", "visibility": "VERY_HIDDEN" }
+```
+
+## SET_SHEET_PROTECTION
+
+```json
+{
+  "type": "SET_SHEET_PROTECTION",
+  "sheetName": "Budget Review",
+  "protection": {
+    "autoFilterLocked": true,
+    "deleteColumnsLocked": true,
+    "deleteRowsLocked": true,
+    "formatCellsLocked": true,
+    "formatColumnsLocked": false,
+    "formatRowsLocked": false,
+    "insertColumnsLocked": true,
+    "insertHyperlinksLocked": true,
+    "insertRowsLocked": true,
+    "objectsLocked": true,
+    "pivotTablesLocked": true,
+    "scenariosLocked": true,
+    "selectLockedCellsLocked": true,
+    "selectUnlockedCellsLocked": false,
+    "sortLocked": true
+  }
+}
+```
+
+## CLEAR_SHEET_PROTECTION
+
+```json
+{ "type": "CLEAR_SHEET_PROTECTION", "sheetName": "Budget Review" }
 ```
 
 ## MERGE_CELLS
@@ -508,7 +571,7 @@ accepted and stored as `"A1:B4"`.
 
 `SET_COLUMN_WIDTH.widthCharacters` is converted to POI width units with `round(widthCharacters * 256)`. Must be > 0 and ≤ 255.0.
 `SET_ROW_HEIGHT.heightPoints` uses Excel point units. Must be > 0 and ≤ 1,638.35 (32,767 twips). `UNMERGE_CELLS` requires an exact merged-range match.
-`DELETE_SHEET` returns `INVALID_REQUEST` when the sheet to delete is the only remaining sheet in the workbook.
+`DELETE_SHEET` returns `INVALID_REQUEST` when the sheet to delete is the only remaining sheet or the last visible sheet in the workbook.
 
 ## EVALUATE_FORMULAS
 

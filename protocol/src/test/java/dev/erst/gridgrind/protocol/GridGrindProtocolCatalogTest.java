@@ -471,12 +471,13 @@ class GridGrindProtocolCatalogTest {
     assertEquals("type", catalog.discriminatorField());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
-    assertEquals(31, catalog.operationTypes().size());
+    assertEquals(37, catalog.operationTypes().size());
     assertEquals(24, catalog.readTypes().size());
     assertEquals(
         List.of(
             "cellInputTypes",
             "hyperlinkTargetTypes",
+            "sheetCopyPositionTypes",
             "cellSelectionTypes",
             "rangeSelectionTypes",
             "sheetSelectionTypes",
@@ -495,6 +496,7 @@ class GridGrindProtocolCatalogTest {
         List.of(
             "commentInputType",
             "namedRangeTargetType",
+            "sheetProtectionSettingsType",
             "cellStyleInputType",
             "cellBorderInputType",
             "cellBorderSideInputType",
@@ -535,6 +537,35 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
         fieldNamed(namedRangeGroup.type(), "range").requirement());
+
+    GridGrindProtocolCatalog.TypeEntry copySheet =
+        entryNamed(catalog.operationTypes(), "COPY_SHEET");
+    assertEquals(
+        GridGrindProtocolCatalog.FieldRequirement.OPTIONAL,
+        fieldNamed(copySheet, "position").requirement());
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetCopyPositionTypes"),
+        fieldNamed(copySheet, "position").shape());
+
+    GridGrindProtocolCatalog.PlainTypeGroup protectionGroup =
+        plainGroup(catalog, "sheetProtectionSettingsType");
+    assertTrue(
+        fieldNamed(protectionGroup.type(), "autoFilterLocked").shape()
+            instanceof GridGrindProtocolCatalog.FieldShape.Scalar,
+        "sheetProtectionSettingsType boolean fields must be scalar booleans");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.Scalar(GridGrindProtocolCatalog.ScalarType.BOOLEAN),
+        fieldNamed(protectionGroup.type(), "sortLocked").shape());
+
+    assertTrue(
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_SHEET_VISIBILITY"), "visibility")
+            .enumValues()
+            .contains("VERY_HIDDEN"),
+        "SET_SHEET_VISIBILITY.visibility must expose visibility enum values");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef("sheetProtectionSettingsType"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_SHEET_PROTECTION"), "protection")
+            .shape());
 
     GridGrindProtocolCatalog.FieldEntry borderStyleField =
         fieldNamed(plainGroup(catalog, "cellBorderSideInputType").type(), "style");
@@ -685,6 +716,29 @@ class GridGrindProtocolCatalogTest {
         entryNamed(catalog.operationTypes(), "APPEND_ROW").summary().contains("value-bearing"),
         "APPEND_ROW summary must explain value-bearing row semantics");
     assertTrue(
+        entryNamed(catalog.operationTypes(), "COPY_SHEET")
+            .summary()
+            .contains("Sheets containing tables"),
+        "COPY_SHEET summary must describe explicit non-copyable sheet families");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_SELECTED_SHEETS")
+            .summary()
+            .contains("workbook order"),
+        "SET_SELECTED_SHEETS summary must explain workbook-order readback");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "DELETE_SHEET")
+            .summary()
+            .contains("last visible sheet"),
+        "DELETE_SHEET summary must explain the last-visible-sheet invariant");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_WORKBOOK_SUMMARY")
+            .summary()
+            .contains("workbook.kind=EMPTY"),
+        "GET_WORKBOOK_SUMMARY summary must describe the empty-workbook variant");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_SHEET_SUMMARY").summary().contains("visibility"),
+        "GET_SHEET_SUMMARY summary must mention visibility");
+    assertTrue(
         entryNamed(catalog.operationTypes(), "AUTO_SIZE_COLUMNS")
             .summary()
             .contains("deterministically"),
@@ -761,6 +815,10 @@ class GridGrindProtocolCatalogTest {
   }
 
   private static void assertCatalogPolymorphicReferences(GridGrindProtocolCatalog.Catalog catalog) {
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetCopyPositionTypes"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "COPY_SHEET"), "position").shape(),
+        "COPY_SHEET.position must point to sheetCopyPositionTypes");
     assertEquals(
         new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("cellSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "GET_HYPERLINKS"), "selection").shape(),

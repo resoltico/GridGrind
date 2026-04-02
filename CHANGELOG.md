@@ -3,6 +3,48 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.23.0] - 2026-04-02
+
+### Added
+
+- Sheet-management public surface:
+  `COPY_SHEET`, `SET_ACTIVE_SHEET`, `SET_SELECTED_SHEETS`, `SET_SHEET_VISIBILITY`,
+  `SET_SHEET_PROTECTION`, and `CLEAR_SHEET_PROTECTION`.
+- `GET_WORKBOOK_SUMMARY` now reports the typed `EMPTY` versus `WITH_SHEETS` workbook-summary
+  shape, and non-empty workbooks expose `activeSheetName` plus `selectedSheetNames`.
+- `GET_SHEET_SUMMARY` now reports `visibility` and typed sheet-protection state alongside the
+  existing structural row and column facts.
+- New public example `examples/sheet-management-request.json` covering sheet copy, active and
+  selected sheet state, visibility, protection, workbook summary, and sheet summary reads.
+
+### Changed
+
+- Sheet-copy execution is now GridGrind-owned instead of delegating to Apache POI's raw
+  `cloneSheet()` behavior. Copying preserves supported sheet-local content while rejecting
+  unsupported copy cases such as tables and sheet-scoped formula-defined named ranges.
+- Jazzer sequence generation now uses a stable byte-selector grammar for workflow, command, and
+  read-family dispatch, so expanding the authored surface no longer requires mutating bounded
+  selector ranges in place.
+- The committed `sheet_management_request` Jazzer protocol-request seed now exercises the shipped
+  sheet-state contract instead of the older rename and move only slice.
+
+### Fixed
+
+- `DELETE_SHEET` now shares the same visible-sheet invariant as `SET_SHEET_VISIBILITY`, so
+  deleting the last visible sheet returns `INVALID_REQUEST` instead of crashing during workbook
+  view-state normalization.
+- Workbook and sheet summaries now expose active-sheet, selected-sheet, visibility, and
+  protection state through the public response model instead of truncating the new facts at
+  the engine boundary.
+- Sheet-management copy and workbook-view normalization now have direct round-trip and fuzz-backed
+  verification, including empty-sheet copies, protected-sheet copies, and invalid active-tab
+  repair paths.
+- `CLEAR_SHEET_PROTECTION` is now idempotent on already unprotected sheets instead of delegating
+  into an Apache POI removal path that could throw during `.xlsx` round-trip fuzzing.
+- Jazzer promotion metadata is now refreshed against the stable selector grammar, so replay
+  expectations remain truthful after the sheet-management expansion instead of silently
+  describing a previous generator contract.
+
 ## [0.22.0] - 2026-04-02
 
 ### Added
@@ -729,7 +771,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.22.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.23.0...HEAD
+[0.23.0]: https://github.com/resoltico/GridGrind/compare/v0.22.0...v0.23.0
 [0.22.0]: https://github.com/resoltico/GridGrind/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/resoltico/GridGrind/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/resoltico/GridGrind/compare/v0.19.0...v0.20.0

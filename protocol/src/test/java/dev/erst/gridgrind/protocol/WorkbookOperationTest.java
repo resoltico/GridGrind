@@ -6,6 +6,8 @@ import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
+import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +41,32 @@ class WorkbookOperationTest {
     assertEquals(16.0, setColumnWidth.widthCharacters());
     assertEquals(28.5, setRowHeight.heightPoints());
     assertEquals(2, freezePanes.topRow());
+  }
+
+  @Test
+  void buildsSheetStateOperationsAndDefaultsCopyPosition() {
+    ExcelSheetProtectionSettings protection = protectionSettings();
+    WorkbookOperation.CopySheet copySheet =
+        new WorkbookOperation.CopySheet("Budget", "Budget Copy", null);
+    WorkbookOperation.SetActiveSheet setActiveSheet =
+        new WorkbookOperation.SetActiveSheet("Budget Copy");
+    WorkbookOperation.SetSelectedSheets setSelectedSheets =
+        new WorkbookOperation.SetSelectedSheets(List.of("Budget", "Budget Copy"));
+    WorkbookOperation.SetSheetVisibility setSheetVisibility =
+        new WorkbookOperation.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN);
+    WorkbookOperation.SetSheetProtection setSheetProtection =
+        new WorkbookOperation.SetSheetProtection("Budget", protection);
+    WorkbookOperation.ClearSheetProtection clearSheetProtection =
+        new WorkbookOperation.ClearSheetProtection("Budget");
+
+    assertEquals("Budget", copySheet.sourceSheetName());
+    assertEquals("Budget Copy", copySheet.newSheetName());
+    assertInstanceOf(SheetCopyPosition.AppendAtEnd.class, copySheet.position());
+    assertEquals("Budget Copy", setActiveSheet.sheetName());
+    assertEquals(List.of("Budget", "Budget Copy"), setSelectedSheets.sheetNames());
+    assertEquals(ExcelSheetVisibility.HIDDEN, setSheetVisibility.visibility());
+    assertEquals(protection, setSheetProtection.protection());
+    assertEquals("Budget", clearSheetProtection.sheetName());
   }
 
   @Test
@@ -158,6 +186,29 @@ class WorkbookOperationTest {
 
   @Test
   void validatesNullAndEmptyCollectionConstraints() {
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.CopySheet(null, "Budget Copy", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.CopySheet("Budget", null, new SheetCopyPosition.AppendAtEnd()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.CopySheet("Budget", " ", new SheetCopyPosition.AppendAtEnd()));
+    assertThrows(NullPointerException.class, () -> new WorkbookOperation.SetActiveSheet(null));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.SetActiveSheet(" "));
+    assertThrows(NullPointerException.class, () -> new WorkbookOperation.SetSelectedSheets(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.SetSelectedSheets(List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.SetSelectedSheets(List.of("Budget", "Budget")));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.SetSheetVisibility("Budget", null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.SetSheetProtection("Budget", null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.ClearSheetProtection(null));
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookOperation.AppendRow("Budget", null));
     assertThrows(NullPointerException.class, () -> new WorkbookOperation.AutoSizeColumns(null));
@@ -479,6 +530,26 @@ class WorkbookOperationTest {
     assertEquals("DELETE_SHEET", new WorkbookOperation.DeleteSheet("Budget").operationType());
     assertEquals("MOVE_SHEET", new WorkbookOperation.MoveSheet("Budget", 0).operationType());
     assertEquals(
+        "COPY_SHEET",
+        new WorkbookOperation.CopySheet(
+                "Budget", "Budget Copy", new SheetCopyPosition.AppendAtEnd())
+            .operationType());
+    assertEquals(
+        "SET_ACTIVE_SHEET", new WorkbookOperation.SetActiveSheet("Budget").operationType());
+    assertEquals(
+        "SET_SELECTED_SHEETS",
+        new WorkbookOperation.SetSelectedSheets(List.of("Budget")).operationType());
+    assertEquals(
+        "SET_SHEET_VISIBILITY",
+        new WorkbookOperation.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN)
+            .operationType());
+    assertEquals(
+        "SET_SHEET_PROTECTION",
+        new WorkbookOperation.SetSheetProtection("Budget", protectionSettings()).operationType());
+    assertEquals(
+        "CLEAR_SHEET_PROTECTION",
+        new WorkbookOperation.ClearSheetProtection("Budget").operationType());
+    assertEquals(
         "MERGE_CELLS", new WorkbookOperation.MergeCells("Budget", "A1:B2").operationType());
     assertEquals(
         "UNMERGE_CELLS", new WorkbookOperation.UnmergeCells("Budget", "A1:B2").operationType());
@@ -576,5 +647,11 @@ class WorkbookOperationTest {
         new DataValidationPromptInput("Reason", "Keep the reason concise.", true),
         new DataValidationErrorAlertInput(
             ExcelDataValidationErrorStyle.STOP, "Too long", "Use 20 characters or fewer.", true));
+  }
+
+  private static ExcelSheetProtectionSettings protectionSettings() {
+    return new ExcelSheetProtectionSettings(
+        false, true, false, true, false, true, false, true, false, true, false, true, false, true,
+        false);
   }
 }

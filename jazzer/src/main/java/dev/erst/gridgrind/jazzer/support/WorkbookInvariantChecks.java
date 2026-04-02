@@ -2,6 +2,8 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.WorkbookReadCommand;
+import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import dev.erst.gridgrind.protocol.AutofilterEntryReport;
 import dev.erst.gridgrind.protocol.AutofilterHealthReport;
 import dev.erst.gridgrind.protocol.ConditionalFormattingEntryReport;
@@ -80,16 +82,26 @@ public final class WorkbookInvariantChecks {
   /** Requires the open workbook to satisfy the structural invariants the fuzzers rely on. */
   public static void requireWorkbookShape(ExcelWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
-    require(workbook.sheetCount() >= 0, "sheetCount must not be negative");
-    require(
-        workbook.sheetCount() == workbook.sheetNames().size(),
-        "sheet count must match sheetNames size");
-    require(
-        workbook.sheetNames().size() == new HashSet<>(workbook.sheetNames()).size(),
-        "sheet names must be unique");
+    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    var workbookSummary =
+        ((dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult)
+                readExecutor.apply(
+                    workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-shape")).getFirst())
+            .workbook();
+
+    requireEngineWorkbookSummaryShape(workbookSummary);
     workbook
         .sheetNames()
-        .forEach(sheetName -> require(!sheetName.isBlank(), "sheetName must not be blank"));
+        .forEach(
+            sheetName ->
+                requireEngineSheetSummaryShape(
+                    ((dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult)
+                            readExecutor.apply(
+                                workbook,
+                                new WorkbookReadCommand.GetSheetSummary(
+                                    "sheet-shape-" + sheetName, sheetName))
+                                .getFirst())
+                        .sheet()));
   }
 
   private static void requirePersistenceMatchesRequest(
@@ -163,6 +175,7 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadOperation.GetSheetSummary expected -> {
         WorkbookReadResult.SheetSummaryResult result =
             (WorkbookReadResult.SheetSummaryResult) readResult;
+        requireSheetSummaryShape(result.sheet());
         require(expected.sheetName().equals(result.sheet().sheetName()), "sheet summary sheet mismatch");
       }
       case WorkbookReadOperation.GetCells expected -> {
@@ -384,14 +397,123 @@ public final class WorkbookInvariantChecks {
     workbook
         .sheetNames()
         .forEach(sheetName -> require(sheetName != null && !sheetName.isBlank(), "sheetName must not be blank"));
+    switch (workbook) {
+      case GridGrindResponse.WorkbookSummary.Empty empty -> {
+        require(empty.sheetCount() == 0, "empty workbook summary must have sheetCount 0");
+        require(empty.sheetNames().isEmpty(), "empty workbook summary must have no sheet names");
+      }
+      case GridGrindResponse.WorkbookSummary.WithSheets withSheets -> {
+        require(
+            withSheets.sheetCount() > 0, "non-empty workbook summary must have positive sheetCount");
+        requireNonBlank(withSheets.activeSheetName(), "activeSheetName");
+        require(
+            withSheets.sheetNames().contains(withSheets.activeSheetName()),
+            "activeSheetName must be present in sheetNames");
+        require(
+            withSheets.selectedSheetNames() != null,
+            "selectedSheetNames must not be null");
+        require(
+            !withSheets.selectedSheetNames().isEmpty(),
+            "selectedSheetNames must not be empty");
+        require(
+            withSheets.selectedSheetNames().size()
+                == new HashSet<>(withSheets.selectedSheetNames()).size(),
+            "selectedSheetNames must be unique");
+        withSheets
+            .selectedSheetNames()
+            .forEach(
+                selectedSheetName -> {
+                  requireNonBlank(selectedSheetName, "selectedSheetName");
+                  require(
+                      withSheets.sheetNames().contains(selectedSheetName),
+                      "selectedSheetNames must be present in sheetNames");
+                });
+      }
+    }
   }
 
   private static void requireSheetSummaryShape(GridGrindResponse.SheetSummaryReport sheet) {
     require(sheet.sheetName() != null, "sheetName must not be null");
     require(!sheet.sheetName().isBlank(), "sheetName must not be blank");
+    require(sheet.visibility() != null, "visibility must not be null");
+    require(sheet.protection() != null, "protection must not be null");
     require(sheet.physicalRowCount() >= 0, "physicalRowCount must not be negative");
     require(sheet.lastRowIndex() >= -1, "lastRowIndex must be greater than or equal to -1");
     require(sheet.lastColumnIndex() >= -1, "lastColumnIndex must be greater than or equal to -1");
+    switch (sheet.protection()) {
+      case GridGrindResponse.SheetProtectionReport.Unprotected _ -> {}
+      case GridGrindResponse.SheetProtectionReport.Protected protectedReport ->
+          require(protectedReport.settings() != null, "protected sheet settings must not be null");
+    }
+  }
+
+  private static void requireEngineWorkbookSummaryShape(
+      dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary workbook) {
+    require(workbook != null, "engine workbook summary must not be null");
+    require(workbook.sheetCount() >= 0, "engine sheetCount must not be negative");
+    require(workbook.namedRangeCount() >= 0, "engine namedRangeCount must not be negative");
+    require(workbook.sheetNames() != null, "engine sheetNames must not be null");
+    require(
+        workbook.sheetCount() == workbook.sheetNames().size(),
+        "engine sheetCount must match sheetNames size");
+    require(
+        workbook.sheetNames().size() == new HashSet<>(workbook.sheetNames()).size(),
+        "engine sheet names must be unique");
+    workbook
+        .sheetNames()
+        .forEach(sheetName -> requireNonBlank(sheetName, "engine sheetName"));
+    switch (workbook) {
+      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.Empty empty -> {
+        require(empty.sheetCount() == 0, "engine empty workbook summary must have sheetCount 0");
+        require(
+            empty.sheetNames().isEmpty(),
+            "engine empty workbook summary must have no sheet names");
+      }
+      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.WithSheets withSheets -> {
+        require(
+            withSheets.sheetCount() > 0,
+            "engine non-empty workbook summary must have positive sheetCount");
+        requireNonBlank(withSheets.activeSheetName(), "engine activeSheetName");
+        require(
+            withSheets.sheetNames().contains(withSheets.activeSheetName()),
+            "engine activeSheetName must be present in sheetNames");
+        require(
+            !withSheets.selectedSheetNames().isEmpty(),
+            "engine selectedSheetNames must not be empty");
+        require(
+            withSheets.selectedSheetNames().size()
+                == new HashSet<>(withSheets.selectedSheetNames()).size(),
+            "engine selectedSheetNames must be unique");
+        withSheets
+            .selectedSheetNames()
+            .forEach(
+                selectedSheetName -> {
+                  requireNonBlank(selectedSheetName, "engine selectedSheetName");
+                  require(
+                      withSheets.sheetNames().contains(selectedSheetName),
+                      "engine selectedSheetNames must be present in sheetNames");
+                });
+      }
+    }
+  }
+
+  private static void requireEngineSheetSummaryShape(
+      dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary sheet) {
+    requireNonBlank(sheet.sheetName(), "engine sheetName");
+    require(sheet.visibility() != null, "engine visibility must not be null");
+    require(sheet.protection() != null, "engine protection must not be null");
+    require(sheet.physicalRowCount() >= 0, "engine physicalRowCount must not be negative");
+    require(sheet.lastRowIndex() >= -1, "engine lastRowIndex must be greater than or equal to -1");
+    require(
+        sheet.lastColumnIndex() >= -1,
+        "engine lastColumnIndex must be greater than or equal to -1");
+    switch (sheet.protection()) {
+      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Unprotected _ -> {}
+      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Protected protectedSheet ->
+          require(
+              protectedSheet.settings() != null,
+              "engine protected sheet settings must not be null");
+    }
   }
 
   private static void requireWindowShape(GridGrindResponse.WindowReport window) {

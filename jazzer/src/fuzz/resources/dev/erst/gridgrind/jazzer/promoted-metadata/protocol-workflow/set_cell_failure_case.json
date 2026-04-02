@@ -12,13 +12,11 @@
       "persistenceKind" : "NONE",
       "operationCount" : 1,
       "operationKinds" : {
-        "SET_AUTOFILTER" : 1
+        "SET_ROW_HEIGHT" : 1
       },
       "styleKinds" : { },
-      "readCount" : 5,
-      "readKinds" : {
-        "GET_WORKBOOK_SUMMARY" : 5
-      },
+      "readCount" : 0,
+      "readKinds" : { },
       "responseKind" : "FAILURE"
     }
   },

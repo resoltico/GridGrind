@@ -10,10 +10,10 @@
       "inputBytes" : 30,
       "sourceKind" : "NEW",
       "persistenceKind" : "NONE",
-      "operationCount" : 5,
+      "operationCount" : 3,
       "operationKinds" : {
-        "ENSURE_SHEET" : 4,
-        "SET_TABLE" : 1
+        "ENSURE_SHEET" : 2,
+        "SET_COMMENT" : 1
       },
       "styleKinds" : { },
       "readCount" : 0,

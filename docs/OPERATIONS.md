@@ -1,11 +1,11 @@
 ---
 afad: "3.4"
-version: "0.22.0"
+version: "0.23.0"
 domain: OPERATIONS
-updated: "2026-04-01"
+updated: "2026-04-02"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-data-validations, get-autofilters, get-tables, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol]
-  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, freeze-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-data-validations, get-autofilters, get-tables, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol]
+  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
 ---
 
 # Operations Reference
@@ -169,8 +169,9 @@ Excel sheet name and must not conflict with another sheet name.
 
 ### DELETE_SHEET
 
-Delete an existing sheet. A workbook must contain at least one sheet; attempting to delete the
-last remaining sheet returns `INVALID_REQUEST`.
+Delete an existing sheet. A workbook must retain at least one sheet and at least one visible
+sheet, so attempting to delete the last remaining sheet or the last visible sheet returns
+`INVALID_REQUEST`.
 
 ```json
 { "type": "DELETE_SHEET", "sheetName": "Scratch" }
@@ -178,7 +179,7 @@ last remaining sheet returns `INVALID_REQUEST`.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing sheet to delete. Must not be the only remaining sheet. |
+| `sheetName` | Yes | Existing sheet to delete. Must not be the only remaining sheet or the last visible sheet. |
 
 ---
 
@@ -199,6 +200,140 @@ the operation runs, after all earlier operations in the same request.
 |:------|:---------|:------------|
 | `sheetName` | Yes | Existing sheet to move. |
 | `targetIndex` | Yes | Zero-based destination index. Must be between `0` and `sheetCount - 1`. |
+
+---
+
+### COPY_SHEET
+
+Copy one sheet into a new visible, unselected sheet. The copied sheet is placed either at the end
+of workbook order or at an explicit zero-based index. GridGrind preserves supported sheet-local
+content such as formulas, validations, conditional formatting, comments, hyperlinks, merged
+regions, and layout state. Sheets containing tables or sheet-scoped formula-defined named ranges
+are rejected explicitly because they are not copyable under the current product contract.
+
+```json
+{
+  "type": "COPY_SHEET",
+  "sourceSheetName": "Budget",
+  "newSheetName": "Budget Review",
+  "position": { "type": "AT_INDEX", "targetIndex": 1 }
+}
+```
+
+```json
+{
+  "type": "COPY_SHEET",
+  "sourceSheetName": "Budget",
+  "newSheetName": "Budget Snapshot"
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sourceSheetName` | Yes | Existing sheet to copy. |
+| `newSheetName` | Yes | New unique destination sheet name. |
+| `position` | No | Copy position. Omit to append at end. |
+
+`position` variants:
+
+- `{"type":"APPEND_AT_END"}`
+- `{"type":"AT_INDEX","targetIndex":1}`
+
+---
+
+### SET_ACTIVE_SHEET
+
+Set the active sheet. Hidden sheets cannot be activated. The active sheet is always selected.
+
+```json
+{ "type": "SET_ACTIVE_SHEET", "sheetName": "Budget Review" }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing visible sheet to activate. |
+
+---
+
+### SET_SELECTED_SHEETS
+
+Set the selected visible sheet set. Duplicate or unknown sheet names are rejected. Workbook
+summary reads return `selectedSheetNames` in workbook order while preserving the chosen active
+sheet as the primary selected tab.
+
+```json
+{ "type": "SET_SELECTED_SHEETS", "sheetNames": ["Budget", "Budget Review"] }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetNames` | Yes | Non-empty distinct list of existing visible sheets. |
+
+---
+
+### SET_SHEET_VISIBILITY
+
+Set one sheet visibility state. A workbook must retain at least one visible sheet, so hiding the
+last visible sheet is rejected.
+
+```json
+{ "type": "SET_SHEET_VISIBILITY", "sheetName": "Archive", "visibility": "VERY_HIDDEN" }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `visibility` | Yes | `VISIBLE`, `HIDDEN`, or `VERY_HIDDEN`. |
+
+---
+
+### SET_SHEET_PROTECTION
+
+Enable sheet protection with the exact supported lock flags. Password-bearing protection is out of
+scope; GridGrind authors and reports only the supported lock-state surface.
+
+```json
+{
+  "type": "SET_SHEET_PROTECTION",
+  "sheetName": "Budget Review",
+  "protection": {
+    "autoFilterLocked": true,
+    "deleteColumnsLocked": true,
+    "deleteRowsLocked": true,
+    "formatCellsLocked": true,
+    "formatColumnsLocked": false,
+    "formatRowsLocked": false,
+    "insertColumnsLocked": true,
+    "insertHyperlinksLocked": true,
+    "insertRowsLocked": true,
+    "objectsLocked": true,
+    "pivotTablesLocked": true,
+    "scenariosLocked": true,
+    "selectLockedCellsLocked": true,
+    "selectUnlockedCellsLocked": false,
+    "sortLocked": true
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `protection` | Yes | Supported lock-flag payload. |
+
+---
+
+### CLEAR_SHEET_PROTECTION
+
+Disable sheet protection entirely.
+
+```json
+{ "type": "CLEAR_SHEET_PROTECTION", "sheetName": "Budget Review" }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
 
 ---
 
@@ -1075,6 +1210,13 @@ force-recalculation flag.
 { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" }
 ```
 
+Response shapes:
+
+- `{"kind":"EMPTY","sheetCount":0,"sheetNames":[],"namedRangeCount":0,"forceFormulaRecalculationOnOpen":false}`
+- `{"kind":"WITH_SHEETS","sheetCount":2,"sheetNames":["Budget","Budget Review"],"activeSheetName":"Budget Review","selectedSheetNames":["Budget","Budget Review"],"namedRangeCount":0,"forceFormulaRecalculationOnOpen":false}`
+
+`selectedSheetNames` are returned in workbook order, not request order.
+
 ### GET_NAMED_RANGES
 
 Returns exact named-range reports selected by workbook-wide or exact-selector input.
@@ -1125,6 +1267,9 @@ Response field semantics:
 
 | Field | Description |
 |:------|:------------|
+| `visibility` | Sheet visibility state: `VISIBLE`, `HIDDEN`, or `VERY_HIDDEN`. |
+| `protection.kind` | `UNPROTECTED` or `PROTECTED`. |
+| `protection.settings` | Present only when `protection.kind=PROTECTED`; echoes the supported authored lock flags. |
 | `physicalRowCount` | Number of physically materialized rows in the sheet. Rows are sparse; a sheet with data only in row 1 and row 100 has `physicalRowCount=2`. |
 | `lastRowIndex` | Zero-based index of the last populated row. `-1` when the sheet is empty. Not the same as `physicalRowCount - 1` when rows are sparse. |
 | `lastColumnIndex` | Zero-based index of the last populated column across all rows. `-1` when the sheet is empty. |

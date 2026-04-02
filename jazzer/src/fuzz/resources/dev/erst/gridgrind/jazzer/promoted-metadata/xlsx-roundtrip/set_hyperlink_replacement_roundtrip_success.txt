@@ -1,10 +1,8 @@
 Replay Result
 Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/set_hyperlink_replacement_roundtrip_success.bin
 Harness: xlsx-roundtrip
-Outcome: EXPECTED_INVALID
-Kind: SheetNotFoundException
-Message: Sheet does not exist: C
+Outcome: SUCCESS
 Input Bytes: 82
 Command Count: 4
 Style Kinds: (none)
-Command Kinds: RENAME_SHEET=4
+Command Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=4

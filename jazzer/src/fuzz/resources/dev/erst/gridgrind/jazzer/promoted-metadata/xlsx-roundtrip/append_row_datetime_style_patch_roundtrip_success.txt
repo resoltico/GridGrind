@@ -2,9 +2,9 @@ Replay Result
 Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_datetime_style_patch_roundtrip_success.bin
 Harness: xlsx-roundtrip
 Outcome: EXPECTED_INVALID
-Kind: IllegalArgumentException
-Message: targetIndex out of range: workbook has 1 sheet(s), valid positions are 0 to 0; got 1
+Kind: SheetNotFoundException
+Message: Sheet does not exist: E
 Input Bytes: 228
-Command Count: 10
-Style Kinds: (none)
-Command Kinds: MOVE_SHEET=5, UNMERGE_CELLS=4, CREATE_SHEET=1
+Command Count: 2
+Style Kinds: border=1, border_all=1, border_top=1, border_right=1, border_bottom=1, fill_color=1, border_left=1
+Command Kinds: CLEAR_CONDITIONAL_FORMATTING=1, APPLY_STYLE=1

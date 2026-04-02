@@ -21,6 +21,9 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
+import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
+import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
@@ -489,6 +492,28 @@ class XlsxRoundTripVerifierTest {
     assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
+  /** Preserves copied-sheet order, active selection state, visibility, and protection through reopen. */
+  @Test
+  void requireRoundTripReadable_preservesB1SheetState(@TempDir Path tempDirectory)
+      throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Alpha"),
+            new WorkbookCommand.CreateSheet("Beta"),
+            new WorkbookCommand.SetCell("Alpha", "A1", ExcelCellValue.text("Queue")),
+            new WorkbookCommand.SetCell("Alpha", "B2", ExcelCellValue.number(7.0)),
+            new WorkbookCommand.CopySheet(
+                "Alpha", "Replica", new ExcelSheetCopyPosition.AtIndex(1)),
+            new WorkbookCommand.SetActiveSheet("Replica"),
+            new WorkbookCommand.SetSelectedSheets(List.of("Alpha", "Replica")),
+            new WorkbookCommand.SetSheetVisibility("Beta", ExcelSheetVisibility.VERY_HIDDEN),
+            new WorkbookCommand.SetSheetProtection("Replica", protectionSettings()));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
   private static Path saveWorkbook(Path tempDirectory, List<WorkbookCommand> commands)
       throws IOException {
     Path workbookPath = tempDirectory.resolve("roundtrip.xlsx");
@@ -497,5 +522,24 @@ class XlsxRoundTripVerifierTest {
       workbook.save(workbookPath);
     }
     return workbookPath;
+  }
+
+  private static ExcelSheetProtectionSettings protectionSettings() {
+    return new ExcelSheetProtectionSettings(
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false);
   }
 }

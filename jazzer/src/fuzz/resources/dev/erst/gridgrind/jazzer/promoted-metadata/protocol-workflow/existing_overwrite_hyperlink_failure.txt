@@ -1,13 +1,15 @@
 Replay Result
 Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_hyperlink_failure.bin
 Harness: protocol-workflow
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: IllegalArgumentException
+Message: name must start with a letter or underscore and contain only letters, digits, underscore, or period
 Input Bytes: 317
-Source Kind: NEW
-Persistence Kind: NONE
-Operation Count: 6
-Read Count: 5
-Read Kinds: GET_FORMULA_SURFACE=3, GET_NAMED_RANGES=2
-Response Kind: FAILURE
+Source Kind: NOT_GENERATED
+Persistence Kind: NOT_GENERATED
+Operation Count: 0
+Read Count: 0
+Read Kinds: (none)
+Response Kind: NOT_EXECUTED
 Style Kinds: (none)
-Operation Kinds: CLEAR_RANGE=4, CLEAR_HYPERLINK=2
+Operation Kinds: (none)

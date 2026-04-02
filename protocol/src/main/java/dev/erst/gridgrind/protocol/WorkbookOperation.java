@@ -3,6 +3,8 @@ package dev.erst.gridgrind.protocol;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
+import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import java.util.List;
 import java.util.Objects;
 
@@ -13,6 +15,20 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = WorkbookOperation.RenameSheet.class, name = "RENAME_SHEET"),
   @JsonSubTypes.Type(value = WorkbookOperation.DeleteSheet.class, name = "DELETE_SHEET"),
   @JsonSubTypes.Type(value = WorkbookOperation.MoveSheet.class, name = "MOVE_SHEET"),
+  @JsonSubTypes.Type(value = WorkbookOperation.CopySheet.class, name = "COPY_SHEET"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetActiveSheet.class, name = "SET_ACTIVE_SHEET"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.SetSelectedSheets.class,
+      name = "SET_SELECTED_SHEETS"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.SetSheetVisibility.class,
+      name = "SET_SHEET_VISIBILITY"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.SetSheetProtection.class,
+      name = "SET_SHEET_PROTECTION"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.ClearSheetProtection.class,
+      name = "CLEAR_SHEET_PROTECTION"),
   @JsonSubTypes.Type(value = WorkbookOperation.MergeCells.class, name = "MERGE_CELLS"),
   @JsonSubTypes.Type(value = WorkbookOperation.UnmergeCells.class, name = "UNMERGE_CELLS"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetColumnWidth.class, name = "SET_COLUMN_WIDTH"),
@@ -81,6 +97,59 @@ public sealed interface WorkbookOperation {
       Validation.requireSheetName(sheetName, "sheetName");
       Objects.requireNonNull(targetIndex, "targetIndex must not be null");
       Validation.requireNonNegative(targetIndex, "targetIndex");
+    }
+  }
+
+  /** Copies one sheet into a new visible, unselected sheet at the requested workbook position. */
+  record CopySheet(String sourceSheetName, String newSheetName, SheetCopyPosition position)
+      implements WorkbookOperation {
+    public CopySheet {
+      Validation.requireSheetName(sourceSheetName, "sourceSheetName");
+      Validation.requireSheetName(newSheetName, "newSheetName");
+      position = position == null ? new SheetCopyPosition.AppendAtEnd() : position;
+    }
+  }
+
+  /** Sets the active sheet and ensures it is selected. */
+  record SetActiveSheet(String sheetName) implements WorkbookOperation {
+    public SetActiveSheet {
+      Validation.requireSheetName(sheetName, "sheetName");
+    }
+  }
+
+  /** Sets the selected visible sheet set. */
+  record SetSelectedSheets(List<String> sheetNames) implements WorkbookOperation {
+    public SetSelectedSheets {
+      sheetNames = Validation.copySheetNames(sheetNames, "sheetNames");
+      if (sheetNames.isEmpty()) {
+        throw new IllegalArgumentException("sheetNames must not be empty");
+      }
+      Validation.requireDistinct(sheetNames, "sheetNames");
+    }
+  }
+
+  /** Sets one sheet visibility. */
+  record SetSheetVisibility(String sheetName, ExcelSheetVisibility visibility)
+      implements WorkbookOperation {
+    public SetSheetVisibility {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(visibility, "visibility must not be null");
+    }
+  }
+
+  /** Enables sheet protection with the exact supported lock flags. */
+  record SetSheetProtection(String sheetName, ExcelSheetProtectionSettings protection)
+      implements WorkbookOperation {
+    public SetSheetProtection {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(protection, "protection must not be null");
+    }
+  }
+
+  /** Disables sheet protection entirely. */
+  record ClearSheetProtection(String sheetName) implements WorkbookOperation {
+    public ClearSheetProtection {
+      Validation.requireSheetName(sheetName, "sheetName");
     }
   }
 
@@ -349,6 +418,12 @@ public sealed interface WorkbookOperation {
       case RenameSheet _ -> "RENAME_SHEET";
       case DeleteSheet _ -> "DELETE_SHEET";
       case MoveSheet _ -> "MOVE_SHEET";
+      case CopySheet _ -> "COPY_SHEET";
+      case SetActiveSheet _ -> "SET_ACTIVE_SHEET";
+      case SetSelectedSheets _ -> "SET_SELECTED_SHEETS";
+      case SetSheetVisibility _ -> "SET_SHEET_VISIBILITY";
+      case SetSheetProtection _ -> "SET_SHEET_PROTECTION";
+      case ClearSheetProtection _ -> "CLEAR_SHEET_PROTECTION";
       case MergeCells _ -> "MERGE_CELLS";
       case UnmergeCells _ -> "UNMERGE_CELLS";
       case SetColumnWidth _ -> "SET_COLUMN_WIDTH";
@@ -481,6 +556,21 @@ public sealed interface WorkbookOperation {
         return List.of();
       }
       return rows.stream().map(row -> row == null ? null : List.copyOf(row)).toList();
+    }
+
+    static List<String> copySheetNames(List<String> sheetNames, String fieldName) {
+      Objects.requireNonNull(sheetNames, fieldName + " must not be null");
+      List<String> copy = List.copyOf(sheetNames);
+      for (String sheetName : copy) {
+        requireSheetName(sheetName, fieldName);
+      }
+      return copy;
+    }
+
+    static void requireDistinct(List<String> values, String fieldName) {
+      if (new java.util.LinkedHashSet<>(values).size() != values.size()) {
+        throw new IllegalArgumentException(fieldName + " must not contain duplicates");
+      }
     }
 
     static void requireRectangularRows(List<List<CellInput>> rows) {
