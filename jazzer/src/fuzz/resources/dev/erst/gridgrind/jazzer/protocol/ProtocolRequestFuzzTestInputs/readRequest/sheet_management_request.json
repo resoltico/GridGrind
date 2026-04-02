@@ -10,59 +10,93 @@
   "operations": [
     { "type": "ENSURE_SHEET", "sheetName": "Budget" },
     { "type": "ENSURE_SHEET", "sheetName": "Archive" },
-    { "type": "ENSURE_SHEET", "sheetName": "Scratch" },
     {
-      "type": "SET_CELL",
-      "sheetName": "Archive",
-      "address": "A1",
-      "value": { "type": "TEXT", "text": "Archived numbers" }
-    },
-    {
-      "type": "SET_CELL",
+      "type": "SET_RANGE",
       "sheetName": "Budget",
-      "address": "A1",
-      "value": { "type": "TEXT", "text": "Current numbers" }
+      "range": "A1:B3",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Owner" },
+          { "type": "TEXT", "text": "Total" }
+        ],
+        [
+          { "type": "TEXT", "text": "Marta" },
+          { "type": "NUMBER", "number": 120.0 }
+        ],
+        [
+          { "type": "TEXT", "text": "Liam" },
+          { "type": "NUMBER", "number": 140.0 }
+        ]
+      ]
     },
     {
-      "type": "RENAME_SHEET",
+      "type": "SET_CELL",
       "sheetName": "Archive",
-      "newSheetName": "History"
+      "address": "A1",
+      "value": { "type": "TEXT", "text": "Hidden archive" }
     },
     {
-      "type": "MOVE_SHEET",
-      "sheetName": "History",
-      "targetIndex": 0
+      "type": "COPY_SHEET",
+      "sourceSheetName": "Budget",
+      "newSheetName": "Budget Review",
+      "position": { "type": "AT_INDEX", "targetIndex": 1 }
     },
-    { "type": "DELETE_SHEET", "sheetName": "Scratch" }
+    {
+      "type": "SET_CELL",
+      "sheetName": "Budget Review",
+      "address": "B3",
+      "value": { "type": "NUMBER", "number": 155.0 }
+    },
+    { "type": "SET_ACTIVE_SHEET", "sheetName": "Budget Review" },
+    {
+      "type": "SET_SELECTED_SHEETS",
+      "sheetNames": ["Budget", "Budget Review"]
+    },
+    {
+      "type": "SET_SHEET_VISIBILITY",
+      "sheetName": "Archive",
+      "visibility": "VERY_HIDDEN"
+    },
+    {
+      "type": "SET_SHEET_PROTECTION",
+      "sheetName": "Budget Review",
+      "protection": {
+        "autoFilterLocked": true,
+        "deleteColumnsLocked": true,
+        "deleteRowsLocked": true,
+        "formatCellsLocked": true,
+        "formatColumnsLocked": false,
+        "formatRowsLocked": false,
+        "insertColumnsLocked": true,
+        "insertHyperlinksLocked": true,
+        "insertRowsLocked": true,
+        "objectsLocked": true,
+        "pivotTablesLocked": true,
+        "scenariosLocked": true,
+        "selectLockedCellsLocked": true,
+        "selectUnlockedCellsLocked": false,
+        "sortLocked": true
+      }
+    }
   ],
   "reads": [
     { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
     {
-      "type": "GET_CELLS",
-      "requestId": "history-cells",
-      "sheetName": "History",
-      "addresses": ["A1"]
+      "type": "GET_SHEET_SUMMARY",
+      "requestId": "review-summary",
+      "sheetName": "Budget Review"
+    },
+    {
+      "type": "GET_SHEET_SUMMARY",
+      "requestId": "archive-summary",
+      "sheetName": "Archive"
     },
     {
       "type": "GET_WINDOW",
-      "requestId": "history-window",
-      "sheetName": "History",
+      "requestId": "review-window",
+      "sheetName": "Budget Review",
       "topLeftAddress": "A1",
-      "rowCount": 2,
-      "columnCount": 2
-    },
-    {
-      "type": "GET_CELLS",
-      "requestId": "budget-cells",
-      "sheetName": "Budget",
-      "addresses": ["A1"]
-    },
-    {
-      "type": "GET_WINDOW",
-      "requestId": "budget-window",
-      "sheetName": "Budget",
-      "topLeftAddress": "A1",
-      "rowCount": 2,
+      "rowCount": 3,
       "columnCount": 2
     }
   ]

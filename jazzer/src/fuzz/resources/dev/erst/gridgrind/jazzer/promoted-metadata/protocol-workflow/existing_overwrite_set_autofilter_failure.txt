@@ -1,13 +1,13 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/2863fd39fcb02afb9ec25cdf1d93b614e2600736
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_set_autofilter_failure.bin
 Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 215
 Source Kind: EXISTING
-Persistence Kind: OVERWRITE
-Operation Count: 8
-Read Count: 2
-Read Kinds: ANALYZE_HYPERLINK_HEALTH=1, GET_NAMED_RANGE_SURFACE=1
+Persistence Kind: SAVE_AS
+Operation Count: 1
+Read Count: 4
+Read Kinds: GET_AUTOFILTERS=3, GET_FORMULA_SURFACE=1
 Response Kind: FAILURE
-Style Kinds: (none)
-Operation Kinds: ENSURE_SHEET=4, DELETE_SHEET=2, SET_AUTOFILTER=1, SET_DATA_VALIDATION=1
+Style Kinds: border_all=1, fill_color=1, font_color=1, border=1
+Operation Kinds: APPLY_STYLE=1

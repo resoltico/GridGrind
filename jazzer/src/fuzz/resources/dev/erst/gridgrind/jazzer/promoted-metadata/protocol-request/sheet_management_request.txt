@@ -2,12 +2,12 @@ Replay Result
 Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/sheet_management_request.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 1616
+Input Bytes: 2666
 Decode Outcome: PARSED
 Source Kind: NEW
 Persistence Kind: SAVE_AS
-Operation Count: 8
-Read Count: 5
-Read Kinds: GET_WINDOW=2, GET_CELLS=2, GET_WORKBOOK_SUMMARY=1
+Operation Count: 10
+Read Count: 4
+Read Kinds: GET_SHEET_SUMMARY=2, GET_WORKBOOK_SUMMARY=1, GET_WINDOW=1
 Style Kinds: (none)
-Operation Kinds: ENSURE_SHEET=3, SET_CELL=2, DELETE_SHEET=1, RENAME_SHEET=1, MOVE_SHEET=1
+Operation Kinds: ENSURE_SHEET=2, SET_CELL=2, SET_RANGE=1, SET_SHEET_VISIBILITY=1, SET_ACTIVE_SHEET=1, COPY_SHEET=1, SET_SHEET_PROTECTION=1, SET_SELECTED_SHEETS=1

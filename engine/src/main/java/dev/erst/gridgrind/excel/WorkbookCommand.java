@@ -11,6 +11,12 @@ public sealed interface WorkbookCommand
         WorkbookCommand.RenameSheet,
         WorkbookCommand.DeleteSheet,
         WorkbookCommand.MoveSheet,
+        WorkbookCommand.CopySheet,
+        WorkbookCommand.SetActiveSheet,
+        WorkbookCommand.SetSelectedSheets,
+        WorkbookCommand.SetSheetVisibility,
+        WorkbookCommand.SetSheetProtection,
+        WorkbookCommand.ClearSheetProtection,
         WorkbookCommand.MergeCells,
         WorkbookCommand.UnmergeCells,
         WorkbookCommand.SetColumnWidth,
@@ -81,6 +87,86 @@ public sealed interface WorkbookCommand
       }
       if (targetIndex < 0) {
         throw new IllegalArgumentException("targetIndex must not be negative");
+      }
+    }
+  }
+
+  /** Copies one sheet into a new visible, unselected sheet at the requested workbook position. */
+  record CopySheet(String sourceSheetName, String newSheetName, ExcelSheetCopyPosition position)
+      implements WorkbookCommand {
+    public CopySheet {
+      Objects.requireNonNull(sourceSheetName, "sourceSheetName must not be null");
+      Objects.requireNonNull(newSheetName, "newSheetName must not be null");
+      Objects.requireNonNull(position, "position must not be null");
+      if (sourceSheetName.isBlank()) {
+        throw new IllegalArgumentException("sourceSheetName must not be blank");
+      }
+      if (newSheetName.isBlank()) {
+        throw new IllegalArgumentException("newSheetName must not be blank");
+      }
+    }
+  }
+
+  /** Sets the active sheet and ensures it is selected. */
+  record SetActiveSheet(String sheetName) implements WorkbookCommand {
+    public SetActiveSheet {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Sets the selected visible sheet set. */
+  record SetSelectedSheets(List<String> sheetNames) implements WorkbookCommand {
+    public SetSelectedSheets {
+      Objects.requireNonNull(sheetNames, "sheetNames must not be null");
+      sheetNames = List.copyOf(sheetNames);
+      if (sheetNames.isEmpty()) {
+        throw new IllegalArgumentException("sheetNames must not be empty");
+      }
+      for (String sheetName : sheetNames) {
+        Objects.requireNonNull(sheetName, "sheetNames must not contain nulls");
+        if (sheetName.isBlank()) {
+          throw new IllegalArgumentException("sheetNames must not contain blank values");
+        }
+      }
+      if (sheetNames.size() != new java.util.LinkedHashSet<>(sheetNames).size()) {
+        throw new IllegalArgumentException("sheetNames must not contain duplicates");
+      }
+    }
+  }
+
+  /** Sets one sheet visibility. */
+  record SetSheetVisibility(String sheetName, ExcelSheetVisibility visibility)
+      implements WorkbookCommand {
+    public SetSheetVisibility {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(visibility, "visibility must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Enables sheet protection with the exact supported lock flags. */
+  record SetSheetProtection(String sheetName, ExcelSheetProtectionSettings protection)
+      implements WorkbookCommand {
+    public SetSheetProtection {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(protection, "protection must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Disables sheet protection entirely. */
+  record ClearSheetProtection(String sheetName) implements WorkbookCommand {
+    public ClearSheetProtection {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
       }
     }
   }

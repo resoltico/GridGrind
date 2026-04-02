@@ -270,27 +270,78 @@ public sealed interface WorkbookReadResult
   }
 
   /** Workbook-level summary facts captured after all mutations complete. */
-  record WorkbookSummary(
-      int sheetCount,
-      List<String> sheetNames,
-      int namedRangeCount,
-      boolean forceFormulaRecalculationOnOpen) {
-    public WorkbookSummary {
-      if (sheetCount < 0) {
-        throw new IllegalArgumentException("sheetCount must not be negative");
+  sealed interface WorkbookSummary permits WorkbookSummary.Empty, WorkbookSummary.WithSheets {
+    /** Total sheet count after all mutations complete. */
+    int sheetCount();
+
+    /** Ordered workbook sheet names. */
+    List<String> sheetNames();
+
+    /** Count of exposed named ranges after all mutations complete. */
+    int namedRangeCount();
+
+    /** Whether the workbook is marked to recalculate formulas on open. */
+    boolean forceFormulaRecalculationOnOpen();
+
+    /** Workbook summary for a zero-sheet workbook. */
+    record Empty(
+        int sheetCount,
+        List<String> sheetNames,
+        int namedRangeCount,
+        boolean forceFormulaRecalculationOnOpen)
+        implements WorkbookSummary {
+      public Empty {
+        sheetNames = validateCommonWorkbookSummaryFields(sheetCount, sheetNames, namedRangeCount);
+        if (sheetCount != 0) {
+          throw new IllegalArgumentException("sheetCount must be 0 for an empty workbook");
+        }
       }
-      if (namedRangeCount < 0) {
-        throw new IllegalArgumentException("namedRangeCount must not be negative");
+    }
+
+    /** Workbook summary for a workbook that contains one or more sheets. */
+    record WithSheets(
+        int sheetCount,
+        List<String> sheetNames,
+        String activeSheetName,
+        List<String> selectedSheetNames,
+        int namedRangeCount,
+        boolean forceFormulaRecalculationOnOpen)
+        implements WorkbookSummary {
+      public WithSheets {
+        sheetNames = validateCommonWorkbookSummaryFields(sheetCount, sheetNames, namedRangeCount);
+        activeSheetName = requireNonBlank(activeSheetName, "activeSheetName");
+        selectedSheetNames = copyDistinctStrings(selectedSheetNames, "selectedSheetNames");
+        if (sheetCount == 0) {
+          throw new IllegalArgumentException("sheetCount must be greater than 0");
+        }
+        if (!sheetNames.contains(activeSheetName)) {
+          throw new IllegalArgumentException("activeSheetName must be present in sheetNames");
+        }
+        if (selectedSheetNames.isEmpty()) {
+          throw new IllegalArgumentException("selectedSheetNames must not be empty");
+        }
+        for (String selectedSheetName : selectedSheetNames) {
+          if (!sheetNames.contains(selectedSheetName)) {
+            throw new IllegalArgumentException(
+                "selectedSheetNames must only contain values present in sheetNames");
+          }
+        }
       }
-      sheetNames = copyStrings(sheetNames, "sheetNames");
     }
   }
 
   /** Structural summary facts for one sheet. */
   record SheetSummary(
-      String sheetName, int physicalRowCount, int lastRowIndex, int lastColumnIndex) {
+      String sheetName,
+      ExcelSheetVisibility visibility,
+      SheetProtection protection,
+      int physicalRowCount,
+      int lastRowIndex,
+      int lastColumnIndex) {
     public SheetSummary {
       sheetName = requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(visibility, "visibility must not be null");
+      Objects.requireNonNull(protection, "protection must not be null");
       if (physicalRowCount < 0) {
         throw new IllegalArgumentException("physicalRowCount must not be negative");
       }
@@ -299,6 +350,20 @@ public sealed interface WorkbookReadResult
       }
       if (lastColumnIndex < -1) {
         throw new IllegalArgumentException("lastColumnIndex must be greater than or equal to -1");
+      }
+    }
+  }
+
+  /** Captures whether a sheet is protected and, if so, with which supported lock flags. */
+  sealed interface SheetProtection permits SheetProtection.Unprotected, SheetProtection.Protected {
+
+    /** Sheet protection is disabled. */
+    record Unprotected() implements SheetProtection {}
+
+    /** Sheet protection is enabled with the reported supported lock flags. */
+    record Protected(ExcelSheetProtectionSettings settings) implements SheetProtection {
+      public Protected {
+        Objects.requireNonNull(settings, "settings must not be null");
       }
     }
   }
@@ -569,6 +634,34 @@ public sealed interface WorkbookReadResult
     List<String> copy = List.copyOf(values);
     for (String value : copy) {
       Objects.requireNonNull(value, fieldName + " must not contain nulls");
+    }
+    return copy;
+  }
+
+  private static List<String> copyDistinctStrings(List<String> values, String fieldName) {
+    List<String> copy = copyStrings(values, fieldName);
+    if (copy.size() != new java.util.LinkedHashSet<>(copy).size()) {
+      throw new IllegalArgumentException(fieldName + " must not contain duplicates");
+    }
+    return copy;
+  }
+
+  private static List<String> validateCommonWorkbookSummaryFields(
+      int sheetCount, List<String> sheetNames, int namedRangeCount) {
+    if (sheetCount < 0) {
+      throw new IllegalArgumentException("sheetCount must not be negative");
+    }
+    if (namedRangeCount < 0) {
+      throw new IllegalArgumentException("namedRangeCount must not be negative");
+    }
+    List<String> copy = copyDistinctStrings(sheetNames, "sheetNames");
+    if (sheetCount != copy.size()) {
+      throw new IllegalArgumentException("sheetCount must match sheetNames size");
+    }
+    for (String sheetName : copy) {
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetNames must not contain blank values");
+      }
     }
     return copy;
   }

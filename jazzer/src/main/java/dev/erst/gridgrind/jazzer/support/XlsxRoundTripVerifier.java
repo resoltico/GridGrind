@@ -88,6 +88,7 @@ public final class XlsxRoundTripVerifier {
       requireExpectedMetadata(expectedWorkbookState.expectedMetadata(), workbook);
       requireExpectedNamedRanges(expectedWorkbookState.expectedNamedRanges(), workbook);
     }
+    requireExpectedWorkbookState(expectedWorkbookState, workbookPath);
     requireExpectedDataValidations(expectedWorkbookState.expectedDataValidations(), workbookPath);
     requireExpectedConditionalFormatting(
         expectedWorkbookState.expectedConditionalFormatting(), workbookPath);
@@ -358,6 +359,8 @@ public final class XlsxRoundTripVerifier {
           expectedStyles(candidateSnapshots, defaultStyleSnapshot()),
           expectedMetadata(candidateSnapshots),
           expectedNamedRanges(workbook),
+          expectedWorkbookSummary(workbook),
+          expectedSheetSummaries(workbook),
           expectedDataValidations(workbook),
           expectedConditionalFormatting(workbook),
           expectedAutofilters(workbook),
@@ -388,6 +391,27 @@ public final class XlsxRoundTripVerifier {
         }
         case WorkbookCommand.MoveSheet _ -> {
           // Sheet order does not affect candidate or append-location tracking.
+        }
+        case WorkbookCommand.CopySheet copySheet -> {
+          copyExpectedSheetState(
+              candidateCoordinatesBySheet, copySheet.sourceSheetName(), copySheet.newSheetName());
+          copyExpectedSheetState(
+              valueBearingCoordinatesBySheet, copySheet.sourceSheetName(), copySheet.newSheetName());
+        }
+        case WorkbookCommand.SetActiveSheet _ -> {
+          // Active sheet state does not affect cell-level round-trip expectations.
+        }
+        case WorkbookCommand.SetSelectedSheets _ -> {
+          // Selected sheet state does not affect cell-level round-trip expectations.
+        }
+        case WorkbookCommand.SetSheetVisibility _ -> {
+          // Visibility state does not affect cell-level round-trip expectations.
+        }
+        case WorkbookCommand.SetSheetProtection _ -> {
+          // Sheet protection is tracked independently from cell-level expectations.
+        }
+        case WorkbookCommand.ClearSheetProtection _ -> {
+          // Sheet protection is tracked independently from cell-level expectations.
         }
         case WorkbookCommand.MergeCells _ -> {
           // Merge state does not add new candidate cells.
@@ -597,6 +621,34 @@ public final class XlsxRoundTripVerifier {
     return Map.copyOf(expectedNamedRanges);
   }
 
+  private static dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary expectedWorkbookSummary(
+      ExcelWorkbook workbook) {
+    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    return ((dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult)
+            readExecutor.apply(
+                workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-summary")).getFirst())
+        .workbook();
+  }
+
+  private static Map<String, dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary>
+      expectedSheetSummaries(ExcelWorkbook workbook) {
+    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    LinkedHashMap<String, dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary> expected =
+        new LinkedHashMap<>();
+    for (String sheetName : workbook.sheetNames()) {
+      expected.put(
+          sheetName,
+          ((dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult)
+                  readExecutor.apply(
+                      workbook,
+                      new WorkbookReadCommand.GetSheetSummary(
+                          "sheet-summary-" + sheetName, sheetName))
+                      .getFirst())
+              .sheet());
+    }
+    return Map.copyOf(expected);
+  }
+
   private static Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations(
       ExcelWorkbook workbook) {
     LinkedHashMap<String, List<ExcelDataValidationSnapshot>> expected = new LinkedHashMap<>();
@@ -679,6 +731,41 @@ public final class XlsxRoundTripVerifier {
                   + entry.getValue()
                   + " but was "
                   + actual);
+        }
+      }
+    }
+  }
+
+  private static void requireExpectedWorkbookState(
+      ExpectedWorkbookState expectedWorkbookState, Path workbookPath) throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      var actualWorkbookSummary = expectedWorkbookSummary(workbook);
+      if (!expectedWorkbookState.expectedWorkbookSummary().equals(actualWorkbookSummary)) {
+        throw new IllegalStateException(
+            "workbook summary changed across round-trip: expected "
+                + expectedWorkbookState.expectedWorkbookSummary()
+                + " but was "
+                + actualWorkbookSummary);
+      }
+      for (Map.Entry<String, dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary> entry :
+          expectedWorkbookState.expectedSheetSummaries().entrySet()) {
+        var actualSheetSummary =
+            ((dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult)
+                    new WorkbookReadExecutor()
+                        .apply(
+                            workbook,
+                            new WorkbookReadCommand.GetSheetSummary(
+                                "sheet-summary-" + entry.getKey(), entry.getKey()))
+                        .getFirst())
+                .sheet();
+        if (!entry.getValue().equals(actualSheetSummary)) {
+          throw new IllegalStateException(
+              "sheet summary changed across round-trip for "
+                  + entry.getKey()
+                  + ": expected "
+                  + entry.getValue()
+                  + " but was "
+                  + actualSheetSummary);
         }
       }
     }
@@ -786,6 +873,14 @@ public final class XlsxRoundTripVerifier {
   private static <T> void renameExpectedSheetState(
       Map<String, T> valuesBySheet, String sheetName, String newSheetName) {
     T values = valuesBySheet.remove(sheetName);
+    if (values != null) {
+      valuesBySheet.put(newSheetName, values);
+    }
+  }
+
+  private static <T> void copyExpectedSheetState(
+      Map<String, T> valuesBySheet, String sourceSheetName, String newSheetName) {
+    T values = valuesBySheet.get(sourceSheetName);
     if (values != null) {
       valuesBySheet.put(newSheetName, values);
     }
@@ -982,6 +1077,8 @@ public final class XlsxRoundTripVerifier {
       Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStyles,
       Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadata,
       Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges,
+      dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary expectedWorkbookSummary,
+      Map<String, dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary> expectedSheetSummaries,
       Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations,
       Map<String, List<ExcelConditionalFormattingBlockSnapshot>> expectedConditionalFormatting,
       Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters,

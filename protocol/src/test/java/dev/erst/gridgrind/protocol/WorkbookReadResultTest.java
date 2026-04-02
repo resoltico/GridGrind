@@ -15,7 +15,9 @@ class WorkbookReadResultTest {
             IllegalArgumentException.class,
             () ->
                 new WorkbookReadResult.WorkbookSummaryResult(
-                    " ", new GridGrindResponse.WorkbookSummary(1, List.of("Budget"), 0, false)));
+                    " ",
+                    new GridGrindResponse.WorkbookSummary.WithSheets(
+                        1, List.of("Budget"), "Budget", List.of("Budget"), 0, false)));
 
     assertEquals("requestId must not be blank", exception.getMessage());
   }

@@ -3,11 +3,11 @@ Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/
 Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 148
-Source Kind: NEW
+Source Kind: EXISTING
 Persistence Kind: SAVE_AS
-Operation Count: 6
+Operation Count: 3
 Read Count: 3
-Read Kinds: GET_MERGED_REGIONS=1, ANALYZE_DATA_VALIDATION_HEALTH=1, GET_SHEET_SCHEMA=1
+Read Kinds: ANALYZE_WORKBOOK_FINDINGS=1, GET_AUTOFILTERS=1, GET_FORMULA_SURFACE=1
 Response Kind: FAILURE
 Style Kinds: (none)
-Operation Kinds: DELETE_SHEET=2, SET_NAMED_RANGE=2, CLEAR_RANGE=1, SET_ROW_HEIGHT=1
+Operation Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=3

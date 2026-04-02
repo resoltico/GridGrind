@@ -16,7 +16,6 @@ import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellReference;
-import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
@@ -27,6 +26,8 @@ public final class ExcelWorkbook implements AutoCloseable {
   private final WorkbookStyleRegistry styleRegistry;
   private final ExcelFormulaRuntime formulaRuntime;
   private final ExcelTableController tableController;
+  private final ExcelSheetCopyController sheetCopyController;
+  private final ExcelSheetStateController sheetStateController;
 
   private ExcelWorkbook(XSSFWorkbook workbook) {
     this(workbook, ExcelFormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator()));
@@ -37,6 +38,8 @@ public final class ExcelWorkbook implements AutoCloseable {
     this.styleRegistry = new WorkbookStyleRegistry(workbook);
     this.formulaRuntime = Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
     this.tableController = new ExcelTableController();
+    this.sheetCopyController = new ExcelSheetCopyController();
+    this.sheetStateController = new ExcelSheetStateController();
   }
 
   /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
@@ -88,38 +91,49 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   /** Renames an existing sheet to a new destination name. */
   public ExcelWorkbook renameSheet(String sheetName, String newSheetName) {
-    requireNonBlank(sheetName, "sheetName");
-    requireNonBlank(newSheetName, "newSheetName");
-
-    int sheetIndex = requiredSheetIndex(sheetName);
-    WorkbookUtil.validateSheetName(newSheetName);
-    requireSheetNameAvailable(newSheetName, sheetIndex);
-    if (sheetName.equals(newSheetName)) {
-      return this;
-    }
-    workbook.setSheetName(sheetIndex, newSheetName);
-    return this;
+    return sheetStateController.renameSheet(this, sheetName, newSheetName);
   }
 
   /** Deletes an existing sheet from the workbook. A workbook must retain at least one sheet. */
   public ExcelWorkbook deleteSheet(String sheetName) {
-    int index = requiredSheetIndex(sheetName);
-    if (workbook.getNumberOfSheets() == 1) {
-      throw new IllegalArgumentException(
-          "cannot delete sheet '" + sheetName + "': a workbook must contain at least one sheet");
-    }
-    workbook.removeSheetAt(index);
-    return this;
+    return sheetStateController.deleteSheet(this, sheetName);
   }
 
   /** Moves an existing sheet to a zero-based workbook position. */
   public ExcelWorkbook moveSheet(String sheetName, int targetIndex) {
-    requireNonBlank(sheetName, "sheetName");
-    Sheet sheet = requiredSheet(sheetName);
-    requireTargetIndex(targetIndex);
+    return sheetStateController.moveSheet(this, sheetName, targetIndex);
+  }
 
-    workbook.setSheetOrder(sheet.getSheetName(), targetIndex);
-    return this;
+  /** Copies one sheet into a new visible, unselected sheet at the requested workbook position. */
+  public ExcelWorkbook copySheet(
+      String sourceSheetName, String newSheetName, ExcelSheetCopyPosition position) {
+    return sheetCopyController.copySheet(this, sourceSheetName, newSheetName, position);
+  }
+
+  /** Sets the active sheet and ensures it is selected. */
+  public ExcelWorkbook setActiveSheet(String sheetName) {
+    return sheetStateController.setActiveSheet(this, sheetName);
+  }
+
+  /** Sets the selected visible sheet set and normalizes the active tab into that selection. */
+  public ExcelWorkbook setSelectedSheets(List<String> sheetNames) {
+    return sheetStateController.setSelectedSheets(this, sheetNames);
+  }
+
+  /** Sets one sheet visibility while preserving a visible active selected sheet. */
+  public ExcelWorkbook setSheetVisibility(String sheetName, ExcelSheetVisibility visibility) {
+    return sheetStateController.setSheetVisibility(this, sheetName, visibility);
+  }
+
+  /** Enables sheet protection with the exact supported lock flags. */
+  public ExcelWorkbook setSheetProtection(
+      String sheetName, ExcelSheetProtectionSettings protection) {
+    return sheetStateController.setSheetProtection(this, sheetName, protection);
+  }
+
+  /** Disables sheet protection entirely. */
+  public ExcelWorkbook clearSheetProtection(String sheetName) {
+    return sheetStateController.clearSheetProtection(this, sheetName);
   }
 
   /** Creates or replaces one named range in workbook or sheet scope. */
@@ -235,6 +249,16 @@ public final class ExcelWorkbook implements AutoCloseable {
     return workbook.getForceFormulaRecalculation();
   }
 
+  /** Returns the workbook-level summary facts including active and selected sheet state. */
+  WorkbookReadResult.WorkbookSummary workbookSummary() {
+    return sheetStateController.summarizeWorkbook(this);
+  }
+
+  /** Returns the summary facts for one sheet, including visibility and protection state. */
+  WorkbookReadResult.SheetSummary sheetSummary(String sheetName) {
+    return sheetStateController.summarizeSheet(this, sheetName);
+  }
+
   /** Saves the workbook to disk, creating parent directories as needed. */
   public void save(Path workbookPath) throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
@@ -262,13 +286,6 @@ public final class ExcelWorkbook implements AutoCloseable {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-  }
-
-  private static void requireSheetName(String value, String fieldName) {
-    requireNonBlank(value, fieldName);
-    if (value.length() > 31) {
-      throw new IllegalArgumentException(fieldName + " must not exceed 31 characters: " + value);
     }
   }
 
@@ -348,27 +365,10 @@ public final class ExcelWorkbook implements AutoCloseable {
     return new ExcelNamedRangeScope.SheetScope(workbook.getSheetName(sheetIndex));
   }
 
-  private void requireSheetNameAvailable(String newSheetName, int currentSheetIndex) {
-    for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
-      if (sheetIndex == currentSheetIndex) {
-        continue;
-      }
-      if (workbook.getSheetName(sheetIndex).equalsIgnoreCase(newSheetName)) {
-        throw new IllegalArgumentException("Sheet already exists: " + newSheetName);
-      }
-    }
-  }
-
-  private void requireTargetIndex(int targetIndex) {
-    int sheetCount = workbook.getNumberOfSheets();
-    if (targetIndex < 0 || targetIndex >= sheetCount) {
-      throw new IllegalArgumentException(
-          "targetIndex out of range: workbook has "
-              + sheetCount
-              + " sheet(s), valid positions are 0 to "
-              + (sheetCount - 1)
-              + "; got "
-              + targetIndex);
+  private static void requireSheetName(String value, String fieldName) {
+    requireNonBlank(value, fieldName);
+    if (value.length() > 31) {
+      throw new IllegalArgumentException(fieldName + " must not exceed 31 characters: " + value);
     }
   }
 }

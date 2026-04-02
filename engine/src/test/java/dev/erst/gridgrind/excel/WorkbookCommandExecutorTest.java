@@ -331,6 +331,41 @@ class WorkbookCommandExecutorTest {
   }
 
   @Test
+  void appliesSheetManagementCommandsThroughExecutor() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+
+      assertSame(
+          workbook,
+          executor.apply(
+              workbook,
+              new WorkbookCommand.CreateSheet("Alpha"),
+              new WorkbookCommand.CreateSheet("Beta"),
+              new WorkbookCommand.SetCell("Alpha", "A1", ExcelCellValue.text("Live")),
+              new WorkbookCommand.CopySheet(
+                  "Alpha", "Alpha Copy", new ExcelSheetCopyPosition.AtIndex(1)),
+              new WorkbookCommand.SetActiveSheet("Alpha"),
+              new WorkbookCommand.SetSelectedSheets(List.of("Alpha", "Beta")),
+              new WorkbookCommand.SetSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN),
+              new WorkbookCommand.SetSheetProtection("Alpha", protectionSettings()),
+              new WorkbookCommand.ClearSheetProtection("Alpha")));
+
+      assertEquals(List.of("Alpha", "Alpha Copy", "Beta"), workbook.sheetNames());
+      assertEquals("Live", workbook.sheet("Alpha Copy").text("A1"));
+
+      WorkbookReadResult.WorkbookSummary.WithSheets summary =
+          assertInstanceOf(
+              WorkbookReadResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
+      assertEquals("Alpha", summary.activeSheetName());
+      assertEquals(List.of("Alpha"), summary.selectedSheetNames());
+      assertEquals(ExcelSheetVisibility.HIDDEN, workbook.sheetSummary("Beta").visibility());
+      assertInstanceOf(
+          WorkbookReadResult.SheetProtection.Unprotected.class,
+          workbook.sheetSummary("Alpha").protection());
+    }
+  }
+
+  @Test
   void validatesNullWorkbooksCommandsAndCommandEntries() throws IOException {
     WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
@@ -358,5 +393,11 @@ class WorkbookCommandExecutorTest {
             "Invalid status",
             "Use one of the allowed values.",
             true));
+  }
+
+  private static ExcelSheetProtectionSettings protectionSettings() {
+    return new ExcelSheetProtectionSettings(
+        true, false, true, false, true, false, true, false, true, false, true, false, true, false,
+        true);
   }
 }

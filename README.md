@@ -5,6 +5,10 @@ RETRIEVAL_HINTS:
   related: [docs/QUICK_REFERENCE.md, docs/OPERATIONS.md, docs/ERRORS.md]
 -->
 
+[![GridGrind Art](https://raw.githubusercontent.com/resoltico/GridGrind/main/images/GridGrind.jpg)](https://github.com/resoltico/GridGrind)
+
+-----
+
 # GridGrind
 
 **A fresh grind for every workbook.**
@@ -41,7 +45,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.22.0
+docker pull ghcr.io/resoltico/gridgrind:0.23.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -148,8 +152,14 @@ autonomous callers deterministic failure semantics instead of "error after side 
 |:----------|:-------------|
 | `ENSURE_SHEET` | Create a sheet if it does not already exist |
 | `RENAME_SHEET` | Rename an existing sheet to a new name |
-| `DELETE_SHEET` | Remove an existing sheet (the last remaining sheet cannot be deleted) |
+| `DELETE_SHEET` | Remove an existing sheet (the last remaining sheet or last visible sheet cannot be deleted) |
 | `MOVE_SHEET` | Move an existing sheet to a zero-based position |
+| `COPY_SHEET` | Copy a sheet into a new visible, unselected sheet at a requested position |
+| `SET_ACTIVE_SHEET` | Set the active sheet and ensure it is selected |
+| `SET_SELECTED_SHEETS` | Set the selected visible sheet set |
+| `SET_SHEET_VISIBILITY` | Set one sheet visibility state |
+| `SET_SHEET_PROTECTION` | Enable sheet protection with the supported lock flags |
+| `CLEAR_SHEET_PROTECTION` | Disable sheet protection entirely |
 | `MERGE_CELLS` | Merge a rectangular A1-style range |
 | `UNMERGE_CELLS` | Remove a merged region by exact range match |
 | `SET_COLUMN_WIDTH` | Set one or more column widths using character units |
@@ -182,7 +192,14 @@ Cell values accept types: `TEXT`, `NUMBER`, `BOOLEAN`, `FORMULA`, `DATE`, `DATE_
 
 Sheet-management operations use strict semantics: missing sheets fail, `MOVE_SHEET.targetIndex`
 is zero-based, and `RENAME_SHEET` requires a valid destination name that does not conflict with
-another sheet.
+another sheet. `COPY_SHEET` creates a new visible, unselected sheet and uses a GridGrind-owned
+copy path instead of POI's raw `cloneSheet()` seam, so supported sheet-local content stays
+converged while unsupported copy cases such as tables and sheet-scoped formula-defined named
+ranges fail explicitly. `SET_ACTIVE_SHEET` and `SET_SELECTED_SHEETS` keep the active tab inside
+the selected visible sheet set. `DELETE_SHEET` rejects attempts to delete the last visible sheet,
+and `SET_SHEET_VISIBILITY` rejects attempts to hide it. `SET_SHEET_PROTECTION` and
+`CLEAR_SHEET_PROTECTION` author and report the exact supported lock-flag set without password
+semantics.
 
 Structural layout operations are also strict: `MERGE_CELLS` uses A1-style ranges, `UNMERGE_CELLS`
 requires an exact merged-region match, `SET_COLUMN_WIDTH.widthCharacters` is converted to POI
@@ -288,6 +305,10 @@ Analysis reads:
 Every read carries a caller-defined `requestId`, and every result echoes that `requestId` back so
 agents can correlate repeated or similar reads deterministically.
 
+`GET_WORKBOOK_SUMMARY` now returns a typed workbook summary: `kind=EMPTY` for zero-sheet
+workbooks and `kind=WITH_SHEETS` when one or more sheets exist. Non-empty workbooks also report
+`activeSheetName` and workbook-ordered `selectedSheetNames`. `GET_SHEET_SUMMARY` now reports
+sheet `visibility` plus typed `protection` state alongside the existing row and column facts.
 `GET_HYPERLINKS` returns hyperlinks in the same discriminated shape used by `SET_HYPERLINK`
 targets. `FILE` targets come back in the `path` field as normalized plain path strings.
 `GET_DATA_VALIDATIONS` returns supported validation entries plus typed unsupported entries for the
@@ -318,6 +339,9 @@ limits to prevent out-of-memory failures during JSON serialization in bounded-he
 For large sheets, use `GET_SHEET_SUMMARY` to discover the populated region and tile it with
 multiple bounded window reads. See [docs/LIMITATIONS.md](docs/LIMITATIONS.md) for the full limit
 reference.
+
+The runnable example set now includes [examples/sheet-management-request.json](examples/sheet-management-request.json)
+for B1 sheet copy, active and selected sheet state, visibility, protection, and summary reads.
 
 ---
 

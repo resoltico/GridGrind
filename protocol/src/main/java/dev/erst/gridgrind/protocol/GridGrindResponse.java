@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode;
 import dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity;
@@ -103,13 +105,71 @@ public sealed interface GridGrindResponse {
   }
 
   /** High-level workbook facts returned on success. */
-  record WorkbookSummary(
-      int sheetCount,
-      List<String> sheetNames,
-      int namedRangeCount,
-      boolean forceFormulaRecalculationOnOpen) {
-    public WorkbookSummary {
-      sheetNames = copyStrings(sheetNames, "sheetNames");
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = WorkbookSummary.Empty.class, name = "EMPTY"),
+    @JsonSubTypes.Type(value = WorkbookSummary.WithSheets.class, name = "WITH_SHEETS")
+  })
+  sealed interface WorkbookSummary permits WorkbookSummary.Empty, WorkbookSummary.WithSheets {
+    /** Total sheet count after all mutations complete. */
+    int sheetCount();
+
+    /** Ordered workbook sheet names. */
+    List<String> sheetNames();
+
+    /** Count of exposed named ranges after all mutations complete. */
+    int namedRangeCount();
+
+    /** Whether the workbook is marked to recalculate formulas on open. */
+    boolean forceFormulaRecalculationOnOpen();
+
+    /** Workbook summary for a zero-sheet workbook. */
+    record Empty(
+        int sheetCount,
+        List<String> sheetNames,
+        int namedRangeCount,
+        boolean forceFormulaRecalculationOnOpen)
+        implements WorkbookSummary {
+      public Empty {
+        sheetNames = validateCommonWorkbookSummaryFields(sheetCount, sheetNames, namedRangeCount);
+        if (sheetCount != 0) {
+          throw new IllegalArgumentException("sheetCount must be 0 for an empty workbook");
+        }
+      }
+    }
+
+    /** Workbook summary for a workbook that contains one or more sheets. */
+    record WithSheets(
+        int sheetCount,
+        List<String> sheetNames,
+        String activeSheetName,
+        List<String> selectedSheetNames,
+        int namedRangeCount,
+        boolean forceFormulaRecalculationOnOpen)
+        implements WorkbookSummary {
+      public WithSheets {
+        sheetNames = validateCommonWorkbookSummaryFields(sheetCount, sheetNames, namedRangeCount);
+        Objects.requireNonNull(activeSheetName, "activeSheetName must not be null");
+        if (activeSheetName.isBlank()) {
+          throw new IllegalArgumentException("activeSheetName must not be blank");
+        }
+        selectedSheetNames = copyDistinctStrings(selectedSheetNames, "selectedSheetNames");
+        if (sheetCount == 0) {
+          throw new IllegalArgumentException("sheetCount must be greater than 0");
+        }
+        if (!sheetNames.contains(activeSheetName)) {
+          throw new IllegalArgumentException("activeSheetName must be present in sheetNames");
+        }
+        if (selectedSheetNames.isEmpty()) {
+          throw new IllegalArgumentException("selectedSheetNames must not be empty");
+        }
+        for (String selectedSheetName : selectedSheetNames) {
+          if (!sheetNames.contains(selectedSheetName)) {
+            throw new IllegalArgumentException(
+                "selectedSheetNames must only contain values present in sheetNames");
+          }
+        }
+      }
     }
   }
 
@@ -164,11 +224,48 @@ public sealed interface GridGrindResponse {
 
   /** Structural summary facts for one sheet. */
   record SheetSummaryReport(
-      String sheetName, int physicalRowCount, int lastRowIndex, int lastColumnIndex) {
+      String sheetName,
+      ExcelSheetVisibility visibility,
+      SheetProtectionReport protection,
+      int physicalRowCount,
+      int lastRowIndex,
+      int lastColumnIndex) {
     public SheetSummaryReport {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      Objects.requireNonNull(visibility, "visibility must not be null");
+      Objects.requireNonNull(protection, "protection must not be null");
+    }
+  }
+
+  /** Captures whether a sheet is protected and, if so, with which supported lock flags. */
+  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
+  @JsonSubTypes({
+    @JsonSubTypes.Type(value = SheetProtectionReport.Unprotected.class, name = "UNPROTECTED"),
+    @JsonSubTypes.Type(value = SheetProtectionReport.Protected.class, name = "PROTECTED")
+  })
+  sealed interface SheetProtectionReport
+      permits SheetProtectionReport.Unprotected, SheetProtectionReport.Protected {
+
+    /**
+     * Supported lock flags; populated only by Protected, null for Unprotected.
+     *
+     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
+     * interface used for wire serialization; internal code must use a switch expression instead.
+     */
+    default ExcelSheetProtectionSettings settings() {
+      return null;
+    }
+
+    /** Sheet protection is disabled. */
+    record Unprotected() implements SheetProtectionReport {}
+
+    /** Sheet protection is enabled with the reported supported lock flags. */
+    record Protected(ExcelSheetProtectionSettings settings) implements SheetProtectionReport {
+      public Protected {
+        Objects.requireNonNull(settings, "settings must not be null");
       }
     }
   }
@@ -1332,6 +1429,34 @@ public sealed interface GridGrindResponse {
     List<String> copy = List.copyOf(values);
     for (String value : copy) {
       Objects.requireNonNull(value, fieldName + " must not contain nulls");
+    }
+    return copy;
+  }
+
+  private static List<String> copyDistinctStrings(List<String> values, String fieldName) {
+    List<String> copy = copyStrings(values, fieldName);
+    if (copy.size() != new java.util.LinkedHashSet<>(copy).size()) {
+      throw new IllegalArgumentException(fieldName + " must not contain duplicates");
+    }
+    return copy;
+  }
+
+  private static List<String> validateCommonWorkbookSummaryFields(
+      int sheetCount, List<String> sheetNames, int namedRangeCount) {
+    if (sheetCount < 0) {
+      throw new IllegalArgumentException("sheetCount must not be negative");
+    }
+    if (namedRangeCount < 0) {
+      throw new IllegalArgumentException("namedRangeCount must not be negative");
+    }
+    List<String> copy = copyDistinctStrings(sheetNames, "sheetNames");
+    if (sheetCount != copy.size()) {
+      throw new IllegalArgumentException("sheetCount must match sheetNames size");
+    }
+    for (String sheetName : copy) {
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetNames must not contain blank values");
+      }
     }
     return copy;
   }

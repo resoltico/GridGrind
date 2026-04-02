@@ -3,6 +3,8 @@ package dev.erst.gridgrind.protocol;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -89,7 +91,8 @@ class GridGrindJsonTest {
             List.of(
                 new WorkbookReadResult.WorkbookSummaryResult(
                     "workbook",
-                    new GridGrindResponse.WorkbookSummary(1, List.of("Budget"), 1, true)),
+                    new GridGrindResponse.WorkbookSummary.WithSheets(
+                        1, List.of("Budget"), "Budget", List.of("Budget"), 1, true)),
                 new WorkbookReadResult.NamedRangesResult(
                     "named-ranges",
                     List.of(
@@ -274,6 +277,79 @@ class GridGrindJsonTest {
     assertEquals("#FFF2CC", applyStyle.style().fillColor());
     assertEquals(ExcelBorderStyle.THIN, applyStyle.style().border().all().style());
     assertEquals(ExcelBorderStyle.DOUBLE, applyStyle.style().border().right().style());
+  }
+
+  @Test
+  void readsSheetStateOperationsFromJson() throws IOException {
+    GridGrindRequest request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "source": { "type": "NEW" },
+              "operations": [
+                {
+                  "type": "COPY_SHEET",
+                  "sourceSheetName": "Budget",
+                  "newSheetName": "Budget Copy",
+                  "position": { "type": "AT_INDEX", "targetIndex": 1 }
+                },
+                { "type": "SET_ACTIVE_SHEET", "sheetName": "Budget Copy" },
+                { "type": "SET_SELECTED_SHEETS", "sheetNames": ["Budget", "Budget Copy"] },
+                {
+                  "type": "SET_SHEET_VISIBILITY",
+                  "sheetName": "Budget",
+                  "visibility": "VERY_HIDDEN"
+                },
+                {
+                  "type": "SET_SHEET_PROTECTION",
+                  "sheetName": "Budget",
+                  "protection": {
+                    "autoFilterLocked": false,
+                    "deleteColumnsLocked": true,
+                    "deleteRowsLocked": false,
+                    "formatCellsLocked": true,
+                    "formatColumnsLocked": false,
+                    "formatRowsLocked": true,
+                    "insertColumnsLocked": false,
+                    "insertHyperlinksLocked": true,
+                    "insertRowsLocked": false,
+                    "objectsLocked": true,
+                    "pivotTablesLocked": false,
+                    "scenariosLocked": true,
+                    "selectLockedCellsLocked": false,
+                    "selectUnlockedCellsLocked": true,
+                    "sortLocked": false
+                  }
+                },
+                { "type": "CLEAR_SHEET_PROTECTION", "sheetName": "Budget" }
+              ],
+              "reads": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    assertEquals(6, request.operations().size());
+    WorkbookOperation.CopySheet copySheet =
+        assertInstanceOf(WorkbookOperation.CopySheet.class, request.operations().get(0));
+    WorkbookOperation.SetActiveSheet setActiveSheet =
+        assertInstanceOf(WorkbookOperation.SetActiveSheet.class, request.operations().get(1));
+    WorkbookOperation.SetSelectedSheets setSelectedSheets =
+        assertInstanceOf(WorkbookOperation.SetSelectedSheets.class, request.operations().get(2));
+    WorkbookOperation.SetSheetVisibility setSheetVisibility =
+        assertInstanceOf(WorkbookOperation.SetSheetVisibility.class, request.operations().get(3));
+    WorkbookOperation.SetSheetProtection setSheetProtection =
+        assertInstanceOf(WorkbookOperation.SetSheetProtection.class, request.operations().get(4));
+    WorkbookOperation.ClearSheetProtection clearSheetProtection =
+        assertInstanceOf(WorkbookOperation.ClearSheetProtection.class, request.operations().get(5));
+
+    SheetCopyPosition.AtIndex position =
+        assertInstanceOf(SheetCopyPosition.AtIndex.class, copySheet.position());
+    assertEquals(1, position.targetIndex());
+    assertEquals("Budget Copy", setActiveSheet.sheetName());
+    assertEquals(List.of("Budget", "Budget Copy"), setSelectedSheets.sheetNames());
+    assertEquals(ExcelSheetVisibility.VERY_HIDDEN, setSheetVisibility.visibility());
+    assertEquals(protectionSettings(), setSheetProtection.protection());
+    assertEquals("Budget", clearSheetProtection.sheetName());
   }
 
   @Test
@@ -630,6 +706,54 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void roundTripsSheetStateReadResults() throws IOException {
+    GridGrindResponse expected =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            List.of(
+                new WorkbookReadResult.WorkbookSummaryResult(
+                    "workbook",
+                    new GridGrindResponse.WorkbookSummary.WithSheets(
+                        2,
+                        List.of("Budget", "Archive"),
+                        "Archive",
+                        List.of("Budget", "Archive"),
+                        1,
+                        true)),
+                new WorkbookReadResult.SheetSummaryResult(
+                    "sheet",
+                    new GridGrindResponse.SheetSummaryReport(
+                        "Budget",
+                        ExcelSheetVisibility.VERY_HIDDEN,
+                        new GridGrindResponse.SheetProtectionReport.Protected(protectionSettings()),
+                        4,
+                        7,
+                        2))));
+
+    byte[] encoded = GridGrindJson.writeResponseBytes(expected);
+    String json = new String(encoded, StandardCharsets.UTF_8);
+    GridGrindResponse.Success actual =
+        assertInstanceOf(GridGrindResponse.Success.class, GridGrindJson.readResponse(encoded));
+    WorkbookReadResult.WorkbookSummaryResult workbook =
+        assertInstanceOf(WorkbookReadResult.WorkbookSummaryResult.class, actual.reads().get(0));
+    GridGrindResponse.WorkbookSummary.WithSheets workbookSummary =
+        assertInstanceOf(GridGrindResponse.WorkbookSummary.WithSheets.class, workbook.workbook());
+    WorkbookReadResult.SheetSummaryResult sheet =
+        assertInstanceOf(WorkbookReadResult.SheetSummaryResult.class, actual.reads().get(1));
+    GridGrindResponse.SheetProtectionReport.Protected protection =
+        assertInstanceOf(
+            GridGrindResponse.SheetProtectionReport.Protected.class, sheet.sheet().protection());
+
+    assertTrue(json.contains("\"type\" : \"GET_SHEET_SUMMARY\""));
+    assertTrue(json.contains("\"kind\" : \"WITH_SHEETS\""));
+    assertEquals("Archive", workbookSummary.activeSheetName());
+    assertEquals(List.of("Budget", "Archive"), workbookSummary.selectedSheetNames());
+    assertEquals(ExcelSheetVisibility.VERY_HIDDEN, sheet.sheet().visibility());
+    assertEquals(protectionSettings(), protection.settings());
+  }
+
+  @Test
   void jsonLineAndColumnReturnNullForNullOrNonPositiveLocation() {
     assertNull(GridGrindJson.jsonLine(null));
     assertNull(GridGrindJson.jsonColumn(null));
@@ -842,5 +966,11 @@ class GridGrindJsonTest {
     private SyntheticJacksonException(String message, TokenStreamLocation location) {
       super(message, location, null);
     }
+  }
+
+  private static ExcelSheetProtectionSettings protectionSettings() {
+    return new ExcelSheetProtectionSettings(
+        false, true, false, true, false, true, false, true, false, true, false, true, false, true,
+        false);
   }
 }

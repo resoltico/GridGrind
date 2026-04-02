@@ -9,19 +9,21 @@
       "type" : "PROTOCOL_WORKFLOW",
       "inputBytes" : 215,
       "sourceKind" : "EXISTING",
-      "persistenceKind" : "OVERWRITE",
-      "operationCount" : 8,
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 1,
       "operationKinds" : {
-        "ENSURE_SHEET" : 4,
-        "SET_AUTOFILTER" : 1,
-        "DELETE_SHEET" : 2,
-        "SET_DATA_VALIDATION" : 1
+        "APPLY_STYLE" : 1
       },
-      "styleKinds" : { },
-      "readCount" : 2,
+      "styleKinds" : {
+        "border_all" : 1,
+        "fill_color" : 1,
+        "font_color" : 1,
+        "border" : 1
+      },
+      "readCount" : 4,
       "readKinds" : {
-        "ANALYZE_HYPERLINK_HEALTH" : 1,
-        "GET_NAMED_RANGE_SURFACE" : 1
+        "GET_AUTOFILTERS" : 3,
+        "GET_FORMULA_SURFACE" : 1
       },
       "responseKind" : "FAILURE"
     }

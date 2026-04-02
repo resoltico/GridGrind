@@ -2,17 +2,16 @@
   "targetKey" : "xlsx-roundtrip",
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest/roundTrip/5b251f4cf358fc7dd865fa08f768d186d579757b",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/set_table_missing_sheet_invalid_roundtrip.bin",
-  "replayOutcome" : "EXPECTED_INVALID",
+  "replayOutcome" : "SUCCESS",
   "expectation" : {
-    "outcomeKind" : "EXPECTED_INVALID",
+    "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 60,
-      "commandCount" : 6,
+      "commandCount" : 4,
       "commandKinds" : {
-        "CREATE_SHEET" : 3,
-        "SET_HYPERLINK" : 2,
-        "SET_TABLE" : 1
+        "CREATE_SHEET" : 2,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2
       },
       "styleKinds" : { }
     }

@@ -24,6 +24,9 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
+import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
+import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
@@ -1082,6 +1085,30 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
+  void returnsStructuredFailureWhenDeletingLastVisibleSheet() {
+    GridGrindResponse.Failure failure =
+        failure(
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request(
+                        new GridGrindRequest.WorkbookSource.New(),
+                        new GridGrindRequest.WorkbookPersistence.None(),
+                        List.of(
+                            new WorkbookOperation.EnsureSheet("Alpha"),
+                            new WorkbookOperation.EnsureSheet("Beta"),
+                            new WorkbookOperation.SetSheetVisibility(
+                                "Beta", ExcelSheetVisibility.HIDDEN),
+                            new WorkbookOperation.DeleteSheet("Alpha")))));
+
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals(3, failure.problem().context().operationIndex());
+    assertEquals("DELETE_SHEET", failure.problem().context().operationType());
+    assertEquals("Alpha", failure.problem().context().sheetName());
+    assertTrue(failure.problem().message().contains("last visible sheet"));
+  }
+
+  @Test
   void returnsStructuredFailureForInvalidPersistTarget() throws IOException {
     Path parentFile = Files.createTempFile("gridgrind-persist-target-", ".tmp");
     Path workbookPath = parentFile.resolve("book.xlsx");
@@ -1831,6 +1858,61 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
+  void extractsSheetStateContextForB1Operations() {
+    RuntimeException exception = new RuntimeException("test");
+    WorkbookOperation copySheet =
+        new WorkbookOperation.CopySheet(
+            "Budget", "Budget Copy", new SheetCopyPosition.AppendAtEnd());
+    WorkbookOperation setActiveSheet = new WorkbookOperation.SetActiveSheet("Budget Copy");
+    WorkbookOperation setSelectedSheets =
+        new WorkbookOperation.SetSelectedSheets(List.of("Budget", "Budget Copy"));
+    WorkbookOperation setSheetVisibility =
+        new WorkbookOperation.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN);
+    WorkbookOperation setSheetProtection =
+        new WorkbookOperation.SetSheetProtection("Budget", protectionSettings());
+    WorkbookOperation clearSheetProtection = new WorkbookOperation.ClearSheetProtection("Budget");
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(copySheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setActiveSheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setSelectedSheets, exception));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setSheetVisibility, exception));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setSheetProtection, exception));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(clearSheetProtection, exception));
+
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(copySheet, exception));
+    assertEquals(
+        "Budget Copy", DefaultGridGrindRequestExecutor.sheetNameFor(setActiveSheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(setSelectedSheets, exception));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setSheetVisibility, exception));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setSheetProtection, exception));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(clearSheetProtection, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(copySheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setActiveSheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setSelectedSheets, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setSheetVisibility, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setSheetProtection, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(clearSheetProtection, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(copySheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(setActiveSheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(setSelectedSheets, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(setSheetVisibility, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(setSheetProtection, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(clearSheetProtection, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(copySheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(setActiveSheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(setSelectedSheets, exception));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(setSheetVisibility, exception));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(setSheetProtection, exception));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(clearSheetProtection, exception));
+  }
+
+  @Test
   void extractsContextForStructuralLayoutOperations() {
     RuntimeException exception = new RuntimeException("test");
     WorkbookOperation mergeCells = new WorkbookOperation.MergeCells("Budget", "A1:B2");
@@ -2166,6 +2248,53 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
+  void convertsSheetStateOperationsIntoWorkbookCommandsWithExactFields() {
+    WorkbookCommand.CopySheet copySheet =
+        cast(
+            WorkbookCommand.CopySheet.class,
+            DefaultGridGrindRequestExecutor.toCommand(
+                new WorkbookOperation.CopySheet(
+                    "Budget", "Budget Copy", new SheetCopyPosition.AtIndex(1))));
+    WorkbookCommand.SetActiveSheet setActiveSheet =
+        cast(
+            WorkbookCommand.SetActiveSheet.class,
+            DefaultGridGrindRequestExecutor.toCommand(
+                new WorkbookOperation.SetActiveSheet("Budget Copy")));
+    WorkbookCommand.SetSelectedSheets setSelectedSheets =
+        cast(
+            WorkbookCommand.SetSelectedSheets.class,
+            DefaultGridGrindRequestExecutor.toCommand(
+                new WorkbookOperation.SetSelectedSheets(List.of("Budget", "Budget Copy"))));
+    WorkbookCommand.SetSheetVisibility setSheetVisibility =
+        cast(
+            WorkbookCommand.SetSheetVisibility.class,
+            DefaultGridGrindRequestExecutor.toCommand(
+                new WorkbookOperation.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN)));
+    WorkbookCommand.SetSheetProtection setSheetProtection =
+        cast(
+            WorkbookCommand.SetSheetProtection.class,
+            DefaultGridGrindRequestExecutor.toCommand(
+                new WorkbookOperation.SetSheetProtection("Budget", protectionSettings())));
+    WorkbookCommand.ClearSheetProtection clearSheetProtection =
+        cast(
+            WorkbookCommand.ClearSheetProtection.class,
+            DefaultGridGrindRequestExecutor.toCommand(
+                new WorkbookOperation.ClearSheetProtection("Budget")));
+
+    ExcelSheetCopyPosition.AtIndex position =
+        assertInstanceOf(ExcelSheetCopyPosition.AtIndex.class, copySheet.position());
+
+    assertEquals("Budget", copySheet.sourceSheetName());
+    assertEquals("Budget Copy", copySheet.newSheetName());
+    assertEquals(1, position.targetIndex());
+    assertEquals("Budget Copy", setActiveSheet.sheetName());
+    assertEquals(List.of("Budget", "Budget Copy"), setSelectedSheets.sheetNames());
+    assertEquals(ExcelSheetVisibility.HIDDEN, setSheetVisibility.visibility());
+    assertEquals(protectionSettings(), setSheetProtection.protection());
+    assertEquals("Budget", clearSheetProtection.sheetName());
+  }
+
+  @Test
   void convertsReadResultsIntoProtocolReadResults() {
     ExcelCellSnapshot.BlankSnapshot blank =
         new ExcelCellSnapshot.BlankSnapshot(
@@ -2175,8 +2304,8 @@ class DefaultGridGrindRequestExecutorTest {
         DefaultGridGrindRequestExecutor.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult(
                 "workbook",
-                new dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary(
-                    1, List.of("Budget"), 1, true)));
+                new dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.WithSheets(
+                    1, List.of("Budget"), "Budget", List.of("Budget"), 1, true)));
     WorkbookReadResult namedRanges =
         DefaultGridGrindRequestExecutor.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangesResult(
@@ -2191,7 +2320,13 @@ class DefaultGridGrindRequestExecutorTest {
         DefaultGridGrindRequestExecutor.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult(
                 "sheet",
-                new dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary("Budget", 4, 3, 2)));
+                new dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary(
+                    "Budget",
+                    dev.erst.gridgrind.excel.ExcelSheetVisibility.VISIBLE,
+                    new dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Unprotected(),
+                    4,
+                    3,
+                    2)));
     WorkbookReadResult cells =
         DefaultGridGrindRequestExecutor.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookReadResult.CellsResult(
@@ -2599,6 +2734,60 @@ class DefaultGridGrindRequestExecutorTest {
                         List.of()))));
 
     assertInstanceOf(GridGrindResponse.FreezePaneReport.None.class, layout.layout().freezePanes());
+  }
+
+  @Test
+  void convertsSheetStateReadResultsIntoProtocolShapes() {
+    WorkbookReadResult emptyWorkbookSummary =
+        DefaultGridGrindRequestExecutor.toReadResult(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult(
+                "workbook",
+                new dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.Empty(
+                    0, List.of(), 0, false)));
+    WorkbookReadResult populatedWorkbookSummary =
+        DefaultGridGrindRequestExecutor.toReadResult(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult(
+                "workbook-2",
+                new dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.WithSheets(
+                    2,
+                    List.of("Budget", "Archive"),
+                    "Archive",
+                    List.of("Budget", "Archive"),
+                    1,
+                    true)));
+    WorkbookReadResult protectedSheetSummary =
+        DefaultGridGrindRequestExecutor.toReadResult(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult(
+                "sheet",
+                new dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary(
+                    "Budget",
+                    dev.erst.gridgrind.excel.ExcelSheetVisibility.VERY_HIDDEN,
+                    new dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Protected(
+                        protectionSettings()),
+                    4,
+                    7,
+                    3)));
+
+    GridGrindResponse.WorkbookSummary.Empty empty =
+        assertInstanceOf(
+            GridGrindResponse.WorkbookSummary.Empty.class,
+            cast(WorkbookReadResult.WorkbookSummaryResult.class, emptyWorkbookSummary).workbook());
+    GridGrindResponse.WorkbookSummary.WithSheets populated =
+        assertInstanceOf(
+            GridGrindResponse.WorkbookSummary.WithSheets.class,
+            cast(WorkbookReadResult.WorkbookSummaryResult.class, populatedWorkbookSummary)
+                .workbook());
+    GridGrindResponse.SheetSummaryReport sheet =
+        cast(WorkbookReadResult.SheetSummaryResult.class, protectedSheetSummary).sheet();
+    GridGrindResponse.SheetProtectionReport.Protected protection =
+        assertInstanceOf(
+            GridGrindResponse.SheetProtectionReport.Protected.class, sheet.protection());
+
+    assertEquals(0, empty.sheetCount());
+    assertEquals("Archive", populated.activeSheetName());
+    assertEquals(List.of("Budget", "Archive"), populated.selectedSheetNames());
+    assertEquals(ExcelSheetVisibility.VERY_HIDDEN, sheet.visibility());
+    assertEquals(protectionSettings(), protection.settings());
   }
 
   @Test
@@ -3271,5 +3460,11 @@ class DefaultGridGrindRequestExecutorTest {
         ExcelBorderStyle.NONE,
         ExcelBorderStyle.NONE,
         ExcelBorderStyle.NONE);
+  }
+
+  private static ExcelSheetProtectionSettings protectionSettings() {
+    return new ExcelSheetProtectionSettings(
+        false, true, false, true, false, true, false, true, false, true, false, true, false, true,
+        false);
   }
 }

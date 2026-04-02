@@ -1,10 +1,8 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest/roundTrip/5b251f4cf358fc7dd865fa08f768d186d579757b
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/set_table_missing_sheet_invalid_roundtrip.bin
 Harness: xlsx-roundtrip
-Outcome: EXPECTED_INVALID
-Kind: SheetNotFoundException
-Message: Sheet does not exist: U
+Outcome: SUCCESS
 Input Bytes: 60
-Command Count: 6
+Command Count: 4
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=3, SET_HYPERLINK=2, SET_TABLE=1
+Command Kinds: CREATE_SHEET=2, FORCE_FORMULA_RECALCULATION_ON_OPEN=2

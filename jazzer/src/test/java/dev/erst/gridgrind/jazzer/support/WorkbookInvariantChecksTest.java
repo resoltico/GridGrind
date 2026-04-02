@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.protocol.CellSelection;
@@ -53,7 +55,8 @@ class WorkbookInvariantChecksTest {
             List.of(
                 new WorkbookReadResult.WorkbookSummaryResult(
                     "summary",
-                    new GridGrindResponse.WorkbookSummary(1, List.of("Budget"), 1, false)),
+                    new GridGrindResponse.WorkbookSummary.WithSheets(
+                        1, List.of("Budget"), "Budget", List.of("Budget"), 1, false)),
                 new WorkbookReadResult.NamedRangesResult(
                     "ranges",
                     List.of(
@@ -229,7 +232,8 @@ class WorkbookInvariantChecksTest {
             List.of(
                 new WorkbookReadResult.WorkbookSummaryResult(
                     "summary",
-                    new GridGrindResponse.WorkbookSummary(1, List.of("Budget"), 1, false)),
+                    new GridGrindResponse.WorkbookSummary.WithSheets(
+                        1, List.of("Budget"), "Budget", List.of("Budget"), 1, false)),
                 new WorkbookReadResult.CellsResult(
                     "cells", "Budget", List.of(textCell("A1", "Report"))),
                 new WorkbookReadResult.DataValidationsResult(
@@ -302,6 +306,44 @@ class WorkbookInvariantChecksTest {
 
       assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
     }
+  }
+
+  @Test
+  void acceptsWorkbookShapeWithB1SheetState() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      workbook.getOrCreateSheet("Beta");
+      workbook.setActiveSheet("Beta");
+      workbook.setSelectedSheets(List.of("Alpha", "Beta"));
+      workbook.setSheetVisibility("Alpha", ExcelSheetVisibility.HIDDEN);
+      workbook.setSheetProtection("Beta", protectionSettings());
+
+      assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
+    }
+  }
+
+  @Test
+  void acceptsResponseShapeWithProtectedSheetSummary(@TempDir Path tempDirectory) throws IOException {
+    Path workbookPath = tempDirectory.resolve("result.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                "result.xlsx", workbookPath.toString()),
+            List.of(
+                new WorkbookReadResult.SheetSummaryResult(
+                    "sheet",
+                    new GridGrindResponse.SheetSummaryReport(
+                        "Budget",
+                        ExcelSheetVisibility.VERY_HIDDEN,
+                        new GridGrindResponse.SheetProtectionReport.Protected(protectionSettings()),
+                        4,
+                        7,
+                        3))));
+
+    assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
   }
 
   @Test
@@ -430,5 +472,24 @@ class WorkbookInvariantChecksTest {
   private static GridGrindResponse.CellReport.TextReport textCell(String address, String value) {
     return new GridGrindResponse.CellReport.TextReport(
         address, "STRING", value, defaultStyle(), null, null, value);
+  }
+
+  private static ExcelSheetProtectionSettings protectionSettings() {
+    return new ExcelSheetProtectionSettings(
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false);
   }
 }

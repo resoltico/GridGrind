@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.22.0"
+version: "0.23.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
 updated: "2026-04-01"
 route:
@@ -277,6 +277,9 @@ Seed-quality rules:
 - keep at least one successful seed in every binary harness, not only invalid ones
 - keep the seed floor broad enough to preserve sheet management, structural layout, formatting
   depth, authoring metadata, named-range behavior, and source/persistence-type coverage together
+- treat `OperationSequenceModel` selector bytes as a stability contract for promoted binary seeds;
+  if that grammar changes intentionally, refresh promotion metadata immediately and add a
+  changelog-worthy note to the Jazzer developer docs
 
 Dictionary-evaluation rules:
 - only evaluate dictionary promotion after repeated similar recommendations from the same harness

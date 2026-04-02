@@ -5,6 +5,6 @@ Outcome: EXPECTED_INVALID
 Kind: SheetNotFoundException
 Message: Sheet does not exist: X
 Input Bytes: 107
-Command Count: 10
+Command Count: 6
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=4, CLEAR_DATA_VALIDATIONS=2, DELETE_SHEET=1, CLEAR_RANGE=1, RENAME_SHEET=1, UNMERGE_CELLS=1
+Command Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=3, CREATE_SHEET=1, EVALUATE_ALL_FORMULAS=1, APPEND_ROW=1

@@ -108,6 +108,12 @@ public final class SequenceIntrospection {
       case WorkbookOperation.RenameSheet _ -> "RENAME_SHEET";
       case WorkbookOperation.DeleteSheet _ -> "DELETE_SHEET";
       case WorkbookOperation.MoveSheet _ -> "MOVE_SHEET";
+      case WorkbookOperation.CopySheet _ -> "COPY_SHEET";
+      case WorkbookOperation.SetActiveSheet _ -> "SET_ACTIVE_SHEET";
+      case WorkbookOperation.SetSelectedSheets _ -> "SET_SELECTED_SHEETS";
+      case WorkbookOperation.SetSheetVisibility _ -> "SET_SHEET_VISIBILITY";
+      case WorkbookOperation.SetSheetProtection _ -> "SET_SHEET_PROTECTION";
+      case WorkbookOperation.ClearSheetProtection _ -> "CLEAR_SHEET_PROTECTION";
       case WorkbookOperation.MergeCells _ -> "MERGE_CELLS";
       case WorkbookOperation.UnmergeCells _ -> "UNMERGE_CELLS";
       case WorkbookOperation.SetColumnWidth _ -> "SET_COLUMN_WIDTH";
@@ -147,6 +153,12 @@ public final class SequenceIntrospection {
       case WorkbookCommand.RenameSheet _ -> "RENAME_SHEET";
       case WorkbookCommand.DeleteSheet _ -> "DELETE_SHEET";
       case WorkbookCommand.MoveSheet _ -> "MOVE_SHEET";
+      case WorkbookCommand.CopySheet _ -> "COPY_SHEET";
+      case WorkbookCommand.SetActiveSheet _ -> "SET_ACTIVE_SHEET";
+      case WorkbookCommand.SetSelectedSheets _ -> "SET_SELECTED_SHEETS";
+      case WorkbookCommand.SetSheetVisibility _ -> "SET_SHEET_VISIBILITY";
+      case WorkbookCommand.SetSheetProtection _ -> "SET_SHEET_PROTECTION";
+      case WorkbookCommand.ClearSheetProtection _ -> "CLEAR_SHEET_PROTECTION";
       case WorkbookCommand.MergeCells _ -> "MERGE_CELLS";
       case WorkbookCommand.UnmergeCells _ -> "UNMERGE_CELLS";
       case WorkbookCommand.SetColumnWidth _ -> "SET_COLUMN_WIDTH";

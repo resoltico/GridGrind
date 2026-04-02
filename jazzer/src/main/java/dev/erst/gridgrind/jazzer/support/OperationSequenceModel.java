@@ -3,26 +3,35 @@ package dev.erst.gridgrind.jazzer.support;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelDataValidationPrompt;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
+import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
+import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.protocol.CellSelection;
 import dev.erst.gridgrind.protocol.CommentInput;
+import dev.erst.gridgrind.protocol.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.protocol.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.protocol.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.protocol.DataValidationInput;
 import dev.erst.gridgrind.protocol.DataValidationPromptInput;
 import dev.erst.gridgrind.protocol.DataValidationRuleInput;
+import dev.erst.gridgrind.protocol.DifferentialStyleInput;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.NamedRangeSelection;
@@ -31,6 +40,7 @@ import dev.erst.gridgrind.protocol.NamedRangeSelector;
 import dev.erst.gridgrind.protocol.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.RangeSelection;
 import dev.erst.gridgrind.protocol.SheetSelection;
+import dev.erst.gridgrind.protocol.SheetCopyPosition;
 import dev.erst.gridgrind.protocol.TableInput;
 import dev.erst.gridgrind.protocol.TableSelection;
 import dev.erst.gridgrind.protocol.TableStyleInput;
@@ -43,6 +53,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** Builds bounded protocol requests and workbook command sequences for Jazzer harnesses. */
@@ -114,107 +125,143 @@ public final class OperationSequenceModel {
     FreezePaneArguments freezePaneArguments = nextFreezePaneArguments(data);
     String namedRangeName = data.consumeBoolean() ? workbookNamedRange : sheetNamedRange;
     String tableName = nextTableName(data, validName, targetSheet);
+    int selector = nextSelectorByte(data);
 
-    return switch (data.consumeInt(0, 28)) {
-      case 0 -> new WorkbookOperation.EnsureSheet(targetSheet);
-      case 1 -> new WorkbookOperation.RenameSheet(targetSheet, primarySheet + "Renamed");
-      case 2 -> new WorkbookOperation.DeleteSheet(targetSheet);
-      case 3 -> new WorkbookOperation.MoveSheet(targetSheet, data.consumeInt(0, 2));
-      case 4 ->
-          new WorkbookOperation.MergeCells(
-              targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
-      case 5 ->
-          new WorkbookOperation.UnmergeCells(
-              targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
-      case 6 ->
-          new WorkbookOperation.SetColumnWidth(
-              targetSheet,
-              columnSpan.first(),
-              columnSpan.last(),
-              data.consumeRegularDouble(1.0d, 20.0d));
-      case 7 ->
-          new WorkbookOperation.SetRowHeight(
-              targetSheet,
-              rowSpan.first(),
-              rowSpan.last(),
-              data.consumeRegularDouble(5.0d, 40.0d));
-      case 8 ->
-          new WorkbookOperation.FreezePanes(
-              targetSheet,
-              freezePaneArguments.splitColumn(),
-              freezePaneArguments.splitRow(),
-              freezePaneArguments.leftmostColumn(),
-              freezePaneArguments.topRow());
-      case 9 ->
-          new WorkbookOperation.SetCell(
-              targetSheet,
-              FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
-              FuzzDataDecoders.nextCellInput(data));
-      case 10 -> {
-        String range = validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false);
-        yield new WorkbookOperation.SetRange(
-            targetSheet, range, FuzzDataDecoders.nextProtocolMatrix(data, 2, 2));
-      }
-      case 11 ->
-          new WorkbookOperation.ClearRange(
-              targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
-      case 12 ->
-          new WorkbookOperation.SetHyperlink(
-              targetSheet,
-              FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
-              nextHyperlinkTarget(data));
-      case 13 ->
-          new WorkbookOperation.ClearHyperlink(
-              targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
-      case 14 ->
-          new WorkbookOperation.SetComment(
-              targetSheet,
-              FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
-              nextCommentInput(data));
-      case 15 ->
-          new WorkbookOperation.ClearComment(
-              targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
-      case 16 ->
-          new WorkbookOperation.ApplyStyle(
-              targetSheet,
-              validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false),
-              WorkbookStyleInputs.nextStyleInput(data));
-      case 17 ->
-          new WorkbookOperation.SetDataValidation(
-              targetSheet,
-              validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false),
-              nextDataValidationInput(data));
-      case 18 ->
-          new WorkbookOperation.ClearDataValidations(
-              targetSheet, nextRangeSelection(data, validRange));
-      case 19 -> new WorkbookOperation.SetAutofilter(targetSheet, nextAutofilterRange(validRange));
-      case 20 -> new WorkbookOperation.ClearAutofilter(targetSheet);
-      case 21 ->
-          new WorkbookOperation.SetTable(nextTableInput(data, targetSheet, tableName, validRange));
-      case 22 -> new WorkbookOperation.DeleteTable(tableName, targetSheet);
-      case 23 ->
-          new WorkbookOperation.SetNamedRange(
-              validName ? namedRangeName : nextNamedRangeName(data, false),
-              data.consumeBoolean()
-                  ? new NamedRangeScope.Workbook()
-                  : new NamedRangeScope.Sheet(targetSheet),
-              new NamedRangeTarget(
-                  targetSheet, validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false)));
-      case 24 ->
-          new WorkbookOperation.DeleteNamedRange(
-              validName ? namedRangeName : nextNamedRangeName(data, false),
-              data.consumeBoolean()
-                  ? new NamedRangeScope.Workbook()
-                  : new NamedRangeScope.Sheet(targetSheet));
-      case 25 ->
-          new WorkbookOperation.AppendRow(
-              targetSheet,
-              List.of(FuzzDataDecoders.nextCellInput(data), FuzzDataDecoders.nextCellInput(data)));
-      case 26 -> new WorkbookOperation.AutoSizeColumns(targetSheet);
-      default ->
-          data.consumeBoolean()
-              ? new WorkbookOperation.EvaluateFormulas()
-              : new WorkbookOperation.ForceFormulaRecalculationOnOpen();
+    return switch (selectorFamily(selector)) {
+      case 0x0 -> switch (selectorSlot(selector)) {
+        case 0x0 -> new WorkbookOperation.EnsureSheet(targetSheet);
+        case 0x1 -> new WorkbookOperation.RenameSheet(targetSheet, primarySheet + "Renamed");
+        case 0x2 -> new WorkbookOperation.DeleteSheet(targetSheet);
+        case 0x3 -> new WorkbookOperation.MoveSheet(targetSheet, data.consumeInt(0, 2));
+        case 0x4 ->
+            new WorkbookOperation.CopySheet(
+                targetSheet, nextCopySheetName(targetSheet), nextSheetCopyPosition(data));
+        case 0x5 -> new WorkbookOperation.SetActiveSheet(targetSheet);
+        case 0x6 ->
+            new WorkbookOperation.SetSelectedSheets(
+                nextSelectedSheetNames(data, primarySheet, secondarySheet));
+        case 0x7 ->
+            new WorkbookOperation.SetSheetVisibility(targetSheet, nextSheetVisibility(data));
+        case 0x8 ->
+            new WorkbookOperation.SetSheetProtection(
+                targetSheet, nextSheetProtectionSettings(data));
+        default -> new WorkbookOperation.ClearSheetProtection(targetSheet);
+      };
+      case 0x1 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookOperation.MergeCells(
+                targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
+        case 0x1 ->
+            new WorkbookOperation.UnmergeCells(
+                targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
+        case 0x2 ->
+            new WorkbookOperation.SetColumnWidth(
+                targetSheet,
+                columnSpan.first(),
+                columnSpan.last(),
+                data.consumeRegularDouble(1.0d, 20.0d));
+        case 0x3 ->
+            new WorkbookOperation.SetRowHeight(
+                targetSheet,
+                rowSpan.first(),
+                rowSpan.last(),
+                data.consumeRegularDouble(5.0d, 40.0d));
+        default ->
+            new WorkbookOperation.FreezePanes(
+                targetSheet,
+                freezePaneArguments.splitColumn(),
+                freezePaneArguments.splitRow(),
+                freezePaneArguments.leftmostColumn(),
+                freezePaneArguments.topRow());
+      };
+      case 0x2 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookOperation.SetCell(
+                targetSheet,
+                FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
+                FuzzDataDecoders.nextCellInput(data));
+        case 0x1 -> {
+          String range = validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false);
+          yield new WorkbookOperation.SetRange(
+              targetSheet, range, FuzzDataDecoders.nextProtocolMatrix(data, 2, 2));
+        }
+        case 0x2 ->
+            new WorkbookOperation.ClearRange(
+                targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
+        default ->
+            new WorkbookOperation.AppendRow(
+                targetSheet,
+                List.of(FuzzDataDecoders.nextCellInput(data), FuzzDataDecoders.nextCellInput(data)));
+      };
+      case 0x3 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookOperation.SetHyperlink(
+                targetSheet,
+                FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
+                nextHyperlinkTarget(data));
+        case 0x1 ->
+            new WorkbookOperation.ClearHyperlink(
+                targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
+        case 0x2 ->
+            new WorkbookOperation.SetComment(
+                targetSheet,
+                FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
+                nextCommentInput(data));
+        case 0x3 ->
+            new WorkbookOperation.ClearComment(
+                targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
+        default ->
+            new WorkbookOperation.ApplyStyle(
+                targetSheet,
+                validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false),
+                WorkbookStyleInputs.nextStyleInput(data));
+      };
+      case 0x4 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookOperation.SetDataValidation(
+                targetSheet,
+                validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false),
+                nextDataValidationInput(data));
+        case 0x1 ->
+            new WorkbookOperation.ClearDataValidations(
+                targetSheet, nextRangeSelection(data, validRange));
+        case 0x2 ->
+            new WorkbookOperation.SetConditionalFormatting(
+                targetSheet, nextConditionalFormattingInput(data, validRange));
+        default ->
+            new WorkbookOperation.ClearConditionalFormatting(
+                targetSheet, nextRangeSelection(data, validRange));
+      };
+      case 0x5 -> switch (selectorSlot(selector)) {
+        case 0x0 -> new WorkbookOperation.SetAutofilter(targetSheet, nextAutofilterRange(validRange));
+        case 0x1 -> new WorkbookOperation.ClearAutofilter(targetSheet);
+        case 0x2 ->
+            new WorkbookOperation.SetTable(
+                nextTableInput(data, targetSheet, tableName, validRange));
+        default -> new WorkbookOperation.DeleteTable(tableName, targetSheet);
+      };
+      case 0x6 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookOperation.SetNamedRange(
+                validName ? namedRangeName : nextNamedRangeName(data, false),
+                data.consumeBoolean()
+                    ? new NamedRangeScope.Workbook()
+                    : new NamedRangeScope.Sheet(targetSheet),
+                new NamedRangeTarget(
+                    targetSheet,
+                    validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false)));
+        default ->
+            new WorkbookOperation.DeleteNamedRange(
+                validName ? namedRangeName : nextNamedRangeName(data, false),
+                data.consumeBoolean()
+                    ? new NamedRangeScope.Workbook()
+                    : new NamedRangeScope.Sheet(targetSheet));
+      };
+      default -> switch (selectorSlot(selector)) {
+        case 0x0 -> new WorkbookOperation.AutoSizeColumns(targetSheet);
+        case 0x1 -> new WorkbookOperation.EvaluateFormulas();
+        default -> new WorkbookOperation.ForceFormulaRecalculationOnOpen();
+      };
     };
   }
 
@@ -233,112 +280,144 @@ public final class OperationSequenceModel {
     FreezePaneArguments freezePaneArguments = nextFreezePaneArguments(data);
     String namedRangeName = data.consumeBoolean() ? workbookNamedRange : sheetNamedRange;
     String tableName = nextTableName(data, validName, targetSheet);
+    int selector = nextSelectorByte(data);
 
-    return switch (data.consumeInt(0, 28)) {
-      case 0 -> new WorkbookCommand.CreateSheet(targetSheet);
-      case 1 -> new WorkbookCommand.RenameSheet(targetSheet, primarySheet + "Renamed");
-      case 2 -> new WorkbookCommand.DeleteSheet(targetSheet);
-      case 3 -> new WorkbookCommand.MoveSheet(targetSheet, data.consumeInt(0, 2));
-      case 4 ->
-          new WorkbookCommand.MergeCells(
-              targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
-      case 5 ->
-          new WorkbookCommand.UnmergeCells(
-              targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
-      case 6 ->
-          new WorkbookCommand.SetColumnWidth(
-              targetSheet,
-              columnSpan.first(),
-              columnSpan.last(),
-              data.consumeRegularDouble(1.0d, 20.0d));
-      case 7 ->
-          new WorkbookCommand.SetRowHeight(
-              targetSheet,
-              rowSpan.first(),
-              rowSpan.last(),
-              data.consumeRegularDouble(5.0d, 40.0d));
-      case 8 ->
-          new WorkbookCommand.FreezePanes(
-              targetSheet,
-              freezePaneArguments.splitColumn(),
-              freezePaneArguments.splitRow(),
-              freezePaneArguments.leftmostColumn(),
-              freezePaneArguments.topRow());
-      case 9 ->
-          new WorkbookCommand.SetCell(
-              targetSheet,
-              FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
-              FuzzDataDecoders.nextExcelCellValue(data));
-      case 10 -> {
-        String range = validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false);
-        yield new WorkbookCommand.SetRange(
-            targetSheet, range, FuzzDataDecoders.nextExcelMatrix(data, 2, 2));
-      }
-      case 11 ->
-          new WorkbookCommand.ClearRange(
-              targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
-      case 12 ->
-          new WorkbookCommand.SetHyperlink(
-              targetSheet,
-              FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
-              nextExcelHyperlink(data));
-      case 13 ->
-          new WorkbookCommand.ClearHyperlink(
-              targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
-      case 14 ->
-          new WorkbookCommand.SetComment(
-              targetSheet,
-              FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
-              nextExcelComment(data));
-      case 15 ->
-          new WorkbookCommand.ClearComment(
-              targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
-      case 16 ->
-          new WorkbookCommand.ApplyStyle(
-              targetSheet,
-              validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false),
-              FuzzDataDecoders.nextStyle(data));
-      case 17 ->
-          new WorkbookCommand.SetDataValidation(
-              targetSheet,
-              validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false),
-              nextExcelDataValidationDefinition(data));
-      case 18 ->
-          new WorkbookCommand.ClearDataValidations(
-              targetSheet, nextExcelRangeSelection(data, validRange));
-      case 19 -> new WorkbookCommand.SetAutofilter(targetSheet, nextAutofilterRange(validRange));
-      case 20 -> new WorkbookCommand.ClearAutofilter(targetSheet);
-      case 21 ->
-          new WorkbookCommand.SetTable(
-              nextExcelTableDefinition(data, targetSheet, tableName, validRange));
-      case 22 -> new WorkbookCommand.DeleteTable(tableName, targetSheet);
-      case 23 ->
-          new WorkbookCommand.SetNamedRange(
-              new ExcelNamedRangeDefinition(
-                  validName ? namedRangeName : nextNamedRangeName(data, false),
-                  data.consumeBoolean()
-                      ? new ExcelNamedRangeScope.WorkbookScope()
-                      : new ExcelNamedRangeScope.SheetScope(targetSheet),
-                  new ExcelNamedRangeTarget(
-                      targetSheet,
-                      validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false))));
-      case 24 ->
-          new WorkbookCommand.DeleteNamedRange(
-              validName ? namedRangeName : nextNamedRangeName(data, false),
-              data.consumeBoolean()
-                  ? new ExcelNamedRangeScope.WorkbookScope()
-                  : new ExcelNamedRangeScope.SheetScope(targetSheet));
-      case 25 ->
-          new WorkbookCommand.AppendRow(
-              targetSheet,
-              List.of(
-                  FuzzDataDecoders.nextExcelCellValue(data),
-                  FuzzDataDecoders.nextExcelCellValue(data)));
-      case 26 -> new WorkbookCommand.AutoSizeColumns(targetSheet);
-      default ->
-          data.consumeBoolean()
-              ? new WorkbookCommand.EvaluateAllFormulas()
-              : new WorkbookCommand.ForceFormulaRecalculationOnOpen();
+    return switch (selectorFamily(selector)) {
+      case 0x0 -> switch (selectorSlot(selector)) {
+        case 0x0 -> new WorkbookCommand.CreateSheet(targetSheet);
+        case 0x1 -> new WorkbookCommand.RenameSheet(targetSheet, primarySheet + "Renamed");
+        case 0x2 -> new WorkbookCommand.DeleteSheet(targetSheet);
+        case 0x3 -> new WorkbookCommand.MoveSheet(targetSheet, data.consumeInt(0, 2));
+        case 0x4 ->
+            new WorkbookCommand.CopySheet(
+                targetSheet, nextCopySheetName(targetSheet), nextExcelSheetCopyPosition(data));
+        case 0x5 -> new WorkbookCommand.SetActiveSheet(targetSheet);
+        case 0x6 ->
+            new WorkbookCommand.SetSelectedSheets(
+                nextSelectedSheetNames(data, primarySheet, secondarySheet));
+        case 0x7 -> new WorkbookCommand.SetSheetVisibility(targetSheet, nextSheetVisibility(data));
+        case 0x8 ->
+            new WorkbookCommand.SetSheetProtection(targetSheet, nextSheetProtectionSettings(data));
+        default -> new WorkbookCommand.ClearSheetProtection(targetSheet);
+      };
+      case 0x1 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookCommand.MergeCells(
+                targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
+        case 0x1 ->
+            new WorkbookCommand.UnmergeCells(
+                targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
+        case 0x2 ->
+            new WorkbookCommand.SetColumnWidth(
+                targetSheet,
+                columnSpan.first(),
+                columnSpan.last(),
+                data.consumeRegularDouble(1.0d, 20.0d));
+        case 0x3 ->
+            new WorkbookCommand.SetRowHeight(
+                targetSheet,
+                rowSpan.first(),
+                rowSpan.last(),
+                data.consumeRegularDouble(5.0d, 40.0d));
+        default ->
+            new WorkbookCommand.FreezePanes(
+                targetSheet,
+                freezePaneArguments.splitColumn(),
+                freezePaneArguments.splitRow(),
+                freezePaneArguments.leftmostColumn(),
+                freezePaneArguments.topRow());
+      };
+      case 0x2 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookCommand.SetCell(
+                targetSheet,
+                FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
+                FuzzDataDecoders.nextExcelCellValue(data));
+        case 0x1 -> {
+          String range = validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false);
+          yield new WorkbookCommand.SetRange(
+              targetSheet, range, FuzzDataDecoders.nextExcelMatrix(data, 2, 2));
+        }
+        case 0x2 ->
+            new WorkbookCommand.ClearRange(
+                targetSheet, FuzzDataDecoders.nextNonBlankRange(data, validRange));
+        default ->
+            new WorkbookCommand.AppendRow(
+                targetSheet,
+                List.of(
+                    FuzzDataDecoders.nextExcelCellValue(data),
+                    FuzzDataDecoders.nextExcelCellValue(data)));
+      };
+      case 0x3 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookCommand.SetHyperlink(
+                targetSheet,
+                FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
+                nextExcelHyperlink(data));
+        case 0x1 ->
+            new WorkbookCommand.ClearHyperlink(
+                targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
+        case 0x2 ->
+            new WorkbookCommand.SetComment(
+                targetSheet,
+                FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
+                nextExcelComment(data));
+        case 0x3 ->
+            new WorkbookCommand.ClearComment(
+                targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
+        default ->
+            new WorkbookCommand.ApplyStyle(
+                targetSheet,
+                validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false),
+                FuzzDataDecoders.nextStyle(data));
+      };
+      case 0x4 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookCommand.SetDataValidation(
+                targetSheet,
+                validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false),
+                nextExcelDataValidationDefinition(data));
+        case 0x1 ->
+            new WorkbookCommand.ClearDataValidations(
+                targetSheet, nextExcelRangeSelection(data, validRange));
+        case 0x2 ->
+            new WorkbookCommand.SetConditionalFormatting(
+                targetSheet, nextExcelConditionalFormattingBlockDefinition(data, validRange));
+        default ->
+            new WorkbookCommand.ClearConditionalFormatting(
+                targetSheet, nextExcelRangeSelection(data, validRange));
+      };
+      case 0x5 -> switch (selectorSlot(selector)) {
+        case 0x0 -> new WorkbookCommand.SetAutofilter(targetSheet, nextAutofilterRange(validRange));
+        case 0x1 -> new WorkbookCommand.ClearAutofilter(targetSheet);
+        case 0x2 ->
+            new WorkbookCommand.SetTable(
+                nextExcelTableDefinition(data, targetSheet, tableName, validRange));
+        default -> new WorkbookCommand.DeleteTable(tableName, targetSheet);
+      };
+      case 0x6 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookCommand.SetNamedRange(
+                new ExcelNamedRangeDefinition(
+                    validName ? namedRangeName : nextNamedRangeName(data, false),
+                    data.consumeBoolean()
+                        ? new ExcelNamedRangeScope.WorkbookScope()
+                        : new ExcelNamedRangeScope.SheetScope(targetSheet),
+                    new ExcelNamedRangeTarget(
+                        targetSheet,
+                        validRange ? "A1:B2" : FuzzDataDecoders.nextNonBlankRange(data, false))));
+        default ->
+            new WorkbookCommand.DeleteNamedRange(
+                validName ? namedRangeName : nextNamedRangeName(data, false),
+                data.consumeBoolean()
+                    ? new ExcelNamedRangeScope.WorkbookScope()
+                    : new ExcelNamedRangeScope.SheetScope(targetSheet));
+      };
+      default -> switch (selectorSlot(selector)) {
+        case 0x0 -> new WorkbookCommand.AutoSizeColumns(targetSheet);
+        case 0x1 -> new WorkbookCommand.EvaluateAllFormulas();
+        default -> new WorkbookCommand.ForceFormulaRecalculationOnOpen();
+      };
     };
   }
 
@@ -354,78 +433,97 @@ public final class OperationSequenceModel {
     boolean validAddress = data.consumeBoolean();
     boolean validRange = data.consumeBoolean();
     boolean validName = data.consumeBoolean();
+    int selector = nextSelectorByte(data);
 
-    return switch (data.consumeInt(0, 21)) {
-      case 0 -> new WorkbookReadOperation.GetWorkbookSummary(requestId);
-      case 1 ->
-          new WorkbookReadOperation.GetNamedRanges(
-              requestId,
-              nextNamedRangeSelection(
-                  data, targetSheet, workbookNamedRange, sheetNamedRange, validName));
-      case 2 -> new WorkbookReadOperation.GetSheetSummary(requestId, targetSheet);
-      case 3 ->
-          new WorkbookReadOperation.GetCells(
-              requestId,
-              targetSheet,
-              nextReadAddresses(data, validAddress));
-      case 4 ->
-          new WorkbookReadOperation.GetWindow(
-              requestId,
-              targetSheet,
-              FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
-              data.consumeInt(1, 4),
-              data.consumeInt(1, 4));
-      case 5 -> new WorkbookReadOperation.GetMergedRegions(requestId, targetSheet);
-      case 6 ->
-          new WorkbookReadOperation.GetHyperlinks(
-              requestId, targetSheet, nextCellSelection(data, validAddress));
-      case 7 ->
-          new WorkbookReadOperation.GetComments(
-              requestId, targetSheet, nextCellSelection(data, validAddress));
-      case 8 -> new WorkbookReadOperation.GetSheetLayout(requestId, targetSheet);
-      case 9 ->
-          new WorkbookReadOperation.GetDataValidations(
-              requestId, targetSheet, nextRangeSelection(data, validRange));
-      case 10 -> new WorkbookReadOperation.GetAutofilters(requestId, targetSheet);
-      case 11 ->
-          new WorkbookReadOperation.GetTables(
-              requestId, nextTableSelection(data, primarySheet, secondarySheet));
-      case 12 ->
-          new WorkbookReadOperation.GetFormulaSurface(
-              requestId, nextSheetSelection(data, primarySheet, secondarySheet));
-      case 13 ->
-          new WorkbookReadOperation.GetSheetSchema(
-              requestId,
-              targetSheet,
-              validAddress ? "A1" : FuzzDataDecoders.nextNonBlankCellAddress(data, false),
-              data.consumeInt(1, 5),
-              data.consumeInt(1, 4));
-      case 14 ->
-          new WorkbookReadOperation.GetNamedRangeSurface(
-              requestId,
-              nextNamedRangeSelection(
-                  data, targetSheet, workbookNamedRange, sheetNamedRange, validName));
-      case 15 ->
-          new WorkbookReadOperation.AnalyzeFormulaHealth(
-              requestId, nextSheetSelection(data, primarySheet, secondarySheet));
-      case 16 ->
-          new WorkbookReadOperation.AnalyzeDataValidationHealth(
-              requestId, nextSheetSelection(data, primarySheet, secondarySheet));
-      case 17 ->
-          new WorkbookReadOperation.AnalyzeAutofilterHealth(
-              requestId, nextSheetSelection(data, primarySheet, secondarySheet));
-      case 18 ->
-          new WorkbookReadOperation.AnalyzeTableHealth(
-              requestId, nextTableSelection(data, primarySheet, secondarySheet));
-      case 19 ->
-          new WorkbookReadOperation.AnalyzeHyperlinkHealth(
-              requestId, nextSheetSelection(data, primarySheet, secondarySheet));
-      case 20 ->
-          new WorkbookReadOperation.AnalyzeNamedRangeHealth(
-              requestId,
-              nextNamedRangeSelection(
-                  data, targetSheet, workbookNamedRange, sheetNamedRange, validName));
-      default -> new WorkbookReadOperation.AnalyzeWorkbookFindings(requestId);
+    return switch (selectorFamily(selector)) {
+      case 0x0 -> switch (selectorSlot(selector)) {
+        case 0x0 -> new WorkbookReadOperation.GetWorkbookSummary(requestId);
+        case 0x1 -> new WorkbookReadOperation.GetSheetSummary(requestId, targetSheet);
+        case 0x2 ->
+            new WorkbookReadOperation.GetNamedRanges(
+                requestId,
+                nextNamedRangeSelection(
+                    data, targetSheet, workbookNamedRange, sheetNamedRange, validName));
+        default ->
+            new WorkbookReadOperation.GetNamedRangeSurface(
+                requestId,
+                nextNamedRangeSelection(
+                    data, targetSheet, workbookNamedRange, sheetNamedRange, validName));
+      };
+      case 0x1 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookReadOperation.GetCells(
+                requestId, targetSheet, nextReadAddresses(data, validAddress));
+        case 0x1 ->
+            new WorkbookReadOperation.GetWindow(
+                requestId,
+                targetSheet,
+                FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress),
+                data.consumeInt(1, 4),
+                data.consumeInt(1, 4));
+        case 0x2 -> new WorkbookReadOperation.GetSheetLayout(requestId, targetSheet);
+        default ->
+            new WorkbookReadOperation.GetSheetSchema(
+                requestId,
+                targetSheet,
+                validAddress ? "A1" : FuzzDataDecoders.nextNonBlankCellAddress(data, false),
+                data.consumeInt(1, 5),
+                data.consumeInt(1, 4));
+      };
+      case 0x2 -> switch (selectorSlot(selector)) {
+        case 0x0 -> new WorkbookReadOperation.GetMergedRegions(requestId, targetSheet);
+        case 0x1 ->
+            new WorkbookReadOperation.GetHyperlinks(
+                requestId, targetSheet, nextCellSelection(data, validAddress));
+        case 0x2 ->
+            new WorkbookReadOperation.GetComments(
+                requestId, targetSheet, nextCellSelection(data, validAddress));
+        default ->
+            new WorkbookReadOperation.GetFormulaSurface(
+                requestId, nextSheetSelection(data, primarySheet, secondarySheet));
+      };
+      case 0x3 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookReadOperation.GetDataValidations(
+                requestId, targetSheet, nextRangeSelection(data, validRange));
+        case 0x1 ->
+            new WorkbookReadOperation.GetConditionalFormatting(
+                requestId, targetSheet, nextRangeSelection(data, validRange));
+        default -> new WorkbookReadOperation.GetAutofilters(requestId, targetSheet);
+      };
+      case 0x4 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookReadOperation.GetTables(
+                requestId, nextTableSelection(data, primarySheet, secondarySheet));
+        case 0x1 ->
+            new WorkbookReadOperation.AnalyzeTableHealth(
+                requestId, nextTableSelection(data, primarySheet, secondarySheet));
+        default ->
+            new WorkbookReadOperation.AnalyzeAutofilterHealth(
+                requestId, nextSheetSelection(data, primarySheet, secondarySheet));
+      };
+      case 0x5 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookReadOperation.AnalyzeFormulaHealth(
+                requestId, nextSheetSelection(data, primarySheet, secondarySheet));
+        case 0x1 ->
+            new WorkbookReadOperation.AnalyzeDataValidationHealth(
+                requestId, nextSheetSelection(data, primarySheet, secondarySheet));
+        case 0x2 ->
+            new WorkbookReadOperation.AnalyzeConditionalFormattingHealth(
+                requestId, nextSheetSelection(data, primarySheet, secondarySheet));
+        default ->
+            new WorkbookReadOperation.AnalyzeHyperlinkHealth(
+                requestId, nextSheetSelection(data, primarySheet, secondarySheet));
+      };
+      default -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookReadOperation.AnalyzeNamedRangeHealth(
+                requestId,
+                nextNamedRangeSelection(
+                    data, targetSheet, workbookNamedRange, sheetNamedRange, validName));
+        default -> new WorkbookReadOperation.AnalyzeWorkbookFindings(requestId);
+      };
     };
   }
 
@@ -435,7 +533,7 @@ public final class OperationSequenceModel {
       String workbookNamedRange,
       String sheetNamedRange,
       boolean validName) {
-    return switch (data.consumeInt(0, 2)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new NamedRangeSelection.All();
       default ->
           new NamedRangeSelection.Selected(
@@ -449,7 +547,7 @@ public final class OperationSequenceModel {
   }
 
   private static CellSelection nextCellSelection(FuzzedDataProvider data, boolean validAddress) {
-    return switch (data.consumeInt(0, 1)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new CellSelection.AllUsedCells();
       default ->
           new CellSelection.Selected(
@@ -459,7 +557,7 @@ public final class OperationSequenceModel {
 
   private static SheetSelection nextSheetSelection(
       FuzzedDataProvider data, String primarySheet, String secondarySheet) {
-    return switch (data.consumeInt(0, 1)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new SheetSelection.All();
       default ->
           new SheetSelection.Selected(
@@ -484,7 +582,7 @@ public final class OperationSequenceModel {
   }
 
   private static FreezePaneArguments nextFreezePaneArguments(FuzzedDataProvider data) {
-    return switch (data.consumeInt(0, 2)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> {
         int splitColumn = data.consumeInt(1, 3);
         yield new FreezePaneArguments(
@@ -506,13 +604,64 @@ public final class OperationSequenceModel {
     };
   }
 
+  private static SheetCopyPosition nextSheetCopyPosition(FuzzedDataProvider data) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> new SheetCopyPosition.AppendAtEnd();
+      default -> new SheetCopyPosition.AtIndex(data.consumeInt(0, 2));
+    };
+  }
+
+  private static ExcelSheetCopyPosition nextExcelSheetCopyPosition(FuzzedDataProvider data) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> new ExcelSheetCopyPosition.AppendAtEnd();
+      default -> new ExcelSheetCopyPosition.AtIndex(data.consumeInt(0, 2));
+    };
+  }
+
+  private static List<String> nextSelectedSheetNames(
+      FuzzedDataProvider data, String primarySheet, String secondarySheet) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> List.of(primarySheet);
+      case 1 -> List.of(secondarySheet);
+      default -> List.of(primarySheet, secondarySheet);
+    };
+  }
+
+  private static ExcelSheetVisibility nextSheetVisibility(FuzzedDataProvider data) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> ExcelSheetVisibility.VISIBLE;
+      case 1 -> ExcelSheetVisibility.HIDDEN;
+      default -> ExcelSheetVisibility.VERY_HIDDEN;
+    };
+  }
+
+  private static ExcelSheetProtectionSettings nextSheetProtectionSettings(
+      FuzzedDataProvider data) {
+    return new ExcelSheetProtectionSettings(
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean(),
+        data.consumeBoolean());
+  }
+
   private static WorkflowStorage nextWorkflowStorage(
       String primarySheet, String secondarySheet, FuzzedDataProvider data) throws IOException {
     Path directory = Files.createTempDirectory("gridgrind-jazzer-workflow-");
     Path sourcePath = directory.resolve("source.xlsx");
     Path saveAsPath = directory.resolve("output.xlsx");
 
-    return switch (data.consumeInt(0, 4)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 ->
           new WorkflowStorage(
               new GridGrindRequest.WorkbookSource.New(),
@@ -575,7 +724,7 @@ public final class OperationSequenceModel {
   }
 
   private static HyperlinkTarget nextHyperlinkTarget(FuzzedDataProvider data) {
-    return switch (data.consumeInt(0, 3)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new HyperlinkTarget.Url("https://example.com/" + nextNamedRangeName(data, true));
       case 1 -> new HyperlinkTarget.Email(nextNamedRangeName(data, true) + "@example.com");
       case 2 -> new HyperlinkTarget.File("/tmp/" + nextNamedRangeName(data, true) + ".xlsx");
@@ -584,7 +733,7 @@ public final class OperationSequenceModel {
   }
 
   private static ExcelHyperlink nextExcelHyperlink(FuzzedDataProvider data) {
-    return switch (data.consumeInt(0, 3)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new ExcelHyperlink.Url("https://example.com/" + nextNamedRangeName(data, true));
       case 1 -> new ExcelHyperlink.Email(nextNamedRangeName(data, true) + "@example.com");
       case 2 -> new ExcelHyperlink.File("/tmp/" + nextNamedRangeName(data, true) + ".xlsx");
@@ -640,8 +789,92 @@ public final class OperationSequenceModel {
             : null);
   }
 
+  private static ConditionalFormattingBlockInput nextConditionalFormattingInput(
+      FuzzedDataProvider data, boolean validRange) {
+    return new ConditionalFormattingBlockInput(
+        List.of(validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)),
+        List.of(
+            data.consumeBoolean()
+                ? new ConditionalFormattingRuleInput.FormulaRule(
+                    "A1>0", data.consumeBoolean(), nextDifferentialStyleInput(data))
+                : new ConditionalFormattingRuleInput.CellValueRule(
+                    ExcelComparisonOperator.GREATER_THAN,
+                    "1",
+                    null,
+                    data.consumeBoolean(),
+                    nextDifferentialStyleInput(data))));
+  }
+
+  private static ExcelConditionalFormattingBlockDefinition
+      nextExcelConditionalFormattingBlockDefinition(FuzzedDataProvider data, boolean validRange) {
+    return new ExcelConditionalFormattingBlockDefinition(
+        List.of(validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)),
+        List.of(
+            data.consumeBoolean()
+                ? new ExcelConditionalFormattingRule.FormulaRule(
+                    "A1>0", data.consumeBoolean(), nextExcelDifferentialStyle(data))
+                : new ExcelConditionalFormattingRule.CellValueRule(
+                    ExcelComparisonOperator.GREATER_THAN,
+                    "1",
+                    null,
+                    data.consumeBoolean(),
+                    nextExcelDifferentialStyle(data))));
+  }
+
+  private static DifferentialStyleInput nextDifferentialStyleInput(FuzzedDataProvider data) {
+    boolean includeNumberFormat = data.consumeBoolean();
+    Boolean bold = data.consumeBoolean() ? Boolean.TRUE : null;
+    Boolean italic = data.consumeBoolean() ? Boolean.TRUE : null;
+    String fontColor = data.consumeBoolean() ? "#102030" : null;
+    Boolean underline = data.consumeBoolean() ? Boolean.TRUE : null;
+    Boolean strikeout = data.consumeBoolean() ? Boolean.TRUE : null;
+    String fillColor = data.consumeBoolean() ? "#E0F0AA" : null;
+    String numberFormat =
+        includeNumberFormat
+                || Stream.of(bold, italic, fontColor, underline, strikeout, fillColor)
+                    .allMatch(Objects::isNull)
+            ? "0.00"
+            : null;
+    return new DifferentialStyleInput(
+        numberFormat,
+        bold,
+        italic,
+        null,
+        fontColor,
+        underline,
+        strikeout,
+        fillColor,
+        null);
+  }
+
+  private static ExcelDifferentialStyle nextExcelDifferentialStyle(FuzzedDataProvider data) {
+    boolean includeNumberFormat = data.consumeBoolean();
+    Boolean bold = data.consumeBoolean() ? Boolean.TRUE : null;
+    Boolean italic = data.consumeBoolean() ? Boolean.TRUE : null;
+    String fontColor = data.consumeBoolean() ? "#102030" : null;
+    Boolean underline = data.consumeBoolean() ? Boolean.TRUE : null;
+    Boolean strikeout = data.consumeBoolean() ? Boolean.TRUE : null;
+    String fillColor = data.consumeBoolean() ? "#E0F0AA" : null;
+    String numberFormat =
+        includeNumberFormat
+                || Stream.of(bold, italic, fontColor, underline, strikeout, fillColor)
+                    .allMatch(Objects::isNull)
+            ? "0.00"
+            : null;
+    return new ExcelDifferentialStyle(
+        numberFormat,
+        bold,
+        italic,
+        null,
+        fontColor,
+        underline,
+        strikeout,
+        fillColor,
+        null);
+  }
+
   private static RangeSelection nextRangeSelection(FuzzedDataProvider data, boolean validRange) {
-    return switch (data.consumeInt(0, 1)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new RangeSelection.All();
       default ->
           new RangeSelection.Selected(
@@ -651,7 +884,7 @@ public final class OperationSequenceModel {
 
   private static ExcelRangeSelection nextExcelRangeSelection(
       FuzzedDataProvider data, boolean validRange) {
-    return switch (data.consumeInt(0, 1)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new ExcelRangeSelection.All();
       default ->
           new ExcelRangeSelection.Selected(
@@ -661,6 +894,12 @@ public final class OperationSequenceModel {
 
   private static String nextAutofilterRange(boolean validRange) {
     return validRange ? "E1:F3" : "BadRange";
+  }
+
+  private static String nextCopySheetName(String sourceSheetName) {
+    Objects.requireNonNull(sourceSheetName, "sourceSheetName must not be null");
+    String base = sourceSheetName.length() <= 27 ? sourceSheetName : sourceSheetName.substring(0, 27);
+    return base + "_B1";
   }
 
   private static TableInput nextTableInput(
@@ -684,7 +923,7 @@ public final class OperationSequenceModel {
   }
 
   private static TableStyleInput nextTableStyleInput(FuzzedDataProvider data) {
-    return switch (data.consumeInt(0, 1)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new TableStyleInput.None();
       default ->
           new TableStyleInput.Named(
@@ -697,7 +936,7 @@ public final class OperationSequenceModel {
   }
 
   private static ExcelTableStyle nextExcelTableStyle(FuzzedDataProvider data) {
-    return switch (data.consumeInt(0, 1)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new ExcelTableStyle.None();
       default ->
           new ExcelTableStyle.Named(
@@ -711,7 +950,7 @@ public final class OperationSequenceModel {
 
   private static TableSelection nextTableSelection(
       FuzzedDataProvider data, String primarySheet, String secondarySheet) {
-    return switch (data.consumeInt(0, 1)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new TableSelection.All();
       default ->
           new TableSelection.ByNames(
@@ -727,7 +966,7 @@ public final class OperationSequenceModel {
     if (!valid) {
       return nextNamedRangeName(data, false);
     }
-    return switch (data.consumeInt(0, 2)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> sheetName + "Table";
       case 1 -> "BudgetTable";
       default -> "OpsTable";
@@ -741,7 +980,7 @@ public final class OperationSequenceModel {
   private static String nextNamedRangeName(FuzzedDataProvider data, boolean valid) {
     Objects.requireNonNull(data, "data must not be null");
     if (!valid) {
-      return switch (data.consumeInt(0, 4)) {
+      return switch (selectorSlot(nextSelectorByte(data))) {
         case 0 -> "";
         case 1 -> "A1";
         case 2 -> "R1C1";
@@ -749,13 +988,25 @@ public final class OperationSequenceModel {
         default -> "1Budget";
       };
     }
-    return switch (data.consumeInt(0, 4)) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> "BudgetTotal";
       case 1 -> "LocalItem";
       case 2 -> "Report_Value";
       case 3 -> "Summary.Total";
       default -> "Name" + data.consumeInt(1, 9);
     };
+  }
+
+  private static int nextSelectorByte(FuzzedDataProvider data) {
+    return Byte.toUnsignedInt(data.consumeByte());
+  }
+
+  private static int selectorFamily(int selector) {
+    return selector >>> 4;
+  }
+
+  private static int selectorSlot(int selector) {
+    return selector & 0x0F;
   }
 
   private record IndexSpan(int first, int last) {}

@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.22.0"
+version: "0.23.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-04-02"
 route:
@@ -23,9 +23,9 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
 | `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 14 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
-| `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 7 |
-| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 12 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 44 total across harnesses |
+| `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 8 |
+| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 14 |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 47 total across harnesses |
 
 ---
 
@@ -207,6 +207,7 @@ Committed custom seeds currently in source control:
 | `engine-command-sequence` | `apply_style_formatting_depth_success.bin` | direct engine seed that replays to successful formatting-depth style application |
 | `engine-command-sequence` | `invalid_formula_parser_state_case.bin` | direct engine seed that replays to the expected-invalid malformed-formula parser-state case fixed from a former Jazzer finding |
 | `engine-command-sequence` | `set_hyperlink_clear_comment_invalid_sheet.bin` | direct engine seed that replays to an expected-invalid mixed hyperlink/comment command case against a missing sheet |
+| `engine-command-sequence` | `delete_last_visible_sheet_invalid.bin` | direct engine seed promoted from a live B1 finding to assert that deleting the last visible sheet is classified as expected-invalid instead of crashing view-state normalization |
 | `xlsx-roundtrip` | `create_sheet_roundtrip_case.bin` | successful round-trip seed dominated by repeated `CREATE_SHEET` commands |
 | `xlsx-roundtrip` | `single_sheet_roundtrip_case.bin` | minimal successful round-trip seed that creates one sheet and persists cleanly |
 | `xlsx-roundtrip` | `create_sheet_set_range_roundtrip_case.bin` | successful round-trip seed that persists `CREATE_SHEET` plus `SET_RANGE` commands |
@@ -216,6 +217,7 @@ Committed custom seeds currently in source control:
 | `xlsx-roundtrip` | `append_row_datetime_style_patch_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that date-time append writes relayer their required number format onto styled blank rows |
 | `xlsx-roundtrip` | `table_header_rewrite_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that table header rewrites keep persisted table metadata synchronized through reopen |
 | `xlsx-roundtrip` | `table_header_style_display_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that header-range style patches keep typed table header metadata synchronized through reopen |
+| `xlsx-roundtrip` | `clear_sheet_protection_unprotected_roundtrip_success.bin` | successful round-trip seed promoted from a live B1 finding to assert that clearing protection on an already unprotected sheet is an idempotent no-op instead of a POI-backed crash |
 | `xlsx-roundtrip` | `named_range_normalization_roundtrip_success.bin` | successful round-trip seed that preserves named-range state while normalizing reversed target ordering |
 | `xlsx-roundtrip` | `hyperlink_comment_invalid_row_case.bin` | expected-invalid round-trip seed that exercises hyperlink and comment commands alongside invalid row mutation input |
 | `xlsx-roundtrip` | `set_hyperlink_replacement_roundtrip_success.bin` | successful round-trip seed that preserves the latest hyperlink target after repeated writes to the same cell |
@@ -246,6 +248,8 @@ The current Jazzer layer is strongest at:
   verified binary workflow seeds
 - validation-aware request and round-trip coverage for the data-validation authoring family
 - validation-aware request and round-trip coverage for the table and autofilter authoring family
+- explicit regression coverage for workbook-view invariants such as rejecting deletion of the
+  last visible sheet
 - normalized local-file hyperlink path semantics in request seeds and `.xlsx` round-trip
   invariants
 - style-aware `.xlsx` round-trip verification for formatting depth, authoring metadata, and

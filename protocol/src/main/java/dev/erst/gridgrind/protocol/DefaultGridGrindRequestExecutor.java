@@ -180,6 +180,19 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.DeleteSheet op -> new WorkbookCommand.DeleteSheet(op.sheetName());
       case WorkbookOperation.MoveSheet op ->
           new WorkbookCommand.MoveSheet(op.sheetName(), op.targetIndex());
+      case WorkbookOperation.CopySheet op ->
+          new WorkbookCommand.CopySheet(
+              op.sourceSheetName(), op.newSheetName(), op.position().toExcelSheetCopyPosition());
+      case WorkbookOperation.SetActiveSheet op ->
+          new WorkbookCommand.SetActiveSheet(op.sheetName());
+      case WorkbookOperation.SetSelectedSheets op ->
+          new WorkbookCommand.SetSelectedSheets(op.sheetNames());
+      case WorkbookOperation.SetSheetVisibility op ->
+          new WorkbookCommand.SetSheetVisibility(op.sheetName(), op.visibility());
+      case WorkbookOperation.SetSheetProtection op ->
+          new WorkbookCommand.SetSheetProtection(op.sheetName(), op.protection());
+      case WorkbookOperation.ClearSheetProtection op ->
+          new WorkbookCommand.ClearSheetProtection(op.sheetName());
       case WorkbookOperation.MergeCells op ->
           new WorkbookCommand.MergeCells(op.sheetName(), op.range());
       case WorkbookOperation.UnmergeCells op ->
@@ -362,12 +375,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     return switch (result) {
       case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult workbookSummary ->
           new WorkbookReadResult.WorkbookSummaryResult(
-              workbookSummary.requestId(),
-              new GridGrindResponse.WorkbookSummary(
-                  workbookSummary.workbook().sheetCount(),
-                  workbookSummary.workbook().sheetNames(),
-                  workbookSummary.workbook().namedRangeCount(),
-                  workbookSummary.workbook().forceFormulaRecalculationOnOpen()));
+              workbookSummary.requestId(), toWorkbookSummary(workbookSummary.workbook()));
       case dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangesResult namedRanges ->
           new WorkbookReadResult.NamedRangesResult(
               namedRanges.requestId(),
@@ -379,6 +387,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               sheetSummary.requestId(),
               new GridGrindResponse.SheetSummaryReport(
                   sheetSummary.sheet().sheetName(),
+                  sheetSummary.sheet().visibility(),
+                  toSheetProtectionReport(sheetSummary.sheet().protection()),
                   sheetSummary.sheet().physicalRowCount(),
                   sheetSummary.sheet().lastRowIndex(),
                   sheetSummary.sheet().lastColumnIndex()));
@@ -948,6 +958,38 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     };
   }
 
+  /** Converts workbook-core sheet-protection state into the protocol response variant. */
+  static GridGrindResponse.SheetProtectionReport toSheetProtectionReport(
+      dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection protection) {
+    return switch (protection) {
+      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Unprotected _ ->
+          new GridGrindResponse.SheetProtectionReport.Unprotected();
+      case dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Protected protectedState ->
+          new GridGrindResponse.SheetProtectionReport.Protected(protectedState.settings());
+    };
+  }
+
+  /** Converts one workbook-core workbook summary into the protocol response shape. */
+  static GridGrindResponse.WorkbookSummary toWorkbookSummary(
+      dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary workbookSummary) {
+    return switch (workbookSummary) {
+      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.Empty empty ->
+          new GridGrindResponse.WorkbookSummary.Empty(
+              empty.sheetCount(),
+              empty.sheetNames(),
+              empty.namedRangeCount(),
+              empty.forceFormulaRecalculationOnOpen());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.WithSheets withSheets ->
+          new GridGrindResponse.WorkbookSummary.WithSheets(
+              withSheets.sheetCount(),
+              withSheets.sheetNames(),
+              withSheets.activeSheetName(),
+              withSheets.selectedSheetNames(),
+              withSheets.namedRangeCount(),
+              withSheets.forceFormulaRecalculationOnOpen());
+    };
+  }
+
   /** Delegates to GridGrindProblems to classify the exception into a problem code. */
   static GridGrindProblemCode problemCodeFor(Exception exception) {
     return GridGrindProblems.codeFor(exception);
@@ -1286,6 +1328,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.RenameSheet _ -> null;
       case WorkbookOperation.DeleteSheet _ -> null;
       case WorkbookOperation.MoveSheet _ -> null;
+      case WorkbookOperation.CopySheet _ -> null;
+      case WorkbookOperation.SetActiveSheet _ -> null;
+      case WorkbookOperation.SetSelectedSheets _ -> null;
+      case WorkbookOperation.SetSheetVisibility _ -> null;
+      case WorkbookOperation.SetSheetProtection _ -> null;
+      case WorkbookOperation.ClearSheetProtection _ -> null;
       case WorkbookOperation.MergeCells _ -> null;
       case WorkbookOperation.UnmergeCells _ -> null;
       case WorkbookOperation.SetColumnWidth _ -> null;
@@ -1323,6 +1371,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.RenameSheet op -> op.sheetName();
           case WorkbookOperation.DeleteSheet op -> op.sheetName();
           case WorkbookOperation.MoveSheet op -> op.sheetName();
+          case WorkbookOperation.CopySheet op -> op.sourceSheetName();
+          case WorkbookOperation.SetActiveSheet op -> op.sheetName();
+          case WorkbookOperation.SetSelectedSheets _ -> null;
+          case WorkbookOperation.SetSheetVisibility op -> op.sheetName();
+          case WorkbookOperation.SetSheetProtection op -> op.sheetName();
+          case WorkbookOperation.ClearSheetProtection op -> op.sheetName();
           case WorkbookOperation.MergeCells op -> op.sheetName();
           case WorkbookOperation.UnmergeCells op -> op.sheetName();
           case WorkbookOperation.SetColumnWidth op -> op.sheetName();
@@ -1371,6 +1425,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.RenameSheet _ -> null;
           case WorkbookOperation.DeleteSheet _ -> null;
           case WorkbookOperation.MoveSheet _ -> null;
+          case WorkbookOperation.CopySheet _ -> null;
+          case WorkbookOperation.SetActiveSheet _ -> null;
+          case WorkbookOperation.SetSelectedSheets _ -> null;
+          case WorkbookOperation.SetSheetVisibility _ -> null;
+          case WorkbookOperation.SetSheetProtection _ -> null;
+          case WorkbookOperation.ClearSheetProtection _ -> null;
           case WorkbookOperation.MergeCells _ -> null;
           case WorkbookOperation.UnmergeCells _ -> null;
           case WorkbookOperation.SetColumnWidth _ -> null;
@@ -1418,6 +1478,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.RenameSheet _ -> null;
           case WorkbookOperation.DeleteSheet _ -> null;
           case WorkbookOperation.MoveSheet _ -> null;
+          case WorkbookOperation.CopySheet _ -> null;
+          case WorkbookOperation.SetActiveSheet _ -> null;
+          case WorkbookOperation.SetSelectedSheets _ -> null;
+          case WorkbookOperation.SetSheetVisibility _ -> null;
+          case WorkbookOperation.SetSheetProtection _ -> null;
+          case WorkbookOperation.ClearSheetProtection _ -> null;
           case WorkbookOperation.SetColumnWidth _ -> null;
           case WorkbookOperation.SetRowHeight _ -> null;
           case WorkbookOperation.FreezePanes _ -> null;
@@ -1449,6 +1515,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.RenameSheet _ -> null;
           case WorkbookOperation.DeleteSheet _ -> null;
           case WorkbookOperation.MoveSheet _ -> null;
+          case WorkbookOperation.CopySheet _ -> null;
+          case WorkbookOperation.SetActiveSheet _ -> null;
+          case WorkbookOperation.SetSelectedSheets _ -> null;
+          case WorkbookOperation.SetSheetVisibility _ -> null;
+          case WorkbookOperation.SetSheetProtection _ -> null;
+          case WorkbookOperation.ClearSheetProtection _ -> null;
           case WorkbookOperation.MergeCells _ -> null;
           case WorkbookOperation.UnmergeCells _ -> null;
           case WorkbookOperation.SetColumnWidth _ -> null;

@@ -104,6 +104,287 @@ class ExcelWorkbookTest {
   }
 
   @Test
+  void workbookSummaryUsesExplicitEmptyAndWithSheetsStates() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      WorkbookReadResult.WorkbookSummary emptySummary = workbook.workbookSummary();
+      WorkbookReadResult.WorkbookSummary.Empty empty =
+          assertInstanceOf(WorkbookReadResult.WorkbookSummary.Empty.class, emptySummary);
+      assertEquals(0, empty.sheetCount());
+      assertEquals(List.of(), empty.sheetNames());
+
+      workbook.getOrCreateSheet("Alpha");
+      workbook.getOrCreateSheet("Beta");
+      workbook.getOrCreateSheet("Gamma");
+      workbook.setActiveSheet("Beta");
+      workbook.setSelectedSheets(List.of("Gamma", "Alpha"));
+      workbook.setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
+
+      WorkbookReadResult.WorkbookSummary.WithSheets summary =
+          assertInstanceOf(
+              WorkbookReadResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
+      assertEquals(List.of("Alpha", "Beta", "Gamma"), summary.sheetNames());
+      assertEquals("Gamma", summary.activeSheetName());
+      assertEquals(List.of("Alpha", "Gamma"), summary.selectedSheetNames());
+    }
+  }
+
+  @Test
+  void sheetStateRoundTripsAcrossSaveAndReopen() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-sheet-state-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha").setCell("A1", ExcelCellValue.text("Live"));
+      workbook.getOrCreateSheet("Beta");
+      workbook.getOrCreateSheet("Gamma");
+      workbook.copySheet("Alpha", "Replica", new ExcelSheetCopyPosition.AtIndex(1));
+      workbook.setActiveSheet("Beta");
+      workbook.setSelectedSheets(List.of("Gamma", "Alpha"));
+      workbook.setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
+      workbook.setSheetVisibility("Replica", ExcelSheetVisibility.VERY_HIDDEN);
+      workbook.setSheetProtection("Alpha", protectionSettings());
+      workbook.save(workbookPath);
+    }
+
+    assertEquals(
+        List.of("Alpha", "Replica", "Beta", "Gamma"), XlsxRoundTrip.sheetOrder(workbookPath));
+    assertEquals("Gamma", XlsxRoundTrip.activeSheetName(workbookPath));
+    assertEquals(List.of("Alpha", "Gamma"), XlsxRoundTrip.selectedSheetNames(workbookPath));
+    assertEquals(ExcelSheetVisibility.HIDDEN, XlsxRoundTrip.sheetVisibility(workbookPath, "Beta"));
+    assertEquals(
+        ExcelSheetVisibility.VERY_HIDDEN, XlsxRoundTrip.sheetVisibility(workbookPath, "Replica"));
+    assertEquals(
+        new WorkbookReadResult.SheetProtection.Protected(protectionSettings()),
+        XlsxRoundTrip.sheetProtection(workbookPath, "Alpha"));
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      WorkbookReadResult.WorkbookSummary.WithSheets summary =
+          assertInstanceOf(
+              WorkbookReadResult.WorkbookSummary.WithSheets.class, workbook.workbookSummary());
+      assertEquals("Gamma", summary.activeSheetName());
+      assertEquals(List.of("Alpha", "Gamma"), summary.selectedSheetNames());
+
+      WorkbookReadResult.SheetSummary alphaSummary = workbook.sheetSummary("Alpha");
+      WorkbookReadResult.SheetSummary betaSummary = workbook.sheetSummary("Beta");
+      WorkbookReadResult.SheetSummary replicaSummary = workbook.sheetSummary("Replica");
+      assertEquals(ExcelSheetVisibility.VISIBLE, alphaSummary.visibility());
+      assertEquals(
+          new WorkbookReadResult.SheetProtection.Protected(protectionSettings()),
+          alphaSummary.protection());
+      assertEquals(ExcelSheetVisibility.HIDDEN, betaSummary.visibility());
+      assertInstanceOf(
+          WorkbookReadResult.SheetProtection.Unprotected.class, betaSummary.protection());
+      assertEquals(ExcelSheetVisibility.VERY_HIDDEN, replicaSummary.visibility());
+    }
+  }
+
+  @Test
+  void clearSheetProtectionIsIdempotentForUnprotectedSheets() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-clear-sheet-protection-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      workbook.getOrCreateSheet("Beta");
+      workbook.clearSheetProtection("Alpha");
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      assertInstanceOf(
+          WorkbookReadResult.SheetProtection.Unprotected.class,
+          workbook.sheetSummary("Alpha").protection());
+    }
+  }
+
+  @Test
+  void clearSheetProtectionRemovesExistingProtectionAcrossSaveAndReopen() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-clear-existing-sheet-protection-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      workbook.setSheetProtection("Alpha", protectionSettings());
+      workbook.clearSheetProtection("Alpha");
+      workbook.save(workbookPath);
+    }
+
+    assertEquals(
+        new WorkbookReadResult.SheetProtection.Unprotected(),
+        XlsxRoundTrip.sheetProtection(workbookPath, "Alpha"));
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      assertInstanceOf(
+          WorkbookReadResult.SheetProtection.Unprotected.class,
+          workbook.sheetSummary("Alpha").protection());
+    }
+  }
+
+  @Test
+  void copySheetPreservesSupportedLocalStructuresAndCopiesSheetScopedRangeNames()
+      throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Source");
+      workbook.sheet("Source").setCell("A1", ExcelCellValue.text("Item"));
+      workbook.sheet("Source").setCell("B1", ExcelCellValue.text("Amount"));
+      workbook.sheet("Source").setCell("A2", ExcelCellValue.text("Hosting"));
+      workbook.sheet("Source").setCell("B2", ExcelCellValue.number(49.0));
+      workbook.sheet("Source").setCell("B3", ExcelCellValue.formula("SUM(B2:B2)"));
+      workbook.sheet("Source").setHyperlink("A2", new ExcelHyperlink.Url("https://example.com/h"));
+      workbook.sheet("Source").setComment("A2", new ExcelComment("Review", "GridGrind", false));
+      workbook
+          .sheet("Source")
+          .setDataValidation(
+              "C2:C4",
+              new ExcelDataValidationDefinition(
+                  new ExcelDataValidationRule.WholeNumber(
+                      ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                  false,
+                  false,
+                  null,
+                  null));
+      workbook
+          .sheet("Source")
+          .setConditionalFormatting(
+              new ExcelConditionalFormattingBlockDefinition(
+                  List.of("B2:B4"),
+                  List.of(
+                      new ExcelConditionalFormattingRule.FormulaRule(
+                          "B2>0",
+                          true,
+                          new ExcelDifferentialStyle(
+                              "0.00", true, null, null, "#102030", null, null, "#E0F0AA", null)))));
+      workbook.sheet("Source").mergeCells("A1:B1");
+      workbook.sheet("Source").freezePanes(1, 1, 1, 1);
+      workbook.setNamedRange(
+          new ExcelNamedRangeDefinition(
+              "LocalBudget",
+              new ExcelNamedRangeScope.SheetScope("Source"),
+              new ExcelNamedRangeTarget("Source", "A1:B3")));
+      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.save(workbookPath);
+    }
+
+    assertEquals(
+        new XlsxRoundTrip.FreezePaneState.Frozen(1, 1, 1, 1),
+        XlsxRoundTrip.freezePaneState(workbookPath, "Replica"));
+    assertEquals(
+        List.of(
+            new ExcelNamedRangeSnapshot.RangeSnapshot(
+                "LocalBudget",
+                new ExcelNamedRangeScope.SheetScope("Source"),
+                "Source!$A$1:Source!$B$3",
+                new ExcelNamedRangeTarget("Source", "A1:B3")),
+            new ExcelNamedRangeSnapshot.RangeSnapshot(
+                "LocalBudget",
+                new ExcelNamedRangeScope.SheetScope("Replica"),
+                "Replica!$A$1:Replica!$B$3",
+                new ExcelNamedRangeTarget("Replica", "A1:B3"))),
+        XlsxRoundTrip.namedRanges(workbookPath));
+    assertEquals(
+        List.of(
+            new ExcelDataValidationSnapshot.Supported(
+                List.of("C2:C4"),
+                new ExcelDataValidationDefinition(
+                    new ExcelDataValidationRule.WholeNumber(
+                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                    false,
+                    true,
+                    null,
+                    null))),
+        XlsxRoundTrip.dataValidations(workbookPath, "Replica"));
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      assertEquals("Item", workbook.sheet("Replica").text("A1"));
+      assertEquals(
+          "https://example.com/h",
+          workbook
+              .sheet("Replica")
+              .snapshotCell("A2")
+              .metadata()
+              .hyperlink()
+              .orElseThrow()
+              .target());
+      assertEquals(
+          "Review",
+          workbook.sheet("Replica").snapshotCell("A2").metadata().comment().orElseThrow().text());
+      assertEquals(
+          List.of("A1:B1"),
+          workbook.sheet("Replica").mergedRegions().stream()
+              .map(WorkbookReadResult.MergedRegion::range)
+              .toList());
+      assertEquals(
+          List.of("B2:B4"),
+          workbook
+              .sheet("Replica")
+              .conditionalFormatting(new ExcelRangeSelection.All())
+              .getFirst()
+              .ranges());
+    }
+  }
+
+  @Test
+  void copySheetRejectsUnsupportedSourceStructuresAndVisibilityRulesStayHonest()
+      throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      workbook.getOrCreateSheet("Beta");
+      workbook.setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN);
+      assertDoesNotThrow(() -> workbook.setSheetVisibility("Beta", ExcelSheetVisibility.HIDDEN));
+
+      IllegalArgumentException lastVisible =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> workbook.setSheetVisibility("Alpha", ExcelSheetVisibility.HIDDEN));
+      assertEquals("cannot hide the last visible sheet 'Alpha'", lastVisible.getMessage());
+
+      IllegalArgumentException deleteLastVisible =
+          assertThrows(IllegalArgumentException.class, () -> workbook.deleteSheet("Alpha"));
+      assertEquals("cannot delete the last visible sheet 'Alpha'", deleteLastVisible.getMessage());
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Tables");
+      workbook.sheet("Tables").setCell("A1", ExcelCellValue.text("Name"));
+      workbook.sheet("Tables").setCell("B1", ExcelCellValue.text("Value"));
+      workbook.sheet("Tables").setCell("A2", ExcelCellValue.text("Ops"));
+      workbook.sheet("Tables").setCell("B2", ExcelCellValue.number(1.0));
+      workbook.setTable(
+          new ExcelTableDefinition(
+              "OpsTable", "Tables", "A1:B2", false, new ExcelTableStyle.None()));
+
+      IllegalArgumentException tableFailure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  workbook.copySheet(
+                      "Tables", "Tables Copy", new ExcelSheetCopyPosition.AppendAtEnd()));
+      assertEquals(
+          "cannot copy sheet 'Tables': sheets containing tables are not copyable",
+          tableFailure.getMessage());
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("FormulaNames");
+      Name localFormula = workbook.xssfWorkbook().createName();
+      localFormula.setNameName("LocalFormula");
+      localFormula.setSheetIndex(workbook.xssfWorkbook().getSheetIndex("FormulaNames"));
+      localFormula.setRefersToFormula("SUM(FormulaNames!$A$1:$A$2)");
+
+      IllegalArgumentException nameFailure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  workbook.copySheet(
+                      "FormulaNames",
+                      "FormulaNames Copy",
+                      new ExcelSheetCopyPosition.AppendAtEnd()));
+      assertEquals(
+          "cannot copy sheet 'FormulaNames': sheet-scoped formula-defined named ranges are not copyable",
+          nameFailure.getMessage());
+    }
+  }
+
+  @Test
   void persistsStructuralLayoutOperationsAcrossSaves() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-");
 
@@ -507,5 +788,11 @@ class ExcelWorkbookTest {
       assertThrows(IllegalArgumentException.class, () -> workbook.getOrCreateSheet(tooLong));
       assertThrows(IllegalArgumentException.class, () -> workbook.sheet(tooLong));
     }
+  }
+
+  private static ExcelSheetProtectionSettings protectionSettings() {
+    return new ExcelSheetProtectionSettings(
+        true, false, true, false, true, false, true, false, true, false, true, false, true, false,
+        true);
   }
 }

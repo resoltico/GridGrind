@@ -8,19 +8,35 @@
     "details" : {
       "type" : "PROTOCOL_WORKFLOW",
       "inputBytes" : 314,
-      "sourceKind" : "NEW",
-      "persistenceKind" : "NONE",
+      "sourceKind" : "EXISTING",
+      "persistenceKind" : "SAVE_AS",
       "operationCount" : 5,
       "operationKinds" : {
-        "RENAME_SHEET" : 5
+        "APPLY_STYLE" : 3,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2
       },
-      "styleKinds" : { },
-      "readCount" : 3,
+      "styleKinds" : {
+        "font_height_twips" : 3,
+        "border" : 3,
+        "fill_color" : 3,
+        "vertical_alignment" : 3,
+        "border_bottom" : 3,
+        "bold" : 3,
+        "border_top" : 3,
+        "font_name" : 3,
+        "font_color" : 3,
+        "font_height" : 3,
+        "wrap_text" : 3,
+        "horizontal_alignment" : 3,
+        "italic" : 3,
+        "underline" : 3,
+        "strikeout" : 3
+      },
+      "readCount" : 6,
       "readKinds" : {
-        "GET_WORKBOOK_SUMMARY" : 1,
-        "ANALYZE_FORMULA_HEALTH" : 2
+        "ANALYZE_WORKBOOK_FINDINGS" : 6
       },
-      "responseKind" : "FAILURE"
+      "responseKind" : "SUCCESS"
     }
   },
   "promotedAt" : "2026-03-26T16:46:35.402673Z",

@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -17,7 +19,9 @@ class GridGrindResponseTest {
     List<WorkbookReadResult> reads = new ArrayList<>();
     reads.add(
         new WorkbookReadResult.WorkbookSummaryResult(
-            "workbook", new GridGrindResponse.WorkbookSummary(1, List.of("Budget"), 1, true)));
+            "workbook",
+            new GridGrindResponse.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Budget", List.of("Budget"), 1, true)));
 
     GridGrindResponse.Success success =
         new GridGrindResponse.Success(
@@ -48,7 +52,8 @@ class GridGrindResponseTest {
   void copiesAndValidatesNestedCollections() {
     List<String> sheetNames = new ArrayList<>(List.of("Budget"));
     GridGrindResponse.WorkbookSummary workbook =
-        new GridGrindResponse.WorkbookSummary(1, sheetNames, 1, true);
+        new GridGrindResponse.WorkbookSummary.WithSheets(
+            1, sheetNames, "Budget", List.of("Budget"), 1, true);
     List<WorkbookReadResult> reads =
         new ArrayList<>(
             List.of(new WorkbookReadResult.WorkbookSummaryResult("workbook", workbook)));
@@ -63,7 +68,10 @@ class GridGrindResponseTest {
 
     assertThrows(NullPointerException.class, () -> new GridGrindResponse.Success(null, null, null));
     assertThrows(
-        NullPointerException.class, () -> new GridGrindResponse.WorkbookSummary(1, null, 0, true));
+        NullPointerException.class,
+        () ->
+            new GridGrindResponse.WorkbookSummary.WithSheets(
+                1, null, "Budget", List.of("Budget"), 0, true));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -80,6 +88,32 @@ class GridGrindResponseTest {
     assertThrows(
         NullPointerException.class,
         () -> new GridGrindResponse.PersistenceOutcome.SavedAs("budget.xlsx", null));
+  }
+
+  @Test
+  void workbookSummaryAndSheetProtectionVariantsExposeB1State() {
+    GridGrindResponse.WorkbookSummary.Empty empty =
+        new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false);
+    ExcelSheetProtectionSettings protectionSettings = protectionSettings();
+    GridGrindResponse.WorkbookSummary.WithSheets withSheets =
+        new GridGrindResponse.WorkbookSummary.WithSheets(
+            2, List.of("Budget", "Archive"), "Archive", List.of("Budget", "Archive"), 1, true);
+    GridGrindResponse.SheetProtectionReport.Unprotected unprotected =
+        new GridGrindResponse.SheetProtectionReport.Unprotected();
+    GridGrindResponse.SheetProtectionReport.Protected protectedReport =
+        new GridGrindResponse.SheetProtectionReport.Protected(protectionSettings);
+    GridGrindResponse.SheetSummaryReport sheetSummary =
+        new GridGrindResponse.SheetSummaryReport(
+            "Budget", ExcelSheetVisibility.VERY_HIDDEN, protectedReport, 4, 8, 3);
+
+    assertEquals(0, empty.sheetCount());
+    assertEquals(List.of(), empty.sheetNames());
+    assertEquals("Archive", withSheets.activeSheetName());
+    assertEquals(List.of("Budget", "Archive"), withSheets.selectedSheetNames());
+    assertNull(unprotected.settings());
+    assertEquals(protectionSettings, protectedReport.settings());
+    assertEquals(ExcelSheetVisibility.VERY_HIDDEN, sheetSummary.visibility());
+    assertEquals(protectedReport, sheetSummary.protection());
   }
 
   @Test
@@ -336,13 +370,75 @@ class GridGrindResponseTest {
   void responseRecordsRejectBlankAndInvalidValues() {
     assertThrows(
         IllegalArgumentException.class,
+        () -> new GridGrindResponse.WorkbookSummary.Empty(0, List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.WorkbookSummary.Empty(1, List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.WorkbookSummary.Empty(-1, List.of(), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), -1, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.WorkbookSummary.Empty(2, List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.WorkbookSummary.Empty(0, List.of("Budget", "Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.WorkbookSummary.Empty(1, List.of(" "), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Archive", List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Budget", List.of("Archive"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), " ", List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.WorkbookSummary.WithSheets(
+                0, List.of(), "Budget", List.of("Budget"), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Budget", List.of(), 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.WorkbookSummary.WithSheets(
+                1, List.of("Budget"), "Budget", List.of("Budget", "Budget"), 0, false));
+    assertThrows(
+        NullPointerException.class,
+        () -> new GridGrindResponse.SheetProtectionReport.Protected(null));
+    assertThrows(
+        IllegalArgumentException.class,
         () -> new GridGrindResponse.PersistenceOutcome.SavedAs(" ", "/tmp/budget.xlsx"));
     assertThrows(
         IllegalArgumentException.class,
         () -> new GridGrindResponse.PersistenceOutcome.SavedAs("budget.xlsx", " "));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindResponse.SheetSummaryReport(" ", 0, 0, 0));
+        () ->
+            new GridGrindResponse.SheetSummaryReport(
+                " ",
+                dev.erst.gridgrind.excel.ExcelSheetVisibility.VISIBLE,
+                new GridGrindResponse.SheetProtectionReport.Unprotected(),
+                0,
+                0,
+                0));
     assertThrows(
         IllegalArgumentException.class,
         () -> new GridGrindResponse.WindowReport("Budget", " ", 1, 1, List.of()));
@@ -658,5 +754,11 @@ class GridGrindResponseTest {
         ExcelBorderStyle.DOUBLE,
         ExcelBorderStyle.THIN,
         ExcelBorderStyle.THIN);
+  }
+
+  private static ExcelSheetProtectionSettings protectionSettings() {
+    return new ExcelSheetProtectionSettings(
+        false, true, false, true, false, true, false, true, false, true, false, true, false, true,
+        false);
   }
 }

@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.22.0"
+version: "0.23.0"
 domain: DEVELOPER_JAZZER
 updated: "2026-04-01"
 route:
@@ -111,9 +111,9 @@ The operator goal is not to maximize seed count. The goal is to preserve a stabl
 Current promoted floor:
 - `protocol-request`: 14 committed seeds
 - `protocol-workflow`: 11 committed seeds
-- `engine-command-sequence`: 7 committed seeds
-- `xlsx-roundtrip`: 13 committed seeds
-- total promoted seed floor: 45 inputs
+- `engine-command-sequence`: 8 committed seeds
+- `xlsx-roundtrip`: 14 committed seeds
+- total promoted seed floor: 47 inputs
 
 Additional committed non-floor regression inputs also exist for narrower expected-invalid request
 shapes. The counts above track the intentionally curated promoted floor, not every committed input

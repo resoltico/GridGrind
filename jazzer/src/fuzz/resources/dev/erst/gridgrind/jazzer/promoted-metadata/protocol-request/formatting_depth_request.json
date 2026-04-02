@@ -13,33 +13,33 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 7,
       "operationKinds" : {
-        "EVALUATE_FORMULAS" : 1,
-        "SET_RANGE" : 1,
-        "AUTO_SIZE_COLUMNS" : 1,
+        "APPLY_STYLE" : 3,
         "ENSURE_SHEET" : 1,
-        "APPLY_STYLE" : 3
+        "AUTO_SIZE_COLUMNS" : 1,
+        "SET_RANGE" : 1,
+        "EVALUATE_FORMULAS" : 1
       },
       "styleKinds" : {
-        "number_format" : 1,
-        "border_top" : 1,
-        "font_height_twips" : 1,
-        "border" : 2,
-        "font_color" : 2,
-        "vertical_alignment" : 1,
-        "bold" : 2,
-        "fill_color" : 2,
-        "font_name" : 2,
+        "font_height" : 2,
+        "font_height_points" : 1,
+        "horizontal_alignment" : 2,
         "wrap_text" : 1,
         "border_all" : 2,
-        "font_height" : 2,
-        "horizontal_alignment" : 2,
-        "font_height_points" : 1
+        "font_name" : 2,
+        "fill_color" : 2,
+        "bold" : 2,
+        "vertical_alignment" : 1,
+        "font_color" : 2,
+        "border" : 2,
+        "font_height_twips" : 1,
+        "border_top" : 1,
+        "number_format" : 1
       },
       "readCount" : 3,
       "readKinds" : {
-        "GET_FORMULA_SURFACE" : 1,
+        "GET_CELLS" : 1,
         "GET_WINDOW" : 1,
-        "GET_CELLS" : 1
+        "GET_FORMULA_SURFACE" : 1
       }
     }
   },

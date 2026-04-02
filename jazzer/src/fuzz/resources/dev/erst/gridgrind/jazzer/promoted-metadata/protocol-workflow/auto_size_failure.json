@@ -2,20 +2,23 @@
   "targetKey" : "protocol-workflow",
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/ffbeeade11fe37088d3bb32892ea09f429c48731",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/auto_size_failure.bin",
-  "replayOutcome" : "EXPECTED_INVALID",
+  "replayOutcome" : "SUCCESS",
   "expectation" : {
-    "outcomeKind" : "EXPECTED_INVALID",
+    "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_WORKFLOW",
       "inputBytes" : 38,
-      "sourceKind" : "NOT_GENERATED",
-      "persistenceKind" : "NOT_GENERATED",
-      "operationCount" : 0,
-      "operationKinds" : { },
+      "sourceKind" : "NEW",
+      "persistenceKind" : "NONE",
+      "operationCount" : 3,
+      "operationKinds" : {
+        "CLEAR_SHEET_PROTECTION" : 1,
+        "ENSURE_SHEET" : 2
+      },
       "styleKinds" : { },
       "readCount" : 0,
       "readKinds" : { },
-      "responseKind" : "NOT_EXECUTED"
+      "responseKind" : "FAILURE"
     }
   },
   "promotedAt" : "2026-03-26T04:16:00.687436Z",

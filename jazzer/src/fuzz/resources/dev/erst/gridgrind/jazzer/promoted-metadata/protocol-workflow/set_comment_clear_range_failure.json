@@ -9,18 +9,33 @@
       "type" : "PROTOCOL_WORKFLOW",
       "inputBytes" : 173,
       "sourceKind" : "NEW",
-      "persistenceKind" : "SAVE_AS",
+      "persistenceKind" : "NONE",
       "operationCount" : 8,
       "operationKinds" : {
-        "UNMERGE_CELLS" : 1,
-        "CLEAR_HYPERLINK" : 6,
-        "CLEAR_RANGE" : 1
+        "ENSURE_SHEET" : 1,
+        "CLEAR_CONDITIONAL_FORMATTING" : 5,
+        "APPLY_STYLE" : 1,
+        "DELETE_NAMED_RANGE" : 1
       },
-      "styleKinds" : { },
-      "readCount" : 1,
-      "readKinds" : {
-        "GET_MERGED_REGIONS" : 1
+      "styleKinds" : {
+        "font_height_twips" : 1,
+        "border" : 1,
+        "fill_color" : 1,
+        "vertical_alignment" : 1,
+        "bold" : 1,
+        "font_name" : 1,
+        "font_color" : 1,
+        "border_all" : 1,
+        "border_right" : 1,
+        "font_height" : 1,
+        "wrap_text" : 1,
+        "horizontal_alignment" : 1,
+        "italic" : 1,
+        "underline" : 1,
+        "strikeout" : 1
       },
+      "readCount" : 0,
+      "readKinds" : { },
       "responseKind" : "FAILURE"
     }
   },

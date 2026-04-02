@@ -13,20 +13,20 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 6,
       "operationKinds" : {
-        "MERGE_CELLS" : 1,
-        "SET_COLUMN_WIDTH" : 1,
-        "SET_CELL" : 1,
-        "ENSURE_SHEET" : 1,
+        "SET_ROW_HEIGHT" : 1,
         "FREEZE_PANES" : 1,
-        "SET_ROW_HEIGHT" : 1
+        "ENSURE_SHEET" : 1,
+        "SET_CELL" : 1,
+        "SET_COLUMN_WIDTH" : 1,
+        "MERGE_CELLS" : 1
       },
       "styleKinds" : { },
       "readCount" : 4,
       "readKinds" : {
-        "GET_MERGED_REGIONS" : 1,
-        "GET_SHEET_LAYOUT" : 1,
+        "GET_CELLS" : 1,
         "GET_WINDOW" : 1,
-        "GET_CELLS" : 1
+        "GET_SHEET_LAYOUT" : 1,
+        "GET_MERGED_REGIONS" : 1
       }
     }
   },

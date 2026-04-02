@@ -32,6 +32,13 @@ class WorkbookCommandTest {
         new WorkbookCommand.RenameSheet("Budget", "Summary"),
         new WorkbookCommand.DeleteSheet("Archive"),
         new WorkbookCommand.MoveSheet("Budget", 1),
+        new WorkbookCommand.CopySheet(
+            "Budget", "Budget Copy", new ExcelSheetCopyPosition.AppendAtEnd()),
+        new WorkbookCommand.SetActiveSheet("Budget"),
+        new WorkbookCommand.SetSelectedSheets(List.of("Budget", "Summary")),
+        new WorkbookCommand.SetSheetVisibility("Budget", ExcelSheetVisibility.VERY_HIDDEN),
+        new WorkbookCommand.SetSheetProtection("Budget", protectionSettings()),
+        new WorkbookCommand.ClearSheetProtection("Budget"),
         new WorkbookCommand.MergeCells("Budget", "A1:B2"),
         new WorkbookCommand.UnmergeCells("Budget", "A1:B2"),
         new WorkbookCommand.SetColumnWidth("Budget", 0, 1, 16.0),
@@ -90,6 +97,12 @@ class WorkbookCommandTest {
     assertEquals("Summary", commands.renameSheet().newSheetName());
     assertEquals("Archive", commands.deleteSheet().sheetName());
     assertEquals(1, commands.moveSheet().targetIndex());
+    assertEquals("Budget Copy", commands.copySheet().newSheetName());
+    assertEquals("Budget", commands.setActiveSheet().sheetName());
+    assertEquals(List.of("Budget", "Summary"), commands.setSelectedSheets().sheetNames());
+    assertEquals(ExcelSheetVisibility.VERY_HIDDEN, commands.setSheetVisibility().visibility());
+    assertEquals(protectionSettings(), commands.setSheetProtection().protection());
+    assertEquals("Budget", commands.clearSheetProtection().sheetName());
     assertEquals("A1:B2", commands.mergeCells().range());
     assertEquals("A1:B2", commands.unmergeCells().range());
     assertEquals(16.0, commands.setColumnWidth().widthCharacters());
@@ -129,7 +142,7 @@ class WorkbookCommandTest {
   }
 
   @Test
-  void validatesSheetAndLayoutCommandInputs() {
+  void validatesSheetIdentityCommandInputs() {
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.CreateSheet(null));
     assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.CreateSheet(" "));
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.RenameSheet(null, "New"));
@@ -142,6 +155,65 @@ class WorkbookCommandTest {
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.MoveSheet(null, 0));
     assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.MoveSheet(" ", 0));
     assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.MoveSheet("Budget", -1));
+  }
+
+  @Test
+  void validatesSheetCopyAndStateCommandInputs() {
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookCommand.CopySheet(
+                null, "Budget Copy", new ExcelSheetCopyPosition.AppendAtEnd()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookCommand.CopySheet(
+                " ", "Budget Copy", new ExcelSheetCopyPosition.AppendAtEnd()));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookCommand.CopySheet(
+                "Budget", null, new ExcelSheetCopyPosition.AppendAtEnd()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookCommand.CopySheet("Budget", " ", new ExcelSheetCopyPosition.AppendAtEnd()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.CopySheet("Budget", "Budget Copy", null));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetActiveSheet(null));
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.SetActiveSheet(" "));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetSelectedSheets(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.SetSelectedSheets(List.of()));
+    List<String> selectedSheetsWithNull = new ArrayList<>();
+    selectedSheetsWithNull.add(null);
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.SetSelectedSheets(selectedSheetsWithNull));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.SetSelectedSheets(List.of("Budget", " ")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.SetSelectedSheets(List.of("Budget", "Budget")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.SetSheetVisibility(" ", ExcelSheetVisibility.HIDDEN));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.SetSheetVisibility("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.SetSheetProtection(" ", protectionSettings()));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.SetSheetProtection("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.ClearSheetProtection(" "));
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearSheetProtection(null));
+  }
+
+  @Test
+  void validatesMergeAndLayoutSizingCommandInputs() {
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.MergeCells(null, "A1:B2"));
     assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.MergeCells(" ", "A1"));
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.MergeCells("Budget", null));
@@ -203,6 +275,10 @@ class WorkbookCommandTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookCommand.SetRowHeight("Budget", 0, 0, 0.0));
+  }
+
+  @Test
+  void validatesFreezePaneCommandInputs() {
     assertDoesNotThrow(() -> new WorkbookCommand.FreezePanes("Budget", 0, 2, 0, 2));
     assertDoesNotThrow(() -> new WorkbookCommand.FreezePanes("Budget", 2, 0, 2, 0));
     assertThrows(
@@ -512,6 +588,12 @@ class WorkbookCommandTest {
       WorkbookCommand.RenameSheet renameSheet,
       WorkbookCommand.DeleteSheet deleteSheet,
       WorkbookCommand.MoveSheet moveSheet,
+      WorkbookCommand.CopySheet copySheet,
+      WorkbookCommand.SetActiveSheet setActiveSheet,
+      WorkbookCommand.SetSelectedSheets setSelectedSheets,
+      WorkbookCommand.SetSheetVisibility setSheetVisibility,
+      WorkbookCommand.SetSheetProtection setSheetProtection,
+      WorkbookCommand.ClearSheetProtection clearSheetProtection,
       WorkbookCommand.MergeCells mergeCells,
       WorkbookCommand.UnmergeCells unmergeCells,
       WorkbookCommand.SetColumnWidth setColumnWidth,
@@ -539,4 +621,10 @@ class WorkbookCommandTest {
       WorkbookCommand.AutoSizeColumns autoSizeColumns,
       WorkbookCommand.EvaluateAllFormulas evaluate,
       WorkbookCommand.ForceFormulaRecalculationOnOpen recalc) {}
+
+  private static ExcelSheetProtectionSettings protectionSettings() {
+    return new ExcelSheetProtectionSettings(
+        true, false, true, false, true, false, true, false, true, false, true, false, true, false,
+        true);
+  }
 }

@@ -2,26 +2,20 @@
   "targetKey" : "protocol-workflow",
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/5b6e500eb0a83626238c41380c56cab8b8394acb",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_hyperlink_failure.bin",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_WORKFLOW",
       "inputBytes" : 317,
-      "sourceKind" : "NEW",
-      "persistenceKind" : "NONE",
-      "operationCount" : 6,
-      "operationKinds" : {
-        "CLEAR_HYPERLINK" : 2,
-        "CLEAR_RANGE" : 4
-      },
+      "sourceKind" : "NOT_GENERATED",
+      "persistenceKind" : "NOT_GENERATED",
+      "operationCount" : 0,
+      "operationKinds" : { },
       "styleKinds" : { },
-      "readCount" : 5,
-      "readKinds" : {
-        "GET_NAMED_RANGES" : 2,
-        "GET_FORMULA_SURFACE" : 3
-      },
-      "responseKind" : "FAILURE"
+      "readCount" : 0,
+      "readKinds" : { },
+      "responseKind" : "NOT_EXECUTED"
     }
   },
   "promotedAt" : "2026-03-26T16:46:27.861899Z",

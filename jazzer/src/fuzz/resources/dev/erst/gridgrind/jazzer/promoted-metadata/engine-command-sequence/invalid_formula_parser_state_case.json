@@ -2,16 +2,17 @@
   "targetKey" : "engine-command-sequence",
   "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/crash-2f13d11ff7f3014d6023755bd957eccfbbc39d86",
   "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/invalid_formula_parser_state_case.bin",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "ENGINE_COMMAND_SEQUENCE",
       "inputBytes" : 57,
       "commandCount" : 4,
       "commandKinds" : {
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
         "CREATE_SHEET" : 2,
-        "FREEZE_PANES" : 2
+        "DELETE_TABLE" : 1
       },
       "styleKinds" : { }
     }
