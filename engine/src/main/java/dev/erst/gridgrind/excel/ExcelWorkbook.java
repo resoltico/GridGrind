@@ -241,6 +241,7 @@ public final class ExcelWorkbook implements AutoCloseable {
 
     Path absolutePath = workbookPath.toAbsolutePath();
     Files.createDirectories(absolutePath.getParent());
+    ExcelTableHeaderSyncSupport.syncAllHeaders(workbook);
 
     try (OutputStream outputStream = Files.newOutputStream(absolutePath)) {
       workbook.write(outputStream);

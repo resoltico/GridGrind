@@ -4,6 +4,13 @@ import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.protocol.AutofilterEntryReport;
 import dev.erst.gridgrind.protocol.AutofilterHealthReport;
+import dev.erst.gridgrind.protocol.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.protocol.ConditionalFormattingHealthReport;
+import dev.erst.gridgrind.protocol.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.protocol.ConditionalFormattingThresholdReport;
+import dev.erst.gridgrind.protocol.DifferentialBorderReport;
+import dev.erst.gridgrind.protocol.DifferentialBorderSideReport;
+import dev.erst.gridgrind.protocol.DifferentialStyleReport;
 import dev.erst.gridgrind.protocol.FontHeightReport;
 import dev.erst.gridgrind.protocol.GridGrindRequest;
 import dev.erst.gridgrind.protocol.GridGrindResponse;
@@ -202,6 +209,13 @@ public final class WorkbookInvariantChecks {
             (WorkbookReadResult.DataValidationsResult) readResult;
         require(expected.sheetName().equals(result.sheetName()), "data validations sheet mismatch");
       }
+      case WorkbookReadOperation.GetConditionalFormatting expected -> {
+        WorkbookReadResult.ConditionalFormattingResult result =
+            (WorkbookReadResult.ConditionalFormattingResult) readResult;
+        require(
+            expected.sheetName().equals(result.sheetName()),
+            "conditional formatting sheet mismatch");
+      }
       case WorkbookReadOperation.GetAutofilters expected -> {
         WorkbookReadResult.AutofiltersResult result =
             (WorkbookReadResult.AutofiltersResult) readResult;
@@ -234,6 +248,9 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadOperation.AnalyzeDataValidationHealth _ ->
           requireDataValidationHealthShape(
               ((WorkbookReadResult.DataValidationHealthResult) readResult).analysis());
+      case WorkbookReadOperation.AnalyzeConditionalFormattingHealth _ ->
+          requireConditionalFormattingHealthShape(
+              ((WorkbookReadResult.ConditionalFormattingHealthResult) readResult).analysis());
       case WorkbookReadOperation.AnalyzeAutofilterHealth _ ->
           requireAutofilterHealthShape(
               ((WorkbookReadResult.AutofilterHealthResult) readResult).analysis());
@@ -263,6 +280,7 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.CommentsResult _ -> "GET_COMMENTS";
       case WorkbookReadResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadResult.DataValidationsResult _ -> "GET_DATA_VALIDATIONS";
+      case WorkbookReadResult.ConditionalFormattingResult _ -> "GET_CONDITIONAL_FORMATTING";
       case WorkbookReadResult.AutofiltersResult _ -> "GET_AUTOFILTERS";
       case WorkbookReadResult.TablesResult _ -> "GET_TABLES";
       case WorkbookReadResult.FormulaSurfaceResult _ -> "GET_FORMULA_SURFACE";
@@ -270,6 +288,8 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.NamedRangeSurfaceResult _ -> "GET_NAMED_RANGE_SURFACE";
       case WorkbookReadResult.FormulaHealthResult _ -> "ANALYZE_FORMULA_HEALTH";
       case WorkbookReadResult.DataValidationHealthResult _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
+      case WorkbookReadResult.ConditionalFormattingHealthResult _ ->
+          "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
       case WorkbookReadResult.AutofilterHealthResult _ -> "ANALYZE_AUTOFILTER_HEALTH";
       case WorkbookReadResult.TableHealthResult _ -> "ANALYZE_TABLE_HEALTH";
       case WorkbookReadResult.HyperlinkHealthResult _ -> "ANALYZE_HYPERLINK_HEALTH";
@@ -315,6 +335,15 @@ public final class WorkbookInvariantChecks {
         require(!result.sheetName().isBlank(), "data validations sheetName must not be blank");
         result.validations().forEach(WorkbookInvariantChecks::requireDataValidationEntryShape);
       }
+      case WorkbookReadResult.ConditionalFormattingResult result -> {
+        require(
+            result.sheetName() != null, "conditional formatting sheetName must not be null");
+        require(
+            !result.sheetName().isBlank(),
+            "conditional formatting sheetName must not be blank");
+        result.conditionalFormattingBlocks()
+            .forEach(WorkbookInvariantChecks::requireConditionalFormattingEntryShape);
+      }
       case WorkbookReadResult.AutofiltersResult result -> {
         require(result.sheetName() != null, "autofilters sheetName must not be null");
         require(!result.sheetName().isBlank(), "autofilters sheetName must not be blank");
@@ -330,6 +359,8 @@ public final class WorkbookInvariantChecks {
           requireFormulaHealthShape(result.analysis());
       case WorkbookReadResult.DataValidationHealthResult result ->
           requireDataValidationHealthShape(result.analysis());
+      case WorkbookReadResult.ConditionalFormattingHealthResult result ->
+          requireConditionalFormattingHealthShape(result.analysis());
       case WorkbookReadResult.AutofilterHealthResult result ->
           requireAutofilterHealthShape(result.analysis());
       case WorkbookReadResult.TableHealthResult result -> requireTableHealthShape(result.analysis());
@@ -457,6 +488,26 @@ public final class WorkbookInvariantChecks {
     }
   }
 
+  private static void requireConditionalFormattingEntryShape(
+      ConditionalFormattingEntryReport conditionalFormatting) {
+    require(
+        conditionalFormatting.ranges() != null, "conditional formatting ranges must not be null");
+    require(
+        !conditionalFormatting.ranges().isEmpty(),
+        "conditional formatting ranges must not be empty");
+    conditionalFormatting
+        .ranges()
+        .forEach(range -> requireNonBlank(range, "conditional formatting range"));
+    require(
+        conditionalFormatting.rules() != null, "conditional formatting rules must not be null");
+    require(
+        !conditionalFormatting.rules().isEmpty(),
+        "conditional formatting rules must not be empty");
+    conditionalFormatting
+        .rules()
+        .forEach(WorkbookInvariantChecks::requireConditionalFormattingRuleShape);
+  }
+
   private static void requireTableEntryShape(TableEntryReport table) {
     requireNonBlank(table.name(), "table name");
     requireNonBlank(table.sheetName(), "table sheetName");
@@ -467,6 +518,121 @@ public final class WorkbookInvariantChecks {
     table.columnNames().forEach(columnName -> require(columnName != null, "table column name must not be null"));
     require(table.style() != null, "table style must not be null");
     requireTableStyleShape(table.style());
+  }
+
+  private static void requireConditionalFormattingRuleShape(
+      ConditionalFormattingRuleReport rule) {
+    require(rule.priority() > 0, "conditional formatting priority must be greater than 0");
+    switch (rule) {
+      case ConditionalFormattingRuleReport.FormulaRule formulaRule -> {
+        requireNonBlank(formulaRule.formula(), "conditional formatting formula");
+        require(formulaRule.style() != null, "conditional formatting style must not be null");
+        requireDifferentialStyleShape(formulaRule.style());
+      }
+      case ConditionalFormattingRuleReport.CellValueRule cellValueRule -> {
+        require(cellValueRule.operator() != null, "conditional formatting operator must not be null");
+        requireNonBlank(cellValueRule.formula1(), "conditional formatting formula1");
+        if (cellValueRule.formula2() != null) {
+          requireNonBlank(cellValueRule.formula2(), "conditional formatting formula2");
+        }
+        if (cellValueRule.style() != null) {
+          requireDifferentialStyleShape(cellValueRule.style());
+        }
+      }
+      case ConditionalFormattingRuleReport.ColorScaleRule colorScaleRule -> {
+        require(
+            colorScaleRule.thresholds() != null,
+            "conditional formatting thresholds must not be null");
+        require(
+            !colorScaleRule.thresholds().isEmpty(),
+            "conditional formatting thresholds must not be empty");
+        colorScaleRule
+            .thresholds()
+            .forEach(WorkbookInvariantChecks::requireConditionalFormattingThresholdShape);
+        require(colorScaleRule.colors() != null, "conditional formatting colors must not be null");
+        require(
+            !colorScaleRule.colors().isEmpty(),
+            "conditional formatting colors must not be empty");
+        colorScaleRule.colors().forEach(color -> requireNonBlank(color, "conditional formatting color"));
+      }
+      case ConditionalFormattingRuleReport.DataBarRule dataBarRule -> {
+        requireNonBlank(dataBarRule.color(), "conditional formatting color");
+        requireConditionalFormattingThresholdShape(dataBarRule.minThreshold());
+        requireConditionalFormattingThresholdShape(dataBarRule.maxThreshold());
+        require(dataBarRule.widthMin() >= 0, "conditional formatting widthMin must not be negative");
+        require(dataBarRule.widthMax() >= 0, "conditional formatting widthMax must not be negative");
+      }
+      case ConditionalFormattingRuleReport.IconSetRule iconSetRule -> {
+        require(iconSetRule.iconSet() != null, "conditional formatting iconSet must not be null");
+        require(iconSetRule.thresholds() != null, "conditional formatting thresholds must not be null");
+        require(
+            !iconSetRule.thresholds().isEmpty(),
+            "conditional formatting thresholds must not be empty");
+        iconSetRule
+            .thresholds()
+            .forEach(WorkbookInvariantChecks::requireConditionalFormattingThresholdShape);
+      }
+      case ConditionalFormattingRuleReport.UnsupportedRule unsupportedRule -> {
+        requireNonBlank(unsupportedRule.kind(), "conditional formatting kind");
+        requireNonBlank(unsupportedRule.detail(), "conditional formatting detail");
+      }
+    }
+  }
+
+  private static void requireConditionalFormattingThresholdShape(
+      ConditionalFormattingThresholdReport threshold) {
+    require(threshold != null, "conditional formatting threshold must not be null");
+    require(threshold.type() != null, "conditional formatting threshold type must not be null");
+  }
+
+  private static void requireDifferentialStyleShape(DifferentialStyleReport style) {
+    require(style != null, "conditional formatting style must not be null");
+    if (style.numberFormat() != null) {
+      requireNonBlank(style.numberFormat(), "conditional formatting numberFormat");
+    }
+    if (style.fontHeight() != null) {
+      requireFontHeightShape(style.fontHeight());
+    }
+    if (style.fontColor() != null) {
+      requireNonBlank(style.fontColor(), "conditional formatting fontColor");
+    }
+    if (style.fillColor() != null) {
+      requireNonBlank(style.fillColor(), "conditional formatting fillColor");
+    }
+    if (style.border() != null) {
+      requireDifferentialBorderShape(style.border());
+    }
+    require(style.unsupportedFeatures() != null, "conditional formatting unsupportedFeatures must not be null");
+    style
+        .unsupportedFeatures()
+        .forEach(feature -> require(feature != null, "conditional formatting unsupported feature must not be null"));
+  }
+
+  private static void requireDifferentialBorderShape(DifferentialBorderReport border) {
+    require(border != null, "conditional formatting border must not be null");
+    if (border.all() != null) {
+      requireDifferentialBorderSideShape(border.all());
+    }
+    if (border.top() != null) {
+      requireDifferentialBorderSideShape(border.top());
+    }
+    if (border.right() != null) {
+      requireDifferentialBorderSideShape(border.right());
+    }
+    if (border.bottom() != null) {
+      requireDifferentialBorderSideShape(border.bottom());
+    }
+    if (border.left() != null) {
+      requireDifferentialBorderSideShape(border.left());
+    }
+  }
+
+  private static void requireDifferentialBorderSideShape(DifferentialBorderSideReport side) {
+    require(side != null, "conditional formatting border side must not be null");
+    require(side.style() != null, "conditional formatting border style must not be null");
+    if (side.color() != null) {
+      requireNonBlank(side.color(), "conditional formatting border color");
+    }
   }
 
   private static void requireTableStyleShape(TableStyleReport style) {
@@ -612,6 +778,14 @@ public final class WorkbookInvariantChecks {
     require(
         analysis.checkedValidationCount() >= 0,
         "checkedValidationCount must not be negative");
+    requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
+  }
+
+  private static void requireConditionalFormattingHealthShape(
+      ConditionalFormattingHealthReport analysis) {
+    require(
+        analysis.checkedConditionalFormattingBlockCount() >= 0,
+        "checkedConditionalFormattingBlockCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 

@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -88,6 +89,8 @@ public final class XlsxRoundTripVerifier {
       requireExpectedNamedRanges(expectedWorkbookState.expectedNamedRanges(), workbook);
     }
     requireExpectedDataValidations(expectedWorkbookState.expectedDataValidations(), workbookPath);
+    requireExpectedConditionalFormatting(
+        expectedWorkbookState.expectedConditionalFormatting(), workbookPath);
     requireExpectedAutofilters(expectedWorkbookState.expectedAutofilters(), workbookPath);
     requireExpectedTables(expectedWorkbookState.expectedTables(), workbookPath);
   }
@@ -356,6 +359,7 @@ public final class XlsxRoundTripVerifier {
           expectedMetadata(candidateSnapshots),
           expectedNamedRanges(workbook),
           expectedDataValidations(workbook),
+          expectedConditionalFormatting(workbook),
           expectedAutofilters(workbook),
           expectedTables(workbook));
     }
@@ -465,6 +469,12 @@ public final class XlsxRoundTripVerifier {
         }
         case WorkbookCommand.ClearDataValidations _ -> {
           // Data validations are tracked independently from cell-style and metadata expectations.
+        }
+        case WorkbookCommand.SetConditionalFormatting _ -> {
+          // Conditional formatting is tracked independently from cell-style and metadata expectations.
+        }
+        case WorkbookCommand.ClearConditionalFormatting _ -> {
+          // Conditional formatting is tracked independently from cell-style and metadata expectations.
         }
         case WorkbookCommand.SetAutofilter _ -> {
           // Autofilters are tracked independently from cell-style and metadata expectations.
@@ -600,6 +610,27 @@ public final class XlsxRoundTripVerifier {
     return Map.copyOf(expected);
   }
 
+  private static Map<String, List<ExcelConditionalFormattingBlockSnapshot>>
+      expectedConditionalFormatting(ExcelWorkbook workbook) {
+    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    LinkedHashMap<String, List<ExcelConditionalFormattingBlockSnapshot>> expected =
+        new LinkedHashMap<>();
+    for (String sheetName : workbook.sheetNames()) {
+      var result =
+          (dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingResult)
+              readExecutor
+                  .apply(
+                      workbook,
+                      new WorkbookReadCommand.GetConditionalFormatting(
+                          "conditionalFormatting", sheetName, new ExcelRangeSelection.All()))
+                  .getFirst();
+      if (!result.conditionalFormattingBlocks().isEmpty()) {
+        expected.put(sheetName, result.conditionalFormattingBlocks());
+      }
+    }
+    return Map.copyOf(expected);
+  }
+
   private static Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters(
       ExcelWorkbook workbook) {
     WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
@@ -643,6 +674,41 @@ public final class XlsxRoundTripVerifier {
         if (!entry.getValue().equals(actual)) {
           throw new IllegalStateException(
               "data validations changed across round-trip for sheet "
+                  + entry.getKey()
+                  + ": expected "
+                  + entry.getValue()
+                  + " but was "
+                  + actual);
+        }
+      }
+    }
+  }
+
+  private static void requireExpectedConditionalFormatting(
+      Map<String, List<ExcelConditionalFormattingBlockSnapshot>> expectedConditionalFormatting,
+      Path workbookPath)
+      throws IOException {
+    if (expectedConditionalFormatting.isEmpty()) {
+      return;
+    }
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+      for (Map.Entry<String, List<ExcelConditionalFormattingBlockSnapshot>> entry :
+          expectedConditionalFormatting.entrySet()) {
+        var actual =
+            ((dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingResult)
+                    readExecutor
+                        .apply(
+                            workbook,
+                            new WorkbookReadCommand.GetConditionalFormatting(
+                                "conditionalFormatting",
+                                entry.getKey(),
+                                new ExcelRangeSelection.All()))
+                        .getFirst())
+                .conditionalFormattingBlocks();
+        if (!entry.getValue().equals(actual)) {
+          throw new IllegalStateException(
+              "conditional formatting changed across round-trip for sheet "
                   + entry.getKey()
                   + ": expected "
                   + entry.getValue()
@@ -917,6 +983,7 @@ public final class XlsxRoundTripVerifier {
       Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadata,
       Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges,
       Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations,
+      Map<String, List<ExcelConditionalFormattingBlockSnapshot>> expectedConditionalFormatting,
       Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters,
       List<ExcelTableSnapshot> expectedTables) {}
 

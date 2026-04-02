@@ -28,6 +28,7 @@ public sealed interface WorkbookReadResult
           CommentsResult,
           SheetLayoutResult,
           DataValidationsResult,
+          ConditionalFormattingResult,
           AutofiltersResult,
           TablesResult,
           FormulaSurfaceResult,
@@ -38,6 +39,7 @@ public sealed interface WorkbookReadResult
   sealed interface Analysis extends WorkbookReadResult
       permits FormulaHealthResult,
           DataValidationHealthResult,
+          ConditionalFormattingHealthResult,
           AutofilterHealthResult,
           TableHealthResult,
           HyperlinkHealthResult,
@@ -137,6 +139,20 @@ public sealed interface WorkbookReadResult
     }
   }
 
+  /** Returns conditional-formatting metadata for the selected ranges on one sheet. */
+  record ConditionalFormattingResult(
+      String requestId,
+      String sheetName,
+      List<ExcelConditionalFormattingBlockSnapshot> conditionalFormattingBlocks)
+      implements Introspection {
+    public ConditionalFormattingResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      conditionalFormattingBlocks =
+          copyValues(conditionalFormattingBlocks, "conditionalFormattingBlocks");
+    }
+  }
+
   /** Returns sheet- and table-owned autofilter metadata for one sheet. */
   record AutofiltersResult(
       String requestId, String sheetName, List<ExcelAutofilterSnapshot> autofilters)
@@ -194,6 +210,15 @@ public sealed interface WorkbookReadResult
   record DataValidationHealthResult(
       String requestId, WorkbookAnalysis.DataValidationHealth analysis) implements Analysis {
     public DataValidationHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns conditional-formatting-health findings for one analysis read. */
+  record ConditionalFormattingHealthResult(
+      String requestId, WorkbookAnalysis.ConditionalFormattingHealth analysis) implements Analysis {
+    public ConditionalFormattingHealthResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }

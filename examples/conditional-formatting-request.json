@@ -1,0 +1,116 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "cli/build/generated-workbooks/gridgrind-conditional-formatting-request.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Dispatch" },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Dispatch",
+      "range": "A1:D5",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Task" },
+          { "type": "TEXT", "text": "Owner" },
+          { "type": "TEXT", "text": "AgeHours" },
+          { "type": "TEXT", "text": "Status" }
+        ],
+        [
+          { "type": "TEXT", "text": "Badge run" },
+          { "type": "TEXT", "text": "Ada" },
+          { "type": "NUMBER", "number": 3 },
+          { "type": "TEXT", "text": "Queued" }
+        ],
+        [
+          { "type": "TEXT", "text": "Laptop prep" },
+          { "type": "TEXT", "text": "Lin" },
+          { "type": "NUMBER", "number": 11 },
+          { "type": "TEXT", "text": "Blocked" }
+        ],
+        [
+          { "type": "TEXT", "text": "Desk labels" },
+          { "type": "TEXT", "text": "Sam" },
+          { "type": "NUMBER", "number": 7 },
+          { "type": "TEXT", "text": "Done" }
+        ],
+        [
+          { "type": "TEXT", "text": "Access card" },
+          { "type": "TEXT", "text": "Mia" },
+          { "type": "NUMBER", "number": 15 },
+          { "type": "TEXT", "text": "Blocked" }
+        ]
+      ]
+    },
+    {
+      "type": "SET_CONDITIONAL_FORMATTING",
+      "sheetName": "Dispatch",
+      "conditionalFormatting": {
+        "ranges": ["C2:C200"],
+        "rules": [
+          {
+            "type": "CELL_VALUE_RULE",
+            "operator": "GREATER_THAN",
+            "formula1": "8",
+            "stopIfTrue": false,
+            "style": {
+              "numberFormat": "0.0",
+              "fillColor": "#FDE9D9",
+              "fontColor": "#9C0006",
+              "bold": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_CONDITIONAL_FORMATTING",
+      "sheetName": "Dispatch",
+      "conditionalFormatting": {
+        "ranges": ["A2:D200"],
+        "rules": [
+          {
+            "type": "FORMULA_RULE",
+            "formula": "$D2=\"Blocked\"",
+            "stopIfTrue": true,
+            "style": {
+              "fillColor": "#FFF2CC",
+              "fontColor": "#7F6000",
+              "italic": true
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "CLEAR_CONDITIONAL_FORMATTING",
+      "sheetName": "Dispatch",
+      "selection": {
+        "type": "SELECTED",
+        "ranges": ["C2:C3"]
+      }
+    }
+  ],
+  "reads": [
+    {
+      "type": "GET_CONDITIONAL_FORMATTING",
+      "requestId": "conditional-formatting",
+      "sheetName": "Dispatch",
+      "selection": { "type": "ALL" }
+    },
+    {
+      "type": "ANALYZE_CONDITIONAL_FORMATTING_HEALTH",
+      "requestId": "conditional-formatting-health",
+      "selection": {
+        "type": "SELECTED",
+        "sheetNames": ["Dispatch"]
+      }
+    },
+    {
+      "type": "ANALYZE_WORKBOOK_FINDINGS",
+      "requestId": "workbook-findings"
+    }
+  ]
+}

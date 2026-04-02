@@ -1,0 +1,8 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-2fd538704ab2f1e50c87b7954538ec4d4fd10e36
+Harness: xlsx-roundtrip
+Outcome: SUCCESS
+Input Bytes: 191
+Command Count: 10
+Style Kinds: underline=1, strikeout=1, number_format=1, border_all=1, font_height=1, wrap_text=1, font_name=1, border=1, font_color=1, fill_color=1, horizontal_alignment=1, vertical_alignment=1, border_all_none=1
+Command Kinds: SET_TABLE=5, CREATE_SHEET=3, APPEND_ROW=1, APPLY_STYLE=1

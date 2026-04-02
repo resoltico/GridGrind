@@ -56,6 +56,7 @@ public final class GridGrindProtocolCatalog {
           Map.entry(NamedRangeScope.class, "namedRangeScopeTypes"),
           Map.entry(NamedRangeSelector.class, "namedRangeSelectorTypes"),
           Map.entry(DataValidationRuleInput.class, "dataValidationRuleTypes"),
+          Map.entry(ConditionalFormattingRuleInput.class, "conditionalFormattingRuleTypes"),
           Map.entry(TableStyleInput.class, "tableStyleTypes"),
           Map.entry(FontHeightInput.class, "fontHeightTypes"));
   private static final Map<Class<?>, String> PLAIN_FIELD_SHAPE_GROUPS =
@@ -68,6 +69,10 @@ public final class GridGrindProtocolCatalog {
           Map.entry(DataValidationInput.class, "dataValidationInputType"),
           Map.entry(DataValidationPromptInput.class, "dataValidationPromptInputType"),
           Map.entry(DataValidationErrorAlertInput.class, "dataValidationErrorAlertInputType"),
+          Map.entry(ConditionalFormattingBlockInput.class, "conditionalFormattingBlockInputType"),
+          Map.entry(DifferentialStyleInput.class, "differentialStyleInputType"),
+          Map.entry(DifferentialBorderInput.class, "differentialBorderInputType"),
+          Map.entry(DifferentialBorderSideInput.class, "differentialBorderSideInputType"),
           Map.entry(TableInput.class, "tableInputType"));
   private static final List<TypeDescriptor> SOURCE_TYPES =
       List.of(
@@ -204,6 +209,21 @@ public final class GridGrindProtocolCatalog {
                   + " SELECTED removes only intersecting coverage; ALL clears every rule"
                   + " on the sheet."),
           descriptor(
+              WorkbookOperation.SetConditionalFormatting.class,
+              "SET_CONDITIONAL_FORMATTING",
+              "Create or replace one logical conditional-formatting block over the supplied"
+                  + " sheet ranges."
+                  + " The write contract currently authors formula rules and cell-value rules."
+                  + " Any existing conditional-formatting block that intersects the target ranges"
+                  + " is removed first so the written block becomes authoritative on that"
+                  + " coverage."),
+          descriptor(
+              WorkbookOperation.ClearConditionalFormatting.class,
+              "CLEAR_CONDITIONAL_FORMATTING",
+              "Remove conditional-formatting blocks from the selected ranges on one sheet."
+                  + " SELECTED removes whole blocks whose stored ranges intersect the supplied"
+                  + " ranges; ALL clears every conditional-formatting block on the sheet."),
+          descriptor(
               WorkbookOperation.SetAutofilter.class,
               "SET_AUTOFILTER",
               "Create or replace one sheet-level autofilter range."
@@ -327,6 +347,13 @@ public final class GridGrindProtocolCatalog {
                   + " and custom formulas; unsupported rules are surfaced explicitly with typed"
                   + " detail."),
           descriptor(
+              WorkbookReadOperation.GetConditionalFormatting.class,
+              "GET_CONDITIONAL_FORMATTING",
+              "Return factual conditional-formatting blocks for the selected sheet ranges."
+                  + " Read families include authored formula and cell-value rules plus loaded"
+                  + " color scales, data bars, icon sets, and explicitly unsupported rules."
+                  + " Each block preserves its stored ordered ranges and rule priority data."),
+          descriptor(
               WorkbookReadOperation.GetAutofilters.class,
               "GET_AUTOFILTERS",
               "Return sheet- and table-owned autofilter metadata for one sheet."
@@ -368,6 +395,11 @@ public final class GridGrindProtocolCatalog {
               "Report data-validation findings such as unsupported, overlapping, or"
                   + " broken-formula rules."),
           descriptor(
+              WorkbookReadOperation.AnalyzeConditionalFormattingHealth.class,
+              "ANALYZE_CONDITIONAL_FORMATTING_HEALTH",
+              "Report conditional-formatting findings such as broken formulas,"
+                  + " unsupported loaded rules, invalid target ranges, or priority collisions."),
+          descriptor(
               WorkbookReadOperation.AnalyzeAutofilterHealth.class,
               "ANALYZE_AUTOFILTER_HEALTH",
               "Report autofilter findings such as invalid ranges, blank header rows,"
@@ -392,8 +424,9 @@ public final class GridGrindProtocolCatalog {
               WorkbookReadOperation.AnalyzeWorkbookFindings.class,
               "ANALYZE_WORKBOOK_FINDINGS",
               "Run all analysis families (formula health, data-validation health,"
-                  + " autofilter health, table health, hyperlink health, and named-range health)"
-                  + " across the entire workbook and aggregate findings in a single response."));
+                  + " conditional-formatting health, autofilter health, table health,"
+                  + " hyperlink health, and named-range health) across the entire workbook"
+                  + " and aggregate findings in a single response."));
   private static final List<NestedTypeDescriptor> NESTED_TYPE_GROUPS =
       List.of(
           nestedTypeGroup(
@@ -579,6 +612,22 @@ public final class GridGrindProtocolCatalog {
                       "Allow values that satisfy a custom formula."
                           + " Omit the leading = sign."))),
           nestedTypeGroup(
+              "conditionalFormattingRuleTypes",
+              ConditionalFormattingRuleInput.class,
+              List.of(
+                  descriptor(
+                      ConditionalFormattingRuleInput.FormulaRule.class,
+                      "FORMULA_RULE",
+                      "Apply one formula-driven conditional-formatting rule."
+                          + " Omit the leading = sign and supply one differential style."),
+                  descriptor(
+                      ConditionalFormattingRuleInput.CellValueRule.class,
+                      "CELL_VALUE_RULE",
+                      "Apply one cell-value comparison conditional-formatting rule."
+                          + " formula2 is used only for BETWEEN and NOT_BETWEEN."
+                          + " Supply one differential style.",
+                      "formula2"))),
+          nestedTypeGroup(
               "tableStyleTypes",
               TableStyleInput.class,
               List.of(
@@ -653,6 +702,34 @@ public final class GridGrindProtocolCatalog {
               "DataValidationErrorAlertInput",
               "Optional error-box configuration shown when invalid data is entered.",
               List.of("showErrorBox")),
+          plainTypeDescriptor(
+              "conditionalFormattingBlockInputType",
+              ConditionalFormattingBlockInput.class,
+              "ConditionalFormattingBlockInput",
+              "One authored conditional-formatting block with ordered target ranges and rules."
+                  + " rules must not be empty; ranges must be unique.",
+              List.of()),
+          plainTypeDescriptor(
+              "differentialStyleInputType",
+              DifferentialStyleInput.class,
+              "DifferentialStyleInput",
+              "Differential style payload used by authored conditional-formatting rules."
+                  + " At least one field must be set. Colors use #RRGGBB hex.",
+              List.of()),
+          plainTypeDescriptor(
+              "differentialBorderInputType",
+              DifferentialBorderInput.class,
+              "DifferentialBorderInput",
+              "Conditional-formatting differential border patch; at least one side must be set."
+                  + " Use 'all' as shorthand for all four sides.",
+              List.of("all", "top", "right", "bottom", "left")),
+          plainTypeDescriptor(
+              "differentialBorderSideInputType",
+              DifferentialBorderSideInput.class,
+              "DifferentialBorderSideInput",
+              "One conditional-formatting differential border side defined by style and optional"
+                  + " color.",
+              List.of()),
           plainTypeDescriptor(
               "tableInputType",
               TableInput.class,

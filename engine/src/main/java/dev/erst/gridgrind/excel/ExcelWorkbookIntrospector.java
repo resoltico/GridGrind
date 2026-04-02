@@ -88,6 +88,13 @@ final class ExcelWorkbookIntrospector {
               getDataValidations.sheetName(),
               documentIntrospector.dataValidations(
                   workbook.sheet(getDataValidations.sheetName()), getDataValidations.selection()));
+      case WorkbookReadCommand.GetConditionalFormatting getConditionalFormatting ->
+          new WorkbookReadResult.ConditionalFormattingResult(
+              getConditionalFormatting.requestId(),
+              getConditionalFormatting.sheetName(),
+              documentIntrospector.conditionalFormatting(
+                  workbook.sheet(getConditionalFormatting.sheetName()),
+                  getConditionalFormatting.selection()));
       case WorkbookReadCommand.GetAutofilters getAutofilters ->
           new WorkbookReadResult.AutofiltersResult(
               getAutofilters.requestId(),

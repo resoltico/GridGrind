@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 /** Typed data-validation rule families supported by GridGrind. */
@@ -28,7 +27,7 @@ public sealed interface ExcelDataValidationRule
   /** List-validation rule driven by a formula expression. */
   record FormulaList(String formula) implements ExcelDataValidationRule {
     public FormulaList {
-      formula = normalizeFormula(formula, "formula");
+      formula = ExcelComparisonFormulaSupport.normalizeFormula(formula, "formula");
     }
   }
 
@@ -36,9 +35,10 @@ public sealed interface ExcelDataValidationRule
   record WholeNumber(ExcelComparisonOperator operator, String formula1, String formula2)
       implements ExcelDataValidationRule {
     public WholeNumber {
-      validateComparisonRule(operator, formula1, formula2);
-      formula1 = normalizeFormula(formula1, "formula1");
-      formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
+      ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
+      formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
+      formula2 =
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
@@ -46,9 +46,10 @@ public sealed interface ExcelDataValidationRule
   record DecimalNumber(ExcelComparisonOperator operator, String formula1, String formula2)
       implements ExcelDataValidationRule {
     public DecimalNumber {
-      validateComparisonRule(operator, formula1, formula2);
-      formula1 = normalizeFormula(formula1, "formula1");
-      formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
+      ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
+      formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
+      formula2 =
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
@@ -56,9 +57,10 @@ public sealed interface ExcelDataValidationRule
   record DateRule(ExcelComparisonOperator operator, String formula1, String formula2)
       implements ExcelDataValidationRule {
     public DateRule {
-      validateComparisonRule(operator, formula1, formula2);
-      formula1 = normalizeFormula(formula1, "formula1");
-      formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
+      ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
+      formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
+      formula2 =
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
@@ -66,9 +68,10 @@ public sealed interface ExcelDataValidationRule
   record TimeRule(ExcelComparisonOperator operator, String formula1, String formula2)
       implements ExcelDataValidationRule {
     public TimeRule {
-      validateComparisonRule(operator, formula1, formula2);
-      formula1 = normalizeFormula(formula1, "formula1");
-      formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
+      ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
+      formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
+      formula2 =
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
@@ -76,45 +79,18 @@ public sealed interface ExcelDataValidationRule
   record TextLength(ExcelComparisonOperator operator, String formula1, String formula2)
       implements ExcelDataValidationRule {
     public TextLength {
-      validateComparisonRule(operator, formula1, formula2);
-      formula1 = normalizeFormula(formula1, "formula1");
-      formula2 = normalizeOptionalComparisonUpperBound(operator, formula2);
+      ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
+      formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
+      formula2 =
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
     }
   }
 
   /** Custom formula-validation rule. */
   record CustomFormula(String formula) implements ExcelDataValidationRule {
     public CustomFormula {
-      formula = normalizeFormula(formula, "formula");
+      formula = ExcelComparisonFormulaSupport.normalizeFormula(formula, "formula");
     }
-  }
-
-  private static void validateComparisonRule(
-      ExcelComparisonOperator operator, String formula1, String formula2) {
-    Objects.requireNonNull(operator, "operator must not be null");
-    requireNonBlank(formula1, "formula1");
-    if ((operator == ExcelComparisonOperator.BETWEEN
-            || operator == ExcelComparisonOperator.NOT_BETWEEN)
-        && (formula2 == null || formula2.isBlank())) {
-      throw new IllegalArgumentException(
-          "formula2 must not be blank for " + operator.name().toLowerCase(Locale.ROOT));
-    }
-    if (operator != ExcelComparisonOperator.BETWEEN
-        && operator != ExcelComparisonOperator.NOT_BETWEEN
-        && formula2 != null
-        && !formula2.isBlank()) {
-      throw new IllegalArgumentException(
-          "formula2 must be omitted unless operator is BETWEEN or NOT_BETWEEN");
-    }
-  }
-
-  private static String normalizeOptionalComparisonUpperBound(
-      ExcelComparisonOperator operator, String formula2) {
-    if (operator == ExcelComparisonOperator.BETWEEN
-        || operator == ExcelComparisonOperator.NOT_BETWEEN) {
-      return normalizeFormula(formula2, "formula2");
-    }
-    return null;
   }
 
   private static List<String> copyValues(List<String> values) {
@@ -124,17 +100,6 @@ public sealed interface ExcelDataValidationRule
       requireNonBlank(value, "values");
     }
     return copy;
-  }
-
-  private static String normalizeFormula(String value, String fieldName) {
-    String normalized = requireNonBlank(value, fieldName).trim();
-    if (normalized.startsWith("=")) {
-      normalized = normalized.substring(1);
-    }
-    if (normalized.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return normalized;
   }
 
   private static String requireNonBlank(String value, String fieldName) {

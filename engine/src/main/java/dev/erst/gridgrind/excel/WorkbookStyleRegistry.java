@@ -11,7 +11,6 @@ import org.apache.poi.ss.usermodel.FontUnderline;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
-import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -93,7 +92,7 @@ final class WorkbookStyleRegistry {
         fromPoi(style.getVerticalAlignment()),
         font.getFontName(),
         new ExcelFontHeight(font.getFontHeight()),
-        toRgbHex(font.getXSSFColor()),
+        ExcelRgbColorSupport.toRgbHex(font.getXSSFColor()),
         font.getUnderline() != FontUnderline.NONE.getByteValue(),
         font.getStrikeout(),
         fillColor(style),
@@ -143,7 +142,8 @@ final class WorkbookStyleRegistry {
     }
     if (stylePatch.fillColor() != null) {
       cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-      cellStyle.setFillForegroundColor(toXssfColor(stylePatch.fillColor()));
+      cellStyle.setFillForegroundColor(
+          ExcelRgbColorSupport.toXssfColor(workbook, stylePatch.fillColor()));
     }
     if (stylePatch.border() != null) {
       applyBorderPatch(cellStyle, stylePatch.border());
@@ -176,7 +176,7 @@ final class WorkbookStyleRegistry {
       font.setFontHeight(fontPatch.fontHeight().points().doubleValue());
     }
     if (fontPatch.fontColor() != null) {
-      font.setColor(toXssfColor(fontPatch.fontColor()));
+      font.setColor(ExcelRgbColorSupport.toXssfColor(workbook, fontPatch.fontColor()));
     }
     if (fontPatch.underline() != null) {
       font.setUnderline(fontPatch.underline() ? FontUnderline.SINGLE : FontUnderline.NONE);
@@ -240,28 +240,7 @@ final class WorkbookStyleRegistry {
     if (style.getFillPattern() != FillPatternType.SOLID_FOREGROUND) {
       return null;
     }
-    return toRgbHex(style.getFillForegroundColorColor());
-  }
-
-  private static String toRgbHex(XSSFColor color) {
-    if (color == null) {
-      return null;
-    }
-    byte[] rgb = color.getRGB();
-    if (rgb == null || rgb.length != 3) {
-      return null;
-    }
-    return "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
-  }
-
-  private XSSFColor toXssfColor(String color) {
-    return new XSSFColor(
-        new byte[] {
-          (byte) Integer.parseInt(color.substring(1, 3), 16),
-          (byte) Integer.parseInt(color.substring(3, 5), 16),
-          (byte) Integer.parseInt(color.substring(5, 7), 16)
-        },
-        workbook.getStylesSource().getIndexedColors());
+    return ExcelRgbColorSupport.toRgbHex(style.getFillForegroundColorColor());
   }
 
   private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {

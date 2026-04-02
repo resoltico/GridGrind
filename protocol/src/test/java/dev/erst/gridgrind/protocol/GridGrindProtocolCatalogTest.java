@@ -471,8 +471,8 @@ class GridGrindProtocolCatalogTest {
     assertEquals("type", catalog.discriminatorField());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
-    assertEquals(29, catalog.operationTypes().size());
-    assertEquals(22, catalog.readTypes().size());
+    assertEquals(31, catalog.operationTypes().size());
+    assertEquals(24, catalog.readTypes().size());
     assertEquals(
         List.of(
             "cellInputTypes",
@@ -486,6 +486,7 @@ class GridGrindProtocolCatalogTest {
             "namedRangeSelectorTypes",
             "fontHeightTypes",
             "dataValidationRuleTypes",
+            "conditionalFormattingRuleTypes",
             "tableStyleTypes"),
         catalog.nestedTypes().stream()
             .map(GridGrindProtocolCatalog.NestedTypeGroup::group)
@@ -500,6 +501,10 @@ class GridGrindProtocolCatalogTest {
             "dataValidationInputType",
             "dataValidationPromptInputType",
             "dataValidationErrorAlertInputType",
+            "conditionalFormattingBlockInputType",
+            "differentialStyleInputType",
+            "differentialBorderInputType",
+            "differentialBorderSideInputType",
             "tableInputType"),
         catalog.plainTypes().stream().map(GridGrindProtocolCatalog.PlainTypeGroup::group).toList());
   }
@@ -605,6 +610,36 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         new GridGrindProtocolCatalog.FieldShape.Scalar(GridGrindProtocolCatalog.ScalarType.STRING),
         tableStyleName.shape());
+
+    GridGrindProtocolCatalog.PlainTypeGroup conditionalFormattingBlockGroup =
+        plainGroup(catalog, "conditionalFormattingBlockInputType");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.ListShape(
+            new GridGrindProtocolCatalog.FieldShape.Scalar(
+                GridGrindProtocolCatalog.ScalarType.STRING)),
+        fieldNamed(conditionalFormattingBlockGroup.type(), "ranges").shape());
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.ListShape(
+            new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef(
+                "conditionalFormattingRuleTypes")),
+        fieldNamed(conditionalFormattingBlockGroup.type(), "rules").shape());
+
+    GridGrindProtocolCatalog.PlainTypeGroup differentialStyleGroup =
+        plainGroup(catalog, "differentialStyleInputType");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("fontHeightTypes"),
+        fieldNamed(differentialStyleGroup.type(), "fontHeight").shape());
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef("differentialBorderInputType"),
+        fieldNamed(differentialStyleGroup.type(), "border").shape());
+
+    GridGrindProtocolCatalog.FieldEntry conditionalFormattingOperatorField =
+        fieldNamed(
+            nestedTypeEntry(catalog, "conditionalFormattingRuleTypes", "CELL_VALUE_RULE"),
+            "operator");
+    assertTrue(
+        conditionalFormattingOperatorField.enumValues().contains("BETWEEN"),
+        "conditional-formatting operator enum values should include BETWEEN");
   }
 
   private static void assertCatalogSummaries(GridGrindProtocolCatalog.Catalog catalog) {
@@ -659,6 +694,21 @@ class GridGrindProtocolCatalogTest {
             .summary()
             .contains("Overlapping existing rules are normalized"),
         "SET_DATA_VALIDATION summary must describe overlap normalization");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_CONDITIONAL_FORMATTING")
+            .summary()
+            .contains("authoritative"),
+        "SET_CONDITIONAL_FORMATTING summary must describe authoritative replacement");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_CONDITIONAL_FORMATTING")
+            .summary()
+            .contains("unsupported rules"),
+        "GET_CONDITIONAL_FORMATTING summary must describe unsupported-rule surfacing");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_CONDITIONAL_FORMATTING_HEALTH")
+            .summary()
+            .contains("priority collisions"),
+        "ANALYZE_CONDITIONAL_FORMATTING_HEALTH summary must mention priority collisions");
     assertTrue(
         entryNamed(catalog.readTypes(), "GET_DATA_VALIDATIONS")
             .summary()
@@ -744,6 +794,32 @@ class GridGrindProtocolCatalogTest {
         new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "GET_DATA_VALIDATIONS"), "selection").shape(),
         "GET_DATA_VALIDATIONS.selection must point to rangeSelectionTypes");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef(
+            "conditionalFormattingBlockInputType"),
+        fieldNamed(
+                entryNamed(catalog.operationTypes(), "SET_CONDITIONAL_FORMATTING"),
+                "conditionalFormatting")
+            .shape(),
+        "SET_CONDITIONAL_FORMATTING.conditionalFormatting must point to conditionalFormattingBlockInputType");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
+        fieldNamed(
+                entryNamed(catalog.operationTypes(), "CLEAR_CONDITIONAL_FORMATTING"), "selection")
+            .shape(),
+        "CLEAR_CONDITIONAL_FORMATTING.selection must point to rangeSelectionTypes");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
+        fieldNamed(entryNamed(catalog.readTypes(), "GET_CONDITIONAL_FORMATTING"), "selection")
+            .shape(),
+        "GET_CONDITIONAL_FORMATTING.selection must point to rangeSelectionTypes");
+    assertEquals(
+        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
+        fieldNamed(
+                entryNamed(catalog.readTypes(), "ANALYZE_CONDITIONAL_FORMATTING_HEALTH"),
+                "selection")
+            .shape(),
+        "ANALYZE_CONDITIONAL_FORMATTING_HEALTH.selection must point to sheetSelectionTypes");
     assertEquals(
         new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_DATA_VALIDATION_HEALTH"), "selection")

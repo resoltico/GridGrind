@@ -50,6 +50,9 @@ class WorkbookReadCommandTest {
     WorkbookReadCommand.AnalyzeDataValidationHealth dataValidationHealth =
         new WorkbookReadCommand.AnalyzeDataValidationHealth(
             "dataValidationHealth", new ExcelSheetSelection.All());
+    WorkbookReadCommand.AnalyzeConditionalFormattingHealth conditionalFormattingHealth =
+        new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
+            "conditionalFormattingHealth", new ExcelSheetSelection.All());
     WorkbookReadCommand.AnalyzeAutofilterHealth autofilterHealth =
         new WorkbookReadCommand.AnalyzeAutofilterHealth(
             "autofilterHealth", new ExcelSheetSelection.All());
@@ -82,6 +85,7 @@ class WorkbookReadCommandTest {
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeSurface.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, formulaHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, dataValidationHealth.selection());
+    assertInstanceOf(ExcelSheetSelection.All.class, conditionalFormattingHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, autofilterHealth.selection());
     assertInstanceOf(ExcelTableSelection.ByNames.class, tableHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, hyperlinkHealth.selection());
@@ -156,6 +160,11 @@ class WorkbookReadCommandTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadCommand.AnalyzeDataValidationHealth("dataValidationHealth", null));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
+                "conditionalFormattingHealth", null));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadCommand.AnalyzeAutofilterHealth("autofilterHealth", null));

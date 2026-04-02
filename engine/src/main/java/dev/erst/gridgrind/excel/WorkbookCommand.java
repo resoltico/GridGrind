@@ -26,6 +26,8 @@ public sealed interface WorkbookCommand
         WorkbookCommand.ApplyStyle,
         WorkbookCommand.SetDataValidation,
         WorkbookCommand.ClearDataValidations,
+        WorkbookCommand.SetConditionalFormatting,
+        WorkbookCommand.ClearConditionalFormatting,
         WorkbookCommand.SetAutofilter,
         WorkbookCommand.ClearAutofilter,
         WorkbookCommand.SetTable,
@@ -338,6 +340,30 @@ public sealed interface WorkbookCommand
   record ClearDataValidations(String sheetName, ExcelRangeSelection selection)
       implements WorkbookCommand {
     public ClearDataValidations {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(selection, "selection must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Creates or replaces one logical conditional-formatting block over the requested ranges. */
+  record SetConditionalFormatting(String sheetName, ExcelConditionalFormattingBlockDefinition block)
+      implements WorkbookCommand {
+    public SetConditionalFormatting {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(block, "block must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Removes conditional-formatting blocks on the sheet that intersect the provided selection. */
+  record ClearConditionalFormatting(String sheetName, ExcelRangeSelection selection)
+      implements WorkbookCommand {
+    public ClearConditionalFormatting {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(selection, "selection must not be null");
       if (sheetName.isBlank()) {

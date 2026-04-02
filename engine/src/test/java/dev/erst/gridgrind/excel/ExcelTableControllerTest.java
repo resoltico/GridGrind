@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.util.AreaReference;
@@ -9,6 +12,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /** Tests for direct table authoring, introspection, and health analysis. */
 class ExcelTableControllerTest {
@@ -709,6 +713,173 @@ class ExcelTableControllerTest {
               .findFirst()
               .orElseThrow()
               .range());
+    }
+  }
+
+  @Test
+  void headerCellWritesSynchronizeTableMetadataImmediatelyAndAcrossSave(@TempDir Path tempDirectory)
+      throws Exception {
+    Path workbookPath = tempDirectory.resolve("table-header-cell-sync.xlsx");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      populateTableCells(sheet, "c]cc", "Task");
+      controller.setTable(
+          workbook,
+          new ExcelTableDefinition(
+              "BudgetTable", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+
+      XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
+      sheet.setCell("A1", ExcelCellValue.text("QQQQq"));
+
+      assertEquals("QQQQq", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
+      assertEquals(
+          List.of("QQQQq", "Task"),
+          controller.tables(workbook, new ExcelTableSelection.All()).getFirst().columnNames());
+
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      assertEquals(
+          List.of("QQQQq", "Task"),
+          controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
+    }
+  }
+
+  @Test
+  void headerRangeWritesAndClearsSynchronizeTableMetadataAndHealthFindings(
+      @TempDir Path tempDirectory) throws Exception {
+    Path workbookPath = tempDirectory.resolve("table-header-range-sync.xlsx");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      populateTableCells(sheet, "Owner", "Task");
+      controller.setTable(
+          workbook,
+          new ExcelTableDefinition("Queue", "Ops", "A1:B3", false, new ExcelTableStyle.None()));
+
+      XSSFTable table = workbook.sheet("Ops").xssfSheet().getTables().getFirst();
+      sheet.setRange(
+          "A1:B2",
+          List.of(
+              List.of(ExcelCellValue.text("Desk"), ExcelCellValue.text("Lane")),
+              List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queue"))));
+
+      assertEquals("Desk", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
+      assertEquals("Lane", table.getCTTable().getTableColumns().getTableColumnArray(1).getName());
+
+      sheet.clearRange("A1");
+
+      assertEquals("", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
+      assertTrue(
+          controller.tableHealthFindings(workbook, new ExcelTableSelection.All()).stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .toList()
+              .contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_BLANK_HEADER));
+
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      ExcelTableSnapshot table =
+          controller.tables(reopened, new ExcelTableSelection.All()).getFirst();
+      assertEquals(List.of("", "Lane"), table.columnNames());
+      assertTrue(
+          controller.tableHealthFindings(reopened, new ExcelTableSelection.All()).stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .toList()
+              .contains(WorkbookAnalysis.AnalysisFindingCode.TABLE_BLANK_HEADER));
+    }
+  }
+
+  @Test
+  void headerStyleWritesSynchronizeTableMetadataImmediatelyAndAcrossSave(
+      @TempDir Path tempDirectory) throws Exception {
+    Path workbookPath = tempDirectory.resolve("table-header-style-sync.xlsx");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("V");
+      sheet.appendRow(
+          ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
+          ExcelCellValue.date(LocalDate.of(2026, 6, 26)));
+      sheet.setCell("A2", ExcelCellValue.text("Ada"));
+      sheet.setCell("B2", ExcelCellValue.text("Queue"));
+      sheet.setCell("A3", ExcelCellValue.text("Totals"));
+      sheet.setCell("B3", ExcelCellValue.text("Done"));
+      controller.setTable(
+          workbook,
+          new ExcelTableDefinition(
+              "OpsTable",
+              "V",
+              "A1:B3",
+              true,
+              new ExcelTableStyle.Named("TableStyleMedium2", true, true, true, true)));
+
+      XSSFTable table = workbook.sheet("V").xssfSheet().getTables().getFirst();
+      assertEquals(
+          "2026-02-06 00:19:17",
+          table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
+
+      sheet.applyStyle("A1:B2", ExcelCellStyle.numberFormat("yyyy-mm-dd"));
+
+      assertEquals(
+          "2026-02-06", table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
+      assertEquals(
+          List.of("2026-02-06", "2026-06-26"),
+          controller.tables(workbook, new ExcelTableSelection.All()).getFirst().columnNames());
+
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      assertEquals(
+          List.of("2026-02-06", "2026-06-26"),
+          controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
+    }
+  }
+
+  @Test
+  void saveNormalizesStaleTypedHeaderMetadataBeforePersistence(@TempDir Path tempDirectory)
+      throws Exception {
+    Path workbookPath = tempDirectory.resolve("table-header-save-normalization.xlsx");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("V");
+      sheet.appendRow(
+          ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
+          ExcelCellValue.date(LocalDate.of(2026, 6, 26)));
+      sheet.setCell("A2", ExcelCellValue.text("Ada"));
+      sheet.setCell("B2", ExcelCellValue.text("Queue"));
+      sheet.setCell("A3", ExcelCellValue.text("Totals"));
+      sheet.setCell("B3", ExcelCellValue.text("Done"));
+      controller.setTable(
+          workbook,
+          new ExcelTableDefinition(
+              "OpsTable",
+              "V",
+              "A1:B3",
+              true,
+              new ExcelTableStyle.Named("TableStyleMedium2", true, true, true, true)));
+
+      XSSFTable table = workbook.sheet("V").xssfSheet().getTables().getFirst();
+      var headerCell = workbook.sheet("V").xssfSheet().getRow(0).getCell(0);
+      var staleStyle = workbook.xssfWorkbook().createCellStyle();
+      staleStyle.cloneStyleFrom(headerCell.getCellStyle());
+      staleStyle.setDataFormat(workbook.xssfWorkbook().createDataFormat().getFormat("yyyy-mm-dd"));
+      headerCell.setCellStyle(staleStyle);
+
+      assertEquals(
+          "2026-02-06 00:19:17",
+          table.getCTTable().getTableColumns().getTableColumnArray(0).getName());
+
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      assertEquals(
+          List.of("2026-02-06", "2026-06-26"),
+          controller.tables(reopened, new ExcelTableSelection.All()).getFirst().columnNames());
     }
   }
 

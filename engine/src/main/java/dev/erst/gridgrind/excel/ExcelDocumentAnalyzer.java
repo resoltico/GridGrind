@@ -7,23 +7,29 @@ import java.util.Objects;
 /** Derives document-intelligence findings from reusable workbook and sheet facts. */
 final class ExcelDocumentAnalyzer {
   private final ExcelDataValidationController dataValidationController;
+  private final ExcelConditionalFormattingController conditionalFormattingController;
   private final ExcelAutofilterController autofilterController;
   private final ExcelTableController tableController;
 
   ExcelDocumentAnalyzer() {
     this(
         new ExcelDataValidationController(),
+        new ExcelConditionalFormattingController(),
         new ExcelAutofilterController(),
         new ExcelTableController());
   }
 
   ExcelDocumentAnalyzer(
       ExcelDataValidationController dataValidationController,
+      ExcelConditionalFormattingController conditionalFormattingController,
       ExcelAutofilterController autofilterController,
       ExcelTableController tableController) {
     this.dataValidationController =
         Objects.requireNonNull(
             dataValidationController, "dataValidationController must not be null");
+    this.conditionalFormattingController =
+        Objects.requireNonNull(
+            conditionalFormattingController, "conditionalFormattingController must not be null");
     this.autofilterController =
         Objects.requireNonNull(autofilterController, "autofilterController must not be null");
     this.tableController =
@@ -47,6 +53,26 @@ final class ExcelDocumentAnalyzer {
     WorkbookAnalysis.AnalysisSummary summary = summarizeFindings(findings);
     return new WorkbookAnalysis.DataValidationHealth(
         checkedValidationCount, summary, List.copyOf(findings));
+  }
+
+  /** Returns conditional-formatting-health findings for the selected sheets. */
+  WorkbookAnalysis.ConditionalFormattingHealth conditionalFormattingHealth(
+      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+
+    int checkedConditionalFormattingBlockCount = 0;
+    List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    for (String sheetName : selectSheets(workbook, selection)) {
+      ExcelSheet sheet = workbook.sheet(sheetName);
+      checkedConditionalFormattingBlockCount +=
+          conditionalFormattingController.conditionalFormattingBlockCount(sheet.xssfSheet());
+      findings.addAll(
+          conditionalFormattingController.conditionalFormattingHealthFindings(
+              sheetName, sheet.xssfSheet()));
+    }
+    return new WorkbookAnalysis.ConditionalFormattingHealth(
+        checkedConditionalFormattingBlockCount, summarizeFindings(findings), List.copyOf(findings));
   }
 
   /** Returns autofilter-health findings for the selected sheets. */

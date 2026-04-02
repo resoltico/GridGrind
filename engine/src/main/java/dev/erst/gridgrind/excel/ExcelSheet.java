@@ -29,6 +29,7 @@ public final class ExcelSheet {
   private final ExcelFormulaRuntime formulaRuntime;
   private final DataFormatter dataFormatter;
   private final ExcelDataValidationController dataValidationController;
+  private final ExcelConditionalFormattingController conditionalFormattingController;
   private final ExcelAutofilterController autofilterController;
 
   ExcelSheet(Sheet sheet, WorkbookStyleRegistry styleRegistry, ExcelFormulaRuntime formulaRuntime) {
@@ -37,6 +38,7 @@ public final class ExcelSheet {
     this.formulaRuntime = formulaRuntime;
     this.dataFormatter = new DataFormatter();
     this.dataValidationController = new ExcelDataValidationController();
+    this.conditionalFormattingController = new ExcelConditionalFormattingController();
     this.autofilterController = new ExcelAutofilterController();
   }
 
@@ -56,7 +58,13 @@ public final class ExcelSheet {
     Objects.requireNonNull(value, "value must not be null");
 
     CellReference cellReference = parseCellReference(address);
-    setCell(cellReference.getRow(), cellReference.getCol(), value);
+    writeCellValue(cellReference.getRow(), cellReference.getCol(), value);
+    syncTableHeaders(
+        new ExcelRange(
+            cellReference.getRow(),
+            cellReference.getRow(),
+            cellReference.getCol(),
+            cellReference.getCol()));
     return this;
   }
 
@@ -88,12 +96,13 @@ public final class ExcelSheet {
     for (int rowOffset = 0; rowOffset < copiedRows.size(); rowOffset++) {
       List<ExcelCellValue> rowValues = copiedRows.get(rowOffset);
       for (int columnOffset = 0; columnOffset < rowValues.size(); columnOffset++) {
-        setCell(
+        writeCellValue(
             excelRange.firstRow() + rowOffset,
             excelRange.firstColumn() + columnOffset,
             rowValues.get(columnOffset));
       }
     }
+    syncTableHeaders(excelRange);
     return this;
   }
 
@@ -119,6 +128,7 @@ public final class ExcelSheet {
         cell.setBlank();
       }
     }
+    syncTableHeaders(excelRange);
     return this;
   }
 
@@ -182,6 +192,7 @@ public final class ExcelSheet {
         cell.setCellStyle(styleRegistry.mergedStyle(cell, style));
       }
     }
+    syncTableHeaders(excelRange);
     return this;
   }
 
@@ -197,6 +208,20 @@ public final class ExcelSheet {
   public ExcelSheet clearDataValidations(ExcelRangeSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
     dataValidationController.clearDataValidations(xssfSheet(), selection);
+    return this;
+  }
+
+  /** Creates or replaces one logical conditional-formatting block on this sheet. */
+  public ExcelSheet setConditionalFormatting(ExcelConditionalFormattingBlockDefinition block) {
+    Objects.requireNonNull(block, "block must not be null");
+    conditionalFormattingController.setConditionalFormatting(xssfSheet(), block);
+    return this;
+  }
+
+  /** Removes conditional-formatting blocks on this sheet matching the provided selection. */
+  public ExcelSheet clearConditionalFormatting(ExcelRangeSelection selection) {
+    Objects.requireNonNull(selection, "selection must not be null");
+    conditionalFormattingController.clearConditionalFormatting(xssfSheet(), selection);
     return this;
   }
 
@@ -222,7 +247,10 @@ public final class ExcelSheet {
 
     int rowIndex = nextAppendRowIndex();
     for (int columnIndex = 0; columnIndex < values.length; columnIndex++) {
-      setCell(rowIndex, columnIndex, values[columnIndex]);
+      writeCellValue(rowIndex, columnIndex, values[columnIndex]);
+    }
+    if (values.length > 0) {
+      syncTableHeaders(new ExcelRange(rowIndex, rowIndex, 0, values.length - 1));
     }
 
     return this;
@@ -491,6 +519,13 @@ public final class ExcelSheet {
     return dataValidationController.dataValidations(xssfSheet(), selection);
   }
 
+  /** Returns factual conditional-formatting blocks for the selected ranges on this sheet. */
+  public List<ExcelConditionalFormattingBlockSnapshot> conditionalFormatting(
+      ExcelRangeSelection selection) {
+    Objects.requireNonNull(selection, "selection must not be null");
+    return conditionalFormattingController.conditionalFormatting(xssfSheet(), selection);
+  }
+
   /** Returns every formula cell currently present on the sheet. */
   public List<ExcelCellSnapshot.FormulaSnapshot> formulaCells() {
     List<ExcelCellSnapshot.FormulaSnapshot> formulas = new ArrayList<>();
@@ -519,6 +554,11 @@ public final class ExcelSheet {
       }
     }
     return count;
+  }
+
+  /** Returns the number of conditional-formatting blocks currently present on the sheet. */
+  int conditionalFormattingBlockCount() {
+    return conditionalFormattingController.conditionalFormattingBlockCount(xssfSheet());
   }
 
   /** Returns derived findings for formula health on this sheet. */
@@ -580,6 +620,11 @@ public final class ExcelSheet {
       }
     }
     return List.copyOf(findings);
+  }
+
+  /** Returns derived conditional-formatting health findings on this sheet. */
+  List<WorkbookAnalysis.AnalysisFinding> conditionalFormattingHealthFindings() {
+    return conditionalFormattingController.conditionalFormattingHealthFindings(name(), xssfSheet());
   }
 
   /** Returns the number of raw hyperlinks currently present on the sheet. */
@@ -651,7 +696,7 @@ public final class ExcelSheet {
     return snapshot(address, cell);
   }
 
-  private void setCell(int rowIndex, int columnIndex, ExcelCellValue value) {
+  private void writeCellValue(int rowIndex, int columnIndex, ExcelCellValue value) {
     Cell cell = getOrCreateCell(rowIndex, columnIndex);
 
     switch (value) {
@@ -679,6 +724,10 @@ public final class ExcelSheet {
         }
       }
     }
+  }
+
+  private void syncTableHeaders(ExcelRange changedRange) {
+    ExcelTableHeaderSyncSupport.syncAffectedHeaders(xssfSheet(), changedRange);
   }
 
   private Cell requiredCell(String address) {

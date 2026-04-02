@@ -145,6 +145,67 @@ class WorkbookReadResultTest {
   }
 
   @Test
+  void conditionalFormattingResultsCopyEntriesAndRejectInvalidState() {
+    WorkbookReadResult.ConditionalFormattingResult result =
+        new WorkbookReadResult.ConditionalFormattingResult(
+            "conditional-formatting",
+            "Budget",
+            List.of(
+                new ConditionalFormattingEntryReport(
+                    List.of("A2:A5"),
+                    List.of(
+                        new ConditionalFormattingRuleReport.FormulaRule(
+                            1,
+                            true,
+                            "A2>0",
+                            new DifferentialStyleReport(
+                                "0.00", true, null, null, null, null, null, null, null,
+                                List.of()))))));
+
+    assertEquals("A2:A5", result.conditionalFormattingBlocks().getFirst().ranges().getFirst());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.ConditionalFormattingResult(" ", "Budget", List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookReadResult.ConditionalFormattingResult(
+                "conditional-formatting", "Budget", null));
+  }
+
+  @Test
+  void conditionalFormattingHealthResultsRejectBlankRequestIdAndNullAnalysis() {
+    GridGrindResponse.AnalysisSummaryReport summary =
+        new GridGrindResponse.AnalysisSummaryReport(1, 1, 0, 0);
+    GridGrindResponse.AnalysisFindingReport finding =
+        new GridGrindResponse.AnalysisFindingReport(
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                .CONDITIONAL_FORMATTING_PRIORITY_COLLISION,
+            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.ERROR,
+            "Priority collision",
+            "Conditional-formatting priorities collide.",
+            new GridGrindResponse.AnalysisLocationReport.Sheet("Budget"),
+            List.of("FORMULA_RULE@Budget!A1:A3"));
+    ConditionalFormattingHealthReport health =
+        new ConditionalFormattingHealthReport(1, summary, List.of(finding));
+
+    assertEquals(
+        1,
+        new WorkbookReadResult.ConditionalFormattingHealthResult(
+                "conditional-formatting-health", health)
+            .analysis()
+            .checkedConditionalFormattingBlockCount());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.ConditionalFormattingHealthResult(" ", health));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookReadResult.ConditionalFormattingHealthResult(
+                "conditional-formatting-health", null));
+  }
+
+  @Test
   void autofilterAndTableResultsCopyEntriesAndRejectInvalidState() {
     WorkbookReadResult.AutofiltersResult autofilters =
         new WorkbookReadResult.AutofiltersResult(
