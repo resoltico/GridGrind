@@ -76,6 +76,11 @@ final class ExcelWorkbookIntrospector {
           new WorkbookReadResult.SheetLayoutResult(
               getSheetLayout.requestId(),
               sheetIntrospector.layout(workbook.sheet(getSheetLayout.sheetName())));
+      case WorkbookReadCommand.GetPrintLayout getPrintLayout ->
+          new WorkbookReadResult.PrintLayoutResult(
+              getPrintLayout.requestId(),
+              getPrintLayout.sheetName(),
+              sheetIntrospector.printLayout(workbook.sheet(getPrintLayout.sheetName())));
       case WorkbookReadCommand.GetDataValidations getDataValidations ->
           new WorkbookReadResult.DataValidationsResult(
               getDataValidations.requestId(),

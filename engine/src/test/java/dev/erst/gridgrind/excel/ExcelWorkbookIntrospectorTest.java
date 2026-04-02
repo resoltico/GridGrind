@@ -29,8 +29,10 @@ class ExcelWorkbookIntrospectorTest {
           "https://example.com/report",
           results.hyperlinks().hyperlinks().getFirst().hyperlink().target());
       assertEquals("Review", results.comments().comments().getFirst().comment().text());
-      assertInstanceOf(
-          WorkbookReadResult.FreezePane.Frozen.class, results.layout().layout().freezePanes());
+      assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), results.layout().layout().pane());
+      assertEquals(130, results.layout().layout().zoomPercent());
+      assertEquals(
+          ExcelPrintOrientation.LANDSCAPE, results.printLayout().printLayout().orientation());
       assertEquals(1, results.formulaSurface().analysis().totalFormulaCellCount());
       assertEquals(
           "SUM(B2:B3)",
@@ -407,7 +409,17 @@ class ExcelWorkbookIntrospectorTest {
     budget.mergeCells("A1:B1");
     budget.setColumnWidth(0, 0, 12.5);
     budget.setRowHeight(0, 0, 18.0);
-    budget.freezePanes(1, 1, 1, 1);
+    budget.setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+    budget.setZoom(130);
+    budget.setPrintLayout(
+        new ExcelPrintLayout(
+            new ExcelPrintLayout.Area.Range("A1:B5"),
+            ExcelPrintOrientation.LANDSCAPE,
+            new ExcelPrintLayout.Scaling.Fit(1, 0),
+            new ExcelPrintLayout.TitleRows.Band(0, 0),
+            new ExcelPrintLayout.TitleColumns.None(),
+            new ExcelHeaderFooterText("Budget", "", ""),
+            new ExcelHeaderFooterText("", "Page &P", "")));
     budget.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
     budget.setComment("A1", new ExcelComment("Review", "GridGrind", false));
     workbook.setNamedRange(
@@ -480,6 +492,10 @@ class ExcelWorkbookIntrospectorTest {
             introspector.execute(
                 workbook, new WorkbookReadCommand.GetSheetLayout("layout", "Budget"))),
         cast(
+            WorkbookReadResult.PrintLayoutResult.class,
+            introspector.execute(
+                workbook, new WorkbookReadCommand.GetPrintLayout("printLayout", "Budget"))),
+        cast(
             WorkbookReadResult.FormulaSurfaceResult.class,
             introspector.execute(
                 workbook,
@@ -520,6 +536,7 @@ class ExcelWorkbookIntrospectorTest {
       WorkbookReadResult.HyperlinksResult hyperlinks,
       WorkbookReadResult.CommentsResult comments,
       WorkbookReadResult.SheetLayoutResult layout,
+      WorkbookReadResult.PrintLayoutResult printLayout,
       WorkbookReadResult.FormulaSurfaceResult formulaSurface,
       WorkbookReadResult.SheetSchemaResult schema,
       WorkbookReadResult.NamedRangeSurfaceResult namedRangeSurface,

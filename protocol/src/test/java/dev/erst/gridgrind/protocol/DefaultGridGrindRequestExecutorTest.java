@@ -24,7 +24,10 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
+import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
+import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
@@ -190,10 +193,23 @@ class DefaultGridGrindRequestExecutorTest {
                         new WorkbookOperation.MergeCells("Budget", "A1:B1"),
                         new WorkbookOperation.SetColumnWidth("Budget", 0, 1, 16.0),
                         new WorkbookOperation.SetRowHeight("Budget", 0, 0, 28.5),
-                        new WorkbookOperation.FreezePanes("Budget", 1, 1, 1, 1)),
+                        new WorkbookOperation.SetSheetPane(
+                            "Budget", new PaneInput.Frozen(1, 1, 1, 1)),
+                        new WorkbookOperation.SetSheetZoom("Budget", 125),
+                        new WorkbookOperation.SetPrintLayout(
+                            "Budget",
+                            new PrintLayoutInput(
+                                new PrintAreaInput.Range("A1:B12"),
+                                ExcelPrintOrientation.LANDSCAPE,
+                                new PrintScalingInput.Fit(1, 0),
+                                new PrintTitleRowsInput.Band(0, 0),
+                                new PrintTitleColumnsInput.Band(0, 0),
+                                new HeaderFooterTextInput("Budget", "", ""),
+                                new HeaderFooterTextInput("", "Page &P", "")))),
                     new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
                     new WorkbookReadOperation.GetMergedRegions("merged", "Budget"),
                     new WorkbookReadOperation.GetSheetLayout("layout", "Budget"),
+                    new WorkbookReadOperation.GetPrintLayout("printLayout", "Budget"),
                     new WorkbookReadOperation.GetWorkbookSummary("workbook")));
 
     GridGrindResponse.Success success = success(response);
@@ -203,6 +219,8 @@ class DefaultGridGrindRequestExecutorTest {
         read(success, "merged", WorkbookReadResult.MergedRegionsResult.class);
     GridGrindResponse.SheetLayoutReport layout =
         read(success, "layout", WorkbookReadResult.SheetLayoutResult.class).layout();
+    PrintLayoutReport printLayout =
+        read(success, "printLayout", WorkbookReadResult.PrintLayoutResult.class).layout();
     GridGrindResponse.WorkbookSummary workbook =
         read(success, "workbook", WorkbookReadResult.WorkbookSummaryResult.class).workbook();
 
@@ -214,21 +232,21 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(
         List.of("A1:B1"),
         merged.mergedRegions().stream().map(GridGrindResponse.MergedRegionReport::range).toList());
-    assertInstanceOf(GridGrindResponse.FreezePaneReport.Frozen.class, layout.freezePanes());
-    GridGrindResponse.FreezePaneReport.Frozen frozen =
-        cast(GridGrindResponse.FreezePaneReport.Frozen.class, layout.freezePanes());
+    assertInstanceOf(PaneReport.Frozen.class, layout.pane());
+    PaneReport.Frozen frozen = cast(PaneReport.Frozen.class, layout.pane());
     assertEquals(1, frozen.splitColumn());
     assertEquals(1, frozen.splitRow());
+    assertEquals(125, layout.zoomPercent());
     assertEquals(16.0, layout.columns().getFirst().widthCharacters());
     assertEquals(28.5, layout.rows().getFirst().heightPoints());
+    assertEquals(ExcelPrintOrientation.LANDSCAPE, printLayout.orientation());
     assertEquals(List.of("Budget"), workbook.sheetNames());
 
     assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
-    assertEquals(
-        new XlsxRoundTrip.FreezePaneState.Frozen(1, 1, 1, 1),
-        XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+    assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Budget"));
+    assertEquals(125, XlsxRoundTrip.zoomPercent(workbookPath, "Budget"));
   }
 
   @Test
@@ -901,7 +919,7 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
-  void returnsStructuredFailureWhenFreezePanesTargetsMissingSheet() {
+  void returnsStructuredFailureWhenSetSheetPaneTargetsMissingSheet() {
     GridGrindResponse.Failure failure =
         failure(
             new DefaultGridGrindRequestExecutor()
@@ -909,10 +927,12 @@ class DefaultGridGrindRequestExecutorTest {
                     request(
                         new GridGrindRequest.WorkbookSource.New(),
                         new GridGrindRequest.WorkbookPersistence.None(),
-                        List.of(new WorkbookOperation.FreezePanes("Missing", 1, 1, 1, 1)))));
+                        List.of(
+                            new WorkbookOperation.SetSheetPane(
+                                "Missing", new PaneInput.Frozen(1, 1, 1, 1))))));
 
     assertEquals(GridGrindProblemCode.SHEET_NOT_FOUND, failure.problem().code());
-    assertEquals("FREEZE_PANES", failure.problem().context().operationType());
+    assertEquals("SET_SHEET_PANE", failure.problem().context().operationType());
     assertEquals("Missing", failure.problem().context().sheetName());
   }
 
@@ -981,9 +1001,7 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(List.of("A1:B2"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
     assertEquals(4096, XlsxRoundTrip.columnWidth(workbookPath, "Budget", 0));
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
-    assertEquals(
-        new XlsxRoundTrip.FreezePaneState.Frozen(1, 2, 3, 4),
-        XlsxRoundTrip.freezePaneState(workbookPath, "Budget"));
+    assertEquals(new ExcelSheetPane.Frozen(1, 2, 3, 4), XlsxRoundTrip.pane(workbookPath, "Budget"));
   }
 
   @Test
@@ -1919,7 +1937,21 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookOperation unmergeCells = new WorkbookOperation.UnmergeCells("Budget", "A1:B2");
     WorkbookOperation setColumnWidth = new WorkbookOperation.SetColumnWidth("Budget", 0, 1, 16.0);
     WorkbookOperation setRowHeight = new WorkbookOperation.SetRowHeight("Budget", 0, 1, 28.5);
-    WorkbookOperation freezePanes = new WorkbookOperation.FreezePanes("Budget", 1, 1, 1, 1);
+    WorkbookOperation setSheetPane =
+        new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 1, 1, 1));
+    WorkbookOperation setSheetZoom = new WorkbookOperation.SetSheetZoom("Budget", 125);
+    WorkbookOperation setPrintLayout =
+        new WorkbookOperation.SetPrintLayout(
+            "Budget",
+            new PrintLayoutInput(
+                new PrintAreaInput.Range("A1:B12"),
+                ExcelPrintOrientation.LANDSCAPE,
+                new PrintScalingInput.Fit(1, 0),
+                new PrintTitleRowsInput.Band(0, 0),
+                new PrintTitleColumnsInput.Band(0, 0),
+                new HeaderFooterTextInput("Budget", "", ""),
+                new HeaderFooterTextInput("", "Page &P", "")));
+    WorkbookOperation clearPrintLayout = new WorkbookOperation.ClearPrintLayout("Budget");
 
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(mergeCells, exception));
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(mergeCells, exception));
@@ -1941,10 +1973,26 @@ class DefaultGridGrindRequestExecutorTest {
     assertNull(DefaultGridGrindRequestExecutor.addressFor(setRowHeight, exception));
     assertNull(DefaultGridGrindRequestExecutor.rangeFor(setRowHeight, exception));
 
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(freezePanes, exception));
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(freezePanes, exception));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(freezePanes, exception));
-    assertNull(DefaultGridGrindRequestExecutor.rangeFor(freezePanes, exception));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setSheetPane, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setSheetPane, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setSheetPane, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(setSheetPane, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setSheetZoom, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setSheetZoom, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setSheetZoom, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(setSheetZoom, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setPrintLayout, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setPrintLayout, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setPrintLayout, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(setPrintLayout, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(clearPrintLayout, exception));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(clearPrintLayout, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(clearPrintLayout, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(clearPrintLayout, exception));
   }
 
   @Test
@@ -2029,9 +2077,30 @@ class DefaultGridGrindRequestExecutorTest {
         DefaultGridGrindRequestExecutor.toCommand(
             new WorkbookOperation.SetRowHeight("Budget", 0, 1, 28.5)));
     assertInstanceOf(
-        WorkbookCommand.FreezePanes.class,
+        WorkbookCommand.SetSheetPane.class,
         DefaultGridGrindRequestExecutor.toCommand(
-            new WorkbookOperation.FreezePanes("Budget", 1, 1, 1, 1)));
+            new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 1, 1, 1))));
+    assertInstanceOf(
+        WorkbookCommand.SetSheetZoom.class,
+        DefaultGridGrindRequestExecutor.toCommand(
+            new WorkbookOperation.SetSheetZoom("Budget", 125)));
+    assertInstanceOf(
+        WorkbookCommand.SetPrintLayout.class,
+        DefaultGridGrindRequestExecutor.toCommand(
+            new WorkbookOperation.SetPrintLayout(
+                "Budget",
+                new PrintLayoutInput(
+                    new PrintAreaInput.Range("A1:B12"),
+                    ExcelPrintOrientation.LANDSCAPE,
+                    new PrintScalingInput.Fit(1, 0),
+                    new PrintTitleRowsInput.Band(0, 0),
+                    new PrintTitleColumnsInput.Band(0, 0),
+                    new HeaderFooterTextInput("Budget", "", ""),
+                    new HeaderFooterTextInput("", "Page &P", "")))));
+    assertInstanceOf(
+        WorkbookCommand.ClearPrintLayout.class,
+        DefaultGridGrindRequestExecutor.toCommand(
+            new WorkbookOperation.ClearPrintLayout("Budget")));
     assertInstanceOf(
         WorkbookCommand.SetCell.class,
         DefaultGridGrindRequestExecutor.toCommand(
@@ -2093,10 +2162,43 @@ class DefaultGridGrindRequestExecutorTest {
         WorkbookCommand.ForceFormulaRecalculationOnOpen.class,
         DefaultGridGrindRequestExecutor.toCommand(
             new WorkbookOperation.ForceFormulaRecalculationOnOpen()));
+
+    WorkbookCommand.SetSheetPane setSheetPaneNone =
+        cast(
+            WorkbookCommand.SetSheetPane.class,
+            DefaultGridGrindRequestExecutor.toCommand(
+                new WorkbookOperation.SetSheetPane("Budget", new PaneInput.None())));
+    WorkbookCommand.SetSheetPane setSheetPaneSplit =
+        cast(
+            WorkbookCommand.SetSheetPane.class,
+            DefaultGridGrindRequestExecutor.toCommand(
+                new WorkbookOperation.SetSheetPane(
+                    "Budget", new PaneInput.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT))));
+    WorkbookCommand.SetPrintLayout defaultPrintLayout =
+        cast(
+            WorkbookCommand.SetPrintLayout.class,
+            DefaultGridGrindRequestExecutor.toCommand(
+                new WorkbookOperation.SetPrintLayout(
+                    "Budget", new PrintLayoutInput(null, null, null, null, null, null, null))));
+
+    assertEquals(new ExcelSheetPane.None(), setSheetPaneNone.pane());
+    assertEquals(
+        new ExcelSheetPane.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
+        setSheetPaneSplit.pane());
+    assertEquals(
+        new dev.erst.gridgrind.excel.ExcelPrintLayout(
+            new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.None(),
+            ExcelPrintOrientation.PORTRAIT,
+            new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Automatic(),
+            new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.None(),
+            new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.None(),
+            new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", ""),
+            new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", "")),
+        defaultPrintLayout.printLayout());
   }
 
   @Test
-  void convertsReadOperationsIntoWorkbookReadCommands() {
+  void convertsStructuralAndSurfaceReadOperationsIntoWorkbookReadCommands() {
     WorkbookReadCommand workbookSummary =
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.GetWorkbookSummary("workbook"));
@@ -2131,6 +2233,9 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookReadCommand layout =
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.GetSheetLayout("layout", "Budget"));
+    WorkbookReadCommand printLayout =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.GetPrintLayout("printLayout", "Budget"));
     WorkbookReadCommand validations =
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.GetDataValidations(
@@ -2157,6 +2262,53 @@ class DefaultGridGrindRequestExecutorTest {
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.GetNamedRangeSurface(
                 "surface", new NamedRangeSelection.All()));
+
+    assertInstanceOf(WorkbookReadCommand.GetWorkbookSummary.class, workbookSummary);
+    assertInstanceOf(WorkbookReadCommand.GetNamedRanges.class, namedRanges);
+    assertInstanceOf(WorkbookReadCommand.GetSheetSummary.class, sheetSummary);
+    assertInstanceOf(WorkbookReadCommand.GetCells.class, cells);
+    assertInstanceOf(WorkbookReadCommand.GetWindow.class, window);
+    assertInstanceOf(WorkbookReadCommand.GetMergedRegions.class, merged);
+    assertInstanceOf(WorkbookReadCommand.GetHyperlinks.class, hyperlinks);
+    assertInstanceOf(WorkbookReadCommand.GetComments.class, comments);
+    assertInstanceOf(WorkbookReadCommand.GetSheetLayout.class, layout);
+    assertInstanceOf(WorkbookReadCommand.GetPrintLayout.class, printLayout);
+    assertInstanceOf(WorkbookReadCommand.GetDataValidations.class, validations);
+    assertInstanceOf(WorkbookReadCommand.GetConditionalFormatting.class, conditionalFormatting);
+    assertInstanceOf(WorkbookReadCommand.GetAutofilters.class, autofilters);
+    assertInstanceOf(WorkbookReadCommand.GetTables.class, tables);
+    assertInstanceOf(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface);
+    assertInstanceOf(WorkbookReadCommand.GetSheetSchema.class, schema);
+    assertInstanceOf(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface);
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelNamedRangeSelection.Selected.class,
+        cast(WorkbookReadCommand.GetNamedRanges.class, namedRanges).selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelCellSelection.AllUsedCells.class,
+        cast(WorkbookReadCommand.GetHyperlinks.class, hyperlinks).selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelCellSelection.Selected.class,
+        cast(WorkbookReadCommand.GetComments.class, comments).selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelRangeSelection.All.class,
+        cast(WorkbookReadCommand.GetDataValidations.class, validations).selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelRangeSelection.Selected.class,
+        cast(WorkbookReadCommand.GetConditionalFormatting.class, conditionalFormatting)
+            .selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelTableSelection.ByNames.class,
+        cast(WorkbookReadCommand.GetTables.class, tables).selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelSheetSelection.Selected.class,
+        cast(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface).selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelNamedRangeSelection.All.class,
+        cast(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface).selection());
+  }
+
+  @Test
+  void convertsAnalysisReadOperationsIntoWorkbookReadCommands() {
     WorkbookReadCommand formulaHealth =
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.AnalyzeFormulaHealth(
@@ -2189,22 +2341,6 @@ class DefaultGridGrindRequestExecutorTest {
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.AnalyzeWorkbookFindings("workbookFindings"));
 
-    assertInstanceOf(WorkbookReadCommand.GetWorkbookSummary.class, workbookSummary);
-    assertInstanceOf(WorkbookReadCommand.GetNamedRanges.class, namedRanges);
-    assertInstanceOf(WorkbookReadCommand.GetSheetSummary.class, sheetSummary);
-    assertInstanceOf(WorkbookReadCommand.GetCells.class, cells);
-    assertInstanceOf(WorkbookReadCommand.GetWindow.class, window);
-    assertInstanceOf(WorkbookReadCommand.GetMergedRegions.class, merged);
-    assertInstanceOf(WorkbookReadCommand.GetHyperlinks.class, hyperlinks);
-    assertInstanceOf(WorkbookReadCommand.GetComments.class, comments);
-    assertInstanceOf(WorkbookReadCommand.GetSheetLayout.class, layout);
-    assertInstanceOf(WorkbookReadCommand.GetDataValidations.class, validations);
-    assertInstanceOf(WorkbookReadCommand.GetConditionalFormatting.class, conditionalFormatting);
-    assertInstanceOf(WorkbookReadCommand.GetAutofilters.class, autofilters);
-    assertInstanceOf(WorkbookReadCommand.GetTables.class, tables);
-    assertInstanceOf(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface);
-    assertInstanceOf(WorkbookReadCommand.GetSheetSchema.class, schema);
-    assertInstanceOf(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface);
     assertInstanceOf(WorkbookReadCommand.AnalyzeFormulaHealth.class, formulaHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeDataValidationHealth.class, validationHealth);
     assertInstanceOf(
@@ -2214,31 +2350,6 @@ class DefaultGridGrindRequestExecutorTest {
     assertInstanceOf(WorkbookReadCommand.AnalyzeHyperlinkHealth.class, hyperlinkHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeNamedRangeHealth.class, namedRangeHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeWorkbookFindings.class, workbookFindings);
-    assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelNamedRangeSelection.Selected.class,
-        cast(WorkbookReadCommand.GetNamedRanges.class, namedRanges).selection());
-    assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelCellSelection.AllUsedCells.class,
-        cast(WorkbookReadCommand.GetHyperlinks.class, hyperlinks).selection());
-    assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelCellSelection.Selected.class,
-        cast(WorkbookReadCommand.GetComments.class, comments).selection());
-    assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelRangeSelection.All.class,
-        cast(WorkbookReadCommand.GetDataValidations.class, validations).selection());
-    assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelRangeSelection.Selected.class,
-        cast(WorkbookReadCommand.GetConditionalFormatting.class, conditionalFormatting)
-            .selection());
-    assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelTableSelection.ByNames.class,
-        cast(WorkbookReadCommand.GetTables.class, tables).selection());
-    assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelSheetSelection.Selected.class,
-        cast(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface).selection());
-    assertInstanceOf(
-        dev.erst.gridgrind.excel.ExcelNamedRangeSelection.All.class,
-        cast(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface).selection());
     assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelSheetSelection.Selected.class,
         cast(
@@ -2371,9 +2482,23 @@ class DefaultGridGrindRequestExecutorTest {
                 "layout",
                 new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout(
                     "Budget",
-                    new dev.erst.gridgrind.excel.WorkbookReadResult.FreezePane.Frozen(1, 1, 1, 1),
+                    new dev.erst.gridgrind.excel.ExcelSheetPane.Frozen(1, 1, 1, 1),
+                    125,
                     List.of(new dev.erst.gridgrind.excel.WorkbookReadResult.ColumnLayout(0, 12.5)),
                     List.of(new dev.erst.gridgrind.excel.WorkbookReadResult.RowLayout(0, 18.0)))));
+    WorkbookReadResult printLayout =
+        DefaultGridGrindRequestExecutor.toReadResult(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult(
+                "printLayout",
+                "Budget",
+                new dev.erst.gridgrind.excel.ExcelPrintLayout(
+                    new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.Range("A1:B20"),
+                    ExcelPrintOrientation.LANDSCAPE,
+                    new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Fit(1, 0),
+                    new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.Band(0, 0),
+                    new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.Band(0, 0),
+                    new dev.erst.gridgrind.excel.ExcelHeaderFooterText("Budget", "", ""),
+                    new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "Page &P", ""))));
     WorkbookReadResult conditionalFormatting =
         DefaultGridGrindRequestExecutor.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingResult(
@@ -2477,6 +2602,7 @@ class DefaultGridGrindRequestExecutorTest {
     assertInstanceOf(WorkbookReadResult.HyperlinksResult.class, hyperlinks);
     assertInstanceOf(WorkbookReadResult.CommentsResult.class, comments);
     assertInstanceOf(WorkbookReadResult.SheetLayoutResult.class, layout);
+    assertInstanceOf(WorkbookReadResult.PrintLayoutResult.class, printLayout);
     assertInstanceOf(WorkbookReadResult.ConditionalFormattingResult.class, conditionalFormatting);
     assertInstanceOf(WorkbookReadResult.FormulaSurfaceResult.class, formulaSurface);
     assertInstanceOf(WorkbookReadResult.SheetSchemaResult.class, schema);
@@ -2528,8 +2654,13 @@ class DefaultGridGrindRequestExecutorTest {
             .comment()
             .text());
     assertInstanceOf(
-        GridGrindResponse.FreezePaneReport.Frozen.class,
-        cast(WorkbookReadResult.SheetLayoutResult.class, layout).layout().freezePanes());
+        PaneReport.Frozen.class,
+        cast(WorkbookReadResult.SheetLayoutResult.class, layout).layout().pane());
+    assertEquals(
+        125, cast(WorkbookReadResult.SheetLayoutResult.class, layout).layout().zoomPercent());
+    assertEquals(
+        ExcelPrintOrientation.LANDSCAPE,
+        cast(WorkbookReadResult.PrintLayoutResult.class, printLayout).layout().orientation());
     assertEquals(
         2,
         cast(WorkbookReadResult.ConditionalFormattingResult.class, conditionalFormatting)
@@ -2720,7 +2851,7 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
-  void convertsFreezePaneNoneIntoProtocolReport() {
+  void convertsPaneNoneIntoProtocolReport() {
     WorkbookReadResult.SheetLayoutResult layout =
         cast(
             WorkbookReadResult.SheetLayoutResult.class,
@@ -2729,11 +2860,55 @@ class DefaultGridGrindRequestExecutorTest {
                     "layout",
                     new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout(
                         "Budget",
-                        new dev.erst.gridgrind.excel.WorkbookReadResult.FreezePane.None(),
+                        new dev.erst.gridgrind.excel.ExcelSheetPane.None(),
+                        100,
                         List.of(),
                         List.of()))));
 
-    assertInstanceOf(GridGrindResponse.FreezePaneReport.None.class, layout.layout().freezePanes());
+    assertInstanceOf(PaneReport.None.class, layout.layout().pane());
+  }
+
+  @Test
+  void convertsSplitPaneAndDefaultPrintLayoutIntoProtocolReports() {
+    WorkbookReadResult.SheetLayoutResult layout =
+        cast(
+            WorkbookReadResult.SheetLayoutResult.class,
+            DefaultGridGrindRequestExecutor.toReadResult(
+                new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayoutResult(
+                    "layout",
+                    new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout(
+                        "Budget",
+                        new dev.erst.gridgrind.excel.ExcelSheetPane.Split(
+                            1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
+                        100,
+                        List.of(),
+                        List.of()))));
+    WorkbookReadResult.PrintLayoutResult printLayout =
+        cast(
+            WorkbookReadResult.PrintLayoutResult.class,
+            DefaultGridGrindRequestExecutor.toReadResult(
+                new dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult(
+                    "print-layout",
+                    "Budget",
+                    new dev.erst.gridgrind.excel.ExcelPrintLayout(
+                        new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.None(),
+                        ExcelPrintOrientation.PORTRAIT,
+                        new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Automatic(),
+                        new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.None(),
+                        new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.None(),
+                        new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", ""),
+                        new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", "")))));
+
+    PaneReport.Split pane = assertInstanceOf(PaneReport.Split.class, layout.layout().pane());
+    assertEquals(1200, pane.xSplitPosition());
+    assertEquals(2400, pane.ySplitPosition());
+    assertEquals(3, pane.leftmostColumn());
+    assertEquals(4, pane.topRow());
+    assertEquals(ExcelPaneRegion.LOWER_RIGHT, pane.activePane());
+    assertInstanceOf(PrintAreaReport.None.class, printLayout.layout().printArea());
+    assertInstanceOf(PrintScalingReport.Automatic.class, printLayout.layout().scaling());
+    assertInstanceOf(PrintTitleRowsReport.None.class, printLayout.layout().repeatingRows());
+    assertInstanceOf(PrintTitleColumnsReport.None.class, printLayout.layout().repeatingColumns());
   }
 
   @Test
@@ -2803,6 +2978,7 @@ class DefaultGridGrindRequestExecutorTest {
             "GET_HYPERLINKS",
             "GET_COMMENTS",
             "GET_SHEET_LAYOUT",
+            "GET_PRINT_LAYOUT",
             "GET_DATA_VALIDATIONS",
             "GET_CONDITIONAL_FORMATTING",
             "GET_AUTOFILTERS",
@@ -2839,6 +3015,8 @@ class DefaultGridGrindRequestExecutorTest {
                     "comments", "Budget", new CellSelection.AllUsedCells())),
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetSheetLayout("layout", "Budget")),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.GetPrintLayout("print-layout", "Budget")),
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetDataValidations(
                     "validations", "Budget", new RangeSelection.All())),
@@ -2906,6 +3084,8 @@ class DefaultGridGrindRequestExecutorTest {
         new WorkbookReadOperation.GetComments(
             "comments", "Budget", new CellSelection.Selected(List.of("A1")));
     WorkbookReadOperation layout = new WorkbookReadOperation.GetSheetLayout("layout", "Budget");
+    WorkbookReadOperation printLayout =
+        new WorkbookReadOperation.GetPrintLayout("print-layout", "Budget");
     WorkbookReadOperation validations =
         new WorkbookReadOperation.GetDataValidations(
             "validations", "Budget", new RangeSelection.Selected(List.of("A1:A3")));
@@ -2958,6 +3138,7 @@ class DefaultGridGrindRequestExecutorTest {
     assertReadContext(hyperlinks, "Budget", null, null, runtimeException);
     assertReadContext(comments, "Budget", null, null, runtimeException);
     assertReadContext(layout, "Budget", null, null, runtimeException);
+    assertReadContext(printLayout, "Budget", null, null, runtimeException);
     assertReadContext(validations, "Budget", null, null, runtimeException);
     assertReadContext(conditionalFormatting, "Budget", null, null, runtimeException);
     assertReadContext(autofilters, "Budget", null, null, runtimeException);
@@ -3271,7 +3452,19 @@ class DefaultGridGrindRequestExecutorTest {
             new WorkbookOperation.UnmergeCells("Budget", "A1:B2"),
             new WorkbookOperation.SetColumnWidth("Budget", 0, 1, 16.0),
             new WorkbookOperation.SetRowHeight("Budget", 0, 1, 28.5),
-            new WorkbookOperation.FreezePanes("Budget", 1, 1, 1, 1),
+            new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 1, 1, 1)),
+            new WorkbookOperation.SetSheetZoom("Budget", 125),
+            new WorkbookOperation.SetPrintLayout(
+                "Budget",
+                new PrintLayoutInput(
+                    new PrintAreaInput.Range("A1:B12"),
+                    ExcelPrintOrientation.LANDSCAPE,
+                    new PrintScalingInput.Fit(1, 0),
+                    new PrintTitleRowsInput.Band(0, 0),
+                    new PrintTitleColumnsInput.Band(0, 0),
+                    new HeaderFooterTextInput("Budget", "", ""),
+                    new HeaderFooterTextInput("", "Page &P", ""))),
+            new WorkbookOperation.ClearPrintLayout("Budget"),
             new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("x")),
             new WorkbookOperation.SetRange(
                 "Budget", "A1:B1", List.of(List.of(new CellInput.Text("x")))),
@@ -3327,7 +3520,8 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(
         "BudgetTotal",
         DefaultGridGrindRequestExecutor.namedRangeNameFor(
-            new WorkbookOperation.FreezePanes("Budget", 1, 1, 1, 1), missingNamedRange));
+            new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 1, 1, 1)),
+            missingNamedRange));
   }
 
   private static GridGrindRequest request(

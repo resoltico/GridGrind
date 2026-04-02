@@ -3,7 +3,7 @@ Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/
 Harness: xlsx-roundtrip
 Outcome: EXPECTED_INVALID
 Kind: IllegalArgumentException
-Message: name must start with a letter or underscore and contain only letters, digits, underscore, or period
+Message: name must not collide with A1-style cell reference syntax
 Input Bytes: 231
 Command Count: 0
 Style Kinds: (none)

@@ -159,12 +159,28 @@ class ExcelSheetTest {
       assertThrows(
           IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, Double.MIN_VALUE));
       assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, Double.NaN));
-      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(-1, 0, 0, 0));
-      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(0, 0, 0, 0));
-      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(0, 1, 1, 1));
-      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(1, 0, 1, 1));
-      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(2, 1, 1, 1));
-      assertThrows(IllegalArgumentException.class, () -> sheet.freezePanes(1, 2, 1, 1));
+      assertThrows(NullPointerException.class, () -> sheet.setPane(null));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.setPane(new ExcelSheetPane.Frozen(-1, 0, 0, 0)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.setPane(new ExcelSheetPane.Frozen(0, 0, 0, 0)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.setPane(new ExcelSheetPane.Frozen(0, 1, 1, 1)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.setPane(new ExcelSheetPane.Frozen(1, 0, 1, 1)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.setPane(new ExcelSheetPane.Frozen(2, 1, 1, 1)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> sheet.setPane(new ExcelSheetPane.Frozen(1, 2, 1, 1)));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setZoom(9));
+      assertThrows(IllegalArgumentException.class, () -> sheet.setZoom(401));
+      assertThrows(NullPointerException.class, () -> sheet.setPrintLayout(null));
       assertThrows(
           NullPointerException.class,
           () -> sheet.applyStyle(null, ExcelCellStyle.numberFormat("0")));
@@ -561,7 +577,8 @@ class ExcelSheetTest {
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
       WorkbookReadResult.SheetLayout emptyLayout = sheet.layout();
-      assertInstanceOf(WorkbookReadResult.FreezePane.None.class, emptyLayout.freezePanes());
+      assertEquals(new ExcelSheetPane.None(), emptyLayout.pane());
+      assertEquals(100, emptyLayout.zoomPercent());
       assertEquals(List.of(), emptyLayout.columns());
       assertEquals(List.of(), emptyLayout.rows());
 
@@ -597,20 +614,22 @@ class ExcelSheetTest {
       assertEquals("C3", selectedComments.getFirst().address());
 
       WorkbookReadResult.SheetLayout unfrozenLayout = sheet.layout();
-      assertInstanceOf(WorkbookReadResult.FreezePane.None.class, unfrozenLayout.freezePanes());
+      assertEquals(new ExcelSheetPane.None(), unfrozenLayout.pane());
+      assertEquals(100, unfrozenLayout.zoomPercent());
       assertEquals(3, unfrozenLayout.columns().size());
       assertEquals(3, unfrozenLayout.rows().size());
 
-      sheet.freezePanes(1, 1, 1, 1);
+      sheet.setPane(new ExcelSheetPane.Frozen(1, 1, 1, 1));
+      sheet.setZoom(135);
       WorkbookReadResult.SheetLayout frozenLayout = sheet.layout();
-      WorkbookReadResult.FreezePane.Frozen freezePane =
-          assertInstanceOf(WorkbookReadResult.FreezePane.Frozen.class, frozenLayout.freezePanes());
-      assertEquals(1, freezePane.splitColumn());
-      assertEquals(1, freezePane.splitRow());
+      assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), frozenLayout.pane());
+      assertEquals(135, frozenLayout.zoomPercent());
 
       poiSheet.createSplitPane(2000, 2000, 0, 0, PaneType.LOWER_RIGHT);
       WorkbookReadResult.SheetLayout splitLayout = sheet.layout();
-      assertInstanceOf(WorkbookReadResult.FreezePane.None.class, splitLayout.freezePanes());
+      assertEquals(
+          new ExcelSheetPane.Split(2000, 2000, 0, 0, ExcelPaneRegion.LOWER_RIGHT),
+          splitLayout.pane());
     }
   }
 
@@ -903,7 +922,7 @@ class ExcelSheetTest {
   }
 
   @Test
-  void managesMergedRegionsSizingAndFreezePanes() throws Exception {
+  void managesMergedRegionsSizingPaneZoomAndPrintLayout() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       Sheet poiSheet = poiWorkbook.createSheet("Budget");
       FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
@@ -927,22 +946,50 @@ class ExcelSheetTest {
       sheet.setRowHeight(0, 0, 1638.35);
       assertEquals(32767 / 20.0, sheet.layout().rows().get(0).heightPoints());
 
-      assertSame(sheet, sheet.freezePanes(1, 2, 3, 4));
+      assertSame(sheet, sheet.setPane(new ExcelSheetPane.Frozen(1, 2, 3, 4)));
       assertNotNull(poiSheet.getPaneInformation());
       assertEquals(1, poiSheet.getPaneInformation().getVerticalSplitPosition());
       assertEquals(2, poiSheet.getPaneInformation().getHorizontalSplitPosition());
       assertEquals(3, poiSheet.getPaneInformation().getVerticalSplitLeftColumn());
       assertEquals(4, poiSheet.getPaneInformation().getHorizontalSplitTopRow());
-      assertSame(sheet, sheet.freezePanes(0, 2, 0, 2));
+      assertSame(sheet, sheet.setPane(new ExcelSheetPane.Frozen(0, 2, 0, 2)));
       assertEquals(0, poiSheet.getPaneInformation().getVerticalSplitPosition());
       assertEquals(2, poiSheet.getPaneInformation().getHorizontalSplitPosition());
       assertEquals(0, poiSheet.getPaneInformation().getVerticalSplitLeftColumn());
       assertEquals(2, poiSheet.getPaneInformation().getHorizontalSplitTopRow());
-      assertSame(sheet, sheet.freezePanes(2, 0, 2, 0));
+      assertSame(sheet, sheet.setPane(new ExcelSheetPane.Frozen(2, 0, 2, 0)));
       assertEquals(2, poiSheet.getPaneInformation().getVerticalSplitPosition());
       assertEquals(0, poiSheet.getPaneInformation().getHorizontalSplitPosition());
       assertEquals(2, poiSheet.getPaneInformation().getVerticalSplitLeftColumn());
       assertEquals(0, poiSheet.getPaneInformation().getHorizontalSplitTopRow());
+      assertSame(
+          sheet,
+          sheet.setPane(new ExcelSheetPane.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT)));
+      assertEquals(
+          new ExcelSheetPane.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
+          sheet.layout().pane());
+      assertSame(sheet, sheet.setZoom(125));
+      assertEquals(125, sheet.layout().zoomPercent());
+      ExcelPrintLayout printLayout =
+          new ExcelPrintLayout(
+              new ExcelPrintLayout.Area.Range("A1:B20"),
+              ExcelPrintOrientation.LANDSCAPE,
+              new ExcelPrintLayout.Scaling.Fit(1, 0),
+              new ExcelPrintLayout.TitleRows.Band(0, 0),
+              new ExcelPrintLayout.TitleColumns.Band(0, 0),
+              new ExcelHeaderFooterText("Budget", "", ""),
+              new ExcelHeaderFooterText("", "Page &P", ""));
+      assertSame(sheet, sheet.setPrintLayout(printLayout));
+      assertEquals(printLayout, sheet.printLayout());
+      assertSame(sheet, sheet.clearPrintLayout());
+      ExcelPrintLayout clearedPrintLayout = sheet.printLayout();
+      assertEquals(new ExcelPrintLayout.Area.None(), clearedPrintLayout.printArea());
+      assertEquals(ExcelPrintOrientation.PORTRAIT, clearedPrintLayout.orientation());
+      assertEquals(new ExcelPrintLayout.Scaling.Automatic(), clearedPrintLayout.scaling());
+      assertEquals(new ExcelPrintLayout.TitleRows.None(), clearedPrintLayout.repeatingRows());
+      assertEquals(new ExcelPrintLayout.TitleColumns.None(), clearedPrintLayout.repeatingColumns());
+      assertEquals(ExcelHeaderFooterText.blank(), clearedPrintLayout.header());
+      assertEquals(ExcelHeaderFooterText.blank(), clearedPrintLayout.footer());
 
       assertSame(sheet, sheet.unmergeCells("A1:B2"));
       assertEquals(0, poiSheet.getNumMergedRegions());
@@ -950,7 +997,7 @@ class ExcelSheetTest {
   }
 
   @Test
-  void validatesStructuralLayoutHelpers() throws Exception {
+  void validatesStructuralRangeAndSizingHelpers() {
     ExcelRange exactRange = ExcelRange.parse("A1:B2");
     CellRangeAddress exactAddress = new CellRangeAddress(0, 1, 0, 1);
 
@@ -981,21 +1028,95 @@ class ExcelSheetTest {
         () -> ExcelSheet.toRowHeightPoints((Short.MAX_VALUE / 20.0d) + 1.0d));
     assertThrows(
         IllegalArgumentException.class, () -> ExcelSheet.toRowHeightPoints(Double.MIN_VALUE));
+  }
 
-    assertDoesNotThrow(() -> ExcelSheet.requireFreezePaneCoordinates(1, 2, 1, 2));
-    assertDoesNotThrow(() -> ExcelSheet.requireFreezePaneCoordinates(0, 2, 0, 2));
-    assertDoesNotThrow(() -> ExcelSheet.requireFreezePaneCoordinates(2, 0, 2, 0));
+  @Test
+  void validatesPaneRegionAndPrintLayoutValueTypes() {
+    assertDoesNotThrow(() -> new ExcelSheetPane.Frozen(1, 2, 1, 2));
+    assertDoesNotThrow(() -> new ExcelSheetPane.Frozen(0, 2, 0, 2));
+    assertDoesNotThrow(() -> new ExcelSheetPane.Frozen(2, 0, 2, 0));
+    assertDoesNotThrow(() -> new ExcelSheetPane.Split(0, 1200, 0, 3, ExcelPaneRegion.LOWER_LEFT));
+    assertDoesNotThrow(() -> new ExcelSheetPane.Split(1200, 0, 3, 0, ExcelPaneRegion.UPPER_RIGHT));
+    assertDoesNotThrow(
+        () ->
+            new ExcelPrintLayout(
+                new ExcelPrintLayout.Area.None(),
+                ExcelPrintOrientation.PORTRAIT,
+                new ExcelPrintLayout.Scaling.Automatic(),
+                new ExcelPrintLayout.TitleRows.None(),
+                new ExcelPrintLayout.TitleColumns.None(),
+                ExcelHeaderFooterText.blank(),
+                ExcelHeaderFooterText.blank()));
+    assertDoesNotThrow(() -> ExcelSheetViewSupport.requireZoomPercent(10));
+    assertDoesNotThrow(() -> ExcelSheetViewSupport.requireZoomPercent(400));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(0, 1, 1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(1, 0, 1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(2, 1, 1, 1));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetPane.Frozen(1, 2, 1, 1));
     assertThrows(
-        IllegalArgumentException.class, () -> ExcelSheet.requireFreezePaneCoordinates(0, 0, 0, 0));
+        IllegalArgumentException.class,
+        () -> new ExcelSheetPane.Split(0, 1200, 1, 0, ExcelPaneRegion.LOWER_LEFT));
     assertThrows(
-        IllegalArgumentException.class, () -> ExcelSheet.requireFreezePaneCoordinates(0, 1, 1, 1));
+        IllegalArgumentException.class,
+        () -> new ExcelSheetPane.Split(1200, 0, 0, 1, ExcelPaneRegion.LOWER_LEFT));
+    assertThrows(NullPointerException.class, () -> new ExcelSheetPane.Split(1200, 0, 0, 0, null));
+    assertTrue(ExcelHeaderFooterText.blank().isBlank());
+    assertFalse(new ExcelHeaderFooterText("Left", "", "").isBlank());
+    assertFalse(new ExcelHeaderFooterText("", "Center", "").isBlank());
+    assertFalse(new ExcelHeaderFooterText("", "", "Right").isBlank());
+    assertThrows(NullPointerException.class, () -> new ExcelHeaderFooterText(null, "", ""));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintLayout.Area.Range(" "));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintLayout.Scaling.Fit(-1, 0));
     assertThrows(
-        IllegalArgumentException.class, () -> ExcelSheet.requireFreezePaneCoordinates(1, 0, 1, 1));
+        IllegalArgumentException.class,
+        () -> new ExcelPrintLayout.Scaling.Fit(Short.MAX_VALUE + 1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(-1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(0, -1));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(2, 1));
     assertThrows(
-        IllegalArgumentException.class, () -> ExcelSheet.requireFreezePaneCoordinates(2, 1, 1, 1));
+        IllegalArgumentException.class,
+        () ->
+            new ExcelPrintLayout.TitleRows.Band(
+                0, org.apache.poi.ss.SpreadsheetVersion.EXCEL2007.getLastRowIndex() + 1));
     assertThrows(
-        IllegalArgumentException.class, () -> ExcelSheet.requireFreezePaneCoordinates(1, 2, 1, 1));
+        IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(-1, 0));
+    assertThrows(
+        IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(0, -1));
+    assertThrows(
+        IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(2, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelPrintLayout.TitleColumns.Band(
+                0, org.apache.poi.ss.SpreadsheetVersion.EXCEL2007.getLastColumnIndex() + 1));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new ExcelPrintLayout(
+                null,
+                ExcelPrintOrientation.PORTRAIT,
+                new ExcelPrintLayout.Scaling.Automatic(),
+                new ExcelPrintLayout.TitleRows.None(),
+                new ExcelPrintLayout.TitleColumns.None(),
+                ExcelHeaderFooterText.blank(),
+                ExcelHeaderFooterText.blank()));
+    assertEquals(ExcelPaneRegion.UPPER_LEFT, ExcelPaneRegion.fromPoi(PaneType.UPPER_LEFT));
+    assertEquals(ExcelPaneRegion.UPPER_RIGHT, ExcelPaneRegion.fromPoi(PaneType.UPPER_RIGHT));
+    assertEquals(ExcelPaneRegion.LOWER_LEFT, ExcelPaneRegion.fromPoi(PaneType.LOWER_LEFT));
+    assertEquals(ExcelPaneRegion.LOWER_RIGHT, ExcelPaneRegion.fromPoi(PaneType.LOWER_RIGHT));
+    assertEquals(PaneType.UPPER_LEFT, ExcelPaneRegion.UPPER_LEFT.toPoi());
+    assertEquals(PaneType.UPPER_RIGHT, ExcelPaneRegion.UPPER_RIGHT.toPoi());
+    assertEquals(PaneType.LOWER_LEFT, ExcelPaneRegion.LOWER_LEFT.toPoi());
+    assertEquals(PaneType.LOWER_RIGHT, ExcelPaneRegion.LOWER_RIGHT.toPoi());
+    assertThrows(IllegalArgumentException.class, () -> ExcelSheetViewSupport.requireZoomPercent(9));
+    assertThrows(
+        IllegalArgumentException.class, () -> ExcelSheetViewSupport.requireZoomPercent(401));
+  }
 
+  @Test
+  void validatesMergedRegionLookupAndOverlapHelpers() throws Exception {
+    ExcelRange exactRange = ExcelRange.parse("A1:B2");
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       Sheet emptySheet = poiWorkbook.createSheet("Empty");
       Sheet mergedSheet = poiWorkbook.createSheet("Merged");

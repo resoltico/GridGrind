@@ -40,9 +40,15 @@ final class ExcelSheetIntrospector {
     return sheet.comments(selection);
   }
 
-  /** Returns layout metadata such as freeze panes and visible sizing. */
+  /** Returns layout metadata such as pane state, zoom, and visible sizing. */
   WorkbookReadResult.SheetLayout layout(ExcelSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     return sheet.layout();
+  }
+
+  /** Returns supported print-layout metadata for one sheet. */
+  ExcelPrintLayout printLayout(ExcelSheet sheet) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return sheet.printLayout();
   }
 }

@@ -12,14 +12,24 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 3,
       "operationKinds" : {
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2,
+        "APPLY_STYLE" : 1
       },
-      "styleKinds" : { },
+      "styleKinds" : {
+        "font_color" : 1,
+        "border_top" : 1,
+        "border_all" : 1,
+        "border_bottom" : 1,
+        "border" : 1,
+        "border_left" : 1,
+        "border_right" : 1,
+        "fill_color" : 1
+      },
       "readCount" : 3,
       "readKinds" : {
         "ANALYZE_WORKBOOK_FINDINGS" : 1,
-        "GET_AUTOFILTERS" : 1,
-        "GET_FORMULA_SURFACE" : 1
+        "GET_FORMULA_SURFACE" : 1,
+        "GET_AUTOFILTERS" : 1
       },
       "responseKind" : "FAILURE"
     }

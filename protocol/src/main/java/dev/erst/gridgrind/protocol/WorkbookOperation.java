@@ -33,7 +33,10 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = WorkbookOperation.UnmergeCells.class, name = "UNMERGE_CELLS"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetColumnWidth.class, name = "SET_COLUMN_WIDTH"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetRowHeight.class, name = "SET_ROW_HEIGHT"),
-  @JsonSubTypes.Type(value = WorkbookOperation.FreezePanes.class, name = "FREEZE_PANES"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetSheetPane.class, name = "SET_SHEET_PANE"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetSheetZoom.class, name = "SET_SHEET_ZOOM"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetPrintLayout.class, name = "SET_PRINT_LAYOUT"),
+  @JsonSubTypes.Type(value = WorkbookOperation.ClearPrintLayout.class, name = "CLEAR_PRINT_LAYOUT"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetCell.class, name = "SET_CELL"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetRange.class, name = "SET_RANGE"),
   @JsonSubTypes.Type(value = WorkbookOperation.ClearRange.class, name = "CLEAR_RANGE"),
@@ -202,25 +205,36 @@ public sealed interface WorkbookOperation {
     }
   }
 
-  /** Freezes panes using explicit split and visible-origin coordinates. */
-  record FreezePanes(
-      String sheetName,
-      Integer splitColumn,
-      Integer splitRow,
-      Integer leftmostColumn,
-      Integer topRow)
-      implements WorkbookOperation {
-    public FreezePanes {
+  /** Applies one explicit pane state to a sheet. */
+  record SetSheetPane(String sheetName, PaneInput pane) implements WorkbookOperation {
+    public SetSheetPane {
       Validation.requireSheetName(sheetName, "sheetName");
-      Objects.requireNonNull(splitColumn, "splitColumn must not be null");
-      Objects.requireNonNull(splitRow, "splitRow must not be null");
-      Objects.requireNonNull(leftmostColumn, "leftmostColumn must not be null");
-      Objects.requireNonNull(topRow, "topRow must not be null");
-      Validation.requireNonNegative(splitColumn, "splitColumn");
-      Validation.requireNonNegative(splitRow, "splitRow");
-      Validation.requireNonNegative(leftmostColumn, "leftmostColumn");
-      Validation.requireNonNegative(topRow, "topRow");
-      Validation.requireFreezePaneCoordinates(splitColumn, splitRow, leftmostColumn, topRow);
+      Objects.requireNonNull(pane, "pane must not be null");
+    }
+  }
+
+  /** Applies one explicit zoom percentage to a sheet. */
+  record SetSheetZoom(String sheetName, Integer zoomPercent) implements WorkbookOperation {
+    public SetSheetZoom {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(zoomPercent, "zoomPercent must not be null");
+      Validation.requireZoomPercent(zoomPercent);
+    }
+  }
+
+  /** Applies one authoritative supported print-layout state to a sheet. */
+  record SetPrintLayout(String sheetName, PrintLayoutInput printLayout)
+      implements WorkbookOperation {
+    public SetPrintLayout {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(printLayout, "printLayout must not be null");
+    }
+  }
+
+  /** Clears the supported print-layout state from a sheet. */
+  record ClearPrintLayout(String sheetName) implements WorkbookOperation {
+    public ClearPrintLayout {
+      Validation.requireSheetName(sheetName, "sheetName");
     }
   }
 
@@ -428,7 +442,10 @@ public sealed interface WorkbookOperation {
       case UnmergeCells _ -> "UNMERGE_CELLS";
       case SetColumnWidth _ -> "SET_COLUMN_WIDTH";
       case SetRowHeight _ -> "SET_ROW_HEIGHT";
-      case FreezePanes _ -> "FREEZE_PANES";
+      case SetSheetPane _ -> "SET_SHEET_PANE";
+      case SetSheetZoom _ -> "SET_SHEET_ZOOM";
+      case SetPrintLayout _ -> "SET_PRINT_LAYOUT";
+      case ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
       case SetCell _ -> "SET_CELL";
       case SetRange _ -> "SET_RANGE";
       case ClearRange _ -> "CLEAR_RANGE";
@@ -513,27 +530,6 @@ public sealed interface WorkbookOperation {
       }
     }
 
-    static void requireFreezePaneCoordinates(
-        int splitColumn, int splitRow, int leftmostColumn, int topRow) {
-      if (splitColumn == 0 && splitRow == 0) {
-        throw new IllegalArgumentException("splitColumn and splitRow must not both be 0");
-      }
-      if (splitColumn == 0 && leftmostColumn != 0) {
-        throw new IllegalArgumentException(
-            "leftmostColumn must be 0 when splitColumn is 0: " + leftmostColumn);
-      }
-      if (splitRow == 0 && topRow != 0) {
-        throw new IllegalArgumentException("topRow must be 0 when splitRow is 0: " + topRow);
-      }
-      if (splitColumn > 0 && leftmostColumn < splitColumn) {
-        throw new IllegalArgumentException(
-            "leftmostColumn must be greater than or equal to splitColumn");
-      }
-      if (splitRow > 0 && topRow < splitRow) {
-        throw new IllegalArgumentException("topRow must be greater than or equal to splitRow");
-      }
-    }
-
     static void requireNamedRangeName(String name) {
       ExcelNamedRangeDefinition.validateName(name);
     }
@@ -548,6 +544,13 @@ public sealed interface WorkbookOperation {
       }
       if (value <= 0.0d) {
         throw new IllegalArgumentException(fieldName + " must be greater than 0");
+      }
+    }
+
+    static void requireZoomPercent(int zoomPercent) {
+      if (zoomPercent < 10 || zoomPercent > 400) {
+        throw new IllegalArgumentException(
+            "zoomPercent must be between 10 and 400 inclusive: " + zoomPercent);
       }
     }
 

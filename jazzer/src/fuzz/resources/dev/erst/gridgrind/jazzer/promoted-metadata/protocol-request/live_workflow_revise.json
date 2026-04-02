@@ -14,16 +14,16 @@
       "operationCount" : 5,
       "operationKinds" : {
         "EVALUATE_FORMULAS" : 1,
-        "SET_CELL" : 3,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
+        "SET_CELL" : 3
       },
       "styleKinds" : { },
       "readCount" : 6,
       "readKinds" : {
-        "GET_CELLS" : 2,
         "GET_WINDOW" : 2,
-        "GET_WORKBOOK_SUMMARY" : 1,
-        "GET_FORMULA_SURFACE" : 1
+        "GET_CELLS" : 2,
+        "GET_FORMULA_SURFACE" : 1,
+        "GET_WORKBOOK_SUMMARY" : 1
       }
     }
   },

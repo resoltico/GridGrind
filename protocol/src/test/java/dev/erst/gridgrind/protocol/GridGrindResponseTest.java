@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
@@ -235,9 +237,20 @@ class GridGrindResponseTest {
     GridGrindResponse.SheetLayoutReport layout =
         new GridGrindResponse.SheetLayoutReport(
             "Budget",
-            new GridGrindResponse.FreezePaneReport.Frozen(1, 1, 1, 1),
+            new PaneReport.Frozen(1, 1, 1, 1),
+            125,
             List.of(new GridGrindResponse.ColumnLayoutReport(0, 12.5d)),
             List.of(new GridGrindResponse.RowLayoutReport(0, 18.0d)));
+    PrintLayoutReport printLayout =
+        new PrintLayoutReport(
+            "Budget",
+            new PrintAreaReport.Range("A1:B20"),
+            ExcelPrintOrientation.LANDSCAPE,
+            new PrintScalingReport.Fit(1, 0),
+            new PrintTitleRowsReport.Band(0, 0),
+            new PrintTitleColumnsReport.Band(0, 0),
+            new HeaderFooterTextReport("Budget", "", ""),
+            new HeaderFooterTextReport("", "Page &P", ""));
 
     assertEquals("FORMULA", formulaReport.effectiveType());
     assertEquals(
@@ -263,7 +276,9 @@ class GridGrindResponseTest {
     assertNull(blankReport.booleanValue());
     assertNull(blankReport.errorValue());
     assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
-    assertInstanceOf(GridGrindResponse.FreezePaneReport.Frozen.class, layout.freezePanes());
+    assertInstanceOf(PaneReport.Frozen.class, layout.pane());
+    assertEquals(125, layout.zoomPercent());
+    assertEquals(ExcelPrintOrientation.LANDSCAPE, printLayout.orientation());
   }
 
   @Test
@@ -458,7 +473,7 @@ class GridGrindResponseTest {
         IllegalArgumentException.class,
         () ->
             new GridGrindResponse.SheetLayoutReport(
-                " ", new GridGrindResponse.FreezePaneReport.None(), List.of(), List.of()));
+                " ", new PaneReport.None(), 100, List.of(), List.of()));
     assertThrows(
         IllegalArgumentException.class, () -> new GridGrindResponse.ColumnLayoutReport(-1, 12.0));
     assertThrows(
@@ -698,9 +713,11 @@ class GridGrindResponseTest {
   }
 
   @Test
-  void freezePaneNoneAndProblemCauseCopyPathsRemainUsable() {
-    GridGrindResponse.FreezePaneReport.None none = new GridGrindResponse.FreezePaneReport.None();
-    assertInstanceOf(GridGrindResponse.FreezePaneReport.None.class, none);
+  void paneReportVariantsAndProblemCauseCopyPathsRemainUsable() {
+    PaneReport.None none = new PaneReport.None();
+    PaneReport.Split split = new PaneReport.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT);
+    assertInstanceOf(PaneReport.None.class, none);
+    assertEquals(ExcelPaneRegion.LOWER_RIGHT, split.activePane());
 
     GridGrindResponse.Problem problem =
         new GridGrindResponse.Problem(

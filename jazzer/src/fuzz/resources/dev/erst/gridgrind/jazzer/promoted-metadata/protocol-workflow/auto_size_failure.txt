@@ -9,5 +9,5 @@ Operation Count: 3
 Read Count: 0
 Read Kinds: (none)
 Response Kind: FAILURE
-Style Kinds: (none)
-Operation Kinds: ENSURE_SHEET=2, CLEAR_SHEET_PROTECTION=1
+Style Kinds: border=1, border_all=1, wrap_text=1
+Operation Kinds: APPLY_STYLE=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1, ENSURE_SHEET=1

@@ -8,8 +8,8 @@
     "details" : {
       "type" : "PROTOCOL_WORKFLOW",
       "inputBytes" : 67,
-      "sourceKind" : "EXISTING",
-      "persistenceKind" : "SAVE_AS",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "NONE",
       "operationCount" : 1,
       "operationKinds" : {
         "CLEAR_SHEET_PROTECTION" : 1
@@ -17,8 +17,8 @@
       "styleKinds" : { },
       "readCount" : 6,
       "readKinds" : {
-        "GET_NAMED_RANGE_SURFACE" : 5,
-        "GET_WORKBOOK_SUMMARY" : 1
+        "GET_NAMED_RANGE_SURFACE" : 4,
+        "GET_WORKBOOK_SUMMARY" : 2
       },
       "responseKind" : "FAILURE"
     }

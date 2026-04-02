@@ -12,10 +12,15 @@
       "persistenceKind" : "NONE",
       "operationCount" : 3,
       "operationKinds" : {
-        "CLEAR_SHEET_PROTECTION" : 1,
-        "ENSURE_SHEET" : 2
+        "APPLY_STYLE" : 1,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
+        "ENSURE_SHEET" : 1
       },
-      "styleKinds" : { },
+      "styleKinds" : {
+        "border" : 1,
+        "border_all" : 1,
+        "wrap_text" : 1
+      },
       "readCount" : 0,
       "readKinds" : { },
       "responseKind" : "FAILURE"

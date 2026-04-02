@@ -471,8 +471,8 @@ class GridGrindProtocolCatalogTest {
     assertEquals("type", catalog.discriminatorField());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
-    assertEquals(37, catalog.operationTypes().size());
-    assertEquals(24, catalog.readTypes().size());
+    assertEquals(40, catalog.operationTypes().size());
+    assertEquals(25, catalog.readTypes().size());
     assertEquals(
         List.of(
             "cellInputTypes",

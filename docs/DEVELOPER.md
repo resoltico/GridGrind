@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.23.0"
+version: "0.24.0"
 domain: DEVELOPER
 updated: "2026-03-31"
 route:
@@ -200,7 +200,7 @@ These runnable examples cover the core operation surface:
 | `examples/live-workflow-create.json` | Multi-sheet workbook with cross-sheet formulas and aggregations |
 | `examples/live-workflow-revise.json` | Reopen, revise, recalculate, and reread |
 | `examples/sheet-management-request.json` | Sheet rename, delete, and reorder semantics |
-| `examples/structural-layout-request.json` | Merge, size, freeze-pane shaping, and layout reads |
+| `examples/structural-layout-request.json` | Merge, size, pane, zoom, and print-layout shaping with layout reads |
 
 Run any fixture with:
 

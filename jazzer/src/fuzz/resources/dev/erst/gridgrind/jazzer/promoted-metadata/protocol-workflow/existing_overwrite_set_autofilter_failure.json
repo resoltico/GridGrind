@@ -15,15 +15,17 @@
         "APPLY_STYLE" : 1
       },
       "styleKinds" : {
-        "border_all" : 1,
-        "fill_color" : 1,
-        "font_color" : 1,
-        "border" : 1
+        "horizontal_alignment" : 1,
+        "font_height_points" : 1,
+        "font_height" : 1,
+        "vertical_alignment" : 1,
+        "fill_color" : 1
       },
-      "readCount" : 4,
+      "readCount" : 3,
       "readKinds" : {
-        "GET_AUTOFILTERS" : 3,
-        "GET_FORMULA_SURFACE" : 1
+        "ANALYZE_WORKBOOK_FINDINGS" : 1,
+        "ANALYZE_NAMED_RANGE_HEALTH" : 1,
+        "GET_AUTOFILTERS" : 1
       },
       "responseKind" : "FAILURE"
     }
