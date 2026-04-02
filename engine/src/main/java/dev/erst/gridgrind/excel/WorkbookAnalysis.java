@@ -7,6 +7,7 @@ import java.util.Objects;
 public sealed interface WorkbookAnalysis
     permits WorkbookAnalysis.FormulaHealth,
         WorkbookAnalysis.DataValidationHealth,
+        WorkbookAnalysis.ConditionalFormattingHealth,
         WorkbookAnalysis.AutofilterHealth,
         WorkbookAnalysis.TableHealth,
         WorkbookAnalysis.HyperlinkHealth,
@@ -29,6 +30,10 @@ public sealed interface WorkbookAnalysis
     DATA_VALIDATION_UNSUPPORTED_RULE,
     DATA_VALIDATION_BROKEN_FORMULA,
     DATA_VALIDATION_OVERLAPPING_RULES,
+    CONDITIONAL_FORMATTING_BROKEN_FORMULA,
+    CONDITIONAL_FORMATTING_UNSUPPORTED_RULE,
+    CONDITIONAL_FORMATTING_PRIORITY_COLLISION,
+    CONDITIONAL_FORMATTING_EMPTY_RANGE,
     AUTOFILTER_INVALID_RANGE,
     AUTOFILTER_MISSING_HEADER_ROW,
     AUTOFILTER_TABLE_MISMATCH,
@@ -150,6 +155,22 @@ public sealed interface WorkbookAnalysis
     public DataValidationHealth {
       if (checkedValidationCount < 0) {
         throw new IllegalArgumentException("checkedValidationCount must not be negative");
+      }
+      Objects.requireNonNull(summary, "summary must not be null");
+      findings = copyValues(findings, "findings");
+    }
+  }
+
+  /** Conditional-formatting-health analysis for one selected sheet set. */
+  record ConditionalFormattingHealth(
+      int checkedConditionalFormattingBlockCount,
+      AnalysisSummary summary,
+      List<AnalysisFinding> findings)
+      implements WorkbookAnalysis {
+    public ConditionalFormattingHealth {
+      if (checkedConditionalFormattingBlockCount < 0) {
+        throw new IllegalArgumentException(
+            "checkedConditionalFormattingBlockCount must not be negative");
       }
       Objects.requireNonNull(summary, "summary must not be null");
       findings = copyValues(findings, "findings");

@@ -222,6 +222,13 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.ClearDataValidations op ->
           new WorkbookCommand.ClearDataValidations(
               op.sheetName(), toExcelRangeSelection(op.selection()));
+      case WorkbookOperation.SetConditionalFormatting op ->
+          new WorkbookCommand.SetConditionalFormatting(
+              op.sheetName(),
+              op.conditionalFormatting().toExcelConditionalFormattingBlockDefinition());
+      case WorkbookOperation.ClearConditionalFormatting op ->
+          new WorkbookCommand.ClearConditionalFormatting(
+              op.sheetName(), toExcelRangeSelection(op.selection()));
       case WorkbookOperation.SetAutofilter op ->
           new WorkbookCommand.SetAutofilter(op.sheetName(), op.range());
       case WorkbookOperation.ClearAutofilter op ->
@@ -277,6 +284,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetDataValidations op ->
           new WorkbookReadCommand.GetDataValidations(
               op.requestId(), op.sheetName(), toExcelRangeSelection(op.selection()));
+      case WorkbookReadOperation.GetConditionalFormatting op ->
+          new WorkbookReadCommand.GetConditionalFormatting(
+              op.requestId(), op.sheetName(), toExcelRangeSelection(op.selection()));
       case WorkbookReadOperation.GetAutofilters op ->
           new WorkbookReadCommand.GetAutofilters(op.requestId(), op.sheetName());
       case WorkbookReadOperation.GetTables op ->
@@ -295,6 +305,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               op.requestId(), toExcelSheetSelection(op.selection()));
       case WorkbookReadOperation.AnalyzeDataValidationHealth op ->
           new WorkbookReadCommand.AnalyzeDataValidationHealth(
+              op.requestId(), toExcelSheetSelection(op.selection()));
+      case WorkbookReadOperation.AnalyzeConditionalFormattingHealth op ->
+          new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
               op.requestId(), toExcelSheetSelection(op.selection()));
       case WorkbookReadOperation.AnalyzeAutofilterHealth op ->
           new WorkbookReadCommand.AnalyzeAutofilterHealth(
@@ -407,6 +420,14 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               dataValidations.validations().stream()
                   .map(DefaultGridGrindRequestExecutor::toDataValidationEntryReport)
                   .toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingResult
+              conditionalFormatting ->
+          new WorkbookReadResult.ConditionalFormattingResult(
+              conditionalFormatting.requestId(),
+              conditionalFormatting.sheetName(),
+              conditionalFormatting.conditionalFormattingBlocks().stream()
+                  .map(ConditionalFormattingEntryReport::fromExcel)
+                  .toList());
       case dev.erst.gridgrind.excel.WorkbookReadResult.AutofiltersResult autofilters ->
           new WorkbookReadResult.AutofiltersResult(
               autofilters.requestId(),
@@ -438,6 +459,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           new WorkbookReadResult.DataValidationHealthResult(
               dataValidationHealth.requestId(),
               toDataValidationHealthReport(dataValidationHealth.analysis()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingHealthResult
+              conditionalFormattingHealth ->
+          new WorkbookReadResult.ConditionalFormattingHealthResult(
+              conditionalFormattingHealth.requestId(),
+              toConditionalFormattingHealthReport(conditionalFormattingHealth.analysis()));
       case dev.erst.gridgrind.excel.WorkbookReadResult.AutofilterHealthResult autofilterHealth ->
           new WorkbookReadResult.AutofilterHealthResult(
               autofilterHealth.requestId(), toAutofilterHealthReport(autofilterHealth.analysis()));
@@ -597,6 +623,16 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       dev.erst.gridgrind.excel.WorkbookAnalysis.DataValidationHealth analysis) {
     return new DataValidationHealthReport(
         analysis.checkedValidationCount(),
+        toAnalysisSummaryReport(analysis.summary()),
+        analysis.findings().stream()
+            .map(DefaultGridGrindRequestExecutor::toAnalysisFindingReport)
+            .toList());
+  }
+
+  private static ConditionalFormattingHealthReport toConditionalFormattingHealthReport(
+      dev.erst.gridgrind.excel.WorkbookAnalysis.ConditionalFormattingHealth analysis) {
+    return new ConditionalFormattingHealthReport(
+        analysis.checkedConditionalFormattingBlockCount(),
         toAnalysisSummaryReport(analysis.summary()),
         analysis.findings().stream()
             .map(DefaultGridGrindRequestExecutor::toAnalysisFindingReport)
@@ -1087,6 +1123,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadOperation.GetDataValidations _ -> "GET_DATA_VALIDATIONS";
+      case WorkbookReadOperation.GetConditionalFormatting _ -> "GET_CONDITIONAL_FORMATTING";
       case WorkbookReadOperation.GetAutofilters _ -> "GET_AUTOFILTERS";
       case WorkbookReadOperation.GetTables _ -> "GET_TABLES";
       case WorkbookReadOperation.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
@@ -1094,6 +1131,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
       case WorkbookReadOperation.AnalyzeFormulaHealth _ -> "ANALYZE_FORMULA_HEALTH";
       case WorkbookReadOperation.AnalyzeDataValidationHealth _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
+      case WorkbookReadOperation.AnalyzeConditionalFormattingHealth _ ->
+          "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
       case WorkbookReadOperation.AnalyzeAutofilterHealth _ -> "ANALYZE_AUTOFILTER_HEALTH";
       case WorkbookReadOperation.AnalyzeTableHealth _ -> "ANALYZE_TABLE_HEALTH";
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> "ANALYZE_HYPERLINK_HEALTH";
@@ -1113,11 +1152,14 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetComments op -> op.sheetName();
       case WorkbookReadOperation.GetSheetLayout op -> op.sheetName();
       case WorkbookReadOperation.GetDataValidations op -> op.sheetName();
+      case WorkbookReadOperation.GetConditionalFormatting op -> op.sheetName();
       case WorkbookReadOperation.GetAutofilters op -> op.sheetName();
       case WorkbookReadOperation.GetSheetSchema op -> op.sheetName();
       case WorkbookReadOperation.GetFormulaSurface op -> singleSheetName(op.selection());
       case WorkbookReadOperation.AnalyzeFormulaHealth op -> singleSheetName(op.selection());
       case WorkbookReadOperation.AnalyzeDataValidationHealth op -> singleSheetName(op.selection());
+      case WorkbookReadOperation.AnalyzeConditionalFormattingHealth op ->
+          singleSheetName(op.selection());
       case WorkbookReadOperation.AnalyzeAutofilterHealth op -> singleSheetName(op.selection());
       case WorkbookReadOperation.AnalyzeHyperlinkHealth op -> singleSheetName(op.selection());
       case WorkbookReadOperation.GetWorkbookSummary _ -> null;
@@ -1148,12 +1190,14 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
       case WorkbookReadOperation.GetDataValidations _ -> null;
+      case WorkbookReadOperation.GetConditionalFormatting _ -> null;
       case WorkbookReadOperation.GetAutofilters _ -> null;
       case WorkbookReadOperation.GetTables _ -> null;
       case WorkbookReadOperation.GetFormulaSurface _ -> null;
       case WorkbookReadOperation.GetNamedRangeSurface _ -> null;
       case WorkbookReadOperation.AnalyzeFormulaHealth _ -> null;
       case WorkbookReadOperation.AnalyzeDataValidationHealth _ -> null;
+      case WorkbookReadOperation.AnalyzeConditionalFormattingHealth _ -> null;
       case WorkbookReadOperation.AnalyzeAutofilterHealth _ -> null;
       case WorkbookReadOperation.AnalyzeTableHealth _ -> null;
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> null;
@@ -1179,6 +1223,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
       case WorkbookReadOperation.GetDataValidations _ -> null;
+      case WorkbookReadOperation.GetConditionalFormatting _ -> null;
       case WorkbookReadOperation.GetAutofilters _ -> null;
       case WorkbookReadOperation.GetTables _ -> null;
       case WorkbookReadOperation.GetFormulaSurface _ -> null;
@@ -1186,6 +1231,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetNamedRangeSurface op -> singleNamedRangeName(op.selection());
       case WorkbookReadOperation.AnalyzeFormulaHealth _ -> null;
       case WorkbookReadOperation.AnalyzeDataValidationHealth _ -> null;
+      case WorkbookReadOperation.AnalyzeConditionalFormattingHealth _ -> null;
       case WorkbookReadOperation.AnalyzeAutofilterHealth _ -> null;
       case WorkbookReadOperation.AnalyzeTableHealth _ -> null;
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> null;
@@ -1254,6 +1300,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.ApplyStyle _ -> null;
       case WorkbookOperation.SetDataValidation _ -> null;
       case WorkbookOperation.ClearDataValidations _ -> null;
+      case WorkbookOperation.SetConditionalFormatting _ -> null;
+      case WorkbookOperation.ClearConditionalFormatting _ -> null;
       case WorkbookOperation.SetAutofilter _ -> null;
       case WorkbookOperation.ClearAutofilter _ -> null;
       case WorkbookOperation.SetTable _ -> null;
@@ -1290,6 +1338,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.ApplyStyle op -> op.sheetName();
           case WorkbookOperation.SetDataValidation op -> op.sheetName();
           case WorkbookOperation.ClearDataValidations op -> op.sheetName();
+          case WorkbookOperation.SetConditionalFormatting op -> op.sheetName();
+          case WorkbookOperation.ClearConditionalFormatting op -> op.sheetName();
           case WorkbookOperation.SetAutofilter op -> op.sheetName();
           case WorkbookOperation.ClearAutofilter op -> op.sheetName();
           case WorkbookOperation.SetTable op -> op.table().sheetName();
@@ -1331,6 +1381,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.ApplyStyle _ -> null;
           case WorkbookOperation.SetDataValidation _ -> null;
           case WorkbookOperation.ClearDataValidations _ -> null;
+          case WorkbookOperation.SetConditionalFormatting _ -> null;
+          case WorkbookOperation.ClearConditionalFormatting _ -> null;
           case WorkbookOperation.SetAutofilter _ -> null;
           case WorkbookOperation.ClearAutofilter _ -> null;
           case WorkbookOperation.SetTable _ -> null;
@@ -1353,6 +1405,10 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.ClearRange op -> op.range();
           case WorkbookOperation.ApplyStyle op -> op.range();
           case WorkbookOperation.SetDataValidation op -> op.range();
+          case WorkbookOperation.SetConditionalFormatting op ->
+              op.conditionalFormatting().ranges().size() == 1
+                  ? op.conditionalFormatting().ranges().getFirst()
+                  : null;
           case WorkbookOperation.SetAutofilter op -> op.range();
           case WorkbookOperation.SetTable op -> op.table().range();
           case WorkbookOperation.MergeCells op -> op.range();
@@ -1372,6 +1428,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.ClearComment _ -> null;
           case WorkbookOperation.AppendRow _ -> null;
           case WorkbookOperation.ClearDataValidations _ -> null;
+          case WorkbookOperation.ClearConditionalFormatting _ -> null;
           case WorkbookOperation.ClearAutofilter _ -> null;
           case WorkbookOperation.DeleteTable _ -> null;
           case WorkbookOperation.DeleteNamedRange _ -> null;
@@ -1407,6 +1464,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.ApplyStyle _ -> null;
           case WorkbookOperation.SetDataValidation _ -> null;
           case WorkbookOperation.ClearDataValidations _ -> null;
+          case WorkbookOperation.SetConditionalFormatting _ -> null;
+          case WorkbookOperation.ClearConditionalFormatting _ -> null;
           case WorkbookOperation.SetAutofilter _ -> null;
           case WorkbookOperation.ClearAutofilter _ -> null;
           case WorkbookOperation.SetTable _ -> null;

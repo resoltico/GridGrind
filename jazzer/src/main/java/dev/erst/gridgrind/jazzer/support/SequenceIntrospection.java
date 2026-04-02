@@ -123,6 +123,8 @@ public final class SequenceIntrospection {
       case WorkbookOperation.ApplyStyle _ -> "APPLY_STYLE";
       case WorkbookOperation.SetDataValidation _ -> "SET_DATA_VALIDATION";
       case WorkbookOperation.ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
+      case WorkbookOperation.SetConditionalFormatting _ -> "SET_CONDITIONAL_FORMATTING";
+      case WorkbookOperation.ClearConditionalFormatting _ -> "CLEAR_CONDITIONAL_FORMATTING";
       case WorkbookOperation.SetAutofilter _ -> "SET_AUTOFILTER";
       case WorkbookOperation.ClearAutofilter _ -> "CLEAR_AUTOFILTER";
       case WorkbookOperation.SetTable _ -> "SET_TABLE";
@@ -160,6 +162,8 @@ public final class SequenceIntrospection {
       case WorkbookCommand.ApplyStyle _ -> "APPLY_STYLE";
       case WorkbookCommand.SetDataValidation _ -> "SET_DATA_VALIDATION";
       case WorkbookCommand.ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
+      case WorkbookCommand.SetConditionalFormatting _ -> "SET_CONDITIONAL_FORMATTING";
+      case WorkbookCommand.ClearConditionalFormatting _ -> "CLEAR_CONDITIONAL_FORMATTING";
       case WorkbookCommand.SetAutofilter _ -> "SET_AUTOFILTER";
       case WorkbookCommand.ClearAutofilter _ -> "CLEAR_AUTOFILTER";
       case WorkbookCommand.SetTable _ -> "SET_TABLE";
@@ -188,6 +192,7 @@ public final class SequenceIntrospection {
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadOperation.GetDataValidations _ -> "GET_DATA_VALIDATIONS";
+      case WorkbookReadOperation.GetConditionalFormatting _ -> "GET_CONDITIONAL_FORMATTING";
       case WorkbookReadOperation.GetAutofilters _ -> "GET_AUTOFILTERS";
       case WorkbookReadOperation.GetTables _ -> "GET_TABLES";
       case WorkbookReadOperation.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
@@ -195,6 +200,8 @@ public final class SequenceIntrospection {
       case WorkbookReadOperation.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
       case WorkbookReadOperation.AnalyzeFormulaHealth _ -> "ANALYZE_FORMULA_HEALTH";
       case WorkbookReadOperation.AnalyzeDataValidationHealth _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
+      case WorkbookReadOperation.AnalyzeConditionalFormattingHealth _ ->
+          "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
       case WorkbookReadOperation.AnalyzeAutofilterHealth _ -> "ANALYZE_AUTOFILTER_HEALTH";
       case WorkbookReadOperation.AnalyzeTableHealth _ -> "ANALYZE_TABLE_HEALTH";
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> "ANALYZE_HYPERLINK_HEALTH";

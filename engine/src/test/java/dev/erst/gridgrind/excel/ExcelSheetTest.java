@@ -866,6 +866,21 @@ class ExcelSheetTest {
   }
 
   @Test
+  void appendRowWithNoValuesIsANoOp() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      assertSame(sheet, sheet.appendRow());
+      assertEquals(0, sheet.physicalRowCount());
+      assertEquals(-1, sheet.lastRowIndex());
+      assertEquals(-1, sheet.lastColumnIndex());
+    }
+  }
+
+  @Test
   void autoSizeColumnsProducesDeterministicWidthsFromDisplayedContent() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       Sheet poiSheet = poiWorkbook.createSheet("Budget");

@@ -104,6 +104,25 @@ class WorkbookReadOperationTest {
   }
 
   @Test
+  void conditionalFormattingReadsAndAnalysisRequireSheetAndSelection() {
+    WorkbookReadOperation.GetConditionalFormatting getConditionalFormatting =
+        new WorkbookReadOperation.GetConditionalFormatting(
+            "cf", "Budget", new RangeSelection.Selected(List.of("A1:A3")));
+    WorkbookReadOperation.AnalyzeConditionalFormattingHealth analyzeConditionalFormattingHealth =
+        new WorkbookReadOperation.AnalyzeConditionalFormattingHealth(
+            "cf-health", new SheetSelection.Selected(List.of("Budget")));
+
+    assertEquals("Budget", getConditionalFormatting.sheetName());
+    assertEquals("cf-health", analyzeConditionalFormattingHealth.requestId());
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadOperation.GetConditionalFormatting("cf", "Budget", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadOperation.AnalyzeConditionalFormattingHealth("cf-health", null));
+  }
+
+  @Test
   void getAutofiltersAndAnalyzeAutofilterHealthRequireSheetSelectionState() {
     WorkbookReadOperation.GetAutofilters getAutofilters =
         new WorkbookReadOperation.GetAutofilters("filters", "Budget");

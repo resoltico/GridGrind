@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.21.0"
+version: "0.22.0"
 domain: DEVELOPER_JAZZER
 updated: "2026-04-01"
 route:
@@ -100,8 +100,8 @@ Target-specific strategy:
   not by its filename alone
 - engine command seeds may be reused for `.xlsx` round-trip seeds when replay confirms they persist
   cleanly in the round-trip harness
-- the `.xlsx` round-trip verifier is expected to derive style and metadata expectations from the
-  real pre-save workbook state, not from a duplicated command-semantics model
+- the `.xlsx` round-trip verifier is expected to derive style, metadata, and table expectations
+  from the real pre-save workbook state, not from a duplicated command-semantics model
 
 The operator goal is not to maximize seed count. The goal is to preserve a stable minimum floor of:
 - representative success cases
@@ -112,8 +112,8 @@ Current promoted floor:
 - `protocol-request`: 14 committed seeds
 - `protocol-workflow`: 11 committed seeds
 - `engine-command-sequence`: 7 committed seeds
-- `xlsx-roundtrip`: 11 committed seeds
-- total promoted seed floor: 43 inputs
+- `xlsx-roundtrip`: 13 committed seeds
+- total promoted seed floor: 45 inputs
 
 Additional committed non-floor regression inputs also exist for narrower expected-invalid request
 shapes. The counts above track the intentionally curated promoted floor, not every committed input

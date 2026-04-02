@@ -85,6 +85,20 @@ class WorkbookOperationTest {
     WorkbookOperation.ClearDataValidations clearDataValidations =
         new WorkbookOperation.ClearDataValidations(
             "Budget", new RangeSelection.Selected(List.of("C2:D4")));
+    WorkbookOperation.SetConditionalFormatting setConditionalFormatting =
+        new WorkbookOperation.SetConditionalFormatting(
+            "Budget",
+            new ConditionalFormattingBlockInput(
+                List.of("E2:E5"),
+                List.of(
+                    new ConditionalFormattingRuleInput.FormulaRule(
+                        "E2>0",
+                        true,
+                        new DifferentialStyleInput(
+                            null, true, null, null, "#112233", null, null, null, null)))));
+    WorkbookOperation.ClearConditionalFormatting clearConditionalFormatting =
+        new WorkbookOperation.ClearConditionalFormatting(
+            "Budget", new RangeSelection.Selected(List.of("E2:E5")));
     WorkbookOperation.SetAutofilter setAutofilter =
         new WorkbookOperation.SetAutofilter("Budget", "A1:C4");
     WorkbookOperation.ClearAutofilter clearAutofilter =
@@ -118,6 +132,10 @@ class WorkbookOperationTest {
         DataValidationRuleInput.TextLength.class, setDataValidation.validation().rule());
     assertEquals(
         List.of("C2:D4"), ((RangeSelection.Selected) clearDataValidations.selection()).ranges());
+    assertEquals(List.of("E2:E5"), setConditionalFormatting.conditionalFormatting().ranges());
+    assertEquals(
+        List.of("E2:E5"),
+        ((RangeSelection.Selected) clearConditionalFormatting.selection()).ranges());
     assertEquals("A1:C4", setAutofilter.range());
     assertEquals("Budget", clearAutofilter.sheetName());
     assertEquals("BudgetTable", setTable.table().name());
@@ -128,6 +146,8 @@ class WorkbookOperationTest {
     assertEquals("Budget", autoSizeColumns.sheetName());
     assertEquals("SET_DATA_VALIDATION", setDataValidation.operationType());
     assertEquals("CLEAR_DATA_VALIDATIONS", clearDataValidations.operationType());
+    assertEquals("SET_CONDITIONAL_FORMATTING", setConditionalFormatting.operationType());
+    assertEquals("CLEAR_CONDITIONAL_FORMATTING", clearConditionalFormatting.operationType());
     assertEquals("SET_AUTOFILTER", setAutofilter.operationType());
     assertEquals("CLEAR_AUTOFILTER", clearAutofilter.operationType());
     assertEquals("SET_TABLE", setTable.operationType());
@@ -199,6 +219,12 @@ class WorkbookOperationTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookOperation.ClearDataValidations("Budget", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.SetConditionalFormatting("Budget", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.ClearConditionalFormatting("Budget", null));
     assertThrows(
         NullPointerException.class, () -> new WorkbookOperation.SetAutofilter(null, "A1:B2"));
     assertThrows(NullPointerException.class, () -> new WorkbookOperation.ClearAutofilter(null));

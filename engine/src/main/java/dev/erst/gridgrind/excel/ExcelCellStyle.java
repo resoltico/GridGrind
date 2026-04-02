@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.excel;
 
-import java.util.Locale;
-
 /** Agent-facing style patch that can be applied to one cell or a rectangular range. */
 public record ExcelCellStyle(
     String numberFormat,
@@ -24,8 +22,8 @@ public record ExcelCellStyle(
     if (fontName != null && fontName.isBlank()) {
       throw new IllegalArgumentException("fontName must not be blank");
     }
-    fontColor = normalizeRgbHex(fontColor, "fontColor");
-    fillColor = normalizeRgbHex(fillColor, "fillColor");
+    fontColor = ExcelRgbColorSupport.normalizeRgbHex(fontColor, "fontColor");
+    fillColor = ExcelRgbColorSupport.normalizeRgbHex(fillColor, "fillColor");
     if (numberFormat == null
         && bold == null
         && italic == null
@@ -75,18 +73,5 @@ public record ExcelCellStyle(
         null,
         null,
         null);
-  }
-
-  private static String normalizeRgbHex(String color, String fieldName) {
-    if (color == null) {
-      return null;
-    }
-    if (color.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    if (!color.matches("^#[0-9A-Fa-f]{6}$")) {
-      throw new IllegalArgumentException(fieldName + " must match #RRGGBB");
-    }
-    return color.toUpperCase(Locale.ROOT);
   }
 }

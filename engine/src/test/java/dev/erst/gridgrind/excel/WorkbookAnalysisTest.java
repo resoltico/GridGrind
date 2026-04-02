@@ -79,6 +79,8 @@ class WorkbookAnalysisTest {
         new WorkbookAnalysis.FormulaHealth(2, summary, mutable);
     WorkbookAnalysis.HyperlinkHealth hyperlinkHealth =
         new WorkbookAnalysis.HyperlinkHealth(2, summary, mutable);
+    WorkbookAnalysis.ConditionalFormattingHealth conditionalFormattingHealth =
+        new WorkbookAnalysis.ConditionalFormattingHealth(2, summary, mutable);
     WorkbookAnalysis.AutofilterHealth autofilterHealth =
         new WorkbookAnalysis.AutofilterHealth(2, summary, mutable);
     WorkbookAnalysis.TableHealth tableHealth =
@@ -91,6 +93,7 @@ class WorkbookAnalysisTest {
 
     assertEquals(3, formulaHealth.findings().size());
     assertEquals(3, hyperlinkHealth.findings().size());
+    assertEquals(3, conditionalFormattingHealth.findings().size());
     assertEquals(3, autofilterHealth.findings().size());
     assertEquals(3, tableHealth.findings().size());
     assertEquals(3, namedRangeHealth.findings().size());
@@ -102,6 +105,9 @@ class WorkbookAnalysisTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookAnalysis.HyperlinkHealth(-1, summary, List.of(finding)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookAnalysis.ConditionalFormattingHealth(-1, summary, List.of(finding)));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookAnalysis.AutofilterHealth(-1, summary, List.of(finding)));

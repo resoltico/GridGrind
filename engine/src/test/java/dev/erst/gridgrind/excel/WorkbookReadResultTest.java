@@ -66,6 +66,11 @@ class WorkbookReadResultTest {
         () -> new WorkbookReadResult.DataValidationsResult("validations", "Budget", null));
     assertThrows(
         NullPointerException.class,
+        () ->
+            new WorkbookReadResult.ConditionalFormattingHealthResult(
+                "conditionalFormattingHealth", null));
+    assertThrows(
+        NullPointerException.class,
         () -> new WorkbookReadResult.AutofiltersResult("autofilters", "Budget", null));
     assertThrows(
         NullPointerException.class, () -> new WorkbookReadResult.TablesResult("tables", null));
@@ -318,6 +323,10 @@ class WorkbookReadResultTest {
                 columns,
                 resultRows)),
         new WorkbookReadResult.DataValidationsResult("validations", "Budget", validations),
+        new WorkbookReadResult.ConditionalFormattingHealthResult(
+            "conditionalFormattingHealth",
+            new WorkbookAnalysis.ConditionalFormattingHealth(
+                1, new WorkbookAnalysis.AnalysisSummary(0, 0, 0, 0), List.of())),
         new WorkbookReadResult.AutofiltersResult("autofilters", "Budget", autofilters),
         new WorkbookReadResult.TablesResult("tables", tables),
         new WorkbookReadResult.FormulaSurfaceResult(
@@ -346,6 +355,8 @@ class WorkbookReadResultTest {
         WorkbookReadResult.FreezePane.Frozen.class, fixture.layoutResult().layout().freezePanes());
     assertEquals(
         "A2:A5", fixture.dataValidationsResult().validations().getFirst().ranges().getFirst());
+    assertEquals(
+        "conditionalFormattingHealth", fixture.conditionalFormattingHealthResult().requestId());
     assertEquals("E1:F4", fixture.autofiltersResult().autofilters().getFirst().range());
     assertEquals("BudgetTable", fixture.tablesResult().tables().getFirst().name());
     assertEquals(1, fixture.formulaSurfaceResult().analysis().totalFormulaCellCount());
@@ -382,6 +393,7 @@ class WorkbookReadResultTest {
       WorkbookReadResult.CommentsResult commentsResult,
       WorkbookReadResult.SheetLayoutResult layoutResult,
       WorkbookReadResult.DataValidationsResult dataValidationsResult,
+      WorkbookReadResult.ConditionalFormattingHealthResult conditionalFormattingHealthResult,
       WorkbookReadResult.AutofiltersResult autofiltersResult,
       WorkbookReadResult.TablesResult tablesResult,
       WorkbookReadResult.FormulaSurfaceResult formulaSurfaceResult,

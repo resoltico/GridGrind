@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.21.0"
+version: "0.22.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-01"
 route:
@@ -319,6 +319,70 @@ range.
 }
 ```
 
+## SET_CONDITIONAL_FORMATTING
+
+```json
+{
+  "type": "SET_CONDITIONAL_FORMATTING",
+  "sheetName": "Sheet1",
+  "conditionalFormatting": {
+    "ranges": ["D2:D20"],
+    "rules": [
+      {
+        "type": "CELL_VALUE_RULE",
+        "operator": "GREATER_THAN",
+        "formula1": "8",
+        "stopIfTrue": false,
+        "style": {
+          "fillColor": "#FDE9D9",
+          "fontColor": "#9C0006",
+          "bold": true
+        }
+      }
+    ]
+  }
+}
+{
+  "type": "SET_CONDITIONAL_FORMATTING",
+  "sheetName": "Sheet1",
+  "conditionalFormatting": {
+    "ranges": ["A2:D20"],
+    "rules": [
+      {
+        "type": "FORMULA_RULE",
+        "formula": "$D2=\"Blocked\"",
+        "stopIfTrue": true,
+        "style": {
+          "fillColor": "#FFF2CC",
+          "fontColor": "#7F6000",
+          "italic": true
+        }
+      }
+    ]
+  }
+}
+```
+
+Write support covers `FORMULA_RULE` and `CELL_VALUE_RULE`.
+
+## CLEAR_CONDITIONAL_FORMATTING
+
+```json
+{
+  "type": "CLEAR_CONDITIONAL_FORMATTING",
+  "sheetName": "Sheet1",
+  "selection": { "type": "ALL" }
+}
+{
+  "type": "CLEAR_CONDITIONAL_FORMATTING",
+  "sheetName": "Sheet1",
+  "selection": {
+    "type": "SELECTED",
+    "ranges": ["D2:D20", "F2:F20"]
+  }
+}
+```
+
 ## SET_AUTOFILTER
 
 ```json
@@ -373,7 +437,9 @@ tables.
 ```
 
 Table names are workbook-global. Header cells in the first row of the range must be nonblank and
-unique case-insensitively. Overlapping different-name tables are rejected.
+unique case-insensitively. Overlapping different-name tables are rejected. Later value writes and
+style patches that touch the table header row keep the table's persisted column metadata aligned
+with the visible header cells.
 
 ## DELETE_TABLE
 
@@ -609,6 +675,29 @@ responses use the `path` field with a normalized plain path string.
 
 Entries are `SHEET` or `TABLE`.
 
+## GET_CONDITIONAL_FORMATTING
+
+```json
+{
+  "type": "GET_CONDITIONAL_FORMATTING",
+  "requestId": "conditional-formatting",
+  "sheetName": "Sheet1",
+  "selection": { "type": "ALL" }
+}
+{
+  "type": "GET_CONDITIONAL_FORMATTING",
+  "requestId": "selected-conditional-formatting",
+  "sheetName": "Sheet1",
+  "selection": {
+    "type": "SELECTED",
+    "ranges": ["A2:D20", "F2:F20"]
+  }
+}
+```
+
+Read entries may report `FORMULA_RULE`, `CELL_VALUE_RULE`, `COLOR_SCALE_RULE`, `DATA_BAR_RULE`,
+`ICON_SET_RULE`, or `UNSUPPORTED_RULE`.
+
 ## GET_TABLES
 
 ```json
@@ -707,6 +796,19 @@ Entries are `SHEET` or `TABLE`.
 }
 ```
 
+## ANALYZE_CONDITIONAL_FORMATTING_HEALTH
+
+```json
+{
+  "type": "ANALYZE_CONDITIONAL_FORMATTING_HEALTH",
+  "requestId": "conditional-formatting-health",
+  "selection": {
+    "type": "SELECTED",
+    "sheetNames": ["Sheet1", "Sheet2"]
+  }
+}
+```
+
 ## ANALYZE_AUTOFILTER_HEALTH
 
 ```json
@@ -774,7 +876,7 @@ Unsaved workbooks report unresolved relative file targets instead of treating th
 ```
 
 `ANALYZE_WORKBOOK_FINDINGS` aggregates every shipped health family: formula, data validation,
-autofilter, table, hyperlink, and named range.
+conditional formatting, autofilter, table, hyperlink, and named range.
 
 Selection snippets:
 

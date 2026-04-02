@@ -9,8 +9,14 @@ import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelComment;
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
+import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -377,6 +383,108 @@ class DefaultGridGrindRequestExecutorTest {
         health.analysis().findings().getFirst().code());
     assertEquals(2, persisted.size());
     assertEquals(List.of("A2:C2", "A4:C5", "A3", "C3"), persisted.getFirst().ranges());
+  }
+
+  @Test
+  void returnsConditionalFormattingReadResultsAndPersistsDefinitions() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-conditional-formatting-");
+
+    GridGrindResponse response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.SetRange(
+                            "Budget",
+                            "A1:B5",
+                            List.of(
+                                List.of(new CellInput.Text("Status"), new CellInput.Text("Amount")),
+                                List.of(new CellInput.Text("Queued"), new CellInput.Numeric(1.0)),
+                                List.of(new CellInput.Text("Done"), new CellInput.Numeric(9.0)),
+                                List.of(new CellInput.Text("Done"), new CellInput.Numeric(11.0)),
+                                List.of(new CellInput.Text("Queued"), new CellInput.Numeric(4.0)))),
+                        new WorkbookOperation.SetConditionalFormatting(
+                            "Budget",
+                            new ConditionalFormattingBlockInput(
+                                List.of("B2:B5"),
+                                List.of(
+                                    new ConditionalFormattingRuleInput.FormulaRule(
+                                        "B2>5",
+                                        true,
+                                        new DifferentialStyleInput(
+                                            "0.00", true, null, null, "#102030", null, null,
+                                            "#E0F0AA", null)),
+                                    new ConditionalFormattingRuleInput.CellValueRule(
+                                        ExcelComparisonOperator.BETWEEN,
+                                        "1",
+                                        "10",
+                                        false,
+                                        new DifferentialStyleInput(
+                                            null, null, true, null, null, null, null, null,
+                                            null)))))),
+                    new WorkbookReadOperation.GetConditionalFormatting(
+                        "conditional-formatting", "Budget", new RangeSelection.All()),
+                    new WorkbookReadOperation.AnalyzeConditionalFormattingHealth(
+                        "conditional-formatting-health",
+                        new SheetSelection.Selected(List.of("Budget")))));
+
+    GridGrindResponse.Success success = success(response);
+    WorkbookReadResult.ConditionalFormattingResult conditionalFormatting =
+        read(
+            success,
+            "conditional-formatting",
+            WorkbookReadResult.ConditionalFormattingResult.class);
+    WorkbookReadResult.ConditionalFormattingHealthResult health =
+        read(
+            success,
+            "conditional-formatting-health",
+            WorkbookReadResult.ConditionalFormattingHealthResult.class);
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(1, conditionalFormatting.conditionalFormattingBlocks().size());
+    ConditionalFormattingEntryReport block =
+        conditionalFormatting.conditionalFormattingBlocks().getFirst();
+    assertEquals(List.of("B2:B5"), block.ranges());
+    assertEquals(2, block.rules().size());
+    assertInstanceOf(ConditionalFormattingRuleReport.FormulaRule.class, block.rules().get(0));
+    assertInstanceOf(ConditionalFormattingRuleReport.CellValueRule.class, block.rules().get(1));
+    assertEquals(1, health.analysis().checkedConditionalFormattingBlockCount());
+    assertEquals(List.of(), health.analysis().findings());
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+      dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingResult reopened =
+          (dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingResult)
+              readExecutor
+                  .apply(
+                      workbook,
+                      new WorkbookReadCommand.GetConditionalFormatting(
+                          "conditional-formatting",
+                          "Budget",
+                          new dev.erst.gridgrind.excel.ExcelRangeSelection.All()))
+                  .getFirst();
+
+      assertEquals(1, reopened.conditionalFormattingBlocks().size());
+      ExcelConditionalFormattingBlockSnapshot reopenedBlock =
+          reopened.conditionalFormattingBlocks().getFirst();
+      assertEquals(List.of("B2:B5"), reopenedBlock.ranges());
+      assertEquals(2, reopenedBlock.rules().size());
+      assertEquals(
+          "B2>5",
+          cast(
+                  ExcelConditionalFormattingRuleSnapshot.FormulaRule.class,
+                  reopenedBlock.rules().get(0))
+              .formula());
+      assertEquals(
+          ExcelComparisonOperator.BETWEEN,
+          cast(
+                  ExcelConditionalFormattingRuleSnapshot.CellValueRule.class,
+                  reopenedBlock.rules().get(1))
+              .operator());
+    }
   }
 
   @Test
@@ -1856,6 +1964,23 @@ class DefaultGridGrindRequestExecutorTest {
         DefaultGridGrindRequestExecutor.toCommand(
             new WorkbookOperation.ClearRange("Budget", "A1:B1")));
     assertInstanceOf(
+        WorkbookCommand.SetConditionalFormatting.class,
+        DefaultGridGrindRequestExecutor.toCommand(
+            new WorkbookOperation.SetConditionalFormatting(
+                "Budget",
+                new ConditionalFormattingBlockInput(
+                    List.of("A1:A3"),
+                    List.of(
+                        new ConditionalFormattingRuleInput.FormulaRule(
+                            "A1>0",
+                            false,
+                            new DifferentialStyleInput(
+                                null, true, null, null, null, null, null, null, null)))))));
+    assertInstanceOf(
+        WorkbookCommand.ClearConditionalFormatting.class,
+        DefaultGridGrindRequestExecutor.toCommand(
+            new WorkbookOperation.ClearConditionalFormatting("Budget", new RangeSelection.All())));
+    assertInstanceOf(
         WorkbookCommand.SetAutofilter.class,
         DefaultGridGrindRequestExecutor.toCommand(
             new WorkbookOperation.SetAutofilter("Budget", "A1:B4")));
@@ -1928,6 +2053,10 @@ class DefaultGridGrindRequestExecutorTest {
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.GetDataValidations(
                 "validations", "Budget", new RangeSelection.All()));
+    WorkbookReadCommand conditionalFormatting =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.GetConditionalFormatting(
+                "conditionalFormatting", "Budget", new RangeSelection.Selected(List.of("A1:A3"))));
     WorkbookReadCommand autofilters =
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.GetAutofilters("autofilters", "Budget"));
@@ -1954,6 +2083,10 @@ class DefaultGridGrindRequestExecutorTest {
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.AnalyzeDataValidationHealth(
                 "validationHealth", new SheetSelection.All()));
+    WorkbookReadCommand conditionalFormattingHealth =
+        DefaultGridGrindRequestExecutor.toReadCommand(
+            new WorkbookReadOperation.AnalyzeConditionalFormattingHealth(
+                "conditionalFormattingHealth", new SheetSelection.Selected(List.of("Budget"))));
     WorkbookReadCommand autofilterHealth =
         DefaultGridGrindRequestExecutor.toReadCommand(
             new WorkbookReadOperation.AnalyzeAutofilterHealth(
@@ -1984,6 +2117,7 @@ class DefaultGridGrindRequestExecutorTest {
     assertInstanceOf(WorkbookReadCommand.GetComments.class, comments);
     assertInstanceOf(WorkbookReadCommand.GetSheetLayout.class, layout);
     assertInstanceOf(WorkbookReadCommand.GetDataValidations.class, validations);
+    assertInstanceOf(WorkbookReadCommand.GetConditionalFormatting.class, conditionalFormatting);
     assertInstanceOf(WorkbookReadCommand.GetAutofilters.class, autofilters);
     assertInstanceOf(WorkbookReadCommand.GetTables.class, tables);
     assertInstanceOf(WorkbookReadCommand.GetFormulaSurface.class, formulaSurface);
@@ -1991,6 +2125,8 @@ class DefaultGridGrindRequestExecutorTest {
     assertInstanceOf(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface);
     assertInstanceOf(WorkbookReadCommand.AnalyzeFormulaHealth.class, formulaHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeDataValidationHealth.class, validationHealth);
+    assertInstanceOf(
+        WorkbookReadCommand.AnalyzeConditionalFormattingHealth.class, conditionalFormattingHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeAutofilterHealth.class, autofilterHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeTableHealth.class, tableHealth);
     assertInstanceOf(WorkbookReadCommand.AnalyzeHyperlinkHealth.class, hyperlinkHealth);
@@ -2009,6 +2145,10 @@ class DefaultGridGrindRequestExecutorTest {
         dev.erst.gridgrind.excel.ExcelRangeSelection.All.class,
         cast(WorkbookReadCommand.GetDataValidations.class, validations).selection());
     assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelRangeSelection.Selected.class,
+        cast(WorkbookReadCommand.GetConditionalFormatting.class, conditionalFormatting)
+            .selection());
+    assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelTableSelection.ByNames.class,
         cast(WorkbookReadCommand.GetTables.class, tables).selection());
     assertInstanceOf(
@@ -2017,6 +2157,12 @@ class DefaultGridGrindRequestExecutorTest {
     assertInstanceOf(
         dev.erst.gridgrind.excel.ExcelNamedRangeSelection.All.class,
         cast(WorkbookReadCommand.GetNamedRangeSurface.class, namedRangeSurface).selection());
+    assertInstanceOf(
+        dev.erst.gridgrind.excel.ExcelSheetSelection.Selected.class,
+        cast(
+                WorkbookReadCommand.AnalyzeConditionalFormattingHealth.class,
+                conditionalFormattingHealth)
+            .selection());
   }
 
   @Test
@@ -2093,6 +2239,31 @@ class DefaultGridGrindRequestExecutorTest {
                     new dev.erst.gridgrind.excel.WorkbookReadResult.FreezePane.Frozen(1, 1, 1, 1),
                     List.of(new dev.erst.gridgrind.excel.WorkbookReadResult.ColumnLayout(0, 12.5)),
                     List.of(new dev.erst.gridgrind.excel.WorkbookReadResult.RowLayout(0, 18.0)))));
+    WorkbookReadResult conditionalFormatting =
+        DefaultGridGrindRequestExecutor.toReadResult(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingResult(
+                "conditional-formatting",
+                "Budget",
+                List.of(
+                    new ExcelConditionalFormattingBlockSnapshot(
+                        List.of("A2:A5"),
+                        List.of(
+                            new ExcelConditionalFormattingRuleSnapshot.FormulaRule(
+                                1,
+                                true,
+                                "A2>0",
+                                new ExcelDifferentialStyleSnapshot(
+                                    "0.00", true, null, null, "#102030", null, null, "#E0F0AA",
+                                    null, List.of())),
+                            new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
+                                2,
+                                false,
+                                List.of(
+                                    new ExcelConditionalFormattingThresholdSnapshot(
+                                        ExcelConditionalFormattingThresholdType.MIN, null, null),
+                                    new ExcelConditionalFormattingThresholdSnapshot(
+                                        ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                                List.of("#AA0000", "#00AA00")))))));
     WorkbookReadResult formulaSurface =
         DefaultGridGrindRequestExecutor.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookReadResult.FormulaSurfaceResult(
@@ -2171,6 +2342,7 @@ class DefaultGridGrindRequestExecutorTest {
     assertInstanceOf(WorkbookReadResult.HyperlinksResult.class, hyperlinks);
     assertInstanceOf(WorkbookReadResult.CommentsResult.class, comments);
     assertInstanceOf(WorkbookReadResult.SheetLayoutResult.class, layout);
+    assertInstanceOf(WorkbookReadResult.ConditionalFormattingResult.class, conditionalFormatting);
     assertInstanceOf(WorkbookReadResult.FormulaSurfaceResult.class, formulaSurface);
     assertInstanceOf(WorkbookReadResult.SheetSchemaResult.class, schema);
     assertInstanceOf(WorkbookReadResult.NamedRangeSurfaceResult.class, namedRangeSurface);
@@ -2224,6 +2396,13 @@ class DefaultGridGrindRequestExecutorTest {
         GridGrindResponse.FreezePaneReport.Frozen.class,
         cast(WorkbookReadResult.SheetLayoutResult.class, layout).layout().freezePanes());
     assertEquals(
+        2,
+        cast(WorkbookReadResult.ConditionalFormattingResult.class, conditionalFormatting)
+            .conditionalFormattingBlocks()
+            .getFirst()
+            .rules()
+            .size());
+    assertEquals(
         1,
         cast(WorkbookReadResult.FormulaSurfaceResult.class, formulaSurface)
             .analysis()
@@ -2252,6 +2431,23 @@ class DefaultGridGrindRequestExecutorTest {
 
   @Test
   void convertsRemainingAnalysisReadResultsIntoProtocolReadResults() {
+    WorkbookReadResult conditionalFormattingHealth =
+        DefaultGridGrindRequestExecutor.toReadResult(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingHealthResult(
+                "conditional-formatting-health",
+                new dev.erst.gridgrind.excel.WorkbookAnalysis.ConditionalFormattingHealth(
+                    1,
+                    new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSummary(1, 1, 0, 0),
+                    List.of(
+                        new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFinding(
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
+                                .CONDITIONAL_FORMATTING_PRIORITY_COLLISION,
+                            dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.ERROR,
+                            "Priority collision",
+                            "Conditional-formatting priorities collide.",
+                            new dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisLocation.Sheet(
+                                "Budget"),
+                            List.of("FORMULA_RULE@Budget!A1:A3"))))));
     WorkbookReadResult hyperlinkHealth =
         DefaultGridGrindRequestExecutor.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookReadResult.HyperlinkHealthResult(
@@ -2313,6 +2509,13 @@ class DefaultGridGrindRequestExecutorTest {
                                 "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
                             List.of("Budget!$B$4"))))));
 
+    assertEquals(
+        1,
+        cast(
+                WorkbookReadResult.ConditionalFormattingHealthResult.class,
+                conditionalFormattingHealth)
+            .analysis()
+            .checkedConditionalFormattingBlockCount());
     GridGrindResponse.AnalysisLocationReport workbookLocation =
         cast(WorkbookReadResult.HyperlinkHealthResult.class, hyperlinkHealth)
             .analysis()
@@ -2412,6 +2615,7 @@ class DefaultGridGrindRequestExecutorTest {
             "GET_COMMENTS",
             "GET_SHEET_LAYOUT",
             "GET_DATA_VALIDATIONS",
+            "GET_CONDITIONAL_FORMATTING",
             "GET_AUTOFILTERS",
             "GET_TABLES",
             "GET_FORMULA_SURFACE",
@@ -2419,6 +2623,7 @@ class DefaultGridGrindRequestExecutorTest {
             "GET_NAMED_RANGE_SURFACE",
             "ANALYZE_FORMULA_HEALTH",
             "ANALYZE_DATA_VALIDATION_HEALTH",
+            "ANALYZE_CONDITIONAL_FORMATTING_HEALTH",
             "ANALYZE_AUTOFILTER_HEALTH",
             "ANALYZE_TABLE_HEALTH",
             "ANALYZE_HYPERLINK_HEALTH",
@@ -2449,6 +2654,9 @@ class DefaultGridGrindRequestExecutorTest {
                 new WorkbookReadOperation.GetDataValidations(
                     "validations", "Budget", new RangeSelection.All())),
             DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.GetConditionalFormatting(
+                    "conditional-formatting", "Budget", new RangeSelection.All())),
+            DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetAutofilters("autofilters", "Budget")),
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetTables(
@@ -2466,6 +2674,9 @@ class DefaultGridGrindRequestExecutorTest {
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.AnalyzeDataValidationHealth(
                     "validation-health", new SheetSelection.All())),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.AnalyzeConditionalFormattingHealth(
+                    "conditional-formatting-health", new SheetSelection.All())),
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.AnalyzeAutofilterHealth(
                     "autofilter-health", new SheetSelection.All())),
@@ -2509,6 +2720,9 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookReadOperation validations =
         new WorkbookReadOperation.GetDataValidations(
             "validations", "Budget", new RangeSelection.Selected(List.of("A1:A3")));
+    WorkbookReadOperation conditionalFormatting =
+        new WorkbookReadOperation.GetConditionalFormatting(
+            "conditional-formatting", "Budget", new RangeSelection.Selected(List.of("B2:B5")));
     WorkbookReadOperation autofilters =
         new WorkbookReadOperation.GetAutofilters("autofilters", "Budget");
     WorkbookReadOperation tables =
@@ -2526,6 +2740,9 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookReadOperation validationHealth =
         new WorkbookReadOperation.AnalyzeDataValidationHealth(
             "validation-health", new SheetSelection.Selected(List.of("Budget")));
+    WorkbookReadOperation conditionalFormattingHealth =
+        new WorkbookReadOperation.AnalyzeConditionalFormattingHealth(
+            "conditional-formatting-health", new SheetSelection.Selected(List.of("Budget")));
     WorkbookReadOperation autofilterHealth =
         new WorkbookReadOperation.AnalyzeAutofilterHealth(
             "autofilter-health", new SheetSelection.Selected(List.of("Budget")));
@@ -2553,6 +2770,7 @@ class DefaultGridGrindRequestExecutorTest {
     assertReadContext(comments, "Budget", null, null, runtimeException);
     assertReadContext(layout, "Budget", null, null, runtimeException);
     assertReadContext(validations, "Budget", null, null, runtimeException);
+    assertReadContext(conditionalFormatting, "Budget", null, null, runtimeException);
     assertReadContext(autofilters, "Budget", null, null, runtimeException);
     assertReadContext(tables, null, null, null, runtimeException);
     assertReadContext(formula, null, null, null, runtimeException);
@@ -2560,6 +2778,7 @@ class DefaultGridGrindRequestExecutorTest {
     assertReadContext(surface, null, null, null, runtimeException);
     assertReadContext(formulaHealth, "Budget", null, null, runtimeException);
     assertReadContext(validationHealth, "Budget", null, null, runtimeException);
+    assertReadContext(conditionalFormattingHealth, "Budget", null, null, runtimeException);
     assertReadContext(autofilterHealth, "Budget", null, null, runtimeException);
     assertReadContext(tableHealth, null, null, null, runtimeException);
     assertReadContext(hyperlinkHealth, null, null, null, runtimeException);
@@ -2697,6 +2916,29 @@ class DefaultGridGrindRequestExecutorTest {
         null,
         null);
     assertWriteContext(
+        new WorkbookOperation.SetConditionalFormatting(
+            "Budget",
+            new ConditionalFormattingBlockInput(
+                List.of("B2:B5"),
+                List.of(
+                    new ConditionalFormattingRuleInput.FormulaRule(
+                        "B2>0",
+                        true,
+                        new DifferentialStyleInput(
+                            null, true, null, null, null, null, null, null, null))))),
+        exception,
+        "Budget",
+        null,
+        "B2:B5",
+        null);
+    assertWriteContext(
+        new WorkbookOperation.ClearConditionalFormatting("Budget", new RangeSelection.All()),
+        exception,
+        "Budget",
+        null,
+        null,
+        null);
+    assertWriteContext(
         new WorkbookOperation.SetAutofilter("Budget", "A1:C4"),
         exception,
         "Budget",
@@ -2782,6 +3024,33 @@ class DefaultGridGrindRequestExecutorTest {
         "E1:E2",
         DefaultGridGrindRequestExecutor.rangeFor(
             new WorkbookOperation.ClearRange("Budget", "E1:E2"), invalidFormula));
+    assertEquals(
+        "B2:B5",
+        DefaultGridGrindRequestExecutor.rangeFor(
+            new WorkbookOperation.SetConditionalFormatting(
+                "Budget",
+                new ConditionalFormattingBlockInput(
+                    List.of("B2:B5"),
+                    List.of(
+                        new ConditionalFormattingRuleInput.FormulaRule(
+                            "B2>0",
+                            true,
+                            new DifferentialStyleInput(
+                                null, true, null, null, null, null, null, null, null))))),
+            invalidFormula));
+    assertNull(
+        DefaultGridGrindRequestExecutor.rangeFor(
+            new WorkbookOperation.SetConditionalFormatting(
+                "Budget",
+                new ConditionalFormattingBlockInput(
+                    List.of("B2:B5", "D2:D5"),
+                    List.of(
+                        new ConditionalFormattingRuleInput.FormulaRule(
+                            "B2>0",
+                            true,
+                            new DifferentialStyleInput(
+                                null, true, null, null, null, null, null, null, null))))),
+            invalidFormula));
     assertNull(
         DefaultGridGrindRequestExecutor.rangeFor(
             new WorkbookOperation.SetHyperlink(
@@ -2840,6 +3109,17 @@ class DefaultGridGrindRequestExecutorTest {
                     null,
                     null)),
             new WorkbookOperation.ClearDataValidations("Budget", new RangeSelection.All()),
+            new WorkbookOperation.SetConditionalFormatting(
+                "Budget",
+                new ConditionalFormattingBlockInput(
+                    List.of("B2:B5"),
+                    List.of(
+                        new ConditionalFormattingRuleInput.FormulaRule(
+                            "B2>0",
+                            true,
+                            new DifferentialStyleInput(
+                                null, true, null, null, null, null, null, null, null))))),
+            new WorkbookOperation.ClearConditionalFormatting("Budget", new RangeSelection.All()),
             new WorkbookOperation.SetAutofilter("Budget", "A1:C4"),
             new WorkbookOperation.ClearAutofilter("Budget"),
             new WorkbookOperation.SetTable(

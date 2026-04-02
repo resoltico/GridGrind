@@ -32,6 +32,12 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = WorkbookOperation.ClearDataValidations.class,
       name = "CLEAR_DATA_VALIDATIONS"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.SetConditionalFormatting.class,
+      name = "SET_CONDITIONAL_FORMATTING"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.ClearConditionalFormatting.class,
+      name = "CLEAR_CONDITIONAL_FORMATTING"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetAutofilter.class, name = "SET_AUTOFILTER"),
   @JsonSubTypes.Type(value = WorkbookOperation.ClearAutofilter.class, name = "CLEAR_AUTOFILTER"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetTable.class, name = "SET_TABLE"),
@@ -242,6 +248,25 @@ public sealed interface WorkbookOperation {
     }
   }
 
+  /** Creates or replaces one logical conditional-formatting block over the requested ranges. */
+  record SetConditionalFormatting(
+      String sheetName, ConditionalFormattingBlockInput conditionalFormatting)
+      implements WorkbookOperation {
+    public SetConditionalFormatting {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(conditionalFormatting, "conditionalFormatting must not be null");
+    }
+  }
+
+  /** Removes conditional-formatting blocks on the sheet that match the provided range selection. */
+  record ClearConditionalFormatting(String sheetName, RangeSelection selection)
+      implements WorkbookOperation {
+    public ClearConditionalFormatting {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
   /** Creates or replaces one sheet-level autofilter range. */
   record SetAutofilter(String sheetName, String range) implements WorkbookOperation {
     public SetAutofilter {
@@ -339,6 +364,8 @@ public sealed interface WorkbookOperation {
       case ApplyStyle _ -> "APPLY_STYLE";
       case SetDataValidation _ -> "SET_DATA_VALIDATION";
       case ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
+      case SetConditionalFormatting _ -> "SET_CONDITIONAL_FORMATTING";
+      case ClearConditionalFormatting _ -> "CLEAR_CONDITIONAL_FORMATTING";
       case SetAutofilter _ -> "SET_AUTOFILTER";
       case ClearAutofilter _ -> "CLEAR_AUTOFILTER";
       case SetTable _ -> "SET_TABLE";

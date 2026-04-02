@@ -87,6 +87,14 @@ public final class WorkbookCommandExecutor {
           workbook
               .sheet(clearDataValidations.sheetName())
               .clearDataValidations(clearDataValidations.selection());
+      case WorkbookCommand.SetConditionalFormatting setConditionalFormatting ->
+          workbook
+              .sheet(setConditionalFormatting.sheetName())
+              .setConditionalFormatting(setConditionalFormatting.block());
+      case WorkbookCommand.ClearConditionalFormatting clearConditionalFormatting ->
+          workbook
+              .sheet(clearConditionalFormatting.sheetName())
+              .clearConditionalFormatting(clearConditionalFormatting.selection());
       case WorkbookCommand.SetAutofilter setAutofilter ->
           workbook.sheet(setAutofilter.sheetName()).setAutofilter(setAutofilter.range());
       case WorkbookCommand.ClearAutofilter clearAutofilter ->

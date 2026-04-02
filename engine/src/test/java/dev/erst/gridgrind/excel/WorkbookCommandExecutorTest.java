@@ -235,7 +235,29 @@ class WorkbookCommandExecutorTest {
           () ->
               executor.apply(
                   workbook,
+                  new WorkbookCommand.SetConditionalFormatting(
+                      "Missing",
+                      new ExcelConditionalFormattingBlockDefinition(
+                          List.of("A1"),
+                          List.of(
+                              new ExcelConditionalFormattingRule.FormulaRule(
+                                  "A1>0",
+                                  false,
+                                  new ExcelDifferentialStyle(
+                                      null, true, null, null, null, null, null, null, null)))))));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
                   new WorkbookCommand.ClearDataValidations(
+                      "Missing", new ExcelRangeSelection.All())));
+      assertThrows(
+          SheetNotFoundException.class,
+          () ->
+              executor.apply(
+                  workbook,
+                  new WorkbookCommand.ClearConditionalFormatting(
                       "Missing", new ExcelRangeSelection.All())));
       assertThrows(
           SheetNotFoundException.class,
@@ -260,6 +282,51 @@ class WorkbookCommandExecutorTest {
               executor.apply(
                   workbook,
                   new WorkbookCommand.AppendRow("Missing", List.of(ExcelCellValue.text("x")))));
+    }
+  }
+
+  @Test
+  void appliesConditionalFormattingCommandsThroughExecutor() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+      workbook.getOrCreateSheet("Ops");
+
+      executor.apply(
+          workbook,
+          new WorkbookCommand.SetConditionalFormatting(
+              "Ops",
+              new ExcelConditionalFormattingBlockDefinition(
+                  List.of("A1:A3"),
+                  List.of(
+                      new ExcelConditionalFormattingRule.FormulaRule(
+                          "A1>0",
+                          true,
+                          new ExcelDifferentialStyle(
+                              null, true, null, null, "#112233", null, null, null, null))))));
+
+      WorkbookReadResult.ConditionalFormattingResult initial =
+          assertInstanceOf(
+              WorkbookReadResult.ConditionalFormattingResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetConditionalFormatting(
+                          "cf", "Ops", new ExcelRangeSelection.All())));
+      assertEquals(1, initial.conditionalFormattingBlocks().size());
+
+      executor.apply(
+          workbook,
+          new WorkbookCommand.ClearConditionalFormatting("Ops", new ExcelRangeSelection.All()));
+
+      WorkbookReadResult.ConditionalFormattingResult cleared =
+          assertInstanceOf(
+              WorkbookReadResult.ConditionalFormattingResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetConditionalFormatting(
+                          "cf", "Ops", new ExcelRangeSelection.All())));
+      assertEquals(List.of(), cleared.conditionalFormattingBlocks());
     }
   }
 

@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.21.0"
+version: "0.22.0"
 domain: OPERATIONS
 updated: "2026-04-01"
 route:
@@ -131,10 +131,11 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 Create a sheet if it does not already exist. Does nothing if the sheet exists.
 
 All mutation operations (`SET_CELL`, `SET_RANGE`, `CLEAR_RANGE`, `APPLY_STYLE`,
-`SET_DATA_VALIDATION`, `CLEAR_DATA_VALIDATIONS`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`,
-`SET_COMMENT`, `CLEAR_COMMENT`, `SET_AUTOFILTER`, `CLEAR_AUTOFILTER`, `APPEND_ROW`,
-`AUTO_SIZE_COLUMNS`) require the target sheet to already exist. `SET_TABLE` also requires the
-target `table.sheetName` to exist. Use `ENSURE_SHEET` before the first write to any sheet.
+`SET_DATA_VALIDATION`, `CLEAR_DATA_VALIDATIONS`, `SET_CONDITIONAL_FORMATTING`,
+`CLEAR_CONDITIONAL_FORMATTING`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`,
+`CLEAR_COMMENT`, `SET_AUTOFILTER`, `CLEAR_AUTOFILTER`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`)
+require the target sheet to already exist. `SET_TABLE` also requires the target `table.sheetName`
+to exist. Use `ENSURE_SHEET` before the first write to any sheet.
 
 ```json
 { "type": "ENSURE_SHEET", "sheetName": "Inventory" }
@@ -697,6 +698,91 @@ ranges, preserving any remaining coverage fragments around the cleared area.
 
 ---
 
+### SET_CONDITIONAL_FORMATTING
+
+Creates or replaces one logical conditional-formatting block on the sheet. The block owns one or
+more target ranges and one ordered rule list. Phase A authoring supports two rule families:
+
+- `FORMULA_RULE`
+- `CELL_VALUE_RULE`
+
+The `style` payload is differential, not a whole-cell style patch. Supported authored attributes
+are `numberFormat`, `bold`, `italic`, `fontHeight`, `fontColor`, `underline`, `strikeout`,
+`fillColor`, and per-side differential borders.
+
+```json
+{
+  "type": "SET_CONDITIONAL_FORMATTING",
+  "sheetName": "Inventory",
+  "conditionalFormatting": {
+    "ranges": ["D2:D200"],
+    "rules": [
+      {
+        "type": "CELL_VALUE_RULE",
+        "operator": "GREATER_THAN",
+        "formula1": "8",
+        "stopIfTrue": false,
+        "style": {
+          "numberFormat": "0.0",
+          "fillColor": "#FDE9D9",
+          "fontColor": "#9C0006",
+          "bold": true
+        }
+      }
+    ]
+  }
+}
+```
+
+```json
+{
+  "type": "SET_CONDITIONAL_FORMATTING",
+  "sheetName": "Inventory",
+  "conditionalFormatting": {
+    "ranges": ["A2:D200"],
+    "rules": [
+      {
+        "type": "FORMULA_RULE",
+        "formula": "$D2=\"Blocked\"",
+        "stopIfTrue": true,
+        "style": {
+          "fillColor": "#FFF2CC",
+          "fontColor": "#7F6000",
+          "italic": true
+        }
+      }
+    ]
+  }
+}
+```
+
+### CLEAR_CONDITIONAL_FORMATTING
+
+Removes conditional-formatting blocks on the sheet that intersect the provided range selection.
+`ALL` clears the sheet. `SELECTED` removes every stored block whose target ranges intersect any of
+the selected A1 ranges.
+
+```json
+{
+  "type": "CLEAR_CONDITIONAL_FORMATTING",
+  "sheetName": "Inventory",
+  "selection": { "type": "ALL" }
+}
+```
+
+```json
+{
+  "type": "CLEAR_CONDITIONAL_FORMATTING",
+  "sheetName": "Inventory",
+  "selection": {
+    "type": "SELECTED",
+    "ranges": ["D2:D200", "F2:F20"]
+  }
+}
+```
+
+---
+
 ### SET_AUTOFILTER
 
 Create or replace one sheet-level autofilter range. The range must be rectangular, include a
@@ -742,6 +828,8 @@ the table's header cells, which must be nonblank and unique case-insensitively. 
 on the same sheet are replaced. Same-name tables on a different sheet are rejected. Overlapping
 different-name tables are rejected. If the new table overlaps a sheet-level autofilter, the
 sheet-level filter is cleared so the table-owned autofilter becomes authoritative on that range.
+Later value writes and style patches that touch the table header row keep the persisted
+table-column metadata converged with the visible header cells.
 
 ```json
 {
@@ -1247,6 +1335,39 @@ Range-selection payloads use:
 }
 ```
 
+### GET_CONDITIONAL_FORMATTING
+
+Returns factual conditional-formatting blocks for one sheet. Each returned block includes its
+stored ranges plus an ordered rule list. Rule reports may be one of:
+
+- `FORMULA_RULE`
+- `CELL_VALUE_RULE`
+- `COLOR_SCALE_RULE`
+- `DATA_BAR_RULE`
+- `ICON_SET_RULE`
+- `UNSUPPORTED_RULE`
+
+```json
+{
+  "type": "GET_CONDITIONAL_FORMATTING",
+  "requestId": "conditional-formatting",
+  "sheetName": "Inventory",
+  "selection": { "type": "ALL" }
+}
+```
+
+```json
+{
+  "type": "GET_CONDITIONAL_FORMATTING",
+  "requestId": "selected-conditional-formatting",
+  "sheetName": "Inventory",
+  "selection": {
+    "type": "SELECTED",
+    "ranges": ["A2:D200", "F2:F20"]
+  }
+}
+```
+
 ### GET_AUTOFILTERS
 
 Returns factual autofilter metadata for one sheet. The result may include:
@@ -1418,6 +1539,22 @@ unsupported rules, broken formulas, and overlapping validation coverage.
 }
 ```
 
+### ANALYZE_CONDITIONAL_FORMATTING_HEALTH
+
+Reports conditional-formatting findings such as broken formulas, unsupported loaded rule
+families, empty target ranges, or priority collisions.
+
+```json
+{
+  "type": "ANALYZE_CONDITIONAL_FORMATTING_HEALTH",
+  "requestId": "conditional-formatting-health",
+  "selection": {
+    "type": "SELECTED",
+    "sheetNames": ["Inventory", "Summary"]
+  }
+}
+```
+
 ### ANALYZE_AUTOFILTER_HEALTH
 
 Reports autofilter findings such as invalid ranges, blank header rows, or ownership mismatches
@@ -1494,6 +1631,9 @@ Reports named-range findings such as broken references, unresolved targets, and 
 
 Runs every shipped finding-bearing analysis family across the workbook and returns one aggregated
 flat finding list.
+
+The aggregate currently includes formula, data validation, conditional formatting, autofilter,
+table, hyperlink, and named-range findings.
 
 ```json
 {

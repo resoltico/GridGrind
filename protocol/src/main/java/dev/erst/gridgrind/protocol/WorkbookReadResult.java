@@ -26,6 +26,9 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = WorkbookReadResult.DataValidationsResult.class,
       name = "GET_DATA_VALIDATIONS"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.ConditionalFormattingResult.class,
+      name = "GET_CONDITIONAL_FORMATTING"),
   @JsonSubTypes.Type(value = WorkbookReadResult.AutofiltersResult.class, name = "GET_AUTOFILTERS"),
   @JsonSubTypes.Type(value = WorkbookReadResult.TablesResult.class, name = "GET_TABLES"),
   @JsonSubTypes.Type(
@@ -41,6 +44,9 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = WorkbookReadResult.DataValidationHealthResult.class,
       name = "ANALYZE_DATA_VALIDATION_HEALTH"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.ConditionalFormattingHealthResult.class,
+      name = "ANALYZE_CONDITIONAL_FORMATTING_HEALTH"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.AutofilterHealthResult.class,
       name = "ANALYZE_AUTOFILTER_HEALTH"),
@@ -75,6 +81,7 @@ public sealed interface WorkbookReadResult
           CommentsResult,
           SheetLayoutResult,
           DataValidationsResult,
+          ConditionalFormattingResult,
           AutofiltersResult,
           TablesResult,
           FormulaSurfaceResult,
@@ -85,6 +92,7 @@ public sealed interface WorkbookReadResult
   sealed interface Analysis extends WorkbookReadResult
       permits FormulaHealthResult,
           DataValidationHealthResult,
+          ConditionalFormattingHealthResult,
           AutofilterHealthResult,
           TableHealthResult,
           HyperlinkHealthResult,
@@ -190,6 +198,20 @@ public sealed interface WorkbookReadResult
     }
   }
 
+  /** Returns conditional-formatting metadata for the selected ranges on one sheet. */
+  record ConditionalFormattingResult(
+      String requestId,
+      String sheetName,
+      List<ConditionalFormattingEntryReport> conditionalFormattingBlocks)
+      implements Introspection {
+    public ConditionalFormattingResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      conditionalFormattingBlocks =
+          copyValues(conditionalFormattingBlocks, "conditionalFormattingBlocks");
+    }
+  }
+
   /** Returns sheet- and table-owned autofilter metadata for one sheet. */
   record AutofiltersResult(
       String requestId, String sheetName, List<AutofilterEntryReport> autofilters)
@@ -250,6 +272,15 @@ public sealed interface WorkbookReadResult
   record DataValidationHealthResult(String requestId, DataValidationHealthReport analysis)
       implements Analysis {
     public DataValidationHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns conditional-formatting-health findings. */
+  record ConditionalFormattingHealthResult(
+      String requestId, ConditionalFormattingHealthReport analysis) implements Analysis {
+    public ConditionalFormattingHealthResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }

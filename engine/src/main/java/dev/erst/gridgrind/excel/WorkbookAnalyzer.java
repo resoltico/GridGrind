@@ -42,6 +42,12 @@ final class WorkbookAnalyzer {
           new WorkbookReadResult.DataValidationHealthResult(
               analyzeDataValidationHealth.requestId(),
               dataValidationHealth(workbook, analyzeDataValidationHealth.selection()));
+      case WorkbookReadCommand.AnalyzeConditionalFormattingHealth
+              analyzeConditionalFormattingHealth ->
+          new WorkbookReadResult.ConditionalFormattingHealthResult(
+              analyzeConditionalFormattingHealth.requestId(),
+              conditionalFormattingHealth(
+                  workbook, analyzeConditionalFormattingHealth.selection()));
       case WorkbookReadCommand.AnalyzeAutofilterHealth analyzeAutofilterHealth ->
           new WorkbookReadResult.AutofilterHealthResult(
               analyzeAutofilterHealth.requestId(),
@@ -85,6 +91,13 @@ final class WorkbookAnalyzer {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return documentAnalyzer.dataValidationHealth(workbook, selection);
+  }
+
+  WorkbookAnalysis.ConditionalFormattingHealth conditionalFormattingHealth(
+      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+    return documentAnalyzer.conditionalFormattingHealth(workbook, selection);
   }
 
   WorkbookAnalysis.AutofilterHealth autofilterHealth(
@@ -144,6 +157,8 @@ final class WorkbookAnalyzer {
     List<WorkbookAnalysis.AnalysisFinding> combined = new ArrayList<>();
     combined.addAll(formulaHealth(workbook, new ExcelSheetSelection.All()).findings());
     combined.addAll(dataValidationHealth(workbook, new ExcelSheetSelection.All()).findings());
+    combined.addAll(
+        conditionalFormattingHealth(workbook, new ExcelSheetSelection.All()).findings());
     combined.addAll(autofilterHealth(workbook, new ExcelSheetSelection.All()).findings());
     combined.addAll(tableHealth(workbook, new ExcelTableSelection.All()).findings());
     combined.addAll(

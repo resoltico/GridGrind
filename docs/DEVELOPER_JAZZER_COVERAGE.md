@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.21.0"
+version: "0.22.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-04-01"
+updated: "2026-04-02"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -24,8 +24,8 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 | `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 14 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 7 |
-| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 11 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 43 total across harnesses |
+| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 12 |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 44 total across harnesses |
 
 ---
 
@@ -131,6 +131,8 @@ What it asserts:
 - data-validation state remains readable and normalized after reopen when those commands succeed
 - table and autofilter commands remain structurally coherent after reopen when those commands
   succeed or are classified as expected-invalid
+- table header rewrites, header clears, and header-range style patches keep persisted table-column
+  metadata converged with the visible header cells after reopen
 
 Telemetry signals:
 - command-kind counts
@@ -140,7 +142,6 @@ Telemetry signals:
 
 What it does not cover:
 - charts
-- tables
 - encrypted or macro-bearing workbooks
 
 ---
@@ -213,6 +214,8 @@ Committed custom seeds currently in source control:
 | `xlsx-roundtrip` | `apply_style_formatting_depth_roundtrip_success.bin` | successful round-trip seed that preserves formatting-depth style state after reopen |
 | `xlsx-roundtrip` | `append_row_preserves_styled_blank_row_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert style preservation when `APPEND_ROW` reuses styled blank rows |
 | `xlsx-roundtrip` | `append_row_datetime_style_patch_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that date-time append writes relayer their required number format onto styled blank rows |
+| `xlsx-roundtrip` | `table_header_rewrite_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that table header rewrites keep persisted table metadata synchronized through reopen |
+| `xlsx-roundtrip` | `table_header_style_display_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that header-range style patches keep typed table header metadata synchronized through reopen |
 | `xlsx-roundtrip` | `named_range_normalization_roundtrip_success.bin` | successful round-trip seed that preserves named-range state while normalizing reversed target ordering |
 | `xlsx-roundtrip` | `hyperlink_comment_invalid_row_case.bin` | expected-invalid round-trip seed that exercises hyperlink and comment commands alongside invalid row mutation input |
 | `xlsx-roundtrip` | `set_hyperlink_replacement_roundtrip_success.bin` | successful round-trip seed that preserves the latest hyperlink target after repeated writes to the same cell |

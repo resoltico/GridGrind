@@ -50,6 +50,18 @@ class WorkbookCommandTest {
         new WorkbookCommand.SetDataValidation("Budget", "B2:B5", validationDefinition()),
         new WorkbookCommand.ClearDataValidations(
             "Budget", new ExcelRangeSelection.Selected(List.of("C2:D4"))),
+        new WorkbookCommand.SetConditionalFormatting(
+            "Budget",
+            new ExcelConditionalFormattingBlockDefinition(
+                List.of("A2:A5"),
+                List.of(
+                    new ExcelConditionalFormattingRule.FormulaRule(
+                        "A2>0",
+                        true,
+                        new ExcelDifferentialStyle(
+                            "0.00", null, null, null, null, null, null, null, null))))),
+        new WorkbookCommand.ClearConditionalFormatting(
+            "Budget", new ExcelRangeSelection.Selected(List.of("A2:A5"))),
         new WorkbookCommand.SetAutofilter("Budget", "A1:C4"),
         new WorkbookCommand.ClearAutofilter("Budget"),
         new WorkbookCommand.SetTable(
@@ -96,6 +108,12 @@ class WorkbookCommandTest {
     assertEquals(
         List.of("C2:D4"),
         ((ExcelRangeSelection.Selected) commands.clearDataValidations().selection()).ranges());
+    assertEquals("Budget", commands.setConditionalFormatting().sheetName());
+    assertEquals(List.of("A2:A5"), commands.setConditionalFormatting().block().ranges());
+    assertEquals(
+        List.of("A2:A5"),
+        ((ExcelRangeSelection.Selected) commands.clearConditionalFormatting().selection())
+            .ranges());
     assertEquals("A1:C4", commands.setAutofilter().range());
     assertEquals("Budget", commands.clearAutofilter().sheetName());
     assertEquals("BudgetTable", commands.setTable().definition().name());
@@ -373,6 +391,44 @@ class WorkbookCommandTest {
         IllegalArgumentException.class,
         () -> new WorkbookCommand.ClearDataValidations(" ", new ExcelRangeSelection.All()));
     assertThrows(
+        NullPointerException.class,
+        () ->
+            new WorkbookCommand.SetConditionalFormatting(
+                null,
+                new ExcelConditionalFormattingBlockDefinition(
+                    List.of("A2:A5"),
+                    List.of(
+                        new ExcelConditionalFormattingRule.FormulaRule(
+                            "A2>0",
+                            true,
+                            new ExcelDifferentialStyle(
+                                "0.00", null, null, null, null, null, null, null, null))))));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.SetConditionalFormatting("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookCommand.SetConditionalFormatting(
+                " ",
+                new ExcelConditionalFormattingBlockDefinition(
+                    List.of("A2:A5"),
+                    List.of(
+                        new ExcelConditionalFormattingRule.FormulaRule(
+                            "A2>0",
+                            true,
+                            new ExcelDifferentialStyle(
+                                "0.00", null, null, null, null, null, null, null, null))))));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.ClearConditionalFormatting("Budget", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.ClearConditionalFormatting(null, new ExcelRangeSelection.All()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.ClearConditionalFormatting(" ", new ExcelRangeSelection.All()));
+    assertThrows(
         NullPointerException.class, () -> new WorkbookCommand.SetAutofilter(null, "A1:B2"));
     assertThrows(
         NullPointerException.class, () -> new WorkbookCommand.SetAutofilter("Budget", null));
@@ -471,6 +527,8 @@ class WorkbookCommandTest {
       WorkbookCommand.ApplyStyle applyStyle,
       WorkbookCommand.SetDataValidation setDataValidation,
       WorkbookCommand.ClearDataValidations clearDataValidations,
+      WorkbookCommand.SetConditionalFormatting setConditionalFormatting,
+      WorkbookCommand.ClearConditionalFormatting clearConditionalFormatting,
       WorkbookCommand.SetAutofilter setAutofilter,
       WorkbookCommand.ClearAutofilter clearAutofilter,
       WorkbookCommand.SetTable setTable,

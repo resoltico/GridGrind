@@ -14,36 +14,7 @@ class WorkbookAnalyzerTest {
   @Test
   void executesEveryAnalysisCommandAgainstWorkbookState() throws IOException {
     Path workbookPath = Files.createTempFile("gridgrind-analyzer-", ".xlsx");
-
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      var budget = workbook.createSheet("Budget");
-      budget.createRow(0).createCell(0).setCellValue("Item");
-      budget.getRow(0).createCell(1).setCellValue("Amount");
-      budget.createRow(1).createCell(0).setCellValue("Hosting");
-      budget.getRow(1).createCell(1).setCellFormula("1/0");
-      budget.createRow(2).createCell(0).setCellValue("Domain");
-      budget.getRow(2).createCell(1).setCellFormula("NOW()");
-
-      var workbookScoped = workbook.createName();
-      workbookScoped.setNameName("SharedName");
-      workbookScoped.setRefersToFormula("Budget!$A$2");
-
-      var broken = workbook.createName();
-      broken.setNameName("BrokenRange");
-      broken.setRefersToFormula("#REF!");
-
-      var missingSheet = workbook.createName();
-      missingSheet.setNameName("MissingSheetRange");
-      missingSheet.setRefersToFormula("Missing!$A$1");
-
-      var unresolved = workbook.createName();
-      unresolved.setNameName("ApproximateRange");
-      unresolved.setRefersToFormula("Budget!$A$2+1");
-
-      try (var outputStream = Files.newOutputStream(workbookPath)) {
-        workbook.write(outputStream);
-      }
-    }
+    writeAnalyzerFixture(workbookPath);
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
       ExcelSheet budget = workbook.sheet("Budget");
@@ -56,6 +27,15 @@ class WorkbookAnalyzerTest {
       budget.setCell("E2", ExcelCellValue.text("Queue"));
       budget.setCell("D3", ExcelCellValue.text("Lin"));
       budget.setCell("E3", ExcelCellValue.text("Pack"));
+      budget.setConditionalFormatting(
+          new ExcelConditionalFormattingBlockDefinition(
+              List.of("B2:B3"),
+              List.of(
+                  new ExcelConditionalFormattingRule.FormulaRule(
+                      "B2>0",
+                      false,
+                      new ExcelDifferentialStyle(
+                          "0.00", null, null, null, null, null, null, null, null)))));
       workbook.setTable(
           new ExcelTableDefinition("Queue", "Budget", "D1:E3", false, new ExcelTableStyle.None()));
       budget.xssfSheet().getTables().getFirst().getCTTable().getAutoFilter().setRef("D1:E2");
@@ -94,6 +74,14 @@ class WorkbookAnalyzerTest {
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeAutofilterHealth(
                       "autofilterHealth", new ExcelSheetSelection.All())));
+      WorkbookReadResult.ConditionalFormattingHealthResult conditionalFormattingHealth =
+          cast(
+              WorkbookReadResult.ConditionalFormattingHealthResult.class,
+              analyzer.execute(
+                  workbook,
+                  new WorkbookLocation.StoredWorkbook(workbookPath),
+                  new WorkbookReadCommand.AnalyzeConditionalFormattingHealth(
+                      "conditionalFormattingHealth", new ExcelSheetSelection.All())));
       WorkbookReadResult.TableHealthResult tableHealth =
           cast(
               WorkbookReadResult.TableHealthResult.class,
@@ -145,6 +133,12 @@ class WorkbookAnalyzerTest {
       assertEquals(
           WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH,
           autofilterHealth.analysis().findings().getFirst().code());
+
+      assertEquals(
+          1, conditionalFormattingHealth.analysis().checkedConditionalFormattingBlockCount());
+      assertEquals(
+          conditionalFormattingHealth.analysis().summary().totalCount(),
+          conditionalFormattingHealth.analysis().findings().size());
 
       assertEquals(1, tableHealth.analysis().checkedTableCount());
       assertEquals(0, tableHealth.analysis().summary().totalCount());
@@ -415,5 +409,32 @@ class WorkbookAnalyzerTest {
 
   private static <T> T cast(Class<T> type, Object value) {
     return type.cast(assertInstanceOf(type, value));
+  }
+
+  private static void writeAnalyzerFixture(Path workbookPath) throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var budget = workbook.createSheet("Budget");
+      budget.createRow(0).createCell(0).setCellValue("Item");
+      budget.getRow(0).createCell(1).setCellValue("Amount");
+      budget.createRow(1).createCell(0).setCellValue("Hosting");
+      budget.getRow(1).createCell(1).setCellFormula("1/0");
+      budget.createRow(2).createCell(0).setCellValue("Domain");
+      budget.getRow(2).createCell(1).setCellFormula("NOW()");
+
+      namedRange(workbook, "SharedName", "Budget!$A$2");
+      namedRange(workbook, "BrokenRange", "#REF!");
+      namedRange(workbook, "MissingSheetRange", "Missing!$A$1");
+      namedRange(workbook, "ApproximateRange", "Budget!$A$2+1");
+
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+  }
+
+  private static void namedRange(XSSFWorkbook workbook, String name, String formula) {
+    var namedRange = workbook.createName();
+    namedRange.setNameName(name);
+    namedRange.setRefersToFormula(formula);
   }
 }

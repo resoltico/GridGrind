@@ -24,6 +24,7 @@ public sealed interface WorkbookReadCommand
           GetComments,
           GetSheetLayout,
           GetDataValidations,
+          GetConditionalFormatting,
           GetAutofilters,
           GetTables,
           GetFormulaSurface,
@@ -34,6 +35,7 @@ public sealed interface WorkbookReadCommand
   sealed interface Analysis extends WorkbookReadCommand
       permits AnalyzeFormulaHealth,
           AnalyzeDataValidationHealth,
+          AnalyzeConditionalFormattingHealth,
           AnalyzeAutofilterHealth,
           AnalyzeTableHealth,
           AnalyzeHyperlinkHealth,
@@ -141,6 +143,16 @@ public sealed interface WorkbookReadCommand
     }
   }
 
+  /** Returns conditional-formatting metadata for the selected ranges on one sheet. */
+  record GetConditionalFormatting(String requestId, String sheetName, ExcelRangeSelection selection)
+      implements Introspection {
+    public GetConditionalFormatting {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
   /** Returns sheet- and table-owned autofilter metadata for one sheet. */
   record GetAutofilters(String requestId, String sheetName) implements Introspection {
     public GetAutofilters {
@@ -201,6 +213,15 @@ public sealed interface WorkbookReadCommand
   record AnalyzeDataValidationHealth(String requestId, ExcelSheetSelection selection)
       implements Analysis {
     public AnalyzeDataValidationHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports conditional-formatting findings such as broken formulas or priority collisions. */
+  record AnalyzeConditionalFormattingHealth(String requestId, ExcelSheetSelection selection)
+      implements Analysis {
+    public AnalyzeConditionalFormattingHealth {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(selection, "selection must not be null");
     }

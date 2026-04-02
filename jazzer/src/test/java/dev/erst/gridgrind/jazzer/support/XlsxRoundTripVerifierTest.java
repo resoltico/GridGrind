@@ -9,6 +9,8 @@ import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
@@ -17,6 +19,7 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
@@ -27,6 +30,8 @@ import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -276,6 +281,57 @@ class XlsxRoundTripVerifierTest {
 
   /** Preserves sheet autofilters and workbook tables through save and reopen. */
   @Test
+  void requireRoundTripReadable_preservesConditionalFormattingAuthoring(@TempDir Path tempDirectory)
+      throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Budget"),
+            new WorkbookCommand.SetRange(
+                "Budget",
+                "A1:B5",
+                List.of(
+                    List.of(ExcelCellValue.text("Status"), ExcelCellValue.text("Amount")),
+                    List.of(ExcelCellValue.text("Queued"), ExcelCellValue.number(1.0)),
+                    List.of(ExcelCellValue.text("Done"), ExcelCellValue.number(9.0)),
+                    List.of(ExcelCellValue.text("Done"), ExcelCellValue.number(11.0)),
+                    List.of(ExcelCellValue.text("Queued"), ExcelCellValue.number(4.0)))),
+            new WorkbookCommand.SetConditionalFormatting(
+                "Budget",
+                new ExcelConditionalFormattingBlockDefinition(
+                    List.of("A2:A5"),
+                    List.of(
+                        new ExcelConditionalFormattingRule.FormulaRule(
+                            "A2=\"Done\"",
+                            true,
+                            new ExcelDifferentialStyle(
+                                null, true, null, null, "#102030", null, null, "#E0F0AA", null))))),
+            new WorkbookCommand.ClearConditionalFormatting(
+                "Budget", new ExcelRangeSelection.Selected(List.of("A2:A5"))),
+            new WorkbookCommand.SetConditionalFormatting(
+                "Budget",
+                new ExcelConditionalFormattingBlockDefinition(
+                    List.of("B2:B5"),
+                    List.of(
+                        new ExcelConditionalFormattingRule.FormulaRule(
+                            "B2>5",
+                            true,
+                            new ExcelDifferentialStyle(
+                                "0.00", true, null, null, "#102030", null, null, "#E0F0AA", null)),
+                        new ExcelConditionalFormattingRule.CellValueRule(
+                            ExcelComparisonOperator.BETWEEN,
+                            "1",
+                            "10",
+                            false,
+                            new ExcelDifferentialStyle(
+                                null, null, true, null, null, null, null, null, null))))));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Preserves sheet autofilters and workbook tables through save and reopen. */
+  @Test
   void requireRoundTripReadable_preservesAutofilterAndTableAuthoring(
       @TempDir Path tempDirectory) throws IOException {
     List<WorkbookCommand> commands =
@@ -318,6 +374,69 @@ class XlsxRoundTripVerifierTest {
                     "A1:C4",
                     false,
                     new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Accepts header rewrites after table creation without losing persisted table column names. */
+  @Test
+  void requireRoundTripReadable_preservesTableHeaderRewritesAfterTableCreation(
+      @TempDir Path tempDirectory) throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("V"),
+            new WorkbookCommand.SetRange(
+                "V",
+                "A1:B3",
+                List.of(
+                    List.of(ExcelCellValue.text("c]cc"), ExcelCellValue.text("Task")),
+                    List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queue")),
+                    List.of(ExcelCellValue.text("Lin"), ExcelCellValue.text("Pack")))),
+            new WorkbookCommand.SetTable(
+                new ExcelTableDefinition(
+                    "BudgetTable",
+                    "V",
+                    "A1:B3",
+                    false,
+                    new ExcelTableStyle.Named("TableStyleMedium2", true, true, true, true))),
+            new WorkbookCommand.SetRange(
+                "V",
+                "A1:B2",
+                List.of(
+                    List.of(ExcelCellValue.text("QQQQq"), ExcelCellValue.text("Task")),
+                    List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queue")))));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Accepts header style patches that change the displayed table header text for typed cells. */
+  @Test
+  void requireRoundTripReadable_preservesTableHeadersAfterHeaderStyleDisplayChanges(
+      @TempDir Path tempDirectory) throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("V"),
+            new WorkbookCommand.AppendRow(
+                "V",
+                List.of(
+                    ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 0, 19, 17)),
+                    ExcelCellValue.date(LocalDate.of(2026, 6, 26)))),
+            new WorkbookCommand.SetCell("V", "A2", ExcelCellValue.text("Ada")),
+            new WorkbookCommand.SetCell("V", "B2", ExcelCellValue.text("Queue")),
+            new WorkbookCommand.SetCell("V", "A3", ExcelCellValue.text("Totals")),
+            new WorkbookCommand.SetCell("V", "B3", ExcelCellValue.text("Done")),
+            new WorkbookCommand.SetTable(
+                new ExcelTableDefinition(
+                    "OpsTable",
+                    "V",
+                    "A1:B3",
+                    true,
+                    new ExcelTableStyle.Named("TableStyleMedium2", true, true, true, true))),
+            new WorkbookCommand.ApplyStyle("V", "A1:B2", ExcelCellStyle.numberFormat("yyyy-mm-dd")));
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 

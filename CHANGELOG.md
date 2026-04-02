@@ -3,7 +3,35 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.22.0] - 2026-04-02
+
+### Added
+
+- Conditional formatting public surface:
+  `SET_CONDITIONAL_FORMATTING`, `CLEAR_CONDITIONAL_FORMATTING`,
+  `GET_CONDITIONAL_FORMATTING`, and `ANALYZE_CONDITIONAL_FORMATTING_HEALTH`.
+- New public example `examples/conditional-formatting-request.json` covering block authoring,
+  factual reads, conditional-formatting health, and aggregate workbook findings.
+
+### Changed
+
+- `ANALYZE_WORKBOOK_FINDINGS` now aggregates conditional-formatting findings alongside formula,
+  data-validation, autofilter, table, hyperlink, and named-range findings.
+
+### Fixed
+
+- Protocol coverage, executor mapping coverage, and `.xlsx` round-trip Jazzer invariants now
+  assert conditional-formatting authoring and persistence instead of leaving the new family
+  under-verified.
+- Table header mutations made after `SET_TABLE`, including header-range style patches that change
+  typed header display text, now synchronize the persisted table-column metadata immediately.
+  `ExcelWorkbook.save()` also normalizes every table header before persistence as a backstop, so
+  `GET_TABLES`, table health analysis, save/reopen behavior, and `.xlsx` round-trip fuzzing all
+  observe one converged table-header state instead of drifting between sheet cells and table XML.
+- Jazzer now has promoted `.xlsx` round-trip success seeds covering both the former table-header
+  rewrite crash and the later typed-header style-display crash, and the deterministic round-trip
+  verifier suite asserts that header rewrites, header clears, and header-range style changes
+  survive save and reopen without metadata drift.
 
 ## [0.21.0] - 2026-04-01
 
@@ -701,7 +729,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.21.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.22.0...HEAD
+[0.22.0]: https://github.com/resoltico/GridGrind/compare/v0.21.0...v0.22.0
 [0.21.0]: https://github.com/resoltico/GridGrind/compare/v0.20.0...v0.21.0
 [0.20.0]: https://github.com/resoltico/GridGrind/compare/v0.19.0...v0.20.0
 [0.19.0]: https://github.com/resoltico/GridGrind/compare/v0.18.0...v0.19.0
