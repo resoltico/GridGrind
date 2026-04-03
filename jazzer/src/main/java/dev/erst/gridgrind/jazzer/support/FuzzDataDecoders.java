@@ -9,7 +9,7 @@ import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
-import dev.erst.gridgrind.protocol.CellInput;
+import dev.erst.gridgrind.protocol.dto.CellInput;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

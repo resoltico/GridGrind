@@ -1,14 +1,14 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
-import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.protocol.CellBorderInput;
-import dev.erst.gridgrind.protocol.CellBorderSideInput;
-import dev.erst.gridgrind.protocol.CellStyleInput;
-import dev.erst.gridgrind.protocol.FontHeightInput;
+import dev.erst.gridgrind.protocol.dto.BorderStyle;
+import dev.erst.gridgrind.protocol.dto.CellBorderInput;
+import dev.erst.gridgrind.protocol.dto.CellBorderSideInput;
+import dev.erst.gridgrind.protocol.dto.CellStyleInput;
+import dev.erst.gridgrind.protocol.dto.FontHeightInput;
+import dev.erst.gridgrind.protocol.dto.HorizontalAlignment;
+import dev.erst.gridgrind.protocol.dto.VerticalAlignment;
 import java.math.BigDecimal;
 import java.util.Objects;
 
@@ -20,8 +20,8 @@ public final class WorkbookStyleInputs {
   public static CellStyleInput nextStyleInput(FuzzedDataProvider data) {
     Objects.requireNonNull(data, "data must not be null");
 
-    ExcelHorizontalAlignment[] horizontalValues = ExcelHorizontalAlignment.values();
-    ExcelVerticalAlignment[] verticalValues = ExcelVerticalAlignment.values();
+    HorizontalAlignment[] horizontalValues = HorizontalAlignment.values();
+    VerticalAlignment[] verticalValues = VerticalAlignment.values();
     return switch (data.consumeInt(0, 7)) {
       case 0 ->
           new CellStyleInput(
@@ -180,7 +180,7 @@ public final class WorkbookStyleInputs {
   }
 
   private static CellBorderSideInput nextBorderSide(FuzzedDataProvider data) {
-    ExcelBorderStyle[] values = ExcelBorderStyle.values();
+    BorderStyle[] values = BorderStyle.values();
     return new CellBorderSideInput(values[data.consumeInt(0, values.length - 1)]);
   }
 }

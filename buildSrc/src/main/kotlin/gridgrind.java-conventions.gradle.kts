@@ -25,6 +25,7 @@ extensions.configure<JavaPluginExtension> {
     toolchain {
         languageVersion = JavaLanguageVersion.of(gridgrindJavaVersion)
     }
+    modularity.inferModulePath = true
     withSourcesJar()
 }
 

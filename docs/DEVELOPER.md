@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.24.0"
+version: "0.25.0"
 domain: DEVELOPER
-updated: "2026-03-31"
+updated: "2026-04-03"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -22,16 +22,17 @@ Local-only Jazzer architecture, operations, and coverage inventories live in:
 
 ## Architecture
 
-GridGrind is a three-module Gradle project:
+GridGrind is a three-module Gradle project with compiler-enforced JPMS boundaries:
 
 ```
-engine/     Workbook-core abstractions on top of Apache POI.
-            No JSON, no transport, no protocol concerns.
+engine/     Apache-POI-backed workbook engine. Owns mutable workbook state,
+            workbook mutation rules, and factual workbook inspection.
 
-protocol/   The external GridGrind contract and execution layer:
-            request and response models, the request-executor port,
-            the default executor, structured failures, JSON encoding,
-            protocol discovery metadata, and execution semantics.
+protocol/   The external GridGrind contract plus the single execution bridge
+            into engine. Public contract code is protocol-owned and split by
+            responsibility: dto, operation, read, catalog, json, and exec.
+            DefaultGridGrindRequestExecutor is the only main-source class
+            here that is engine-aware.
 
 cli/        Thin transport adapter. Reads a protocol request from stdin
             or --request file, delegates to protocol, writes the response,
@@ -41,6 +42,16 @@ cli/        Thin transport adapter. Reads a protocol request from stdin
 The CLI is not the core. The foundation is `engine` plus `protocol`. The CLI is one adapter on
 top. Future adapters (HTTP, gRPC, library embedding) can be added without touching `engine` or
 `protocol`.
+
+The enforced dependency graph is:
+
+```text
+dev.erst.gridgrind.cli -> dev.erst.gridgrind.protocol -> dev.erst.gridgrind.engine
+```
+
+`cli` does not depend on `engine`, and `protocol` does not re-export `engine`. Shared Java build
+conventions enable `modularity.inferModulePath`, so the `module-info.java` descriptors in all
+three modules participate in normal local builds, CI, and release verification.
 
 ---
 
@@ -199,8 +210,8 @@ These runnable examples cover the core operation surface:
 | `examples/introspection-analysis-request.json` | Read-heavy workbook showcasing factual reads plus finding-bearing analysis operations together |
 | `examples/live-workflow-create.json` | Multi-sheet workbook with cross-sheet formulas and aggregations |
 | `examples/live-workflow-revise.json` | Reopen, revise, recalculate, and reread |
-| `examples/sheet-management-request.json` | Sheet rename, delete, and reorder semantics |
-| `examples/structural-layout-request.json` | Merge, size, pane, zoom, and print-layout shaping with layout reads |
+| `examples/sheet-management-request.json` | Sheet copy, active/selected state, visibility, protection, and workbook-summary reads |
+| `examples/structural-layout-request.json` | Merge, size, pane, zoom, print-layout, and repeating-title shaping with layout reads |
 
 Run any fixture with:
 

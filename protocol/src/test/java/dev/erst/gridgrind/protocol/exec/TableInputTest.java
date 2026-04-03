@@ -1,0 +1,51 @@
+package dev.erst.gridgrind.protocol.exec;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import dev.erst.gridgrind.excel.ExcelTableDefinition;
+import dev.erst.gridgrind.excel.ExcelTableStyle;
+import dev.erst.gridgrind.protocol.dto.TableInput;
+import dev.erst.gridgrind.protocol.dto.TableStyleInput;
+import org.junit.jupiter.api.Test;
+
+/** Tests for protocol-facing table authoring input invariants and conversion. */
+class TableInputTest {
+  @Test
+  void validatesAndConvertsToWorkbookDefinition() {
+    TableInput input =
+        new TableInput(
+            "BudgetTable",
+            "Budget",
+            "A1:C4",
+            true,
+            new TableStyleInput.Named("TableStyleMedium2", false, false, true, false));
+
+    assertEquals(
+        new ExcelTableDefinition(
+            "BudgetTable",
+            "Budget",
+            "A1:C4",
+            true,
+            new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false)),
+        DefaultGridGrindRequestExecutor.toExcelTableDefinition(input));
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new TableInput("BudgetTable", " ", "A1:C4", false, new TableStyleInput.None()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new TableInput(
+                "BudgetTable",
+                "12345678901234567890123456789012",
+                "A1:C4",
+                false,
+                new TableStyleInput.None()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new TableInput("BudgetTable", "Budget", " ", false, new TableStyleInput.None()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new TableInput("BudgetTable", "Budget", "A1:C4", false, null));
+  }
+}

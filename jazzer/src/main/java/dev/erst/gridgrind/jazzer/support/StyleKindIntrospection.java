@@ -3,9 +3,11 @@ package dev.erst.gridgrind.jazzer.support;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
-import dev.erst.gridgrind.protocol.CellBorderInput;
-import dev.erst.gridgrind.protocol.CellBorderSideInput;
-import dev.erst.gridgrind.protocol.CellStyleInput;
+import dev.erst.gridgrind.protocol.dto.BorderStyle;
+import dev.erst.gridgrind.protocol.dto.CellBorderInput;
+import dev.erst.gridgrind.protocol.dto.CellBorderSideInput;
+import dev.erst.gridgrind.protocol.dto.CellStyleInput;
+import dev.erst.gridgrind.protocol.dto.FontHeightInput;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -26,8 +28,8 @@ public final class StyleKindIntrospection {
     increment(kinds, "vertical_alignment", style.verticalAlignment() != null);
     increment(kinds, "font_name", style.fontName() != null);
     increment(kinds, "font_height", style.fontHeight() != null);
-    increment(kinds, "font_height_points", style.fontHeight() instanceof dev.erst.gridgrind.protocol.FontHeightInput.Points);
-    increment(kinds, "font_height_twips", style.fontHeight() instanceof dev.erst.gridgrind.protocol.FontHeightInput.Twips);
+    increment(kinds, "font_height_points", style.fontHeight() instanceof FontHeightInput.Points);
+    increment(kinds, "font_height_twips", style.fontHeight() instanceof FontHeightInput.Twips);
     increment(kinds, "font_color", style.fontColor() != null);
     increment(kinds, "underline", style.underline() != null);
     increment(kinds, "strikeout", style.strikeout() != null);
@@ -91,7 +93,7 @@ public final class StyleKindIntrospection {
   }
 
   private static boolean isNone(CellBorderSideInput side) {
-    return side != null && side.style() == dev.erst.gridgrind.excel.ExcelBorderStyle.NONE;
+    return side != null && side.style() == BorderStyle.NONE;
   }
 
   private static boolean isNone(ExcelBorderSide side) {

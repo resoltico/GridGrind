@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.protocol.GridGrindRequest;
+import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

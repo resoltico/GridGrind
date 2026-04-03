@@ -45,7 +45,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.24.0
+docker pull ghcr.io/resoltico/gridgrind:0.25.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -143,6 +143,11 @@ Every request follows the same pipeline:
 
 If any step fails, GridGrind returns a structured error and no file is written. That gives
 autonomous callers deterministic failure semantics instead of "error after side effect."
+
+Internally, GridGrind is enforced as `cli -> protocol -> engine`. The public JSON contract lives
+in protocol-owned packages grouped by responsibility: `dto`, `operation`, `read`, `catalog`,
+`json`, and `exec`. `DefaultGridGrindRequestExecutor` is the single protocol-to-engine
+translation boundary into the Apache-POI-backed workbook engine.
 
 ---
 
