@@ -5,11 +5,11 @@ import com.code_intelligence.jazzer.junit.FuzzTest;
 import dev.erst.gridgrind.jazzer.support.HarnessTelemetry;
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import dev.erst.gridgrind.jazzer.support.SequenceIntrospection;
-import dev.erst.gridgrind.protocol.GridGrindJson;
-import dev.erst.gridgrind.protocol.GridGrindRequest;
-import dev.erst.gridgrind.protocol.InvalidJsonException;
-import dev.erst.gridgrind.protocol.InvalidRequestException;
-import dev.erst.gridgrind.protocol.InvalidRequestShapeException;
+import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
+import dev.erst.gridgrind.protocol.json.GridGrindJson;
+import dev.erst.gridgrind.protocol.json.InvalidJsonException;
+import dev.erst.gridgrind.protocol.json.InvalidRequestException;
+import dev.erst.gridgrind.protocol.json.InvalidRequestShapeException;
 import java.io.IOException;
 
 /** Fuzzes protocol request decoding and validation from raw JSON payloads. */

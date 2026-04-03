@@ -2,13 +2,13 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.protocol.GridGrindJson;
-import dev.erst.gridgrind.protocol.GridGrindProblemCategory;
-import dev.erst.gridgrind.protocol.GridGrindProblemCode;
-import dev.erst.gridgrind.protocol.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.protocol.GridGrindRequest;
-import dev.erst.gridgrind.protocol.GridGrindResponse;
-import dev.erst.gridgrind.protocol.WorkbookReadResult;
+import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.protocol.dto.GridGrindProblemCategory;
+import dev.erst.gridgrind.protocol.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
+import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
+import dev.erst.gridgrind.protocol.json.GridGrindJson;
+import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

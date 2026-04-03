@@ -6,7 +6,7 @@ plugins {
 description = "Structured GridGrind protocol and request execution layer"
 
 dependencies {
-    api(project(":engine"))
+    implementation(project(":engine"))
     api(libs.jackson.databind)
     testImplementation(testFixtures(project(":engine")))
     testImplementation(libs.junit.jupiter)

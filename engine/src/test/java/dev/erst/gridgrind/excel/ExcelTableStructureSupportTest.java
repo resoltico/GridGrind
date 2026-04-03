@@ -166,7 +166,7 @@ class ExcelTableStructureSupportTest {
                   case "getCellFormula" -> formulaValue;
                   case "toString" -> displayValue;
                   case "hashCode" -> System.identityHashCode(proxy);
-                  case "equals" -> Boolean.FALSE;
+                  case "equals" -> false;
                   default -> throw new UnsupportedOperationException(method.getName());
                 });
   }

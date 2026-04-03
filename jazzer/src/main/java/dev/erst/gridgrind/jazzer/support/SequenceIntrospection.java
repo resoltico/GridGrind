@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.protocol.GridGrindRequest;
-import dev.erst.gridgrind.protocol.GridGrindResponse;
-import dev.erst.gridgrind.protocol.WorkbookReadOperation;
-import dev.erst.gridgrind.protocol.WorkbookOperation;
+import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
+import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
+import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
+import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

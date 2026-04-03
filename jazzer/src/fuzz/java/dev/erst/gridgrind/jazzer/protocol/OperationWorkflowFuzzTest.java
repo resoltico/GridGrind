@@ -8,9 +8,9 @@ import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import dev.erst.gridgrind.jazzer.support.OperationSequenceModel;
 import dev.erst.gridgrind.jazzer.support.SequenceIntrospection;
 import dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks;
-import dev.erst.gridgrind.protocol.GridGrindRequest;
-import dev.erst.gridgrind.protocol.GridGrindResponse;
-import dev.erst.gridgrind.protocol.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
+import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
+import dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor;
 
 /** Fuzzes ordered protocol workflows against the production service entrypoint. */
 class OperationWorkflowFuzzTest {

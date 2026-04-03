@@ -16,25 +16,28 @@ import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.protocol.CommentInput;
-import dev.erst.gridgrind.protocol.ConditionalFormattingBlockInput;
-import dev.erst.gridgrind.protocol.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.protocol.DataValidationInput;
-import dev.erst.gridgrind.protocol.DataValidationRuleInput;
-import dev.erst.gridgrind.protocol.DifferentialStyleInput;
-import dev.erst.gridgrind.protocol.GridGrindRequest;
-import dev.erst.gridgrind.protocol.HyperlinkTarget;
-import dev.erst.gridgrind.protocol.NamedRangeSelection;
-import dev.erst.gridgrind.protocol.NamedRangeScope;
-import dev.erst.gridgrind.protocol.NamedRangeTarget;
-import dev.erst.gridgrind.protocol.RangeSelection;
-import dev.erst.gridgrind.protocol.SheetSelection;
-import dev.erst.gridgrind.protocol.SheetCopyPosition;
-import dev.erst.gridgrind.protocol.TableInput;
-import dev.erst.gridgrind.protocol.TableSelection;
-import dev.erst.gridgrind.protocol.TableStyleInput;
-import dev.erst.gridgrind.protocol.WorkbookReadOperation;
-import dev.erst.gridgrind.protocol.WorkbookOperation;
+import dev.erst.gridgrind.protocol.dto.ComparisonOperator;
+import dev.erst.gridgrind.protocol.dto.CommentInput;
+import dev.erst.gridgrind.protocol.dto.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.protocol.dto.DataValidationInput;
+import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
+import dev.erst.gridgrind.protocol.dto.DifferentialStyleInput;
+import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
+import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
+import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
+import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
+import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
+import dev.erst.gridgrind.protocol.dto.RangeSelection;
+import dev.erst.gridgrind.protocol.dto.SheetSelection;
+import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
+import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
+import dev.erst.gridgrind.protocol.dto.SheetVisibility;
+import dev.erst.gridgrind.protocol.dto.TableInput;
+import dev.erst.gridgrind.protocol.dto.TableSelection;
+import dev.erst.gridgrind.protocol.dto.TableStyleInput;
+import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
+import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -57,11 +60,11 @@ class SequenceIntrospectionTest {
     assertEquals(
         "SET_SHEET_VISIBILITY",
         SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN)));
+            new WorkbookOperation.SetSheetVisibility("Budget", SheetVisibility.HIDDEN)));
     assertEquals(
         "SET_SHEET_PROTECTION",
         SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetSheetProtection("Budget", protectionSettings())));
+            new WorkbookOperation.SetSheetProtection("Budget", protocolProtectionSettings())));
     assertEquals(
         "CLEAR_SHEET_PROTECTION",
         SequenceIntrospection.operationKind(
@@ -102,7 +105,7 @@ class SequenceIntrospectionTest {
                 "A2:A5",
                 new DataValidationInput(
                     new DataValidationRuleInput.WholeNumber(
-                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                        ComparisonOperator.GREATER_OR_EQUAL, "1", null),
                     false,
                     false,
                     null,
@@ -180,7 +183,7 @@ class SequenceIntrospectionTest {
     assertEquals(
         "SET_SHEET_PROTECTION",
         SequenceIntrospection.commandKind(
-            new WorkbookCommand.SetSheetProtection("Budget", protectionSettings())));
+            new WorkbookCommand.SetSheetProtection("Budget", excelProtectionSettings())));
     assertEquals(
         "CLEAR_SHEET_PROTECTION",
         SequenceIntrospection.commandKind(
@@ -345,7 +348,26 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_WORKBOOK_FINDINGS"));
   }
 
-  private static ExcelSheetProtectionSettings protectionSettings() {
+  private static SheetProtectionSettings protocolProtectionSettings() {
+    return new SheetProtectionSettings(
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false);
+  }
+
+  private static ExcelSheetProtectionSettings excelProtectionSettings() {
     return new ExcelSheetProtectionSettings(
         false,
         true,

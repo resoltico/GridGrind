@@ -9,35 +9,41 @@ import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.protocol.CellSelection;
-import dev.erst.gridgrind.protocol.AutofilterEntryReport;
-import dev.erst.gridgrind.protocol.AutofilterHealthReport;
-import dev.erst.gridgrind.protocol.DataValidationEntryReport;
-import dev.erst.gridgrind.protocol.DataValidationHealthReport;
-import dev.erst.gridgrind.protocol.DataValidationRuleInput;
-import dev.erst.gridgrind.protocol.FontHeightReport;
-import dev.erst.gridgrind.protocol.GridGrindRequest;
-import dev.erst.gridgrind.protocol.GridGrindProtocolVersion;
-import dev.erst.gridgrind.protocol.GridGrindResponse;
-import dev.erst.gridgrind.protocol.HeaderFooterTextReport;
-import dev.erst.gridgrind.protocol.HyperlinkTarget;
-import dev.erst.gridgrind.protocol.NamedRangeScope;
-import dev.erst.gridgrind.protocol.NamedRangeSelection;
-import dev.erst.gridgrind.protocol.NamedRangeTarget;
-import dev.erst.gridgrind.protocol.PaneReport;
-import dev.erst.gridgrind.protocol.PrintAreaReport;
-import dev.erst.gridgrind.protocol.PrintLayoutReport;
-import dev.erst.gridgrind.protocol.PrintScalingReport;
-import dev.erst.gridgrind.protocol.PrintTitleColumnsReport;
-import dev.erst.gridgrind.protocol.PrintTitleRowsReport;
-import dev.erst.gridgrind.protocol.RangeSelection;
-import dev.erst.gridgrind.protocol.SheetSelection;
-import dev.erst.gridgrind.protocol.TableEntryReport;
-import dev.erst.gridgrind.protocol.TableHealthReport;
-import dev.erst.gridgrind.protocol.TableSelection;
-import dev.erst.gridgrind.protocol.TableStyleReport;
-import dev.erst.gridgrind.protocol.WorkbookReadOperation;
-import dev.erst.gridgrind.protocol.WorkbookReadResult;
+import dev.erst.gridgrind.protocol.dto.AnalysisFindingCode;
+import dev.erst.gridgrind.protocol.dto.AnalysisSeverity;
+import dev.erst.gridgrind.protocol.dto.BorderStyle;
+import dev.erst.gridgrind.protocol.dto.CellSelection;
+import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterHealthReport;
+import dev.erst.gridgrind.protocol.dto.DataValidationEntryReport;
+import dev.erst.gridgrind.protocol.dto.DataValidationHealthReport;
+import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
+import dev.erst.gridgrind.protocol.dto.FontHeightReport;
+import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
+import dev.erst.gridgrind.protocol.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
+import dev.erst.gridgrind.protocol.dto.HeaderFooterTextReport;
+import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
+import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
+import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
+import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
+import dev.erst.gridgrind.protocol.dto.PaneReport;
+import dev.erst.gridgrind.protocol.dto.PrintAreaReport;
+import dev.erst.gridgrind.protocol.dto.PrintLayoutReport;
+import dev.erst.gridgrind.protocol.dto.PrintOrientation;
+import dev.erst.gridgrind.protocol.dto.PrintScalingReport;
+import dev.erst.gridgrind.protocol.dto.PrintTitleColumnsReport;
+import dev.erst.gridgrind.protocol.dto.PrintTitleRowsReport;
+import dev.erst.gridgrind.protocol.dto.RangeSelection;
+import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
+import dev.erst.gridgrind.protocol.dto.SheetSelection;
+import dev.erst.gridgrind.protocol.dto.SheetVisibility;
+import dev.erst.gridgrind.protocol.dto.TableEntryReport;
+import dev.erst.gridgrind.protocol.dto.TableHealthReport;
+import dev.erst.gridgrind.protocol.dto.TableSelection;
+import dev.erst.gridgrind.protocol.dto.TableStyleReport;
+import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
+import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -133,7 +139,7 @@ class WorkbookInvariantChecksTest {
                     new PrintLayoutReport(
                         "Budget",
                         new PrintAreaReport.Range("A1:B20"),
-                        dev.erst.gridgrind.excel.ExcelPrintOrientation.LANDSCAPE,
+                        PrintOrientation.LANDSCAPE,
                         new PrintScalingReport.Fit(1, 0),
                         new PrintTitleRowsReport.Band(0, 0),
                         new PrintTitleColumnsReport.Band(0, 0),
@@ -145,9 +151,9 @@ class WorkbookInvariantChecksTest {
                     List.of(
                         new DataValidationEntryReport.Supported(
                             List.of("A2:A5"),
-                            new DataValidationEntryReport.DataValidationDefinitionReport(
-                                new DataValidationRuleInput.WholeNumber(
-                                    dev.erst.gridgrind.excel.ExcelComparisonOperator
+                                new DataValidationEntryReport.DataValidationDefinitionReport(
+                                    new DataValidationRuleInput.WholeNumber(
+                                    dev.erst.gridgrind.protocol.dto.ComparisonOperator
                                         .GREATER_OR_EQUAL,
                                     "1",
                                     null),
@@ -204,9 +210,8 @@ class WorkbookInvariantChecksTest {
                         new GridGrindResponse.AnalysisSummaryReport(1, 0, 0, 1),
                         List.of(
                             new GridGrindResponse.AnalysisFindingReport(
-                                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
-                                    .FORMULA_VOLATILE_FUNCTION,
-                                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.INFO,
+                                AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
+                                AnalysisSeverity.INFO,
                                 "Volatile formula",
                                 "Formula uses NOW().",
                                 new GridGrindResponse.AnalysisLocationReport.Cell(
@@ -274,9 +279,8 @@ class WorkbookInvariantChecksTest {
                         new GridGrindResponse.AnalysisSummaryReport(1, 1, 0, 0),
                         List.of(
                             new GridGrindResponse.AnalysisFindingReport(
-                                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisFindingCode
-                                    .DATA_VALIDATION_UNSUPPORTED_RULE,
-                                dev.erst.gridgrind.excel.WorkbookAnalysis.AnalysisSeverity.WARNING,
+                                AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
+                                AnalysisSeverity.WARNING,
                                 "Unsupported data-validation rule",
                                 "Formula is missing",
                                 new GridGrindResponse.AnalysisLocationReport.Range(
@@ -356,8 +360,9 @@ class WorkbookInvariantChecksTest {
                     "sheet",
                     new GridGrindResponse.SheetSummaryReport(
                         "Budget",
-                        ExcelSheetVisibility.VERY_HIDDEN,
-                        new GridGrindResponse.SheetProtectionReport.Protected(protectionSettings()),
+                        SheetVisibility.VERY_HIDDEN,
+                        new GridGrindResponse.SheetProtectionReport.Protected(
+                            protocolProtectionSettings()),
                         4,
                         7,
                         3))));
@@ -474,23 +479,42 @@ class WorkbookInvariantChecksTest {
         false,
         false,
         false,
-        ExcelHorizontalAlignment.GENERAL,
-        ExcelVerticalAlignment.BOTTOM,
+        dev.erst.gridgrind.protocol.dto.HorizontalAlignment.GENERAL,
+        dev.erst.gridgrind.protocol.dto.VerticalAlignment.BOTTOM,
         "Calibri",
         new FontHeightReport(220, new BigDecimal("11")),
         null,
         false,
         false,
         null,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE);
+        BorderStyle.NONE,
+        BorderStyle.NONE,
+        BorderStyle.NONE,
+        BorderStyle.NONE);
   }
 
   private static GridGrindResponse.CellReport.TextReport textCell(String address, String value) {
     return new GridGrindResponse.CellReport.TextReport(
         address, "STRING", value, defaultStyle(), null, null, value);
+  }
+
+  private static SheetProtectionSettings protocolProtectionSettings() {
+    return new SheetProtectionSettings(
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false,
+        true,
+        false);
   }
 
   private static ExcelSheetProtectionSettings protectionSettings() {

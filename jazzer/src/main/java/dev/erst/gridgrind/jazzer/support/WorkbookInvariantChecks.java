@@ -4,26 +4,26 @@ import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
-import dev.erst.gridgrind.protocol.AutofilterEntryReport;
-import dev.erst.gridgrind.protocol.AutofilterHealthReport;
-import dev.erst.gridgrind.protocol.ConditionalFormattingEntryReport;
-import dev.erst.gridgrind.protocol.ConditionalFormattingHealthReport;
-import dev.erst.gridgrind.protocol.ConditionalFormattingRuleReport;
-import dev.erst.gridgrind.protocol.ConditionalFormattingThresholdReport;
-import dev.erst.gridgrind.protocol.DifferentialBorderReport;
-import dev.erst.gridgrind.protocol.DifferentialBorderSideReport;
-import dev.erst.gridgrind.protocol.DifferentialStyleReport;
-import dev.erst.gridgrind.protocol.FontHeightReport;
-import dev.erst.gridgrind.protocol.GridGrindRequest;
-import dev.erst.gridgrind.protocol.GridGrindResponse;
-import dev.erst.gridgrind.protocol.HyperlinkTarget;
-import dev.erst.gridgrind.protocol.PaneReport;
-import dev.erst.gridgrind.protocol.PrintLayoutReport;
-import dev.erst.gridgrind.protocol.TableEntryReport;
-import dev.erst.gridgrind.protocol.TableHealthReport;
-import dev.erst.gridgrind.protocol.TableStyleReport;
-import dev.erst.gridgrind.protocol.WorkbookReadOperation;
-import dev.erst.gridgrind.protocol.WorkbookReadResult;
+import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterHealthReport;
+import dev.erst.gridgrind.protocol.dto.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.protocol.dto.ConditionalFormattingHealthReport;
+import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.protocol.dto.ConditionalFormattingThresholdReport;
+import dev.erst.gridgrind.protocol.dto.DifferentialBorderReport;
+import dev.erst.gridgrind.protocol.dto.DifferentialBorderSideReport;
+import dev.erst.gridgrind.protocol.dto.DifferentialStyleReport;
+import dev.erst.gridgrind.protocol.dto.FontHeightReport;
+import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
+import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
+import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
+import dev.erst.gridgrind.protocol.dto.PaneReport;
+import dev.erst.gridgrind.protocol.dto.PrintLayoutReport;
+import dev.erst.gridgrind.protocol.dto.TableEntryReport;
+import dev.erst.gridgrind.protocol.dto.TableHealthReport;
+import dev.erst.gridgrind.protocol.dto.TableStyleReport;
+import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
+import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -619,15 +619,15 @@ public final class WorkbookInvariantChecks {
   }
 
   private static void requireDataValidationEntryShape(
-      dev.erst.gridgrind.protocol.DataValidationEntryReport validation) {
+      dev.erst.gridgrind.protocol.dto.DataValidationEntryReport validation) {
     require(validation.ranges() != null, "data validation ranges must not be null");
     require(!validation.ranges().isEmpty(), "data validation ranges must not be empty");
     validation.ranges().forEach(range -> requireNonBlank(range, "data validation range"));
 
     switch (validation) {
-      case dev.erst.gridgrind.protocol.DataValidationEntryReport.Supported supported ->
+      case dev.erst.gridgrind.protocol.dto.DataValidationEntryReport.Supported supported ->
           requireSupportedDataValidationShape(supported.validation());
-      case dev.erst.gridgrind.protocol.DataValidationEntryReport.Unsupported unsupported -> {
+      case dev.erst.gridgrind.protocol.dto.DataValidationEntryReport.Unsupported unsupported -> {
         requireNonBlank(unsupported.kind(), "data validation kind");
         requireNonBlank(unsupported.detail(), "data validation detail");
       }
@@ -798,29 +798,29 @@ public final class WorkbookInvariantChecks {
   }
 
   private static void requireSupportedDataValidationShape(
-      dev.erst.gridgrind.protocol.DataValidationEntryReport.DataValidationDefinitionReport
+      dev.erst.gridgrind.protocol.dto.DataValidationEntryReport.DataValidationDefinitionReport
           validation) {
     require(validation != null, "data validation definition must not be null");
     require(validation.rule() != null, "data validation rule must not be null");
     switch (validation.rule()) {
-      case dev.erst.gridgrind.protocol.DataValidationRuleInput.ExplicitList explicitList -> {
+      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.ExplicitList explicitList -> {
         require(explicitList.values() != null, "explicit list values must not be null");
         require(!explicitList.values().isEmpty(), "explicit list values must not be empty");
         explicitList.values().forEach(value -> requireNonBlank(value, "explicit list value"));
       }
-      case dev.erst.gridgrind.protocol.DataValidationRuleInput.FormulaList formulaList ->
+      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.FormulaList formulaList ->
           requireNonBlank(formulaList.formula(), "formula list formula");
-      case dev.erst.gridgrind.protocol.DataValidationRuleInput.WholeNumber wholeNumber ->
+      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.WholeNumber wholeNumber ->
           requireComparisonRuleShape(wholeNumber.operator(), wholeNumber.formula1());
-      case dev.erst.gridgrind.protocol.DataValidationRuleInput.DecimalNumber decimalNumber ->
+      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.DecimalNumber decimalNumber ->
           requireComparisonRuleShape(decimalNumber.operator(), decimalNumber.formula1());
-      case dev.erst.gridgrind.protocol.DataValidationRuleInput.DateRule dateRule ->
+      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.DateRule dateRule ->
           requireComparisonRuleShape(dateRule.operator(), dateRule.formula1());
-      case dev.erst.gridgrind.protocol.DataValidationRuleInput.TimeRule timeRule ->
+      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.TimeRule timeRule ->
           requireComparisonRuleShape(timeRule.operator(), timeRule.formula1());
-      case dev.erst.gridgrind.protocol.DataValidationRuleInput.TextLength textLength ->
+      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.TextLength textLength ->
           requireComparisonRuleShape(textLength.operator(), textLength.formula1());
-      case dev.erst.gridgrind.protocol.DataValidationRuleInput.CustomFormula customFormula ->
+      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.CustomFormula customFormula ->
           requireNonBlank(customFormula.formula(), "custom validation formula");
     }
     if (validation.prompt() != null) {
@@ -929,7 +929,7 @@ public final class WorkbookInvariantChecks {
   }
 
   private static void requireDataValidationHealthShape(
-      dev.erst.gridgrind.protocol.DataValidationHealthReport analysis) {
+      dev.erst.gridgrind.protocol.dto.DataValidationHealthReport analysis) {
     require(
         analysis.checkedValidationCount() >= 0,
         "checkedValidationCount must not be negative");
