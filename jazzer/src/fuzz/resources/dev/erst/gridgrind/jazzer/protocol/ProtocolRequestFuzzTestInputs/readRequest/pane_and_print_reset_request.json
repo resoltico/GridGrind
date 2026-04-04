@@ -1,0 +1,40 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Data" },
+    { "type": "ENSURE_SHEET", "sheetName": "Review" },
+    {
+      "type": "SET_SHEET_PANE",
+      "sheetName": "Data",
+      "pane": {
+        "type": "SPLIT",
+        "xSplitPosition": 1800,
+        "ySplitPosition": 900,
+        "leftmostColumn": 2,
+        "topRow": 3,
+        "activePane": "LOWER_RIGHT"
+      }
+    },
+    {
+      "type": "SET_PRINT_LAYOUT",
+      "sheetName": "Data",
+      "printLayout": {
+        "printArea": { "type": "NONE" },
+        "orientation": "PORTRAIT",
+        "scaling": { "type": "AUTOMATIC" },
+        "repeatingRows": { "type": "NONE" },
+        "repeatingColumns": { "type": "NONE" }
+      }
+    },
+    { "type": "SET_SHEET_PANE", "sheetName": "Review", "pane": { "type": "NONE" } },
+    { "type": "CLEAR_PRINT_LAYOUT", "sheetName": "Review" }
+  ],
+  "reads": [
+    { "type": "GET_SHEET_LAYOUT", "requestId": "data-layout", "sheetName": "Data" },
+    { "type": "GET_PRINT_LAYOUT", "requestId": "data-print", "sheetName": "Data" },
+    { "type": "GET_SHEET_LAYOUT", "requestId": "review-layout", "sheetName": "Review" },
+    { "type": "GET_PRINT_LAYOUT", "requestId": "review-print", "sheetName": "Review" }
+  ]
+}

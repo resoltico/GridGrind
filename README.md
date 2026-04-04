@@ -45,7 +45,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.25.0
+docker pull ghcr.io/resoltico/gridgrind:0.26.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -74,7 +74,8 @@ docker run --rm ghcr.io/resoltico/gridgrind:latest --print-protocol-catalog
 
 The protocol catalog is machine-readable JSON. Each entry now lists its fields, whether each field
 is required or optional, and the exact nested/plain type group accepted by polymorphic fields such
-as `value`, `target`, `selection`, `style`, and `scope`.
+as `value`, `target`, `selection`, `style`, and `scope`. The built-in catalog and request template
+are emitted deterministically, so discovery output is stable across repeated runs.
 
 To read a request file and write response and `.xlsx` files back to the host,
 mount a working directory:

@@ -2,21 +2,22 @@ package dev.erst.gridgrind.protocol.catalog;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.protocol.catalog.gather.CatalogDuplicateFailures;
+import dev.erst.gridgrind.protocol.catalog.gather.CatalogFieldMetadataSupport;
+import dev.erst.gridgrind.protocol.catalog.gather.CatalogGatherers;
 import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.RecordComponent;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
-import java.util.function.BinaryOperator;
 import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /** Publishes the machine-readable GridGrind protocol surface used by CLI discovery commands. */
 public final class GridGrindProtocolCatalog {
@@ -28,64 +29,6 @@ public final class GridGrindProtocolCatalog {
           new GridGrindRequest.WorkbookPersistence.None(),
           List.of(),
           List.of());
-  private static final Set<Class<?>> STRING_FIELD_TYPES =
-      Set.of(String.class, java.time.LocalDate.class, java.time.LocalDateTime.class);
-  private static final Set<Class<?>> BOOLEAN_FIELD_TYPES = Set.of(boolean.class, Boolean.class);
-  private static final Set<Class<?>> NUMERIC_FIELD_TYPES =
-      Set.of(
-          byte.class,
-          short.class,
-          int.class,
-          long.class,
-          float.class,
-          double.class,
-          Byte.class,
-          Short.class,
-          Integer.class,
-          Long.class,
-          Float.class,
-          Double.class,
-          java.math.BigDecimal.class,
-          java.math.BigInteger.class);
-  private static final Map<Class<?>, String> NESTED_FIELD_SHAPE_GROUPS =
-      Map.ofEntries(
-          Map.entry(CellInput.class, "cellInputTypes"),
-          Map.entry(HyperlinkTarget.class, "hyperlinkTargetTypes"),
-          Map.entry(PaneInput.class, "paneTypes"),
-          Map.entry(SheetCopyPosition.class, "sheetCopyPositionTypes"),
-          Map.entry(CellSelection.class, "cellSelectionTypes"),
-          Map.entry(RangeSelection.class, "rangeSelectionTypes"),
-          Map.entry(SheetSelection.class, "sheetSelectionTypes"),
-          Map.entry(TableSelection.class, "tableSelectionTypes"),
-          Map.entry(NamedRangeSelection.class, "namedRangeSelectionTypes"),
-          Map.entry(NamedRangeScope.class, "namedRangeScopeTypes"),
-          Map.entry(NamedRangeSelector.class, "namedRangeSelectorTypes"),
-          Map.entry(DataValidationRuleInput.class, "dataValidationRuleTypes"),
-          Map.entry(ConditionalFormattingRuleInput.class, "conditionalFormattingRuleTypes"),
-          Map.entry(PrintAreaInput.class, "printAreaTypes"),
-          Map.entry(PrintScalingInput.class, "printScalingTypes"),
-          Map.entry(PrintTitleRowsInput.class, "printTitleRowsTypes"),
-          Map.entry(PrintTitleColumnsInput.class, "printTitleColumnsTypes"),
-          Map.entry(TableStyleInput.class, "tableStyleTypes"),
-          Map.entry(FontHeightInput.class, "fontHeightTypes"));
-  private static final Map<Class<?>, String> PLAIN_FIELD_SHAPE_GROUPS =
-      Map.ofEntries(
-          Map.entry(CommentInput.class, "commentInputType"),
-          Map.entry(NamedRangeTarget.class, "namedRangeTargetType"),
-          Map.entry(SheetProtectionSettings.class, "sheetProtectionSettingsType"),
-          Map.entry(CellStyleInput.class, "cellStyleInputType"),
-          Map.entry(CellBorderInput.class, "cellBorderInputType"),
-          Map.entry(CellBorderSideInput.class, "cellBorderSideInputType"),
-          Map.entry(DataValidationInput.class, "dataValidationInputType"),
-          Map.entry(DataValidationPromptInput.class, "dataValidationPromptInputType"),
-          Map.entry(DataValidationErrorAlertInput.class, "dataValidationErrorAlertInputType"),
-          Map.entry(ConditionalFormattingBlockInput.class, "conditionalFormattingBlockInputType"),
-          Map.entry(HeaderFooterTextInput.class, "headerFooterTextInputType"),
-          Map.entry(DifferentialStyleInput.class, "differentialStyleInputType"),
-          Map.entry(DifferentialBorderInput.class, "differentialBorderInputType"),
-          Map.entry(DifferentialBorderSideInput.class, "differentialBorderSideInputType"),
-          Map.entry(PrintLayoutInput.class, "printLayoutInputType"),
-          Map.entry(TableInput.class, "tableInputType"));
   private static final List<TypeDescriptor> SOURCE_TYPES =
       List.of(
           descriptor(
@@ -551,6 +494,20 @@ public final class GridGrindProtocolCatalog {
                       "DOCUMENT",
                       "Attach an internal workbook target."))),
           nestedTypeGroup(
+              "paneTypes",
+              PaneInput.class,
+              List.of(
+                  descriptor(
+                      PaneInput.None.class, "NONE", "Sheet has no active pane split or freeze."),
+                  descriptor(
+                      PaneInput.Frozen.class,
+                      "FROZEN",
+                      "Freeze the sheet at the provided split and visible-origin coordinates."),
+                  descriptor(
+                      PaneInput.Split.class,
+                      "SPLIT",
+                      "Apply split panes with explicit split offsets, visible origin, and active pane."))),
+          nestedTypeGroup(
               "sheetCopyPositionTypes",
               SheetCopyPosition.class,
               List.of(
@@ -719,6 +676,53 @@ public final class GridGrindProtocolCatalog {
                           + " Supply one differential style.",
                       "formula2"))),
           nestedTypeGroup(
+              "printAreaTypes",
+              PrintAreaInput.class,
+              List.of(
+                  descriptor(
+                      PrintAreaInput.None.class, "NONE", "Sheet has no explicit print area."),
+                  descriptor(
+                      PrintAreaInput.Range.class,
+                      "RANGE",
+                      "Sheet prints the provided rectangular A1-style range."))),
+          nestedTypeGroup(
+              "printScalingTypes",
+              PrintScalingInput.class,
+              List.of(
+                  descriptor(
+                      PrintScalingInput.Automatic.class,
+                      "AUTOMATIC",
+                      "Sheet uses Excel's default scaling instead of fit-to-page counts."),
+                  descriptor(
+                      PrintScalingInput.Fit.class,
+                      "FIT",
+                      "Sheet fits printed content into the provided page counts."
+                          + " A value of 0 on one axis keeps that axis unconstrained."))),
+          nestedTypeGroup(
+              "printTitleRowsTypes",
+              PrintTitleRowsInput.class,
+              List.of(
+                  descriptor(
+                      PrintTitleRowsInput.None.class,
+                      "NONE",
+                      "Sheet has no repeating print-title rows."),
+                  descriptor(
+                      PrintTitleRowsInput.Band.class,
+                      "BAND",
+                      "Sheet repeats the provided inclusive zero-based row band on every printed page."))),
+          nestedTypeGroup(
+              "printTitleColumnsTypes",
+              PrintTitleColumnsInput.class,
+              List.of(
+                  descriptor(
+                      PrintTitleColumnsInput.None.class,
+                      "NONE",
+                      "Sheet has no repeating print-title columns."),
+                  descriptor(
+                      PrintTitleColumnsInput.Band.class,
+                      "BAND",
+                      "Sheet repeats the provided inclusive zero-based column band on every printed page."))),
+          nestedTypeGroup(
               "tableStyleTypes",
               TableStyleInput.class,
               List.of(
@@ -807,6 +811,13 @@ public final class GridGrindProtocolCatalog {
                   + " rules must not be empty; ranges must be unique.",
               List.of()),
           plainTypeDescriptor(
+              "headerFooterTextInputType",
+              HeaderFooterTextInput.class,
+              "HeaderFooterTextInput",
+              "Plain left, center, and right header or footer text segments."
+                  + " Null fields default to empty string.",
+              List.of("left", "center", "right")),
+          plainTypeDescriptor(
               "differentialStyleInputType",
               DifferentialStyleInput.class,
               "DifferentialStyleInput",
@@ -827,6 +838,20 @@ public final class GridGrindProtocolCatalog {
               "One conditional-formatting differential border side defined by style and optional"
                   + " color.",
               List.of()),
+          plainTypeDescriptor(
+              "printLayoutInputType",
+              PrintLayoutInput.class,
+              "PrintLayoutInput",
+              "Authoritative supported print-layout payload for one SET_PRINT_LAYOUT request."
+                  + " All fields are optional and normalize to defaults when omitted.",
+              List.of(
+                  "printArea",
+                  "orientation",
+                  "scaling",
+                  "repeatingRows",
+                  "repeatingColumns",
+                  "header",
+                  "footer")),
           plainTypeDescriptor(
               "tableInputType",
               TableInput.class,
@@ -851,20 +876,20 @@ public final class GridGrindProtocolCatalog {
    * Returns the single catalog entry matching the given operation id, or empty when no entry with
    * that id exists. Searches sourceTypes, persistenceTypes, operationTypes, and readTypes.
    */
-  public static java.util.Optional<TypeEntry> entryFor(String id) {
+  public static Optional<TypeEntry> entryFor(String id) {
     return allEntries().stream().filter(e -> e.id().equals(id)).findFirst();
   }
 
   private static List<TypeEntry> allEntries() {
-    List<TypeEntry> all = new java.util.ArrayList<>();
-    all.addAll(CATALOG.sourceTypes());
-    all.addAll(CATALOG.persistenceTypes());
-    all.addAll(CATALOG.operationTypes());
-    all.addAll(CATALOG.readTypes());
-    for (NestedTypeGroup group : CATALOG.nestedTypes()) {
-      all.addAll(group.types());
-    }
-    return all;
+    return Stream.concat(
+            Stream.of(
+                    CATALOG.sourceTypes(),
+                    CATALOG.persistenceTypes(),
+                    CATALOG.operationTypes(),
+                    CATALOG.readTypes())
+                .flatMap(List::stream),
+            CATALOG.nestedTypes().stream().map(NestedTypeGroup::types).flatMap(List::stream))
+        .toList();
   }
 
   private static Catalog buildCatalog() {
@@ -928,125 +953,56 @@ public final class GridGrindProtocolCatalog {
   private static List<FieldEntry> fieldEntries(
       Class<? extends Record> recordType, List<String> optionalFields) {
     requiredFields(recordType, optionalFields);
+    Set<String> optionalFieldSet = Set.copyOf(optionalFields);
     return Arrays.stream(recordType.getRecordComponents())
-        .map(
-            component ->
-                new FieldEntry(
-                    component.getName(),
-                    optionalFields.contains(component.getName())
-                        ? FieldRequirement.OPTIONAL
-                        : FieldRequirement.REQUIRED,
-                    fieldShape(component.getGenericType()),
-                    enumValues(component.getGenericType())))
+        .gather(CatalogGatherers.expandFieldsWithMetadata(optionalFieldSet))
         .toList();
   }
 
-  /** Returns the machine-readable field shape for one record component type. */
-  static FieldShape fieldShape(Type type) {
-    Objects.requireNonNull(type, "type must not be null");
-    if (type instanceof ParameterizedType parameterizedType) {
-      return fieldShape(parameterizedType);
-    }
-    if (type instanceof Class<?> classType) {
-      return fieldShape(classType);
-    }
-    throw new IllegalStateException("Unsupported catalog field type: " + type);
-  }
-
-  /** Returns the machine-readable field shape for one parameterized record component type. */
-  static FieldShape fieldShape(ParameterizedType parameterizedType) {
-    Objects.requireNonNull(parameterizedType, "parameterizedType must not be null");
-    Type rawType = parameterizedType.getRawType();
-    if (rawType == List.class) {
-      Type[] typeArguments = parameterizedType.getActualTypeArguments();
-      if (typeArguments.length != 1) {
-        throw new IllegalStateException(
-            "List field must declare exactly one type argument: " + parameterizedType);
-      }
-      return new FieldShape.ListShape(fieldShape(typeArguments[0]));
-    }
-    throw new IllegalStateException(
-        "Unsupported parameterized catalog field type: " + parameterizedType);
-  }
-
-  /** Returns the machine-readable field shape for one non-parameterized record component type. */
-  static FieldShape fieldShape(Class<?> classType) {
-    Objects.requireNonNull(classType, "classType must not be null");
-    if (STRING_FIELD_TYPES.contains(classType)) {
-      return new FieldShape.Scalar(ScalarType.STRING);
-    }
-    if (BOOLEAN_FIELD_TYPES.contains(classType)) {
-      return new FieldShape.Scalar(ScalarType.BOOLEAN);
-    }
-    if (isNumericType(classType)) {
-      return new FieldShape.Scalar(ScalarType.NUMBER);
-    }
-    if (classType.isEnum()) {
-      return new FieldShape.Scalar(ScalarType.STRING);
-    }
-    String nestedGroup = NESTED_FIELD_SHAPE_GROUPS.get(classType);
-    if (nestedGroup != null) {
-      return new FieldShape.NestedTypeGroupRef(nestedGroup);
-    }
-    String plainGroup = PLAIN_FIELD_SHAPE_GROUPS.get(classType);
-    if (plainGroup != null) {
-      return new FieldShape.PlainTypeGroupRef(plainGroup);
-    }
-    throw new IllegalStateException("Unsupported catalog field type: " + classType.getName());
-  }
-
-  /** Returns whether one non-parameterized record component type is represented as JSON NUMBER. */
-  static boolean isNumericType(Class<?> classType) {
-    Objects.requireNonNull(classType, "classType must not be null");
-    return NUMERIC_FIELD_TYPES.contains(classType);
-  }
-
   private static void validateFieldShapeGroupMappings() {
+    Set<Class<?>> descriptorNestedTypes =
+        NESTED_TYPE_GROUPS.stream()
+            .map(NestedTypeDescriptor::sealedType)
+            .collect(java.util.stream.Collectors.toSet());
+    Set<Class<?>> descriptorPlainTypes =
+        PLAIN_TYPE_DESCRIPTORS.stream()
+            .map(PlainTypeDescriptor::recordType)
+            .collect(java.util.stream.Collectors.toSet());
+
     for (NestedTypeDescriptor descriptor : NESTED_TYPE_GROUPS) {
-      validateNestedTypeGroupMapping(descriptor.sealedType(), descriptor.group());
+      CatalogFieldMetadataSupport.validateNestedTypeGroupMapping(
+          descriptor.sealedType(), descriptor.group());
     }
     for (PlainTypeDescriptor descriptor : PLAIN_TYPE_DESCRIPTORS) {
-      validatePlainTypeGroupMapping(descriptor.recordType(), descriptor.group());
+      CatalogFieldMetadataSupport.validatePlainTypeGroupMapping(
+          descriptor.recordType(), descriptor.group());
     }
+
+    // Reverse check: every registered type must appear in a descriptor.
+    validateReverseGroupMappings(descriptorNestedTypes, descriptorPlainTypes);
   }
 
-  /** Validates that one nested sealed input type maps to the published field-shape group. */
-  static void validateNestedTypeGroupMapping(Class<?> sealedType, String expectedGroup) {
-    Objects.requireNonNull(sealedType, "sealedType must not be null");
-    String mappedGroup = NESTED_FIELD_SHAPE_GROUPS.get(sealedType);
-    if (!expectedGroup.equals(mappedGroup)) {
-      throw new IllegalStateException(
-          "Field-shape nested group mapping mismatch for "
-              + sealedType.getName()
-              + ": expected="
-              + expectedGroup
-              + ", mapped="
-              + mappedGroup);
+  /**
+   * Validates that every type registered in the field-shape maps appears in one of the provided
+   * descriptor sets. Exposed as package-private so tests can exercise the failure paths with
+   * synthetic descriptor sets that are intentionally incomplete.
+   */
+  static void validateReverseGroupMappings(
+      Set<Class<?>> descriptorNestedTypes, Set<Class<?>> descriptorPlainTypes) {
+    for (Class<?> registeredType : CatalogFieldMetadataSupport.registeredNestedTypes()) {
+      if (!descriptorNestedTypes.contains(registeredType)) {
+        throw new IllegalStateException(
+            "Field-shape nested group map contains type with no catalog descriptor: "
+                + registeredType.getName());
+      }
     }
-  }
-
-  /** Validates that one plain record input type maps to the published field-shape group. */
-  static void validatePlainTypeGroupMapping(Class<?> recordType, String expectedGroup) {
-    Objects.requireNonNull(recordType, "recordType must not be null");
-    String mappedGroup = PLAIN_FIELD_SHAPE_GROUPS.get(recordType);
-    if (!expectedGroup.equals(mappedGroup)) {
-      throw new IllegalStateException(
-          "Field-shape plain group mapping mismatch for "
-              + recordType.getName()
-              + ": expected="
-              + expectedGroup
-              + ", mapped="
-              + mappedGroup);
+    for (Class<?> registeredType : CatalogFieldMetadataSupport.registeredPlainTypes()) {
+      if (!descriptorPlainTypes.contains(registeredType)) {
+        throw new IllegalStateException(
+            "Field-shape plain group map contains type with no catalog descriptor: "
+                + registeredType.getName());
+      }
     }
-  }
-
-  private static List<String> enumValues(Type type) {
-    if (type instanceof Class<?> classType && classType.isEnum()) {
-      return Arrays.stream(classType.getEnumConstants())
-          .map(value -> ((Enum<?>) value).name())
-          .toList();
-    }
-    return List.of();
   }
 
   /** Returns the required record fields after removing the explicitly optional ones. */
@@ -1129,218 +1085,19 @@ public final class GridGrindProtocolCatalog {
     }
   }
 
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
   private static <T, K, V> Map<K, V> toOrderedMap(
-      List<T> values, Function<T, K> keyExtractor, Function<T, V> valueExtractor, String label) {
-    return values.stream()
-        .collect(
-            Collectors.toMap(
-                keyExtractor, valueExtractor, duplicateEntryHandler(label), LinkedHashMap::new));
-  }
-
-  /**
-   * Builds the failure used when a duplicate entry is detected during catalog construction.
-   * Package-private for direct unit testing of the unreachable-in-integration duplicate path.
-   */
-  @SuppressWarnings("DoNotCallSuggester")
-  static IllegalStateException duplicateEntryFailure(String label, Object left, Object right) {
-    return new IllegalStateException(
-        "Duplicate %s detected while building the protocol catalog: %s / %s"
-            .formatted(label, left, right));
-  }
-
-  /** Returns the duplicate-entry merge handler used when building ordered protocol maps. */
-  static <T> BinaryOperator<T> duplicateEntryHandler(String label) {
-    return new DuplicateEntryMerger<>(label);
-  }
-
-  /** Merge function that always fails when duplicate ordered-map keys are encountered. */
-  record DuplicateEntryMerger<T>(String label) implements BinaryOperator<T> {
-    @Override
-    public T apply(T left, T right) {
-      throw duplicateEntryFailure(label, left, right);
-    }
-  }
-
-  /** JSON-serializable top-level catalog emitted by {@code --print-protocol-catalog}. */
-  public record Catalog(
-      GridGrindProtocolVersion protocolVersion,
-      String discriminatorField,
-      List<TypeEntry> sourceTypes,
-      List<TypeEntry> persistenceTypes,
-      List<TypeEntry> operationTypes,
-      List<TypeEntry> readTypes,
-      List<NestedTypeGroup> nestedTypes,
-      List<PlainTypeGroup> plainTypes) {
-    public Catalog {
-      protocolVersion =
-          protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
-      discriminatorField = requireNonBlank(discriminatorField, "discriminatorField");
-      sourceTypes = copyEntries(sourceTypes, "sourceTypes");
-      persistenceTypes = copyEntries(persistenceTypes, "persistenceTypes");
-      operationTypes = copyEntries(operationTypes, "operationTypes");
-      readTypes = copyEntries(readTypes, "readTypes");
-      nestedTypes = copyGroups(nestedTypes, "nestedTypes");
-      plainTypes = copyPlainGroups(plainTypes, "plainTypes");
-    }
-  }
-
-  /** JSON-serializable type entry describing one request or nested union variant. */
-  public record TypeEntry(String id, String summary, List<FieldEntry> fields) {
-    public TypeEntry {
-      id = requireNonBlank(id, "id");
-      summary = requireNonBlank(summary, "summary");
-      fields = copyFieldEntries(fields, "fields");
-    }
-
-    /** Returns the field entry with the given name, or null when this type has no such field. */
-    public FieldEntry field(String name) {
-      Objects.requireNonNull(name, "name must not be null");
-      return fields.stream().filter(field -> field.name().equals(name)).findFirst().orElse(null);
-    }
-  }
-
-  /** Whether a catalog field is required or optional in the JSON payload. */
-  public enum FieldRequirement {
-    REQUIRED,
-    OPTIONAL
-  }
-
-  /** Canonical scalar JSON value types used in the machine-readable field catalog. */
-  public enum ScalarType {
-    STRING,
-    NUMBER,
-    BOOLEAN
-  }
-
-  /** JSON-serializable field descriptor for one record component. */
-  public record FieldEntry(
-      String name, FieldRequirement requirement, FieldShape shape, List<String> enumValues) {
-    public FieldEntry {
-      name = requireNonBlank(name, "name");
-      Objects.requireNonNull(requirement, "requirement must not be null");
-      Objects.requireNonNull(shape, "shape must not be null");
-      enumValues = copyStrings(enumValues, "enumValues");
-    }
-  }
-
-  /** JSON-serializable recursive field-shape contract used by protocol discovery output. */
-  @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "kind")
-  @JsonSubTypes({
-    @JsonSubTypes.Type(value = FieldShape.Scalar.class, name = "SCALAR"),
-    @JsonSubTypes.Type(value = FieldShape.ListShape.class, name = "LIST"),
-    @JsonSubTypes.Type(value = FieldShape.NestedTypeGroupRef.class, name = "NESTED_TYPE_GROUP"),
-    @JsonSubTypes.Type(value = FieldShape.PlainTypeGroupRef.class, name = "PLAIN_TYPE_GROUP")
-  })
-  public sealed interface FieldShape
-      permits FieldShape.Scalar,
-          FieldShape.ListShape,
-          FieldShape.NestedTypeGroupRef,
-          FieldShape.PlainTypeGroupRef {
-    /** Scalar JSON value type such as STRING, NUMBER, or BOOLEAN. */
-    record Scalar(ScalarType scalarType) implements FieldShape {
-      public Scalar {
-        Objects.requireNonNull(scalarType, "scalarType must not be null");
+      List<T> items, Function<T, K> keyFn, Function<T, V> valueFn, String label) {
+    Map<K, V> result = new LinkedHashMap<>();
+    for (T item : items) {
+      K key = keyFn.apply(item);
+      V value = valueFn.apply(item);
+      if (result.containsKey(key)) {
+        throw CatalogDuplicateFailures.duplicateEntryFailure(label, result.get(key), value);
       }
+      result.put(key, value);
     }
-
-    /** Recursive array shape whose elements all share the same shape. */
-    record ListShape(FieldShape elementShape) implements FieldShape {
-      public ListShape {
-        Objects.requireNonNull(elementShape, "elementShape must not be null");
-      }
-    }
-
-    /** Reference to one nested discriminated union group published elsewhere in the catalog. */
-    record NestedTypeGroupRef(String group) implements FieldShape {
-      public NestedTypeGroupRef {
-        group = requireNonBlank(group, "group");
-      }
-    }
-
-    /** Reference to one plain record-type group published elsewhere in the catalog. */
-    record PlainTypeGroupRef(String group) implements FieldShape {
-      public PlainTypeGroupRef {
-        group = requireNonBlank(group, "group");
-      }
-    }
-  }
-
-  /** JSON-serializable named group of nested tagged union variants. */
-  public record NestedTypeGroup(String group, List<TypeEntry> types) {
-    public NestedTypeGroup {
-      group = requireNonBlank(group, "group");
-      types = copyEntries(types, "types");
-    }
-  }
-
-  /** JSON-serializable named group describing one plain record type with its field shape. */
-  public record PlainTypeGroup(String group, TypeEntry type) {
-    public PlainTypeGroup {
-      group = requireNonBlank(group, "group");
-      Objects.requireNonNull(type, "type must not be null");
-    }
-  }
-
-  private static List<TypeEntry> copyEntries(List<TypeEntry> entries, String fieldName) {
-    Objects.requireNonNull(entries, fieldName + " must not be null");
-    List<TypeEntry> copy = List.copyOf(entries);
-    for (TypeEntry entry : copy) {
-      Objects.requireNonNull(entry, fieldName + " must not contain nulls");
-    }
-    return copy;
-  }
-
-  private static List<NestedTypeGroup> copyGroups(List<NestedTypeGroup> groups, String fieldName) {
-    Objects.requireNonNull(groups, fieldName + " must not be null");
-    List<NestedTypeGroup> copy = List.copyOf(groups);
-    for (NestedTypeGroup group : copy) {
-      Objects.requireNonNull(group, fieldName + " must not contain nulls");
-    }
-    return copy;
-  }
-
-  private static List<PlainTypeGroup> copyPlainGroups(
-      List<PlainTypeGroup> groups, String fieldName) {
-    Objects.requireNonNull(groups, fieldName + " must not be null");
-    List<PlainTypeGroup> copy = List.copyOf(groups);
-    for (PlainTypeGroup group : copy) {
-      Objects.requireNonNull(group, fieldName + " must not contain nulls");
-    }
-    return copy;
-  }
-
-  private static List<String> copyStrings(List<String> values, String fieldName) {
-    Objects.requireNonNull(values, fieldName + " must not be null");
-    List<String> copy = List.copyOf(values);
-    for (String value : copy) {
-      requireNonBlank(value, fieldName);
-    }
-    return copy;
-  }
-
-  private static List<FieldEntry> copyFieldEntries(List<FieldEntry> fields, String fieldName) {
-    Objects.requireNonNull(fields, fieldName + " must not be null");
-    List<FieldEntry> copy = List.copyOf(fields);
-    for (int index = 0; index < copy.size(); index++) {
-      FieldEntry field =
-          Objects.requireNonNull(copy.get(index), fieldName + " must not contain nulls");
-      for (int candidateIndex = index + 1; candidateIndex < copy.size(); candidateIndex++) {
-        FieldEntry candidate =
-            Objects.requireNonNull(copy.get(candidateIndex), fieldName + " must not contain nulls");
-        if (field.name().equals(candidate.name())) {
-          throw duplicateEntryFailure(fieldName, field, candidate);
-        }
-      }
-    }
-    return copy;
-  }
-
-  private static String requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    return value;
+    return result;
   }
 
   private record TypeDescriptor(Class<? extends Record> recordType, TypeEntry typeEntry) {
@@ -1353,7 +1110,7 @@ public final class GridGrindProtocolCatalog {
   private record PlainTypeDescriptor(
       String group, Class<? extends Record> recordType, TypeEntry typeEntry) {
     private PlainTypeDescriptor {
-      group = requireNonBlank(group, "group");
+      group = CatalogRecordValidation.requireNonBlank(group, "group");
       Objects.requireNonNull(recordType, "recordType must not be null");
       Objects.requireNonNull(typeEntry, "typeEntry must not be null");
     }
@@ -1362,7 +1119,7 @@ public final class GridGrindProtocolCatalog {
   private record NestedTypeDescriptor(
       String group, Class<?> sealedType, List<TypeDescriptor> typeDescriptors) {
     private NestedTypeDescriptor {
-      group = requireNonBlank(group, "group");
+      group = CatalogRecordValidation.requireNonBlank(group, "group");
       Objects.requireNonNull(sealedType, "sealedType must not be null");
       typeDescriptors = List.copyOf(typeDescriptors);
       for (TypeDescriptor typeDescriptor : typeDescriptors) {

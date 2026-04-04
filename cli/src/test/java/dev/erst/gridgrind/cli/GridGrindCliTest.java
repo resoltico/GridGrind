@@ -2,6 +2,7 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.protocol.catalog.Catalog;
 import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.protocol.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.protocol.dto.GridGrindProblemCode;
@@ -343,8 +344,7 @@ class GridGrindCliTest {
                 new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
-    GridGrindProtocolCatalog.Catalog catalog =
-        GridGrindJson.readProtocolCatalog(stdout.toByteArray());
+    Catalog catalog = GridGrindJson.readProtocolCatalog(stdout.toByteArray());
 
     assertEquals(0, exitCode);
     assertEquals(GridGrindProtocolCatalog.catalog(), catalog);

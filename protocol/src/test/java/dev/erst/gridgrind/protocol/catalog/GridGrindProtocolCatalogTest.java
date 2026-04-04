@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.protocol.catalog.gather.CatalogFieldMetadataSupport;
 import dev.erst.gridgrind.protocol.dto.CellInput;
 import dev.erst.gridgrind.protocol.dto.CommentInput;
 import dev.erst.gridgrind.protocol.dto.GridGrindProtocolVersion;
@@ -18,6 +19,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the machine-readable protocol catalog and built-in request template. */
@@ -37,8 +39,8 @@ class GridGrindProtocolCatalogTest {
 
   @Test
   void exposesTheCurrentProtocolCatalog() throws IOException {
-    GridGrindProtocolCatalog.Catalog catalog = GridGrindProtocolCatalog.catalog();
-    GridGrindProtocolCatalog.Catalog decoded =
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    Catalog decoded =
         GridGrindJson.readProtocolCatalog(GridGrindJson.writeProtocolCatalogBytes(catalog));
 
     assertCatalogInventory(catalog);
@@ -47,6 +49,16 @@ class GridGrindProtocolCatalogTest {
     assertCatalogPolymorphicReferences(catalog);
 
     assertEquals(catalog, decoded);
+  }
+
+  @Test
+  void requestTemplateAndCatalogEncodeDeterministically() throws IOException {
+    assertArrayEquals(
+        GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()),
+        GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()));
+    assertArrayEquals(
+        GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()),
+        GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()));
   }
 
   @Test
@@ -191,9 +203,8 @@ class GridGrindProtocolCatalogTest {
         new TestParameterizedType(List.class, List.of(CellInput.class));
 
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.ListShape(
-            new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("cellInputTypes")),
-        GridGrindProtocolCatalog.fieldShape(listOfCellInputs));
+        new FieldShape.ListShape(new FieldShape.NestedTypeGroupRef("cellInputTypes")),
+        CatalogFieldMetadataSupport.fieldShape(listOfCellInputs));
   }
 
   @Test
@@ -201,7 +212,7 @@ class GridGrindProtocolCatalogTest {
     IllegalStateException failure =
         assertThrows(
             IllegalStateException.class,
-            () -> GridGrindProtocolCatalog.fieldShape(new UnsupportedType("custom-type")));
+            () -> CatalogFieldMetadataSupport.fieldShape(new UnsupportedType("custom-type")));
 
     assertEquals("Unsupported catalog field type: custom-type", failure.getMessage());
   }
@@ -212,7 +223,7 @@ class GridGrindProtocolCatalogTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                GridGrindProtocolCatalog.fieldShape(
+                CatalogFieldMetadataSupport.fieldShape(
                     new TestParameterizedType(List.class, List.of())));
 
     assertEquals(
@@ -229,7 +240,7 @@ class GridGrindProtocolCatalogTest {
     IllegalStateException failure =
         assertThrows(
             IllegalStateException.class,
-            () -> GridGrindProtocolCatalog.fieldShape(unsupportedType));
+            () -> CatalogFieldMetadataSupport.fieldShape(unsupportedType));
 
     assertEquals(
         "Unsupported parameterized catalog field type: " + unsupportedType, failure.getMessage());
@@ -240,15 +251,15 @@ class GridGrindProtocolCatalogTest {
     IllegalStateException failure =
         assertThrows(
             IllegalStateException.class,
-            () -> GridGrindProtocolCatalog.fieldShape(java.util.UUID.class));
+            () -> CatalogFieldMetadataSupport.fieldShape(java.util.UUID.class));
 
     assertEquals("Unsupported catalog field type: java.util.UUID", failure.getMessage());
   }
 
   @Test
   void isNumericTypeRecognizesNumericAndNonNumericClasses() {
-    assertTrue(GridGrindProtocolCatalog.isNumericType(java.math.BigInteger.class));
-    assertFalse(GridGrindProtocolCatalog.isNumericType(String.class));
+    assertTrue(CatalogFieldMetadataSupport.isNumericType(java.math.BigInteger.class));
+    assertFalse(CatalogFieldMetadataSupport.isNumericType(String.class));
   }
 
   @Test
@@ -257,7 +268,7 @@ class GridGrindProtocolCatalogTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                GridGrindProtocolCatalog.validateNestedTypeGroupMapping(
+                CatalogFieldMetadataSupport.validateNestedTypeGroupMapping(
                     HyperlinkTarget.class, "wrongGroup"));
 
     assertEquals(
@@ -273,7 +284,7 @@ class GridGrindProtocolCatalogTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                GridGrindProtocolCatalog.validatePlainTypeGroupMapping(
+                CatalogFieldMetadataSupport.validatePlainTypeGroupMapping(
                     CommentInput.class, "wrongGroup"));
 
     assertEquals(
@@ -285,24 +296,21 @@ class GridGrindProtocolCatalogTest {
 
   @Test
   void catalogDefaultsNullProtocolVersionAndCopiesLists() {
-    GridGrindProtocolCatalog.TypeEntry sourceType =
-        new GridGrindProtocolCatalog.TypeEntry(
+    TypeEntry sourceType =
+        new TypeEntry(
             "NEW",
             "Create",
             List.of(
-                new GridGrindProtocolCatalog.FieldEntry(
+                new FieldEntry(
                     "type",
-                    GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
-                    new GridGrindProtocolCatalog.FieldShape.Scalar(
-                        GridGrindProtocolCatalog.ScalarType.STRING),
+                    FieldRequirement.REQUIRED,
+                    new FieldShape.Scalar(ScalarType.STRING),
                     List.of())));
-    GridGrindProtocolCatalog.NestedTypeGroup nestedTypeGroup =
-        new GridGrindProtocolCatalog.NestedTypeGroup("cellInputTypes", List.of(sourceType));
-    GridGrindProtocolCatalog.PlainTypeGroup plainTypeGroup =
-        new GridGrindProtocolCatalog.PlainTypeGroup("commentInputType", sourceType);
+    NestedTypeGroup nestedTypeGroup = new NestedTypeGroup("cellInputTypes", List.of(sourceType));
+    PlainTypeGroup plainTypeGroup = new PlainTypeGroup("commentInputType", sourceType);
 
-    GridGrindProtocolCatalog.Catalog catalog =
-        new GridGrindProtocolCatalog.Catalog(
+    Catalog catalog =
+        new Catalog(
             null,
             "type",
             List.of(sourceType),
@@ -322,43 +330,38 @@ class GridGrindProtocolCatalogTest {
   void publicCatalogRecordsRejectBlankAndNullValues() {
     assertEquals(
         "group must not be blank",
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> new GridGrindProtocolCatalog.NestedTypeGroup(" ", List.of()))
+        assertThrows(IllegalArgumentException.class, () -> new NestedTypeGroup(" ", List.of()))
             .getMessage());
     assertEquals(
         "name must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    new GridGrindProtocolCatalog.FieldEntry(
+                    new FieldEntry(
                         " ",
-                        GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
-                        new GridGrindProtocolCatalog.FieldShape.Scalar(
-                            GridGrindProtocolCatalog.ScalarType.STRING),
+                        FieldRequirement.REQUIRED,
+                        new FieldShape.Scalar(ScalarType.STRING),
                         List.of()))
             .getMessage());
     assertThrows(
         NullPointerException.class,
-        () ->
-            new GridGrindProtocolCatalog.NestedTypeGroup(
-                "cellInputTypes", Arrays.asList((GridGrindProtocolCatalog.TypeEntry) null)));
+        () -> new NestedTypeGroup("cellInputTypes", Arrays.asList((TypeEntry) null)));
     assertThrows(
         NullPointerException.class,
         () ->
-            new GridGrindProtocolCatalog.Catalog(
+            new Catalog(
                 GridGrindProtocolVersion.current(),
                 "type",
                 List.of(),
                 List.of(),
                 List.of(),
                 List.of(),
-                Arrays.asList((GridGrindProtocolCatalog.NestedTypeGroup) null),
+                Arrays.asList((NestedTypeGroup) null),
                 List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new GridGrindProtocolCatalog.Catalog(
+            new Catalog(
                 GridGrindProtocolVersion.current(),
                 "type",
                 List.of(),
@@ -366,63 +369,43 @@ class GridGrindProtocolCatalogTest {
                 List.of(),
                 List.of(),
                 List.of(),
-                Arrays.asList((GridGrindProtocolCatalog.PlainTypeGroup) null)));
+                Arrays.asList((PlainTypeGroup) null)));
     assertEquals(
         "group must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
-                () ->
-                    new GridGrindProtocolCatalog.PlainTypeGroup(
-                        " ", new GridGrindProtocolCatalog.TypeEntry("ID", "Summary", List.of())))
+                () -> new PlainTypeGroup(" ", new TypeEntry("ID", "Summary", List.of())))
             .getMessage());
+    assertThrows(NullPointerException.class, () -> new PlainTypeGroup("commentInputType", null));
+    assertThrows(NullPointerException.class, () -> new TypeEntry("ID", "Summary", null));
     assertThrows(
         NullPointerException.class,
-        () -> new GridGrindProtocolCatalog.PlainTypeGroup("commentInputType", null));
+        () -> new FieldEntry("name", null, new FieldShape.Scalar(ScalarType.STRING), List.of()));
     assertThrows(
         NullPointerException.class,
-        () -> new GridGrindProtocolCatalog.TypeEntry("ID", "Summary", null));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new GridGrindProtocolCatalog.FieldEntry(
-                "name",
-                null,
-                new GridGrindProtocolCatalog.FieldShape.Scalar(
-                    GridGrindProtocolCatalog.ScalarType.STRING),
-                List.of()));
+        () -> new FieldEntry("name", FieldRequirement.REQUIRED, null, List.of()));
     assertThrows(
         NullPointerException.class,
         () ->
-            new GridGrindProtocolCatalog.FieldEntry(
-                "name", GridGrindProtocolCatalog.FieldRequirement.REQUIRED, null, List.of()));
-    assertThrows(
-        NullPointerException.class,
-        () ->
-            new GridGrindProtocolCatalog.FieldEntry(
-                "name",
-                GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
-                new GridGrindProtocolCatalog.FieldShape.Scalar(
-                    GridGrindProtocolCatalog.ScalarType.STRING),
-                null));
+            new FieldEntry(
+                "name", FieldRequirement.REQUIRED, new FieldShape.Scalar(ScalarType.STRING), null));
     IllegalStateException duplicateFieldFailure =
         assertThrows(
             IllegalStateException.class,
             () ->
-                new GridGrindProtocolCatalog.TypeEntry(
+                new TypeEntry(
                     "ID",
                     "Summary",
                     List.of(
-                        new GridGrindProtocolCatalog.FieldEntry(
+                        new FieldEntry(
                             "name",
-                            GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
-                            new GridGrindProtocolCatalog.FieldShape.Scalar(
-                                GridGrindProtocolCatalog.ScalarType.STRING),
+                            FieldRequirement.REQUIRED,
+                            new FieldShape.Scalar(ScalarType.STRING),
                             List.of()),
-                        new GridGrindProtocolCatalog.FieldEntry(
+                        new FieldEntry(
                             "name",
-                            GridGrindProtocolCatalog.FieldRequirement.OPTIONAL,
-                            new GridGrindProtocolCatalog.FieldShape.Scalar(
-                                GridGrindProtocolCatalog.ScalarType.STRING),
+                            FieldRequirement.OPTIONAL,
+                            new FieldShape.Scalar(ScalarType.STRING),
                             List.of()))));
     assertTrue(duplicateFieldFailure.getMessage().contains("Duplicate fields"));
   }
@@ -439,41 +422,56 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
-  void duplicateEntryFailureReturnsIllegalStateException() {
-    IllegalStateException failure =
-        GridGrindProtocolCatalog.duplicateEntryFailure("test label", "LEFT", "RIGHT");
-    assertTrue(failure.getMessage().contains("test label"));
-    assertTrue(failure.getMessage().contains("LEFT"));
-    assertTrue(failure.getMessage().contains("RIGHT"));
+  void fieldShapeGroupRefRejectsBlankGroups() {
+    assertEquals(
+        "group must not be blank",
+        assertThrows(IllegalArgumentException.class, () -> new FieldShape.NestedTypeGroupRef(" "))
+            .getMessage());
+    assertEquals(
+        "group must not be blank",
+        assertThrows(IllegalArgumentException.class, () -> new FieldShape.PlainTypeGroupRef(" "))
+            .getMessage());
   }
 
   @Test
-  void duplicateEntryHandlerThrowsIllegalStateThroughTheReturnedMergeFunction() {
+  void validateReverseGroupMappingsRejectsNestedTypeWithNoDescriptor() {
+    Set<Class<?>> emptyNestedTypes = Set.of();
+    Set<Class<?>> allPlainTypes = CatalogFieldMetadataSupport.registeredPlainTypes();
+
     IllegalStateException failure =
         assertThrows(
             IllegalStateException.class,
             () ->
-                GridGrindProtocolCatalog.duplicateEntryHandler("test label")
-                    .apply("LEFT", "RIGHT"));
-    assertTrue(failure.getMessage().contains("test label"));
-    assertTrue(failure.getMessage().contains("LEFT"));
-    assertTrue(failure.getMessage().contains("RIGHT"));
+                GridGrindProtocolCatalog.validateReverseGroupMappings(
+                    emptyNestedTypes, allPlainTypes));
+
+    assertTrue(
+        failure
+            .getMessage()
+            .contains("Field-shape nested group map contains type with no catalog descriptor:"),
+        "failure must identify the orphaned nested type");
   }
 
   @Test
-  void duplicateEntryMergerThrowsIllegalStateWhenAppliedDirectly() {
+  void validateReverseGroupMappingsRejectsPlainTypeWithNoDescriptor() {
+    Set<Class<?>> allNestedTypes = CatalogFieldMetadataSupport.registeredNestedTypes();
+    Set<Class<?>> emptyPlainTypes = Set.of();
+
     IllegalStateException failure =
         assertThrows(
             IllegalStateException.class,
             () ->
-                new GridGrindProtocolCatalog.DuplicateEntryMerger<>("test label")
-                    .apply("LEFT", "RIGHT"));
-    assertTrue(failure.getMessage().contains("test label"));
-    assertTrue(failure.getMessage().contains("LEFT"));
-    assertTrue(failure.getMessage().contains("RIGHT"));
+                GridGrindProtocolCatalog.validateReverseGroupMappings(
+                    allNestedTypes, emptyPlainTypes));
+
+    assertTrue(
+        failure
+            .getMessage()
+            .contains("Field-shape plain group map contains type with no catalog descriptor:"),
+        "failure must identify the orphaned plain type");
   }
 
-  private static void assertCatalogInventory(GridGrindProtocolCatalog.Catalog catalog) {
+  private static void assertCatalogInventory(Catalog catalog) {
     assertEquals(GridGrindProtocolVersion.V1, catalog.protocolVersion());
     assertEquals("type", catalog.discriminatorField());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
@@ -484,6 +482,7 @@ class GridGrindProtocolCatalogTest {
         List.of(
             "cellInputTypes",
             "hyperlinkTargetTypes",
+            "paneTypes",
             "sheetCopyPositionTypes",
             "cellSelectionTypes",
             "rangeSelectionTypes",
@@ -495,10 +494,12 @@ class GridGrindProtocolCatalogTest {
             "fontHeightTypes",
             "dataValidationRuleTypes",
             "conditionalFormattingRuleTypes",
+            "printAreaTypes",
+            "printScalingTypes",
+            "printTitleRowsTypes",
+            "printTitleColumnsTypes",
             "tableStyleTypes"),
-        catalog.nestedTypes().stream()
-            .map(GridGrindProtocolCatalog.NestedTypeGroup::group)
-            .toList());
+        catalog.nestedTypes().stream().map(NestedTypeGroup::group).toList());
     assertEquals(
         List.of(
             "commentInputType",
@@ -511,57 +512,46 @@ class GridGrindProtocolCatalogTest {
             "dataValidationPromptInputType",
             "dataValidationErrorAlertInputType",
             "conditionalFormattingBlockInputType",
+            "headerFooterTextInputType",
             "differentialStyleInputType",
             "differentialBorderInputType",
             "differentialBorderSideInputType",
+            "printLayoutInputType",
             "tableInputType"),
-        catalog.plainTypes().stream().map(GridGrindProtocolCatalog.PlainTypeGroup::group).toList());
+        catalog.plainTypes().stream().map(PlainTypeGroup::group).toList());
   }
 
-  private static void assertCatalogFieldShapes(GridGrindProtocolCatalog.Catalog catalog) {
-    GridGrindProtocolCatalog.PlainTypeGroup commentGroup = plainGroup(catalog, "commentInputType");
+  private static void assertCatalogFieldShapes(Catalog catalog) {
+    PlainTypeGroup commentGroup = plainGroup(catalog, "commentInputType");
+    assertEquals(FieldRequirement.REQUIRED, fieldNamed(commentGroup.type(), "text").requirement());
     assertEquals(
-        GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
-        fieldNamed(commentGroup.type(), "text").requirement());
+        new FieldShape.Scalar(ScalarType.STRING), fieldNamed(commentGroup.type(), "text").shape());
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.Scalar(GridGrindProtocolCatalog.ScalarType.STRING),
-        fieldNamed(commentGroup.type(), "text").shape());
+        FieldRequirement.REQUIRED, fieldNamed(commentGroup.type(), "author").requirement());
     assertEquals(
-        GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
-        fieldNamed(commentGroup.type(), "author").requirement());
+        FieldRequirement.OPTIONAL, fieldNamed(commentGroup.type(), "visible").requirement());
     assertEquals(
-        GridGrindProtocolCatalog.FieldRequirement.OPTIONAL,
-        fieldNamed(commentGroup.type(), "visible").requirement());
-    assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.Scalar(GridGrindProtocolCatalog.ScalarType.BOOLEAN),
+        new FieldShape.Scalar(ScalarType.BOOLEAN),
         fieldNamed(commentGroup.type(), "visible").shape());
 
-    GridGrindProtocolCatalog.PlainTypeGroup namedRangeGroup =
-        plainGroup(catalog, "namedRangeTargetType");
+    PlainTypeGroup namedRangeGroup = plainGroup(catalog, "namedRangeTargetType");
     assertEquals(
-        GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
-        fieldNamed(namedRangeGroup.type(), "sheetName").requirement());
+        FieldRequirement.REQUIRED, fieldNamed(namedRangeGroup.type(), "sheetName").requirement());
     assertEquals(
-        GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
-        fieldNamed(namedRangeGroup.type(), "range").requirement());
+        FieldRequirement.REQUIRED, fieldNamed(namedRangeGroup.type(), "range").requirement());
 
-    GridGrindProtocolCatalog.TypeEntry copySheet =
-        entryNamed(catalog.operationTypes(), "COPY_SHEET");
+    TypeEntry copySheet = entryNamed(catalog.operationTypes(), "COPY_SHEET");
+    assertEquals(FieldRequirement.OPTIONAL, fieldNamed(copySheet, "position").requirement());
     assertEquals(
-        GridGrindProtocolCatalog.FieldRequirement.OPTIONAL,
-        fieldNamed(copySheet, "position").requirement());
-    assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetCopyPositionTypes"),
+        new FieldShape.NestedTypeGroupRef("sheetCopyPositionTypes"),
         fieldNamed(copySheet, "position").shape());
 
-    GridGrindProtocolCatalog.PlainTypeGroup protectionGroup =
-        plainGroup(catalog, "sheetProtectionSettingsType");
+    PlainTypeGroup protectionGroup = plainGroup(catalog, "sheetProtectionSettingsType");
     assertTrue(
-        fieldNamed(protectionGroup.type(), "autoFilterLocked").shape()
-            instanceof GridGrindProtocolCatalog.FieldShape.Scalar,
+        fieldNamed(protectionGroup.type(), "autoFilterLocked").shape() instanceof FieldShape.Scalar,
         "sheetProtectionSettingsType boolean fields must be scalar booleans");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.Scalar(GridGrindProtocolCatalog.ScalarType.BOOLEAN),
+        new FieldShape.Scalar(ScalarType.BOOLEAN),
         fieldNamed(protectionGroup.type(), "sortLocked").shape());
 
     assertTrue(
@@ -570,14 +560,13 @@ class GridGrindProtocolCatalogTest {
             .contains("VERY_HIDDEN"),
         "SET_SHEET_VISIBILITY.visibility must expose visibility enum values");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef("sheetProtectionSettingsType"),
+        new FieldShape.PlainTypeGroupRef("sheetProtectionSettingsType"),
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_SHEET_PROTECTION"), "protection")
             .shape());
 
-    GridGrindProtocolCatalog.FieldEntry borderStyleField =
+    FieldEntry borderStyleField =
         fieldNamed(plainGroup(catalog, "cellBorderSideInputType").type(), "style");
-    assertEquals(
-        GridGrindProtocolCatalog.FieldRequirement.REQUIRED, borderStyleField.requirement());
+    assertEquals(FieldRequirement.REQUIRED, borderStyleField.requirement());
     assertFalse(
         borderStyleField.enumValues().isEmpty(),
         "cellBorderSideInputType should expose enum values for 'style'");
@@ -588,7 +577,7 @@ class GridGrindProtocolCatalogTest {
         borderStyleField.enumValues().contains("NONE"),
         "border style enum values should include NONE");
 
-    GridGrindProtocolCatalog.PlainTypeGroup styleGroup = plainGroup(catalog, "cellStyleInputType");
+    PlainTypeGroup styleGroup = plainGroup(catalog, "cellStyleInputType");
     assertTrue(
         fieldNamed(styleGroup.type(), "horizontalAlignment").enumValues().contains("GENERAL"),
         "horizontalAlignment enum values should include GENERAL");
@@ -596,29 +585,26 @@ class GridGrindProtocolCatalogTest {
         fieldNamed(styleGroup.type(), "verticalAlignment").enumValues().contains("BOTTOM"),
         "verticalAlignment enum values should include BOTTOM");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("fontHeightTypes"),
+        new FieldShape.NestedTypeGroupRef("fontHeightTypes"),
         fieldNamed(styleGroup.type(), "fontHeight").shape());
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef("cellBorderInputType"),
+        new FieldShape.PlainTypeGroupRef("cellBorderInputType"),
         fieldNamed(styleGroup.type(), "border").shape());
 
-    GridGrindProtocolCatalog.PlainTypeGroup validationGroup =
-        plainGroup(catalog, "dataValidationInputType");
+    PlainTypeGroup validationGroup = plainGroup(catalog, "dataValidationInputType");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("dataValidationRuleTypes"),
+        new FieldShape.NestedTypeGroupRef("dataValidationRuleTypes"),
         fieldNamed(validationGroup.type(), "rule").shape());
     assertEquals(
-        GridGrindProtocolCatalog.FieldRequirement.OPTIONAL,
-        fieldNamed(validationGroup.type(), "prompt").requirement());
+        FieldRequirement.OPTIONAL, fieldNamed(validationGroup.type(), "prompt").requirement());
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef("dataValidationPromptInputType"),
+        new FieldShape.PlainTypeGroupRef("dataValidationPromptInputType"),
         fieldNamed(validationGroup.type(), "prompt").shape());
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef(
-            "dataValidationErrorAlertInputType"),
+        new FieldShape.PlainTypeGroupRef("dataValidationErrorAlertInputType"),
         fieldNamed(validationGroup.type(), "errorAlert").shape());
 
-    GridGrindProtocolCatalog.FieldEntry dataValidationOperatorField =
+    FieldEntry dataValidationOperatorField =
         fieldNamed(nestedTypeEntry(catalog, "dataValidationRuleTypes", "WHOLE_NUMBER"), "operator");
     assertFalse(
         dataValidationOperatorField.enumValues().isEmpty(),
@@ -627,60 +613,112 @@ class GridGrindProtocolCatalogTest {
         dataValidationOperatorField.enumValues().contains("BETWEEN"),
         "comparison-operator enum values should include BETWEEN");
 
-    GridGrindProtocolCatalog.PlainTypeGroup tableGroup = plainGroup(catalog, "tableInputType");
+    PlainTypeGroup tableGroup = plainGroup(catalog, "tableInputType");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("tableStyleTypes"),
+        new FieldShape.NestedTypeGroupRef("tableStyleTypes"),
         fieldNamed(tableGroup.type(), "style").shape());
-    assertEquals(
-        GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
-        fieldNamed(tableGroup.type(), "name").requirement());
+    assertEquals(FieldRequirement.REQUIRED, fieldNamed(tableGroup.type(), "name").requirement());
 
-    GridGrindProtocolCatalog.FieldEntry tableSelectionNames =
+    FieldEntry tableSelectionNames =
         fieldNamed(nestedTypeEntry(catalog, "tableSelectionTypes", "BY_NAMES"), "names");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.ListShape(
-            new GridGrindProtocolCatalog.FieldShape.Scalar(
-                GridGrindProtocolCatalog.ScalarType.STRING)),
+        new FieldShape.ListShape(new FieldShape.Scalar(ScalarType.STRING)),
         tableSelectionNames.shape());
 
-    GridGrindProtocolCatalog.FieldEntry tableStyleName =
+    FieldEntry tableStyleName =
         fieldNamed(nestedTypeEntry(catalog, "tableStyleTypes", "NAMED"), "name");
-    assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.Scalar(GridGrindProtocolCatalog.ScalarType.STRING),
-        tableStyleName.shape());
+    assertEquals(new FieldShape.Scalar(ScalarType.STRING), tableStyleName.shape());
 
-    GridGrindProtocolCatalog.PlainTypeGroup conditionalFormattingBlockGroup =
+    PlainTypeGroup conditionalFormattingBlockGroup =
         plainGroup(catalog, "conditionalFormattingBlockInputType");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.ListShape(
-            new GridGrindProtocolCatalog.FieldShape.Scalar(
-                GridGrindProtocolCatalog.ScalarType.STRING)),
+        new FieldShape.ListShape(new FieldShape.Scalar(ScalarType.STRING)),
         fieldNamed(conditionalFormattingBlockGroup.type(), "ranges").shape());
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.ListShape(
-            new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef(
-                "conditionalFormattingRuleTypes")),
+        new FieldShape.ListShape(
+            new FieldShape.NestedTypeGroupRef("conditionalFormattingRuleTypes")),
         fieldNamed(conditionalFormattingBlockGroup.type(), "rules").shape());
 
-    GridGrindProtocolCatalog.PlainTypeGroup differentialStyleGroup =
-        plainGroup(catalog, "differentialStyleInputType");
+    PlainTypeGroup differentialStyleGroup = plainGroup(catalog, "differentialStyleInputType");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("fontHeightTypes"),
+        new FieldShape.NestedTypeGroupRef("fontHeightTypes"),
         fieldNamed(differentialStyleGroup.type(), "fontHeight").shape());
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef("differentialBorderInputType"),
+        new FieldShape.PlainTypeGroupRef("differentialBorderInputType"),
         fieldNamed(differentialStyleGroup.type(), "border").shape());
 
-    GridGrindProtocolCatalog.FieldEntry conditionalFormattingOperatorField =
+    FieldEntry conditionalFormattingOperatorField =
         fieldNamed(
             nestedTypeEntry(catalog, "conditionalFormattingRuleTypes", "CELL_VALUE_RULE"),
             "operator");
     assertTrue(
         conditionalFormattingOperatorField.enumValues().contains("BETWEEN"),
         "conditional-formatting operator enum values should include BETWEEN");
+
+    assertCatalogPrintAndPaneFieldShapes(catalog);
   }
 
-  private static void assertCatalogSummaries(GridGrindProtocolCatalog.Catalog catalog) {
+  private static void assertCatalogPrintAndPaneFieldShapes(Catalog catalog) {
+    TypeEntry setSheetPane = entryNamed(catalog.operationTypes(), "SET_SHEET_PANE");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("paneTypes"),
+        fieldNamed(setSheetPane, "pane").shape(),
+        "SET_SHEET_PANE.pane must point to paneTypes");
+    assertEquals(
+        0,
+        nestedTypeEntry(catalog, "paneTypes", "NONE").fields().size(),
+        "paneTypes.NONE has no fields");
+    assertEquals(
+        4,
+        nestedTypeEntry(catalog, "paneTypes", "FROZEN").fields().size(),
+        "paneTypes.FROZEN has four fields: splitColumn, splitRow, leftmostColumn, topRow");
+    assertEquals(
+        5,
+        nestedTypeEntry(catalog, "paneTypes", "SPLIT").fields().size(),
+        "paneTypes.SPLIT has five fields: xSplitPosition, ySplitPosition, leftmostColumn, topRow, activePane");
+
+    PlainTypeGroup printLayoutGroup = plainGroup(catalog, "printLayoutInputType");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("printAreaTypes"),
+        fieldNamed(printLayoutGroup.type(), "printArea").shape(),
+        "printLayoutInputType.printArea must point to printAreaTypes");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("printScalingTypes"),
+        fieldNamed(printLayoutGroup.type(), "scaling").shape(),
+        "printLayoutInputType.scaling must point to printScalingTypes");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("printTitleRowsTypes"),
+        fieldNamed(printLayoutGroup.type(), "repeatingRows").shape(),
+        "printLayoutInputType.repeatingRows must point to printTitleRowsTypes");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("printTitleColumnsTypes"),
+        fieldNamed(printLayoutGroup.type(), "repeatingColumns").shape(),
+        "printLayoutInputType.repeatingColumns must point to printTitleColumnsTypes");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("headerFooterTextInputType"),
+        fieldNamed(printLayoutGroup.type(), "header").shape(),
+        "printLayoutInputType.header must point to headerFooterTextInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("headerFooterTextInputType"),
+        fieldNamed(printLayoutGroup.type(), "footer").shape(),
+        "printLayoutInputType.footer must point to headerFooterTextInputType");
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        fieldNamed(printLayoutGroup.type(), "printArea").requirement(),
+        "printLayoutInputType.printArea must be optional");
+
+    PlainTypeGroup headerFooterGroup = plainGroup(catalog, "headerFooterTextInputType");
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.STRING),
+        fieldNamed(headerFooterGroup.type(), "left").shape(),
+        "headerFooterTextInputType.left must be a string scalar");
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        fieldNamed(headerFooterGroup.type(), "left").requirement(),
+        "headerFooterTextInputType.left must be optional");
+  }
+
+  private static void assertCatalogSummaries(Catalog catalog) {
     assertTrue(
         nestedTypeEntry(catalog, "cellInputTypes", "FORMULA")
             .summary()
@@ -810,7 +848,7 @@ class GridGrindProtocolCatalogTest {
             .contains("persisted path"),
         "ANALYZE_HYPERLINK_HEALTH summary must explain relative FILE resolution");
     assertEquals(
-        GridGrindProtocolCatalog.FieldRequirement.REQUIRED,
+        FieldRequirement.REQUIRED,
         fieldNamed(nestedTypeEntry(catalog, "hyperlinkTargetTypes", "FILE"), "path").requirement(),
         "FILE hyperlink targets must expose a required path field");
     assertTrue(
@@ -819,115 +857,125 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         nestedTypeEntry(catalog, "cellInputTypes", "DATE").summary().contains("NUMBER"),
         "DATE summary must note that read-back declaredType is NUMBER");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_SHEET_PANE")
+            .summary()
+            .contains("NONE, FROZEN, or SPLIT"),
+        "SET_SHEET_PANE summary must document the three pane types");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_PRINT_LAYOUT").summary().contains("print area"),
+        "SET_PRINT_LAYOUT summary must mention print area");
+    assertTrue(
+        nestedTypeEntry(catalog, "printScalingTypes", "FIT").summary().contains("unconstrained"),
+        "FIT scaling summary must explain zero-axis constraint semantics");
   }
 
-  private static void assertCatalogPolymorphicReferences(GridGrindProtocolCatalog.Catalog catalog) {
+  private static void assertCatalogPolymorphicReferences(Catalog catalog) {
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetCopyPositionTypes"),
+        new FieldShape.NestedTypeGroupRef("sheetCopyPositionTypes"),
         fieldNamed(entryNamed(catalog.operationTypes(), "COPY_SHEET"), "position").shape(),
         "COPY_SHEET.position must point to sheetCopyPositionTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("cellSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("cellSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "GET_HYPERLINKS"), "selection").shape(),
         "GET_HYPERLINKS.selection must point to the cell selection group");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("hyperlinkTargetTypes"),
+        new FieldShape.NestedTypeGroupRef("hyperlinkTargetTypes"),
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_HYPERLINK"), "target").shape(),
         "SET_HYPERLINK.target must point to hyperlinkTargetTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.ListShape(
-            new GridGrindProtocolCatalog.FieldShape.ListShape(
-                new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("cellInputTypes"))),
+        new FieldShape.ListShape(
+            new FieldShape.ListShape(new FieldShape.NestedTypeGroupRef("cellInputTypes"))),
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_RANGE"), "rows").shape(),
         "SET_RANGE.rows must expose the nested cellInputTypes matrix shape");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_HYPERLINK_HEALTH"), "selection")
             .shape(),
         "ANALYZE_HYPERLINK_HEALTH.selection must point to sheetSelectionTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef("dataValidationInputType"),
+        new FieldShape.PlainTypeGroupRef("dataValidationInputType"),
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_DATA_VALIDATION"), "validation")
             .shape(),
         "SET_DATA_VALIDATION.validation must point to dataValidationInputType");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
         fieldNamed(entryNamed(catalog.operationTypes(), "CLEAR_DATA_VALIDATIONS"), "selection")
             .shape(),
         "CLEAR_DATA_VALIDATIONS.selection must point to rangeSelectionTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "GET_DATA_VALIDATIONS"), "selection").shape(),
         "GET_DATA_VALIDATIONS.selection must point to rangeSelectionTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef(
-            "conditionalFormattingBlockInputType"),
+        new FieldShape.PlainTypeGroupRef("conditionalFormattingBlockInputType"),
         fieldNamed(
                 entryNamed(catalog.operationTypes(), "SET_CONDITIONAL_FORMATTING"),
                 "conditionalFormatting")
             .shape(),
         "SET_CONDITIONAL_FORMATTING.conditionalFormatting must point to conditionalFormattingBlockInputType");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
         fieldNamed(
                 entryNamed(catalog.operationTypes(), "CLEAR_CONDITIONAL_FORMATTING"), "selection")
             .shape(),
         "CLEAR_CONDITIONAL_FORMATTING.selection must point to rangeSelectionTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("rangeSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "GET_CONDITIONAL_FORMATTING"), "selection")
             .shape(),
         "GET_CONDITIONAL_FORMATTING.selection must point to rangeSelectionTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
         fieldNamed(
                 entryNamed(catalog.readTypes(), "ANALYZE_CONDITIONAL_FORMATTING_HEALTH"),
                 "selection")
             .shape(),
         "ANALYZE_CONDITIONAL_FORMATTING_HEALTH.selection must point to sheetSelectionTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_DATA_VALIDATION_HEALTH"), "selection")
             .shape(),
         "ANALYZE_DATA_VALIDATION_HEALTH.selection must point to sheetSelectionTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.PlainTypeGroupRef("tableInputType"),
+        new FieldShape.PlainTypeGroupRef("tableInputType"),
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_TABLE"), "table").shape(),
         "SET_TABLE.table must point to tableInputType");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("tableSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("tableSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "GET_TABLES"), "selection").shape(),
         "GET_TABLES.selection must point to tableSelectionTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("tableSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("tableSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_TABLE_HEALTH"), "selection").shape(),
         "ANALYZE_TABLE_HEALTH.selection must point to tableSelectionTypes");
     assertEquals(
-        new GridGrindProtocolCatalog.FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
+        new FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_AUTOFILTER_HEALTH"), "selection")
             .shape(),
         "ANALYZE_AUTOFILTER_HEALTH.selection must point to sheetSelectionTypes");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("printLayoutInputType"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_PRINT_LAYOUT"), "printLayout").shape(),
+        "SET_PRINT_LAYOUT.printLayout must point to printLayoutInputType");
   }
 
-  private static List<String> ids(List<GridGrindProtocolCatalog.TypeEntry> entries) {
-    return entries.stream().map(GridGrindProtocolCatalog.TypeEntry::id).toList();
+  private static List<String> ids(List<TypeEntry> entries) {
+    return entries.stream().map(TypeEntry::id).toList();
   }
 
-  private static GridGrindProtocolCatalog.TypeEntry entryNamed(
-      List<GridGrindProtocolCatalog.TypeEntry> entries, String id) {
+  private static TypeEntry entryNamed(List<TypeEntry> entries, String id) {
     return entries.stream().filter(entry -> id.equals(entry.id())).findFirst().orElseThrow();
   }
 
-  private static GridGrindProtocolCatalog.PlainTypeGroup plainGroup(
-      GridGrindProtocolCatalog.Catalog catalog, String group) {
+  private static PlainTypeGroup plainGroup(Catalog catalog, String group) {
     return catalog.plainTypes().stream()
         .filter(entry -> group.equals(entry.group()))
         .findFirst()
         .orElseThrow();
   }
 
-  private static GridGrindProtocolCatalog.TypeEntry nestedTypeEntry(
-      GridGrindProtocolCatalog.Catalog catalog, String group, String id) {
+  private static TypeEntry nestedTypeEntry(Catalog catalog, String group, String id) {
     return catalog.nestedTypes().stream()
         .filter(entry -> group.equals(entry.group()))
         .findFirst()
@@ -939,9 +987,8 @@ class GridGrindProtocolCatalogTest {
         .orElseThrow();
   }
 
-  private static GridGrindProtocolCatalog.FieldEntry fieldNamed(
-      GridGrindProtocolCatalog.TypeEntry entry, String name) {
-    GridGrindProtocolCatalog.FieldEntry field = entry.field(name);
+  private static FieldEntry fieldNamed(TypeEntry entry, String name) {
+    FieldEntry field = entry.field(name);
     assertNotNull(field, () -> "Expected field '" + name + "' on catalog entry " + entry.id());
     return field;
   }
@@ -1018,16 +1065,6 @@ class GridGrindProtocolCatalogTest {
     @Override
     public Type getOwnerType() {
       return null;
-    }
-
-    @Override
-    public String toString() {
-      return rawType.getTypeName()
-          + "<"
-          + actualTypeArguments.stream()
-              .map(Type::getTypeName)
-              .collect(java.util.stream.Collectors.joining(", "))
-          + ">";
     }
   }
 }

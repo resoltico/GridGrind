@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.25.0"
+version: "0.26.0"
 domain: DEVELOPER
 updated: "2026-04-03"
 route:
@@ -103,7 +103,10 @@ gate and GitHub workflows. Both should be clean before a release-quality change 
 The protocol catalog is generated from the protocol record signatures. If you change request
 records, nested tagged unions, or plain input records, update the catalog summaries and keep the
 field-shape output authoritative: every field should still publish required/optional status and
-the exact nested/plain group accepted by polymorphic inputs.
+the exact nested/plain group accepted by polymorphic inputs. The catalog build path now uses a
+small internal `protocol.catalog.gather` seam for the two cases that genuinely benefit from
+Stream Gatherers: ordered uniqueness and reflected field-metadata expansion. The built-in request
+template remains an ordinary constant because no domain gatherer semantics are needed there.
 
 ---
 

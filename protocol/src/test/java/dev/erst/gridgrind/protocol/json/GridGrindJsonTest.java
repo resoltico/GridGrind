@@ -2,7 +2,9 @@ package dev.erst.gridgrind.protocol.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.protocol.catalog.Catalog;
 import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.protocol.catalog.TypeEntry;
 import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import dev.erst.gridgrind.protocol.read.*;
@@ -62,7 +64,7 @@ class GridGrindJsonTest {
     byte[] bytes = GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog());
 
     try (TrackingInputStream inputStream = new TrackingInputStream(bytes)) {
-      GridGrindProtocolCatalog.Catalog catalog = GridGrindJson.readProtocolCatalog(inputStream);
+      Catalog catalog = GridGrindJson.readProtocolCatalog(inputStream);
 
       assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
       assertFalse(inputStream.closed);
@@ -72,11 +74,11 @@ class GridGrindJsonTest {
   @Test
   void roundTripsRequestTemplatesAndProtocolCatalogs() throws IOException {
     GridGrindRequest template = GridGrindProtocolCatalog.requestTemplate();
-    GridGrindProtocolCatalog.Catalog catalog = GridGrindProtocolCatalog.catalog();
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
 
     GridGrindRequest decodedTemplate =
         GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(template));
-    GridGrindProtocolCatalog.Catalog decodedCatalog =
+    Catalog decodedCatalog =
         GridGrindJson.readProtocolCatalog(GridGrindJson.writeProtocolCatalogBytes(catalog));
 
     assertEquals(template, decodedTemplate);
@@ -820,8 +822,7 @@ class GridGrindJsonTest {
   @Test
   void writeTypeEntrySerializesASingleCatalogEntry() throws Exception {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
-    GridGrindProtocolCatalog.TypeEntry entry =
-        GridGrindProtocolCatalog.entryFor("SET_CELL").orElseThrow();
+    TypeEntry entry = GridGrindProtocolCatalog.entryFor("SET_CELL").orElseThrow();
     GridGrindJson.writeTypeEntry(out, entry);
     String json = out.toString(java.nio.charset.StandardCharsets.UTF_8);
     assertTrue(json.contains("\"SET_CELL\""), "output must contain the entry id");
