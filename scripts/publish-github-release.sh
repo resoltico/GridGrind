@@ -24,7 +24,7 @@ resolve_script_dir() {
 
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
-readonly tag_name="${GITHUB_REF_NAME:-}"
+readonly tag_name="${1:-${RELEASE_TAG:-${GITHUB_REF_NAME:-}}}"
 readonly asset_path="${repo_root}/cli/build/libs/gridgrind.jar"
 readonly asset_name="$(basename -- "${asset_path}")"
 

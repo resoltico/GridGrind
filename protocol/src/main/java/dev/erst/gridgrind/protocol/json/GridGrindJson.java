@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.protocol.json;
 
-import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.protocol.catalog.Catalog;
+import dev.erst.gridgrind.protocol.catalog.TypeEntry;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
 import java.io.IOException;
@@ -81,22 +82,20 @@ public final class GridGrindJson {
   }
 
   /** Reads a protocol catalog from an input stream without closing the caller-owned stream. */
-  public static GridGrindProtocolCatalog.Catalog readProtocolCatalog(InputStream inputStream)
-      throws IOException {
+  public static Catalog readProtocolCatalog(InputStream inputStream) throws IOException {
     Objects.requireNonNull(inputStream, "inputStream must not be null");
     try {
-      return JSON_MAPPER.readValue(inputStream, GridGrindProtocolCatalog.Catalog.class);
+      return JSON_MAPPER.readValue(inputStream, Catalog.class);
     } catch (JacksonException exception) {
       throw invalidPayload(exception);
     }
   }
 
   /** Reads a protocol catalog from a byte array. */
-  public static GridGrindProtocolCatalog.Catalog readProtocolCatalog(byte[] bytes)
-      throws IOException {
+  public static Catalog readProtocolCatalog(byte[] bytes) throws IOException {
     Objects.requireNonNull(bytes, "bytes must not be null");
     try {
-      return JSON_MAPPER.readValue(bytes, GridGrindProtocolCatalog.Catalog.class);
+      return JSON_MAPPER.readValue(bytes, Catalog.class);
     } catch (JacksonException exception) {
       throw invalidPayload(exception);
     }
@@ -115,8 +114,7 @@ public final class GridGrindJson {
   }
 
   /** Serializes a protocol catalog to bytes. */
-  public static byte[] writeProtocolCatalogBytes(GridGrindProtocolCatalog.Catalog catalog)
-      throws IOException {
+  public static byte[] writeProtocolCatalogBytes(Catalog catalog) throws IOException {
     Objects.requireNonNull(catalog, "catalog must not be null");
     return writeBytes(catalog);
   }
@@ -136,8 +134,8 @@ public final class GridGrindJson {
   }
 
   /** Writes a protocol catalog to an output stream without closing the caller-owned stream. */
-  public static void writeProtocolCatalog(
-      OutputStream outputStream, GridGrindProtocolCatalog.Catalog catalog) throws IOException {
+  public static void writeProtocolCatalog(OutputStream outputStream, Catalog catalog)
+      throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     outputStream.write(writeProtocolCatalogBytes(catalog));
   }
@@ -145,8 +143,7 @@ public final class GridGrindJson {
   /**
    * Writes a single catalog type entry to an output stream without closing the caller-owned stream.
    */
-  public static void writeTypeEntry(
-      OutputStream outputStream, GridGrindProtocolCatalog.TypeEntry entry) throws IOException {
+  public static void writeTypeEntry(OutputStream outputStream, TypeEntry entry) throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");
     Objects.requireNonNull(entry, "entry must not be null");
     outputStream.write(JSON_MAPPER.writeValueAsBytes(entry));

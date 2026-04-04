@@ -3,6 +3,47 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.26.0] - 2026-04-04
+
+### Added
+
+- New Jazzer protocol-request regression seed `pane_and_print_reset_request` covering the
+  previously untested pane and print-layout variants: `PaneInput.NONE` (reset), `PaneInput.SPLIT`
+  (x/y offsets with active-pane region), `PrintAreaInput.NONE`, `PrintScalingInput.AUTOMATIC`,
+  and `CLEAR_PRINT_LAYOUT`. The existing `structural_layout_request` seed only covered `FROZEN`
+  panes with `FIT` scaling.
+- Protocol catalog now publishes `paneTypes`, `printAreaTypes`, `printScalingTypes`,
+  `printTitleRowsTypes`, and `printTitleColumnsTypes` as nested type groups, and
+  `headerFooterTextInputType` and `printLayoutInputType` as plain type groups. Agents using
+  `--print-protocol-catalog` or `--describe-operation SET_SHEET_PANE` / `SET_PRINT_LAYOUT`
+  previously received dangling `NESTED_TYPE_GROUP` or `PLAIN_TYPE_GROUP` references with no
+  matching catalog entry; those entries are now present and complete.
+- Bidirectional validation between the field-shape group maps in `CatalogFieldMetadataSupport`
+  and the descriptor lists in `GridGrindProtocolCatalog`: a type registered in the field-shape
+  map with no corresponding catalog descriptor now raises `IllegalStateException` at startup
+  rather than silently producing an incomplete catalog.
+
+### Changed
+
+- Eight public nested types (`Catalog`, `TypeEntry`, `FieldEntry`, `NestedTypeGroup`,
+  `PlainTypeGroup`, `FieldShape`, `FieldRequirement`, `ScalarType`) extracted from
+  `GridGrindProtocolCatalog` to individual top-level files in the `catalog` package.
+  Wire format, catalog content, and public API are unchanged.
+- Protocol-catalog construction now uses a small internal gatherer seam for ordered uniqueness
+  and reflected field-metadata expansion instead of hand-rolled duplicate and ordering logic
+  inside `GridGrindProtocolCatalog`.
+- Built-in discovery output remains deterministic and contract-identical, while request-template
+  generation intentionally stays a plain constant because it does not warrant gatherer-based
+  abstraction.
+- Release and container workflows now support tag-targeted `workflow_dispatch` reruns, and the
+  release procedure now codifies protected-`main` CI requirements plus automatic release-branch
+  cleanup.
+- GHCR publication verification now runs both `docker pull` and `docker run` through the same
+  anonymous Docker config, matching the operator release protocol instead of silently falling
+  back to ambient credentials.
+
 ## [0.25.0] - 2026-04-03
 
 ### Changed
@@ -806,7 +847,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.25.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.26.0...HEAD
+[0.26.0]: https://github.com/resoltico/GridGrind/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/resoltico/GridGrind/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/resoltico/GridGrind/compare/v0.23.0...v0.24.0
 [0.23.0]: https://github.com/resoltico/GridGrind/compare/v0.22.0...v0.23.0

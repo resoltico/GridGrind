@@ -1,0 +1,31 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/examples/pane-and-print-reset-request.json",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/pane_and_print_reset_request.json",
+  "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 1324,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "NONE",
+      "operationCount" : 6,
+      "operationKinds" : {
+        "ENSURE_SHEET" : 2,
+        "SET_SHEET_PANE" : 2,
+        "SET_PRINT_LAYOUT" : 1,
+        "CLEAR_PRINT_LAYOUT" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 4,
+      "readKinds" : {
+        "GET_SHEET_LAYOUT" : 2,
+        "GET_PRINT_LAYOUT" : 2
+      }
+    }
+  },
+  "promotedAt" : "2026-04-04T00:00:00.000000Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/pane_and_print_reset_request.txt"
+}

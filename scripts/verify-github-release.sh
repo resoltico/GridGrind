@@ -9,7 +9,7 @@ die() {
     exit 1
 }
 
-readonly tag_name="${1:-${GITHUB_REF_NAME:-}}"
+readonly tag_name="${1:-${RELEASE_TAG:-${GITHUB_REF_NAME:-}}}"
 readonly asset_name="${2:-gridgrind.jar}"
 
 [[ -n "${GH_TOKEN:-}" ]] || die "GH_TOKEN is required"
