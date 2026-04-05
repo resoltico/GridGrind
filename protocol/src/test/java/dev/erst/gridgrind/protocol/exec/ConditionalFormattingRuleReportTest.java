@@ -3,6 +3,7 @@ package dev.erst.gridgrind.protocol.exec;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
@@ -27,11 +28,11 @@ class ConditionalFormattingRuleReportTest {
             ExcelConditionalFormattingThresholdType.MAX, null, 100.0d);
 
     ConditionalFormattingRuleReport dataBar =
-        DefaultGridGrindRequestExecutor.toConditionalFormattingRuleReport(
+        WorkbookReadResultConverter.toConditionalFormattingRuleReport(
             new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
                 4, false, "#102030", true, false, 10, 90, minThreshold, maxThreshold));
     ConditionalFormattingRuleReport iconSet =
-        DefaultGridGrindRequestExecutor.toConditionalFormattingRuleReport(
+        WorkbookReadResultConverter.toConditionalFormattingRuleReport(
             new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
                 5,
                 true,
@@ -48,7 +49,7 @@ class ConditionalFormattingRuleReportTest {
     assertEquals("#102030", dataBarRule.color());
     assertEquals(10, dataBarRule.widthMin());
     assertEquals(90, dataBarRule.widthMax());
-    assertEquals(ConditionalFormattingIconSet.GYR_3_ARROW, iconSetRule.iconSet());
+    assertEquals(ExcelConditionalFormattingIconSet.GYR_3_ARROW, iconSetRule.iconSet());
     assertEquals(2, iconSetRule.thresholds().size());
   }
 
@@ -56,12 +57,12 @@ class ConditionalFormattingRuleReportTest {
   void validatesConditionalFormattingRuleReportInvariants() {
     ConditionalFormattingThresholdReport threshold =
         new ConditionalFormattingThresholdReport(
-            ConditionalFormattingThresholdType.NUMBER, null, 5.0d);
+            ExcelConditionalFormattingThresholdType.NUMBER, null, 5.0d);
 
     assertEquals(
         "1",
         new ConditionalFormattingRuleReport.CellValueRule(
-                1, false, ComparisonOperator.GREATER_THAN, "1", null, null)
+                1, false, ExcelComparisonOperator.GREATER_THAN, "1", null, null)
             .formula1());
     assertThrows(
         IllegalArgumentException.class,
@@ -70,12 +71,12 @@ class ConditionalFormattingRuleReportTest {
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleReport.CellValueRule(
-                1, false, ComparisonOperator.BETWEEN, " ", "9", null));
+                1, false, ExcelComparisonOperator.BETWEEN, " ", "9", null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleReport.CellValueRule(
-                1, false, ComparisonOperator.BETWEEN, "1", " ", null));
+                1, false, ExcelComparisonOperator.BETWEEN, "1", " ", null));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ConditionalFormattingRuleReport.UnsupportedRule(1, false, " ", "detail"));
@@ -126,12 +127,11 @@ class ConditionalFormattingRuleReportTest {
             border,
             List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT));
 
-    DifferentialStyleReport report =
-        DefaultGridGrindRequestExecutor.toDifferentialStyleReport(style);
+    DifferentialStyleReport report = WorkbookReadResultConverter.toDifferentialStyleReport(style);
     DifferentialBorderReport borderReport =
-        DefaultGridGrindRequestExecutor.toDifferentialBorderReport(border);
+        WorkbookReadResultConverter.toDifferentialBorderReport(border);
     DifferentialBorderReport sparseBorderReport =
-        DefaultGridGrindRequestExecutor.toDifferentialBorderReport(
+        WorkbookReadResultConverter.toDifferentialBorderReport(
             new ExcelDifferentialBorder(
                 new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#102030"),
                 null,
@@ -139,16 +139,17 @@ class ConditionalFormattingRuleReportTest {
                 null,
                 null));
     DifferentialBorderSideReport borderSideReport =
-        DefaultGridGrindRequestExecutor.toDifferentialBorderSideReport(
+        WorkbookReadResultConverter.toDifferentialBorderSideReport(
             new ExcelDifferentialBorderSide(ExcelBorderStyle.THICK, "#AABBCC"));
 
-    assertNull(DefaultGridGrindRequestExecutor.toDifferentialStyleReport(null));
-    assertNull(DefaultGridGrindRequestExecutor.toDifferentialBorderReport(null));
+    assertNull(WorkbookReadResultConverter.toDifferentialStyleReport(null));
+    assertNull(WorkbookReadResultConverter.toDifferentialBorderReport(null));
     assertEquals("#111111", report.fontColor());
     assertEquals("#EEEEEE", report.fillColor());
     assertEquals(
-        List.of(ConditionalFormattingUnsupportedFeature.ALIGNMENT), report.unsupportedFeatures());
-    assertEquals(BorderStyle.DASHED, borderReport.top().style());
+        List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT),
+        report.unsupportedFeatures());
+    assertEquals(ExcelBorderStyle.DASHED, borderReport.top().style());
     assertNull(sparseBorderReport.top());
     assertEquals("#AABBCC", borderSideReport.color());
 
@@ -175,27 +176,27 @@ class ConditionalFormattingRuleReportTest {
                 null,
                 null,
                 null,
-                List.of((ConditionalFormattingUnsupportedFeature) null)));
+                List.of((ExcelConditionalFormattingUnsupportedFeature) null)));
     assertThrows(
         IllegalArgumentException.class,
         () -> new DifferentialBorderReport(null, null, null, null, null));
-    assertNull(DefaultGridGrindRequestExecutor.toDifferentialBorderSideReport(null));
+    assertNull(WorkbookReadResultConverter.toDifferentialBorderSideReport(null));
   }
 
   @Test
   void convertsAndValidatesThresholdReports() {
     ConditionalFormattingThresholdReport threshold =
-        DefaultGridGrindRequestExecutor.toConditionalFormattingThresholdReport(
+        WorkbookReadResultConverter.toConditionalFormattingThresholdReport(
             new ExcelConditionalFormattingThresholdSnapshot(
                 ExcelConditionalFormattingThresholdType.FORMULA, "A1", null));
 
-    assertEquals(ConditionalFormattingThresholdType.FORMULA, threshold.type());
+    assertEquals(ExcelConditionalFormattingThresholdType.FORMULA, threshold.type());
     assertEquals("A1", threshold.formula());
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingThresholdReport(
-                ConditionalFormattingThresholdType.FORMULA, " ", null));
+                ExcelConditionalFormattingThresholdType.FORMULA, " ", null));
     assertThrows(
         NullPointerException.class,
         () -> new ConditionalFormattingThresholdReport(null, null, null));

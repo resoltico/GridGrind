@@ -1,11 +1,12 @@
 package dev.erst.gridgrind.protocol.dto;
 
+import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import java.util.Objects;
 
 /** One authoritative supported print-layout payload in protocol form. */
 public record PrintLayoutInput(
     PrintAreaInput printArea,
-    PrintOrientation orientation,
+    ExcelPrintOrientation orientation,
     PrintScalingInput scaling,
     PrintTitleRowsInput repeatingRows,
     PrintTitleColumnsInput repeatingColumns,
@@ -13,7 +14,7 @@ public record PrintLayoutInput(
     HeaderFooterTextInput footer) {
   public PrintLayoutInput {
     printArea = printArea == null ? new PrintAreaInput.None() : printArea;
-    orientation = orientation == null ? PrintOrientation.PORTRAIT : orientation;
+    orientation = orientation == null ? ExcelPrintOrientation.PORTRAIT : orientation;
     scaling = scaling == null ? new PrintScalingInput.Automatic() : scaling;
     repeatingRows = repeatingRows == null ? new PrintTitleRowsInput.None() : repeatingRows;
     repeatingColumns =

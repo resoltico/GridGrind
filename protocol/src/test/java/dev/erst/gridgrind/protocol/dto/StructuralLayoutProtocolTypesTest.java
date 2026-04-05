@@ -3,6 +3,8 @@ package dev.erst.gridgrind.protocol.dto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import org.junit.jupiter.api.Test;
 
 /** Direct tests for the structural-layout protocol input and report families. */
@@ -12,19 +14,19 @@ class StructuralLayoutProtocolTypesTest {
     assertEquals(new PaneInput.None(), new PaneInput.None());
     assertEquals(new PaneInput.Frozen(1, 2, 1, 2), new PaneInput.Frozen(1, 2, 1, 2));
     assertEquals(
-        new PaneInput.Split(0, 1800, 0, 3, PaneRegion.LOWER_LEFT),
-        new PaneInput.Split(0, 1800, 0, 3, PaneRegion.LOWER_LEFT));
+        new PaneInput.Split(0, 1800, 0, 3, ExcelPaneRegion.LOWER_LEFT),
+        new PaneInput.Split(0, 1800, 0, 3, ExcelPaneRegion.LOWER_LEFT));
 
     assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(-1, 2, 1, 2));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PaneInput.Split(0, 0, 0, 0, PaneRegion.UPPER_LEFT));
+        () -> new PaneInput.Split(0, 0, 0, 0, ExcelPaneRegion.UPPER_LEFT));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PaneInput.Split(0, 1800, 1, 3, PaneRegion.LOWER_LEFT));
+        () -> new PaneInput.Split(0, 1800, 1, 3, ExcelPaneRegion.LOWER_LEFT));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new PaneInput.Split(1200, 0, 2, 1, PaneRegion.UPPER_RIGHT));
+        () -> new PaneInput.Split(1200, 0, 2, 1, ExcelPaneRegion.UPPER_RIGHT));
     assertThrows(NullPointerException.class, () -> new PaneInput.Split(1200, 1800, 2, 3, null));
   }
 
@@ -71,7 +73,7 @@ class StructuralLayoutProtocolTypesTest {
     PrintLayoutInput input = new PrintLayoutInput(null, null, null, null, null, null, null);
 
     assertEquals(new PrintAreaInput.None(), input.printArea());
-    assertEquals(PrintOrientation.PORTRAIT, input.orientation());
+    assertEquals(ExcelPrintOrientation.PORTRAIT, input.orientation());
     assertEquals(new PrintScalingInput.Automatic(), input.scaling());
     assertEquals(new PrintTitleRowsInput.None(), input.repeatingRows());
     assertEquals(new PrintTitleColumnsInput.None(), input.repeatingColumns());
@@ -83,8 +85,8 @@ class StructuralLayoutProtocolTypesTest {
   void paneAndPrintReportVariantsValidateTheirContracts() {
     assertEquals(new PaneReport.None(), new PaneReport.None());
     assertEquals(
-        new PaneReport.Split(1200, 2400, 3, 4, PaneRegion.LOWER_RIGHT),
-        new PaneReport.Split(1200, 2400, 3, 4, PaneRegion.LOWER_RIGHT));
+        new PaneReport.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
+        new PaneReport.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT));
     assertThrows(NullPointerException.class, () -> new PaneReport.Split(1, 1, 0, 0, null));
 
     assertEquals(new PrintAreaReport.None(), new PrintAreaReport.None());
@@ -102,7 +104,7 @@ class StructuralLayoutProtocolTypesTest {
         new PrintLayoutReport(
             "Budget",
             new PrintAreaReport.None(),
-            PrintOrientation.PORTRAIT,
+            ExcelPrintOrientation.PORTRAIT,
             new PrintScalingReport.Automatic(),
             new PrintTitleRowsReport.None(),
             new PrintTitleColumnsReport.None(),
@@ -111,7 +113,7 @@ class StructuralLayoutProtocolTypesTest {
         new PrintLayoutReport(
             "Budget",
             new PrintAreaReport.None(),
-            PrintOrientation.PORTRAIT,
+            ExcelPrintOrientation.PORTRAIT,
             new PrintScalingReport.Automatic(),
             new PrintTitleRowsReport.None(),
             new PrintTitleColumnsReport.None(),
@@ -123,7 +125,7 @@ class StructuralLayoutProtocolTypesTest {
             new PrintLayoutReport(
                 " ",
                 new PrintAreaReport.None(),
-                PrintOrientation.PORTRAIT,
+                ExcelPrintOrientation.PORTRAIT,
                 new PrintScalingReport.Automatic(),
                 new PrintTitleRowsReport.None(),
                 new PrintTitleColumnsReport.None(),

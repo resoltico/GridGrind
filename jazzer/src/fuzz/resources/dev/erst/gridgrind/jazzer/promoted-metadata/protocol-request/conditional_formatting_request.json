@@ -1,0 +1,31 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/conditional_formatting_request.json",
+  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/conditional_formatting_request.json",
+  "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 2747,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 5,
+      "operationKinds" : {
+        "ENSURE_SHEET" : 1,
+        "SET_RANGE" : 1,
+        "SET_CONDITIONAL_FORMATTING" : 2,
+        "CLEAR_CONDITIONAL_FORMATTING" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 2,
+      "readKinds" : {
+        "GET_CONDITIONAL_FORMATTING" : 1,
+        "ANALYZE_CONDITIONAL_FORMATTING_HEALTH" : 1
+      }
+    }
+  },
+  "promotedAt" : "2026-04-05T00:00:00.000000Z",
+  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/conditional_formatting_request.txt"
+}

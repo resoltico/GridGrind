@@ -2,6 +2,12 @@ package dev.erst.gridgrind.protocol.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -100,7 +106,7 @@ class GridGrindResponseTest {
         new GridGrindResponse.SheetProtectionReport.Protected(protectionSettings);
     GridGrindResponse.SheetSummaryReport sheetSummary =
         new GridGrindResponse.SheetSummaryReport(
-            "Budget", SheetVisibility.VERY_HIDDEN, protectedReport, 4, 8, 3);
+            "Budget", ExcelSheetVisibility.VERY_HIDDEN, protectedReport, 4, 8, 3);
 
     assertEquals(0, empty.sheetCount());
     assertEquals(List.of(), empty.sheetNames());
@@ -108,7 +114,7 @@ class GridGrindResponseTest {
     assertEquals(List.of("Budget", "Archive"), withSheets.selectedSheetNames());
     assertNull(unprotected.settings());
     assertEquals(protectionSettings, protectedReport.settings());
-    assertEquals(SheetVisibility.VERY_HIDDEN, sheetSummary.visibility());
+    assertEquals(ExcelSheetVisibility.VERY_HIDDEN, sheetSummary.visibility());
     assertEquals(protectedReport, sheetSummary.protection());
   }
 
@@ -239,7 +245,7 @@ class GridGrindResponseTest {
         new PrintLayoutReport(
             "Budget",
             new PrintAreaReport.Range("A1:B20"),
-            PrintOrientation.LANDSCAPE,
+            ExcelPrintOrientation.LANDSCAPE,
             new PrintScalingReport.Fit(1, 0),
             new PrintTitleRowsReport.Band(0, 0),
             new PrintTitleColumnsReport.Band(0, 0),
@@ -272,7 +278,7 @@ class GridGrindResponseTest {
     assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
     assertInstanceOf(PaneReport.Frozen.class, layout.pane());
     assertEquals(125, layout.zoomPercent());
-    assertEquals(PrintOrientation.LANDSCAPE, printLayout.orientation());
+    assertEquals(ExcelPrintOrientation.LANDSCAPE, printLayout.orientation());
   }
 
   @Test
@@ -442,7 +448,7 @@ class GridGrindResponseTest {
         () ->
             new GridGrindResponse.SheetSummaryReport(
                 " ",
-                SheetVisibility.VISIBLE,
+                ExcelSheetVisibility.VISIBLE,
                 new GridGrindResponse.SheetProtectionReport.Unprotected(),
                 0,
                 0,
@@ -703,9 +709,9 @@ class GridGrindResponseTest {
   @Test
   void paneReportVariantsAndProblemCauseCopyPathsRemainUsable() {
     PaneReport.None none = new PaneReport.None();
-    PaneReport.Split split = new PaneReport.Split(1200, 2400, 3, 4, PaneRegion.LOWER_RIGHT);
+    PaneReport.Split split = new PaneReport.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT);
     assertInstanceOf(PaneReport.None.class, none);
-    assertEquals(PaneRegion.LOWER_RIGHT, split.activePane());
+    assertEquals(ExcelPaneRegion.LOWER_RIGHT, split.activePane());
 
     GridGrindResponse.Problem problem =
         new GridGrindResponse.Problem(
@@ -747,18 +753,18 @@ class GridGrindResponseTest {
         true,
         false,
         true,
-        HorizontalAlignment.CENTER,
-        VerticalAlignment.TOP,
+        ExcelHorizontalAlignment.CENTER,
+        ExcelVerticalAlignment.TOP,
         "Aptos",
         new FontHeightReport(230, new BigDecimal("11.5")),
         "#1F4E78",
         true,
         false,
         "#FFF2CC",
-        BorderStyle.THIN,
-        BorderStyle.DOUBLE,
-        BorderStyle.THIN,
-        BorderStyle.THIN);
+        ExcelBorderStyle.THIN,
+        ExcelBorderStyle.DOUBLE,
+        ExcelBorderStyle.THIN,
+        ExcelBorderStyle.THIN);
   }
 
   private static SheetProtectionSettings protectionSettings() {

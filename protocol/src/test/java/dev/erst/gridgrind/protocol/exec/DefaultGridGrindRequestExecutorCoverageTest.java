@@ -15,45 +15,33 @@ import org.junit.jupiter.api.Test;
 class DefaultGridGrindRequestExecutorCoverageTest {
   @Test
   void mapsProtocolEnumsIntoEngineCommands() {
-    for (HorizontalAlignment alignment : HorizontalAlignment.values()) {
+    for (ExcelHorizontalAlignment alignment : ExcelHorizontalAlignment.values()) {
       assertProtocolHorizontalAlignmentMapping(alignment);
     }
 
-    for (VerticalAlignment alignment : VerticalAlignment.values()) {
+    for (ExcelVerticalAlignment alignment : ExcelVerticalAlignment.values()) {
       assertProtocolVerticalAlignmentMapping(alignment);
     }
 
-    for (BorderStyle style : BorderStyle.values()) {
+    for (ExcelBorderStyle style : ExcelBorderStyle.values()) {
       assertProtocolBorderStyleMapping(style);
     }
 
-    for (ComparisonOperator operator : ComparisonOperator.values()) {
+    for (ExcelComparisonOperator operator : ExcelComparisonOperator.values()) {
       assertProtocolComparisonOperatorMapping(operator);
     }
 
-    for (SheetVisibility visibility : SheetVisibility.values()) {
+    for (ExcelSheetVisibility visibility : ExcelSheetVisibility.values()) {
       assertProtocolSheetVisibilityMapping(visibility);
     }
 
-    for (PaneRegion region : PaneRegion.values()) {
+    for (ExcelPaneRegion region : ExcelPaneRegion.values()) {
       assertProtocolPaneRegionMapping(region);
     }
   }
 
   @Test
   void mapsEngineFactsBackIntoProtocolEnumsAndReports() {
-    for (ExcelHorizontalAlignment alignment : ExcelHorizontalAlignment.values()) {
-      assertEngineHorizontalAlignmentMapping(alignment);
-    }
-
-    for (ExcelVerticalAlignment alignment : ExcelVerticalAlignment.values()) {
-      assertEngineVerticalAlignmentMapping(alignment);
-    }
-
-    for (ExcelBorderStyle style : ExcelBorderStyle.values()) {
-      assertEngineBorderStyleMapping(style);
-    }
-
     for (ExcelSheetVisibility visibility : ExcelSheetVisibility.values()) {
       assertEngineSheetVisibilityMapping(visibility);
     }
@@ -90,10 +78,10 @@ class DefaultGridGrindRequestExecutorCoverageTest {
     ConditionalFormattingRuleReport.CellValueRule cellValueRule =
         assertInstanceOf(
             ConditionalFormattingRuleReport.CellValueRule.class,
-            DefaultGridGrindRequestExecutor.toConditionalFormattingRuleReport(
+            WorkbookReadResultConverter.toConditionalFormattingRuleReport(
                 new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
                     1, false, ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null, null)));
-    assertEquals(ComparisonOperator.GREATER_OR_EQUAL, cellValueRule.operator());
+    assertEquals(ExcelComparisonOperator.GREATER_OR_EQUAL, cellValueRule.operator());
   }
 
   @Test
@@ -222,9 +210,9 @@ class DefaultGridGrindRequestExecutorCoverageTest {
   }
 
   private static CellStyleInput styleInput(
-      HorizontalAlignment horizontalAlignment,
-      VerticalAlignment verticalAlignment,
-      BorderStyle borderStyle) {
+      ExcelHorizontalAlignment horizontalAlignment,
+      ExcelVerticalAlignment verticalAlignment,
+      ExcelBorderStyle borderStyle) {
     return new CellStyleInput(
         null,
         null,
@@ -246,7 +234,7 @@ class DefaultGridGrindRequestExecutorCoverageTest {
             new CellBorderSideInput(borderStyle)));
   }
 
-  private static String comparisonUpperBound(ComparisonOperator operator) {
+  private static String comparisonUpperBound(ExcelComparisonOperator operator) {
     return switch (operator) {
       case BETWEEN, NOT_BETWEEN -> "2";
       default -> null;
@@ -260,49 +248,47 @@ class DefaultGridGrindRequestExecutorCoverageTest {
     };
   }
 
-  private static void assertProtocolHorizontalAlignmentMapping(HorizontalAlignment alignment) {
+  private static void assertProtocolHorizontalAlignmentMapping(ExcelHorizontalAlignment alignment) {
     WorkbookCommand.ApplyStyle command =
         assertInstanceOf(
             WorkbookCommand.ApplyStyle.class,
-            DefaultGridGrindRequestExecutor.toCommand(
+            WorkbookCommandConverter.toCommand(
                 new WorkbookOperation.ApplyStyle(
                     "Budget",
                     "A1",
-                    styleInput(alignment, VerticalAlignment.TOP, BorderStyle.THIN))));
-    assertEquals(
-        ExcelHorizontalAlignment.valueOf(alignment.name()), command.style().horizontalAlignment());
+                    styleInput(alignment, ExcelVerticalAlignment.TOP, ExcelBorderStyle.THIN))));
+    assertEquals(alignment, command.style().horizontalAlignment());
   }
 
-  private static void assertProtocolVerticalAlignmentMapping(VerticalAlignment alignment) {
+  private static void assertProtocolVerticalAlignmentMapping(ExcelVerticalAlignment alignment) {
     WorkbookCommand.ApplyStyle command =
         assertInstanceOf(
             WorkbookCommand.ApplyStyle.class,
-            DefaultGridGrindRequestExecutor.toCommand(
+            WorkbookCommandConverter.toCommand(
                 new WorkbookOperation.ApplyStyle(
                     "Budget",
                     "A1",
-                    styleInput(HorizontalAlignment.LEFT, alignment, BorderStyle.THIN))));
-    assertEquals(
-        ExcelVerticalAlignment.valueOf(alignment.name()), command.style().verticalAlignment());
+                    styleInput(ExcelHorizontalAlignment.LEFT, alignment, ExcelBorderStyle.THIN))));
+    assertEquals(alignment, command.style().verticalAlignment());
   }
 
-  private static void assertProtocolBorderStyleMapping(BorderStyle style) {
+  private static void assertProtocolBorderStyleMapping(ExcelBorderStyle style) {
     WorkbookCommand.ApplyStyle command =
         assertInstanceOf(
             WorkbookCommand.ApplyStyle.class,
-            DefaultGridGrindRequestExecutor.toCommand(
+            WorkbookCommandConverter.toCommand(
                 new WorkbookOperation.ApplyStyle(
                     "Budget",
                     "A1",
-                    styleInput(HorizontalAlignment.LEFT, VerticalAlignment.TOP, style))));
-    assertEquals(ExcelBorderStyle.valueOf(style.name()), command.style().border().top().style());
+                    styleInput(ExcelHorizontalAlignment.LEFT, ExcelVerticalAlignment.TOP, style))));
+    assertEquals(style, command.style().border().top().style());
   }
 
-  private static void assertProtocolComparisonOperatorMapping(ComparisonOperator operator) {
+  private static void assertProtocolComparisonOperatorMapping(ExcelComparisonOperator operator) {
     WorkbookCommand.SetDataValidation command =
         assertInstanceOf(
             WorkbookCommand.SetDataValidation.class,
-            DefaultGridGrindRequestExecutor.toCommand(
+            WorkbookCommandConverter.toCommand(
                 new WorkbookOperation.SetDataValidation(
                     "Budget",
                     "A1",
@@ -315,51 +301,34 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                         null))));
     ExcelDataValidationRule.WholeNumber rule =
         assertInstanceOf(ExcelDataValidationRule.WholeNumber.class, command.validation().rule());
-    assertEquals(ExcelComparisonOperator.valueOf(operator.name()), rule.operator());
+    assertEquals(operator, rule.operator());
   }
 
-  private static void assertProtocolSheetVisibilityMapping(SheetVisibility visibility) {
+  private static void assertProtocolSheetVisibilityMapping(ExcelSheetVisibility visibility) {
     WorkbookCommand.SetSheetVisibility command =
         assertInstanceOf(
             WorkbookCommand.SetSheetVisibility.class,
-            DefaultGridGrindRequestExecutor.toCommand(
+            WorkbookCommandConverter.toCommand(
                 new WorkbookOperation.SetSheetVisibility("Budget", visibility)));
-    assertEquals(ExcelSheetVisibility.valueOf(visibility.name()), command.visibility());
+    assertEquals(visibility, command.visibility());
   }
 
-  private static void assertProtocolPaneRegionMapping(PaneRegion region) {
+  private static void assertProtocolPaneRegionMapping(ExcelPaneRegion region) {
     WorkbookCommand.SetSheetPane command =
         assertInstanceOf(
             WorkbookCommand.SetSheetPane.class,
-            DefaultGridGrindRequestExecutor.toCommand(
+            WorkbookCommandConverter.toCommand(
                 new WorkbookOperation.SetSheetPane(
                     "Budget", new PaneInput.Split(120, 240, 0, 0, region))));
     ExcelSheetPane.Split split = assertInstanceOf(ExcelSheetPane.Split.class, command.pane());
-    assertEquals(ExcelPaneRegion.valueOf(region.name()), split.activePane());
-  }
-
-  private static void assertEngineHorizontalAlignmentMapping(ExcelHorizontalAlignment alignment) {
-    assertEquals(
-        HorizontalAlignment.valueOf(alignment.name()),
-        DefaultGridGrindRequestExecutor.toHorizontalAlignment(alignment));
-  }
-
-  private static void assertEngineVerticalAlignmentMapping(ExcelVerticalAlignment alignment) {
-    assertEquals(
-        VerticalAlignment.valueOf(alignment.name()),
-        DefaultGridGrindRequestExecutor.toVerticalAlignment(alignment));
-  }
-
-  private static void assertEngineBorderStyleMapping(ExcelBorderStyle style) {
-    assertEquals(
-        BorderStyle.valueOf(style.name()), DefaultGridGrindRequestExecutor.toBorderStyle(style));
+    assertEquals(region, split.activePane());
   }
 
   private static void assertEngineSheetVisibilityMapping(ExcelSheetVisibility visibility) {
     WorkbookReadResult.SheetSummaryResult result =
         assertInstanceOf(
             WorkbookReadResult.SheetSummaryResult.class,
-            DefaultGridGrindRequestExecutor.toReadResult(
+            WorkbookReadResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult(
                     "sheet",
                     new dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary(
@@ -370,14 +339,14 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                         0,
                         -1,
                         -1))));
-    assertEquals(SheetVisibility.valueOf(visibility.name()), result.sheet().visibility());
+    assertEquals(visibility, result.sheet().visibility());
   }
 
   private static void assertEnginePaneRegionMapping(ExcelPaneRegion region) {
     WorkbookReadResult.SheetLayoutResult result =
         assertInstanceOf(
             WorkbookReadResult.SheetLayoutResult.class,
-            DefaultGridGrindRequestExecutor.toReadResult(
+            WorkbookReadResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayoutResult(
                     "layout",
                     new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout(
@@ -389,7 +358,7 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                         List.of(
                             new dev.erst.gridgrind.excel.WorkbookReadResult.RowLayout(0, 15.0))))));
     PaneReport.Split split = assertInstanceOf(PaneReport.Split.class, result.layout().pane());
-    assertEquals(PaneRegion.valueOf(region.name()), split.activePane());
+    assertEquals(region, split.activePane());
   }
 
   private static void assertEngineDataValidationErrorStyleMapping(
@@ -397,7 +366,7 @@ class DefaultGridGrindRequestExecutorCoverageTest {
     DataValidationEntryReport.Supported entry =
         assertInstanceOf(
             DataValidationEntryReport.Supported.class,
-            DefaultGridGrindRequestExecutor.toDataValidationEntryReport(
+            WorkbookReadResultConverter.toDataValidationEntryReport(
                 new ExcelDataValidationSnapshot.Supported(
                     List.of("A1"),
                     new ExcelDataValidationDefinition(
@@ -407,18 +376,17 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                         false,
                         null,
                         new ExcelDataValidationErrorAlert(style, "Title", "Text", true)))));
-    assertEquals(
-        DataValidationErrorStyle.valueOf(style.name()), entry.validation().errorAlert().style());
+    assertEquals(style, entry.validation().errorAlert().style());
     DataValidationRuleInput.WholeNumber rule =
         assertInstanceOf(DataValidationRuleInput.WholeNumber.class, entry.validation().rule());
-    assertEquals(ComparisonOperator.EQUAL, rule.operator());
+    assertEquals(ExcelComparisonOperator.EQUAL, rule.operator());
   }
 
   private static void assertEngineComparisonOperatorMapping(ExcelComparisonOperator operator) {
     DataValidationEntryReport.Supported entry =
         assertInstanceOf(
             DataValidationEntryReport.Supported.class,
-            DefaultGridGrindRequestExecutor.toDataValidationEntryReport(
+            WorkbookReadResultConverter.toDataValidationEntryReport(
                 new ExcelDataValidationSnapshot.Supported(
                     List.of("A1"),
                     new ExcelDataValidationDefinition(
@@ -430,15 +398,15 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                         null))));
     DataValidationRuleInput.WholeNumber rule =
         assertInstanceOf(DataValidationRuleInput.WholeNumber.class, entry.validation().rule());
-    assertEquals(ComparisonOperator.valueOf(operator.name()), rule.operator());
+    assertEquals(operator, rule.operator());
   }
 
   private static void assertEngineThresholdTypeMapping(
       ExcelConditionalFormattingThresholdType type) {
     ConditionalFormattingThresholdReport threshold =
-        DefaultGridGrindRequestExecutor.toConditionalFormattingThresholdReport(
+        WorkbookReadResultConverter.toConditionalFormattingThresholdReport(
             new ExcelConditionalFormattingThresholdSnapshot(type, "A1", 2.0));
-    assertEquals(ConditionalFormattingThresholdType.valueOf(type.name()), threshold.type());
+    assertEquals(type, threshold.type());
   }
 
   private static void assertEngineConditionalFormattingIconSetMapping(
@@ -446,7 +414,7 @@ class DefaultGridGrindRequestExecutorCoverageTest {
     ConditionalFormattingRuleReport.IconSetRule rule =
         assertInstanceOf(
             ConditionalFormattingRuleReport.IconSetRule.class,
-            DefaultGridGrindRequestExecutor.toConditionalFormattingRuleReport(
+            WorkbookReadResultConverter.toConditionalFormattingRuleReport(
                 new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
                     1,
                     false,
@@ -456,17 +424,15 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                     List.of(
                         new ExcelConditionalFormattingThresholdSnapshot(
                             ExcelConditionalFormattingThresholdType.MIN, null, null)))));
-    assertEquals(ConditionalFormattingIconSet.valueOf(iconSet.name()), rule.iconSet());
+    assertEquals(iconSet, rule.iconSet());
   }
 
   private static void assertEngineConditionalFormattingUnsupportedFeatureMapping(
       ExcelConditionalFormattingUnsupportedFeature feature) {
     DifferentialStyleReport report =
-        DefaultGridGrindRequestExecutor.toDifferentialStyleReport(
+        WorkbookReadResultConverter.toDifferentialStyleReport(
             new ExcelDifferentialStyleSnapshot(
                 null, null, null, null, null, null, null, null, null, List.of(feature)));
-    assertEquals(
-        List.of(ConditionalFormattingUnsupportedFeature.valueOf(feature.name())),
-        report.unsupportedFeatures());
+    assertEquals(List.of(feature), report.unsupportedFeatures());
   }
 }

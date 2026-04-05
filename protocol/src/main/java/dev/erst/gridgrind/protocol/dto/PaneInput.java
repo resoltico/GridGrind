@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import java.util.Objects;
 
 /** One explicit sheet pane state requested through the wire protocol. */
@@ -51,7 +52,7 @@ public sealed interface PaneInput permits PaneInput.None, PaneInput.Frozen, Pane
       Integer ySplitPosition,
       Integer leftmostColumn,
       Integer topRow,
-      PaneRegion activePane)
+      ExcelPaneRegion activePane)
       implements PaneInput {
     public Split {
       Objects.requireNonNull(xSplitPosition, "xSplitPosition must not be null");

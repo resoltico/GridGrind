@@ -2,6 +2,8 @@ package dev.erst.gridgrind.protocol.json;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.protocol.catalog.Catalog;
 import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.protocol.catalog.TypeEntry;
@@ -279,8 +281,8 @@ class GridGrindJsonTest {
         new BigDecimal("11.5"),
         assertInstanceOf(FontHeightInput.Points.class, applyStyle.style().fontHeight()).points());
     assertEquals("#FFF2CC", applyStyle.style().fillColor());
-    assertEquals(BorderStyle.THIN, applyStyle.style().border().all().style());
-    assertEquals(BorderStyle.DOUBLE, applyStyle.style().border().right().style());
+    assertEquals(ExcelBorderStyle.THIN, applyStyle.style().border().all().style());
+    assertEquals(ExcelBorderStyle.DOUBLE, applyStyle.style().border().right().style());
   }
 
   @Test
@@ -351,7 +353,7 @@ class GridGrindJsonTest {
     assertEquals(1, position.targetIndex());
     assertEquals("Budget Copy", setActiveSheet.sheetName());
     assertEquals(List.of("Budget", "Budget Copy"), setSelectedSheets.sheetNames());
-    assertEquals(SheetVisibility.VERY_HIDDEN, setSheetVisibility.visibility());
+    assertEquals(ExcelSheetVisibility.VERY_HIDDEN, setSheetVisibility.visibility());
     assertEquals(protectionSettings(), setSheetProtection.protection());
     assertEquals("Budget", clearSheetProtection.sheetName());
   }
@@ -729,7 +731,7 @@ class GridGrindJsonTest {
                     "sheet",
                     new GridGrindResponse.SheetSummaryReport(
                         "Budget",
-                        SheetVisibility.VERY_HIDDEN,
+                        ExcelSheetVisibility.VERY_HIDDEN,
                         new GridGrindResponse.SheetProtectionReport.Protected(protectionSettings()),
                         4,
                         7,
@@ -753,7 +755,7 @@ class GridGrindJsonTest {
     assertTrue(json.contains("\"kind\" : \"WITH_SHEETS\""));
     assertEquals("Archive", workbookSummary.activeSheetName());
     assertEquals(List.of("Budget", "Archive"), workbookSummary.selectedSheetNames());
-    assertEquals(SheetVisibility.VERY_HIDDEN, sheet.sheet().visibility());
+    assertEquals(ExcelSheetVisibility.VERY_HIDDEN, sheet.sheet().visibility());
     assertEquals(protectionSettings(), protection.settings());
   }
 

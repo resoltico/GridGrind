@@ -2,6 +2,13 @@ package dev.erst.gridgrind.protocol.operation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.protocol.dto.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -55,7 +62,7 @@ class WorkbookOperationTest {
     WorkbookOperation.SetSelectedSheets setSelectedSheets =
         new WorkbookOperation.SetSelectedSheets(List.of("Budget", "Budget Copy"));
     WorkbookOperation.SetSheetVisibility setSheetVisibility =
-        new WorkbookOperation.SetSheetVisibility("Budget", SheetVisibility.HIDDEN);
+        new WorkbookOperation.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN);
     WorkbookOperation.SetSheetProtection setSheetProtection =
         new WorkbookOperation.SetSheetProtection("Budget", protection);
     WorkbookOperation.ClearSheetProtection clearSheetProtection =
@@ -66,7 +73,7 @@ class WorkbookOperationTest {
     assertInstanceOf(SheetCopyPosition.AppendAtEnd.class, copySheet.position());
     assertEquals("Budget Copy", setActiveSheet.sheetName());
     assertEquals(List.of("Budget", "Budget Copy"), setSelectedSheets.sheetNames());
-    assertEquals(SheetVisibility.HIDDEN, setSheetVisibility.visibility());
+    assertEquals(ExcelSheetVisibility.HIDDEN, setSheetVisibility.visibility());
     assertEquals(protection, setSheetProtection.protection());
     assertEquals("Budget", clearSheetProtection.sheetName());
   }
@@ -440,7 +447,7 @@ class WorkbookOperationTest {
     assertDoesNotThrow(() -> new PaneInput.Frozen(1, 2, 1, 2));
     assertDoesNotThrow(() -> new PaneInput.Frozen(0, 2, 0, 2));
     assertDoesNotThrow(() -> new PaneInput.Frozen(2, 0, 2, 0));
-    assertDoesNotThrow(() -> new PaneInput.Split(1200, 0, 3, 0, PaneRegion.UPPER_RIGHT));
+    assertDoesNotThrow(() -> new PaneInput.Split(1200, 0, 3, 0, ExcelPaneRegion.UPPER_RIGHT));
     assertDoesNotThrow(() -> WorkbookOperation.Validation.requireZoomPercent(10));
     assertDoesNotThrow(() -> WorkbookOperation.Validation.requireZoomPercent(400));
     assertThrows(IllegalArgumentException.class, () -> new PaneInput.Frozen(0, 0, 0, 0));
@@ -547,7 +554,8 @@ class WorkbookOperationTest {
         new WorkbookOperation.SetSelectedSheets(List.of("Budget")).operationType());
     assertEquals(
         "SET_SHEET_VISIBILITY",
-        new WorkbookOperation.SetSheetVisibility("Budget", SheetVisibility.HIDDEN).operationType());
+        new WorkbookOperation.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN)
+            .operationType());
     assertEquals(
         "SET_SHEET_PROTECTION",
         new WorkbookOperation.SetSheetProtection("Budget", protectionSettings()).operationType());
@@ -642,8 +650,8 @@ class WorkbookOperationTest {
         true,
         null,
         true,
-        HorizontalAlignment.RIGHT,
-        VerticalAlignment.CENTER,
+        ExcelHorizontalAlignment.RIGHT,
+        ExcelVerticalAlignment.CENTER,
         null,
         null,
         null,
@@ -655,12 +663,12 @@ class WorkbookOperationTest {
 
   private static DataValidationInput protocolValidation() {
     return new DataValidationInput(
-        new DataValidationRuleInput.TextLength(ComparisonOperator.LESS_OR_EQUAL, "20", null),
+        new DataValidationRuleInput.TextLength(ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
         true,
         false,
         new DataValidationPromptInput("Reason", "Keep the reason concise.", true),
         new DataValidationErrorAlertInput(
-            DataValidationErrorStyle.STOP, "Too long", "Use 20 characters or fewer.", true));
+            ExcelDataValidationErrorStyle.STOP, "Too long", "Use 20 characters or fewer.", true));
   }
 
   private static SheetProtectionSettings protectionSettings() {
@@ -672,7 +680,7 @@ class WorkbookOperationTest {
   private static PrintLayoutInput defaultPrintLayout() {
     return new PrintLayoutInput(
         new PrintAreaInput.Range("A1:C20"),
-        PrintOrientation.LANDSCAPE,
+        ExcelPrintOrientation.LANDSCAPE,
         new PrintScalingInput.Fit(1, 0),
         new PrintTitleRowsInput.Band(0, 0),
         new PrintTitleColumnsInput.Band(0, 0),

@@ -1,13 +1,16 @@
 package dev.erst.gridgrind.protocol.dto;
 
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
+
 /** Protocol-facing style patch used for range and cell presentation changes. */
 public record CellStyleInput(
     String numberFormat,
     Boolean bold,
     Boolean italic,
     Boolean wrapText,
-    HorizontalAlignment horizontalAlignment,
-    VerticalAlignment verticalAlignment,
+    ExcelHorizontalAlignment horizontalAlignment,
+    ExcelVerticalAlignment verticalAlignment,
     String fontName,
     FontHeightInput fontHeight,
     String fontColor,

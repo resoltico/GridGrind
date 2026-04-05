@@ -5,13 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
-import dev.erst.gridgrind.protocol.dto.BorderStyle;
 import dev.erst.gridgrind.protocol.dto.CellBorderInput;
 import dev.erst.gridgrind.protocol.dto.CellBorderSideInput;
 import dev.erst.gridgrind.protocol.dto.CellStyleInput;
 import dev.erst.gridgrind.protocol.dto.FontHeightInput;
-import dev.erst.gridgrind.protocol.dto.HorizontalAlignment;
-import dev.erst.gridgrind.protocol.dto.VerticalAlignment;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 
@@ -25,8 +22,8 @@ class CellStyleInputTest {
             true,
             false,
             true,
-            HorizontalAlignment.RIGHT,
-            VerticalAlignment.CENTER,
+            ExcelHorizontalAlignment.RIGHT,
+            ExcelVerticalAlignment.CENTER,
             "Aptos",
             new FontHeightInput.Points(new BigDecimal("11.5")),
             "#00aa55",
@@ -34,9 +31,9 @@ class CellStyleInputTest {
             false,
             "#FFF2CC",
             new CellBorderInput(
-                null, new CellBorderSideInput(BorderStyle.THICK), null, null, null));
+                null, new CellBorderSideInput(ExcelBorderStyle.THICK), null, null, null));
 
-    var engineStyle = DefaultGridGrindRequestExecutor.toExcelCellStyle(style);
+    var engineStyle = WorkbookCommandConverter.toExcelCellStyle(style);
     assertEquals("#,##0.00", engineStyle.numberFormat());
     assertTrue(engineStyle.bold());
     assertFalse(engineStyle.italic());
@@ -59,7 +56,7 @@ class CellStyleInputTest {
         new CellStyleInput(
             null, null, true, true, null, null, null, null, null, null, null, null, null);
 
-    var engineStyle = DefaultGridGrindRequestExecutor.toExcelCellStyle(style);
+    var engineStyle = WorkbookCommandConverter.toExcelCellStyle(style);
     assertNull(engineStyle.numberFormat());
     assertNull(engineStyle.horizontalAlignment());
     assertNull(engineStyle.verticalAlignment());
@@ -129,7 +126,7 @@ class CellStyleInputTest {
             null,
             null,
             null,
-            HorizontalAlignment.CENTER,
+            ExcelHorizontalAlignment.CENTER,
             null,
             null,
             null,
@@ -175,7 +172,7 @@ class CellStyleInputTest {
             null,
             null,
             null,
-            VerticalAlignment.TOP,
+            ExcelVerticalAlignment.TOP,
             null,
             null,
             null,
@@ -198,6 +195,6 @@ class CellStyleInputTest {
             null,
             null,
             new CellBorderInput(
-                null, null, null, null, new CellBorderSideInput(BorderStyle.THIN))));
+                null, null, null, null, new CellBorderSideInput(ExcelBorderStyle.THIN))));
   }
 }

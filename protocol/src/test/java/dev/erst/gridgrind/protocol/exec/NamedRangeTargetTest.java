@@ -15,7 +15,7 @@ class NamedRangeTargetTest {
     assertEquals("B4:A1", target.range());
     assertEquals(
         new ExcelNamedRangeTarget("Budget", "A1:B4"),
-        DefaultGridGrindRequestExecutor.toExcelNamedRangeTarget(target));
+        WorkbookCommandConverter.toExcelNamedRangeTarget(target));
   }
 
   @Test
@@ -24,7 +24,7 @@ class NamedRangeTargetTest {
 
     assertEquals(
         new ExcelNamedRangeTarget("Budget", "B4:C5"),
-        DefaultGridGrindRequestExecutor.toExcelNamedRangeTarget(target));
+        WorkbookCommandConverter.toExcelNamedRangeTarget(target));
   }
 
   @Test

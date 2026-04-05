@@ -27,7 +27,7 @@ class TableInputTest {
             "A1:C4",
             true,
             new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false)),
-        DefaultGridGrindRequestExecutor.toExcelTableDefinition(input));
+        WorkbookCommandConverter.toExcelTableDefinition(input));
 
     assertThrows(
         IllegalArgumentException.class,

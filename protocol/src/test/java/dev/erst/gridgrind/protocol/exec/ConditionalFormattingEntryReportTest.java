@@ -19,7 +19,7 @@ class ConditionalFormattingEntryReportTest {
   @Test
   void convertsConditionalFormattingSnapshotsToProtocolReports() {
     ConditionalFormattingEntryReport entry =
-        DefaultGridGrindRequestExecutor.toConditionalFormattingEntryReport(
+        WorkbookReadResultConverter.toConditionalFormattingEntryReport(
             new ExcelConditionalFormattingBlockSnapshot(
                 List.of("A1:A3"),
                 List.of(

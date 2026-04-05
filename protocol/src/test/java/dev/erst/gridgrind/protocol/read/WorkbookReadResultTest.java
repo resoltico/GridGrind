@@ -2,6 +2,10 @@ package dev.erst.gridgrind.protocol.read;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.protocol.dto.*;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -93,7 +97,7 @@ class WorkbookReadResultTest {
                     List.of("A2:A5"),
                     new DataValidationEntryReport.DataValidationDefinitionReport(
                         new DataValidationRuleInput.WholeNumber(
-                            ComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                            ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
                         true,
                         false,
                         new DataValidationPromptInput("Priority", "Use 1 or greater.", true),
@@ -285,17 +289,17 @@ class WorkbookReadResultTest {
         false,
         false,
         false,
-        HorizontalAlignment.GENERAL,
-        VerticalAlignment.BOTTOM,
+        ExcelHorizontalAlignment.GENERAL,
+        ExcelVerticalAlignment.BOTTOM,
         "Aptos",
         new FontHeightReport(220, java.math.BigDecimal.valueOf(11)),
         null,
         false,
         false,
         null,
-        BorderStyle.NONE,
-        BorderStyle.NONE,
-        BorderStyle.NONE,
-        BorderStyle.NONE);
+        ExcelBorderStyle.NONE,
+        ExcelBorderStyle.NONE,
+        ExcelBorderStyle.NONE,
+        ExcelBorderStyle.NONE);
   }
 }

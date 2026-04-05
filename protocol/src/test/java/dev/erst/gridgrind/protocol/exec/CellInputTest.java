@@ -14,50 +14,50 @@ class CellInputTest {
   void convertsAllSupportedInputTypesToExcelValues() {
     assertInstanceOf(
         ExcelCellValue.BlankValue.class,
-        DefaultGridGrindRequestExecutor.toExcelCellValue(new CellInput.Blank()));
+        WorkbookCommandConverter.toExcelCellValue(new CellInput.Blank()));
 
     ExcelCellValue.TextValue textValue =
         assertInstanceOf(
             ExcelCellValue.TextValue.class,
-            DefaultGridGrindRequestExecutor.toExcelCellValue(new CellInput.Text("Budget")));
+            WorkbookCommandConverter.toExcelCellValue(new CellInput.Text("Budget")));
     assertEquals("Budget", textValue.value());
 
     ExcelCellValue.NumberValue numberValue =
         assertInstanceOf(
             ExcelCellValue.NumberValue.class,
-            DefaultGridGrindRequestExecutor.toExcelCellValue(new CellInput.Numeric(42.5)));
+            WorkbookCommandConverter.toExcelCellValue(new CellInput.Numeric(42.5)));
     assertEquals(42.5, numberValue.value());
 
     ExcelCellValue.BooleanValue booleanValue =
         assertInstanceOf(
             ExcelCellValue.BooleanValue.class,
-            DefaultGridGrindRequestExecutor.toExcelCellValue(new CellInput.BooleanValue(true)));
+            WorkbookCommandConverter.toExcelCellValue(new CellInput.BooleanValue(true)));
     assertTrue(booleanValue.value());
 
     ExcelCellValue.FormulaValue formulaValue =
         assertInstanceOf(
             ExcelCellValue.FormulaValue.class,
-            DefaultGridGrindRequestExecutor.toExcelCellValue(new CellInput.Formula("SUM(B2:B4)")));
+            WorkbookCommandConverter.toExcelCellValue(new CellInput.Formula("SUM(B2:B4)")));
     assertEquals("SUM(B2:B4)", formulaValue.expression());
 
     // Leading = is stripped automatically so callers can use Excel-native syntax
     ExcelCellValue.FormulaValue strippedFormulaValue =
         assertInstanceOf(
             ExcelCellValue.FormulaValue.class,
-            DefaultGridGrindRequestExecutor.toExcelCellValue(new CellInput.Formula("=SUM(B2:B4)")));
+            WorkbookCommandConverter.toExcelCellValue(new CellInput.Formula("=SUM(B2:B4)")));
     assertEquals("SUM(B2:B4)", strippedFormulaValue.expression());
 
     ExcelCellValue.DateValue dateValue =
         assertInstanceOf(
             ExcelCellValue.DateValue.class,
-            DefaultGridGrindRequestExecutor.toExcelCellValue(
+            WorkbookCommandConverter.toExcelCellValue(
                 new CellInput.Date(LocalDate.of(2026, 3, 23))));
     assertEquals(LocalDate.of(2026, 3, 23), dateValue.value());
 
     ExcelCellValue.DateTimeValue dateTimeValue =
         assertInstanceOf(
             ExcelCellValue.DateTimeValue.class,
-            DefaultGridGrindRequestExecutor.toExcelCellValue(
+            WorkbookCommandConverter.toExcelCellValue(
                 new CellInput.DateTime(LocalDateTime.of(2026, 3, 23, 10, 15, 30))));
     assertEquals(LocalDateTime.of(2026, 3, 23, 10, 15, 30), dateTimeValue.value());
   }

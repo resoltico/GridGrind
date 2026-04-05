@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import java.util.Objects;
 
 /** Protocol-facing authored conditional-formatting rule families. */
@@ -32,7 +33,7 @@ public sealed interface ConditionalFormattingRuleInput
 
   /** Cell-value comparison rule with one or two operands and one differential-style payload. */
   record CellValueRule(
-      ComparisonOperator operator,
+      ExcelComparisonOperator operator,
       String formula1,
       String formula2,
       boolean stopIfTrue,

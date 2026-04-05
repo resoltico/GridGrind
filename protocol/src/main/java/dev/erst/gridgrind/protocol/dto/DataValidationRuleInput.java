@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import java.util.List;
 import java.util.Objects;
 
@@ -45,7 +46,7 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Whole-number comparison validation rule. */
-  record WholeNumber(ComparisonOperator operator, String formula1, String formula2)
+  record WholeNumber(ExcelComparisonOperator operator, String formula1, String formula2)
       implements DataValidationRuleInput {
     public WholeNumber {
       Objects.requireNonNull(operator, "operator must not be null");
@@ -54,7 +55,7 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Decimal-number comparison validation rule. */
-  record DecimalNumber(ComparisonOperator operator, String formula1, String formula2)
+  record DecimalNumber(ExcelComparisonOperator operator, String formula1, String formula2)
       implements DataValidationRuleInput {
     public DecimalNumber {
       Objects.requireNonNull(operator, "operator must not be null");
@@ -63,7 +64,7 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Date comparison validation rule. */
-  record DateRule(ComparisonOperator operator, String formula1, String formula2)
+  record DateRule(ExcelComparisonOperator operator, String formula1, String formula2)
       implements DataValidationRuleInput {
     public DateRule {
       Objects.requireNonNull(operator, "operator must not be null");
@@ -72,7 +73,7 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Time comparison validation rule. */
-  record TimeRule(ComparisonOperator operator, String formula1, String formula2)
+  record TimeRule(ExcelComparisonOperator operator, String formula1, String formula2)
       implements DataValidationRuleInput {
     public TimeRule {
       Objects.requireNonNull(operator, "operator must not be null");
@@ -81,7 +82,7 @@ public sealed interface DataValidationRuleInput
   }
 
   /** Text-length comparison validation rule. */
-  record TextLength(ComparisonOperator operator, String formula1, String formula2)
+  record TextLength(ExcelComparisonOperator operator, String formula1, String formula2)
       implements DataValidationRuleInput {
     public TextLength {
       Objects.requireNonNull(operator, "operator must not be null");

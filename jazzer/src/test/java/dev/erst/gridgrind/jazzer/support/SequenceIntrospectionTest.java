@@ -16,7 +16,6 @@ import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.protocol.dto.ComparisonOperator;
 import dev.erst.gridgrind.protocol.dto.CommentInput;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingBlockInput;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleInput;
@@ -32,7 +31,6 @@ import dev.erst.gridgrind.protocol.dto.RangeSelection;
 import dev.erst.gridgrind.protocol.dto.SheetSelection;
 import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.protocol.dto.SheetVisibility;
 import dev.erst.gridgrind.protocol.dto.TableInput;
 import dev.erst.gridgrind.protocol.dto.TableSelection;
 import dev.erst.gridgrind.protocol.dto.TableStyleInput;
@@ -60,7 +58,7 @@ class SequenceIntrospectionTest {
     assertEquals(
         "SET_SHEET_VISIBILITY",
         SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetSheetVisibility("Budget", SheetVisibility.HIDDEN)));
+            new WorkbookOperation.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN)));
     assertEquals(
         "SET_SHEET_PROTECTION",
         SequenceIntrospection.operationKind(
@@ -105,7 +103,7 @@ class SequenceIntrospectionTest {
                 "A2:A5",
                 new DataValidationInput(
                     new DataValidationRuleInput.WholeNumber(
-                        ComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
                     false,
                     false,
                     null,

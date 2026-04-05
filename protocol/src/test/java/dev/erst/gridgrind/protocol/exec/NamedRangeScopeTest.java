@@ -12,11 +12,10 @@ class NamedRangeScopeTest {
   void convertsWorkbookAndSheetScopes() {
     assertEquals(
         new ExcelNamedRangeScope.WorkbookScope(),
-        DefaultGridGrindRequestExecutor.toExcelNamedRangeScope(new NamedRangeScope.Workbook()));
+        WorkbookCommandConverter.toExcelNamedRangeScope(new NamedRangeScope.Workbook()));
     assertEquals(
         new ExcelNamedRangeScope.SheetScope("Budget"),
-        DefaultGridGrindRequestExecutor.toExcelNamedRangeScope(
-            new NamedRangeScope.Sheet("Budget")));
+        WorkbookCommandConverter.toExcelNamedRangeScope(new NamedRangeScope.Sheet("Budget")));
   }
 
   @Test
