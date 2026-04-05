@@ -5,6 +5,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.27.0] - 2026-04-05
+
+### Changed
+
+- Eleven shadow enums deleted from `protocol.dto` (`HorizontalAlignment`, `VerticalAlignment`,
+  `BorderStyle`, `SheetVisibility`, `PrintOrientation`, `PaneRegion`, `ComparisonOperator`,
+  `DataValidationErrorStyle`, `ConditionalFormattingIconSet`, `ConditionalFormattingThresholdType`,
+  `ConditionalFormattingUnsupportedFeature`). All protocol DTOs, reports, and operation types now
+  reference the canonical `Excel*` engine enums directly via the existing module dependency.
+- `DefaultGridGrindRequestExecutor` (2 571 lines) decomposed into three package-private converter
+  classes: `WorkbookCommandConverter` (protocol operations to engine commands),
+  `WorkbookReadCommandConverter` (protocol read operations to engine read commands), and
+  `WorkbookReadResultConverter` (engine read results to protocol reports). The executor now
+  delegates to these converters and contains no conversion logic. Each converter exposes
+  package-private static methods for direct unit testing without reflection.
+
+### Added
+
+- New Jazzer protocol-request regression seed `conditional_formatting_request` covering
+  `SET_CONDITIONAL_FORMATTING` (formula rule, cell-value rule with `LESS_THAN`, cell-value rule
+  with `BETWEEN` including a differential border), `CLEAR_CONDITIONAL_FORMATTING` with a selected
+  range, `GET_CONDITIONAL_FORMATTING`, and `ANALYZE_CONDITIONAL_FORMATTING_HEALTH`. No seed
+  exercising conditional-formatting operations existed previously.
+
+### Fixed
+
+- Promoted protocol-request seed `conditional_formatting_request` uses `conditionalFormatting`
+  for `SET_CONDITIONAL_FORMATTING` payloads, matching `WorkbookOperation.SetConditionalFormatting`
+  JSON and Jazzer promotion-metadata replay expectations.
+
 ## [0.26.0] - 2026-04-04
 
 ### Added
@@ -847,7 +877,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.26.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.27.0...HEAD
+[0.27.0]: https://github.com/resoltico/GridGrind/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/resoltico/GridGrind/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/resoltico/GridGrind/compare/v0.24.0...v0.25.0
 [0.24.0]: https://github.com/resoltico/GridGrind/compare/v0.23.0...v0.24.0

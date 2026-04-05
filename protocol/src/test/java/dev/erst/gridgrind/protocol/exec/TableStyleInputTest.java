@@ -12,10 +12,10 @@ class TableStyleInputTest {
   void convertsSupportedStyleVariants() {
     assertEquals(
         new ExcelTableStyle.None(),
-        DefaultGridGrindRequestExecutor.toExcelTableStyle(new TableStyleInput.None()));
+        WorkbookCommandConverter.toExcelTableStyle(new TableStyleInput.None()));
     assertEquals(
         new ExcelTableStyle.Named("TableStyleMedium2", true, false, true, false),
-        DefaultGridGrindRequestExecutor.toExcelTableStyle(
+        WorkbookCommandConverter.toExcelTableStyle(
             new TableStyleInput.Named("TableStyleMedium2", true, false, true, false)));
   }
 

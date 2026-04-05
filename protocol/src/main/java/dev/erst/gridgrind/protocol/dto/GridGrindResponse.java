@@ -3,6 +3,10 @@ package dev.erst.gridgrind.protocol.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.util.List;
 import java.util.Objects;
@@ -219,7 +223,7 @@ public sealed interface GridGrindResponse {
   /** Structural summary facts for one sheet. */
   record SheetSummaryReport(
       String sheetName,
-      SheetVisibility visibility,
+      ExcelSheetVisibility visibility,
       SheetProtectionReport protection,
       int physicalRowCount,
       int lastRowIndex,
@@ -509,18 +513,18 @@ public sealed interface GridGrindResponse {
       boolean bold,
       boolean italic,
       boolean wrapText,
-      HorizontalAlignment horizontalAlignment,
-      VerticalAlignment verticalAlignment,
+      ExcelHorizontalAlignment horizontalAlignment,
+      ExcelVerticalAlignment verticalAlignment,
       String fontName,
       FontHeightReport fontHeight,
       String fontColor,
       boolean underline,
       boolean strikeout,
       String fillColor,
-      BorderStyle topBorderStyle,
-      BorderStyle rightBorderStyle,
-      BorderStyle bottomBorderStyle,
-      BorderStyle leftBorderStyle) {
+      ExcelBorderStyle topBorderStyle,
+      ExcelBorderStyle rightBorderStyle,
+      ExcelBorderStyle bottomBorderStyle,
+      ExcelBorderStyle leftBorderStyle) {
     public CellStyleReport {
       Objects.requireNonNull(numberFormat, "numberFormat must not be null");
       Objects.requireNonNull(horizontalAlignment, "horizontalAlignment must not be null");

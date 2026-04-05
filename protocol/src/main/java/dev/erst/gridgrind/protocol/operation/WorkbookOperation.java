@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol.operation;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.dto.ProtocolDefinedNameValidation;
 import java.util.List;
@@ -131,7 +132,7 @@ public sealed interface WorkbookOperation {
   }
 
   /** Sets one sheet visibility. */
-  record SetSheetVisibility(String sheetName, SheetVisibility visibility)
+  record SetSheetVisibility(String sheetName, ExcelSheetVisibility visibility)
       implements WorkbookOperation {
     public SetSheetVisibility {
       Validation.requireSheetName(sheetName, "sheetName");

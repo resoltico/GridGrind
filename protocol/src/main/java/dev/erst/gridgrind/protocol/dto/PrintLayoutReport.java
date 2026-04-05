@@ -1,12 +1,13 @@
 package dev.erst.gridgrind.protocol.dto;
 
+import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import java.util.Objects;
 
 /** Supported print-layout facts for one sheet. */
 public record PrintLayoutReport(
     String sheetName,
     PrintAreaReport printArea,
-    PrintOrientation orientation,
+    ExcelPrintOrientation orientation,
     PrintScalingReport scaling,
     PrintTitleRowsReport repeatingRows,
     PrintTitleColumnsReport repeatingColumns,

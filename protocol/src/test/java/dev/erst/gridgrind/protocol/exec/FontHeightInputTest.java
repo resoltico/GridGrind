@@ -13,11 +13,10 @@ class FontHeightInputTest {
     FontHeightInput.Points points = new FontHeightInput.Points(new BigDecimal("11.5"));
     FontHeightInput.Twips twips = new FontHeightInput.Twips(260);
 
-    assertEquals(230, DefaultGridGrindRequestExecutor.toExcelFontHeight(points).twips());
+    assertEquals(230, WorkbookCommandConverter.toExcelFontHeight(points).twips());
     assertEquals(
-        new BigDecimal("11.5"), DefaultGridGrindRequestExecutor.toExcelFontHeight(points).points());
-    assertEquals(
-        new BigDecimal("13"), DefaultGridGrindRequestExecutor.toExcelFontHeight(twips).points());
+        new BigDecimal("11.5"), WorkbookCommandConverter.toExcelFontHeight(points).points());
+    assertEquals(new BigDecimal("13"), WorkbookCommandConverter.toExcelFontHeight(twips).points());
   }
 
   @Test

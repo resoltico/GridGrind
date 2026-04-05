@@ -13,10 +13,10 @@ class TableSelectionTest {
   void convertsAllAndByNamesSelectors() {
     assertEquals(
         new ExcelTableSelection.All(),
-        DefaultGridGrindRequestExecutor.toExcelTableSelection(new TableSelection.All()));
+        WorkbookReadCommandConverter.toExcelTableSelection(new TableSelection.All()));
     assertEquals(
         new ExcelTableSelection.ByNames(List.of("BudgetTable")),
-        DefaultGridGrindRequestExecutor.toExcelTableSelection(
+        WorkbookReadCommandConverter.toExcelTableSelection(
             new TableSelection.ByNames(List.of("BudgetTable"))));
   }
 

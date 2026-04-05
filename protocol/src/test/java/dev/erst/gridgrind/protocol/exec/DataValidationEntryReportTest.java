@@ -137,11 +137,11 @@ class DataValidationEntryReportTest {
     assertInstanceOf(DataValidationRuleInput.CustomFormula.class, custom.rule());
     assertThrows(
         NullPointerException.class,
-        () -> DefaultGridGrindRequestExecutor.toDataValidationDefinitionReport(null));
+        () -> WorkbookReadResultConverter.toDataValidationDefinitionReport(null));
   }
 
   private static DataValidationEntryReport.DataValidationDefinitionReport reportFor(
       ExcelDataValidationDefinition definition) {
-    return DefaultGridGrindRequestExecutor.toDataValidationDefinitionReport(definition);
+    return WorkbookReadResultConverter.toDataValidationDefinitionReport(definition);
   }
 }

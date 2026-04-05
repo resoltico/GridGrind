@@ -19,23 +19,23 @@ class HyperlinkTargetTest {
 
     assertEquals(
         new ExcelHyperlink.Url("https://example.com/report"),
-        DefaultGridGrindRequestExecutor.toExcelHyperlink(url));
+        WorkbookCommandConverter.toExcelHyperlink(url));
     assertEquals(
         new ExcelHyperlink.Email("team@example.com"),
-        DefaultGridGrindRequestExecutor.toExcelHyperlink(email));
+        WorkbookCommandConverter.toExcelHyperlink(email));
     assertEquals(
         new ExcelHyperlink.Email("team@example.com"),
-        DefaultGridGrindRequestExecutor.toExcelHyperlink(plainEmail));
+        WorkbookCommandConverter.toExcelHyperlink(plainEmail));
     assertEquals(
         new ExcelHyperlink.File("/tmp/report.xlsx"),
-        DefaultGridGrindRequestExecutor.toExcelHyperlink(file));
+        WorkbookCommandConverter.toExcelHyperlink(file));
     assertEquals(
         new ExcelHyperlink.File("/tmp/report.xlsx"),
-        DefaultGridGrindRequestExecutor.toExcelHyperlink(fileUri));
+        WorkbookCommandConverter.toExcelHyperlink(fileUri));
     assertEquals("/tmp/report.xlsx", fileUri.path());
     assertEquals(
         new ExcelHyperlink.Document("Budget!B4"),
-        DefaultGridGrindRequestExecutor.toExcelHyperlink(document));
+        WorkbookCommandConverter.toExcelHyperlink(document));
   }
 
   @Test

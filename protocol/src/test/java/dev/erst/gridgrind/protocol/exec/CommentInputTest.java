@@ -15,7 +15,7 @@ class CommentInputTest {
     assertFalse(comment.visible());
     assertEquals(
         new ExcelComment("Review", "GridGrind", false),
-        DefaultGridGrindRequestExecutor.toExcelComment(comment));
+        WorkbookCommandConverter.toExcelComment(comment));
   }
 
   @Test

@@ -1,0 +1,109 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "generated/conditional-formatting.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Metrics" },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Metrics",
+      "range": "A1:B5",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Label" },
+          { "type": "TEXT", "text": "Value" }
+        ],
+        [
+          { "type": "TEXT", "text": "Alpha" },
+          { "type": "NUMBER", "number": 120.0 }
+        ],
+        [
+          { "type": "TEXT", "text": "Beta" },
+          { "type": "NUMBER", "number": -5.0 }
+        ],
+        [
+          { "type": "TEXT", "text": "Gamma" },
+          { "type": "NUMBER", "number": 50.0 }
+        ],
+        [
+          { "type": "TEXT", "text": "Delta" },
+          { "type": "NUMBER", "number": 200.0 }
+        ]
+      ]
+    },
+    {
+      "type": "SET_CONDITIONAL_FORMATTING",
+      "sheetName": "Metrics",
+      "conditionalFormatting": {
+        "ranges": ["B2:B5"],
+        "rules": [
+          {
+            "type": "FORMULA_RULE",
+            "formula": "B2>100",
+            "stopIfTrue": false,
+            "style": {
+              "bold": true,
+              "fillColor": "#C6EFCE",
+              "fontColor": "#006100"
+            }
+          },
+          {
+            "type": "CELL_VALUE_RULE",
+            "operator": "LESS_THAN",
+            "formula1": "0",
+            "stopIfTrue": false,
+            "style": {
+              "fillColor": "#FFC7CE",
+              "fontColor": "#9C0006"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_CONDITIONAL_FORMATTING",
+      "sheetName": "Metrics",
+      "conditionalFormatting": {
+        "ranges": ["B2:B5"],
+        "rules": [
+          {
+            "type": "CELL_VALUE_RULE",
+            "operator": "BETWEEN",
+            "formula1": "0",
+            "formula2": "100",
+            "stopIfTrue": true,
+            "style": {
+              "italic": true,
+              "fillColor": "#FFEB9C",
+              "fontColor": "#9C5700",
+              "border": {
+                "bottom": { "style": "THIN", "color": "#9C5700" }
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "CLEAR_CONDITIONAL_FORMATTING",
+      "sheetName": "Metrics",
+      "selection": { "type": "SELECTED", "ranges": ["B4:B5"] }
+    }
+  ],
+  "reads": [
+    {
+      "type": "GET_CONDITIONAL_FORMATTING",
+      "requestId": "cf-metrics",
+      "sheetName": "Metrics",
+      "selection": { "type": "ALL" }
+    },
+    {
+      "type": "ANALYZE_CONDITIONAL_FORMATTING_HEALTH",
+      "requestId": "cf-health",
+      "selection": { "type": "ALL" }
+    }
+  ]
+}

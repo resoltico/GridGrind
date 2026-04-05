@@ -2,6 +2,8 @@ package dev.erst.gridgrind.protocol.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingIconSet;
 import java.util.List;
 import java.util.Objects;
 
@@ -58,7 +60,7 @@ public sealed interface ConditionalFormattingRuleReport
   record CellValueRule(
       int priority,
       boolean stopIfTrue,
-      ComparisonOperator operator,
+      ExcelComparisonOperator operator,
       String formula1,
       String formula2,
       DifferentialStyleReport style)
@@ -120,7 +122,7 @@ public sealed interface ConditionalFormattingRuleReport
   record IconSetRule(
       int priority,
       boolean stopIfTrue,
-      ConditionalFormattingIconSet iconSet,
+      ExcelConditionalFormattingIconSet iconSet,
       boolean iconOnly,
       boolean reversed,
       List<ConditionalFormattingThresholdReport> thresholds)

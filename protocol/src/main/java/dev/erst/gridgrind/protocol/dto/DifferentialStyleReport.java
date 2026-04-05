@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.protocol.dto;
 
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingUnsupportedFeature;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -15,7 +16,7 @@ public record DifferentialStyleReport(
     Boolean strikeout,
     String fillColor,
     DifferentialBorderReport border,
-    List<ConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
+    List<ExcelConditionalFormattingUnsupportedFeature> unsupportedFeatures) {
   public DifferentialStyleReport {
     if (numberFormat != null && numberFormat.isBlank()) {
       throw new IllegalArgumentException("numberFormat must not be blank");
@@ -24,7 +25,7 @@ public record DifferentialStyleReport(
     fillColor = ProtocolRgbColorSupport.normalizeRgbHex(fillColor, "fillColor");
     Objects.requireNonNull(unsupportedFeatures, "unsupportedFeatures must not be null");
     unsupportedFeatures = List.copyOf(unsupportedFeatures);
-    for (ConditionalFormattingUnsupportedFeature unsupportedFeature : unsupportedFeatures) {
+    for (ExcelConditionalFormattingUnsupportedFeature unsupportedFeature : unsupportedFeatures) {
       Objects.requireNonNull(
           unsupportedFeature, "unsupportedFeatures must not contain null values");
     }

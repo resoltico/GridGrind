@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import java.util.Objects;
 
 /** Pane state captured from a sheet layout read. */
@@ -21,7 +22,11 @@ public sealed interface PaneReport permits PaneReport.None, PaneReport.Frozen, P
 
   /** Sheet uses split panes with explicit split offsets, visible origin, and active pane. */
   record Split(
-      int xSplitPosition, int ySplitPosition, int leftmostColumn, int topRow, PaneRegion activePane)
+      int xSplitPosition,
+      int ySplitPosition,
+      int leftmostColumn,
+      int topRow,
+      ExcelPaneRegion activePane)
       implements PaneReport {
     public Split {
       Objects.requireNonNull(activePane, "activePane must not be null");

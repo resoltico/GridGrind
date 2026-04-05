@@ -14,7 +14,7 @@ class SheetCopyPositionTest {
 
     assertInstanceOf(
         ExcelSheetCopyPosition.AppendAtEnd.class,
-        DefaultGridGrindRequestExecutor.toExcelSheetCopyPosition(position));
+        WorkbookCommandConverter.toExcelSheetCopyPosition(position));
   }
 
   @Test
@@ -24,7 +24,7 @@ class SheetCopyPositionTest {
     ExcelSheetCopyPosition.AtIndex converted =
         assertInstanceOf(
             ExcelSheetCopyPosition.AtIndex.class,
-            DefaultGridGrindRequestExecutor.toExcelSheetCopyPosition(position));
+            WorkbookCommandConverter.toExcelSheetCopyPosition(position));
 
     assertEquals(2, converted.targetIndex());
     assertThrows(NullPointerException.class, () -> new SheetCopyPosition.AtIndex(null));

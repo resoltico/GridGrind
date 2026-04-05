@@ -36,13 +36,13 @@ class ConditionalFormattingInputTest {
                         true,
                         "#E0F0AA",
                         new DifferentialBorderInput(
-                            new DifferentialBorderSideInput(BorderStyle.THIN, "#405060"),
+                            new DifferentialBorderSideInput(ExcelBorderStyle.THIN, "#405060"),
                             null,
                             null,
                             null,
                             null))),
                 new ConditionalFormattingRuleInput.CellValueRule(
-                    ComparisonOperator.BETWEEN,
+                    ExcelComparisonOperator.BETWEEN,
                     "1",
                     "9",
                     false,
@@ -78,7 +78,7 @@ class ConditionalFormattingInputTest {
                     false,
                     new ExcelDifferentialStyle(
                         null, null, true, null, null, null, null, "#AAEECC", null)))),
-        DefaultGridGrindRequestExecutor.toExcelConditionalFormattingBlock(input));
+        WorkbookCommandConverter.toExcelConditionalFormattingBlock(input));
   }
 
   @Test
@@ -122,7 +122,7 @@ class ConditionalFormattingInputTest {
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleInput.CellValueRule(
-                ComparisonOperator.GREATER_THAN,
+                ExcelComparisonOperator.GREATER_THAN,
                 " ",
                 null,
                 false,
@@ -147,23 +147,19 @@ class ConditionalFormattingInputTest {
 
     ConditionalFormattingRuleInput.CellValueRule missingUpperBound =
         new ConditionalFormattingRuleInput.CellValueRule(
-            ComparisonOperator.BETWEEN, "1", null, false, style);
+            ExcelComparisonOperator.BETWEEN, "1", null, false, style);
     ConditionalFormattingRuleInput.CellValueRule unexpectedUpperBound =
         new ConditionalFormattingRuleInput.CellValueRule(
-            ComparisonOperator.GREATER_THAN, "1", "9", false, style);
+            ExcelComparisonOperator.GREATER_THAN, "1", "9", false, style);
 
     IllegalArgumentException missingUpperBoundFailure =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-                DefaultGridGrindRequestExecutor.toExcelConditionalFormattingRule(
-                    missingUpperBound));
+            () -> WorkbookCommandConverter.toExcelConditionalFormattingRule(missingUpperBound));
     IllegalArgumentException unexpectedUpperBoundFailure =
         assertThrows(
             IllegalArgumentException.class,
-            () ->
-                DefaultGridGrindRequestExecutor.toExcelConditionalFormattingRule(
-                    unexpectedUpperBound));
+            () -> WorkbookCommandConverter.toExcelConditionalFormattingRule(unexpectedUpperBound));
 
     assertTrue(missingUpperBoundFailure.getMessage().contains("formula2"));
     assertTrue(unexpectedUpperBoundFailure.getMessage().contains("formula2"));
@@ -173,11 +169,11 @@ class ConditionalFormattingInputTest {
   void convertsDifferentialBordersWithExplicitSides() {
     DifferentialBorderInput border =
         new DifferentialBorderInput(
-            new DifferentialBorderSideInput(BorderStyle.THIN, "#102030"),
-            new DifferentialBorderSideInput(BorderStyle.DASHED, "#203040"),
-            new DifferentialBorderSideInput(BorderStyle.DOUBLE, "#304050"),
-            new DifferentialBorderSideInput(BorderStyle.HAIR, "#405060"),
-            new DifferentialBorderSideInput(BorderStyle.DOTTED, "#506070"));
+            new DifferentialBorderSideInput(ExcelBorderStyle.THIN, "#102030"),
+            new DifferentialBorderSideInput(ExcelBorderStyle.DASHED, "#203040"),
+            new DifferentialBorderSideInput(ExcelBorderStyle.DOUBLE, "#304050"),
+            new DifferentialBorderSideInput(ExcelBorderStyle.HAIR, "#405060"),
+            new DifferentialBorderSideInput(ExcelBorderStyle.DOTTED, "#506070"));
 
     assertEquals(
         new ExcelDifferentialBorder(
@@ -186,6 +182,6 @@ class ConditionalFormattingInputTest {
             new ExcelDifferentialBorderSide(ExcelBorderStyle.DOUBLE, "#304050"),
             new ExcelDifferentialBorderSide(ExcelBorderStyle.HAIR, "#405060"),
             new ExcelDifferentialBorderSide(ExcelBorderStyle.DOTTED, "#506070")),
-        DefaultGridGrindRequestExecutor.toExcelDifferentialBorder(border));
+        WorkbookCommandConverter.toExcelDifferentialBorder(border));
   }
 }

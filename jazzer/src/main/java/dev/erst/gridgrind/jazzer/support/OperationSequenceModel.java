@@ -30,11 +30,9 @@ import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.protocol.dto.CellSelection;
 import dev.erst.gridgrind.protocol.dto.CommentInput;
-import dev.erst.gridgrind.protocol.dto.ComparisonOperator;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingBlockInput;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.protocol.dto.DataValidationErrorStyle;
 import dev.erst.gridgrind.protocol.dto.DataValidationInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationPromptInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
@@ -47,10 +45,8 @@ import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
 import dev.erst.gridgrind.protocol.dto.NamedRangeSelector;
 import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.dto.PaneInput;
-import dev.erst.gridgrind.protocol.dto.PaneRegion;
 import dev.erst.gridgrind.protocol.dto.PrintAreaInput;
 import dev.erst.gridgrind.protocol.dto.PrintLayoutInput;
-import dev.erst.gridgrind.protocol.dto.PrintOrientation;
 import dev.erst.gridgrind.protocol.dto.PrintScalingInput;
 import dev.erst.gridgrind.protocol.dto.PrintTitleColumnsInput;
 import dev.erst.gridgrind.protocol.dto.PrintTitleRowsInput;
@@ -58,7 +54,6 @@ import dev.erst.gridgrind.protocol.dto.RangeSelection;
 import dev.erst.gridgrind.protocol.dto.SheetSelection;
 import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.protocol.dto.SheetVisibility;
 import dev.erst.gridgrind.protocol.dto.TableInput;
 import dev.erst.gridgrind.protocol.dto.TableSelection;
 import dev.erst.gridgrind.protocol.dto.TableStyleInput;
@@ -660,7 +655,7 @@ public final class OperationSequenceModel {
   private static PrintLayoutInput nextPrintLayoutInput(FuzzedDataProvider data) {
     return new PrintLayoutInput(
         data.consumeBoolean() ? new PrintAreaInput.Range("A1:C20") : new PrintAreaInput.None(),
-        data.consumeBoolean() ? PrintOrientation.LANDSCAPE : PrintOrientation.PORTRAIT,
+        data.consumeBoolean() ? ExcelPrintOrientation.LANDSCAPE : ExcelPrintOrientation.PORTRAIT,
         data.consumeBoolean()
             ? new PrintScalingInput.Fit(data.consumeInt(0, 2), data.consumeInt(0, 2))
             : new PrintScalingInput.Automatic(),
@@ -693,12 +688,12 @@ public final class OperationSequenceModel {
         new ExcelHeaderFooterText("", "P" + data.consumeInt(0, 9), ""));
   }
 
-  private static PaneRegion nextProtocolPaneRegion(FuzzedDataProvider data) {
+  private static ExcelPaneRegion nextProtocolPaneRegion(FuzzedDataProvider data) {
     return switch (selectorSlot(nextSelectorByte(data)) & 0x3) {
-      case 0 -> PaneRegion.UPPER_LEFT;
-      case 1 -> PaneRegion.UPPER_RIGHT;
-      case 2 -> PaneRegion.LOWER_LEFT;
-      default -> PaneRegion.LOWER_RIGHT;
+      case 0 -> ExcelPaneRegion.UPPER_LEFT;
+      case 1 -> ExcelPaneRegion.UPPER_RIGHT;
+      case 2 -> ExcelPaneRegion.LOWER_LEFT;
+      default -> ExcelPaneRegion.LOWER_RIGHT;
     };
   }
 
@@ -734,11 +729,11 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static SheetVisibility nextProtocolSheetVisibility(FuzzedDataProvider data) {
+  private static ExcelSheetVisibility nextProtocolSheetVisibility(FuzzedDataProvider data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
-      case 0 -> SheetVisibility.VISIBLE;
-      case 1 -> SheetVisibility.HIDDEN;
-      default -> SheetVisibility.VERY_HIDDEN;
+      case 0 -> ExcelSheetVisibility.VISIBLE;
+      case 1 -> ExcelSheetVisibility.HIDDEN;
+      default -> ExcelSheetVisibility.VERY_HIDDEN;
     };
   }
 
@@ -888,7 +883,7 @@ public final class OperationSequenceModel {
         data.consumeBoolean()
             ? new DataValidationRuleInput.ExplicitList(List.of("Queued", "Done"))
             : new DataValidationRuleInput.WholeNumber(
-                ComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
         data.consumeBoolean(),
         data.consumeBoolean(),
         data.consumeBoolean()
@@ -896,7 +891,7 @@ public final class OperationSequenceModel {
             : null,
         data.consumeBoolean()
             ? new DataValidationErrorAlertInput(
-                DataValidationErrorStyle.STOP,
+                ExcelDataValidationErrorStyle.STOP,
                 "Invalid",
                 "Use an allowed value.",
                 data.consumeBoolean())
@@ -933,7 +928,7 @@ public final class OperationSequenceModel {
                 ? new ConditionalFormattingRuleInput.FormulaRule(
                     "A1>0", data.consumeBoolean(), nextDifferentialStyleInput(data))
                 : new ConditionalFormattingRuleInput.CellValueRule(
-                    ComparisonOperator.GREATER_THAN,
+                    ExcelComparisonOperator.GREATER_THAN,
                     "1",
                     null,
                     data.consumeBoolean(),

@@ -2,8 +2,8 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
-import dev.erst.gridgrind.protocol.dto.BorderStyle;
 import dev.erst.gridgrind.protocol.dto.CellBorderInput;
 import dev.erst.gridgrind.protocol.dto.CellBorderSideInput;
 import dev.erst.gridgrind.protocol.dto.CellStyleInput;
@@ -93,7 +93,7 @@ public final class StyleKindIntrospection {
   }
 
   private static boolean isNone(CellBorderSideInput side) {
-    return side != null && side.style() == BorderStyle.NONE;
+    return side != null && side.style() == ExcelBorderStyle.NONE;
   }
 
   private static boolean isNone(ExcelBorderSide side) {

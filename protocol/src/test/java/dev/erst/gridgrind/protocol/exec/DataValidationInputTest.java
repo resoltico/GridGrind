@@ -8,9 +8,7 @@ import dev.erst.gridgrind.excel.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelDataValidationPrompt;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
-import dev.erst.gridgrind.protocol.dto.ComparisonOperator;
 import dev.erst.gridgrind.protocol.dto.DataValidationErrorAlertInput;
-import dev.erst.gridgrind.protocol.dto.DataValidationErrorStyle;
 import dev.erst.gridgrind.protocol.dto.DataValidationInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationPromptInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
@@ -23,12 +21,12 @@ class DataValidationInputTest {
     DataValidationInput input =
         new DataValidationInput(
             new DataValidationRuleInput.DateRule(
-                ComparisonOperator.GREATER_OR_EQUAL, "TODAY()", null),
+                ExcelComparisonOperator.GREATER_OR_EQUAL, "TODAY()", null),
             null,
             null,
             new DataValidationPromptInput("Ship date", "Use today or later.", null),
             new DataValidationErrorAlertInput(
-                DataValidationErrorStyle.WARNING,
+                ExcelDataValidationErrorStyle.WARNING,
                 "Invalid date",
                 "Date must be today or later.",
                 null));
@@ -45,7 +43,7 @@ class DataValidationInputTest {
                 "Invalid date",
                 "Date must be today or later.",
                 true)),
-        DefaultGridGrindRequestExecutor.toExcelDataValidationDefinition(input));
+        WorkbookCommandConverter.toExcelDataValidationDefinition(input));
   }
 
   @Test
@@ -58,7 +56,9 @@ class DataValidationInputTest {
         IllegalArgumentException.class, () -> new DataValidationPromptInput("Title", " ", true));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new DataValidationErrorAlertInput(DataValidationErrorStyle.STOP, " ", "Text", true));
+        () ->
+            new DataValidationErrorAlertInput(
+                ExcelDataValidationErrorStyle.STOP, " ", "Text", true));
     assertThrows(
         NullPointerException.class,
         () -> new DataValidationErrorAlertInput(null, "Title", "Text", true));
@@ -68,23 +68,26 @@ class DataValidationInputTest {
   void nestedPromptAndErrorInputsDefaultAndPreserveVisibilityFlags() {
     assertEquals(
         new ExcelDataValidationPrompt("Ship date", "Use today or later.", true),
-        DefaultGridGrindRequestExecutor.toExcelDataValidationPrompt(
+        WorkbookCommandConverter.toExcelDataValidationPrompt(
             new DataValidationPromptInput("Ship date", "Use today or later.", null)));
     assertEquals(
         new ExcelDataValidationPrompt("Ship date", "Use today or later.", false),
-        DefaultGridGrindRequestExecutor.toExcelDataValidationPrompt(
+        WorkbookCommandConverter.toExcelDataValidationPrompt(
             new DataValidationPromptInput("Ship date", "Use today or later.", false)));
     assertEquals(
         new ExcelDataValidationErrorAlert(
             ExcelDataValidationErrorStyle.INFORMATION, "Invalid date", "Pick a real date.", true),
-        DefaultGridGrindRequestExecutor.toExcelDataValidationErrorAlert(
+        WorkbookCommandConverter.toExcelDataValidationErrorAlert(
             new DataValidationErrorAlertInput(
-                DataValidationErrorStyle.INFORMATION, "Invalid date", "Pick a real date.", null)));
+                ExcelDataValidationErrorStyle.INFORMATION,
+                "Invalid date",
+                "Pick a real date.",
+                null)));
     assertEquals(
         new ExcelDataValidationErrorAlert(
             ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false),
-        DefaultGridGrindRequestExecutor.toExcelDataValidationErrorAlert(
+        WorkbookCommandConverter.toExcelDataValidationErrorAlert(
             new DataValidationErrorAlertInput(
-                DataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false)));
+                ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false)));
   }
 }
