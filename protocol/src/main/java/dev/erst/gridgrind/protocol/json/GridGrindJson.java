@@ -8,7 +8,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.time.DateTimeException;
+import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.StreamReadFeature;
@@ -218,21 +220,44 @@ public final class GridGrindJson {
     return productOwnedJacksonMessage(cleanJacksonMessage(message));
   }
 
-  /** Returns the public wording for mismatched JSON token shapes. */
+  /**
+   * Returns the public wording for mismatched JSON token shapes.
+   *
+   * <p>When a required primitive field is absent or supplied as JSON {@code null}, Jackson maps it
+   * as a null-into-primitive coercion failure rather than a missing-creator-property failure. The
+   * raw message leaks internal Jackson configuration advice; extract the field name from the
+   * exception path and surface it as a standard missing-required-field message instead.
+   */
   static String mismatchedInputMessage(MismatchedInputException exception) {
-    return productOwnedJacksonMessage(cleanJacksonMessage(exception.getOriginalMessage()));
+    String original = exception.getOriginalMessage();
+    if (original != null && original.startsWith("Cannot map `null` into type")) {
+      return nullIntoPrimitiveMessage(exception);
+    }
+    return productOwnedJacksonMessage(cleanJacksonMessage(original));
+  }
+
+  private static String nullIntoPrimitiveMessage(MismatchedInputException exception) {
+    List<JacksonException.Reference> path = exception.getPath();
+    if (path.isEmpty()) {
+      return "Missing required field";
+    }
+    String propertyName = path.getLast().getPropertyName();
+    if (propertyName == null) {
+      return "Missing required field";
+    }
+    return "Missing required field '" + propertyName + "'";
   }
 
   private static String productOwnedJacksonMessage(String cleaned) {
-    java.util.regex.Matcher missingRequiredField = MISSING_REQUIRED_FIELD_PATTERN.matcher(cleaned);
+    Matcher missingRequiredField = MISSING_REQUIRED_FIELD_PATTERN.matcher(cleaned);
     if (missingRequiredField.find()) {
       return "Missing required field '" + missingRequiredField.group(1) + "'";
     }
-    java.util.regex.Matcher missingTypeIdField = MISSING_TYPE_ID_FIELD_PATTERN.matcher(cleaned);
+    Matcher missingTypeIdField = MISSING_TYPE_ID_FIELD_PATTERN.matcher(cleaned);
     if (missingTypeIdField.find()) {
       return "Missing required field '" + missingTypeIdField.group(1) + "'";
     }
-    java.util.regex.Matcher nullFieldProblem = NULL_FIELD_PROBLEM_PATTERN.matcher(cleaned);
+    Matcher nullFieldProblem = NULL_FIELD_PROBLEM_PATTERN.matcher(cleaned);
     if (nullFieldProblem.find()) {
       return "Missing required field '" + nullFieldProblem.group(1) + "'";
     }
@@ -245,7 +270,23 @@ public final class GridGrindJson {
     return cleaned;
   }
 
-  /** Removes Jackson-specific suffix noise from one parser message. */
+  /**
+   * Removes Jackson-specific noise from one parser message.
+   *
+   * <p>Strips four categories of Jackson noise:
+   *
+   * <ul>
+   *   <li>Source-location suffix: {@code (start marker at [Source:...])}
+   *   <li>Subtype description: {@code as a subtype of `X`}
+   *   <li>POJO property reference: {@code (for POJO property 'X')}
+   *   <li>Configuration advice: {@code (set X.Y to 'Z' to allow)} — the universal pattern Jackson
+   *       uses to suggest enabling or disabling deserialization features
+   * </ul>
+   *
+   * <p>The fallback {@code return cleaned} in {@link #productOwnedJacksonMessage} is only safe
+   * because this method guarantees the output is noise-free. Any new Jackson noise pattern
+   * discovered in a real error message must be added here as a stripping rule.
+   */
   static String cleanJacksonMessage(String message) {
     if (message == null || message.isBlank()) {
       return "Invalid JSON payload";
@@ -254,7 +295,8 @@ public final class GridGrindJson {
     String trimmed = startMarkerIndex >= 0 ? message.substring(0, startMarkerIndex) : message;
     return trimmed
         .replaceAll(" as a subtype of `[^`]+`", "")
-        .replaceAll(" \\(for POJO property '[^']+'\\)", "");
+        .replaceAll(" \\(for POJO property '[^']+'\\)", "")
+        .replaceAll(" \\(set [^)]*to allow\\)", "");
   }
 
   private static PayloadMetadata payloadMetadata(JacksonException exception) {

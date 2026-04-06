@@ -722,8 +722,8 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         nestedTypeEntry(catalog, "cellInputTypes", "FORMULA")
             .summary()
-            .contains("Omit the leading = sign"),
-        "FORMULA summary should mention omitting leading = sign");
+            .contains("leading = sign is accepted and stripped automatically"),
+        "FORMULA summary should describe leading = sign handling");
     assertTrue(
         entryNamed(catalog.sourceTypes(), "NEW").summary().contains("zero sheets"),
         "NEW source summary must mention zero sheets");

@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.27.0"
+version: "0.28.0"
 domain: OPERATIONS
 updated: "2026-04-02"
 route:
@@ -897,13 +897,13 @@ Supported rule families:
 | `validation.rule.type` | Required fields | Notes |
 |:-----------------------|:----------------|:------|
 | `EXPLICIT_LIST` | `values` | One or more allowed strings. |
-| `FORMULA_LIST` | `formula` | Formula-driven list. Omit the leading `=`. |
+| `FORMULA_LIST` | `formula` | Formula-driven list. A leading `=` is accepted and stripped automatically. |
 | `WHOLE_NUMBER` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
 | `DECIMAL_NUMBER` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
 | `DATE` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
 | `TIME` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
 | `TEXT_LENGTH` | `operator`, `formula1` | `formula2` is required only for `BETWEEN` / `NOT_BETWEEN`. |
-| `CUSTOM_FORMULA` | `formula` | Omit the leading `=`. |
+| `CUSTOM_FORMULA` | `formula` | A leading `=` is accepted and stripped automatically. |
 
 Optional validation fields:
 

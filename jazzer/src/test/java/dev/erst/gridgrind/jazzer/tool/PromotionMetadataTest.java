@@ -7,7 +7,10 @@ import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
@@ -25,6 +28,39 @@ class PromotionMetadataTest {
           .toList()
           .stream();
     }
+  }
+
+  @Test
+  void everyInputFileHasPromotionMetadata() throws IOException {
+    Path projectDirectory = Path.of("").toAbsolutePath().normalize();
+    List<JazzerHarness> replayableHarnesses =
+        Arrays.stream(JazzerHarness.values())
+            .filter(
+                harness -> {
+                  Path dir = harness.inputDirectory(projectDirectory);
+                  return Files.isDirectory(dir);
+                })
+            .toList();
+
+    List<Path> orphans =
+        replayableHarnesses.stream()
+            .flatMap(
+                harness -> {
+                  try {
+                    return JazzerReportSupport.orphanedInputs(projectDirectory, harness).stream();
+                  } catch (IOException exception) {
+                    throw new RuntimeException(exception);
+                  }
+                })
+            .sorted()
+            .toList();
+
+    assertEquals(
+        List.of(),
+        orphans,
+        "Every committed input file must have a promoted-metadata entry. "
+            + "Run 'jazzer/bin/promote <target> <input-path> <name>' for each listed file "
+            + "or move it there via that command.");
   }
 
   private DynamicTest promotedInputReplayTest(Path metadataPath) {

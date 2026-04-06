@@ -1,0 +1,23 @@
+{
+  "targetKey": "protocol-request",
+  "sourcePath": "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/sheet_name_too_long.json",
+  "promotedInputPath": "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/sheet_name_too_long.json",
+  "replayOutcome": "EXPECTED_INVALID",
+  "expectation": {
+    "outcomeKind": "EXPECTED_INVALID",
+    "details": {
+      "type": "PROTOCOL_REQUEST",
+      "inputBytes": 216,
+      "decodeOutcome": "INVALID_REQUEST",
+      "sourceKind": "NOT_PARSED",
+      "persistenceKind": "NOT_PARSED",
+      "operationCount": 0,
+      "operationKinds": {},
+      "styleKinds": {},
+      "readCount": 0,
+      "readKinds": {}
+    }
+  },
+  "promotedAt": "2026-04-05T00:00:00.000000Z",
+  "replayTextPath": "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/sheet_name_too_long.txt"
+}

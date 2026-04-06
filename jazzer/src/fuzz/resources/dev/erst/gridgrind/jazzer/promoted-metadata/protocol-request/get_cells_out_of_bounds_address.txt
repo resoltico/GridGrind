@@ -1,0 +1,14 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/get_cells_out_of_bounds_address.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 397
+Decode Outcome: PARSED
+Source Kind: NEW
+Persistence Kind: NONE
+Operation Count: 2
+Read Count: 1
+Read Kinds: GET_CELLS=1
+Style Kinds: (none)
+Operation Kinds: ENSURE_SHEET=1, SET_CELL=1
+

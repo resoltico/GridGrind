@@ -473,7 +473,7 @@ public final class GridGrindProtocolCatalog {
                   descriptor(
                       CellInput.Formula.class,
                       "FORMULA",
-                      "Write an Excel formula. Omit the leading = sign; the engine adds it internally."))),
+                      "Write an Excel formula. A leading = sign is accepted and stripped automatically; the engine stores the formula without it."))),
           nestedTypeGroup(
               "hyperlinkTargetTypes",
               HyperlinkTarget.class,
@@ -622,8 +622,7 @@ public final class GridGrindProtocolCatalog {
                   descriptor(
                       DataValidationRuleInput.FormulaList.class,
                       "FORMULA_LIST",
-                      "Allow values from a formula-driven list expression."
-                          + " Omit the leading = sign."),
+                      "Allow values from a formula-driven list expression."),
                   descriptor(
                       DataValidationRuleInput.WholeNumber.class,
                       "WHOLE_NUMBER",
@@ -657,8 +656,7 @@ public final class GridGrindProtocolCatalog {
                   descriptor(
                       DataValidationRuleInput.CustomFormula.class,
                       "CUSTOM_FORMULA",
-                      "Allow values that satisfy a custom formula."
-                          + " Omit the leading = sign."))),
+                      "Allow values that satisfy a custom formula."))),
           nestedTypeGroup(
               "conditionalFormattingRuleTypes",
               ConditionalFormattingRuleInput.class,
@@ -667,7 +665,7 @@ public final class GridGrindProtocolCatalog {
                       ConditionalFormattingRuleInput.FormulaRule.class,
                       "FORMULA_RULE",
                       "Apply one formula-driven conditional-formatting rule."
-                          + " Omit the leading = sign and supply one differential style."),
+                          + " Supply one differential style."),
                   descriptor(
                       ConditionalFormattingRuleInput.CellValueRule.class,
                       "CELL_VALUE_RULE",
@@ -823,7 +821,16 @@ public final class GridGrindProtocolCatalog {
               "DifferentialStyleInput",
               "Differential style payload used by authored conditional-formatting rules."
                   + " At least one field must be set. Colors use #RRGGBB hex.",
-              List.of()),
+              List.of(
+                  "numberFormat",
+                  "bold",
+                  "italic",
+                  "fontHeight",
+                  "fontColor",
+                  "underline",
+                  "strikeout",
+                  "fillColor",
+                  "border")),
           plainTypeDescriptor(
               "differentialBorderInputType",
               DifferentialBorderInput.class,

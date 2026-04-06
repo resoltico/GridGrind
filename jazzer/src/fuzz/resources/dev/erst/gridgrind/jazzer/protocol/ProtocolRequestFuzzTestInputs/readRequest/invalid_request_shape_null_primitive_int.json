@@ -1,0 +1,16 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    {
+      "type": "APPLY_STYLE",
+      "sheetName": "Sheet1",
+      "range": "A1",
+      "style": {
+        "fontHeight": { "type": "TWIPS", "twips": null }
+      }
+    }
+  ],
+  "reads": []
+}

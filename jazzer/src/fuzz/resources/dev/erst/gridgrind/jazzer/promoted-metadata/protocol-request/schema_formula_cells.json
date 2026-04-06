@@ -1,0 +1,28 @@
+{
+  "targetKey": "protocol-request",
+  "sourcePath": "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/schema_formula_cells.json",
+  "promotedInputPath": "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/schema_formula_cells.json",
+  "replayOutcome": "SUCCESS",
+  "expectation": {
+    "outcomeKind": "SUCCESS",
+    "details": {
+      "type": "PROTOCOL_REQUEST",
+      "inputBytes": 711,
+      "decodeOutcome": "PARSED",
+      "sourceKind": "NEW",
+      "persistenceKind": "NONE",
+      "operationCount": 4,
+      "operationKinds": {
+        "ENSURE_SHEET": 1,
+        "SET_CELL": 3
+      },
+      "styleKinds": {},
+      "readCount": 1,
+      "readKinds": {
+        "GET_SHEET_SCHEMA": 1
+      }
+    }
+  },
+  "promotedAt": "2026-04-05T00:00:00.000000Z",
+  "replayTextPath": "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/schema_formula_cells.txt"
+}

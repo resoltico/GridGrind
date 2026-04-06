@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.27.0"
+version: "0.28.0"
 domain: DEVELOPER_JAZZER
 updated: "2026-04-01"
 route:
@@ -89,6 +89,10 @@ Seed policy:
   whether it also deserves a main-suite regression test
 - every promoted metadata entry must carry a stable replay expectation and must remain replay-
   verified by deterministic support tests
+- the promotion contract is bidirectional and enforced by `PromotionMetadataTest`: every file
+  committed to a harness input directory must have a corresponding promoted-metadata entry, and
+  every promoted-metadata entry must replay to its recorded expectation; hand-dropping a file
+  into the input directory without running `jazzer/bin/promote` will fail the test suite
 
 Target-specific strategy:
 - `protocol-request` favors human-readable `.json` seeds promoted from public example requests
@@ -109,15 +113,11 @@ The operator goal is not to maximize seed count. The goal is to preserve a stabl
 - representative feature-family coverage
 
 Current promoted floor:
-- `protocol-request`: 14 committed seeds
+- `protocol-request`: 30 committed seeds
 - `protocol-workflow`: 11 committed seeds
 - `engine-command-sequence`: 8 committed seeds
 - `xlsx-roundtrip`: 14 committed seeds
-- total promoted seed floor: 47 inputs
-
-Additional committed non-floor regression inputs also exist for narrower expected-invalid request
-shapes. The counts above track the intentionally curated promoted floor, not every committed input
-resource.
+- total promoted seed floor: 63 inputs
 
 ---
 

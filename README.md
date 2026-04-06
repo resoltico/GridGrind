@@ -45,7 +45,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.27.0
+docker pull ghcr.io/resoltico/gridgrind:0.28.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
