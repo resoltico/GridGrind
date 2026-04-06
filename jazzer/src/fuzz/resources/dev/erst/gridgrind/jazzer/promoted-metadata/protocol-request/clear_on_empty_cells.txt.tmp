@@ -1,0 +1,13 @@
+Replay Result
+Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/clear_on_empty_cells.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 603
+Decode Outcome: PARSED
+Source Kind: NEW
+Persistence Kind: NONE
+Operation Count: 5
+Read Count: 1
+Read Kinds: GET_SHEET_SUMMARY=1
+Style Kinds: (none)
+Operation Kinds: SET_CELL=1, CLEAR_HYPERLINK=1, CLEAR_RANGE=1, ENSURE_SHEET=1, CLEAR_COMMENT=1

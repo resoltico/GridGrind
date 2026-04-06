@@ -3,7 +3,74 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.28.0] - 2026-04-06
+
+### Changed
+
+- `GridGrindJson.cleanJacksonMessage` now strips Jackson configuration-advice suffixes of the
+  form `(set X.Y to 'Z' to allow)` in addition to the existing source-location, subtype, and
+  POJO-property noise patterns. This closes a class of raw-message leaks: any null-into-primitive
+  coercion on any field type now has its configuration advice stripped before the message reaches
+  `productOwnedJacksonMessage`, regardless of whether a dedicated dispatch arm exists for that
+  exact exception shape.
+
+### Fixed
+
+- `GridGrindJson` now surfaces a clean `Missing required field '<name>'` error when a required
+  primitive boolean field (e.g. `stopIfTrue`) is supplied as JSON `null`. Previously the raw
+  Jackson internal configuration-advice message
+  (`"set DeserializationConfig.DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false'
+  to allow"`) leaked directly into the `InvalidRequestShapeException` message seen by agents.
+- Protocol catalog `DifferentialStyleInput` descriptor now lists all nine optional fields
+  (`numberFormat`, `bold`, `italic`, `fontHeight`, `fontColor`, `underline`, `strikeout`,
+  `fillColor`, `border`). Previously the field list was empty, so `--describe-type` showed no
+  fields at all for this type.
+- Protocol catalog descriptions for `FORMULA` cell input, `FORMULA_LIST` and `CUSTOM_FORMULA`
+  data-validation rule types, and `FORMULA_RULE` conditional-formatting rule type no longer
+  instruct agents to omit the leading `=` sign. GridGrind accepts and strips it automatically;
+  the prior wording contradicted the actual behavior observed when submitting `=SUM(...)`.
+
+### Added
+
+- `PromotionMetadataTest.everyInputFileHasPromotionMetadata` asserts that every file committed
+  to any harness input directory has a corresponding promoted-metadata entry. Previously only
+  the inverse direction was enforced: metadata entries were replayed but no test checked whether
+  every input *file* had metadata. A seed hand-dropped into the input directory without running
+  `jazzer/bin/promote` would compile, replay in regression mode, but leave no stable contract
+  that `PromotionMetadataTest` could assert against. The new test closes that gap for all four
+  harnesses simultaneously.
+- `JazzerReportSupport.orphanedInputs` and `promotedInputPaths` — new public methods that
+  identify input files with no promoted-metadata entry by building a set of all
+  `promotedInputPath` values from the metadata tree and diffing against the input directory.
+  Used by the new test and by `list-corpus`.
+- `list-corpus` (`jazzer/bin/list-corpus`) now surfaces a `WARNING: Seeds Without Promotion
+  Metadata` section for any harness that has orphaned input files, listing each file and
+  reminding the operator to run `jazzer/bin/promote`. Previously the gap was invisible from
+  the operator tooling.
+- `GridGrindJsonTest` integration test `wrapsNullPrimitiveBooleanFieldAsInvalidRequestShapeWithFieldName`
+  verifies that a full `readRequest` round-trip with `"stopIfTrue": null` produces
+  `InvalidRequestShapeException` with message `"Missing required field 'stopIfTrue'"` and no
+  Jackson internals in the message.
+- Four `GridGrindJsonTest` unit tests for the `mismatchedInputMessage` null-into-primitive paths
+  (named property, no path, array-index path) and `cleanJacksonMessage` configuration-advice
+  stripping.
+- `GridGrindJsonTest` unit test `mismatchedInputMessageWithNullOriginalMessageReturnsFallback`
+  covering the `original == null` branch of `mismatchedInputMessage`.
+- Jazzer promoted seed `invalid_request_shape_null_primitive_boolean` covering the
+  `SET_CONDITIONAL_FORMATTING` request with `"stopIfTrue": null`, captured as
+  `EXPECTED_INVALID` / `INVALID_REQUEST_SHAPE`.
+- Jazzer promoted seed `invalid_request_shape_null_primitive_int` covering an `APPLY_STYLE`
+  request with `"fontHeight": {"type": "TWIPS", "twips": null}`, captured as `EXPECTED_INVALID`
+  / `INVALID_REQUEST_SHAPE` with message `"Missing required field 'twips'"`. Proves that the
+  `cleanJacksonMessage` configuration-advice stripping generalizes to non-boolean primitives.
+- Fourteen previously unpromoted protocol-request seeds retroactively promoted with full
+  expectation metadata and replay text: `clear_on_empty_cells`, `delete_last_sheet`,
+  `duplicate_request_id`, `formula_equals_prefix`, `get_cells_invalid_address`,
+  `get_cells_out_of_bounds_address`, `get_window_overflow`, `introspection_analysis_request`,
+  `invalid_email_no_at_sign`, `schema_empty_sheet`, `schema_formula_cells`,
+  `sheet_name_too_long`, `unknown_field_rejection`, `window_size_limit_exceeded`. All were
+  curated seeds in the corpus without regression contracts; `PromotionMetadataTest` now covers
+  them.
 
 ## [0.27.0] - 2026-04-05
 
@@ -877,7 +944,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.27.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.28.0...HEAD
+[0.28.0]: https://github.com/resoltico/GridGrind/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/resoltico/GridGrind/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/resoltico/GridGrind/compare/v0.25.0...v0.26.0
 [0.25.0]: https://github.com/resoltico/GridGrind/compare/v0.24.0...v0.25.0

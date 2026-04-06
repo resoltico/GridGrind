@@ -877,6 +877,23 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void cleanJacksonMessageStripsJacksonConfigurationAdvice() {
+    assertEquals(
+        "Cannot map `null` into type `boolean`",
+        GridGrindJson.cleanJacksonMessage(
+            "Cannot map `null` into type `boolean`"
+                + " (set DeserializationConfig.DeserializationFeature"
+                + ".FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)"));
+  }
+
+  @Test
+  void mismatchedInputMessageWithNullOriginalMessageReturnsFallback() {
+    MismatchedInputException exception = MismatchedInputException.from(null, Object.class, null);
+
+    assertEquals("Invalid JSON payload", GridGrindJson.mismatchedInputMessage(exception));
+  }
+
+  @Test
   void mismatchedInputMessageReturnsTheCleanedOriginalWhenItIsAlreadySpecific() {
     MismatchedInputException exception =
         MismatchedInputException.from(null, Object.class, "Expected an array value");
@@ -913,6 +930,84 @@ class GridGrindJsonTest {
     assertEquals(
         "JSON object is missing required fields or has the wrong shape",
         GridGrindJson.mismatchedInputMessage(exception));
+  }
+
+  @Test
+  void mismatchedInputMessageMapsNullIntoPrimitiveBooleanToMissingFieldMessage() {
+    MismatchedInputException exception =
+        MismatchedInputException.from(
+            null,
+            boolean.class,
+            "Cannot map `null` into type `boolean` (set DeserializationConfig"
+                + ".DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)");
+    exception.prependPath(GridGrindJsonTest.class, "stopIfTrue");
+
+    assertEquals(
+        "Missing required field 'stopIfTrue'", GridGrindJson.mismatchedInputMessage(exception));
+  }
+
+  @Test
+  void mismatchedInputMessageMapsNullIntoPrimitiveBooleanWithNoPathToFallbackMessage() {
+    MismatchedInputException exception =
+        MismatchedInputException.from(
+            null,
+            boolean.class,
+            "Cannot map `null` into type `boolean` (set DeserializationConfig"
+                + ".DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)");
+
+    assertEquals("Missing required field", GridGrindJson.mismatchedInputMessage(exception));
+  }
+
+  @Test
+  void mismatchedInputMessageMapsNullIntoPrimitiveBooleanWithArrayIndexPathToFallbackMessage() {
+    MismatchedInputException exception =
+        MismatchedInputException.from(
+            null,
+            boolean.class,
+            "Cannot map `null` into type `boolean` (set DeserializationConfig"
+                + ".DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES to 'false' to allow)");
+    // Array-index path reference has a null property name
+    exception.prependPath(GridGrindJsonTest.class, 0);
+
+    assertEquals("Missing required field", GridGrindJson.mismatchedInputMessage(exception));
+  }
+
+  @Test
+  void wrapsNullPrimitiveBooleanFieldAsInvalidRequestShapeWithFieldName() {
+    InvalidRequestShapeException failure =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "operations": [
+                        {
+                          "type": "SET_CONDITIONAL_FORMATTING",
+                          "sheetName": "Budget",
+                          "conditionalFormatting": {
+                            "ranges": ["B2:B5"],
+                            "rules": [
+                              {
+                                "type": "CELL_VALUE_RULE",
+                                "operator": "GREATER_THAN",
+                                "formula1": "100",
+                                "stopIfTrue": null,
+                                "style": { "fillColor": "#C6EFCE" }
+                              }
+                            ]
+                          }
+                        }
+                      ],
+                      "reads": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals("Missing required field 'stopIfTrue'", failure.getMessage());
+    assertFalse(failure.getMessage().contains("DeserializationConfig"));
+    assertFalse(failure.getMessage().contains("FAIL_ON_NULL_FOR_PRIMITIVES"));
   }
 
   /** ByteArrayInputStream that records whether {@code close()} was called. */

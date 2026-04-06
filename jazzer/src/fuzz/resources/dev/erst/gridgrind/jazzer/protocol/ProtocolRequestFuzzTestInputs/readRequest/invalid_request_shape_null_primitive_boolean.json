@@ -1,0 +1,24 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    {
+      "type": "SET_CONDITIONAL_FORMATTING",
+      "sheetName": "Budget",
+      "conditionalFormatting": {
+        "ranges": ["B2:B5"],
+        "rules": [
+          {
+            "type": "CELL_VALUE_RULE",
+            "operator": "GREATER_THAN",
+            "formula1": "100",
+            "stopIfTrue": null,
+            "style": { "fillColor": "#C6EFCE" }
+          }
+        ]
+      }
+    }
+  ],
+  "reads": []
+}

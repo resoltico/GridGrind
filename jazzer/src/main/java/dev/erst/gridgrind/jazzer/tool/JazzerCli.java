@@ -122,6 +122,10 @@ public final class JazzerCli {
           target.replayable()
               ? JazzerReportSupport.promotedInputs(projectDirectory, target.replayHarness())
               : List.of();
+      List<Path> orphans =
+          target.replayable()
+              ? JazzerReportSupport.orphanedInputs(projectDirectory, target.replayHarness())
+              : List.of();
       if (index > 0) {
         System.out.println();
       }
@@ -131,7 +135,8 @@ public final class JazzerCli {
               JazzerReportSupport.scanCorpus(target.workingDirectory(projectDirectory)),
               JazzerReportSupport.scanFiles(promotedInputs),
               JazzerReportSupport.newestCorpusEntries(target.workingDirectory(projectDirectory), 10),
-              promotedInputs));
+              promotedInputs,
+              orphans));
     }
   }
 

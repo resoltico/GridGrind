@@ -10,8 +10,10 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -146,6 +148,53 @@ public final class JazzerReportSupport {
     try (Stream<Path> stream = Files.list(inputDirectory)) {
       return stream.filter(Files::isRegularFile).sorted().toList();
     }
+  }
+
+  /**
+   * Returns input files in the harness input directory that have no corresponding promoted-metadata
+   * entry. An orphaned input was committed directly to the input directory without going through
+   * {@code jazzer/bin/promote}, leaving it without a replay contract enforced by
+   * {@code PromotionMetadataTest}.
+   */
+  public static List<Path> orphanedInputs(Path projectDirectory, JazzerHarness harness)
+      throws IOException {
+    Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
+    Objects.requireNonNull(harness, "harness must not be null");
+    List<Path> inputs = promotedInputs(projectDirectory, harness);
+    if (inputs.isEmpty()) {
+      return List.of();
+    }
+    Set<Path> promotedPaths = promotedInputPaths(projectDirectory);
+    return inputs.stream()
+        .filter(input -> !promotedPaths.contains(input.toAbsolutePath().normalize()))
+        .sorted()
+        .toList();
+  }
+
+  /**
+   * Returns the set of {@code promotedInputPath} values recorded across all promoted-metadata
+   * entries in the project, normalized to absolute paths.
+   */
+  public static Set<Path> promotedInputPaths(Path projectDirectory) throws IOException {
+    Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
+    Path metadataRoot =
+        projectDirectory.resolve(
+            "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata");
+    if (!Files.exists(metadataRoot)) {
+      return Set.of();
+    }
+    Set<Path> result = new HashSet<>();
+    try (Stream<Path> stream = Files.walk(metadataRoot)) {
+      for (Path jsonPath :
+          stream
+              .filter(p -> p.getFileName().toString().endsWith(".json"))
+              .sorted()
+              .toList()) {
+        PromotionMetadata metadata = JazzerJson.read(jsonPath, PromotionMetadata.class);
+        result.add(Path.of(metadata.promotedInputPath()).toAbsolutePath().normalize());
+      }
+    }
+    return Set.copyOf(result);
   }
 
   /** Returns file-count and byte-count statistics for an arbitrary list of input files. */

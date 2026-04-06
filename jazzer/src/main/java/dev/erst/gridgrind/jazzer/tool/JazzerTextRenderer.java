@@ -140,7 +140,8 @@ public final class JazzerTextRenderer {
       CorpusStats localCorpusStats,
       CorpusStats committedSeedStats,
       List<Path> newestEntries,
-      List<Path> promotedInputs) {
+      List<Path> promotedInputs,
+      List<Path> orphanedInputs) {
     StringBuilder builder = new StringBuilder();
     builder.append("Corpus Listing").append(System.lineSeparator());
     builder.append("Target: ").append(targetKey).append(System.lineSeparator());
@@ -169,6 +170,18 @@ public final class JazzerTextRenderer {
       builder.append("  (none)").append(System.lineSeparator());
     } else {
       promotedInputs.forEach(path -> builder.append("  - ").append(path).append(System.lineSeparator()));
+    }
+    if (!orphanedInputs.isEmpty()) {
+      builder
+          .append("WARNING: Seeds Without Promotion Metadata (")
+          .append(orphanedInputs.size())
+          .append(")")
+          .append(System.lineSeparator());
+      orphanedInputs.forEach(
+          path -> builder.append("  ! ").append(path).append(System.lineSeparator()));
+      builder
+          .append("  Run 'jazzer/bin/promote <target> <input-path> <name>' for each listed seed.")
+          .append(System.lineSeparator());
     }
     return builder.toString().trim();
   }
