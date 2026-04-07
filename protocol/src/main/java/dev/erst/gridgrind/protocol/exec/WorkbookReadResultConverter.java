@@ -3,6 +3,7 @@ package dev.erst.gridgrind.protocol.exec;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
+import java.util.List;
 
 /** Converts workbook-core read results into protocol response shapes. */
 final class WorkbookReadResultConverter {
@@ -383,6 +384,41 @@ final class WorkbookReadResultConverter {
         : new FontHeightReport(fontHeight.twips(), fontHeight.points());
   }
 
+  static GridGrindResponse.CellStyleReport toCellStyleReport(ExcelCellStyleSnapshot style) {
+    return new GridGrindResponse.CellStyleReport(
+        style.numberFormat(),
+        new CellAlignmentReport(
+            style.alignment().wrapText(),
+            style.alignment().horizontalAlignment(),
+            style.alignment().verticalAlignment(),
+            style.alignment().textRotation(),
+            style.alignment().indentation()),
+        toCellFontReport(style.font()),
+        new CellFillReport(
+            style.fill().pattern(), style.fill().foregroundColor(), style.fill().backgroundColor()),
+        new CellBorderReport(
+            toCellBorderSideReport(style.border().top()),
+            toCellBorderSideReport(style.border().right()),
+            toCellBorderSideReport(style.border().bottom()),
+            toCellBorderSideReport(style.border().left())),
+        new CellProtectionReport(style.protection().locked(), style.protection().hiddenFormula()));
+  }
+
+  static CellFontReport toCellFontReport(ExcelCellFontSnapshot font) {
+    return new CellFontReport(
+        font.bold(),
+        font.italic(),
+        font.fontName(),
+        toFontHeightReport(font.fontHeight()),
+        font.fontColor(),
+        font.underline(),
+        font.strikeout());
+  }
+
+  static CellBorderSideReport toCellBorderSideReport(ExcelBorderSide side) {
+    return new CellBorderSideReport(side.style(), side.color());
+  }
+
   private static GridGrindResponse.WindowReport toWindowReport(
       dev.erst.gridgrind.excel.WorkbookReadResult.Window window) {
     return new GridGrindResponse.WindowReport(
@@ -508,24 +544,7 @@ final class WorkbookReadResultConverter {
   }
 
   private static GridGrindResponse.CellReport toCellReport(ExcelCellSnapshot snapshot) {
-    GridGrindResponse.CellStyleReport style =
-        new GridGrindResponse.CellStyleReport(
-            snapshot.style().numberFormat(),
-            snapshot.style().bold(),
-            snapshot.style().italic(),
-            snapshot.style().wrapText(),
-            snapshot.style().horizontalAlignment(),
-            snapshot.style().verticalAlignment(),
-            snapshot.style().fontName(),
-            toFontHeightReport(snapshot.style().fontHeight()),
-            snapshot.style().fontColor(),
-            snapshot.style().underline(),
-            snapshot.style().strikeout(),
-            snapshot.style().fillColor(),
-            snapshot.style().topBorderStyle(),
-            snapshot.style().rightBorderStyle(),
-            snapshot.style().bottomBorderStyle(),
-            snapshot.style().leftBorderStyle());
+    GridGrindResponse.CellStyleReport style = toCellStyleReport(snapshot.style());
     HyperlinkTarget hyperlink = toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null));
     GridGrindResponse.CommentReport comment =
         toCommentReport(snapshot.metadata().comment().orElse(null));
@@ -542,7 +561,8 @@ final class WorkbookReadResultConverter {
               style,
               hyperlink,
               comment,
-              s.stringValue());
+              s.stringValue(),
+              toRichTextRunReports(s.richText()));
       case ExcelCellSnapshot.NumberSnapshot s ->
           new GridGrindResponse.CellReport.NumberReport(
               s.address(),
@@ -581,6 +601,16 @@ final class WorkbookReadResultConverter {
               s.formula(),
               toCellReport(s.evaluation()));
     };
+  }
+
+  @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
+  private static List<RichTextRunReport> toRichTextRunReports(ExcelRichTextSnapshot richText) {
+    if (richText == null) {
+      return null;
+    }
+    return richText.runs().stream()
+        .map(run -> new RichTextRunReport(run.text(), toCellFontReport(run.font())))
+        .toList();
   }
 
   private static GridGrindResponse.FormulaSurfaceReport toFormulaSurfaceReport(

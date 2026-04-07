@@ -7,7 +7,7 @@ Source Kind: EXISTING
 Persistence Kind: SAVE_AS
 Operation Count: 3
 Read Count: 3
-Read Kinds: GET_AUTOFILTERS=1, ANALYZE_WORKBOOK_FINDINGS=1, GET_FORMULA_SURFACE=1
-Response Kind: FAILURE
-Style Kinds: border_left=1, border_right=1, fill_color=1, font_color=1, border_top=1, border_all=1, border_bottom=1, border=1
-Operation Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=2, APPLY_STYLE=1
+Read Kinds: GET_AUTOFILTERS=2, ANALYZE_WORKBOOK_FINDINGS=1
+Response Kind: SUCCESS
+Style Kinds: underline=2, fill=2, fill_pattern=2, font=2, strikeout=2, border=2, border_all=2, fill_patterned=1, font_height_twips=1, fill_pattern_solid=1, border_right=1, border_all_color=1, font_color=1, fill_foreground_color=1, border_all_none=1, font_height=1, fill_color=1
+Operation Kinds: APPLY_STYLE=2, FORCE_FORMULA_RECALCULATION_ON_OPEN=1

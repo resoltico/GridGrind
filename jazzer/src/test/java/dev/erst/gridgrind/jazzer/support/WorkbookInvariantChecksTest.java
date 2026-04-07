@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -14,6 +15,12 @@ import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.protocol.dto.AnalysisFindingCode;
 import dev.erst.gridgrind.protocol.dto.AnalysisSeverity;
 import dev.erst.gridgrind.protocol.dto.CellSelection;
+import dev.erst.gridgrind.protocol.dto.CellAlignmentReport;
+import dev.erst.gridgrind.protocol.dto.CellBorderReport;
+import dev.erst.gridgrind.protocol.dto.CellBorderSideReport;
+import dev.erst.gridgrind.protocol.dto.CellFillReport;
+import dev.erst.gridgrind.protocol.dto.CellFontReport;
+import dev.erst.gridgrind.protocol.dto.CellProtectionReport;
 import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
 import dev.erst.gridgrind.protocol.dto.AutofilterHealthReport;
 import dev.erst.gridgrind.protocol.dto.DataValidationEntryReport;
@@ -35,6 +42,7 @@ import dev.erst.gridgrind.protocol.dto.PrintScalingReport;
 import dev.erst.gridgrind.protocol.dto.PrintTitleColumnsReport;
 import dev.erst.gridgrind.protocol.dto.PrintTitleRowsReport;
 import dev.erst.gridgrind.protocol.dto.RangeSelection;
+import dev.erst.gridgrind.protocol.dto.RichTextRunReport;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
 import dev.erst.gridgrind.protocol.dto.SheetSelection;
 import dev.erst.gridgrind.protocol.dto.TableEntryReport;
@@ -88,7 +96,18 @@ class WorkbookInvariantChecksTest {
                             style,
                             new HyperlinkTarget.Url("https://example.com/report"),
                             new GridGrindResponse.CommentReport("Review", "GridGrind", true),
-                            "Report"))),
+                            "Report",
+                            List.of(
+                                new RichTextRunReport(
+                                    "Report",
+                                    new CellFontReport(
+                                        false,
+                                        false,
+                                        "Calibri",
+                                        new FontHeightReport(220, new BigDecimal("11")),
+                                        null,
+                                        false,
+                                        false)))))),
                 new WorkbookReadResult.WindowResult(
                     "window",
                     new GridGrindResponse.WindowReport(
@@ -107,7 +126,8 @@ class WorkbookInvariantChecksTest {
                                         style,
                                         null,
                                         null,
-                                        "Report")))))),
+                                        "Report",
+                                        null)))))),
                 new WorkbookReadResult.MergedRegionsResult(
                     "merged",
                     "Budget",
@@ -476,26 +496,28 @@ class WorkbookInvariantChecksTest {
   private static GridGrindResponse.CellStyleReport defaultStyle() {
     return new GridGrindResponse.CellStyleReport(
         "General",
-        false,
-        false,
-        false,
-        ExcelHorizontalAlignment.GENERAL,
-        ExcelVerticalAlignment.BOTTOM,
-        "Calibri",
-        new FontHeightReport(220, new BigDecimal("11")),
-        null,
-        false,
-        false,
-        null,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE);
+        new CellAlignmentReport(
+            false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
+        new CellFontReport(
+            false,
+            false,
+            "Calibri",
+            new FontHeightReport(220, new BigDecimal("11")),
+            null,
+            false,
+            false),
+        new CellFillReport(ExcelFillPattern.NONE, null, null),
+        new CellBorderReport(
+            new CellBorderSideReport(ExcelBorderStyle.NONE, null),
+            new CellBorderSideReport(ExcelBorderStyle.NONE, null),
+            new CellBorderSideReport(ExcelBorderStyle.NONE, null),
+            new CellBorderSideReport(ExcelBorderStyle.NONE, null)),
+        new CellProtectionReport(true, false));
   }
 
   private static GridGrindResponse.CellReport.TextReport textCell(String address, String value) {
     return new GridGrindResponse.CellReport.TextReport(
-        address, "STRING", value, defaultStyle(), null, null, value);
+        address, "STRING", value, defaultStyle(), null, null, value, null);
   }
 
   private static SheetProtectionSettings protocolProtectionSettings() {

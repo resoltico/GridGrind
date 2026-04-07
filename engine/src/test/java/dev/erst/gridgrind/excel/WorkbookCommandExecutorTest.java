@@ -126,7 +126,7 @@ class WorkbookCommandExecutorTest {
       assertEquals(1, workbook.namedRangeCount());
       assertEquals(
           ExcelHorizontalAlignment.CENTER,
-          workbook.sheet("Budget").snapshotCell("A1").style().horizontalAlignment());
+          workbook.sheet("Budget").snapshotCell("A1").style().alignment().horizontalAlignment());
       assertEquals("BLANK", workbook.sheet("Budget").snapshotCell("A2").effectiveType());
       assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Scratch"));
       assertTrue(workbook.forceFormulaRecalculationOnOpenEnabled());

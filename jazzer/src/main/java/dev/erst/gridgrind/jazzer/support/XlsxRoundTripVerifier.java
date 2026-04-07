@@ -1,13 +1,22 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
+import dev.erst.gridgrind.excel.ExcelBorderSide;
+import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
+import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
+import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
+import dev.erst.gridgrind.excel.ExcelCellProtectionSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
-import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
+import dev.erst.gridgrind.excel.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
+import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelHyperlinkType;
@@ -17,7 +26,7 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
-import dev.erst.gridgrind.excel.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
@@ -38,12 +47,14 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FillPatternType;
-import org.apache.poi.ss.usermodel.FontUnderline;
+import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.PaneType;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.PaneInformation;
@@ -144,25 +155,29 @@ public final class XlsxRoundTripVerifier {
     if (font.getFontHeight() <= 0) {
       throw new IllegalStateException("font height must be positive");
     }
-    if (style.getFillPattern() == FillPatternType.SOLID_FOREGROUND) {
-      XSSFColor color = style.getFillForegroundColorColor();
-      if (color != null && color.getRGB() != null && color.getRGB().length != 3) {
-        throw new IllegalStateException("solid fill rgb must be 3 bytes when present");
-      }
-    }
+    requireColorShape(font.getXSSFColor(), "font color");
+    requireColorShape(style.getFillForegroundColorColor(), "fill foreground color");
+    requireColorShape(style.getFillBackgroundColorColor(), "fill background color");
+    requireColorShape(style.getTopBorderXSSFColor(), "top border color");
+    requireColorShape(style.getRightBorderXSSFColor(), "right border color");
+    requireColorShape(style.getBottomBorderXSSFColor(), "bottom border color");
+    requireColorShape(style.getLeftBorderXSSFColor(), "left border color");
+    styleSnapshot(style);
   }
 
   private static void requireExpectedStyles(
-      Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStyles, XSSFWorkbook workbook) {
+      Map<String, Map<CellCoordinate, ExcelCellStyleSnapshot>> expectedStyles, XSSFWorkbook workbook) {
     if (expectedStyles.isEmpty()) {
       return;
     }
-    for (Map.Entry<String, Map<CellCoordinate, ExpectedStyle>> sheetEntry : expectedStyles.entrySet()) {
+    for (Map.Entry<String, Map<CellCoordinate, ExcelCellStyleSnapshot>> sheetEntry :
+        expectedStyles.entrySet()) {
       var sheet = workbook.getSheet(sheetEntry.getKey());
       if (sheet == null) {
         throw new IllegalStateException("expected styled sheet must exist after round-trip: " + sheetEntry.getKey());
       }
-      for (Map.Entry<CellCoordinate, ExpectedStyle> cellEntry : sheetEntry.getValue().entrySet()) {
+      for (Map.Entry<CellCoordinate, ExcelCellStyleSnapshot> cellEntry :
+          sheetEntry.getValue().entrySet()) {
         Row row = sheet.getRow(cellEntry.getKey().rowIndex());
         if (row == null) {
           throw new IllegalStateException("expected styled row must exist after round-trip: "
@@ -179,106 +194,13 @@ public final class XlsxRoundTripVerifier {
   }
 
   private static void requireExpectedStyle(
-      String sheetName, CellCoordinate coordinate, ExpectedStyle expectedStyle, Cell cell) {
-    XSSFCellStyle style = (XSSFCellStyle) cell.getCellStyle();
-    XSSFFont font = style.getFont();
-
-    requireEquals(
-        sheetName,
-        coordinate,
-        "numberFormat",
-        expectedStyle.numberFormat(),
-        resolveNumberFormat(style.getDataFormatString()));
-    requireEquals(
-        sheetName,
-        coordinate,
-        "bold",
-        expectedStyle.bold(),
-        font.getBold());
-    requireEquals(
-        sheetName,
-        coordinate,
-        "italic",
-        expectedStyle.italic(),
-        font.getItalic());
-    requireEquals(
-        sheetName,
-        coordinate,
-        "wrapText",
-        expectedStyle.wrapText(),
-        style.getWrapText());
-    requireEquals(
-        sheetName,
-        coordinate,
-        "horizontalAlignment",
-        expectedStyle.horizontalAlignment(),
-        ExcelHorizontalAlignment.valueOf(style.getAlignment().name()));
-    requireEquals(
-        sheetName,
-        coordinate,
-        "verticalAlignment",
-        expectedStyle.verticalAlignment(),
-        ExcelVerticalAlignment.valueOf(style.getVerticalAlignment().name()));
-    requireEquals(
-        sheetName,
-        coordinate,
-        "fontName",
-        expectedStyle.fontName(),
-        font.getFontName());
-    requireEquals(
-        sheetName,
-        coordinate,
-        "fontHeightTwips",
-        expectedStyle.fontHeightTwips(),
-        Integer.valueOf(font.getFontHeight()));
-    requireEquals(
-        sheetName,
-        coordinate,
-        "fontColor",
-        expectedStyle.fontColor(),
-        toRgbHex(font.getXSSFColor()));
-    requireEquals(
-        sheetName,
-        coordinate,
-        "underline",
-        expectedStyle.underline(),
-        font.getUnderline() != FontUnderline.NONE.getByteValue());
-    requireEquals(
-        sheetName,
-        coordinate,
-        "strikeout",
-        expectedStyle.strikeout(),
-        font.getStrikeout());
-    requireEquals(
-        sheetName,
-        coordinate,
-        "fillColor",
-        expectedStyle.fillColor(),
-        fillColor(style));
-    requireEquals(
-        sheetName,
-        coordinate,
-        "borderTop",
-        expectedStyle.borderTop(),
-        ExcelBorderStyle.valueOf(style.getBorderTop().name()));
-    requireEquals(
-        sheetName,
-        coordinate,
-        "borderRight",
-        expectedStyle.borderRight(),
-        ExcelBorderStyle.valueOf(style.getBorderRight().name()));
-    requireEquals(
-        sheetName,
-        coordinate,
-        "borderBottom",
-        expectedStyle.borderBottom(),
-        ExcelBorderStyle.valueOf(style.getBorderBottom().name()));
-    requireEquals(
-        sheetName,
-        coordinate,
-        "borderLeft",
-        expectedStyle.borderLeft(),
-        ExcelBorderStyle.valueOf(style.getBorderLeft().name()));
+      String sheetName, CellCoordinate coordinate, ExcelCellStyleSnapshot expectedStyle, Cell cell) {
+    ExcelCellStyleSnapshot actualStyle = styleSnapshot((XSSFCellStyle) cell.getCellStyle());
+    if (!expectedStyle.equals(actualStyle)) {
+      throw new IllegalStateException(
+          "style must survive .xlsx round-trip for %s!%s: expected %s but was %s"
+              .formatted(sheetName, coordinate.a1Address(), expectedStyle, actualStyle));
+    }
   }
 
   private static void requireExpectedMetadata(
@@ -368,6 +290,7 @@ public final class XlsxRoundTripVerifier {
       return new ExpectedWorkbookState(
           expectedStyles(candidateSnapshots, defaultStyleSnapshot()),
           expectedMetadata(candidateSnapshots),
+          expectedRichText(candidateSnapshots),
           expectedNamedRanges(workbook),
           expectedWorkbookSummary(workbook),
           expectedSheetSummaries(workbook),
@@ -825,16 +748,15 @@ public final class XlsxRoundTripVerifier {
     return Map.copyOf(snapshotsBySheet);
   }
 
-  private static Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStyles(
+  private static Map<String, Map<CellCoordinate, ExcelCellStyleSnapshot>> expectedStyles(
       Map<String, List<ExcelCellSnapshot>> candidateSnapshots, ExcelCellStyleSnapshot defaultStyle) {
-    LinkedHashMap<String, Map<CellCoordinate, ExpectedStyle>> expectedStylesBySheet =
+    LinkedHashMap<String, Map<CellCoordinate, ExcelCellStyleSnapshot>> expectedStylesBySheet =
         new LinkedHashMap<>();
     for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
-      LinkedHashMap<CellCoordinate, ExpectedStyle> expectedStyles = new LinkedHashMap<>();
+      LinkedHashMap<CellCoordinate, ExcelCellStyleSnapshot> expectedStyles = new LinkedHashMap<>();
       for (ExcelCellSnapshot snapshot : entry.getValue()) {
         if (!snapshot.style().equals(defaultStyle)) {
-          expectedStyles.put(
-              CellCoordinate.fromAddress(snapshot.address()), ExpectedStyle.from(snapshot.style()));
+          expectedStyles.put(CellCoordinate.fromAddress(snapshot.address()), snapshot.style());
         }
       }
       if (!expectedStyles.isEmpty()) {
@@ -862,6 +784,25 @@ public final class XlsxRoundTripVerifier {
       }
     }
     return Map.copyOf(expectedMetadataBySheet);
+  }
+
+  private static Map<String, Map<CellCoordinate, ExcelRichTextSnapshot>> expectedRichText(
+      Map<String, List<ExcelCellSnapshot>> candidateSnapshots) {
+    LinkedHashMap<String, Map<CellCoordinate, ExcelRichTextSnapshot>> expectedRichTextBySheet =
+        new LinkedHashMap<>();
+    for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
+      LinkedHashMap<CellCoordinate, ExcelRichTextSnapshot> expectedRichText =
+          new LinkedHashMap<>();
+      for (ExcelCellSnapshot snapshot : entry.getValue()) {
+        if (snapshot instanceof ExcelCellSnapshot.TextSnapshot text && text.richText() != null) {
+          expectedRichText.put(CellCoordinate.fromAddress(text.address()), text.richText());
+        }
+      }
+      if (!expectedRichText.isEmpty()) {
+        expectedRichTextBySheet.put(entry.getKey(), Map.copyOf(expectedRichText));
+      }
+    }
+    return Map.copyOf(expectedRichTextBySheet);
   }
 
   private static Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges(ExcelWorkbook workbook) {
@@ -1024,6 +965,32 @@ public final class XlsxRoundTripVerifier {
                   + entry.getValue()
                   + " but was "
                   + actualSheetSummary);
+        }
+      }
+      for (Map.Entry<String, Map<CellCoordinate, ExcelRichTextSnapshot>> entry :
+          expectedWorkbookState.expectedRichText().entrySet()) {
+        for (Map.Entry<CellCoordinate, ExcelRichTextSnapshot> cellEntry : entry.getValue().entrySet()) {
+          ExcelCellSnapshot actualSnapshot =
+              workbook.sheet(entry.getKey()).snapshotCell(cellEntry.getKey().a1Address());
+          if (!(actualSnapshot instanceof ExcelCellSnapshot.TextSnapshot textSnapshot)) {
+            throw new IllegalStateException(
+                "rich text cell must reopen as STRING for "
+                    + entry.getKey()
+                    + "!"
+                    + cellEntry.getKey().a1Address());
+          }
+          requireEquals(
+              entry.getKey(),
+              cellEntry.getKey(),
+              "stringValue",
+              cellEntry.getValue().plainText(),
+              textSnapshot.stringValue());
+          requireEquals(
+              entry.getKey(),
+              cellEntry.getKey(),
+              "richText",
+              cellEntry.getValue(),
+              textSnapshot.richText());
         }
       }
     }
@@ -1574,6 +1541,7 @@ public final class XlsxRoundTripVerifier {
     return switch (value) {
       case dev.erst.gridgrind.excel.ExcelCellValue.BlankValue _ -> false;
       case dev.erst.gridgrind.excel.ExcelCellValue.TextValue _ -> true;
+      case dev.erst.gridgrind.excel.ExcelCellValue.RichTextValue _ -> true;
       case dev.erst.gridgrind.excel.ExcelCellValue.NumberValue _ -> true;
       case dev.erst.gridgrind.excel.ExcelCellValue.BooleanValue _ -> true;
       case dev.erst.gridgrind.excel.ExcelCellValue.DateValue _ -> true;
@@ -1613,11 +1581,54 @@ public final class XlsxRoundTripVerifier {
     return numberFormat == null || numberFormat.isBlank() ? "General" : numberFormat;
   }
 
-  private static String fillColor(XSSFCellStyle style) {
-    if (style.getFillPattern() != FillPatternType.SOLID_FOREGROUND) {
-      return null;
+  private static ExcelCellStyleSnapshot styleSnapshot(XSSFCellStyle style) {
+    XSSFFont font = style.getFont();
+    return new ExcelCellStyleSnapshot(
+        resolveNumberFormat(style.getDataFormatString()),
+        new ExcelCellAlignmentSnapshot(
+            style.getWrapText(),
+            fromPoi(style.getAlignment()),
+            fromPoi(style.getVerticalAlignment()),
+            style.getRotation(),
+            style.getIndention()),
+        new ExcelCellFontSnapshot(
+            font.getBold(),
+            font.getItalic(),
+            font.getFontName(),
+            new ExcelFontHeight(font.getFontHeight()),
+            toRgbHex(font.getXSSFColor()),
+            font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
+            font.getStrikeout()),
+        fillSnapshot(style),
+        new ExcelBorderSnapshot(
+            new ExcelBorderSide(fromPoi(style.getBorderTop()), toRgbHex(style.getTopBorderXSSFColor())),
+            new ExcelBorderSide(
+                fromPoi(style.getBorderRight()), toRgbHex(style.getRightBorderXSSFColor())),
+            new ExcelBorderSide(
+                fromPoi(style.getBorderBottom()), toRgbHex(style.getBottomBorderXSSFColor())),
+            new ExcelBorderSide(
+                fromPoi(style.getBorderLeft()), toRgbHex(style.getLeftBorderXSSFColor()))),
+        new ExcelCellProtectionSnapshot(style.getLocked(), style.getHidden()));
+  }
+
+  private static ExcelCellFillSnapshot fillSnapshot(XSSFCellStyle style) {
+    ExcelFillPattern pattern = fromPoi(style.getFillPattern());
+    if (pattern == ExcelFillPattern.NONE) {
+      return new ExcelCellFillSnapshot(pattern, null, null);
     }
-    return toRgbHex(style.getFillForegroundColorColor());
+    return new ExcelCellFillSnapshot(
+        pattern,
+        toRgbHex(style.getFillForegroundColorColor()),
+        pattern == ExcelFillPattern.SOLID ? null : toRgbHex(style.getFillBackgroundColorColor()));
+  }
+
+  private static void requireColorShape(XSSFColor color, String label) {
+    if (color == null || color.getRGB() == null) {
+      return;
+    }
+    if (color.getRGB().length != 3) {
+      throw new IllegalStateException(label + " must resolve to a 3-byte RGB value");
+    }
   }
 
   private static String toRgbHex(XSSFColor color) {
@@ -1629,6 +1640,42 @@ public final class XlsxRoundTripVerifier {
       return null;
     }
     return "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
+  }
+
+  private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {
+    return ExcelHorizontalAlignment.valueOf(alignment.name());
+  }
+
+  private static ExcelVerticalAlignment fromPoi(VerticalAlignment alignment) {
+    return ExcelVerticalAlignment.valueOf(alignment.name());
+  }
+
+  private static ExcelBorderStyle fromPoi(BorderStyle borderStyle) {
+    return ExcelBorderStyle.valueOf(borderStyle.name());
+  }
+
+  private static ExcelFillPattern fromPoi(FillPatternType pattern) {
+    return switch (pattern) {
+      case NO_FILL -> ExcelFillPattern.NONE;
+      case SOLID_FOREGROUND -> ExcelFillPattern.SOLID;
+      case FINE_DOTS -> ExcelFillPattern.FINE_DOTS;
+      case ALT_BARS -> ExcelFillPattern.ALT_BARS;
+      case SPARSE_DOTS -> ExcelFillPattern.SPARSE_DOTS;
+      case THICK_HORZ_BANDS -> ExcelFillPattern.THICK_HORIZONTAL_BANDS;
+      case THICK_VERT_BANDS -> ExcelFillPattern.THICK_VERTICAL_BANDS;
+      case THICK_BACKWARD_DIAG -> ExcelFillPattern.THICK_BACKWARD_DIAGONAL;
+      case THICK_FORWARD_DIAG -> ExcelFillPattern.THICK_FORWARD_DIAGONAL;
+      case BIG_SPOTS -> ExcelFillPattern.BIG_SPOTS;
+      case BRICKS -> ExcelFillPattern.BRICKS;
+      case THIN_HORZ_BANDS -> ExcelFillPattern.THIN_HORIZONTAL_BANDS;
+      case THIN_VERT_BANDS -> ExcelFillPattern.THIN_VERTICAL_BANDS;
+      case THIN_BACKWARD_DIAG -> ExcelFillPattern.THIN_BACKWARD_DIAGONAL;
+      case THIN_FORWARD_DIAG -> ExcelFillPattern.THIN_FORWARD_DIAGONAL;
+      case SQUARES -> ExcelFillPattern.SQUARES;
+      case DIAMONDS -> ExcelFillPattern.DIAMONDS;
+      case LESS_DOTS -> ExcelFillPattern.LESS_DOTS;
+      case LEAST_DOTS -> ExcelFillPattern.LEAST_DOTS;
+    };
   }
 
   private static ExcelHyperlink hyperlink(Cell cell) {
@@ -1711,14 +1758,15 @@ public final class XlsxRoundTripVerifier {
     }
     if (!expected.equals(actual)) {
       throw new IllegalStateException(
-          "style field %s must survive .xlsx round-trip for %s!%s: expected %s but was %s"
+          "%s must survive .xlsx round-trip for %s!%s: expected %s but was %s"
               .formatted(fieldName, sheetName, coordinate.a1Address(), expected, actual));
     }
   }
 
   private record ExpectedWorkbookState(
-      Map<String, Map<CellCoordinate, ExpectedStyle>> expectedStyles,
+      Map<String, Map<CellCoordinate, ExcelCellStyleSnapshot>> expectedStyles,
       Map<String, Map<CellCoordinate, ExpectedCellMetadata>> expectedMetadata,
+      Map<String, Map<CellCoordinate, ExcelRichTextSnapshot>> expectedRichText,
       Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges,
       dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary expectedWorkbookSummary,
       Map<String, dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary> expectedSheetSummaries,
@@ -1838,43 +1886,4 @@ public final class XlsxRoundTripVerifier {
 
   private record ExpectedNamedRange(
       ExcelNamedRangeScope scope, String refersToFormula, ExcelNamedRangeTarget target) {}
-
-  private record ExpectedStyle(
-      String numberFormat,
-      Boolean bold,
-      Boolean italic,
-      Boolean wrapText,
-      ExcelHorizontalAlignment horizontalAlignment,
-      ExcelVerticalAlignment verticalAlignment,
-      String fontName,
-      Integer fontHeightTwips,
-      String fontColor,
-      Boolean underline,
-      Boolean strikeout,
-      String fillColor,
-      ExcelBorderStyle borderTop,
-      ExcelBorderStyle borderRight,
-      ExcelBorderStyle borderBottom,
-      ExcelBorderStyle borderLeft) {
-    private static ExpectedStyle from(ExcelCellStyleSnapshot style) {
-      return new ExpectedStyle(
-          style.numberFormat(),
-          style.bold(),
-          style.italic(),
-          style.wrapText(),
-          style.horizontalAlignment(),
-          style.verticalAlignment(),
-          style.fontName(),
-          style.fontHeight().twips(),
-          style.fontColor(),
-          style.underline(),
-          style.strikeout(),
-          style.fillColor(),
-          style.topBorderStyle(),
-          style.rightBorderStyle(),
-          style.bottomBorderStyle(),
-          style.leftBorderStyle());
-    }
-
-  }
 }

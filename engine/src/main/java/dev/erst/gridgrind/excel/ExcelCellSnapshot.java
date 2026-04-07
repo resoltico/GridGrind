@@ -42,8 +42,21 @@ public sealed interface ExcelCellSnapshot {
       String displayValue,
       ExcelCellStyleSnapshot style,
       ExcelCellMetadataSnapshot metadata,
-      String stringValue)
+      String stringValue,
+      ExcelRichTextSnapshot richText)
       implements ExcelCellSnapshot {
+    public TextSnapshot {
+      java.util.Objects.requireNonNull(address, "address must not be null");
+      java.util.Objects.requireNonNull(declaredType, "declaredType must not be null");
+      java.util.Objects.requireNonNull(displayValue, "displayValue must not be null");
+      java.util.Objects.requireNonNull(style, "style must not be null");
+      java.util.Objects.requireNonNull(metadata, "metadata must not be null");
+      java.util.Objects.requireNonNull(stringValue, "stringValue must not be null");
+      if (richText != null && !stringValue.equals(richText.plainText())) {
+        throw new IllegalArgumentException("richText run text must concatenate to the stringValue");
+      }
+    }
+
     @Override
     public String effectiveType() {
       return "STRING";

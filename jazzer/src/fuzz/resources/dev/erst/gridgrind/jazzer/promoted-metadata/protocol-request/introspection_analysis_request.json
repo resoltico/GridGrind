@@ -13,6 +13,7 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 12,
       "operationKinds" : {
+        "AUTO_SIZE_COLUMNS" : 1,
         "SET_CELL" : 1,
         "ENSURE_SHEET" : 1,
         "EVALUATE_FORMULAS" : 1,
@@ -23,12 +24,12 @@
         "SET_SHEET_ZOOM" : 1,
         "SET_SHEET_PANE" : 1,
         "MERGE_CELLS" : 1,
-        "SET_PRINT_LAYOUT" : 1,
-        "AUTO_SIZE_COLUMNS" : 1
+        "SET_PRINT_LAYOUT" : 1
       },
       "styleKinds" : { },
       "readCount" : 16,
       "readKinds" : {
+        "GET_HYPERLINKS" : 1,
         "GET_MERGED_REGIONS" : 1,
         "GET_SHEET_LAYOUT" : 1,
         "ANALYZE_HYPERLINK_HEALTH" : 1,
@@ -43,8 +44,7 @@
         "GET_COMMENTS" : 1,
         "GET_NAMED_RANGE_SURFACE" : 1,
         "GET_WINDOW" : 1,
-        "ANALYZE_NAMED_RANGE_HEALTH" : 1,
-        "GET_HYPERLINKS" : 1
+        "ANALYZE_NAMED_RANGE_HEALTH" : 1
       }
     }
   },

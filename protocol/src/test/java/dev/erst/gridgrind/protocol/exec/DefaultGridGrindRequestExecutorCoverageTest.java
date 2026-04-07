@@ -215,15 +215,7 @@ class DefaultGridGrindRequestExecutorCoverageTest {
       ExcelBorderStyle borderStyle) {
     return new CellStyleInput(
         null,
-        null,
-        null,
-        null,
-        horizontalAlignment,
-        verticalAlignment,
-        null,
-        null,
-        null,
-        null,
+        new CellAlignmentInput(null, horizontalAlignment, verticalAlignment, null, null),
         null,
         null,
         new CellBorderInput(
@@ -231,7 +223,8 @@ class DefaultGridGrindRequestExecutorCoverageTest {
             new CellBorderSideInput(borderStyle),
             new CellBorderSideInput(borderStyle),
             new CellBorderSideInput(borderStyle),
-            new CellBorderSideInput(borderStyle)));
+            new CellBorderSideInput(borderStyle)),
+        null);
   }
 
   private static String comparisonUpperBound(ExcelComparisonOperator operator) {
@@ -257,7 +250,7 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                     "Budget",
                     "A1",
                     styleInput(alignment, ExcelVerticalAlignment.TOP, ExcelBorderStyle.THIN))));
-    assertEquals(alignment, command.style().horizontalAlignment());
+    assertEquals(alignment, command.style().alignment().horizontalAlignment());
   }
 
   private static void assertProtocolVerticalAlignmentMapping(ExcelVerticalAlignment alignment) {
@@ -269,7 +262,7 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                     "Budget",
                     "A1",
                     styleInput(ExcelHorizontalAlignment.LEFT, alignment, ExcelBorderStyle.THIN))));
-    assertEquals(alignment, command.style().verticalAlignment());
+    assertEquals(alignment, command.style().alignment().verticalAlignment());
   }
 
   private static void assertProtocolBorderStyleMapping(ExcelBorderStyle style) {

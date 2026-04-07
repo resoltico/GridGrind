@@ -1,11 +1,19 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
 import dev.erst.gridgrind.protocol.dto.AutofilterHealthReport;
+import dev.erst.gridgrind.protocol.dto.CellAlignmentReport;
+import dev.erst.gridgrind.protocol.dto.CellBorderReport;
+import dev.erst.gridgrind.protocol.dto.CellBorderSideReport;
+import dev.erst.gridgrind.protocol.dto.CellFillReport;
+import dev.erst.gridgrind.protocol.dto.CellFontReport;
+import dev.erst.gridgrind.protocol.dto.CellProtectionReport;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleReport;
@@ -1033,8 +1041,22 @@ public final class WorkbookInvariantChecks {
 
     switch (cellReport) {
       case GridGrindResponse.CellReport.BlankReport _ -> {}
-      case GridGrindResponse.CellReport.TextReport text ->
-          require(text.stringValue() != null, "stringValue must not be null");
+      case GridGrindResponse.CellReport.TextReport text -> {
+        require(text.stringValue() != null, "stringValue must not be null");
+        if (text.richText() != null) {
+          require(!text.richText().isEmpty(), "richText must not be empty");
+          StringBuilder builder = new StringBuilder();
+          for (var run : text.richText()) {
+            require(run.text() != null, "richText run text must not be null");
+            require(!run.text().isEmpty(), "richText run text must not be empty");
+            requireCellFontShape(run.font());
+            builder.append(run.text());
+          }
+          require(
+              text.stringValue().equals(builder.toString()),
+              "richText run text must concatenate to stringValue");
+        }
+      }
       case GridGrindResponse.CellReport.NumberReport number ->
           require(number.numberValue() != null, "numberValue must not be null");
       case GridGrindResponse.CellReport.BooleanReport bool ->
@@ -1114,15 +1136,79 @@ public final class WorkbookInvariantChecks {
   private static void requireCellStyleShape(GridGrindResponse.CellStyleReport style) {
     require(style != null, "style must not be null");
     require(style.numberFormat() != null, "numberFormat must not be null");
-    require(style.horizontalAlignment() != null, "horizontalAlignment must not be null");
-    require(style.verticalAlignment() != null, "verticalAlignment must not be null");
-    require(style.fontName() != null, "fontName must not be null");
-    require(!style.fontName().isBlank(), "fontName must not be blank");
-    requireFontHeightShape(style.fontHeight());
-    require(style.topBorderStyle() != null, "topBorderStyle must not be null");
-    require(style.rightBorderStyle() != null, "rightBorderStyle must not be null");
-    require(style.bottomBorderStyle() != null, "bottomBorderStyle must not be null");
-    require(style.leftBorderStyle() != null, "leftBorderStyle must not be null");
+    requireCellAlignmentShape(style.alignment());
+    requireCellFontShape(style.font());
+    requireCellFillShape(style.fill());
+    requireCellBorderShape(style.border());
+    requireCellProtectionShape(style.protection());
+  }
+
+  private static void requireCellAlignmentShape(CellAlignmentReport alignment) {
+    require(alignment != null, "alignment must not be null");
+    require(
+        alignment.horizontalAlignment() != null,
+        "horizontalAlignment must not be null");
+    require(
+        alignment.verticalAlignment() != null,
+        "verticalAlignment must not be null");
+    require(
+        alignment.textRotation() >= 0 && alignment.textRotation() <= 180,
+        "textRotation must be between 0 and 180 inclusive");
+    require(
+        alignment.indentation() >= 0 && alignment.indentation() <= 250,
+        "indentation must be between 0 and 250 inclusive");
+  }
+
+  private static void requireCellFontShape(CellFontReport font) {
+    require(font != null, "font must not be null");
+    require(font.fontName() != null, "fontName must not be null");
+    require(!font.fontName().isBlank(), "fontName must not be blank");
+    requireFontHeightShape(font.fontHeight());
+    if (font.fontColor() != null) {
+      requireNonBlank(font.fontColor(), "fontColor");
+    }
+  }
+
+  private static void requireCellFillShape(CellFillReport fill) {
+    require(fill != null, "fill must not be null");
+    require(fill.pattern() != null, "fill pattern must not be null");
+    if (fill.foregroundColor() != null) {
+      requireNonBlank(fill.foregroundColor(), "fill foregroundColor");
+    }
+    if (fill.backgroundColor() != null) {
+      requireNonBlank(fill.backgroundColor(), "fill backgroundColor");
+    }
+    if (fill.pattern() == ExcelFillPattern.NONE) {
+      require(
+          fill.foregroundColor() == null && fill.backgroundColor() == null,
+          "fill pattern NONE must not carry colors");
+    }
+    if (fill.pattern() == ExcelFillPattern.SOLID) {
+      require(fill.backgroundColor() == null, "SOLID fills must not carry backgroundColor");
+    }
+  }
+
+  private static void requireCellBorderShape(CellBorderReport border) {
+    require(border != null, "border must not be null");
+    requireCellBorderSideShape(border.top(), "top");
+    requireCellBorderSideShape(border.right(), "right");
+    requireCellBorderSideShape(border.bottom(), "bottom");
+    requireCellBorderSideShape(border.left(), "left");
+  }
+
+  private static void requireCellBorderSideShape(CellBorderSideReport side, String label) {
+    require(side != null, label + " border side must not be null");
+    require(side.style() != null, label + " border style must not be null");
+    if (side.color() != null) {
+      requireNonBlank(side.color(), label + " border color");
+      require(
+          side.style() != ExcelBorderStyle.NONE,
+          label + " border color requires a visible border style");
+    }
+  }
+
+  private static void requireCellProtectionShape(CellProtectionReport protection) {
+    require(protection != null, "protection must not be null");
   }
 
   private static void requireFontHeightShape(FontHeightReport fontHeight) {

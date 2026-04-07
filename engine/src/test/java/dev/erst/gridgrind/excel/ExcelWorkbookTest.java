@@ -583,42 +583,47 @@ class ExcelWorkbookTest {
               "A1",
               new ExcelCellStyle(
                   null,
-                  true,
-                  false,
-                  true,
-                  ExcelHorizontalAlignment.CENTER,
-                  ExcelVerticalAlignment.TOP,
-                  "Aptos",
-                  ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
-                  "#1F4E78",
-                  true,
-                  true,
-                  "#FFF2CC",
+                  new ExcelCellAlignment(
+                      true,
+                      ExcelHorizontalAlignment.CENTER,
+                      ExcelVerticalAlignment.TOP,
+                      null,
+                      null),
+                  new ExcelCellFont(
+                      true,
+                      false,
+                      "Aptos",
+                      ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
+                      "#1F4E78",
+                      true,
+                      true),
+                  new ExcelCellFill(ExcelFillPattern.SOLID, "#FFF2CC", null),
                   new ExcelBorder(
                       new ExcelBorderSide(ExcelBorderStyle.THIN),
                       null,
                       new ExcelBorderSide(ExcelBorderStyle.DOUBLE),
                       null,
-                      null)));
+                      null),
+                  null));
       workbook.save(workbookPath);
     }
 
     ExcelCellStyleSnapshot style = XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1");
-    assertTrue(style.bold());
-    assertFalse(style.italic());
-    assertTrue(style.wrapText());
-    assertEquals(ExcelHorizontalAlignment.CENTER, style.horizontalAlignment());
-    assertEquals(ExcelVerticalAlignment.TOP, style.verticalAlignment());
-    assertEquals("Aptos", style.fontName());
-    assertEquals(new BigDecimal("11.5"), style.fontHeight().points());
-    assertEquals("#1F4E78", style.fontColor());
-    assertTrue(style.underline());
-    assertTrue(style.strikeout());
-    assertEquals("#FFF2CC", style.fillColor());
-    assertEquals(ExcelBorderStyle.THIN, style.topBorderStyle());
-    assertEquals(ExcelBorderStyle.DOUBLE, style.rightBorderStyle());
-    assertEquals(ExcelBorderStyle.THIN, style.bottomBorderStyle());
-    assertEquals(ExcelBorderStyle.THIN, style.leftBorderStyle());
+    assertTrue(style.font().bold());
+    assertFalse(style.font().italic());
+    assertTrue(style.alignment().wrapText());
+    assertEquals(ExcelHorizontalAlignment.CENTER, style.alignment().horizontalAlignment());
+    assertEquals(ExcelVerticalAlignment.TOP, style.alignment().verticalAlignment());
+    assertEquals("Aptos", style.font().fontName());
+    assertEquals(new BigDecimal("11.5"), style.font().fontHeight().points());
+    assertEquals("#1F4E78", style.font().fontColor());
+    assertTrue(style.font().underline());
+    assertTrue(style.font().strikeout());
+    assertEquals("#FFF2CC", style.fill().foregroundColor());
+    assertEquals(ExcelBorderStyle.THIN, style.border().top().style());
+    assertEquals(ExcelBorderStyle.DOUBLE, style.border().right().style());
+    assertEquals(ExcelBorderStyle.THIN, style.border().bottom().style());
+    assertEquals(ExcelBorderStyle.THIN, style.border().left().style());
   }
 
   @Test

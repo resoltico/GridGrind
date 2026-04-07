@@ -595,7 +595,7 @@ class WorkbookOperationTest {
         IllegalArgumentException.class, () -> new WorkbookOperation.ClearHyperlink(tooLong, "A1"));
     CellStyleInput style =
         new CellStyleInput(
-            null, false, null, false, null, null, null, null, null, null, null, null, null);
+            null, new CellAlignmentInput(false, null, null, null, null), null, null, null, null);
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookOperation.ApplyStyle(tooLong, "A1:B2", style));
@@ -618,7 +618,7 @@ class WorkbookOperationTest {
     CellInput textValue = new CellInput.Text("x");
     CellStyleInput style =
         new CellStyleInput(
-            null, false, null, false, null, null, null, null, null, null, null, null, null);
+            null, new CellAlignmentInput(false, null, null, null, null), null, null, null, null);
 
     assertEquals("ENSURE_SHEET", new WorkbookOperation.EnsureSheet("Budget").operationType());
     assertEquals(
@@ -770,15 +770,9 @@ class WorkbookOperationTest {
   private static CellStyleInput protocolStyle() {
     return new CellStyleInput(
         "#,##0.00",
-        true,
-        null,
-        true,
-        ExcelHorizontalAlignment.RIGHT,
-        ExcelVerticalAlignment.CENTER,
-        null,
-        null,
-        null,
-        null,
+        new CellAlignmentInput(
+            true, ExcelHorizontalAlignment.RIGHT, ExcelVerticalAlignment.CENTER, null, null),
+        new CellFontInput(true, null, null, null, null, null, null),
         null,
         null,
         null);

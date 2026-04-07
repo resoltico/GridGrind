@@ -3,10 +3,7 @@ package dev.erst.gridgrind.protocol.dto;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
-import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.util.List;
 import java.util.Objects;
@@ -324,6 +321,18 @@ public sealed interface GridGrindResponse {
     }
 
     /**
+     * Structured rich-text runs; populated only by TextReport when the workbook stores run-level
+     * formatting, null for all other subtypes and scalar plain-string cells.
+     *
+     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
+     * interface used for wire serialization; internal code must use a switch expression instead.
+     */
+    @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
+    default List<RichTextRunReport> richText() {
+      return null;
+    }
+
+    /**
      * Numeric value; populated only by NumberReport, null for all other subtypes.
      *
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
@@ -384,13 +393,20 @@ public sealed interface GridGrindResponse {
         CellStyleReport style,
         HyperlinkTarget hyperlink,
         CommentReport comment,
-        String stringValue)
+        String stringValue,
+        List<RichTextRunReport> richText)
         implements CellReport {
       public TextReport {
         Objects.requireNonNull(address, "address must not be null");
         Objects.requireNonNull(declaredType, "declaredType must not be null");
         Objects.requireNonNull(displayValue, "displayValue must not be null");
         Objects.requireNonNull(style, "style must not be null");
+        Objects.requireNonNull(stringValue, "stringValue must not be null");
+        richText = copyRichTextRuns(richText, "richText");
+        if (richText != null && !stringValue.equals(concatenateRichTextRuns(richText))) {
+          throw new IllegalArgumentException(
+              "richText run text must concatenate to the stringValue");
+        }
       }
 
       @Override
@@ -510,31 +526,18 @@ public sealed interface GridGrindResponse {
   /** Effective style facts returned with every analyzed cell. */
   record CellStyleReport(
       String numberFormat,
-      boolean bold,
-      boolean italic,
-      boolean wrapText,
-      ExcelHorizontalAlignment horizontalAlignment,
-      ExcelVerticalAlignment verticalAlignment,
-      String fontName,
-      FontHeightReport fontHeight,
-      String fontColor,
-      boolean underline,
-      boolean strikeout,
-      String fillColor,
-      ExcelBorderStyle topBorderStyle,
-      ExcelBorderStyle rightBorderStyle,
-      ExcelBorderStyle bottomBorderStyle,
-      ExcelBorderStyle leftBorderStyle) {
+      CellAlignmentReport alignment,
+      CellFontReport font,
+      CellFillReport fill,
+      CellBorderReport border,
+      CellProtectionReport protection) {
     public CellStyleReport {
       Objects.requireNonNull(numberFormat, "numberFormat must not be null");
-      Objects.requireNonNull(horizontalAlignment, "horizontalAlignment must not be null");
-      Objects.requireNonNull(verticalAlignment, "verticalAlignment must not be null");
-      Objects.requireNonNull(fontName, "fontName must not be null");
-      Objects.requireNonNull(fontHeight, "fontHeight must not be null");
-      Objects.requireNonNull(topBorderStyle, "topBorderStyle must not be null");
-      Objects.requireNonNull(rightBorderStyle, "rightBorderStyle must not be null");
-      Objects.requireNonNull(bottomBorderStyle, "bottomBorderStyle must not be null");
-      Objects.requireNonNull(leftBorderStyle, "leftBorderStyle must not be null");
+      Objects.requireNonNull(alignment, "alignment must not be null");
+      Objects.requireNonNull(font, "font must not be null");
+      Objects.requireNonNull(fill, "fill must not be null");
+      Objects.requireNonNull(border, "border must not be null");
+      Objects.requireNonNull(protection, "protection must not be null");
     }
   }
 
@@ -1467,6 +1470,27 @@ public sealed interface GridGrindResponse {
       Objects.requireNonNull(value, fieldName + " must not contain nulls");
     }
     return copy;
+  }
+
+  @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
+  private static List<RichTextRunReport> copyRichTextRuns(
+      List<RichTextRunReport> values, String fieldName) {
+    if (values == null) {
+      return null;
+    }
+    List<RichTextRunReport> copy = copyValues(values, fieldName);
+    if (copy.isEmpty()) {
+      throw new IllegalArgumentException(fieldName + " must not be empty");
+    }
+    return copy;
+  }
+
+  private static String concatenateRichTextRuns(List<RichTextRunReport> runs) {
+    StringBuilder builder = new StringBuilder();
+    for (RichTextRunReport run : runs) {
+      builder.append(run.text());
+    }
+    return builder.toString();
   }
 
   private static List<ProblemCause> copyProblemCauses(List<ProblemCause> causes) {

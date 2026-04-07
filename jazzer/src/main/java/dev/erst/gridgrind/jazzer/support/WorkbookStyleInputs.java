@@ -1,11 +1,16 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
+import dev.erst.gridgrind.protocol.dto.CellAlignmentInput;
 import dev.erst.gridgrind.protocol.dto.CellBorderInput;
 import dev.erst.gridgrind.protocol.dto.CellBorderSideInput;
+import dev.erst.gridgrind.protocol.dto.CellFillInput;
+import dev.erst.gridgrind.protocol.dto.CellFontInput;
+import dev.erst.gridgrind.protocol.dto.CellProtectionInput;
 import dev.erst.gridgrind.protocol.dto.CellStyleInput;
 import dev.erst.gridgrind.protocol.dto.FontHeightInput;
 import java.math.BigDecimal;
@@ -19,130 +24,75 @@ public final class WorkbookStyleInputs {
   public static CellStyleInput nextStyleInput(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
-    ExcelHorizontalAlignment[] horizontalValues = ExcelHorizontalAlignment.values();
-    ExcelVerticalAlignment[] verticalValues = ExcelVerticalAlignment.values();
     return switch (data.consumeInt(0, 7)) {
       case 0 ->
           new CellStyleInput(
-              data.consumeBoolean() ? "0.00" : "yyyy-mm-dd",
-              null,
-              null,
-              Boolean.TRUE,
-              horizontalValues[data.consumeInt(0, horizontalValues.length - 1)],
-              verticalValues[data.consumeInt(0, verticalValues.length - 1)],
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null);
+              data.consumeBoolean() ? "0.00" : "yyyy-mm-dd", null, null, null, null, null);
       case 1 ->
-          new CellStyleInput(
-              null,
-              data.consumeBoolean() ? Boolean.TRUE : null,
-              data.consumeBoolean() ? Boolean.TRUE : null,
-              data.consumeBoolean() ? Boolean.TRUE : null,
-              null,
-              null,
-              "Aptos",
-              nextFontHeightInput(data),
-              nextRgbHex(data),
-              data.consumeBoolean() ? Boolean.TRUE : null,
-              data.consumeBoolean() ? Boolean.FALSE : null,
-              null,
-              null);
-      case 2 ->
-          new CellStyleInput(
-              null,
-              null,
-              null,
-              null,
-              horizontalValues[data.consumeInt(0, horizontalValues.length - 1)],
-              verticalValues[data.consumeInt(0, verticalValues.length - 1)],
-              data.consumeBoolean() ? "Aptos Display" : null,
-              nextFontHeightInput(data),
-              data.consumeBoolean() ? nextRgbHex(data) : null,
-              data.consumeBoolean() ? data.consumeBoolean() : null,
-              data.consumeBoolean() ? data.consumeBoolean() : null,
-              nextRgbHex(data),
-              null);
+          new CellStyleInput(null, nextAlignmentInput(data, true), null, null, null, null);
+      case 2 -> new CellStyleInput(null, null, nextFontInput(data, true), null, null, null);
       case 3 ->
           new CellStyleInput(
               null,
-              Boolean.TRUE,
-              Boolean.FALSE,
-              Boolean.TRUE,
-              horizontalValues[data.consumeInt(0, horizontalValues.length - 1)],
-              verticalValues[data.consumeInt(0, verticalValues.length - 1)],
-              "Aptos",
-              nextFontHeightInput(data),
-              nextRgbHex(data),
-              Boolean.TRUE,
-              data.consumeBoolean() ? Boolean.TRUE : Boolean.FALSE,
-              nextRgbHex(data),
-              nextProtocolBorder(data));
+              nextAlignmentInput(data, true),
+              nextFontInput(data, true),
+              nextFillInput(data),
+              nextProtocolBorder(data),
+              nextProtectionInput(data));
       case 4 ->
           new CellStyleInput(
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              nextRgbHex(data),
-              null,
-              null,
-              nextRgbHex(data),
-              nextProtocolBorder(data));
-      case 5 ->
-          new CellStyleInput(
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              nextFontHeightInput(data),
-              null,
-              null,
-              null,
-              null,
-              null);
+              null, null, nextFontInput(data, false), nextFillInput(data), nextProtocolBorder(data), null);
+      case 5 -> new CellStyleInput(null, null, null, nextFillInput(data), null, nextProtectionInput(data));
       case 6 ->
-          new CellStyleInput(
-              null,
-              null,
-              null,
-              Boolean.TRUE,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              nextProtocolBorder(data));
+          new CellStyleInput(null, nextAlignmentInput(data, true), null, null, nextProtocolBorder(data), null);
       default ->
-          new CellStyleInput(
-              null,
-              null,
-              null,
-              Boolean.TRUE,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null);
+          new CellStyleInput(null, null, nextFontInput(data, false), null, null, nextProtectionInput(data));
     };
+  }
+
+  private static CellAlignmentInput nextAlignmentInput(GridGrindFuzzData data, boolean includeDepth) {
+    return new CellAlignmentInput(
+        data.consumeBoolean() ? Boolean.TRUE : null,
+        nextHorizontalAlignment(data),
+        nextVerticalAlignment(data),
+        includeDepth && data.consumeBoolean() ? data.consumeInt(0, 180) : null,
+        includeDepth && data.consumeBoolean() ? data.consumeInt(0, 8) : null);
+  }
+
+  private static CellFontInput nextFontInput(GridGrindFuzzData data, boolean includeName) {
+    return new CellFontInput(
+        data.consumeBoolean() ? Boolean.TRUE : null,
+        data.consumeBoolean() ? Boolean.FALSE : null,
+        includeName ? (data.consumeBoolean() ? "Aptos" : "Aptos Display") : null,
+        data.consumeBoolean() ? nextFontHeightInput(data) : null,
+        data.consumeBoolean() ? nextRgbHex(data) : null,
+        data.consumeBoolean() ? Boolean.TRUE : null,
+        data.consumeBoolean() ? Boolean.FALSE : null);
+  }
+
+  private static CellFillInput nextFillInput(GridGrindFuzzData data) {
+    return switch (data.consumeInt(0, 3)) {
+      case 0 -> new CellFillInput(ExcelFillPattern.SOLID, nextRgbHex(data), null);
+      case 1 ->
+          new CellFillInput(
+              nextPatternFill(data),
+              nextRgbHex(data),
+              data.consumeBoolean() ? nextRgbHex(data) : null);
+      case 2 -> new CellFillInput(null, nextRgbHex(data), null);
+      default -> new CellFillInput(nextPatternFill(data), null, null);
+    };
+  }
+
+  private static ExcelFillPattern nextPatternFill(GridGrindFuzzData data) {
+    ExcelFillPattern[] patterns =
+        new ExcelFillPattern[] {
+          ExcelFillPattern.FINE_DOTS,
+          ExcelFillPattern.SPARSE_DOTS,
+          ExcelFillPattern.THIN_HORIZONTAL_BANDS,
+          ExcelFillPattern.THICK_FORWARD_DIAGONAL,
+          ExcelFillPattern.SQUARES
+        };
+    return patterns[data.consumeInt(0, patterns.length - 1)];
   }
 
   private static FontHeightInput nextFontHeightInput(GridGrindFuzzData data) {
@@ -180,6 +130,24 @@ public final class WorkbookStyleInputs {
 
   private static CellBorderSideInput nextBorderSide(GridGrindFuzzData data) {
     ExcelBorderStyle[] values = ExcelBorderStyle.values();
-    return new CellBorderSideInput(values[data.consumeInt(0, values.length - 1)]);
+    ExcelBorderStyle style = values[data.consumeInt(0, values.length - 1)];
+    return new CellBorderSideInput(
+        style, style == ExcelBorderStyle.NONE || !data.consumeBoolean() ? null : nextRgbHex(data));
+  }
+
+  private static CellProtectionInput nextProtectionInput(GridGrindFuzzData data) {
+    return new CellProtectionInput(
+        data.consumeBoolean() ? data.consumeBoolean() : null,
+        data.consumeBoolean() ? data.consumeBoolean() : null);
+  }
+
+  private static ExcelHorizontalAlignment nextHorizontalAlignment(GridGrindFuzzData data) {
+    ExcelHorizontalAlignment[] values = ExcelHorizontalAlignment.values();
+    return values[data.consumeInt(0, values.length - 1)];
+  }
+
+  private static ExcelVerticalAlignment nextVerticalAlignment(GridGrindFuzzData data) {
+    ExcelVerticalAlignment[] values = ExcelVerticalAlignment.values();
+    return values[data.consumeInt(0, values.length - 1)];
   }
 }

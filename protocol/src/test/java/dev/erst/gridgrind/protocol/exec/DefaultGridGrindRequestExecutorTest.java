@@ -3,8 +3,14 @@ package dev.erst.gridgrind.protocol.exec;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
+import dev.erst.gridgrind.excel.ExcelBorderSide;
+import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
+import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
+import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
+import dev.erst.gridgrind.excel.ExcelCellProtectionSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
@@ -143,6 +149,72 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals("A1", window.topLeftAddress());
     assertEquals(4, window.rows().size());
     assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
+  }
+
+  @Test
+  void executesRichTextCellWorkflowAndReportsStructuredRuns() {
+    GridGrindResponse response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget"),
+                        new WorkbookOperation.ApplyStyle(
+                            "Budget",
+                            "A1",
+                            new CellStyleInput(
+                                null,
+                                null,
+                                new CellFontInput(
+                                    null,
+                                    Boolean.TRUE,
+                                    "Aptos",
+                                    new FontHeightInput.Twips(260),
+                                    "#112233",
+                                    null,
+                                    null),
+                                null,
+                                null,
+                                null)),
+                        new WorkbookOperation.SetCell(
+                            "Budget",
+                            "A1",
+                            new CellInput.RichText(
+                                List.of(
+                                    new RichTextRunInput("Budget", null),
+                                    new RichTextRunInput(
+                                        " FY26",
+                                        new CellFontInput(
+                                            Boolean.TRUE,
+                                            null,
+                                            null,
+                                            null,
+                                            "#FF0000",
+                                            null,
+                                            null)))))),
+                    new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1"))));
+
+    GridGrindResponse.Success success = success(response);
+    WorkbookReadResult.CellsResult cells =
+        read(success, "cells", WorkbookReadResult.CellsResult.class);
+    GridGrindResponse.CellReport.TextReport cell =
+        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst());
+
+    assertEquals("Budget FY26", cell.stringValue());
+    assertNotNull(cell.richText());
+    assertEquals(2, cell.richText().size());
+    assertEquals("Budget", cell.richText().get(0).text());
+    assertEquals("Aptos", cell.richText().get(0).font().fontName());
+    assertEquals("#112233", cell.richText().get(0).font().fontColor());
+    assertTrue(cell.richText().get(0).font().italic());
+    assertFalse(cell.richText().get(0).font().bold());
+    assertEquals(" FY26", cell.richText().get(1).text());
+    assertEquals("Aptos", cell.richText().get(1).font().fontName());
+    assertEquals("#FF0000", cell.richText().get(1).font().fontColor());
+    assertTrue(cell.richText().get(1).font().bold());
+    assertTrue(cell.richText().get(1).font().italic());
   }
 
   @Test
@@ -1665,15 +1737,13 @@ class DefaultGridGrindRequestExecutorTest {
                                 "A1:B1",
                                 new CellStyleInput(
                                     "#,##0.00",
-                                    true,
-                                    null,
-                                    true,
-                                    ExcelHorizontalAlignment.CENTER,
-                                    ExcelVerticalAlignment.CENTER,
-                                    null,
-                                    null,
-                                    null,
-                                    null,
+                                    new CellAlignmentInput(
+                                        true,
+                                        ExcelHorizontalAlignment.CENTER,
+                                        ExcelVerticalAlignment.CENTER,
+                                        null,
+                                        null),
+                                    new CellFontInput(true, null, null, null, null, null, null),
                                     null,
                                     null,
                                     null)),
@@ -1682,15 +1752,13 @@ class DefaultGridGrindRequestExecutorTest {
                                 "C1",
                                 new CellStyleInput(
                                     null,
-                                    null,
-                                    true,
-                                    null,
-                                    ExcelHorizontalAlignment.RIGHT,
-                                    ExcelVerticalAlignment.BOTTOM,
-                                    null,
-                                    null,
-                                    null,
-                                    null,
+                                    new CellAlignmentInput(
+                                        null,
+                                        ExcelHorizontalAlignment.RIGHT,
+                                        ExcelVerticalAlignment.BOTTOM,
+                                        null,
+                                        null),
+                                    new CellFontInput(null, true, null, null, null, null, null),
                                     null,
                                     null,
                                     null)),
@@ -1709,14 +1777,15 @@ class DefaultGridGrindRequestExecutorTest {
 
     assertTrue(Files.exists(workbookPath));
     assertEquals(
-        ExcelHorizontalAlignment.CENTER, cells.cells().getFirst().style().horizontalAlignment());
-    assertTrue(cells.cells().getFirst().style().bold());
-    assertTrue(cells.cells().getFirst().style().wrapText());
+        ExcelHorizontalAlignment.CENTER,
+        cells.cells().getFirst().style().alignment().horizontalAlignment());
+    assertTrue(cells.cells().getFirst().style().font().bold());
+    assertTrue(cells.cells().getFirst().style().alignment().wrapText());
     assertEquals("BLANK", cells.cells().get(1).effectiveType());
     assertEquals("49", cells.cells().get(2).displayValue());
     assertTrue(
         window.rows().getFirst().cells().stream().anyMatch(cell -> "C1".equals(cell.address())));
-    assertTrue(cells.cells().get(3).style().italic());
+    assertTrue(cells.cells().get(3).style().font().italic());
   }
 
   @Test
@@ -1740,45 +1809,63 @@ class DefaultGridGrindRequestExecutorTest {
                                 "A1",
                                 new CellStyleInput(
                                     null,
-                                    true,
-                                    false,
-                                    true,
-                                    ExcelHorizontalAlignment.CENTER,
-                                    ExcelVerticalAlignment.TOP,
-                                    "Aptos",
-                                    new FontHeightInput.Points(new BigDecimal("11.5")),
-                                    "#1F4E78",
-                                    true,
-                                    true,
-                                    "#FFF2CC",
+                                    new CellAlignmentInput(
+                                        true,
+                                        ExcelHorizontalAlignment.CENTER,
+                                        ExcelVerticalAlignment.TOP,
+                                        45,
+                                        3),
+                                    new CellFontInput(
+                                        true,
+                                        false,
+                                        "Aptos",
+                                        new FontHeightInput.Points(new BigDecimal("11.5")),
+                                        "#1F4E78",
+                                        true,
+                                        true),
+                                    new CellFillInput(
+                                        dev.erst.gridgrind.excel.ExcelFillPattern
+                                            .THIN_HORIZONTAL_BANDS,
+                                        "#FFF2CC",
+                                        "#DDEBF7"),
                                     new CellBorderInput(
-                                        new CellBorderSideInput(ExcelBorderStyle.THIN),
+                                        new CellBorderSideInput(ExcelBorderStyle.THIN, "#102030"),
                                         null,
-                                        new CellBorderSideInput(ExcelBorderStyle.DOUBLE),
+                                        new CellBorderSideInput(ExcelBorderStyle.DOUBLE, "#203040"),
                                         null,
-                                        null)))),
+                                        null),
+                                    new CellProtectionInput(false, true)))),
                         new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")))));
 
     GridGrindResponse.CellStyleReport style =
         read(success, "cells", WorkbookReadResult.CellsResult.class).cells().getFirst().style();
 
     assertTrue(Files.exists(workbookPath));
-    assertTrue(style.bold());
-    assertFalse(style.italic());
-    assertTrue(style.wrapText());
-    assertEquals(ExcelHorizontalAlignment.CENTER, style.horizontalAlignment());
-    assertEquals(ExcelVerticalAlignment.TOP, style.verticalAlignment());
-    assertEquals("Aptos", style.fontName());
-    assertEquals(230, style.fontHeight().twips());
-    assertEquals(new BigDecimal("11.5"), style.fontHeight().points());
-    assertEquals("#1F4E78", style.fontColor());
-    assertTrue(style.underline());
-    assertTrue(style.strikeout());
-    assertEquals("#FFF2CC", style.fillColor());
-    assertEquals(ExcelBorderStyle.THIN, style.topBorderStyle());
-    assertEquals(ExcelBorderStyle.DOUBLE, style.rightBorderStyle());
-    assertEquals(ExcelBorderStyle.THIN, style.bottomBorderStyle());
-    assertEquals(ExcelBorderStyle.THIN, style.leftBorderStyle());
+    assertTrue(style.font().bold());
+    assertFalse(style.font().italic());
+    assertTrue(style.alignment().wrapText());
+    assertEquals(ExcelHorizontalAlignment.CENTER, style.alignment().horizontalAlignment());
+    assertEquals(ExcelVerticalAlignment.TOP, style.alignment().verticalAlignment());
+    assertEquals(45, style.alignment().textRotation());
+    assertEquals(3, style.alignment().indentation());
+    assertEquals("Aptos", style.font().fontName());
+    assertEquals(230, style.font().fontHeight().twips());
+    assertEquals(new BigDecimal("11.5"), style.font().fontHeight().points());
+    assertEquals("#1F4E78", style.font().fontColor());
+    assertTrue(style.font().underline());
+    assertTrue(style.font().strikeout());
+    assertEquals(
+        dev.erst.gridgrind.excel.ExcelFillPattern.THIN_HORIZONTAL_BANDS, style.fill().pattern());
+    assertEquals("#FFF2CC", style.fill().foregroundColor());
+    assertEquals("#DDEBF7", style.fill().backgroundColor());
+    assertEquals(ExcelBorderStyle.THIN, style.border().top().style());
+    assertEquals(ExcelBorderStyle.DOUBLE, style.border().right().style());
+    assertEquals(ExcelBorderStyle.THIN, style.border().bottom().style());
+    assertEquals(ExcelBorderStyle.THIN, style.border().left().style());
+    assertEquals("#102030", style.border().top().color());
+    assertEquals("#203040", style.border().right().color());
+    assertFalse(style.protection().locked());
+    assertTrue(style.protection().hiddenFormula());
     assertEquals(
         style, toResponseStyleReport(XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1")));
   }
@@ -1984,8 +2071,12 @@ class DefaultGridGrindRequestExecutorTest {
                                 "Budget",
                                 "A1:",
                                 new CellStyleInput(
-                                    null, true, null, null, null, null, null, null, null, null,
-                                    null, null, null))))));
+                                    null,
+                                    null,
+                                    new CellFontInput(true, null, null, null, null, null, null),
+                                    null,
+                                    null,
+                                    null))))));
 
     assertEquals("APPLY_OPERATION", failure.problem().context().stage());
     assertEquals("APPLY_STYLE", failure.problem().context().operationType());
@@ -2075,6 +2166,21 @@ class DefaultGridGrindRequestExecutorTest {
     assertNull(
         DefaultGridGrindRequestExecutor.formulaFor(
             new WorkbookOperation.SetCell("S", "A1", new CellInput.Blank()), exception));
+    assertNull(
+        DefaultGridGrindRequestExecutor.formulaFor(
+            new WorkbookOperation.SetCell("S", "A1", new CellInput.Text("hello")), exception));
+    assertNull(
+        DefaultGridGrindRequestExecutor.formulaFor(
+            new WorkbookOperation.SetCell(
+                "S",
+                "A1",
+                new CellInput.RichText(
+                    List.of(
+                        new RichTextRunInput("Budget", null),
+                        new RichTextRunInput(
+                            " FY26",
+                            new CellFontInput(true, false, null, null, "#AABBCC", false, false))))),
+            exception));
     assertNull(
         DefaultGridGrindRequestExecutor.formulaFor(
             new WorkbookOperation.SetCell("S", "A1", new CellInput.Numeric(1.0)), exception));
@@ -3611,7 +3717,12 @@ class DefaultGridGrindRequestExecutorTest {
             "Budget",
             "A1:B2",
             new CellStyleInput(
-                null, true, null, null, null, null, null, null, null, null, null, null, null)),
+                null,
+                null,
+                new CellFontInput(true, null, null, null, null, null, null),
+                null,
+                null,
+                null)),
         exception,
         "Budget",
         null,
@@ -3847,7 +3958,12 @@ class DefaultGridGrindRequestExecutorTest {
                 "Budget",
                 "A1:B2",
                 new CellStyleInput(
-                    null, true, null, null, null, null, null, null, null, null, null, null, null)),
+                    null,
+                    null,
+                    new CellFontInput(true, null, null, null, null, null, null),
+                    null,
+                    null,
+                    null)),
             new WorkbookOperation.SetDataValidation(
                 "Budget",
                 "B2:B5",
@@ -3985,43 +4101,29 @@ class DefaultGridGrindRequestExecutorTest {
 
   private GridGrindResponse.CellStyleReport toResponseStyleReport(
       dev.erst.gridgrind.excel.ExcelCellStyleSnapshot style) {
-    return new GridGrindResponse.CellStyleReport(
-        style.numberFormat(),
-        style.bold(),
-        style.italic(),
-        style.wrapText(),
-        style.horizontalAlignment(),
-        style.verticalAlignment(),
-        style.fontName(),
-        WorkbookReadResultConverter.toFontHeightReport(style.fontHeight()),
-        style.fontColor(),
-        style.underline(),
-        style.strikeout(),
-        style.fillColor(),
-        style.topBorderStyle(),
-        style.rightBorderStyle(),
-        style.bottomBorderStyle(),
-        style.leftBorderStyle());
+    return WorkbookReadResultConverter.toCellStyleReport(style);
   }
 
   private static ExcelCellStyleSnapshot defaultStyle() {
     return new ExcelCellStyleSnapshot(
         "",
-        false,
-        false,
-        false,
-        ExcelHorizontalAlignment.GENERAL,
-        ExcelVerticalAlignment.BOTTOM,
-        "Aptos",
-        ExcelFontHeight.fromPoints(new BigDecimal("11")),
-        null,
-        false,
-        false,
-        null,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE);
+        new ExcelCellAlignmentSnapshot(
+            false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
+        new ExcelCellFontSnapshot(
+            false,
+            false,
+            "Aptos",
+            ExcelFontHeight.fromPoints(new BigDecimal("11")),
+            null,
+            false,
+            false),
+        new ExcelCellFillSnapshot(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, null, null),
+        new ExcelBorderSnapshot(
+            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSide(ExcelBorderStyle.NONE, null)),
+        new ExcelCellProtectionSnapshot(true, false));
   }
 
   private static SheetProtectionSettings protectionSettings() {

@@ -286,20 +286,22 @@ class WorkbookReadResultTest {
   private static GridGrindResponse.CellStyleReport defaultStyle() {
     return new GridGrindResponse.CellStyleReport(
         "General",
-        false,
-        false,
-        false,
-        ExcelHorizontalAlignment.GENERAL,
-        ExcelVerticalAlignment.BOTTOM,
-        "Aptos",
-        new FontHeightReport(220, java.math.BigDecimal.valueOf(11)),
-        null,
-        false,
-        false,
-        null,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE);
+        new CellAlignmentReport(
+            false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
+        new CellFontReport(
+            false,
+            false,
+            "Aptos",
+            new FontHeightReport(220, java.math.BigDecimal.valueOf(11)),
+            null,
+            false,
+            false),
+        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, null, null),
+        new CellBorderReport(
+            new CellBorderSideReport(ExcelBorderStyle.NONE, null),
+            new CellBorderSideReport(ExcelBorderStyle.NONE, null),
+            new CellBorderSideReport(ExcelBorderStyle.NONE, null),
+            new CellBorderSideReport(ExcelBorderStyle.NONE, null)),
+        new CellProtectionReport(true, false));
   }
 }

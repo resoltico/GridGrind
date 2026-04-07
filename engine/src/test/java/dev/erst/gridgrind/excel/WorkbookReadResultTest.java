@@ -277,21 +277,23 @@ class WorkbookReadResultTest {
   private static ExcelCellStyleSnapshot defaultStyle() {
     return new ExcelCellStyleSnapshot(
         "",
-        false,
-        false,
-        false,
-        ExcelHorizontalAlignment.GENERAL,
-        ExcelVerticalAlignment.BOTTOM,
-        "Aptos",
-        ExcelFontHeight.fromPoints(new BigDecimal("11")),
-        null,
-        false,
-        false,
-        null,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE,
-        ExcelBorderStyle.NONE);
+        new ExcelCellAlignmentSnapshot(
+            false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
+        new ExcelCellFontSnapshot(
+            false,
+            false,
+            "Aptos",
+            ExcelFontHeight.fromPoints(new BigDecimal("11")),
+            null,
+            false,
+            false),
+        new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, null),
+        new ExcelBorderSnapshot(
+            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSide(ExcelBorderStyle.NONE, null)),
+        new ExcelCellProtectionSnapshot(true, false));
   }
 
   private ReadResultFixture createReadResultFixture() {

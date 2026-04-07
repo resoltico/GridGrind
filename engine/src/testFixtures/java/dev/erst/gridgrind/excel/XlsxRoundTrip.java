@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
@@ -204,21 +203,31 @@ public final class XlsxRoundTrip {
           XSSFFont font = style.getFont();
           return new ExcelCellStyleSnapshot(
               WorkbookStyleRegistry.resolveNumberFormat(style.getDataFormatString()),
-              font.getBold(),
-              font.getItalic(),
-              style.getWrapText(),
-              fromPoi(style.getAlignment()),
-              fromPoi(style.getVerticalAlignment()),
-              font.getFontName(),
-              new ExcelFontHeight(font.getFontHeight()),
-              toRgbHex(font.getXSSFColor()),
-              font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
-              font.getStrikeout(),
-              fillColor(style),
-              fromPoi(style.getBorderTop()),
-              fromPoi(style.getBorderRight()),
-              fromPoi(style.getBorderBottom()),
-              fromPoi(style.getBorderLeft()));
+              new ExcelCellAlignmentSnapshot(
+                  style.getWrapText(),
+                  fromPoi(style.getAlignment()),
+                  fromPoi(style.getVerticalAlignment()),
+                  style.getRotation(),
+                  style.getIndention()),
+              new ExcelCellFontSnapshot(
+                  font.getBold(),
+                  font.getItalic(),
+                  font.getFontName(),
+                  new ExcelFontHeight(font.getFontHeight()),
+                  toRgbHex(font.getXSSFColor()),
+                  font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
+                  font.getStrikeout()),
+              fillSnapshot(style),
+              new ExcelBorderSnapshot(
+                  new ExcelBorderSide(
+                      fromPoi(style.getBorderTop()), toRgbHex(style.getTopBorderXSSFColor())),
+                  new ExcelBorderSide(
+                      fromPoi(style.getBorderRight()), toRgbHex(style.getRightBorderXSSFColor())),
+                  new ExcelBorderSide(
+                      fromPoi(style.getBorderBottom()), toRgbHex(style.getBottomBorderXSSFColor())),
+                  new ExcelBorderSide(
+                      fromPoi(style.getBorderLeft()), toRgbHex(style.getLeftBorderXSSFColor()))),
+              new ExcelCellProtectionSnapshot(style.getLocked(), style.getHidden()));
         });
   }
 
@@ -343,11 +352,15 @@ public final class XlsxRoundTrip {
     T read(XSSFSheet sheet);
   }
 
-  private static String fillColor(XSSFCellStyle style) {
-    if (style.getFillPattern() != FillPatternType.SOLID_FOREGROUND) {
-      return null;
+  private static ExcelCellFillSnapshot fillSnapshot(XSSFCellStyle style) {
+    ExcelFillPattern pattern = fromPoi(style.getFillPattern());
+    if (pattern == ExcelFillPattern.NONE) {
+      return new ExcelCellFillSnapshot(pattern, null, null);
     }
-    return toRgbHex(style.getFillForegroundColorColor());
+    return new ExcelCellFillSnapshot(
+        pattern,
+        toRgbHex(style.getFillForegroundColorColor()),
+        pattern == ExcelFillPattern.SOLID ? null : toRgbHex(style.getFillBackgroundColorColor()));
   }
 
   private static ExcelHyperlink hyperlink(XSSFCell cell) {
@@ -422,5 +435,29 @@ public final class XlsxRoundTrip {
 
   private static ExcelBorderStyle fromPoi(BorderStyle borderStyle) {
     return ExcelBorderStyle.valueOf(borderStyle.name());
+  }
+
+  private static ExcelFillPattern fromPoi(org.apache.poi.ss.usermodel.FillPatternType pattern) {
+    return switch (pattern) {
+      case NO_FILL -> ExcelFillPattern.NONE;
+      case SOLID_FOREGROUND -> ExcelFillPattern.SOLID;
+      case FINE_DOTS -> ExcelFillPattern.FINE_DOTS;
+      case ALT_BARS -> ExcelFillPattern.ALT_BARS;
+      case SPARSE_DOTS -> ExcelFillPattern.SPARSE_DOTS;
+      case THICK_HORZ_BANDS -> ExcelFillPattern.THICK_HORIZONTAL_BANDS;
+      case THICK_VERT_BANDS -> ExcelFillPattern.THICK_VERTICAL_BANDS;
+      case THICK_BACKWARD_DIAG -> ExcelFillPattern.THICK_BACKWARD_DIAGONAL;
+      case THICK_FORWARD_DIAG -> ExcelFillPattern.THICK_FORWARD_DIAGONAL;
+      case BIG_SPOTS -> ExcelFillPattern.BIG_SPOTS;
+      case BRICKS -> ExcelFillPattern.BRICKS;
+      case THIN_HORZ_BANDS -> ExcelFillPattern.THIN_HORIZONTAL_BANDS;
+      case THIN_VERT_BANDS -> ExcelFillPattern.THIN_VERTICAL_BANDS;
+      case THIN_BACKWARD_DIAG -> ExcelFillPattern.THIN_BACKWARD_DIAGONAL;
+      case THIN_FORWARD_DIAG -> ExcelFillPattern.THIN_FORWARD_DIAGONAL;
+      case SQUARES -> ExcelFillPattern.SQUARES;
+      case DIAMONDS -> ExcelFillPattern.DIAMONDS;
+      case LESS_DOTS -> ExcelFillPattern.LESS_DOTS;
+      case LEAST_DOTS -> ExcelFillPattern.LEAST_DOTS;
+    };
   }
 }

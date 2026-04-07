@@ -3,9 +3,14 @@ package dev.erst.gridgrind.protocol.exec;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelRichText;
+import dev.erst.gridgrind.excel.ExcelRichTextRun;
+import dev.erst.gridgrind.protocol.dto.CellFontInput;
 import dev.erst.gridgrind.protocol.dto.CellInput;
+import dev.erst.gridgrind.protocol.dto.RichTextRunInput;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Tests for CellInput record construction and ExcelCellValue conversion. */
@@ -21,6 +26,27 @@ class CellInputTest {
             ExcelCellValue.TextValue.class,
             WorkbookCommandConverter.toExcelCellValue(new CellInput.Text("Budget")));
     assertEquals("Budget", textValue.value());
+
+    ExcelCellValue.RichTextValue richTextValue =
+        assertInstanceOf(
+            ExcelCellValue.RichTextValue.class,
+            WorkbookCommandConverter.toExcelCellValue(
+                new CellInput.RichText(
+                    List.of(
+                        new RichTextRunInput("Budget", null),
+                        new RichTextRunInput(
+                            " FY26",
+                            new CellFontInput(
+                                Boolean.TRUE, null, null, null, "#AABBCC", null, null))))));
+    assertEquals(
+        new ExcelRichText(
+            List.of(
+                new ExcelRichTextRun("Budget", null),
+                new ExcelRichTextRun(
+                    " FY26",
+                    new dev.erst.gridgrind.excel.ExcelCellFont(
+                        Boolean.TRUE, null, null, null, "#AABBCC", null, null)))),
+        richTextValue.value());
 
     ExcelCellValue.NumberValue numberValue =
         assertInstanceOf(
@@ -65,6 +91,11 @@ class CellInputTest {
   @Test
   void validatesTypedInputRequirements() {
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Text(null));
+    assertThrows(IllegalArgumentException.class, () -> new CellInput.RichText(null));
+    assertThrows(IllegalArgumentException.class, () -> new CellInput.RichText(List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellInput.RichText(List.of(new RichTextRunInput("", null))));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Numeric(null));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.BooleanValue(null));
     assertThrows(IllegalArgumentException.class, () -> new CellInput.Formula(null));

@@ -3,6 +3,9 @@ package dev.erst.gridgrind.jazzer.support;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import dev.erst.gridgrind.excel.ExcelBorder;
+import dev.erst.gridgrind.excel.ExcelCellAlignment;
+import dev.erst.gridgrind.excel.ExcelCellFill;
+import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelComment;
@@ -21,7 +24,10 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
+import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
+import dev.erst.gridgrind.excel.ExcelRichText;
+import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -74,17 +80,11 @@ class XlsxRoundTripVerifierTest {
                 "A1",
                 new ExcelCellStyle(
                     null,
+                    new ExcelCellAlignment(
+                        null, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, null, null),
                     null,
+                    new ExcelCellFill(ExcelFillPattern.SOLID, "#AABBCC", null),
                     null,
-                    null,
-                    ExcelHorizontalAlignment.CENTER,
-                    ExcelVerticalAlignment.TOP,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    "#AABBCC",
                     null)),
             new WorkbookCommand.SetCell("Sheet1", "A1", ExcelCellValue.text("reset")));
 
@@ -106,18 +106,18 @@ class XlsxRoundTripVerifierTest {
                 new ExcelCellStyle(
                     null,
                     null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    "Aptos",
-                    ExcelFontHeight.fromPoints(new BigDecimal("15.2")),
-                    "#A3A3A3",
-                    null,
-                    Boolean.TRUE,
-                    "#CDCDCD",
+                    new ExcelCellFont(
+                        null,
+                        null,
+                        "Aptos",
+                        ExcelFontHeight.fromPoints(new BigDecimal("15.2")),
+                        "#A3A3A3",
+                        null,
+                        Boolean.TRUE),
+                    new ExcelCellFill(ExcelFillPattern.SOLID, "#CDCDCD", null),
                     new ExcelBorder(
-                        new ExcelBorderSide(ExcelBorderStyle.DASH_DOT), null, null, null, null))),
+                        new ExcelBorderSide(ExcelBorderStyle.DASH_DOT), null, null, null, null),
+                    null)),
             new WorkbookCommand.AppendRow(
                 "X",
                 List.of(ExcelCellValue.number(607.8483822864587), ExcelCellValue.bool(false))));
@@ -144,23 +144,16 @@ class XlsxRoundTripVerifierTest {
                 "A1:B2",
                 new ExcelCellStyle(
                     "0.00",
-                    Boolean.TRUE,
-                    null,
-                    Boolean.TRUE,
-                    null,
-                    ExcelVerticalAlignment.CENTER,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    "#603A79",
+                    new ExcelCellAlignment(Boolean.TRUE, null, ExcelVerticalAlignment.CENTER, null, null),
+                    new ExcelCellFont(null, Boolean.TRUE, null, null, null, null, null),
+                    new ExcelCellFill(ExcelFillPattern.SOLID, "#603A79", null),
                     new ExcelBorder(
                         new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
                         null,
                         new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
                         null,
-                        null))),
+                        null),
+                    null)),
             new WorkbookCommand.AppendRow(
                 "E",
                 List.of(
@@ -179,23 +172,24 @@ class XlsxRoundTripVerifierTest {
     ExcelCellStyle style =
         new ExcelCellStyle(
             null,
-            Boolean.TRUE,
-            Boolean.TRUE,
-            Boolean.TRUE,
-            ExcelHorizontalAlignment.CENTER,
-            ExcelVerticalAlignment.TOP,
-            "Arial",
-            ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
-            "#112233",
-            Boolean.TRUE,
-            Boolean.TRUE,
-            "#445566",
+            new ExcelCellAlignment(
+                Boolean.TRUE, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, null, null),
+            new ExcelCellFont(
+                Boolean.TRUE,
+                Boolean.TRUE,
+                "Arial",
+                ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
+                "#112233",
+                Boolean.TRUE,
+                Boolean.TRUE),
+            new ExcelCellFill(ExcelFillPattern.SOLID, "#445566", null),
             new ExcelBorder(
                 new ExcelBorderSide(ExcelBorderStyle.THIN),
                 null,
                 new ExcelBorderSide(ExcelBorderStyle.DOUBLE),
                 null,
-                null));
+                null),
+            null);
     List<WorkbookCommand> commands =
         List.of(
             new WorkbookCommand.CreateSheet("Sheet1"),
@@ -228,6 +222,47 @@ class XlsxRoundTripVerifierTest {
                     "BudgetTable",
                     new ExcelNamedRangeScope.SheetScope("Sheet1"),
                     new ExcelNamedRangeTarget("Sheet1", "A1:B2"))));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Preserves rich-text runs and inherited font facts through save and reopen. */
+  @Test
+  void requireRoundTripReadable_preservesRichTextRuns(@TempDir Path tempDirectory)
+      throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Budget"),
+            new WorkbookCommand.SetCell(
+                "Budget",
+                "A1",
+                ExcelCellValue.richText(
+                    new ExcelRichText(
+                        List.of(
+                            new ExcelRichTextRun("Budget", null),
+                            new ExcelRichTextRun(
+                                " FY26",
+                                new ExcelCellFont(
+                                    Boolean.TRUE, null, null, null, "#FF0000", null, null)))))),
+            new WorkbookCommand.ApplyStyle(
+                "Budget",
+                "A1",
+                new ExcelCellStyle(
+                    null,
+                    null,
+                    new ExcelCellFont(
+                        null,
+                        Boolean.TRUE,
+                        "Aptos",
+                        new ExcelFontHeight(260),
+                        "#112233",
+                        null,
+                        null),
+                    null,
+                    null,
+                    null)));
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 

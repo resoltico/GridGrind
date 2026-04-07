@@ -3,7 +3,9 @@ package dev.erst.gridgrind.protocol.json;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.protocol.catalog.Catalog;
 import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.protocol.catalog.TypeEntry;
@@ -118,6 +120,104 @@ class GridGrindJsonTest {
     assertEquals(expected, streamDecoded);
     assertEquals(expected, actual);
     assertArrayEquals(encoded, outputStream.toByteArray());
+  }
+
+  @Test
+  void roundTripsRichTextRequestsAndResponses() throws IOException {
+    GridGrindRequest request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "source": { "type": "NEW" },
+              "operations": [
+                {
+                  "type": "SET_CELL",
+                  "sheetName": "Narrative",
+                  "address": "A1",
+                  "value": {
+                    "type": "RICH_TEXT",
+                    "runs": [
+                      { "text": "Q2 " },
+                      {
+                        "text": "Budget",
+                        "font": {
+                          "bold": true,
+                          "fontColor": "#C00000"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ],
+              "reads": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    WorkbookOperation.SetCell setCell =
+        assertInstanceOf(WorkbookOperation.SetCell.class, request.operations().getFirst());
+    CellInput.RichText richText = assertInstanceOf(CellInput.RichText.class, setCell.value());
+
+    assertEquals("Narrative", setCell.sheetName());
+    assertEquals("A1", setCell.address());
+    assertEquals(2, richText.runs().size());
+    assertEquals("Q2 ", richText.runs().get(0).text());
+    assertNull(richText.runs().get(0).font());
+    assertEquals("Budget", richText.runs().get(1).text());
+    assertTrue(richText.runs().get(1).font().bold());
+    assertEquals("#C00000", richText.runs().get(1).font().fontColor());
+    String requestJson =
+        new String(GridGrindJson.writeRequestBytes(request), StandardCharsets.UTF_8);
+
+    CellFontReport baseRunFont = defaultCellStyleReport().font();
+    GridGrindResponse expected =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            List.of(
+                new WorkbookReadResult.CellsResult(
+                    "cells",
+                    "Narrative",
+                    List.of(
+                        new GridGrindResponse.CellReport.TextReport(
+                            "A1",
+                            "STRING",
+                            "Q2 Budget",
+                            defaultCellStyleReport(),
+                            null,
+                            null,
+                            "Q2 Budget",
+                            List.of(
+                                new RichTextRunReport("Q2 ", baseRunFont),
+                                new RichTextRunReport(
+                                    "Budget",
+                                    new CellFontReport(
+                                        true,
+                                        baseRunFont.italic(),
+                                        baseRunFont.fontName(),
+                                        baseRunFont.fontHeight(),
+                                        "#C00000",
+                                        baseRunFont.underline(),
+                                        baseRunFont.strikeout()))))))));
+
+    byte[] encoded = GridGrindJson.writeResponseBytes(expected);
+    String json = new String(encoded, StandardCharsets.UTF_8);
+    GridGrindResponse.Success actual =
+        assertInstanceOf(GridGrindResponse.Success.class, GridGrindJson.readResponse(encoded));
+    WorkbookReadResult.CellsResult cells =
+        assertInstanceOf(WorkbookReadResult.CellsResult.class, actual.reads().getFirst());
+    GridGrindResponse.CellReport.TextReport cell =
+        assertInstanceOf(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst());
+
+    assertTrue(requestJson.contains("\"type\" : \"RICH_TEXT\""));
+    assertTrue(json.contains("\"richText\""));
+    assertEquals("Q2 Budget", cell.stringValue());
+    assertNotNull(cell.richText());
+    assertEquals(2, cell.richText().size());
+    assertEquals("Q2 ", cell.richText().get(0).text());
+    assertEquals("Budget", cell.richText().get(1).text());
+    assertTrue(cell.richText().get(1).font().bold());
+    assertEquals("#C00000", cell.richText().get(1).font().fontColor());
   }
 
   @Test
@@ -240,9 +340,14 @@ class GridGrindJsonTest {
                   "sheetName": "Summary",
                   "range": "A1",
                   "style": {
-                    "fontName": "Aptos",
-                    "fontHeight": { "type": "POINTS", "points": 11.5 },
-                    "fillColor": "#fff2cc",
+                    "font": {
+                      "fontName": "Aptos",
+                      "fontHeight": { "type": "POINTS", "points": 11.5 }
+                    },
+                    "fill": {
+                      "pattern": "SOLID",
+                      "foregroundColor": "#fff2cc"
+                    },
                     "border": {
                       "all": { "style": "THIN" },
                       "right": { "style": "DOUBLE" }
@@ -276,11 +381,12 @@ class GridGrindJsonTest {
 
     WorkbookOperation.ApplyStyle applyStyle =
         (WorkbookOperation.ApplyStyle) request.operations().get(2);
-    assertEquals("Aptos", applyStyle.style().fontName());
+    assertEquals("Aptos", applyStyle.style().font().fontName());
     assertEquals(
         new BigDecimal("11.5"),
-        assertInstanceOf(FontHeightInput.Points.class, applyStyle.style().fontHeight()).points());
-    assertEquals("#FFF2CC", applyStyle.style().fillColor());
+        assertInstanceOf(FontHeightInput.Points.class, applyStyle.style().font().fontHeight())
+            .points());
+    assertEquals("#FFF2CC", applyStyle.style().fill().foregroundColor());
     assertEquals(ExcelBorderStyle.THIN, applyStyle.style().border().all().style());
     assertEquals(ExcelBorderStyle.DOUBLE, applyStyle.style().border().right().style());
   }
@@ -505,11 +611,11 @@ class GridGrindJsonTest {
                     {"type":"GET_WINDOW","requestId":"window","window":{"sheetName":"Budget","topLeftAddress":"A1",\
                     "rowCount":1,"columnCount":1,"rows":[{"rowIndex":0,"cells":[{"effectiveType":"BLANK",\
                     "address":"A1","declaredType":"BLANK","displayValue":"","style":{"numberFormat":null,\
-                    "bold":false,"italic":false,"wrapText":false,"horizontalAlignment":"GENERAL",\
-                    "verticalAlignment":"BOTTOM","fontName":"Calibri","fontHeight":{"twips":220,"points":11},\
-                    "fontColor":null,"underline":false,"strikeout":false,"fillColor":null,\
-                    "topBorderStyle":"NONE","rightBorderStyle":"NONE","bottomBorderStyle":"NONE",\
-                    "leftBorderStyle":"NONE"}}]}]}}]}"""
+                    "alignment":{"wrapText":false,"horizontalAlignment":"GENERAL","verticalAlignment":"BOTTOM","textRotation":0,"indentation":0},\
+                    "font":{"bold":false,"italic":false,"fontName":"Calibri","fontHeight":{"twips":220,"points":11},"fontColor":null,"underline":false,"strikeout":false},\
+                    "fill":{"pattern":"NONE","foregroundColor":null,"backgroundColor":null},\
+                    "border":{"top":{"style":"NONE","color":null},"right":{"style":"NONE","color":null},"bottom":{"style":"NONE","color":null},"left":{"style":"NONE","color":null}},\
+                    "protection":{"locked":true,"hiddenFormula":false}}}]}]}}]}"""
                         .getBytes(StandardCharsets.UTF_8)));
 
     assertNotNull(failure.getMessage());
@@ -1071,6 +1177,28 @@ class GridGrindJsonTest {
     private SyntheticJacksonException(String message, TokenStreamLocation location) {
       super(message, location, null);
     }
+  }
+
+  private static GridGrindResponse.CellStyleReport defaultCellStyleReport() {
+    return new GridGrindResponse.CellStyleReport(
+        "General",
+        new CellAlignmentReport(
+            true, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, 0, 0),
+        new CellFontReport(
+            true,
+            false,
+            "Aptos",
+            new FontHeightReport(230, new BigDecimal("11.5")),
+            "#1F4E78",
+            true,
+            false),
+        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.SOLID, "#FFF2CC", null),
+        new CellBorderReport(
+            new CellBorderSideReport(ExcelBorderStyle.THIN, null),
+            new CellBorderSideReport(ExcelBorderStyle.DOUBLE, null),
+            new CellBorderSideReport(ExcelBorderStyle.THIN, null),
+            new CellBorderSideReport(ExcelBorderStyle.THIN, null)),
+        new CellProtectionReport(true, false));
   }
 
   private static SheetProtectionSettings protectionSettings() {

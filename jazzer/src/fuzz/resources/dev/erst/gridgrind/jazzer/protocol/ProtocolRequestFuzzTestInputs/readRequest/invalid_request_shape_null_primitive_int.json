@@ -8,7 +8,9 @@
       "sheetName": "Sheet1",
       "range": "A1",
       "style": {
-        "fontHeight": { "type": "TWIPS", "twips": null }
+        "font": {
+          "fontHeight": { "type": "TWIPS", "twips": null }
+        }
       }
     }
   ],

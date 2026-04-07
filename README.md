@@ -45,7 +45,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.29.0
+docker pull ghcr.io/resoltico/gridgrind:0.30.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -193,7 +193,7 @@ translation boundary into the Apache-POI-backed workbook engine.
 | `CLEAR_HYPERLINK` | Remove a hyperlink from a cell; no-op when the cell does not exist |
 | `SET_COMMENT` | Attach a plain-text comment to a single cell |
 | `CLEAR_COMMENT` | Remove a comment from a cell; no-op when the cell does not exist |
-| `APPLY_STYLE` | Apply number formats, font styling, fills, borders, alignment, or wrap to a range |
+| `APPLY_STYLE` | Apply nested `numberFormat`/`alignment`/`font`/`fill`/`border`/`protection` style patches to a range |
 | `SET_DATA_VALIDATION` | Create or replace one data-validation rule over a sheet range |
 | `CLEAR_DATA_VALIDATIONS` | Remove data-validation coverage from selected ranges or an entire sheet |
 | `SET_CONDITIONAL_FORMATTING` | Create or replace one logical conditional-formatting block over one or more ranges |
@@ -209,7 +209,8 @@ translation boundary into the Apache-POI-backed workbook engine.
 | `EVALUATE_FORMULAS` | Force formula recalculation before save |
 | `FORCE_FORMULA_RECALCULATION_ON_OPEN` | Mark the workbook to recalculate when opened in Excel |
 
-Cell values accept types: `TEXT`, `NUMBER`, `BOOLEAN`, `FORMULA`, `DATE`, `DATE_TIME`, `BLANK`.
+Cell values accept types: `TEXT`, `RICH_TEXT`, `NUMBER`, `BOOLEAN`, `FORMULA`, `DATE`,
+`DATE_TIME`, `BLANK`.
 
 Sheet-management operations use strict semantics: missing sheets fail, `MOVE_SHEET.targetIndex`
 is zero-based, and `RENAME_SHEET` requires a valid destination name that does not conflict with
@@ -244,11 +245,22 @@ delete and shift operations reject destructive range-backed named-range rewrites
 structural edits still reject workbooks that contain formulas or formula-defined names because
 Apache POI leaves some column references stale after column moves.
 
-`APPLY_STYLE` supports number formats, bold/italic, wrap, horizontal and vertical alignment,
-`fontName`, typed `fontHeight`, `fontColor`, `underline`, `strikeout`, `fillColor`, and per-side
-border styles through a nested `border` patch. `fontHeight` accepts either point units or exact
-twips. Style analysis reports `fontHeight.twips` and `fontHeight.points` alongside the other
-effective font, fill, and border facts.
+`APPLY_STYLE` uses one nested style contract with `numberFormat`, `alignment`, `font`, `fill`,
+`border`, and `protection` groups. Alignment patches cover wrap, horizontal or vertical
+alignment, text rotation, and indentation. Font patches cover bold, italic, `fontName`, typed
+`fontHeight`, `fontColor`, `underline`, and `strikeout`. Fill patches cover solid and patterned
+fills with explicit foreground or background colors. Border patches support per-side styles plus
+RGB colors, but a border color is only valid when that side has a visible style directly or via
+`border.all`, and protection patches cover `locked` and `hiddenFormula`. Style reads in
+`GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` mirror that nested shape; the read-side
+`style.font.fontHeight` object reports both exact `twips` and human-friendly `points`.
+
+`RICH_TEXT` is a typed cell-value family rather than a markup convention. It writes an ordered,
+non-empty `runs` list, each run carrying plain `text` plus an optional nested font patch
+(`fontName`, `fontHeight`, `bold`, `italic`, `underline`, `strikeout`, `fontColor`). Zero-length
+runs are rejected. String reads through `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` now
+return the plain `stringValue` plus optional structured `richText` runs when the stored cell
+contains authored rich text.
 
 Authoring metadata is also supported directly. `SET_HYPERLINK` and `CLEAR_HYPERLINK`
 work on one cell at a time with typed `URL`, `EMAIL`, `FILE`, or `DOCUMENT` targets. `FILE`
@@ -353,6 +365,8 @@ one sheet. Row and column entries now include explicit size plus `hidden`, `outl
 `collapsed` where Excel exposes that state. `GET_PRINT_LAYOUT` returns the supported print-area,
 orientation, scaling, repeating-row, repeating-column, and plain header or footer text state for
 one sheet.
+String cell reads now expose `stringValue` plus optional `richText` runs in the same response
+family, so no separate rich-text read call is needed.
 `GET_HYPERLINKS` returns hyperlinks in the same discriminated shape used by `SET_HYPERLINK`
 targets. `FILE` targets come back in the `path` field as normalized plain path strings.
 `GET_DATA_VALIDATIONS` returns supported validation entries plus typed unsupported entries for the
@@ -384,8 +398,11 @@ For large sheets, use `GET_SHEET_SUMMARY` to discover the populated region and t
 multiple bounded window reads. See [docs/LIMITATIONS.md](docs/LIMITATIONS.md) for the full limit
 reference.
 
-The runnable example set now includes [examples/sheet-management-request.json](examples/sheet-management-request.json)
-for B1 sheet copy, active and selected sheet state, visibility, protection, and summary reads.
+The runnable example set now includes
+[examples/sheet-management-request.json](examples/sheet-management-request.json) for B1 sheet
+copy, active and selected sheet state, visibility, protection, and summary reads, plus
+[examples/rich-text-request.json](examples/rich-text-request.json) for structured `RICH_TEXT`
+authoring and read-back through existing cell introspection.
 
 ---
 
@@ -434,15 +451,27 @@ A request that builds Alice's green coffee inventory sheet:
       "sheetName": "Inventory",
       "range": "A1:C1",
       "style": {
-        "bold": true,
-        "fontName": "Aptos",
-        "fontHeight": { "type": "POINTS", "points": 13 },
-        "fontColor": "#FFFFFF",
-        "fillColor": "#1F4E78",
-        "horizontalAlignment": "CENTER",
-        "verticalAlignment": "CENTER",
+        "alignment": {
+          "horizontalAlignment": "CENTER",
+          "verticalAlignment": "CENTER",
+          "textRotation": 15
+        },
+        "font": {
+          "bold": true,
+          "fontName": "Aptos",
+          "fontHeight": { "type": "POINTS", "points": 13 },
+          "fontColor": "#FFFFFF"
+        },
+        "fill": {
+          "pattern": "THIN_HORIZONTAL_BANDS",
+          "foregroundColor": "#1F4E78",
+          "backgroundColor": "#D9E2F3"
+        },
         "border": {
-          "all": { "style": "THIN" }
+          "all": { "style": "THIN", "color": "#FFFFFF" }
+        },
+        "protection": {
+          "locked": true
         }
       }
     },

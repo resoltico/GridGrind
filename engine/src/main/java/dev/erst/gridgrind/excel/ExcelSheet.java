@@ -19,6 +19,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 /** High-level sheet wrapper for typed reads, writes, and previews. */
@@ -809,6 +810,9 @@ public final class ExcelSheet {
     switch (value) {
       case ExcelCellValue.BlankValue _ -> cell.setBlank();
       case ExcelCellValue.TextValue textValue -> cell.setCellValue(textValue.value());
+      case ExcelCellValue.RichTextValue richTextValue ->
+          cell.setCellValue(
+              ExcelRichTextSupport.toPoiRichText(xssfSheet().getWorkbook(), richTextValue.value()));
       case ExcelCellValue.NumberValue numberValue -> cell.setCellValue(numberValue.value());
       case ExcelCellValue.BooleanValue booleanValue -> cell.setCellValue(booleanValue.value());
       case ExcelCellValue.DateValue dateValue -> {
@@ -932,7 +936,8 @@ public final class ExcelSheet {
                     displayValue,
                     style,
                     metadata,
-                    evaluatedCell.getStringValue());
+                    evaluatedCell.getStringValue(),
+                    null);
             case NUMERIC ->
                 new ExcelCellSnapshot.NumberSnapshot(
                     address,
@@ -968,7 +973,16 @@ public final class ExcelSheet {
     return switch (declaredType) {
       case STRING ->
           new ExcelCellSnapshot.TextSnapshot(
-              address, "STRING", displayValue, style, metadata, cell.getStringCellValue());
+              address,
+              "STRING",
+              displayValue,
+              style,
+              metadata,
+              cell.getStringCellValue(),
+              ExcelRichTextSupport.snapshot(
+                  xssfSheet().getWorkbook(),
+                  (XSSFRichTextString) cell.getRichStringCellValue(),
+                  style.font()));
       case NUMERIC ->
           new ExcelCellSnapshot.NumberSnapshot(
               address, "NUMBER", displayValue, style, metadata, cell.getNumericCellValue());

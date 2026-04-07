@@ -5,6 +5,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.30.0] - 2026-04-07
+
+### Added
+
+- Style-system expansion: `APPLY_STYLE` and cell-style reads now expose a nested style contract
+  with `numberFormat`, `alignment`, `font`, `fill`, `border`, and `protection` groups. The
+  shipped style surface now includes text rotation, indentation, cell `locked` and
+  `hiddenFormula` flags, per-side border colors, and patterned fills with foreground or
+  background colors.
+- Rich-text cell authoring: `SET_CELL`, `SET_RANGE`, and `APPEND_ROW` now accept typed
+  `RICH_TEXT` values with ordered runs and optional per-run font overrides.
+- String cell reads in `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` now surface optional
+  structured `richText` runs alongside `stringValue`, so authored rich text round-trips through
+  the existing cell-introspection surface instead of a separate read family.
+
+### Changed
+
+- Public request examples, README snippets, and committed Jazzer protocol-request seeds now use
+  the nested `APPLY_STYLE` JSON shape instead of the old flat style fields, so docs, examples,
+  and deterministic replay all reflect the live public contract.
+- Jazzer style generation, style-kind coverage telemetry, protocol response invariants, and
+  `.xlsx` reopen verification now operate on the full nested style model rather than a flat
+  subset.
+- Jazzer typed-value generation, protocol invariants, and `.xlsx` reopen verification now assert
+  rich-text persistence explicitly, including run ordering, non-empty run text, concatenation
+  back to `stringValue`, and effective per-run font facts on read-back.
+- Border color patches now require an effective visible border style on the same side, either set
+  directly or inherited from `border.all`, instead of tolerating color-only states that Excel does
+  not model as a visible border.
+
+### Fixed
+
+- `APPLY_STYLE` border patches that clear a side or `border.all` back to `NONE` no longer crash on
+  workbooks whose underlying border XML already has no stored color entry. Border-color clearing
+  now avoids POI's unsafe unset path when there is no color to remove, and the case is locked into
+  deterministic `.xlsx` round-trip regression coverage.
+
 ## [0.29.0] - 2026-04-07
 
 ### Added
@@ -1009,7 +1046,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.29.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.30.0...HEAD
+[0.30.0]: https://github.com/resoltico/GridGrind/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/resoltico/GridGrind/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/resoltico/GridGrind/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/resoltico/GridGrind/compare/v0.26.0...v0.27.0

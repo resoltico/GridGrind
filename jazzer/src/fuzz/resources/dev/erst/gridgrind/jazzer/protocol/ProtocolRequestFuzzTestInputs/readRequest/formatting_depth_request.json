@@ -43,16 +43,30 @@
       "sheetName": "Styled Report",
       "range": "A1:D1",
       "style": {
-        "bold": true,
-        "wrapText": true,
-        "horizontalAlignment": "CENTER",
-        "verticalAlignment": "CENTER",
-        "fontName": "Aptos",
-        "fontHeight": { "type": "POINTS", "points": 13 },
-        "fontColor": "#FFFFFF",
-        "fillColor": "#1F4E78",
+        "alignment": {
+          "wrapText": true,
+          "horizontalAlignment": "CENTER",
+          "verticalAlignment": "CENTER",
+          "textRotation": 15
+        },
+        "font": {
+          "bold": true,
+          "fontName": "Aptos",
+          "fontHeight": { "type": "POINTS", "points": 13 },
+          "fontColor": "#FFFFFF"
+        },
+        "fill": {
+          "pattern": "THIN_HORIZONTAL_BANDS",
+          "foregroundColor": "#1F4E78",
+          "backgroundColor": "#D9E2F3"
+        },
         "border": {
-          "all": { "style": "THIN" }
+          "all": { "style": "THIN", "color": "#FFFFFF" },
+          "bottom": { "style": "DOUBLE", "color": "#D9E2F3" }
+        },
+        "protection": {
+          "locked": true,
+          "hiddenFormula": false
         }
       }
     },
@@ -62,7 +76,13 @@
       "range": "C2:D4",
       "style": {
         "numberFormat": "#,##0.00",
-        "horizontalAlignment": "RIGHT"
+        "alignment": {
+          "horizontalAlignment": "RIGHT",
+          "indentation": 1
+        },
+        "protection": {
+          "locked": false
+        }
       }
     },
     {
@@ -70,14 +90,27 @@
       "sheetName": "Styled Report",
       "range": "A4:D4",
       "style": {
-        "bold": true,
-        "fontName": "Aptos",
-        "fontHeight": { "type": "TWIPS", "twips": 240 },
-        "fontColor": "#1F1F1F",
-        "fillColor": "#FFF2CC",
+        "alignment": {
+          "horizontalAlignment": "RIGHT",
+          "verticalAlignment": "CENTER"
+        },
+        "font": {
+          "bold": true,
+          "fontName": "Aptos",
+          "fontHeight": { "type": "TWIPS", "twips": 240 },
+          "fontColor": "#1F1F1F"
+        },
+        "fill": {
+          "pattern": "SOLID",
+          "foregroundColor": "#FFF2CC"
+        },
         "border": {
-          "all": { "style": "THIN" },
-          "top": { "style": "DOUBLE" }
+          "all": { "style": "THIN", "color": "#BF9000" },
+          "top": { "style": "DOUBLE", "color": "#7F6000" }
+        },
+        "protection": {
+          "locked": true,
+          "hiddenFormula": true
         }
       }
     },

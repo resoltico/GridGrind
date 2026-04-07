@@ -508,8 +508,13 @@ class GridGrindProtocolCatalogTest {
             "namedRangeTargetType",
             "sheetProtectionSettingsType",
             "cellStyleInputType",
+            "cellAlignmentInputType",
+            "cellFontInputType",
+            "richTextRunInputType",
+            "cellFillInputType",
             "cellBorderInputType",
             "cellBorderSideInputType",
+            "cellProtectionInputType",
             "dataValidationInputType",
             "dataValidationPromptInputType",
             "dataValidationErrorAlertInputType",
@@ -524,6 +529,14 @@ class GridGrindProtocolCatalogTest {
   }
 
   private static void assertCatalogFieldShapes(Catalog catalog) {
+    assertCatalogCoreFieldShapes(catalog);
+    assertCatalogStyleFieldShapes(catalog);
+    assertCatalogValidationAndTableFieldShapes(catalog);
+    assertCatalogConditionalFormattingFieldShapes(catalog);
+    assertCatalogPrintAndPaneFieldShapes(catalog);
+  }
+
+  private static void assertCatalogCoreFieldShapes(Catalog catalog) {
     PlainTypeGroup commentGroup = plainGroup(catalog, "commentInputType");
     assertEquals(FieldRequirement.REQUIRED, fieldNamed(commentGroup.type(), "text").requirement());
     assertEquals(
@@ -568,7 +581,7 @@ class GridGrindProtocolCatalogTest {
 
     FieldEntry borderStyleField =
         fieldNamed(plainGroup(catalog, "cellBorderSideInputType").type(), "style");
-    assertEquals(FieldRequirement.REQUIRED, borderStyleField.requirement());
+    assertEquals(FieldRequirement.OPTIONAL, borderStyleField.requirement());
     assertFalse(
         borderStyleField.enumValues().isEmpty(),
         "cellBorderSideInputType should expose enum values for 'style'");
@@ -578,21 +591,57 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         borderStyleField.enumValues().contains("NONE"),
         "border style enum values should include NONE");
+  }
 
+  private static void assertCatalogStyleFieldShapes(Catalog catalog) {
     PlainTypeGroup styleGroup = plainGroup(catalog, "cellStyleInputType");
-    assertTrue(
-        fieldNamed(styleGroup.type(), "horizontalAlignment").enumValues().contains("GENERAL"),
-        "horizontalAlignment enum values should include GENERAL");
-    assertTrue(
-        fieldNamed(styleGroup.type(), "verticalAlignment").enumValues().contains("BOTTOM"),
-        "verticalAlignment enum values should include BOTTOM");
     assertEquals(
-        new FieldShape.NestedTypeGroupRef("fontHeightTypes"),
-        fieldNamed(styleGroup.type(), "fontHeight").shape());
+        new FieldShape.PlainTypeGroupRef("cellAlignmentInputType"),
+        fieldNamed(styleGroup.type(), "alignment").shape());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("cellFontInputType"),
+        fieldNamed(styleGroup.type(), "font").shape());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("cellFillInputType"),
+        fieldNamed(styleGroup.type(), "fill").shape());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("cellProtectionInputType"),
+        fieldNamed(styleGroup.type(), "protection").shape());
     assertEquals(
         new FieldShape.PlainTypeGroupRef("cellBorderInputType"),
         fieldNamed(styleGroup.type(), "border").shape());
 
+    PlainTypeGroup alignmentGroup = plainGroup(catalog, "cellAlignmentInputType");
+    assertTrue(
+        fieldNamed(alignmentGroup.type(), "horizontalAlignment").enumValues().contains("GENERAL"),
+        "horizontalAlignment enum values should include GENERAL");
+    assertTrue(
+        fieldNamed(alignmentGroup.type(), "verticalAlignment").enumValues().contains("BOTTOM"),
+        "verticalAlignment enum values should include BOTTOM");
+
+    PlainTypeGroup fontGroup = plainGroup(catalog, "cellFontInputType");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("fontHeightTypes"),
+        fieldNamed(fontGroup.type(), "fontHeight").shape());
+
+    TypeEntry richTextEntry = nestedTypeEntry(catalog, "cellInputTypes", "RICH_TEXT");
+    assertEquals(
+        new FieldShape.ListShape(new FieldShape.PlainTypeGroupRef("richTextRunInputType")),
+        fieldNamed(richTextEntry, "runs").shape());
+
+    PlainTypeGroup richTextRunGroup = plainGroup(catalog, "richTextRunInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("cellFontInputType"),
+        fieldNamed(richTextRunGroup.type(), "font").shape());
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(richTextRunGroup.type(), "font").requirement());
+
+    PlainTypeGroup fillGroup = plainGroup(catalog, "cellFillInputType");
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(fillGroup.type(), "backgroundColor").requirement());
+  }
+
+  private static void assertCatalogValidationAndTableFieldShapes(Catalog catalog) {
     PlainTypeGroup validationGroup = plainGroup(catalog, "dataValidationInputType");
     assertEquals(
         new FieldShape.NestedTypeGroupRef("dataValidationRuleTypes"),
@@ -630,7 +679,9 @@ class GridGrindProtocolCatalogTest {
     FieldEntry tableStyleName =
         fieldNamed(nestedTypeEntry(catalog, "tableStyleTypes", "NAMED"), "name");
     assertEquals(new FieldShape.Scalar(ScalarType.STRING), tableStyleName.shape());
+  }
 
+  private static void assertCatalogConditionalFormattingFieldShapes(Catalog catalog) {
     PlainTypeGroup conditionalFormattingBlockGroup =
         plainGroup(catalog, "conditionalFormattingBlockInputType");
     assertEquals(
@@ -656,8 +707,6 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         conditionalFormattingOperatorField.enumValues().contains("BETWEEN"),
         "conditional-formatting operator enum values should include BETWEEN");
-
-    assertCatalogPrintAndPaneFieldShapes(catalog);
   }
 
   private static void assertCatalogPrintAndPaneFieldShapes(Catalog catalog) {
@@ -859,6 +908,11 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         nestedTypeEntry(catalog, "cellInputTypes", "DATE").summary().contains("NUMBER"),
         "DATE summary must note that read-back declaredType is NUMBER");
+    assertTrue(
+        nestedTypeEntry(catalog, "cellInputTypes", "RICH_TEXT")
+            .summary()
+            .contains("ordered rich-text run list"),
+        "RICH_TEXT summary must describe ordered run authoring");
     assertTrue(
         entryNamed(catalog.operationTypes(), "SET_SHEET_PANE")
             .summary()

@@ -4,5 +4,5 @@ Harness: xlsx-roundtrip
 Outcome: SUCCESS
 Input Bytes: 228
 Command Count: 2
-Style Kinds: border=1, border_right=1, fill_color=1, border_all=1
+Style Kinds: fill_patterned=1, locked=1, fill=1, fill_pattern=1, protection=1, fill_color=1, hidden_formula=1, fill_foreground_color=1, fill_background_color=1
 Command Kinds: APPLY_STYLE=1, CREATE_SHEET=1

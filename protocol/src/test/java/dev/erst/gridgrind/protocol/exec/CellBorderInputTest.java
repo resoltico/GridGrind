@@ -40,9 +40,12 @@ class CellBorderInputTest {
 
   @Test
   void validatesBorderPatchRequirements() {
-    assertThrows(NullPointerException.class, () -> new CellBorderSideInput(null));
+    assertThrows(IllegalArgumentException.class, () -> new CellBorderSideInput(null));
     assertThrows(
         IllegalArgumentException.class, () -> new CellBorderInput(null, null, null, null, null));
+    CellBorderSideInput colorOnly = new CellBorderSideInput(null, "#a1b2c3");
+    assertNull(colorOnly.style());
+    assertEquals("#A1B2C3", colorOnly.color());
     assertEquals(
         ExcelBorderStyle.THIN,
         WorkbookCommandConverter.toExcelBorder(

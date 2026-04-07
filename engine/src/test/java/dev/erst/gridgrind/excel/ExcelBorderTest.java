@@ -42,8 +42,19 @@ class ExcelBorderTest {
 
   @Test
   void validatesBorderRequirements() {
-    assertThrows(NullPointerException.class, () -> new ExcelBorderSide(null));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelBorderSide(null));
     assertThrows(
         IllegalArgumentException.class, () -> new ExcelBorder(null, null, null, null, null));
+  }
+
+  @Test
+  void validatesBorderSideColorRules() {
+    ExcelBorderSide colorOnly = new ExcelBorderSide(null, "#a1b2c3");
+
+    assertNull(colorOnly.style());
+    assertEquals("#A1B2C3", colorOnly.color());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelBorderSide(ExcelBorderStyle.NONE, "#112233"));
   }
 }
