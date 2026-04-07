@@ -68,6 +68,7 @@ class ExcelSheetTest {
       assertEquals("STRING", textSnapshot.declaredType());
       assertEquals("STRING", textSnapshot.effectiveType());
       assertEquals("Name", textSnapshot.stringValue());
+      assertNull(textSnapshot.richText());
 
       ExcelCellSnapshot.NumberSnapshot numberSnapshot =
           (ExcelCellSnapshot.NumberSnapshot) sheet.snapshotCell("B1");
@@ -338,15 +339,9 @@ class ExcelSheetTest {
           "A1:B1",
           new ExcelCellStyle(
               "#,##0.00",
-              true,
-              null,
-              true,
-              ExcelHorizontalAlignment.CENTER,
-              ExcelVerticalAlignment.TOP,
-              null,
-              null,
-              null,
-              null,
+              new ExcelCellAlignment(
+                  true, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, null, null),
+              new ExcelCellFont(true, null, null, null, null, null, null),
               null,
               null,
               null));
@@ -354,44 +349,46 @@ class ExcelSheetTest {
 
       ExcelCellSnapshot styledValue = sheet.snapshotCell("A1");
       assertEquals("#,##0.00", styledValue.style().numberFormat());
-      assertTrue(styledValue.style().bold());
-      assertTrue(styledValue.style().wrapText());
-      assertEquals(ExcelHorizontalAlignment.CENTER, styledValue.style().horizontalAlignment());
-      assertEquals(ExcelVerticalAlignment.TOP, styledValue.style().verticalAlignment());
-      assertEquals("Calibri", styledValue.style().fontName());
-      assertEquals(220, styledValue.style().fontHeight().twips());
-      assertFalse(styledValue.style().underline());
-      assertFalse(styledValue.style().strikeout());
-      assertEquals("#000000", styledValue.style().fontColor());
-      assertNull(styledValue.style().fillColor());
-      assertEquals(ExcelBorderStyle.NONE, styledValue.style().topBorderStyle());
-      assertEquals(ExcelBorderStyle.NONE, styledValue.style().rightBorderStyle());
-      assertEquals(ExcelBorderStyle.NONE, styledValue.style().bottomBorderStyle());
-      assertEquals(ExcelBorderStyle.NONE, styledValue.style().leftBorderStyle());
+      assertTrue(styledValue.style().font().bold());
+      assertTrue(styledValue.style().alignment().wrapText());
+      assertEquals(
+          ExcelHorizontalAlignment.CENTER, styledValue.style().alignment().horizontalAlignment());
+      assertEquals(ExcelVerticalAlignment.TOP, styledValue.style().alignment().verticalAlignment());
+      assertEquals("Calibri", styledValue.style().font().fontName());
+      assertEquals(220, styledValue.style().font().fontHeight().twips());
+      assertFalse(styledValue.style().font().underline());
+      assertFalse(styledValue.style().font().strikeout());
+      assertEquals("#000000", styledValue.style().font().fontColor());
+      assertNull(styledValue.style().fill().foregroundColor());
+      assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().top().style());
+      assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().right().style());
+      assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().bottom().style());
+      assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().left().style());
 
       List<ExcelPreviewRow> preview = sheet.preview(2, 3);
       assertTrue(preview.getFirst().cells().stream().anyMatch(cell -> "C1".equals(cell.address())));
       assertEquals("BLANK", sheet.snapshotCell("C1").effectiveType());
-      assertTrue(sheet.snapshotCell("C1").style().italic());
+      assertTrue(sheet.snapshotCell("C1").style().font().italic());
 
       sheet.clearRange("A2:B2");
 
       ExcelCellSnapshot cleared = sheet.snapshotCell("A2");
       assertEquals("BLANK", cleared.declaredType());
       assertEquals("General", cleared.style().numberFormat());
-      assertFalse(cleared.style().bold());
-      assertEquals(ExcelHorizontalAlignment.GENERAL, cleared.style().horizontalAlignment());
-      assertEquals(ExcelVerticalAlignment.BOTTOM, cleared.style().verticalAlignment());
-      assertEquals("Calibri", cleared.style().fontName());
-      assertEquals(220, cleared.style().fontHeight().twips());
-      assertEquals("#000000", cleared.style().fontColor());
-      assertFalse(cleared.style().underline());
-      assertFalse(cleared.style().strikeout());
-      assertNull(cleared.style().fillColor());
-      assertEquals(ExcelBorderStyle.NONE, cleared.style().topBorderStyle());
-      assertEquals(ExcelBorderStyle.NONE, cleared.style().rightBorderStyle());
-      assertEquals(ExcelBorderStyle.NONE, cleared.style().bottomBorderStyle());
-      assertEquals(ExcelBorderStyle.NONE, cleared.style().leftBorderStyle());
+      assertFalse(cleared.style().font().bold());
+      assertEquals(
+          ExcelHorizontalAlignment.GENERAL, cleared.style().alignment().horizontalAlignment());
+      assertEquals(ExcelVerticalAlignment.BOTTOM, cleared.style().alignment().verticalAlignment());
+      assertEquals("Calibri", cleared.style().font().fontName());
+      assertEquals(220, cleared.style().font().fontHeight().twips());
+      assertEquals("#000000", cleared.style().font().fontColor());
+      assertFalse(cleared.style().font().underline());
+      assertFalse(cleared.style().font().strikeout());
+      assertNull(cleared.style().fill().foregroundColor());
+      assertEquals(ExcelBorderStyle.NONE, cleared.style().border().top().style());
+      assertEquals(ExcelBorderStyle.NONE, cleared.style().border().right().style());
+      assertEquals(ExcelBorderStyle.NONE, cleared.style().border().bottom().style());
+      assertEquals(ExcelBorderStyle.NONE, cleared.style().border().left().style());
 
       assertThrows(
           IllegalArgumentException.class,
@@ -434,52 +431,40 @@ class ExcelSheetTest {
           "A1",
           new ExcelCellStyle(
               null,
-              true,
-              false,
-              true,
-              ExcelHorizontalAlignment.CENTER,
-              ExcelVerticalAlignment.TOP,
-              "Aptos",
-              new ExcelFontHeight(280),
-              "#1F4E78",
-              true,
-              false,
-              "#FFF2CC",
-              new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null)));
+              new ExcelCellAlignment(
+                  true, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, null, null),
+              new ExcelCellFont(
+                  true, false, "Aptos", new ExcelFontHeight(280), "#1F4E78", true, false),
+              new ExcelCellFill(ExcelFillPattern.SOLID, "#FFF2CC", null),
+              new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null),
+              null));
       sheet.applyStyle(
           "A1",
           new ExcelCellStyle(
               null,
               null,
+              new ExcelCellFont(null, null, null, null, null, null, true),
               null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              true,
-              null,
-              new ExcelBorder(
-                  null, null, new ExcelBorderSide(ExcelBorderStyle.DOUBLE), null, null)));
+              new ExcelBorder(null, null, new ExcelBorderSide(ExcelBorderStyle.DOUBLE), null, null),
+              null));
 
       ExcelCellSnapshot styled = sheet.snapshotCell("A1");
-      assertTrue(styled.style().bold());
-      assertFalse(styled.style().italic());
-      assertTrue(styled.style().wrapText());
-      assertEquals(ExcelHorizontalAlignment.CENTER, styled.style().horizontalAlignment());
-      assertEquals(ExcelVerticalAlignment.TOP, styled.style().verticalAlignment());
-      assertEquals("Aptos", styled.style().fontName());
-      assertEquals(280, styled.style().fontHeight().twips());
-      assertEquals("#1F4E78", styled.style().fontColor());
-      assertTrue(styled.style().underline());
-      assertTrue(styled.style().strikeout());
-      assertEquals("#FFF2CC", styled.style().fillColor());
-      assertEquals(ExcelBorderStyle.THIN, styled.style().topBorderStyle());
-      assertEquals(ExcelBorderStyle.DOUBLE, styled.style().rightBorderStyle());
-      assertEquals(ExcelBorderStyle.THIN, styled.style().bottomBorderStyle());
-      assertEquals(ExcelBorderStyle.THIN, styled.style().leftBorderStyle());
+      assertTrue(styled.style().font().bold());
+      assertFalse(styled.style().font().italic());
+      assertTrue(styled.style().alignment().wrapText());
+      assertEquals(
+          ExcelHorizontalAlignment.CENTER, styled.style().alignment().horizontalAlignment());
+      assertEquals(ExcelVerticalAlignment.TOP, styled.style().alignment().verticalAlignment());
+      assertEquals("Aptos", styled.style().font().fontName());
+      assertEquals(280, styled.style().font().fontHeight().twips());
+      assertEquals("#1F4E78", styled.style().font().fontColor());
+      assertTrue(styled.style().font().underline());
+      assertTrue(styled.style().font().strikeout());
+      assertEquals("#FFF2CC", styled.style().fill().foregroundColor());
+      assertEquals(ExcelBorderStyle.THIN, styled.style().border().top().style());
+      assertEquals(ExcelBorderStyle.DOUBLE, styled.style().border().right().style());
+      assertEquals(ExcelBorderStyle.THIN, styled.style().border().bottom().style());
+      assertEquals(ExcelBorderStyle.THIN, styled.style().border().left().style());
     }
   }
 
@@ -711,18 +696,11 @@ class ExcelSheetTest {
           "A1",
           new ExcelCellStyle(
               null,
-              Boolean.TRUE,
-              null,
-              null,
-              ExcelHorizontalAlignment.CENTER,
-              null,
-              null,
-              null,
-              null,
-              null,
-              null,
-              "#AABBCC",
-              new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null)));
+              new ExcelCellAlignment(null, ExcelHorizontalAlignment.CENTER, null, null, null),
+              new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null),
+              new ExcelCellFill(ExcelFillPattern.SOLID, "#AABBCC", null),
+              new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null),
+              null));
       sheet.setHyperlink("A1", new ExcelHyperlink.Url("https://example.com/report"));
       sheet.setComment("A1", new ExcelComment("Review", "GridGrind", false));
 
@@ -730,9 +708,10 @@ class ExcelSheetTest {
           (ExcelCellSnapshot.TextSnapshot)
               sheet.setCell("A1", ExcelCellValue.text("Quarterly report")).snapshotCell("A1");
       assertEquals("Quarterly report", textSnapshot.stringValue());
-      assertEquals("#AABBCC", textSnapshot.style().fillColor());
-      assertEquals(ExcelBorderStyle.THIN, textSnapshot.style().topBorderStyle());
-      assertEquals(ExcelHorizontalAlignment.CENTER, textSnapshot.style().horizontalAlignment());
+      assertEquals("#AABBCC", textSnapshot.style().fill().foregroundColor());
+      assertEquals(ExcelBorderStyle.THIN, textSnapshot.style().border().top().style());
+      assertEquals(
+          ExcelHorizontalAlignment.CENTER, textSnapshot.style().alignment().horizontalAlignment());
       assertEquals(
           new ExcelHyperlink.Url("https://example.com/report"),
           textSnapshot.metadata().hyperlink().orElseThrow());
@@ -743,8 +722,8 @@ class ExcelSheetTest {
       ExcelCellSnapshot.BlankSnapshot blankSnapshot =
           (ExcelCellSnapshot.BlankSnapshot)
               sheet.setCell("A1", ExcelCellValue.blank()).snapshotCell("A1");
-      assertEquals("#AABBCC", blankSnapshot.style().fillColor());
-      assertEquals(ExcelBorderStyle.THIN, blankSnapshot.style().topBorderStyle());
+      assertEquals("#AABBCC", blankSnapshot.style().fill().foregroundColor());
+      assertEquals(ExcelBorderStyle.THIN, blankSnapshot.style().border().top().style());
       assertEquals(
           new ExcelHyperlink.Url("https://example.com/report"),
           blankSnapshot.metadata().hyperlink().orElseThrow());
@@ -765,19 +744,11 @@ class ExcelSheetTest {
       ExcelCellStyle style =
           new ExcelCellStyle(
               null,
-              Boolean.TRUE,
-              null,
-              Boolean.TRUE,
-              null,
-              ExcelVerticalAlignment.TOP,
-              null,
-              null,
-              null,
-              null,
-              null,
-              "#DDEBF7",
-              new ExcelBorder(
-                  null, null, new ExcelBorderSide(ExcelBorderStyle.DOUBLE), null, null));
+              new ExcelCellAlignment(Boolean.TRUE, null, ExcelVerticalAlignment.TOP, null, null),
+              new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null),
+              new ExcelCellFill(ExcelFillPattern.SOLID, "#DDEBF7", null),
+              new ExcelBorder(null, null, new ExcelBorderSide(ExcelBorderStyle.DOUBLE), null, null),
+              null);
       sheet.applyStyle("A1:B1", style);
 
       ExcelCellSnapshot.NumberSnapshot dateSnapshot =
@@ -792,18 +763,75 @@ class ExcelSheetTest {
                   .snapshotCell("B1");
 
       assertEquals("yyyy-mm-dd", dateSnapshot.style().numberFormat());
-      assertEquals("#DDEBF7", dateSnapshot.style().fillColor());
-      assertTrue(dateSnapshot.style().bold());
-      assertTrue(dateSnapshot.style().wrapText());
-      assertEquals(ExcelVerticalAlignment.TOP, dateSnapshot.style().verticalAlignment());
-      assertEquals(ExcelBorderStyle.DOUBLE, dateSnapshot.style().rightBorderStyle());
+      assertEquals("#DDEBF7", dateSnapshot.style().fill().foregroundColor());
+      assertTrue(dateSnapshot.style().font().bold());
+      assertTrue(dateSnapshot.style().alignment().wrapText());
+      assertEquals(
+          ExcelVerticalAlignment.TOP, dateSnapshot.style().alignment().verticalAlignment());
+      assertEquals(ExcelBorderStyle.DOUBLE, dateSnapshot.style().border().right().style());
 
       assertEquals("yyyy-mm-dd hh:mm:ss", dateTimeSnapshot.style().numberFormat());
-      assertEquals("#DDEBF7", dateTimeSnapshot.style().fillColor());
-      assertTrue(dateTimeSnapshot.style().bold());
-      assertTrue(dateTimeSnapshot.style().wrapText());
-      assertEquals(ExcelVerticalAlignment.TOP, dateTimeSnapshot.style().verticalAlignment());
-      assertEquals(ExcelBorderStyle.DOUBLE, dateTimeSnapshot.style().rightBorderStyle());
+      assertEquals("#DDEBF7", dateTimeSnapshot.style().fill().foregroundColor());
+      assertTrue(dateTimeSnapshot.style().font().bold());
+      assertTrue(dateTimeSnapshot.style().alignment().wrapText());
+      assertEquals(
+          ExcelVerticalAlignment.TOP, dateTimeSnapshot.style().alignment().verticalAlignment());
+      assertEquals(ExcelBorderStyle.DOUBLE, dateTimeSnapshot.style().border().right().style());
+    }
+  }
+
+  @Test
+  void snapshotsRichTextRunsWithEffectiveInheritedFontFacts() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setCell(
+          "A1",
+          ExcelCellValue.richText(
+              new ExcelRichText(
+                  List.of(
+                      new ExcelRichTextRun("Quarterly", null),
+                      new ExcelRichTextRun(
+                          " Report",
+                          new ExcelCellFont(
+                              Boolean.TRUE, null, null, null, "#FF0000", null, null))))));
+      sheet.applyStyle(
+          "A1",
+          new ExcelCellStyle(
+              null,
+              null,
+              new ExcelCellFont(
+                  null, Boolean.TRUE, "Aptos", new ExcelFontHeight(260), "#112233", null, null),
+              null,
+              null,
+              null));
+
+      ExcelCellSnapshot.TextSnapshot textSnapshot =
+          (ExcelCellSnapshot.TextSnapshot) sheet.snapshotCell("A1");
+
+      assertEquals("Quarterly Report", textSnapshot.stringValue());
+      assertNotNull(textSnapshot.richText());
+      assertEquals("Quarterly Report", textSnapshot.richText().plainText());
+      assertEquals(2, textSnapshot.richText().runs().size());
+
+      ExcelRichTextRunSnapshot firstRun = textSnapshot.richText().runs().get(0);
+      assertEquals("Quarterly", firstRun.text());
+      assertEquals("Aptos", firstRun.font().fontName());
+      assertEquals(new ExcelFontHeight(260), firstRun.font().fontHeight());
+      assertEquals("#112233", firstRun.font().fontColor());
+      assertFalse(firstRun.font().bold());
+      assertTrue(firstRun.font().italic());
+
+      ExcelRichTextRunSnapshot secondRun = textSnapshot.richText().runs().get(1);
+      assertEquals(" Report", secondRun.text());
+      assertEquals("Aptos", secondRun.font().fontName());
+      assertEquals(new ExcelFontHeight(260), secondRun.font().fontHeight());
+      assertEquals("#FF0000", secondRun.font().fontColor());
+      assertTrue(secondRun.font().bold());
+      assertTrue(secondRun.font().italic());
     }
   }
 
@@ -820,18 +848,18 @@ class ExcelSheetTest {
           new ExcelCellStyle(
               null,
               null,
-              null,
-              null,
-              null,
-              null,
-              "Aptos",
-              ExcelFontHeight.fromPoints(new java.math.BigDecimal("15.2")),
-              "#A3A3A3",
-              null,
-              Boolean.TRUE,
-              "#CDCDCD",
+              new ExcelCellFont(
+                  null,
+                  null,
+                  "Aptos",
+                  ExcelFontHeight.fromPoints(new java.math.BigDecimal("15.2")),
+                  "#A3A3A3",
+                  null,
+                  Boolean.TRUE),
+              new ExcelCellFill(ExcelFillPattern.SOLID, "#CDCDCD", null),
               new ExcelBorder(
-                  new ExcelBorderSide(ExcelBorderStyle.DASH_DOT), null, null, null, null)));
+                  new ExcelBorderSide(ExcelBorderStyle.DASH_DOT), null, null, null, null),
+              null));
 
       sheet.appendRow(ExcelCellValue.number(607.8483822864587), ExcelCellValue.bool(false));
 
@@ -842,14 +870,14 @@ class ExcelSheetTest {
       ExcelCellSnapshot.BlankSnapshot untouchedStyledCell =
           (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A2");
 
-      assertEquals("#CDCDCD", firstCell.style().fillColor());
-      assertEquals("#A3A3A3", firstCell.style().fontColor());
-      assertTrue(firstCell.style().strikeout());
-      assertEquals(ExcelBorderStyle.DASH_DOT, firstCell.style().topBorderStyle());
-      assertEquals("#CDCDCD", secondCell.style().fillColor());
-      assertEquals(ExcelBorderStyle.DASH_DOT, secondCell.style().topBorderStyle());
-      assertEquals("#CDCDCD", untouchedStyledCell.style().fillColor());
-      assertEquals(ExcelBorderStyle.DASH_DOT, untouchedStyledCell.style().topBorderStyle());
+      assertEquals("#CDCDCD", firstCell.style().fill().foregroundColor());
+      assertEquals("#A3A3A3", firstCell.style().font().fontColor());
+      assertTrue(firstCell.style().font().strikeout());
+      assertEquals(ExcelBorderStyle.DASH_DOT, firstCell.style().border().top().style());
+      assertEquals("#CDCDCD", secondCell.style().fill().foregroundColor());
+      assertEquals(ExcelBorderStyle.DASH_DOT, secondCell.style().border().top().style());
+      assertEquals("#CDCDCD", untouchedStyledCell.style().fill().foregroundColor());
+      assertEquals(ExcelBorderStyle.DASH_DOT, untouchedStyledCell.style().border().top().style());
     }
   }
 
@@ -869,23 +897,16 @@ class ExcelSheetTest {
           "A1:B2",
           new ExcelCellStyle(
               "0.00",
-              Boolean.TRUE,
-              null,
-              Boolean.TRUE,
-              null,
-              ExcelVerticalAlignment.CENTER,
-              null,
-              null,
-              null,
-              null,
-              null,
-              "#603A79",
+              new ExcelCellAlignment(Boolean.TRUE, null, ExcelVerticalAlignment.CENTER, null, null),
+              new ExcelCellFont(Boolean.TRUE, null, null, null, null, null, null),
+              new ExcelCellFill(ExcelFillPattern.SOLID, "#603A79", null),
               new ExcelBorder(
                   new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
                   null,
                   new ExcelBorderSide(ExcelBorderStyle.MEDIUM_DASHED),
                   null,
-                  null)));
+                  null),
+              null));
 
       sheet.appendRow(
           ExcelCellValue.dateTime(LocalDateTime.of(2026, 2, 6, 13, 1, 58)),
@@ -898,12 +919,15 @@ class ExcelSheetTest {
 
       assertEquals("yyyy-mm-dd hh:mm:ss", appendedFirstCell.style().numberFormat());
       assertEquals("yyyy-mm-dd hh:mm:ss", appendedSecondCell.style().numberFormat());
-      assertEquals("#603A79", appendedFirstCell.style().fillColor());
-      assertTrue(appendedFirstCell.style().bold());
-      assertTrue(appendedFirstCell.style().wrapText());
-      assertEquals(ExcelVerticalAlignment.CENTER, appendedFirstCell.style().verticalAlignment());
-      assertEquals(ExcelBorderStyle.MEDIUM_DASHED, appendedFirstCell.style().topBorderStyle());
-      assertEquals(ExcelBorderStyle.MEDIUM_DASHED, appendedFirstCell.style().rightBorderStyle());
+      assertEquals("#603A79", appendedFirstCell.style().fill().foregroundColor());
+      assertTrue(appendedFirstCell.style().font().bold());
+      assertTrue(appendedFirstCell.style().alignment().wrapText());
+      assertEquals(
+          ExcelVerticalAlignment.CENTER, appendedFirstCell.style().alignment().verticalAlignment());
+      assertEquals(
+          ExcelBorderStyle.MEDIUM_DASHED, appendedFirstCell.style().border().top().style());
+      assertEquals(
+          ExcelBorderStyle.MEDIUM_DASHED, appendedFirstCell.style().border().right().style());
     }
   }
 

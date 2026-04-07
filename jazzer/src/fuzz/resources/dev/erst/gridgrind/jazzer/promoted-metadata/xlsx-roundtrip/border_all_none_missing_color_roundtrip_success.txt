@@ -1,0 +1,8 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/border_all_none_missing_color_roundtrip_success.bin
+Harness: xlsx-roundtrip
+Outcome: SUCCESS
+Input Bytes: 38
+Command Count: 8
+Style Kinds: font_color=1, fill_pattern_solid=1, fill=1, border_all=1, fill_color=1, fill_foreground_color=1, italic=1, fill_pattern=1, font=1, border=1, border_all_none=1
+Command Kinds: CREATE_SHEET=7, APPLY_STYLE=1

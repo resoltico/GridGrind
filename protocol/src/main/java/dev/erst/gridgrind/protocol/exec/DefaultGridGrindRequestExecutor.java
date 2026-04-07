@@ -650,6 +650,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
             case CellInput.Formula formula -> formula.formula();
             case CellInput.Blank _ -> null;
             case CellInput.Text _ -> null;
+            case CellInput.RichText _ -> null;
             case CellInput.Numeric _ -> null;
             case CellInput.BooleanValue _ -> null;
             case CellInput.Date _ -> null;

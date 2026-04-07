@@ -33,7 +33,8 @@ replay_pid*
 
 # OS and local scratch files
 .claude/
-AGENTS.md
+.codex/
+.gemini/
 .DS_Store
 *.swp
 *.swo

@@ -34,10 +34,14 @@
       "sheetName": "Budget",
       "range": "A1:C1",
       "style": {
-        "bold": true,
-        "wrapText": true,
-        "horizontalAlignment": "CENTER",
-        "verticalAlignment": "CENTER"
+        "alignment": {
+          "wrapText": true,
+          "horizontalAlignment": "CENTER",
+          "verticalAlignment": "CENTER"
+        },
+        "font": {
+          "bold": true
+        }
       }
     },
     {
@@ -46,7 +50,9 @@
       "range": "B2:B4",
       "style": {
         "numberFormat": "#,##0.00",
-        "horizontalAlignment": "RIGHT"
+        "alignment": {
+          "horizontalAlignment": "RIGHT"
+        }
       }
     },
     {

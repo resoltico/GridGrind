@@ -4,12 +4,14 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /** JSON-friendly typed cell input used at the agent protocol boundary. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = CellInput.Blank.class, name = "BLANK"),
   @JsonSubTypes.Type(value = CellInput.Text.class, name = "TEXT"),
+  @JsonSubTypes.Type(value = CellInput.RichText.class, name = "RICH_TEXT"),
   @JsonSubTypes.Type(value = CellInput.Numeric.class, name = "NUMBER"),
   @JsonSubTypes.Type(value = CellInput.BooleanValue.class, name = "BOOLEAN"),
   @JsonSubTypes.Type(value = CellInput.Date.class, name = "DATE"),
@@ -25,6 +27,20 @@ public sealed interface CellInput {
   record Text(String text) implements CellInput {
     public Text {
       Validation.required(text, "text");
+    }
+  }
+
+  /** Structured rich-text string cell input. */
+  record RichText(List<RichTextRunInput> runs) implements CellInput {
+    public RichText {
+      Validation.required(runs, "runs");
+      runs = List.copyOf(runs);
+      if (runs.isEmpty()) {
+        throw new IllegalArgumentException("runs must not be empty");
+      }
+      for (RichTextRunInput run : runs) {
+        Validation.required(run, "runs element");
+      }
     }
   }
 

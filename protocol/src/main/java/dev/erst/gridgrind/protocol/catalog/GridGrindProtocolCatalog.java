@@ -391,8 +391,8 @@ public final class GridGrindProtocolCatalog {
                   + " numberValue (NUMBER), booleanValue (BOOLEAN), errorValue (ERROR),"
                   + " formula and evaluation (FORMULA). For FORMULA cells, effectiveType is FORMULA"
                   + " and the evaluated result type is in evaluation.effectiveType."
-                  + " style.fontHeight is a plain object with both twips and points fields,"
-                  + " not the discriminated FontHeightInput write format."),
+                  + " style.font.fontHeight is a plain object with both twips and points fields,"
+                  + " nested under the style.font group."),
           descriptor(
               WorkbookReadOperation.GetWindow.class,
               "GET_WINDOW",
@@ -530,6 +530,12 @@ public final class GridGrindProtocolCatalog {
               List.of(
                   descriptor(CellInput.Blank.class, "BLANK", "Write an empty cell."),
                   descriptor(CellInput.Text.class, "TEXT", "Write a string cell value."),
+                  descriptor(
+                      CellInput.RichText.class,
+                      "RICH_TEXT",
+                      "Write a structured string cell value with an ordered rich-text run list."
+                          + " Run text concatenates to the stored plain string value and each run"
+                          + " may override font attributes independently."),
                   descriptor(CellInput.Numeric.class, "NUMBER", "Write a numeric cell value."),
                   descriptor(
                       CellInput.BooleanValue.class, "BOOLEAN", "Write a boolean cell value."),
@@ -846,21 +852,50 @@ public final class GridGrindProtocolCatalog {
               CellStyleInput.class,
               "CellStyleInput",
               "Style patch applied to a cell or range; at least one field must be set."
-                  + " Colors use #RRGGBB hex.",
+                  + " Colors use #RRGGBB hex and style subgroups are nested explicitly.",
+              List.of("numberFormat", "alignment", "font", "fill", "border", "protection")),
+          plainTypeDescriptor(
+              "cellAlignmentInputType",
+              CellAlignmentInput.class,
+              "CellAlignmentInput",
+              "Alignment patch for cell styling; at least one field must be set."
+                  + " textRotation uses XSSF's explicit 0-180 degree scale and indentation uses"
+                  + " Excel's 0-250 cell-indent range.",
               List.of(
-                  "numberFormat",
-                  "bold",
-                  "italic",
                   "wrapText",
                   "horizontalAlignment",
                   "verticalAlignment",
+                  "textRotation",
+                  "indentation")),
+          plainTypeDescriptor(
+              "cellFontInputType",
+              CellFontInput.class,
+              "CellFontInput",
+              "Font patch for cell styling; at least one field must be set."
+                  + " Colors use #RRGGBB hex.",
+              List.of(
+                  "bold",
+                  "italic",
                   "fontName",
                   "fontHeight",
                   "fontColor",
                   "underline",
-                  "strikeout",
-                  "fillColor",
-                  "border")),
+                  "strikeout")),
+          plainTypeDescriptor(
+              "richTextRunInputType",
+              RichTextRunInput.class,
+              "RichTextRunInput",
+              "One ordered rich-text run for a string cell."
+                  + " text must be non-empty; font is an optional override patch."
+                  + " The ordered run texts concatenate to the stored plain string value.",
+              List.of("font")),
+          plainTypeDescriptor(
+              "cellFillInputType",
+              CellFillInput.class,
+              "CellFillInput",
+              "Fill patch for cell styling. pattern controls solid and patterned fills;"
+                  + " colors use #RRGGBB hex.",
+              List.of("pattern", "foregroundColor", "backgroundColor")),
           plainTypeDescriptor(
               "cellBorderInputType",
               CellBorderInput.class,
@@ -872,8 +907,15 @@ public final class GridGrindProtocolCatalog {
               "cellBorderSideInputType",
               CellBorderSideInput.class,
               "CellBorderSideInput",
-              "One border side defined by its border style.",
-              List.of()),
+              "One border side defined by its border style and optional RGB color.",
+              List.of("style", "color")),
+          plainTypeDescriptor(
+              "cellProtectionInputType",
+              CellProtectionInput.class,
+              "CellProtectionInput",
+              "Cell protection patch; at least one field must be set."
+                  + " These flags matter when sheet protection is enabled.",
+              List.of("locked", "hiddenFormula")),
           plainTypeDescriptor(
               "dataValidationInputType",
               DataValidationInput.class,

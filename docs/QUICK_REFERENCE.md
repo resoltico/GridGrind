@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.29.0"
+version: "0.30.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-02"
 route:
@@ -404,6 +404,7 @@ band (`LIM-018`) and also rejects formula-bearing workbooks (`LIM-017`).
 { "type": "SET_CELL", "sheetName": "Sheet1", "address": "E1", "value": { "type": "DATE",      "date": "2026-03-25"                   } }
 { "type": "SET_CELL", "sheetName": "Sheet1", "address": "F1", "value": { "type": "DATE_TIME", "dateTime": "2026-03-25T10:15:30"      } }
 { "type": "SET_CELL", "sheetName": "Sheet1", "address": "G1", "value": { "type": "BLANK"                                             } }
+{ "type": "SET_CELL", "sheetName": "Sheet1", "address": "H1", "value": { "type": "RICH_TEXT", "runs": [{ "text": "Q2 " }, { "text": "Budget", "font": { "bold": true, "fontColor": "#C00000" } }] } }
 ```
 
 A leading `=` in `FORMULA` values is accepted and stripped automatically. `"=SUM(B1:B10)"` and `"SUM(B1:B10)"` are equivalent.
@@ -483,31 +484,49 @@ If `visible` is omitted, it defaults to `false`.
   "sheetName": "Sheet1",
   "range": "A1:C1",
   "style": {
-    "bold": true,
-    "italic": false,
-    "wrapText": true,
     "numberFormat": "#,##0.00",
-    "fontName": "Aptos",
-    "fontHeight": { "type": "POINTS", "points": 13 },
-    "fontColor": "#1F4E78",
-    "underline": true,
-    "strikeout": false,
-    "fillColor": "#FFF2CC",
-    "horizontalAlignment": "CENTER",
-    "verticalAlignment": "CENTER",
+    "alignment": {
+      "wrapText": true,
+      "horizontalAlignment": "CENTER",
+      "verticalAlignment": "CENTER",
+      "textRotation": 15,
+      "indentation": 1
+    },
+    "font": {
+      "bold": true,
+      "italic": false,
+      "fontName": "Aptos",
+      "fontHeight": { "type": "POINTS", "points": 13 },
+      "fontColor": "#1F4E78",
+      "underline": true,
+      "strikeout": false
+    },
+    "fill": {
+      "pattern": "THIN_HORIZONTAL_BANDS",
+      "foregroundColor": "#FFF2CC",
+      "backgroundColor": "#FDE9D9"
+    },
     "border": {
-      "all": { "style": "THIN" },
-      "right": { "style": "DOUBLE" }
+      "all": { "style": "THIN", "color": "#D6B656" },
+      "right": { "style": "DOUBLE", "color": "#C55A11" }
+    },
+    "protection": {
+      "locked": true,
+      "hiddenFormula": false
     }
   }
 }
 ```
 
-`horizontalAlignment` values: `"LEFT"` `"CENTER"` `"RIGHT"` `"GENERAL"`
-`verticalAlignment` values:   `"TOP"` `"CENTER"` `"BOTTOM"`
-`fontColor` and `fillColor` use `#RRGGBB`.
-`fontHeight` accepts either `{ "type": "POINTS", "points": 11.5 }` or `{ "type": "TWIPS", "twips": 230 }`.
-`border.all` sets the default side style; explicit sides override it.
+`style` groups are `numberFormat`, `alignment`, `font`, `fill`, `border`, and `protection`.
+`alignment.horizontalAlignment` values: `"LEFT"` `"CENTER"` `"RIGHT"` `"GENERAL"`
+`alignment.verticalAlignment` values: `"TOP"` `"CENTER"` `"BOTTOM"`
+`alignment.textRotation` uses explicit `0..180` degrees. `alignment.indentation` uses Excel's `0..250` cell-indent scale.
+`font.fontHeight` accepts either `{ "type": "POINTS", "points": 11.5 }` or `{ "type": "TWIPS", "twips": 230 }`.
+`font.fontColor`, `fill.foregroundColor`, `fill.backgroundColor`, and `border.*.color` use `#RRGGBB`.
+`fill.backgroundColor` is for patterned fills only; `SOLID` fills use `foregroundColor` only.
+`border.all` sets the default side style or color; explicit sides override it.
+`border.*.color` requires a visible style on that side, either directly or via `border.all`.
 
 ## SET_DATA_VALIDATION
 
@@ -822,6 +841,9 @@ a caller-defined `requestId`.
   "addresses": ["A1", "B4", "C10"]
 }
 ```
+
+String cells return `stringValue` and, when the stored cell contains authored rich text, an
+optional ordered `richText` run list with effective per-run font facts.
 
 ## GET_WINDOW
 

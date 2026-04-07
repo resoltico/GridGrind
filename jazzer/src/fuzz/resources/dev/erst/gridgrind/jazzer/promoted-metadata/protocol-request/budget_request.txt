@@ -2,12 +2,12 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/budget_request.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 2495
+Input Bytes: 2599
 Decode Outcome: PARSED
 Source Kind: NEW
 Persistence Kind: SAVE_AS
 Operation Count: 9
 Read Count: 5
 Read Kinds: GET_CELLS=1, GET_FORMULA_SURFACE=1, GET_WORKBOOK_SUMMARY=1, GET_WINDOW=1, GET_SHEET_SCHEMA=1
-Style Kinds: horizontal_alignment=2, vertical_alignment=1, number_format=1, wrap_text=1, bold=1
-Operation Kinds: SET_CELL=2, APPLY_STYLE=2, SET_RANGE=1, EVALUATE_FORMULAS=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1, ENSURE_SHEET=1, AUTO_SIZE_COLUMNS=1
+Style Kinds: horizontal_alignment=2, alignment=2, bold=1, number_format=1, font=1, wrap_text=1, vertical_alignment=1
+Operation Kinds: SET_CELL=2, APPLY_STYLE=2, AUTO_SIZE_COLUMNS=1, SET_RANGE=1, EVALUATE_FORMULAS=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1, ENSURE_SHEET=1

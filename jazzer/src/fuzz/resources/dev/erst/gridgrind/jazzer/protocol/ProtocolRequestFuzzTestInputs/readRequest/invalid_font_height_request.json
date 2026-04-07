@@ -9,7 +9,9 @@
       "sheetName": "Styled Report",
       "range": "A1",
       "style": {
-        "fontHeight": { "type": "POINTS", "points": 11.333 }
+        "font": {
+          "fontHeight": { "type": "POINTS", "points": 11.333 }
+        }
       }
     }
   ]

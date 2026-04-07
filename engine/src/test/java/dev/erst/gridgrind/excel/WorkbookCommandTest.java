@@ -665,15 +665,9 @@ class WorkbookCommandTest {
   private ExcelCellStyle defaultStyle() {
     return new ExcelCellStyle(
         "#,##0.00",
-        true,
-        false,
-        true,
-        ExcelHorizontalAlignment.RIGHT,
-        ExcelVerticalAlignment.CENTER,
-        null,
-        null,
-        null,
-        null,
+        new ExcelCellAlignment(
+            true, ExcelHorizontalAlignment.RIGHT, ExcelVerticalAlignment.CENTER, null, null),
+        new ExcelCellFont(true, false, null, null, null, null, null),
         null,
         null,
         null);

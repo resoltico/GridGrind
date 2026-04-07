@@ -15,11 +15,8 @@
         "APPLY_STYLE" : 1
       },
       "styleKinds" : {
-        "vertical_alignment" : 1,
-        "fill_color" : 1,
-        "horizontal_alignment" : 1,
-        "font_height_points" : 1,
-        "font_height" : 1
+        "font" : 1,
+        "font_name" : 1
       },
       "readCount" : 3,
       "readKinds" : {

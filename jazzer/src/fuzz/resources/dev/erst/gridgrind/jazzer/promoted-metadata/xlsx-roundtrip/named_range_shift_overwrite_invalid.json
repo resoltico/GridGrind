@@ -10,11 +10,11 @@
       "inputBytes" : 83,
       "commandCount" : 9,
       "commandKinds" : {
+        "SET_NAMED_RANGE" : 1,
         "RENAME_SHEET" : 1,
         "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2,
         "CREATE_SHEET" : 4,
-        "SHIFT_ROWS" : 1,
-        "SET_NAMED_RANGE" : 1
+        "SHIFT_ROWS" : 1
       },
       "styleKinds" : { }
     }

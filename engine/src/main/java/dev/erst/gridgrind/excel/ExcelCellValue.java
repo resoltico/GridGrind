@@ -8,6 +8,7 @@ import java.util.Objects;
 public sealed interface ExcelCellValue
     permits ExcelCellValue.BlankValue,
         ExcelCellValue.TextValue,
+        ExcelCellValue.RichTextValue,
         ExcelCellValue.NumberValue,
         ExcelCellValue.BooleanValue,
         ExcelCellValue.DateValue,
@@ -22,6 +23,11 @@ public sealed interface ExcelCellValue
   /** Creates a text cell value. */
   static ExcelCellValue text(String value) {
     return new TextValue(value);
+  }
+
+  /** Creates a structured rich-text string cell value. */
+  static ExcelCellValue richText(ExcelRichText value) {
+    return new RichTextValue(value);
   }
 
   /** Creates a numeric cell value. */
@@ -53,6 +59,12 @@ public sealed interface ExcelCellValue
 
   record TextValue(String value) implements ExcelCellValue {
     public TextValue {
+      Objects.requireNonNull(value, "value must not be null");
+    }
+  }
+
+  record RichTextValue(ExcelRichText value) implements ExcelCellValue {
+    public RichTextValue {
       Objects.requireNonNull(value, "value must not be null");
     }
   }

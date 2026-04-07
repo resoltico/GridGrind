@@ -78,7 +78,7 @@ class GridGrindResponseTest {
         NullPointerException.class,
         () ->
             new GridGrindResponse.CellReport.TextReport(
-                "A1", "STRING", "x", null, null, null, "x"));
+                "A1", "STRING", "x", null, null, null, "x", null));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -255,7 +255,8 @@ class GridGrindResponseTest {
     assertEquals("FORMULA", formulaReport.effectiveType());
     assertEquals(
         "STRING",
-        new GridGrindResponse.CellReport.TextReport("B1", "STRING", "x", style, null, null, "x")
+        new GridGrindResponse.CellReport.TextReport(
+                "B1", "STRING", "x", style, null, null, "x", null)
             .effectiveType());
     assertEquals(
         "NUMBER",
@@ -272,6 +273,7 @@ class GridGrindResponseTest {
     assertNull(blankReport.hyperlink());
     assertNull(blankReport.comment());
     assertNull(blankReport.stringValue());
+    assertNull(blankReport.richText());
     assertNull(blankReport.numberValue());
     assertNull(blankReport.booleanValue());
     assertNull(blankReport.errorValue());
@@ -279,6 +281,76 @@ class GridGrindResponseTest {
     assertInstanceOf(PaneReport.Frozen.class, layout.pane());
     assertEquals(125, layout.zoomPercent());
     assertEquals(ExcelPrintOrientation.LANDSCAPE, printLayout.orientation());
+  }
+
+  @Test
+  void textReportValidatesStructuredRichTextFacts() {
+    GridGrindResponse.CellStyleReport style = defaultCellStyleReport();
+    List<RichTextRunReport> richText =
+        List.of(
+            new RichTextRunReport(
+                "Budget",
+                new CellFontReport(
+                    false,
+                    false,
+                    "Aptos",
+                    new FontHeightReport(220, new BigDecimal("11")),
+                    null,
+                    false,
+                    false)),
+            new RichTextRunReport(
+                " FY26",
+                new CellFontReport(
+                    true,
+                    false,
+                    "Aptos",
+                    new FontHeightReport(220, new BigDecimal("11")),
+                    "#AABBCC",
+                    false,
+                    false)));
+
+    GridGrindResponse.CellReport.TextReport report =
+        new GridGrindResponse.CellReport.TextReport(
+            "A1", "STRING", "Budget FY26", style, null, null, "Budget FY26", richText);
+
+    assertEquals(richText, report.richText());
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new RichTextRunReport(
+                null,
+                new CellFontReport(
+                    false,
+                    false,
+                    "Aptos",
+                    new FontHeightReport(220, new BigDecimal("11")),
+                    null,
+                    false,
+                    false)));
+    assertThrows(NullPointerException.class, () -> new RichTextRunReport("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RichTextRunReport(
+                "",
+                new CellFontReport(
+                    false,
+                    false,
+                    "Aptos",
+                    new FontHeightReport(220, new BigDecimal("11")),
+                    null,
+                    false,
+                    false)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.CellReport.TextReport(
+                "A1", "STRING", "", style, null, null, "", List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.CellReport.TextReport(
+                "A1", "STRING", "Mismatch", style, null, null, "Mismatch", richText));
   }
 
   @Test
@@ -758,24 +830,55 @@ class GridGrindResponseTest {
                 GridGrindProblemCode.INVALID_REQUEST, "bad request", " "));
   }
 
+  @Test
+  void validatesCellFillReportContracts() {
+    CellFillReport noFill =
+        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, null, null);
+    CellFillReport patternedFill =
+        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.BRICKS, null, "#aabbcc");
+
+    assertEquals(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, noFill.pattern());
+    assertNull(noFill.foregroundColor());
+    assertNull(noFill.backgroundColor());
+    assertEquals("#AABBCC", patternedFill.backgroundColor());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, "#112233", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, null, "#112233"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellFillReport(
+                dev.erst.gridgrind.excel.ExcelFillPattern.NONE, "#112233", "#445566"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellFillReport(
+                dev.erst.gridgrind.excel.ExcelFillPattern.SOLID, "#112233", "#445566"));
+  }
+
   private static GridGrindResponse.CellStyleReport defaultCellStyleReport() {
     return new GridGrindResponse.CellStyleReport(
         "General",
-        true,
-        false,
-        true,
-        ExcelHorizontalAlignment.CENTER,
-        ExcelVerticalAlignment.TOP,
-        "Aptos",
-        new FontHeightReport(230, new BigDecimal("11.5")),
-        "#1F4E78",
-        true,
-        false,
-        "#FFF2CC",
-        ExcelBorderStyle.THIN,
-        ExcelBorderStyle.DOUBLE,
-        ExcelBorderStyle.THIN,
-        ExcelBorderStyle.THIN);
+        new CellAlignmentReport(
+            true, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, 0, 0),
+        new CellFontReport(
+            true,
+            false,
+            "Aptos",
+            new FontHeightReport(230, new BigDecimal("11.5")),
+            "#1F4E78",
+            true,
+            false),
+        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.SOLID, "#FFF2CC", null),
+        new CellBorderReport(
+            new CellBorderSideReport(ExcelBorderStyle.THIN, null),
+            new CellBorderSideReport(ExcelBorderStyle.DOUBLE, null),
+            new CellBorderSideReport(ExcelBorderStyle.THIN, null),
+            new CellBorderSideReport(ExcelBorderStyle.THIN, null)),
+        new CellProtectionReport(true, false));
   }
 
   private static SheetProtectionSettings protectionSettings() {

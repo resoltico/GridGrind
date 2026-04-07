@@ -144,12 +144,22 @@ final class WorkbookCommandConverter {
     return switch (value) {
       case CellInput.Blank _ -> ExcelCellValue.blank();
       case CellInput.Text text -> ExcelCellValue.text(text.text());
+      case CellInput.RichText richText -> ExcelCellValue.richText(toExcelRichText(richText));
       case CellInput.Numeric numeric -> ExcelCellValue.number(numeric.number());
       case CellInput.BooleanValue booleanValue -> ExcelCellValue.bool(booleanValue.bool());
       case CellInput.Date date -> ExcelCellValue.date(date.date());
       case CellInput.DateTime dateTime -> ExcelCellValue.dateTime(dateTime.dateTime());
       case CellInput.Formula formula -> ExcelCellValue.formula(formula.formula());
     };
+  }
+
+  static ExcelRichText toExcelRichText(CellInput.RichText richText) {
+    return new ExcelRichText(
+        richText.runs().stream().map(WorkbookCommandConverter::toExcelRichTextRun).toList());
+  }
+
+  static ExcelRichTextRun toExcelRichTextRun(RichTextRunInput run) {
+    return new ExcelRichTextRun(run.text(), toExcelCellFont(run.font()));
   }
 
   static ExcelHyperlink toExcelHyperlink(HyperlinkTarget target) {
@@ -181,18 +191,51 @@ final class WorkbookCommandConverter {
   static ExcelCellStyle toExcelCellStyle(CellStyleInput style) {
     return new ExcelCellStyle(
         style.numberFormat(),
-        style.bold(),
-        style.italic(),
-        style.wrapText(),
-        style.horizontalAlignment(),
-        style.verticalAlignment(),
-        style.fontName(),
-        toExcelFontHeight(style.fontHeight()),
-        style.fontColor(),
-        style.underline(),
-        style.strikeout(),
-        style.fillColor(),
-        toExcelBorder(style.border()));
+        toExcelCellAlignment(style.alignment()),
+        toExcelCellFont(style.font()),
+        toExcelCellFill(style.fill()),
+        toExcelBorder(style.border()),
+        toExcelCellProtection(style.protection()));
+  }
+
+  static ExcelCellAlignment toExcelCellAlignment(CellAlignmentInput alignment) {
+    if (alignment == null) {
+      return null;
+    }
+    return new ExcelCellAlignment(
+        alignment.wrapText(),
+        alignment.horizontalAlignment(),
+        alignment.verticalAlignment(),
+        alignment.textRotation(),
+        alignment.indentation());
+  }
+
+  static ExcelCellFont toExcelCellFont(CellFontInput font) {
+    if (font == null) {
+      return null;
+    }
+    return new ExcelCellFont(
+        font.bold(),
+        font.italic(),
+        font.fontName(),
+        toExcelFontHeight(font.fontHeight()),
+        font.fontColor(),
+        font.underline(),
+        font.strikeout());
+  }
+
+  static ExcelCellFill toExcelCellFill(CellFillInput fill) {
+    if (fill == null) {
+      return null;
+    }
+    return new ExcelCellFill(fill.pattern(), fill.foregroundColor(), fill.backgroundColor());
+  }
+
+  static ExcelCellProtection toExcelCellProtection(CellProtectionInput protection) {
+    if (protection == null) {
+      return null;
+    }
+    return new ExcelCellProtection(protection.locked(), protection.hiddenFormula());
   }
 
   static ExcelFontHeight toExcelFontHeight(FontHeightInput fontHeight) {
@@ -218,7 +261,7 @@ final class WorkbookCommandConverter {
   }
 
   static ExcelBorderSide toExcelBorderSide(CellBorderSideInput side) {
-    return side == null ? null : new ExcelBorderSide(side.style());
+    return side == null ? null : new ExcelBorderSide(side.style(), side.color());
   }
 
   static ExcelDataValidationDefinition toExcelDataValidationDefinition(

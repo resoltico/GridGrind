@@ -3,54 +3,39 @@ package dev.erst.gridgrind.excel;
 /** Agent-facing style patch that can be applied to one cell or a rectangular range. */
 public record ExcelCellStyle(
     String numberFormat,
-    Boolean bold,
-    Boolean italic,
-    Boolean wrapText,
-    ExcelHorizontalAlignment horizontalAlignment,
-    ExcelVerticalAlignment verticalAlignment,
-    String fontName,
-    ExcelFontHeight fontHeight,
-    String fontColor,
-    Boolean underline,
-    Boolean strikeout,
-    String fillColor,
-    ExcelBorder border) {
+    ExcelCellAlignment alignment,
+    ExcelCellFont font,
+    ExcelCellFill fill,
+    ExcelBorder border,
+    ExcelCellProtection protection) {
   public ExcelCellStyle {
     if (numberFormat != null && numberFormat.isBlank()) {
       throw new IllegalArgumentException("numberFormat must not be blank");
     }
-    if (fontName != null && fontName.isBlank()) {
-      throw new IllegalArgumentException("fontName must not be blank");
-    }
-    fontColor = ExcelRgbColorSupport.normalizeRgbHex(fontColor, "fontColor");
-    fillColor = ExcelRgbColorSupport.normalizeRgbHex(fillColor, "fillColor");
     if (numberFormat == null
-        && bold == null
-        && italic == null
-        && wrapText == null
-        && horizontalAlignment == null
-        && verticalAlignment == null
-        && fontName == null
-        && fontHeight == null
-        && fontColor == null
-        && underline == null
-        && strikeout == null
-        && fillColor == null
-        && border == null) {
+        && alignment == null
+        && font == null
+        && fill == null
+        && border == null
+        && protection == null) {
       throw new IllegalArgumentException("style must set at least one attribute");
     }
   }
 
   /** Creates a style patch that only changes the number format. */
   public static ExcelCellStyle numberFormat(String numberFormat) {
-    return new ExcelCellStyle(
-        numberFormat, null, null, null, null, null, null, null, null, null, null, null, null);
+    return new ExcelCellStyle(numberFormat, null, null, null, null, null);
   }
 
   /** Creates a style patch that only changes font emphasis. */
   public static ExcelCellStyle emphasis(Boolean bold, Boolean italic) {
     return new ExcelCellStyle(
-        null, bold, italic, null, null, null, null, null, null, null, null, null, null);
+        null,
+        null,
+        new ExcelCellFont(bold, italic, null, null, null, null, null),
+        null,
+        null,
+        null);
   }
 
   /** Creates a style patch that only changes horizontal and vertical alignment. */
@@ -61,14 +46,7 @@ public record ExcelCellStyle(
     }
     return new ExcelCellStyle(
         null,
-        null,
-        null,
-        null,
-        horizontalAlignment,
-        verticalAlignment,
-        null,
-        null,
-        null,
+        new ExcelCellAlignment(null, horizontalAlignment, verticalAlignment, null, null),
         null,
         null,
         null,

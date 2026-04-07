@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.29.0"
+version: "0.30.0"
 domain: OPERATIONS
 updated: "2026-04-02"
 route:
@@ -114,6 +114,13 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 
 ```json
 { "type": "TEXT",      "text": "Origin"              }
+{
+  "type": "RICH_TEXT",
+  "runs": [
+    { "text": "Q2 ", "font": { "fontName": "Aptos", "fontColor": "#44546A" } },
+    { "text": "Budget", "font": { "bold": true, "fontColor": "#C00000" } }
+  ]
+}
 { "type": "NUMBER",    "number": 8.40                }
 { "type": "BOOLEAN",   "bool": true                  }
 { "type": "FORMULA",   "formula": "SUM(B2:B3)"       }  // leading = is accepted and stripped
@@ -121,6 +128,10 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 { "type": "DATE_TIME", "dateTime": "2026-03-25T10:15:30" }
 { "type": "BLANK"                                     }
 ```
+
+`RICH_TEXT` writes an ordered, non-empty `runs` list. Every run must have non-empty `text`, and
+the optional `font` object reuses the same font-field vocabulary as the nested style contract:
+`bold`, `italic`, `fontName`, `fontHeight`, `fontColor`, `underline`, and `strikeout`.
 
 ---
 
@@ -881,6 +892,7 @@ fill, border, font, alignment, or wrap state already present on the cell.
 Write a rectangular grid of typed values. The `rows` matrix must exactly match the dimensions of
 `range`. Row count must equal `range` row span; column count of each row must equal `range`
 column span. Existing style, hyperlink, and comment state on the targeted cells is preserved.
+Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid inside `rows`.
 
 ```json
 {
@@ -1024,17 +1036,29 @@ unspecified style properties are left untouched.
   "sheetName": "Inventory",
   "range": "A1:C1",
   "style": {
-    "bold": true,
-    "fontName": "Aptos",
-    "fontHeight": { "type": "POINTS", "points": 13 },
-    "fontColor": "#FFFFFF",
-    "fillColor": "#1F4E78",
-    "horizontalAlignment": "CENTER",
-    "verticalAlignment": "CENTER",
-    "wrapText": true,
+    "alignment": {
+      "wrapText": true,
+      "horizontalAlignment": "CENTER",
+      "verticalAlignment": "CENTER",
+      "textRotation": 15
+    },
+    "font": {
+      "bold": true,
+      "fontName": "Aptos",
+      "fontHeight": { "type": "POINTS", "points": 13 },
+      "fontColor": "#FFFFFF"
+    },
+    "fill": {
+      "pattern": "THIN_HORIZONTAL_BANDS",
+      "foregroundColor": "#1F4E78",
+      "backgroundColor": "#D9E2F3"
+    },
     "border": {
-      "all": { "style": "THIN" },
-      "bottom": { "style": "DOUBLE" }
+      "all": { "style": "THIN", "color": "#FFFFFF" },
+      "bottom": { "style": "DOUBLE", "color": "#D9E2F3" }
+    },
+    "protection": {
+      "locked": true
     }
   }
 }
@@ -1044,48 +1068,69 @@ unspecified style properties are left untouched.
 |:------|:---------|:------------|
 | `sheetName` | Yes | Target sheet. |
 | `range` | Yes | Range to style. |
-| `style` | Yes | Partial style patch. All fields optional. |
+| `style` | Yes | Partial style patch. `numberFormat` plus nested `alignment`, `font`, `fill`, `border`, and `protection` groups are all optional. |
 
 Style fields:
 
 | Field | Type | Values |
 |:------|:-----|:-------|
 | `numberFormat` | string | Any Excel number format string, e.g. `"#,##0.00"`, `"yyyy-mm-dd"` |
-| `bold` | boolean | `true` / `false` |
-| `italic` | boolean | `true` / `false` |
-| `wrapText` | boolean | `true` / `false` |
-| `horizontalAlignment` | string | `"LEFT"`, `"CENTER"`, `"RIGHT"`, `"GENERAL"` |
-| `verticalAlignment` | string | `"TOP"`, `"CENTER"`, `"BOTTOM"` |
-| `fontName` | string | Excel font family name, e.g. `"Aptos"` |
-| `fontHeight` | object | Typed font height. See below. |
-| `fontColor` | string | RGB hex string in `#RRGGBB` form. Lowercase input is normalized to uppercase. |
-| `underline` | boolean | `true` adds a single underline, `false` removes it |
-| `strikeout` | boolean | `true` / `false` |
-| `fillColor` | string | Solid foreground fill color in `#RRGGBB` form |
-| `border` | object | Nested border patch. See below. |
+| `alignment` | object | Optional alignment patch. See below. |
+| `font` | object | Optional font patch. See below. |
+| `fill` | object | Optional fill patch. See below. |
+| `border` | object | Optional border patch. See below. |
+| `protection` | object | Optional cell-protection patch. See below. |
+
+Alignment patch:
+
+| Field | Type | Values |
+|:------|:-----|:-------|
+| `alignment.wrapText` | boolean | `true` / `false` |
+| `alignment.horizontalAlignment` | string | `"LEFT"`, `"CENTER"`, `"RIGHT"`, `"GENERAL"` |
+| `alignment.verticalAlignment` | string | `"TOP"`, `"CENTER"`, `"BOTTOM"` |
+| `alignment.textRotation` | integer | Explicit `0..180` text-rotation degrees |
+| `alignment.indentation` | integer | Excel's `0..250` cell-indent scale |
+
+Font patch:
+
+| Field | Type | Values |
+|:------|:-----|:-------|
+| `font.bold` | boolean | `true` / `false` |
+| `font.italic` | boolean | `true` / `false` |
+| `font.fontName` | string | Excel font family name, e.g. `"Aptos"` |
+| `font.fontHeight` | object | Typed font height. See below. |
+| `font.fontColor` | string | RGB hex string in `#RRGGBB` form. Lowercase input is normalized to uppercase. |
+| `font.underline` | boolean | `true` adds a single underline, `false` removes it |
+| `font.strikeout` | boolean | `true` / `false` |
 
 Font-height input:
 
 | Field | Type | Values |
 |:------|:-----|:-------|
-| `fontHeight.type` | string | `"POINTS"` or `"TWIPS"` |
-| `fontHeight.points` | number | Required when `type` is `"POINTS"`. Must resolve exactly to whole twips, e.g. `11`, `11.5`, `13.25` |
-| `fontHeight.twips` | integer | Required when `type` is `"TWIPS"`. Positive exact twip value where `20` twips = `1` point |
+| `font.fontHeight.type` | string | `"POINTS"` or `"TWIPS"` |
+| `font.fontHeight.points` | number | Required when `type` is `"POINTS"`. Must resolve exactly to whole twips, e.g. `11`, `11.5`, `13.25` |
+| `font.fontHeight.twips` | integer | Required when `type` is `"TWIPS"`. Positive exact twip value where `20` twips = `1` point |
 
 Color notes:
 
-- `fontColor` and `fillColor` must match `#RRGGBB`.
+- `font.fontColor`, `fill.foregroundColor`, `fill.backgroundColor`, and `border.*.color`
+  must match `#RRGGBB`.
 - Lowercase hex input is accepted and normalized to uppercase.
 - This contract does not support alpha channels, theme colors, indexed colors, or gradient fills.
 
+Fill patch:
+
+| Field | Type | Values |
+|:------|:-----|:-------|
+| `fill.pattern` | string | `ExcelFillPattern` value such as `"SOLID"`, `"THIN_HORIZONTAL_BANDS"`, `"SQUARES"` |
+| `fill.foregroundColor` | string | Foreground RGB color in `#RRGGBB` form |
+| `fill.backgroundColor` | string | Background RGB color in `#RRGGBB` form for patterned fills |
+
 Fill notes:
 
-- `fillColor` always means a solid foreground fill.
-- Non-solid patterns and background-fill authoring are not part of the public contract.
-- Cell snapshot reads (GET_CELLS, GET_WINDOW, GET_SHEET_SCHEMA) report `style.fontHeight` as a
-  plain object with both `twips` and `points` fields: `{"twips": 260, "points": 13}`. This is
-  not the same as the write-side `FontHeightInput` discriminated format. See the Cell snapshot
-  shape section under GET_CELLS for the full write-vs-read comparison.
+- `fill.pattern="NONE"` does not allow colors.
+- `fill.pattern="SOLID"` uses `foregroundColor` only; `backgroundColor` is not allowed.
+- Patterned fills beyond solid are part of the public contract. Gradient fills are not.
 
 Border patch:
 
@@ -1097,22 +1142,36 @@ Border patch:
 | `bottom` | object | Optional side-specific override |
 | `left` | object | Optional side-specific override |
 
-Each border-side object currently contains one field:
+Each border-side object can set a visible style, an RGB color, or both:
 
 | Field | Type | Values |
 |:------|:-----|:-------|
 | `style` | string | `"NONE"`, `"THIN"`, `"MEDIUM"`, `"DASHED"`, `"DOTTED"`, `"THICK"`, `"DOUBLE"`, `"HAIR"`, `"MEDIUM_DASHED"`, `"DASH_DOT"`, `"MEDIUM_DASH_DOT"`, `"DASH_DOT_DOT"`, `"MEDIUM_DASH_DOT_DOT"`, `"SLANTED_DASH_DOT"` |
+| `color` | string | Optional RGB color in `#RRGGBB` form |
 
 Border notes:
 
 - `border` must set at least one of `all`, `top`, `right`, `bottom`, or `left`.
-- `border.all` acts as the default style for every side not explicitly set in the same patch.
+- `border.all` acts as the default style and color for every side not explicitly set in the same patch.
 - Explicit side settings override `border.all`.
-- Border colors and diagonal borders are not part of the public contract.
+- A border color requires an effective visible style on that side, either set on the side itself
+  or inherited from `border.all`.
+- `style="NONE"` does not allow a `color`.
 
-**Border write vs. read shape:** the `border` write object is not mirrored in cell snapshot
-responses. `GET_CELLS`, `GET_WINDOW`, and `GET_SHEET_SCHEMA` return four flat fields instead:
-`topBorderStyle`, `rightBorderStyle`, `bottomBorderStyle`, and `leftBorderStyle`.
+Protection patch:
+
+| Field | Type | Values |
+|:------|:-----|:-------|
+| `protection.locked` | boolean | `true` / `false` |
+| `protection.hiddenFormula` | boolean | `true` / `false` |
+
+Protection note:
+
+- These flags matter when sheet protection is enabled.
+- Cell snapshot reads (GET_CELLS, GET_WINDOW, GET_SHEET_SCHEMA) report `style.font.fontHeight`
+  as a plain object with both `twips` and `points` fields:
+  `{"twips": 260, "points": 13}`. This differs from the write-side
+  `FontHeightInput` discriminated format.
 
 ---
 
@@ -1443,6 +1502,7 @@ The request fails if the table does not exist on the expected sheet.
 Append a single row of typed values after the last value-bearing row in a sheet.
 If the next append position lands on cells that already exist because they carry only style,
 hyperlink, or comment state, that existing state is preserved when values are written there.
+Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid inside `values`.
 
 ```json
 {
@@ -1705,21 +1765,23 @@ common fields:
 | `declaredType` | Raw Excel cell type: `BLANK`, `STRING`, `NUMBER`, `BOOLEAN`, `FORMULA`, or `ERROR`. |
 | `effectiveType` | For non-formula cells: same as `declaredType`. For formula cells: always `FORMULA` — the evaluated result type is in `evaluation.effectiveType`. |
 | `displayValue` | Formatted string as Excel would render it. |
-| `style` | Style snapshot: `numberFormat`, `bold`, `italic`, `wrapText`, `horizontalAlignment`, `verticalAlignment`, `fontName`, `fontHeight`, `fontColor`, `underline`, `strikeout`, `fillColor`, border sides. |
-| `metadata` | Hyperlink and comment metadata attached at snapshot time. |
+| `style` | Nested style snapshot with `numberFormat`, `alignment`, `font`, `fill`, `border`, and `protection`. |
+| `hyperlink` | Optional hyperlink metadata attached at snapshot time. |
+| `comment` | Optional comment metadata attached at snapshot time. |
 
 Type-specific value fields (present only on matching `effectiveType`):
 
 | Field | Present when | Description |
 |:------|:-------------|:------------|
 | `stringValue` | `effectiveType=STRING` | The string content. |
+| `richText` | `effectiveType=STRING` | Optional ordered rich-text runs. When present, run text concatenates exactly to `stringValue`, and each run carries factual effective font data. |
 | `numberValue` | `effectiveType=NUMBER` | The numeric value as a double. |
 | `booleanValue` | `effectiveType=BOOLEAN` | `true` or `false`. |
 | `errorValue` | `effectiveType=ERROR` | The error string (e.g. `#DIV/0!`). |
 | `formula` | `declaredType=FORMULA` | The formula text without the leading `=`. |
 | `evaluation` | `declaredType=FORMULA` | Nested cell snapshot of the evaluated result. |
 
-**fontHeight read-back shape:** `style.fontHeight` is a plain object with both `twips` and
+**fontHeight read-back shape:** `style.font.fontHeight` is a plain object with both `twips` and
 `points` fields: `{"twips": 260, "points": 13}`. This differs from the write-side
 `FontHeightInput` format which uses a discriminated `{"type": "POINTS", "points": 13}` object.
 Agents that read a font height and want to write it back must use the `FontHeightInput` write
