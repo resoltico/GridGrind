@@ -61,7 +61,13 @@ readonly repo_root="$(resolve_script_dir)"
 readonly gradlew="${repo_root}/gradlew"
 current_stage_id='startup'
 current_stage_label='starting'
+current_stage_log_path=''
+current_stage_diagnostics_directory=''
 emit_final_status_enabled=true
+readonly pulse_interval_seconds=15
+readonly stall_threshold_seconds=90
+readonly diagnostics_command_timeout_seconds=5
+readonly stall_exit_code=124
 
 print_usage() {
     printf '%s\n' \
@@ -127,6 +133,373 @@ print_failure_guidance() {
     esac
 }
 
+epoch_seconds() {
+    date +%s
+}
+
+file_size_bytes() {
+    local file_path=$1
+    if [[ ! -f "${file_path}" ]]; then
+        printf '0'
+        return
+    fi
+    stat -f '%z' "${file_path}"
+}
+
+latest_nonempty_line() {
+    local log_path=$1
+    if [[ ! -s "${log_path}" ]]; then
+        return 0
+    fi
+    awk 'NF { line = $0 } END { if (line != "") print line }' "${log_path}"
+}
+
+compact_text() {
+    printf '%s' "$1" \
+        | tr '\n' ' ' \
+        | sed -E 's/[[:space:]]+/ /g; s/^ //; s/ $//' \
+        | cut -c1-220
+}
+
+latest_task_line() {
+    local log_path=$1
+    local task_line=''
+    task_line="$(grep '^> Task ' "${log_path}" | tail -1 2>/dev/null || true)"
+    if [[ -n "${task_line}" ]]; then
+        printf '%s' "${task_line}"
+        return
+    fi
+    latest_nonempty_line "${log_path}"
+}
+
+latest_jazzer_pulse_line() {
+    local log_path=$1
+    grep '^\[JAZZER-PULSE\]' "${log_path}" | tail -1 2>/dev/null || true
+}
+
+stage_progress_summary_jazzer() {
+    local project_dir=$1
+    local log_path=$2
+    local support_total_classes
+    local completed_support_classes
+    local finished_regression_targets
+    local latest_pulse
+
+    support_total_classes="$(
+        find "${project_dir}/src/test/java" -type f -name '*Test.java' | wc -l | tr -d '[:space:]'
+    )"
+    completed_support_classes="$(
+        grep -c '^\[JAZZER-PULSE\] support-tests phase=class-complete ' "${log_path}" 2>/dev/null || true
+    )"
+    finished_regression_targets="$(
+        grep -c '^\[JAZZER-PULSE\] regression-target phase=finish ' "${log_path}" 2>/dev/null || true
+    )"
+    latest_pulse="$(grep '^\[JAZZER-PULSE\]' "${log_path}" | tail -1 2>/dev/null || true)"
+    if [[ -z "${latest_pulse}" ]]; then
+        latest_pulse="$(latest_task_line "${log_path}")"
+    fi
+
+    printf 'support-classes=%s/%s regression-targets=%s/4 latest=%s' \
+        "${completed_support_classes}" \
+        "${support_total_classes}" \
+        "${finished_regression_targets}" \
+        "$(compact_text "${latest_pulse}")"
+}
+
+stage_progress_summary() {
+    local stage_id=$1
+    local project_dir=$2
+    local log_path=$3
+    case "${stage_id}" in
+        jazzer-check)
+            stage_progress_summary_jazzer "${project_dir}" "${log_path}"
+            ;;
+        *)
+            latest_task_line "${log_path}"
+            ;;
+    esac
+}
+
+stage_progress_marker_jazzer() {
+    local log_path=$1
+    local latest_pulse
+    latest_pulse="$(latest_jazzer_pulse_line "${log_path}")"
+    if [[ -n "${latest_pulse}" ]]; then
+        printf '%s' "${latest_pulse}"
+        return
+    fi
+    latest_nonempty_line "${log_path}"
+}
+
+stage_progress_marker() {
+    local stage_id=$1
+    local project_dir=$2
+    local log_path=$3
+    case "${stage_id}" in
+        jazzer-check)
+            stage_progress_marker_jazzer "${log_path}"
+            ;;
+        *)
+            latest_nonempty_line "${log_path}"
+            ;;
+    esac
+}
+
+collect_descendant_pids() {
+    local parent_pid=$1
+    local child_pid=''
+    while IFS= read -r child_pid; do
+        [[ -n "${child_pid}" ]] || continue
+        printf '%s\n' "${child_pid}"
+        collect_descendant_pids "${child_pid}"
+    done < <(pgrep -P "${parent_pid}" 2>/dev/null || true)
+}
+
+capture_with_timeout() {
+    local output_path=$1
+    local timeout_seconds=$2
+    shift 2
+
+    (
+        "$@" >"${output_path}" 2>&1
+    ) &
+    local command_pid=$!
+    (
+        sleep "${timeout_seconds}"
+        if kill -0 "${command_pid}" 2>/dev/null; then
+            kill -TERM "${command_pid}" 2>/dev/null || true
+        fi
+    ) &
+    local watchdog_pid=$!
+
+    wait "${command_pid}" 2>/dev/null || true
+    kill "${watchdog_pid}" 2>/dev/null || true
+    wait "${watchdog_pid}" 2>/dev/null || true
+}
+
+capture_stage_diagnostics() {
+    local stage_id=$1
+    local child_pid=$2
+    local log_path=$3
+    local diagnostics_root=$4
+    local quiet_seconds=$5
+    local snapshot_dir="${diagnostics_root}/$(date -u +%Y%m%dT%H%M%SZ)"
+    mkdir -p "${snapshot_dir}"
+
+    {
+        printf 'stage=%s\n' "${stage_id}"
+        printf 'captured_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+        printf 'quiet_seconds=%s\n' "${quiet_seconds}"
+        printf 'log_path=%s\n' "${log_path}"
+    } >"${snapshot_dir}/metadata.txt"
+
+    local process_ids=()
+    local process_id=''
+    while IFS= read -r process_id; do
+        [[ -n "${process_id}" ]] || continue
+        process_ids+=("${process_id}")
+    done < <(
+        {
+            printf '%s\n' "${child_pid}"
+            collect_descendant_pids "${child_pid}"
+        } | awk '!seen[$0]++'
+    )
+
+    if ((${#process_ids[@]} > 0)); then
+        ps -o pid=,ppid=,etime=,%cpu=,%mem=,command= -p "${process_ids[@]}" \
+            >"${snapshot_dir}/process-tree.txt" 2>&1 || true
+        if command -v lsof >/dev/null 2>&1; then
+            for process_id in "${process_ids[@]}"; do
+                capture_with_timeout \
+                    "${snapshot_dir}/lsof-${process_id}.txt" \
+                    "${diagnostics_command_timeout_seconds}" \
+                    lsof -p "${process_id}"
+            done
+        fi
+        if command -v jcmd >/dev/null 2>&1; then
+            for process_id in "${process_ids[@]}"; do
+                if ps -o command= -p "${process_id}" 2>/dev/null | grep -q '[j]ava'; then
+                    capture_with_timeout \
+                        "${snapshot_dir}/jcmd-${process_id}-thread-print.txt" \
+                        "${diagnostics_command_timeout_seconds}" \
+                        jcmd "${process_id}" Thread.print
+                fi
+            done
+        fi
+    fi
+
+    tail -n 200 "${log_path}" >"${snapshot_dir}/log-tail.txt" 2>&1 || true
+    printf '[CHECK-DIAG] stage=%s quiet=%ss diagnostics=%s\n' \
+        "${stage_id}" \
+        "${quiet_seconds}" \
+        "${snapshot_dir}"
+}
+
+terminate_stage_process() {
+    local child_pid=$1
+    local process_ids=()
+    local process_id=''
+    while IFS= read -r process_id; do
+        [[ -n "${process_id}" ]] || continue
+        process_ids+=("${process_id}")
+    done < <(
+        {
+            printf '%s\n' "${child_pid}"
+            collect_descendant_pids "${child_pid}"
+        } | awk '!seen[$0]++'
+    )
+
+    if ((${#process_ids[@]} == 0)); then
+        return
+    fi
+
+    kill -TERM "${process_ids[@]}" 2>/dev/null || true
+    sleep 5
+
+    local remaining_process_ids=()
+    for process_id in "${process_ids[@]}"; do
+        if kill -0 "${process_id}" 2>/dev/null; then
+            remaining_process_ids+=("${process_id}")
+        fi
+    done
+
+    if ((${#remaining_process_ids[@]} > 0)); then
+        kill -KILL "${remaining_process_ids[@]}" 2>/dev/null || true
+    fi
+}
+
+monitor_stage_process() {
+    local stage_id=$1
+    local project_dir=$2
+    local log_path=$3
+    local diagnostics_root=$4
+    local child_pid=$5
+    local started_at
+    local last_output_at
+    local last_progress_at
+    local last_seen_size=0
+    local last_progress_marker=''
+
+    started_at="$(epoch_seconds)"
+    last_output_at="${started_at}"
+    last_progress_at="${started_at}"
+
+    while kill -0 "${child_pid}" 2>/dev/null; do
+        sleep "${pulse_interval_seconds}"
+        if ! kill -0 "${child_pid}" 2>/dev/null; then
+            break
+        fi
+
+        local now
+        local current_size
+        now="$(epoch_seconds)"
+        current_size="$(file_size_bytes "${log_path}")"
+        if (( current_size > last_seen_size )); then
+            last_output_at="${now}"
+            last_seen_size="${current_size}"
+        fi
+
+        local elapsed_seconds
+        local quiet_seconds
+        local stalled_seconds
+        local progress_summary
+        local progress_marker
+        progress_marker="$(stage_progress_marker "${stage_id}" "${project_dir}" "${log_path}")"
+        if [[ -n "${progress_marker}" && "${progress_marker}" != "${last_progress_marker}" ]]; then
+            last_progress_at="${now}"
+            last_progress_marker="${progress_marker}"
+        fi
+        elapsed_seconds=$((now - started_at))
+        quiet_seconds=$((now - last_output_at))
+        stalled_seconds=$((now - last_progress_at))
+        progress_summary="$(stage_progress_summary "${stage_id}" "${project_dir}" "${log_path}")"
+        if [[ -z "${progress_summary}" ]]; then
+            progress_summary='(no progress reported yet)'
+        fi
+        printf '[CHECK-PULSE] stage=%s elapsed=%ss quiet=%ss stalled=%ss progress=%s\n' \
+            "${stage_id}" \
+            "${elapsed_seconds}" \
+            "${quiet_seconds}" \
+            "${stalled_seconds}" \
+            "$(compact_text "${progress_summary}")"
+
+        if (( stalled_seconds >= stall_threshold_seconds )); then
+            capture_stage_diagnostics \
+                "${stage_id}" \
+                "${child_pid}" \
+                "${log_path}" \
+                "${diagnostics_root}" \
+                "${stalled_seconds}"
+            printf '[CHECK-STALL] stage=%s stalled=%ss action=terminate\n' \
+                "${stage_id}" \
+                "${stalled_seconds}"
+            terminate_stage_process "${child_pid}"
+            return "${stall_exit_code}"
+        fi
+    done
+}
+
+run_monitored_command() {
+    local stage_id=$1
+    local stage_label=$2
+    local project_dir=$3
+    shift 3
+
+    current_stage_id="${stage_id}"
+    current_stage_label="${stage_label}"
+    printf '%s\n' "${stage_label}"
+
+    local stage_temp_dir
+    stage_temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind-check-${stage_id}.XXXXXX")"
+    local log_path="${stage_temp_dir}/${stage_id}.log"
+    local diagnostics_root="${stage_temp_dir}/diagnostics"
+    local pipe_path="${stage_temp_dir}/${stage_id}.pipe"
+    mkdir -p "${diagnostics_root}"
+    current_stage_log_path="${log_path}"
+    current_stage_diagnostics_directory="${diagnostics_root}"
+
+    printf '[CHECK-PULSE] stage=%s phase=start log=%s diagnostics=%s\n' \
+        "${stage_id}" \
+        "${log_path}" \
+        "${diagnostics_root}"
+
+    mkfifo "${pipe_path}"
+    tee -a "${log_path}" <"${pipe_path}" &
+    local tee_pid=$!
+    (
+        cd "${project_dir}"
+        "$@"
+    ) >"${pipe_path}" 2>&1 &
+    local child_pid=$!
+    rm -f "${pipe_path}"
+
+    local monitor_exit_code=0
+    if monitor_stage_process "${stage_id}" "${project_dir}" "${log_path}" "${diagnostics_root}" "${child_pid}"; then
+        monitor_exit_code=0
+    else
+        monitor_exit_code=$?
+    fi
+
+    local child_exit_code=0
+    if wait "${child_pid}"; then
+        child_exit_code=0
+    else
+        child_exit_code=$?
+    fi
+    wait "${tee_pid}" 2>/dev/null || true
+
+    if (( monitor_exit_code != 0 )); then
+        child_exit_code="${monitor_exit_code}"
+    fi
+
+    printf '[CHECK-PULSE] stage=%s phase=finish exit=%d log=%s\n' \
+        "${stage_id}" \
+        "${child_exit_code}" \
+        "${log_path}"
+
+    return "${child_exit_code}"
+}
+
 emit_final_status() {
     local exit_code=$?
     [[ "${emit_final_status_enabled}" == true ]] || return 0
@@ -136,6 +509,12 @@ emit_final_status() {
     else
         printf 'Result: failure during %s\n' "${current_stage_label}"
         print_failure_guidance
+        if [[ -n "${current_stage_log_path}" ]]; then
+            printf 'Stage log: %s\n' "${current_stage_log_path}"
+        fi
+        if [[ -n "${current_stage_diagnostics_directory}" ]]; then
+            printf 'Diagnostics directory: %s\n' "${current_stage_diagnostics_directory}"
+        fi
         printf '[CHECK-SUMMARY] status=failure stage=%s exit_code=%d\n' "${current_stage_id}" "${exit_code}"
     fi
 }
@@ -217,20 +596,21 @@ run_stage() {
     local stage_label=$2
     local project_dir=$3
     shift 3
-    current_stage_id="${stage_id}"
-    current_stage_label="${stage_label}"
-    printf '%s\n' "${stage_label}"
-    "${gradlew}" --project-dir "${project_dir}" "$@" "${gradle_args[@]}"
+    run_monitored_command \
+        "${stage_id}" \
+        "${stage_label}" \
+        "${project_dir}" \
+        "${gradlew}" \
+        --project-dir "${project_dir}" \
+        "$@" \
+        "${gradle_args[@]}"
 }
 
 run_shell_stage() {
     local stage_id=$1
     local stage_label=$2
     shift 2
-    current_stage_id="${stage_id}"
-    current_stage_label="${stage_label}"
-    printf '%s\n' "${stage_label}"
-    (cd "${repo_root}" && "$@")
+    run_monitored_command "${stage_id}" "${stage_label}" "${repo_root}" "$@"
 }
 
 run_stage 'quality-gates' 'Stage 1/5: running quality gates' "${repo_root}" check coverage

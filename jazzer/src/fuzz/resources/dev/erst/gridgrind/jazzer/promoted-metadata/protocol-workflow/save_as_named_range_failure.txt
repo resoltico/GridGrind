@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/save_as_named_range_failure.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/save_as_named_range_failure.bin
 Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 314
@@ -9,5 +9,5 @@ Operation Count: 5
 Read Count: 6
 Read Kinds: ANALYZE_WORKBOOK_FINDINGS=6
 Response Kind: SUCCESS
-Style Kinds: font_name=4, font_color=4, bold=4, strikeout=4, border=4, fill_color=4, font_height=4, vertical_alignment=4, italic=4, wrap_text=4, font_height_twips=4, underline=4, horizontal_alignment=4, border_top=3, border_bottom=3, border_all_none=1, border_all=1
+Style Kinds: wrap_text=4, italic=4, font_height_twips=4, underline=4, horizontal_alignment=4, font_name=4, font_color=4, bold=4, border=4, fill_color=4, strikeout=4, font_height=4, vertical_alignment=4, border_top=3, border_bottom=3, border_all_none=1, border_all=1
 Operation Kinds: APPLY_STYLE=4, FORCE_FORMULA_RECALCULATION_ON_OPEN=1

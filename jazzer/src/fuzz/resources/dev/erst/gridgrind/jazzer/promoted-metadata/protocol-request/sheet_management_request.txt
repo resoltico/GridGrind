@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/sheet_management_request.json
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/sheet_management_request.json
 Harness: protocol-request
 Outcome: SUCCESS
 Input Bytes: 2666
@@ -10,4 +10,4 @@ Operation Count: 10
 Read Count: 4
 Read Kinds: GET_SHEET_SUMMARY=2, GET_WINDOW=1, GET_WORKBOOK_SUMMARY=1
 Style Kinds: (none)
-Operation Kinds: SET_CELL=2, ENSURE_SHEET=2, SET_ACTIVE_SHEET=1, SET_SHEET_VISIBILITY=1, SET_RANGE=1, SET_SELECTED_SHEETS=1, SET_SHEET_PROTECTION=1, COPY_SHEET=1
+Operation Kinds: SET_CELL=2, ENSURE_SHEET=2, SET_SHEET_PROTECTION=1, COPY_SHEET=1, SET_ACTIVE_SHEET=1, SET_SHEET_VISIBILITY=1, SET_RANGE=1, SET_SELECTED_SHEETS=1

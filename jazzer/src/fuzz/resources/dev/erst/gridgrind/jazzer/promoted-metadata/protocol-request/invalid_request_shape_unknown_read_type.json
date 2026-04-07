@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_unknown_read_type.json",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_unknown_read_type.json",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_unknown_read_type.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_unknown_read_type.json",
   "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
     "outcomeKind" : "EXPECTED_INVALID",
@@ -19,5 +19,5 @@
     }
   },
   "promotedAt" : "2026-03-28T00:14:30.035124Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/invalid_request_shape_unknown_read_type.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/invalid_request_shape_unknown_read_type.txt"
 }

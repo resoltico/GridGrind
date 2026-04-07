@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.28.0"
+version: "0.29.0"
 domain: OPERATIONS
 updated: "2026-04-02"
 route:
@@ -415,6 +415,282 @@ Set the height of one or more contiguous rows. Row indexes are zero-based and in
 | `firstRowIndex` | Yes | Zero-based first row index. |
 | `lastRowIndex` | Yes | Zero-based last row index. Must be greater than or equal to `firstRowIndex`. |
 | `heightPoints` | Yes | Positive Excel row height in points. Must be finite and > 0 and ≤ 1,638.35 (Excel storage limit: 32,767 twips). |
+
+---
+
+### INSERT_ROWS
+
+Insert one or more blank rows before `rowIndex`. `rowIndex` is zero-based and may point at the
+current append position (`last existing row + 1`) but not beyond it.
+
+```json
+{
+  "type": "INSERT_ROWS",
+  "sheetName": "Inventory",
+  "rowIndex": 2,
+  "rowCount": 3
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `rowIndex` | Yes | Zero-based insertion point. Must be within the current row bounds or exactly one past the last existing row. |
+| `rowCount` | Yes | Positive number of blank rows to insert. |
+
+GridGrind rejects the edit when Apache POI would leave a moved table, sheet-owned autofilter, or
+data validation stale (`LIM-016`).
+
+---
+
+### DELETE_ROWS
+
+Delete one inclusive zero-based row band. Rows beneath the deleted band shift upward.
+
+```json
+{
+  "type": "DELETE_ROWS",
+  "sheetName": "Inventory",
+  "rows": { "type": "BAND", "firstRowIndex": 4, "lastRowIndex": 6 }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `rows` | Yes | One inclusive row-band payload. |
+
+GridGrind rejects the edit when it would move or truncate a table, sheet-owned autofilter, or
+data validation (`LIM-016`), and it also rejects deletes that would truncate a range-backed named
+range (`LIM-018`).
+
+---
+
+### SHIFT_ROWS
+
+Move one inclusive zero-based row band by a signed non-zero `delta`. Positive values move rows
+down; negative values move rows up.
+
+```json
+{
+  "type": "SHIFT_ROWS",
+  "sheetName": "Inventory",
+  "rows": { "type": "BAND", "firstRowIndex": 1, "lastRowIndex": 3 },
+  "delta": 2
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `rows` | Yes | One inclusive row-band payload. |
+| `delta` | Yes | Signed non-zero row offset. |
+
+GridGrind rejects the edit when it would move a table, sheet-owned autofilter, or data
+validation (`LIM-016`), and it also rejects shifts that would partially move or overwrite a
+range-backed named range outside the moved band (`LIM-018`).
+
+---
+
+### INSERT_COLUMNS
+
+Insert one or more blank columns before `columnIndex`. `columnIndex` is zero-based and may point
+at the current append position (`last existing column + 1`) but not beyond it.
+
+```json
+{
+  "type": "INSERT_COLUMNS",
+  "sheetName": "Inventory",
+  "columnIndex": 1,
+  "columnCount": 2
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `columnIndex` | Yes | Zero-based insertion point. Must be within the current column bounds or exactly one past the last existing column. |
+| `columnCount` | Yes | Positive number of blank columns to insert. |
+
+GridGrind rejects the edit when Apache POI would leave a moved table, sheet-owned autofilter, or
+data validation stale (`LIM-016`), and it also rejects the edit when the workbook contains any
+formula cells or formula-defined named ranges because Apache POI leaves some column references
+stale after column moves (`LIM-017`).
+
+---
+
+### DELETE_COLUMNS
+
+Delete one inclusive zero-based column band. Columns to the right of the deleted band shift left.
+
+```json
+{
+  "type": "DELETE_COLUMNS",
+  "sheetName": "Inventory",
+  "columns": { "type": "BAND", "firstColumnIndex": 3, "lastColumnIndex": 4 }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `columns` | Yes | One inclusive column-band payload. |
+
+GridGrind enforces ownership rejection (`LIM-016`), the formula-bearing workbook guard for column
+structural edits (`LIM-017`), and a named-range guard that rejects deletes which would truncate a
+range-backed named range (`LIM-018`).
+
+---
+
+### SHIFT_COLUMNS
+
+Move one inclusive zero-based column band by a signed non-zero `delta`. Positive values move
+columns right; negative values move columns left.
+
+```json
+{
+  "type": "SHIFT_COLUMNS",
+  "sheetName": "Inventory",
+  "columns": { "type": "BAND", "firstColumnIndex": 0, "lastColumnIndex": 1 },
+  "delta": -1
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `columns` | Yes | One inclusive column-band payload. |
+| `delta` | Yes | Signed non-zero column offset. |
+
+GridGrind enforces ownership rejection (`LIM-016`), the formula-bearing workbook guard for column
+structural edits (`LIM-017`), and a named-range guard that rejects shifts which would partially
+move or overwrite a range-backed named range outside the moved band (`LIM-018`).
+
+---
+
+### SET_ROW_VISIBILITY
+
+Hide or unhide one inclusive zero-based row band.
+
+```json
+{
+  "type": "SET_ROW_VISIBILITY",
+  "sheetName": "Inventory",
+  "rows": { "type": "BAND", "firstRowIndex": 5, "lastRowIndex": 7 },
+  "hidden": true
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `rows` | Yes | One inclusive row-band payload. |
+| `hidden` | Yes | `true` hides the rows; `false` unhides them. |
+
+---
+
+### SET_COLUMN_VISIBILITY
+
+Hide or unhide one inclusive zero-based column band.
+
+```json
+{
+  "type": "SET_COLUMN_VISIBILITY",
+  "sheetName": "Inventory",
+  "columns": { "type": "BAND", "firstColumnIndex": 2, "lastColumnIndex": 3 },
+  "hidden": false
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `columns` | Yes | One inclusive column-band payload. |
+| `hidden` | Yes | `true` hides the columns; `false` unhides them. |
+
+---
+
+### GROUP_ROWS
+
+Apply one outline group to one inclusive zero-based row band. When `collapsed` is omitted it
+defaults to `false`.
+
+```json
+{
+  "type": "GROUP_ROWS",
+  "sheetName": "Inventory",
+  "rows": { "type": "BAND", "firstRowIndex": 8, "lastRowIndex": 10 },
+  "collapsed": true
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `rows` | Yes | One inclusive row-band payload. |
+| `collapsed` | No | When `true`, the newly grouped rows are collapsed immediately. Defaults to `false`. |
+
+---
+
+### UNGROUP_ROWS
+
+Remove one outline group from one inclusive zero-based row band. GridGrind expands the band first
+so hidden rows are not left stranded in a collapsed state.
+
+```json
+{
+  "type": "UNGROUP_ROWS",
+  "sheetName": "Inventory",
+  "rows": { "type": "BAND", "firstRowIndex": 8, "lastRowIndex": 10 }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `rows` | Yes | One inclusive row-band payload. |
+
+---
+
+### GROUP_COLUMNS
+
+Apply one outline group to one inclusive zero-based column band. When `collapsed` is omitted it
+defaults to `false`.
+
+```json
+{
+  "type": "GROUP_COLUMNS",
+  "sheetName": "Inventory",
+  "columns": { "type": "BAND", "firstColumnIndex": 4, "lastColumnIndex": 6 },
+  "collapsed": true
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `columns` | Yes | One inclusive column-band payload. |
+| `collapsed` | No | When `true`, the newly grouped columns are collapsed immediately. Defaults to `false`. |
+
+---
+
+### UNGROUP_COLUMNS
+
+Remove one outline group from one inclusive zero-based column band. GridGrind expands the band
+first so hidden columns are not left stranded in a collapsed state.
+
+```json
+{
+  "type": "UNGROUP_COLUMNS",
+  "sheetName": "Inventory",
+  "columns": { "type": "BAND", "firstColumnIndex": 4, "lastColumnIndex": 6 }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `columns` | Yes | One inclusive column-band payload. |
 
 ---
 
@@ -1549,7 +1825,9 @@ Cell-selection payloads use:
 
 ### GET_SHEET_LAYOUT
 
-Returns pane state, effective zoom, and explicit row-height and column-width facts for one sheet.
+Returns pane state, effective zoom, and per-row or per-column layout facts for one sheet. Row and
+column entries include explicit size plus `hidden`, `outlineLevel`, and `collapsed` where Excel
+exposes that state.
 
 ```json
 {

@@ -45,7 +45,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.28.0
+docker pull ghcr.io/resoltico/gridgrind:0.29.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -170,6 +170,18 @@ translation boundary into the Apache-POI-backed workbook engine.
 | `UNMERGE_CELLS` | Remove a merged region by exact range match |
 | `SET_COLUMN_WIDTH` | Set one or more column widths using character units |
 | `SET_ROW_HEIGHT` | Set one or more row heights using point units |
+| `INSERT_ROWS` | Insert one or more blank rows before a zero-based row index |
+| `DELETE_ROWS` | Delete one inclusive zero-based row band |
+| `SHIFT_ROWS` | Move one inclusive zero-based row band by a signed delta |
+| `INSERT_COLUMNS` | Insert one or more blank columns before a zero-based column index |
+| `DELETE_COLUMNS` | Delete one inclusive zero-based column band |
+| `SHIFT_COLUMNS` | Move one inclusive zero-based column band by a signed delta |
+| `SET_ROW_VISIBILITY` | Hide or unhide one inclusive zero-based row band |
+| `SET_COLUMN_VISIBILITY` | Hide or unhide one inclusive zero-based column band |
+| `GROUP_ROWS` | Apply one outline group to one inclusive zero-based row band |
+| `UNGROUP_ROWS` | Remove one outline group from one inclusive zero-based row band |
+| `GROUP_COLUMNS` | Apply one outline group to one inclusive zero-based column band |
+| `UNGROUP_COLUMNS` | Remove one outline group from one inclusive zero-based column band |
 | `SET_SHEET_PANE` | Apply an explicit pane state using `NONE`, `FROZEN`, or `SPLIT` |
 | `SET_SHEET_ZOOM` | Set the sheet zoom percentage |
 | `SET_PRINT_LAYOUT` | Apply the supported print-layout state to one sheet |
@@ -219,6 +231,18 @@ split counts plus visible-origin coordinates, while `SPLIT` panes use Excel spli
 from `10` through `400`. `SET_PRINT_LAYOUT` covers print area, portrait or landscape orientation,
 fit scaling, repeating rows, repeating columns, and plain left/center/right header or footer
 text, while `CLEAR_PRINT_LAYOUT` restores the supported default state.
+
+Row and column structural editing is now supported directly. `INSERT_ROWS`, `DELETE_ROWS`,
+`SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, and `SHIFT_COLUMNS` change sheet geometry.
+`SET_ROW_VISIBILITY`, `SET_COLUMN_VISIBILITY`, `GROUP_ROWS`, `UNGROUP_ROWS`, `GROUP_COLUMNS`,
+and `UNGROUP_COLUMNS` control outline and hidden-state presentation. To prevent silent workbook
+drift, row structural edits reject any request that would move or truncate a table, sheet-owned
+autofilter, or data validation. Row deletes and shifts also reject destructive interactions with
+range-backed named ranges, while still allowing names that are fully contained inside the moved
+band or completely untouched by the edit. Column structural edits enforce the same ownership rule,
+delete and shift operations reject destructive range-backed named-range rewrites, and all column
+structural edits still reject workbooks that contain formulas or formula-defined names because
+Apache POI leaves some column references stale after column moves.
 
 `APPLY_STYLE` supports number formats, bold/italic, wrap, horizontal and vertical alignment,
 `fontName`, typed `fontHeight`, `fontColor`, `underline`, `strikeout`, `fillColor`, and per-side
@@ -324,9 +348,11 @@ agents can correlate repeated or similar reads deterministically.
 workbooks and `kind=WITH_SHEETS` when one or more sheets exist. Non-empty workbooks also report
 `activeSheetName` and workbook-ordered `selectedSheetNames`. `GET_SHEET_SUMMARY` now reports
 sheet `visibility` plus typed `protection` state alongside the existing row and column facts.
-`GET_SHEET_LAYOUT` returns pane state plus effective zoom and explicit row-height or column-width
-facts for one sheet. `GET_PRINT_LAYOUT` returns the supported print-area, orientation, scaling,
-repeating-row, repeating-column, and plain header or footer text state for one sheet.
+`GET_SHEET_LAYOUT` returns pane state, effective zoom, and per-row or per-column layout facts for
+one sheet. Row and column entries now include explicit size plus `hidden`, `outlineLevel`, and
+`collapsed` where Excel exposes that state. `GET_PRINT_LAYOUT` returns the supported print-area,
+orientation, scaling, repeating-row, repeating-column, and plain header or footer text state for
+one sheet.
 `GET_HYPERLINKS` returns hyperlinks in the same discriminated shape used by `SET_HYPERLINK`
 targets. `FILE` targets come back in the `path` field as normalized plain path strings.
 `GET_DATA_VALIDATIONS` returns supported validation entries plus typed unsupported entries for the

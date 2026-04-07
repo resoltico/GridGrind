@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.28.0"
+version: "0.29.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-04-01"
+updated: "2026-04-07"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -25,7 +25,7 @@ route:
 
 This document is the canonical source of truth for Jazzer in GridGrind.
 
-As of `2026-04-01`, the Jazzer layer is implemented and working end to end.
+As of `2026-04-07`, the Jazzer layer is implemented and working end to end.
 
 Implemented now:
 - standalone nested Gradle build at `jazzer/`
@@ -36,6 +36,8 @@ Implemented now:
   nested Jazzer `check` sequentially
 - per-target run history, latest-summary artifacts, and per-harness telemetry
 - replay and promotion tooling
+- pure-Java deterministic replay for the structured binary harnesses, so committed-seed replay
+  and `jazzer/bin/replay` do not depend on Jazzer's native replay provider loading
 - replay-expectation verification for every promoted metadata entry
 - promoted-metadata refresh tooling for intentional generator and replay-shape changes
 - committed custom seed floor made of promoted regression inputs and readable example requests
@@ -43,6 +45,7 @@ Implemented now:
   named-range persistence, named-range normalization, data-validation persistence, table and
   autofilter persistence boundaries, and the explicit `reads` pipeline
 - local-only corpora, logs, finding artifacts, and cleanup commands
+- semantic progress pulses and stall-aware outer-gate monitoring for long-running Jazzer stages
 
 Deliberately not implemented:
 - any root-build dependency on Jazzer
@@ -87,6 +90,8 @@ Seed policy:
 - the local generated corpus remains the large exploratory pool and stays uncommitted
 - a promoted seed is not automatically a deterministic ordinary test; promote first, then decide
   whether it also deserves a main-suite regression test
+- deterministic replay for promoted binary seeds is defined by GridGrind's own replay seam, not by
+  direct dependence on Jazzer's native `withJavaData(...)` bootstrap path
 - every promoted metadata entry must carry a stable replay expectation and must remain replay-
   verified by deterministic support tests
 - the promotion contract is bidirectional and enforced by `PromotionMetadataTest`: every file
@@ -113,11 +118,11 @@ The operator goal is not to maximize seed count. The goal is to preserve a stabl
 - representative feature-family coverage
 
 Current promoted floor:
-- `protocol-request`: 30 committed seeds
+- `protocol-request`: 33 committed seeds
 - `protocol-workflow`: 11 committed seeds
 - `engine-command-sequence`: 8 committed seeds
-- `xlsx-roundtrip`: 14 committed seeds
-- total promoted seed floor: 63 inputs
+- `xlsx-roundtrip`: 15 committed seeds
+- total promoted seed floor: 67 inputs
 
 ---
 
@@ -214,10 +219,13 @@ GridGrind/
 │   ├── src/
 │   │   ├── main/
 │   │   │   └── java/
-│   │   │       ├── com/code_intelligence/jazzer/utils/UnsafeProvider.java
 │   │   │       └── dev/erst/gridgrind/jazzer/
 │   │   │           ├── support/
+│   │   │           │   ├── GridGrindFuzzData.java
+│   │   │           │   ├── JazzerGridGrindFuzzData.java
+│   │   │           │   └── ReplayGridGrindFuzzData.java
 │   │   │           └── tool/
+│   │   │               └── JazzerRegressionRunner.java
 │   │   ├── test/
 │   │   │   └── java/
 │   │   │       └── dev/erst/gridgrind/jazzer/
@@ -247,6 +255,10 @@ GridGrind/
 Tree rules:
 - `jazzer/` is the only top-level home for Jazzer code and Jazzer-local state.
 - `jazzer/src/main/java` contains shared support, telemetry, replay, report, and promotion code.
+- `jazzer/src/main/java/dev/erst/gridgrind/jazzer/support/GridGrindFuzzData` is the only allowed
+  structured-generator seam for scalar fuzz-data consumption; deterministic replay must stay on
+  the project-owned pure-Java implementation rather than calling Jazzer native replay APIs
+  directly.
 - `jazzer/src/test/java` contains deterministic tests for the Jazzer support and reporting layer.
 - `jazzer/src/fuzz/java` contains only fuzz harness classes.
 - `jazzer/src/fuzz/resources` contains only committed regression inputs and promotion metadata.

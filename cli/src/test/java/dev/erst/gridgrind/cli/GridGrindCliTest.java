@@ -259,6 +259,18 @@ class GridGrindCliTest {
   }
 
   @Test
+  void helpTextIncludesStructuralEditLimitNotes() {
+    String help = GridGrindCli.helpText("1.0.0");
+
+    assertTrue(
+        help.contains(
+            "Row structural edits:     rejected when they would move tables, sheet autofilters, or data validations; deletes/shifts also reject destructive range-backed named ranges."));
+    assertTrue(
+        help.contains(
+            "Column structural edits:  same ownership rule; deletes/shifts also reject destructive range-backed named ranges; all column edits reject formulas or formula-defined names."));
+  }
+
+  @Test
   void descriptionFrom_returnsFallback_whenResourceAbsent() {
     // Object.class lives in the bootstrap classloader which has no gridgrind.properties.
     assertEquals("GridGrind", GridGrindCli.descriptionFrom(Object.class));

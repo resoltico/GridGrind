@@ -1,7 +1,7 @@
 {
   "targetKey" : "xlsx-roundtrip",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-0196775dc07e92df7ec0ac3c19d56dd8e26c7c1c",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_preserves_styled_blank_row_roundtrip_success.bin",
+  "sourcePath" : ".local/runs/xlsx-roundtrip/crash-0196775dc07e92df7ec0ac3c19d56dd8e26c7c1c",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_preserves_styled_blank_row_roundtrip_success.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -10,14 +10,14 @@
       "inputBytes" : 107,
       "commandCount" : 6,
       "commandKinds" : {
-        "CLEAR_CONDITIONAL_FORMATTING" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3,
         "CREATE_SHEET" : 1,
-        "CLEAR_SHEET_PROTECTION" : 1
+        "CLEAR_SHEET_PROTECTION" : 1,
+        "CLEAR_CONDITIONAL_FORMATTING" : 1,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3
       },
       "styleKinds" : { }
     }
   },
   "promotedAt" : "2026-03-31T13:03:51.323419Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/append_row_preserves_styled_blank_row_roundtrip_success.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/append_row_preserves_styled_blank_row_roundtrip_success.txt"
 }

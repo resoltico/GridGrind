@@ -3,6 +3,71 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.29.0] - 2026-04-07
+
+### Added
+
+- Column structural editing:
+  `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`,
+  `SHIFT_COLUMNS`, `SET_ROW_VISIBILITY`, `SET_COLUMN_VISIBILITY`, `GROUP_ROWS`,
+  `UNGROUP_ROWS`, `GROUP_COLUMNS`, and `UNGROUP_COLUMNS`.
+- `GET_SHEET_LAYOUT` now reports row and column `hidden`, `outlineLevel`, and `collapsed`
+  facts alongside explicit size so grouped or hidden structure can be read back cleanly.
+- New example request: `examples/row-column-structure-request.json`.
+- Round-trip and Jazzer verification now assert persisted row or column layout state for column structural
+  operations, including hidden-state shifts, grouping, and save-reopen fidelity.
+- Jazzer promoted seed `row_column_structure_request` now covers the public structural-edit
+  request surface, including row or column insertion, deletion, shifting, visibility, grouping,
+  and `GET_SHEET_LAYOUT` reads.
+
+### Changed
+
+- `./check.sh` now emits `[CHECK-PULSE]` stage progress lines during long-running verification
+  and captures `[CHECK-DIAG]` stall snapshots with process-tree, `lsof`, thread-dump, and log-tail
+  artifacts when a stage stops making semantic progress. Diagnosed stalled stages are now
+  terminated with a stable failure instead of waiting indefinitely.
+- Nested Jazzer verification now emits stable `[JAZZER-PULSE]` progress lines for deterministic
+  support tests, per-harness regression targets, per-input committed-seed replay, and standalone
+  harness replay, so long-running Stage 2 verification exposes real progress instead of appearing
+  silent.
+- Promoted-input semantic replay now runs only in the dedicated Jazzer regression runner tasks
+  instead of inside `PromotionMetadataTest`, keeping the support-test JVM structural-only while
+  preserving committed replay-contract verification in the isolated tool runtime.
+- Deterministic Jazzer replay now uses a project-owned pure-Java scalar fuzz-data cursor for the
+  subset of `FuzzedDataProvider` behavior GridGrind actually consumes, so `jazzer/bin/replay`
+  and committed-seed regression no longer depend on Jazzer's native replay provider loading in a
+  fresh JVM.
+- Column structural edits now re-normalize explicit column metadata after insert, delete, and
+  shift operations so hidden state, outline state, and other explicit column-definition facts move
+  with the authored columns instead of being left behind in stale XML.
+- GridGrind now documents and surfaces two product-owned structural-edit limits:
+  `LIM-016` rejects edits that would move or truncate tables, sheet-owned autofilters, or data
+  validations; `LIM-017` rejects column structural edits when formulas or formula-defined names
+  are present because Apache POI leaves some column references stale.
+
+### Fixed
+
+- Row and column destructive structural edits now reject range-backed named ranges before Apache
+  POI can rewrite them into broken `#REF!` formulas. `DELETE_ROWS`, `SHIFT_ROWS`,
+  `DELETE_COLUMNS`, and `SHIFT_COLUMNS` now preserve workbook integrity by allowing only safe
+  named-range cases such as full-band moves and completely untouched ranges.
+- Column structural edits now preserve Apache POI's required `<cols>` worksheet container even
+  when a sheet has no explicit column metadata, so follow-up operations like `GROUP_COLUMNS`,
+  `UNGROUP_COLUMNS`, and column visibility changes no longer crash after insert, delete, or shift
+  edits rebuild column definitions.
+- Collapsed row groups at the sparse tail of a sheet now persist their control-row marker across
+  save and reopen, so `GROUP_ROWS(..., collapsed=true)` round-trips the exposed `collapsed` fact
+  in `GET_SHEET_LAYOUT` instead of losing it on reopen.
+- Sparse rows touched by `UNGROUP_ROWS` now normalize Apache POI's internal outline-level
+  sentinel `-1` back to public outline level `0`, so row layout reads and round-trip assertions
+  stay stable after save and reopen.
+- Promoted Jazzer metadata and replay text now store project-relative paths instead of
+  hard-coded workspace paths. `jazzer/bin/promote`, promoted-metadata refresh, and orphaned-seed
+  detection now resolve those paths against the project directory, so replay validation works
+  correctly from alternate worktrees.
+
 ## [0.28.0] - 2026-04-06
 
 ### Changed
@@ -944,7 +1009,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.28.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.29.0...HEAD
+[0.29.0]: https://github.com/resoltico/GridGrind/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/resoltico/GridGrind/compare/v0.27.0...v0.28.0
 [0.27.0]: https://github.com/resoltico/GridGrind/compare/v0.26.0...v0.27.0
 [0.26.0]: https://github.com/resoltico/GridGrind/compare/v0.25.0...v0.26.0

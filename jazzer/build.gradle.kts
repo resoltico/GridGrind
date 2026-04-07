@@ -1,6 +1,7 @@
 import java.nio.file.DirectoryNotEmptyException
 import java.nio.file.Files
 import java.util.Comparator
+import dev.erst.gridgrind.jazzer.build.JazzerSupportTestPulseListener
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.plugins.JavaPluginExtension
@@ -140,6 +141,49 @@ fun requiredGradleProperty(name: String): String =
     providers.gradleProperty(name).orNull
         ?: throw IllegalArgumentException("Missing Gradle property: $name")
 
+data class JazzerHarnessPulseMetadata(
+    val key: String,
+    val className: String,
+    val methodName: String
+) {
+    fun inputDirectory(projectDirectory: java.io.File): java.nio.file.Path {
+        val packagePath = className.substringBeforeLast('.').replace('.', '/')
+        val simpleName = className.substringAfterLast('.')
+        return projectDirectory
+            .toPath()
+            .resolve("src/fuzz/resources")
+            .resolve("$packagePath/${simpleName}Inputs/$methodName")
+    }
+}
+
+val jazzerHarnessPulseMetadataByClassName: Map<String, JazzerHarnessPulseMetadata> =
+    listOf(
+        JazzerHarnessPulseMetadata(
+            "protocol-request",
+            "dev.erst.gridgrind.jazzer.protocol.ProtocolRequestFuzzTest",
+            "readRequest"
+        ),
+        JazzerHarnessPulseMetadata(
+            "protocol-workflow",
+            "dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest",
+            "executeWorkflow"
+        ),
+        JazzerHarnessPulseMetadata(
+            "engine-command-sequence",
+            "dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest",
+            "applyCommands"
+        ),
+        JazzerHarnessPulseMetadata(
+            "xlsx-roundtrip",
+            "dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest",
+            "roundTrip"
+        )
+    ).associateBy(JazzerHarnessPulseMetadata::className)
+
+fun harnessForClassName(className: String): JazzerHarnessPulseMetadata =
+    jazzerHarnessPulseMetadataByClassName[className]
+        ?: throw IllegalArgumentException("Unknown Jazzer harness class: $className")
+
 fun JavaExec.configureHarnessRuntime() {
     classpath = fuzzSourceSet.runtimeClasspath
     mainClass.set("dev.erst.gridgrind.jazzer.tool.JazzerHarnessRunner")
@@ -200,49 +244,43 @@ fun registerFuzzTask(
 fun registerRegressionTask(
     name: String,
     descriptionText: String,
-    className: String,
-    workingDirectory: String
+    className: String
 ) = tasks.register<JavaExec>(name) {
+    val harness = harnessForClassName(className)
     description = descriptionText
     group = "verification"
-    configureHarnessRuntime()
-    args("--class", className)
-    workingDir = runDirectory(workingDirectory)
-    doFirst {
-        workingDir.mkdirs()
-    }
+    configureMainSourceSet()
+    mainClass.set("dev.erst.gridgrind.jazzer.tool.JazzerRegressionRunner")
+    args("--target", harness.key)
+    workingDir = layout.projectDirectory.asFile
 }
 
 val regressionProtocolRequest =
     registerRegressionTask(
         "regressionProtocolRequest",
         "Replays committed protocol-request Jazzer inputs in regression mode.",
-        "dev.erst.gridgrind.jazzer.protocol.ProtocolRequestFuzzTest",
-        ".local/runs/regression/protocol-request"
+        "dev.erst.gridgrind.jazzer.protocol.ProtocolRequestFuzzTest"
     )
 
 val regressionProtocolWorkflow =
     registerRegressionTask(
         "regressionProtocolWorkflow",
         "Replays committed protocol-workflow Jazzer inputs in regression mode.",
-        "dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest",
-        ".local/runs/regression/protocol-workflow"
+        "dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest"
     )
 
 val regressionEngineCommandSequence =
     registerRegressionTask(
         "regressionEngineCommandSequence",
         "Replays committed engine-command-sequence Jazzer inputs in regression mode.",
-        "dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest",
-        ".local/runs/regression/engine-command-sequence"
+        "dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest"
     )
 
 val regressionXlsxRoundTrip =
     registerRegressionTask(
         "regressionXlsxRoundTrip",
         "Replays committed xlsx-roundtrip Jazzer inputs in regression mode.",
-        "dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest",
-        ".local/runs/regression/xlsx-roundtrip"
+        "dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest"
     )
 
 val jazzerRegression =
@@ -294,11 +332,16 @@ val fuzzXlsxRoundTrip =
     )
 
 tasks.named<Test>("test") {
+    val supportTestClassCount =
+        fileTree("src/test/java") {
+            include("**/*Test.java")
+        }.files.size
     description = "Runs deterministic Jazzer support tests."
     group = "verification"
     useJUnitPlatform()
     maxParallelForks = 1
     jvmArgs("--enable-native-access=ALL-UNNAMED")
+    addTestListener(JazzerSupportTestPulseListener(supportTestClassCount))
 }
 
 tasks.named("check") {

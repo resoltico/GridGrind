@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/delete_last_visible_sheet_invalid.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/delete_last_visible_sheet_invalid.bin
 Harness: engine-command-sequence
 Outcome: EXPECTED_INVALID
 Kind: SheetNotFoundException
@@ -7,4 +7,4 @@ Message: Sheet does not exist: A
 Input Bytes: 72
 Command Count: 4
 Style Kinds: (none)
-Command Kinds: SET_SHEET_VISIBILITY=2, FORCE_FORMULA_RECALCULATION_ON_OPEN=1, CREATE_SHEET=1
+Command Kinds: SET_SHEET_VISIBILITY=2, CREATE_SHEET=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1

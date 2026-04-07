@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.28.0"
+version: "0.29.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-04-01"
+updated: "2026-04-07"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -50,8 +50,12 @@ command runs at a time.
 ```
 
 This runs the root quality gates and coverage reports first, then the nested Jazzer `check`
-workflow, then the CLI fat-JAR packaging step. It is the supported one-command local verification
-path when a change touches both the main codebase and the Jazzer layer.
+workflow, then the CLI fat-JAR packaging step, shell syntax checks, and the Docker smoke test.
+It is the supported one-command local verification path when a change touches both the main
+codebase and the Jazzer layer.
+
+If the Docker daemon is unavailable locally, Stage 5 fails as an environment problem after the
+earlier code and Jazzer stages have already completed.
 
 ### Run the Deterministic Jazzer Support Tests
 
@@ -101,6 +105,8 @@ This runs all committed `*Inputs` resources in regression mode and writes the re
 Under the hood, regression replay is isolated per harness. The public `jazzer/bin/regression`
 command drives four separate regression launcher tasks and then records one aggregate regression
 summary. This avoids relying on Gradle's `Test` result store for the entire committed seed floor.
+Structured binary-harness replay uses GridGrind's pure-Java scalar replay cursor rather than
+Jazzer's native replay bootstrap path, so replay remains stable in a fresh JVM.
 
 ### Inspect the Current State
 
@@ -127,6 +133,11 @@ This does not fuzz. It replays the exact raw bytes and prints a structured summa
 - style kinds, source type, and persistence type where applicable
 - read kinds where applicable
 - response classification where applicable
+
+Replay for `protocol-workflow`, `engine-command-sequence`, and `xlsx-roundtrip` now runs through
+the project-owned deterministic replay seam. If replay disagrees with an active-fuzz finding,
+treat that as a replay-contract bug to investigate immediately rather than assuming the active
+finding is still current.
 
 ### Promote One Input
 
@@ -158,6 +169,27 @@ jazzer/bin/refresh-promoted-metadata --console=plain
 Use this after an intentional replay-shape change, such as a new command family or an expanded
 sequence-introspection model. The command replays every promoted input, rewrites the replay text,
 and refreshes the stored replay outcome plus replay expectation metadata.
+
+The refresh command is expected to rewrite many metadata files at once after a legitimate replay
+contract change. Review those changes as one semantic batch, not as unrelated individual diffs.
+
+---
+
+## Progress Pulses
+
+Long-running verification now emits semantic pulse lines instead of going silent:
+
+- `jazzer check` emits `[JAZZER-PULSE] support-tests ...`, `[JAZZER-PULSE] regression-target ...`,
+  and `[JAZZER-PULSE] regression-input ...`
+- root `./check.sh` emits `[CHECK-PULSE] ...` with elapsed time, quiet time, stalled time, and
+  the latest semantic progress marker
+
+Interpretation rules:
+- a long gap with the same latest committed input means the harness is still working on that input
+  and has not yet stalled
+- `quiet` means no new output; `stalled` means no new semantic progress marker
+- only a `[CHECK-STALL]` line means the outer gate has decided the stage is genuinely stuck and
+  has terminated it after collecting diagnostics
 
 ---
 

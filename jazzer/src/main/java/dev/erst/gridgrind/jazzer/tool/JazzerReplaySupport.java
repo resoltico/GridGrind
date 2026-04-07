@@ -1,10 +1,10 @@
 package dev.erst.gridgrind.jazzer.tool;
 
-import com.code_intelligence.jazzer.driver.FuzzedDataProviderImpl;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.jazzer.support.GeneratedProtocolWorkflow;
+import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import dev.erst.gridgrind.jazzer.support.OperationSequenceModel;
 import dev.erst.gridgrind.jazzer.support.SequenceIntrospection;
@@ -145,7 +145,7 @@ public final class JazzerReplaySupport {
   }
 
   private static ReplayOutcome replayProtocolWorkflow(byte[] input) {
-    FuzzedDataProviderImpl data = FuzzedDataProviderImpl.withJavaData(input);
+    GridGrindFuzzData data = GridGrindFuzzData.replay(input);
     GeneratedProtocolWorkflow workflow = null;
     GridGrindRequest request = null;
     GridGrindResponse response = null;
@@ -178,7 +178,7 @@ public final class JazzerReplaySupport {
   }
 
   private static ReplayOutcome replayCommandSequence(byte[] input) {
-    FuzzedDataProviderImpl data = FuzzedDataProviderImpl.withJavaData(input);
+    GridGrindFuzzData data = GridGrindFuzzData.replay(input);
     List<WorkbookCommand> commands = List.of();
     try {
       commands = OperationSequenceModel.nextWorkbookCommands(data);
@@ -205,7 +205,7 @@ public final class JazzerReplaySupport {
   }
 
   private static ReplayOutcome replayRoundTrip(byte[] input) {
-    FuzzedDataProviderImpl data = FuzzedDataProviderImpl.withJavaData(input);
+    GridGrindFuzzData data = GridGrindFuzzData.replay(input);
     Path directory = null;
     List<WorkbookCommand> commands = List.of();
     try {

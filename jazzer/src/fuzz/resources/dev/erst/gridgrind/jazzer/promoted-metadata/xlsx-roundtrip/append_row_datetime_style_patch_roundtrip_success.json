@@ -1,7 +1,7 @@
 {
   "targetKey" : "xlsx-roundtrip",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-6723b2566910250fd4dbf8d9e9c01a98cdb2e727",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_datetime_style_patch_roundtrip_success.bin",
+  "sourcePath" : ".local/runs/xlsx-roundtrip/crash-6723b2566910250fd4dbf8d9e9c01a98cdb2e727",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_datetime_style_patch_roundtrip_success.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -10,17 +10,17 @@
       "inputBytes" : 228,
       "commandCount" : 2,
       "commandKinds" : {
-        "CREATE_SHEET" : 1,
-        "APPLY_STYLE" : 1
+        "APPLY_STYLE" : 1,
+        "CREATE_SHEET" : 1
       },
       "styleKinds" : {
+        "border" : 1,
         "border_right" : 1,
         "fill_color" : 1,
-        "border_all" : 1,
-        "border" : 1
+        "border_all" : 1
       }
     }
   },
   "promotedAt" : "2026-04-01T01:46:13.635463Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/append_row_datetime_style_patch_roundtrip_success.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/append_row_datetime_style_patch_roundtrip_success.txt"
 }

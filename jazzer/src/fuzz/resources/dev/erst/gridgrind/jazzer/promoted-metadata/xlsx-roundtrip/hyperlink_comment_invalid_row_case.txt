@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/hyperlink_comment_invalid_row_case.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/hyperlink_comment_invalid_row_case.bin
 Harness: xlsx-roundtrip
 Outcome: EXPECTED_INVALID
 Kind: IllegalArgumentException

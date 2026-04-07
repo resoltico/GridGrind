@@ -1,7 +1,7 @@
 {
   "targetKey" : "xlsx-roundtrip",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-2fd538704ab2f1e50c87b7954538ec4d4fd10e36",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/table_header_style_display_roundtrip_success.bin",
+  "sourcePath" : ".local/runs/xlsx-roundtrip/crash-2fd538704ab2f1e50c87b7954538ec4d4fd10e36",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/table_header_style_display_roundtrip_success.bin",
   "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
     "outcomeKind" : "EXPECTED_INVALID",
@@ -10,13 +10,14 @@
       "inputBytes" : 191,
       "commandCount" : 6,
       "commandKinds" : {
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3,
         "CLEAR_CONDITIONAL_FORMATTING" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 4,
+        "SET_COLUMN_VISIBILITY" : 1,
         "RENAME_SHEET" : 1
       },
       "styleKinds" : { }
     }
   },
   "promotedAt" : "2026-04-02T00:21:04.593159Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/table_header_style_display_roundtrip_success.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/table_header_style_display_roundtrip_success.txt"
 }

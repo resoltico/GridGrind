@@ -1,7 +1,7 @@
 {
   "targetKey" : "engine-command-sequence",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/crash-5e90f4c070d4b9cdc09462914c4a852f7dfd3d9b",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/delete_last_visible_sheet_invalid.bin",
+  "sourcePath" : ".local/runs/engine-command-sequence/crash-5e90f4c070d4b9cdc09462914c4a852f7dfd3d9b",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/delete_last_visible_sheet_invalid.bin",
   "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
     "outcomeKind" : "EXPECTED_INVALID",
@@ -10,13 +10,13 @@
       "inputBytes" : 72,
       "commandCount" : 4,
       "commandKinds" : {
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
         "CREATE_SHEET" : 1,
-        "SET_SHEET_VISIBILITY" : 2
+        "SET_SHEET_VISIBILITY" : 2,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
       },
       "styleKinds" : { }
     }
   },
   "promotedAt" : "2026-04-02T11:18:54.850309Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/delete_last_visible_sheet_invalid.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/delete_last_visible_sheet_invalid.txt"
 }

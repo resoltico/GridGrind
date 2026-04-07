@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/create_sheet_only_success.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/create_sheet_only_success.bin
 Harness: engine-command-sequence
 Outcome: SUCCESS
 Input Bytes: 5

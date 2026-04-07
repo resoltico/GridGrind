@@ -449,7 +449,12 @@ public sealed interface WorkbookReadResult
   }
 
   /** Width metadata for one sheet column. */
-  record ColumnLayout(int columnIndex, double widthCharacters) {
+  record ColumnLayout(
+      int columnIndex,
+      double widthCharacters,
+      boolean hidden,
+      int outlineLevel,
+      boolean collapsed) {
     public ColumnLayout {
       if (columnIndex < 0) {
         throw new IllegalArgumentException("columnIndex must not be negative");
@@ -457,17 +462,24 @@ public sealed interface WorkbookReadResult
       if (!Double.isFinite(widthCharacters) || widthCharacters <= 0.0d) {
         throw new IllegalArgumentException("widthCharacters must be finite and greater than 0");
       }
+      if (outlineLevel < 0) {
+        throw new IllegalArgumentException("outlineLevel must not be negative");
+      }
     }
   }
 
   /** Height metadata for one sheet row. */
-  record RowLayout(int rowIndex, double heightPoints) {
+  record RowLayout(
+      int rowIndex, double heightPoints, boolean hidden, int outlineLevel, boolean collapsed) {
     public RowLayout {
       if (rowIndex < 0) {
         throw new IllegalArgumentException("rowIndex must not be negative");
       }
       if (!Double.isFinite(heightPoints) || heightPoints <= 0.0d) {
         throw new IllegalArgumentException("heightPoints must be finite and greater than 0");
+      }
+      if (outlineLevel < 0) {
+        throw new IllegalArgumentException("outlineLevel must not be negative");
       }
     }
   }

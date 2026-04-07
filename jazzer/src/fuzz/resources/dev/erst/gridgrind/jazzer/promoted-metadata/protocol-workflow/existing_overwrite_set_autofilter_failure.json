@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-workflow",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/2863fd39fcb02afb9ec25cdf1d93b614e2600736",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_set_autofilter_failure.bin",
+  "sourcePath" : ".local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/2863fd39fcb02afb9ec25cdf1d93b614e2600736",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_set_autofilter_failure.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -15,21 +15,21 @@
         "APPLY_STYLE" : 1
       },
       "styleKinds" : {
+        "vertical_alignment" : 1,
+        "fill_color" : 1,
         "horizontal_alignment" : 1,
         "font_height_points" : 1,
-        "font_height" : 1,
-        "vertical_alignment" : 1,
-        "fill_color" : 1
+        "font_height" : 1
       },
       "readCount" : 3,
       "readKinds" : {
+        "GET_AUTOFILTERS" : 1,
         "ANALYZE_WORKBOOK_FINDINGS" : 1,
-        "ANALYZE_NAMED_RANGE_HEALTH" : 1,
-        "GET_AUTOFILTERS" : 1
+        "ANALYZE_NAMED_RANGE_HEALTH" : 1
       },
       "responseKind" : "FAILURE"
     }
   },
   "promotedAt" : "2026-04-01T04:57:28.175253Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/existing_overwrite_set_autofilter_failure.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/existing_overwrite_set_autofilter_failure.txt"
 }

@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-workflow",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/fe8fd7ddc3a50cc53ab97727c04c22798cb85c27",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/apply_style_success.bin",
+  "sourcePath" : ".local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/fe8fd7ddc3a50cc53ab97727c04c22798cb85c27",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/apply_style_success.bin",
   "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
     "outcomeKind" : "EXPECTED_INVALID",
@@ -19,5 +19,5 @@
     }
   },
   "promotedAt" : "2026-03-26T04:15:58.420353Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/apply_style_success.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/apply_style_success.txt"
 }

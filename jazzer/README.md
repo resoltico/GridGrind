@@ -47,7 +47,14 @@ Run the nested Jazzer verification baseline:
 
 This runs the deterministic Jazzer support tests plus regression replay of the committed seed
 floor. Regression replay is isolated per harness under the hood rather than running all four
-Jazzer harnesses through one Gradle `Test` task. It does not start active fuzzing.
+Jazzer harnesses through one Gradle `Test` task, and promoted-input semantic replay now lives
+only in those dedicated regression runner tasks rather than inside `PromotionMetadataTest`.
+Regression replay and `jazzer/bin/replay` use a project-owned pure-Java scalar replay cursor
+instead of Jazzer's native `withJavaData(...)` path, so replay stays stable in a fresh JVM even
+when upstream native replay loading is temperamental.
+It does not start active fuzzing. It now emits `[JAZZER-PULSE]` lines while support tests and
+regression harnesses advance so whole-repo `./check.sh` runs can show live Stage 2 progress
+instead of going quiet.
 
 Run one harness:
 
@@ -90,6 +97,22 @@ jazzer/bin/regression --console=plain
 `jazzer/bin/regression` keeps a single public operator command, but the nested build now executes
 the four harnesses as isolated regression launcher tasks before writing the aggregate `regression`
 summary.
+
+## Progress Pulses
+
+Long-running Jazzer verification surfaces operator-readable progress with stable pulse prefixes:
+
+- `[JAZZER-PULSE] support-tests ...` for deterministic support-test start, per-test completion,
+  and top-level class completion
+- `[JAZZER-PULSE] regression-target ...` for each committed-seed replay harness
+- `[JAZZER-PULSE] regression-input ...` for each committed promoted input replayed by a
+  regression harness
+- `[JAZZER-PULSE] harness-class ...` for standalone launcher-based replay of a single harness
+
+Root `./check.sh` also emits `[CHECK-PULSE]` lines every 15 seconds while a stage is active and
+`[CHECK-DIAG]` lines if a stage stops making progress long enough to trigger automatic stall
+diagnostics. A diagnosed stalled stage is then terminated with a `[CHECK-STALL]` line instead of
+waiting indefinitely.
 
 Inspect active findings versus expected-invalid and replay-clean artifacts:
 

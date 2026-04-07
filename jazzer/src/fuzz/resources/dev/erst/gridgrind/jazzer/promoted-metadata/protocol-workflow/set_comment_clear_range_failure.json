@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-workflow",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/fdf2b1f4471f81858053a09b22f657b3baa3a974",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/set_comment_clear_range_failure.bin",
+  "sourcePath" : ".local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/fdf2b1f4471f81858053a09b22f657b3baa3a974",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/set_comment_clear_range_failure.bin",
   "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
     "outcomeKind" : "EXPECTED_INVALID",
@@ -19,5 +19,5 @@
     }
   },
   "promotedAt" : "2026-03-26T16:47:36.732322Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/set_comment_clear_range_failure.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/set_comment_clear_range_failure.txt"
 }

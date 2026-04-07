@@ -1,7 +1,7 @@
 {
   "targetKey" : "engine-command-sequence",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-18f533680ff39227fa5f9e35ae8a807a9f4a6342",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/apply_style_formatting_depth_success.bin",
+  "sourcePath" : ".local/runs/xlsx-roundtrip/crash-18f533680ff39227fa5f9e35ae8a807a9f4a6342",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/apply_style_formatting_depth_success.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -16,5 +16,5 @@
     }
   },
   "promotedAt" : "2026-03-26T11:37:35.327756Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/apply_style_formatting_depth_success.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/apply_style_formatting_depth_success.txt"
 }

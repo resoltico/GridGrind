@@ -1,0 +1,24 @@
+{
+  "targetKey" : "xlsx-roundtrip",
+  "sourcePath" : ".local/runs/xlsx-roundtrip/crash-6e575d4a7285ab740363ca1aaecd2f7ffb933eff",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/named_range_shift_overwrite_invalid.bin",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "expectation" : {
+    "outcomeKind" : "EXPECTED_INVALID",
+    "details" : {
+      "type" : "XLSX_ROUND_TRIP",
+      "inputBytes" : 83,
+      "commandCount" : 9,
+      "commandKinds" : {
+        "RENAME_SHEET" : 1,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2,
+        "CREATE_SHEET" : 4,
+        "SHIFT_ROWS" : 1,
+        "SET_NAMED_RANGE" : 1
+      },
+      "styleKinds" : { }
+    }
+  },
+  "promotedAt" : "2026-04-07T02:07:31.263757Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/named_range_shift_overwrite_invalid.txt"
+}

@@ -1,8 +1,8 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_datetime_style_patch_roundtrip_success.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_datetime_style_patch_roundtrip_success.bin
 Harness: xlsx-roundtrip
 Outcome: SUCCESS
 Input Bytes: 228
 Command Count: 2
-Style Kinds: border_right=1, fill_color=1, border_all=1, border=1
-Command Kinds: CREATE_SHEET=1, APPLY_STYLE=1
+Style Kinds: border=1, border_right=1, fill_color=1, border_all=1
+Command Kinds: APPLY_STYLE=1, CREATE_SHEET=1

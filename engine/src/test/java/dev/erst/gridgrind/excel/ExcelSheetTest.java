@@ -268,6 +268,29 @@ class ExcelSheetTest {
   }
 
   @Test
+  void groupsAndUngroupsRowsAndColumnsThroughSheetFacade() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      FormulaEvaluator evaluator = poiWorkbook.getCreationHelper().createFormulaEvaluator();
+      ExcelSheet sheet =
+          new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
+
+      sheet.setCell("A1", ExcelCellValue.text("Header"));
+
+      assertSame(sheet, sheet.groupRows(new ExcelRowSpan(1, 3), true));
+      assertSame(sheet, sheet.groupColumns(new ExcelColumnSpan(1, 3), true));
+      assertSame(sheet, sheet.ungroupRows(new ExcelRowSpan(1, 3)));
+      assertSame(sheet, sheet.ungroupColumns(new ExcelColumnSpan(1, 3)));
+
+      WorkbookReadResult.SheetLayout layout = sheet.layout();
+      assertFalse(layout.rows().get(1).hidden());
+      assertEquals(0, layout.rows().get(1).outlineLevel());
+      assertFalse(layout.columns().get(1).hidden());
+      assertEquals(0, layout.columns().get(1).outlineLevel());
+    }
+  }
+
+  @Test
   void validatesPreviewAndReadFailures() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       Sheet poiSheet = poiWorkbook.createSheet("Budget");

@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.28.0"
+version: "0.29.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-04-02"
+updated: "2026-04-07"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 30 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 33 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 8 |
-| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 14 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 63 total across harnesses |
+| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 15 |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 67 total across harnesses |
 
 ---
 
@@ -155,9 +155,15 @@ jazzer/src/test/java/
 ```
 
 Current deterministic support scope:
+- `ReplayGridGrindFuzzDataTest`: scalar replay semantics for the pure-Java deterministic replay
+  cursor used by structured binary-harness replay
 - `JazzerReportSupportTest`: latest-summary parsing, including active-fuzz corpus-size parsing
 - `JazzerTextRendererTest`: summary rendering semantics for active findings vs replay-clean
   artifacts
+- `JazzerRegressionRunnerTest`: committed-seed replay launch behavior, including non-JSON harness
+  replay without Jazzer's native replay provider
+- `JazzerReplaySupportTest`: replay-time classification, stable replay expectations, and artifact
+  classification for committed raw findings
 - `WorkbookInvariantChecksTest`: protocol-workflow and response-shape invariants outside the fuzz
   loop
 - `XlsxRoundTripVerifierTest`: targeted style-aware and authoring-metadata round-trip verifier
@@ -183,6 +189,7 @@ Committed custom seeds currently in source control:
 | `protocol-request` | `file_hyperlink_health_request.json` | readable hyperlink-analysis seed covering FILE path inputs, `file:` URI normalization, hyperlink metadata reads, and hyperlink-health analysis |
 | `protocol-request` | `live_workflow_create.json` | readable multi-sheet finance workflow with append-row and formula authoring |
 | `protocol-request` | `live_workflow_revise.json` | readable existing-workbook revision seed with overwrite persistence |
+| `protocol-request` | `row_column_structure_request.json` | readable B3 structural-edit seed covering row and column insertion, deletion, shifting, visibility, grouping, and `GET_SHEET_LAYOUT` reads |
 | `protocol-request` | `structural_layout_request.json` | readable structural-layout seed covering merge, sizing, pane state, zoom, and print layout |
 | `protocol-request` | `formatting_depth_request.json` | readable formatting-depth seed covering typed `fontHeight`, fill, color, and border patches |
 | `protocol-request` | `invalid_data_validation_empty_explicit_list.json` | readable expected-invalid seed covering empty explicit-list validation rejection |
@@ -219,6 +226,7 @@ Committed custom seeds currently in source control:
 | `xlsx-roundtrip` | `table_header_style_display_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that header-range style patches keep typed table header metadata synchronized through reopen |
 | `xlsx-roundtrip` | `clear_sheet_protection_unprotected_roundtrip_success.bin` | successful round-trip seed promoted from a live B1 finding to assert that clearing protection on an already unprotected sheet is an idempotent no-op instead of a POI-backed crash |
 | `xlsx-roundtrip` | `named_range_normalization_roundtrip_success.bin` | successful round-trip seed that preserves named-range state while normalizing reversed target ordering |
+| `xlsx-roundtrip` | `named_range_shift_overwrite_invalid.bin` | expected-invalid round-trip seed proving that destructive row shifts against range-backed named ranges are rejected before POI can rewrite them into broken `#REF!` formulas |
 | `xlsx-roundtrip` | `hyperlink_comment_invalid_row_case.bin` | expected-invalid round-trip seed that exercises hyperlink and comment commands alongside invalid row mutation input |
 | `xlsx-roundtrip` | `set_hyperlink_replacement_roundtrip_success.bin` | successful round-trip seed that preserves the latest hyperlink target after repeated writes to the same cell |
 | `xlsx-roundtrip` | `set_table_missing_sheet_invalid_roundtrip.bin` | expected-invalid round-trip seed that exercises table authoring across missing-sheet failure classification |

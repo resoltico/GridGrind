@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/get_window_overflow.json
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/get_window_overflow.json
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestException
@@ -13,4 +13,3 @@ Read Count: 0
 Read Kinds: (none)
 Style Kinds: (none)
 Operation Kinds: (none)
-

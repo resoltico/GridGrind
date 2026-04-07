@@ -131,8 +131,10 @@ class WorkbookInvariantChecksTest {
                         "Budget",
                         new PaneReport.Frozen(1, 1, 1, 1),
                         125,
-                        List.of(new GridGrindResponse.ColumnLayoutReport(0, 12.5)),
-                        List.of(new GridGrindResponse.RowLayoutReport(0, 18.0)))),
+                        List.of(
+                            new GridGrindResponse.ColumnLayoutReport(0, 12.5, false, 0, false)),
+                        List.of(
+                            new GridGrindResponse.RowLayoutReport(0, 18.0, false, 0, false)))),
                 new WorkbookReadResult.PrintLayoutResult(
                     "print-layout",
                     new PrintLayoutReport(

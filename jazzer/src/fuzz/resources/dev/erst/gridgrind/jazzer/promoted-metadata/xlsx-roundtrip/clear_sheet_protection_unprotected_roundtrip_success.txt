@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/clear_sheet_protection_unprotected_roundtrip_success.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/clear_sheet_protection_unprotected_roundtrip_success.bin
 Harness: xlsx-roundtrip
 Outcome: SUCCESS
 Input Bytes: 38

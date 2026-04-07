@@ -1,0 +1,13 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/row_column_structure_request.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 4927
+Decode Outcome: PARSED
+Source Kind: NEW
+Persistence Kind: SAVE_AS
+Operation Count: 16
+Read Count: 2
+Read Kinds: GET_CELLS=1, GET_SHEET_LAYOUT=1
+Style Kinds: (none)
+Operation Kinds: ENSURE_SHEET=2, SET_RANGE=2, SET_CELL=2, SHIFT_COLUMNS=1, DELETE_COLUMNS=1, INSERT_COLUMNS=1, GROUP_COLUMNS=1, SET_ROW_VISIBILITY=1, GROUP_ROWS=1, DELETE_ROWS=1, INSERT_ROWS=1, SHIFT_ROWS=1, SET_COLUMN_VISIBILITY=1

@@ -239,8 +239,8 @@ class GridGrindResponseTest {
             "Budget",
             new PaneReport.Frozen(1, 1, 1, 1),
             125,
-            List.of(new GridGrindResponse.ColumnLayoutReport(0, 12.5d)),
-            List.of(new GridGrindResponse.RowLayoutReport(0, 18.0d)));
+            List.of(new GridGrindResponse.ColumnLayoutReport(0, 12.5d, false, 0, false)),
+            List.of(new GridGrindResponse.RowLayoutReport(0, 18.0d, false, 0, false)));
     PrintLayoutReport printLayout =
         new PrintLayoutReport(
             "Budget",
@@ -474,22 +474,33 @@ class GridGrindResponseTest {
             new GridGrindResponse.SheetLayoutReport(
                 " ", new PaneReport.None(), 100, List.of(), List.of()));
     assertThrows(
-        IllegalArgumentException.class, () -> new GridGrindResponse.ColumnLayoutReport(-1, 12.0));
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.ColumnLayoutReport(-1, 12.0, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindResponse.ColumnLayoutReport(0, Double.NaN));
-    assertThrows(
-        IllegalArgumentException.class, () -> new GridGrindResponse.ColumnLayoutReport(0, 0.0));
+        () -> new GridGrindResponse.ColumnLayoutReport(0, 12.0, false, -1, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindResponse.ColumnLayoutReport(0, Double.POSITIVE_INFINITY));
-    assertThrows(
-        IllegalArgumentException.class, () -> new GridGrindResponse.RowLayoutReport(-1, 12.0));
-    assertThrows(
-        IllegalArgumentException.class, () -> new GridGrindResponse.RowLayoutReport(0, 0.0));
+        () -> new GridGrindResponse.ColumnLayoutReport(0, Double.NaN, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new GridGrindResponse.RowLayoutReport(0, Double.POSITIVE_INFINITY));
+        () -> new GridGrindResponse.ColumnLayoutReport(0, 0.0, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new GridGrindResponse.ColumnLayoutReport(0, Double.POSITIVE_INFINITY, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.RowLayoutReport(-1, 12.0, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.RowLayoutReport(0, 12.0, false, -1, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.RowLayoutReport(0, 0.0, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new GridGrindResponse.RowLayoutReport(0, Double.POSITIVE_INFINITY, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
         () -> new GridGrindResponse.FormulaSurfaceReport(-1, List.of()));

@@ -1,7 +1,7 @@
 {
   "targetKey" : "engine-command-sequence",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/engine-command-sequence/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest/applyCommands/fed8f48b6074bdef648e7d027c1ace4c7192ba1b",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/create_sheet_set_range_success.bin",
+  "sourcePath" : ".local/runs/engine-command-sequence/.cifuzz-corpus/dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest/applyCommands/fed8f48b6074bdef648e7d027c1ace4c7192ba1b",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/create_sheet_set_range_success.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -16,5 +16,5 @@
     }
   },
   "promotedAt" : "2026-03-26T04:16:03.008731Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/create_sheet_set_range_success.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/create_sheet_set_range_success.txt"
 }

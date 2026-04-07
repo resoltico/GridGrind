@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/formatting_depth_request.json
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/formatting_depth_request.json
 Harness: protocol-request
 Outcome: SUCCESS
 Input Bytes: 2924
@@ -8,6 +8,6 @@ Source Kind: NEW
 Persistence Kind: SAVE_AS
 Operation Count: 7
 Read Count: 3
-Read Kinds: GET_CELLS=1, GET_FORMULA_SURFACE=1, GET_WINDOW=1
-Style Kinds: fill_color=2, font_name=2, border_all=2, horizontal_alignment=2, font_height=2, border=2, font_color=2, bold=2, wrap_text=1, font_height_points=1, number_format=1, border_top=1, font_height_twips=1, vertical_alignment=1
-Operation Kinds: APPLY_STYLE=3, ENSURE_SHEET=1, EVALUATE_FORMULAS=1, SET_RANGE=1, AUTO_SIZE_COLUMNS=1
+Read Kinds: GET_FORMULA_SURFACE=1, GET_WINDOW=1, GET_CELLS=1
+Style Kinds: border=2, font_color=2, bold=2, fill_color=2, font_name=2, border_all=2, font_height=2, horizontal_alignment=2, number_format=1, border_top=1, font_height_twips=1, vertical_alignment=1, wrap_text=1, font_height_points=1
+Operation Kinds: APPLY_STYLE=3, EVALUATE_FORMULAS=1, SET_RANGE=1, AUTO_SIZE_COLUMNS=1, ENSURE_SHEET=1

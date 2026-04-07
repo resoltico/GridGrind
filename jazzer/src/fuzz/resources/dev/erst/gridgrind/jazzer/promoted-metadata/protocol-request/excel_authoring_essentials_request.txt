@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/excel_authoring_essentials_request.json
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/excel_authoring_essentials_request.json
 Harness: protocol-request
 Outcome: SUCCESS
 Input Bytes: 2858
@@ -8,6 +8,6 @@ Source Kind: NEW
 Persistence Kind: SAVE_AS
 Operation Count: 8
 Read Count: 6
-Read Kinds: GET_NAMED_RANGES=1, GET_WINDOW=1, GET_CELLS=1, GET_NAMED_RANGE_SURFACE=1, GET_HYPERLINKS=1, GET_COMMENTS=1
+Read Kinds: GET_HYPERLINKS=1, GET_COMMENTS=1, GET_NAMED_RANGES=1, GET_WINDOW=1, GET_CELLS=1, GET_NAMED_RANGE_SURFACE=1
 Style Kinds: (none)
-Operation Kinds: SET_NAMED_RANGE=2, SET_HYPERLINK=2, ENSURE_SHEET=1, EVALUATE_FORMULAS=1, SET_RANGE=1, SET_COMMENT=1
+Operation Kinds: SET_NAMED_RANGE=2, SET_HYPERLINK=2, SET_COMMENT=1, ENSURE_SHEET=1, EVALUATE_FORMULAS=1, SET_RANGE=1

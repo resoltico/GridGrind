@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/examples/table-autofilter-request.json",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/table_autofilter_request.json",
+  "sourcePath" : "../examples/table-autofilter-request.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/table_autofilter_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -13,21 +13,21 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 6,
       "operationKinds" : {
+        "SET_AUTOFILTER" : 2,
         "SET_TABLE" : 1,
         "SET_RANGE" : 2,
-        "ENSURE_SHEET" : 1,
-        "SET_AUTOFILTER" : 2
+        "ENSURE_SHEET" : 1
       },
       "styleKinds" : { },
       "readCount" : 4,
       "readKinds" : {
+        "GET_AUTOFILTERS" : 1,
         "ANALYZE_AUTOFILTER_HEALTH" : 1,
         "ANALYZE_TABLE_HEALTH" : 1,
-        "GET_TABLES" : 1,
-        "GET_AUTOFILTERS" : 1
+        "GET_TABLES" : 1
       }
     }
   },
   "promotedAt" : "2026-04-01T04:57:21.641736Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/table_autofilter_request.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/table_autofilter_request.txt"
 }

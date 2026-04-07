@@ -15,7 +15,11 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
+import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
+import dev.erst.gridgrind.excel.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.ExcelRowSpan;
+import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
@@ -38,14 +42,18 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.FontUnderline;
 import org.apache.poi.ss.usermodel.Name;
+import org.apache.poi.ss.usermodel.PaneType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.ss.util.PaneInformation;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCols;
 
 /** Reopens saved workbooks and validates basic `.xlsx` structural invariants. */
 public final class XlsxRoundTripVerifier {
@@ -89,6 +97,7 @@ public final class XlsxRoundTripVerifier {
       requireExpectedNamedRanges(expectedWorkbookState.expectedNamedRanges(), workbook);
     }
     requireExpectedWorkbookState(expectedWorkbookState, workbookPath);
+    requireExpectedSheetLayouts(expectedWorkbookState.expectedSheetLayouts(), workbookPath);
     requireExpectedDataValidations(expectedWorkbookState.expectedDataValidations(), workbookPath);
     requireExpectedConditionalFormatting(
         expectedWorkbookState.expectedConditionalFormatting(), workbookPath);
@@ -351,6 +360,7 @@ public final class XlsxRoundTripVerifier {
   private static ExpectedWorkbookState expectedWorkbookState(List<WorkbookCommand> commands)
       throws IOException {
     ExpectedWorkbookFootprint footprint = expectedWorkbookFootprint(commands);
+    Map<String, ExpectedSheetLayoutState> expectedSheetLayouts = expectedSheetLayouts(commands);
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       new WorkbookCommandExecutor().apply(workbook, commands);
       Map<String, List<ExcelCellSnapshot>> candidateSnapshots =
@@ -361,11 +371,214 @@ public final class XlsxRoundTripVerifier {
           expectedNamedRanges(workbook),
           expectedWorkbookSummary(workbook),
           expectedSheetSummaries(workbook),
+          expectedSheetLayouts,
           expectedDataValidations(workbook),
           expectedConditionalFormatting(workbook),
           expectedAutofilters(workbook),
           expectedTables(workbook));
     }
+  }
+
+  private static Map<String, ExpectedSheetLayoutState> expectedSheetLayouts(
+      List<WorkbookCommand> commands) {
+    LinkedHashMap<String, MutableExpectedSheetLayoutState> layoutsBySheet = new LinkedHashMap<>();
+
+    for (WorkbookCommand command : commands) {
+      switch (command) {
+        case WorkbookCommand.CreateSheet createSheet ->
+            layoutsBySheet.computeIfAbsent(
+                createSheet.sheetName(), sheetKey -> new MutableExpectedSheetLayoutState());
+        case WorkbookCommand.RenameSheet renameSheet ->
+            renameExpectedSheetLayoutState(
+                layoutsBySheet, renameSheet.sheetName(), renameSheet.newSheetName());
+        case WorkbookCommand.DeleteSheet deleteSheet -> layoutsBySheet.remove(deleteSheet.sheetName());
+        case WorkbookCommand.MoveSheet _ -> {
+          // Workbook order does not change sheet-local layout state.
+        }
+        case WorkbookCommand.CopySheet copySheet ->
+            copyExpectedSheetLayoutState(
+                layoutsBySheet, copySheet.sourceSheetName(), copySheet.newSheetName());
+        case WorkbookCommand.SetActiveSheet _ -> {
+          // Active selection does not affect sheet-local layout state.
+        }
+        case WorkbookCommand.SetSelectedSheets _ -> {
+          // Selection state does not affect sheet-local layout state.
+        }
+        case WorkbookCommand.SetSheetVisibility _ -> {
+          // Sheet visibility lives in workbook summary, not sheet layout.
+        }
+        case WorkbookCommand.SetSheetProtection _ -> {
+          // Protection lives in sheet summary, not sheet layout.
+        }
+        case WorkbookCommand.ClearSheetProtection _ -> {
+          // Protection lives in sheet summary, not sheet layout.
+        }
+        case WorkbookCommand.MergeCells _ -> {
+          // Merge state is tracked independently from sheet layout.
+        }
+        case WorkbookCommand.UnmergeCells _ -> {
+          // Merge state is tracked independently from sheet layout.
+        }
+        case WorkbookCommand.SetColumnWidth _ -> {
+          // Width persistence is covered by dedicated deterministic tests.
+        }
+        case WorkbookCommand.SetRowHeight _ -> {
+          // Height persistence is covered by dedicated deterministic tests.
+        }
+        case WorkbookCommand.InsertRows insertRows ->
+            insertExpectedRows(
+                sheetLayoutState(layoutsBySheet, insertRows.sheetName()),
+                insertRows.rowIndex(),
+                insertRows.rowCount());
+        case WorkbookCommand.DeleteRows deleteRows ->
+            deleteExpectedRows(
+                sheetLayoutState(layoutsBySheet, deleteRows.sheetName()),
+                deleteRows.rows().firstRowIndex(),
+                deleteRows.rows().lastRowIndex());
+        case WorkbookCommand.ShiftRows shiftRows ->
+            shiftExpectedRows(
+                sheetLayoutState(layoutsBySheet, shiftRows.sheetName()),
+                shiftRows.rows().firstRowIndex(),
+                shiftRows.rows().lastRowIndex(),
+                shiftRows.delta());
+        case WorkbookCommand.InsertColumns insertColumns ->
+            insertExpectedColumns(
+                sheetLayoutState(layoutsBySheet, insertColumns.sheetName()),
+                insertColumns.columnIndex(),
+                insertColumns.columnCount());
+        case WorkbookCommand.DeleteColumns deleteColumns ->
+            deleteExpectedColumns(
+                sheetLayoutState(layoutsBySheet, deleteColumns.sheetName()),
+                deleteColumns.columns().firstColumnIndex(),
+                deleteColumns.columns().lastColumnIndex());
+        case WorkbookCommand.ShiftColumns shiftColumns ->
+            shiftExpectedColumns(
+                sheetLayoutState(layoutsBySheet, shiftColumns.sheetName()),
+                shiftColumns.columns().firstColumnIndex(),
+                shiftColumns.columns().lastColumnIndex(),
+                shiftColumns.delta());
+        case WorkbookCommand.SetRowVisibility setRowVisibility ->
+            setExpectedRowHidden(
+                sheetLayoutState(layoutsBySheet, setRowVisibility.sheetName()),
+                setRowVisibility.rows().firstRowIndex(),
+                setRowVisibility.rows().lastRowIndex(),
+                setRowVisibility.hidden());
+        case WorkbookCommand.SetColumnVisibility setColumnVisibility ->
+            setExpectedColumnHidden(
+                sheetLayoutState(layoutsBySheet, setColumnVisibility.sheetName()),
+                setColumnVisibility.columns().firstColumnIndex(),
+                setColumnVisibility.columns().lastColumnIndex(),
+                setColumnVisibility.hidden());
+        case WorkbookCommand.GroupRows groupRows ->
+            groupExpectedRows(
+                sheetLayoutState(layoutsBySheet, groupRows.sheetName()),
+                groupRows.rows().firstRowIndex(),
+                groupRows.rows().lastRowIndex(),
+                groupRows.collapsed());
+        case WorkbookCommand.UngroupRows ungroupRows ->
+            ungroupExpectedRows(
+                sheetLayoutState(layoutsBySheet, ungroupRows.sheetName()),
+                ungroupRows.rows().firstRowIndex(),
+                ungroupRows.rows().lastRowIndex());
+        case WorkbookCommand.GroupColumns groupColumns ->
+            groupExpectedColumns(
+                sheetLayoutState(layoutsBySheet, groupColumns.sheetName()),
+                groupColumns.columns().firstColumnIndex(),
+                groupColumns.columns().lastColumnIndex(),
+                groupColumns.collapsed());
+        case WorkbookCommand.UngroupColumns ungroupColumns ->
+            ungroupExpectedColumns(
+                sheetLayoutState(layoutsBySheet, ungroupColumns.sheetName()),
+                ungroupColumns.columns().firstColumnIndex(),
+                ungroupColumns.columns().lastColumnIndex());
+        case WorkbookCommand.SetSheetPane setSheetPane ->
+            sheetLayoutState(layoutsBySheet, setSheetPane.sheetName()).pane = setSheetPane.pane();
+        case WorkbookCommand.SetSheetZoom setSheetZoom ->
+            sheetLayoutState(layoutsBySheet, setSheetZoom.sheetName()).zoomPercent =
+                setSheetZoom.zoomPercent();
+        case WorkbookCommand.SetPrintLayout _ -> {
+          // Print layout is tracked independently from sheet layout.
+        }
+        case WorkbookCommand.ClearPrintLayout _ -> {
+          // Print layout is tracked independently from sheet layout.
+        }
+        case WorkbookCommand.SetCell _ -> {
+          // Cell values do not affect tracked layout state.
+        }
+        case WorkbookCommand.SetRange _ -> {
+          // Cell values do not affect tracked layout state.
+        }
+        case WorkbookCommand.ClearRange _ -> {
+          // Cell values do not affect tracked layout state.
+        }
+        case WorkbookCommand.SetHyperlink _ -> {
+          // Metadata does not affect tracked layout state.
+        }
+        case WorkbookCommand.ClearHyperlink _ -> {
+          // Metadata does not affect tracked layout state.
+        }
+        case WorkbookCommand.SetComment _ -> {
+          // Metadata does not affect tracked layout state.
+        }
+        case WorkbookCommand.ClearComment _ -> {
+          // Metadata does not affect tracked layout state.
+        }
+        case WorkbookCommand.ApplyStyle _ -> {
+          // Cell styling does not affect tracked layout state.
+        }
+        case WorkbookCommand.SetDataValidation _ -> {
+          // Validation state is tracked independently.
+        }
+        case WorkbookCommand.ClearDataValidations _ -> {
+          // Validation state is tracked independently.
+        }
+        case WorkbookCommand.SetConditionalFormatting _ -> {
+          // Conditional formatting state is tracked independently.
+        }
+        case WorkbookCommand.ClearConditionalFormatting _ -> {
+          // Conditional formatting state is tracked independently.
+        }
+        case WorkbookCommand.SetAutofilter _ -> {
+          // Autofilter state is tracked independently.
+        }
+        case WorkbookCommand.ClearAutofilter _ -> {
+          // Autofilter state is tracked independently.
+        }
+        case WorkbookCommand.SetTable _ -> {
+          // Table state is tracked independently.
+        }
+        case WorkbookCommand.DeleteTable _ -> {
+          // Table state is tracked independently.
+        }
+        case WorkbookCommand.SetNamedRange _ -> {
+          // Named ranges are tracked independently.
+        }
+        case WorkbookCommand.DeleteNamedRange _ -> {
+          // Named ranges are tracked independently.
+        }
+        case WorkbookCommand.AppendRow _ -> {
+          // Append semantics affect cell footprints, not tracked layout state.
+        }
+        case WorkbookCommand.AutoSizeColumns _ -> {
+          // Auto-sized widths are covered by dedicated deterministic tests.
+        }
+        case WorkbookCommand.EvaluateAllFormulas _ -> {
+          // Formula evaluation does not affect tracked layout state.
+        }
+        case WorkbookCommand.ForceFormulaRecalculationOnOpen _ -> {
+          // Force-recalc flags do not affect tracked layout state.
+        }
+      }
+    }
+
+    LinkedHashMap<String, ExpectedSheetLayoutState> expectedLayouts = new LinkedHashMap<>();
+    layoutsBySheet.forEach(
+        (sheetName, layoutState) -> {
+          if (layoutState.isTracked()) {
+            expectedLayouts.put(sheetName, layoutState.toImmutable());
+          }
+        });
+    return Map.copyOf(expectedLayouts);
   }
 
   private static ExpectedWorkbookFootprint expectedWorkbookFootprint(List<WorkbookCommand> commands) {
@@ -424,6 +637,42 @@ public final class XlsxRoundTripVerifier {
         }
         case WorkbookCommand.SetRowHeight _ -> {
           // Row height does not affect cell-level round-trip expectations.
+        }
+        case WorkbookCommand.InsertRows _ -> {
+          // Structural row state is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.DeleteRows _ -> {
+          // Structural row state is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.ShiftRows _ -> {
+          // Structural row state is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.InsertColumns _ -> {
+          // Structural column state is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.DeleteColumns _ -> {
+          // Structural column state is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.ShiftColumns _ -> {
+          // Structural column state is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.SetRowVisibility _ -> {
+          // Row visibility is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.SetColumnVisibility _ -> {
+          // Column visibility is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.GroupRows _ -> {
+          // Row outline state is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.UngroupRows _ -> {
+          // Row outline state is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.GroupColumns _ -> {
+          // Column outline state is tracked independently from cell-level round-trip expectations.
+        }
+        case WorkbookCommand.UngroupColumns _ -> {
+          // Column outline state is tracked independently from cell-level round-trip expectations.
         }
         case WorkbookCommand.SetSheetPane _ -> {
           // Pane state does not affect cell-level round-trip expectations.
@@ -780,6 +1029,109 @@ public final class XlsxRoundTripVerifier {
     }
   }
 
+  private static void requireExpectedSheetLayouts(
+      Map<String, ExpectedSheetLayoutState> expectedSheetLayouts, Path workbookPath)
+      throws IOException {
+    if (expectedSheetLayouts.isEmpty()) {
+      return;
+    }
+    try (InputStream inputStream = Files.newInputStream(workbookPath);
+        XSSFWorkbook workbook = new XSSFWorkbook(inputStream)) {
+      for (Map.Entry<String, ExpectedSheetLayoutState> entry : expectedSheetLayouts.entrySet()) {
+        var sheet = workbook.getSheet(entry.getKey());
+        if (sheet == null) {
+          throw new IllegalStateException(
+              "expected sheet layout sheet must exist after round-trip: " + entry.getKey());
+        }
+        requireExpectedSheetLayout(entry.getKey(), entry.getValue(), sheet);
+      }
+    }
+  }
+
+  private static void requireExpectedSheetLayout(
+      String sheetName,
+      ExpectedSheetLayoutState expectedSheetLayout,
+      org.apache.poi.xssf.usermodel.XSSFSheet sheet) {
+    ExcelSheetPane actualPane = pane(sheet);
+    int actualZoomPercent = zoomPercent(sheet);
+    if (expectedSheetLayout.pane() != null && !expectedSheetLayout.pane().equals(actualPane)) {
+      throw new IllegalStateException(
+          "sheet pane changed across round-trip for "
+              + sheetName
+              + ": expected "
+              + expectedSheetLayout.pane()
+              + " but was "
+              + actualPane);
+    }
+    if (expectedSheetLayout.zoomPercent() != null
+        && !expectedSheetLayout.zoomPercent().equals(actualZoomPercent)) {
+      throw new IllegalStateException(
+          "sheet zoom changed across round-trip for "
+              + sheetName
+              + ": expected "
+              + expectedSheetLayout.zoomPercent()
+              + " but was "
+              + actualZoomPercent);
+    }
+    for (Map.Entry<Integer, ExpectedRowLayoutState> rowEntry : expectedSheetLayout.rows().entrySet()) {
+      requireExpectedRowLayout(sheetName, rowEntry.getKey(), rowEntry.getValue(), sheet);
+    }
+    for (Map.Entry<Integer, ExpectedColumnLayoutState> columnEntry :
+        expectedSheetLayout.columns().entrySet()) {
+      requireExpectedColumnLayout(sheetName, columnEntry.getKey(), columnEntry.getValue(), sheet);
+    }
+  }
+
+  private static void requireExpectedRowLayout(
+      String sheetName,
+      int rowIndex,
+      ExpectedRowLayoutState expectedRowLayout,
+      org.apache.poi.xssf.usermodel.XSSFSheet sheet) {
+    Row row = sheet.getRow(rowIndex);
+    Boolean hidden =
+        row instanceof org.apache.poi.xssf.usermodel.XSSFRow xssfRow && xssfRow.getZeroHeight();
+    Integer outlineLevel = row == null ? 0 : Math.max(0, row.getOutlineLevel());
+    Boolean collapsed =
+        row instanceof org.apache.poi.xssf.usermodel.XSSFRow xssfRow
+            && xssfRow.getCTRow().getCollapsed();
+    requireLayoutField(sheetName, "row", rowIndex, "hidden", expectedRowLayout.hidden(), hidden);
+    requireLayoutField(
+        sheetName,
+        "row",
+        rowIndex,
+        "outlineLevel",
+        expectedRowLayout.outlineLevel(),
+        outlineLevel);
+    requireLayoutField(
+        sheetName, "row", rowIndex, "collapsed", expectedRowLayout.collapsed(), collapsed);
+  }
+
+  private static void requireExpectedColumnLayout(
+      String sheetName,
+      int columnIndex,
+      ExpectedColumnLayoutState expectedColumnLayout,
+      org.apache.poi.xssf.usermodel.XSSFSheet sheet) {
+    Boolean hidden = sheet.isColumnHidden(columnIndex);
+    Integer outlineLevel = sheet.getColumnOutlineLevel(columnIndex);
+    Boolean collapsed = columnCollapsed(sheet, columnIndex);
+    requireLayoutField(
+        sheetName, "column", columnIndex, "hidden", expectedColumnLayout.hidden(), hidden);
+    requireLayoutField(
+        sheetName,
+        "column",
+        columnIndex,
+        "outlineLevel",
+        expectedColumnLayout.outlineLevel(),
+        outlineLevel);
+    requireLayoutField(
+        sheetName,
+        "column",
+        columnIndex,
+        "collapsed",
+        expectedColumnLayout.collapsed(),
+        collapsed);
+  }
+
   private static void requireExpectedConditionalFormatting(
       Map<String, List<ExcelConditionalFormattingBlockSnapshot>> expectedConditionalFormatting,
       Path workbookPath)
@@ -870,6 +1222,288 @@ public final class XlsxRoundTripVerifier {
                 + actual);
       }
     }
+  }
+
+  private static MutableExpectedSheetLayoutState sheetLayoutState(
+      Map<String, MutableExpectedSheetLayoutState> layoutsBySheet, String sheetName) {
+    return layoutsBySheet.computeIfAbsent(sheetName, sheetKey -> new MutableExpectedSheetLayoutState());
+  }
+
+  private static void renameExpectedSheetLayoutState(
+      Map<String, MutableExpectedSheetLayoutState> layoutsBySheet,
+      String sheetName,
+      String newSheetName) {
+    MutableExpectedSheetLayoutState layoutState = layoutsBySheet.remove(sheetName);
+    if (layoutState != null) {
+      layoutsBySheet.put(newSheetName, layoutState);
+    }
+  }
+
+  private static void copyExpectedSheetLayoutState(
+      Map<String, MutableExpectedSheetLayoutState> layoutsBySheet,
+      String sourceSheetName,
+      String newSheetName) {
+    MutableExpectedSheetLayoutState layoutState = layoutsBySheet.get(sourceSheetName);
+    if (layoutState != null) {
+      layoutsBySheet.put(newSheetName, layoutState.copy());
+    }
+  }
+
+  private static void insertExpectedRows(
+      MutableExpectedSheetLayoutState layoutState, int rowIndex, int rowCount) {
+    replaceExpectedRows(
+        layoutState, shiftedStatesForInsert(layoutState.rows, rowIndex, rowCount));
+  }
+
+  private static void deleteExpectedRows(
+      MutableExpectedSheetLayoutState layoutState, int firstRowIndex, int lastRowIndex) {
+    replaceExpectedRows(
+        layoutState, shiftedStatesForDelete(layoutState.rows, firstRowIndex, lastRowIndex));
+  }
+
+  private static void shiftExpectedRows(
+      MutableExpectedSheetLayoutState layoutState,
+      int firstRowIndex,
+      int lastRowIndex,
+      int delta) {
+    replaceExpectedRows(
+        layoutState, shiftedStatesForShift(layoutState.rows, firstRowIndex, lastRowIndex, delta));
+  }
+
+  private static void insertExpectedColumns(
+      MutableExpectedSheetLayoutState layoutState, int columnIndex, int columnCount) {
+    replaceExpectedColumns(
+        layoutState, shiftedStatesForInsert(layoutState.columns, columnIndex, columnCount));
+  }
+
+  private static void deleteExpectedColumns(
+      MutableExpectedSheetLayoutState layoutState, int firstColumnIndex, int lastColumnIndex) {
+    replaceExpectedColumns(
+        layoutState,
+        shiftedStatesForDelete(layoutState.columns, firstColumnIndex, lastColumnIndex));
+  }
+
+  private static void shiftExpectedColumns(
+      MutableExpectedSheetLayoutState layoutState,
+      int firstColumnIndex,
+      int lastColumnIndex,
+      int delta) {
+    replaceExpectedColumns(
+        layoutState,
+        shiftedStatesForShift(layoutState.columns, firstColumnIndex, lastColumnIndex, delta));
+  }
+
+  private static void setExpectedRowHidden(
+      MutableExpectedSheetLayoutState layoutState,
+      int firstRowIndex,
+      int lastRowIndex,
+      boolean hidden) {
+    for (int rowIndex = firstRowIndex; rowIndex <= lastRowIndex; rowIndex++) {
+      expectedRowState(layoutState, rowIndex).hidden = hidden;
+    }
+  }
+
+  private static void setExpectedColumnHidden(
+      MutableExpectedSheetLayoutState layoutState,
+      int firstColumnIndex,
+      int lastColumnIndex,
+      boolean hidden) {
+    for (int columnIndex = firstColumnIndex; columnIndex <= lastColumnIndex; columnIndex++) {
+      expectedColumnState(layoutState, columnIndex).hidden = hidden;
+    }
+  }
+
+  private static void groupExpectedRows(
+      MutableExpectedSheetLayoutState layoutState,
+      int firstRowIndex,
+      int lastRowIndex,
+      boolean collapsed) {
+    for (int rowIndex = firstRowIndex; rowIndex <= lastRowIndex; rowIndex++) {
+      MutableExpectedRowLayoutState rowState = expectedRowState(layoutState, rowIndex);
+      rowState.outlineLevel = currentOutlineLevel(rowState.outlineLevel) + 1;
+      rowState.hidden = collapsed;
+    }
+    if (lastRowIndex < ExcelRowSpan.MAX_ROW_INDEX) {
+      expectedRowState(layoutState, lastRowIndex + 1).collapsed = collapsed;
+    }
+  }
+
+  private static void ungroupExpectedRows(
+      MutableExpectedSheetLayoutState layoutState, int firstRowIndex, int lastRowIndex) {
+    for (int rowIndex = firstRowIndex; rowIndex <= lastRowIndex; rowIndex++) {
+      MutableExpectedRowLayoutState rowState = expectedRowState(layoutState, rowIndex);
+      rowState.outlineLevel = Math.max(0, currentOutlineLevel(rowState.outlineLevel) - 1);
+      rowState.hidden = false;
+    }
+    if (lastRowIndex < ExcelRowSpan.MAX_ROW_INDEX) {
+      expectedRowState(layoutState, lastRowIndex + 1).collapsed = false;
+    }
+  }
+
+  private static void groupExpectedColumns(
+      MutableExpectedSheetLayoutState layoutState,
+      int firstColumnIndex,
+      int lastColumnIndex,
+      boolean collapsed) {
+    for (int columnIndex = firstColumnIndex; columnIndex <= lastColumnIndex; columnIndex++) {
+      MutableExpectedColumnLayoutState columnState = expectedColumnState(layoutState, columnIndex);
+      columnState.outlineLevel = currentOutlineLevel(columnState.outlineLevel) + 1;
+      columnState.hidden = collapsed;
+    }
+    if (lastColumnIndex < ExcelColumnSpan.MAX_COLUMN_INDEX) {
+      expectedColumnState(layoutState, lastColumnIndex + 1).collapsed = collapsed;
+    }
+  }
+
+  private static void ungroupExpectedColumns(
+      MutableExpectedSheetLayoutState layoutState, int firstColumnIndex, int lastColumnIndex) {
+    for (int columnIndex = firstColumnIndex; columnIndex <= lastColumnIndex; columnIndex++) {
+      MutableExpectedColumnLayoutState columnState = expectedColumnState(layoutState, columnIndex);
+      columnState.outlineLevel = Math.max(0, currentOutlineLevel(columnState.outlineLevel) - 1);
+      columnState.hidden = false;
+    }
+    if (lastColumnIndex < ExcelColumnSpan.MAX_COLUMN_INDEX) {
+      expectedColumnState(layoutState, lastColumnIndex + 1).collapsed = false;
+    }
+  }
+
+  private static MutableExpectedRowLayoutState expectedRowState(
+      MutableExpectedSheetLayoutState layoutState, int rowIndex) {
+    return layoutState.rows.computeIfAbsent(rowIndex, ignored -> new MutableExpectedRowLayoutState());
+  }
+
+  private static MutableExpectedColumnLayoutState expectedColumnState(
+      MutableExpectedSheetLayoutState layoutState, int columnIndex) {
+    return layoutState.columns.computeIfAbsent(
+        columnIndex, ignored -> new MutableExpectedColumnLayoutState());
+  }
+
+  private static int currentOutlineLevel(Integer outlineLevel) {
+    return outlineLevel == null ? 0 : outlineLevel;
+  }
+
+  private static void replaceExpectedRows(
+      MutableExpectedSheetLayoutState layoutState,
+      LinkedHashMap<Integer, MutableExpectedRowLayoutState> replacement) {
+    layoutState.rows.clear();
+    layoutState.rows.putAll(replacement);
+  }
+
+  private static void replaceExpectedColumns(
+      MutableExpectedSheetLayoutState layoutState,
+      LinkedHashMap<Integer, MutableExpectedColumnLayoutState> replacement) {
+    layoutState.columns.clear();
+    layoutState.columns.putAll(replacement);
+  }
+
+  private static <T> LinkedHashMap<Integer, T> shiftedStatesForInsert(
+      Map<Integer, T> statesByIndex, int index, int count) {
+    LinkedHashMap<Integer, T> shifted = new LinkedHashMap<>();
+    statesByIndex.forEach(
+        (existingIndex, state) ->
+            shifted.put(existingIndex >= index ? existingIndex + count : existingIndex, state));
+    return shifted;
+  }
+
+  private static <T> LinkedHashMap<Integer, T> shiftedStatesForDelete(
+      Map<Integer, T> statesByIndex, int firstIndex, int lastIndex) {
+    LinkedHashMap<Integer, T> shifted = new LinkedHashMap<>();
+    int count = lastIndex - firstIndex + 1;
+    statesByIndex.forEach(
+        (existingIndex, state) -> {
+          if (existingIndex < firstIndex) {
+            shifted.put(existingIndex, state);
+          } else if (existingIndex > lastIndex) {
+            shifted.put(existingIndex - count, state);
+          }
+        });
+    return shifted;
+  }
+
+  private static <T> LinkedHashMap<Integer, T> shiftedStatesForShift(
+      Map<Integer, T> statesByIndex, int firstIndex, int lastIndex, int delta) {
+    int destinationFirstIndex = firstIndex + delta;
+    int destinationLastIndex = lastIndex + delta;
+    int overwrittenFirstIndex = Math.min(destinationFirstIndex, destinationLastIndex);
+    int overwrittenLastIndex = Math.max(destinationFirstIndex, destinationLastIndex);
+    LinkedHashMap<Integer, T> shifted = new LinkedHashMap<>();
+    statesByIndex.forEach(
+        (existingIndex, state) -> {
+          boolean inSource = existingIndex >= firstIndex && existingIndex <= lastIndex;
+          boolean overwrittenDestination =
+              existingIndex >= overwrittenFirstIndex && existingIndex <= overwrittenLastIndex;
+          if (!inSource && !overwrittenDestination) {
+            shifted.put(existingIndex, state);
+          }
+        });
+    statesByIndex.forEach(
+        (existingIndex, state) -> {
+          if (existingIndex >= firstIndex && existingIndex <= lastIndex) {
+            shifted.put(existingIndex + delta, state);
+          }
+        });
+    return shifted;
+  }
+
+  private static void requireLayoutField(
+      String sheetName,
+      String axis,
+      int index,
+      String fieldName,
+      Object expected,
+      Object actual) {
+    if (expected == null || expected.equals(actual)) {
+      return;
+    }
+    throw new IllegalStateException(
+        "sheet layout %s %d field %s changed across round-trip for %s: expected %s but was %s"
+            .formatted(axis, index, fieldName, sheetName, expected, actual));
+  }
+
+  private static ExcelSheetPane pane(org.apache.poi.xssf.usermodel.XSSFSheet sheet) {
+    PaneInformation paneInformation = sheet.getPaneInformation();
+    if (paneInformation == null) {
+      return new ExcelSheetPane.None();
+    }
+    if (paneInformation.isFreezePane()) {
+      return new ExcelSheetPane.Frozen(
+          paneInformation.getVerticalSplitPosition(),
+          paneInformation.getHorizontalSplitPosition(),
+          paneInformation.getVerticalSplitLeftColumn(),
+          paneInformation.getHorizontalSplitTopRow());
+    }
+    return new ExcelSheetPane.Split(
+        paneInformation.getVerticalSplitPosition(),
+        paneInformation.getHorizontalSplitPosition(),
+        paneInformation.getVerticalSplitLeftColumn(),
+        paneInformation.getHorizontalSplitTopRow(),
+        paneRegion(paneInformation.getActivePaneType()));
+  }
+
+  private static int zoomPercent(org.apache.poi.xssf.usermodel.XSSFSheet sheet) {
+    var sheetView = sheet.getCTWorksheet().getSheetViews().getSheetViewArray(0);
+    return sheetView.isSetZoomScale() ? Math.toIntExact(sheetView.getZoomScale()) : 100;
+  }
+
+  private static ExcelPaneRegion paneRegion(PaneType paneType) {
+    return switch (paneType) {
+      case UPPER_LEFT -> ExcelPaneRegion.UPPER_LEFT;
+      case UPPER_RIGHT -> ExcelPaneRegion.UPPER_RIGHT;
+      case LOWER_LEFT -> ExcelPaneRegion.LOWER_LEFT;
+      case LOWER_RIGHT -> ExcelPaneRegion.LOWER_RIGHT;
+    };
+  }
+
+  private static boolean columnCollapsed(
+      org.apache.poi.xssf.usermodel.XSSFSheet sheet, int columnIndex) {
+    for (CTCols cols : sheet.getCTWorksheet().getColsList()) {
+      for (CTCol col : cols.getColList()) {
+        if (columnIndex + 1 >= col.getMin() && columnIndex + 1 <= col.getMax()) {
+          return col.getCollapsed();
+        }
+      }
+    }
+    return false;
   }
 
   private static ExcelCellStyleSnapshot defaultStyleSnapshot() throws IOException {
@@ -1088,6 +1722,7 @@ public final class XlsxRoundTripVerifier {
       Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges,
       dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary expectedWorkbookSummary,
       Map<String, dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary> expectedSheetSummaries,
+      Map<String, ExpectedSheetLayoutState> expectedSheetLayouts,
       Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations,
       Map<String, List<ExcelConditionalFormattingBlockSnapshot>> expectedConditionalFormatting,
       Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters,
@@ -1110,6 +1745,84 @@ public final class XlsxRoundTripVerifier {
     private static ExpectedCellMetadata from(ExcelCellMetadataSnapshot metadata) {
       return new ExpectedCellMetadata(
           metadata.hyperlink().orElse(null), metadata.comment().orElse(null));
+    }
+  }
+
+  private record ExpectedSheetLayoutState(
+      ExcelSheetPane pane,
+      Integer zoomPercent,
+      Map<Integer, ExpectedRowLayoutState> rows,
+      Map<Integer, ExpectedColumnLayoutState> columns) {}
+
+  private record ExpectedRowLayoutState(Boolean hidden, Integer outlineLevel, Boolean collapsed) {}
+
+  private record ExpectedColumnLayoutState(
+      Boolean hidden, Integer outlineLevel, Boolean collapsed) {}
+
+  private static final class MutableExpectedSheetLayoutState {
+    private ExcelSheetPane pane;
+    private Integer zoomPercent;
+    private final LinkedHashMap<Integer, MutableExpectedRowLayoutState> rows = new LinkedHashMap<>();
+    private final LinkedHashMap<Integer, MutableExpectedColumnLayoutState> columns =
+        new LinkedHashMap<>();
+
+    private MutableExpectedSheetLayoutState copy() {
+      MutableExpectedSheetLayoutState copy = new MutableExpectedSheetLayoutState();
+      copy.pane = pane;
+      copy.zoomPercent = zoomPercent;
+      rows.forEach((rowIndex, state) -> copy.rows.put(rowIndex, state.copy()));
+      columns.forEach((columnIndex, state) -> copy.columns.put(columnIndex, state.copy()));
+      return copy;
+    }
+
+    private boolean isTracked() {
+      return pane != null || zoomPercent != null || !rows.isEmpty() || !columns.isEmpty();
+    }
+
+    private ExpectedSheetLayoutState toImmutable() {
+      LinkedHashMap<Integer, ExpectedRowLayoutState> expectedRows = new LinkedHashMap<>();
+      rows.forEach((rowIndex, state) -> expectedRows.put(rowIndex, state.toImmutable()));
+      LinkedHashMap<Integer, ExpectedColumnLayoutState> expectedColumns = new LinkedHashMap<>();
+      columns.forEach(
+          (columnIndex, state) -> expectedColumns.put(columnIndex, state.toImmutable()));
+      return new ExpectedSheetLayoutState(
+          pane, zoomPercent, Map.copyOf(expectedRows), Map.copyOf(expectedColumns));
+    }
+  }
+
+  private static final class MutableExpectedRowLayoutState {
+    private Boolean hidden;
+    private Integer outlineLevel;
+    private Boolean collapsed;
+
+    private MutableExpectedRowLayoutState copy() {
+      MutableExpectedRowLayoutState copy = new MutableExpectedRowLayoutState();
+      copy.hidden = hidden;
+      copy.outlineLevel = outlineLevel;
+      copy.collapsed = collapsed;
+      return copy;
+    }
+
+    private ExpectedRowLayoutState toImmutable() {
+      return new ExpectedRowLayoutState(hidden, outlineLevel, collapsed);
+    }
+  }
+
+  private static final class MutableExpectedColumnLayoutState {
+    private Boolean hidden;
+    private Integer outlineLevel;
+    private Boolean collapsed;
+
+    private MutableExpectedColumnLayoutState copy() {
+      MutableExpectedColumnLayoutState copy = new MutableExpectedColumnLayoutState();
+      copy.hidden = hidden;
+      copy.outlineLevel = outlineLevel;
+      copy.collapsed = collapsed;
+      return copy;
+    }
+
+    private ExpectedColumnLayoutState toImmutable() {
+      return new ExpectedColumnLayoutState(hidden, outlineLevel, collapsed);
     }
   }
 

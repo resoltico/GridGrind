@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/examples/data-validation-request.json",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/data_validation_request.json",
+  "sourcePath" : "../examples/data-validation-request.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/data_validation_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -21,12 +21,12 @@
       "styleKinds" : { },
       "readCount" : 3,
       "readKinds" : {
+        "GET_CELLS" : 1,
         "GET_DATA_VALIDATIONS" : 1,
-        "ANALYZE_DATA_VALIDATION_HEALTH" : 1,
-        "GET_CELLS" : 1
+        "ANALYZE_DATA_VALIDATION_HEALTH" : 1
       }
     }
   },
   "promotedAt" : "2026-03-31T23:49:47.234671Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/data_validation_request.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/data_validation_request.txt"
 }

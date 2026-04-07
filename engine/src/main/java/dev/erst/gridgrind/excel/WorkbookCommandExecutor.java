@@ -66,6 +66,42 @@ public final class WorkbookCommandExecutor {
                   setRowHeight.firstRowIndex(),
                   setRowHeight.lastRowIndex(),
                   setRowHeight.heightPoints());
+      case WorkbookCommand.InsertRows insertRows ->
+          workbook
+              .sheet(insertRows.sheetName())
+              .insertRows(insertRows.rowIndex(), insertRows.rowCount());
+      case WorkbookCommand.DeleteRows deleteRows ->
+          workbook.sheet(deleteRows.sheetName()).deleteRows(deleteRows.rows());
+      case WorkbookCommand.ShiftRows shiftRows ->
+          workbook.sheet(shiftRows.sheetName()).shiftRows(shiftRows.rows(), shiftRows.delta());
+      case WorkbookCommand.InsertColumns insertColumns ->
+          workbook
+              .sheet(insertColumns.sheetName())
+              .insertColumns(insertColumns.columnIndex(), insertColumns.columnCount());
+      case WorkbookCommand.DeleteColumns deleteColumns ->
+          workbook.sheet(deleteColumns.sheetName()).deleteColumns(deleteColumns.columns());
+      case WorkbookCommand.ShiftColumns shiftColumns ->
+          workbook
+              .sheet(shiftColumns.sheetName())
+              .shiftColumns(shiftColumns.columns(), shiftColumns.delta());
+      case WorkbookCommand.SetRowVisibility setRowVisibility ->
+          workbook
+              .sheet(setRowVisibility.sheetName())
+              .setRowVisibility(setRowVisibility.rows(), setRowVisibility.hidden());
+      case WorkbookCommand.SetColumnVisibility setColumnVisibility ->
+          workbook
+              .sheet(setColumnVisibility.sheetName())
+              .setColumnVisibility(setColumnVisibility.columns(), setColumnVisibility.hidden());
+      case WorkbookCommand.GroupRows groupRows ->
+          workbook.sheet(groupRows.sheetName()).groupRows(groupRows.rows(), groupRows.collapsed());
+      case WorkbookCommand.UngroupRows ungroupRows ->
+          workbook.sheet(ungroupRows.sheetName()).ungroupRows(ungroupRows.rows());
+      case WorkbookCommand.GroupColumns groupColumns ->
+          workbook
+              .sheet(groupColumns.sheetName())
+              .groupColumns(groupColumns.columns(), groupColumns.collapsed());
+      case WorkbookCommand.UngroupColumns ungroupColumns ->
+          workbook.sheet(ungroupColumns.sheetName()).ungroupColumns(ungroupColumns.columns());
       case WorkbookCommand.SetSheetPane setSheetPane ->
           workbook.sheet(setSheetPane.sheetName()).setPane(setSheetPane.pane());
       case WorkbookCommand.SetSheetZoom setSheetZoom ->

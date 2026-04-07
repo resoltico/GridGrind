@@ -5,6 +5,7 @@ import com.code_intelligence.jazzer.junit.FuzzTest;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
+import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.HarnessTelemetry;
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import dev.erst.gridgrind.jazzer.support.OperationSequenceModel;
@@ -20,10 +21,11 @@ class WorkbookCommandSequenceFuzzTest {
 
   @FuzzTest
   void applyCommands(FuzzedDataProvider data) throws IOException {
-    TELEMETRY.beginIteration(data.remainingBytes());
+    GridGrindFuzzData fuzzData = GridGrindFuzzData.wrap(data);
+    TELEMETRY.beginIteration(fuzzData.remainingBytes());
     List<WorkbookCommand> commands;
     try {
-      commands = OperationSequenceModel.nextWorkbookCommands(data);
+      commands = OperationSequenceModel.nextWorkbookCommands(fuzzData);
     } catch (IllegalArgumentException expected) {
       TELEMETRY.recordGeneratedInvalid();
       return;

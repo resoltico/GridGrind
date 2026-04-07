@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/examples/live-workflow-revise.json",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/live_workflow_revise.json",
+  "sourcePath" : "../examples/live-workflow-revise.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/live_workflow_revise.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -13,20 +13,20 @@
       "persistenceKind" : "OVERWRITE",
       "operationCount" : 5,
       "operationKinds" : {
+        "SET_CELL" : 3,
         "EVALUATE_FORMULAS" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
-        "SET_CELL" : 3
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
       },
       "styleKinds" : { },
       "readCount" : 6,
       "readKinds" : {
-        "GET_WINDOW" : 2,
-        "GET_CELLS" : 2,
         "GET_FORMULA_SURFACE" : 1,
-        "GET_WORKBOOK_SUMMARY" : 1
+        "GET_WORKBOOK_SUMMARY" : 1,
+        "GET_WINDOW" : 2,
+        "GET_CELLS" : 2
       }
     }
   },
   "promotedAt" : "2026-03-26T04:15:55.071972Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/live_workflow_revise.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/live_workflow_revise.txt"
 }

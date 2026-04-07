@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-workflow",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/61e0a48fe9c7b87a7fb1cdaaa275fa5ae1e9cdd4",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/save_as_named_range_failure.bin",
+  "sourcePath" : ".local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/61e0a48fe9c7b87a7fb1cdaaa275fa5ae1e9cdd4",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/save_as_named_range_failure.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -12,27 +12,27 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 5,
       "operationKinds" : {
-        "APPLY_STYLE" : 4,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
+        "APPLY_STYLE" : 4
       },
       "styleKinds" : {
+        "border_top" : 3,
+        "wrap_text" : 4,
+        "italic" : 4,
+        "font_height_twips" : 4,
+        "underline" : 4,
+        "border_bottom" : 3,
+        "horizontal_alignment" : 4,
         "font_name" : 4,
         "font_color" : 4,
         "border_all_none" : 1,
         "bold" : 4,
-        "strikeout" : 4,
         "border" : 4,
         "fill_color" : 4,
+        "strikeout" : 4,
         "font_height" : 4,
         "vertical_alignment" : 4,
-        "border_all" : 1,
-        "italic" : 4,
-        "border_top" : 3,
-        "wrap_text" : 4,
-        "font_height_twips" : 4,
-        "underline" : 4,
-        "border_bottom" : 3,
-        "horizontal_alignment" : 4
+        "border_all" : 1
       },
       "readCount" : 6,
       "readKinds" : {
@@ -42,5 +42,5 @@
     }
   },
   "promotedAt" : "2026-03-26T16:46:35.402673Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/save_as_named_range_failure.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/save_as_named_range_failure.txt"
 }

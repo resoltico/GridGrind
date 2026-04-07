@@ -252,6 +252,233 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
+  void returnsB3SheetLayoutFactsAndPersistsVisibilityGrouping() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-b3-layout-");
+
+    GridGrindResponse response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Layout"),
+                        new WorkbookOperation.SetRange(
+                            "Layout",
+                            "A1:F6",
+                            List.of(
+                                List.of(
+                                    new CellInput.Text("Item"),
+                                    new CellInput.Text("Qty"),
+                                    new CellInput.Text("Status"),
+                                    new CellInput.Text("Note"),
+                                    new CellInput.Text("Owner"),
+                                    new CellInput.Text("Flag")),
+                                List.of(
+                                    new CellInput.Text("Hosting"),
+                                    new CellInput.Numeric(42.0),
+                                    new CellInput.Text("Open"),
+                                    new CellInput.Text("Alpha"),
+                                    new CellInput.Text("Ada"),
+                                    new CellInput.Text("Y")),
+                                List.of(
+                                    new CellInput.Text("Support"),
+                                    new CellInput.Numeric(84.0),
+                                    new CellInput.Text("Closed"),
+                                    new CellInput.Text("Beta"),
+                                    new CellInput.Text("Lin"),
+                                    new CellInput.Text("N")),
+                                List.of(
+                                    new CellInput.Text("Ops"),
+                                    new CellInput.Numeric(168.0),
+                                    new CellInput.Text("Open"),
+                                    new CellInput.Text("Gamma"),
+                                    new CellInput.Text("Bea"),
+                                    new CellInput.Text("Y")),
+                                List.of(
+                                    new CellInput.Text("QA"),
+                                    new CellInput.Numeric(21.0),
+                                    new CellInput.Text("Queued"),
+                                    new CellInput.Text("Delta"),
+                                    new CellInput.Text("Kai"),
+                                    new CellInput.Text("N")),
+                                List.of(
+                                    new CellInput.Text("Infra"),
+                                    new CellInput.Numeric(7.0),
+                                    new CellInput.Text("Done"),
+                                    new CellInput.Text("Epsilon"),
+                                    new CellInput.Text("Mia"),
+                                    new CellInput.Text("Y")))),
+                        new WorkbookOperation.GroupRows(
+                            "Layout", new RowSpanInput.Band(1, 3), true),
+                        new WorkbookOperation.SetRowVisibility(
+                            "Layout", new RowSpanInput.Band(5, 5), true),
+                        new WorkbookOperation.GroupColumns(
+                            "Layout", new ColumnSpanInput.Band(1, 3), true),
+                        new WorkbookOperation.SetColumnVisibility(
+                            "Layout", new ColumnSpanInput.Band(5, 5), true)),
+                    new WorkbookReadOperation.GetSheetLayout("layout", "Layout")));
+
+    GridGrindResponse.Success success = success(response);
+    GridGrindResponse.SheetLayoutReport layout =
+        read(success, "layout", WorkbookReadResult.SheetLayoutResult.class).layout();
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(6, layout.rows().size());
+    assertTrue(layout.rows().get(1).hidden());
+    assertEquals(1, layout.rows().get(1).outlineLevel());
+    assertTrue(layout.rows().get(4).collapsed());
+    assertTrue(layout.rows().get(5).hidden());
+    assertEquals(6, layout.columns().size());
+    assertTrue(layout.columns().get(1).hidden());
+    assertEquals(1, layout.columns().get(1).outlineLevel());
+    assertTrue(layout.columns().get(4).collapsed());
+    assertTrue(layout.columns().get(5).hidden());
+
+    dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout reopenedLayout =
+        XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
+    assertTrue(reopenedLayout.rows().get(1).hidden());
+    assertEquals(1, reopenedLayout.rows().get(1).outlineLevel());
+    assertTrue(reopenedLayout.rows().get(4).collapsed());
+    assertTrue(reopenedLayout.rows().get(5).hidden());
+    assertTrue(reopenedLayout.columns().get(1).hidden());
+    assertEquals(1, reopenedLayout.columns().get(1).outlineLevel());
+    assertTrue(reopenedLayout.columns().get(4).collapsed());
+    assertTrue(reopenedLayout.columns().get(5).hidden());
+  }
+
+  @Test
+  void executesB3InsertDeleteAndShiftOperationsAndPersistsMovedCells() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-b3-geometry-");
+
+    GridGrindResponse response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Moves"),
+                        new WorkbookOperation.SetRange(
+                            "Moves",
+                            "A1:D3",
+                            List.of(
+                                List.of(
+                                    new CellInput.Text("Item"),
+                                    new CellInput.Text("Qty"),
+                                    new CellInput.Text("Status"),
+                                    new CellInput.Text("Note")),
+                                List.of(
+                                    new CellInput.Text("Hosting"),
+                                    new CellInput.Numeric(42.0),
+                                    new CellInput.Text("Open"),
+                                    new CellInput.Text("Alpha")),
+                                List.of(
+                                    new CellInput.Text("Support"),
+                                    new CellInput.Numeric(84.0),
+                                    new CellInput.Text("Closed"),
+                                    new CellInput.Text("Beta")))),
+                        new WorkbookOperation.InsertRows("Moves", 1, 1),
+                        new WorkbookOperation.SetCell("Moves", "A2", new CellInput.Text("Spacer")),
+                        new WorkbookOperation.ShiftRows("Moves", new RowSpanInput.Band(2, 3), 1),
+                        new WorkbookOperation.DeleteRows("Moves", new RowSpanInput.Band(2, 2)),
+                        new WorkbookOperation.InsertColumns("Moves", 1, 1),
+                        new WorkbookOperation.SetCell("Moves", "B1", new CellInput.Text("Pad")),
+                        new WorkbookOperation.ShiftColumns(
+                            "Moves", new ColumnSpanInput.Band(2, 4), 1),
+                        new WorkbookOperation.DeleteColumns(
+                            "Moves", new ColumnSpanInput.Band(2, 2))),
+                    new WorkbookReadOperation.GetCells(
+                        "cells", "Moves", List.of("A2", "B1", "A3", "C3", "E4"))));
+
+    GridGrindResponse.Success success = success(response);
+    WorkbookReadResult.CellsResult cells =
+        read(success, "cells", WorkbookReadResult.CellsResult.class);
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertEquals(
+        "Spacer",
+        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(0)).stringValue());
+    assertEquals(
+        "Pad",
+        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(1)).stringValue());
+    assertEquals(
+        "Hosting",
+        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(2)).stringValue());
+    assertEquals(
+        42.0,
+        cast(GridGrindResponse.CellReport.NumberReport.class, cells.cells().get(3)).numberValue());
+    assertEquals(
+        "Beta",
+        cast(GridGrindResponse.CellReport.TextReport.class, cells.cells().get(4)).stringValue());
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      assertEquals("Spacer", workbook.sheet("Moves").text("A2"));
+      assertEquals("Pad", workbook.sheet("Moves").text("B1"));
+      assertEquals("Hosting", workbook.sheet("Moves").text("A3"));
+      assertEquals(42.0, workbook.sheet("Moves").number("C3"));
+      assertEquals("Beta", workbook.sheet("Moves").text("E4"));
+    }
+  }
+
+  @Test
+  void returnsStructuredFailureForRowStructuralEditsThatWouldMoveTables() {
+    GridGrindResponse.Failure failure =
+        failure(
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request(
+                        new GridGrindRequest.WorkbookSource.New(),
+                        new GridGrindRequest.WorkbookPersistence.None(),
+                        List.of(
+                            new WorkbookOperation.EnsureSheet("Budget"),
+                            new WorkbookOperation.SetRange(
+                                "Budget",
+                                "A1:B3",
+                                List.of(
+                                    List.of(new CellInput.Text("Item"), new CellInput.Text("Qty")),
+                                    List.of(
+                                        new CellInput.Text("Hosting"), new CellInput.Numeric(42.0)),
+                                    List.of(
+                                        new CellInput.Text("Support"),
+                                        new CellInput.Numeric(84.0)))),
+                            new WorkbookOperation.SetTable(
+                                new TableInput(
+                                    "BudgetTable",
+                                    "Budget",
+                                    "A1:B3",
+                                    false,
+                                    new TableStyleInput.None())),
+                            new WorkbookOperation.InsertRows("Budget", 1, 1)))));
+
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertTrue(failure.problem().message().contains("table 'BudgetTable'"));
+    assertTrue(failure.problem().message().contains("row structural edits"));
+  }
+
+  @Test
+  void returnsStructuredFailureForColumnStructuralEditsWhenWorkbookHasFormulas() {
+    GridGrindResponse.Failure failure =
+        failure(
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request(
+                        new GridGrindRequest.WorkbookSource.New(),
+                        new GridGrindRequest.WorkbookPersistence.None(),
+                        List.of(
+                            new WorkbookOperation.EnsureSheet("Budget"),
+                            new WorkbookOperation.SetCell(
+                                "Budget", "A1", new CellInput.Text("Item")),
+                            new WorkbookOperation.SetCell(
+                                "Budget", "B2", new CellInput.Formula("SUM(1, 1)")),
+                            new WorkbookOperation.InsertColumns("Budget", 1, 1)))));
+
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertTrue(failure.problem().message().contains("workbook formulas are present"));
+    assertTrue(failure.problem().message().contains("column structural edits"));
+  }
+
+  @Test
   void returnsAuthoringMetadataAndNamedRangeReadResults() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-authoring-ops-");
 
@@ -1932,12 +2159,35 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
+  @SuppressWarnings("PMD.NcssCount")
   void extractsContextForStructuralLayoutOperations() {
     RuntimeException exception = new RuntimeException("test");
     WorkbookOperation mergeCells = new WorkbookOperation.MergeCells("Budget", "A1:B2");
     WorkbookOperation unmergeCells = new WorkbookOperation.UnmergeCells("Budget", "A1:B2");
     WorkbookOperation setColumnWidth = new WorkbookOperation.SetColumnWidth("Budget", 0, 1, 16.0);
     WorkbookOperation setRowHeight = new WorkbookOperation.SetRowHeight("Budget", 0, 1, 28.5);
+    WorkbookOperation insertRows = new WorkbookOperation.InsertRows("Budget", 1, 2);
+    WorkbookOperation deleteRows =
+        new WorkbookOperation.DeleteRows("Budget", new RowSpanInput.Band(1, 2));
+    WorkbookOperation shiftRows =
+        new WorkbookOperation.ShiftRows("Budget", new RowSpanInput.Band(1, 2), 1);
+    WorkbookOperation insertColumns = new WorkbookOperation.InsertColumns("Budget", 1, 2);
+    WorkbookOperation deleteColumns =
+        new WorkbookOperation.DeleteColumns("Budget", new ColumnSpanInput.Band(1, 2));
+    WorkbookOperation shiftColumns =
+        new WorkbookOperation.ShiftColumns("Budget", new ColumnSpanInput.Band(1, 2), -1);
+    WorkbookOperation setRowVisibility =
+        new WorkbookOperation.SetRowVisibility("Budget", new RowSpanInput.Band(1, 2), true);
+    WorkbookOperation setColumnVisibility =
+        new WorkbookOperation.SetColumnVisibility("Budget", new ColumnSpanInput.Band(1, 2), false);
+    WorkbookOperation groupRows =
+        new WorkbookOperation.GroupRows("Budget", new RowSpanInput.Band(1, 2), true);
+    WorkbookOperation ungroupRows =
+        new WorkbookOperation.UngroupRows("Budget", new RowSpanInput.Band(1, 2));
+    WorkbookOperation groupColumns =
+        new WorkbookOperation.GroupColumns("Budget", new ColumnSpanInput.Band(1, 2), true);
+    WorkbookOperation ungroupColumns =
+        new WorkbookOperation.UngroupColumns("Budget", new ColumnSpanInput.Band(1, 2));
     WorkbookOperation setSheetPane =
         new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 1, 1, 1));
     WorkbookOperation setSheetZoom = new WorkbookOperation.SetSheetZoom("Budget", 125);
@@ -1973,6 +2223,68 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setRowHeight, exception));
     assertNull(DefaultGridGrindRequestExecutor.addressFor(setRowHeight, exception));
     assertNull(DefaultGridGrindRequestExecutor.rangeFor(setRowHeight, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(insertRows, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(insertRows, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(insertRows, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(insertRows, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(deleteRows, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(deleteRows, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(deleteRows, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(deleteRows, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(shiftRows, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(shiftRows, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(shiftRows, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(shiftRows, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(insertColumns, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(insertColumns, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(insertColumns, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(insertColumns, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(deleteColumns, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(deleteColumns, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(deleteColumns, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(deleteColumns, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(shiftColumns, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(shiftColumns, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(shiftColumns, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(shiftColumns, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setRowVisibility, exception));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setRowVisibility, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setRowVisibility, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(setRowVisibility, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setColumnVisibility, exception));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setColumnVisibility, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setColumnVisibility, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(setColumnVisibility, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(groupRows, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(groupRows, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(groupRows, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(groupRows, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(ungroupRows, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(ungroupRows, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(ungroupRows, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(ungroupRows, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(groupColumns, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(groupColumns, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(groupColumns, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(groupColumns, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(ungroupColumns, exception));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(ungroupColumns, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(ungroupColumns, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(ungroupColumns, exception));
 
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(setSheetPane, exception));
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setSheetPane, exception));
@@ -2072,6 +2384,53 @@ class DefaultGridGrindRequestExecutorTest {
         WorkbookCommand.SetRowHeight.class,
         WorkbookCommandConverter.toCommand(
             new WorkbookOperation.SetRowHeight("Budget", 0, 1, 28.5)));
+    assertInstanceOf(
+        WorkbookCommand.InsertRows.class,
+        WorkbookCommandConverter.toCommand(new WorkbookOperation.InsertRows("Budget", 1, 2)));
+    assertInstanceOf(
+        WorkbookCommand.DeleteRows.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.DeleteRows("Budget", new RowSpanInput.Band(1, 2))));
+    assertInstanceOf(
+        WorkbookCommand.ShiftRows.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.ShiftRows("Budget", new RowSpanInput.Band(1, 2), 1)));
+    assertInstanceOf(
+        WorkbookCommand.InsertColumns.class,
+        WorkbookCommandConverter.toCommand(new WorkbookOperation.InsertColumns("Budget", 1, 2)));
+    assertInstanceOf(
+        WorkbookCommand.DeleteColumns.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.DeleteColumns("Budget", new ColumnSpanInput.Band(1, 2))));
+    assertInstanceOf(
+        WorkbookCommand.ShiftColumns.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.ShiftColumns("Budget", new ColumnSpanInput.Band(1, 2), -1)));
+    assertInstanceOf(
+        WorkbookCommand.SetRowVisibility.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.SetRowVisibility("Budget", new RowSpanInput.Band(1, 2), true)));
+    assertInstanceOf(
+        WorkbookCommand.SetColumnVisibility.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.SetColumnVisibility(
+                "Budget", new ColumnSpanInput.Band(1, 2), true)));
+    assertInstanceOf(
+        WorkbookCommand.GroupRows.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.GroupRows("Budget", new RowSpanInput.Band(1, 2), false)));
+    assertInstanceOf(
+        WorkbookCommand.UngroupRows.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.UngroupRows("Budget", new RowSpanInput.Band(1, 2))));
+    assertInstanceOf(
+        WorkbookCommand.GroupColumns.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.GroupColumns("Budget", new ColumnSpanInput.Band(1, 2), false)));
+    assertInstanceOf(
+        WorkbookCommand.UngroupColumns.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.UngroupColumns("Budget", new ColumnSpanInput.Band(1, 2))));
     assertInstanceOf(
         WorkbookCommand.SetSheetPane.class,
         WorkbookCommandConverter.toCommand(
@@ -2476,8 +2835,12 @@ class DefaultGridGrindRequestExecutorTest {
                     "Budget",
                     new dev.erst.gridgrind.excel.ExcelSheetPane.Frozen(1, 1, 1, 1),
                     125,
-                    List.of(new dev.erst.gridgrind.excel.WorkbookReadResult.ColumnLayout(0, 12.5)),
-                    List.of(new dev.erst.gridgrind.excel.WorkbookReadResult.RowLayout(0, 18.0)))));
+                    List.of(
+                        new dev.erst.gridgrind.excel.WorkbookReadResult.ColumnLayout(
+                            0, 12.5, false, 0, false)),
+                    List.of(
+                        new dev.erst.gridgrind.excel.WorkbookReadResult.RowLayout(
+                            0, 18.0, false, 0, false)))));
     WorkbookReadResult printLayout =
         WorkbookReadResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult(
@@ -3444,6 +3807,19 @@ class DefaultGridGrindRequestExecutorTest {
             new WorkbookOperation.UnmergeCells("Budget", "A1:B2"),
             new WorkbookOperation.SetColumnWidth("Budget", 0, 1, 16.0),
             new WorkbookOperation.SetRowHeight("Budget", 0, 1, 28.5),
+            new WorkbookOperation.InsertRows("Budget", 1, 2),
+            new WorkbookOperation.DeleteRows("Budget", new RowSpanInput.Band(1, 2)),
+            new WorkbookOperation.ShiftRows("Budget", new RowSpanInput.Band(1, 2), 1),
+            new WorkbookOperation.InsertColumns("Budget", 1, 2),
+            new WorkbookOperation.DeleteColumns("Budget", new ColumnSpanInput.Band(1, 2)),
+            new WorkbookOperation.ShiftColumns("Budget", new ColumnSpanInput.Band(1, 2), -1),
+            new WorkbookOperation.SetRowVisibility("Budget", new RowSpanInput.Band(1, 2), true),
+            new WorkbookOperation.SetColumnVisibility(
+                "Budget", new ColumnSpanInput.Band(1, 2), false),
+            new WorkbookOperation.GroupRows("Budget", new RowSpanInput.Band(1, 2), true),
+            new WorkbookOperation.UngroupRows("Budget", new RowSpanInput.Band(1, 2)),
+            new WorkbookOperation.GroupColumns("Budget", new ColumnSpanInput.Band(1, 2), true),
+            new WorkbookOperation.UngroupColumns("Budget", new ColumnSpanInput.Band(1, 2)),
             new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 1, 1, 1)),
             new WorkbookOperation.SetSheetZoom("Budget", 125),
             new WorkbookOperation.SetPrintLayout(

@@ -9,6 +9,7 @@ import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
@@ -22,12 +23,14 @@ import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
+import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import java.io.IOException;
@@ -486,6 +489,102 @@ class XlsxRoundTripVerifierTest {
             new WorkbookCommand.ClearComment("Summary", "A1"),
             new WorkbookCommand.DeleteNamedRange(
                 "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Preserves B3 row and column layout facts, including shifted hidden state, through reopen. */
+  @Test
+  void requireRoundTripReadable_preservesB3RowAndColumnLayoutState(
+      @TempDir Path tempDirectory) throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Layout"),
+            new WorkbookCommand.SetRange(
+                "Layout",
+                "A1:F6",
+                List.of(
+                    List.of(
+                        ExcelCellValue.text("Item"),
+                        ExcelCellValue.text("Qty"),
+                        ExcelCellValue.text("Status"),
+                        ExcelCellValue.text("Note"),
+                        ExcelCellValue.text("Owner"),
+                        ExcelCellValue.text("Flag")),
+                    List.of(
+                        ExcelCellValue.text("Hosting"),
+                        ExcelCellValue.number(42.0),
+                        ExcelCellValue.text("Open"),
+                        ExcelCellValue.text("Alpha"),
+                        ExcelCellValue.text("Ada"),
+                        ExcelCellValue.text("Y")),
+                    List.of(
+                        ExcelCellValue.text("Support"),
+                        ExcelCellValue.number(84.0),
+                        ExcelCellValue.text("Closed"),
+                        ExcelCellValue.text("Beta"),
+                        ExcelCellValue.text("Lin"),
+                        ExcelCellValue.text("N")),
+                    List.of(
+                        ExcelCellValue.text("Ops"),
+                        ExcelCellValue.number(168.0),
+                        ExcelCellValue.text("Open"),
+                        ExcelCellValue.text("Gamma"),
+                        ExcelCellValue.text("Bea"),
+                        ExcelCellValue.text("Y")),
+                    List.of(
+                        ExcelCellValue.text("QA"),
+                        ExcelCellValue.number(21.0),
+                        ExcelCellValue.text("Queued"),
+                        ExcelCellValue.text("Delta"),
+                        ExcelCellValue.text("Kai"),
+                        ExcelCellValue.text("N")),
+                    List.of(
+                        ExcelCellValue.text("Infra"),
+                        ExcelCellValue.number(7.0),
+                        ExcelCellValue.text("Done"),
+                        ExcelCellValue.text("Epsilon"),
+                        ExcelCellValue.text("Mia"),
+                        ExcelCellValue.text("Y")))),
+            new WorkbookCommand.SetSheetPane(
+                "Layout", new ExcelSheetPane.Frozen(1, 1, 1, 1)),
+            new WorkbookCommand.SetSheetZoom("Layout", 135),
+            new WorkbookCommand.SetRowVisibility("Layout", new ExcelRowSpan(1, 1), true),
+            new WorkbookCommand.ShiftRows("Layout", new ExcelRowSpan(1, 1), 1),
+            new WorkbookCommand.GroupRows("Layout", new ExcelRowSpan(3, 4), true),
+            new WorkbookCommand.SetColumnVisibility("Layout", new ExcelColumnSpan(1, 1), true),
+            new WorkbookCommand.ShiftColumns("Layout", new ExcelColumnSpan(1, 1), 1),
+            new WorkbookCommand.GroupColumns("Layout", new ExcelColumnSpan(3, 4), true));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Preserves collapsed row-group control markers when the grouped band ends at the sheet tail. */
+  @Test
+  void requireRoundTripReadable_preservesCollapsedRowGroupAtSparseSheetTail(
+      @TempDir Path tempDirectory) throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("E"),
+            new WorkbookCommand.GroupRows("E", new ExcelRowSpan(0, 1), true));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
+    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  /** Normalizes sparse ungrouped rows back to public outline level zero through reopen. */
+  @Test
+  void requireRoundTripReadable_normalizesSparseUngroupedRowsToOutlineLevelZero(
+      @TempDir Path tempDirectory) throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("E"),
+            new WorkbookCommand.UngroupRows("E", new ExcelRowSpan(1, 3)));
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 

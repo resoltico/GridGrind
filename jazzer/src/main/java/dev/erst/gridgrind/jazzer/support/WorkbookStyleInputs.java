@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
@@ -17,7 +16,7 @@ public final class WorkbookStyleInputs {
   private WorkbookStyleInputs() {}
 
   /** Returns a bounded protocol style patch. */
-  public static CellStyleInput nextStyleInput(FuzzedDataProvider data) {
+  public static CellStyleInput nextStyleInput(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     ExcelHorizontalAlignment[] horizontalValues = ExcelHorizontalAlignment.values();
@@ -146,7 +145,7 @@ public final class WorkbookStyleInputs {
     };
   }
 
-  private static FontHeightInput nextFontHeightInput(FuzzedDataProvider data) {
+  private static FontHeightInput nextFontHeightInput(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 2)) {
       case 0 -> new FontHeightInput.Twips(data.consumeInt(20, 640));
       case 1 -> new FontHeightInput.Points(nextPointHeight(data));
@@ -154,16 +153,16 @@ public final class WorkbookStyleInputs {
     };
   }
 
-  private static BigDecimal nextPointHeight(FuzzedDataProvider data) {
+  private static BigDecimal nextPointHeight(GridGrindFuzzData data) {
     return new ExcelFontHeight(data.consumeInt(20, 640)).points();
   }
 
-  private static String nextRgbHex(FuzzedDataProvider data) {
+  private static String nextRgbHex(GridGrindFuzzData data) {
     return "#%02X%02X%02X".formatted(
         data.consumeInt(0, 255), data.consumeInt(0, 255), data.consumeInt(0, 255));
   }
 
-  private static CellBorderInput nextProtocolBorder(FuzzedDataProvider data) {
+  private static CellBorderInput nextProtocolBorder(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 4)) {
       case 0 -> new CellBorderInput(nextBorderSide(data), null, null, null, null);
       case 1 -> new CellBorderInput(nextBorderSide(data), null, nextBorderSide(data), null, null);
@@ -179,7 +178,7 @@ public final class WorkbookStyleInputs {
     };
   }
 
-  private static CellBorderSideInput nextBorderSide(FuzzedDataProvider data) {
+  private static CellBorderSideInput nextBorderSide(GridGrindFuzzData data) {
     ExcelBorderStyle[] values = ExcelBorderStyle.values();
     return new CellBorderSideInput(values[data.consumeInt(0, values.length - 1)]);
   }

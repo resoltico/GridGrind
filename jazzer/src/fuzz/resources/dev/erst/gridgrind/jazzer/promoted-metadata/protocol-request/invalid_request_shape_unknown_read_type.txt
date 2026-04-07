@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_unknown_read_type.json
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_unknown_read_type.json
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
