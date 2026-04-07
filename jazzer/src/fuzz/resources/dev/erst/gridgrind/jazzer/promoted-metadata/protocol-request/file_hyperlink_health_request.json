@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/examples/file-hyperlink-health-request.json",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/file_hyperlink_health_request.json",
+  "sourcePath" : "../examples/file-hyperlink-health-request.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/file_hyperlink_health_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -13,9 +13,9 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 5,
       "operationKinds" : {
-        "SET_HYPERLINK" : 3,
         "SET_RANGE" : 1,
-        "ENSURE_SHEET" : 1
+        "ENSURE_SHEET" : 1,
+        "SET_HYPERLINK" : 3
       },
       "styleKinds" : { },
       "readCount" : 2,
@@ -26,5 +26,5 @@
     }
   },
   "promotedAt" : "2026-03-31T11:12:16.960469Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/file_hyperlink_health_request.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/file_hyperlink_health_request.txt"
 }

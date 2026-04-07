@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-workflow",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/ffbeeade11fe37088d3bb32892ea09f429c48731",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/auto_size_failure.bin",
+  "sourcePath" : ".local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/ffbeeade11fe37088d3bb32892ea09f429c48731",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/auto_size_failure.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -12,14 +12,14 @@
       "persistenceKind" : "NONE",
       "operationCount" : 3,
       "operationKinds" : {
+        "ENSURE_SHEET" : 1,
         "APPLY_STYLE" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
-        "ENSURE_SHEET" : 1
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
       },
       "styleKinds" : {
+        "wrap_text" : 1,
         "border" : 1,
-        "border_all" : 1,
-        "wrap_text" : 1
+        "border_all" : 1
       },
       "readCount" : 0,
       "readKinds" : { },
@@ -27,5 +27,5 @@
     }
   },
   "promotedAt" : "2026-03-26T04:16:00.687436Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/auto_size_failure.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/auto_size_failure.txt"
 }

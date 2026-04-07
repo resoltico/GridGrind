@@ -1,7 +1,7 @@
 {
   "targetKey" : "xlsx-roundtrip",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-cf071a5c3fab6142435ab70362296fd72841f102",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/table_header_rewrite_roundtrip_success.bin",
+  "sourcePath" : ".local/runs/xlsx-roundtrip/crash-cf071a5c3fab6142435ab70362296fd72841f102",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/table_header_rewrite_roundtrip_success.bin",
   "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
     "outcomeKind" : "EXPECTED_INVALID",
@@ -14,5 +14,5 @@
     }
   },
   "promotedAt" : "2026-04-01T22:13:03.482902Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/table_header_rewrite_roundtrip_success.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/table_header_rewrite_roundtrip_success.txt"
 }

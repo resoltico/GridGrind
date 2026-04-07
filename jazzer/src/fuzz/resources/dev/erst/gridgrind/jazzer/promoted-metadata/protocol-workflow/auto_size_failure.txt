@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/auto_size_failure.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/auto_size_failure.bin
 Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 38
@@ -9,5 +9,5 @@ Operation Count: 3
 Read Count: 0
 Read Kinds: (none)
 Response Kind: FAILURE
-Style Kinds: border=1, border_all=1, wrap_text=1
-Operation Kinds: APPLY_STYLE=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1, ENSURE_SHEET=1
+Style Kinds: wrap_text=1, border=1, border_all=1
+Operation Kinds: ENSURE_SHEET=1, APPLY_STYLE=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1

@@ -1,20 +1,20 @@
 {
   "targetKey" : "xlsx-roundtrip",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/xlsx-roundtrip/crash-08186b9e501c003407c08ae9cc9268976d5c0f1e",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/set_hyperlink_replacement_roundtrip_success.bin",
-  "replayOutcome" : "SUCCESS",
+  "sourcePath" : ".local/runs/xlsx-roundtrip/crash-08186b9e501c003407c08ae9cc9268976d5c0f1e",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/set_hyperlink_replacement_roundtrip_success.bin",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 82,
       "commandCount" : 4,
       "commandKinds" : {
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 4
+        "SHIFT_COLUMNS" : 4
       },
       "styleKinds" : { }
     }
   },
   "promotedAt" : "2026-03-26T23:21:10.700059Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/set_hyperlink_replacement_roundtrip_success.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/xlsx-roundtrip/set_hyperlink_replacement_roundtrip_success.txt"
 }

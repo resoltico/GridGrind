@@ -38,24 +38,42 @@ class JazzerHarnessRunnerTest {
   class Run {
     @Test
     void run_returnsSuccess_whenTaggedJazzerTestsExist() {
+      StringWriter output = new StringWriter();
       StringWriter errors = new StringWriter();
 
       int exitCode =
           JazzerHarnessRunner.run(
-              SuccessfulTaggedHarness.class.getName(), new PrintWriter(errors, true));
+              SuccessfulTaggedHarness.class.getName(),
+              new PrintWriter(output, true),
+              new PrintWriter(errors, true));
 
       assertEquals(0, exitCode);
+      assertTrue(
+          output.toString().contains(
+              "[JAZZER-PULSE] harness-class="
+                  + SuccessfulTaggedHarness.class.getName()
+                  + " phase=plan total-tests=1"));
+      assertTrue(output.toString().contains("phase=test-complete completed=1/1 status=SUCCESS"));
       assertTrue(errors.toString().isBlank());
     }
 
     @Test
     void run_returnsFailure_whenNoTaggedJazzerTestsExist() {
+      StringWriter output = new StringWriter();
       StringWriter errors = new StringWriter();
 
       int exitCode =
-          JazzerHarnessRunner.run(UntaggedHarness.class.getName(), new PrintWriter(errors, true));
+          JazzerHarnessRunner.run(
+              UntaggedHarness.class.getName(),
+              new PrintWriter(output, true),
+              new PrintWriter(errors, true));
 
       assertEquals(1, exitCode);
+      assertTrue(
+          output.toString().contains(
+              "[JAZZER-PULSE] harness-class="
+                  + UntaggedHarness.class.getName()
+                  + " phase=plan total-tests=0"));
       assertTrue(errors.toString().contains("No Jazzer tests were discovered"));
     }
   }

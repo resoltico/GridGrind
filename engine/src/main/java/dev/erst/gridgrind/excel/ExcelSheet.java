@@ -22,6 +22,7 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 /** High-level sheet wrapper for typed reads, writes, and previews. */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public final class ExcelSheet {
   private final Sheet sheet;
   private final WorkbookStyleRegistry styleRegistry;
@@ -31,6 +32,7 @@ public final class ExcelSheet {
   private final ExcelConditionalFormattingController conditionalFormattingController;
   private final ExcelAutofilterController autofilterController;
   private final ExcelPrintLayoutController printLayoutController;
+  private final ExcelRowColumnStructureController rowColumnStructureController;
 
   ExcelSheet(Sheet sheet, WorkbookStyleRegistry styleRegistry, ExcelFormulaRuntime formulaRuntime) {
     this.sheet = sheet;
@@ -41,6 +43,7 @@ public final class ExcelSheet {
     this.conditionalFormattingController = new ExcelConditionalFormattingController();
     this.autofilterController = new ExcelAutofilterController();
     this.printLayoutController = new ExcelPrintLayoutController();
+    this.rowColumnStructureController = new ExcelRowColumnStructureController();
   }
 
   /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
@@ -311,6 +314,88 @@ public final class ExcelSheet {
     return this;
   }
 
+  /** Inserts one or more blank rows before the provided zero-based row index. */
+  public ExcelSheet insertRows(int rowIndex, int rowCount) {
+    rowColumnStructureController.insertRows(xssfSheet(), rowIndex, rowCount);
+    return this;
+  }
+
+  /** Deletes the requested inclusive zero-based row band. */
+  public ExcelSheet deleteRows(ExcelRowSpan rows) {
+    Objects.requireNonNull(rows, "rows must not be null");
+    rowColumnStructureController.deleteRows(xssfSheet(), rows);
+    return this;
+  }
+
+  /** Moves the requested inclusive zero-based row band by the provided signed delta. */
+  public ExcelSheet shiftRows(ExcelRowSpan rows, int delta) {
+    Objects.requireNonNull(rows, "rows must not be null");
+    rowColumnStructureController.shiftRows(xssfSheet(), rows, delta);
+    return this;
+  }
+
+  /** Inserts one or more blank columns before the provided zero-based column index. */
+  public ExcelSheet insertColumns(int columnIndex, int columnCount) {
+    rowColumnStructureController.insertColumns(xssfSheet(), columnIndex, columnCount);
+    return this;
+  }
+
+  /** Deletes the requested inclusive zero-based column band. */
+  public ExcelSheet deleteColumns(ExcelColumnSpan columns) {
+    Objects.requireNonNull(columns, "columns must not be null");
+    rowColumnStructureController.deleteColumns(xssfSheet(), columns);
+    return this;
+  }
+
+  /** Moves the requested inclusive zero-based column band by the provided signed delta. */
+  public ExcelSheet shiftColumns(ExcelColumnSpan columns, int delta) {
+    Objects.requireNonNull(columns, "columns must not be null");
+    rowColumnStructureController.shiftColumns(xssfSheet(), columns, delta);
+    return this;
+  }
+
+  /** Sets the hidden state for the requested inclusive zero-based row band. */
+  public ExcelSheet setRowVisibility(ExcelRowSpan rows, boolean hidden) {
+    Objects.requireNonNull(rows, "rows must not be null");
+    rowColumnStructureController.setRowVisibility(xssfSheet(), rows, hidden);
+    return this;
+  }
+
+  /** Sets the hidden state for the requested inclusive zero-based column band. */
+  public ExcelSheet setColumnVisibility(ExcelColumnSpan columns, boolean hidden) {
+    Objects.requireNonNull(columns, "columns must not be null");
+    rowColumnStructureController.setColumnVisibility(xssfSheet(), columns, hidden);
+    return this;
+  }
+
+  /** Applies one outline group to the requested inclusive zero-based row band. */
+  public ExcelSheet groupRows(ExcelRowSpan rows, boolean collapsed) {
+    Objects.requireNonNull(rows, "rows must not be null");
+    rowColumnStructureController.groupRows(xssfSheet(), rows, collapsed);
+    return this;
+  }
+
+  /** Removes outline grouping from the requested inclusive zero-based row band. */
+  public ExcelSheet ungroupRows(ExcelRowSpan rows) {
+    Objects.requireNonNull(rows, "rows must not be null");
+    rowColumnStructureController.ungroupRows(xssfSheet(), rows);
+    return this;
+  }
+
+  /** Applies one outline group to the requested inclusive zero-based column band. */
+  public ExcelSheet groupColumns(ExcelColumnSpan columns, boolean collapsed) {
+    Objects.requireNonNull(columns, "columns must not be null");
+    rowColumnStructureController.groupColumns(xssfSheet(), columns, collapsed);
+    return this;
+  }
+
+  /** Removes outline grouping from the requested inclusive zero-based column band. */
+  public ExcelSheet ungroupColumns(ExcelColumnSpan columns) {
+    Objects.requireNonNull(columns, "columns must not be null");
+    rowColumnStructureController.ungroupColumns(xssfSheet(), columns);
+    return this;
+  }
+
   /** Applies one explicit pane state to this sheet. */
   public ExcelSheet setPane(ExcelSheetPane pane) {
     Objects.requireNonNull(pane, "pane must not be null");
@@ -352,11 +437,7 @@ public final class ExcelSheet {
    * Returns the 0-based index of the widest column across all rows, or -1 if the sheet is empty.
    */
   public int lastColumnIndex() {
-    int lastColumnIndex = -1;
-    for (Row row : sheet) {
-      lastColumnIndex = Math.max(lastColumnIndex, row.getLastCellNum() - 1);
-    }
-    return lastColumnIndex;
+    return rowColumnStructureController.lastColumnIndex(xssfSheet());
   }
 
   /** Auto-sizes all populated columns on this sheet to fit their content. */
@@ -530,8 +611,8 @@ public final class ExcelSheet {
         name(),
         ExcelSheetViewSupport.pane(xssfSheet()),
         ExcelSheetViewSupport.zoomPercent(xssfSheet()),
-        columnLayouts(),
-        rowLayouts());
+        rowColumnStructureController.columnLayouts(xssfSheet()),
+        rowColumnStructureController.rowLayouts(xssfSheet()));
   }
 
   /** Returns supported print-layout metadata for this sheet. */
@@ -1126,35 +1207,6 @@ public final class ExcelSheet {
     CellReference reference = parseCellReference(address);
     Row row = sheet.getRow(reference.getRow());
     return row == null ? null : row.getCell(reference.getCol());
-  }
-
-  private List<WorkbookReadResult.ColumnLayout> columnLayouts() {
-    int lastColumnIndex = lastColumnIndex();
-    if (lastColumnIndex < 0) {
-      return List.of();
-    }
-    List<WorkbookReadResult.ColumnLayout> columns = new ArrayList<>(lastColumnIndex + 1);
-    for (int columnIndex = 0; columnIndex <= lastColumnIndex; columnIndex++) {
-      columns.add(
-          new WorkbookReadResult.ColumnLayout(
-              columnIndex, sheet.getColumnWidth(columnIndex) / 256.0d));
-    }
-    return List.copyOf(columns);
-  }
-
-  private List<WorkbookReadResult.RowLayout> rowLayouts() {
-    int lastRowIndex = lastRowIndex();
-    if (lastRowIndex < 0) {
-      return List.of();
-    }
-    List<WorkbookReadResult.RowLayout> rows = new ArrayList<>(lastRowIndex + 1);
-    for (int rowIndex = 0; rowIndex <= lastRowIndex; rowIndex++) {
-      Row row = sheet.getRow(rowIndex);
-      double heightPoints =
-          row == null ? sheet.getDefaultRowHeight() / 20.0 : row.getHeight() / 20.0;
-      rows.add(new WorkbookReadResult.RowLayout(rowIndex, heightPoints));
-    }
-    return List.copyOf(rows);
   }
 
   /**

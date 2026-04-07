@@ -2,6 +2,8 @@ package dev.erst.gridgrind.protocol.operation;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.dto.ProtocolDefinedNameValidation;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** One validated workbook operation expressed in protocol form. */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = WorkbookOperation.EnsureSheet.class, name = "ENSURE_SHEET"),
@@ -33,6 +36,20 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = WorkbookOperation.UnmergeCells.class, name = "UNMERGE_CELLS"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetColumnWidth.class, name = "SET_COLUMN_WIDTH"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetRowHeight.class, name = "SET_ROW_HEIGHT"),
+  @JsonSubTypes.Type(value = WorkbookOperation.InsertRows.class, name = "INSERT_ROWS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.DeleteRows.class, name = "DELETE_ROWS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.ShiftRows.class, name = "SHIFT_ROWS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.InsertColumns.class, name = "INSERT_COLUMNS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.DeleteColumns.class, name = "DELETE_COLUMNS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.ShiftColumns.class, name = "SHIFT_COLUMNS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetRowVisibility.class, name = "SET_ROW_VISIBILITY"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.SetColumnVisibility.class,
+      name = "SET_COLUMN_VISIBILITY"),
+  @JsonSubTypes.Type(value = WorkbookOperation.GroupRows.class, name = "GROUP_ROWS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.UngroupRows.class, name = "UNGROUP_ROWS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.GroupColumns.class, name = "GROUP_COLUMNS"),
+  @JsonSubTypes.Type(value = WorkbookOperation.UngroupColumns.class, name = "UNGROUP_COLUMNS"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetSheetPane.class, name = "SET_SHEET_PANE"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetSheetZoom.class, name = "SET_SHEET_ZOOM"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetPrintLayout.class, name = "SET_PRINT_LAYOUT"),
@@ -202,6 +219,124 @@ public sealed interface WorkbookOperation {
       Validation.requireNonNegative(lastRowIndex, "lastRowIndex");
       Validation.requireOrderedSpan(firstRowIndex, lastRowIndex, "firstRowIndex", "lastRowIndex");
       Validation.requireRowHeightPoints(heightPoints);
+    }
+  }
+
+  /** Inserts one or more blank rows before the provided zero-based row index. */
+  record InsertRows(String sheetName, Integer rowIndex, Integer rowCount)
+      implements WorkbookOperation {
+    public InsertRows {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(rowIndex, "rowIndex must not be null");
+      Objects.requireNonNull(rowCount, "rowCount must not be null");
+      Validation.requireRowIndex(rowIndex, "rowIndex");
+      Validation.requirePositive(rowCount, "rowCount");
+    }
+  }
+
+  /** Deletes the requested inclusive zero-based row band. */
+  record DeleteRows(String sheetName, RowSpanInput rows) implements WorkbookOperation {
+    public DeleteRows {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(rows, "rows must not be null");
+    }
+  }
+
+  /** Moves the requested inclusive zero-based row band by the provided signed delta. */
+  record ShiftRows(String sheetName, RowSpanInput rows, Integer delta)
+      implements WorkbookOperation {
+    public ShiftRows {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(rows, "rows must not be null");
+      Objects.requireNonNull(delta, "delta must not be null");
+      Validation.requireNonZero(delta, "delta");
+    }
+  }
+
+  /** Inserts one or more blank columns before the provided zero-based column index. */
+  record InsertColumns(String sheetName, Integer columnIndex, Integer columnCount)
+      implements WorkbookOperation {
+    public InsertColumns {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(columnIndex, "columnIndex must not be null");
+      Objects.requireNonNull(columnCount, "columnCount must not be null");
+      Validation.requireColumnIndex(columnIndex, "columnIndex");
+      Validation.requirePositive(columnCount, "columnCount");
+    }
+  }
+
+  /** Deletes the requested inclusive zero-based column band. */
+  record DeleteColumns(String sheetName, ColumnSpanInput columns) implements WorkbookOperation {
+    public DeleteColumns {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(columns, "columns must not be null");
+    }
+  }
+
+  /** Moves the requested inclusive zero-based column band by the provided signed delta. */
+  record ShiftColumns(String sheetName, ColumnSpanInput columns, Integer delta)
+      implements WorkbookOperation {
+    public ShiftColumns {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(columns, "columns must not be null");
+      Objects.requireNonNull(delta, "delta must not be null");
+      Validation.requireNonZero(delta, "delta");
+    }
+  }
+
+  /** Sets the hidden state for the requested inclusive zero-based row band. */
+  record SetRowVisibility(String sheetName, RowSpanInput rows, Boolean hidden)
+      implements WorkbookOperation {
+    public SetRowVisibility {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(rows, "rows must not be null");
+      Objects.requireNonNull(hidden, "hidden must not be null");
+    }
+  }
+
+  /** Sets the hidden state for the requested inclusive zero-based column band. */
+  record SetColumnVisibility(String sheetName, ColumnSpanInput columns, Boolean hidden)
+      implements WorkbookOperation {
+    public SetColumnVisibility {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(columns, "columns must not be null");
+      Objects.requireNonNull(hidden, "hidden must not be null");
+    }
+  }
+
+  /** Applies one outline group to the requested inclusive zero-based row band. */
+  record GroupRows(String sheetName, RowSpanInput rows, Boolean collapsed)
+      implements WorkbookOperation {
+    public GroupRows {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(rows, "rows must not be null");
+      collapsed = collapsed == null ? Boolean.FALSE : collapsed;
+    }
+  }
+
+  /** Removes outline grouping from the requested inclusive zero-based row band. */
+  record UngroupRows(String sheetName, RowSpanInput rows) implements WorkbookOperation {
+    public UngroupRows {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(rows, "rows must not be null");
+    }
+  }
+
+  /** Applies one outline group to the requested inclusive zero-based column band. */
+  record GroupColumns(String sheetName, ColumnSpanInput columns, Boolean collapsed)
+      implements WorkbookOperation {
+    public GroupColumns {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(columns, "columns must not be null");
+      collapsed = collapsed == null ? Boolean.FALSE : collapsed;
+    }
+  }
+
+  /** Removes outline grouping from the requested inclusive zero-based column band. */
+  record UngroupColumns(String sheetName, ColumnSpanInput columns) implements WorkbookOperation {
+    public UngroupColumns {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(columns, "columns must not be null");
     }
   }
 
@@ -442,6 +577,18 @@ public sealed interface WorkbookOperation {
       case UnmergeCells _ -> "UNMERGE_CELLS";
       case SetColumnWidth _ -> "SET_COLUMN_WIDTH";
       case SetRowHeight _ -> "SET_ROW_HEIGHT";
+      case InsertRows _ -> "INSERT_ROWS";
+      case DeleteRows _ -> "DELETE_ROWS";
+      case ShiftRows _ -> "SHIFT_ROWS";
+      case InsertColumns _ -> "INSERT_COLUMNS";
+      case DeleteColumns _ -> "DELETE_COLUMNS";
+      case ShiftColumns _ -> "SHIFT_COLUMNS";
+      case SetRowVisibility _ -> "SET_ROW_VISIBILITY";
+      case SetColumnVisibility _ -> "SET_COLUMN_VISIBILITY";
+      case GroupRows _ -> "GROUP_ROWS";
+      case UngroupRows _ -> "UNGROUP_ROWS";
+      case GroupColumns _ -> "GROUP_COLUMNS";
+      case UngroupColumns _ -> "UNGROUP_COLUMNS";
       case SetSheetPane _ -> "SET_SHEET_PANE";
       case SetSheetZoom _ -> "SET_SHEET_ZOOM";
       case SetPrintLayout _ -> "SET_PRINT_LAYOUT";
@@ -492,6 +639,37 @@ public sealed interface WorkbookOperation {
     static void requireNonNegative(int value, String fieldName) {
       if (value < 0) {
         throw new IllegalArgumentException(fieldName + " must not be negative");
+      }
+    }
+
+    static void requirePositive(int value, String fieldName) {
+      if (value <= 0) {
+        throw new IllegalArgumentException(fieldName + " must be greater than 0");
+      }
+    }
+
+    static void requireNonZero(int value, String fieldName) {
+      if (value == 0) {
+        throw new IllegalArgumentException(fieldName + " must not be 0");
+      }
+    }
+
+    static void requireRowIndex(int value, String fieldName) {
+      requireNonNegative(value, fieldName);
+      if (value > ExcelRowSpan.MAX_ROW_INDEX) {
+        throw new IllegalArgumentException(
+            fieldName + " must not exceed " + ExcelRowSpan.MAX_ROW_INDEX + " (Excel row limit)");
+      }
+    }
+
+    static void requireColumnIndex(int value, String fieldName) {
+      requireNonNegative(value, fieldName);
+      if (value > ExcelColumnSpan.MAX_COLUMN_INDEX) {
+        throw new IllegalArgumentException(
+            fieldName
+                + " must not exceed "
+                + ExcelColumnSpan.MAX_COLUMN_INDEX
+                + " (Excel column limit)");
       }
     }
 

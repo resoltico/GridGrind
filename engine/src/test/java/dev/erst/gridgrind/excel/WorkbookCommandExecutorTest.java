@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -376,6 +377,124 @@ class WorkbookCommandExecutorTest {
   }
 
   @Test
+  void appliesRowAndColumnStructuralCommandsThroughExecutor() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-structural-commands-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+
+      assertSame(
+          workbook,
+          executor.apply(
+              workbook,
+              new WorkbookCommand.CreateSheet("Layout"),
+              new WorkbookCommand.SetRange(
+                  "Layout",
+                  "A1:F6",
+                  List.of(
+                      List.of(
+                          ExcelCellValue.text("Item"),
+                          ExcelCellValue.text("Qty"),
+                          ExcelCellValue.text("Status"),
+                          ExcelCellValue.text("Note"),
+                          ExcelCellValue.text("Owner"),
+                          ExcelCellValue.text("Flag")),
+                      List.of(
+                          ExcelCellValue.text("Hosting"),
+                          ExcelCellValue.number(42.0),
+                          ExcelCellValue.text("Open"),
+                          ExcelCellValue.text("Alpha"),
+                          ExcelCellValue.text("Ada"),
+                          ExcelCellValue.text("Y")),
+                      List.of(
+                          ExcelCellValue.text("Support"),
+                          ExcelCellValue.number(84.0),
+                          ExcelCellValue.text("Closed"),
+                          ExcelCellValue.text("Beta"),
+                          ExcelCellValue.text("Lin"),
+                          ExcelCellValue.text("N")),
+                      List.of(
+                          ExcelCellValue.text("Ops"),
+                          ExcelCellValue.number(168.0),
+                          ExcelCellValue.text("Open"),
+                          ExcelCellValue.text("Gamma"),
+                          ExcelCellValue.text("Bea"),
+                          ExcelCellValue.text("Y")),
+                      List.of(
+                          ExcelCellValue.text("QA"),
+                          ExcelCellValue.number(21.0),
+                          ExcelCellValue.text("Queued"),
+                          ExcelCellValue.text("Delta"),
+                          ExcelCellValue.text("Kai"),
+                          ExcelCellValue.text("N")),
+                      List.of(
+                          ExcelCellValue.text("Infra"),
+                          ExcelCellValue.number(7.0),
+                          ExcelCellValue.text("Done"),
+                          ExcelCellValue.text("Epsilon"),
+                          ExcelCellValue.text("Mia"),
+                          ExcelCellValue.text("Y")))),
+              new WorkbookCommand.GroupRows("Layout", new ExcelRowSpan(1, 3), true),
+              new WorkbookCommand.SetRowVisibility("Layout", new ExcelRowSpan(5, 5), true),
+              new WorkbookCommand.GroupColumns("Layout", new ExcelColumnSpan(1, 3), true),
+              new WorkbookCommand.SetColumnVisibility("Layout", new ExcelColumnSpan(5, 5), true),
+              new WorkbookCommand.CreateSheet("Moves"),
+              new WorkbookCommand.SetRange(
+                  "Moves",
+                  "A1:D3",
+                  List.of(
+                      List.of(
+                          ExcelCellValue.text("Item"),
+                          ExcelCellValue.text("Qty"),
+                          ExcelCellValue.text("Status"),
+                          ExcelCellValue.text("Note")),
+                      List.of(
+                          ExcelCellValue.text("Hosting"),
+                          ExcelCellValue.number(42.0),
+                          ExcelCellValue.text("Open"),
+                          ExcelCellValue.text("Alpha")),
+                      List.of(
+                          ExcelCellValue.text("Support"),
+                          ExcelCellValue.number(84.0),
+                          ExcelCellValue.text("Closed"),
+                          ExcelCellValue.text("Beta")))),
+              new WorkbookCommand.InsertRows("Moves", 1, 1),
+              new WorkbookCommand.SetCell("Moves", "A2", ExcelCellValue.text("Spacer")),
+              new WorkbookCommand.ShiftRows("Moves", new ExcelRowSpan(2, 3), 1),
+              new WorkbookCommand.DeleteRows("Moves", new ExcelRowSpan(2, 2)),
+              new WorkbookCommand.InsertColumns("Moves", 1, 1),
+              new WorkbookCommand.SetCell("Moves", "B1", ExcelCellValue.text("Pad")),
+              new WorkbookCommand.ShiftColumns("Moves", new ExcelColumnSpan(2, 4), 1),
+              new WorkbookCommand.DeleteColumns("Moves", new ExcelColumnSpan(2, 2))));
+
+      assertEquals("Pad", workbook.sheet("Moves").text("B1"));
+      assertEquals("Hosting", workbook.sheet("Moves").text("A3"));
+      assertEquals(42.0, workbook.sheet("Moves").number("C3"));
+      assertEquals("Beta", workbook.sheet("Moves").text("E4"));
+      workbook.save(workbookPath);
+    }
+
+    WorkbookReadResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
+    assertEquals(6, layout.rows().size());
+    assertTrue(layout.rows().get(1).hidden());
+    assertEquals(1, layout.rows().get(1).outlineLevel());
+    assertTrue(layout.rows().get(4).collapsed());
+    assertTrue(layout.rows().get(5).hidden());
+    assertEquals(6, layout.columns().size());
+    assertTrue(layout.columns().get(1).hidden());
+    assertEquals(1, layout.columns().get(1).outlineLevel());
+    assertTrue(layout.columns().get(4).collapsed());
+    assertTrue(layout.columns().get(5).hidden());
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      assertEquals("Pad", reopened.sheet("Moves").text("B1"));
+      assertEquals("Hosting", reopened.sheet("Moves").text("A3"));
+      assertEquals(42.0, reopened.sheet("Moves").number("C3"));
+      assertEquals("Beta", reopened.sheet("Moves").text("E4"));
+    }
+  }
+
+  @Test
   void appliesSheetManagementCommandsThroughExecutor() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
@@ -408,6 +527,58 @@ class WorkbookCommandExecutorTest {
           WorkbookReadResult.SheetProtection.Unprotected.class,
           workbook.sheetSummary("Alpha").protection());
     }
+  }
+
+  @Test
+  void appliesUngroupCommandsThroughExecutor() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-command-ungroup-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+
+      executor.apply(
+          workbook,
+          new WorkbookCommand.CreateSheet("Layout"),
+          new WorkbookCommand.SetRange(
+              "Layout",
+              "A1:D4",
+              List.of(
+                  List.of(
+                      ExcelCellValue.text("Item"),
+                      ExcelCellValue.text("Qty"),
+                      ExcelCellValue.text("Status"),
+                      ExcelCellValue.text("Owner")),
+                  List.of(
+                      ExcelCellValue.text("Hosting"),
+                      ExcelCellValue.number(42.0),
+                      ExcelCellValue.text("Open"),
+                      ExcelCellValue.text("Ada")),
+                  List.of(
+                      ExcelCellValue.text("Support"),
+                      ExcelCellValue.number(84.0),
+                      ExcelCellValue.text("Closed"),
+                      ExcelCellValue.text("Lin")),
+                  List.of(
+                      ExcelCellValue.text("Ops"),
+                      ExcelCellValue.number(7.0),
+                      ExcelCellValue.text("Done"),
+                      ExcelCellValue.text("Mia")))),
+          new WorkbookCommand.GroupRows("Layout", new ExcelRowSpan(1, 3), true),
+          new WorkbookCommand.GroupColumns("Layout", new ExcelColumnSpan(1, 3), true),
+          new WorkbookCommand.UngroupRows("Layout", new ExcelRowSpan(1, 3)),
+          new WorkbookCommand.UngroupColumns("Layout", new ExcelColumnSpan(1, 3)));
+
+      workbook.save(workbookPath);
+    }
+
+    WorkbookReadResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Layout");
+
+    assertTrue(layout.rows().size() >= 4);
+    assertFalse(layout.rows().get(1).hidden());
+    assertEquals(0, layout.rows().get(1).outlineLevel());
+    assertTrue(layout.columns().size() >= 4);
+    assertFalse(layout.columns().get(1).hidden());
+    assertEquals(0, layout.columns().get(1).outlineLevel());
   }
 
   @Test

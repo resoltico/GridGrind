@@ -183,17 +183,24 @@ public final class JazzerCli {
     Files.createDirectories(metadataDirectory);
     Path replayTextPath = metadataDirectory.resolve(name + ".txt");
     Path replayJsonPath = metadataDirectory.resolve(name + ".json");
-    Files.writeString(replayTextPath, JazzerTextRenderer.renderReplay(inputPath, outcome) + System.lineSeparator());
+    String storedSourcePath = PromotionMetadata.relativizePath(projectDirectory, inputPath);
+    String storedPromotedInputPath =
+        PromotionMetadata.relativizePath(projectDirectory, promotedInputPath);
+    String storedReplayTextPath = PromotionMetadata.relativizePath(projectDirectory, replayTextPath);
+    Files.writeString(
+        replayTextPath,
+        JazzerTextRenderer.renderReplay(Path.of(storedPromotedInputPath), outcome)
+            + System.lineSeparator());
     JazzerJson.write(
         replayJsonPath,
         new PromotionMetadata(
             target.key(),
-            inputPath.toAbsolutePath().normalize().toString(),
-            promotedInputPath.toAbsolutePath().normalize().toString(),
+            storedSourcePath,
+            storedPromotedInputPath,
             JazzerReplaySupport.outcomeKind(outcome),
             JazzerReplaySupport.expectationFor(outcome),
             Instant.now().toString(),
-            replayTextPath.toAbsolutePath().normalize().toString()));
+            storedReplayTextPath));
 
     System.out.println("Promoted input written to " + promotedInputPath.toAbsolutePath().normalize());
     System.out.println("Promotion metadata written to " + replayJsonPath.toAbsolutePath().normalize());
@@ -218,11 +225,12 @@ public final class JazzerCli {
     for (Path metadataPath : metadataPaths) {
       PromotionMetadata metadata = JazzerJson.read(metadataPath, PromotionMetadata.class);
       JazzerRunTarget target = JazzerRunTarget.fromKey(metadata.targetKey());
+      Path promotedInputPath = metadata.promotedInputPath(projectDirectory);
+      Path replayTextPath = metadata.replayTextPath(projectDirectory);
       ReplayOutcome outcome =
-          JazzerReplaySupport.replay(
-              target.replayHarness(), Files.readAllBytes(Path.of(metadata.promotedInputPath())));
+          JazzerReplaySupport.replay(target.replayHarness(), Files.readAllBytes(promotedInputPath));
       Files.writeString(
-          Path.of(metadata.replayTextPath()),
+          replayTextPath,
           JazzerTextRenderer.renderReplay(Path.of(metadata.promotedInputPath()), outcome)
               + System.lineSeparator());
       JazzerJson.write(
@@ -260,7 +268,9 @@ public final class JazzerCli {
 
   private static Path projectDirectory(List<String> args) {
     String configured = optionalValue(args, "--project-dir");
-    return configured == null ? Path.of("").toAbsolutePath().normalize() : Path.of(configured);
+    return configured == null
+        ? Path.of("").toAbsolutePath().normalize()
+        : Path.of(configured).toAbsolutePath().normalize();
   }
 
   private static Path promotedMetadataRoot(Path projectDirectory) {

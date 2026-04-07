@@ -423,10 +423,21 @@ final class WorkbookReadResultConverter {
             .map(
                 column ->
                     new GridGrindResponse.ColumnLayoutReport(
-                        column.columnIndex(), column.widthCharacters()))
+                        column.columnIndex(),
+                        column.widthCharacters(),
+                        column.hidden(),
+                        column.outlineLevel(),
+                        column.collapsed()))
             .toList(),
         layout.rows().stream()
-            .map(row -> new GridGrindResponse.RowLayoutReport(row.rowIndex(), row.heightPoints()))
+            .map(
+                row ->
+                    new GridGrindResponse.RowLayoutReport(
+                        row.rowIndex(),
+                        row.heightPoints(),
+                        row.hidden(),
+                        row.outlineLevel(),
+                        row.collapsed()))
             .toList());
   }
 

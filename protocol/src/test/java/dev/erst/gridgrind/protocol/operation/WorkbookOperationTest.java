@@ -2,11 +2,13 @@ package dev.erst.gridgrind.protocol.operation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.protocol.dto.*;
@@ -50,6 +52,50 @@ class WorkbookOperationTest {
     assertEquals(135, setSheetZoom.zoomPercent());
     assertEquals(defaultPrintLayout(), setPrintLayout.printLayout());
     assertEquals("Budget", clearPrintLayout.sheetName());
+  }
+
+  @Test
+  void buildsRowAndColumnStructureOperations() {
+    WorkbookOperation.InsertRows insertRows = new WorkbookOperation.InsertRows("Budget", 2, 3);
+    WorkbookOperation.DeleteRows deleteRows =
+        new WorkbookOperation.DeleteRows("Budget", new RowSpanInput.Band(4, 6));
+    WorkbookOperation.ShiftRows shiftRows =
+        new WorkbookOperation.ShiftRows("Budget", new RowSpanInput.Band(1, 3), 2);
+    WorkbookOperation.InsertColumns insertColumns =
+        new WorkbookOperation.InsertColumns("Budget", 1, 2);
+    WorkbookOperation.DeleteColumns deleteColumns =
+        new WorkbookOperation.DeleteColumns("Budget", new ColumnSpanInput.Band(3, 4));
+    WorkbookOperation.ShiftColumns shiftColumns =
+        new WorkbookOperation.ShiftColumns("Budget", new ColumnSpanInput.Band(0, 1), -1);
+    WorkbookOperation.SetRowVisibility setRowVisibility =
+        new WorkbookOperation.SetRowVisibility("Budget", new RowSpanInput.Band(5, 7), true);
+    WorkbookOperation.SetColumnVisibility setColumnVisibility =
+        new WorkbookOperation.SetColumnVisibility("Budget", new ColumnSpanInput.Band(2, 3), false);
+    WorkbookOperation.GroupRows groupRows =
+        new WorkbookOperation.GroupRows("Budget", new RowSpanInput.Band(8, 10), null);
+    WorkbookOperation.UngroupRows ungroupRows =
+        new WorkbookOperation.UngroupRows("Budget", new RowSpanInput.Band(8, 10));
+    WorkbookOperation.GroupColumns groupColumns =
+        new WorkbookOperation.GroupColumns("Budget", new ColumnSpanInput.Band(4, 6), true);
+    WorkbookOperation.GroupColumns groupColumnsWithDefaultCollapse =
+        new WorkbookOperation.GroupColumns("Budget", new ColumnSpanInput.Band(4, 6), null);
+    WorkbookOperation.UngroupColumns ungroupColumns =
+        new WorkbookOperation.UngroupColumns("Budget", new ColumnSpanInput.Band(4, 6));
+
+    assertEquals(2, insertRows.rowIndex());
+    assertEquals(3, insertRows.rowCount());
+    assertEquals(new RowSpanInput.Band(4, 6), deleteRows.rows());
+    assertEquals(2, shiftRows.delta());
+    assertEquals(1, insertColumns.columnIndex());
+    assertEquals(new ColumnSpanInput.Band(3, 4), deleteColumns.columns());
+    assertEquals(-1, shiftColumns.delta());
+    assertTrue(setRowVisibility.hidden());
+    assertFalse(setColumnVisibility.hidden());
+    assertFalse(groupRows.collapsed());
+    assertEquals(new RowSpanInput.Band(8, 10), ungroupRows.rows());
+    assertTrue(groupColumns.collapsed());
+    assertFalse(groupColumnsWithDefaultCollapse.collapsed());
+    assertEquals(new ColumnSpanInput.Band(4, 6), ungroupColumns.columns());
   }
 
   @Test
@@ -192,6 +238,7 @@ class WorkbookOperationTest {
   }
 
   @Test
+  @SuppressWarnings("PMD.NcssCount")
   void validatesNullAndEmptyCollectionConstraints() {
     assertThrows(
         NullPointerException.class,
@@ -258,6 +305,42 @@ class WorkbookOperationTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookOperation.SetRowHeight("Budget", 0, 0, Double.NaN));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.InsertRows("Budget", null, 1));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.InsertRows("Budget", 0, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.InsertRows("Budget", ExcelRowSpan.MAX_ROW_INDEX + 1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.DeleteRows("Budget", new RowSpanInput.Band(2, 1)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.ShiftRows("Budget", new RowSpanInput.Band(0, 0), 0));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookOperation.InsertColumns("Budget", 0, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.InsertColumns("Budget", ExcelColumnSpan.MAX_COLUMN_INDEX + 1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.DeleteColumns("Budget", new ColumnSpanInput.Band(4, 3)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.ShiftColumns("Budget", new ColumnSpanInput.Band(0, 0), 0));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.SetRowVisibility("Budget", null, true));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.SetColumnVisibility("Budget", null, true));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.GroupRows("Budget", null, false));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.GroupColumns("Budget", null, false));
     assertThrows(
         NullPointerException.class, () -> new WorkbookOperation.SetSheetPane("Budget", null));
     assertThrows(
@@ -571,6 +654,46 @@ class WorkbookOperationTest {
         new WorkbookOperation.SetColumnWidth("Budget", 0, 1, 16.0).operationType());
     assertEquals(
         "SET_ROW_HEIGHT", new WorkbookOperation.SetRowHeight("Budget", 0, 1, 28.5).operationType());
+    assertEquals("INSERT_ROWS", new WorkbookOperation.InsertRows("Budget", 1, 2).operationType());
+    assertEquals(
+        "DELETE_ROWS",
+        new WorkbookOperation.DeleteRows("Budget", new RowSpanInput.Band(1, 2)).operationType());
+    assertEquals(
+        "SHIFT_ROWS",
+        new WorkbookOperation.ShiftRows("Budget", new RowSpanInput.Band(1, 2), 1).operationType());
+    assertEquals(
+        "INSERT_COLUMNS", new WorkbookOperation.InsertColumns("Budget", 1, 2).operationType());
+    assertEquals(
+        "DELETE_COLUMNS",
+        new WorkbookOperation.DeleteColumns("Budget", new ColumnSpanInput.Band(1, 2))
+            .operationType());
+    assertEquals(
+        "SHIFT_COLUMNS",
+        new WorkbookOperation.ShiftColumns("Budget", new ColumnSpanInput.Band(1, 2), -1)
+            .operationType());
+    assertEquals(
+        "SET_ROW_VISIBILITY",
+        new WorkbookOperation.SetRowVisibility("Budget", new RowSpanInput.Band(1, 2), true)
+            .operationType());
+    assertEquals(
+        "SET_COLUMN_VISIBILITY",
+        new WorkbookOperation.SetColumnVisibility("Budget", new ColumnSpanInput.Band(1, 2), true)
+            .operationType());
+    assertEquals(
+        "GROUP_ROWS",
+        new WorkbookOperation.GroupRows("Budget", new RowSpanInput.Band(1, 2), false)
+            .operationType());
+    assertEquals(
+        "UNGROUP_ROWS",
+        new WorkbookOperation.UngroupRows("Budget", new RowSpanInput.Band(1, 2)).operationType());
+    assertEquals(
+        "GROUP_COLUMNS",
+        new WorkbookOperation.GroupColumns("Budget", new ColumnSpanInput.Band(1, 2), false)
+            .operationType());
+    assertEquals(
+        "UNGROUP_COLUMNS",
+        new WorkbookOperation.UngroupColumns("Budget", new ColumnSpanInput.Band(1, 2))
+            .operationType());
     assertEquals(
         "SET_SHEET_PANE",
         new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 2, 1, 2))

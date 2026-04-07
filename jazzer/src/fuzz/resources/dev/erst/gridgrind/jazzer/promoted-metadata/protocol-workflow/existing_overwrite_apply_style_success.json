@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-workflow",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/7673cafcbf6d09e270c90db5b83156666b590a4e",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_apply_style_success.bin",
+  "sourcePath" : ".local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/7673cafcbf6d09e270c90db5b83156666b590a4e",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_apply_style_success.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -12,28 +12,28 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 3,
       "operationKinds" : {
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2,
-        "APPLY_STYLE" : 1
+        "APPLY_STYLE" : 1,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2
       },
       "styleKinds" : {
+        "border_left" : 1,
+        "border_right" : 1,
+        "fill_color" : 1,
         "font_color" : 1,
         "border_top" : 1,
         "border_all" : 1,
         "border_bottom" : 1,
-        "border" : 1,
-        "border_left" : 1,
-        "border_right" : 1,
-        "fill_color" : 1
+        "border" : 1
       },
       "readCount" : 3,
       "readKinds" : {
+        "GET_AUTOFILTERS" : 1,
         "ANALYZE_WORKBOOK_FINDINGS" : 1,
-        "GET_FORMULA_SURFACE" : 1,
-        "GET_AUTOFILTERS" : 1
+        "GET_FORMULA_SURFACE" : 1
       },
       "responseKind" : "FAILURE"
     }
   },
   "promotedAt" : "2026-03-26T11:37:30.455503Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/existing_overwrite_apply_style_success.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/existing_overwrite_apply_style_success.txt"
 }

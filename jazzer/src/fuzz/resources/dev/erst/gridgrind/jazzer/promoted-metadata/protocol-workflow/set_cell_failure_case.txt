@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/set_cell_failure_case.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/set_cell_failure_case.bin
 Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 25
@@ -10,4 +10,4 @@ Read Count: 4
 Read Kinds: GET_WORKBOOK_SUMMARY=3, GET_SHEET_SCHEMA=1
 Response Kind: FAILURE
 Style Kinds: (none)
-Operation Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=1
+Operation Kinds: UNGROUP_COLUMNS=1

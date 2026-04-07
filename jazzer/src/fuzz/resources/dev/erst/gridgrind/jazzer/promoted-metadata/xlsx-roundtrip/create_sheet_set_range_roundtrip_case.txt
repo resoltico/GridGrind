@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/create_sheet_set_range_roundtrip_case.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/create_sheet_set_range_roundtrip_case.bin
 Harness: xlsx-roundtrip
 Outcome: SUCCESS
 Input Bytes: 17

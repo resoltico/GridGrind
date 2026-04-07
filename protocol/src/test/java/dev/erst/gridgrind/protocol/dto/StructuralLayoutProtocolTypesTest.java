@@ -3,12 +3,42 @@ package dev.erst.gridgrind.protocol.dto;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.ExcelRowSpan;
 import org.junit.jupiter.api.Test;
 
 /** Direct tests for the structural-layout protocol input and report families. */
 class StructuralLayoutProtocolTypesTest {
+  @Test
+  void rowAndColumnSpanInputsValidateBounds() {
+    assertEquals(new RowSpanInput.Band(0, 2), new RowSpanInput.Band(0, 2));
+    assertEquals(new ColumnSpanInput.Band(1, 3), new ColumnSpanInput.Band(1, 3));
+
+    assertThrows(IllegalArgumentException.class, () -> new RowSpanInput.Band(-1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new RowSpanInput.Band(0, -1));
+    assertThrows(IllegalArgumentException.class, () -> new RowSpanInput.Band(2, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new RowSpanInput.Band(ExcelRowSpan.MAX_ROW_INDEX + 1, ExcelRowSpan.MAX_ROW_INDEX + 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new RowSpanInput.Band(0, ExcelRowSpan.MAX_ROW_INDEX + 1));
+    assertThrows(IllegalArgumentException.class, () -> new ColumnSpanInput.Band(-1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new ColumnSpanInput.Band(0, -1));
+    assertThrows(IllegalArgumentException.class, () -> new ColumnSpanInput.Band(2, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ColumnSpanInput.Band(
+                ExcelColumnSpan.MAX_COLUMN_INDEX + 1, ExcelColumnSpan.MAX_COLUMN_INDEX + 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ColumnSpanInput.Band(0, ExcelColumnSpan.MAX_COLUMN_INDEX + 1));
+  }
+
   @Test
   void paneInputVariantsValidateTheirContracts() {
     assertEquals(new PaneInput.None(), new PaneInput.None());

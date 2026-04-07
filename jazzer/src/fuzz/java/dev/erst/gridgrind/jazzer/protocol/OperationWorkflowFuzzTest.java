@@ -3,6 +3,7 @@ package dev.erst.gridgrind.jazzer.protocol;
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
 import dev.erst.gridgrind.jazzer.support.GeneratedProtocolWorkflow;
+import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.HarnessTelemetry;
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import dev.erst.gridgrind.jazzer.support.OperationSequenceModel;
@@ -19,10 +20,11 @@ class OperationWorkflowFuzzTest {
 
   @FuzzTest
   void executeWorkflow(FuzzedDataProvider data) {
-    TELEMETRY.beginIteration(data.remainingBytes());
+    GridGrindFuzzData fuzzData = GridGrindFuzzData.wrap(data);
+    TELEMETRY.beginIteration(fuzzData.remainingBytes());
     GeneratedProtocolWorkflow workflow;
     try {
-      workflow = OperationSequenceModel.nextProtocolWorkflow(data);
+      workflow = OperationSequenceModel.nextProtocolWorkflow(fuzzData);
     } catch (IllegalArgumentException expected) {
       TELEMETRY.recordGeneratedInvalid();
       return;

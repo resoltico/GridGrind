@@ -25,6 +25,45 @@ class WorkbookCommandTest {
     assertCreatedCommands(commands, defaultStyle());
   }
 
+  @Test
+  void buildsRowAndColumnStructureCommands() {
+    WorkbookCommand.InsertRows insertRows = new WorkbookCommand.InsertRows("Budget", 2, 3);
+    WorkbookCommand.DeleteRows deleteRows =
+        new WorkbookCommand.DeleteRows("Budget", new ExcelRowSpan(4, 6));
+    WorkbookCommand.ShiftRows shiftRows =
+        new WorkbookCommand.ShiftRows("Budget", new ExcelRowSpan(1, 3), 2);
+    WorkbookCommand.InsertColumns insertColumns = new WorkbookCommand.InsertColumns("Budget", 1, 2);
+    WorkbookCommand.DeleteColumns deleteColumns =
+        new WorkbookCommand.DeleteColumns("Budget", new ExcelColumnSpan(3, 4));
+    WorkbookCommand.ShiftColumns shiftColumns =
+        new WorkbookCommand.ShiftColumns("Budget", new ExcelColumnSpan(0, 1), -1);
+    WorkbookCommand.SetRowVisibility setRowVisibility =
+        new WorkbookCommand.SetRowVisibility("Budget", new ExcelRowSpan(5, 7), true);
+    WorkbookCommand.SetColumnVisibility setColumnVisibility =
+        new WorkbookCommand.SetColumnVisibility("Budget", new ExcelColumnSpan(2, 3), false);
+    WorkbookCommand.GroupRows groupRows =
+        new WorkbookCommand.GroupRows("Budget", new ExcelRowSpan(8, 10), false);
+    WorkbookCommand.UngroupRows ungroupRows =
+        new WorkbookCommand.UngroupRows("Budget", new ExcelRowSpan(8, 10));
+    WorkbookCommand.GroupColumns groupColumns =
+        new WorkbookCommand.GroupColumns("Budget", new ExcelColumnSpan(4, 6), true);
+    WorkbookCommand.UngroupColumns ungroupColumns =
+        new WorkbookCommand.UngroupColumns("Budget", new ExcelColumnSpan(4, 6));
+
+    assertEquals(2, insertRows.rowIndex());
+    assertEquals(new ExcelRowSpan(4, 6), deleteRows.rows());
+    assertEquals(2, shiftRows.delta());
+    assertEquals(1, insertColumns.columnIndex());
+    assertEquals(new ExcelColumnSpan(3, 4), deleteColumns.columns());
+    assertEquals(-1, shiftColumns.delta());
+    assertTrue(setRowVisibility.hidden());
+    assertFalse(setColumnVisibility.hidden());
+    assertFalse(groupRows.collapsed());
+    assertEquals(new ExcelRowSpan(8, 10), ungroupRows.rows());
+    assertTrue(groupColumns.collapsed());
+    assertEquals(new ExcelColumnSpan(4, 6), ungroupColumns.columns());
+  }
+
   private CreatedCommands createSupportedCommands(
       List<ExcelCellValue> values, List<List<ExcelCellValue>> rows, ExcelCellStyle style) {
     return new CreatedCommands(
@@ -216,6 +255,63 @@ class WorkbookCommandTest {
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookCommand.ClearSheetProtection(" "));
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearSheetProtection(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.InsertRows("Budget", -1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.InsertRows("Budget", ExcelRowSpan.MAX_ROW_INDEX + 1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.ShiftRows("Budget", new ExcelRowSpan(0, 0), 0));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.InsertColumns("Budget", -1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.InsertColumns("Budget", ExcelColumnSpan.MAX_COLUMN_INDEX + 1, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.ShiftColumns("Budget", new ExcelColumnSpan(0, 0), 0));
+  }
+
+  @Test
+  void validatesStructuralCommandSheetNamesAndCounts() {
+    assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.InsertRows(" ", 0, 1));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.InsertRows("Budget", 0, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.DeleteRows(" ", new ExcelRowSpan(0, 0)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.ShiftRows(" ", new ExcelRowSpan(0, 0), 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.SetRowVisibility(" ", new ExcelRowSpan(0, 0), true));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.GroupRows(" ", new ExcelRowSpan(0, 0), false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.UngroupRows(" ", new ExcelRowSpan(0, 0)));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.InsertColumns(" ", 0, 1));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.InsertColumns("Budget", 0, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.DeleteColumns(" ", new ExcelColumnSpan(0, 0)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.ShiftColumns(" ", new ExcelColumnSpan(0, 0), 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.SetColumnVisibility(" ", new ExcelColumnSpan(0, 0), true));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.GroupColumns(" ", new ExcelColumnSpan(0, 0), false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.UngroupColumns(" ", new ExcelColumnSpan(0, 0)));
   }
 
   @Test

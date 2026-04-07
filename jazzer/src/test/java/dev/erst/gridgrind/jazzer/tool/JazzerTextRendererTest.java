@@ -1,9 +1,12 @@
 package dev.erst.gridgrind.jazzer.tool;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.jazzer.support.HarnessTelemetrySnapshot;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Verifies the human-readable rendering used by the local Jazzer operator commands. */
@@ -75,5 +78,24 @@ class JazzerTextRendererTest {
         summaryText.contains(
             "Findings: 1 active, 1 expected-invalid artifacts, 1 replay-clean artifacts"));
     assertTrue(statusText.contains("findings=1, expected-invalid=1, replay-clean=1"));
+  }
+
+  /** Preserves relative input paths so committed replay text does not hard-code one workspace. */
+  @Test
+  void renderReplay_preservesRelativeInputPaths() {
+    ReplayOutcome outcome =
+        new ReplayOutcome.Success(
+            "protocol-request",
+            new ProtocolRequestDetails(2, "PARSED", "NEW", "NONE", 0, Map.of(), Map.of(), 0, Map.of()));
+
+    String replayText =
+        JazzerTextRenderer.renderReplay(
+            Path.of("jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/seed.json"),
+            outcome);
+
+    assertTrue(
+        replayText.contains(
+            "Input: jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/seed.json"));
+    assertFalse(replayText.contains("/Users/erst/Tools/GridGrind"));
   }
 }

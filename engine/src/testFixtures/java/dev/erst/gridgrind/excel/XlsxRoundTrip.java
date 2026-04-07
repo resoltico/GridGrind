@@ -161,6 +161,21 @@ public final class XlsxRoundTrip {
     return readSheet(workbookPath, sheetName, ExcelSheetViewSupport::zoomPercent);
   }
 
+  /** Returns the supported sheet-layout snapshot stored on the named sheet. */
+  public static WorkbookReadResult.SheetLayout sheetLayout(Path workbookPath, String sheetName)
+      throws IOException {
+    requireWorkbookPath(workbookPath);
+    requireNonBlank(sheetName, "sheetName");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      return ((WorkbookReadResult.SheetLayoutResult)
+              new WorkbookReadExecutor()
+                  .apply(workbook, new WorkbookReadCommand.GetSheetLayout("layout", sheetName))
+                  .getFirst())
+          .layout();
+    }
+  }
+
   /** Returns the supported print-layout state stored on the named sheet. */
   public static ExcelPrintLayout printLayout(Path workbookPath, String sheetName)
       throws IOException {

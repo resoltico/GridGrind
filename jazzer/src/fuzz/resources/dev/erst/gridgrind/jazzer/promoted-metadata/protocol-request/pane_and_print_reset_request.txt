@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/pane_and_print_reset_request.json
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/pane_and_print_reset_request.json
 Harness: protocol-request
 Outcome: SUCCESS
 Input Bytes: 1324
@@ -8,6 +8,6 @@ Source Kind: NEW
 Persistence Kind: NONE
 Operation Count: 6
 Read Count: 4
-Read Kinds: GET_SHEET_LAYOUT=2, GET_PRINT_LAYOUT=2
+Read Kinds: GET_PRINT_LAYOUT=2, GET_SHEET_LAYOUT=2
 Style Kinds: (none)
 Operation Kinds: ENSURE_SHEET=2, SET_SHEET_PANE=2, SET_PRINT_LAYOUT=1, CLEAR_PRINT_LAYOUT=1

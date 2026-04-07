@@ -6,6 +6,7 @@ import java.util.Objects;
 /**
  * Workbook-core commands that can be executed deterministically against an {@link ExcelWorkbook}.
  */
+@SuppressWarnings("PMD.ExcessivePublicCount")
 public sealed interface WorkbookCommand
     permits WorkbookCommand.CreateSheet,
         WorkbookCommand.RenameSheet,
@@ -21,6 +22,18 @@ public sealed interface WorkbookCommand
         WorkbookCommand.UnmergeCells,
         WorkbookCommand.SetColumnWidth,
         WorkbookCommand.SetRowHeight,
+        WorkbookCommand.InsertRows,
+        WorkbookCommand.DeleteRows,
+        WorkbookCommand.ShiftRows,
+        WorkbookCommand.InsertColumns,
+        WorkbookCommand.DeleteColumns,
+        WorkbookCommand.ShiftColumns,
+        WorkbookCommand.SetRowVisibility,
+        WorkbookCommand.SetColumnVisibility,
+        WorkbookCommand.GroupRows,
+        WorkbookCommand.UngroupRows,
+        WorkbookCommand.GroupColumns,
+        WorkbookCommand.UngroupColumns,
         WorkbookCommand.SetSheetPane,
         WorkbookCommand.SetSheetZoom,
         WorkbookCommand.SetPrintLayout,
@@ -243,6 +256,170 @@ public sealed interface WorkbookCommand
         throw new IllegalArgumentException("lastRowIndex must not be less than firstRowIndex");
       }
       requireRowHeightPoints(heightPoints);
+    }
+  }
+
+  /** Inserts one or more blank rows before the provided zero-based row index. */
+  record InsertRows(String sheetName, int rowIndex, int rowCount) implements WorkbookCommand {
+    public InsertRows {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (rowIndex < 0) {
+        throw new IllegalArgumentException("rowIndex must not be negative");
+      }
+      if (rowIndex > ExcelRowSpan.MAX_ROW_INDEX) {
+        throw new IllegalArgumentException(
+            "rowIndex must not exceed " + ExcelRowSpan.MAX_ROW_INDEX + " (Excel row limit)");
+      }
+      if (rowCount <= 0) {
+        throw new IllegalArgumentException("rowCount must be greater than 0");
+      }
+    }
+  }
+
+  /** Deletes the requested inclusive zero-based row band. */
+  record DeleteRows(String sheetName, ExcelRowSpan rows) implements WorkbookCommand {
+    public DeleteRows {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(rows, "rows must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Moves the requested inclusive zero-based row band by the provided signed delta. */
+  record ShiftRows(String sheetName, ExcelRowSpan rows, int delta) implements WorkbookCommand {
+    public ShiftRows {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(rows, "rows must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (delta == 0) {
+        throw new IllegalArgumentException("delta must not be 0");
+      }
+    }
+  }
+
+  /** Inserts one or more blank columns before the provided zero-based column index. */
+  record InsertColumns(String sheetName, int columnIndex, int columnCount)
+      implements WorkbookCommand {
+    public InsertColumns {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (columnIndex < 0) {
+        throw new IllegalArgumentException("columnIndex must not be negative");
+      }
+      if (columnIndex > ExcelColumnSpan.MAX_COLUMN_INDEX) {
+        throw new IllegalArgumentException(
+            "columnIndex must not exceed "
+                + ExcelColumnSpan.MAX_COLUMN_INDEX
+                + " (Excel column limit)");
+      }
+      if (columnCount <= 0) {
+        throw new IllegalArgumentException("columnCount must be greater than 0");
+      }
+    }
+  }
+
+  /** Deletes the requested inclusive zero-based column band. */
+  record DeleteColumns(String sheetName, ExcelColumnSpan columns) implements WorkbookCommand {
+    public DeleteColumns {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(columns, "columns must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Moves the requested inclusive zero-based column band by the provided signed delta. */
+  record ShiftColumns(String sheetName, ExcelColumnSpan columns, int delta)
+      implements WorkbookCommand {
+    public ShiftColumns {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(columns, "columns must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (delta == 0) {
+        throw new IllegalArgumentException("delta must not be 0");
+      }
+    }
+  }
+
+  /** Sets the hidden state for the requested inclusive zero-based row band. */
+  record SetRowVisibility(String sheetName, ExcelRowSpan rows, boolean hidden)
+      implements WorkbookCommand {
+    public SetRowVisibility {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(rows, "rows must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Sets the hidden state for the requested inclusive zero-based column band. */
+  record SetColumnVisibility(String sheetName, ExcelColumnSpan columns, boolean hidden)
+      implements WorkbookCommand {
+    public SetColumnVisibility {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(columns, "columns must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Applies one outline group to the requested inclusive zero-based row band. */
+  record GroupRows(String sheetName, ExcelRowSpan rows, boolean collapsed)
+      implements WorkbookCommand {
+    public GroupRows {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(rows, "rows must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Removes outline grouping from the requested inclusive zero-based row band. */
+  record UngroupRows(String sheetName, ExcelRowSpan rows) implements WorkbookCommand {
+    public UngroupRows {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(rows, "rows must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Applies one outline group to the requested inclusive zero-based column band. */
+  record GroupColumns(String sheetName, ExcelColumnSpan columns, boolean collapsed)
+      implements WorkbookCommand {
+    public GroupColumns {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(columns, "columns must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Removes outline grouping from the requested inclusive zero-based column band. */
+  record UngroupColumns(String sheetName, ExcelColumnSpan columns) implements WorkbookCommand {
+    public UngroupColumns {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(columns, "columns must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
     }
   }
 

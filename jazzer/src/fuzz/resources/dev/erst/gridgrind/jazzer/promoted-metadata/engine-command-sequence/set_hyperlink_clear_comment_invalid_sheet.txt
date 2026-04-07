@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/set_hyperlink_clear_comment_invalid_sheet.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/set_hyperlink_clear_comment_invalid_sheet.bin
 Harness: engine-command-sequence
 Outcome: EXPECTED_INVALID
 Kind: IllegalArgumentException

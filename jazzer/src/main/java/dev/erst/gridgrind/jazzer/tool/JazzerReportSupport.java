@@ -191,7 +191,7 @@ public final class JazzerReportSupport {
               .sorted()
               .toList()) {
         PromotionMetadata metadata = JazzerJson.read(jsonPath, PromotionMetadata.class);
-        result.add(Path.of(metadata.promotedInputPath()).toAbsolutePath().normalize());
+        result.add(metadata.promotedInputPath(projectDirectory));
       }
     }
     return Set.copyOf(result);

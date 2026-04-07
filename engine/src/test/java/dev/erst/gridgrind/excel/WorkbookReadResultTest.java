@@ -116,16 +116,29 @@ class WorkbookReadResultTest {
         NullPointerException.class,
         () -> new WorkbookReadResult.PrintLayoutResult("print", "Budget", null));
     assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookReadResult.ColumnLayout(-1, 1.0));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookReadResult.ColumnLayout(0, 0.0));
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.ColumnLayout(-1, 1.0, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.ColumnLayout(0, Double.POSITIVE_INFINITY));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookReadResult.RowLayout(-1, 1.0));
-    assertThrows(IllegalArgumentException.class, () -> new WorkbookReadResult.RowLayout(0, 0.0));
+        () -> new WorkbookReadResult.ColumnLayout(0, 0.0, false, 0, false));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookReadResult.RowLayout(0, Double.POSITIVE_INFINITY));
+        () -> new WorkbookReadResult.ColumnLayout(0, Double.POSITIVE_INFINITY, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.ColumnLayout(0, 1.0, false, -1, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.RowLayout(-1, 1.0, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.RowLayout(0, 0.0, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.RowLayout(0, Double.POSITIVE_INFINITY, false, 0, false));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.RowLayout(0, 1.0, false, -1, false));
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookReadResult.FormulaSurface(-1, List.of()));
     assertThrows(
@@ -310,9 +323,9 @@ class WorkbookReadResultTest {
                 new WorkbookReadResult.CellComment(
                     "A1", new ExcelComment("Review", "GridGrind", false))));
     List<WorkbookReadResult.ColumnLayout> columns =
-        new ArrayList<>(List.of(new WorkbookReadResult.ColumnLayout(0, 12.5)));
+        new ArrayList<>(List.of(new WorkbookReadResult.ColumnLayout(0, 12.5, false, 0, false)));
     List<WorkbookReadResult.RowLayout> resultRows =
-        new ArrayList<>(List.of(new WorkbookReadResult.RowLayout(0, 18.0)));
+        new ArrayList<>(List.of(new WorkbookReadResult.RowLayout(0, 18.0, false, 0, false)));
     List<ExcelDataValidationSnapshot> validations =
         new ArrayList<>(
             List.of(

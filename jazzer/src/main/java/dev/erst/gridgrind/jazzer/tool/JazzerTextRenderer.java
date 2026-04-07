@@ -109,7 +109,7 @@ public final class JazzerTextRenderer {
 
     StringBuilder builder = new StringBuilder();
     builder.append("Replay Result").append(System.lineSeparator());
-    builder.append("Input: ").append(inputPath.toAbsolutePath()).append(System.lineSeparator());
+    builder.append("Input: ").append(inputPath.normalize()).append(System.lineSeparator());
     builder.append("Harness: ").append(outcome.harnessKey()).append(System.lineSeparator());
     switch (outcome) {
       case ReplayOutcome.Success success -> {

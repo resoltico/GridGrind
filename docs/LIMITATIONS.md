@@ -1,8 +1,8 @@
 ---
 afad: "3.4"
-version: "0.28.0"
+version: "0.29.0"
 domain: LIMITATIONS
-updated: "2026-03-29"
+updated: "2026-04-07"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit"]
@@ -254,6 +254,77 @@ effective limit when writing via GridGrind.
 | **Limit** | 255 |
 | **POI constant** | `SpreadsheetVersion.EXCEL2007.getMaxFunctionArgs()` returns `255` |
 | **Excel spec** | 255 |
+
+---
+
+### LIM-016 — Structural Edits That Would Move Unsupported Owned Structures
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | Row or column structural edits are rejected when they would move or truncate a table, sheet-owned autofilter, or data validation |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | Product-owned `INSERT_*`, `DELETE_*`, or `SHIFT_*` message naming the affected structure and sheet |
+| **Applies to** | `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, `SHIFT_COLUMNS` |
+| **Code** | `ExcelRowColumnStructureController.rejectAffectedRowStructuresFor*`; `ExcelRowColumnStructureController.rejectAffectedColumnStructuresFor*` |
+| **UX** | `--help` Limits section; structural-edit catalog summaries |
+
+Apache POI 5.5.1 does not reliably normalize table refs, sheet autofilter refs, or data-validation
+coverage when rows or columns are structurally inserted, deleted, or shifted. GridGrind rejects
+those edits instead of persisting stale workbook XML or silently moving only part of the owned
+structure.
+
+The rejection is precise and structure-owned. Example messages include:
+- `INSERT_ROWS cannot move table 'BudgetTable' on sheet 'Budget'; row structural edits that would move tables are not supported`
+- `DELETE_COLUMNS cannot move sheet autofilter A1:C10 on sheet 'Budget'; column structural edits that would move or truncate sheet autofilters are not supported`
+
+---
+
+### LIM-017 — Column Structural Edits While Formulas Are Present
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | Column structural edits are rejected when the workbook contains any formula cells or formula-defined named ranges |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` product-owned message explaining that Apache POI leaves some column references stale |
+| **Applies to** | `INSERT_COLUMNS`, `DELETE_COLUMNS`, `SHIFT_COLUMNS` |
+| **Code** | `ExcelRowColumnStructureController.rejectFormulaBearingWorkbookForColumnEdit` |
+| **UX** | `--help` Limits section; structural-edit catalog summaries |
+
+Apache POI 5.5.1 updates some column references during `shiftColumns(...)`, but not all of them.
+In direct probes against formula-bearing workbooks, formulas such as `A2&B2` were rewritten while
+others such as `SUM(B2:B4)` remained stale after the same column move. Formula-defined names have
+the same risk surface. GridGrind therefore rejects column structural edits whenever formulas or
+formula-defined names are present instead of persisting mixed-reference drift.
+
+Example message:
+- `SHIFT_COLUMNS cannot run while workbook formulas are present; Apache POI leaves some column references stale during column structural edits`
+
+---
+
+### LIM-018 — Destructive Structural Edits Against Range-Backed Named Ranges
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, and `SHIFT_COLUMNS` are rejected when they would truncate a range-backed named range or partially move / overwrite one outside the moved band |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | Product-owned `DELETE_*` or `SHIFT_*` message naming the affected named range and sheet |
+| **Applies to** | `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, `SHIFT_COLUMNS` |
+| **Code** | `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForRowDelete`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForRowShift`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForColumnDelete`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForColumnShift` |
+| **UX** | `--help` Limits section; structural-edit catalog summaries |
+
+Apache POI can safely translate a range-backed named range when the named range is fully contained
+inside the moved row or column band, or when it is completely untouched by the edit. Direct probes
+against `deleteRows(...)`, `shiftRows(...)`, `deleteColumns(...)`, and `shiftColumns(...)` showed
+that destructive overlap produces broken formulas such as `I!#REF!:I!#REF!` and
+`I!#REF!:I!$B$1`. GridGrind therefore rejects only the destructive cases instead of persisting
+invalid named-range formulas that can later crash workbook rewrites.
+
+Example messages:
+- `DELETE_ROWS cannot move named range 'BudgetWindow' on sheet 'Budget'; row structural edits that would truncate range-backed named ranges are not supported`
+- `SHIFT_COLUMNS cannot move named range 'BudgetWindow' on sheet 'Budget'; column structural edits that would overwrite or partially move range-backed named ranges are not supported`
 
 ---
 

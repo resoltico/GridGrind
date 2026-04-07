@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/set_table_missing_sheet_invalid_roundtrip.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/set_table_missing_sheet_invalid_roundtrip.bin
 Harness: xlsx-roundtrip
 Outcome: SUCCESS
 Input Bytes: 60

@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/delete_last_sheet.json
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/delete_last_sheet.json
 Harness: protocol-request
 Outcome: SUCCESS
 Input Bytes: 291
@@ -11,4 +11,3 @@ Read Count: 0
 Read Kinds: (none)
 Style Kinds: (none)
 Operation Kinds: DELETE_SHEET=2, ENSURE_SHEET=1
-

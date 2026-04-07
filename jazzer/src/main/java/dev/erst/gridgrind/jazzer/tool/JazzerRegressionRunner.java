@@ -1,0 +1,117 @@
+package dev.erst.gridgrind.jazzer.tool;
+
+import dev.erst.gridgrind.jazzer.support.JazzerHarness;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Objects;
+
+/** Replays one harness's committed promoted inputs directly against GridGrind's replay engine. */
+public final class JazzerRegressionRunner {
+  private static final String PULSE_PREFIX = "[JAZZER-PULSE] ";
+
+  private JazzerRegressionRunner() {}
+
+  /** Replays the selected harness's committed promoted inputs and exits non-zero on any mismatch. */
+  public static void main(String[] args) throws IOException {
+    try (PrintWriter outputWriter = new PrintWriter(System.out, true);
+        PrintWriter errorWriter = new PrintWriter(System.err, true)) {
+      System.exit(run(Path.of("").toAbsolutePath().normalize(), parseHarness(args), outputWriter, errorWriter));
+    }
+  }
+
+  /** Parses the required `--target <harness-key>` argument pair for direct regression replay. */
+  static JazzerHarness parseHarness(String[] args) {
+    Objects.requireNonNull(args, "args must not be null");
+    if (args.length != 2 || !"--target".equals(args[0])) {
+      throw new IllegalArgumentException("Usage: JazzerRegressionRunner --target <harness-key>");
+    }
+    String targetKey = Objects.requireNonNull(args[1], "targetKey must not be null");
+    if (targetKey.isBlank()) {
+      throw new IllegalArgumentException("targetKey must not be blank");
+    }
+    return JazzerHarness.fromKey(targetKey);
+  }
+
+  /** Replays all committed promoted inputs for one harness and returns a process-style exit code. */
+  static int run(
+      Path projectDirectory, JazzerHarness harness, PrintWriter outputWriter, PrintWriter errorWriter)
+      throws IOException {
+    Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
+    Objects.requireNonNull(harness, "harness must not be null");
+    Objects.requireNonNull(outputWriter, "outputWriter must not be null");
+    Objects.requireNonNull(errorWriter, "errorWriter must not be null");
+
+    List<Path> metadataPaths = promotedMetadataPaths(projectDirectory, harness);
+    if (metadataPaths.isEmpty()) {
+      errorWriter.println("No promoted metadata entries were found for harness: " + harness.key());
+      return 1;
+    }
+
+    outputWriter.println(
+        PULSE_PREFIX
+            + "regression-target phase=plan target="
+            + harness.key()
+            + " total-inputs="
+            + metadataPaths.size());
+
+    for (int index = 0; index < metadataPaths.size(); index++) {
+      Path metadataPath = metadataPaths.get(index);
+      PromotionMetadata metadata = JazzerJson.read(metadataPath, PromotionMetadata.class);
+      Path promotedInputPath = metadata.promotedInputPath(projectDirectory);
+      ReplayOutcome currentOutcome =
+          JazzerReplaySupport.replay(harness, Files.readAllBytes(promotedInputPath));
+      String currentOutcomeKind = JazzerReplaySupport.outcomeKind(currentOutcome);
+      ReplayExpectation currentExpectation = JazzerReplaySupport.expectationFor(currentOutcome);
+      if (!metadata.replayOutcome().equals(currentOutcomeKind)
+          || !metadata.expectation().equals(currentExpectation)) {
+        errorWriter.println(
+            "Regression mismatch for "
+                + harness.key()
+                + " input "
+                + promotedInputPath.getFileName()
+                + ": expected "
+                + metadata.replayOutcome()
+                + " / "
+                + metadata.expectation()
+                + " but got "
+                + currentOutcomeKind
+                + " / "
+                + currentExpectation);
+        return 1;
+      }
+      outputWriter.println(
+          PULSE_PREFIX
+              + "regression-input target="
+              + harness.key()
+              + " completed="
+              + (index + 1)
+              + "/"
+              + metadataPaths.size()
+              + " name="
+              + promotedInputPath.getFileName()
+              + " status=SUCCESS");
+    }
+    outputWriter.println(PULSE_PREFIX + "regression-target phase=finish target=" + harness.key() + " status=SUCCESS");
+    return 0;
+  }
+
+  private static List<Path> promotedMetadataPaths(Path projectDirectory, JazzerHarness harness)
+      throws IOException {
+    Path metadataRoot =
+        projectDirectory
+            .resolve("src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata")
+            .resolve(harness.key());
+    if (!Files.isDirectory(metadataRoot)) {
+      return List.of();
+    }
+    try (var stream = Files.walk(metadataRoot)) {
+      return stream
+          .filter(path -> path.getFileName().toString().endsWith(".json"))
+          .sorted()
+          .toList();
+    }
+  }
+}

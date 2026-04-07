@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
@@ -25,7 +24,7 @@ public final class FuzzDataDecoders {
   private FuzzDataDecoders() {}
 
   /** Returns a bounded sheet name, optionally valid for Excel sheet creation. */
-  public static String nextSheetName(FuzzedDataProvider data, boolean valid) {
+  public static String nextSheetName(GridGrindFuzzData data, boolean valid) {
     Objects.requireNonNull(data, "data must not be null");
 
     if (!valid) {
@@ -52,7 +51,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a bounded A1-style cell address. */
-  public static String nextCellAddress(FuzzedDataProvider data, boolean valid) {
+  public static String nextCellAddress(GridGrindFuzzData data, boolean valid) {
     Objects.requireNonNull(data, "data must not be null");
 
     if (!valid) {
@@ -71,7 +70,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a bounded non-blank A1-style cell address that may still be semantically invalid. */
-  public static String nextNonBlankCellAddress(FuzzedDataProvider data, boolean valid) {
+  public static String nextNonBlankCellAddress(GridGrindFuzzData data, boolean valid) {
     Objects.requireNonNull(data, "data must not be null");
 
     if (valid) {
@@ -87,7 +86,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a bounded rectangular A1-style range. */
-  public static String nextRange(FuzzedDataProvider data, boolean valid) {
+  public static String nextRange(GridGrindFuzzData data, boolean valid) {
     Objects.requireNonNull(data, "data must not be null");
 
     if (!valid) {
@@ -112,7 +111,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a bounded non-blank rectangular A1-style range that may still be semantically invalid. */
-  public static String nextNonBlankRange(FuzzedDataProvider data, boolean valid) {
+  public static String nextNonBlankRange(GridGrindFuzzData data, boolean valid) {
     Objects.requireNonNull(data, "data must not be null");
 
     if (valid) {
@@ -128,7 +127,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a protocol-layer cell input value. */
-  public static CellInput nextCellInput(FuzzedDataProvider data) {
+  public static CellInput nextCellInput(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     return switch (data.consumeInt(0, 6)) {
@@ -151,7 +150,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a workbook-core cell value. */
-  public static ExcelCellValue nextExcelCellValue(FuzzedDataProvider data) {
+  public static ExcelCellValue nextExcelCellValue(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     return switch (data.consumeInt(0, 6)) {
@@ -174,7 +173,7 @@ public final class FuzzDataDecoders {
   }
 
   /** Returns a bounded style patch. */
-  public static ExcelCellStyle nextStyle(FuzzedDataProvider data) {
+  public static ExcelCellStyle nextStyle(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     return switch (data.consumeInt(0, 7)) {
@@ -275,7 +274,7 @@ public final class FuzzDataDecoders {
 
   /** Returns a non-empty rectangular matrix of protocol cell inputs. */
   public static List<List<CellInput>> nextProtocolMatrix(
-      FuzzedDataProvider data, int rowCount, int columnCount) {
+      GridGrindFuzzData data, int rowCount, int columnCount) {
     Objects.requireNonNull(data, "data must not be null");
 
     List<List<CellInput>> rows = new ArrayList<>(rowCount);
@@ -291,7 +290,7 @@ public final class FuzzDataDecoders {
 
   /** Returns a non-empty rectangular matrix of workbook-core cell values. */
   public static List<List<ExcelCellValue>> nextExcelMatrix(
-      FuzzedDataProvider data, int rowCount, int columnCount) {
+      GridGrindFuzzData data, int rowCount, int columnCount) {
     Objects.requireNonNull(data, "data must not be null");
 
     List<List<ExcelCellValue>> rows = new ArrayList<>(rowCount);
@@ -305,17 +304,17 @@ public final class FuzzDataDecoders {
     return List.copyOf(rows);
   }
 
-  private static ExcelHorizontalAlignment nextHorizontalAlignment(FuzzedDataProvider data) {
+  private static ExcelHorizontalAlignment nextHorizontalAlignment(GridGrindFuzzData data) {
     ExcelHorizontalAlignment[] values = ExcelHorizontalAlignment.values();
     return values[data.consumeInt(0, values.length - 1)];
   }
 
-  private static ExcelVerticalAlignment nextVerticalAlignment(FuzzedDataProvider data) {
+  private static ExcelVerticalAlignment nextVerticalAlignment(GridGrindFuzzData data) {
     ExcelVerticalAlignment[] values = ExcelVerticalAlignment.values();
     return values[data.consumeInt(0, values.length - 1)];
   }
 
-  private static String nextText(FuzzedDataProvider data) {
+  private static String nextText(GridGrindFuzzData data) {
     int length = data.consumeInt(1, 16);
     StringBuilder builder = new StringBuilder(length);
     for (int index = 0; index < length; index++) {
@@ -325,7 +324,7 @@ public final class FuzzDataDecoders {
     return result.isBlank() ? "X" : result;
   }
 
-  private static String nextFormula(FuzzedDataProvider data) {
+  private static String nextFormula(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 5)) {
       case 0 -> "SUM(A1:A2)";
       case 1 -> "A1+A2";
@@ -336,7 +335,7 @@ public final class FuzzDataDecoders {
     };
   }
 
-  private static ExcelFontHeight nextExcelFontHeight(FuzzedDataProvider data) {
+  private static ExcelFontHeight nextExcelFontHeight(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 2)) {
       case 0 -> new ExcelFontHeight(data.consumeInt(20, 640));
       case 1 -> ExcelFontHeight.fromPoints(nextPointHeight(data));
@@ -344,16 +343,16 @@ public final class FuzzDataDecoders {
     };
   }
 
-  private static BigDecimal nextPointHeight(FuzzedDataProvider data) {
+  private static BigDecimal nextPointHeight(GridGrindFuzzData data) {
     return new ExcelFontHeight(data.consumeInt(20, 640)).points();
   }
 
-  private static String nextRgbHex(FuzzedDataProvider data) {
+  private static String nextRgbHex(GridGrindFuzzData data) {
     return "#%02X%02X%02X".formatted(
         data.consumeInt(0, 255), data.consumeInt(0, 255), data.consumeInt(0, 255));
   }
 
-  private static ExcelBorder nextExcelBorder(FuzzedDataProvider data) {
+  private static ExcelBorder nextExcelBorder(GridGrindFuzzData data) {
     return switch (data.consumeInt(0, 4)) {
       case 0 -> new ExcelBorder(nextBorderSide(data), null, null, null, null);
       case 1 -> new ExcelBorder(nextBorderSide(data), null, nextBorderSide(data), null, null);
@@ -369,7 +368,7 @@ public final class FuzzDataDecoders {
     };
   }
 
-  private static ExcelBorderSide nextBorderSide(FuzzedDataProvider data) {
+  private static ExcelBorderSide nextBorderSide(GridGrindFuzzData data) {
     ExcelBorderStyle[] values = ExcelBorderStyle.values();
     return new ExcelBorderSide(values[data.consumeInt(0, values.length - 1)]);
   }

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import com.code_intelligence.jazzer.api.FuzzedDataProvider;
+import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
@@ -20,6 +20,7 @@ import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
 import dev.erst.gridgrind.excel.ExcelPrintLayout;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -30,6 +31,7 @@ import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.protocol.dto.CellSelection;
 import dev.erst.gridgrind.protocol.dto.CommentInput;
+import dev.erst.gridgrind.protocol.dto.ColumnSpanInput;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingBlockInput;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationErrorAlertInput;
@@ -51,6 +53,7 @@ import dev.erst.gridgrind.protocol.dto.PrintScalingInput;
 import dev.erst.gridgrind.protocol.dto.PrintTitleColumnsInput;
 import dev.erst.gridgrind.protocol.dto.PrintTitleRowsInput;
 import dev.erst.gridgrind.protocol.dto.RangeSelection;
+import dev.erst.gridgrind.protocol.dto.RowSpanInput;
 import dev.erst.gridgrind.protocol.dto.SheetSelection;
 import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
@@ -74,7 +77,7 @@ public final class OperationSequenceModel {
   private OperationSequenceModel() {}
 
   /** Returns a bounded protocol workflow plus any owned local scratch paths it created. */
-  public static GeneratedProtocolWorkflow nextProtocolWorkflow(FuzzedDataProvider data)
+  public static GeneratedProtocolWorkflow nextProtocolWorkflow(GridGrindFuzzData data)
       throws IOException {
     Objects.requireNonNull(data, "data must not be null");
 
@@ -107,7 +110,7 @@ public final class OperationSequenceModel {
   }
 
   /** Returns a bounded sequence of workbook-core commands. */
-  public static List<WorkbookCommand> nextWorkbookCommands(FuzzedDataProvider data) {
+  public static List<WorkbookCommand> nextWorkbookCommands(GridGrindFuzzData data) {
     Objects.requireNonNull(data, "data must not be null");
 
     String primarySheet = FuzzDataDecoders.nextSheetName(data, true);
@@ -124,7 +127,7 @@ public final class OperationSequenceModel {
   }
 
   private static WorkbookOperation nextOperation(
-      FuzzedDataProvider data,
+      GridGrindFuzzData data,
       String primarySheet,
       String secondarySheet,
       String workbookNamedRange,
@@ -268,6 +271,56 @@ public final class OperationSequenceModel {
                     ? new NamedRangeScope.Workbook()
                     : new NamedRangeScope.Sheet(targetSheet));
       };
+      case 0x7 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookOperation.InsertRows(
+                targetSheet, rowSpan.first(), rowSpan.last() - rowSpan.first() + 1);
+        case 0x1 ->
+            new WorkbookOperation.DeleteRows(
+                targetSheet, new RowSpanInput.Band(rowSpan.first(), rowSpan.last()));
+        case 0x2 ->
+            new WorkbookOperation.ShiftRows(
+                targetSheet,
+                new RowSpanInput.Band(rowSpan.first(), rowSpan.last()),
+                nextNonZeroDelta(data, 2));
+        case 0x3 ->
+            new WorkbookOperation.InsertColumns(
+                targetSheet, columnSpan.first(), columnSpan.last() - columnSpan.first() + 1);
+        case 0x4 ->
+            new WorkbookOperation.DeleteColumns(
+                targetSheet, new ColumnSpanInput.Band(columnSpan.first(), columnSpan.last()));
+        case 0x5 ->
+            new WorkbookOperation.ShiftColumns(
+                targetSheet,
+                new ColumnSpanInput.Band(columnSpan.first(), columnSpan.last()),
+                nextNonZeroDelta(data, 2));
+        case 0x6 ->
+            new WorkbookOperation.SetRowVisibility(
+                targetSheet,
+                new RowSpanInput.Band(rowSpan.first(), rowSpan.last()),
+                data.consumeBoolean());
+        case 0x7 ->
+            new WorkbookOperation.SetColumnVisibility(
+                targetSheet,
+                new ColumnSpanInput.Band(columnSpan.first(), columnSpan.last()),
+                data.consumeBoolean());
+        case 0x8 ->
+            new WorkbookOperation.GroupRows(
+                targetSheet,
+                new RowSpanInput.Band(rowSpan.first(), rowSpan.last()),
+                data.consumeBoolean());
+        case 0x9 ->
+            new WorkbookOperation.UngroupRows(
+                targetSheet, new RowSpanInput.Band(rowSpan.first(), rowSpan.last()));
+        case 0xA ->
+            new WorkbookOperation.GroupColumns(
+                targetSheet,
+                new ColumnSpanInput.Band(columnSpan.first(), columnSpan.last()),
+                data.consumeBoolean());
+        default ->
+            new WorkbookOperation.UngroupColumns(
+                targetSheet, new ColumnSpanInput.Band(columnSpan.first(), columnSpan.last()));
+      };
       default -> switch (selectorSlot(selector)) {
         case 0x0 -> new WorkbookOperation.AutoSizeColumns(targetSheet);
         case 0x1 -> new WorkbookOperation.EvaluateFormulas();
@@ -277,7 +330,7 @@ public final class OperationSequenceModel {
   }
 
   private static WorkbookCommand nextCommand(
-      FuzzedDataProvider data,
+      GridGrindFuzzData data,
       String primarySheet,
       String secondarySheet,
       String workbookNamedRange,
@@ -421,6 +474,52 @@ public final class OperationSequenceModel {
                     ? new ExcelNamedRangeScope.WorkbookScope()
                     : new ExcelNamedRangeScope.SheetScope(targetSheet));
       };
+      case 0x7 -> switch (selectorSlot(selector)) {
+        case 0x0 ->
+            new WorkbookCommand.InsertRows(
+                targetSheet, rowSpan.first(), rowSpan.last() - rowSpan.first() + 1);
+        case 0x1 ->
+            new WorkbookCommand.DeleteRows(
+                targetSheet, new ExcelRowSpan(rowSpan.first(), rowSpan.last()));
+        case 0x2 ->
+            new WorkbookCommand.ShiftRows(
+                targetSheet,
+                new ExcelRowSpan(rowSpan.first(), rowSpan.last()),
+                nextNonZeroDelta(data, 2));
+        case 0x3 ->
+            new WorkbookCommand.InsertColumns(
+                targetSheet, columnSpan.first(), columnSpan.last() - columnSpan.first() + 1);
+        case 0x4 ->
+            new WorkbookCommand.DeleteColumns(
+                targetSheet, new ExcelColumnSpan(columnSpan.first(), columnSpan.last()));
+        case 0x5 ->
+            new WorkbookCommand.ShiftColumns(
+                targetSheet,
+                new ExcelColumnSpan(columnSpan.first(), columnSpan.last()),
+                nextNonZeroDelta(data, 2));
+        case 0x6 ->
+            new WorkbookCommand.SetRowVisibility(
+                targetSheet, new ExcelRowSpan(rowSpan.first(), rowSpan.last()), data.consumeBoolean());
+        case 0x7 ->
+            new WorkbookCommand.SetColumnVisibility(
+                targetSheet,
+                new ExcelColumnSpan(columnSpan.first(), columnSpan.last()),
+                data.consumeBoolean());
+        case 0x8 ->
+            new WorkbookCommand.GroupRows(
+                targetSheet, new ExcelRowSpan(rowSpan.first(), rowSpan.last()), data.consumeBoolean());
+        case 0x9 ->
+            new WorkbookCommand.UngroupRows(
+                targetSheet, new ExcelRowSpan(rowSpan.first(), rowSpan.last()));
+        case 0xA ->
+            new WorkbookCommand.GroupColumns(
+                targetSheet,
+                new ExcelColumnSpan(columnSpan.first(), columnSpan.last()),
+                data.consumeBoolean());
+        default ->
+            new WorkbookCommand.UngroupColumns(
+                targetSheet, new ExcelColumnSpan(columnSpan.first(), columnSpan.last()));
+      };
       default -> switch (selectorSlot(selector)) {
         case 0x0 -> new WorkbookCommand.AutoSizeColumns(targetSheet);
         case 0x1 -> new WorkbookCommand.EvaluateAllFormulas();
@@ -430,7 +529,7 @@ public final class OperationSequenceModel {
   }
 
   private static WorkbookReadOperation nextRead(
-      FuzzedDataProvider data,
+      GridGrindFuzzData data,
       int index,
       String primarySheet,
       String secondarySheet,
@@ -538,7 +637,7 @@ public final class OperationSequenceModel {
   }
 
   private static NamedRangeSelection nextNamedRangeSelection(
-      FuzzedDataProvider data,
+      GridGrindFuzzData data,
       String sheetName,
       String workbookNamedRange,
       String sheetNamedRange,
@@ -556,7 +655,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static CellSelection nextCellSelection(FuzzedDataProvider data, boolean validAddress) {
+  private static CellSelection nextCellSelection(GridGrindFuzzData data, boolean validAddress) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new CellSelection.AllUsedCells();
       default ->
@@ -566,7 +665,7 @@ public final class OperationSequenceModel {
   }
 
   private static SheetSelection nextSheetSelection(
-      FuzzedDataProvider data, String primarySheet, String secondarySheet) {
+      GridGrindFuzzData data, String primarySheet, String secondarySheet) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new SheetSelection.All();
       default ->
@@ -577,7 +676,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static List<String> nextReadAddresses(FuzzedDataProvider data, boolean validAddress) {
+  private static List<String> nextReadAddresses(GridGrindFuzzData data, boolean validAddress) {
     String first = FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress);
     String second = FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress);
     if (first.equals(second)) {
@@ -586,12 +685,17 @@ public final class OperationSequenceModel {
     return List.of(first, second);
   }
 
-  private static IndexSpan nextIndexSpan(FuzzedDataProvider data, int upperBound) {
+  private static IndexSpan nextIndexSpan(GridGrindFuzzData data, int upperBound) {
     int first = data.consumeInt(0, upperBound - 1);
     return new IndexSpan(first, data.consumeInt(first, upperBound));
   }
 
-  private static PaneInput nextPaneInput(FuzzedDataProvider data) {
+  private static int nextNonZeroDelta(GridGrindFuzzData data, int upperBound) {
+    int absoluteDelta = data.consumeInt(1, upperBound);
+    return data.consumeBoolean() ? absoluteDelta : -absoluteDelta;
+  }
+
+  private static PaneInput nextPaneInput(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new PaneInput.None();
       case 1 -> {
@@ -621,7 +725,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static ExcelSheetPane nextExcelSheetPane(FuzzedDataProvider data) {
+  private static ExcelSheetPane nextExcelSheetPane(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new ExcelSheetPane.None();
       case 1 -> {
@@ -652,7 +756,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static PrintLayoutInput nextPrintLayoutInput(FuzzedDataProvider data) {
+  private static PrintLayoutInput nextPrintLayoutInput(GridGrindFuzzData data) {
     return new PrintLayoutInput(
         data.consumeBoolean() ? new PrintAreaInput.Range("A1:C20") : new PrintAreaInput.None(),
         data.consumeBoolean() ? ExcelPrintOrientation.LANDSCAPE : ExcelPrintOrientation.PORTRAIT,
@@ -669,7 +773,7 @@ public final class OperationSequenceModel {
         new HeaderFooterTextInput("", "P" + data.consumeInt(0, 9), ""));
   }
 
-  private static ExcelPrintLayout nextExcelPrintLayout(FuzzedDataProvider data) {
+  private static ExcelPrintLayout nextExcelPrintLayout(GridGrindFuzzData data) {
     return new ExcelPrintLayout(
         data.consumeBoolean()
             ? new ExcelPrintLayout.Area.Range("A1:C20")
@@ -688,7 +792,7 @@ public final class OperationSequenceModel {
         new ExcelHeaderFooterText("", "P" + data.consumeInt(0, 9), ""));
   }
 
-  private static ExcelPaneRegion nextProtocolPaneRegion(FuzzedDataProvider data) {
+  private static ExcelPaneRegion nextProtocolPaneRegion(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) & 0x3) {
       case 0 -> ExcelPaneRegion.UPPER_LEFT;
       case 1 -> ExcelPaneRegion.UPPER_RIGHT;
@@ -697,7 +801,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static ExcelPaneRegion nextPaneRegion(FuzzedDataProvider data) {
+  private static ExcelPaneRegion nextPaneRegion(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data)) & 0x3) {
       case 0 -> ExcelPaneRegion.UPPER_LEFT;
       case 1 -> ExcelPaneRegion.UPPER_RIGHT;
@@ -706,14 +810,14 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static SheetCopyPosition nextSheetCopyPosition(FuzzedDataProvider data) {
+  private static SheetCopyPosition nextSheetCopyPosition(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new SheetCopyPosition.AppendAtEnd();
       default -> new SheetCopyPosition.AtIndex(data.consumeInt(0, 2));
     };
   }
 
-  private static ExcelSheetCopyPosition nextExcelSheetCopyPosition(FuzzedDataProvider data) {
+  private static ExcelSheetCopyPosition nextExcelSheetCopyPosition(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new ExcelSheetCopyPosition.AppendAtEnd();
       default -> new ExcelSheetCopyPosition.AtIndex(data.consumeInt(0, 2));
@@ -721,7 +825,7 @@ public final class OperationSequenceModel {
   }
 
   private static List<String> nextSelectedSheetNames(
-      FuzzedDataProvider data, String primarySheet, String secondarySheet) {
+      GridGrindFuzzData data, String primarySheet, String secondarySheet) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> List.of(primarySheet);
       case 1 -> List.of(secondarySheet);
@@ -729,7 +833,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static ExcelSheetVisibility nextProtocolSheetVisibility(FuzzedDataProvider data) {
+  private static ExcelSheetVisibility nextProtocolSheetVisibility(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> ExcelSheetVisibility.VISIBLE;
       case 1 -> ExcelSheetVisibility.HIDDEN;
@@ -737,7 +841,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static ExcelSheetVisibility nextSheetVisibility(FuzzedDataProvider data) {
+  private static ExcelSheetVisibility nextSheetVisibility(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> ExcelSheetVisibility.VISIBLE;
       case 1 -> ExcelSheetVisibility.HIDDEN;
@@ -746,7 +850,7 @@ public final class OperationSequenceModel {
   }
 
   private static SheetProtectionSettings nextProtocolSheetProtectionSettings(
-      FuzzedDataProvider data) {
+      GridGrindFuzzData data) {
     return new SheetProtectionSettings(
         data.consumeBoolean(),
         data.consumeBoolean(),
@@ -766,7 +870,7 @@ public final class OperationSequenceModel {
   }
 
   private static ExcelSheetProtectionSettings nextSheetProtectionSettings(
-      FuzzedDataProvider data) {
+      GridGrindFuzzData data) {
     return new ExcelSheetProtectionSettings(
         data.consumeBoolean(),
         data.consumeBoolean(),
@@ -786,7 +890,7 @@ public final class OperationSequenceModel {
   }
 
   private static WorkflowStorage nextWorkflowStorage(
-      String primarySheet, String secondarySheet, FuzzedDataProvider data) throws IOException {
+      String primarySheet, String secondarySheet, GridGrindFuzzData data) throws IOException {
     Path directory = Files.createTempDirectory("gridgrind-jazzer-workflow-");
     Path sourcePath = directory.resolve("source.xlsx");
     Path saveAsPath = directory.resolve("output.xlsx");
@@ -827,7 +931,7 @@ public final class OperationSequenceModel {
   }
 
   private static void writeExistingWorkbook(
-      Path sourcePath, String primarySheet, String secondarySheet, FuzzedDataProvider data)
+      Path sourcePath, String primarySheet, String secondarySheet, GridGrindFuzzData data)
       throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       var primary = workbook.createSheet(primarySheet);
@@ -853,7 +957,7 @@ public final class OperationSequenceModel {
     }
   }
 
-  private static HyperlinkTarget nextHyperlinkTarget(FuzzedDataProvider data) {
+  private static HyperlinkTarget nextHyperlinkTarget(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new HyperlinkTarget.Url("https://example.com/" + nextNamedRangeName(data, true));
       case 1 -> new HyperlinkTarget.Email(nextNamedRangeName(data, true) + "@example.com");
@@ -862,7 +966,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static ExcelHyperlink nextExcelHyperlink(FuzzedDataProvider data) {
+  private static ExcelHyperlink nextExcelHyperlink(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new ExcelHyperlink.Url("https://example.com/" + nextNamedRangeName(data, true));
       case 1 -> new ExcelHyperlink.Email(nextNamedRangeName(data, true) + "@example.com");
@@ -871,14 +975,14 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static CommentInput nextCommentInput(FuzzedDataProvider data) {
+  private static CommentInput nextCommentInput(GridGrindFuzzData data) {
     return new CommentInput(
         "Note " + nextNamedRangeName(data, true),
         "GridGrind",
         data.consumeBoolean());
   }
 
-  private static DataValidationInput nextDataValidationInput(FuzzedDataProvider data) {
+  private static DataValidationInput nextDataValidationInput(GridGrindFuzzData data) {
     return new DataValidationInput(
         data.consumeBoolean()
             ? new DataValidationRuleInput.ExplicitList(List.of("Queued", "Done"))
@@ -899,7 +1003,7 @@ public final class OperationSequenceModel {
   }
 
   private static ExcelDataValidationDefinition nextExcelDataValidationDefinition(
-      FuzzedDataProvider data) {
+      GridGrindFuzzData data) {
     return new ExcelDataValidationDefinition(
         data.consumeBoolean()
             ? new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done"))
@@ -920,7 +1024,7 @@ public final class OperationSequenceModel {
   }
 
   private static ConditionalFormattingBlockInput nextConditionalFormattingInput(
-      FuzzedDataProvider data, boolean validRange) {
+      GridGrindFuzzData data, boolean validRange) {
     return new ConditionalFormattingBlockInput(
         List.of(validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)),
         List.of(
@@ -936,7 +1040,7 @@ public final class OperationSequenceModel {
   }
 
   private static ExcelConditionalFormattingBlockDefinition
-      nextExcelConditionalFormattingBlockDefinition(FuzzedDataProvider data, boolean validRange) {
+      nextExcelConditionalFormattingBlockDefinition(GridGrindFuzzData data, boolean validRange) {
     return new ExcelConditionalFormattingBlockDefinition(
         List.of(validRange ? "A1:A4" : FuzzDataDecoders.nextNonBlankRange(data, false)),
         List.of(
@@ -951,7 +1055,7 @@ public final class OperationSequenceModel {
                     nextExcelDifferentialStyle(data))));
   }
 
-  private static DifferentialStyleInput nextDifferentialStyleInput(FuzzedDataProvider data) {
+  private static DifferentialStyleInput nextDifferentialStyleInput(GridGrindFuzzData data) {
     boolean includeNumberFormat = data.consumeBoolean();
     Boolean bold = data.consumeBoolean() ? Boolean.TRUE : null;
     Boolean italic = data.consumeBoolean() ? Boolean.TRUE : null;
@@ -977,7 +1081,7 @@ public final class OperationSequenceModel {
         null);
   }
 
-  private static ExcelDifferentialStyle nextExcelDifferentialStyle(FuzzedDataProvider data) {
+  private static ExcelDifferentialStyle nextExcelDifferentialStyle(GridGrindFuzzData data) {
     boolean includeNumberFormat = data.consumeBoolean();
     Boolean bold = data.consumeBoolean() ? Boolean.TRUE : null;
     Boolean italic = data.consumeBoolean() ? Boolean.TRUE : null;
@@ -1003,7 +1107,7 @@ public final class OperationSequenceModel {
         null);
   }
 
-  private static RangeSelection nextRangeSelection(FuzzedDataProvider data, boolean validRange) {
+  private static RangeSelection nextRangeSelection(GridGrindFuzzData data, boolean validRange) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new RangeSelection.All();
       default ->
@@ -1013,7 +1117,7 @@ public final class OperationSequenceModel {
   }
 
   private static ExcelRangeSelection nextExcelRangeSelection(
-      FuzzedDataProvider data, boolean validRange) {
+      GridGrindFuzzData data, boolean validRange) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new ExcelRangeSelection.All();
       default ->
@@ -1033,7 +1137,7 @@ public final class OperationSequenceModel {
   }
 
   private static TableInput nextTableInput(
-      FuzzedDataProvider data, String sheetName, String tableName, boolean validRange) {
+      GridGrindFuzzData data, String sheetName, String tableName, boolean validRange) {
     return new TableInput(
         tableName,
         sheetName,
@@ -1043,7 +1147,7 @@ public final class OperationSequenceModel {
   }
 
   private static ExcelTableDefinition nextExcelTableDefinition(
-      FuzzedDataProvider data, String sheetName, String tableName, boolean validRange) {
+      GridGrindFuzzData data, String sheetName, String tableName, boolean validRange) {
     return new ExcelTableDefinition(
         tableName,
         sheetName,
@@ -1052,7 +1156,7 @@ public final class OperationSequenceModel {
         nextExcelTableStyle(data));
   }
 
-  private static TableStyleInput nextTableStyleInput(FuzzedDataProvider data) {
+  private static TableStyleInput nextTableStyleInput(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new TableStyleInput.None();
       default ->
@@ -1065,7 +1169,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static ExcelTableStyle nextExcelTableStyle(FuzzedDataProvider data) {
+  private static ExcelTableStyle nextExcelTableStyle(GridGrindFuzzData data) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new ExcelTableStyle.None();
       default ->
@@ -1079,7 +1183,7 @@ public final class OperationSequenceModel {
   }
 
   private static TableSelection nextTableSelection(
-      FuzzedDataProvider data, String primarySheet, String secondarySheet) {
+      GridGrindFuzzData data, String primarySheet, String secondarySheet) {
     return switch (selectorSlot(nextSelectorByte(data))) {
       case 0 -> new TableSelection.All();
       default ->
@@ -1091,7 +1195,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static String nextTableName(FuzzedDataProvider data, boolean valid, String sheetName) {
+  private static String nextTableName(GridGrindFuzzData data, boolean valid, String sheetName) {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     if (!valid) {
       return nextNamedRangeName(data, false);
@@ -1103,11 +1207,11 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static ExcelComment nextExcelComment(FuzzedDataProvider data) {
+  private static ExcelComment nextExcelComment(GridGrindFuzzData data) {
     return new ExcelComment("Note " + nextNamedRangeName(data, true), "GridGrind", data.consumeBoolean());
   }
 
-  private static String nextNamedRangeName(FuzzedDataProvider data, boolean valid) {
+  private static String nextNamedRangeName(GridGrindFuzzData data, boolean valid) {
     Objects.requireNonNull(data, "data must not be null");
     if (!valid) {
       return switch (selectorSlot(nextSelectorByte(data))) {
@@ -1127,7 +1231,7 @@ public final class OperationSequenceModel {
     };
   }
 
-  private static int nextSelectorByte(FuzzedDataProvider data) {
+  private static int nextSelectorByte(GridGrindFuzzData data) {
     return Byte.toUnsignedInt(data.consumeByte());
   }
 

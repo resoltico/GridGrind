@@ -1,7 +1,7 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "/Users/erst/Tools/GridGrind/examples/sheet-management-request.json",
-  "promotedInputPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/sheet_management_request.json",
+  "sourcePath" : "../examples/sheet-management-request.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/sheet_management_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
@@ -13,14 +13,14 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 10,
       "operationKinds" : {
+        "SET_SHEET_PROTECTION" : 1,
+        "COPY_SHEET" : 1,
         "SET_ACTIVE_SHEET" : 1,
         "SET_SHEET_VISIBILITY" : 1,
         "SET_RANGE" : 1,
         "SET_CELL" : 2,
         "ENSURE_SHEET" : 2,
-        "SET_SELECTED_SHEETS" : 1,
-        "SET_SHEET_PROTECTION" : 1,
-        "COPY_SHEET" : 1
+        "SET_SELECTED_SHEETS" : 1
       },
       "styleKinds" : { },
       "readCount" : 4,
@@ -32,5 +32,5 @@
     }
   },
   "promotedAt" : "2026-03-26T03:22:08.997103Z",
-  "replayTextPath" : "/Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/sheet_management_request.txt"
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/sheet_management_request.txt"
 }

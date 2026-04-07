@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
@@ -83,5 +84,34 @@ class JazzerReplaySupportTest {
     assertEquals("InvalidRequestException", expectedInvalid.invalidKind());
     assertEquals(
         "INVALID_REQUEST", ((ProtocolRequestDetails) expectedInvalid.details()).decodeOutcome());
+  }
+
+  @Test
+  void replayClassifiesNamedRangeShiftArtifactAsExpectedInvalidRoundTripInput() {
+    byte[] input =
+        Base64.getDecoder()
+            .decode(
+                "bHNlZcwBYGBgnZ2dnZ1gc2hhcmVkU3RynZ2dnZ2dnZ2dnZ2dnWBgYGBgYAAAAPf39/f39/dl+2FgkQBLAAAAAAAAAAAAAMsEy8swUMw0LczMSYQ=");
+
+    ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.XLSX_ROUND_TRIP, input);
+
+    assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
+    ReplayOutcome.ExpectedInvalid expectedInvalid = (ReplayOutcome.ExpectedInvalid) outcome;
+    assertEquals("IllegalArgumentException", expectedInvalid.invalidKind());
+    assertEquals(
+        "SHIFT_ROWS cannot move named range 'Name9' on sheet 'I'; row structural edits that would overwrite or partially move range-backed named ranges are not supported",
+        expectedInvalid.message());
+    assertEquals(
+        new XlsxRoundTripDetails(
+            83,
+            9,
+            Map.of(
+                "CREATE_SHEET", 4L,
+                "FORCE_FORMULA_RECALCULATION_ON_OPEN", 2L,
+                "RENAME_SHEET", 1L,
+                "SET_NAMED_RANGE", 1L,
+                "SHIFT_ROWS", 1L),
+            Map.of()),
+        expectedInvalid.details());
   }
 }

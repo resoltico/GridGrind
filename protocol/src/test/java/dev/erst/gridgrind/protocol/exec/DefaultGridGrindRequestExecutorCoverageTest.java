@@ -354,9 +354,11 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                         new ExcelSheetPane.Split(120, 240, 0, 0, region),
                         100,
                         List.of(
-                            new dev.erst.gridgrind.excel.WorkbookReadResult.ColumnLayout(0, 12.0)),
+                            new dev.erst.gridgrind.excel.WorkbookReadResult.ColumnLayout(
+                                0, 12.0, false, 0, false)),
                         List.of(
-                            new dev.erst.gridgrind.excel.WorkbookReadResult.RowLayout(0, 15.0))))));
+                            new dev.erst.gridgrind.excel.WorkbookReadResult.RowLayout(
+                                0, 15.0, false, 0, false))))));
     PaneReport.Split split = assertInstanceOf(PaneReport.Split.class, result.layout().pane());
     assertEquals(region, split.activePane());
   }

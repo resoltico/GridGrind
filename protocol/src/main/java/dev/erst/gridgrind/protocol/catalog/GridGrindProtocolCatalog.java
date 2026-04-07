@@ -149,6 +149,77 @@ public final class GridGrindProtocolCatalog {
               "Set one or more row heights in Excel point units."
                   + " heightPoints must be > 0 and <= 1638.35 (Excel row height limit: 32767 twips)."),
           descriptor(
+              WorkbookOperation.InsertRows.class,
+              "INSERT_ROWS",
+              "Insert one or more blank rows before rowIndex."
+                  + " rowIndex must be <= last existing row + 1."
+                  + " GridGrind rejects row inserts that would move tables, sheet autofilters,"
+                  + " or data validations."),
+          descriptor(
+              WorkbookOperation.DeleteRows.class,
+              "DELETE_ROWS",
+              "Delete one inclusive zero-based row band."
+                  + " GridGrind rejects row deletes that would move or truncate tables,"
+                  + " sheet autofilters, or data validations, and it also rejects deletes that"
+                  + " would truncate range-backed named ranges."),
+          descriptor(
+              WorkbookOperation.ShiftRows.class,
+              "SHIFT_ROWS",
+              "Move one inclusive zero-based row band by delta rows."
+                  + " delta must not be 0."
+                  + " GridGrind rejects row shifts that would move tables, sheet autofilters,"
+                  + " or data validations, and it also rejects shifts that would partially move"
+                  + " or overwrite range-backed named ranges."),
+          descriptor(
+              WorkbookOperation.InsertColumns.class,
+              "INSERT_COLUMNS",
+              "Insert one or more blank columns before columnIndex."
+                  + " columnIndex must be <= last existing column + 1."
+                  + " GridGrind rejects column inserts when formulas or formula-defined names"
+                  + " exist, or when the edit would move tables, sheet autofilters, or data"
+                  + " validations."),
+          descriptor(
+              WorkbookOperation.DeleteColumns.class,
+              "DELETE_COLUMNS",
+              "Delete one inclusive zero-based column band."
+                  + " GridGrind rejects column deletes when formulas or formula-defined names"
+                  + " exist, or when the edit would move or truncate tables, sheet autofilters,"
+                  + " or data validations, or truncate range-backed named ranges."),
+          descriptor(
+              WorkbookOperation.ShiftColumns.class,
+              "SHIFT_COLUMNS",
+              "Move one inclusive zero-based column band by delta columns."
+                  + " delta must not be 0."
+                  + " GridGrind rejects column shifts when formulas or formula-defined names"
+                  + " exist, or when the edit would move tables, sheet autofilters, or data"
+                  + " validations, or partially move or overwrite range-backed named ranges."),
+          descriptor(
+              WorkbookOperation.SetRowVisibility.class,
+              "SET_ROW_VISIBILITY",
+              "Set the hidden state for one inclusive zero-based row band."),
+          descriptor(
+              WorkbookOperation.SetColumnVisibility.class,
+              "SET_COLUMN_VISIBILITY",
+              "Set the hidden state for one inclusive zero-based column band."),
+          descriptor(
+              WorkbookOperation.GroupRows.class,
+              "GROUP_ROWS",
+              "Apply one outline group to an inclusive zero-based row band."
+                  + " collapsed defaults to false when omitted."),
+          descriptor(
+              WorkbookOperation.UngroupRows.class,
+              "UNGROUP_ROWS",
+              "Remove outline grouping from one inclusive zero-based row band."),
+          descriptor(
+              WorkbookOperation.GroupColumns.class,
+              "GROUP_COLUMNS",
+              "Apply one outline group to an inclusive zero-based column band."
+                  + " collapsed defaults to false when omitted."),
+          descriptor(
+              WorkbookOperation.UngroupColumns.class,
+              "UNGROUP_COLUMNS",
+              "Remove outline grouping from one inclusive zero-based column band."),
+          descriptor(
               WorkbookOperation.SetSheetPane.class,
               "SET_SHEET_PANE",
               "Apply one explicit pane state."
@@ -354,7 +425,9 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.GetSheetLayout.class,
               "GET_SHEET_LAYOUT",
-              "Return pane, zoom, row-height, and column-width metadata."),
+              "Return pane, zoom, row-height, and column-width metadata."
+                  + " Row and column entries now include hidden, outlineLevel, and collapsed"
+                  + " state where Excel persists it."),
           descriptor(
               WorkbookReadOperation.GetPrintLayout.class,
               "GET_PRINT_LAYOUT",
@@ -519,6 +592,24 @@ public final class GridGrindProtocolCatalog {
                       SheetCopyPosition.AtIndex.class,
                       "AT_INDEX",
                       "Place the copied sheet at the requested zero-based workbook position."))),
+          nestedTypeGroup(
+              "rowSpanTypes",
+              RowSpanInput.class,
+              List.of(
+                  descriptor(
+                      RowSpanInput.Band.class,
+                      "BAND",
+                      "Inclusive zero-based row band."
+                          + " firstRowIndex and lastRowIndex must stay within 0..1048575."))),
+          nestedTypeGroup(
+              "columnSpanTypes",
+              ColumnSpanInput.class,
+              List.of(
+                  descriptor(
+                      ColumnSpanInput.Band.class,
+                      "BAND",
+                      "Inclusive zero-based column band."
+                          + " firstColumnIndex and lastColumnIndex must stay within 0..16383."))),
           nestedTypeGroup(
               "cellSelectionTypes",
               CellSelection.class,

@@ -1,0 +1,40 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "../examples/row-column-structure-request.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/row_column_structure_request.json",
+  "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 4927,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 16,
+      "operationKinds" : {
+        "SHIFT_COLUMNS" : 1,
+        "ENSURE_SHEET" : 2,
+        "DELETE_COLUMNS" : 1,
+        "INSERT_COLUMNS" : 1,
+        "SET_RANGE" : 2,
+        "SET_CELL" : 2,
+        "GROUP_COLUMNS" : 1,
+        "SET_ROW_VISIBILITY" : 1,
+        "GROUP_ROWS" : 1,
+        "DELETE_ROWS" : 1,
+        "INSERT_ROWS" : 1,
+        "SHIFT_ROWS" : 1,
+        "SET_COLUMN_VISIBILITY" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 2,
+      "readKinds" : {
+        "GET_CELLS" : 1,
+        "GET_SHEET_LAYOUT" : 1
+      }
+    }
+  },
+  "promotedAt" : "2026-04-06T01:57:49.328066Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/row_column_structure_request.txt"
+}

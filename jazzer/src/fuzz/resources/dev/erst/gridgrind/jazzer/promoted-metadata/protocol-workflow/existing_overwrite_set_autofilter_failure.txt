@@ -1,5 +1,5 @@
 Replay Result
-Input: /Users/erst/Tools/GridGrind/jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_set_autofilter_failure.bin
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/existing_overwrite_set_autofilter_failure.bin
 Harness: protocol-workflow
 Outcome: SUCCESS
 Input Bytes: 215
@@ -7,7 +7,7 @@ Source Kind: EXISTING
 Persistence Kind: SAVE_AS
 Operation Count: 1
 Read Count: 3
-Read Kinds: ANALYZE_WORKBOOK_FINDINGS=1, ANALYZE_NAMED_RANGE_HEALTH=1, GET_AUTOFILTERS=1
+Read Kinds: GET_AUTOFILTERS=1, ANALYZE_WORKBOOK_FINDINGS=1, ANALYZE_NAMED_RANGE_HEALTH=1
 Response Kind: FAILURE
-Style Kinds: horizontal_alignment=1, font_height_points=1, font_height=1, vertical_alignment=1, fill_color=1
+Style Kinds: vertical_alignment=1, fill_color=1, horizontal_alignment=1, font_height_points=1, font_height=1
 Operation Kinds: APPLY_STYLE=1

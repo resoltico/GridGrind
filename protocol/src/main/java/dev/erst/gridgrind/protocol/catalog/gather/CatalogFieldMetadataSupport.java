@@ -40,6 +40,8 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(HyperlinkTarget.class, "hyperlinkTargetTypes"),
           Map.entry(PaneInput.class, "paneTypes"),
           Map.entry(SheetCopyPosition.class, "sheetCopyPositionTypes"),
+          Map.entry(RowSpanInput.class, "rowSpanTypes"),
+          Map.entry(ColumnSpanInput.class, "columnSpanTypes"),
           Map.entry(CellSelection.class, "cellSelectionTypes"),
           Map.entry(RangeSelection.class, "rangeSelectionTypes"),
           Map.entry(SheetSelection.class, "sheetSelectionTypes"),

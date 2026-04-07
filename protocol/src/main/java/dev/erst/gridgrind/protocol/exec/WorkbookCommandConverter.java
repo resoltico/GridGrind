@@ -41,6 +41,34 @@ final class WorkbookCommandConverter {
       case WorkbookOperation.SetRowHeight op ->
           new WorkbookCommand.SetRowHeight(
               op.sheetName(), op.firstRowIndex(), op.lastRowIndex(), op.heightPoints());
+      case WorkbookOperation.InsertRows op ->
+          new WorkbookCommand.InsertRows(op.sheetName(), op.rowIndex(), op.rowCount());
+      case WorkbookOperation.DeleteRows op ->
+          new WorkbookCommand.DeleteRows(op.sheetName(), toExcelRowSpan(op.rows()));
+      case WorkbookOperation.ShiftRows op ->
+          new WorkbookCommand.ShiftRows(op.sheetName(), toExcelRowSpan(op.rows()), op.delta());
+      case WorkbookOperation.InsertColumns op ->
+          new WorkbookCommand.InsertColumns(op.sheetName(), op.columnIndex(), op.columnCount());
+      case WorkbookOperation.DeleteColumns op ->
+          new WorkbookCommand.DeleteColumns(op.sheetName(), toExcelColumnSpan(op.columns()));
+      case WorkbookOperation.ShiftColumns op ->
+          new WorkbookCommand.ShiftColumns(
+              op.sheetName(), toExcelColumnSpan(op.columns()), op.delta());
+      case WorkbookOperation.SetRowVisibility op ->
+          new WorkbookCommand.SetRowVisibility(
+              op.sheetName(), toExcelRowSpan(op.rows()), op.hidden());
+      case WorkbookOperation.SetColumnVisibility op ->
+          new WorkbookCommand.SetColumnVisibility(
+              op.sheetName(), toExcelColumnSpan(op.columns()), op.hidden());
+      case WorkbookOperation.GroupRows op ->
+          new WorkbookCommand.GroupRows(op.sheetName(), toExcelRowSpan(op.rows()), op.collapsed());
+      case WorkbookOperation.UngroupRows op ->
+          new WorkbookCommand.UngroupRows(op.sheetName(), toExcelRowSpan(op.rows()));
+      case WorkbookOperation.GroupColumns op ->
+          new WorkbookCommand.GroupColumns(
+              op.sheetName(), toExcelColumnSpan(op.columns()), op.collapsed());
+      case WorkbookOperation.UngroupColumns op ->
+          new WorkbookCommand.UngroupColumns(op.sheetName(), toExcelColumnSpan(op.columns()));
       case WorkbookOperation.SetSheetPane op ->
           new WorkbookCommand.SetSheetPane(op.sheetName(), toExcelSheetPane(op.pane()));
       case WorkbookOperation.SetSheetZoom op ->
@@ -135,6 +163,19 @@ final class WorkbookCommandConverter {
 
   static ExcelComment toExcelComment(CommentInput comment) {
     return new ExcelComment(comment.text(), comment.author(), comment.visible());
+  }
+
+  static ExcelRowSpan toExcelRowSpan(RowSpanInput rows) {
+    return switch (rows) {
+      case RowSpanInput.Band band -> new ExcelRowSpan(band.firstRowIndex(), band.lastRowIndex());
+    };
+  }
+
+  static ExcelColumnSpan toExcelColumnSpan(ColumnSpanInput columns) {
+    return switch (columns) {
+      case ColumnSpanInput.Band band ->
+          new ExcelColumnSpan(band.firstColumnIndex(), band.lastColumnIndex());
+    };
   }
 
   static ExcelCellStyle toExcelCellStyle(CellStyleInput style) {

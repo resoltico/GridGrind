@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.28.0"
+version: "0.29.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-02"
 route:
@@ -191,6 +191,145 @@ separate `path` field. `SAVE_AS` creates missing parent directories automaticall
   "firstRowIndex": 0,
   "lastRowIndex": 3,
   "heightPoints": 28.5
+}
+```
+
+## INSERT_ROWS
+
+```json
+{
+  "type": "INSERT_ROWS",
+  "sheetName": "Sheet1",
+  "rowIndex": 2,
+  "rowCount": 3
+}
+```
+
+## DELETE_ROWS
+
+```json
+{
+  "type": "DELETE_ROWS",
+  "sheetName": "Sheet1",
+  "rows": { "type": "BAND", "firstRowIndex": 4, "lastRowIndex": 6 }
+}
+```
+
+Rejects deletes that would truncate a range-backed named range (`LIM-018`).
+
+## SHIFT_ROWS
+
+```json
+{
+  "type": "SHIFT_ROWS",
+  "sheetName": "Sheet1",
+  "rows": { "type": "BAND", "firstRowIndex": 1, "lastRowIndex": 3 },
+  "delta": 2
+}
+```
+
+Rejects shifts that would partially move or overwrite a range-backed named range outside the moved
+band (`LIM-018`).
+
+## INSERT_COLUMNS
+
+```json
+{
+  "type": "INSERT_COLUMNS",
+  "sheetName": "Sheet1",
+  "columnIndex": 1,
+  "columnCount": 2
+}
+```
+
+## DELETE_COLUMNS
+
+```json
+{
+  "type": "DELETE_COLUMNS",
+  "sheetName": "Sheet1",
+  "columns": { "type": "BAND", "firstColumnIndex": 3, "lastColumnIndex": 4 }
+}
+```
+
+Rejects deletes that would truncate a range-backed named range (`LIM-018`) and also rejects
+formula-bearing workbooks (`LIM-017`).
+
+## SHIFT_COLUMNS
+
+```json
+{
+  "type": "SHIFT_COLUMNS",
+  "sheetName": "Sheet1",
+  "columns": { "type": "BAND", "firstColumnIndex": 0, "lastColumnIndex": 1 },
+  "delta": -1
+}
+```
+
+Rejects shifts that would partially move or overwrite a range-backed named range outside the moved
+band (`LIM-018`) and also rejects formula-bearing workbooks (`LIM-017`).
+
+## SET_ROW_VISIBILITY
+
+```json
+{
+  "type": "SET_ROW_VISIBILITY",
+  "sheetName": "Sheet1",
+  "rows": { "type": "BAND", "firstRowIndex": 5, "lastRowIndex": 7 },
+  "hidden": true
+}
+```
+
+## SET_COLUMN_VISIBILITY
+
+```json
+{
+  "type": "SET_COLUMN_VISIBILITY",
+  "sheetName": "Sheet1",
+  "columns": { "type": "BAND", "firstColumnIndex": 2, "lastColumnIndex": 3 },
+  "hidden": false
+}
+```
+
+## GROUP_ROWS
+
+```json
+{
+  "type": "GROUP_ROWS",
+  "sheetName": "Sheet1",
+  "rows": { "type": "BAND", "firstRowIndex": 8, "lastRowIndex": 10 },
+  "collapsed": true
+}
+```
+
+## UNGROUP_ROWS
+
+```json
+{
+  "type": "UNGROUP_ROWS",
+  "sheetName": "Sheet1",
+  "rows": { "type": "BAND", "firstRowIndex": 8, "lastRowIndex": 10 }
+}
+```
+
+## GROUP_COLUMNS
+
+```json
+{
+  "type": "GROUP_COLUMNS",
+  "sheetName": "Sheet1",
+  "columns": { "type": "BAND", "firstColumnIndex": 4, "lastColumnIndex": 6 },
+  "collapsed": true
+}
+```
+
+## UNGROUP_COLUMNS
+
+```json
+{
+  "type": "UNGROUP_COLUMNS",
+  "sheetName": "Sheet1",
+  "columns": { "type": "BAND", "firstColumnIndex": 4, "lastColumnIndex": 6 }
 }
 ```
 
@@ -753,6 +892,9 @@ responses use the `path` field with a normalized plain path string.
 ```json
 { "type": "GET_SHEET_LAYOUT", "requestId": "layout", "sheetName": "Sheet1" }
 ```
+
+Row and column entries report explicit size plus `hidden`, `outlineLevel`, and `collapsed`
+where Excel exposes that state.
 
 ## GET_PRINT_LAYOUT
 
