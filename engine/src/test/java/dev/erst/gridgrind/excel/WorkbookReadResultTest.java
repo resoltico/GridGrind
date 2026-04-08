@@ -18,10 +18,6 @@ class WorkbookReadResultTest {
 
   @Test
   void validatesNestedReadResultInvariants() {
-    ExcelCellSnapshot.BlankSnapshot blank =
-        new ExcelCellSnapshot.BlankSnapshot(
-            "A1", "BLANK", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
-
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -55,26 +51,6 @@ class WorkbookReadResultTest {
                 0,
                 0));
     assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookReadResult.SheetSummary(
-                "Budget",
-                ExcelSheetVisibility.VISIBLE,
-                new WorkbookReadResult.SheetProtection.Unprotected(),
-                0,
-                -2,
-                0));
-    assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new WorkbookReadResult.SheetSummary(
-                "Budget",
-                ExcelSheetVisibility.VISIBLE,
-                new WorkbookReadResult.SheetProtection.Unprotected(),
-                0,
-                0,
-                -2));
-    assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadResult.CellsResult("cells", "Budget", null));
     assertThrows(
@@ -83,8 +59,6 @@ class WorkbookReadResultTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookReadResult.Window("Budget", "A1", 1, 0, List.of()));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookReadResult.WindowRow(-1, List.of(blank)));
     assertThrows(IllegalArgumentException.class, () -> new WorkbookReadResult.MergedRegion(" "));
     assertThrows(
         NullPointerException.class, () -> new WorkbookReadResult.CellHyperlink("A1", null));
@@ -220,6 +194,77 @@ class WorkbookReadResultTest {
                 null,
                 "Budget!$B$4",
                 WorkbookReadResult.NamedRangeBackingKind.RANGE));
+  }
+
+  @Test
+  void reportsExcelNativeIndexDiagnosticsForReadResults() {
+    ExcelCellSnapshot.BlankSnapshot blank =
+        new ExcelCellSnapshot.BlankSnapshot(
+            "A1", "BLANK", "", defaultStyle(), ExcelCellMetadataSnapshot.empty());
+
+    IllegalArgumentException windowRowFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new WorkbookReadResult.WindowRow(-1, List.of(blank)));
+    assertTrue(windowRowFailure.getMessage().contains("rowIndex -1"));
+    assertTrue(windowRowFailure.getMessage().contains("Excel row 1"));
+
+    IllegalArgumentException columnLayoutFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new WorkbookReadResult.ColumnLayout(-1, 1.0, false, 0, false));
+    assertTrue(columnLayoutFailure.getMessage().contains("columnIndex -1"));
+    assertTrue(columnLayoutFailure.getMessage().contains("Excel column A"));
+
+    IllegalArgumentException rowLayoutFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new WorkbookReadResult.RowLayout(-1, 1.0, false, 0, false));
+    assertTrue(rowLayoutFailure.getMessage().contains("rowIndex -1"));
+    assertTrue(rowLayoutFailure.getMessage().contains("Excel row 1"));
+
+    IllegalArgumentException schemaColumnFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new WorkbookReadResult.SchemaColumn(
+                    -1,
+                    "A1",
+                    "Item",
+                    0,
+                    0,
+                    List.of(new WorkbookReadResult.TypeCount("STRING", 1)),
+                    "STRING"));
+    assertTrue(schemaColumnFailure.getMessage().contains("columnIndex -1"));
+    assertTrue(schemaColumnFailure.getMessage().contains("Excel column A"));
+
+    IllegalArgumentException lastRowFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new WorkbookReadResult.SheetSummary(
+                    "Budget",
+                    ExcelSheetVisibility.VISIBLE,
+                    new WorkbookReadResult.SheetProtection.Unprotected(),
+                    0,
+                    -2,
+                    0));
+    assertTrue(lastRowFailure.getMessage().contains("lastRowIndex -2"));
+    assertTrue(lastRowFailure.getMessage().contains("empty sheets report -1"));
+
+    IllegalArgumentException lastColumnFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new WorkbookReadResult.SheetSummary(
+                    "Budget",
+                    ExcelSheetVisibility.VISIBLE,
+                    new WorkbookReadResult.SheetProtection.Unprotected(),
+                    0,
+                    0,
+                    -2));
+    assertTrue(lastColumnFailure.getMessage().contains("lastColumnIndex -2"));
+    assertTrue(lastColumnFailure.getMessage().contains("empty sheets report -1"));
   }
 
   @Test

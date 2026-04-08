@@ -80,10 +80,8 @@ public record ExcelPrintLayout(
         requireBand(firstRowIndex, lastRowIndex, "firstRowIndex", "lastRowIndex");
         if (lastRowIndex > SpreadsheetVersion.EXCEL2007.getLastRowIndex()) {
           throw new IllegalArgumentException(
-              "lastRowIndex must not exceed "
-                  + SpreadsheetVersion.EXCEL2007.getLastRowIndex()
-                  + ": "
-                  + lastRowIndex);
+              ExcelIndexDisplay.mustNotExceed(
+                  "lastRowIndex", lastRowIndex, SpreadsheetVersion.EXCEL2007.getLastRowIndex()));
         }
       }
     }
@@ -100,10 +98,10 @@ public record ExcelPrintLayout(
         requireBand(firstColumnIndex, lastColumnIndex, "firstColumnIndex", "lastColumnIndex");
         if (lastColumnIndex > SpreadsheetVersion.EXCEL2007.getLastColumnIndex()) {
           throw new IllegalArgumentException(
-              "lastColumnIndex must not exceed "
-                  + SpreadsheetVersion.EXCEL2007.getLastColumnIndex()
-                  + ": "
-                  + lastColumnIndex);
+              ExcelIndexDisplay.mustNotExceed(
+                  "lastColumnIndex",
+                  lastColumnIndex,
+                  SpreadsheetVersion.EXCEL2007.getLastColumnIndex()));
         }
       }
     }
@@ -122,14 +120,17 @@ public record ExcelPrintLayout(
   private static void requireBand(
       int firstIndex, int lastIndex, String firstFieldName, String lastFieldName) {
     if (firstIndex < 0) {
-      throw new IllegalArgumentException(firstFieldName + " must not be negative");
+      throw new IllegalArgumentException(
+          ExcelIndexDisplay.mustNotBeNegative(firstFieldName, firstIndex));
     }
     if (lastIndex < 0) {
-      throw new IllegalArgumentException(lastFieldName + " must not be negative");
+      throw new IllegalArgumentException(
+          ExcelIndexDisplay.mustNotBeNegative(lastFieldName, lastIndex));
     }
     if (lastIndex < firstIndex) {
       throw new IllegalArgumentException(
-          lastFieldName + " must not be less than " + firstFieldName);
+          ExcelIndexDisplay.mustNotBeLessThan(
+              lastFieldName, lastIndex, firstFieldName, firstIndex));
     }
   }
 }

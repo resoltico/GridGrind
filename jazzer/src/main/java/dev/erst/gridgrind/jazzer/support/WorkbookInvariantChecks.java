@@ -30,6 +30,7 @@ import dev.erst.gridgrind.protocol.dto.PrintLayoutReport;
 import dev.erst.gridgrind.protocol.dto.TableEntryReport;
 import dev.erst.gridgrind.protocol.dto.TableHealthReport;
 import dev.erst.gridgrind.protocol.dto.TableStyleReport;
+import dev.erst.gridgrind.protocol.dto.RequestWarning;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.nio.file.Files;
@@ -51,6 +52,8 @@ public final class WorkbookInvariantChecks {
       case GridGrindResponse.Success success -> {
         require(success.persistence() != null, "persistence must not be null");
         requirePersistenceOutcomeShape(success.persistence());
+        require(success.warnings() != null, "warnings must not be null");
+        success.warnings().forEach(WorkbookInvariantChecks::requireRequestWarningShape);
         require(success.reads() != null, "reads must not be null");
         success.reads().forEach(WorkbookInvariantChecks::requireReadResultShape);
       }
@@ -161,6 +164,13 @@ public final class WorkbookInvariantChecks {
     require(executionPath != null, "executionPath must not be null");
     require(executionPath.endsWith(".xlsx"), "executionPath must point to .xlsx");
     require(Files.exists(Path.of(executionPath)), "executionPath must exist");
+  }
+
+  private static void requireRequestWarningShape(RequestWarning warning) {
+    require(warning != null, "warning must not be null");
+    require(warning.operationIndex() >= 0, "warning operationIndex must not be negative");
+    requireNonBlank(warning.operationType(), "warning operationType");
+    requireNonBlank(warning.message(), "warning message");
   }
 
   private static void requireReadMatchesRequest(

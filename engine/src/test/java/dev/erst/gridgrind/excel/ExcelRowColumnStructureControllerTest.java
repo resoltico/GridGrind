@@ -85,6 +85,38 @@ class ExcelRowColumnStructureControllerTest {
   }
 
   @Test
+  void partialColumnUngroupKeepsBoundaryCollapsedMarkerAcrossRoundTrip() throws Exception {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-column-ungroup-collapse-");
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+
+      controller.ungroupColumns(sheet, new ExcelColumnSpan(0, 3));
+      controller.ungroupColumns(sheet, new ExcelColumnSpan(0, 3));
+      controller.ungroupColumns(sheet, new ExcelColumnSpan(0, 3));
+      controller.groupColumns(sheet, new ExcelColumnSpan(0, 3), true);
+      controller.ungroupColumns(sheet, new ExcelColumnSpan(1, 1));
+
+      List<WorkbookReadResult.ColumnLayout> inMemoryColumns = controller.columnLayouts(sheet);
+      assertEquals(4, inMemoryColumns.size(), "in-memory columns=" + inMemoryColumns);
+      assertTrue(inMemoryColumns.get(0).hidden(), "in-memory columns=" + inMemoryColumns);
+      assertTrue(inMemoryColumns.get(1).collapsed(), "in-memory columns=" + inMemoryColumns);
+      assertEquals(
+          0, inMemoryColumns.get(1).outlineLevel(), "in-memory columns=" + inMemoryColumns);
+
+      try (var output = Files.newOutputStream(workbookPath)) {
+        workbook.write(output);
+      }
+    }
+
+    WorkbookReadResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
+
+    assertEquals(4, layout.columns().size(), "reopened columns=" + layout.columns());
+    assertTrue(layout.columns().get(0).hidden(), "reopened columns=" + layout.columns());
+    assertTrue(layout.columns().get(1).collapsed(), "reopened columns=" + layout.columns());
+    assertEquals(0, layout.columns().get(1).outlineLevel(), "reopened columns=" + layout.columns());
+  }
+
+  @Test
   void ungroupedSparseRowsNormalizeOutlineLevelToZeroAfterReopen() throws Exception {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-row-ungroup-tail-");
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -281,7 +313,8 @@ class ExcelRowColumnStructureControllerTest {
           assertThrows(
               IllegalArgumentException.class,
               () -> controller.deleteRows(boundsSheet, new ExcelRowSpan(1, 1)));
-      assertTrue(boundsFailure.getMessage().contains("last existing row is 0"));
+      assertTrue(boundsFailure.getMessage().contains("last existing row is 0 (Excel row 1)"));
+      assertTrue(boundsFailure.getMessage().contains("requested lastRowIndex 1 (Excel row 2)"));
 
       XSSFSheet deleteSheet = workbook.createSheet("DeleteRows");
       setString(deleteSheet, "A1", "Keep");
@@ -310,7 +343,9 @@ class ExcelRowColumnStructureControllerTest {
           assertThrows(
               IllegalArgumentException.class,
               () -> controller.deleteColumns(boundsSheet, new ExcelColumnSpan(1, 1)));
-      assertTrue(boundsFailure.getMessage().contains("last existing column is 0"));
+      assertTrue(boundsFailure.getMessage().contains("last existing column is 0 (Excel column A)"));
+      assertTrue(
+          boundsFailure.getMessage().contains("requested lastColumnIndex 1 (Excel column B)"));
     }
   }
 
@@ -321,7 +356,8 @@ class ExcelRowColumnStructureControllerTest {
       IllegalArgumentException rowGapFailure =
           assertThrows(
               IllegalArgumentException.class, () -> controller.insertRows(insertRowBounds, 1, 1));
-      assertTrue(rowGapFailure.getMessage().contains("last existing row + 1: 0"));
+      assertTrue(rowGapFailure.getMessage().contains("rowIndex 1 (Excel row 2)"));
+      assertTrue(rowGapFailure.getMessage().contains("last existing row + 1: 0 (Excel row 1)"));
 
       XSSFSheet insertRowLimit = workbook.createSheet("InsertRowLimit");
       insertRowLimit.createRow(ExcelRowSpan.MAX_ROW_INDEX);
@@ -329,7 +365,12 @@ class ExcelRowColumnStructureControllerTest {
           assertThrows(
               IllegalArgumentException.class,
               () -> controller.insertRows(insertRowLimit, ExcelRowSpan.MAX_ROW_INDEX, 2));
-      assertTrue(rowOverflowFailure.getMessage().contains("would exceed the maximum row index"));
+      assertTrue(
+          rowOverflowFailure
+              .getMessage()
+              .contains("destination last row would be 1048576 (Excel row 1048577)"));
+      assertTrue(
+          rowOverflowFailure.getMessage().contains("maximum is 1048575 (Excel row 1048576)"));
 
       XSSFSheet insertColumnBounds = workbook.createSheet("InsertColumnBounds");
       setString(insertColumnBounds, "A1", "Header");
@@ -337,7 +378,9 @@ class ExcelRowColumnStructureControllerTest {
           assertThrows(
               IllegalArgumentException.class,
               () -> controller.insertColumns(insertColumnBounds, 2, 1));
-      assertTrue(columnGapFailure.getMessage().contains("last existing column + 1: 1"));
+      assertTrue(columnGapFailure.getMessage().contains("columnIndex 2 (Excel column C)"));
+      assertTrue(
+          columnGapFailure.getMessage().contains("last existing column + 1: 1 (Excel column B)"));
 
       XSSFSheet insertColumnLimit = workbook.createSheet("InsertColumnLimit");
       setString(insertColumnLimit, "XFD1", "Edge");
@@ -347,13 +390,20 @@ class ExcelRowColumnStructureControllerTest {
               () ->
                   controller.insertColumns(insertColumnLimit, ExcelColumnSpan.MAX_COLUMN_INDEX, 2));
       assertTrue(
-          columnOverflowFailure.getMessage().contains("would exceed the maximum column index"));
+          columnOverflowFailure
+              .getMessage()
+              .contains("destination last column would be 16384 (Excel column XFE)"));
+      assertTrue(
+          columnOverflowFailure.getMessage().contains("maximum is 16383 (Excel column XFD)"));
 
       IllegalArgumentException shiftRowLowFailure =
           assertThrows(
               IllegalArgumentException.class,
               () -> controller.shiftRows(insertRowBounds, new ExcelRowSpan(0, 0), -1));
-      assertTrue(shiftRowLowFailure.getMessage().contains("before index 0"));
+      assertTrue(
+          shiftRowLowFailure.getMessage().contains("firstRowIndex 0 (Excel row 1) by delta -1"));
+      assertTrue(
+          shiftRowLowFailure.getMessage().contains("before the first worksheet row (Excel row 1)"));
 
       IllegalArgumentException shiftRowHighFailure =
           assertThrows(
@@ -363,13 +413,25 @@ class ExcelRowColumnStructureControllerTest {
                       insertRowBounds,
                       new ExcelRowSpan(ExcelRowSpan.MAX_ROW_INDEX, ExcelRowSpan.MAX_ROW_INDEX),
                       1));
-      assertTrue(shiftRowHighFailure.getMessage().contains("would exceed the maximum row index"));
+      assertTrue(
+          shiftRowHighFailure
+              .getMessage()
+              .contains("lastRowIndex 1048575 (Excel row 1048576) by delta 1"));
+      assertTrue(
+          shiftRowHighFailure.getMessage().contains("maximum row 1048575 (Excel row 1048576)"));
 
       IllegalArgumentException shiftColumnLowFailure =
           assertThrows(
               IllegalArgumentException.class,
               () -> controller.shiftColumns(insertColumnBounds, new ExcelColumnSpan(0, 0), -1));
-      assertTrue(shiftColumnLowFailure.getMessage().contains("before index 0"));
+      assertTrue(
+          shiftColumnLowFailure
+              .getMessage()
+              .contains("firstColumnIndex 0 (Excel column A) by delta -1"));
+      assertTrue(
+          shiftColumnLowFailure
+              .getMessage()
+              .contains("before the first worksheet column (Excel column A)"));
 
       IllegalArgumentException shiftColumnHighFailure =
           assertThrows(
@@ -381,7 +443,11 @@ class ExcelRowColumnStructureControllerTest {
                           ExcelColumnSpan.MAX_COLUMN_INDEX, ExcelColumnSpan.MAX_COLUMN_INDEX),
                       1));
       assertTrue(
-          shiftColumnHighFailure.getMessage().contains("would exceed the maximum column index"));
+          shiftColumnHighFailure
+              .getMessage()
+              .contains("lastColumnIndex 16383 (Excel column XFD) by delta 1"));
+      assertTrue(
+          shiftColumnHighFailure.getMessage().contains("maximum column 16383 (Excel column XFD)"));
     }
   }
 

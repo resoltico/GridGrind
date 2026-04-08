@@ -78,6 +78,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       GridGrindProtocolVersion protocolVersion, GridGrindRequest request, ExcelWorkbook workbook) {
     WorkbookLocation workbookLocation =
         workbookLocationFor(request.source(), request.persistence());
+    List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
     for (int operationIndex = 0; operationIndex < request.operations().size(); operationIndex++) {
       WorkbookOperation operation = request.operations().get(operationIndex);
       try {
@@ -124,7 +125,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
     return closeWorkbook(
         workbook,
-        new GridGrindResponse.Success(protocolVersion, persistence, List.copyOf(reads)),
+        new GridGrindResponse.Success(protocolVersion, persistence, warnings, List.copyOf(reads)),
         request);
   }
 

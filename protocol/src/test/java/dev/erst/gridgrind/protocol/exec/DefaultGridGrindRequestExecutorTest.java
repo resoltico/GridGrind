@@ -124,6 +124,7 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(GridGrindProtocolVersion.V1, success.protocolVersion());
     assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
     assertTrue(Files.exists(workbookPath));
+    assertEquals(List.of(), success.warnings());
     assertEquals(List.of("workbook", "cells", "window"), requestIds(success));
     assertEquals(1, workbook.sheetCount());
     assertEquals(List.of("Budget"), workbook.sheetNames());
@@ -215,6 +216,34 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals("#FF0000", cell.richText().get(1).font().fontColor());
     assertTrue(cell.richText().get(1).font().bold());
     assertTrue(cell.richText().get(1).font().italic());
+  }
+
+  @Test
+  void surfacesRequestWarningsAlongsideSuccessfulExecution() {
+    GridGrindResponse response =
+        new DefaultGridGrindRequestExecutor()
+            .execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Budget Review"),
+                        new WorkbookOperation.EnsureSheet("Summary"),
+                        new WorkbookOperation.SetCell(
+                            "Budget Review", "A1", new CellInput.Numeric(1200.0)),
+                        new WorkbookOperation.SetCell(
+                            "Summary", "A1", new CellInput.Formula("Budget Review!A1")))));
+
+    GridGrindResponse.Success success = success(response);
+
+    assertEquals(
+        List.of(
+            new RequestWarning(
+                3,
+                "SET_CELL",
+                "Formula references same-request sheet names with spaces without single quotes: Budget Review. Use 'Sheet Name'!A1 syntax.")),
+        success.warnings());
+    assertEquals(List.of(), success.reads());
   }
 
   @Test

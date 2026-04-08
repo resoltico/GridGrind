@@ -225,14 +225,17 @@ public sealed interface WorkbookCommand
         throw new IllegalArgumentException("sheetName must not be blank");
       }
       if (firstColumnIndex < 0) {
-        throw new IllegalArgumentException("firstColumnIndex must not be negative");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeNegative("firstColumnIndex", firstColumnIndex));
       }
       if (lastColumnIndex < 0) {
-        throw new IllegalArgumentException("lastColumnIndex must not be negative");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeNegative("lastColumnIndex", lastColumnIndex));
       }
       if (lastColumnIndex < firstColumnIndex) {
         throw new IllegalArgumentException(
-            "lastColumnIndex must not be less than firstColumnIndex");
+            ExcelIndexDisplay.mustNotBeLessThan(
+                "lastColumnIndex", lastColumnIndex, "firstColumnIndex", firstColumnIndex));
       }
       requireColumnWidthCharacters(widthCharacters);
     }
@@ -247,13 +250,17 @@ public sealed interface WorkbookCommand
         throw new IllegalArgumentException("sheetName must not be blank");
       }
       if (firstRowIndex < 0) {
-        throw new IllegalArgumentException("firstRowIndex must not be negative");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeNegative("firstRowIndex", firstRowIndex));
       }
       if (lastRowIndex < 0) {
-        throw new IllegalArgumentException("lastRowIndex must not be negative");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeNegative("lastRowIndex", lastRowIndex));
       }
       if (lastRowIndex < firstRowIndex) {
-        throw new IllegalArgumentException("lastRowIndex must not be less than firstRowIndex");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeLessThan(
+                "lastRowIndex", lastRowIndex, "firstRowIndex", firstRowIndex));
       }
       requireRowHeightPoints(heightPoints);
     }
@@ -267,11 +274,12 @@ public sealed interface WorkbookCommand
         throw new IllegalArgumentException("sheetName must not be blank");
       }
       if (rowIndex < 0) {
-        throw new IllegalArgumentException("rowIndex must not be negative");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeNegative("rowIndex", rowIndex));
       }
       if (rowIndex > ExcelRowSpan.MAX_ROW_INDEX) {
         throw new IllegalArgumentException(
-            "rowIndex must not exceed " + ExcelRowSpan.MAX_ROW_INDEX + " (Excel row limit)");
+            ExcelIndexDisplay.mustNotExceed("rowIndex", rowIndex, ExcelRowSpan.MAX_ROW_INDEX));
       }
       if (rowCount <= 0) {
         throw new IllegalArgumentException("rowCount must be greater than 0");
@@ -313,13 +321,13 @@ public sealed interface WorkbookCommand
         throw new IllegalArgumentException("sheetName must not be blank");
       }
       if (columnIndex < 0) {
-        throw new IllegalArgumentException("columnIndex must not be negative");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeNegative("columnIndex", columnIndex));
       }
       if (columnIndex > ExcelColumnSpan.MAX_COLUMN_INDEX) {
         throw new IllegalArgumentException(
-            "columnIndex must not exceed "
-                + ExcelColumnSpan.MAX_COLUMN_INDEX
-                + " (Excel column limit)");
+            ExcelIndexDisplay.mustNotExceed(
+                "columnIndex", columnIndex, ExcelColumnSpan.MAX_COLUMN_INDEX));
       }
       if (columnCount <= 0) {
         throw new IllegalArgumentException("columnCount must be greater than 0");

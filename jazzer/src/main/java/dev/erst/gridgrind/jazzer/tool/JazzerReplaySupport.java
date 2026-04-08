@@ -216,7 +216,7 @@ public final class JazzerReplaySupport {
         new WorkbookCommandExecutor().apply(workbook, commands);
         WorkbookInvariantChecks.requireWorkbookShape(workbook);
         workbook.save(workbookPath);
-        XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands);
+        XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);
       }
       XlsxRoundTripDetails details = roundTripDetails(input.length, commands);
       return new ReplayOutcome.Success(JazzerHarness.XLSX_ROUND_TRIP.key(), details);

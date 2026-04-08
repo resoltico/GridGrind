@@ -7,21 +7,25 @@ public record ExcelRowSpan(int firstRowIndex, int lastRowIndex) {
 
   public ExcelRowSpan {
     if (firstRowIndex < 0) {
-      throw new IllegalArgumentException("firstRowIndex must not be negative");
+      throw new IllegalArgumentException(
+          ExcelIndexDisplay.mustNotBeNegative("firstRowIndex", firstRowIndex));
     }
     if (lastRowIndex < 0) {
-      throw new IllegalArgumentException("lastRowIndex must not be negative");
+      throw new IllegalArgumentException(
+          ExcelIndexDisplay.mustNotBeNegative("lastRowIndex", lastRowIndex));
     }
     if (lastRowIndex < firstRowIndex) {
-      throw new IllegalArgumentException("lastRowIndex must not be less than firstRowIndex");
+      throw new IllegalArgumentException(
+          ExcelIndexDisplay.mustNotBeLessThan(
+              "lastRowIndex", lastRowIndex, "firstRowIndex", firstRowIndex));
     }
     if (firstRowIndex > MAX_ROW_INDEX) {
       throw new IllegalArgumentException(
-          "firstRowIndex must not exceed " + MAX_ROW_INDEX + " (Excel row limit)");
+          ExcelIndexDisplay.mustNotExceed("firstRowIndex", firstRowIndex, MAX_ROW_INDEX));
     }
     if (lastRowIndex > MAX_ROW_INDEX) {
       throw new IllegalArgumentException(
-          "lastRowIndex must not exceed " + MAX_ROW_INDEX + " (Excel row limit)");
+          ExcelIndexDisplay.mustNotExceed("lastRowIndex", lastRowIndex, MAX_ROW_INDEX));
     }
   }
 

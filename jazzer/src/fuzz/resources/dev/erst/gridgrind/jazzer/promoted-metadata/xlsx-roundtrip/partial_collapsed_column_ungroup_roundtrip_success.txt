@@ -1,0 +1,8 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/partial_collapsed_column_ungroup_roundtrip_success.bin
+Harness: xlsx-roundtrip
+Outcome: SUCCESS
+Input Bytes: 94
+Command Count: 7
+Style Kinds: (none)
+Command Kinds: UNGROUP_COLUMNS=4, CLEAR_SHEET_PROTECTION=1, GROUP_COLUMNS=1, CREATE_SHEET=1

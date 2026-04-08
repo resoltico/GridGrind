@@ -1,11 +1,11 @@
 ---
-afad: "3.4"
-version: "0.30.0"
+afad: "3.5"
+version: "0.31.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-02"
+updated: "2026-04-08"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
 ---
 
 # Quick Reference
@@ -47,6 +47,38 @@ Path model:
 - `OVERWRITE` writes back to `source.path`; it does not accept its own `path` field.
 - Relative paths in `--request`, `--response`, `source.path`, and `persistence.path` resolve from
   the current working directory.
+
+## Coordinate Systems
+
+| Field pattern | Convention |
+|:--------------|:-----------|
+| `address` | A1 cell address, e.g. `B3` |
+| `range` | A1 rectangular range, e.g. `A1:C4` |
+| `*RowIndex` | Zero-based row index, e.g. `0 = Excel row 1` |
+| `*ColumnIndex` | Zero-based column index, e.g. `0 = Excel column A` |
+
+Validation messages echo both forms inline, for example `firstRowIndex 5 (Excel row 6)` or
+`firstColumnIndex 5 (Excel column F)`.
+
+## Checking Workbook Health
+
+Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it with
+`persistence.type=NONE` when you only need findings and do not want a saved workbook:
+
+```json
+{
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [],
+  "reads": [
+    { "type": "ANALYZE_WORKBOOK_FINDINGS", "requestId": "lint" }
+  ]
+}
+```
+
+Successful responses may include a `warnings` array. The current request-phase warning flags
+same-request sheet names with spaces referenced in formulas without single quotes. Use
+`'Sheet Name'!A1` syntax.
 
 ---
 
@@ -1157,7 +1189,8 @@ Unsaved workbooks report unresolved relative file targets instead of treating th
 ```
 
 `ANALYZE_WORKBOOK_FINDINGS` aggregates every shipped health family: formula, data validation,
-conditional formatting, autofilter, table, hyperlink, and named range.
+conditional formatting, autofilter, table, hyperlink, and named range. It is the primary
+workbook-health check and pairs naturally with `persistence.type=NONE`.
 
 Selection snippets:
 

@@ -43,6 +43,7 @@ import dev.erst.gridgrind.protocol.dto.PrintTitleColumnsReport;
 import dev.erst.gridgrind.protocol.dto.PrintTitleRowsReport;
 import dev.erst.gridgrind.protocol.dto.RangeSelection;
 import dev.erst.gridgrind.protocol.dto.RichTextRunReport;
+import dev.erst.gridgrind.protocol.dto.RequestWarning;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
 import dev.erst.gridgrind.protocol.dto.SheetSelection;
 import dev.erst.gridgrind.protocol.dto.TableEntryReport;
@@ -72,6 +73,9 @@ class WorkbookInvariantChecksTest {
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 "result.xlsx", workbookPath.toString()),
+            List.of(
+                new RequestWarning(
+                    1, "SET_CELL", "Formula references same-request sheet names with spaces.")),
             List.of(
                 new WorkbookReadResult.WorkbookSummaryResult(
                     "summary",
@@ -273,6 +277,7 @@ class WorkbookInvariantChecksTest {
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 workbookPath.toString(), workbookPath.toString()),
+            List.of(),
             List.of(
                 new WorkbookReadResult.WorkbookSummaryResult(
                     "summary",
@@ -326,6 +331,7 @@ class WorkbookInvariantChecksTest {
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 workbookPath.toString(), workbookPath.toString()),
+            List.of(),
             List.of(
                 new WorkbookReadResult.HyperlinksResult(
                     "hyperlinks",
@@ -375,6 +381,7 @@ class WorkbookInvariantChecksTest {
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 "result.xlsx", workbookPath.toString()),
+            List.of(),
             List.of(
                 new WorkbookReadResult.SheetSummaryResult(
                     "sheet",
@@ -401,6 +408,7 @@ class WorkbookInvariantChecksTest {
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 "result.xlsx", workbookPath.toString()),
+            List.of(),
             List.of(
                 new WorkbookReadResult.AutofiltersResult(
                     "autofilters",
@@ -460,6 +468,7 @@ class WorkbookInvariantChecksTest {
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 workbookPath.toString(), workbookPath.toString()),
+            List.of(),
             List.of(
                 new WorkbookReadResult.AutofiltersResult(
                     "autofilters",

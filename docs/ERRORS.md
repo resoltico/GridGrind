@@ -1,11 +1,11 @@
 ---
-afad: "3.4"
-version: "0.30.0"
+afad: "3.5"
+version: "0.31.0"
 domain: ERRORS
-updated: "2026-03-31"
+updated: "2026-04-08"
 route:
-  keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, causes, context]
-  questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context"]
+  keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
+  questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors"]
 ---
 
 # Error Reference
@@ -126,8 +126,8 @@ The `context` block provides structured metadata about where the failure occurre
 | Field | Description |
 |:------|:------------|
 | `stage` | `PARSE_ARGUMENTS`, `READ_REQUEST`, `VALIDATE_REQUEST`, `OPEN_WORKBOOK`, `APPLY_OPERATION`, `EXECUTE_READ`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
-| `sourceType` | Request `source.type` when the failure occurred after request parsing. |
-| `persistenceType` | Request `persistence.type` when the failure occurred after request parsing. |
+| `sourceType` | Request `source.type` when the failure occurred after request parsing, including `EXECUTE_REQUEST` failures. |
+| `persistenceType` | Request `persistence.type` when the failure occurred after request parsing, including `EXECUTE_REQUEST` failures. |
 | `operationIndex` | Zero-based index of the failing operation in `operations`. |
 | `operationType` | The `type` field of the failing operation (e.g. `SET_CELL`). |
 | `readIndex` | Zero-based index of the failing read in `reads`. |
@@ -141,6 +141,17 @@ The `context` block provides structured metadata about where the failure occurre
 | `jsonPath` | JSON Pointer to the field that failed parsing (transport errors only). |
 | `jsonLine` | Line number in the request payload (transport errors only). |
 | `jsonColumn` | Column number in the request payload (transport errors only). |
+
+## Index-Based Validation Messages
+
+Row and column validation failures report both the raw zero-based value and the Excel-native
+equivalent. For example:
+
+- `firstRowIndex 5 (Excel row 6)`
+- `firstColumnIndex 5 (Excel column F)`
+
+This applies to structural edit bounds, print-title band validation, and related index-based
+operations. `address` and `range` fields still use plain A1 notation.
 
 ---
 

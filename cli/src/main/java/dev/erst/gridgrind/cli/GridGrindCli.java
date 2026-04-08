@@ -154,7 +154,9 @@ public final class GridGrindCli {
           new GridGrindResponse.Failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
-                  exception, new GridGrindResponse.ProblemContext.ExecuteRequest(null, null)));
+                  exception,
+                  new GridGrindResponse.ProblemContext.ExecuteRequest(
+                      requestSourceType(request), requestPersistenceType(request))));
     }
 
     return responseWriter.write(command.responsePath(), stdout, response);
@@ -218,6 +220,14 @@ public final class GridGrindCli {
           persistence OVERWRITE:       write back to source.path; no path field is supplied.
           Relative paths in --request, --response, source.path, and persistence.path resolve from the current working directory.
 
+        Coordinate Systems:
+          Pattern                Convention / Example
+          address                A1 cell address, e.g. B3
+          range                  A1 rectangular range, e.g. A1:C4
+          *RowIndex              zero-based, e.g. 0 = Excel row 1
+          *ColumnIndex           zero-based, e.g. 0 = Excel column A
+          first/last pairs are inclusive zero-based bands.
+
         Minimal Valid Request:
         %s
 
@@ -238,6 +248,15 @@ public final class GridGrindCli {
         Discovery:
           gridgrind --print-request-template
           gridgrind --print-protocol-catalog
+          Workbook health workflow (no save):
+            {
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "operations": [],
+              "reads": [
+                { "type": "ANALYZE_WORKBOOK_FINDINGS", "requestId": "lint" }
+              ]
+            }
           The protocol catalog lists each field, whether it is required, and the nested/plain
           type group accepted by polymorphic fields such as value, target, selection, style,
           and scope.
@@ -352,6 +371,21 @@ public final class GridGrindCli {
 
   private String pathString(Path path) {
     return path == null ? null : path.toAbsolutePath().toString();
+  }
+
+  private String requestSourceType(GridGrindRequest request) {
+    return switch (request.source()) {
+      case GridGrindRequest.WorkbookSource.New _ -> "NEW";
+      case GridGrindRequest.WorkbookSource.ExistingFile _ -> "EXISTING";
+    };
+  }
+
+  private String requestPersistenceType(GridGrindRequest request) {
+    return switch (request.persistence()) {
+      case GridGrindRequest.WorkbookPersistence.None _ -> "NONE";
+      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
+      case GridGrindRequest.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
+    };
   }
 
   /** Supplies request-template bytes for help rendering. */

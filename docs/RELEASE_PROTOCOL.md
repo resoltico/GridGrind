@@ -1,3 +1,13 @@
+---
+afad: "3.5"
+version: "0.31.0"
+domain: RELEASE_PROTOCOL
+updated: "2026-04-08"
+route:
+  keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
+  questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
+---
+
 # Release Protocol
 
 The entire release flow is driven by the GitHub CLI (`gh`). Every step that touches GitHub —
@@ -24,7 +34,21 @@ Do not attempt to resolve missing `gh` or authentication failures autonomously.
 
 ### Step 1 — Pre-flight: verify release readiness
 
-Run `./check.sh`. It must exit 0. If it fails, fix all failures before proceeding.
+Before running any build or release command, verify the local Java and Gradle runtime:
+
+```bash
+command -v java
+java --version
+./gradlew --version --console=plain
+```
+
+Requirements before continuing:
+
+- `command -v java` must not be `/usr/bin/java`.
+- `java --version` must report Java 26.
+- Use `./gradlew`, never Brew `gradle`, for every repo build or release step.
+
+Then run `./check.sh`. It must exit 0. If it fails, fix all failures before proceeding.
 
 Then verify every item in this checklist. All must be true before any commit or tag:
 

@@ -43,7 +43,9 @@ final class ExcelRowColumnStructureController {
     if (rows.lastRowIndex() > lastRowIndex) {
       throw new IllegalArgumentException(
           "DELETE_ROWS rows must stay within existing row bounds: last existing row is "
-              + lastRowIndex);
+              + ExcelIndexDisplay.rowValue(lastRowIndex)
+              + "; requested "
+              + ExcelIndexDisplay.describe("lastRowIndex", rows.lastRowIndex()));
     }
     rejectAffectedRowStructuresForDelete(sheet, rows); // LIM-016
     if (rows.lastRowIndex() < lastRowIndex) {
@@ -93,7 +95,9 @@ final class ExcelRowColumnStructureController {
     if (columns.lastColumnIndex() > lastColumnIndex) {
       throw new IllegalArgumentException(
           "DELETE_COLUMNS columns must stay within existing column bounds: last existing column is "
-              + lastColumnIndex);
+              + ExcelIndexDisplay.columnValue(lastColumnIndex)
+              + "; requested "
+              + ExcelIndexDisplay.describe("lastColumnIndex", columns.lastColumnIndex()));
     }
     rejectFormulaBearingWorkbookForColumnEdit(sheet.getWorkbook(), "DELETE_COLUMNS"); // LIM-017
     normalizeColumnDefinitionContainer(sheet);
@@ -248,12 +252,17 @@ final class ExcelRowColumnStructureController {
     int lastRowIndex = sheet.getLastRowNum();
     if (rowIndex > lastRowIndex + 1) {
       throw new IllegalArgumentException(
-          "INSERT_ROWS rowIndex must be less than or equal to last existing row + 1: "
-              + (lastRowIndex + 1));
+          "INSERT_ROWS "
+              + ExcelIndexDisplay.describe("rowIndex", rowIndex)
+              + " must be less than or equal to last existing row + 1: "
+              + ExcelIndexDisplay.rowValue(lastRowIndex + 1));
     }
     if (rowIndex + rowCount - 1 > ExcelRowSpan.MAX_ROW_INDEX) {
       throw new IllegalArgumentException(
-          "INSERT_ROWS would exceed the maximum row index " + ExcelRowSpan.MAX_ROW_INDEX);
+          "INSERT_ROWS would exceed the maximum row index: destination last row would be "
+              + ExcelIndexDisplay.rowValue(rowIndex + rowCount - 1)
+              + "; maximum is "
+              + ExcelIndexDisplay.rowValue(ExcelRowSpan.MAX_ROW_INDEX));
     }
   }
 
@@ -261,34 +270,61 @@ final class ExcelRowColumnStructureController {
     int lastColumnIndex = lastColumnIndex(sheet);
     if (columnIndex > lastColumnIndex + 1) {
       throw new IllegalArgumentException(
-          "INSERT_COLUMNS columnIndex must be less than or equal to last existing column + 1: "
-              + (lastColumnIndex + 1));
+          "INSERT_COLUMNS "
+              + ExcelIndexDisplay.describe("columnIndex", columnIndex)
+              + " must be less than or equal to last existing column + 1: "
+              + ExcelIndexDisplay.columnValue(lastColumnIndex + 1));
     }
     if (columnIndex + columnCount - 1 > ExcelColumnSpan.MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
-          "INSERT_COLUMNS would exceed the maximum column index "
-              + ExcelColumnSpan.MAX_COLUMN_INDEX);
+          "INSERT_COLUMNS would exceed the maximum column index: destination last column would be "
+              + ExcelIndexDisplay.columnValue(columnIndex + columnCount - 1)
+              + "; maximum is "
+              + ExcelIndexDisplay.columnValue(ExcelColumnSpan.MAX_COLUMN_INDEX));
     }
   }
 
   private void requireShiftedRowBounds(ExcelRowSpan rows, int delta) {
     if (rows.firstRowIndex() + delta < 0) {
-      throw new IllegalArgumentException("SHIFT_ROWS would move rows before index 0");
+      throw new IllegalArgumentException(
+          "SHIFT_ROWS would move "
+              + ExcelIndexDisplay.describe("firstRowIndex", rows.firstRowIndex())
+              + " by delta "
+              + delta
+              + " before the first worksheet row ("
+              + ExcelIndexDisplay.excelRow(0)
+              + ")");
     }
     if (rows.lastRowIndex() + delta > ExcelRowSpan.MAX_ROW_INDEX) {
       throw new IllegalArgumentException(
-          "SHIFT_ROWS would exceed the maximum row index " + ExcelRowSpan.MAX_ROW_INDEX);
+          "SHIFT_ROWS would move "
+              + ExcelIndexDisplay.describe("lastRowIndex", rows.lastRowIndex())
+              + " by delta "
+              + delta
+              + " beyond the maximum row "
+              + ExcelIndexDisplay.rowValue(ExcelRowSpan.MAX_ROW_INDEX));
     }
   }
 
   private void requireShiftedColumnBounds(ExcelColumnSpan columns, int delta) {
     if (columns.firstColumnIndex() + delta < 0) {
-      throw new IllegalArgumentException("SHIFT_COLUMNS would move columns before index 0");
+      throw new IllegalArgumentException(
+          "SHIFT_COLUMNS would move "
+              + ExcelIndexDisplay.describe("firstColumnIndex", columns.firstColumnIndex())
+              + " by delta "
+              + delta
+              + " before the first worksheet column ("
+              + ExcelIndexDisplay.excelColumn(0)
+              + ")");
     }
     if (columns.lastColumnIndex() + delta > ExcelColumnSpan.MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
-          "SHIFT_COLUMNS would exceed the maximum column index "
-              + ExcelColumnSpan.MAX_COLUMN_INDEX);
+          "SHIFT_COLUMNS would move "
+              + ExcelIndexDisplay.describe("lastColumnIndex", columns.lastColumnIndex())
+              + " by delta "
+              + delta
+              + " beyond the maximum column "
+              + ExcelIndexDisplay.columnValue(ExcelColumnSpan.MAX_COLUMN_INDEX));
     }
   }
 

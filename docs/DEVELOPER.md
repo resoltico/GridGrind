@@ -1,8 +1,8 @@
 ---
-afad: "3.4"
-version: "0.30.0"
+afad: "3.5"
+version: "0.31.0"
 domain: DEVELOPER
-updated: "2026-04-03"
+updated: "2026-04-08"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -11,9 +11,11 @@ route:
 # Developer Reference
 
 **Purpose**: Build, test, architecture, and quality gate reference for GridGrind contributors.
-**Prerequisites**: Java 26 (auto-provisioned via Gradle toolchains), Gradle wrapper.
+**Prerequisites**: Java 26 active in the current shell, Gradle wrapper.
+**Java setup**: [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
 
-Local-only Jazzer architecture, operations, and coverage inventories live in:
+Companion references:
+- [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
 - [DEVELOPER_JAZZER.md](./DEVELOPER_JAZZER.md)
 - [DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md)
 - [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md)
@@ -65,6 +67,11 @@ three modules participate in normal local builds, CI, and release verification.
 | JUnit Jupiter | 6.0.3 |
 | Log4j Core | 2.25.3 |
 
+GridGrind's runtime and product-module baseline is Java 26. The only deliberate exception is the
+Gradle `buildSrc` logic, which still emits JVM 25 bytecode because Kotlin `2.3.0` does not yet
+target JVM 26 directly. That build logic now compiles with the Java 26 toolchain and only lowers
+the emitted bytecode level, so the repository no longer requires a separate Java 25 installation.
+
 ---
 
 ## Commands
@@ -76,6 +83,14 @@ surface scripts, and a Docker smoke test that runs the image from a non-default 
 with weird request/response/save paths. `check.sh` intentionally lives in the repository root as
 the canonical contributor entrypoint, while `scripts/` contains helper scripts invoked by the root
 gate and GitHub workflows. Both should be clean before a release-quality change is considered done.
+When Stage 1 reaches long-running Gradle `Test` tasks, the shared test conventions emit
+`[GRADLE-TEST-PULSE]` lines with class-start, class-complete, and throttled test-progress facts
+so the local watchdog tracks semantic execution rather than mistaking quiet test output for a
+hang.
+
+Use `./gradlew`, not Brew `gradle`. GridGrind's CLI, fat JAR, release flow, and `./check.sh` all
+depend on the ambient shell `java`, so `command -v java` must resolve to Java 26 and not to the
+macOS `/usr/bin/java` stub. `./check.sh` now fails fast if the shell runtime is wrong.
 
 ```bash
 # Run the local full-stack gate
@@ -106,7 +121,10 @@ field-shape output authoritative: every field should still publish required/opti
 the exact nested/plain group accepted by polymorphic inputs. The catalog build path now uses a
 small internal `protocol.catalog.gather` seam for the two cases that genuinely benefit from
 Stream Gatherers: ordered uniqueness and reflected field-metadata expansion. The built-in request
-template remains an ordinary constant because no domain gatherer semantics are needed there.
+template remains an ordinary constant because no domain gatherer semantics are needed there. Keep
+`--print-request-template` as the smallest valid machine-readable request; workflow snippets such
+as the no-save `ANALYZE_WORKBOOK_FINDINGS` lint pass belong in help text, public docs, and the
+example request set instead of the emitted template itself.
 
 ---
 

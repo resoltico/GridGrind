@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelCellAlignment;
 import dev.erst.gridgrind.excel.ExcelCellFill;
@@ -65,7 +63,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves style expectations when a later value write targets an already styled cell. */
@@ -90,7 +87,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves style state when APPEND_ROW writes into a style-only row selected by append semantics. */
@@ -124,7 +120,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Accepts date-time append writes that relayer the required number format onto styled blank rows. */
@@ -162,7 +157,23 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
+  }
+
+  @Test
+  void requireRoundTripReadable_usesActualSheetLayoutForPartialCollapsedColumnUngroup(
+      @TempDir Path tempDirectory) throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Budget"),
+            new WorkbookCommand.ClearSheetProtection("Budget"),
+            new WorkbookCommand.UngroupColumns("Budget", new ExcelColumnSpan(0, 3)),
+            new WorkbookCommand.UngroupColumns("Budget", new ExcelColumnSpan(0, 3)),
+            new WorkbookCommand.UngroupColumns("Budget", new ExcelColumnSpan(0, 3)),
+            new WorkbookCommand.GroupColumns("Budget", new ExcelColumnSpan(0, 3), true),
+            new WorkbookCommand.UngroupColumns("Budget", new ExcelColumnSpan(1, 1)));
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+
   }
 
   /** Preserves richer Wave 2 formatting depth patches through save and reopen. */
@@ -197,7 +208,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves hyperlink, comment, and named-range state through save and reopen. */
@@ -225,7 +235,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves rich-text runs and inherited font facts through save and reopen. */
@@ -266,7 +275,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves the last hyperlink written to a cell through save and reopen. */
@@ -283,7 +291,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves normalized data-validation state through save and reopen. */
@@ -317,7 +324,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves sheet autofilters and workbook tables through save and reopen. */
@@ -368,7 +374,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves sheet autofilters and workbook tables through save and reopen. */
@@ -418,7 +423,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Accepts header rewrites after table creation without losing persisted table column names. */
@@ -451,7 +455,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Accepts header style patches that change the displayed table header text for typed cells. */
@@ -481,7 +484,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Accepts named-range targets that are normalized during persistence and reopen. */
@@ -499,7 +501,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Tracks renamed sheets and later metadata removals without keeping stale expectations. */
@@ -527,7 +528,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves B3 row and column layout facts, including shifted hidden state, through reopen. */
@@ -595,7 +595,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves collapsed row-group control markers when the grouped band ends at the sheet tail. */
@@ -609,7 +608,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Normalizes sparse ungrouped rows back to public outline level zero through reopen. */
@@ -623,7 +621,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   /** Preserves copied-sheet order, active selection state, visibility, and protection through reopen. */
@@ -645,7 +642,6 @@ class XlsxRoundTripVerifierTest {
 
     Path workbookPath = saveWorkbook(tempDirectory, commands);
 
-    assertDoesNotThrow(() -> XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands));
   }
 
   private static Path saveWorkbook(Path tempDirectory, List<WorkbookCommand> commands)
@@ -654,6 +650,7 @@ class XlsxRoundTripVerifierTest {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       new WorkbookCommandExecutor().apply(workbook, commands);
       workbook.save(workbookPath);
+      XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);
     }
     return workbookPath;
   }

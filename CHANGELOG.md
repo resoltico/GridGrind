@@ -5,6 +5,71 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.31.0] - 2026-04-08
+
+### Added
+
+- Jazzer promoted seed `partial_collapsed_column_ungroup_roundtrip_success` now locks in the
+  `.xlsx` round-trip case where a collapsed grouped column band is partially ungrouped after save.
+- Jazzer support-test progress pulses now include committed class-start and in-flight
+  `test-progress` heartbeats, so long-running nested support tests remain observable to the outer
+  gate instead of going dark between test completions.
+- Added [docs/DEVELOPER_JAVA.md](./docs/DEVELOPER_JAVA.md), which documents GridGrind's shell-level
+  Java 26 setup, the `/usr/bin/java` macOS pitfall, the official `jdk.java.net/26` install path,
+  and why `./gradlew` is the only supported Gradle entrypoint.
+- Added a no-save workbook-health example at
+  [examples/workbook-health-request.json](./examples/workbook-health-request.json), showing
+  `ANALYZE_WORKBOOK_FINDINGS` as the default lint-style workflow and the correct quoted formula
+  syntax for sheet names with spaces.
+- Successful protocol responses can now include a `warnings` array. The first shipped warning flags
+  formulas that reference same-request sheet names with spaces without single quotes.
+
+### Changed
+
+- Upgraded PMD from 7.22.0 to 7.23.0 and Error Prone from 2.48.0 to 2.49.0 across the shared
+  Gradle analyzer toolchain, so all Java subprojects now compile and lint against the newer
+  static-analysis baselines.
+- Jazzer `.xlsx` round-trip verification now snapshots persisted expectations from the actual
+  pre-save workbook state and uses command replay only to bound which cell snapshots are compared
+  after reopen. This removes duplicated sheet-layout modeling from the verifier path.
+- Local `./check.sh` Stage 1 verification now feeds its stall monitor with semantic
+  `[GRADLE-TEST-PULSE]` progress from Gradle `Test` tasks, so long-running root quality-gate runs
+  are tracked by actual test execution instead of a stale `> Task :engine:test` banner.
+- GridGrind's developer and release docs now treat shell-level Java 26 as a first-class runtime
+  requirement and explicitly distinguish that from the temporary JVM 25 bytecode target used only
+  by Gradle `buildSrc` logic while Kotlin lacks direct JVM 26 output.
+- Gradle `buildSrc` logic now compiles with the Java 26 toolchain while still emitting JVM 25
+  bytecode, so local builds no longer require a separate Java 25 installation just to satisfy the
+  temporary Kotlin build-logic ceiling.
+- CLI help, the README, and the public protocol docs now surface GridGrind's coordinate split much
+  more explicitly: `address` and `range` stay in A1 notation, while `*RowIndex` and
+  `*ColumnIndex` fields are zero-based and rendered back with Excel-native equivalents in
+  validation messages.
+- `ANALYZE_WORKBOOK_FINDINGS` is now documented consistently as GridGrind's primary
+  workbook-health check, including the no-save `persistence.type=NONE` workflow.
+
+### Fixed
+
+- Jazzer no longer reports a false `.xlsx` round-trip failure for partially ungrouped collapsed
+  column groups. GridGrind now accepts Excel's persisted boundary-column collapsed-marker
+  semantics for that case, and artifact-backed replay tests load exact committed fixture bytes
+  instead of hand-copied inline Base64.
+- `./check.sh` no longer false-stalls healthy Stage 1 root verification during quiet but active
+  Gradle test execution, and its pulse output now shows live test-progress facts instead of only
+  task-start lines.
+- `./check.sh` no longer false-stalls healthy Jazzer Stage 2 support-test runs because the
+  `JazzerSupportTestPulseListener` is once again source-owned and emits progress during long
+  individual support tests instead of relying on stale compiled build state and completion-only
+  pulses.
+- `./check.sh` now fails fast when the active shell resolves `java` or `javac` to the macOS
+  launcher stubs or to anything other than Java 26, so local verification cannot silently run on
+  the wrong ambient runtime.
+- `EXECUTE_REQUEST` failure context now preserves the parsed request's `sourceType` and
+  `persistenceType` instead of dropping them to `null`.
+- Row and column bounds errors now report Excel-native equivalents inline, such as
+  `firstRowIndex 5 (Excel row 6)` and `firstColumnIndex 5 (Excel column F)`, across structural
+  edits, print-title bands, and readback validation records.
+
 ## [0.30.0] - 2026-04-07
 
 ### Added
@@ -1046,7 +1111,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.30.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.31.0...HEAD
+[0.31.0]: https://github.com/resoltico/GridGrind/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/resoltico/GridGrind/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/resoltico/GridGrind/compare/v0.28.0...v0.29.0
 [0.28.0]: https://github.com/resoltico/GridGrind/compare/v0.27.0...v0.28.0

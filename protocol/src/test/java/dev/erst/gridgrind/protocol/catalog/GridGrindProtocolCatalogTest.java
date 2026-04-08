@@ -898,6 +898,16 @@ class GridGrindProtocolCatalogTest {
             .summary()
             .contains("persisted path"),
         "ANALYZE_HYPERLINK_HEALTH summary must explain relative FILE resolution");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_WORKBOOK_FINDINGS")
+            .summary()
+            .contains("primary workbook-health check"),
+        "ANALYZE_WORKBOOK_FINDINGS summary must describe the primary health-check workflow");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_WORKBOOK_FINDINGS")
+            .summary()
+            .contains("persistence.type=NONE"),
+        "ANALYZE_WORKBOOK_FINDINGS summary must mention the no-save health-check workflow");
     assertEquals(
         FieldRequirement.REQUIRED,
         fieldNamed(nestedTypeEntry(catalog, "hyperlinkTargetTypes", "FILE"), "path").requirement(),

@@ -154,12 +154,12 @@ final class ExcelRichTextSupport {
       Boolean underline,
       Boolean strikeout) {
     return bold == null
-        & italic == null
-        & fontName == null
-        & fontHeight == null
-        & fontColor == null
-        & underline == null
-        & strikeout == null;
+        && italic == null
+        && fontName == null
+        && fontHeight == null
+        && fontColor == null
+        && underline == null
+        && strikeout == null;
   }
 
   private static Boolean booleanProperty(CTBooleanProperty property) {
