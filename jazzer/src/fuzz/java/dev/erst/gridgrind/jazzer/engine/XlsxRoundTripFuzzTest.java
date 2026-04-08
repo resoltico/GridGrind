@@ -44,7 +44,7 @@ class XlsxRoundTripFuzzTest {
         executor.apply(workbook, commands);
         WorkbookInvariantChecks.requireWorkbookShape(workbook);
         workbook.save(workbookPath);
-        XlsxRoundTripVerifier.requireRoundTripReadable(workbookPath, commands);
+        XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);
         TELEMETRY.recordSuccess();
       } catch (IllegalArgumentException expected) {
         // Invalid command sequences are expected to fail before or during persistence.

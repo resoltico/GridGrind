@@ -24,12 +24,14 @@ public sealed interface GridGrindResponse {
   record Success(
       GridGrindProtocolVersion protocolVersion,
       PersistenceOutcome persistence,
+      List<RequestWarning> warnings,
       List<WorkbookReadResult> reads)
       implements GridGrindResponse {
     public Success {
       protocolVersion =
           protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
       persistence = persistence == null ? new PersistenceOutcome.NotSaved() : persistence;
+      warnings = warnings == null ? List.of() : copyValues(warnings, "warnings");
       reads = copyValues(reads, "reads");
     }
   }

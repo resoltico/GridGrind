@@ -95,6 +95,7 @@ class GridGrindJsonTest {
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs("budget.xlsx", "/tmp/budget.xlsx"),
+            List.of(new RequestWarning(1, "SET_CELL", "Quote spaced sheet names in formulas.")),
             List.of(
                 new WorkbookReadResult.WorkbookSummaryResult(
                     "workbook",
@@ -120,6 +121,7 @@ class GridGrindJsonTest {
     assertEquals(expected, streamDecoded);
     assertEquals(expected, actual);
     assertArrayEquals(encoded, outputStream.toByteArray());
+    assertTrue(new String(encoded, StandardCharsets.UTF_8).contains("\"warnings\""));
   }
 
   @Test
@@ -174,6 +176,7 @@ class GridGrindJsonTest {
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            List.of(),
             List.of(
                 new WorkbookReadResult.CellsResult(
                     "cells",
@@ -545,6 +548,7 @@ class GridGrindJsonTest {
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            List.of(),
             List.of(
                 new WorkbookReadResult.HyperlinksResult(
                     "hyperlinks",
@@ -823,6 +827,7 @@ class GridGrindJsonTest {
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            List.of(),
             List.of(
                 new WorkbookReadResult.WorkbookSummaryResult(
                     "workbook",

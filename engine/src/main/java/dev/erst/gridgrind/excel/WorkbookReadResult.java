@@ -357,10 +357,16 @@ public sealed interface WorkbookReadResult
         throw new IllegalArgumentException("physicalRowCount must not be negative");
       }
       if (lastRowIndex < -1) {
-        throw new IllegalArgumentException("lastRowIndex must be greater than or equal to -1");
+        throw new IllegalArgumentException(
+            "lastRowIndex "
+                + lastRowIndex
+                + " must be greater than or equal to -1; empty sheets report -1");
       }
       if (lastColumnIndex < -1) {
-        throw new IllegalArgumentException("lastColumnIndex must be greater than or equal to -1");
+        throw new IllegalArgumentException(
+            "lastColumnIndex "
+                + lastColumnIndex
+                + " must be greater than or equal to -1; empty sheets report -1");
       }
     }
   }
@@ -403,7 +409,8 @@ public sealed interface WorkbookReadResult
   record WindowRow(int rowIndex, List<ExcelCellSnapshot> cells) {
     public WindowRow {
       if (rowIndex < 0) {
-        throw new IllegalArgumentException("rowIndex must not be negative");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeNegative("rowIndex", rowIndex));
       }
       cells = copyValues(cells, "cells");
     }
@@ -457,7 +464,8 @@ public sealed interface WorkbookReadResult
       boolean collapsed) {
     public ColumnLayout {
       if (columnIndex < 0) {
-        throw new IllegalArgumentException("columnIndex must not be negative");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeNegative("columnIndex", columnIndex));
       }
       if (!Double.isFinite(widthCharacters) || widthCharacters <= 0.0d) {
         throw new IllegalArgumentException("widthCharacters must be finite and greater than 0");
@@ -473,7 +481,8 @@ public sealed interface WorkbookReadResult
       int rowIndex, double heightPoints, boolean hidden, int outlineLevel, boolean collapsed) {
     public RowLayout {
       if (rowIndex < 0) {
-        throw new IllegalArgumentException("rowIndex must not be negative");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeNegative("rowIndex", rowIndex));
       }
       if (!Double.isFinite(heightPoints) || heightPoints <= 0.0d) {
         throw new IllegalArgumentException("heightPoints must be finite and greater than 0");
@@ -558,7 +567,8 @@ public sealed interface WorkbookReadResult
       String dominantType) {
     public SchemaColumn {
       if (columnIndex < 0) {
-        throw new IllegalArgumentException("columnIndex must not be negative");
+        throw new IllegalArgumentException(
+            ExcelIndexDisplay.mustNotBeNegative("columnIndex", columnIndex));
       }
       columnAddress = requireNonBlank(columnAddress, "columnAddress");
       Objects.requireNonNull(headerDisplayValue, "headerDisplayValue must not be null");

@@ -7,21 +7,25 @@ public record ExcelColumnSpan(int firstColumnIndex, int lastColumnIndex) {
 
   public ExcelColumnSpan {
     if (firstColumnIndex < 0) {
-      throw new IllegalArgumentException("firstColumnIndex must not be negative");
+      throw new IllegalArgumentException(
+          ExcelIndexDisplay.mustNotBeNegative("firstColumnIndex", firstColumnIndex));
     }
     if (lastColumnIndex < 0) {
-      throw new IllegalArgumentException("lastColumnIndex must not be negative");
+      throw new IllegalArgumentException(
+          ExcelIndexDisplay.mustNotBeNegative("lastColumnIndex", lastColumnIndex));
     }
     if (lastColumnIndex < firstColumnIndex) {
-      throw new IllegalArgumentException("lastColumnIndex must not be less than firstColumnIndex");
+      throw new IllegalArgumentException(
+          ExcelIndexDisplay.mustNotBeLessThan(
+              "lastColumnIndex", lastColumnIndex, "firstColumnIndex", firstColumnIndex));
     }
     if (firstColumnIndex > MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
-          "firstColumnIndex must not exceed " + MAX_COLUMN_INDEX + " (Excel column limit)");
+          ExcelIndexDisplay.mustNotExceed("firstColumnIndex", firstColumnIndex, MAX_COLUMN_INDEX));
     }
     if (lastColumnIndex > MAX_COLUMN_INDEX) {
       throw new IllegalArgumentException(
-          "lastColumnIndex must not exceed " + MAX_COLUMN_INDEX + " (Excel column limit)");
+          ExcelIndexDisplay.mustNotExceed("lastColumnIndex", lastColumnIndex, MAX_COLUMN_INDEX));
     }
   }
 

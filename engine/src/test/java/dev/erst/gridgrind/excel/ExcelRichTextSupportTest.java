@@ -249,6 +249,49 @@ class ExcelRichTextSupportTest {
     }
   }
 
+  @Test
+  void snapshotRetainsRunsWhoseOnlyOverridesAppearLateInTheFontPatchChain() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      ExcelRichText richText =
+          new ExcelRichText(
+              List.of(
+                  new ExcelRichTextRun(
+                      "Name", new ExcelCellFont(null, null, "Courier New", null, null, null, null)),
+                  new ExcelRichTextRun(
+                      " Size",
+                      new ExcelCellFont(
+                          null,
+                          null,
+                          null,
+                          ExcelFontHeight.fromPoints(new BigDecimal("13")),
+                          null,
+                          null,
+                          null)),
+                  new ExcelRichTextRun(
+                      " Color", new ExcelCellFont(null, null, null, null, "#ABCDEF", null, null)),
+                  new ExcelRichTextRun(
+                      " Underline",
+                      new ExcelCellFont(null, null, null, null, null, Boolean.FALSE, null)),
+                  new ExcelRichTextRun(
+                      " Strike",
+                      new ExcelCellFont(null, null, null, null, null, null, Boolean.TRUE))));
+
+      ExcelRichTextSnapshot snapshot =
+          ExcelRichTextSupport.snapshot(
+              workbook, ExcelRichTextSupport.toPoiRichText(workbook, richText), baseFont());
+
+      assertNotNull(snapshot);
+      assertEquals(5, snapshot.runs().size());
+      assertEquals("Courier New", snapshot.runs().get(0).font().fontName());
+      assertEquals(
+          ExcelFontHeight.fromPoints(new BigDecimal("13")),
+          snapshot.runs().get(1).font().fontHeight());
+      assertEquals("#ABCDEF", snapshot.runs().get(2).font().fontColor());
+      assertFalse(snapshot.runs().get(3).font().underline());
+      assertTrue(snapshot.runs().get(4).font().strikeout());
+    }
+  }
+
   private static ExcelCellFontSnapshot baseFont() {
     return new ExcelCellFontSnapshot(
         true,

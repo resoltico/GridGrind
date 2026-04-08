@@ -1,0 +1,39 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Budget Review" },
+    { "type": "ENSURE_SHEET", "sheetName": "Summary" },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Budget Review",
+      "address": "A1",
+      "value": { "type": "TEXT", "text": "Amount" }
+    },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Budget Review",
+      "address": "B1",
+      "value": { "type": "NUMBER", "number": 1200.0 }
+    },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Summary",
+      "address": "A1",
+      "value": { "type": "FORMULA", "formula": "'Budget Review'!B1" }
+    }
+  ],
+  "reads": [
+    {
+      "type": "ANALYZE_WORKBOOK_FINDINGS",
+      "requestId": "lint"
+    },
+    {
+      "type": "GET_CELLS",
+      "requestId": "summary-cells",
+      "sheetName": "Summary",
+      "addresses": ["A1"]
+    }
+  ]
+}

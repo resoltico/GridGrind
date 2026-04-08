@@ -1,8 +1,8 @@
 ---
-afad: "3.4"
-version: "0.30.0"
+afad: "3.5"
+version: "0.31.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-04-07"
+updated: "2026-04-08"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -12,6 +12,8 @@ route:
 
 **Purpose**: Authoritative architecture and policy reference for the GridGrind Jazzer layer.
 **Companion references**:
+- [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md) for the required shell-level Java 26 setup and the
+  `./gradlew`-over-Brew-Gradle rule.
 - [DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md) for command usage, run
   lifecycle, replay, promotion, and cleanup.
 - [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md) for the harness matrix, promoted
@@ -46,6 +48,8 @@ Implemented now:
   autofilter persistence boundaries, and the explicit `reads` pipeline
 - local-only corpora, logs, finding artifacts, and cleanup commands
 - semantic progress pulses and stall-aware outer-gate monitoring for long-running Jazzer stages
+- in-flight support-test heartbeats during long deterministic support tests, so Stage 2 keeps
+  reporting real work even when a single support case takes a while
 
 Deliberately not implemented:
 - any root-build dependency on Jazzer
@@ -109,8 +113,9 @@ Target-specific strategy:
   not by its filename alone
 - engine command seeds may be reused for `.xlsx` round-trip seeds when replay confirms they persist
   cleanly in the round-trip harness
-- the `.xlsx` round-trip verifier is expected to derive style, metadata, and table expectations
-  from the real pre-save workbook state, not from a duplicated command-semantics model
+- the `.xlsx` round-trip verifier is expected to derive sheet-layout, style, metadata, and table
+  expectations from the real pre-save workbook state; command replay exists only to bound which
+  cell snapshots are compared after reopen
 
 The operator goal is not to maximize seed count. The goal is to preserve a stable minimum floor of:
 - representative success cases
@@ -121,8 +126,8 @@ Current promoted floor:
 - `protocol-request`: 33 committed seeds
 - `protocol-workflow`: 11 committed seeds
 - `engine-command-sequence`: 8 committed seeds
-- `xlsx-roundtrip`: 15 committed seeds
-- total promoted seed floor: 67 inputs
+- `xlsx-roundtrip`: 17 committed seeds
+- total promoted seed floor: 69 inputs
 
 ---
 

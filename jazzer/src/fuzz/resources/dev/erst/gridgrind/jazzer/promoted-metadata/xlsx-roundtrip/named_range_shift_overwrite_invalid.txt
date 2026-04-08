@@ -7,4 +7,4 @@ Message: SHIFT_ROWS cannot move named range 'Name9' on sheet 'I'; row structural
 Input Bytes: 83
 Command Count: 9
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=4, FORCE_FORMULA_RECALCULATION_ON_OPEN=2, SET_NAMED_RANGE=1, RENAME_SHEET=1, SHIFT_ROWS=1
+Command Kinds: CREATE_SHEET=4, FORCE_FORMULA_RECALCULATION_ON_OPEN=2, SHIFT_ROWS=1, SET_NAMED_RANGE=1, RENAME_SHEET=1

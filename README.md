@@ -45,7 +45,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release instead of tracking `latest`:
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.30.0
+docker pull ghcr.io/resoltico/gridgrind:0.31.0
 ```
 
 The container registry retains the last 5 releases. For older versions, download the fat JAR
@@ -98,6 +98,10 @@ under `/workdir`, so generated `.xlsx` files land back in `$(pwd)` on the host.
 Download the self-contained JAR from the
 [Releases page](https://github.com/resoltico/GridGrind/releases/latest) and run it the same
 way as the container — stdin/stdout or explicit file paths:
+
+`java -jar gridgrind.jar` uses the ambient shell `java`, not Gradle toolchains. For local
+development and release work, make sure `command -v java` resolves to Java 26 and not to the
+macOS `/usr/bin/java` stub; see [docs/DEVELOPER_JAVA.md](./docs/DEVELOPER_JAVA.md).
 
 ```bash
 echo '{"source":{"type":"NEW"},"operations":[],"reads":[]}' \
@@ -389,6 +393,25 @@ reports broken ranges, overlapping tables, blank or duplicate headers, and style
 `ANALYZE_WORKBOOK_FINDINGS` now aggregates all shipped analysis families: formula, data
 validation, conditional formatting, autofilter, table, hyperlink, and named-range health.
 
+Coordinate systems are split intentionally: `address` and `range` fields use Excel A1 notation,
+while fields ending in `RowIndex` or `ColumnIndex` use zero-based indexes. Validation messages now
+echo both forms inline so out-of-bounds failures read like `firstRowIndex 5 (Excel row 6)` and
+`firstColumnIndex 5 (Excel column F)`.
+
+For a no-save workbook-health pass, pair `persistence.type=NONE` with
+`ANALYZE_WORKBOOK_FINDINGS`. This is the default lint-style workflow:
+
+```json
+{
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [],
+  "reads": [
+    { "type": "ANALYZE_WORKBOOK_FINDINGS", "requestId": "lint" }
+  ]
+}
+```
+
 `GET_WINDOW` and `GET_SHEET_SCHEMA` require `rowCount * columnCount` ≤ 250,000. `GET_WINDOW`
 additionally rejects windows that extend beyond the Excel 2007 sheet boundary
 (1,048,576 rows, 16,384 columns). `GET_CELLS` rejects any address that is not valid A1 notation
@@ -402,7 +425,9 @@ The runnable example set now includes
 [examples/sheet-management-request.json](examples/sheet-management-request.json) for B1 sheet
 copy, active and selected sheet state, visibility, protection, and summary reads, plus
 [examples/rich-text-request.json](examples/rich-text-request.json) for structured `RICH_TEXT`
-authoring and read-back through existing cell introspection.
+authoring and read-back through existing cell introspection, plus
+[examples/workbook-health-request.json](examples/workbook-health-request.json) for a no-save
+analysis pass that demonstrates quoted formulas for sheet names with spaces.
 
 ---
 
@@ -517,6 +542,10 @@ facts can be normalized from the workbook. Persistence is now explicit too:
 - `NONE`: the workbook stayed in memory only
 - `SAVE_AS`: includes both the caller-provided `requestedPath` and the actual `executionPath`
 - `OVERWRITE`: includes both the original `sourcePath` token and the actual `executionPath`
+
+Successful responses may also include a `warnings` array. GridGrind currently uses this for
+request-phase formula warnings such as same-request sheet names with spaces referenced without
+single quotes. Use `'Sheet Name'!A1` syntax for those formulas.
 
 A failed response carries `"status": "ERROR"` and a structured `problem` object with:
 

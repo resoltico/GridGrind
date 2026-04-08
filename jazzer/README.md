@@ -6,6 +6,9 @@ This nested build is intentionally separate from the main product build. It is n
 Gradle `check`, root coverage, or GitHub CI. Root [check.sh](../check.sh) does invoke the nested
 Jazzer `check` workflow sequentially as the supported whole-repo local gate.
 
+Use the root Gradle wrapper, not Brew `gradle`, and make sure the active shell resolves to Java 26
+before running any Jazzer command. See [docs/DEVELOPER_JAVA.md](../docs/DEVELOPER_JAVA.md).
+
 ## Supported Scripts
 
 - `jazzer/bin/regression`

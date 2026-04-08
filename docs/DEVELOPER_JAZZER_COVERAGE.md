@@ -1,8 +1,8 @@
 ---
-afad: "3.4"
-version: "0.30.0"
+afad: "3.5"
+version: "0.31.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-04-07"
+updated: "2026-04-08"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -24,8 +24,8 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 | `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 33 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 8 |
-| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 15 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 67 total across harnesses |
+| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 17 |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 69 total across harnesses |
 
 ---
 
@@ -220,6 +220,7 @@ Committed custom seeds currently in source control:
 | `xlsx-roundtrip` | `create_sheet_set_range_roundtrip_case.bin` | successful round-trip seed that persists `CREATE_SHEET` plus `SET_RANGE` commands |
 | `xlsx-roundtrip` | `apply_style_alignment_roundtrip_success.bin` | successful round-trip seed that preserves alignment-only style state after reopen |
 | `xlsx-roundtrip` | `apply_style_formatting_depth_roundtrip_success.bin` | successful round-trip seed that preserves formatting-depth style state after reopen |
+| `xlsx-roundtrip` | `border_all_none_missing_color_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that clearing border sides back to `NONE` no longer trips POI's unsafe border-color unset path |
 | `xlsx-roundtrip` | `append_row_preserves_styled_blank_row_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert style preservation when `APPEND_ROW` reuses styled blank rows |
 | `xlsx-roundtrip` | `append_row_datetime_style_patch_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that date-time append writes relayer their required number format onto styled blank rows |
 | `xlsx-roundtrip` | `table_header_rewrite_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that table header rewrites keep persisted table metadata synchronized through reopen |
@@ -227,6 +228,7 @@ Committed custom seeds currently in source control:
 | `xlsx-roundtrip` | `clear_sheet_protection_unprotected_roundtrip_success.bin` | successful round-trip seed promoted from a live B1 finding to assert that clearing protection on an already unprotected sheet is an idempotent no-op instead of a POI-backed crash |
 | `xlsx-roundtrip` | `named_range_normalization_roundtrip_success.bin` | successful round-trip seed that preserves named-range state while normalizing reversed target ordering |
 | `xlsx-roundtrip` | `named_range_shift_overwrite_invalid.bin` | expected-invalid round-trip seed proving that destructive row shifts against range-backed named ranges are rejected before POI can rewrite them into broken `#REF!` formulas |
+| `xlsx-roundtrip` | `partial_collapsed_column_ungroup_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that partial ungrouping of a collapsed grouped column band preserves Excel's persisted boundary-column collapsed marker through reopen |
 | `xlsx-roundtrip` | `hyperlink_comment_invalid_row_case.bin` | expected-invalid round-trip seed that exercises hyperlink and comment commands alongside invalid row mutation input |
 | `xlsx-roundtrip` | `set_hyperlink_replacement_roundtrip_success.bin` | successful round-trip seed that preserves the latest hyperlink target after repeated writes to the same cell |
 | `xlsx-roundtrip` | `set_table_missing_sheet_invalid_roundtrip.bin` | expected-invalid round-trip seed that exercises table authoring across missing-sheet failure classification |

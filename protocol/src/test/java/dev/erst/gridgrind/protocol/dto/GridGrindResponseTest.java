@@ -29,12 +29,14 @@ class GridGrindResponseTest {
         new GridGrindResponse.Success(
             null,
             new GridGrindResponse.PersistenceOutcome.SavedAs("budget.xlsx", "/tmp/budget.xlsx"),
+            List.of(new RequestWarning(0, "SET_CELL", "Quote spaced sheet names in formulas.")),
             reads);
     reads.clear();
 
     assertInstanceOf(GridGrindResponse.Success.class, success);
     assertEquals(GridGrindProtocolVersion.V1, success.protocolVersion());
     assertInstanceOf(GridGrindResponse.PersistenceOutcome.SavedAs.class, success.persistence());
+    assertEquals(1, success.warnings().size());
     assertEquals(1, success.reads().size());
 
     GridGrindResponse.Failure failure =
@@ -60,15 +62,18 @@ class GridGrindResponseTest {
         new ArrayList<>(
             List.of(new WorkbookReadResult.WorkbookSummaryResult("workbook", workbook)));
 
-    GridGrindResponse.Success success = new GridGrindResponse.Success(null, null, reads);
+    GridGrindResponse.Success success = new GridGrindResponse.Success(null, null, null, reads);
     sheetNames.clear();
     reads.clear();
 
     assertEquals(List.of("Budget"), workbook.sheetNames());
     assertInstanceOf(GridGrindResponse.PersistenceOutcome.NotSaved.class, success.persistence());
+    assertEquals(List.of(), success.warnings());
     assertEquals(1, success.reads().size());
 
-    assertThrows(NullPointerException.class, () -> new GridGrindResponse.Success(null, null, null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new GridGrindResponse.Success(null, null, List.of(), null));
     assertThrows(
         NullPointerException.class,
         () ->
@@ -90,6 +95,10 @@ class GridGrindResponseTest {
     assertThrows(
         NullPointerException.class,
         () -> new GridGrindResponse.PersistenceOutcome.SavedAs("budget.xlsx", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new RequestWarning(-1, "SET_CELL", "warning"));
+    assertThrows(IllegalArgumentException.class, () -> new RequestWarning(0, " ", "warning"));
+    assertThrows(IllegalArgumentException.class, () -> new RequestWarning(0, "SET_CELL", " "));
   }
 
   @Test

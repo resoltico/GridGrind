@@ -10,10 +10,10 @@
       "inputBytes" : 191,
       "commandCount" : 6,
       "commandKinds" : {
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3,
         "CLEAR_CONDITIONAL_FORMATTING" : 1,
         "SET_COLUMN_VISIBILITY" : 1,
-        "RENAME_SHEET" : 1
+        "RENAME_SHEET" : 1,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3
       },
       "styleKinds" : { }
     }

@@ -1566,7 +1566,7 @@ public final class ExcelSheet {
 
   private static void requireNonNegative(int value, String fieldName) {
     if (value < 0) {
-      throw new IllegalArgumentException(fieldName + " must not be negative");
+      throw new IllegalArgumentException(ExcelIndexDisplay.mustNotBeNegative(fieldName, value));
     }
   }
 
@@ -1574,7 +1574,8 @@ public final class ExcelSheet {
       int firstValue, int lastValue, String firstFieldName, String lastFieldName) {
     if (lastValue < firstValue) {
       throw new IllegalArgumentException(
-          lastFieldName + " must not be less than " + firstFieldName);
+          ExcelIndexDisplay.mustNotBeLessThan(
+              lastFieldName, lastValue, firstFieldName, firstValue));
     }
   }
 

@@ -3,6 +3,10 @@ package dev.erst.gridgrind.jazzer.tool;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
+import dev.erst.gridgrind.jazzer.tool.XlsxRoundTripDetails;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
@@ -87,11 +91,57 @@ class JazzerReplaySupportTest {
   }
 
   @Test
-  void replayClassifiesNamedRangeShiftArtifactAsExpectedInvalidRoundTripInput() {
+  void replayParsesWorkbookHealthWorkflowExample() {
     byte[] input =
-        Base64.getDecoder()
-            .decode(
-                "bHNlZcwBYGBgnZ2dnZ1gc2hhcmVkU3RynZ2dnZ2dnZ2dnZ2dnWBgYGBgYAAAAPf39/f39/dl+2FgkQBLAAAAAAAAAAAAAMsEy8swUMw0LczMSYQ=");
+        """
+        {
+          "protocolVersion": "V1",
+          "source": { "type": "NEW" },
+          "persistence": { "type": "NONE" },
+          "operations": [
+            { "type": "ENSURE_SHEET", "sheetName": "Budget Review" },
+            { "type": "ENSURE_SHEET", "sheetName": "Summary" },
+            {
+              "type": "SET_CELL",
+              "sheetName": "Summary",
+              "address": "A1",
+              "value": { "type": "FORMULA", "formula": "'Budget Review'!B1" }
+            }
+          ],
+          "reads": [
+            { "type": "ANALYZE_WORKBOOK_FINDINGS", "requestId": "lint" },
+            {
+              "type": "GET_CELLS",
+              "requestId": "summary-cells",
+              "sheetName": "Summary",
+              "addresses": ["A1"]
+            }
+          ]
+        }
+        """
+            .getBytes(StandardCharsets.UTF_8);
+    ReplayOutcome outcome =
+        JazzerReplaySupport.replay(JazzerHarness.PROTOCOL_REQUEST, input);
+
+    assertInstanceOf(ReplayOutcome.Success.class, outcome);
+    ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;
+    assertEquals(
+        new ProtocolRequestDetails(
+            input.length,
+            "PARSED",
+            "NEW",
+            "NONE",
+            3,
+            Map.of("ENSURE_SHEET", 2L, "SET_CELL", 1L),
+            Map.of(),
+            2,
+            Map.of("ANALYZE_WORKBOOK_FINDINGS", 1L, "GET_CELLS", 1L)),
+        success.details());
+  }
+
+  @Test
+  void replayClassifiesNamedRangeShiftArtifactAsExpectedInvalidRoundTripInput() {
+    byte[] input = artifactBytes("named-range-shift-overwrite-invalid.b64");
 
     ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.XLSX_ROUND_TRIP, input);
 
@@ -113,5 +163,39 @@ class JazzerReplaySupportTest {
                 "SHIFT_ROWS", 1L),
             Map.of()),
         expectedInvalid.details());
+  }
+
+  @Test
+  void replayClassifiesPartialCollapsedColumnUngroupArtifactAsSuccess() {
+    byte[] input = artifactBytes("partial-collapsed-column-ungroup-roundtrip-success.b64");
+
+    ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.XLSX_ROUND_TRIP, input);
+
+    assertInstanceOf(ReplayOutcome.Success.class, outcome);
+    ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;
+    assertEquals(
+        new XlsxRoundTripDetails(
+            94,
+            7,
+            Map.of(
+                "CLEAR_SHEET_PROTECTION", 1L,
+                "CREATE_SHEET", 1L,
+                "GROUP_COLUMNS", 1L,
+                "UNGROUP_COLUMNS", 4L),
+            Map.of()),
+        success.details());
+  }
+
+  private static byte[] artifactBytes(String resourceName) {
+    try (InputStream inputStream =
+        JazzerReplaySupportTest.class.getResourceAsStream("/dev/erst/gridgrind/jazzer/tool/" + resourceName)) {
+      if (inputStream == null) {
+        throw new IllegalStateException("missing replay artifact resource: " + resourceName);
+      }
+      String base64 = new String(inputStream.readAllBytes(), StandardCharsets.US_ASCII).replaceAll("\\s+", "");
+      return Base64.getDecoder().decode(base64);
+    } catch (IOException exception) {
+      throw new UncheckedIOException("failed to load replay artifact resource: " + resourceName, exception);
+    }
   }
 }

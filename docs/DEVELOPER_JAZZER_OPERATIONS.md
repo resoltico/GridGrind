@@ -1,8 +1,7 @@
----
-afad: "3.4"
-version: "0.30.0"
+afad: "3.5"
+version: "0.31.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-04-07"
+updated: "2026-04-08"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -68,7 +67,9 @@ This runs only the deterministic nested-build test layer for Jazzer support code
 - summary rendering
 - `.xlsx` round-trip verifier behavior
 
-It does not perform active fuzzing.
+It does not perform active fuzzing. During long support cases the task emits `[JAZZER-PULSE]`
+class-start, test-complete, class-complete, and throttled `test-progress` lines so `./check.sh`
+can distinguish active work from a real stall.
 
 ### Run One Harness
 

@@ -1162,6 +1162,64 @@ class ExcelSheetTest {
   }
 
   @Test
+  void reportsExcelNativePrintTitleBandDiagnostics() {
+    IllegalArgumentException negativeTitleRow =
+        assertThrows(
+            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(-1, 0));
+    assertTrue(negativeTitleRow.getMessage().contains("firstRowIndex -1"));
+    assertTrue(negativeTitleRow.getMessage().contains("Excel row 1"));
+
+    IllegalArgumentException negativeLastTitleRow =
+        assertThrows(
+            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(0, -1));
+    assertTrue(negativeLastTitleRow.getMessage().contains("lastRowIndex -1"));
+    assertTrue(negativeLastTitleRow.getMessage().contains("Excel row 1"));
+
+    IllegalArgumentException descendingTitleRow =
+        assertThrows(
+            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleRows.Band(2, 1));
+    assertTrue(descendingTitleRow.getMessage().contains("lastRowIndex 1 (Excel row 2)"));
+    assertTrue(descendingTitleRow.getMessage().contains("firstRowIndex 2 (Excel row 3)"));
+
+    IllegalArgumentException overflowTitleRow =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new ExcelPrintLayout.TitleRows.Band(
+                    0, org.apache.poi.ss.SpreadsheetVersion.EXCEL2007.getLastRowIndex() + 1));
+    assertTrue(overflowTitleRow.getMessage().contains("lastRowIndex 1048576 (Excel row 1048577)"));
+    assertTrue(overflowTitleRow.getMessage().contains("1048575 (Excel row 1048576)"));
+
+    IllegalArgumentException negativeTitleColumn =
+        assertThrows(
+            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(-1, 0));
+    assertTrue(negativeTitleColumn.getMessage().contains("firstColumnIndex -1"));
+    assertTrue(negativeTitleColumn.getMessage().contains("Excel column A"));
+
+    IllegalArgumentException negativeLastTitleColumn =
+        assertThrows(
+            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(0, -1));
+    assertTrue(negativeLastTitleColumn.getMessage().contains("lastColumnIndex -1"));
+    assertTrue(negativeLastTitleColumn.getMessage().contains("Excel column A"));
+
+    IllegalArgumentException descendingTitleColumn =
+        assertThrows(
+            IllegalArgumentException.class, () -> new ExcelPrintLayout.TitleColumns.Band(2, 1));
+    assertTrue(descendingTitleColumn.getMessage().contains("lastColumnIndex 1 (Excel column B)"));
+    assertTrue(descendingTitleColumn.getMessage().contains("firstColumnIndex 2 (Excel column C)"));
+
+    IllegalArgumentException overflowTitleColumn =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                new ExcelPrintLayout.TitleColumns.Band(
+                    0, org.apache.poi.ss.SpreadsheetVersion.EXCEL2007.getLastColumnIndex() + 1));
+    assertTrue(
+        overflowTitleColumn.getMessage().contains("lastColumnIndex 16384 (Excel column XFE)"));
+    assertTrue(overflowTitleColumn.getMessage().contains("16383 (Excel column XFD)"));
+  }
+
+  @Test
   void validatesMergedRegionLookupAndOverlapHelpers() throws Exception {
     ExcelRange exactRange = ExcelRange.parse("A1:B2");
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {

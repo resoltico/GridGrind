@@ -1,11 +1,11 @@
 ---
-afad: "3.4"
-version: "0.30.0"
+afad: "3.5"
+version: "0.31.0"
 domain: OPERATIONS
-updated: "2026-04-02"
+updated: "2026-04-08"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-data-validations, get-autofilters, get-tables, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol]
-  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept"]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-data-validations, get-autofilters, get-tables, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol, coordinates, rowindex, columnindex, warnings]
+  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
 ---
 
 # Operations Reference
@@ -50,6 +50,41 @@ group that defines their accepted JSON structure.
 
 Every tagged request union uses `type` as its discriminator field: `source`, `persistence`,
 `operations`, `reads`, cell values, hyperlink targets, selections, and named-range scopes.
+
+## Coordinate Systems
+
+GridGrind uses two coordinate conventions:
+
+| Field pattern | Convention |
+|:--------------|:-----------|
+| `address` | A1 cell address, e.g. `B3` |
+| `range` | A1 rectangular range, e.g. `A1:C4` |
+| `*RowIndex` | Zero-based row index, e.g. `0 = Excel row 1` |
+| `*ColumnIndex` | Zero-based column index, e.g. `0 = Excel column A` |
+
+`first...` and `last...` index pairs are inclusive zero-based bands. Validation messages echo the
+Excel-native equivalent inline, for example `firstRowIndex 5 (Excel row 6)` or
+`firstColumnIndex 5 (Excel column F)`.
+
+## Checking Workbook Health
+
+Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it with
+`persistence.type=NONE` when you only need findings and do not want a saved workbook:
+
+```json
+{
+  "source": { "type": "NEW" },
+  "persistence": { "type": "NONE" },
+  "operations": [],
+  "reads": [
+    { "type": "ANALYZE_WORKBOOK_FINDINGS", "requestId": "lint" }
+  ]
+}
+```
+
+Successful responses may include a `warnings` array. The current request-phase warning flags
+same-request sheet names with spaces referenced in formulas without single quotes. Use
+`'Sheet Name'!A1` syntax for those references.
 
 ---
 
@@ -2252,7 +2287,8 @@ Reports named-range findings such as broken references, unresolved targets, and 
 ### ANALYZE_WORKBOOK_FINDINGS
 
 Runs every shipped finding-bearing analysis family across the workbook and returns one aggregated
-flat finding list.
+flat finding list. This is the primary workbook-health check and works especially well with
+`persistence.type=NONE` when you want a no-save lint pass.
 
 The aggregate currently includes formula, data validation, conditional formatting, autofilter,
 table, hyperlink, and named-range findings.
@@ -2263,3 +2299,7 @@ table, hyperlink, and named-range findings.
   "requestId": "workbook-findings"
 }
 ```
+
+Formula references to same-request sheet names with spaces should use single quotes, for example
+`'Budget Review'!B1`. When execution succeeds, GridGrind reports this style of request issue in
+the success response `warnings` array.

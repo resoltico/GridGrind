@@ -31,6 +31,10 @@
 # automatically to match the GitHub workflows. Non-interactive runs use --console=plain unless
 # the caller already selected a console mode.
 #
+# Local shell resolution must already point at Java 26. GridGrind's product modules, CLI fat JAR,
+# and release flow all rely on the ambient `java` command, not only Gradle toolchains. The macOS
+# `/usr/bin/java` launcher stub is therefore an invalid local runtime for this script.
+#
 # Exit status: 0 on success. Any failing Gradle stage or script precondition returns a non-zero
 # exit status. The script emits a final human-readable result line plus one machine-readable
 # summary line: [CHECK-SUMMARY] status=<success|failure> stage=<stage-id> exit_code=<n>
@@ -42,6 +46,27 @@ set -euo pipefail
 die() {
     printf 'error: %s\n' "$1" >&2
     exit 1
+}
+
+require_shell_java_26() {
+    local resolved_java resolved_javac java_version_line java_version_token
+
+    resolved_java="$(command -v java || true)"
+    [[ -n "${resolved_java}" ]] || die "no 'java' command found in PATH; GridGrind requires Java 26 in the active shell. See docs/DEVELOPER_JAVA.md."
+    [[ "${resolved_java}" != '/usr/bin/java' ]] || die "java resolves to the macOS /usr/bin/java stub. Activate Java 26 in your shell before running ./check.sh. See docs/DEVELOPER_JAVA.md."
+
+    resolved_javac="$(command -v javac || true)"
+    [[ -n "${resolved_javac}" ]] || die "no 'javac' command found in PATH; GridGrind requires a full Java 26 JDK in the active shell. See docs/DEVELOPER_JAVA.md."
+    [[ "${resolved_javac}" != '/usr/bin/javac' ]] || die "javac resolves to the macOS /usr/bin/javac stub. Activate Java 26 in your shell before running ./check.sh. See docs/DEVELOPER_JAVA.md."
+
+    java_version_line="$("${resolved_java}" --version 2>/dev/null | head -1 || true)"
+    java_version_token="$(printf '%s\n' "${java_version_line}" | awk 'NR == 1 { print $2 }')"
+    case "${java_version_token}" in
+        26|26.*) ;;
+        *)
+            die "java resolves to ${resolved_java} but reports '${java_version_line:-unknown version}'. GridGrind requires Java 26 in the active shell. See docs/DEVELOPER_JAVA.md."
+            ;;
+    esac
 }
 
 resolve_script_dir() {
@@ -66,6 +91,7 @@ current_stage_diagnostics_directory=''
 emit_final_status_enabled=true
 readonly pulse_interval_seconds=15
 readonly stall_threshold_seconds=90
+readonly gradle_test_pulse_interval_millis=$((pulse_interval_seconds * 1000))
 readonly diagnostics_command_timeout_seconds=5
 readonly stall_exit_code=124
 
@@ -154,6 +180,14 @@ latest_nonempty_line() {
     awk 'NF { line = $0 } END { if (line != "") print line }' "${log_path}"
 }
 
+latest_nonempty_line_marker() {
+    local log_path=$1
+    if [[ ! -s "${log_path}" ]]; then
+        return 0
+    fi
+    awk 'NF { line = $0; line_number = NR } END { if (line != "") printf "%s:%s", line_number, line }' "${log_path}"
+}
+
 compact_text() {
     printf '%s' "$1" \
         | tr '\n' ' ' \
@@ -175,6 +209,39 @@ latest_task_line() {
 latest_jazzer_pulse_line() {
     local log_path=$1
     grep '^\[JAZZER-PULSE\]' "${log_path}" | tail -1 2>/dev/null || true
+}
+
+latest_jazzer_pulse_marker() {
+    local log_path=$1
+    grep -n '^\[JAZZER-PULSE\]' "${log_path}" | tail -1 2>/dev/null || true
+}
+
+latest_gradle_test_pulse_line() {
+    local log_path=$1
+    grep '^\[GRADLE-TEST-PULSE\]' "${log_path}" | tail -1 2>/dev/null || true
+}
+
+latest_gradle_test_pulse_marker() {
+    local log_path=$1
+    grep -n '^\[GRADLE-TEST-PULSE\]' "${log_path}" | tail -1 2>/dev/null || true
+}
+
+stage_progress_summary_quality_gates() {
+    local log_path=$1
+    local completed_test_classes
+    local latest_pulse
+
+    completed_test_classes="$(
+        grep -c '^\[GRADLE-TEST-PULSE\].* phase=class-complete ' "${log_path}" 2>/dev/null || true
+    )"
+    latest_pulse="$(latest_gradle_test_pulse_line "${log_path}")"
+    if [[ -z "${latest_pulse}" ]]; then
+        latest_pulse="$(latest_task_line "${log_path}")"
+    fi
+
+    printf 'test-classes=%s latest=%s' \
+        "${completed_test_classes}" \
+        "$(compact_text "${latest_pulse}")"
 }
 
 stage_progress_summary_jazzer() {
@@ -211,6 +278,9 @@ stage_progress_summary() {
     local project_dir=$2
     local log_path=$3
     case "${stage_id}" in
+        quality-gates)
+            stage_progress_summary_quality_gates "${log_path}"
+            ;;
         jazzer-check)
             stage_progress_summary_jazzer "${project_dir}" "${log_path}"
             ;;
@@ -223,12 +293,23 @@ stage_progress_summary() {
 stage_progress_marker_jazzer() {
     local log_path=$1
     local latest_pulse
-    latest_pulse="$(latest_jazzer_pulse_line "${log_path}")"
+    latest_pulse="$(latest_jazzer_pulse_marker "${log_path}")"
     if [[ -n "${latest_pulse}" ]]; then
         printf '%s' "${latest_pulse}"
         return
     fi
-    latest_nonempty_line "${log_path}"
+    latest_nonempty_line_marker "${log_path}"
+}
+
+stage_progress_marker_quality_gates() {
+    local log_path=$1
+    local latest_pulse
+    latest_pulse="$(latest_gradle_test_pulse_marker "${log_path}")"
+    if [[ -n "${latest_pulse}" ]]; then
+        printf '%s' "${latest_pulse}"
+        return
+    fi
+    latest_nonempty_line_marker "${log_path}"
 }
 
 stage_progress_marker() {
@@ -236,11 +317,14 @@ stage_progress_marker() {
     local project_dir=$2
     local log_path=$3
     case "${stage_id}" in
+        quality-gates)
+            stage_progress_marker_quality_gates "${log_path}"
+            ;;
         jazzer-check)
             stage_progress_marker_jazzer "${log_path}"
             ;;
         *)
-            latest_nonempty_line "${log_path}"
+            latest_nonempty_line_marker "${log_path}"
             ;;
     esac
 }
@@ -591,15 +675,28 @@ if [[ ( -n "${CI:-}" || ! -t 1 ) && "${has_console_flag}" == false ]]; then
     gradle_args+=(--console=plain)
 fi
 
+current_stage_id='java-validation'
+current_stage_label='Java 26 shell validation'
+require_shell_java_26
+
 run_stage() {
     local stage_id=$1
     local stage_label=$2
     local project_dir=$3
     shift 3
+    local command_prefix=()
+    if [[ "${stage_id}" == 'quality-gates' ]]; then
+        command_prefix+=(
+            env
+            "GRIDGRIND_TEST_PULSE=1"
+            "GRIDGRIND_TEST_PULSE_INTERVAL_MS=${gradle_test_pulse_interval_millis}"
+        )
+    fi
     run_monitored_command \
         "${stage_id}" \
         "${stage_label}" \
         "${project_dir}" \
+        "${command_prefix[@]}" \
         "${gradlew}" \
         --project-dir "${project_dir}" \
         "$@" \

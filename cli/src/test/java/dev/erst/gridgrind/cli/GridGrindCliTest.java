@@ -63,6 +63,7 @@ class GridGrindCliTest {
     assertEquals(0, exitCode);
     assertInstanceOf(GridGrindResponse.Success.class, response);
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    assertEquals(List.of(), success.warnings());
     GridGrindResponse.WorkbookSummary workbook =
         ((WorkbookReadResult.WorkbookSummaryResult) success.reads().get(0)).workbook();
     assertEquals("Budget", workbook.sheetNames().get(0));
@@ -190,6 +191,7 @@ class GridGrindCliTest {
     assertTrue(help.contains("--print-protocol-catalog"));
     assertTrue(help.contains("--help, -h"));
     assertTrue(help.contains("blob/main/docs/QUICK_REFERENCE.md"));
+    assertTrue(help.contains("Coordinate Systems:"));
     assertTrue(
         help.contains("type group accepted by polymorphic fields"),
         "help must explain what the protocol catalog publishes");
@@ -256,6 +258,26 @@ class GridGrindCliTest {
     assertTrue(
         help.contains(
             "Relative paths in --request, --response, source.path, and persistence.path resolve from the current working directory."));
+  }
+
+  @Test
+  void helpTextIncludesCoordinateSystemsTable() {
+    String help = GridGrindCli.helpText("1.0.0");
+
+    assertTrue(help.contains("Coordinate Systems:"));
+    assertTrue(help.contains("address                A1 cell address, e.g. B3"));
+    assertTrue(help.contains("range                  A1 rectangular range, e.g. A1:C4"));
+    assertTrue(help.contains("*RowIndex              zero-based, e.g. 0 = Excel row 1"));
+    assertTrue(help.contains("*ColumnIndex           zero-based, e.g. 0 = Excel column A"));
+  }
+
+  @Test
+  void helpTextIncludesWorkbookHealthWorkflowSnippet() {
+    String help = GridGrindCli.helpText("1.0.0");
+
+    assertTrue(help.contains("Workbook health workflow (no save):"));
+    assertTrue(help.contains("\"persistence\": { \"type\": \"NONE\" }"));
+    assertTrue(help.contains("\"type\": \"ANALYZE_WORKBOOK_FINDINGS\", \"requestId\": \"lint\""));
   }
 
   @Test
@@ -558,7 +580,79 @@ class GridGrindCliTest {
     assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
     assertEquals(GridGrindProblemCategory.INTERNAL, failure.problem().category());
     assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("NEW", failure.problem().context().sourceType());
+    assertEquals("NONE", failure.problem().context().persistenceType());
     assertEquals("boom", failure.problem().message());
+  }
+
+  @Test
+  void classifiesExecutionErrorsWithExistingSourceAndOverwritePersistence() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    GridGrindCli cli =
+        new GridGrindCli(
+            request -> {
+              throw new UnsupportedOperationException("boom");
+            });
+
+    int exitCode =
+        cli.run(
+            new String[0],
+            new ByteArrayInputStream(
+                """
+                {
+                  "source": { "type": "EXISTING", "path": "/tmp/source.xlsx" },
+                  "persistence": { "type": "OVERWRITE" },
+                  "operations": [],
+                  "reads": []
+                }
+                """
+                    .getBytes(StandardCharsets.UTF_8)),
+            stdout);
+
+    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+
+    assertEquals(1, exitCode);
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("EXISTING", failure.problem().context().sourceType());
+    assertEquals("OVERWRITE", failure.problem().context().persistenceType());
+  }
+
+  @Test
+  void classifiesExecutionErrorsWithSaveAsPersistence() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    GridGrindCli cli =
+        new GridGrindCli(
+            request -> {
+              throw new UnsupportedOperationException("boom");
+            });
+
+    int exitCode =
+        cli.run(
+            new String[0],
+            new ByteArrayInputStream(
+                """
+                {
+                  "source": { "type": "EXISTING", "path": "/tmp/source.xlsx" },
+                  "persistence": { "type": "SAVE_AS", "path": "/tmp/output.xlsx" },
+                  "operations": [],
+                  "reads": []
+                }
+                """
+                    .getBytes(StandardCharsets.UTF_8)),
+            stdout);
+
+    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+
+    assertEquals(1, exitCode);
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, failure.problem().code());
+    assertEquals("EXECUTE_REQUEST", failure.problem().context().stage());
+    assertEquals("EXISTING", failure.problem().context().sourceType());
+    assertEquals("SAVE_AS", failure.problem().context().persistenceType());
   }
 
   @Test
