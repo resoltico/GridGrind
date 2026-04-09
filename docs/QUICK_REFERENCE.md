@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.31.0"
+version: "0.32.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-08"
 route:
@@ -477,7 +477,8 @@ Cells that have never been written are silently skipped.
 ```
 
 `FILE.path` accepts either a plain path or a `file:` URI. Reads return a normalized plain path
-string in `path`.
+string in `path`. Relative `FILE` targets are analyzed against the workbook's persisted path when
+one exists, so use absolute paths when you want cwd-independent health checks.
 
 ## CLEAR_HYPERLINK
 

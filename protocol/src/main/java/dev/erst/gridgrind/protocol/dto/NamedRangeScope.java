@@ -2,7 +2,7 @@ package dev.erst.gridgrind.protocol.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import java.util.Objects;
+import dev.erst.gridgrind.excel.ExcelSheetNames;
 
 /** Protocol-facing scope of a named range, either workbook-wide or local to one sheet. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -18,10 +18,7 @@ public sealed interface NamedRangeScope permits NamedRangeScope.Workbook, NamedR
   /** Sheet-local named-range scope bound to one sheet name. */
   record Sheet(String sheetName) implements NamedRangeScope {
     public Sheet {
-      Objects.requireNonNull(sheetName, "sheetName must not be null");
-      if (sheetName.isBlank()) {
-        throw new IllegalArgumentException("sheetName must not be blank");
-      }
+      ExcelSheetNames.requireValid(sheetName, "sheetName");
     }
   }
 }

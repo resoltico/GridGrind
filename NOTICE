@@ -9,70 +9,160 @@ The Apache License, Version 2.0 full text is included in this distribution as
 LICENSE-APACHE-2.0 and is also available at:
   https://www.apache.org/licenses/LICENSE-2.0
 
-================================================================================
-
-This product bundles Apache POI in its executable JAR distribution.
-
-  Project:   Apache POI
-  Copyright: 2001- The Apache Software Foundation
-  License:   Apache License 2.0
-  Website:   https://poi.apache.org/
-
-Apache POI is licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
-
-Apache POI notice:
-
-    Apache POI
-    Copyright 2001- The Apache Software Foundation
-
-    This product includes software developed at
-    The Apache Software Foundation (https://www.apache.org/).
+The BSD 3-Clause License full text is included in this distribution as
+LICENSE-BSD-3-CLAUSE.
 
 ================================================================================
-
-This product bundles Apache Log4j Core in its executable JAR distribution.
-
-  Project:   Apache Log4j Core
-  Copyright: 1999- The Apache Software Foundation
-  License:   Apache License 2.0
-  Website:   https://logging.apache.org/log4j/2.x/
-
-Apache Log4j Core is licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
-
-Apache Log4j Core notice:
-
-    Apache Log4j Core
-    Copyright 1999- The Apache Software Foundation
-
-    This product includes software developed at
-    The Apache Software Foundation (https://www.apache.org/).
-
+Apache Software Foundation Components
 ================================================================================
 
-This product bundles Jackson Databind in its executable JAR distribution.
+The following components are copyright The Apache Software Foundation and are
+licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
 
-  Project:   Jackson Databind (tools.jackson.core)
-  Copyright: 2007- Tatu Saloranta, tatu.saloranta@iki.fi
-  License:   Apache License 2.0
-  Website:   https://github.com/FasterXML/jackson
+--------------------------------------------------------------------------------
+Apache POI (poi, poi-ooxml, poi-ooxml-lite)
+  Copyright 2001- The Apache Software Foundation
+  https://poi.apache.org/
 
-Jackson Databind is licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+  This product includes software developed at
+  The Apache Software Foundation (https://www.apache.org/).
 
-Jackson Databind notice:
+--------------------------------------------------------------------------------
+Apache XMLBeans
+  Copyright 2004- The Apache Software Foundation
+  https://xmlbeans.apache.org/
 
-    Jackson JSON processor
+  This product includes software developed at
+  The Apache Software Foundation (https://www.apache.org/).
 
-    Copyright (c) 2007- Tatu Saloranta, tatu.saloranta@iki.fi
+  Portions of this software were originally based on the following:
+    - software copyright (c) 2000-2003, BEA Systems,
+      <http://www.bea.com/>.
+
+--------------------------------------------------------------------------------
+Apache Log4j Core / Apache Log4j API
+  Copyright 1999- The Apache Software Foundation
+  https://logging.apache.org/log4j/2.x/
+
+  This product includes software developed at
+  The Apache Software Foundation (https://www.apache.org/).
+
+--------------------------------------------------------------------------------
+Apache Commons Codec
+  Copyright 2002- The Apache Software Foundation
+  https://commons.apache.org/proper/commons-codec/
+
+  This product includes software developed at
+  The Apache Software Foundation (https://www.apache.org/).
+
+  src/test/org/apache/commons/codec/language/DoubleMetaphoneTest.java
+  contains test data from http://aspell.net/test/orig/batch0.tab.
+  Copyright (C) 2002 Kevin Atkinson (kevina@gnu.org)
+
+--------------------------------------------------------------------------------
+Apache Commons Collections
+  Copyright 2001- The Apache Software Foundation
+  https://commons.apache.org/proper/commons-collections/
+
+  This product includes software developed at
+  The Apache Software Foundation (https://www.apache.org/).
+
+--------------------------------------------------------------------------------
+Apache Commons Compress
+  Copyright 2002- The Apache Software Foundation
+  https://commons.apache.org/proper/commons-compress/
+
+  This product includes software developed at
+  The Apache Software Foundation (https://www.apache.org/).
+
+--------------------------------------------------------------------------------
+Apache Commons IO
+  Copyright 2002- The Apache Software Foundation
+  https://commons.apache.org/proper/commons-io/
+
+  This product includes software developed at
+  The Apache Software Foundation (https://www.apache.org/).
+
+--------------------------------------------------------------------------------
+Apache Commons Lang
+  Copyright 2001- The Apache Software Foundation
+  https://commons.apache.org/proper/commons-lang/
+
+  This product includes software developed at
+  The Apache Software Foundation (https://www.apache.org/).
+
+--------------------------------------------------------------------------------
+Apache Commons Math
+  Copyright 2001- The Apache Software Foundation
+  https://commons.apache.org/proper/commons-math/
+
+  This product includes software developed at
+  The Apache Software Foundation (https://www.apache.org/).
 
 ================================================================================
+Non-ASF Apache 2.0 Components
+================================================================================
 
+--------------------------------------------------------------------------------
+Jackson Databind / Jackson Core / Jackson Annotations
+  Copyright 2007- Tatu Saloranta, tatu.saloranta@iki.fi
+  https://github.com/FasterXML/jackson
+
+  Licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+
+  Jackson JSON processor
+  Copyright (c) 2007- Tatu Saloranta, tatu.saloranta@iki.fi
+
+--------------------------------------------------------------------------------
+SparseBitSet
+  Copyright 2014- Bruce Litchfield (Zaxxer)
+  https://github.com/brettwooldridge/SparseBitSet
+
+  Licensed under the Apache License, Version 2.0 (see LICENSE-APACHE-2.0).
+
+================================================================================
+BSD 3-Clause Components
+================================================================================
+
+--------------------------------------------------------------------------------
+CurvesAPI
+  Copyright (c) 2005, Harald Kuhr
+  https://github.com/virtuald/curvesapi
+
+  Licensed under the BSD 3-Clause License (see LICENSE-BSD-3-CLAUSE).
+
+  Redistribution and use in source and binary forms, with or without
+  modification, are permitted provided that the following conditions are met:
+
+  1. Redistributions of source code must retain the above copyright notice,
+     this list of conditions and the following disclaimer.
+  2. Redistributions in binary form must reproduce the above copyright notice,
+     this list of conditions and the following disclaimer in the documentation
+     and/or other materials provided with the distribution.
+  3. Neither the name of the copyright holder nor the names of its contributors
+     may be used to endorse or promote products derived from this software
+     without specific prior written permission.
+
+  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+  LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  POSSIBILITY OF SUCH DAMAGE.
+
+================================================================================
 Trademark Notice
-----------------
+================================================================================
 
-"Apache", "Apache POI", "Apache Log4j", and the Apache feather logo are
-trademarks of The Apache Software Foundation. Use of these marks in this
-document is descriptive only and does not imply affiliation with or
-endorsement by The Apache Software Foundation.
+"Apache", "Apache POI", "Apache Log4j", "Apache Commons", "Apache XMLBeans",
+and the Apache feather logo are trademarks of The Apache Software Foundation.
+Use of these marks in this document is descriptive only and does not imply
+affiliation with or endorsement by The Apache Software Foundation.
 
 "Microsoft Excel", "Excel", and related product names are trademarks of
 Microsoft Corporation. Use of these names is descriptive only.

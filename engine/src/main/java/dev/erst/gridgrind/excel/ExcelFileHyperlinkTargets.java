@@ -85,6 +85,19 @@ final class ExcelFileHyperlinkTargets {
     };
   }
 
+  /** Returns whether the normalized stored path is relative in GridGrind's file-target contract. */
+  static boolean isRelativeStoredPath(String path) {
+    Objects.requireNonNull(path, "path must not be null");
+    if (looksLikeWindowsDrivePath(path)) {
+      return false;
+    }
+    try {
+      return !Path.of(path).isAbsolute();
+    } catch (InvalidPathException exception) {
+      return false;
+    }
+  }
+
   private static boolean looksLikeFileUri(String path) {
     return path.regionMatches(true, 0, "file:", 0, 5);
   }

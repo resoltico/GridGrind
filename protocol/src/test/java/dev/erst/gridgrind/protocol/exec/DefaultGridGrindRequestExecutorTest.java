@@ -2133,22 +2133,6 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
-  void returnsStructuredFailureForEnsureSheetWithInvalidSheetName() {
-    GridGrindResponse.Failure failure =
-        failure(
-            new DefaultGridGrindRequestExecutor()
-                .execute(
-                    request(
-                        new GridGrindRequest.WorkbookSource.New(),
-                        new GridGrindRequest.WorkbookPersistence.None(),
-                        List.of(new WorkbookOperation.EnsureSheet("[Budget]")))));
-
-    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
-    assertEquals("ENSURE_SHEET", failure.problem().context().operationType());
-    assertEquals("[Budget]", failure.problem().context().sheetName());
-  }
-
-  @Test
   void extractsNullContextForOperationsWithNoSheetAddressRangeOrFormula() {
     RuntimeException exception = new RuntimeException("test");
     WorkbookOperation forceRecalc = new WorkbookOperation.ForceFormulaRecalculationOnOpen();
@@ -2230,11 +2214,16 @@ class DefaultGridGrindRequestExecutorTest {
   @Test
   void extractsSheetOnlyContextForDeleteSheetOperations() {
     RuntimeException exception = new RuntimeException("test");
+    WorkbookOperation ensureSheet = new WorkbookOperation.EnsureSheet("Archive");
     WorkbookOperation deleteSheet = new WorkbookOperation.DeleteSheet("Archive");
 
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(ensureSheet, exception));
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(deleteSheet, exception));
+    assertEquals("Archive", DefaultGridGrindRequestExecutor.sheetNameFor(ensureSheet, exception));
     assertEquals("Archive", DefaultGridGrindRequestExecutor.sheetNameFor(deleteSheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(ensureSheet, exception));
     assertNull(DefaultGridGrindRequestExecutor.addressFor(deleteSheet, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(ensureSheet, exception));
     assertNull(DefaultGridGrindRequestExecutor.rangeFor(deleteSheet, exception));
   }
 

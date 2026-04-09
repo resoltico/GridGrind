@@ -11,8 +11,10 @@ import java.util.UUID;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol;
 
 /** Integration tests for ExcelWorkbook creation, loading, and sheet access. */
 class ExcelWorkbookTest {
@@ -820,9 +822,64 @@ class ExcelWorkbookTest {
     }
   }
 
+  @Test
+  void saveCanonicalizesAmbiguousPoiColumnOutlineDefinitions() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-column-save-", ".xlsx");
+
+    try {
+      try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+        XSSFSheet sheet = workbook.xssfWorkbook().createSheet("Budget");
+
+        sheet.groupColumn(2, 3);
+        for (int repetition = 0; repetition < 6; repetition++) {
+          sheet.groupColumn(2, 2);
+        }
+        sheet.groupColumn(1, 3);
+
+        assertFalse(
+            columnDefinitionsAreCanonical(sheet),
+            "raw Apache POI grouping should leave ambiguous overlapping column definitions");
+
+        workbook.save(workbookPath);
+      }
+
+      try (XSSFWorkbook reopenedWorkbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+        XSSFSheet reopenedSheet = reopenedWorkbook.getSheet("Budget");
+
+        assertTrue(columnDefinitionsAreCanonical(reopenedSheet));
+        assertEquals(1, reopenedSheet.getColumnOutlineLevel(1));
+        assertEquals(7, reopenedSheet.getColumnOutlineLevel(2));
+        assertEquals(2, reopenedSheet.getColumnOutlineLevel(3));
+      }
+    } finally {
+      Files.deleteIfExists(workbookPath);
+    }
+  }
+
   private static ExcelSheetProtectionSettings protectionSettings() {
     return new ExcelSheetProtectionSettings(
         true, false, true, false, true, false, true, false, true, false, true, false, true, false,
         true);
+  }
+
+  private static boolean columnDefinitionsAreCanonical(XSSFSheet sheet) {
+    if (sheet.getCTWorksheet().sizeOfColsArray() != 1) {
+      return false;
+    }
+    boolean[] seenColumns = new boolean[ExcelColumnSpan.MAX_COLUMN_INDEX + 1];
+    for (CTCol col : sheet.getCTWorksheet().getColsArray(0).getColList()) {
+      if (col.getMin() != col.getMax()) {
+        return false;
+      }
+      for (int columnIndex = (int) col.getMin() - 1;
+          columnIndex <= (int) col.getMax() - 1;
+          columnIndex++) {
+        if (seenColumns[columnIndex]) {
+          return false;
+        }
+        seenColumns[columnIndex] = true;
+      }
+    }
+    return true;
   }
 }

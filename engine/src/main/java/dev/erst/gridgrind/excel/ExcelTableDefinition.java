@@ -7,13 +7,7 @@ public record ExcelTableDefinition(
     String name, String sheetName, String range, boolean showTotalsRow, ExcelTableStyle style) {
   public ExcelTableDefinition {
     name = validateName(name);
-    Objects.requireNonNull(sheetName, "sheetName must not be null");
-    if (sheetName.isBlank()) {
-      throw new IllegalArgumentException("sheetName must not be blank");
-    }
-    if (sheetName.length() > 31) {
-      throw new IllegalArgumentException("sheetName must not exceed 31 characters: " + sheetName);
-    }
+    ExcelSheetNames.requireValid(sheetName, "sheetName");
     Objects.requireNonNull(range, "range must not be null");
     if (range.isBlank()) {
       throw new IllegalArgumentException("range must not be blank");

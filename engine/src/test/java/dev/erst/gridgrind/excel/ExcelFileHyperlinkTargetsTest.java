@@ -148,4 +148,12 @@ class ExcelFileHyperlinkTargetsTest {
         assertInstanceOf(FileHyperlinkResolution.UnresolvedRelativePath.class, resolution);
     assertEquals("reports/q1.xlsx", unresolved.path());
   }
+
+  @Test
+  void classifiesStoredPathsAsRelativeOnlyWhenTheyReallyAreRelative() {
+    assertTrue(ExcelFileHyperlinkTargets.isRelativeStoredPath("reports/q1.xlsx"));
+    assertFalse(ExcelFileHyperlinkTargets.isRelativeStoredPath("/tmp/report.xlsx"));
+    assertFalse(ExcelFileHyperlinkTargets.isRelativeStoredPath("C:/temp/report.xlsx"));
+    assertFalse(ExcelFileHyperlinkTargets.isRelativeStoredPath("\u0000report.xlsx"));
+  }
 }

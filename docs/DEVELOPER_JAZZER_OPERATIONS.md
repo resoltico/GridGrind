@@ -1,5 +1,5 @@
 afad: "3.5"
-version: "0.31.0"
+version: "0.32.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
 updated: "2026-04-08"
 route:

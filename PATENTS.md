@@ -18,14 +18,20 @@ retaliation clause.
 |:----------|:--------|:----------------------|
 | GridGrind | MIT | No (implicit only) |
 | Apache POI | Apache 2.0 | Yes |
-| Apache Log4j Core | Apache 2.0 | Yes |
-| Jackson Databind | Apache 2.0 | Yes |
+| Apache XMLBeans | Apache 2.0 | Yes |
+| Apache Log4j Core / API | Apache 2.0 | Yes |
+| Apache Commons (Codec, Collections, Compress, IO, Lang, Math) | Apache 2.0 | Yes |
+| Jackson Databind / Core / Annotations | Apache 2.0 | Yes |
+| SparseBitSet | Apache 2.0 | Yes |
+| CurvesAPI | BSD 3-Clause | No |
 
 ## Bundled Dependencies
 
-GridGrind's executable JAR bundles Apache POI, Apache Log4j Core, and Jackson Databind. All three
-are licensed under the Apache License, Version 2.0, which includes an explicit patent grant in
-Section 3:
+GridGrind's executable JAR bundles Apache POI, Apache XMLBeans, Apache Log4j, Apache Commons
+libraries, Jackson, SparseBitSet, and CurvesAPI. See NOTICE for the complete list and
+attributions.
+
+The Apache 2.0 components include an explicit patent grant in Section 3:
 
 > Subject to the terms and conditions of this License, each Contributor hereby grants to You a
 > perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable patent license to
@@ -33,6 +39,9 @@ Section 3:
 
 This Apache 2.0 patent grant applies to contributions made by each respective project's
 contributors. It does not extend to GridGrind's own code, which is licensed separately under MIT.
+
+CurvesAPI is licensed under the BSD 3-Clause License, which does not include an explicit patent
+grant.
 
 ## What This Means
 
@@ -42,9 +51,10 @@ original work.
 
 For GridGrind users:
 
-1. The Apache 2.0 patent grant from Apache POI, Log4j, and Jackson contributors applies to those
-   bundled components.
-2. GridGrind's own MIT-licensed code does not carry an explicit patent grant.
+1. The Apache 2.0 patent grant from Apache POI, XMLBeans, Log4j, Commons, Jackson, and
+   SparseBitSet contributors applies to those bundled components.
+2. CurvesAPI (BSD 3-Clause) and GridGrind's own MIT-licensed code do not carry explicit patent
+   grants.
 3. The copyright holder (Ervins Strauhmanis) makes no patent claims on GridGrind's implementation
    and is not aware of any patents this implementation infringes.
 

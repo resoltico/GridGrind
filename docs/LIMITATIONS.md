@@ -1,6 +1,6 @@
 ---
 afad: "3.4"
-version: "0.31.0"
+version: "0.32.0"
 domain: LIMITATIONS
 updated: "2026-04-07"
 route:
@@ -78,21 +78,21 @@ GridGrind uses Apache POI XSSF, which implements only the `.xlsx` (OOXML) format
 
 ---
 
-### LIM-003 — Sheet Name Length
+### LIM-003 — Sheet Name Contract
 
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind (enforces Excel limit) |
-| **Limit** | Sheet names must be 1 to 31 characters |
+| **Limit** | Sheet names must be 1 to 31 characters and must not contain `:` `\` `/` `?` `*` `[` `]`, or begin or end with a single quote |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | `sheetName must not exceed 31 characters: {name}` |
+| **Message** | `sheetName must not exceed 31 characters: {name}` or `sheetName contains invalid Excel character ':' at position 4: Bad:Name` |
 | **Applies to** | All operations with a `sheetName` field |
-| **Code** | `WorkbookOperation.Validation.requireSheetName`; `ExcelWorkbook.requireSheetName`; `ExcelNamedRangeTarget` compact constructor |
+| **Code** | `ExcelSheetNames.requireValid`; `WorkbookOperation.Validation.requireSheetName`; `ExcelWorkbookSheetSupport.requireSheetName` |
 | **UX** | `--help` Limits section; `ENSURE_SHEET` and `RENAME_SHEET` catalog summaries |
 
-The 31-character ceiling is an Excel hard limit (enforced by Excel and Apache POI). GridGrind
-validates at request parse time so the error is structured and reported before any workbook
-work begins.
+The 31-character ceiling and reserved-character rules are Excel hard limits. GridGrind validates
+them at request parse time so the error is structured and reported before any workbook work
+begins, instead of surfacing a raw Apache POI sheet-creation exception later in execution.
 
 ---
 

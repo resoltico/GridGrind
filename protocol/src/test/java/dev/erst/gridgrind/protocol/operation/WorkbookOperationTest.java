@@ -614,6 +614,25 @@ class WorkbookOperationTest {
   }
 
   @Test
+  void rejectsInvalidExcelSheetNameCharactersAndEdgeQuotes() {
+    IllegalArgumentException invalidCharacter =
+        assertThrows(
+            IllegalArgumentException.class, () -> new WorkbookOperation.EnsureSheet("Bad:Name"));
+    assertTrue(invalidCharacter.getMessage().contains("invalid Excel character ':'"));
+
+    IllegalArgumentException leadingQuote =
+        assertThrows(
+            IllegalArgumentException.class, () -> new WorkbookOperation.EnsureSheet("'Budget"));
+    assertTrue(leadingQuote.getMessage().contains("single quote"));
+
+    IllegalArgumentException trailingQuote =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> new WorkbookOperation.RenameSheet("Budget", "Budget'"));
+    assertTrue(trailingQuote.getMessage().contains("single quote"));
+  }
+
+  @Test
   void operationTypeCoversAllSubtypes() {
     CellInput textValue = new CellInput.Text("x");
     CellStyleInput style =
