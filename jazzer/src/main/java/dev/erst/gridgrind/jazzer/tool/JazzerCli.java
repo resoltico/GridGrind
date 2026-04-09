@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.jazzer.tool;
 
+import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import dev.erst.gridgrind.jazzer.support.JazzerRunTarget;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -176,10 +177,7 @@ public final class JazzerCli {
     Path promotedInputPath = promotedInputDirectory.resolve(name + extensionFor(inputPath));
     Files.write(promotedInputPath, input);
 
-    Path metadataDirectory =
-        projectDirectory
-            .resolve("src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata")
-            .resolve(target.key());
+    Path metadataDirectory = target.replayHarness().promotedMetadataDirectory(projectDirectory);
     Files.createDirectories(metadataDirectory);
     Path replayTextPath = metadataDirectory.resolve(name + ".txt");
     Path replayJsonPath = metadataDirectory.resolve(name + ".json");
@@ -213,7 +211,7 @@ public final class JazzerCli {
     Path projectDirectory = projectDirectory(args);
     String targetKey = optionalValue(args, "--target");
     List<Path> metadataPaths;
-    try (var stream = Files.walk(promotedMetadataRoot(projectDirectory))) {
+    try (var stream = Files.walk(JazzerHarness.promotedMetadataRoot(projectDirectory))) {
       metadataPaths =
           stream
               .filter(path -> path.getFileName().toString().endsWith(".json"))
@@ -271,10 +269,6 @@ public final class JazzerCli {
     return configured == null
         ? Path.of("").toAbsolutePath().normalize()
         : Path.of(configured).toAbsolutePath().normalize();
-  }
-
-  private static Path promotedMetadataRoot(Path projectDirectory) {
-    return projectDirectory.resolve("src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata");
   }
 
   private static Path requiredPath(List<String> args, String flag) {

@@ -95,6 +95,104 @@ class JazzerRegressionRunnerTest {
     }
 
     @Test
+    void validateMetadata_returnsFailure_whenTargetDoesNotMatchHarness() throws Exception {
+      StringWriter errors = new StringWriter();
+      PromotionMetadata metadata = validProtocolRequestMetadata();
+
+      int exitCode =
+          JazzerRegressionRunner.validateMetadata(
+              projectDirectory,
+              JazzerHarness.PROTOCOL_REQUEST,
+              metadataDirectory().resolve("valid_request.json"),
+              new PromotionMetadata(
+                  JazzerHarness.ENGINE_COMMAND_SEQUENCE.key(),
+                  metadata.sourcePath(),
+                  metadata.promotedInputPath(),
+                  metadata.replayOutcome(),
+                  metadata.expectation(),
+                  metadata.promotedAt(),
+                  metadata.replayTextPath()),
+              new PrintWriter(errors, true));
+
+      assertEquals(1, exitCode);
+      assertTrue(errors.toString().contains("Promoted metadata target mismatch"));
+    }
+
+    @Test
+    void validateMetadata_returnsFailure_whenPromotedInputIsMissing() throws Exception {
+      StringWriter errors = new StringWriter();
+      PromotionMetadata metadata = validProtocolRequestMetadata();
+
+      int exitCode =
+          JazzerRegressionRunner.validateMetadata(
+              projectDirectory,
+              JazzerHarness.PROTOCOL_REQUEST,
+              metadataDirectory().resolve("valid_request.json"),
+              new PromotionMetadata(
+                  metadata.targetKey(),
+                  metadata.sourcePath(),
+                  "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/missing_request.json",
+                  metadata.replayOutcome(),
+                  metadata.expectation(),
+                  metadata.promotedAt(),
+                  metadata.replayTextPath()),
+              new PrintWriter(errors, true));
+
+      assertEquals(1, exitCode);
+      assertTrue(errors.toString().contains("Committed promoted input does not exist"));
+    }
+
+    @Test
+    void validateMetadata_returnsFailure_whenReplayTextIsMissing() throws Exception {
+      StringWriter errors = new StringWriter();
+      PromotionMetadata metadata = validProtocolRequestMetadata();
+
+      int exitCode =
+          JazzerRegressionRunner.validateMetadata(
+              projectDirectory,
+              JazzerHarness.PROTOCOL_REQUEST,
+              metadataDirectory().resolve("valid_request.json"),
+              new PromotionMetadata(
+                  metadata.targetKey(),
+                  metadata.sourcePath(),
+                  metadata.promotedInputPath(),
+                  metadata.replayOutcome(),
+                  metadata.expectation(),
+                  metadata.promotedAt(),
+                  "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/missing_request.txt"),
+              new PrintWriter(errors, true));
+
+      assertEquals(1, exitCode);
+      assertTrue(errors.toString().contains("Committed replay text does not exist"));
+    }
+
+    @Test
+    void writeReplayMismatch_includesUnexpectedFailureStackTrace() throws Exception {
+      StringWriter errors = new StringWriter();
+      PromotionMetadata metadata = validProtocolRequestMetadata();
+      ReplayOutcome.UnexpectedFailure outcome =
+          new ReplayOutcome.UnexpectedFailure(
+              JazzerHarness.PROTOCOL_REQUEST.key(),
+              "IllegalStateException",
+              "boom",
+              "stack-trace-line",
+              metadata.expectation().details());
+
+      JazzerRegressionRunner.writeReplayMismatch(
+          new PrintWriter(errors, true),
+          JazzerHarness.PROTOCOL_REQUEST,
+          metadataDirectory().resolve("valid_request.json"),
+          protocolRequestInputPath(),
+          metadata,
+          outcome,
+          JazzerReplaySupport.outcomeKind(outcome),
+          JazzerReplaySupport.expectationFor(outcome));
+
+      assertTrue(errors.toString().contains("stack-trace-line"));
+      assertTrue(errors.toString().contains("metadata valid_request.json"));
+    }
+
+    @Test
     void run_replaysNonJsonHarnessesWithoutNativeJazzerProvider() throws Exception {
       StringWriter output = new StringWriter();
       StringWriter errors = new StringWriter();
@@ -172,13 +270,11 @@ class JazzerRegressionRunnerTest {
     }
 
     private Path metadataDirectory() {
-      return projectDirectory.resolve(
-          "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request");
+      return JazzerHarness.PROTOCOL_REQUEST.promotedMetadataDirectory(projectDirectory);
     }
 
     private Path metadataDirectory(JazzerHarness harness) {
-      return projectDirectory.resolve(
-          "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/" + harness.key());
+      return harness.promotedMetadataDirectory(projectDirectory);
     }
   }
 }

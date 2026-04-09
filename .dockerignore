@@ -5,3 +5,9 @@
 # Allow only the fat JAR produced by the Shadow plugin.
 !cli/build/libs/
 !cli/build/libs/*.jar
+
+# Allow the legal files that the image now publishes into /usr/share/doc/gridgrind.
+!LICENSE
+!NOTICE
+!LICENSE-APACHE-2.0
+!LICENSE-BSD-3-CLAUSE

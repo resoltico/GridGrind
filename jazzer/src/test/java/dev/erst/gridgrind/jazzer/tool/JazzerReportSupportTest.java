@@ -45,8 +45,8 @@ class JazzerReportSupportTest {
     Files.writeString(promotedInputPath, "{}");
 
     Path metadataPath =
-        projectDirectory.resolve(
-            "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/seed.json");
+        JazzerHarness.PROTOCOL_REQUEST.promotedMetadataDirectory(projectDirectory)
+            .resolve("seed.json");
     Files.createDirectories(metadataPath.getParent());
     Path replayTextPath = metadataPath.resolveSibling("seed.txt");
     Files.writeString(replayTextPath, "Replay Result" + System.lineSeparator());

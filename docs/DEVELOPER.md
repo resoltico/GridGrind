@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.32.0"
+version: "0.32.1"
 domain: DEVELOPER
-updated: "2026-04-08"
+updated: "2026-04-09"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -80,10 +80,11 @@ the emitted bytecode level, so the repository no longer requires a separate Java
 and JaCoCo coverage verification. `./check.sh` is the local full-stack gate: root `check`
 plus `coverage`, nested Jazzer `check`, `:cli:shadowJar`, shell syntax checks for the release-
 surface scripts, and a Docker smoke test that runs the image from a non-default working directory
-with weird request/response/save paths. `check.sh` intentionally lives in the repository root as
-the canonical contributor entrypoint, while `scripts/` contains helper scripts invoked by the root
-gate and GitHub workflows. Both should be clean before a release-quality change is considered done.
-When Stage 1 reaches long-running Gradle `Test` tasks, the shared test conventions emit
+with weird request/response/save paths while also asserting the published help/version/response
+contract semantically. `check.sh` intentionally lives in the repository root as the canonical
+contributor entrypoint, while `scripts/` contains helper scripts invoked by the root gate and
+GitHub workflows. Both should be clean before a release-quality change is considered done. When
+Stage 1 reaches long-running Gradle `Test` tasks, the shared test conventions emit
 `[GRADLE-TEST-PULSE]` lines with class-start, class-complete, and throttled test-progress facts
 so the local watchdog tracks semantic execution rather than mistaking quiet test output for a
 hang.

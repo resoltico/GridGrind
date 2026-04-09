@@ -91,6 +91,9 @@ jobs:
           tags: |
             type=raw,value=${{ steps.target-tag.outputs.version }}
             type=raw,value=latest
+          labels: |
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.vendor=Ervins Strauhmanis
 
       - uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
         with:

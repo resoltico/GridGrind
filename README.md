@@ -41,14 +41,11 @@ No install required beyond Docker. Works on macOS, Linux, and Windows on both x6
 docker pull ghcr.io/resoltico/gridgrind:latest
 ```
 
-To pin to a specific release:
+To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.32.0
+docker pull ghcr.io/resoltico/gridgrind:0.32.1
 ```
-
-The container registry retains the last 5 releases. For older versions, download the fat JAR
-from the [Releases page](https://github.com/resoltico/GridGrind/releases).
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
 

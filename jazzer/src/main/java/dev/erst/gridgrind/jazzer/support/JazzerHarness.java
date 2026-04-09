@@ -65,6 +65,12 @@ public enum JazzerHarness {
     return projectDirectory.resolve("src/fuzz/resources").resolve(inputResourceDirectory());
   }
 
+  /** Returns the directory where this harness's promoted metadata entries live. */
+  public Path promotedMetadataDirectory(Path projectDirectory) {
+    Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
+    return promotedMetadataRoot(projectDirectory).resolve(key);
+  }
+
   /** Returns the resource directory suffix used by Jazzer's regression-input discovery. */
   public String inputResourceDirectory() {
     String packagePath =
@@ -80,5 +86,11 @@ public enum JazzerHarness {
         .filter(harness -> harness.key.equals(key))
         .findFirst()
         .orElseThrow(() -> new IllegalArgumentException("Unknown Jazzer harness: " + key));
+  }
+
+  /** Returns the project-relative root directory that owns all promoted metadata entries. */
+  public static Path promotedMetadataRoot(Path projectDirectory) {
+    Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
+    return projectDirectory.resolve("src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata");
   }
 }

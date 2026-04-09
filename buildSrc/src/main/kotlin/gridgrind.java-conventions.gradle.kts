@@ -15,10 +15,148 @@ import org.gradle.api.tasks.testing.TestListener
 import org.gradle.api.tasks.testing.TestResult
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
+import java.util.concurrent.Executors
+import java.util.concurrent.ScheduledExecutorService
+import java.util.concurrent.TimeUnit
 
 plugins {
     `java-base`
     jacoco
+}
+
+class GradleTestPulseListener(
+    private val logger: org.gradle.api.logging.Logger,
+    private val taskPath: String,
+    private val projectPath: String,
+    pulseIntervalMillis: Long,
+) : TestListener {
+    private val pulseExecutor: ScheduledExecutorService =
+        Executors.newSingleThreadScheduledExecutor { runnable ->
+            Thread(runnable, "gridgrind-gradle-test-pulse").apply {
+                isDaemon = true
+            }
+        }
+    private val lock = Any()
+    private val pulseIntervalMillis = pulseIntervalMillis.coerceAtLeast(1_000L)
+
+    private var rootStarted = false
+    private var rootFinished = false
+    private var completedClasses = 0L
+    private var completedTests = 0L
+    private var failedTests = 0L
+    private var skippedTests = 0L
+    private var activeTopLevelClass: String? = null
+    private var activeTestClass: String? = null
+    private var activeTestName: String? = null
+
+    override fun beforeSuite(suite: TestDescriptor) {
+        if (suite.parent == null) {
+            synchronized(lock) {
+                if (rootStarted) {
+                    return
+                }
+                rootStarted = true
+                emit("phase=start")
+                pulseExecutor.scheduleAtFixedRate(
+                    { emitHeartbeat() },
+                    pulseIntervalMillis,
+                    pulseIntervalMillis,
+                    TimeUnit.MILLISECONDS,
+                )
+            }
+            return
+        }
+        if (suite.className != null && suite.parent?.className == null) {
+            synchronized(lock) {
+                activeTopLevelClass = suite.className
+                emit("phase=class-start class=${pulseValue(suite.className)}")
+            }
+        }
+    }
+
+    override fun afterSuite(suite: TestDescriptor, result: TestResult) {
+        if (suite.parent == null) {
+            synchronized(lock) {
+                rootFinished = true
+                emit(
+                    "phase=finish completedClasses=$completedClasses completedTests=$completedTests failedTests=$failedTests skippedTests=$skippedTests result=${result.resultType}"
+                )
+            }
+            pulseExecutor.shutdownNow()
+            return
+        }
+        if (suite.className != null && suite.parent?.className == null) {
+            synchronized(lock) {
+                completedClasses += 1
+                emit(
+                    "phase=class-complete completedClasses=$completedClasses completedTests=$completedTests failedTests=$failedTests skippedTests=$skippedTests class=${pulseValue(suite.className)} classTests=${result.testCount} classFailedTests=${result.failedTestCount} classSkippedTests=${result.skippedTestCount} result=${result.resultType}"
+                )
+                if (activeTopLevelClass == suite.className) {
+                    activeTopLevelClass = null
+                }
+                activeTestClass = null
+                activeTestName = null
+            }
+        }
+    }
+
+    override fun beforeTest(testDescriptor: TestDescriptor) {
+        synchronized(lock) {
+            activeTestClass = testDescriptor.className
+            activeTestName = testDescriptor.name
+            if (activeTopLevelClass == null) {
+                activeTopLevelClass = testDescriptor.className
+            }
+        }
+    }
+
+    override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {
+        synchronized(lock) {
+            completedTests += 1
+            when (result.resultType) {
+                TestResult.ResultType.FAILURE -> failedTests += 1
+                TestResult.ResultType.SKIPPED -> skippedTests += 1
+                TestResult.ResultType.SUCCESS -> Unit
+            }
+            if (activeTestClass == testDescriptor.className && activeTestName == testDescriptor.name) {
+                activeTestClass = null
+                activeTestName = null
+            }
+        }
+    }
+
+    private fun emitHeartbeat() {
+        val heartbeat =
+            synchronized(lock) {
+                if (!rootStarted || rootFinished) {
+                    return
+                }
+                val className = activeTestClass ?: activeTopLevelClass ?: return
+                buildString {
+                    append("phase=test-progress")
+                    append(" completedClasses=").append(completedClasses)
+                    append(" completedTests=").append(completedTests)
+                    append(" failedTests=").append(failedTests)
+                    append(" skippedTests=").append(skippedTests)
+                    append(" class=").append(pulseValue(className))
+                    activeTestName?.let { testName ->
+                        append(" test=").append(pulseValue(testName))
+                    }
+                }
+            }
+        emit(heartbeat)
+    }
+
+    private fun emit(message: String) {
+        logger.lifecycle(
+            "[GRADLE-TEST-PULSE] task={} project={} {}",
+            taskPath,
+            projectPath,
+            message,
+        )
+    }
+
+    private fun pulseValue(raw: String?): String = raw?.replace(Regex("\\s+"), "_") ?: "unknown"
 }
 
 val gridgrindJavaVersion: Int =
@@ -56,103 +194,16 @@ tasks.withType<Test>().configureEach {
                 .get()
         val pulseTaskPath = path
         val pulseProjectPath = project.path
-        fun pulseValue(raw: String?): String = raw?.replace(Regex("\\s+"), "_") ?: "unknown"
-
-        addTestListener(
-            object : TestListener {
-                private var completedClasses = 0L
-                private var completedTests = 0L
-                private var failedTests = 0L
-                private var skippedTests = 0L
-                private var lastPulseAtMillis = 0L
-
-                override fun beforeSuite(suite: TestDescriptor) {
-                    val now = System.currentTimeMillis()
-                    if (suite.parent == null) {
-                        logger.lifecycle(
-                            "[GRADLE-TEST-PULSE] task={} project={} phase=start",
-                            pulseTaskPath,
-                            pulseProjectPath,
-                        )
-                        lastPulseAtMillis = now
-                        return
-                    }
-                    if (suite.className != null && suite.parent?.className == null) {
-                        logger.lifecycle(
-                            "[GRADLE-TEST-PULSE] task={} project={} phase=class-start class={}",
-                            pulseTaskPath,
-                            pulseProjectPath,
-                            pulseValue(suite.className),
-                        )
-                        lastPulseAtMillis = now
-                    }
-                }
-
-                override fun afterSuite(suite: TestDescriptor, result: TestResult) {
-                    val now = System.currentTimeMillis()
-                    if (suite.parent == null) {
-                        logger.lifecycle(
-                            "[GRADLE-TEST-PULSE] task={} project={} phase=finish completedClasses={} completedTests={} failedTests={} skippedTests={} result={}",
-                            pulseTaskPath,
-                            pulseProjectPath,
-                            completedClasses,
-                            completedTests,
-                            failedTests,
-                            skippedTests,
-                            result.resultType,
-                        )
-                        lastPulseAtMillis = now
-                        return
-                    }
-                    if (suite.className != null && suite.parent?.className == null) {
-                        completedClasses += 1
-                        logger.lifecycle(
-                            "[GRADLE-TEST-PULSE] task={} project={} phase=class-complete completedClasses={} completedTests={} failedTests={} skippedTests={} class={} classTests={} classFailedTests={} classSkippedTests={} result={}",
-                            pulseTaskPath,
-                            pulseProjectPath,
-                            completedClasses,
-                            completedTests,
-                            failedTests,
-                            skippedTests,
-                            pulseValue(suite.className),
-                            result.testCount,
-                            result.failedTestCount,
-                            result.skippedTestCount,
-                            result.resultType,
-                        )
-                        lastPulseAtMillis = now
-                    }
-                }
-
-                override fun beforeTest(testDescriptor: TestDescriptor) = Unit
-
-                override fun afterTest(testDescriptor: TestDescriptor, result: TestResult) {
-                    completedTests += 1
-                    when (result.resultType) {
-                        TestResult.ResultType.FAILURE -> failedTests += 1
-                        TestResult.ResultType.SKIPPED -> skippedTests += 1
-                        TestResult.ResultType.SUCCESS -> Unit
-                    }
-
-                    val now = System.currentTimeMillis()
-                    if (now - lastPulseAtMillis >= progressPulseIntervalMillis) {
-                        logger.lifecycle(
-                            "[GRADLE-TEST-PULSE] task={} project={} phase=test-progress completedClasses={} completedTests={} failedTests={} skippedTests={} class={} test={} result={}",
-                            pulseTaskPath,
-                            pulseProjectPath,
-                            completedClasses,
-                            completedTests,
-                            failedTests,
-                            skippedTests,
-                            pulseValue(testDescriptor.className),
-                            pulseValue(testDescriptor.name),
-                            result.resultType,
-                        )
-                        lastPulseAtMillis = now
-                    }
-                }
-            },
-        )
+        doFirst {
+            addTestListener(
+                GradleTestPulseListener(
+                    logger = logger,
+                    taskPath = pulseTaskPath,
+                    projectPath = pulseProjectPath,
+                    pulseIntervalMillis = progressPulseIntervalMillis,
+                ),
+            )
+        }
     }
 }
 

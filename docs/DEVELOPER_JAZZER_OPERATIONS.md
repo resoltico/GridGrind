@@ -1,7 +1,7 @@
 afad: "3.5"
-version: "0.32.0"
+version: "0.32.1"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-04-08"
+updated: "2026-04-09"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.32.0"
+version: "0.32.1"
 domain: DEVELOPER_JAVA
-updated: "2026-04-08"
+updated: "2026-04-09"
 route:
   keywords: [gridgrind, java26, jdk, jdk.java.net, shell, zsh, java-home, javac, brew, gradlew, macos]
   questions: ["how is java 26 set up for gridgrind", "why does gridgrind require shell-level java 26", "how do i configure local java 26 for gridgrind", "why is /usr/bin/java wrong for gridgrind", "why should i use ./gradlew instead of brew gradle"]
