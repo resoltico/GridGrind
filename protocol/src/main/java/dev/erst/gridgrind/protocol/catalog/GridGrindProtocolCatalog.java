@@ -72,12 +72,14 @@ public final class GridGrindProtocolCatalog {
               WorkbookOperation.EnsureSheet.class,
               "ENSURE_SHEET",
               "Create the sheet if it does not already exist."
-                  + " Sheet names must not exceed 31 characters (Excel limit)."),
+                  + " Sheet names must be 1 to 31 characters and must not contain"
+                  + " : \\ / ? * [ ] or begin or end with a single quote (Excel limit)."),
           descriptor(
               WorkbookOperation.RenameSheet.class,
               "RENAME_SHEET",
               "Rename an existing sheet."
-                  + " The new name must not exceed 31 characters (Excel limit)."),
+                  + " The new name must be 1 to 31 characters and must not contain"
+                  + " : \\ / ? * [ ] or begin or end with a single quote (Excel limit)."),
           descriptor(
               WorkbookOperation.DeleteSheet.class,
               "DELETE_SHEET",
@@ -94,6 +96,7 @@ public final class GridGrindProtocolCatalog {
               WorkbookOperation.CopySheet.class,
               "COPY_SHEET",
               "Copy one sheet into a new visible, unselected sheet."
+                  + " newSheetName follows the same Excel sheet-name rules as ENSURE_SHEET."
                   + " position defaults to APPEND_AT_END when omitted."
                   + " The copied sheet preserves supported sheet-local workbook content such as"
                   + " formulas, validations, conditional formatting, comments, hyperlinks,"
@@ -257,7 +260,9 @@ public final class GridGrindProtocolCatalog {
               "SET_HYPERLINK",
               "Attach a hyperlink to one cell."
                   + " FILE targets use the field name path and normalize file: URIs to plain"
-                  + " path strings."),
+                  + " path strings."
+                  + " Relative FILE targets are analyzed against the persisted workbook path"
+                  + " when one exists."),
           descriptor(
               WorkbookOperation.ClearHyperlink.class,
               "CLEAR_HYPERLINK",

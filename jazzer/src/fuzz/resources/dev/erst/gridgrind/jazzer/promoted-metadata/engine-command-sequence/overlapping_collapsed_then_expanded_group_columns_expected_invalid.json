@@ -1,0 +1,22 @@
+{
+  "targetKey" : "engine-command-sequence",
+  "sourcePath" : ".local/runs/engine-command-sequence/crash-fecffa027bb6026589abc381c06f778d138557e9",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/overlapping_collapsed_then_expanded_group_columns_expected_invalid.bin",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "expectation" : {
+    "outcomeKind" : "EXPECTED_INVALID",
+    "details" : {
+      "type" : "ENGINE_COMMAND_SEQUENCE",
+      "inputBytes" : 63,
+      "commandCount" : 4,
+      "commandKinds" : {
+        "GROUP_COLUMNS" : 2,
+        "CREATE_SHEET" : 1,
+        "DELETE_TABLE" : 1
+      },
+      "styleKinds" : { }
+    }
+  },
+  "promotedAt" : "2026-04-08T23:18:52.935236Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/engine-command-sequence/overlapping_collapsed_then_expanded_group_columns_expected_invalid.txt"
+}

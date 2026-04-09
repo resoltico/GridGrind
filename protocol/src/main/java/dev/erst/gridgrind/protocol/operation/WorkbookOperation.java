@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
+import dev.erst.gridgrind.excel.ExcelSheetNames;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.dto.ProtocolDefinedNameValidation;
@@ -630,10 +631,7 @@ public sealed interface WorkbookOperation {
     }
 
     static void requireSheetName(String value, String fieldName) { // LIM-003
-      requireNonBlank(value, fieldName);
-      if (value.length() > 31) {
-        throw new IllegalArgumentException(fieldName + " must not exceed 31 characters: " + value);
-      }
+      ExcelSheetNames.requireValid(value, fieldName);
     }
 
     static void requireNonNegative(int value, String fieldName) {

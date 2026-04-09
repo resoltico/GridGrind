@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.31.0"
+version: "0.32.0"
 domain: OPERATIONS
 updated: "2026-04-08"
 route:
@@ -189,7 +189,7 @@ to exist. Use `ENSURE_SHEET` before the first write to any sheet.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Name of the sheet to create. Maximum 31 characters. |
+| `sheetName` | Yes | Name of the sheet to create. Must be 1 to 31 characters and must not contain `:` `\` `/` `?` `*` `[` `]`, or begin or end with a single quote. |
 
 ---
 
@@ -997,7 +997,9 @@ Supported target variants:
 - `{"type":"DOCUMENT","target":"Inventory!B4"}`
 
 `FILE.path` accepts either a plain relative or absolute file path, or a `file:` URI. Read-side
-metadata always returns a normalized plain path string in `path`, never a `file:` URI.
+metadata always returns a normalized plain path string in `path`, never a `file:` URI. Relative
+`FILE` targets are analyzed against the workbook's persisted path when one exists, so use
+absolute paths when you want cwd-independent health checks.
 
 ---
 

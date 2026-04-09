@@ -106,6 +106,39 @@ class GridGrindCliTest {
   }
 
   @Test
+  void reportsInvalidSheetCharactersDuringRequestRead() throws IOException {
+    String request =
+        """
+            {
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "operations": [
+                { "type": "ENSURE_SHEET", "sheetName": "Bad:Name" }
+              ],
+              "reads": []
+            }
+            """;
+
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[0],
+                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+
+    assertEquals(1, exitCode);
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
+    assertEquals("READ_REQUEST", failure.problem().context().stage());
+    assertEquals("operations[0]", failure.problem().context().jsonPath());
+    assertTrue(failure.problem().message().contains("invalid Excel character ':'"));
+  }
+
+  @Test
   void readsJsonRequestFromFileAndWritesJsonResponseToFile() throws IOException {
     Path requestPath = Files.createTempFile("gridgrind-request-", ".json");
     Path responsePath =
@@ -192,6 +225,10 @@ class GridGrindCliTest {
     assertTrue(help.contains("--help, -h"));
     assertTrue(help.contains("blob/main/docs/QUICK_REFERENCE.md"));
     assertTrue(help.contains("Coordinate Systems:"));
+    assertTrue(help.contains("reject : \\ / ? * [ ]"));
+    assertTrue(
+        help.contains(
+            "Relative FILE hyperlink targets are analyzed against the persisted workbook path"));
     assertTrue(
         help.contains("type group accepted by polymorphic fields"),
         "help must explain what the protocol catalog publishes");
@@ -258,6 +295,9 @@ class GridGrindCliTest {
     assertTrue(
         help.contains(
             "Relative paths in --request, --response, source.path, and persistence.path resolve from the current working directory."));
+    assertTrue(
+        help.contains(
+            "Relative FILE hyperlink targets are analyzed against the persisted workbook path when one exists; use absolute paths for cwd-independent results."));
   }
 
   @Test

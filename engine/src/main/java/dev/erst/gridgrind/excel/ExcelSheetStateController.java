@@ -4,7 +4,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 /** Owns workbook-level active, selected, visibility, protection, and summary state. */
@@ -56,7 +55,6 @@ final class ExcelSheetStateController {
 
     int sheetIndex =
         ExcelWorkbookSheetSupport.requiredSheetIndex(workbook.xssfWorkbook(), sheetName);
-    WorkbookUtil.validateSheetName(newSheetName);
     ExcelWorkbookSheetSupport.requireSheetNameAvailable(
         workbook.xssfWorkbook(), newSheetName, sheetIndex);
     if (sheetName.equals(newSheetName)) {

@@ -5,6 +5,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.0] - 2026-04-09
+
+### Changed
+
+- `--help`, the protocol catalog, and the docs now make two important workbook rules explicit:
+  Excel sheet names reject reserved characters, and relative `FILE` hyperlinks are checked
+  relative to the saved workbook directory during workbook-health analysis.
+
+### Fixed
+
+- Column grouping no longer routes `GROUP_COLUMNS(..., collapsed=false)` through Apache POI's
+  collapsed-group expansion path. Overlapping expanded and previously collapsed column groups now
+  stay deterministic instead of surfacing the XMLBeans `IndexOutOfBoundsException` that POI can
+  trigger while rewriting split column definitions.
+- Column outline edits now discard ghost column metadata and canonicalize ambiguous Excel column
+  definitions before layout reads and persistence. Repeated no-op ungroup operations therefore no
+  longer poison later collapsed groups, and overlapping outline edits keep the same visible state
+  across save/reopen cycles instead of drifting when Apache POI leaves stale column definitions in
+  memory.
+- Sheet-name validation is now consistent across request parsing and engine execution. Invalid
+  Excel sheet-name characters and leading or trailing apostrophes are rejected up front with
+  structured `READ_REQUEST` failures instead of leaking raw Apache POI sheet-creation errors
+  later in `APPLY_OPERATION`.
+- Missing relative `FILE` hyperlink findings now explain the workbook directory they were
+  resolved against, so the health-check output makes the relative-path anchor obvious instead of
+  forcing callers to reverse-engineer it from the final resolved path alone.
+- Jazzer now replays the previously crashing engine-command-sequence artifact
+  `overlapping_collapsed_then_expanded_group_columns_expected_invalid` as a committed
+  expected-invalid regression input, locking the no-crash behavior into the verification suite.
+
 ## [0.31.0] - 2026-04-08
 
 ### Added
@@ -1111,7 +1141,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.31.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.32.0...HEAD
+[0.32.0]: https://github.com/resoltico/GridGrind/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/resoltico/GridGrind/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/resoltico/GridGrind/compare/v0.29.0...v0.30.0
 [0.29.0]: https://github.com/resoltico/GridGrind/compare/v0.28.0...v0.29.0

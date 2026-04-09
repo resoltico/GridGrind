@@ -1,0 +1,10 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/overlapping_collapsed_then_expanded_group_columns_expected_invalid.bin
+Harness: engine-command-sequence
+Outcome: EXPECTED_INVALID
+Kind: IllegalArgumentException
+Message: table not found on expected sheet: KTable@K
+Input Bytes: 63
+Command Count: 4
+Style Kinds: (none)
+Command Kinds: GROUP_COLUMNS=2, CREATE_SHEET=1, DELETE_TABLE=1

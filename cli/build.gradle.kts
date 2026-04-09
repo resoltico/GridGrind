@@ -43,6 +43,7 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     from(rootProject.file("NOTICE")) { into("META-INF") }
     from(rootProject.file("LICENSE")) { into("META-INF") }
     from(rootProject.file("LICENSE-APACHE-2.0")) { into("META-INF") }
+    from(rootProject.file("LICENSE-BSD-3-CLAUSE")) { into("META-INF") }
 
     manifest {
         attributes(

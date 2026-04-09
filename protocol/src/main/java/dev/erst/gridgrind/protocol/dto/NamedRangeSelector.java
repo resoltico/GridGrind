@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelSheetNames;
 import java.util.Objects;
 
 /** Exact selector used to request one or more named ranges during workbook analysis. */
@@ -35,6 +36,7 @@ public sealed interface NamedRangeSelector
     public SheetScope {
       name = requireNonBlank(name, "name");
       sheetName = requireNonBlank(sheetName, "sheetName");
+      ExcelSheetNames.requireValid(sheetName, "sheetName");
     }
   }
 

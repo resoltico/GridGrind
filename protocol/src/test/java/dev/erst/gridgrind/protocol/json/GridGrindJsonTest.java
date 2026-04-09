@@ -768,6 +768,33 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void wrapsInvalidSheetCharactersAsInvalidRequestErrors() {
+    InvalidRequestException failure =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "operations": [
+                        {
+                          "type": "ENSURE_SHEET",
+                          "sheetName": "Bad:Name"
+                        }
+                      ],
+                      "reads": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(
+        "sheetName contains invalid Excel character ':' at position 4: Bad:Name",
+        failure.getMessage());
+    assertEquals("operations[0]", failure.jsonPath());
+  }
+
+  @Test
   void stripsJacksonSourceLocationFromInvalidRequestShapeMessages() {
     InvalidRequestShapeException failure =
         assertThrows(

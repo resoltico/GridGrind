@@ -1479,11 +1479,35 @@ public final class ExcelSheet {
                       WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
                       WorkbookAnalysis.AnalysisSeverity.ERROR,
                       "File hyperlink targets a missing path",
-                      "Resolved file hyperlink path does not exist: " + resolvedPath.resolvedPath(),
+                      missingFileTargetMessage(resolvedPath, workbookLocation),
                       location,
-                      List.of(resolvedPath.path(), resolvedPath.resolvedPath().toString())))
+                      missingFileTargetEvidence(resolvedPath, workbookLocation)))
               : List.of();
     };
+  }
+
+  private static String missingFileTargetMessage(
+      FileHyperlinkResolution.ResolvedPath resolvedPath, WorkbookLocation workbookLocation) {
+    if (workbookLocation instanceof WorkbookLocation.StoredWorkbook storedWorkbook
+        && ExcelFileHyperlinkTargets.isRelativeStoredPath(resolvedPath.path())) {
+      return "Resolved relative file hyperlink path does not exist against workbook directory "
+          + storedWorkbook.baseDirectory().orElseThrow()
+          + ": "
+          + resolvedPath.resolvedPath();
+    }
+    return "Resolved file hyperlink path does not exist: " + resolvedPath.resolvedPath();
+  }
+
+  private static List<String> missingFileTargetEvidence(
+      FileHyperlinkResolution.ResolvedPath resolvedPath, WorkbookLocation workbookLocation) {
+    if (workbookLocation instanceof WorkbookLocation.StoredWorkbook storedWorkbook
+        && ExcelFileHyperlinkTargets.isRelativeStoredPath(resolvedPath.path())) {
+      return List.of(
+          resolvedPath.path(),
+          storedWorkbook.baseDirectory().orElseThrow().toString(),
+          resolvedPath.resolvedPath().toString());
+    }
+    return List.of(resolvedPath.path(), resolvedPath.resolvedPath().toString());
   }
 
   String exceptionMessage(Exception exception) {

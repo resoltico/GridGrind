@@ -206,12 +206,6 @@ final class ExcelWorkbookSheetSupport {
 
   /** Validates one workbook sheet name against the shared GridGrind contract. */
   static void requireSheetName(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-    if (value.length() > 31) {
-      throw new IllegalArgumentException(fieldName + " must not exceed 31 characters: " + value);
-    }
+    ExcelSheetNames.requireValid(value, fieldName);
   }
 }

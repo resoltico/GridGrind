@@ -7,7 +7,6 @@ import java.util.Optional;
 import org.apache.poi.ss.usermodel.CellCopyPolicy;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.SheetVisibility;
-import org.apache.poi.ss.util.WorkbookUtil;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 /** Copies supported sheet-local workbook structures without relying on POI's raw sheet cloning. */
@@ -25,7 +24,6 @@ final class ExcelSheetCopyController {
     ExcelWorkbookSheetSupport.requireSheetName(newSheetName, "newSheetName");
     Objects.requireNonNull(position, "position must not be null");
 
-    WorkbookUtil.validateSheetName(newSheetName);
     ExcelWorkbookSheetSupport.requireSheetNameAvailable(workbook.xssfWorkbook(), newSheetName, -1);
 
     XSSFSheet sourcePoiSheet =

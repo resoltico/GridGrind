@@ -144,6 +144,7 @@ final class ExcelRowColumnStructureController {
         columnIndex++) {
       sheet.setColumnHidden(columnIndex, hidden);
     }
+    canonicalizeColumnDefinitions(sheet);
   }
 
   /** Applies one outline group to the requested inclusive zero-based row band. */
@@ -175,10 +176,12 @@ final class ExcelRowColumnStructureController {
     normalizeColumnDefinitionContainer(sheet);
     sheet.groupColumn(columns.firstColumnIndex(), columns.lastColumnIndex());
     if (collapsed) {
-      sheet.setColumnGroupCollapsed(columns.firstColumnIndex(), true);
+      collapseColumns(sheet, columns);
+      canonicalizeColumnDefinitions(sheet);
       return;
     }
-    expandColumns(sheet, columns);
+    clearExpandedGroupControlColumn(sheet, columns);
+    canonicalizeColumnDefinitions(sheet);
   }
 
   /** Removes outline grouping from the requested inclusive zero-based column band. */
@@ -186,12 +189,13 @@ final class ExcelRowColumnStructureController {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(columns, "columns must not be null");
     normalizeColumnDefinitionContainer(sheet);
-    expandColumns(sheet, columns);
+    prepareColumnsForUngroup(sheet, columns);
     sheet.ungroupColumn(columns.firstColumnIndex(), columns.lastColumnIndex());
+    canonicalizeColumnDefinitions(sheet);
   }
 
   /** Returns the last column index implied by cells or explicit column metadata. */
-  int lastColumnIndex(XSSFSheet sheet) {
+  static int lastColumnIndex(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     int lastColumnIndex = -1;
     for (Row row : sheet) {
@@ -212,15 +216,17 @@ final class ExcelRowColumnStructureController {
     if (lastColumnIndex < 0) {
       return List.of();
     }
+    Map<Integer, CTCol> effectiveColumns = effectiveColumnDefinitions(sheet);
     List<WorkbookReadResult.ColumnLayout> columns = new ArrayList<>(lastColumnIndex + 1);
     for (int columnIndex = 0; columnIndex <= lastColumnIndex; columnIndex++) {
+      CTCol columnDefinition = effectiveColumns.get(columnIndex);
       columns.add(
           new WorkbookReadResult.ColumnLayout(
               columnIndex,
               sheet.getColumnWidth(columnIndex) / 256.0d,
-              sheet.isColumnHidden(columnIndex),
-              sheet.getColumnOutlineLevel(columnIndex),
-              columnCollapsed(sheet, columnIndex)));
+              columnDefinition != null && columnDefinition.getHidden(),
+              columnDefinition == null ? 0 : (int) columnDefinition.getOutlineLevel(),
+              columnDefinition != null && columnDefinition.getCollapsed()));
     }
     return List.copyOf(columns);
   }
@@ -797,17 +803,6 @@ final class ExcelRowColumnStructureController {
     return range;
   }
 
-  private static boolean columnCollapsed(XSSFSheet sheet, int columnIndex) {
-    for (CTCols cols : sheet.getCTWorksheet().getColsList()) {
-      for (CTCol col : cols.getColList()) {
-        if (columnIndex + 1 >= col.getMin() && columnIndex + 1 <= col.getMax()) {
-          return col.getCollapsed();
-        }
-      }
-    }
-    return false;
-  }
-
   private static void ensureRowsExist(XSSFSheet sheet, ExcelRowSpan rows) {
     for (int rowIndex = rows.firstRowIndex(); rowIndex <= rows.lastRowIndex(); rowIndex++) {
       if (sheet.getRow(rowIndex) == null) {
@@ -845,13 +840,30 @@ final class ExcelRowColumnStructureController {
     }
   }
 
-  private static void expandColumns(XSSFSheet sheet, ExcelColumnSpan columns) {
-    sheet.setColumnGroupCollapsed(columns.firstColumnIndex(), false);
+  private static void prepareColumnsForUngroup(XSSFSheet sheet, ExcelColumnSpan columns) {
     for (int columnIndex = columns.firstColumnIndex();
         columnIndex <= columns.lastColumnIndex();
         columnIndex++) {
       sheet.setColumnHidden(columnIndex, false);
     }
+    clearExpandedGroupControlColumn(sheet, columns);
+  }
+
+  private static void collapseColumns(XSSFSheet sheet, ExcelColumnSpan columns) {
+    sheet.setColumnGroupCollapsed(columns.firstColumnIndex(), true);
+  }
+
+  /**
+   * Clears only the control-column collapsed marker for one explicit group boundary.
+   *
+   * <p>Grouping columns with {@code collapsed=false} creates a new expanded outline level; it is
+   * not the same operation as expanding an already-collapsed group. Delegating that case to POI's
+   * {@code setColumnGroupCollapsed(..., false)} can walk and mutate overlapping descendant groups,
+   * which is both semantically broader than GridGrind's request and vulnerable to POI/XMLBeans
+   * crashes on split {@code CTCol} ranges. GridGrind therefore clears only the target group's own
+   * control marker here and leaves existing descendant collapsed state intact.
+   */
+  private static void clearExpandedGroupControlColumn(XSSFSheet sheet, ExcelColumnSpan columns) {
     if (columns.lastColumnIndex() < ExcelColumnSpan.MAX_COLUMN_INDEX) {
       setColumnCollapsed(sheet, columns.lastColumnIndex() + 1, false);
     }
@@ -963,10 +975,15 @@ final class ExcelRowColumnStructureController {
   }
 
   private static void normalizeColumnDefinitionContainer(XSSFSheet sheet) {
-    if (sheet.getCTWorksheet().sizeOfColsArray() == 1) {
+    if (!requiresColumnDefinitionCanonicalization(sheet)) {
       return;
     }
-    rebuildColumnDefinitions(sheet, snapshotColumnDefinitions(sheet));
+    canonicalizeColumnDefinitions(sheet);
+  }
+
+  static void canonicalizeColumnDefinitions(XSSFSheet sheet) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    rebuildColumnDefinitions(sheet, effectiveColumnDefinitions(sheet));
   }
 
   private static void rebuildColumnDefinitions(
@@ -982,6 +999,93 @@ final class ExcelRowColumnStructureController {
               cols.addNewCol().set(definition);
             });
     sheet.getCTWorksheet().setColsArray(new CTCols[] {cols});
+  }
+
+  private static boolean requiresColumnDefinitionCanonicalization(XSSFSheet sheet) {
+    if (sheet.getCTWorksheet().sizeOfColsArray() != 1) {
+      return true;
+    }
+    boolean[] seenColumns = new boolean[ExcelColumnSpan.MAX_COLUMN_INDEX + 1];
+    for (CTCol col : sheet.getCTWorksheet().getColsArray(0).getColList()) {
+      if (col.getMin() != col.getMax()) {
+        return true;
+      }
+      if (isSemanticallyEmptyColumnDefinition(col)) {
+        return true;
+      }
+      for (int columnIndex = (int) col.getMin() - 1;
+          columnIndex <= (int) col.getMax() - 1;
+          columnIndex++) {
+        if (seenColumns[columnIndex]) {
+          return true;
+        }
+        seenColumns[columnIndex] = true;
+      }
+    }
+    return false;
+  }
+
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
+  private static Map<Integer, CTCol> effectiveColumnDefinitions(XSSFSheet sheet) {
+    Map<Integer, CTCol> explicitColumns = snapshotColumnDefinitions(sheet);
+    int lastColumnIndex = lastColumnIndex(sheet);
+    if (lastColumnIndex < 0) {
+      return Map.of();
+    }
+    Map<Integer, CTCol> effectiveColumns = new LinkedHashMap<>();
+    for (int columnIndex = 0; columnIndex <= lastColumnIndex; columnIndex++) {
+      CTCol effectiveDefinition =
+          effectiveColumnDefinition(sheet, columnIndex, explicitColumns.get(columnIndex));
+      if (effectiveDefinition != null) {
+        effectiveColumns.put(columnIndex, effectiveDefinition);
+      }
+    }
+    return Map.copyOf(effectiveColumns);
+  }
+
+  private static CTCol effectiveColumnDefinition(
+      XSSFSheet sheet, int columnIndex, CTCol baseDefinition) {
+    boolean hidden = false;
+    long outlineLevel = 0L;
+    boolean collapsed = false;
+    for (CTCols cols : sheet.getCTWorksheet().getColsList()) {
+      for (CTCol col : cols.getColList()) {
+        if (columnIndex + 1 < col.getMin() || columnIndex + 1 > col.getMax()) {
+          continue;
+        }
+        hidden |= col.getHidden();
+        outlineLevel = Math.max(outlineLevel, col.getOutlineLevel());
+        collapsed |= col.getCollapsed();
+      }
+    }
+    if (!hasMeaningfulColumnDefinition(baseDefinition, hidden, outlineLevel, collapsed)) {
+      return null;
+    }
+    CTCol effectiveDefinition = copyOf(baseDefinition);
+    effectiveDefinition.setMin(columnIndex + 1L);
+    effectiveDefinition.setMax(columnIndex + 1L);
+    effectiveDefinition.setHidden(hidden);
+    effectiveDefinition.setOutlineLevel((short) outlineLevel);
+    effectiveDefinition.setCollapsed(collapsed);
+    return effectiveDefinition;
+  }
+
+  private static boolean hasMeaningfulColumnDefinition(
+      CTCol baseDefinition, boolean hidden, long outlineLevel, boolean collapsed) {
+    return hidden
+        || outlineLevel > 0L
+        || collapsed
+        || (baseDefinition != null && !isSemanticallyEmptyColumnDefinition(baseDefinition));
+  }
+
+  private static boolean isSemanticallyEmptyColumnDefinition(CTCol definition) {
+    return !definition.getHidden()
+        && definition.getOutlineLevel() == 0
+        && !definition.getCollapsed()
+        && !definition.getCustomWidth()
+        && !definition.getBestFit()
+        && !definition.getPhonetic()
+        && (!definition.isSetStyle() || definition.getStyle() == 0L);
   }
 
   private static CTCol copyOf(CTCol original) {

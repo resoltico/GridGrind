@@ -1565,6 +1565,38 @@ class ExcelSheetTest {
     assertEquals(
         WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
         missing.getFirst().code());
+    assertTrue(missing.getFirst().message().contains("workbook directory"));
+    assertTrue(
+        missing
+            .getFirst()
+            .evidence()
+            .contains(storedWorkbook.baseDirectory().orElseThrow().toString()));
+
+    String absoluteMissingTarget =
+        Path.of("tmp", "file-hyperlink-findings", "missing-report.xlsx")
+            .toAbsolutePath()
+            .toString();
+    List<WorkbookAnalysis.AnalysisFinding> missingAbsolute =
+        ExcelSheet.fileHyperlinkFindings(
+            location, absoluteMissingTarget, new WorkbookLocation.UnsavedWorkbook());
+    assertEquals(1, missingAbsolute.size());
+    assertEquals(
+        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
+        missingAbsolute.getFirst().code());
+    assertFalse(missingAbsolute.getFirst().message().contains("workbook directory"));
+
+    List<WorkbookAnalysis.AnalysisFinding> missingAbsoluteStored =
+        ExcelSheet.fileHyperlinkFindings(location, absoluteMissingTarget, storedWorkbook);
+    assertEquals(1, missingAbsoluteStored.size());
+    assertEquals(
+        WorkbookAnalysis.AnalysisFindingCode.HYPERLINK_MISSING_FILE_TARGET,
+        missingAbsoluteStored.getFirst().code());
+    assertFalse(missingAbsoluteStored.getFirst().message().contains("workbook directory"));
+    assertFalse(
+        missingAbsoluteStored
+            .getFirst()
+            .evidence()
+            .contains(storedWorkbook.baseDirectory().orElseThrow().toString()));
   }
 
   @Test

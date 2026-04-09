@@ -194,7 +194,7 @@ public final class GridGrindCli {
 
         Limits:
           File format:              .xlsx only; .xls, .xlsm, and .xlsb are rejected.
-          Sheet names:              1 to 31 characters (Excel limit).
+          Sheet names:              1 to 31 characters; reject : \\ / ? * [ ] and leading/trailing apostrophes.
           GET_WINDOW cell count:    rowCount * columnCount must not exceed 250,000.
           GET_SHEET_SCHEMA cells:   rowCount * columnCount must not exceed 250,000.
           Column widthCharacters:   > 0 and <= 255 (Excel limit).
@@ -219,6 +219,7 @@ public final class GridGrindCli {
           persistence SAVE_AS.path:    write a new workbook to that path; parent directories are created.
           persistence OVERWRITE:       write back to source.path; no path field is supplied.
           Relative paths in --request, --response, source.path, and persistence.path resolve from the current working directory.
+          Relative FILE hyperlink targets are analyzed against the persisted workbook path when one exists; use absolute paths for cwd-independent results.
 
         Coordinate Systems:
           Pattern                Convention / Example

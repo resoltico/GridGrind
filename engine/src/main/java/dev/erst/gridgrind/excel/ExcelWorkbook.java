@@ -265,6 +265,10 @@ public final class ExcelWorkbook implements AutoCloseable {
 
     Path absolutePath = workbookPath.toAbsolutePath();
     Files.createDirectories(absolutePath.getParent());
+    for (Sheet sheet : workbook) {
+      ExcelRowColumnStructureController.canonicalizeColumnDefinitions(
+          (org.apache.poi.xssf.usermodel.XSSFSheet) sheet);
+    }
     ExcelTableHeaderSyncSupport.syncAllHeaders(workbook);
 
     try (OutputStream outputStream = Files.newOutputStream(absolutePath)) {
@@ -282,13 +286,6 @@ public final class ExcelWorkbook implements AutoCloseable {
     return workbook;
   }
 
-  private static void requireNonBlank(String value, String fieldName) {
-    Objects.requireNonNull(value, fieldName + " must not be null");
-    if (value.isBlank()) {
-      throw new IllegalArgumentException(fieldName + " must not be blank");
-    }
-  }
-
   private Sheet requiredSheet(String sheetName) {
     Sheet sheet = workbook.getSheet(sheetName);
     if (sheet == null) {
@@ -298,7 +295,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   private int requiredSheetIndex(String sheetName) {
-    requireNonBlank(sheetName, "sheetName");
+    requireSheetName(sheetName, "sheetName");
 
     int sheetIndex = workbook.getSheetIndex(sheetName);
     if (sheetIndex < 0) {
@@ -366,9 +363,6 @@ public final class ExcelWorkbook implements AutoCloseable {
   }
 
   private static void requireSheetName(String value, String fieldName) {
-    requireNonBlank(value, fieldName);
-    if (value.length() > 31) {
-      throw new IllegalArgumentException(fieldName + " must not exceed 31 characters: " + value);
-    }
+    ExcelSheetNames.requireValid(value, fieldName);
   }
 }

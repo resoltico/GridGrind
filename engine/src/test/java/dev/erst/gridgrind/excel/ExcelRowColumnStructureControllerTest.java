@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -24,6 +25,7 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCols;
 
 /** Tests for structural row and column editing plus layout normalization. */
@@ -85,7 +87,22 @@ class ExcelRowColumnStructureControllerTest {
   }
 
   @Test
-  void partialColumnUngroupKeepsBoundaryCollapsedMarkerAcrossRoundTrip() throws Exception {
+  void redundantNoOpColumnUngroupsDoNotMaterializeGhostColumnMetadata() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+
+      controller.ungroupColumns(sheet, new ExcelColumnSpan(0, 3));
+      controller.ungroupColumns(sheet, new ExcelColumnSpan(0, 3));
+      controller.ungroupColumns(sheet, new ExcelColumnSpan(0, 3));
+
+      assertTrue(controller.columnLayouts(sheet).isEmpty());
+      assertEquals(1, sheet.getCTWorksheet().sizeOfColsArray());
+      assertEquals(0, sheet.getCTWorksheet().getColsArray(0).sizeOfColArray());
+    }
+  }
+
+  @Test
+  void partialColumnUngroupPreservesRemainingCollapsedBandAcrossRoundTrip() throws Exception {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-column-ungroup-collapse-");
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
@@ -97,11 +114,14 @@ class ExcelRowColumnStructureControllerTest {
       controller.ungroupColumns(sheet, new ExcelColumnSpan(1, 1));
 
       List<WorkbookReadResult.ColumnLayout> inMemoryColumns = controller.columnLayouts(sheet);
-      assertEquals(4, inMemoryColumns.size(), "in-memory columns=" + inMemoryColumns);
+      assertEquals(5, inMemoryColumns.size(), "in-memory columns=" + inMemoryColumns);
       assertTrue(inMemoryColumns.get(0).hidden(), "in-memory columns=" + inMemoryColumns);
-      assertTrue(inMemoryColumns.get(1).collapsed(), "in-memory columns=" + inMemoryColumns);
+      assertFalse(inMemoryColumns.get(1).collapsed(), "in-memory columns=" + inMemoryColumns);
       assertEquals(
           0, inMemoryColumns.get(1).outlineLevel(), "in-memory columns=" + inMemoryColumns);
+      assertTrue(inMemoryColumns.get(2).hidden(), "in-memory columns=" + inMemoryColumns);
+      assertTrue(inMemoryColumns.get(3).hidden(), "in-memory columns=" + inMemoryColumns);
+      assertTrue(inMemoryColumns.get(4).collapsed(), "in-memory columns=" + inMemoryColumns);
 
       try (var output = Files.newOutputStream(workbookPath)) {
         workbook.write(output);
@@ -110,10 +130,13 @@ class ExcelRowColumnStructureControllerTest {
 
     WorkbookReadResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
 
-    assertEquals(4, layout.columns().size(), "reopened columns=" + layout.columns());
+    assertEquals(5, layout.columns().size(), "reopened columns=" + layout.columns());
     assertTrue(layout.columns().get(0).hidden(), "reopened columns=" + layout.columns());
-    assertTrue(layout.columns().get(1).collapsed(), "reopened columns=" + layout.columns());
+    assertFalse(layout.columns().get(1).collapsed(), "reopened columns=" + layout.columns());
     assertEquals(0, layout.columns().get(1).outlineLevel(), "reopened columns=" + layout.columns());
+    assertTrue(layout.columns().get(2).hidden(), "reopened columns=" + layout.columns());
+    assertTrue(layout.columns().get(3).hidden(), "reopened columns=" + layout.columns());
+    assertTrue(layout.columns().get(4).collapsed(), "reopened columns=" + layout.columns());
   }
 
   @Test
@@ -1316,6 +1339,205 @@ class ExcelRowColumnStructureControllerTest {
   }
 
   @Test
+  void expandedOuterColumnGroupingDoesNotExpandCollapsedDescendantsOrCrash() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+
+      controller.groupColumns(sheet, new ExcelColumnSpan(2, 3), true);
+      assertDoesNotThrow(() -> controller.groupColumns(sheet, new ExcelColumnSpan(0, 2), false));
+
+      List<WorkbookReadResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+      assertEquals(5, columns.size(), "columns=" + columns);
+      assertFalse(columns.get(0).hidden(), "columns=" + columns);
+      assertFalse(columns.get(1).hidden(), "columns=" + columns);
+      assertTrue(columns.get(2).hidden(), "columns=" + columns);
+      assertEquals(2, columns.get(2).outlineLevel(), "columns=" + columns);
+      assertTrue(columns.get(3).hidden(), "columns=" + columns);
+      assertEquals(1, columns.get(3).outlineLevel(), "columns=" + columns);
+      assertTrue(columns.get(4).collapsed(), "columns=" + columns);
+    }
+  }
+
+  @Test
+  void repeatedExpandedColumnGroupingCanonicalizesOutlineLevelsBeforeRoundTrip() throws Exception {
+    Path workbookPath = Files.createTempFile("gridgrind-column-outline-", ".xlsx");
+
+    try {
+      try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+        XSSFSheet sheet = workbook.createSheet("Budget");
+        ExcelColumnSpan repeatedColumn = new ExcelColumnSpan(2, 2);
+
+        controller.groupColumns(sheet, new ExcelColumnSpan(2, 3), false);
+        for (int repetition = 0; repetition < 6; repetition++) {
+          controller.groupColumns(sheet, repeatedColumn, false);
+        }
+        controller.groupColumns(sheet, new ExcelColumnSpan(1, 3), false);
+
+        assertCanonicalColumnDefinitions(sheet);
+        assertColumnOutlineLevels(sheet, 1, 7, 2);
+
+        try (var outputStream = Files.newOutputStream(workbookPath)) {
+          workbook.write(outputStream);
+        }
+      }
+
+      try (XSSFWorkbook reopenedWorkbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+        XSSFSheet reopenedSheet = reopenedWorkbook.getSheet("Budget");
+
+        assertCanonicalColumnDefinitions(reopenedSheet);
+        assertColumnOutlineLevels(reopenedSheet, 1, 7, 2);
+      }
+    } finally {
+      Files.deleteIfExists(workbookPath);
+    }
+  }
+
+  @Test
+  void insertColumnsNormalizesMultiColumnRangeDefinitionsBeforeShifting() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      setString(sheet, "A1", "Live");
+      CTCol groupedRange = addRawColumnDefinition(sheet, 0, 1);
+      groupedRange.setHidden(true);
+      groupedRange.setOutlineLevel((short) 1);
+
+      controller.insertColumns(sheet, 0, 1);
+
+      assertCanonicalColumnDefinitions(sheet);
+      List<WorkbookReadResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+      assertEquals(3, columns.size(), "columns=" + columns);
+      assertFalse(columns.get(0).hidden(), "columns=" + columns);
+      assertTrue(columns.get(1).hidden(), "columns=" + columns);
+      assertTrue(columns.get(2).hidden(), "columns=" + columns);
+    }
+  }
+
+  @Test
+  void insertColumnsDropsSemanticallyEmptyDefinitionsBeforeShifting() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      setString(sheet, "A1", "Live");
+      addRawColumnDefinition(sheet, 0, 0);
+
+      controller.insertColumns(sheet, 0, 1);
+
+      assertCanonicalColumnDefinitions(sheet);
+      assertEquals(0, sheet.getCTWorksheet().getColsArray(0).sizeOfColArray());
+    }
+  }
+
+  @Test
+  void insertColumnsNormalizesOverlappingDefinitionsBeforeShifting() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      setString(sheet, "A1", "Live");
+
+      CTCol first = addRawColumnDefinition(sheet, 0, 1);
+      first.setHidden(true);
+      first.setOutlineLevel((short) 1);
+
+      CTCol second = addRawColumnDefinition(sheet, 1, 2);
+      second.setOutlineLevel((short) 2);
+
+      controller.insertColumns(sheet, 0, 1);
+
+      assertCanonicalColumnDefinitions(sheet);
+      List<WorkbookReadResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+      assertEquals(4, columns.size(), "columns=" + columns);
+      assertEquals(1, columns.get(1).outlineLevel(), "columns=" + columns);
+      assertEquals(2, columns.get(2).outlineLevel(), "columns=" + columns);
+      assertEquals(2, columns.get(3).outlineLevel(), "columns=" + columns);
+    }
+  }
+
+  @Test
+  void insertColumnsNormalizesDuplicateSingleColumnDefinitionsBeforeShifting() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      setString(sheet, "A1", "Live");
+
+      CTCol hidden = addRawColumnDefinition(sheet, 0, 0);
+      hidden.setHidden(true);
+      hidden.setOutlineLevel((short) 1);
+
+      CTCol nested = addRawColumnDefinition(sheet, 0, 0);
+      nested.setOutlineLevel((short) 2);
+
+      controller.insertColumns(sheet, 0, 1);
+
+      assertCanonicalColumnDefinitions(sheet);
+      List<WorkbookReadResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+      assertEquals(2, columns.size(), "columns=" + columns);
+      assertEquals(2, columns.get(1).outlineLevel(), "columns=" + columns);
+      assertTrue(columns.get(1).hidden(), "columns=" + columns);
+    }
+  }
+
+  @Test
+  void canonicalizeColumnDefinitionsPreservesBestFitOnlyColumns() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      CTCol definition = addRawColumnDefinition(sheet, 0, 0);
+      definition.setBestFit(true);
+
+      ExcelRowColumnStructureController.canonicalizeColumnDefinitions(sheet);
+
+      CTCol canonical = sheet.getCTWorksheet().getColsArray(0).getColArray(0);
+      assertTrue(canonical.getBestFit());
+      assertFalse(canonical.getCustomWidth());
+    }
+  }
+
+  @Test
+  void canonicalizeColumnDefinitionsPreservesPhoneticOnlyColumns() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      CTCol definition = addRawColumnDefinition(sheet, 0, 0);
+      definition.setPhonetic(true);
+
+      ExcelRowColumnStructureController.canonicalizeColumnDefinitions(sheet);
+
+      CTCol canonical = sheet.getCTWorksheet().getColsArray(0).getColArray(0);
+      assertTrue(canonical.getPhonetic());
+      assertFalse(canonical.getCollapsed());
+    }
+  }
+
+  @Test
+  void canonicalizeColumnDefinitionsPreservesStyledColumnsAndDropsZeroStyleDefaults()
+      throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet styledSheet = workbook.createSheet("Styled");
+      CTCol styled = addRawColumnDefinition(styledSheet, 0, 0);
+      styled.setStyle(7L);
+
+      ExcelRowColumnStructureController.canonicalizeColumnDefinitions(styledSheet);
+
+      assertEquals(1, styledSheet.getCTWorksheet().getColsArray(0).sizeOfColArray());
+      assertEquals(7L, styledSheet.getCTWorksheet().getColsArray(0).getColArray(0).getStyle());
+
+      XSSFSheet zeroStyleSheet = workbook.createSheet("ZeroStyle");
+      CTCol zeroStyle = addRawColumnDefinition(zeroStyleSheet, 0, 0);
+      zeroStyle.setStyle(0L);
+
+      ExcelRowColumnStructureController.canonicalizeColumnDefinitions(zeroStyleSheet);
+
+      assertEquals(0, zeroStyleSheet.getCTWorksheet().getColsArray(0).sizeOfColArray());
+    }
+  }
+
+  @Test
+  void shortColumnGroupingSequencesAvoidUnexpectedPoiRuntimeFailures() throws Exception {
+    List<ColumnGroupingMutation> mutations = columnGroupingMutations();
+
+    for (ColumnGroupingMutation first : mutations) {
+      for (ColumnGroupingMutation second : mutations) {
+        assertUnexpectedRuntimeFailureAbsent(first, second);
+      }
+    }
+  }
+
+  @Test
   void setColumnCollapsedSkipsEarlierRangesBeforeMatchingTheTargetRange() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
@@ -1498,6 +1720,96 @@ class ExcelRowColumnStructureControllerTest {
       cell = row.createCell(reference.getCol());
     }
     return cell;
+  }
+
+  private static List<ColumnGroupingMutation> columnGroupingMutations() {
+    List<ColumnGroupingMutation> mutations = new java.util.ArrayList<>();
+    for (int firstColumnIndex = 0; firstColumnIndex <= 3; firstColumnIndex++) {
+      for (int lastColumnIndex = firstColumnIndex; lastColumnIndex <= 3; lastColumnIndex++) {
+        mutations.add(new ColumnGroupingMutation("group", firstColumnIndex, lastColumnIndex, true));
+        mutations.add(
+            new ColumnGroupingMutation("group", firstColumnIndex, lastColumnIndex, false));
+        mutations.add(
+            new ColumnGroupingMutation("ungroup", firstColumnIndex, lastColumnIndex, false));
+      }
+    }
+    return List.copyOf(mutations);
+  }
+
+  private void assertColumnOutlineLevels(XSSFSheet sheet, int first, int second, int third) {
+    List<WorkbookReadResult.ColumnLayout> columns = controller.columnLayouts(sheet);
+
+    assertEquals(first, columns.get(1).outlineLevel(), "columns=" + columns);
+    assertEquals(second, columns.get(2).outlineLevel(), "columns=" + columns);
+    assertEquals(third, columns.get(3).outlineLevel(), "columns=" + columns);
+  }
+
+  private static void assertCanonicalColumnDefinitions(XSSFSheet sheet) {
+    assertEquals(1, sheet.getCTWorksheet().sizeOfColsArray());
+
+    boolean[] seenColumns = new boolean[ExcelColumnSpan.MAX_COLUMN_INDEX + 1];
+    for (CTCol col : sheet.getCTWorksheet().getColsArray(0).getColList()) {
+      assertEquals(col.getMin(), col.getMax(), "column definitions=" + sheet.getCTWorksheet());
+      for (int columnIndex = (int) col.getMin() - 1;
+          columnIndex <= (int) col.getMax() - 1;
+          columnIndex++) {
+        assertFalse(
+            seenColumns[columnIndex], "column definitions overlap for index " + columnIndex);
+        seenColumns[columnIndex] = true;
+      }
+    }
+  }
+
+  private static CTCol addRawColumnDefinition(
+      XSSFSheet sheet, int firstColumnIndex, int lastColumnIndex) {
+    CTCols cols =
+        sheet.getCTWorksheet().sizeOfColsArray() == 0
+            ? sheet.getCTWorksheet().addNewCols()
+            : sheet.getCTWorksheet().getColsArray(0);
+    CTCol definition = cols.addNewCol();
+    definition.setMin(firstColumnIndex + 1L);
+    definition.setMax(lastColumnIndex + 1L);
+    return definition;
+  }
+
+  private record ColumnGroupingMutation(
+      String operation, int firstColumnIndex, int lastColumnIndex, boolean collapsed) {
+    private void apply(ExcelRowColumnStructureController controller, XSSFSheet sheet) {
+      ExcelColumnSpan columns = new ExcelColumnSpan(firstColumnIndex, lastColumnIndex);
+      if ("group".equals(operation)) {
+        controller.groupColumns(sheet, columns, collapsed);
+        return;
+      }
+      controller.ungroupColumns(sheet, columns);
+    }
+
+    @Override
+    public String toString() {
+      return operation
+          + "("
+          + firstColumnIndex
+          + ","
+          + lastColumnIndex
+          + ("group".equals(operation) ? "," + collapsed : "")
+          + ")";
+    }
+  }
+
+  private void assertUnexpectedRuntimeFailureAbsent(
+      ColumnGroupingMutation first, ColumnGroupingMutation second) {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      try {
+        first.apply(controller, sheet);
+        second.apply(controller, sheet);
+      } catch (IllegalArgumentException expected) {
+        // Invalid outline edits are allowed; only unexpected runtime failures should fail.
+      } catch (RuntimeException unexpected) {
+        fail(first + " -> " + second + " threw unexpected runtime failure", unexpected);
+      }
+    } catch (IOException ioException) {
+      fail("Closing workbook should not fail during grouping regression checks", ioException);
+    }
   }
 
   /** Minimal POI Name stub for direct defined-name predicate tests. */

@@ -1,0 +1,8 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/redundant_noop_ungroup_columns_roundtrip_success.bin
+Harness: xlsx-roundtrip
+Outcome: SUCCESS
+Input Bytes: 154
+Command Count: 10
+Style Kinds: (none)
+Command Kinds: GROUP_COLUMNS=8, CREATE_SHEET=1, SET_SHEET_PANE=1

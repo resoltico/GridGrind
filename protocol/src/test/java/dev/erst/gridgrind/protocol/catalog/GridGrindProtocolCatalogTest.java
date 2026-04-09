@@ -803,6 +803,9 @@ class GridGrindProtocolCatalogTest {
         entryNamed(catalog.operationTypes(), "ENSURE_SHEET").summary().contains("31"),
         "ENSURE_SHEET summary must state the 31-character sheet name limit");
     assertTrue(
+        entryNamed(catalog.operationTypes(), "ENSURE_SHEET").summary().contains(": \\ / ? * [ ]"),
+        "ENSURE_SHEET summary must state the reserved Excel sheet-name characters");
+    assertTrue(
         entryNamed(catalog.operationTypes(), "SET_COLUMN_WIDTH").summary().contains("255"),
         "SET_COLUMN_WIDTH summary must state the 255-unit column width limit");
     assertTrue(
@@ -898,6 +901,11 @@ class GridGrindProtocolCatalogTest {
             .summary()
             .contains("persisted path"),
         "ANALYZE_HYPERLINK_HEALTH summary must explain relative FILE resolution");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_HYPERLINK")
+            .summary()
+            .contains("persisted workbook path"),
+        "SET_HYPERLINK summary must explain relative FILE analysis resolution");
     assertTrue(
         entryNamed(catalog.readTypes(), "ANALYZE_WORKBOOK_FINDINGS")
             .summary()

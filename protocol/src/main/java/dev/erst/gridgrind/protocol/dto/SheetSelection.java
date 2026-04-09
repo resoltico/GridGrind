@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.excel.ExcelSheetNames;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -34,6 +35,7 @@ public sealed interface SheetSelection permits SheetSelection.All, SheetSelectio
     Set<String> unique = new LinkedHashSet<>();
     for (String sheetName : copy) {
       requireNonBlank(sheetName, "sheetNames");
+      ExcelSheetNames.requireValid(sheetName, "sheetNames");
       if (!unique.add(sheetName)) {
         throw new IllegalArgumentException("sheetNames must not contain duplicates");
       }
