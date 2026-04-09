@@ -17,8 +17,7 @@ import org.junit.jupiter.api.Test;
 class PromotionMetadataTest {
   @Test
   void committedMetadataPathsAreProjectRelative() throws IOException {
-    Path metadataRoot =
-        Path.of("src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata");
+    Path metadataRoot = JazzerHarness.promotedMetadataRoot(Path.of(""));
     try (Stream<Path> stream = Files.walk(metadataRoot)) {
       for (Path metadataPath :
           stream.filter(path -> path.getFileName().toString().endsWith(".json")).sorted().toList()) {
@@ -35,9 +34,8 @@ class PromotionMetadataTest {
 
   @Test
   void committedMetadataPathsResolveWithinProjectDirectory() throws IOException {
-    Path metadataRoot =
-        Path.of("src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata");
     Path projectDirectory = Path.of("").toAbsolutePath().normalize();
+    Path metadataRoot = JazzerHarness.promotedMetadataRoot(projectDirectory);
     try (Stream<Path> stream = Files.walk(metadataRoot)) {
       for (Path metadataPath :
           stream.filter(path -> path.getFileName().toString().endsWith(".json")).sorted().toList()) {

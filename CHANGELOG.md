@@ -5,6 +5,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.1] - 2026-04-09
+
+### Changed
+
+- `./check.sh` now emits explicit per-stage elapsed times plus a total elapsed time in its final
+  summary, so long local verification runs show where wall-clock time went without requiring
+  external timing wrappers.
+- `./check.sh` now derives its Jazzer regression-target progress total from the live regression
+  pulse plan instead of a hardcoded harness count, so adding or removing a replay harness cannot
+  silently desynchronize the Stage 2 progress summary from the actual nested build.
+
+### Fixed
+
+- Local Docker smoke verification now includes the legal files copied by the production image.
+  `.dockerignore` no longer strips those files from the build context, so local image builds match
+  the Dockerfile contract instead of failing at copy time.
+- Local Docker smoke now asserts GridGrind's help and version output semantically instead of only
+  checking that the container process exits successfully, so release-surface contract drift is
+  caught before publication.
+- Root-project Gradle test pulses now include scheduled in-flight heartbeats for long-running
+  tests instead of only reporting progress after completed tests. Local `./check.sh` quality-gate
+  monitoring therefore no longer misclassifies healthy long tests as stalled just because a single
+  test method runs quietly for longer than the stall threshold.
+- Jazzer regression replay now validates promoted-metadata target keys and referenced artifacts
+  before replaying them, and mismatch diagnostics now include richer expectation details plus any
+  unexpected-failure stack trace. Corrupted or partially moved promoted metadata therefore fails
+  fast as a regression-infrastructure defect instead of surfacing as a less actionable replay
+  mismatch later.
+
 ## [0.32.0] - 2026-04-09
 
 ### Changed
@@ -1141,7 +1170,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.32.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.32.1...HEAD
+[0.32.1]: https://github.com/resoltico/GridGrind/compare/v0.32.0...v0.32.1
 [0.32.0]: https://github.com/resoltico/GridGrind/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/resoltico/GridGrind/compare/v0.30.0...v0.31.0
 [0.30.0]: https://github.com/resoltico/GridGrind/compare/v0.29.0...v0.30.0

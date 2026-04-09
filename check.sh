@@ -36,8 +36,9 @@
 # `/usr/bin/java` launcher stub is therefore an invalid local runtime for this script.
 #
 # Exit status: 0 on success. Any failing Gradle stage or script precondition returns a non-zero
-# exit status. The script emits a final human-readable result line plus one machine-readable
-# summary line: [CHECK-SUMMARY] status=<success|failure> stage=<stage-id> exit_code=<n>
+# exit status. The script emits per-stage finish lines with durations plus one final human-readable
+# result line and one machine-readable summary line:
+# [CHECK-SUMMARY] status=<success|failure> stage=<stage-id> exit_code=<n> total_elapsed_seconds=<n>
 #
 # Usage: ./check.sh [supported gradle options]
 
@@ -94,6 +95,23 @@ readonly stall_threshold_seconds=90
 readonly gradle_test_pulse_interval_millis=$((pulse_interval_seconds * 1000))
 readonly diagnostics_command_timeout_seconds=5
 readonly stall_exit_code=124
+
+format_duration() {
+    local total_seconds=$1
+    local hours=$((total_seconds / 3600))
+    local minutes=$(((total_seconds % 3600) / 60))
+    local seconds=$((total_seconds % 60))
+
+    if (( hours > 0 )); then
+        printf '%dh%02dm%02ds' "${hours}" "${minutes}" "${seconds}"
+        return
+    fi
+    if (( minutes > 0 )); then
+        printf '%dm%02ds' "${minutes}" "${seconds}"
+        return
+    fi
+    printf '%ss' "${seconds}"
+}
 
 print_usage() {
     printf '%s\n' \
@@ -162,6 +180,8 @@ print_failure_guidance() {
 epoch_seconds() {
     date +%s
 }
+
+readonly check_started_at="$(epoch_seconds)"
 
 file_size_bytes() {
     local file_path=$1
@@ -249,6 +269,7 @@ stage_progress_summary_jazzer() {
     local log_path=$2
     local support_total_classes
     local completed_support_classes
+    local planned_regression_targets
     local finished_regression_targets
     local latest_pulse
 
@@ -258,6 +279,9 @@ stage_progress_summary_jazzer() {
     completed_support_classes="$(
         grep -c '^\[JAZZER-PULSE\] support-tests phase=class-complete ' "${log_path}" 2>/dev/null || true
     )"
+    planned_regression_targets="$(
+        grep -c '^\[JAZZER-PULSE\] regression-target phase=plan ' "${log_path}" 2>/dev/null || true
+    )"
     finished_regression_targets="$(
         grep -c '^\[JAZZER-PULSE\] regression-target phase=finish ' "${log_path}" 2>/dev/null || true
     )"
@@ -266,10 +290,11 @@ stage_progress_summary_jazzer() {
         latest_pulse="$(latest_task_line "${log_path}")"
     fi
 
-    printf 'support-classes=%s/%s regression-targets=%s/4 latest=%s' \
+    printf 'support-classes=%s/%s regression-targets=%s/%s latest=%s' \
         "${completed_support_classes}" \
         "${support_total_classes}" \
         "${finished_regression_targets}" \
+        "${planned_regression_targets}" \
         "$(compact_text "${latest_pulse}")"
 }
 
@@ -532,6 +557,8 @@ run_monitored_command() {
     current_stage_id="${stage_id}"
     current_stage_label="${stage_label}"
     printf '%s\n' "${stage_label}"
+    local stage_started_at
+    stage_started_at="$(epoch_seconds)"
 
     local stage_temp_dir
     stage_temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind-check-${stage_id}.XXXXXX")"
@@ -580,18 +607,36 @@ run_monitored_command() {
         "${stage_id}" \
         "${child_exit_code}" \
         "${log_path}"
+    local stage_finished_at
+    local stage_elapsed_seconds
+    stage_finished_at="$(epoch_seconds)"
+    stage_elapsed_seconds=$((stage_finished_at - stage_started_at))
+    printf '[CHECK-TIMING] stage=%s exit=%d elapsed_seconds=%d elapsed=%s log=%s\n' \
+        "${stage_id}" \
+        "${child_exit_code}" \
+        "${stage_elapsed_seconds}" \
+        "$(format_duration "${stage_elapsed_seconds}")" \
+        "${log_path}"
 
     return "${child_exit_code}"
 }
 
 emit_final_status() {
     local exit_code=$?
+    local total_elapsed_seconds
+    total_elapsed_seconds=$(($(epoch_seconds) - check_started_at))
     [[ "${emit_final_status_enabled}" == true ]] || return 0
     if [[ "${exit_code}" -eq 0 ]]; then
-        printf 'Result: success\n'
-        printf '[CHECK-SUMMARY] status=success stage=%s exit_code=%d\n' "${current_stage_id}" "${exit_code}"
+        printf 'Result: success in %s\n' "$(format_duration "${total_elapsed_seconds}")"
+        printf '[CHECK-SUMMARY] status=success stage=%s exit_code=%d total_elapsed_seconds=%d total_elapsed=%s\n' \
+            "${current_stage_id}" \
+            "${exit_code}" \
+            "${total_elapsed_seconds}" \
+            "$(format_duration "${total_elapsed_seconds}")"
     else
-        printf 'Result: failure during %s\n' "${current_stage_label}"
+        printf 'Result: failure during %s after %s\n' \
+            "${current_stage_label}" \
+            "$(format_duration "${total_elapsed_seconds}")"
         print_failure_guidance
         if [[ -n "${current_stage_log_path}" ]]; then
             printf 'Stage log: %s\n' "${current_stage_log_path}"
@@ -599,7 +644,11 @@ emit_final_status() {
         if [[ -n "${current_stage_diagnostics_directory}" ]]; then
             printf 'Diagnostics directory: %s\n' "${current_stage_diagnostics_directory}"
         fi
-        printf '[CHECK-SUMMARY] status=failure stage=%s exit_code=%d\n' "${current_stage_id}" "${exit_code}"
+        printf '[CHECK-SUMMARY] status=failure stage=%s exit_code=%d total_elapsed_seconds=%d total_elapsed=%s\n' \
+            "${current_stage_id}" \
+            "${exit_code}" \
+            "${total_elapsed_seconds}" \
+            "$(format_duration "${total_elapsed_seconds}")"
     fi
 }
 

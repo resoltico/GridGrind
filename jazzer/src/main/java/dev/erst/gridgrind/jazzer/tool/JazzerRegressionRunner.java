@@ -60,6 +60,9 @@ public final class JazzerRegressionRunner {
     for (int index = 0; index < metadataPaths.size(); index++) {
       Path metadataPath = metadataPaths.get(index);
       PromotionMetadata metadata = JazzerJson.read(metadataPath, PromotionMetadata.class);
+      if (validateMetadata(projectDirectory, harness, metadataPath, metadata, errorWriter) != 0) {
+        return 1;
+      }
       Path promotedInputPath = metadata.promotedInputPath(projectDirectory);
       ReplayOutcome currentOutcome =
           JazzerReplaySupport.replay(harness, Files.readAllBytes(promotedInputPath));
@@ -67,19 +70,15 @@ public final class JazzerRegressionRunner {
       ReplayExpectation currentExpectation = JazzerReplaySupport.expectationFor(currentOutcome);
       if (!metadata.replayOutcome().equals(currentOutcomeKind)
           || !metadata.expectation().equals(currentExpectation)) {
-        errorWriter.println(
-            "Regression mismatch for "
-                + harness.key()
-                + " input "
-                + promotedInputPath.getFileName()
-                + ": expected "
-                + metadata.replayOutcome()
-                + " / "
-                + metadata.expectation()
-                + " but got "
-                + currentOutcomeKind
-                + " / "
-                + currentExpectation);
+        writeReplayMismatch(
+            errorWriter,
+            harness,
+            metadataPath,
+            promotedInputPath,
+            metadata,
+            currentOutcome,
+            currentOutcomeKind,
+            currentExpectation);
         return 1;
       }
       outputWriter.println(
@@ -98,12 +97,93 @@ public final class JazzerRegressionRunner {
     return 0;
   }
 
+  static int validateMetadata(
+      Path projectDirectory,
+      JazzerHarness harness,
+      Path metadataPath,
+      PromotionMetadata metadata,
+      PrintWriter errorWriter) {
+    Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
+    Objects.requireNonNull(harness, "harness must not be null");
+    Objects.requireNonNull(metadataPath, "metadataPath must not be null");
+    Objects.requireNonNull(metadata, "metadata must not be null");
+    Objects.requireNonNull(errorWriter, "errorWriter must not be null");
+
+    if (!metadata.targetKey().equals(harness.key())) {
+      errorWriter.println(
+          "Promoted metadata target mismatch for "
+              + metadataPath.getFileName()
+              + ": expected "
+              + harness.key()
+              + " but was "
+              + metadata.targetKey());
+      return 1;
+    }
+
+    Path promotedInputPath = metadata.promotedInputPath(projectDirectory);
+    if (!Files.exists(promotedInputPath)) {
+      errorWriter.println("Committed promoted input does not exist: " + promotedInputPath);
+      return 1;
+    }
+
+    Path replayTextPath = metadata.replayTextPath(projectDirectory);
+    if (!Files.exists(replayTextPath)) {
+      errorWriter.println("Committed replay text does not exist: " + replayTextPath);
+      return 1;
+    }
+
+    return 0;
+  }
+
+  static void writeReplayMismatch(
+      PrintWriter errorWriter,
+      JazzerHarness harness,
+      Path metadataPath,
+      Path promotedInputPath,
+      PromotionMetadata metadata,
+      ReplayOutcome currentOutcome,
+      String currentOutcomeKind,
+      ReplayExpectation currentExpectation) {
+    Objects.requireNonNull(errorWriter, "errorWriter must not be null");
+    Objects.requireNonNull(harness, "harness must not be null");
+    Objects.requireNonNull(metadataPath, "metadataPath must not be null");
+    Objects.requireNonNull(promotedInputPath, "promotedInputPath must not be null");
+    Objects.requireNonNull(metadata, "metadata must not be null");
+    Objects.requireNonNull(currentOutcome, "currentOutcome must not be null");
+    Objects.requireNonNull(currentOutcomeKind, "currentOutcomeKind must not be null");
+    Objects.requireNonNull(currentExpectation, "currentExpectation must not be null");
+
+    errorWriter.println(
+        "Regression mismatch for "
+            + harness.key()
+            + " input "
+            + promotedInputPath.getFileName()
+            + " (metadata "
+            + metadataPath.getFileName()
+            + "): expected "
+            + metadata.replayOutcome()
+            + " / "
+            + expectationText(metadata.expectation())
+            + " but got "
+            + currentOutcomeKind
+            + " / "
+            + expectationText(currentExpectation));
+    if (currentOutcome instanceof ReplayOutcome.UnexpectedFailure unexpectedFailure) {
+      errorWriter.println(unexpectedFailure.stackTrace());
+    }
+  }
+
+  private static String expectationText(ReplayExpectation expectation) {
+    try {
+      return JazzerJson.toJson(expectation);
+    } catch (IOException exception) {
+      throw new IllegalStateException("Failed to serialize replay expectation", exception);
+    }
+  }
+
   private static List<Path> promotedMetadataPaths(Path projectDirectory, JazzerHarness harness)
       throws IOException {
-    Path metadataRoot =
-        projectDirectory
-            .resolve("src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata")
-            .resolve(harness.key());
+    Path metadataRoot = harness.promotedMetadataDirectory(projectDirectory);
     if (!Files.isDirectory(metadataRoot)) {
       return List.of();
     }

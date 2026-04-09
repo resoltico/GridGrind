@@ -177,9 +177,7 @@ public final class JazzerReportSupport {
    */
   public static Set<Path> promotedInputPaths(Path projectDirectory) throws IOException {
     Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
-    Path metadataRoot =
-        projectDirectory.resolve(
-            "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata");
+    Path metadataRoot = JazzerHarness.promotedMetadataRoot(projectDirectory);
     if (!Files.exists(metadataRoot)) {
       return Set.of();
     }

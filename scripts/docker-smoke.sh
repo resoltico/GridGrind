@@ -9,6 +9,16 @@ die() {
     exit 1
 }
 
+require_match() {
+    local text=$1
+    local pattern=$2
+    local message=$3
+
+    if ! printf '%s\n' "${text}" | grep -Eq "${pattern}"; then
+        die "${message}"
+    fi
+}
+
 resolve_script_dir() {
     local source_path="${BASH_SOURCE[0]}"
     while [[ -h "${source_path}" ]]; do
@@ -71,17 +81,23 @@ printf 'Docker smoke: building local image\n'
 docker build -t "${image_tag}" "${repo_root}" >/dev/null
 
 printf 'Docker smoke: verifying custom workdir and weird paths\n'
-docker run --rm \
+help_output="$(docker run --rm \
     -w /workdir \
     -v "${smoke_root}:/workdir" \
     "${image_tag}" \
-    --help >/dev/null
+    --help | tr -d '\r')"
+require_match "${help_output}" '^GridGrind CLI ' \
+    "docker smoke help output did not include the CLI banner"
+require_match "${help_output}" '^Usage:' \
+    "docker smoke help output did not include the usage section"
 
-docker run --rm \
+version_output="$(docker run --rm \
     -w /workdir \
     -v "${smoke_root}:/workdir" \
     "${image_tag}" \
-    --version >/dev/null
+    --version | tr -d '\r')"
+require_match "${version_output}" '^gridgrind ' \
+    "docker smoke version output did not include the application name"
 
 docker run --rm \
     -w /workdir \

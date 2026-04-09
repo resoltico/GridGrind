@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.32.0"
+version: "0.32.1"
 domain: DEVELOPER_JAZZER
-updated: "2026-04-08"
+updated: "2026-04-09"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -41,6 +41,7 @@ Implemented now:
 - pure-Java deterministic replay for the structured binary harnesses, so committed-seed replay
   and `jazzer/bin/replay` do not depend on Jazzer's native replay provider loading
 - replay-expectation verification for every promoted metadata entry
+- promoted-metadata self-validation for target-key consistency and referenced replay artifacts
 - promoted-metadata refresh tooling for intentional generator and replay-shape changes
 - committed custom seed floor made of promoted regression inputs and readable example requests
 - style-aware `.xlsx` round-trip verification for formatting depth, hyperlink/comment metadata,
@@ -98,6 +99,8 @@ Seed policy:
   direct dependence on Jazzer's native `withJavaData(...)` bootstrap path
 - every promoted metadata entry must carry a stable replay expectation and must remain replay-
   verified by deterministic support tests
+- every promoted metadata entry must keep a matching harness target key and must continue to point
+  at both an existing committed input and an existing replay-text artifact
 - the promotion contract is bidirectional and enforced by `PromotionMetadataTest`: every file
   committed to a harness input directory must have a corresponding promoted-metadata entry, and
   every promoted-metadata entry must replay to its recorded expectation; hand-dropping a file
