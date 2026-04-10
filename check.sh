@@ -11,7 +11,8 @@
 #   coverage -> per-module and aggregated JaCoCo HTML/XML reports
 #
 # Stage 2 runs the nested Jazzer verification build:
-#   jazzer check -> deterministic Jazzer support tests plus committed-seed regression replay
+#   jazzer check -> shared Spotless/PMD, deterministic Jazzer support tests, dedicated Jazzer
+#                   coverage verification, and committed-seed regression replay
 #
 # CI runs only the root check task (verification without report generation).
 #

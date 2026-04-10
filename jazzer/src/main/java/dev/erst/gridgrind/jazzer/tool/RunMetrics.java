@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 /** Captures the run-level metrics emitted by a completed Jazzer command. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-    @JsonSubTypes.Type(value = RunMetrics.ActiveFuzzMetrics.class, name = "ACTIVE_FUZZ"),
-    @JsonSubTypes.Type(value = RunMetrics.RegressionMetrics.class, name = "REGRESSION")
+  @JsonSubTypes.Type(value = RunMetrics.ActiveFuzzMetrics.class, name = "ACTIVE_FUZZ"),
+  @JsonSubTypes.Type(value = RunMetrics.RegressionMetrics.class, name = "REGRESSION")
 })
 public sealed interface RunMetrics
     permits RunMetrics.ActiveFuzzMetrics, RunMetrics.RegressionMetrics {

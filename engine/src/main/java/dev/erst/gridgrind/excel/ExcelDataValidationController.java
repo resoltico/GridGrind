@@ -146,7 +146,9 @@ final class ExcelDataValidationController {
 
   private List<String> retainedRanges(CTDataValidation validation, List<ExcelRange> cutouts) {
     List<ExcelRange> retained =
-        normalizedSqref(validation.getSqref()).stream().map(ExcelRange::parse).toList();
+        ExcelSqrefSupport.normalizedSqref(validation.getSqref()).stream()
+            .map(ExcelRange::parse)
+            .toList();
     List<ExcelRange> next = new ArrayList<>();
     for (ExcelRange cutout : cutouts) {
       next.clear();
@@ -214,17 +216,6 @@ final class ExcelDataValidationController {
     return new CellRangeAddress(
             range.firstRow(), range.lastRow(), range.firstColumn(), range.lastColumn())
         .formatAsString();
-  }
-
-  private static List<String> normalizedSqref(List<?> sqref) {
-    List<String> normalized = new ArrayList<>(sqref.size());
-    for (Object value : sqref) {
-      String text = Objects.toString(value, "").trim();
-      if (!text.isEmpty()) {
-        normalized.add(text);
-      }
-    }
-    return List.copyOf(normalized);
   }
 
   private static void syncValidationCount(XSSFSheet sheet) {

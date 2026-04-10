@@ -1,11 +1,13 @@
 package dev.erst.gridgrind.buildlogic
 
+import java.math.BigDecimal
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.VersionCatalog
 import org.gradle.api.artifacts.VersionCatalogsExtension
 import org.gradle.api.file.Directory
 import org.gradle.api.plugins.JavaPluginExtension
+import org.gradle.api.plugins.quality.Pmd
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.testing.Test
@@ -14,18 +16,22 @@ import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import org.gradle.process.JavaForkOptions
+import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
+import org.gradle.testing.jacoco.tasks.JacocoReport
 
 class GridGrindJazzerConventionsPlugin : Plugin<Project> {
     override fun apply(project: Project) {
         with(project) {
             pluginManager.apply("java")
+            pluginManager.apply("gridgrind.java-conventions")
 
             description = "Local-only Jazzer fuzzing layer for GridGrind"
 
-            repositories.mavenCentral()
-
             val topology = JazzerTopology.load(this)
             val libs = extensions.getByType<VersionCatalogsExtension>().named("libs")
+            val repositoryLayout = GridGrindRepositoryLayout.locate(this)
+            val jazzerMainPmdRuleset = repositoryLayout.repositoryRoot.resolve("gradle/pmd/jazzer-ruleset.xml")
+            val jazzerFuzzPmdRuleset = repositoryLayout.repositoryRoot.resolve("gradle/pmd/jazzer-fuzz-ruleset.xml")
             val gridgrindJavaVersion =
                 providers.gradleProperty("gridgrindJavaVersion").map(String::toInt).get()
             val jazzerMaxDuration = providers.gradleProperty("jazzerMaxDuration").orNull
@@ -55,6 +61,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 add("implementation", libs.library("junit-platform-launcher"))
                 add("implementation", libs.library("jazzer-api"))
                 add("implementation", libs.library("jazzer"))
+                add("implementation", libs.library("jazzer-junit"))
                 add("implementation", libs.library("poi-ooxml"))
                 add("implementation", libs.library("jackson-databind"))
                 add("implementation", "dev.erst.gridgrind:protocol")
@@ -63,6 +70,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
 
                 add("testImplementation", platform(libs.library("junit-bom")))
                 add("testImplementation", libs.library("junit-jupiter"))
+                add("testImplementation", libs.library("jazzer-junit"))
                 add("testImplementation", libs.library("poi-ooxml"))
                 add("testImplementation", libs.library("jackson-databind"))
                 add("testImplementation", "dev.erst.gridgrind:protocol")
@@ -176,6 +184,55 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 doFirst {
                     addTestListener(JazzerSupportTestPulseListener(supportTestClassCount))
                 }
+            }
+
+            tasks.withType(Pmd::class.java)
+                .matching { task -> task.name == "pmdMain" }
+                .configureEach {
+                    ruleSetFiles = files(jazzerMainPmdRuleset)
+                    ruleSets = emptyList()
+                }
+
+            tasks.withType(Pmd::class.java)
+                .matching { task -> task.name == "pmdFuzz" }
+                .configureEach {
+                    ruleSetFiles = files(jazzerFuzzPmdRuleset)
+                    ruleSets = emptyList()
+                }
+
+            val jazzerCoverageClasses =
+                mainSourceSet.output.classesDirs.asFileTree.matching {
+                    exclude(*JAZZER_COVERAGE_EXCLUSIONS.toTypedArray())
+                }
+
+            tasks.named<JacocoReport>("jacocoTestReport") {
+                classDirectories.setFrom(jazzerCoverageClasses)
+            }
+
+            tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
+                enabled = false
+            }
+
+            val jazzerCoverageVerification =
+                tasks.register<JacocoCoverageVerification>("jazzerCoverageVerification") {
+                    description =
+                        "Verifies deterministic-unit coverage for the Jazzer support-contract subset."
+                    group = "verification"
+                    dependsOn(tasks.named<Test>("test"))
+                    executionData.from(layout.buildDirectory.file("jacoco/test.exec"))
+                    sourceDirectories.setFrom(mainSourceSet.allJava.srcDirs)
+                    classDirectories.setFrom(jazzerCoverageClasses)
+                    violationRules {
+                        rule {
+                            limit {
+                                minimum = BigDecimal(JAZZER_COVERAGE_MINIMUM)
+                            }
+                        }
+                    }
+                }
+
+            tasks.named("check") {
+                dependsOn(jazzerCoverageVerification)
             }
 
             tasks.named("check") {
@@ -356,5 +413,19 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
 
     private companion object {
         private const val NATIVE_ACCESS_ARGUMENT = "--enable-native-access=ALL-UNNAMED"
+        private const val JAZZER_COVERAGE_MINIMUM = "0.72"
+        private val JAZZER_COVERAGE_EXCLUSIONS =
+            listOf(
+                "dev/erst/gridgrind/jazzer/support/FuzzDataDecoders*.class",
+                "dev/erst/gridgrind/jazzer/support/GeneratedProtocolWorkflow*.class",
+                "dev/erst/gridgrind/jazzer/support/HarnessTelemetry*.class",
+                "dev/erst/gridgrind/jazzer/support/JazzerGridGrindFuzzData*.class",
+                "dev/erst/gridgrind/jazzer/support/OperationSequenceModel*.class",
+                "dev/erst/gridgrind/jazzer/support/StyleKindIntrospection*.class",
+                "dev/erst/gridgrind/jazzer/support/WorkbookStyleInputs*.class",
+                "dev/erst/gridgrind/jazzer/tool/JazzerCli*.class",
+                "dev/erst/gridgrind/jazzer/tool/JazzerReportSupport*.class",
+                "dev/erst/gridgrind/jazzer/tool/RunMetrics*.class",
+            )
     }
 }

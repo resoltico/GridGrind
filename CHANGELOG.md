@@ -5,6 +5,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.33.0] - 2026-04-10
+
+### Changed
+
+- Root build policy is now fully convention-plugin owned. The repository root build script is
+  reduced to a thin `gridgrind.root-conventions` application, shared Java module policy lives in
+  `GridGrindJavaConventionsPlugin`, and the nested Jazzer build now inherits the same shared
+  Spotless and PMD enforcement instead of depending on an old root `subprojects {}` block.
+- Nested Jazzer verification now uses dedicated local-only static-analysis profiles: a Jazzer PMD
+  ruleset for support and operator code, a fuzz-harness PMD ruleset for `@FuzzTest` entrypoints,
+  and a dedicated JaCoCo verification scope for deterministic support-contract classes rather than
+  the root product modules' blanket 100% bundle gate.
+
+### Fixed
+
+- Shared build logic no longer recompiles nondeterministically after local edits. The obsolete
+  root `buildSrc` directory is gone, build-logic output directories are cleaned without deleting
+  the compiler's classpath root, and Kotlin incremental compilation is disabled for
+  `gradle/build-logic` so composite-build recompiles no longer lose sibling helper types.
+- Root aggregated coverage now resolves reproducibly under configuration cache. The
+  `gridgrind.root-conventions` plugin now declares the root repository needed by the
+  `jacocoAggregatedReport` task instead of relying on repository state that used to live in the
+  old root build script.
+- Nested Jazzer support verification is once again fully live under `./gradlew --project-dir
+  jazzer check`: the interrupted `XlsxRoundTripVerifierTest` refactor is completed, Jazzer-only
+  PMD findings are enforced through the right profile, and regression replay plus support-test
+  pulses remain green under the shared conventions.
+- Active fuzz scripts once again execute through Jazzer's real command-line JUnit launcher instead
+  of a partial in-repo reimplementation. `JazzerHarnessRunner` now requires exactly one
+  `@FuzzTest` per harness class, delegates to Jazzer's official `JUnitRunner`, and honors
+  `jazzer.max_duration` and `jazzer.max_executions` during local live runs.
+- Excel XMLBeans `sqref` handling now goes through one shared normalizer instead of ad hoc raw
+  stream usage. Conditional-formatting and data-validation paths both normalize the same way, and
+  engine compilation is free of the lingering unchecked-operation notes in the conditional-
+  formatting controller and its tests.
+
 ## [0.32.2] - 2026-04-10
 
 ### Added
@@ -1204,7 +1240,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.32.2...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.33.0...HEAD
+[0.33.0]: https://github.com/resoltico/GridGrind/compare/v0.32.2...v0.33.0
 [0.32.2]: https://github.com/resoltico/GridGrind/compare/v0.32.1...v0.32.2
 [0.32.1]: https://github.com/resoltico/GridGrind/compare/v0.32.0...v0.32.1
 [0.32.0]: https://github.com/resoltico/GridGrind/compare/v0.31.0...v0.32.0

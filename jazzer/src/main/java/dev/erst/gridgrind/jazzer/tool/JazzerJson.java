@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Objects;
-import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 /** Centralizes JSON serialization for the local Jazzer operator layer. */
 public final class JazzerJson {

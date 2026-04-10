@@ -1,8 +1,12 @@
 package dev.erst.gridgrind.jazzer.tool;
 
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -14,12 +18,16 @@ public final class JazzerRegressionRunner {
 
   private JazzerRegressionRunner() {}
 
-  /** Replays the selected harness's committed promoted inputs and exits non-zero on any mismatch. */
+  /**
+   * Replays the selected harness's committed promoted inputs and exits non-zero on any mismatch.
+   */
   public static void main(String[] args) throws IOException {
-    try (PrintWriter outputWriter = new PrintWriter(System.out, true);
-        PrintWriter errorWriter = new PrintWriter(System.err, true)) {
-      System.exit(run(Path.of("").toAbsolutePath().normalize(), parseHarness(args), outputWriter, errorWriter));
-    }
+    System.exit(
+        run(
+            Path.of("").toAbsolutePath().normalize(),
+            parseHarness(args),
+            standardWriter(System.out),
+            standardWriter(System.err)));
   }
 
   /** Parses the required `--target <harness-key>` argument pair for direct regression replay. */
@@ -35,9 +43,14 @@ public final class JazzerRegressionRunner {
     return JazzerHarness.fromKey(targetKey);
   }
 
-  /** Replays all committed promoted inputs for one harness and returns a process-style exit code. */
+  /**
+   * Replays all committed promoted inputs for one harness and returns a process-style exit code.
+   */
   static int run(
-      Path projectDirectory, JazzerHarness harness, PrintWriter outputWriter, PrintWriter errorWriter)
+      Path projectDirectory,
+      JazzerHarness harness,
+      PrintWriter outputWriter,
+      PrintWriter errorWriter)
       throws IOException {
     Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
     Objects.requireNonNull(harness, "harness must not be null");
@@ -93,7 +106,11 @@ public final class JazzerRegressionRunner {
               + promotedInputPath.getFileName()
               + " status=SUCCESS");
     }
-    outputWriter.println(PULSE_PREFIX + "regression-target phase=finish target=" + harness.key() + " status=SUCCESS");
+    outputWriter.println(
+        PULSE_PREFIX
+            + "regression-target phase=finish target="
+            + harness.key()
+            + " status=SUCCESS");
     return 0;
   }
 
@@ -193,5 +210,10 @@ public final class JazzerRegressionRunner {
           .sorted()
           .toList();
     }
+  }
+
+  private static PrintWriter standardWriter(OutputStream outputStream) {
+    return new PrintWriter(
+        new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)), true);
   }
 }

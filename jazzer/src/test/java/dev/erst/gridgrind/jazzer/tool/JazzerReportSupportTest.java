@@ -45,7 +45,8 @@ class JazzerReportSupportTest {
     Files.writeString(promotedInputPath, "{}");
 
     Path metadataPath =
-        JazzerHarness.protocolRequest().promotedMetadataDirectory(projectDirectory)
+        JazzerHarness.protocolRequest()
+            .promotedMetadataDirectory(projectDirectory)
             .resolve("seed.json");
     Files.createDirectories(metadataPath.getParent());
     Path replayTextPath = metadataPath.resolveSibling("seed.txt");
@@ -59,7 +60,8 @@ class JazzerReportSupportTest {
             "SUCCESS",
             new ReplayExpectation(
                 "SUCCESS",
-                new ProtocolRequestDetails(2, "PARSED", "NEW", "NONE", 0, Map.of(), Map.of(), 0, Map.of())),
+                new ProtocolRequestDetails(
+                    2, "PARSED", "NEW", "NONE", 0, Map.of(), Map.of(), 0, Map.of())),
             "2026-04-06T00:00:00Z",
             PromotionMetadata.relativizePath(projectDirectory, replayTextPath)));
 

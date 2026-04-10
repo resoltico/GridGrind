@@ -239,7 +239,7 @@ final class ExcelConditionalFormattingController {
   }
 
   private static List<String> formattingRanges(CTConditionalFormatting ctBlock) {
-    return ctBlock.getSqref().stream().map(Object::toString).toList();
+    return ExcelSqrefSupport.normalizedSqref(ctBlock.getSqref());
   }
 
   private static CTConditionalFormatting ctBlock(XSSFSheet sheet, int blockIndex) {

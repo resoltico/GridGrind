@@ -3,7 +3,6 @@ package dev.erst.gridgrind.jazzer.tool;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
-import dev.erst.gridgrind.jazzer.tool.XlsxRoundTripDetails;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -120,8 +119,7 @@ class JazzerReplaySupportTest {
         }
         """
             .getBytes(StandardCharsets.UTF_8);
-    ReplayOutcome outcome =
-        JazzerReplaySupport.replay(JazzerHarness.protocolRequest(), input);
+    ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.protocolRequest(), input);
 
     assertInstanceOf(ReplayOutcome.Success.class, outcome);
     ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;
@@ -188,14 +186,17 @@ class JazzerReplaySupportTest {
 
   private static byte[] artifactBytes(String resourceName) {
     try (InputStream inputStream =
-        JazzerReplaySupportTest.class.getResourceAsStream("/dev/erst/gridgrind/jazzer/tool/" + resourceName)) {
+        JazzerReplaySupportTest.class.getResourceAsStream(
+            "/dev/erst/gridgrind/jazzer/tool/" + resourceName)) {
       if (inputStream == null) {
         throw new IllegalStateException("missing replay artifact resource: " + resourceName);
       }
-      String base64 = new String(inputStream.readAllBytes(), StandardCharsets.US_ASCII).replaceAll("\\s+", "");
+      String base64 =
+          new String(inputStream.readAllBytes(), StandardCharsets.US_ASCII).replaceAll("\\s+", "");
       return Base64.getDecoder().decode(base64);
     } catch (IOException exception) {
-      throw new UncheckedIOException("failed to load replay artifact resource: " + resourceName, exception);
+      throw new UncheckedIOException(
+          "failed to load replay artifact resource: " + resourceName, exception);
     }
   }
 }

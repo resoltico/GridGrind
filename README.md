@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.32.2
+docker pull ghcr.io/resoltico/gridgrind:0.33.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -126,6 +126,11 @@ gate:
 That local whole-repo gate runs the root quality checks, nested Jazzer verification, packaging
 smoke checks, and Docker smoke coverage in one supported sequence. Jazzer-specific operator flows
 also remain available through the scripts under [`jazzer/bin`](./jazzer/bin/).
+
+Root `./gradlew check` stays focused on `engine`, `protocol`, and `cli`. The nested Jazzer build
+remains local-only on purpose and has its own `./gradlew --project-dir jazzer check` flow, which
+applies shared Spotless and PMD conventions plus Jazzer-specific coverage and regression gates
+without pulling active fuzzing into GitHub CI.
 
 ---
 

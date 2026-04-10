@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -20,7 +21,10 @@ class PromotionMetadataTest {
     Path metadataRoot = JazzerHarness.promotedMetadataRoot(Path.of(""));
     try (Stream<Path> stream = Files.walk(metadataRoot)) {
       for (Path metadataPath :
-          stream.filter(path -> path.getFileName().toString().endsWith(".json")).sorted().toList()) {
+          stream
+              .filter(path -> path.getFileName().toString().endsWith(".json"))
+              .sorted()
+              .toList()) {
         PromotionMetadata metadata = JazzerJson.read(metadataPath, PromotionMetadata.class);
         assertFalse(Path.of(metadata.sourcePath()).isAbsolute(), "source path must be relative");
         assertFalse(
@@ -38,7 +42,10 @@ class PromotionMetadataTest {
     Path metadataRoot = JazzerHarness.promotedMetadataRoot(projectDirectory);
     try (Stream<Path> stream = Files.walk(metadataRoot)) {
       for (Path metadataPath :
-          stream.filter(path -> path.getFileName().toString().endsWith(".json")).sorted().toList()) {
+          stream
+              .filter(path -> path.getFileName().toString().endsWith(".json"))
+              .sorted()
+              .toList()) {
         PromotionMetadata metadata = JazzerJson.read(metadataPath, PromotionMetadata.class);
         assertTrue(
             Files.exists(metadata.promotedInputPath(projectDirectory)),
@@ -69,7 +76,7 @@ class PromotionMetadataTest {
                   try {
                     return JazzerReportSupport.orphanedInputs(projectDirectory, harness).stream();
                   } catch (IOException exception) {
-                    throw new RuntimeException(exception);
+                    throw new UncheckedIOException(exception);
                   }
                 })
             .sorted()

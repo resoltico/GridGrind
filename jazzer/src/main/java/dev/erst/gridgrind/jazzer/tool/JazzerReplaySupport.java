@@ -10,10 +10,10 @@ import dev.erst.gridgrind.jazzer.support.OperationSequenceModel;
 import dev.erst.gridgrind.jazzer.support.SequenceIntrospection;
 import dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks;
 import dev.erst.gridgrind.jazzer.support.XlsxRoundTripVerifier;
-import dev.erst.gridgrind.protocol.json.GridGrindJson;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
 import dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.protocol.json.GridGrindJson;
 import dev.erst.gridgrind.protocol.json.InvalidJsonException;
 import dev.erst.gridgrind.protocol.json.InvalidRequestException;
 import dev.erst.gridgrind.protocol.json.InvalidRequestShapeException;
@@ -315,16 +315,18 @@ public final class JazzerReplaySupport {
       if (!Files.exists(directory)) {
         return;
       }
-      Files.walk(directory)
-          .sorted((left, right) -> right.compareTo(left))
-          .forEach(
-              path -> {
-                try {
-                  Files.deleteIfExists(path);
-                } catch (IOException ignored) {
-                  // Best-effort cleanup for replay scratch space.
-                }
-              });
+      try (var stream = Files.walk(directory)) {
+        stream
+            .sorted((left, right) -> right.compareTo(left))
+            .forEach(
+                path -> {
+                  try {
+                    Files.deleteIfExists(path);
+                  } catch (IOException ignored) {
+                    // Best-effort cleanup for replay scratch space.
+                  }
+                });
+      }
     } catch (IOException ignored) {
       // Best-effort cleanup for replay scratch space.
     }

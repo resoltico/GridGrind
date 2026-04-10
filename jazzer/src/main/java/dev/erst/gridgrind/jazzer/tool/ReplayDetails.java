@@ -2,7 +2,6 @@ package dev.erst.gridgrind.jazzer.tool;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import java.util.Map;
 
 /** Describes the structured meaning of a replayed fuzz input. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")

@@ -1,31 +1,34 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import dev.erst.gridgrind.excel.ExcelBorder;
+import dev.erst.gridgrind.excel.ExcelBorderSide;
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellAlignment;
 import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.ExcelComment;
+import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
+import dev.erst.gridgrind.excel.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
+import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.ExcelDataValidationRule;
-import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
-import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
+import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -34,11 +37,11 @@ import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -61,8 +64,7 @@ class XlsxRoundTripVerifierTest {
                 ExcelCellStyle.alignment(
                     ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP)));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Preserves style expectations when a later value write targets an already styled cell. */
@@ -78,18 +80,24 @@ class XlsxRoundTripVerifierTest {
                 new ExcelCellStyle(
                     null,
                     new ExcelCellAlignment(
-                        null, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, null, null),
+                        null,
+                        ExcelHorizontalAlignment.CENTER,
+                        ExcelVerticalAlignment.TOP,
+                        null,
+                        null),
                     null,
                     new ExcelCellFill(ExcelFillPattern.SOLID, "#AABBCC", null),
                     null,
                     null)),
             new WorkbookCommand.SetCell("Sheet1", "A1", ExcelCellValue.text("reset")));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
-  /** Preserves style state when APPEND_ROW writes into a style-only row selected by append semantics. */
+  /**
+   * Preserves style state when APPEND_ROW writes into a style-only row selected by append
+   * semantics.
+   */
   @Test
   void requireRoundTripReadable_preservesStylesWhenAppendRowReusesStyledBlankRow(
       @TempDir Path tempDirectory) throws IOException {
@@ -118,11 +126,12 @@ class XlsxRoundTripVerifierTest {
                 "X",
                 List.of(ExcelCellValue.number(607.8483822864587), ExcelCellValue.bool(false))));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
-  /** Accepts date-time append writes that relayer the required number format onto styled blank rows. */
+  /**
+   * Accepts date-time append writes that relayer the required number format onto styled blank rows.
+   */
   @Test
   void requireRoundTripReadable_acceptsDateTimeStyleRelayerOnStyledBlankAppendRow(
       @TempDir Path tempDirectory) throws IOException {
@@ -139,7 +148,8 @@ class XlsxRoundTripVerifierTest {
                 "A1:B2",
                 new ExcelCellStyle(
                     "0.00",
-                    new ExcelCellAlignment(Boolean.TRUE, null, ExcelVerticalAlignment.CENTER, null, null),
+                    new ExcelCellAlignment(
+                        Boolean.TRUE, null, ExcelVerticalAlignment.CENTER, null, null),
                     new ExcelCellFont(null, Boolean.TRUE, null, null, null, null, null),
                     new ExcelCellFill(ExcelFillPattern.SOLID, "#603A79", null),
                     new ExcelBorder(
@@ -155,8 +165,7 @@ class XlsxRoundTripVerifierTest {
                     ExcelCellValue.dateTime(java.time.LocalDateTime.of(2026, 2, 6, 13, 1, 58)),
                     ExcelCellValue.dateTime(java.time.LocalDateTime.of(2026, 2, 6, 13, 1, 1)))));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   @Test
@@ -172,8 +181,7 @@ class XlsxRoundTripVerifierTest {
             new WorkbookCommand.GroupColumns("Budget", new ExcelColumnSpan(0, 3), true),
             new WorkbookCommand.UngroupColumns("Budget", new ExcelColumnSpan(1, 1)));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Preserves richer Wave 2 formatting depth patches through save and reopen. */
@@ -184,7 +192,11 @@ class XlsxRoundTripVerifierTest {
         new ExcelCellStyle(
             null,
             new ExcelCellAlignment(
-                Boolean.TRUE, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, null, null),
+                Boolean.TRUE,
+                ExcelHorizontalAlignment.CENTER,
+                ExcelVerticalAlignment.TOP,
+                null,
+                null),
             new ExcelCellFont(
                 Boolean.TRUE,
                 Boolean.TRUE,
@@ -206,8 +218,7 @@ class XlsxRoundTripVerifierTest {
             new WorkbookCommand.CreateSheet("Sheet1"),
             new WorkbookCommand.ApplyStyle("Sheet1", "B2", style));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Preserves hyperlink, comment, and named-range state through save and reopen. */
@@ -233,8 +244,7 @@ class XlsxRoundTripVerifierTest {
                     new ExcelNamedRangeScope.SheetScope("Sheet1"),
                     new ExcelNamedRangeTarget("Sheet1", "A1:B2"))));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Preserves rich-text runs and inherited font facts through save and reopen. */
@@ -273,8 +283,7 @@ class XlsxRoundTripVerifierTest {
                     null,
                     null)));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Preserves the last hyperlink written to a cell through save and reopen. */
@@ -289,8 +298,7 @@ class XlsxRoundTripVerifierTest {
             new WorkbookCommand.SetHyperlink(
                 "C", "F18", new ExcelHyperlink.Email("Summary.Total@example.com")));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Preserves normalized data-validation state through save and reopen. */
@@ -322,8 +330,7 @@ class XlsxRoundTripVerifierTest {
                     null,
                     null)));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Preserves sheet autofilters and workbook tables through save and reopen. */
@@ -372,14 +379,13 @@ class XlsxRoundTripVerifierTest {
                             new ExcelDifferentialStyle(
                                 null, null, true, null, null, null, null, null, null))))));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Preserves sheet autofilters and workbook tables through save and reopen. */
   @Test
-  void requireRoundTripReadable_preservesAutofilterAndTableAuthoring(
-      @TempDir Path tempDirectory) throws IOException {
+  void requireRoundTripReadable_preservesAutofilterAndTableAuthoring(@TempDir Path tempDirectory)
+      throws IOException {
     List<WorkbookCommand> commands =
         List.of(
             new WorkbookCommand.CreateSheet("Budget"),
@@ -408,10 +414,8 @@ class XlsxRoundTripVerifierTest {
                 "E1:F3",
                 List.of(
                     List.of(ExcelCellValue.text("Queue"), ExcelCellValue.text("Owner")),
-                    List.of(
-                        ExcelCellValue.text("Late invoices"), ExcelCellValue.text("Marta")),
-                    List.of(
-                        ExcelCellValue.text("Badge orders"), ExcelCellValue.text("Rihards")))),
+                    List.of(ExcelCellValue.text("Late invoices"), ExcelCellValue.text("Marta")),
+                    List.of(ExcelCellValue.text("Badge orders"), ExcelCellValue.text("Rihards")))),
             new WorkbookCommand.SetAutofilter("Budget", "E1:F3"),
             new WorkbookCommand.SetTable(
                 new ExcelTableDefinition(
@@ -421,8 +425,7 @@ class XlsxRoundTripVerifierTest {
                     false,
                     new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Accepts header rewrites after table creation without losing persisted table column names. */
@@ -453,8 +456,7 @@ class XlsxRoundTripVerifierTest {
                     List.of(ExcelCellValue.text("QQQQq"), ExcelCellValue.text("Task")),
                     List.of(ExcelCellValue.text("Ada"), ExcelCellValue.text("Queue")))));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Accepts header style patches that change the displayed table header text for typed cells. */
@@ -480,10 +482,10 @@ class XlsxRoundTripVerifierTest {
                     "A1:B3",
                     true,
                     new ExcelTableStyle.Named("TableStyleMedium2", true, true, true, true))),
-            new WorkbookCommand.ApplyStyle("V", "A1:B2", ExcelCellStyle.numberFormat("yyyy-mm-dd")));
+            new WorkbookCommand.ApplyStyle(
+                "V", "A1:B2", ExcelCellStyle.numberFormat("yyyy-mm-dd")));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Accepts named-range targets that are normalized during persistence and reopen. */
@@ -499,8 +501,7 @@ class XlsxRoundTripVerifierTest {
                     new ExcelNamedRangeScope.WorkbookScope(),
                     new ExcelNamedRangeTarget("Sheet1", "B2:A1"))));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Tracks renamed sheets and later metadata removals without keeping stale expectations. */
@@ -526,14 +527,13 @@ class XlsxRoundTripVerifierTest {
             new WorkbookCommand.DeleteNamedRange(
                 "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope()));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Preserves B3 row and column layout facts, including shifted hidden state, through reopen. */
   @Test
-  void requireRoundTripReadable_preservesB3RowAndColumnLayoutState(
-      @TempDir Path tempDirectory) throws IOException {
+  void requireRoundTripReadable_preservesB3RowAndColumnLayoutState(@TempDir Path tempDirectory)
+      throws IOException {
     List<WorkbookCommand> commands =
         List.of(
             new WorkbookCommand.CreateSheet("Layout"),
@@ -583,8 +583,7 @@ class XlsxRoundTripVerifierTest {
                         ExcelCellValue.text("Epsilon"),
                         ExcelCellValue.text("Mia"),
                         ExcelCellValue.text("Y")))),
-            new WorkbookCommand.SetSheetPane(
-                "Layout", new ExcelSheetPane.Frozen(1, 1, 1, 1)),
+            new WorkbookCommand.SetSheetPane("Layout", new ExcelSheetPane.Frozen(1, 1, 1, 1)),
             new WorkbookCommand.SetSheetZoom("Layout", 135),
             new WorkbookCommand.SetRowVisibility("Layout", new ExcelRowSpan(1, 1), true),
             new WorkbookCommand.ShiftRows("Layout", new ExcelRowSpan(1, 1), 1),
@@ -593,8 +592,7 @@ class XlsxRoundTripVerifierTest {
             new WorkbookCommand.ShiftColumns("Layout", new ExcelColumnSpan(1, 1), 1),
             new WorkbookCommand.GroupColumns("Layout", new ExcelColumnSpan(3, 4), true));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Preserves collapsed row-group control markers when the grouped band ends at the sheet tail. */
@@ -606,8 +604,7 @@ class XlsxRoundTripVerifierTest {
             new WorkbookCommand.CreateSheet("E"),
             new WorkbookCommand.GroupRows("E", new ExcelRowSpan(0, 1), true));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
   /** Normalizes sparse ungrouped rows back to public outline level zero through reopen. */
@@ -619,11 +616,13 @@ class XlsxRoundTripVerifierTest {
             new WorkbookCommand.CreateSheet("E"),
             new WorkbookCommand.UngroupRows("E", new ExcelRowSpan(1, 3)));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
-
+    assertRoundTripReadable(tempDirectory, commands);
   }
 
-  /** Preserves copied-sheet order, active selection state, visibility, and protection through reopen. */
+  /**
+   * Preserves copied-sheet order, active selection state, visibility, and protection through
+   * reopen.
+   */
   @Test
   void requireRoundTripReadable_preservesB1SheetState(@TempDir Path tempDirectory)
       throws IOException {
@@ -640,8 +639,12 @@ class XlsxRoundTripVerifierTest {
             new WorkbookCommand.SetSheetVisibility("Beta", ExcelSheetVisibility.VERY_HIDDEN),
             new WorkbookCommand.SetSheetProtection("Replica", protectionSettings()));
 
-    Path workbookPath = saveWorkbook(tempDirectory, commands);
+    assertRoundTripReadable(tempDirectory, commands);
+  }
 
+  private static void assertRoundTripReadable(Path tempDirectory, List<WorkbookCommand> commands)
+      throws IOException {
+    assertTrue(Files.isRegularFile(saveWorkbook(tempDirectory, commands)));
   }
 
   private static Path saveWorkbook(Path tempDirectory, List<WorkbookCommand> commands)
@@ -657,20 +660,7 @@ class XlsxRoundTripVerifierTest {
 
   private static ExcelSheetProtectionSettings protectionSettings() {
     return new ExcelSheetProtectionSettings(
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
+        false, true, false, true, false, true, false, true, false, true, false, true, false, true,
         false);
   }
 }

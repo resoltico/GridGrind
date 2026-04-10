@@ -53,7 +53,8 @@ public final class JazzerReportSupport {
 
     Path runDirectory = target.workingDirectory(projectDirectory);
     CorpusStats corpusAfter = scanCorpus(runDirectory);
-    List<HarnessTelemetrySnapshot> telemetry = readTelemetry(runDirectory, historyDirectory, target);
+    List<HarnessTelemetrySnapshot> telemetry =
+        readTelemetry(runDirectory, historyDirectory, target);
     List<FindingArtifact> findings = writeFindingArtifacts(runDirectory, historyDirectory, target);
     RunMetrics metrics = parseMetrics(logPath, telemetry, target);
     LocalRunSummary summary =
@@ -83,7 +84,8 @@ public final class JazzerReportSupport {
       throws IOException {
     Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
     Objects.requireNonNull(target, "target must not be null");
-    return JazzerJson.read(latestSummaryJson(target.workingDirectory(projectDirectory)), LocalRunSummary.class);
+    return JazzerJson.read(
+        latestSummaryJson(target.workingDirectory(projectDirectory)), LocalRunSummary.class);
   }
 
   /** Returns whether the target already has a latest-summary artifact on disk. */
@@ -111,7 +113,8 @@ public final class JazzerReportSupport {
                       try {
                         return Files.size(path);
                       } catch (IOException exception) {
-                        throw new IllegalStateException("Failed to read corpus file size: " + path, exception);
+                        throw new IllegalStateException(
+                            "Failed to read corpus file size: " + path, exception);
                       }
                     })
                 .sum();
@@ -153,8 +156,8 @@ public final class JazzerReportSupport {
   /**
    * Returns input files in the harness input directory that have no corresponding promoted-metadata
    * entry. An orphaned input was committed directly to the input directory without going through
-   * {@code jazzer/bin/promote}, leaving it without a replay contract enforced by
-   * {@code PromotionMetadataTest}.
+   * {@code jazzer/bin/promote}, leaving it without a replay contract enforced by {@code
+   * PromotionMetadataTest}.
    */
   public static List<Path> orphanedInputs(Path projectDirectory, JazzerHarness harness)
       throws IOException {
@@ -184,10 +187,7 @@ public final class JazzerReportSupport {
     Set<Path> result = new HashSet<>();
     try (Stream<Path> stream = Files.walk(metadataRoot)) {
       for (Path jsonPath :
-          stream
-              .filter(p -> p.getFileName().toString().endsWith(".json"))
-              .sorted()
-              .toList()) {
+          stream.filter(p -> p.getFileName().toString().endsWith(".json")).sorted().toList()) {
         PromotionMetadata metadata = JazzerJson.read(jsonPath, PromotionMetadata.class);
         result.add(metadata.promotedInputPath(projectDirectory));
       }
@@ -216,7 +216,11 @@ public final class JazzerReportSupport {
 
     ArrayList<FindingArtifact> findings = new ArrayList<>();
     try (Stream<Path> stream = Files.list(findingsDirectory)) {
-      for (Path jsonPath : stream.filter(path -> path.getFileName().toString().endsWith(".json")).sorted().toList()) {
+      for (Path jsonPath :
+          stream
+              .filter(path -> path.getFileName().toString().endsWith(".json"))
+              .sorted()
+              .toList()) {
         findings.add(JazzerJson.read(jsonPath, FindingArtifact.class));
       }
     }
@@ -224,7 +228,8 @@ public final class JazzerReportSupport {
   }
 
   private static RunMetrics parseMetrics(
-      Path logPath, List<HarnessTelemetrySnapshot> telemetry, JazzerRunTarget target) throws IOException {
+      Path logPath, List<HarnessTelemetrySnapshot> telemetry, JazzerRunTarget target)
+      throws IOException {
     if (!target.activeFuzzing()) {
       return new RunMetrics.RegressionMetrics(telemetry.size());
     }
@@ -269,7 +274,8 @@ public final class JazzerReportSupport {
     for (JazzerHarness harness : target.harnesses()) {
       Path historyTelemetryPath = historyTelemetryDirectory.resolve(harness.key() + ".json");
       Path runTelemetryPath = runTelemetryDirectory.resolve(harness.key() + ".json");
-      Path sourcePath = Files.exists(historyTelemetryPath) ? historyTelemetryPath : runTelemetryPath;
+      Path sourcePath =
+          Files.exists(historyTelemetryPath) ? historyTelemetryPath : runTelemetryPath;
       if (Files.exists(sourcePath)) {
         snapshots.add(JazzerJson.read(sourcePath, HarnessTelemetrySnapshot.class));
       }
@@ -292,11 +298,24 @@ public final class JazzerReportSupport {
               rawArtifact.getFileName().toString(),
               rawArtifact.toAbsolutePath().normalize().toString(),
               replayOutcomeKind(replayOutcome),
-              runDirectory.resolve("findings").resolve(rawArtifact.getFileName() + ".json").toString(),
-              runDirectory.resolve("findings").resolve(rawArtifact.getFileName() + ".txt").toString());
-      writeFindingArtifact(runDirectory.resolve("findings"), rawArtifact.getFileName().toString(), finding, replayOutcome);
+              runDirectory
+                  .resolve("findings")
+                  .resolve(rawArtifact.getFileName() + ".json")
+                  .toString(),
+              runDirectory
+                  .resolve("findings")
+                  .resolve(rawArtifact.getFileName() + ".txt")
+                  .toString());
       writeFindingArtifact(
-          historyDirectory.resolve("findings"), rawArtifact.getFileName().toString(), finding, replayOutcome);
+          runDirectory.resolve("findings"),
+          rawArtifact.getFileName().toString(),
+          finding,
+          replayOutcome);
+      writeFindingArtifact(
+          historyDirectory.resolve("findings"),
+          rawArtifact.getFileName().toString(),
+          finding,
+          replayOutcome);
       findings.add(finding);
     }
     return List.copyOf(findings);

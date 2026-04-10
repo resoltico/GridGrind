@@ -47,7 +47,8 @@ class JazzerTopologyTest {
 
   @Test
   void runTargets_resolveStableTaskNamesAndHarnessAssignments() {
-    assertEquals(JazzerRunTarget.protocolWorkflow(), JazzerRunTarget.fromTaskName("fuzzProtocolWorkflow"));
+    assertEquals(
+        JazzerRunTarget.protocolWorkflow(), JazzerRunTarget.fromTaskName("fuzzProtocolWorkflow"));
     assertEquals(
         List.of(
             JazzerHarness.protocolRequest(),
@@ -55,7 +56,8 @@ class JazzerTopologyTest {
             JazzerHarness.engineCommandSequence(),
             JazzerHarness.xlsxRoundTrip()),
         JazzerRunTarget.regression().harnesses());
-    assertEquals(JazzerHarness.protocolRequest(), JazzerRunTarget.protocolRequest().replayHarness());
+    assertEquals(
+        JazzerHarness.protocolRequest(), JazzerRunTarget.protocolRequest().replayHarness());
   }
 
   @Test
@@ -70,10 +72,9 @@ class JazzerTopologyTest {
     List<JazzerRunTarget> activeTargets =
         Arrays.stream(JazzerRunTarget.values()).filter(JazzerRunTarget::activeFuzzing).toList();
 
-    activeTargets.forEach(
-        target -> {
-          assertEquals(1, target.harnesses().size());
-          assertEquals(target.key(), target.harnesses().getFirst().key());
-        });
+    for (JazzerRunTarget target : activeTargets) {
+      assertEquals(1, target.harnesses().size());
+      assertEquals(target.key(), target.harnesses().getFirst().key());
+    }
   }
 }
