@@ -16,7 +16,7 @@ public final class JazzerCli {
   private JazzerCli() {}
 
   /** Dispatches one local Jazzer operator command. */
-  public static void main(String[] arguments) throws Exception {
+  public static void main(String[] arguments) throws IOException {
     if (arguments.length == 0) {
       throw new IllegalArgumentException("A Jazzer subcommand is required");
     }
@@ -31,7 +31,8 @@ public final class JazzerCli {
       case "replay" -> replay(args.subList(1, args.size()));
       case "promote" -> promote(args.subList(1, args.size()));
       case "refresh-promoted-metadata" -> refreshPromotedMetadata(args.subList(1, args.size()));
-      default -> throw new IllegalArgumentException("Unknown Jazzer subcommand: " + args.getFirst());
+      default ->
+          throw new IllegalArgumentException("Unknown Jazzer subcommand: " + args.getFirst());
     }
   }
 
@@ -91,7 +92,9 @@ public final class JazzerCli {
     Path projectDirectory = projectDirectory(args);
     String targetKey = optionalValue(args, "--target");
     List<JazzerRunTarget> targets =
-        targetKey == null ? List.of(JazzerRunTarget.values()) : List.of(JazzerRunTarget.fromKey(targetKey));
+        targetKey == null
+            ? List.of(JazzerRunTarget.values())
+            : List.of(JazzerRunTarget.fromKey(targetKey));
 
     for (int index = 0; index < targets.size(); index++) {
       JazzerRunTarget target = targets.get(index);
@@ -135,17 +138,18 @@ public final class JazzerCli {
               target.key(),
               JazzerReportSupport.scanCorpus(target.workingDirectory(projectDirectory)),
               JazzerReportSupport.scanFiles(promotedInputs),
-              JazzerReportSupport.newestCorpusEntries(target.workingDirectory(projectDirectory), 10),
+              JazzerReportSupport.newestCorpusEntries(
+                  target.workingDirectory(projectDirectory), 10),
               promotedInputs,
               orphans));
     }
   }
 
   private static void replay(List<String> args) throws IOException {
-    Path projectDirectory = projectDirectory(args);
     JazzerRunTarget target = JazzerRunTarget.fromKey(requiredValue(args, "--target"));
     if (!target.replayable()) {
-      throw new IllegalArgumentException("Replay requires a single-harness target, not " + target.key());
+      throw new IllegalArgumentException(
+          "Replay requires a single-harness target, not " + target.key());
     }
     Path inputPath = requiredPath(args, "--input");
     ReplayOutcome outcome =
@@ -164,7 +168,8 @@ public final class JazzerCli {
     Path projectDirectory = projectDirectory(args);
     JazzerRunTarget target = JazzerRunTarget.fromKey(requiredValue(args, "--target"));
     if (!target.replayable()) {
-      throw new IllegalArgumentException("Promotion requires a single-harness target, not " + target.key());
+      throw new IllegalArgumentException(
+          "Promotion requires a single-harness target, not " + target.key());
     }
 
     Path inputPath = requiredPath(args, "--input");
@@ -184,7 +189,8 @@ public final class JazzerCli {
     String storedSourcePath = PromotionMetadata.relativizePath(projectDirectory, inputPath);
     String storedPromotedInputPath =
         PromotionMetadata.relativizePath(projectDirectory, promotedInputPath);
-    String storedReplayTextPath = PromotionMetadata.relativizePath(projectDirectory, replayTextPath);
+    String storedReplayTextPath =
+        PromotionMetadata.relativizePath(projectDirectory, replayTextPath);
     Files.writeString(
         replayTextPath,
         JazzerTextRenderer.renderReplay(Path.of(storedPromotedInputPath), outcome)
@@ -200,8 +206,10 @@ public final class JazzerCli {
             Instant.now().toString(),
             storedReplayTextPath));
 
-    System.out.println("Promoted input written to " + promotedInputPath.toAbsolutePath().normalize());
-    System.out.println("Promotion metadata written to " + replayJsonPath.toAbsolutePath().normalize());
+    System.out.println(
+        "Promoted input written to " + promotedInputPath.toAbsolutePath().normalize());
+    System.out.println(
+        "Promotion metadata written to " + replayJsonPath.toAbsolutePath().normalize());
     if (outcome instanceof ReplayOutcome.UnexpectedFailure) {
       System.out.println("Promoted input currently reproduces an unexpected failure.");
     }
@@ -215,7 +223,10 @@ public final class JazzerCli {
       metadataPaths =
           stream
               .filter(path -> path.getFileName().toString().endsWith(".json"))
-              .filter(path -> targetKey == null || path.getParent().getFileName().toString().equals(targetKey))
+              .filter(
+                  path ->
+                      targetKey == null
+                          || path.getParent().getFileName().toString().equals(targetKey))
               .sorted()
               .toList();
     }
@@ -246,7 +257,8 @@ public final class JazzerCli {
     System.out.println("Refreshed " + metadataPaths.size() + " promoted metadata entries.");
   }
 
-  private static List<LocalRunSummary> availableSummaries(Path projectDirectory) throws IOException {
+  private static List<LocalRunSummary> availableSummaries(Path projectDirectory)
+      throws IOException {
     ArrayList<LocalRunSummary> summaries = new ArrayList<>();
     for (JazzerRunTarget target : JazzerRunTarget.values()) {
       if (JazzerReportSupport.hasLatestSummary(projectDirectory, target)) {
@@ -303,5 +315,4 @@ public final class JazzerCli {
     int separator = fileName.lastIndexOf('.');
     return separator >= 0 ? fileName.substring(separator) : ".bin";
   }
-
 }

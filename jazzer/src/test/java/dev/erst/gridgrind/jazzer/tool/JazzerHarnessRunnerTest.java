@@ -7,11 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import org.junit.jupiter.api.Nested;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /** Covers argument parsing and launcher exit semantics for the Jazzer harness runner. */
 class JazzerHarnessRunnerTest {
+  /** Covers `--class` argument parsing. */
   @Nested
   class ParseClassName {
     @Test
@@ -19,73 +19,121 @@ class JazzerHarnessRunnerTest {
       assertEquals(
           "dev.erst.gridgrind.jazzer.protocol.ProtocolRequestFuzzTest",
           JazzerHarnessRunner.parseClassName(
-              new String[] {"--class", "dev.erst.gridgrind.jazzer.protocol.ProtocolRequestFuzzTest"}));
+              new String[] {
+                "--class", "dev.erst.gridgrind.jazzer.protocol.ProtocolRequestFuzzTest"
+              }));
     }
 
     @Test
     void parseClassName_throwsWhenArgumentsAreMissing() {
-      assertThrows(IllegalArgumentException.class, () -> JazzerHarnessRunner.parseClassName(new String[0]));
+      assertThrows(
+          IllegalArgumentException.class, () -> JazzerHarnessRunner.parseClassName(new String[0]));
     }
 
     @Test
     void parseClassName_throwsWhenClassNameIsBlank() {
       assertThrows(
-          IllegalArgumentException.class, () -> JazzerHarnessRunner.parseClassName(new String[] {"--class", " "}));
+          IllegalArgumentException.class,
+          () -> JazzerHarnessRunner.parseClassName(new String[] {"--class", " "}));
     }
   }
 
+  /** Covers harness execution and discovered-test validation. */
   @Nested
   class Run {
     @Test
-    void run_returnsSuccess_whenTaggedJazzerTestsExist() {
+    void run_returnsSuccess_whenExactlyOneFuzzTestExists() {
       StringWriter output = new StringWriter();
       StringWriter errors = new StringWriter();
+      String[] executedMethod = new String[1];
 
       int exitCode =
           JazzerHarnessRunner.run(
-              SuccessfulTaggedHarness.class.getName(),
+              SuccessfulFuzzHarnessFixture.class.getName(),
               new PrintWriter(output, true),
-              new PrintWriter(errors, true));
+              new PrintWriter(errors, true),
+              harness -> {
+                executedMethod[0] = harness.methodName();
+                return 0;
+              });
 
       assertEquals(0, exitCode);
       assertTrue(
-          output.toString().contains(
-              "[JAZZER-PULSE] harness-class="
-                  + SuccessfulTaggedHarness.class.getName()
-                  + " phase=plan total-tests=1"));
-      assertTrue(output.toString().contains("phase=test-complete completed=1/1 status=SUCCESS"));
+          output
+              .toString()
+              .contains(
+                  "[JAZZER-PULSE] harness-class="
+                      + SuccessfulFuzzHarnessFixture.class.getName()
+                      + " phase=plan total-tests=1 fuzz-test=fuzz"));
+      assertTrue(
+          output.toString().contains("phase=finish status=SUCCESS fuzz-test=fuzz exit-code=0"));
+      assertEquals("fuzz", executedMethod[0]);
       assertTrue(errors.toString().isBlank());
     }
 
     @Test
-    void run_returnsFailure_whenNoTaggedJazzerTestsExist() {
+    void run_returnsFailure_whenNoFuzzTestsExist() {
       StringWriter output = new StringWriter();
       StringWriter errors = new StringWriter();
 
       int exitCode =
           JazzerHarnessRunner.run(
-              UntaggedHarness.class.getName(),
+              NonFuzzHarnessFixture.class.getName(),
               new PrintWriter(output, true),
               new PrintWriter(errors, true));
 
       assertEquals(1, exitCode);
+      assertTrue(output.toString().isBlank());
+      assertTrue(errors.toString().contains("No @FuzzTest methods were declared"));
+    }
+
+    @Test
+    void run_returnsFailure_whenMultipleFuzzTestsExist() {
+      StringWriter output = new StringWriter();
+      StringWriter errors = new StringWriter();
+
+      int exitCode =
+          JazzerHarnessRunner.run(
+              MultiFuzzHarnessFixture.class.getName(),
+              new PrintWriter(output, true),
+              new PrintWriter(errors, true));
+
+      assertEquals(1, exitCode);
+      assertTrue(output.toString().isBlank());
+      assertTrue(errors.toString().contains("Exactly one @FuzzTest method is required"));
+      assertTrue(errors.toString().contains("alpha"));
+      assertTrue(errors.toString().contains("beta"));
+    }
+
+    @Test
+    void run_returnsFailure_whenExecutorFails() {
+      StringWriter output = new StringWriter();
+      StringWriter errors = new StringWriter();
+
+      int exitCode =
+          JazzerHarnessRunner.run(
+              SuccessfulFuzzHarnessFixture.class.getName(),
+              new PrintWriter(output, true),
+              new PrintWriter(errors, true),
+              harness -> 77);
+
+      assertEquals(77, exitCode);
       assertTrue(
-          output.toString().contains(
-              "[JAZZER-PULSE] harness-class="
-                  + UntaggedHarness.class.getName()
-                  + " phase=plan total-tests=0"));
-      assertTrue(errors.toString().contains("No Jazzer tests were discovered"));
+          output.toString().contains("phase=finish status=FAILURE fuzz-test=fuzz exit-code=77"));
+      assertTrue(errors.toString().contains("exit code 77"));
     }
   }
 
-  @Tag("jazzer")
-  static class SuccessfulTaggedHarness {
+  /** Covers explicit harness discovery against the `@FuzzTest` contract. */
+  @Nested
+  class DiscoverHarness {
     @Test
-    void succeeds() {}
-  }
+    void discoverHarness_returnsSelectedFuzzMethod() {
+      JazzerHarnessRunner.HarnessDescriptor descriptor =
+          JazzerHarnessRunner.discoverHarness(SuccessfulFuzzHarnessFixture.class.getName());
 
-  static class UntaggedHarness {
-    @Test
-    void succeeds() {}
+      assertEquals(SuccessfulFuzzHarnessFixture.class.getName(), descriptor.className());
+      assertEquals("fuzz", descriptor.methodName());
+    }
   }
 }

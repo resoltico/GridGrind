@@ -18,7 +18,6 @@ import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
-import dev.erst.gridgrind.excel.ExcelHyperlinkType;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
@@ -40,11 +39,12 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -58,8 +58,8 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.PaneInformation;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 import org.apache.poi.xssf.usermodel.XSSFFont;
+import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCols;
@@ -122,13 +122,12 @@ public final class XlsxRoundTripVerifier {
     if (sheet.getNumMergedRegions() < 0) {
       throw new IllegalStateException("merged region count must not be negative");
     }
-    if (sheet.getPaneInformation() != null) {
-      if (sheet.getPaneInformation().getVerticalSplitPosition() < 0
-          || sheet.getPaneInformation().getHorizontalSplitPosition() < 0
-          || sheet.getPaneInformation().getVerticalSplitLeftColumn() < 0
-          || sheet.getPaneInformation().getHorizontalSplitTopRow() < 0) {
-        throw new IllegalStateException("pane coordinates must not be negative");
-      }
+    if (sheet.getPaneInformation() != null
+        && (sheet.getPaneInformation().getVerticalSplitPosition() < 0
+            || sheet.getPaneInformation().getHorizontalSplitPosition() < 0
+            || sheet.getPaneInformation().getVerticalSplitLeftColumn() < 0
+            || sheet.getPaneInformation().getHorizontalSplitTopRow() < 0)) {
+      throw new IllegalStateException("pane coordinates must not be negative");
     }
     for (Row row : sheet) {
       if (row == null) {
@@ -168,7 +167,8 @@ public final class XlsxRoundTripVerifier {
   }
 
   private static void requireExpectedStyles(
-      Map<String, Map<CellCoordinate, ExcelCellStyleSnapshot>> expectedStyles, XSSFWorkbook workbook) {
+      Map<String, Map<CellCoordinate, ExcelCellStyleSnapshot>> expectedStyles,
+      XSSFWorkbook workbook) {
     if (expectedStyles.isEmpty()) {
       return;
     }
@@ -176,19 +176,26 @@ public final class XlsxRoundTripVerifier {
         expectedStyles.entrySet()) {
       var sheet = workbook.getSheet(sheetEntry.getKey());
       if (sheet == null) {
-        throw new IllegalStateException("expected styled sheet must exist after round-trip: " + sheetEntry.getKey());
+        throw new IllegalStateException(
+            "expected styled sheet must exist after round-trip: " + sheetEntry.getKey());
       }
       for (Map.Entry<CellCoordinate, ExcelCellStyleSnapshot> cellEntry :
           sheetEntry.getValue().entrySet()) {
         Row row = sheet.getRow(cellEntry.getKey().rowIndex());
         if (row == null) {
-          throw new IllegalStateException("expected styled row must exist after round-trip: "
-              + sheetEntry.getKey() + "!" + cellEntry.getKey().a1Address());
+          throw new IllegalStateException(
+              "expected styled row must exist after round-trip: "
+                  + sheetEntry.getKey()
+                  + "!"
+                  + cellEntry.getKey().a1Address());
         }
         Cell cell = row.getCell(cellEntry.getKey().columnIndex());
         if (cell == null) {
-          throw new IllegalStateException("expected styled cell must exist after round-trip: "
-              + sheetEntry.getKey() + "!" + cellEntry.getKey().a1Address());
+          throw new IllegalStateException(
+              "expected styled cell must exist after round-trip: "
+                  + sheetEntry.getKey()
+                  + "!"
+                  + cellEntry.getKey().a1Address());
         }
         requireExpectedStyle(sheetEntry.getKey(), cellEntry.getKey(), cellEntry.getValue(), cell);
       }
@@ -196,7 +203,10 @@ public final class XlsxRoundTripVerifier {
   }
 
   private static void requireExpectedStyle(
-      String sheetName, CellCoordinate coordinate, ExcelCellStyleSnapshot expectedStyle, Cell cell) {
+      String sheetName,
+      CellCoordinate coordinate,
+      ExcelCellStyleSnapshot expectedStyle,
+      Cell cell) {
     ExcelCellStyleSnapshot actualStyle = styleSnapshot((XSSFCellStyle) cell.getCellStyle());
     if (!expectedStyle.equals(actualStyle)) {
       throw new IllegalStateException(
@@ -218,7 +228,8 @@ public final class XlsxRoundTripVerifier {
         throw new IllegalStateException(
             "expected metadata sheet must exist after round-trip: " + sheetEntry.getKey());
       }
-      for (Map.Entry<CellCoordinate, ExpectedCellMetadata> cellEntry : sheetEntry.getValue().entrySet()) {
+      for (Map.Entry<CellCoordinate, ExpectedCellMetadata> cellEntry :
+          sheetEntry.getValue().entrySet()) {
         Row row = sheet.getRow(cellEntry.getKey().rowIndex());
         if (row == null) {
           throw new IllegalStateException(
@@ -242,19 +253,13 @@ public final class XlsxRoundTripVerifier {
   }
 
   private static void requireExpectedMetadata(
-      String sheetName, CellCoordinate coordinate, ExpectedCellMetadata expectedMetadata, Cell cell) {
+      String sheetName,
+      CellCoordinate coordinate,
+      ExpectedCellMetadata expectedMetadata,
+      Cell cell) {
     requireEquals(
-        sheetName,
-        coordinate,
-        "hyperlink",
-        expectedMetadata.hyperlink(),
-        hyperlink(cell));
-    requireEquals(
-        sheetName,
-        coordinate,
-        "comment",
-        expectedMetadata.comment(),
-        comment(cell));
+        sheetName, coordinate, "hyperlink", expectedMetadata.hyperlink(), hyperlink(cell));
+    requireEquals(sheetName, coordinate, "comment", expectedMetadata.comment(), comment(cell));
   }
 
   private static void requireExpectedNamedRanges(
@@ -282,8 +287,7 @@ public final class XlsxRoundTripVerifier {
   }
 
   private static ExpectedWorkbookState expectedWorkbookState(
-      ExcelWorkbook workbook, List<WorkbookCommand> commands)
-      throws IOException {
+      ExcelWorkbook workbook, List<WorkbookCommand> commands) throws IOException {
     ExpectedWorkbookFootprint footprint = expectedWorkbookFootprint(commands);
     Map<String, List<ExcelCellSnapshot>> candidateSnapshots =
         expectedCellSnapshots(workbook, footprint);
@@ -301,7 +305,8 @@ public final class XlsxRoundTripVerifier {
         expectedTables(workbook));
   }
 
-  private static Map<String, ExpectedSheetLayoutState> expectedSheetLayouts(ExcelWorkbook workbook) {
+  private static Map<String, ExpectedSheetLayoutState> expectedSheetLayouts(
+      ExcelWorkbook workbook) {
     Objects.requireNonNull(workbook, "workbook must not be null");
 
     WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
@@ -309,14 +314,16 @@ public final class XlsxRoundTripVerifier {
     for (String sheetName : workbook.sheetNames()) {
       WorkbookReadResult.SheetLayoutResult layoutResult =
           (WorkbookReadResult.SheetLayoutResult)
-              readExecutor.apply(workbook, new WorkbookReadCommand.GetSheetLayout("layout", sheetName))
+              readExecutor
+                  .apply(workbook, new WorkbookReadCommand.GetSheetLayout("layout", sheetName))
                   .getFirst();
       expectedLayouts.put(sheetName, expectedSheetLayout(layoutResult.layout()));
     }
     return Map.copyOf(expectedLayouts);
   }
 
-  private static ExpectedSheetLayoutState expectedSheetLayout(WorkbookReadResult.SheetLayout layout) {
+  private static ExpectedSheetLayoutState expectedSheetLayout(
+      WorkbookReadResult.SheetLayout layout) {
     Objects.requireNonNull(layout, "layout must not be null");
 
     LinkedHashMap<Integer, ExpectedRowLayoutState> expectedRows = new LinkedHashMap<>();
@@ -338,10 +345,10 @@ public final class XlsxRoundTripVerifier {
         layout.pane(), layout.zoomPercent(), Map.copyOf(expectedRows), Map.copyOf(expectedColumns));
   }
 
-  private static ExpectedWorkbookFootprint expectedWorkbookFootprint(List<WorkbookCommand> commands) {
-    LinkedHashMap<String, LinkedHashSet<CellCoordinate>> candidateCoordinatesBySheet =
-        new LinkedHashMap<>();
-    LinkedHashMap<String, LinkedHashSet<CellCoordinate>> valueBearingCoordinatesBySheet =
+  private static ExpectedWorkbookFootprint expectedWorkbookFootprint(
+      List<WorkbookCommand> commands) {
+    LinkedHashMap<String, Set<CellCoordinate>> candidateCoordinatesBySheet = new LinkedHashMap<>();
+    LinkedHashMap<String, Set<CellCoordinate>> valueBearingCoordinatesBySheet =
         new LinkedHashMap<>();
 
     for (WorkbookCommand command : commands) {
@@ -366,7 +373,9 @@ public final class XlsxRoundTripVerifier {
           copyExpectedSheetState(
               candidateCoordinatesBySheet, copySheet.sourceSheetName(), copySheet.newSheetName());
           copyExpectedSheetState(
-              valueBearingCoordinatesBySheet, copySheet.sourceSheetName(), copySheet.newSheetName());
+              valueBearingCoordinatesBySheet,
+              copySheet.sourceSheetName(),
+              copySheet.newSheetName());
         }
         case WorkbookCommand.SetActiveSheet _ -> {
           // Active sheet state does not affect cell-level round-trip expectations.
@@ -405,13 +414,16 @@ public final class XlsxRoundTripVerifier {
           // Structural row state is tracked independently from cell-level round-trip expectations.
         }
         case WorkbookCommand.InsertColumns _ -> {
-          // Structural column state is tracked independently from cell-level round-trip expectations.
+          // Structural column state is tracked independently from cell-level round-trip
+          // expectations.
         }
         case WorkbookCommand.DeleteColumns _ -> {
-          // Structural column state is tracked independently from cell-level round-trip expectations.
+          // Structural column state is tracked independently from cell-level round-trip
+          // expectations.
         }
         case WorkbookCommand.ShiftColumns _ -> {
-          // Structural column state is tracked independently from cell-level round-trip expectations.
+          // Structural column state is tracked independently from cell-level round-trip
+          // expectations.
         }
         case WorkbookCommand.SetRowVisibility _ -> {
           // Row visibility is tracked independently from cell-level round-trip expectations.
@@ -502,7 +514,8 @@ public final class XlsxRoundTripVerifier {
             forEachCell(
                 applyStyle.range(),
                 coordinate ->
-                    recordCandidate(candidateCoordinatesBySheet, applyStyle.sheetName(), coordinate));
+                    recordCandidate(
+                        candidateCoordinatesBySheet, applyStyle.sheetName(), coordinate));
         case WorkbookCommand.SetDataValidation _ -> {
           // Data validations are tracked independently from cell-style and metadata expectations.
         }
@@ -510,10 +523,12 @@ public final class XlsxRoundTripVerifier {
           // Data validations are tracked independently from cell-style and metadata expectations.
         }
         case WorkbookCommand.SetConditionalFormatting _ -> {
-          // Conditional formatting is tracked independently from cell-style and metadata expectations.
+          // Conditional formatting is tracked independently from cell-style and metadata
+          // expectations.
         }
         case WorkbookCommand.ClearConditionalFormatting _ -> {
-          // Conditional formatting is tracked independently from cell-style and metadata expectations.
+          // Conditional formatting is tracked independently from cell-style and metadata
+          // expectations.
         }
         case WorkbookCommand.SetAutofilter _ -> {
           // Autofilters are tracked independently from cell-style and metadata expectations.
@@ -572,8 +587,7 @@ public final class XlsxRoundTripVerifier {
     LinkedHashMap<String, List<ExcelCellSnapshot>> snapshotsBySheet = new LinkedHashMap<>();
     for (Map.Entry<String, List<CellCoordinate>> entry :
         footprint.candidateCoordinatesBySheet().entrySet()) {
-      List<String> addresses =
-          entry.getValue().stream().map(CellCoordinate::a1Address).toList();
+      List<String> addresses = entry.getValue().stream().map(CellCoordinate::a1Address).toList();
       List<ExcelCellSnapshot> snapshots = workbook.sheet(entry.getKey()).snapshotCells(addresses);
       if (!snapshots.isEmpty()) {
         snapshotsBySheet.put(entry.getKey(), snapshots);
@@ -583,7 +597,8 @@ public final class XlsxRoundTripVerifier {
   }
 
   private static Map<String, Map<CellCoordinate, ExcelCellStyleSnapshot>> expectedStyles(
-      Map<String, List<ExcelCellSnapshot>> candidateSnapshots, ExcelCellStyleSnapshot defaultStyle) {
+      Map<String, List<ExcelCellSnapshot>> candidateSnapshots,
+      ExcelCellStyleSnapshot defaultStyle) {
     LinkedHashMap<String, Map<CellCoordinate, ExcelCellStyleSnapshot>> expectedStylesBySheet =
         new LinkedHashMap<>();
     for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
@@ -625,8 +640,7 @@ public final class XlsxRoundTripVerifier {
     LinkedHashMap<String, Map<CellCoordinate, ExcelRichTextSnapshot>> expectedRichTextBySheet =
         new LinkedHashMap<>();
     for (Map.Entry<String, List<ExcelCellSnapshot>> entry : candidateSnapshots.entrySet()) {
-      LinkedHashMap<CellCoordinate, ExcelRichTextSnapshot> expectedRichText =
-          new LinkedHashMap<>();
+      LinkedHashMap<CellCoordinate, ExcelRichTextSnapshot> expectedRichText = new LinkedHashMap<>();
       for (ExcelCellSnapshot snapshot : entry.getValue()) {
         if (snapshot instanceof ExcelCellSnapshot.TextSnapshot text && text.richText() != null) {
           expectedRichText.put(CellCoordinate.fromAddress(text.address()), text.richText());
@@ -639,7 +653,8 @@ public final class XlsxRoundTripVerifier {
     return Map.copyOf(expectedRichTextBySheet);
   }
 
-  private static Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges(ExcelWorkbook workbook) {
+  private static Map<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges(
+      ExcelWorkbook workbook) {
     LinkedHashMap<NamedRangeKey, ExpectedNamedRange> expectedNamedRanges = new LinkedHashMap<>();
     for (ExcelNamedRangeSnapshot namedRange : workbook.namedRanges()) {
       ExcelNamedRangeTarget target =
@@ -654,12 +669,13 @@ public final class XlsxRoundTripVerifier {
     return Map.copyOf(expectedNamedRanges);
   }
 
-  private static dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary expectedWorkbookSummary(
-      ExcelWorkbook workbook) {
+  private static dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary
+      expectedWorkbookSummary(ExcelWorkbook workbook) {
     WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
     return ((dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult)
-            readExecutor.apply(
-                workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-summary")).getFirst())
+            readExecutor
+                .apply(workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-summary"))
+                .getFirst())
         .workbook();
   }
 
@@ -672,10 +688,11 @@ public final class XlsxRoundTripVerifier {
       expected.put(
           sheetName,
           ((dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult)
-                  readExecutor.apply(
-                      workbook,
-                      new WorkbookReadCommand.GetSheetSummary(
-                          "sheet-summary-" + sheetName, sheetName))
+                  readExecutor
+                      .apply(
+                          workbook,
+                          new WorkbookReadCommand.GetSheetSummary(
+                              "sheet-summary-" + sheetName, sheetName))
                       .getFirst())
               .sheet());
     }
@@ -803,7 +820,8 @@ public final class XlsxRoundTripVerifier {
       }
       for (Map.Entry<String, Map<CellCoordinate, ExcelRichTextSnapshot>> entry :
           expectedWorkbookState.expectedRichText().entrySet()) {
-        for (Map.Entry<CellCoordinate, ExcelRichTextSnapshot> cellEntry : entry.getValue().entrySet()) {
+        for (Map.Entry<CellCoordinate, ExcelRichTextSnapshot> cellEntry :
+            entry.getValue().entrySet()) {
           ExcelCellSnapshot actualSnapshot =
               workbook.sheet(entry.getKey()).snapshotCell(cellEntry.getKey().a1Address());
           if (!(actualSnapshot instanceof ExcelCellSnapshot.TextSnapshot textSnapshot)) {
@@ -874,7 +892,8 @@ public final class XlsxRoundTripVerifier {
               + " but was "
               + actualZoomPercent);
     }
-    for (Map.Entry<Integer, ExpectedRowLayoutState> rowEntry : expectedSheetLayout.rows().entrySet()) {
+    for (Map.Entry<Integer, ExpectedRowLayoutState> rowEntry :
+        expectedSheetLayout.rows().entrySet()) {
       requireExpectedRowLayout(sheetName, rowEntry.getKey(), rowEntry.getValue(), sheet);
     }
     for (Map.Entry<Integer, ExpectedColumnLayoutState> columnEntry :
@@ -897,12 +916,7 @@ public final class XlsxRoundTripVerifier {
             && xssfRow.getCTRow().getCollapsed();
     requireLayoutField(sheetName, "row", rowIndex, "hidden", expectedRowLayout.hidden(), hidden);
     requireLayoutField(
-        sheetName,
-        "row",
-        rowIndex,
-        "outlineLevel",
-        expectedRowLayout.outlineLevel(),
-        outlineLevel);
+        sheetName, "row", rowIndex, "outlineLevel", expectedRowLayout.outlineLevel(), outlineLevel);
     requireLayoutField(
         sheetName, "row", rowIndex, "collapsed", expectedRowLayout.collapsed(), collapsed);
   }
@@ -925,12 +939,7 @@ public final class XlsxRoundTripVerifier {
         expectedColumnLayout.outlineLevel(),
         outlineLevel);
     requireLayoutField(
-        sheetName,
-        "column",
-        columnIndex,
-        "collapsed",
-        expectedColumnLayout.collapsed(),
-        collapsed);
+        sheetName, "column", columnIndex, "collapsed", expectedColumnLayout.collapsed(), collapsed);
   }
 
   private static void requireExpectedConditionalFormatting(
@@ -976,14 +985,14 @@ public final class XlsxRoundTripVerifier {
     }
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
       WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
-      for (Map.Entry<String, List<ExcelAutofilterSnapshot>> entry : expectedAutofilters.entrySet()) {
+      for (Map.Entry<String, List<ExcelAutofilterSnapshot>> entry :
+          expectedAutofilters.entrySet()) {
         var actual =
             ((dev.erst.gridgrind.excel.WorkbookReadResult.AutofiltersResult)
                     readExecutor
                         .apply(
                             workbook,
-                            new WorkbookReadCommand.GetAutofilters(
-                                "autofilters", entry.getKey()))
+                            new WorkbookReadCommand.GetAutofilters("autofilters", entry.getKey()))
                         .getFirst())
                 .autofilters();
         if (!entry.getValue().equals(actual)) {
@@ -1017,21 +1026,13 @@ public final class XlsxRoundTripVerifier {
               .tables();
       if (!expectedTables.equals(actual)) {
         throw new IllegalStateException(
-            "tables changed across round-trip: expected "
-                + expectedTables
-                + " but was "
-                + actual);
+            "tables changed across round-trip: expected " + expectedTables + " but was " + actual);
       }
     }
   }
 
   private static void requireLayoutField(
-      String sheetName,
-      String axis,
-      int index,
-      String fieldName,
-      Object expected,
-      Object actual) {
+      String sheetName, String axis, int index, String fieldName, Object expected, Object actual) {
     if (expected == null || expected.equals(actual)) {
       return;
     }
@@ -1110,7 +1111,7 @@ public final class XlsxRoundTripVerifier {
   }
 
   private static void recordCandidate(
-      Map<String, LinkedHashSet<CellCoordinate>> candidateCoordinatesBySheet,
+      Map<String, Set<CellCoordinate>> candidateCoordinatesBySheet,
       String sheetName,
       CellCoordinate coordinate) {
     candidateCoordinatesBySheet
@@ -1119,12 +1120,13 @@ public final class XlsxRoundTripVerifier {
   }
 
   private static void recordValueBearing(
-      Map<String, LinkedHashSet<CellCoordinate>> valueBearingCoordinatesBySheet,
+      Map<String, Set<CellCoordinate>> valueBearingCoordinatesBySheet,
       String sheetName,
       CellCoordinate coordinate,
       boolean valueBearing) {
-    LinkedHashSet<CellCoordinate> coordinates =
-        valueBearingCoordinatesBySheet.computeIfAbsent(sheetName, sheetKey -> new LinkedHashSet<>());
+    Set<CellCoordinate> coordinates =
+        valueBearingCoordinatesBySheet.computeIfAbsent(
+            sheetName, sheetKey -> new LinkedHashSet<>());
     if (valueBearing) {
       coordinates.add(coordinate);
     } else {
@@ -1136,8 +1138,8 @@ public final class XlsxRoundTripVerifier {
   }
 
   private static int nextAppendRowIndex(
-      Map<String, LinkedHashSet<CellCoordinate>> valueBearingCoordinatesBySheet, String sheetName) {
-    LinkedHashSet<CellCoordinate> coordinates = valueBearingCoordinatesBySheet.get(sheetName);
+      Map<String, Set<CellCoordinate>> valueBearingCoordinatesBySheet, String sheetName) {
+    Set<CellCoordinate> coordinates = valueBearingCoordinatesBySheet.get(sheetName);
     if (coordinates == null || coordinates.isEmpty()) {
       return 0;
     }
@@ -1163,7 +1165,7 @@ public final class XlsxRoundTripVerifier {
     };
   }
 
-  private static List<CellCoordinate> sortedCoordinates(LinkedHashSet<CellCoordinate> coordinates) {
+  private static List<CellCoordinate> sortedCoordinates(Set<CellCoordinate> coordinates) {
     java.util.ArrayList<CellCoordinate> sorted = new java.util.ArrayList<>(coordinates);
     sorted.sort(
         (left, right) -> {
@@ -1179,7 +1181,8 @@ public final class XlsxRoundTripVerifier {
     return metadata.hyperlink().isPresent() || metadata.comment().isPresent();
   }
 
-  private static void forEachCell(String range, java.util.function.Consumer<CellCoordinate> consumer) {
+  private static void forEachCell(
+      String range, java.util.function.Consumer<CellCoordinate> consumer) {
     CellRangeAddress cellRange = CellRangeAddress.valueOf(range);
     for (int rowIndex = cellRange.getFirstRow(); rowIndex <= cellRange.getLastRow(); rowIndex++) {
       for (int columnIndex = cellRange.getFirstColumn();
@@ -1214,7 +1217,8 @@ public final class XlsxRoundTripVerifier {
             font.getStrikeout()),
         fillSnapshot(style),
         new ExcelBorderSnapshot(
-            new ExcelBorderSide(fromPoi(style.getBorderTop()), toRgbHex(style.getTopBorderXSSFColor())),
+            new ExcelBorderSide(
+                fromPoi(style.getBorderTop()), toRgbHex(style.getTopBorderXSSFColor())),
             new ExcelBorderSide(
                 fromPoi(style.getBorderRight()), toRgbHex(style.getRightBorderXSSFColor())),
             new ExcelBorderSide(
@@ -1389,7 +1393,8 @@ public final class XlsxRoundTripVerifier {
       Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters,
       List<ExcelTableSnapshot> expectedTables) {}
 
-  private record ExpectedWorkbookFootprint(Map<String, List<CellCoordinate>> candidateCoordinatesBySheet) {}
+  private record ExpectedWorkbookFootprint(
+      Map<String, List<CellCoordinate>> candidateCoordinatesBySheet) {}
 
   private record CellCoordinate(int rowIndex, int columnIndex) {
     private static CellCoordinate fromAddress(String address) {

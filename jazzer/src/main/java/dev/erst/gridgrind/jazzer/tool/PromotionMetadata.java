@@ -3,7 +3,9 @@ package dev.erst.gridgrind.jazzer.tool;
 import java.nio.file.Path;
 import java.util.Objects;
 
-/** Describes one committed regression input promoted from a local Jazzer artifact or corpus file. */
+/**
+ * Describes one committed regression input promoted from a local Jazzer artifact or corpus file.
+ */
 public record PromotionMetadata(
     String targetKey,
     String sourcePath,
@@ -17,12 +19,14 @@ public record PromotionMetadata(
     sourcePath = normalizeStoredPath(sourcePath, "sourcePath");
     promotedInputPath = normalizeStoredPath(promotedInputPath, "promotedInputPath");
     replayOutcome = requireNonBlank(replayOutcome, "replayOutcome");
-    expectation = Objects.requireNonNull(expectation, "expectation must not be null");
+    Objects.requireNonNull(expectation, "expectation must not be null");
     promotedAt = requireNonBlank(promotedAt, "promotedAt");
     replayTextPath = normalizeStoredPath(replayTextPath, "replayTextPath");
   }
 
-  /** Normalizes one filesystem path to the project-relative text persisted in promotion metadata. */
+  /**
+   * Normalizes one filesystem path to the project-relative text persisted in promotion metadata.
+   */
   static String relativizePath(Path projectDirectory, Path path) {
     Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
     Objects.requireNonNull(path, "path must not be null");

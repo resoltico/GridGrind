@@ -27,10 +27,10 @@ import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
 import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.dto.PaneReport;
 import dev.erst.gridgrind.protocol.dto.PrintLayoutReport;
+import dev.erst.gridgrind.protocol.dto.RequestWarning;
 import dev.erst.gridgrind.protocol.dto.TableEntryReport;
 import dev.erst.gridgrind.protocol.dto.TableHealthReport;
 import dev.erst.gridgrind.protocol.dto.TableStyleReport;
-import dev.erst.gridgrind.protocol.dto.RequestWarning;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.nio.file.Files;
@@ -70,7 +70,10 @@ public final class WorkbookInvariantChecks {
     }
   }
 
-  /** Requires the response shape to agree with the request's source, reads, and persistence contract. */
+  /**
+   * Requires the response shape to agree with the request's source, reads, and persistence
+   * contract.
+   */
   public static void requireWorkflowOutcomeShape(
       GridGrindRequest request, GridGrindResponse response) {
     Objects.requireNonNull(request, "request must not be null");
@@ -98,8 +101,9 @@ public final class WorkbookInvariantChecks {
     WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
     var workbookSummary =
         ((dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult)
-                readExecutor.apply(
-                    workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-shape")).getFirst())
+                readExecutor
+                    .apply(workbook, new WorkbookReadCommand.GetWorkbookSummary("workbook-shape"))
+                    .getFirst())
             .workbook();
 
     requireEngineWorkbookSummaryShape(workbookSummary);
@@ -109,10 +113,11 @@ public final class WorkbookInvariantChecks {
             sheetName ->
                 requireEngineSheetSummaryShape(
                     ((dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult)
-                            readExecutor.apply(
-                                workbook,
-                                new WorkbookReadCommand.GetSheetSummary(
-                                    "sheet-shape-" + sheetName, sheetName))
+                            readExecutor
+                                .apply(
+                                    workbook,
+                                    new WorkbookReadCommand.GetSheetSummary(
+                                        "sheet-shape-" + sheetName, sheetName))
                                 .getFirst())
                         .sheet()));
   }
@@ -189,14 +194,17 @@ public final class WorkbookInvariantChecks {
         requireWorkbookSummaryShape(result.workbook());
       }
       case WorkbookReadOperation.GetNamedRanges _ -> {
-        WorkbookReadResult.NamedRangesResult result = (WorkbookReadResult.NamedRangesResult) readResult;
+        WorkbookReadResult.NamedRangesResult result =
+            (WorkbookReadResult.NamedRangesResult) readResult;
         result.namedRanges().forEach(WorkbookInvariantChecks::requireNamedRangeShape);
       }
       case WorkbookReadOperation.GetSheetSummary expected -> {
         WorkbookReadResult.SheetSummaryResult result =
             (WorkbookReadResult.SheetSummaryResult) readResult;
         requireSheetSummaryShape(result.sheet());
-        require(expected.sheetName().equals(result.sheet().sheetName()), "sheet summary sheet mismatch");
+        require(
+            expected.sheetName().equals(result.sheet().sheetName()),
+            "sheet summary sheet mismatch");
       }
       case WorkbookReadOperation.GetCells expected -> {
         WorkbookReadResult.CellsResult result = (WorkbookReadResult.CellsResult) readResult;
@@ -211,21 +219,18 @@ public final class WorkbookInvariantChecks {
         require(
             expected.topLeftAddress().equals(result.window().topLeftAddress()),
             "window topLeftAddress mismatch");
+        require(expected.rowCount() == result.window().rowCount(), "window rowCount mismatch");
         require(
-            expected.rowCount() == result.window().rowCount(),
-            "window rowCount mismatch");
-        require(
-            expected.columnCount() == result.window().columnCount(),
-            "window columnCount mismatch");
+            expected.columnCount() == result.window().columnCount(), "window columnCount mismatch");
       }
       case WorkbookReadOperation.GetMergedRegions expected -> {
         WorkbookReadResult.MergedRegionsResult result =
             (WorkbookReadResult.MergedRegionsResult) readResult;
-        require(
-            expected.sheetName().equals(result.sheetName()), "merged regions sheet mismatch");
+        require(expected.sheetName().equals(result.sheetName()), "merged regions sheet mismatch");
       }
       case WorkbookReadOperation.GetHyperlinks expected -> {
-        WorkbookReadResult.HyperlinksResult result = (WorkbookReadResult.HyperlinksResult) readResult;
+        WorkbookReadResult.HyperlinksResult result =
+            (WorkbookReadResult.HyperlinksResult) readResult;
         require(expected.sheetName().equals(result.sheetName()), "hyperlinks sheet mismatch");
       }
       case WorkbookReadOperation.GetComments expected -> {
@@ -271,8 +276,10 @@ public final class WorkbookInvariantChecks {
         require(result.analysis().sheets() != null, "formula surface sheets must not be null");
       }
       case WorkbookReadOperation.GetSheetSchema expected -> {
-        WorkbookReadResult.SheetSchemaResult result = (WorkbookReadResult.SheetSchemaResult) readResult;
-        require(expected.sheetName().equals(result.analysis().sheetName()), "schema sheet mismatch");
+        WorkbookReadResult.SheetSchemaResult result =
+            (WorkbookReadResult.SheetSchemaResult) readResult;
+        require(
+            expected.sheetName().equals(result.analysis().sheetName()), "schema sheet mismatch");
         require(
             expected.topLeftAddress().equals(result.analysis().topLeftAddress()),
             "schema topLeftAddress mismatch");
@@ -281,10 +288,12 @@ public final class WorkbookInvariantChecks {
         WorkbookReadResult.NamedRangeSurfaceResult result =
             (WorkbookReadResult.NamedRangeSurfaceResult) readResult;
         require(
-            result.analysis().namedRanges() != null, "named range surface entries must not be null");
+            result.analysis().namedRanges() != null,
+            "named range surface entries must not be null");
       }
       case WorkbookReadOperation.AnalyzeFormulaHealth _ ->
-          requireFormulaHealthShape(((WorkbookReadResult.FormulaHealthResult) readResult).analysis());
+          requireFormulaHealthShape(
+              ((WorkbookReadResult.FormulaHealthResult) readResult).analysis());
       case WorkbookReadOperation.AnalyzeDataValidationHealth _ ->
           requireDataValidationHealthShape(
               ((WorkbookReadResult.DataValidationHealthResult) readResult).analysis());
@@ -358,7 +367,11 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.MergedRegionsResult result -> {
         require(result.sheetName() != null, "merged regions sheetName must not be null");
         require(!result.sheetName().isBlank(), "merged regions sheetName must not be blank");
-        result.mergedRegions().forEach(region -> require(!region.range().isBlank(), "merged region range must not be blank"));
+        result
+            .mergedRegions()
+            .forEach(
+                region ->
+                    require(!region.range().isBlank(), "merged region range must not be blank"));
       }
       case WorkbookReadResult.HyperlinksResult result -> {
         require(result.sheetName() != null, "hyperlinks sheetName must not be null");
@@ -378,12 +391,11 @@ public final class WorkbookInvariantChecks {
         result.validations().forEach(WorkbookInvariantChecks::requireDataValidationEntryShape);
       }
       case WorkbookReadResult.ConditionalFormattingResult result -> {
+        require(result.sheetName() != null, "conditional formatting sheetName must not be null");
         require(
-            result.sheetName() != null, "conditional formatting sheetName must not be null");
-        require(
-            !result.sheetName().isBlank(),
-            "conditional formatting sheetName must not be blank");
-        result.conditionalFormattingBlocks()
+            !result.sheetName().isBlank(), "conditional formatting sheetName must not be blank");
+        result
+            .conditionalFormattingBlocks()
             .forEach(WorkbookInvariantChecks::requireConditionalFormattingEntryShape);
       }
       case WorkbookReadResult.AutofiltersResult result -> {
@@ -393,8 +405,10 @@ public final class WorkbookInvariantChecks {
       }
       case WorkbookReadResult.TablesResult result ->
           result.tables().forEach(WorkbookInvariantChecks::requireTableEntryShape);
-      case WorkbookReadResult.FormulaSurfaceResult result -> requireFormulaSurfaceShape(result.analysis());
-      case WorkbookReadResult.SheetSchemaResult result -> requireSheetSchemaShape(result.analysis());
+      case WorkbookReadResult.FormulaSurfaceResult result ->
+          requireFormulaSurfaceShape(result.analysis());
+      case WorkbookReadResult.SheetSchemaResult result ->
+          requireSheetSchemaShape(result.analysis());
       case WorkbookReadResult.NamedRangeSurfaceResult result ->
           requireNamedRangeSurfaceShape(result.analysis());
       case WorkbookReadResult.FormulaHealthResult result ->
@@ -405,7 +419,8 @@ public final class WorkbookInvariantChecks {
           requireConditionalFormattingHealthShape(result.analysis());
       case WorkbookReadResult.AutofilterHealthResult result ->
           requireAutofilterHealthShape(result.analysis());
-      case WorkbookReadResult.TableHealthResult result -> requireTableHealthShape(result.analysis());
+      case WorkbookReadResult.TableHealthResult result ->
+          requireTableHealthShape(result.analysis());
       case WorkbookReadResult.HyperlinkHealthResult result ->
           requireHyperlinkHealthShape(result.analysis());
       case WorkbookReadResult.NamedRangeHealthResult result ->
@@ -425,7 +440,9 @@ public final class WorkbookInvariantChecks {
         "sheetCount must match sheetNames size");
     workbook
         .sheetNames()
-        .forEach(sheetName -> require(sheetName != null && !sheetName.isBlank(), "sheetName must not be blank"));
+        .forEach(
+            sheetName ->
+                require(sheetName != null && !sheetName.isBlank(), "sheetName must not be blank"));
     switch (workbook) {
       case GridGrindResponse.WorkbookSummary.Empty empty -> {
         require(empty.sheetCount() == 0, "empty workbook summary must have sheetCount 0");
@@ -433,17 +450,14 @@ public final class WorkbookInvariantChecks {
       }
       case GridGrindResponse.WorkbookSummary.WithSheets withSheets -> {
         require(
-            withSheets.sheetCount() > 0, "non-empty workbook summary must have positive sheetCount");
+            withSheets.sheetCount() > 0,
+            "non-empty workbook summary must have positive sheetCount");
         requireNonBlank(withSheets.activeSheetName(), "activeSheetName");
         require(
             withSheets.sheetNames().contains(withSheets.activeSheetName()),
             "activeSheetName must be present in sheetNames");
-        require(
-            withSheets.selectedSheetNames() != null,
-            "selectedSheetNames must not be null");
-        require(
-            !withSheets.selectedSheetNames().isEmpty(),
-            "selectedSheetNames must not be empty");
+        require(withSheets.selectedSheetNames() != null, "selectedSheetNames must not be null");
+        require(!withSheets.selectedSheetNames().isEmpty(), "selectedSheetNames must not be empty");
         require(
             withSheets.selectedSheetNames().size()
                 == new HashSet<>(withSheets.selectedSheetNames()).size(),
@@ -488,15 +502,12 @@ public final class WorkbookInvariantChecks {
     require(
         workbook.sheetNames().size() == new HashSet<>(workbook.sheetNames()).size(),
         "engine sheet names must be unique");
-    workbook
-        .sheetNames()
-        .forEach(sheetName -> requireNonBlank(sheetName, "engine sheetName"));
+    workbook.sheetNames().forEach(sheetName -> requireNonBlank(sheetName, "engine sheetName"));
     switch (workbook) {
       case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.Empty empty -> {
         require(empty.sheetCount() == 0, "engine empty workbook summary must have sheetCount 0");
         require(
-            empty.sheetNames().isEmpty(),
-            "engine empty workbook summary must have no sheet names");
+            empty.sheetNames().isEmpty(), "engine empty workbook summary must have no sheet names");
       }
       case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary.WithSheets withSheets -> {
         require(
@@ -552,7 +563,8 @@ public final class WorkbookInvariantChecks {
     require(!window.topLeftAddress().isBlank(), "window topLeftAddress must not be blank");
     require(window.rows() != null, "window rows must not be null");
     require(window.rows().size() == window.rowCount(), "window rows size must match rowCount");
-    window.rows()
+    window
+        .rows()
         .forEach(
             row -> {
               require(row.rowIndex() >= 0, "window row index must not be negative");
@@ -671,11 +683,9 @@ public final class WorkbookInvariantChecks {
     conditionalFormatting
         .ranges()
         .forEach(range -> requireNonBlank(range, "conditional formatting range"));
+    require(conditionalFormatting.rules() != null, "conditional formatting rules must not be null");
     require(
-        conditionalFormatting.rules() != null, "conditional formatting rules must not be null");
-    require(
-        !conditionalFormatting.rules().isEmpty(),
-        "conditional formatting rules must not be empty");
+        !conditionalFormatting.rules().isEmpty(), "conditional formatting rules must not be empty");
     conditionalFormatting
         .rules()
         .forEach(WorkbookInvariantChecks::requireConditionalFormattingRuleShape);
@@ -688,13 +698,14 @@ public final class WorkbookInvariantChecks {
     require(table.headerRowCount() >= 0, "table headerRowCount must not be negative");
     require(table.totalsRowCount() >= 0, "table totalsRowCount must not be negative");
     require(table.columnNames() != null, "table columnNames must not be null");
-    table.columnNames().forEach(columnName -> require(columnName != null, "table column name must not be null"));
+    table
+        .columnNames()
+        .forEach(columnName -> require(columnName != null, "table column name must not be null"));
     require(table.style() != null, "table style must not be null");
     requireTableStyleShape(table.style());
   }
 
-  private static void requireConditionalFormattingRuleShape(
-      ConditionalFormattingRuleReport rule) {
+  private static void requireConditionalFormattingRuleShape(ConditionalFormattingRuleReport rule) {
     require(rule.priority() > 0, "conditional formatting priority must be greater than 0");
     switch (rule) {
       case ConditionalFormattingRuleReport.FormulaRule formulaRule -> {
@@ -703,7 +714,8 @@ public final class WorkbookInvariantChecks {
         requireDifferentialStyleShape(formulaRule.style());
       }
       case ConditionalFormattingRuleReport.CellValueRule cellValueRule -> {
-        require(cellValueRule.operator() != null, "conditional formatting operator must not be null");
+        require(
+            cellValueRule.operator() != null, "conditional formatting operator must not be null");
         requireNonBlank(cellValueRule.formula1(), "conditional formatting formula1");
         if (cellValueRule.formula2() != null) {
           requireNonBlank(cellValueRule.formula2(), "conditional formatting formula2");
@@ -724,20 +736,24 @@ public final class WorkbookInvariantChecks {
             .forEach(WorkbookInvariantChecks::requireConditionalFormattingThresholdShape);
         require(colorScaleRule.colors() != null, "conditional formatting colors must not be null");
         require(
-            !colorScaleRule.colors().isEmpty(),
-            "conditional formatting colors must not be empty");
-        colorScaleRule.colors().forEach(color -> requireNonBlank(color, "conditional formatting color"));
+            !colorScaleRule.colors().isEmpty(), "conditional formatting colors must not be empty");
+        colorScaleRule
+            .colors()
+            .forEach(color -> requireNonBlank(color, "conditional formatting color"));
       }
       case ConditionalFormattingRuleReport.DataBarRule dataBarRule -> {
         requireNonBlank(dataBarRule.color(), "conditional formatting color");
         requireConditionalFormattingThresholdShape(dataBarRule.minThreshold());
         requireConditionalFormattingThresholdShape(dataBarRule.maxThreshold());
-        require(dataBarRule.widthMin() >= 0, "conditional formatting widthMin must not be negative");
-        require(dataBarRule.widthMax() >= 0, "conditional formatting widthMax must not be negative");
+        require(
+            dataBarRule.widthMin() >= 0, "conditional formatting widthMin must not be negative");
+        require(
+            dataBarRule.widthMax() >= 0, "conditional formatting widthMax must not be negative");
       }
       case ConditionalFormattingRuleReport.IconSetRule iconSetRule -> {
         require(iconSetRule.iconSet() != null, "conditional formatting iconSet must not be null");
-        require(iconSetRule.thresholds() != null, "conditional formatting thresholds must not be null");
+        require(
+            iconSetRule.thresholds() != null, "conditional formatting thresholds must not be null");
         require(
             !iconSetRule.thresholds().isEmpty(),
             "conditional formatting thresholds must not be empty");
@@ -775,10 +791,16 @@ public final class WorkbookInvariantChecks {
     if (style.border() != null) {
       requireDifferentialBorderShape(style.border());
     }
-    require(style.unsupportedFeatures() != null, "conditional formatting unsupportedFeatures must not be null");
+    require(
+        style.unsupportedFeatures() != null,
+        "conditional formatting unsupportedFeatures must not be null");
     style
         .unsupportedFeatures()
-        .forEach(feature -> require(feature != null, "conditional formatting unsupported feature must not be null"));
+        .forEach(
+            feature ->
+                require(
+                    feature != null,
+                    "conditional formatting unsupported feature must not be null"));
   }
 
   private static void requireDifferentialBorderShape(DifferentialBorderReport border) {
@@ -846,7 +868,8 @@ public final class WorkbookInvariantChecks {
       requireNonBlank(validation.prompt().text(), "data validation prompt text");
     }
     if (validation.errorAlert() != null) {
-      require(validation.errorAlert().style() != null, "data validation error style must not be null");
+      require(
+          validation.errorAlert().style() != null, "data validation error style must not be null");
       requireNonBlank(validation.errorAlert().title(), "data validation error title");
       requireNonBlank(validation.errorAlert().text(), "data validation error text");
     }
@@ -867,16 +890,13 @@ public final class WorkbookInvariantChecks {
               require(!sheet.sheetName().isBlank(), "formula surface sheetName must not be blank");
               require(sheet.formulaCellCount() >= 0, "formulaCellCount must not be negative");
               require(
-                  sheet.distinctFormulaCount() >= 0,
-                  "distinctFormulaCount must not be negative");
+                  sheet.distinctFormulaCount() >= 0, "distinctFormulaCount must not be negative");
               sheet
                   .formulas()
                   .forEach(
                       formula -> {
                         require(formula.formula() != null, "formula pattern must not be null");
-                        require(
-                            !formula.formula().isBlank(),
-                            "formula pattern must not be blank");
+                        require(!formula.formula().isBlank(), "formula pattern must not be blank");
                         require(
                             formula.occurrenceCount() > 0,
                             "occurrenceCount must be greater than 0");
@@ -920,8 +940,7 @@ public final class WorkbookInvariantChecks {
 
   private static void requireNamedRangeSurfaceShape(
       GridGrindResponse.NamedRangeSurfaceReport analysis) {
-    require(
-        analysis.workbookScopedCount() >= 0, "workbookScopedCount must not be negative");
+    require(analysis.workbookScopedCount() >= 0, "workbookScopedCount must not be negative");
     require(analysis.sheetScopedCount() >= 0, "sheetScopedCount must not be negative");
     require(analysis.rangeBackedCount() >= 0, "rangeBackedCount must not be negative");
     require(analysis.formulaBackedCount() >= 0, "formulaBackedCount must not be negative");
@@ -941,16 +960,13 @@ public final class WorkbookInvariantChecks {
 
   private static void requireFormulaHealthShape(GridGrindResponse.FormulaHealthReport analysis) {
     require(
-        analysis.checkedFormulaCellCount() >= 0,
-        "checkedFormulaCellCount must not be negative");
+        analysis.checkedFormulaCellCount() >= 0, "checkedFormulaCellCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 
   private static void requireDataValidationHealthShape(
       dev.erst.gridgrind.protocol.dto.DataValidationHealthReport analysis) {
-    require(
-        analysis.checkedValidationCount() >= 0,
-        "checkedValidationCount must not be negative");
+    require(analysis.checkedValidationCount() >= 0, "checkedValidationCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 
@@ -963,9 +979,7 @@ public final class WorkbookInvariantChecks {
   }
 
   private static void requireAutofilterHealthShape(AutofilterHealthReport analysis) {
-    require(
-        analysis.checkedAutofilterCount() >= 0,
-        "checkedAutofilterCount must not be negative");
+    require(analysis.checkedAutofilterCount() >= 0, "checkedAutofilterCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 
@@ -976,17 +990,13 @@ public final class WorkbookInvariantChecks {
 
   private static void requireHyperlinkHealthShape(
       GridGrindResponse.HyperlinkHealthReport analysis) {
-    require(
-        analysis.checkedHyperlinkCount() >= 0,
-        "checkedHyperlinkCount must not be negative");
+    require(analysis.checkedHyperlinkCount() >= 0, "checkedHyperlinkCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 
   private static void requireNamedRangeHealthShape(
       GridGrindResponse.NamedRangeHealthReport analysis) {
-    require(
-        analysis.checkedNamedRangeCount() >= 0,
-        "checkedNamedRangeCount must not be negative");
+    require(analysis.checkedNamedRangeCount() >= 0, "checkedNamedRangeCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 
@@ -1005,8 +1015,7 @@ public final class WorkbookInvariantChecks {
     require(summary.warningCount() >= 0, "analysis warningCount must not be negative");
     require(summary.infoCount() >= 0, "analysis infoCount must not be negative");
     require(
-        summary.totalCount() == findings.size(),
-        "analysis totalCount must match findings size");
+        summary.totalCount() == findings.size(), "analysis totalCount must match findings size");
     require(
         summary.totalCount() == summary.errorCount() + summary.warningCount() + summary.infoCount(),
         "analysis totalCount must equal error + warning + info");
@@ -1100,9 +1109,7 @@ public final class WorkbookInvariantChecks {
         require(range.target() != null, "namedRange target must not be null");
         require(range.target().sheetName() != null, "namedRange target sheet must not be null");
         require(range.target().range() != null, "namedRange target range must not be null");
-        require(
-            !range.target().sheetName().isBlank(),
-            "namedRange target sheet must not be blank");
+        require(!range.target().sheetName().isBlank(), "namedRange target sheet must not be blank");
         require(!range.target().range().isBlank(), "namedRange target range must not be blank");
       }
       case GridGrindResponse.NamedRangeReport.FormulaReport _ -> {}
@@ -1155,12 +1162,8 @@ public final class WorkbookInvariantChecks {
 
   private static void requireCellAlignmentShape(CellAlignmentReport alignment) {
     require(alignment != null, "alignment must not be null");
-    require(
-        alignment.horizontalAlignment() != null,
-        "horizontalAlignment must not be null");
-    require(
-        alignment.verticalAlignment() != null,
-        "verticalAlignment must not be null");
+    require(alignment.horizontalAlignment() != null, "horizontalAlignment must not be null");
+    require(alignment.verticalAlignment() != null, "verticalAlignment must not be null");
     require(
         alignment.textRotation() >= 0 && alignment.textRotation() <= 180,
         "textRotation must be between 0 and 180 inclusive");

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset
+    name="GridGrind Jazzer Main Quality"
+    xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.github.io/pmd-7.0.0/ruleset_xml_schema.xsd">
+    <description>
+        High-signal PMD rules for GridGrind's local Jazzer support and operator code. This layer is
+        intentionally more coupled to the protocol and engine surface than production modules, and
+        it legitimately owns local CLI, replay, and telemetry concerns that do not map one-to-one
+        to the product-runtime ruleset.
+    </description>
+
+    <rule ref="category/java/errorprone.xml">
+        <exclude name="AvoidCatchingGenericException"/>
+        <exclude name="AvoidDuplicateLiterals"/>
+        <exclude name="AvoidFieldNameMatchingMethodName"/>
+        <exclude name="AvoidLiteralsInIfCondition"/>
+        <exclude name="DoNotTerminateVM"/>
+        <exclude name="NullAssignment"/>
+    </rule>
+
+    <rule ref="category/java/bestpractices.xml">
+        <exclude name="LooseCoupling"/>
+        <exclude name="LiteralsFirstInComparisons"/>
+        <exclude name="SystemPrintln"/>
+    </rule>
+
+    <rule ref="category/java/design.xml">
+        <exclude name="CognitiveComplexity"/>
+        <exclude name="CouplingBetweenObjects"/>
+        <exclude name="DataClass"/>
+        <exclude name="ExcessiveImports"/>
+        <exclude name="GodClass"/>
+        <exclude name="LawOfDemeter"/>
+        <exclude name="LoosePackageCoupling"/>
+        <exclude name="NPathComplexity"/>
+        <exclude name="NcssCount"/>
+        <exclude name="CyclomaticComplexity"/>
+        <exclude name="TooManyMethods"/>
+        <exclude name="UseObjectForClearerAPI"/>
+    </rule>
+
+    <rule ref="category/java/multithreading.xml">
+        <exclude name="AvoidSynchronizedAtMethodLevel"/>
+        <exclude name="DoNotUseThreads"/>
+        <exclude name="UseConcurrentHashMap"/>
+    </rule>
+
+    <rule ref="category/java/performance.xml">
+        <exclude name="AppendCharacterWithChar"/>
+        <exclude name="AvoidInstantiatingObjectsInLoops"/>
+        <exclude name="ConsecutiveAppendsShouldReuse"/>
+        <exclude name="InsufficientStringBufferDeclaration"/>
+        <exclude name="TooFewBranchesForSwitch"/>
+    </rule>
+
+    <rule ref="category/java/security.xml"/>
+
+    <rule ref="category/java/documentation.xml/CommentRequired">
+        <properties>
+            <property name="classCommentRequirement" value="required"/>
+            <property name="enumCommentRequirement" value="required"/>
+            <property name="publicMethodCommentRequirement" value="required"/>
+            <property name="methodWithOverrideCommentRequirement" value="ignored"/>
+            <property name="accessorCommentRequirement" value="ignored"/>
+            <property name="fieldCommentRequirement" value="ignored"/>
+            <property name="protectedMethodCommentRequirement" value="ignored"/>
+        </properties>
+    </rule>
+
+    <rule ref="category/java/documentation.xml/UncommentedEmptyMethodBody"/>
+</ruleset>

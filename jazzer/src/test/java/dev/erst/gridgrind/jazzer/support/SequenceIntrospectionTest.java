@@ -5,11 +5,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
+import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
@@ -24,18 +24,18 @@ import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
 import dev.erst.gridgrind.protocol.dto.DifferentialStyleInput;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
-import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
+import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.dto.RangeSelection;
-import dev.erst.gridgrind.protocol.dto.SheetSelection;
 import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
+import dev.erst.gridgrind.protocol.dto.SheetSelection;
 import dev.erst.gridgrind.protocol.dto.TableInput;
 import dev.erst.gridgrind.protocol.dto.TableSelection;
 import dev.erst.gridgrind.protocol.dto.TableStyleInput;
-import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
+import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -65,8 +65,7 @@ class SequenceIntrospectionTest {
             new WorkbookOperation.SetSheetProtection("Budget", protocolProtectionSettings())));
     assertEquals(
         "CLEAR_SHEET_PROTECTION",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.ClearSheetProtection("Budget")));
+        SequenceIntrospection.operationKind(new WorkbookOperation.ClearSheetProtection("Budget")));
     assertEquals(
         "SET_HYPERLINK",
         SequenceIntrospection.operationKind(
@@ -93,8 +92,7 @@ class SequenceIntrospectionTest {
     assertEquals(
         "DELETE_NAMED_RANGE",
         SequenceIntrospection.operationKind(
-            new WorkbookOperation.DeleteNamedRange(
-                "BudgetTotal", new NamedRangeScope.Workbook())));
+            new WorkbookOperation.DeleteNamedRange("BudgetTotal", new NamedRangeScope.Workbook())));
     assertEquals(
         "SET_DATA_VALIDATION",
         SequenceIntrospection.operationKind(
@@ -122,8 +120,10 @@ class SequenceIntrospectionTest {
                     List.of("A2:A5"),
                     List.of(
                         new ConditionalFormattingRuleInput.FormulaRule(
-                            "A2>0", true, new DifferentialStyleInput("0.00", true, null, null,
-                                null, null, null, null, null)))))));
+                            "A2>0",
+                            true,
+                            new DifferentialStyleInput(
+                                "0.00", true, null, null, null, null, null, null, null)))))));
     assertEquals(
         "CLEAR_CONDITIONAL_FORMATTING",
         SequenceIntrospection.operationKind(
@@ -184,8 +184,7 @@ class SequenceIntrospectionTest {
             new WorkbookCommand.SetSheetProtection("Budget", excelProtectionSettings())));
     assertEquals(
         "CLEAR_SHEET_PROTECTION",
-        SequenceIntrospection.commandKind(
-            new WorkbookCommand.ClearSheetProtection("Budget")));
+        SequenceIntrospection.commandKind(new WorkbookCommand.ClearSheetProtection("Budget")));
     assertEquals(
         "SET_HYPERLINK",
         SequenceIntrospection.commandKind(
@@ -253,8 +252,7 @@ class SequenceIntrospectionTest {
                 "Budget", new dev.erst.gridgrind.excel.ExcelRangeSelection.All())));
     assertEquals(
         "SET_AUTOFILTER",
-        SequenceIntrospection.commandKind(
-            new WorkbookCommand.SetAutofilter("Budget", "E1:F4")));
+        SequenceIntrospection.commandKind(new WorkbookCommand.SetAutofilter("Budget", "E1:F4")));
     assertEquals(
         "CLEAR_AUTOFILTER",
         SequenceIntrospection.commandKind(new WorkbookCommand.ClearAutofilter("Budget")));
@@ -298,8 +296,7 @@ class SequenceIntrospectionTest {
                     "conditional-formatting", "Budget", new RangeSelection.All()),
                 new WorkbookReadOperation.GetAutofilters("autofilters", "Budget"),
                 new WorkbookReadOperation.GetTables("tables", new TableSelection.All()),
-                new WorkbookReadOperation.GetFormulaSurface(
-                    "formulas", new SheetSelection.All()),
+                new WorkbookReadOperation.GetFormulaSurface("formulas", new SheetSelection.All()),
                 new WorkbookReadOperation.AnalyzeDataValidationHealth(
                     "data-validation-health", new SheetSelection.All()),
                 new WorkbookReadOperation.AnalyzeConditionalFormattingHealth(
@@ -313,74 +310,37 @@ class SequenceIntrospectionTest {
                 new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings")));
 
     assertEquals(13, SequenceIntrospection.readCount(request));
+    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
+    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DATA_VALIDATIONS"));
     assertEquals(
-        1L,
-        SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
-    assertEquals(
-        1L,
-        SequenceIntrospection.readKinds(request.reads()).get("GET_DATA_VALIDATIONS"));
-    assertEquals(
-        1L,
-        SequenceIntrospection.readKinds(request.reads()).get("GET_CONDITIONAL_FORMATTING"));
+        1L, SequenceIntrospection.readKinds(request.reads()).get("GET_CONDITIONAL_FORMATTING"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_AUTOFILTERS"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_TABLES"));
+    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_FORMULA_SURFACE"));
     assertEquals(
-        1L,
-        SequenceIntrospection.readKinds(request.reads()).get("GET_FORMULA_SURFACE"));
-    assertEquals(
-        1L,
-        SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_DATA_VALIDATION_HEALTH"));
+        1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_DATA_VALIDATION_HEALTH"));
     assertEquals(
         1L,
         SequenceIntrospection.readKinds(request.reads())
             .get("ANALYZE_CONDITIONAL_FORMATTING_HEALTH"));
     assertEquals(
-        1L,
-        SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_AUTOFILTER_HEALTH"));
+        1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_AUTOFILTER_HEALTH"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_TABLE_HEALTH"));
     assertEquals(
-        1L,
-        SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_NAMED_RANGE_HEALTH"));
+        1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_NAMED_RANGE_HEALTH"));
     assertEquals(
-        1L,
-        SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_WORKBOOK_FINDINGS"));
+        1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_WORKBOOK_FINDINGS"));
   }
 
   private static SheetProtectionSettings protocolProtectionSettings() {
     return new SheetProtectionSettings(
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
+        false, true, false, true, false, true, false, true, false, true, false, true, false, true,
         false);
   }
 
   private static ExcelSheetProtectionSettings excelProtectionSettings() {
     return new ExcelSheetProtectionSettings(
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
-        false,
-        true,
+        false, true, false, true, false, true, false, true, false, true, false, true, false, true,
         false);
   }
 }

@@ -28,8 +28,7 @@ import java.util.Objects;
 
 /** Decodes bounded structured values from a Jazzer data provider. */
 public final class FuzzDataDecoders {
-  private static final List<String> VALID_COLUMNS =
-      List.of("A", "B", "C", "D", "E", "F", "G", "H");
+  private static final List<String> VALID_COLUMNS = List.of("A", "B", "C", "D", "E", "F", "G", "H");
 
   private FuzzDataDecoders() {}
 
@@ -120,7 +119,9 @@ public final class FuzzDataDecoders {
         + lastRow;
   }
 
-  /** Returns a bounded non-blank rectangular A1-style range that may still be semantically invalid. */
+  /**
+   * Returns a bounded non-blank rectangular A1-style range that may still be semantically invalid.
+   */
   public static String nextNonBlankRange(GridGrindFuzzData data, boolean valid) {
     Objects.requireNonNull(data, "data must not be null");
 
@@ -228,10 +229,10 @@ public final class FuzzDataDecoders {
       case 4 ->
           new ExcelCellStyle(
               null, null, nextFont(data, false), nextFill(data), nextExcelBorder(data), null);
-      case 5 ->
-          new ExcelCellStyle(null, null, null, nextFill(data), null, nextProtection(data));
+      case 5 -> new ExcelCellStyle(null, null, null, nextFill(data), null, nextProtection(data));
       case 6 ->
-          new ExcelCellStyle(null, nextAlignment(data, true), null, null, nextExcelBorder(data), null);
+          new ExcelCellStyle(
+              null, nextAlignment(data, true), null, null, nextExcelBorder(data), null);
       default ->
           new ExcelCellStyle(null, null, nextFont(data, false), null, null, nextProtection(data));
     };
@@ -376,8 +377,8 @@ public final class FuzzDataDecoders {
   }
 
   private static String nextRgbHex(GridGrindFuzzData data) {
-    return "#%02X%02X%02X".formatted(
-        data.consumeInt(0, 255), data.consumeInt(0, 255), data.consumeInt(0, 255));
+    return "#%02X%02X%02X"
+        .formatted(data.consumeInt(0, 255), data.consumeInt(0, 255), data.consumeInt(0, 255));
   }
 
   private static CellFontInput toCellFontInput(ExcelCellFont font) {

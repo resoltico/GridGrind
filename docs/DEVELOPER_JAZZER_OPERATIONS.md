@@ -1,5 +1,5 @@
 afad: "3.5"
-version: "0.32.2"
+version: "0.33.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
 updated: "2026-04-10"
 route:
@@ -50,8 +50,10 @@ command runs at a time.
 
 This runs the root quality gates and coverage reports first, then the nested Jazzer `check`
 workflow, then the CLI fat-JAR packaging step, shell syntax checks, and the Docker smoke test.
-It is the supported one-command local verification path when a change touches both the main
-codebase and the Jazzer layer.
+Jazzer's Stage 2 verification includes shared Spotless and PMD enforcement, deterministic support
+tests, the dedicated `jazzerCoverageVerification` gate, and committed-seed regression replay. It
+is the supported one-command local verification path when a change touches both the main codebase
+and the Jazzer layer.
 
 If the Docker daemon is unavailable locally, Stage 5 fails as an environment problem after the
 earlier code and Jazzer stages have already completed.

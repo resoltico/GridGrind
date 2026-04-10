@@ -24,7 +24,9 @@ public record HarnessTelemetrySnapshot(
     Map<String, Long> errorKinds,
     Map<String, Long> responseKinds) {
 
-  /** Normalizes deserialized telemetry so older local history remains readable as the schema grows. */
+  /**
+   * Normalizes deserialized telemetry so older local history remains readable as the schema grows.
+   */
   public HarnessTelemetrySnapshot {
     sequenceKinds = Map.copyOf(sequenceKinds == null ? Map.of() : sequenceKinds);
     readKinds = Map.copyOf(readKinds == null ? Map.of() : readKinds);

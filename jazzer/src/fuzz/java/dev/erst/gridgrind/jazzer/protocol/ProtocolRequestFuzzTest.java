@@ -33,7 +33,9 @@ class ProtocolRequestFuzzTest {
       TELEMETRY.recordReadKinds(SequenceIntrospection.readKinds(request.reads()));
       TELEMETRY.recordStyleKinds(SequenceIntrospection.styleKinds(request.operations()));
       TELEMETRY.recordSuccess();
-    } catch (InvalidJsonException | InvalidRequestShapeException | InvalidRequestException expected) {
+    } catch (InvalidJsonException
+        | InvalidRequestShapeException
+        | InvalidRequestException expected) {
       // Expected invalid-payload classifications are the normal outcome for many fuzz inputs.
       TELEMETRY.recordExpectedInvalid(expected);
     } catch (IOException | RuntimeException unexpected) {

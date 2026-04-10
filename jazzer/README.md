@@ -116,7 +116,7 @@ Long-running Jazzer verification surfaces operator-readable progress with stable
 - `[JAZZER-PULSE] regression-target ...` for each committed-seed replay harness
 - `[JAZZER-PULSE] regression-input ...` for each committed promoted input replayed by a
   regression harness
-- `[JAZZER-PULSE] harness-class ...` for standalone launcher-based replay of a single harness
+- `[JAZZER-PULSE] harness-class ...` for standalone active-fuzz execution of a single harness
 
 Root `./check.sh` also emits `[CHECK-PULSE]` lines every 15 seconds while a stage is active and
 `[CHECK-DIAG]` lines if a stage stops making progress long enough to trigger automatic stall

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 
+/** Verifies deterministic replay-provider semantics for scalar and ranged consumption. */
 class ReplayGridGrindFuzzDataTest {
   @Test
   void replayConsumesScalarBytesFromTheInputTail() {
@@ -39,8 +40,16 @@ class ReplayGridGrindFuzzDataTest {
   void replayClampsRegularDoubleToTheUpperBound() {
     GridGrindFuzzData data =
         GridGrindFuzzData.replay(
-            new byte[] {(byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
-              (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF});
+            new byte[] {
+              (byte) 0xFF,
+              (byte) 0xFF,
+              (byte) 0xFF,
+              (byte) 0xFF,
+              (byte) 0xFF,
+              (byte) 0xFF,
+              (byte) 0xFF,
+              (byte) 0xFF
+            });
 
     assertEquals(10.0d, data.consumeRegularDouble(0.0d, 10.0d));
     assertEquals(0, data.remainingBytes());

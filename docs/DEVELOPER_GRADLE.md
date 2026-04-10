@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.32.2"
+version: "0.33.0"
 domain: DEVELOPER_GRADLE
 updated: "2026-04-10"
 route:
@@ -73,8 +73,11 @@ The current setup replaces both `buildSrc` trees with one explicit included buil
 for Gradle behavior, and one place to fix infrastructure concerns such as test pulses or cleanup
 tasks.
 
-The included build also clears its compile output directories before recompiling. That is a
-deliberate defense against stale hidden classes surviving after source deletion.
+The included build also cleans its compile output directories before recompiling. That is a
+deliberate defense against stale hidden classes surviving after source deletion. Kotlin
+incremental compilation is intentionally disabled in `gradle/build-logic` as well: the included
+build is small, and deterministic recompilation is more important there than micro-optimizing
+plugin compile time.
 
 ### Composite build for Jazzer
 
@@ -104,9 +107,10 @@ Use this routing table before changing the build:
 | If you are changing... | Change here first |
 |:-----------------------|:------------------|
 | root project membership, plugin resolution | `settings.gradle.kts` |
-| repository-wide quality gates, Spotless, PMD, aggregated coverage | `build.gradle.kts` |
+| thin root build wiring | `build.gradle.kts` |
+| repository-wide project-file formatting and aggregated coverage | `gradle/build-logic/.../GridGrindRootConventionsPlugin.kt` |
 | shared Java subproject conventions | `gradle/build-logic/.../GridGrindJavaConventionsPlugin.kt` |
-| shared Jazzer build behavior, Jazzer task registration, cleanup tasks | `gradle/build-logic/.../GridGrindJazzerConventionsPlugin.kt` |
+| shared Jazzer build behavior, Jazzer task registration, Jazzer PMD and coverage profiles, cleanup tasks | `gradle/build-logic/.../GridGrindJazzerConventionsPlugin.kt` |
 | dependency versions shared across product and Jazzer | `gradle/libs.versions.toml` |
 | nested Jazzer plugin wiring or imported catalogs | `jazzer/settings.gradle.kts` |
 | Jazzer harness and run-target topology | `jazzer/src/main/resources/dev/erst/gridgrind/jazzer/support/jazzer-topology.json` |
@@ -131,6 +135,10 @@ These are the Gradle-level invariants worth preserving:
 - the nested Jazzer build imports `../gradle/libs.versions.toml`
 - shared pulse scheduling lives in one base implementation, with build-specific listeners layered on
   top
+- root product-module quality policy lives in convention plugins, not in a root `subprojects {}`
+  block
+- Jazzer-specific PMD and JaCoCo scopes live beside Jazzer task registration in the shared build
+  logic
 - root `./gradlew check` stays focused on the product modules
 - root `./check.sh` remains the supported whole-repo gate that sequences root verification, Jazzer
   verification, packaging, and Docker smoke checks
@@ -150,6 +158,8 @@ Review this setup periodically, especially after Gradle, Kotlin, or Jazzer upgra
 - Are root and nested verification scopes still cleanly separated?
 - Are long-running test pulses still emitted from shared infrastructure rather than copy-pasted
   listeners?
+- Is build-logic compilation still deterministic after repeated local edits, or can Kotlin
+  incremental compilation safely return?
 - Does the nested Jazzer build still need to stay independent from the root project graph?
 - Are configuration-cache or composite-build constraints forcing awkward workarounds that deserve a
   redesign instead?

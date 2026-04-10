@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.32.2"
+version: "0.33.0"
 domain: DEVELOPER
 updated: "2026-04-10"
 route:
@@ -79,7 +79,8 @@ separate Java 25 installation.
 ## Commands
 
 `./gradlew check` remains the root-project CI gate: Spotless formatting, Error Prone, PMD, tests,
-and JaCoCo coverage verification. `./check.sh` is the local full-stack gate: root `check`
+and JaCoCo coverage verification for `engine`, `protocol`, and `cli`. `./check.sh` is the local
+full-stack gate: root `check`
 plus `coverage`, nested Jazzer `check`, `:cli:shadowJar`, shell syntax checks for the release-
 surface scripts, and a Docker smoke test that runs the image from a non-default working directory
 with weird request/response/save paths while also asserting the published help/version/response
@@ -208,6 +209,12 @@ so personal workspace state cannot destabilize the canonical quality gates.
 `./gradlew coverage` to enforce thresholds and generate HTML/XML reports at
 `build/reports/jacoco/` in each module plus an aggregated cross-module report at
 `build/reports/jacoco/aggregated/`.
+
+The table above applies only to the root product modules. The nested Jazzer build has a separate
+coverage contract because its local-only generator, telemetry, and operator classes are exercised
+primarily through regression replay and live fuzzing rather than ordinary unit tests. Run
+`./gradlew --project-dir jazzer check` to enforce Jazzer's dedicated coverage scope together with
+its shared Spotless and PMD gates.
 
 ---
 

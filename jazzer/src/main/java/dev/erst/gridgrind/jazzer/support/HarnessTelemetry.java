@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
-import tools.jackson.databind.json.JsonMapper;
 import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
 /** Records per-harness semantic telemetry and writes local JSON snapshots during Jazzer runs. */
 public final class HarnessTelemetry {

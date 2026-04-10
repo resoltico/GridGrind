@@ -8,8 +8,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/** Loads and validates the committed Jazzer topology shared by runtime support helpers. */
 final class JazzerTopology {
-  private static final String RESOURCE_PATH = "/dev/erst/gridgrind/jazzer/support/jazzer-topology.json";
+  private static final String RESOURCE_PATH =
+      "/dev/erst/gridgrind/jazzer/support/jazzer-topology.json";
   private static final Registry REGISTRY = load();
 
   private JazzerTopology() {}
@@ -49,7 +51,8 @@ final class JazzerTopology {
                   key -> {
                     JazzerHarness harness = harnessesByKey.get(key);
                     if (harness == null) {
-                      throw new IllegalArgumentException("Unknown Jazzer harness key in topology: " + key);
+                      throw new IllegalArgumentException(
+                          "Unknown Jazzer harness key in topology: " + key);
                     }
                     return harness;
                   })
@@ -84,11 +87,11 @@ final class JazzerTopology {
 
     Registry registry =
         new Registry(
-        List.copyOf(harnessesByKey.values()),
-        Map.copyOf(harnessesByKey),
-        List.copyOf(runTargetsByKey.values()),
-        Map.copyOf(runTargetsByKey),
-        Map.copyOf(runTargetsByTaskName));
+            List.copyOf(harnessesByKey.values()),
+            Map.copyOf(harnessesByKey),
+            List.copyOf(runTargetsByKey.values()),
+            Map.copyOf(runTargetsByKey),
+            Map.copyOf(runTargetsByTaskName));
     return registry;
   }
 
@@ -100,17 +103,21 @@ final class JazzerTopology {
       Map<String, JazzerRunTarget> runTargetsByTaskName) {
     Registry {
       harnesses = List.copyOf(Objects.requireNonNull(harnesses, "harnesses must not be null"));
-      harnessesByKey = Map.copyOf(Objects.requireNonNull(harnessesByKey, "harnessesByKey must not be null"));
+      harnessesByKey =
+          Map.copyOf(Objects.requireNonNull(harnessesByKey, "harnessesByKey must not be null"));
       runTargets = List.copyOf(Objects.requireNonNull(runTargets, "runTargets must not be null"));
       runTargetsByKey =
           Map.copyOf(Objects.requireNonNull(runTargetsByKey, "runTargetsByKey must not be null"));
       runTargetsByTaskName =
           Map.copyOf(
-              Objects.requireNonNull(runTargetsByTaskName, "runTargetsByTaskName must not be null"));
+              Objects.requireNonNull(
+                  runTargetsByTaskName, "runTargetsByTaskName must not be null"));
     }
   }
 
-  private record TopologyDocument(List<HarnessDocument> harnesses, List<RunTargetDocument> runTargets) {
+  private record TopologyDocument(
+      List<HarnessDocument> harnesses, List<RunTargetDocument> runTargets) {
+    @SuppressWarnings("UnusedMethod") // Jackson calls this compact constructor reflectively.
     TopologyDocument {
       harnesses = List.copyOf(Objects.requireNonNull(harnesses, "harnesses must not be null"));
       runTargets = List.copyOf(Objects.requireNonNull(runTargets, "runTargets must not be null"));
@@ -123,7 +130,9 @@ final class JazzerTopology {
     }
   }
 
-  private record HarnessDocument(String key, String displayName, String className, String methodName) {
+  private record HarnessDocument(
+      String key, String displayName, String className, String methodName) {
+    @SuppressWarnings("UnusedMethod") // Jackson calls this compact constructor reflectively.
     HarnessDocument {
       key = requireNonBlank(key, "key");
       displayName = requireNonBlank(displayName, "displayName");
@@ -139,12 +148,14 @@ final class JazzerTopology {
       String workingDirectory,
       boolean activeFuzzing,
       List<String> harnessKeys) {
+    @SuppressWarnings("UnusedMethod") // Jackson calls this compact constructor reflectively.
     RunTargetDocument {
       key = requireNonBlank(key, "key");
       displayName = requireNonBlank(displayName, "displayName");
       taskName = requireNonBlank(taskName, "taskName");
       workingDirectory = requireNonBlank(workingDirectory, "workingDirectory");
-      harnessKeys = List.copyOf(Objects.requireNonNull(harnessKeys, "harnessKeys must not be null"));
+      harnessKeys =
+          List.copyOf(Objects.requireNonNull(harnessKeys, "harnessKeys must not be null"));
       if (harnessKeys.isEmpty()) {
         throw new IllegalArgumentException("harnessKeys must not be empty");
       }

@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.32.2"
+version: "0.33.0"
 domain: DEVELOPER_JAZZER
 updated: "2026-04-10"
 route:
@@ -297,6 +297,11 @@ shared included build logic under `../gradle/build-logic`.
 - one aggregate `jazzerRegression` lifecycle task over the four per-harness regression tasks
 - one dedicated metadata-refresh task for promoted replay artifacts
 - local cleanup tasks
+- shared Spotless and PMD enforcement inherited from the main build logic
+- a Jazzer-specific PMD profile for support and operator code plus a fuzz-harness PMD profile for
+  `@FuzzTest` entrypoints
+- a dedicated `jazzerCoverageVerification` gate for deterministic support-contract classes,
+  separate from the root modules' blanket 100% coverage rule
 - nested-build `check` coverage for deterministic Jazzer support tests plus regression replay only
 
 Single source of truth:
@@ -317,11 +322,16 @@ Nested-build verification model:
 - `./gradlew --project-dir jazzer test` runs deterministic support tests only
 - `./gradlew --project-dir jazzer jazzerRegression` replays the committed seed floor through four
   isolated per-harness regression tasks
-- `./gradlew --project-dir jazzer check` runs `test` plus `jazzerRegression`
+- `./gradlew --project-dir jazzer check` runs Spotless, PMD, deterministic support tests,
+  `jazzerCoverageVerification`, and `jazzerRegression`
 - root `./check.sh` runs root-project verification first, then nested Jazzer `check`, then
   release-packaging smoke verification
 - active fuzz tasks remain explicit opt-in local commands and are never dependencies of nested-build
   `check`
+- active fuzz scripts launch one harness class at a time through `JazzerHarnessRunner`, which
+  enforces the repository contract of exactly one `@FuzzTest` per harness class and then delegates
+  to Jazzer's own command-line `JUnitRunner` so internal command-line mode, `jazzer.max_duration`,
+  and `jazzer.max_executions` are honored consistently
 
 Execution discipline:
 - do not run root Gradle builds and nested Jazzer Gradle builds in parallel

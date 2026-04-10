@@ -1,19 +1,16 @@
 package dev.erst.gridgrind.jazzer.tool;
 
+import com.code_intelligence.jazzer.driver.junit.JUnitRunner;
+import com.code_intelligence.jazzer.junit.FuzzTest;
+import java.io.BufferedWriter;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
-import org.junit.platform.engine.TestExecutionResult;
-import org.junit.platform.engine.discovery.DiscoverySelectors;
-import org.junit.platform.launcher.Launcher;
-import org.junit.platform.launcher.LauncherDiscoveryRequest;
-import org.junit.platform.launcher.TestExecutionListener;
-import org.junit.platform.launcher.TestIdentifier;
-import org.junit.platform.launcher.TestPlan;
-import org.junit.platform.launcher.TagFilter;
-import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
-import org.junit.platform.launcher.core.LauncherFactory;
-import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
-import org.junit.platform.launcher.listeners.TestExecutionSummary;
 
 /** Launches one Jazzer harness class through the JUnit Platform outside Gradle's Test task. */
 public final class JazzerHarnessRunner {
@@ -21,19 +18,19 @@ public final class JazzerHarnessRunner {
 
   private JazzerHarnessRunner() {}
 
-  /** Runs the requested Jazzer harness class and exits non-zero on any failure or misconfiguration. */
+  /**
+   * Runs the requested Jazzer harness class and exits non-zero on any failure or misconfiguration.
+   */
   public static void main(String[] args) {
-    try (PrintWriter outputWriter = new PrintWriter(System.out, true);
-        PrintWriter errorWriter = new PrintWriter(System.err, true)) {
-      System.exit(run(parseClassName(args), outputWriter, errorWriter));
-    }
+    System.exit(run(parseClassName(args), standardWriter(System.out), standardWriter(System.err)));
   }
 
   /** Parses the required `--class <fqcn>` argument pair for launcher-based Jazzer execution. */
   static String parseClassName(String[] args) {
     Objects.requireNonNull(args, "args must not be null");
     if (args.length != 2 || !"--class".equals(args[0])) {
-      throw new IllegalArgumentException("Usage: JazzerHarnessRunner --class <fully-qualified-class>");
+      throw new IllegalArgumentException(
+          "Usage: JazzerHarnessRunner --class <fully-qualified-class>");
     }
     String className = Objects.requireNonNull(args[1], "className must not be null");
     if (className.isBlank()) {
@@ -47,7 +44,7 @@ public final class JazzerHarnessRunner {
    * code.
    */
   static int run(String className, PrintWriter errorWriter) {
-    return run(className, new PrintWriter(System.out, true), errorWriter);
+    return run(className, standardWriter(System.out), errorWriter);
   }
 
   /**
@@ -55,76 +52,141 @@ public final class JazzerHarnessRunner {
    * code.
    */
   static int run(String className, PrintWriter outputWriter, PrintWriter errorWriter) {
+    return run(className, outputWriter, errorWriter, OfficialHarnessExecutor.INSTANCE);
+  }
+
+  /**
+   * Executes one Jazzer harness class through the JUnit Platform and returns a process-style exit
+   * code.
+   */
+  static int run(
+      String className,
+      PrintWriter outputWriter,
+      PrintWriter errorWriter,
+      HarnessExecutor executor) {
     Objects.requireNonNull(className, "className must not be null");
     Objects.requireNonNull(outputWriter, "outputWriter must not be null");
     Objects.requireNonNull(errorWriter, "errorWriter must not be null");
-    TestExecutionSummary summary = execute(className, outputWriter);
-    if (summary.getTestsFoundCount() == 0) {
-      errorWriter.println("No Jazzer tests were discovered for class: " + className);
+    Objects.requireNonNull(executor, "executor must not be null");
+
+    HarnessDescriptor harness;
+    try {
+      harness = discoverHarness(className);
+    } catch (IllegalArgumentException exception) {
+      errorWriter.println(exception.getMessage());
       return 1;
     }
-    if (summary.getTotalFailureCount() > 0) {
-      summary.printFailuresTo(errorWriter);
+
+    outputWriter.println(
+        PULSE_PREFIX
+            + "harness-class="
+            + harness.className()
+            + " phase=plan total-tests=1 fuzz-test="
+            + harness.methodName());
+
+    int exitCode;
+    try {
+      exitCode = executor.execute(harness);
+    } catch (RuntimeException exception) {
+      outputWriter.println(
+          PULSE_PREFIX + "harness-class=" + harness.className() + " phase=finish status=FAILURE");
+      errorWriter.println(exception.getMessage());
       return 1;
     }
-    return 0;
+
+    outputWriter.println(
+        PULSE_PREFIX
+            + "harness-class="
+            + harness.className()
+            + " phase=finish status="
+            + (exitCode == 0 ? "SUCCESS" : "FAILURE")
+            + " fuzz-test="
+            + harness.methodName()
+            + " exit-code="
+            + exitCode);
+    if (exitCode != 0) {
+      errorWriter.println(
+          "Jazzer harness execution failed for class: "
+              + harness.className()
+              + " (exit code "
+              + exitCode
+              + ")");
+    }
+    return exitCode;
   }
 
-  private static TestExecutionSummary execute(String className, PrintWriter outputWriter) {
-    LauncherDiscoveryRequest discoveryRequest =
-        LauncherDiscoveryRequestBuilder.request()
-            .selectors(DiscoverySelectors.selectClass(className))
-            .filters(TagFilter.includeTags("jazzer"))
-            .build();
-    SummaryGeneratingListener listener = new SummaryGeneratingListener();
-    Launcher launcher = LauncherFactory.create();
-    launcher.registerTestExecutionListeners(listener, new PulseListener(className, outputWriter));
-    launcher.execute(discoveryRequest);
-    return listener.getSummary();
-  }
-
-  /** Emits concise per-harness progress pulses during standalone Jazzer launcher execution. */
-  private static final class PulseListener implements TestExecutionListener {
-    private final String className;
-    private final PrintWriter outputWriter;
-    private long totalTests;
-    private long completedTests;
-
-    private PulseListener(String className, PrintWriter outputWriter) {
-      this.className = Objects.requireNonNull(className, "className must not be null");
-      this.outputWriter = Objects.requireNonNull(outputWriter, "outputWriter must not be null");
+  static HarnessDescriptor discoverHarness(String className) {
+    Objects.requireNonNull(className, "className must not be null");
+    Class<?> harnessClass;
+    try {
+      harnessClass = Class.forName(className);
+    } catch (ClassNotFoundException exception) {
+      throw new IllegalArgumentException(
+          "Unable to load Jazzer harness class: " + className, exception);
     }
 
-    @Override
-    public void testPlanExecutionStarted(TestPlan testPlan) {
-      totalTests = testPlan.countTestIdentifiers(TestIdentifier::isTest);
-      outputWriter.println(
-          PULSE_PREFIX + "harness-class=" + className + " phase=plan total-tests=" + totalTests);
+    List<String> fuzzMethods =
+        Arrays.stream(harnessClass.getDeclaredMethods())
+            .filter(method -> method.isAnnotationPresent(FuzzTest.class))
+            .map(Method::getName)
+            .sorted()
+            .toList();
+    if (fuzzMethods.isEmpty()) {
+      throw new IllegalArgumentException(
+          "No @FuzzTest methods were declared for class: " + className);
     }
-
-    @Override
-    public void executionFinished(
-        TestIdentifier testIdentifier, TestExecutionResult testExecutionResult) {
-      if (!testIdentifier.isTest()) {
-        return;
-      }
-      completedTests += 1;
-      outputWriter.println(
-          PULSE_PREFIX
-              + "harness-class="
+    if (fuzzMethods.size() != 1) {
+      throw new IllegalArgumentException(
+          "Exactly one @FuzzTest method is required per harness class: "
               + className
-              + " phase=test-complete completed="
-              + completedTests
-              + "/"
-              + totalTests
-              + " status="
-              + testExecutionResult.getStatus()
-              + " test="
-              + normalizedDisplayName(testIdentifier));
+              + " declared "
+              + fuzzMethods.size()
+              + " methods ("
+              + String.join(", ", fuzzMethods)
+              + ")");
     }
+    return new HarnessDescriptor(className, fuzzMethods.get(0));
+  }
 
-    private String normalizedDisplayName(TestIdentifier testIdentifier) {
-      return testIdentifier.getDisplayName().replaceAll("\\s+", " ").trim();
+  private static PrintWriter standardWriter(OutputStream outputStream) {
+    return new PrintWriter(
+        new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8)), true);
+  }
+
+  /** Describes the single `@FuzzTest` method owned by one harness class. */
+  record HarnessDescriptor(String className, String methodName) {
+    HarnessDescriptor {
+      Objects.requireNonNull(className, "className must not be null");
+      Objects.requireNonNull(methodName, "methodName must not be null");
+    }
+  }
+
+  /** Executes one discovered harness descriptor and returns a process-style exit code. */
+  @FunctionalInterface
+  interface HarnessExecutor {
+    /**
+     * Runs one discovered harness descriptor and returns the underlying process-style exit code.
+     */
+    int execute(HarnessDescriptor harness);
+  }
+
+  /** Delegates one harness launch to Jazzer's official command-line JUnit runner. */
+  private static final class OfficialHarnessExecutor implements HarnessExecutor {
+    private static final OfficialHarnessExecutor INSTANCE = new OfficialHarnessExecutor();
+
+    @Override
+    public int execute(HarnessDescriptor harness) {
+      if (!JUnitRunner.isSupported()) {
+        throw new IllegalStateException(
+            "Jazzer JUnit runner support is unavailable on the harness runtime classpath");
+      }
+      return JUnitRunner.create(harness.className(), List.of())
+          .orElseThrow(
+              () ->
+                  new IllegalStateException(
+                      "Jazzer JUnit runner did not discover any @FuzzTest for class: "
+                          + harness.className()))
+          .run();
     }
   }
 }

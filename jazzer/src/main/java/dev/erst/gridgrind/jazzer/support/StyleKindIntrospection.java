@@ -182,8 +182,7 @@ public final class StyleKindIntrospection {
     increment(kinds, "fill_color", style.fill().foregroundColor() != null);
   }
 
-  private static void appendEngineProtectionKinds(
-      Map<String, Long> kinds, ExcelCellStyle style) {
+  private static void appendEngineProtectionKinds(Map<String, Long> kinds, ExcelCellStyle style) {
     increment(kinds, "protection", style.protection() != null);
     if (style.protection() == null) {
       return;

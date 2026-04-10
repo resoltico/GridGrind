@@ -28,16 +28,18 @@ public record GeneratedProtocolWorkflow(GridGrindRequest request, List<Path> cle
       if (!Files.exists(root)) {
         return;
       }
-      Files.walk(root)
-          .sorted(Comparator.reverseOrder())
-          .forEach(
-              path -> {
-                try {
-                  Files.deleteIfExists(path);
-                } catch (IOException ignored) {
-                  // Best-effort scratch cleanup only.
-                }
-              });
+      try (var stream = Files.walk(root)) {
+        stream
+            .sorted(Comparator.reverseOrder())
+            .forEach(
+                path -> {
+                  try {
+                    Files.deleteIfExists(path);
+                  } catch (IOException ignored) {
+                    // Best-effort scratch cleanup only.
+                  }
+                });
+      }
     } catch (IOException ignored) {
       // Best-effort scratch cleanup only.
     }

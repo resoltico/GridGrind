@@ -770,7 +770,7 @@ class ExcelConditionalFormattingControllerTest {
   private static org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting
       ctBlock(XSSFSheet sheet, String range) {
     for (var candidate : sheet.getCTWorksheet().getConditionalFormattingArray()) {
-      if (List.of(range).equals(candidate.getSqref().stream().map(Object::toString).toList())) {
+      if (List.of(range).equals(ExcelSqrefSupport.normalizedSqref(candidate.getSqref()))) {
         return candidate;
       }
     }

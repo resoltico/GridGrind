@@ -17,18 +17,33 @@ public final class JazzerTextRenderer {
 
     StringBuilder builder = new StringBuilder();
     builder.append("Jazzer Run Summary").append(System.lineSeparator());
-    builder.append("Target: ").append(summary.displayName()).append(" [").append(summary.targetKey()).append("]")
+    builder
+        .append("Target: ")
+        .append(summary.displayName())
+        .append(" [")
+        .append(summary.targetKey())
+        .append("]")
         .append(System.lineSeparator());
     builder.append("Mode: ").append(summary.mode()).append(System.lineSeparator());
-    builder.append("Outcome: ").append(summary.outcome()).append(" (exit ").append(summary.exitCode()).append(")")
+    builder
+        .append("Outcome: ")
+        .append(summary.outcome())
+        .append(" (exit ")
+        .append(summary.exitCode())
+        .append(")")
         .append(System.lineSeparator());
     builder.append("Started: ").append(summary.startedAt()).append(System.lineSeparator());
     builder.append("Finished: ").append(summary.finishedAt()).append(System.lineSeparator());
-    builder.append("Duration: ").append(summary.durationSeconds()).append("s").append(System.lineSeparator());
+    builder
+        .append("Duration: ")
+        .append(summary.durationSeconds())
+        .append("s")
+        .append(System.lineSeparator());
     builder.append("Log: ").append(summary.logPath()).append(System.lineSeparator());
     builder.append("History: ").append(summary.historyDirectory()).append(System.lineSeparator());
     builder.append(System.lineSeparator());
-    builder.append("Corpus: ")
+    builder
+        .append("Corpus: ")
         .append(summary.corpusBefore().fileCount())
         .append(" -> ")
         .append(summary.corpusAfter().fileCount())
@@ -52,7 +67,8 @@ public final class JazzerTextRenderer {
     }
     builder.append(System.lineSeparator());
     for (FindingArtifact finding : summary.findings()) {
-      builder.append("  - ")
+      builder
+          .append("  - ")
           .append(finding.rawArtifactName())
           .append(" [")
           .append(finding.replayOutcome())
@@ -75,7 +91,8 @@ public final class JazzerTextRenderer {
     StringBuilder builder = new StringBuilder();
     builder.append("Jazzer Status").append(System.lineSeparator());
     for (LocalRunSummary summary : summaries) {
-      builder.append("- ")
+      builder
+          .append("- ")
           .append(summary.targetKey())
           .append(": ")
           .append(summary.outcome())
@@ -93,7 +110,11 @@ public final class JazzerTextRenderer {
       }
       switch (summary.metrics()) {
         case RunMetrics.ActiveFuzzMetrics metrics ->
-            builder.append(", exec=").append(metrics.executions()).append(", cov=").append(metrics.coverage());
+            builder
+                .append(", exec=")
+                .append(metrics.executions())
+                .append(", cov=")
+                .append(metrics.coverage());
         case RunMetrics.RegressionMetrics metrics ->
             builder.append(", harnesses=").append(metrics.executedHarnessCount());
       }
@@ -163,13 +184,15 @@ public final class JazzerTextRenderer {
     if (newestEntries.isEmpty()) {
       builder.append("  (none)").append(System.lineSeparator());
     } else {
-      newestEntries.forEach(path -> builder.append("  - ").append(path).append(System.lineSeparator()));
+      newestEntries.forEach(
+          path -> builder.append("  - ").append(path).append(System.lineSeparator()));
     }
     builder.append("Committed Custom Seeds").append(System.lineSeparator());
     if (promotedInputs.isEmpty()) {
       builder.append("  (none)").append(System.lineSeparator());
     } else {
-      promotedInputs.forEach(path -> builder.append("  - ").append(path).append(System.lineSeparator()));
+      promotedInputs.forEach(
+          path -> builder.append("  - ").append(path).append(System.lineSeparator()));
     }
     if (!orphanedInputs.isEmpty()) {
       builder
@@ -219,32 +242,30 @@ public final class JazzerTextRenderer {
   private static String renderMetrics(RunMetrics metrics) {
     return switch (metrics) {
       case RunMetrics.ActiveFuzzMetrics active ->
-          new StringBuilder()
-              .append("Executions: ")
-              .append(active.executions())
-              .append(System.lineSeparator())
-              .append("Coverage: ")
-              .append(active.coverage())
-              .append(System.lineSeparator())
-              .append("Features: ")
-              .append(active.features())
-              .append(System.lineSeparator())
-              .append("Exec/s: ")
-              .append(active.executionsPerSecond())
-              .append(System.lineSeparator())
-              .append("RSS: ")
-              .append(active.rssMegabytes())
-              .append(" MB")
-              .append(System.lineSeparator())
-              .append("Corpus Entries: ")
-              .append(active.corpusEntries())
-              .append(System.lineSeparator())
-              .append("Corpus Bytes: ")
-              .append(active.corpusBytes())
-              .append(System.lineSeparator())
-              .append("Max Input Bytes: ")
-              .append(active.maxInputBytes())
-              .toString();
+          "Executions: "
+              + active.executions()
+              + System.lineSeparator()
+              + "Coverage: "
+              + active.coverage()
+              + System.lineSeparator()
+              + "Features: "
+              + active.features()
+              + System.lineSeparator()
+              + "Exec/s: "
+              + active.executionsPerSecond()
+              + System.lineSeparator()
+              + "RSS: "
+              + active.rssMegabytes()
+              + " MB"
+              + System.lineSeparator()
+              + "Corpus Entries: "
+              + active.corpusEntries()
+              + System.lineSeparator()
+              + "Corpus Bytes: "
+              + active.corpusBytes()
+              + System.lineSeparator()
+              + "Max Input Bytes: "
+              + active.maxInputBytes();
       case RunMetrics.RegressionMetrics regression ->
           "Executed Harnesses: " + regression.executedHarnessCount();
     };
@@ -252,13 +273,15 @@ public final class JazzerTextRenderer {
 
   private static String renderHarnessTelemetry(HarnessTelemetrySnapshot snapshot) {
     StringBuilder builder = new StringBuilder();
-    builder.append("- ")
+    builder
+        .append("- ")
         .append(snapshot.displayName())
         .append(" [")
         .append(snapshot.harnessKey())
         .append("]")
         .append(System.lineSeparator());
-    builder.append("  iterations=")
+    builder
+        .append("  iterations=")
         .append(snapshot.iterations())
         .append(", success=")
         .append(snapshot.successfulOutcomes())
@@ -366,7 +389,11 @@ public final class JazzerTextRenderer {
     if (values == null || values.isEmpty()) {
       return;
     }
-    builder.append(label).append("=").append(renderMapInline(values)).append(System.lineSeparator());
+    builder
+        .append(label)
+        .append("=")
+        .append(renderMapInline(values))
+        .append(System.lineSeparator());
   }
 
   private static String renderMapInline(Map<String, Long> values) {

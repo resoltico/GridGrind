@@ -28,8 +28,7 @@ public final class WorkbookStyleInputs {
       case 0 ->
           new CellStyleInput(
               data.consumeBoolean() ? "0.00" : "yyyy-mm-dd", null, null, null, null, null);
-      case 1 ->
-          new CellStyleInput(null, nextAlignmentInput(data, true), null, null, null, null);
+      case 1 -> new CellStyleInput(null, nextAlignmentInput(data, true), null, null, null, null);
       case 2 -> new CellStyleInput(null, null, nextFontInput(data, true), null, null, null);
       case 3 ->
           new CellStyleInput(
@@ -41,16 +40,26 @@ public final class WorkbookStyleInputs {
               nextProtectionInput(data));
       case 4 ->
           new CellStyleInput(
-              null, null, nextFontInput(data, false), nextFillInput(data), nextProtocolBorder(data), null);
-      case 5 -> new CellStyleInput(null, null, null, nextFillInput(data), null, nextProtectionInput(data));
+              null,
+              null,
+              nextFontInput(data, false),
+              nextFillInput(data),
+              nextProtocolBorder(data),
+              null);
+      case 5 ->
+          new CellStyleInput(
+              null, null, null, nextFillInput(data), null, nextProtectionInput(data));
       case 6 ->
-          new CellStyleInput(null, nextAlignmentInput(data, true), null, null, nextProtocolBorder(data), null);
+          new CellStyleInput(
+              null, nextAlignmentInput(data, true), null, null, nextProtocolBorder(data), null);
       default ->
-          new CellStyleInput(null, null, nextFontInput(data, false), null, null, nextProtectionInput(data));
+          new CellStyleInput(
+              null, null, nextFontInput(data, false), null, null, nextProtectionInput(data));
     };
   }
 
-  private static CellAlignmentInput nextAlignmentInput(GridGrindFuzzData data, boolean includeDepth) {
+  private static CellAlignmentInput nextAlignmentInput(
+      GridGrindFuzzData data, boolean includeDepth) {
     return new CellAlignmentInput(
         data.consumeBoolean() ? Boolean.TRUE : null,
         nextHorizontalAlignment(data),
@@ -108,8 +117,8 @@ public final class WorkbookStyleInputs {
   }
 
   private static String nextRgbHex(GridGrindFuzzData data) {
-    return "#%02X%02X%02X".formatted(
-        data.consumeInt(0, 255), data.consumeInt(0, 255), data.consumeInt(0, 255));
+    return "#%02X%02X%02X"
+        .formatted(data.consumeInt(0, 255), data.consumeInt(0, 255), data.consumeInt(0, 255));
   }
 
   private static CellBorderInput nextProtocolBorder(GridGrindFuzzData data) {

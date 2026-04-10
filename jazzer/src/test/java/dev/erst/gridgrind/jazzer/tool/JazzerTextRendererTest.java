@@ -86,7 +86,8 @@ class JazzerTextRendererTest {
     ReplayOutcome outcome =
         new ReplayOutcome.Success(
             "protocol-request",
-            new ProtocolRequestDetails(2, "PARSED", "NEW", "NONE", 0, Map.of(), Map.of(), 0, Map.of()));
+            new ProtocolRequestDetails(
+                2, "PARSED", "NEW", "NONE", 0, Map.of(), Map.of(), 0, Map.of()));
 
     String replayText =
         JazzerTextRenderer.renderReplay(

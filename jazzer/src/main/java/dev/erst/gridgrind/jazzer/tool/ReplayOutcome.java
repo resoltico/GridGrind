@@ -13,7 +13,8 @@ public sealed interface ReplayOutcome
   record Success(String harnessKey, ReplayDetails details) implements ReplayOutcome {}
 
   /** Represents a replay that was invalid in a documented, expected way. */
-  record ExpectedInvalid(String harnessKey, String invalidKind, String message, ReplayDetails details)
+  record ExpectedInvalid(
+      String harnessKey, String invalidKind, String message, ReplayDetails details)
       implements ReplayOutcome {}
 
   /** Represents a replay that surfaced an unexpected exception or invariant failure. */

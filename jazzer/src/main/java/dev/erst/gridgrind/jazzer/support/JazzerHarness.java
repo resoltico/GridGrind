@@ -51,7 +51,8 @@ public record JazzerHarness(String key, String displayName, String className, St
   /** Returns the project-relative root directory that owns all promoted metadata entries. */
   public static Path promotedMetadataRoot(Path projectDirectory) {
     Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
-    return projectDirectory.resolve("src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata");
+    return projectDirectory.resolve(
+        "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata");
   }
 
   /** Returns the canonical protocol-request harness. */
