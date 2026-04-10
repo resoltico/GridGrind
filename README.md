@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.32.1
+docker pull ghcr.io/resoltico/gridgrind:0.32.2
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -111,6 +111,21 @@ java -jar gridgrind.jar --print-protocol-catalog
 Relative paths in `--request`, `--response`, `source.path`, and `persistence.path` resolve from
 the current working directory. In Docker, set `-w` to the mount point so relative paths resolve
 inside the mounted directory.
+
+---
+
+## Developer Verification
+
+Source builds and contributor verification use the project Gradle wrapper plus the repository root
+gate:
+
+```bash
+./check.sh
+```
+
+That local whole-repo gate runs the root quality checks, nested Jazzer verification, packaging
+smoke checks, and Docker smoke coverage in one supported sequence. Jazzer-specific operator flows
+also remain available through the scripts under [`jazzer/bin`](./jazzer/bin/).
 
 ---
 
@@ -285,6 +300,7 @@ See [docs/ERRORS.md](docs/ERRORS.md) for all problem codes and the full error mo
 | [docs/ERRORS.md](docs/ERRORS.md) | Problem codes, categories, and the full error model |
 | [docs/LIMITATIONS.md](docs/LIMITATIONS.md) | All hard limits: window size, Excel maximums, memory |
 | [docs/DEVELOPER.md](docs/DEVELOPER.md) | Build, architecture, coverage, and QA reference |
+| [docs/DEVELOPER_GRADLE.md](docs/DEVELOPER_GRADLE.md) | Gradle system map, setup rationale, and review checklist |
 | [examples/](examples/) | Runnable request files |
 
 ---

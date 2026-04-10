@@ -22,7 +22,7 @@ class JazzerRegressionRunnerTest {
     @Test
     void parseHarness_returnsHarness_whenArgumentsAreValid() {
       assertEquals(
-          JazzerHarness.PROTOCOL_REQUEST,
+          JazzerHarness.protocolRequest(),
           JazzerRegressionRunner.parseHarness(new String[] {"--target", "protocol-request"}));
     }
 
@@ -51,7 +51,7 @@ class JazzerRegressionRunnerTest {
       int exitCode =
           JazzerRegressionRunner.run(
               projectDirectory,
-              JazzerHarness.PROTOCOL_REQUEST,
+              JazzerHarness.protocolRequest(),
               new PrintWriter(output, true),
               new PrintWriter(errors, true));
 
@@ -86,7 +86,7 @@ class JazzerRegressionRunnerTest {
       int exitCode =
           JazzerRegressionRunner.run(
               projectDirectory,
-              JazzerHarness.PROTOCOL_REQUEST,
+              JazzerHarness.protocolRequest(),
               new PrintWriter(output, true),
               new PrintWriter(errors, true));
 
@@ -102,10 +102,10 @@ class JazzerRegressionRunnerTest {
       int exitCode =
           JazzerRegressionRunner.validateMetadata(
               projectDirectory,
-              JazzerHarness.PROTOCOL_REQUEST,
+              JazzerHarness.protocolRequest(),
               metadataDirectory().resolve("valid_request.json"),
               new PromotionMetadata(
-                  JazzerHarness.ENGINE_COMMAND_SEQUENCE.key(),
+                  JazzerHarness.engineCommandSequence().key(),
                   metadata.sourcePath(),
                   metadata.promotedInputPath(),
                   metadata.replayOutcome(),
@@ -126,7 +126,7 @@ class JazzerRegressionRunnerTest {
       int exitCode =
           JazzerRegressionRunner.validateMetadata(
               projectDirectory,
-              JazzerHarness.PROTOCOL_REQUEST,
+              JazzerHarness.protocolRequest(),
               metadataDirectory().resolve("valid_request.json"),
               new PromotionMetadata(
                   metadata.targetKey(),
@@ -150,7 +150,7 @@ class JazzerRegressionRunnerTest {
       int exitCode =
           JazzerRegressionRunner.validateMetadata(
               projectDirectory,
-              JazzerHarness.PROTOCOL_REQUEST,
+              JazzerHarness.protocolRequest(),
               metadataDirectory().resolve("valid_request.json"),
               new PromotionMetadata(
                   metadata.targetKey(),
@@ -172,7 +172,7 @@ class JazzerRegressionRunnerTest {
       PromotionMetadata metadata = validProtocolRequestMetadata();
       ReplayOutcome.UnexpectedFailure outcome =
           new ReplayOutcome.UnexpectedFailure(
-              JazzerHarness.PROTOCOL_REQUEST.key(),
+              JazzerHarness.protocolRequest().key(),
               "IllegalStateException",
               "boom",
               "stack-trace-line",
@@ -180,7 +180,7 @@ class JazzerRegressionRunnerTest {
 
       JazzerRegressionRunner.writeReplayMismatch(
           new PrintWriter(errors, true),
-          JazzerHarness.PROTOCOL_REQUEST,
+          JazzerHarness.protocolRequest(),
           metadataDirectory().resolve("valid_request.json"),
           protocolRequestInputPath(),
           metadata,
@@ -197,12 +197,12 @@ class JazzerRegressionRunnerTest {
       StringWriter output = new StringWriter();
       StringWriter errors = new StringWriter();
       byte[] input = new byte[] {1, 2, 3};
-      writePromotedMetadata(JazzerHarness.ENGINE_COMMAND_SEQUENCE, "command_sequence.bin", input);
+      writePromotedMetadata(JazzerHarness.engineCommandSequence(), "command_sequence.bin", input);
 
       int exitCode =
           JazzerRegressionRunner.run(
               projectDirectory,
-              JazzerHarness.ENGINE_COMMAND_SEQUENCE,
+              JazzerHarness.engineCommandSequence(),
               new PrintWriter(output, true),
               new PrintWriter(errors, true));
 
@@ -222,7 +222,7 @@ class JazzerRegressionRunnerTest {
       Files.writeString(inputPath, "{\"source\":{\"type\":\"NEW\"},\"operations\":[]}");
       ReplayOutcome outcome =
           JazzerReplaySupport.replay(
-              JazzerHarness.PROTOCOL_REQUEST, Files.readAllBytes(inputPath));
+              JazzerHarness.protocolRequest(), Files.readAllBytes(inputPath));
       Path replayTextPath = metadataDirectory().resolve("valid_request.txt");
       Files.createDirectories(replayTextPath.getParent());
       Files.writeString(replayTextPath, "Replay Result" + System.lineSeparator());
@@ -270,7 +270,7 @@ class JazzerRegressionRunnerTest {
     }
 
     private Path metadataDirectory() {
-      return JazzerHarness.PROTOCOL_REQUEST.promotedMetadataDirectory(projectDirectory);
+      return JazzerHarness.protocolRequest().promotedMetadataDirectory(projectDirectory);
     }
 
     private Path metadataDirectory(JazzerHarness harness) {

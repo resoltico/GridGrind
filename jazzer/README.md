@@ -6,6 +6,12 @@ This nested build is intentionally separate from the main product build. It is n
 Gradle `check`, root coverage, or GitHub CI. Root [check.sh](../check.sh) does invoke the nested
 Jazzer `check` workflow sequentially as the supported whole-repo local gate.
 
+The nested build imports the root version catalog and shared included build logic, so dependency
+versions and Gradle task conventions stay aligned with the main repository while Jazzer remains an
+independent composite build. The committed
+`src/main/resources/dev/erst/gridgrind/jazzer/support/jazzer-topology.json` file is the single
+source of truth for harness keys, class names, task names, and working directories.
+
 Use the root Gradle wrapper, not Brew `gradle`, and make sure the active shell resolves to Java 26
 before running any Jazzer command. See [docs/DEVELOPER_JAVA.md](../docs/DEVELOPER_JAVA.md).
 

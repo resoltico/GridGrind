@@ -1,0 +1,83 @@
+{
+  "harnesses" : [
+    {
+      "key" : "protocol-request",
+      "displayName" : "Protocol Request",
+      "className" : "dev.erst.gridgrind.jazzer.protocol.ProtocolRequestFuzzTest",
+      "methodName" : "readRequest"
+    },
+    {
+      "key" : "protocol-workflow",
+      "displayName" : "Protocol Workflow",
+      "className" : "dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest",
+      "methodName" : "executeWorkflow"
+    },
+    {
+      "key" : "engine-command-sequence",
+      "displayName" : "Engine Command Sequence",
+      "className" : "dev.erst.gridgrind.jazzer.engine.WorkbookCommandSequenceFuzzTest",
+      "methodName" : "applyCommands"
+    },
+    {
+      "key" : "xlsx-roundtrip",
+      "displayName" : "XLSX Round Trip",
+      "className" : "dev.erst.gridgrind.jazzer.engine.XlsxRoundTripFuzzTest",
+      "methodName" : "roundTrip"
+    }
+  ],
+  "runTargets" : [
+    {
+      "key" : "regression",
+      "displayName" : "Regression Replay",
+      "taskName" : "jazzerRegression",
+      "workingDirectory" : ".local/runs/regression",
+      "activeFuzzing" : false,
+      "harnessKeys" : [
+        "protocol-request",
+        "protocol-workflow",
+        "engine-command-sequence",
+        "xlsx-roundtrip"
+      ]
+    },
+    {
+      "key" : "protocol-request",
+      "displayName" : "Protocol Request",
+      "taskName" : "fuzzProtocolRequest",
+      "workingDirectory" : ".local/runs/protocol-request",
+      "activeFuzzing" : true,
+      "harnessKeys" : [
+        "protocol-request"
+      ]
+    },
+    {
+      "key" : "protocol-workflow",
+      "displayName" : "Protocol Workflow",
+      "taskName" : "fuzzProtocolWorkflow",
+      "workingDirectory" : ".local/runs/protocol-workflow",
+      "activeFuzzing" : true,
+      "harnessKeys" : [
+        "protocol-workflow"
+      ]
+    },
+    {
+      "key" : "engine-command-sequence",
+      "displayName" : "Engine Command Sequence",
+      "taskName" : "fuzzEngineCommandSequence",
+      "workingDirectory" : ".local/runs/engine-command-sequence",
+      "activeFuzzing" : true,
+      "harnessKeys" : [
+        "engine-command-sequence"
+      ]
+    },
+    {
+      "key" : "xlsx-roundtrip",
+      "displayName" : "XLSX Round Trip",
+      "taskName" : "fuzzXlsxRoundTrip",
+      "workingDirectory" : ".local/runs/xlsx-roundtrip",
+      "activeFuzzing" : true,
+      "harnessKeys" : [
+        "xlsx-roundtrip"
+      ]
+    }
+  ]
+}

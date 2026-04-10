@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.32.1"
+version: "0.32.2"
 domain: DEVELOPER_JAZZER
-updated: "2026-04-09"
+updated: "2026-04-10"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -18,6 +18,8 @@ route:
   lifecycle, replay, promotion, and cleanup.
 - [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md) for the harness matrix, promoted
   seed inventory, and current fuzzing gaps.
+- [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md) for the shared included build logic, root version
+  catalog, and the reasons Jazzer stays a nested composite build.
 - [DEVELOPER.md](./DEVELOPER.md) for the main GridGrind build, module architecture, and root
   quality gates.
 
@@ -199,6 +201,7 @@ Top-level placement:
 GridGrind/
 ├── docs/
 │   ├── DEVELOPER.md
+│   ├── DEVELOPER_GRADLE.md
 │   ├── DEVELOPER_JAZZER.md
 │   ├── DEVELOPER_JAZZER_OPERATIONS.md
 │   └── DEVELOPER_JAZZER_COVERAGE.md
@@ -277,13 +280,17 @@ Tree rules:
 ## Build Model
 
 `jazzer/settings.gradle.kts` uses `includeBuild("..")`, so the nested build consumes the live
-local `engine` and `protocol` modules without publishing snapshots.
+local `engine` and `protocol` modules without publishing snapshots. It also imports the shared root
+version catalog from `../gradle/libs.versions.toml` and resolves `gridgrind.*` plugins from the
+shared included build logic under `../gradle/build-logic`.
 
-`jazzer/build.gradle.kts` currently provides:
+`jazzer/build.gradle.kts` is intentionally thin and now delegates its behavior to the
+`gridgrind.jazzer-conventions` plugin. The nested build still provides:
 - standard `main` source set for shared support and local operator tooling
 - standard `test` source set for deterministic support tests
 - custom `fuzz` source set for Jazzer harness classes and committed regression inputs
-- explicit JUnit 6, Jazzer 0.30.0, Jackson 3.0.3, Apache POI 5.5.1, and local module dependencies
+- shared version-catalog dependency alignment for JUnit 6, Jazzer 0.30.0, Jackson 3.0.3,
+  Apache POI 5.5.1, Log4j, and the local product modules
 - `JavaExec` tasks for local operator commands and per-harness Jazzer execution
 - one explicit JUnit Platform launcher entrypoint for running Jazzer harnesses outside Gradle's
   `Test` result pipeline
@@ -291,6 +298,15 @@ local `engine` and `protocol` modules without publishing snapshots.
 - one dedicated metadata-refresh task for promoted replay artifacts
 - local cleanup tasks
 - nested-build `check` coverage for deterministic Jazzer support tests plus regression replay only
+
+Single source of truth:
+- `jazzer/src/main/resources/dev/erst/gridgrind/jazzer/support/jazzer-topology.json` is the
+  authoritative registry for Jazzer harness keys, class names, fuzz-method names, run-target task
+  names, and working directories
+- runtime helpers such as `JazzerHarness` and `JazzerRunTarget` now load that topology instead of
+  hardcoding duplicate enum metadata
+- the nested Gradle build consumes the same topology when registering fuzz and regression tasks, so
+  build task names and runtime replay metadata cannot drift independently
 
 Important boundary:
 - the root build must not include `jazzer/`

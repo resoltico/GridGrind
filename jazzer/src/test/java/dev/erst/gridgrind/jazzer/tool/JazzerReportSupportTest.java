@@ -40,12 +40,12 @@ class JazzerReportSupportTest {
   void promotedInputPaths_resolveProjectRelativeMetadataEntries(@TempDir Path projectDirectory)
       throws IOException {
     Path promotedInputPath =
-        JazzerHarness.PROTOCOL_REQUEST.inputDirectory(projectDirectory).resolve("seed.json");
+        JazzerHarness.protocolRequest().inputDirectory(projectDirectory).resolve("seed.json");
     Files.createDirectories(promotedInputPath.getParent());
     Files.writeString(promotedInputPath, "{}");
 
     Path metadataPath =
-        JazzerHarness.PROTOCOL_REQUEST.promotedMetadataDirectory(projectDirectory)
+        JazzerHarness.protocolRequest().promotedMetadataDirectory(projectDirectory)
             .resolve("seed.json");
     Files.createDirectories(metadataPath.getParent());
     Path replayTextPath = metadataPath.resolveSibling("seed.txt");
@@ -53,7 +53,7 @@ class JazzerReportSupportTest {
     JazzerJson.write(
         metadataPath,
         new PromotionMetadata(
-            JazzerHarness.PROTOCOL_REQUEST.key(),
+            JazzerHarness.protocolRequest().key(),
             PromotionMetadata.relativizePath(projectDirectory, promotedInputPath),
             PromotionMetadata.relativizePath(projectDirectory, promotedInputPath),
             "SUCCESS",
@@ -68,6 +68,6 @@ class JazzerReportSupportTest {
         JazzerReportSupport.promotedInputPaths(projectDirectory));
     assertEquals(
         List.of(),
-        JazzerReportSupport.orphanedInputs(projectDirectory, JazzerHarness.PROTOCOL_REQUEST));
+        JazzerReportSupport.orphanedInputs(projectDirectory, JazzerHarness.protocolRequest()));
   }
 }

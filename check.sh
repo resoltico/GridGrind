@@ -564,8 +564,8 @@ run_monitored_command() {
     stage_temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind-check-${stage_id}.XXXXXX")"
     local log_path="${stage_temp_dir}/${stage_id}.log"
     local diagnostics_root="${stage_temp_dir}/diagnostics"
-    local pipe_path="${stage_temp_dir}/${stage_id}.pipe"
     mkdir -p "${diagnostics_root}"
+    : >"${log_path}"
     current_stage_log_path="${log_path}"
     current_stage_diagnostics_directory="${diagnostics_root}"
 
@@ -574,15 +574,11 @@ run_monitored_command() {
         "${log_path}" \
         "${diagnostics_root}"
 
-    mkfifo "${pipe_path}"
-    tee -a "${log_path}" <"${pipe_path}" &
-    local tee_pid=$!
     (
         cd "${project_dir}"
-        "$@"
-    ) >"${pipe_path}" 2>&1 &
+        "$@" > >(tee -a "${log_path}") 2>&1
+    ) &
     local child_pid=$!
-    rm -f "${pipe_path}"
 
     local monitor_exit_code=0
     if monitor_stage_process "${stage_id}" "${project_dir}" "${log_path}" "${diagnostics_root}" "${child_pid}"; then
@@ -597,8 +593,6 @@ run_monitored_command() {
     else
         child_exit_code=$?
     fi
-    wait "${tee_pid}" 2>/dev/null || true
-
     if (( monitor_exit_code != 0 )); then
         child_exit_code="${monitor_exit_code}"
     fi

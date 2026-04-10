@@ -16,7 +16,7 @@ import dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor;
 /** Fuzzes ordered protocol workflows against the production service entrypoint. */
 class OperationWorkflowFuzzTest {
   private static final HarnessTelemetry TELEMETRY =
-      HarnessTelemetry.forHarness(JazzerHarness.PROTOCOL_WORKFLOW);
+      HarnessTelemetry.forHarness(JazzerHarness.protocolWorkflow());
 
   @FuzzTest
   void executeWorkflow(FuzzedDataProvider data) {

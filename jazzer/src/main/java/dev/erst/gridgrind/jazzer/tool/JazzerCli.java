@@ -111,10 +111,10 @@ public final class JazzerCli {
     List<JazzerRunTarget> targets =
         targetKey == null
             ? List.of(
-                JazzerRunTarget.PROTOCOL_REQUEST,
-                JazzerRunTarget.PROTOCOL_WORKFLOW,
-                JazzerRunTarget.ENGINE_COMMAND_SEQUENCE,
-                JazzerRunTarget.XLSX_ROUND_TRIP)
+                JazzerRunTarget.protocolRequest(),
+                JazzerRunTarget.protocolWorkflow(),
+                JazzerRunTarget.engineCommandSequence(),
+                JazzerRunTarget.xlsxRoundTrip())
             : List.of(JazzerRunTarget.fromKey(targetKey));
 
     for (int index = 0; index < targets.size(); index++) {

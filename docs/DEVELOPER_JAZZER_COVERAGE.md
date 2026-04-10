@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.32.1"
+version: "0.32.2"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-04-09"
+updated: "2026-04-10"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]

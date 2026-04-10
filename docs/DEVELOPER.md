@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.32.1"
+version: "0.32.2"
 domain: DEVELOPER
-updated: "2026-04-09"
+updated: "2026-04-10"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -16,6 +16,7 @@ route:
 
 Companion references:
 - [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
+- [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md)
 - [DEVELOPER_JAZZER.md](./DEVELOPER_JAZZER.md)
 - [DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md)
 - [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md)
@@ -68,9 +69,10 @@ three modules participate in normal local builds, CI, and release verification.
 | Log4j Core | 2.25.3 |
 
 GridGrind's runtime and product-module baseline is Java 26. The only deliberate exception is the
-Gradle `buildSrc` logic, which still emits JVM 25 bytecode because Kotlin `2.3.0` does not yet
-target JVM 26 directly. That build logic now compiles with the Java 26 toolchain and only lowers
-the emitted bytecode level, so the repository no longer requires a separate Java 25 installation.
+shared included build logic under `gradle/build-logic`, which still emits JVM 25 bytecode because
+Kotlin `2.3.0` does not yet target JVM 26 directly. That build logic compiles with the Java 26
+toolchain and only lowers the emitted bytecode level, so the repository no longer requires a
+separate Java 25 installation.
 
 ---
 

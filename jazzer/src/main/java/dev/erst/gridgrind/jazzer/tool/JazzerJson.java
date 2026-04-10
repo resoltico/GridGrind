@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.tool;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.util.Objects;
 import tools.jackson.databind.json.JsonMapper;
@@ -25,6 +26,18 @@ public final class JazzerJson {
     Objects.requireNonNull(path, "path must not be null");
     Objects.requireNonNull(type, "type must not be null");
     return JSON_MAPPER.readValue(path.toFile(), type);
+  }
+
+  /** Reads one JSON value from a classpath resource into the requested type. */
+  public static <T> T readResource(String resourcePath, Class<T> type) throws IOException {
+    Objects.requireNonNull(resourcePath, "resourcePath must not be null");
+    Objects.requireNonNull(type, "type must not be null");
+    try (InputStream inputStream = JazzerJson.class.getResourceAsStream(resourcePath)) {
+      if (inputStream == null) {
+        throw new IOException("Classpath resource does not exist: " + resourcePath);
+      }
+      return JSON_MAPPER.readValue(inputStream, type);
+    }
   }
 
   /** Returns one value as pretty-printed JSON text. */

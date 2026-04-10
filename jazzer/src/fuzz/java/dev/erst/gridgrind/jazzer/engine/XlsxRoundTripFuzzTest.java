@@ -20,7 +20,7 @@ import java.util.List;
 /** Fuzzes `.xlsx` save and reopen invariants after bounded command sequences. */
 class XlsxRoundTripFuzzTest {
   private static final HarnessTelemetry TELEMETRY =
-      HarnessTelemetry.forHarness(JazzerHarness.XLSX_ROUND_TRIP);
+      HarnessTelemetry.forHarness(JazzerHarness.xlsxRoundTrip());
 
   @FuzzTest
   void roundTrip(FuzzedDataProvider data) throws IOException {
