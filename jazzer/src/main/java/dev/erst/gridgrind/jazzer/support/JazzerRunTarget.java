@@ -1,102 +1,27 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import java.nio.file.Path;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
-/** Enumerates the runnable Jazzer targets, including the aggregate regression target. */
-public enum JazzerRunTarget {
-  REGRESSION(
-      "regression",
-      "Regression Replay",
-      "jazzerRegression",
-      ".local/runs/regression",
-      false,
-      List.of(
-          JazzerHarness.PROTOCOL_REQUEST,
-          JazzerHarness.PROTOCOL_WORKFLOW,
-          JazzerHarness.ENGINE_COMMAND_SEQUENCE,
-          JazzerHarness.XLSX_ROUND_TRIP)),
-  PROTOCOL_REQUEST(
-      "protocol-request",
-      "Protocol Request",
-      "fuzzProtocolRequest",
-      ".local/runs/protocol-request",
-      true,
-      List.of(JazzerHarness.PROTOCOL_REQUEST)),
-  PROTOCOL_WORKFLOW(
-      "protocol-workflow",
-      "Protocol Workflow",
-      "fuzzProtocolWorkflow",
-      ".local/runs/protocol-workflow",
-      true,
-      List.of(JazzerHarness.PROTOCOL_WORKFLOW)),
-  ENGINE_COMMAND_SEQUENCE(
-      "engine-command-sequence",
-      "Engine Command Sequence",
-      "fuzzEngineCommandSequence",
-      ".local/runs/engine-command-sequence",
-      true,
-      List.of(JazzerHarness.ENGINE_COMMAND_SEQUENCE)),
-  XLSX_ROUND_TRIP(
-      "xlsx-roundtrip",
-      "XLSX Round Trip",
-      "fuzzXlsxRoundTrip",
-      ".local/runs/xlsx-roundtrip",
-      true,
-      List.of(JazzerHarness.XLSX_ROUND_TRIP));
-
-  private final String key;
-  private final String displayName;
-  private final String taskName;
-  private final String workingDirectory;
-  private final boolean activeFuzzing;
-  private final List<JazzerHarness> harnesses;
-
-  JazzerRunTarget(
-      String key,
-      String displayName,
-      String taskName,
-      String workingDirectory,
-      boolean activeFuzzing,
-      List<JazzerHarness> harnesses) {
-    this.key = Objects.requireNonNull(key, "key must not be null");
-    this.displayName = Objects.requireNonNull(displayName, "displayName must not be null");
-    this.taskName = Objects.requireNonNull(taskName, "taskName must not be null");
-    this.workingDirectory = Objects.requireNonNull(workingDirectory, "workingDirectory must not be null");
-    this.activeFuzzing = activeFuzzing;
-    this.harnesses = List.copyOf(harnesses);
-  }
-
-  /** Returns the stable external key used by scripts, local directories, and reports. */
-  public String key() {
-    return key;
-  }
-
-  /** Returns the human-readable target name for operator output. */
-  public String displayName() {
-    return displayName;
-  }
-
-  /** Returns the Gradle task name that launches this run target. */
-  public String taskName() {
-    return taskName;
-  }
-
-  /** Returns the target working directory relative to the Jazzer project root. */
-  public String workingDirectory() {
-    return workingDirectory;
-  }
-
-  /** Returns whether this target performs active fuzzing rather than regression replay. */
-  public boolean activeFuzzing() {
-    return activeFuzzing;
-  }
-
-  /** Returns the harnesses executed by this target. */
-  public List<JazzerHarness> harnesses() {
-    return harnesses;
+/** Describes one runnable Jazzer target, including the aggregate regression target. */
+public record JazzerRunTarget(
+    String key,
+    String displayName,
+    String taskName,
+    String workingDirectory,
+    boolean activeFuzzing,
+    List<JazzerHarness> harnesses) {
+  public JazzerRunTarget {
+    key = requireNonBlank(key, "key");
+    displayName = requireNonBlank(displayName, "displayName");
+    taskName = requireNonBlank(taskName, "taskName");
+    workingDirectory = requireNonBlank(workingDirectory, "workingDirectory");
+    harnesses = List.copyOf(Objects.requireNonNull(harnesses, "harnesses must not be null"));
+    if (harnesses.isEmpty()) {
+      throw new IllegalArgumentException("harnesses must not be empty");
+    }
   }
 
   /** Returns the absolute working directory for this target under the Jazzer project root. */
@@ -118,21 +43,64 @@ public enum JazzerRunTarget {
     return harnesses.getFirst();
   }
 
+  /** Returns all committed Jazzer run targets in stable encounter order. */
+  public static JazzerRunTarget[] values() {
+    return JazzerTopology.registry().runTargets().toArray(JazzerRunTarget[]::new);
+  }
+
   /** Resolves a run target from its stable external key. */
   public static JazzerRunTarget fromKey(String key) {
     Objects.requireNonNull(key, "key must not be null");
-    return Arrays.stream(values())
-        .filter(target -> target.key.equals(key))
-        .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("Unknown Jazzer run target: " + key));
+    Map<String, JazzerRunTarget> runTargetsByKey = JazzerTopology.registry().runTargetsByKey();
+    JazzerRunTarget runTarget = runTargetsByKey.get(key);
+    if (runTarget == null) {
+      throw new IllegalArgumentException("Unknown Jazzer run target: " + key);
+    }
+    return runTarget;
   }
 
   /** Resolves a run target from its Gradle task name. */
   public static JazzerRunTarget fromTaskName(String taskName) {
     Objects.requireNonNull(taskName, "taskName must not be null");
-    return Arrays.stream(values())
-        .filter(target -> target.taskName.equals(taskName))
-        .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("Unknown Jazzer task: " + taskName));
+    Map<String, JazzerRunTarget> runTargetsByTaskName = JazzerTopology.registry().runTargetsByTaskName();
+    JazzerRunTarget runTarget = runTargetsByTaskName.get(taskName);
+    if (runTarget == null) {
+      throw new IllegalArgumentException("Unknown Jazzer task: " + taskName);
+    }
+    return runTarget;
+  }
+
+  /** Returns the aggregate regression replay target. */
+  public static JazzerRunTarget regression() {
+    return fromKey("regression");
+  }
+
+  /** Returns the active protocol-request fuzz target. */
+  public static JazzerRunTarget protocolRequest() {
+    return fromKey("protocol-request");
+  }
+
+  /** Returns the active protocol-workflow fuzz target. */
+  public static JazzerRunTarget protocolWorkflow() {
+    return fromKey("protocol-workflow");
+  }
+
+  /** Returns the active engine-command-sequence fuzz target. */
+  public static JazzerRunTarget engineCommandSequence() {
+    return fromKey("engine-command-sequence");
+  }
+
+  /** Returns the active xlsx-roundtrip fuzz target. */
+  public static JazzerRunTarget xlsxRoundTrip() {
+    return fromKey("xlsx-roundtrip");
+  }
+
+  private static String requireNonBlank(String value, String fieldName) {
+    Objects.requireNonNull(value, fieldName + " must not be null");
+    String trimmed = value.trim();
+    if (trimmed.isEmpty()) {
+      throw new IllegalArgumentException(fieldName + " must not be blank");
+    }
+    return trimmed;
   }
 }

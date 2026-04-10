@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.32.1"
+version: "0.32.2"
 domain: DEVELOPER_JAVA
-updated: "2026-04-09"
+updated: "2026-04-10"
 route:
   keywords: [gridgrind, java26, jdk, jdk.java.net, shell, zsh, java-home, javac, brew, gradlew, macos]
   questions: ["how is java 26 set up for gridgrind", "why does gridgrind require shell-level java 26", "how do i configure local java 26 for gridgrind", "why is /usr/bin/java wrong for gridgrind", "why should i use ./gradlew instead of brew gradle"]
@@ -114,18 +114,17 @@ This is the exact local procedure used for GridGrind.
 
 GridGrind's product modules and runtime baseline are Java 26.
 
-There is one deliberate exception: the Gradle `buildSrc` logic in the root build and the nested
-`jazzer/buildSrc` build still emits JVM 25 bytecode because Kotlin `2.3.0` does not yet target JVM
-26 directly. Those builds now compile with the Java 26 toolchain and only lower the emitted
-bytecode level, so no separate Java 25 installation is required. That does **not** change the
-project baseline:
+There is one deliberate exception: the shared included build logic under `gradle/build-logic`
+still emits JVM 25 bytecode because Kotlin `2.3.0` does not yet target JVM 26 directly. That
+build now compiles with the Java 26 toolchain and only lowers the emitted bytecode level, so no
+separate Java 25 installation is required. That does **not** change the project baseline:
 - the Gradle launcher JVM is Java 26
 - the product modules target Java 26
 - the CLI fat JAR requires Java 26
 - `./check.sh` now fails fast if the active shell does not already resolve to Java 26
 
-Treat `buildSrc` JVM 25 as a temporary toolchain boundary, not as permission to run GridGrind on a
-Java 25 shell.
+Treat shared build-logic JVM 25 as a temporary toolchain boundary, not as permission to run
+GridGrind on a Java 25 shell.
 
 ## Homebrew Cleanup
 

@@ -40,13 +40,19 @@ public final class JazzerReplaySupport {
   public static ReplayOutcome replay(JazzerHarness harness, byte[] input) {
     Objects.requireNonNull(harness, "harness must not be null");
     Objects.requireNonNull(input, "input must not be null");
-
-    return switch (harness) {
-      case PROTOCOL_REQUEST -> replayProtocolRequest(input);
-      case PROTOCOL_WORKFLOW -> replayProtocolWorkflow(input);
-      case ENGINE_COMMAND_SEQUENCE -> replayCommandSequence(input);
-      case XLSX_ROUND_TRIP -> replayRoundTrip(input);
-    };
+    if (harness.equals(JazzerHarness.protocolRequest())) {
+      return replayProtocolRequest(input);
+    }
+    if (harness.equals(JazzerHarness.protocolWorkflow())) {
+      return replayProtocolWorkflow(input);
+    }
+    if (harness.equals(JazzerHarness.engineCommandSequence())) {
+      return replayCommandSequence(input);
+    }
+    if (harness.equals(JazzerHarness.xlsxRoundTrip())) {
+      return replayRoundTrip(input);
+    }
+    throw new IllegalArgumentException("Unsupported Jazzer harness: " + harness.key());
   }
 
   private static ReplayOutcome replayProtocolRequest(byte[] input) {
@@ -63,7 +69,7 @@ public final class JazzerReplaySupport {
               SequenceIntrospection.styleKinds(request.operations()),
               SequenceIntrospection.readCount(request),
               SequenceIntrospection.readKinds(request.reads()));
-      return new ReplayOutcome.Success(JazzerHarness.PROTOCOL_REQUEST.key(), details);
+      return new ReplayOutcome.Success(JazzerHarness.protocolRequest().key(), details);
     } catch (InvalidJsonException expected) {
       ProtocolRequestDetails details =
           new ProtocolRequestDetails(
@@ -77,7 +83,7 @@ public final class JazzerReplaySupport {
               0,
               Map.of());
       return new ReplayOutcome.ExpectedInvalid(
-          JazzerHarness.PROTOCOL_REQUEST.key(),
+          JazzerHarness.protocolRequest().key(),
           expected.getClass().getSimpleName(),
           expected.getMessage(),
           details);
@@ -94,7 +100,7 @@ public final class JazzerReplaySupport {
               0,
               Map.of());
       return new ReplayOutcome.ExpectedInvalid(
-          JazzerHarness.PROTOCOL_REQUEST.key(),
+          JazzerHarness.protocolRequest().key(),
           expected.getClass().getSimpleName(),
           expected.getMessage(),
           details);
@@ -111,7 +117,7 @@ public final class JazzerReplaySupport {
               0,
               Map.of());
       return new ReplayOutcome.ExpectedInvalid(
-          JazzerHarness.PROTOCOL_REQUEST.key(),
+          JazzerHarness.protocolRequest().key(),
           expected.getClass().getSimpleName(),
           expected.getMessage(),
           details);
@@ -127,7 +133,7 @@ public final class JazzerReplaySupport {
               Map.of(),
               0,
               Map.of());
-      return unexpectedFailure(JazzerHarness.PROTOCOL_REQUEST, unexpected, details);
+      return unexpectedFailure(JazzerHarness.protocolRequest(), unexpected, details);
     } catch (RuntimeException unexpected) {
       ProtocolRequestDetails details =
           new ProtocolRequestDetails(
@@ -140,7 +146,7 @@ public final class JazzerReplaySupport {
               Map.of(),
               0,
               Map.of());
-      return unexpectedFailure(JazzerHarness.PROTOCOL_REQUEST, unexpected, details);
+      return unexpectedFailure(JazzerHarness.protocolRequest(), unexpected, details);
     }
   }
 
@@ -156,20 +162,20 @@ public final class JazzerReplaySupport {
       WorkbookInvariantChecks.requireResponseShape(response);
       WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response);
       ProtocolWorkflowDetails details = workflowDetails(input.length, request, response);
-      return new ReplayOutcome.Success(JazzerHarness.PROTOCOL_WORKFLOW.key(), details);
+      return new ReplayOutcome.Success(JazzerHarness.protocolWorkflow().key(), details);
     } catch (IllegalArgumentException expected) {
       ProtocolWorkflowDetails details = workflowDetails(input.length, request, response);
       return new ReplayOutcome.ExpectedInvalid(
-          JazzerHarness.PROTOCOL_WORKFLOW.key(),
+          JazzerHarness.protocolWorkflow().key(),
           expected.getClass().getSimpleName(),
           expected.getMessage(),
           details);
     } catch (IOException unexpected) {
       ProtocolWorkflowDetails details = workflowDetails(input.length, request, response);
-      return unexpectedFailure(JazzerHarness.PROTOCOL_WORKFLOW, unexpected, details);
+      return unexpectedFailure(JazzerHarness.protocolWorkflow(), unexpected, details);
     } catch (RuntimeException unexpected) {
       ProtocolWorkflowDetails details = workflowDetails(input.length, request, response);
-      return unexpectedFailure(JazzerHarness.PROTOCOL_WORKFLOW, unexpected, details);
+      return unexpectedFailure(JazzerHarness.protocolWorkflow(), unexpected, details);
     } finally {
       if (workflow != null) {
         workflow.cleanup();
@@ -187,20 +193,20 @@ public final class JazzerReplaySupport {
         WorkbookInvariantChecks.requireWorkbookShape(workbook);
       }
       CommandSequenceDetails details = commandSequenceDetails(input.length, commands);
-      return new ReplayOutcome.Success(JazzerHarness.ENGINE_COMMAND_SEQUENCE.key(), details);
+      return new ReplayOutcome.Success(JazzerHarness.engineCommandSequence().key(), details);
     } catch (IllegalArgumentException expected) {
       CommandSequenceDetails details = commandSequenceDetails(input.length, commands);
       return new ReplayOutcome.ExpectedInvalid(
-          JazzerHarness.ENGINE_COMMAND_SEQUENCE.key(),
+          JazzerHarness.engineCommandSequence().key(),
           expected.getClass().getSimpleName(),
           expected.getMessage(),
           details);
     } catch (IOException unexpected) {
       CommandSequenceDetails details = commandSequenceDetails(input.length, commands);
-      return unexpectedFailure(JazzerHarness.ENGINE_COMMAND_SEQUENCE, unexpected, details);
+      return unexpectedFailure(JazzerHarness.engineCommandSequence(), unexpected, details);
     } catch (RuntimeException unexpected) {
       CommandSequenceDetails details = commandSequenceDetails(input.length, commands);
-      return unexpectedFailure(JazzerHarness.ENGINE_COMMAND_SEQUENCE, unexpected, details);
+      return unexpectedFailure(JazzerHarness.engineCommandSequence(), unexpected, details);
     }
   }
 
@@ -219,20 +225,20 @@ public final class JazzerReplaySupport {
         XlsxRoundTripVerifier.requireRoundTripReadable(workbook, workbookPath, commands);
       }
       XlsxRoundTripDetails details = roundTripDetails(input.length, commands);
-      return new ReplayOutcome.Success(JazzerHarness.XLSX_ROUND_TRIP.key(), details);
+      return new ReplayOutcome.Success(JazzerHarness.xlsxRoundTrip().key(), details);
     } catch (IllegalArgumentException expected) {
       XlsxRoundTripDetails details = roundTripDetails(input.length, commands);
       return new ReplayOutcome.ExpectedInvalid(
-          JazzerHarness.XLSX_ROUND_TRIP.key(),
+          JazzerHarness.xlsxRoundTrip().key(),
           expected.getClass().getSimpleName(),
           expected.getMessage(),
           details);
     } catch (IOException unexpected) {
       XlsxRoundTripDetails details = roundTripDetails(input.length, commands);
-      return unexpectedFailure(JazzerHarness.XLSX_ROUND_TRIP, unexpected, details);
+      return unexpectedFailure(JazzerHarness.xlsxRoundTrip(), unexpected, details);
     } catch (RuntimeException unexpected) {
       XlsxRoundTripDetails details = roundTripDetails(input.length, commands);
-      return unexpectedFailure(JazzerHarness.XLSX_ROUND_TRIP, unexpected, details);
+      return unexpectedFailure(JazzerHarness.xlsxRoundTrip(), unexpected, details);
     } finally {
       if (directory != null) {
         deleteRecursively(directory);

@@ -5,6 +5,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.32.2] - 2026-04-10
+
+### Added
+
+- Added [docs/DEVELOPER_GRADLE.md](./docs/DEVELOPER_GRADLE.md), a developer-facing map of the
+  Gradle system that explains the shared included build logic, the nested Jazzer composite build,
+  the single version-catalog authority, and the periodic review questions contributors should use
+  when revisiting the build architecture.
+
+### Changed
+
+- Root and nested Jazzer Gradle builds now share one included build-logic project under
+  `gradle/build-logic`, and the nested Jazzer build now imports the root version catalog instead
+  of hardcoding overlapping JUnit, Jackson, Apache POI, Log4j, and Jazzer coordinates locally.
+- Jazzer harness and run-target metadata now comes from one committed topology file,
+  `jazzer/src/main/resources/dev/erst/gridgrind/jazzer/support/jazzer-topology.json`, which is
+  consumed by both the runtime support layer and the nested build's task registration.
+- `jazzer/build.gradle.kts` is now a thin plugin application rather than a 683-line mixed build
+  script, while the nested build still preserves the same public task names and `jazzer/bin/*`
+  operator surface.
+
+### Fixed
+
+- `./check.sh` no longer launches stage logging through a racy temporary FIFO that could be
+  unlinked before `tee` opened it. Local release verification therefore no longer intermittently
+  fails during later stages with `No such file or directory` even when the underlying stage
+  command itself succeeds.
+- Deleted build-logic helpers can no longer linger as stale hidden `buildSrc` classes in local
+  Gradle state. GridGrind now compiles its shared included build logic from clean class output
+  directories on each rebuild, and the obsolete root/nested `buildSrc` builds are gone.
+- Jazzer support-test pulses and root-project Gradle test pulses now share one scheduled pulse
+  foundation, so heartbeat scheduling, thread naming, and whitespace normalization no longer drift
+  independently between the two build layers.
+
 ## [0.32.1] - 2026-04-09
 
 ### Changed
@@ -1170,7 +1204,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.32.1...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.32.2...HEAD
+[0.32.2]: https://github.com/resoltico/GridGrind/compare/v0.32.1...v0.32.2
 [0.32.1]: https://github.com/resoltico/GridGrind/compare/v0.32.0...v0.32.1
 [0.32.0]: https://github.com/resoltico/GridGrind/compare/v0.31.0...v0.32.0
 [0.31.0]: https://github.com/resoltico/GridGrind/compare/v0.30.0...v0.31.0

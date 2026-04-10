@@ -1,44 +1,20 @@
-/**
- * Convention plugin applied to every GridGrind Java subproject.
- *
- * Centralises:
- *  - Java toolchain (version read once from gradle.properties)
- *  - sources JAR production
- *  - JUnit Platform test runner
- *  - JaCoCo report + coverage-verification tasks (100 % line, 100 % branch)
- */
-import org.gradle.api.plugins.JavaPluginExtension
-import org.gradle.api.tasks.bundling.Jar
-import org.gradle.api.tasks.testing.Test
-import org.gradle.api.tasks.testing.TestDescriptor
-import org.gradle.api.tasks.testing.TestListener
-import org.gradle.api.tasks.testing.TestResult
-import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
-import org.gradle.testing.jacoco.tasks.JacocoReport
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
+package dev.erst.gridgrind.buildlogic
+
 import java.util.concurrent.TimeUnit
+import org.gradle.api.logging.Logger
+import org.gradle.api.tasks.testing.TestDescriptor
+import org.gradle.api.tasks.testing.TestResult
 
-plugins {
-    `java-base`
-    jacoco
-}
-
-class GradleTestPulseListener(
-    private val logger: org.gradle.api.logging.Logger,
+internal class GradleTestPulseListener(
+    private val logger: Logger,
     private val taskPath: String,
     private val projectPath: String,
     pulseIntervalMillis: Long,
-) : TestListener {
-    private val pulseExecutor: ScheduledExecutorService =
-        Executors.newSingleThreadScheduledExecutor { runnable ->
-            Thread(runnable, "gridgrind-gradle-test-pulse").apply {
-                isDaemon = true
-            }
-        }
-    private val lock = Any()
-    private val pulseIntervalMillis = pulseIntervalMillis.coerceAtLeast(1_000L)
-
+) : ScheduledPulseTestListener(
+        threadName = "gridgrind-gradle-test-pulse",
+        interval = pulseIntervalMillis,
+        timeUnit = TimeUnit.MILLISECONDS,
+    ) {
     private var rootStarted = false
     private var rootFinished = false
     private var completedClasses = 0L
@@ -57,12 +33,7 @@ class GradleTestPulseListener(
                 }
                 rootStarted = true
                 emit("phase=start")
-                pulseExecutor.scheduleAtFixedRate(
-                    { emitHeartbeat() },
-                    pulseIntervalMillis,
-                    pulseIntervalMillis,
-                    TimeUnit.MILLISECONDS,
-                )
+                startPulseLoop(::emitHeartbeat)
             }
             return
         }
@@ -82,7 +53,7 @@ class GradleTestPulseListener(
                     "phase=finish completedClasses=$completedClasses completedTests=$completedTests failedTests=$failedTests skippedTests=$skippedTests result=${result.resultType}"
                 )
             }
-            pulseExecutor.shutdownNow()
+            stopPulseLoop()
             return
         }
         if (suite.className != null && suite.parent?.className == null) {
@@ -154,81 +125,5 @@ class GradleTestPulseListener(
             projectPath,
             message,
         )
-    }
-
-    private fun pulseValue(raw: String?): String = raw?.replace(Regex("\\s+"), "_") ?: "unknown"
-}
-
-val gridgrindJavaVersion: Int =
-    providers.gradleProperty("gridgrindJavaVersion").map(String::toInt).get()
-
-extensions.configure<JavaPluginExtension> {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(gridgrindJavaVersion)
-    }
-    modularity.inferModulePath = true
-    withSourcesJar()
-}
-
-tasks.withType<Jar>().configureEach {
-    manifest {
-        attributes(
-            "Implementation-Title" to project.name,
-            "Implementation-Version" to project.version,
-            "Implementation-Vendor" to "Ervins Strauhmanis",
-            "Implementation-License" to "MIT",
-        )
-    }
-}
-
-tasks.withType<Test>().configureEach {
-    useJUnitPlatform()
-
-    val progressPulseEnabled =
-        providers.environmentVariable("GRIDGRIND_TEST_PULSE").map { it == "1" }.orElse(false).get()
-    if (progressPulseEnabled) {
-        val progressPulseIntervalMillis =
-            providers.environmentVariable("GRIDGRIND_TEST_PULSE_INTERVAL_MS")
-                .map(String::toLong)
-                .orElse(15_000L)
-                .get()
-        val pulseTaskPath = path
-        val pulseProjectPath = project.path
-        doFirst {
-            addTestListener(
-                GradleTestPulseListener(
-                    logger = logger,
-                    taskPath = pulseTaskPath,
-                    projectPath = pulseProjectPath,
-                    pulseIntervalMillis = progressPulseIntervalMillis,
-                ),
-            )
-        }
-    }
-}
-
-tasks.named<JacocoReport>("jacocoTestReport") {
-    dependsOn(tasks.withType<Test>())
-    reports {
-        xml.required = true
-        html.required = true
-    }
-}
-
-tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
-    dependsOn(tasks.withType<Test>())
-    violationRules {
-        rule {
-            limit {
-                counter = "LINE"
-                value = "COVEREDRATIO"
-                minimum = "1.0".toBigDecimal()
-            }
-            limit {
-                counter = "BRANCH"
-                value = "COVEREDRATIO"
-                minimum = "1.0".toBigDecimal()
-            }
-        }
     }
 }

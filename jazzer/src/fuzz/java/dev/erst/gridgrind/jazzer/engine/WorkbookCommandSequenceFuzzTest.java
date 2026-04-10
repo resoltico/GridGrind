@@ -17,7 +17,7 @@ import java.util.List;
 /** Fuzzes workbook-core command sequences directly against the engine entrypoint. */
 class WorkbookCommandSequenceFuzzTest {
   private static final HarnessTelemetry TELEMETRY =
-      HarnessTelemetry.forHarness(JazzerHarness.ENGINE_COMMAND_SEQUENCE);
+      HarnessTelemetry.forHarness(JazzerHarness.engineCommandSequence());
 
   @FuzzTest
   void applyCommands(FuzzedDataProvider data) throws IOException {

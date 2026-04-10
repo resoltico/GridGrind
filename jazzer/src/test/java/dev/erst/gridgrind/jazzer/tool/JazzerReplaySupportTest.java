@@ -18,7 +18,7 @@ class JazzerReplaySupportTest {
   void expectationForCapturesStableOutcomeKindAndReplayDetails() {
     ReplayOutcome outcome =
         JazzerReplaySupport.replay(
-            JazzerHarness.PROTOCOL_REQUEST, "{".getBytes(StandardCharsets.UTF_8));
+            JazzerHarness.protocolRequest(), "{".getBytes(StandardCharsets.UTF_8));
 
     assertEquals(
         new ReplayExpectation(
@@ -32,7 +32,7 @@ class JazzerReplaySupportTest {
   void replayClassifiesMalformedJsonAsInvalidJson() {
     ReplayOutcome outcome =
         JazzerReplaySupport.replay(
-            JazzerHarness.PROTOCOL_REQUEST, "{".getBytes(StandardCharsets.UTF_8));
+            JazzerHarness.protocolRequest(), "{".getBytes(StandardCharsets.UTF_8));
 
     assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
     ReplayOutcome.ExpectedInvalid expectedInvalid = (ReplayOutcome.ExpectedInvalid) outcome;
@@ -45,7 +45,7 @@ class JazzerReplaySupportTest {
   void replayClassifiesRequestShapeFailuresSeparately() {
     ReplayOutcome outcome =
         JazzerReplaySupport.replay(
-            JazzerHarness.PROTOCOL_REQUEST,
+            JazzerHarness.protocolRequest(),
             """
             {
               "protocolVersion": "V1",
@@ -71,7 +71,7 @@ class JazzerReplaySupportTest {
   void replayKeepsSemanticRequestFailuresAsInvalidRequest() {
     ReplayOutcome outcome =
         JazzerReplaySupport.replay(
-            JazzerHarness.PROTOCOL_REQUEST,
+            JazzerHarness.protocolRequest(),
             """
             {
               "protocolVersion": "V1",
@@ -121,7 +121,7 @@ class JazzerReplaySupportTest {
         """
             .getBytes(StandardCharsets.UTF_8);
     ReplayOutcome outcome =
-        JazzerReplaySupport.replay(JazzerHarness.PROTOCOL_REQUEST, input);
+        JazzerReplaySupport.replay(JazzerHarness.protocolRequest(), input);
 
     assertInstanceOf(ReplayOutcome.Success.class, outcome);
     ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;
@@ -143,7 +143,7 @@ class JazzerReplaySupportTest {
   void replayClassifiesNamedRangeShiftArtifactAsExpectedInvalidRoundTripInput() {
     byte[] input = artifactBytes("named-range-shift-overwrite-invalid.b64");
 
-    ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.XLSX_ROUND_TRIP, input);
+    ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.xlsxRoundTrip(), input);
 
     assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
     ReplayOutcome.ExpectedInvalid expectedInvalid = (ReplayOutcome.ExpectedInvalid) outcome;
@@ -169,7 +169,7 @@ class JazzerReplaySupportTest {
   void replayClassifiesPartialCollapsedColumnUngroupArtifactAsSuccess() {
     byte[] input = artifactBytes("partial-collapsed-column-ungroup-roundtrip-success.b64");
 
-    ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.XLSX_ROUND_TRIP, input);
+    ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.xlsxRoundTrip(), input);
 
     assertInstanceOf(ReplayOutcome.Success.class, outcome);
     ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;

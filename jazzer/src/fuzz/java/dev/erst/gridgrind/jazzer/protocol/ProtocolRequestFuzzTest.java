@@ -15,7 +15,7 @@ import java.io.IOException;
 /** Fuzzes protocol request decoding and validation from raw JSON payloads. */
 class ProtocolRequestFuzzTest {
   private static final HarnessTelemetry TELEMETRY =
-      HarnessTelemetry.forHarness(JazzerHarness.PROTOCOL_REQUEST);
+      HarnessTelemetry.forHarness(JazzerHarness.protocolRequest());
 
   @FuzzTest
   void readRequest(FuzzedDataProvider data) throws IOException {
