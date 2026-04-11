@@ -11,9 +11,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BooleanSupplier;
 
 /** Launches one Jazzer harness class through the JUnit Platform outside Gradle's Test task. */
 public final class JazzerHarnessRunner {
+  private static final String GITHUB_ACTIONS_BLOCK_MESSAGE =
+      "Active Jazzer fuzzing is local-only and must not run on GitHub Actions. "
+          + "Use './gradlew --project-dir jazzer check' for deterministic GitHub verification "
+          + "and 'jazzer/bin/*' for local active fuzzing.";
   private static final String PULSE_PREFIX = "[JAZZER-PULSE] ";
 
   private JazzerHarnessRunner() {}
@@ -52,7 +57,12 @@ public final class JazzerHarnessRunner {
    * code.
    */
   static int run(String className, PrintWriter outputWriter, PrintWriter errorWriter) {
-    return run(className, outputWriter, errorWriter, OfficialHarnessExecutor.INSTANCE);
+    return run(
+        className,
+        outputWriter,
+        errorWriter,
+        OfficialHarnessExecutor.INSTANCE,
+        JazzerHarnessRunner::runningOnGitHubActions);
   }
 
   /**
@@ -64,10 +74,30 @@ public final class JazzerHarnessRunner {
       PrintWriter outputWriter,
       PrintWriter errorWriter,
       HarnessExecutor executor) {
+    return run(
+        className,
+        outputWriter,
+        errorWriter,
+        executor,
+        JazzerHarnessRunner::runningOnGitHubActions);
+  }
+
+  static int run(
+      String className,
+      PrintWriter outputWriter,
+      PrintWriter errorWriter,
+      HarnessExecutor executor,
+      BooleanSupplier githubActionsDetector) {
     Objects.requireNonNull(className, "className must not be null");
     Objects.requireNonNull(outputWriter, "outputWriter must not be null");
     Objects.requireNonNull(errorWriter, "errorWriter must not be null");
     Objects.requireNonNull(executor, "executor must not be null");
+    Objects.requireNonNull(githubActionsDetector, "githubActionsDetector must not be null");
+
+    if (githubActionsDetector.getAsBoolean()) {
+      errorWriter.println(GITHUB_ACTIONS_BLOCK_MESSAGE);
+      return 1;
+    }
 
     HarnessDescriptor harness;
     try {
@@ -113,6 +143,10 @@ public final class JazzerHarnessRunner {
               + ")");
     }
     return exitCode;
+  }
+
+  private static boolean runningOnGitHubActions() {
+    return "true".equalsIgnoreCase(System.getenv("GITHUB_ACTIONS"));
   }
 
   static HarnessDescriptor discoverHarness(String className) {

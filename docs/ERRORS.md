@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.33.0"
+version: "0.34.0"
 domain: ERRORS
-updated: "2026-04-10"
+updated: "2026-04-11"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors"]

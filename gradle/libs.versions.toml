@@ -6,6 +6,9 @@ jackson-databind = "3.0.3"
 log4j = "2.25.3"
 poi-ooxml = "5.5.1"
 jazzer = "0.30.0"
+bouncycastle = "1.83"
+xmlsec = "3.0.6"
+slf4j = "2.0.17"
 errorprone = "2.49.0"
 errorprone-plugin = "5.1.0"
 google-java-format = "1.35.0"
@@ -15,6 +18,9 @@ shadow = "9.4.0"
 spotless = "8.4.0"
 
 [libraries]
+bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
+bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+bcutil = { module = "org.bouncycastle:bcutil-jdk18on", version.ref = "bouncycastle" }
 errorprone-core = { module = "com.google.errorprone:error_prone_core", version.ref = "errorprone" }
 jackson-databind = { module = "tools.jackson.core:jackson-databind", version.ref = "jackson-databind" }
 jazzer = { module = "com.code-intelligence:jazzer", version.ref = "jazzer" }
@@ -25,6 +31,8 @@ junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "jun
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform-launcher" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi-ooxml" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
+xmlsec = { module = "org.apache.santuario:xmlsec", version.ref = "xmlsec" }
 
 [plugins]
 errorprone = { id = "net.ltgt.errorprone", version.ref = "errorprone-plugin" }

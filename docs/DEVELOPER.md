@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.33.0"
+version: "0.34.0"
 domain: DEVELOPER
-updated: "2026-04-10"
+updated: "2026-04-11"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]

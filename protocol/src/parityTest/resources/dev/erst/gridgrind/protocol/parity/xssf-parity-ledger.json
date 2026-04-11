@@ -1,0 +1,1108 @@
+{
+  "version": "1.0.0",
+  "poiVersion": "5.5.1",
+  "rows": [
+    {
+      "sequence": 1,
+      "id": "phase-2-core-workbook-sheet-facts-read",
+      "capability": "core-workbook-sheet-facts",
+      "subfamily": "read",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Spreadsheet Overview",
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Workbook and sheet summary reads for authored GridGrind workbook state."
+    },
+    {
+      "sequence": 2,
+      "id": "phase-2-sheet-protection-flags-read",
+      "capability": "sheet-protection-flags",
+      "subfamily": "read",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Current summary reads expose core sheet protection state."
+    },
+    {
+      "sequence": 3,
+      "id": "phase-2-workbook-protection-read",
+      "capability": "workbook-protection",
+      "subfamily": "read",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-workbook-protection-read-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "POI exposes workbook-level protection state that GridGrind does not yet model."
+    },
+    {
+      "sequence": 4,
+      "id": "phase-2-merged-regions-read",
+      "capability": "merged-regions",
+      "subfamily": "read",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Merged-region reads are part of the current workbook-core surface."
+    },
+    {
+      "sequence": 5,
+      "id": "phase-2-layout-read",
+      "capability": "layout",
+      "subfamily": "read",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Sheet layout reads cover the currently authored core layout state."
+    },
+    {
+      "sequence": 6,
+      "id": "phase-2-print-layout-read-core",
+      "capability": "print-layout",
+      "subfamily": "read-core",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Core print-layout reads align for orientation, fit, repeating titles, and centering authored by GridGrind."
+    },
+    {
+      "sequence": 7,
+      "id": "phase-2-print-layout-read-advanced",
+      "capability": "print-layout",
+      "subfamily": "read-advanced",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-advanced-print-read-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Advanced page-setup and print metadata remain unmodeled on read."
+    },
+    {
+      "sequence": 8,
+      "id": "phase-2-cells-read-typed-rich-text",
+      "capability": "cells",
+      "subfamily": "read-typed-rich-text",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Spreadsheet Overview",
+        "Quick Guide"
+      ],
+      "notes": "Typed cell reads and rich-text runs are covered for authored workbook cells."
+    },
+    {
+      "sequence": 9,
+      "id": "phase-2-styles-read-core",
+      "capability": "styles",
+      "subfamily": "read-core",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Current cell-style reads preserve the modeled core style subset."
+    },
+    {
+      "sequence": 10,
+      "id": "phase-2-styles-read-theme-indexed-gradient",
+      "capability": "styles",
+      "subfamily": "read-theme-indexed-gradient",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-advanced-style-read-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Theme, indexed, tint, and gradient style semantics are still normalized away."
+    },
+    {
+      "sequence": 11,
+      "id": "phase-2-comments-read-plain",
+      "capability": "comments",
+      "subfamily": "read-plain",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Plain comment text, author, and visibility are currently readable."
+    },
+    {
+      "sequence": 12,
+      "id": "phase-2-comments-read-rich-anchor",
+      "capability": "comments",
+      "subfamily": "read-rich-anchor",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-rich-comment-read-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Rich comment runs and anchor metadata are not exposed on read."
+    },
+    {
+      "sequence": 13,
+      "id": "phase-2-hyperlinks-read",
+      "capability": "hyperlinks",
+      "subfamily": "read",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Hyperlink reads match the authored core workbook scenario."
+    },
+    {
+      "sequence": 14,
+      "id": "phase-2-named-ranges-read-explicit",
+      "capability": "named-ranges",
+      "subfamily": "read-explicit",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-named-range-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Explicit address-based named ranges are modeled and readable."
+    },
+    {
+      "sequence": 15,
+      "id": "phase-2-named-ranges-read-formula",
+      "capability": "named-ranges",
+      "subfamily": "read-formula",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-named-range-read",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Formula-defined names are already surfaced distinctly from range names."
+    },
+    {
+      "sequence": 16,
+      "id": "phase-2-data-validation-read-core",
+      "capability": "data-validation",
+      "subfamily": "read-core",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Supported validation rules authored through GridGrind read back correctly."
+    },
+    {
+      "sequence": 17,
+      "id": "phase-2-data-validation-analysis-fine-diagnostics",
+      "capability": "data-validation",
+      "subfamily": "analysis-fine-diagnostics",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "PARTIAL",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-data-validation-analysis-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Distinct malformed validation states are collapsed into broader findings."
+    },
+    {
+      "sequence": 18,
+      "id": "phase-2-autofilter-read-range-ownership",
+      "capability": "autofilter",
+      "subfamily": "read-range-ownership",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Autofilter ownership and range reads are present."
+    },
+    {
+      "sequence": 19,
+      "id": "phase-2-autofilter-read-criteria-sort",
+      "capability": "autofilter",
+      "subfamily": "read-criteria-sort",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-autofilter-criteria-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Filter-column criteria and sort-state metadata are not modeled on read."
+    },
+    {
+      "sequence": 20,
+      "id": "phase-2-tables-read-core",
+      "capability": "tables",
+      "subfamily": "read-core",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFTable API"
+      ],
+      "notes": "Core table identity, range, and columns are currently readable."
+    },
+    {
+      "sequence": 21,
+      "id": "phase-2-tables-read-advanced",
+      "capability": "tables",
+      "subfamily": "read-advanced",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-table-advanced-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFTable API"
+      ],
+      "notes": "Advanced table metadata such as totals, published flags, and per-column extras remain unmodeled."
+    },
+    {
+      "sequence": 22,
+      "id": "phase-2-conditional-formatting-read-authored",
+      "capability": "conditional-formatting",
+      "subfamily": "read-authored",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-read",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Current authored conditional-format rules are readable."
+    },
+    {
+      "sequence": 23,
+      "id": "phase-2-conditional-formatting-read-modeled-advanced",
+      "capability": "conditional-formatting",
+      "subfamily": "read-modeled-advanced",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-conditional-formatting-modeled-read",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Modeled advanced rule families already read back from POI-created workbooks."
+    },
+    {
+      "sequence": 24,
+      "id": "phase-2-conditional-formatting-read-all-xssf",
+      "capability": "conditional-formatting",
+      "subfamily": "read-all-xssf",
+      "phase": 2,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "PARTIAL",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-conditional-formatting-unmodeled-read-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "GridGrind still loses some POI-readable XSSF conditional-format rule families."
+    },
+    {
+      "sequence": 25,
+      "id": "phase-3-workbook-sheet-lifecycle-mutation",
+      "capability": "workbook-sheet-lifecycle",
+      "subfamily": "mutation",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Spreadsheet Overview",
+        "Quick Guide"
+      ],
+      "notes": "Core workbook and sheet lifecycle mutation is already supported."
+    },
+    {
+      "sequence": 26,
+      "id": "phase-3-sheet-protection-flags-mutation",
+      "capability": "sheet-protection-flags",
+      "subfamily": "mutation",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Current sheet-protection flag mutation survives save and readback."
+    },
+    {
+      "sequence": 27,
+      "id": "phase-3-workbook-protection-mutation",
+      "capability": "workbook-protection",
+      "subfamily": "mutation",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-workbook-protection-mutation-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Workbook-level protection mutation is not yet exposed."
+    },
+    {
+      "sequence": 28,
+      "id": "phase-3-password-sheet-protection-mutation",
+      "capability": "password-sheet-protection",
+      "subfamily": "mutation",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-sheet-password-mutation-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Hash-bearing sheet password mutation is not yet modeled."
+    },
+    {
+      "sequence": 29,
+      "id": "phase-3-sheet-copy-mutation",
+      "capability": "sheet-copy",
+      "subfamily": "mutation",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "PARTIAL",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-sheet-copy-gap",
+      "scenarioIds": [
+        "gridgrind-core-authoring",
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Sheet copy still rejects or degrades advanced workbook-core structures."
+    },
+    {
+      "sequence": 30,
+      "id": "phase-3-print-layout-mutation-core",
+      "capability": "print-layout",
+      "subfamily": "mutation-core",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Core print-layout mutation is already available."
+    },
+    {
+      "sequence": 31,
+      "id": "phase-3-print-layout-mutation-advanced",
+      "capability": "print-layout",
+      "subfamily": "mutation-advanced",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-advanced-print-mutation-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Advanced page setup and print metadata cannot yet be authored or preserved semantically."
+    },
+    {
+      "sequence": 32,
+      "id": "phase-3-cells-mutation-typed-rich-text",
+      "capability": "cells",
+      "subfamily": "mutation-typed-rich-text",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Spreadsheet Overview",
+        "Quick Guide"
+      ],
+      "notes": "Typed and rich-text cell mutation is supported in the core authored scenario."
+    },
+    {
+      "sequence": 33,
+      "id": "phase-3-styles-mutation-core",
+      "capability": "styles",
+      "subfamily": "mutation-core",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Modeled core style mutation is already available."
+    },
+    {
+      "sequence": 34,
+      "id": "phase-3-styles-mutation-theme-indexed-gradient",
+      "capability": "styles",
+      "subfamily": "mutation-theme-indexed-gradient",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-advanced-style-mutation-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Theme, indexed, tint, and gradient style mutation is not yet supported."
+    },
+    {
+      "sequence": 35,
+      "id": "phase-3-comments-mutation-plain",
+      "capability": "comments",
+      "subfamily": "mutation-plain",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Plain comments can be authored and preserved."
+    },
+    {
+      "sequence": 36,
+      "id": "phase-3-comments-mutation-rich-anchor",
+      "capability": "comments",
+      "subfamily": "mutation-rich-anchor",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-rich-comment-mutation-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Rich comment runs and anchors cannot yet be authored through the protocol."
+    },
+    {
+      "sequence": 37,
+      "id": "phase-3-hyperlinks-mutation",
+      "capability": "hyperlinks",
+      "subfamily": "mutation",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Hyperlink mutation is supported."
+    },
+    {
+      "sequence": 38,
+      "id": "phase-3-named-ranges-mutation-explicit",
+      "capability": "named-ranges",
+      "subfamily": "mutation-explicit",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Explicit named-range authoring and updates are supported."
+    },
+    {
+      "sequence": 39,
+      "id": "phase-3-named-ranges-mutation-formula",
+      "capability": "named-ranges",
+      "subfamily": "mutation-formula",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-named-range-formula-mutation-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Formula-defined name authoring is not yet available."
+    },
+    {
+      "sequence": 40,
+      "id": "phase-3-data-validation-mutation-core",
+      "capability": "data-validation",
+      "subfamily": "mutation-core",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Supported validation mutation is present for the current core contract."
+    },
+    {
+      "sequence": 41,
+      "id": "phase-3-autofilter-mutation-core",
+      "capability": "autofilter",
+      "subfamily": "mutation-core",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Core autofilter ownership and range mutation is supported."
+    },
+    {
+      "sequence": 42,
+      "id": "phase-3-autofilter-mutation-criteria-sort",
+      "capability": "autofilter",
+      "subfamily": "mutation-criteria-sort",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-autofilter-criteria-mutation-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "GridGrind cannot yet author criteria-bearing filters or sort-state metadata."
+    },
+    {
+      "sequence": 43,
+      "id": "phase-3-tables-mutation-core",
+      "capability": "tables",
+      "subfamily": "mutation-core",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFTable API"
+      ],
+      "notes": "Core table authoring and mutation is supported."
+    },
+    {
+      "sequence": 44,
+      "id": "phase-3-tables-mutation-advanced",
+      "capability": "tables",
+      "subfamily": "mutation-advanced",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-table-advanced-mutation-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFTable API"
+      ],
+      "notes": "Advanced table metadata mutation is not yet exposed."
+    },
+    {
+      "sequence": 45,
+      "id": "phase-3-conditional-formatting-mutation-authored",
+      "capability": "conditional-formatting",
+      "subfamily": "mutation-authored",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-core-mutation",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Currently modeled authored conditional-format mutations are supported."
+    },
+    {
+      "sequence": 46,
+      "id": "phase-3-conditional-formatting-mutation-advanced",
+      "capability": "conditional-formatting",
+      "subfamily": "mutation-advanced",
+      "phase": 3,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-conditional-formatting-advanced-mutation-gap",
+      "scenarioIds": [
+        "poi-advanced-nondrawing"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Advanced POI-readable rule families still lack authoring parity."
+    },
+    {
+      "sequence": 47,
+      "id": "phase-4-formula-evaluation-core",
+      "capability": "formula-evaluation",
+      "subfamily": "core",
+      "phase": 4,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-formula-core",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Formula Evaluation",
+        "Quick Guide"
+      ],
+      "notes": "Core formula evaluation works for the authored workbook scenario."
+    },
+    {
+      "sequence": 48,
+      "id": "phase-4-formula-evaluation-external-workbooks",
+      "capability": "formula-evaluation",
+      "subfamily": "external-workbooks",
+      "phase": 4,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-formula-external-gap",
+      "scenarioIds": [
+        "poi-external-formula"
+      ],
+      "primarySources": [
+        "Formula Evaluation",
+        "Quick Guide"
+      ],
+      "notes": "External workbook references are available in POI but not yet orchestrated by GridGrind."
+    },
+    {
+      "sequence": 49,
+      "id": "phase-4-formula-evaluation-udf-toolpacks",
+      "capability": "formula-evaluation",
+      "subfamily": "udf-toolpacks",
+      "phase": 4,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-formula-udf-gap",
+      "scenarioIds": [
+        "poi-udf-formula"
+      ],
+      "primarySources": [
+        "Formula Evaluation",
+        "User Defined Functions"
+      ],
+      "notes": "POI UDF toolpacks have no GridGrind registration surface yet."
+    },
+    {
+      "sequence": 50,
+      "id": "phase-4-formula-evaluation-lifecycle-controls",
+      "capability": "formula-evaluation",
+      "subfamily": "lifecycle-controls",
+      "phase": 4,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-formula-lifecycle-gap",
+      "scenarioIds": [
+        "gridgrind-core-authoring"
+      ],
+      "primarySources": [
+        "Formula Evaluation"
+      ],
+      "notes": "Evaluator lifecycle control remains narrower than POI's surface."
+    },
+    {
+      "sequence": 51,
+      "id": "phase-5-drawings-and-images-preservation",
+      "capability": "drawings-and-images",
+      "subfamily": "preservation",
+      "phase": 5,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-drawing-preservation",
+      "scenarioIds": [
+        "poi-drawing-image"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "GridGrind preserves drawing parts on unrelated edits but does not yet model them."
+    },
+    {
+      "sequence": 52,
+      "id": "phase-5-embedded-objects-preservation",
+      "capability": "embedded-objects",
+      "subfamily": "preservation",
+      "phase": 5,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-embedded-object-preservation",
+      "scenarioIds": [
+        "poi-embedded-object"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "Limitations"
+      ],
+      "notes": "Embedded object package parts survive unrelated edits today, but there is no explicit surface."
+    },
+    {
+      "sequence": 53,
+      "id": "phase-6-charts-preservation",
+      "capability": "charts",
+      "subfamily": "preservation",
+      "phase": 6,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-chart-preservation",
+      "scenarioIds": [
+        "poi-chart"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "Limitations"
+      ],
+      "notes": "Chart package parts are preserved across unrelated edits without first-class modeling."
+    },
+    {
+      "sequence": 54,
+      "id": "phase-7-pivot-tables-preservation",
+      "capability": "pivot-tables",
+      "subfamily": "preservation",
+      "phase": 7,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-pivot-preservation",
+      "scenarioIds": [
+        "poi-pivot"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "Limitations"
+      ],
+      "notes": "Pivot-table package parts are preserved across unrelated edits without first-class modeling."
+    },
+    {
+      "sequence": 55,
+      "id": "phase-8-event-model-read",
+      "capability": "event-model-read",
+      "subfamily": "read",
+      "phase": 8,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-event-model-gap",
+      "scenarioIds": [
+        "poi-large-sheet"
+      ],
+      "primarySources": [
+        "Spreadsheet Overview",
+        "Quick Guide"
+      ],
+      "notes": "POI event-model reads are not yet available through GridGrind."
+    },
+    {
+      "sequence": 56,
+      "id": "phase-8-sxssf-streaming-write",
+      "capability": "sxssf-streaming-write",
+      "subfamily": "write",
+      "phase": 8,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-sxssf-gap",
+      "scenarioIds": [
+        "poi-large-sheet"
+      ],
+      "primarySources": [
+        "Spreadsheet Overview",
+        "Quick Guide"
+      ],
+      "notes": "Streaming write parity via SXSSF is not yet available."
+    },
+    {
+      "sequence": 57,
+      "id": "phase-9-ooxml-encryption",
+      "capability": "ooxml-encryption",
+      "subfamily": "read-write",
+      "phase": 9,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-encryption-gap",
+      "scenarioIds": [
+        "poi-encrypted-workbook"
+      ],
+      "primarySources": [
+        "Encryption Support"
+      ],
+      "notes": "Encrypted OOXML workbook handling is absent from GridGrind."
+    },
+    {
+      "sequence": 58,
+      "id": "phase-9-ooxml-signing",
+      "capability": "ooxml-signing",
+      "subfamily": "read-write",
+      "phase": 9,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "ABSENT",
+      "expectedOutcome": "FAIL",
+      "probeId": "probe-signing-gap",
+      "scenarioIds": [
+        "poi-signed-workbook"
+      ],
+      "primarySources": [
+        "Encryption Support",
+        "Quick Guide"
+      ],
+      "notes": "Signed OOXML package preservation and validation are absent from GridGrind."
+    }
+  ]
+}

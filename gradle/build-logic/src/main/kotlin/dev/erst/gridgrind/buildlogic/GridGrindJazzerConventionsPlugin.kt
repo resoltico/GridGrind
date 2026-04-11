@@ -10,6 +10,7 @@ import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.api.plugins.quality.Pmd
 import org.gradle.api.tasks.JavaExec
 import org.gradle.api.tasks.SourceSetContainer
+import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.testing.Test
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.getByType
@@ -46,6 +47,18 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 java.setSrcDirs(listOf("src/fuzz/java"))
                 resources.setSrcDirs(listOf("src/fuzz/resources"))
             }
+            val jazzerAgentJar =
+                tasks.named<Jar>("jar") {
+                    manifest.attributes(
+                        mapOf(
+                            "Premain-Class" to JAZZER_PREMAIN_CLASS,
+                            "Agent-Class" to JAZZER_PREMAIN_CLASS,
+                            "Can-Redefine-Classes" to "true",
+                            "Can-Retransform-Classes" to "true",
+                            "Can-Set-Native-Method-Prefix" to "true",
+                        ),
+                    )
+                }
             fuzzSourceSet.compileClasspath += mainSourceSet.output
             fuzzSourceSet.runtimeClasspath += mainSourceSet.output
 
@@ -92,7 +105,9 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 mainClass.set("dev.erst.gridgrind.jazzer.tool.JazzerHarnessRunner")
                 outputs.upToDateWhen { false }
                 workingDir = layout.projectDirectory.asFile
+                dependsOn(jazzerAgentJar)
                 enableNativeAccess()
+                jvmArgs("-javaagent:${jazzerAgentJar.flatMap { it.archiveFile }.get().asFile.absolutePath}")
                 if (jazzerMaxDuration != null) {
                     systemProperty("jazzer.max_duration", jazzerMaxDuration)
                 }
@@ -413,6 +428,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
 
     private companion object {
         private const val NATIVE_ACCESS_ARGUMENT = "--enable-native-access=ALL-UNNAMED"
+        private const val JAZZER_PREMAIN_CLASS = "dev.erst.gridgrind.jazzer.tool.JazzerPremainAgent"
         private const val JAZZER_COVERAGE_MINIMUM = "0.72"
         private val JAZZER_COVERAGE_EXCLUSIONS =
             listOf(

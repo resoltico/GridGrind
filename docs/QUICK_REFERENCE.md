@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.33.0"
+version: "0.34.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-10"
+updated: "2026-04-11"
 route:
   keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]

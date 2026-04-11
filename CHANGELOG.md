@@ -5,6 +5,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.34.0] - 2026-04-11
+
+### Added
+
+- Added an executable Apache POI `5.5.1` XSSF parity gate. GridGrind now ships a canonical parity
+  ledger, a golden `.xlsx` corpus, a direct-POI oracle harness, GridGrind-side comparator probes,
+  and a root `./gradlew parity` task for measuring current `.xlsx` parity status end to end.
+
+### Changed
+
+- Root and protocol `check` verification now includes the XSSF parity source set plus parity PMD
+  coverage, so `.xlsx` parity drift fails local verification instead of living only in ad hoc
+  investigation.
+- Jazzer operator docs now distinguish the supported `jazzer/bin/*` surface from raw
+  `./gradlew --project-dir jazzer ...` debugging more explicitly, and the seed-inventory docs now
+  point at one authoritative exhaustive committed-input list instead of drifting count copies.
+- Jazzer operator docs now state a single supported active-fuzz method only: `jazzer/bin/*`.
+  Raw Gradle is documented only for deterministic nested-build verification, not as an endorsed
+  alternative fuzz entrypoint.
+
+### Fixed
+
+- Style snapshot extraction no longer preserves border colors when the effective border style is
+  `NONE`, avoiding impossible border-state reports for advanced POI-authored `.xlsx` workbooks.
+- The parity corpus now materializes real agile-encrypted OOXML workbooks, and the direct-POI
+  parity oracle opens them through POI's decryptor flow instead of treating them as plain `.xlsx`
+  files.
+- Nested Jazzer active fuzzing now preloads a project-owned premain agent that publishes startup
+  instrumentation to Byte Buddy before Jazzer's JUnit extension runs, so Java 26 live fuzzing no
+  longer wedges in the external attach path before the harness starts executing.
+- Active Jazzer fuzzing now hard-fails on GitHub Actions, so GitHub remains a deterministic-only
+  verification surface even if an active fuzz task is wired there by mistake.
+- Promoted Jazzer metadata no longer carries stray committed `.txt.tmp` artifacts, and
+  `PromotionMetadataTest` now rejects non-`.json`/`.txt` files plus orphan replay-text artifacts
+  so temporary refresh leftovers cannot silently re-enter version control.
+- Root `./check.sh` stall diagnostics now bound heavyweight per-process captures to a small sample,
+  so a badly wedged stage cannot fan out `lsof` or `jcmd` collection across an unbounded
+  descendant process tree.
+- Supported `jazzer/bin/*` active-fuzz runs now force `--no-daemon` and tear down the launched
+  Gradle client tree on interrupt or timeout, so canceling a local fuzz session no longer drops the
+  run lock while leaving a live harness JVM and wrapper client chewing CPU in the background.
+
 ## [0.33.0] - 2026-04-10
 
 ### Changed
@@ -1240,7 +1282,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.33.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.34.0...HEAD
+[0.34.0]: https://github.com/resoltico/GridGrind/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/resoltico/GridGrind/compare/v0.32.2...v0.33.0
 [0.32.2]: https://github.com/resoltico/GridGrind/compare/v0.32.1...v0.32.2
 [0.32.1]: https://github.com/resoltico/GridGrind/compare/v0.32.0...v0.32.1

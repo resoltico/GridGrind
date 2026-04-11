@@ -104,6 +104,12 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                     "jacocoAggregatedReport",
                 )
             }
+
+            tasks.register("parity") {
+                group = "verification"
+                description = "Runs the dedicated Apache POI XSSF parity verification suite."
+                dependsOn(":protocol:parityTest")
+            }
         }
     }
 }
