@@ -328,7 +328,6 @@ final class WorkbookReadResultConverter {
               dataBarRule.stopIfTrue(),
               dataBarRule.color(),
               dataBarRule.iconOnly(),
-              dataBarRule.leftToRight(),
               dataBarRule.widthMin(),
               dataBarRule.widthMax(),
               toConditionalFormattingThresholdReport(dataBarRule.minThreshold()),

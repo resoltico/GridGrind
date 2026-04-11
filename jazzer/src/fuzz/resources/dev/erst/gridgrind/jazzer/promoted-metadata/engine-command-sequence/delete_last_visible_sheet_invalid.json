@@ -10,9 +10,9 @@
       "inputBytes" : 72,
       "commandCount" : 4,
       "commandKinds" : {
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
         "CREATE_SHEET" : 1,
-        "SET_SHEET_VISIBILITY" : 2,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
+        "SET_SHEET_VISIBILITY" : 2
       },
       "styleKinds" : { }
     }

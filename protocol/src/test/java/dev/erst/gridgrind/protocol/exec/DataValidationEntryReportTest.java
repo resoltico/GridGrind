@@ -140,6 +140,18 @@ class DataValidationEntryReportTest {
         () -> WorkbookReadResultConverter.toDataValidationDefinitionReport(null));
   }
 
+  @Test
+  void fromExcelPreservesEmptyExplicitLists() {
+    DataValidationEntryReport.DataValidationDefinitionReport report =
+        reportFor(
+            new ExcelDataValidationDefinition(
+                new ExcelDataValidationRule.ExplicitList(List.of()), false, false, null, null));
+
+    DataValidationRuleInput.ExplicitList rule =
+        assertInstanceOf(DataValidationRuleInput.ExplicitList.class, report.rule());
+    assertEquals(List.of(), rule.values());
+  }
+
   private static DataValidationEntryReport.DataValidationDefinitionReport reportFor(
       ExcelDataValidationDefinition definition) {
     return WorkbookReadResultConverter.toDataValidationDefinitionReport(definition);

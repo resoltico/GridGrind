@@ -11,7 +11,8 @@ public record ExcelPrintLayout(
     TitleRows repeatingRows,
     TitleColumns repeatingColumns,
     ExcelHeaderFooterText header,
-    ExcelHeaderFooterText footer) {
+    ExcelHeaderFooterText footer,
+    ExcelPrintSetup setup) {
   /** Returns the GridGrind default print layout for a sheet with no explicit print settings. */
   public static ExcelPrintLayout defaults() {
     return new ExcelPrintLayout(
@@ -21,7 +22,28 @@ public record ExcelPrintLayout(
         new TitleRows.None(),
         new TitleColumns.None(),
         ExcelHeaderFooterText.blank(),
-        ExcelHeaderFooterText.blank());
+        ExcelHeaderFooterText.blank(),
+        ExcelPrintSetup.defaults());
+  }
+
+  /** Creates a print layout while defaulting the advanced print-setup block. */
+  public ExcelPrintLayout(
+      Area printArea,
+      ExcelPrintOrientation orientation,
+      Scaling scaling,
+      TitleRows repeatingRows,
+      TitleColumns repeatingColumns,
+      ExcelHeaderFooterText header,
+      ExcelHeaderFooterText footer) {
+    this(
+        printArea,
+        orientation,
+        scaling,
+        repeatingRows,
+        repeatingColumns,
+        header,
+        footer,
+        ExcelPrintSetup.defaults());
   }
 
   public ExcelPrintLayout {
@@ -32,6 +54,7 @@ public record ExcelPrintLayout(
     Objects.requireNonNull(repeatingColumns, "repeatingColumns must not be null");
     Objects.requireNonNull(header, "header must not be null");
     Objects.requireNonNull(footer, "footer must not be null");
+    Objects.requireNonNull(setup, "setup must not be null");
   }
 
   /** Print-area state for one sheet. */

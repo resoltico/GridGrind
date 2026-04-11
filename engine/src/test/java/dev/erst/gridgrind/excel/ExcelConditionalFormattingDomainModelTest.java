@@ -287,9 +287,7 @@ class ExcelConditionalFormattingDomainModelTest {
     assertEquals(List.of("#102030"), colorScaleRule.colors());
     assertEquals(ExcelConditionalFormattingIconSet.GYR_3_ARROW, iconSetRule.iconSet());
 
-    assertThrows(
-        NullPointerException.class,
-        () -> new ExcelConditionalFormattingRule.FormulaRule("=A1>0", true, null));
+    assertDoesNotThrow(() -> new ExcelConditionalFormattingRule.FormulaRule("=A1>0", true, null));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelConditionalFormattingRuleSnapshot.FormulaRule(-1, false, "A1>0", snapshot));
@@ -302,17 +300,17 @@ class ExcelConditionalFormattingDomainModelTest {
         IllegalArgumentException.class,
         () ->
             new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
-                1, false, "#102030", false, true, -1, 100, threshold, threshold));
+                1, false, "#102030", false, -1, 100, threshold, threshold));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
-                1, false, "#102030", false, true, 0, -1, threshold, threshold));
+                1, false, "#102030", false, 0, -1, threshold, threshold));
     assertThrows(
         NullPointerException.class,
         () ->
             new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
-                1, false, "#102030", false, true, 0, 100, null, threshold));
+                1, false, "#102030", false, 0, 100, null, threshold));
     assertThrows(
         NullPointerException.class,
         () ->

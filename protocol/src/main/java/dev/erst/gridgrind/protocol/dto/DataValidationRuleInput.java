@@ -32,9 +32,6 @@ public sealed interface DataValidationRuleInput
   record ExplicitList(List<String> values) implements DataValidationRuleInput {
     public ExplicitList {
       values = copyValues(values);
-      if (values.isEmpty()) {
-        throw new IllegalArgumentException("values must not be empty");
-      }
     }
   }
 

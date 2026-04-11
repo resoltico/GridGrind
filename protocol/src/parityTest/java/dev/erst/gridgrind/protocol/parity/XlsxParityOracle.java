@@ -51,6 +51,7 @@ import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbookProtection;
 
 /** Direct Apache POI oracle for parity tests. */
 final class XlsxParityOracle {
@@ -105,22 +106,47 @@ final class XlsxParityOracle {
   static WorkbookProtectionSnapshot workbookProtection(Path workbookPath) {
     return withWorkbook(
         workbookPath,
-        workbook ->
-            new WorkbookProtectionSnapshot(
-                workbook.isStructureLocked(),
-                workbook.isWindowsLocked(),
-                workbook.isRevisionLocked(),
-                workbook.getCTWorkbook().getWorkbookProtection().isSetWorkbookPassword(),
-                workbook.getCTWorkbook().getWorkbookProtection().isSetRevisionsPassword(),
-                workbook.validateWorkbookPassword(
-                    XlsxParityScenarios.WORKBOOK_PROTECTION_PASSWORD)));
+        workbook -> {
+          var protection = workbook.getCTWorkbook().getWorkbookProtection();
+          return new WorkbookProtectionSnapshot(
+              workbook.isStructureLocked(),
+              workbook.isWindowsLocked(),
+              workbook.isRevisionLocked(),
+              workbookPasswordHashPresent(protection),
+              revisionsPasswordHashPresent(protection),
+              protection != null
+                  && workbook.validateWorkbookPassword(
+                      XlsxParityScenarios.WORKBOOK_PROTECTION_PASSWORD));
+        });
+  }
+
+  private static boolean workbookPasswordHashPresent(CTWorkbookProtection protection) {
+    return protection != null
+        && (protection.isSetWorkbookPassword()
+            || protection.isSetWorkbookHashValue()
+            || protection.isSetWorkbookSaltValue()
+            || protection.isSetWorkbookSpinCount()
+            || protection.isSetWorkbookAlgorithmName());
+  }
+
+  private static boolean revisionsPasswordHashPresent(CTWorkbookProtection protection) {
+    return protection != null
+        && (protection.isSetRevisionsPassword()
+            || protection.isSetRevisionsHashValue()
+            || protection.isSetRevisionsSaltValue()
+            || protection.isSetRevisionsSpinCount()
+            || protection.isSetRevisionsAlgorithmName());
   }
 
   static AdvancedPrintSnapshot advancedPrint(Path workbookPath) {
+    return advancedPrint(workbookPath, "Advanced");
+  }
+
+  static AdvancedPrintSnapshot advancedPrint(Path workbookPath, String sheetName) {
     return withWorkbook(
         workbookPath,
         workbook -> {
-          XSSFSheet sheet = workbook.getSheet("Advanced");
+          XSSFSheet sheet = workbook.getSheet(sheetName);
           return new AdvancedPrintSnapshot(
               sheet.getMargin(XSSFSheet.LeftMargin),
               sheet.getMargin(XSSFSheet.RightMargin),
@@ -188,7 +214,10 @@ final class XlsxParityOracle {
                     name.getRefersToFormula(),
                     isFormulaDefined(name)));
           }
-          snapshots.sort(Comparator.comparing(NamedRangeSnapshot::name));
+          snapshots.sort(
+              Comparator.comparing(NamedRangeSnapshot::name)
+                  .thenComparing(NamedRangeSnapshot::scope)
+                  .thenComparing(NamedRangeSnapshot::refersToFormula));
           return List.copyOf(snapshots);
         });
   }

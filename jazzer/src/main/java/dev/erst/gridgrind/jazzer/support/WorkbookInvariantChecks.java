@@ -882,7 +882,6 @@ public final class WorkbookInvariantChecks {
     switch (validation.rule()) {
       case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.ExplicitList explicitList -> {
         require(explicitList.values() != null, "explicit list values must not be null");
-        require(!explicitList.values().isEmpty(), "explicit list values must not be empty");
         explicitList.values().forEach(value -> requireNonBlank(value, "explicit list value"));
       }
       case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.FormulaList formulaList ->

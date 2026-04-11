@@ -260,12 +260,23 @@ class ExcelDataValidationControllerTest {
             List.of("B2"), "UNKNOWN", "Unsupported data-validation type: 999"),
         invokeToSnapshot(new StubConstraint(999, 0, null, "1", null), List.of("B2")));
     assertEquals(
-        new ExcelDataValidationSnapshot.Unsupported(
-            List.of("C0"), "EMPTY_EXPLICIT_LIST", "Explicit list has no values."),
+        new ExcelDataValidationSnapshot.Supported(
+            List.of("C0"),
+            new ExcelDataValidationDefinition(
+                new ExcelDataValidationRule.ExplicitList(List.of()), false, true, null, null)),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.LIST, 0, new String[0], null, null),
             List.of("C0")));
+    assertEquals(
+        new ExcelDataValidationSnapshot.Supported(
+            List.of("C0b"),
+            new ExcelDataValidationDefinition(
+                new ExcelDataValidationRule.ExplicitList(List.of()), false, true, null, null)),
+        invokeToSnapshot(
+            new StubConstraint(
+                DataValidationConstraint.ValidationType.LIST, 0, new String[0], "\"\"", null),
+            List.of("C0b")));
     assertEquals(
         new ExcelDataValidationSnapshot.Unsupported(
             List.of("C1"),
@@ -282,6 +293,15 @@ class ExcelDataValidationControllerTest {
         invokeToSnapshot(
             new StubConstraint(DataValidationConstraint.ValidationType.LIST, 0, null, " ", null),
             List.of("C2")));
+    assertEquals(
+        new ExcelDataValidationSnapshot.Supported(
+            List.of("C3"),
+            new ExcelDataValidationDefinition(
+                new ExcelDataValidationRule.FormulaList("Statuses"), false, true, null, null)),
+        invokeToSnapshot(
+            new StubConstraint(
+                DataValidationConstraint.ValidationType.LIST, 0, null, "Statuses", null),
+            List.of("C3")));
     assertEquals(
         new ExcelDataValidationSnapshot.Unsupported(
             List.of("D1"), "MISSING_FORMULA", "whole-number validation is missing formula1."),
@@ -1060,10 +1080,12 @@ class ExcelDataValidationControllerTest {
       List<ExcelDataValidationSnapshot> snapshots =
           controller.dataValidations(sheet, new ExcelRangeSelection.All());
       assertEquals(3, snapshots.size());
+      ExcelDataValidationSnapshot.Supported emptyExplicitList =
+          assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, snapshots.get(0));
+      assertEquals(List.of("E2"), emptyExplicitList.ranges());
       assertEquals(
-          new ExcelDataValidationSnapshot.Unsupported(
-              List.of("E2"), "EMPTY_EXPLICIT_LIST", "Explicit list has no values."),
-          snapshots.get(0));
+          new ExcelDataValidationRule.ExplicitList(List.of()),
+          emptyExplicitList.validation().rule());
       assertEquals(
           new ExcelDataValidationSnapshot.Unsupported(
               List.of("F2"),
@@ -1078,6 +1100,63 @@ class ExcelDataValidationControllerTest {
           List.of(
               WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
               WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE),
+          controller.dataValidationHealthFindings("Budget", sheet).stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .distinct()
+              .toList());
+    }
+  }
+
+  @Test
+  void healthAnalysisMapsMissingFormulaAndUnknownKindsDistinctly() throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      addRawValidation(sheet, "A1", STDataValidationType.LIST, null);
+      addRawValidation(sheet, "B1", STDataValidationType.NONE);
+
+      List<WorkbookAnalysis.AnalysisFindingCode> codes =
+          controller.dataValidationHealthFindings("Budget", sheet).stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .distinct()
+              .toList();
+
+      assertEquals(
+          List.of(
+              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE,
+              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE),
+          codes);
+    }
+  }
+
+  @Test
+  void setDataValidationRoundTripsEmptyExplicitListsAndReportsHealth() throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      ExcelDataValidationDefinition definition =
+          new ExcelDataValidationDefinition(
+              new ExcelDataValidationRule.ExplicitList(List.of()), true, false, null, null);
+
+      controller.setDataValidation(sheet, "E2:E4", definition);
+
+      List<ExcelDataValidationSnapshot> snapshots =
+          controller.dataValidations(sheet, new ExcelRangeSelection.All());
+
+      assertEquals(
+          List.of(
+              new ExcelDataValidationSnapshot.Supported(
+                  List.of("E2:E4"),
+                  new ExcelDataValidationDefinition(
+                      new ExcelDataValidationRule.ExplicitList(List.of()),
+                      true,
+                      false,
+                      null,
+                      null))),
+          snapshots);
+      assertEquals(
+          "\"\"",
+          sheet.getCTWorksheet().getDataValidations().getDataValidationArray(0).getFormula1());
+      assertEquals(
+          List.of(WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST),
           controller.dataValidationHealthFindings("Budget", sheet).stream()
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .distinct()

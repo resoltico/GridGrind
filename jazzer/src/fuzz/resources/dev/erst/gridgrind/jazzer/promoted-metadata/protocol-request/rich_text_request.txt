@@ -8,6 +8,6 @@ Source Kind: NEW
 Persistence Kind: SAVE_AS
 Operation Count: 4
 Read Count: 2
-Read Kinds: GET_WINDOW=1, GET_CELLS=1
-Style Kinds: vertical_alignment=1, font_height=1, alignment=1, font_color=1, wrap_text=1, font=1, font_name=1, font_height_points=1
-Operation Kinds: SET_CELL=2, ENSURE_SHEET=1, APPLY_STYLE=1
+Read Kinds: GET_CELLS=1, GET_WINDOW=1
+Style Kinds: alignment=1, font_color=1, wrap_text=1, font=1, font_name=1, font_height_points=1, vertical_alignment=1, font_height=1
+Operation Kinds: SET_CELL=2, APPLY_STYLE=1, ENSURE_SHEET=1

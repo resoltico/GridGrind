@@ -45,9 +45,14 @@ public final class WorkbookCommandExecutor {
               setSheetVisibility.sheetName(), setSheetVisibility.visibility());
       case WorkbookCommand.SetSheetProtection setSheetProtection ->
           workbook.setSheetProtection(
-              setSheetProtection.sheetName(), setSheetProtection.protection());
+              setSheetProtection.sheetName(),
+              setSheetProtection.protection(),
+              setSheetProtection.password());
       case WorkbookCommand.ClearSheetProtection clearSheetProtection ->
           workbook.clearSheetProtection(clearSheetProtection.sheetName());
+      case WorkbookCommand.SetWorkbookProtection setWorkbookProtection ->
+          workbook.setWorkbookProtection(setWorkbookProtection.protection());
+      case WorkbookCommand.ClearWorkbookProtection _ -> workbook.clearWorkbookProtection();
       case WorkbookCommand.MergeCells mergeCells ->
           workbook.sheet(mergeCells.sheetName()).mergeCells(mergeCells.range());
       case WorkbookCommand.UnmergeCells unmergeCells ->
@@ -147,7 +152,10 @@ public final class WorkbookCommandExecutor {
               .sheet(clearConditionalFormatting.sheetName())
               .clearConditionalFormatting(clearConditionalFormatting.selection());
       case WorkbookCommand.SetAutofilter setAutofilter ->
-          workbook.sheet(setAutofilter.sheetName()).setAutofilter(setAutofilter.range());
+          workbook
+              .sheet(setAutofilter.sheetName())
+              .setAutofilter(
+                  setAutofilter.range(), setAutofilter.criteria(), setAutofilter.sortState());
       case WorkbookCommand.ClearAutofilter clearAutofilter ->
           workbook.sheet(clearAutofilter.sheetName()).clearAutofilter();
       case WorkbookCommand.SetTable setTable -> workbook.setTable(setTable.definition());

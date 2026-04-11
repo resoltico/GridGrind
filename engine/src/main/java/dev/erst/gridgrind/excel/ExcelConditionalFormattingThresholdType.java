@@ -25,4 +25,17 @@ public enum ExcelConditionalFormattingThresholdType {
       case FORMULA -> FORMULA;
     };
   }
+
+  /** Converts this GridGrind threshold family into the matching POI enum. */
+  public ConditionalFormattingThreshold.RangeType toPoi() {
+    return switch (this) {
+      case NUMBER -> ConditionalFormattingThreshold.RangeType.NUMBER;
+      case MIN -> ConditionalFormattingThreshold.RangeType.MIN;
+      case MAX -> ConditionalFormattingThreshold.RangeType.MAX;
+      case PERCENT -> ConditionalFormattingThreshold.RangeType.PERCENT;
+      case PERCENTILE -> ConditionalFormattingThreshold.RangeType.PERCENTILE;
+      case UNALLOCATED -> ConditionalFormattingThreshold.RangeType.UNALLOCATED;
+      case FORMULA -> ConditionalFormattingThreshold.RangeType.FORMULA;
+    };
+  }
 }

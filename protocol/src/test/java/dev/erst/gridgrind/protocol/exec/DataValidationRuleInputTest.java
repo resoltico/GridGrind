@@ -26,6 +26,17 @@ class DataValidationRuleInputTest {
   }
 
   @Test
+  void explicitListAllowsEmptyValuesForParityPreservation() {
+    DataValidationRuleInput.ExplicitList explicitList =
+        new DataValidationRuleInput.ExplicitList(List.of());
+
+    assertEquals(List.of(), explicitList.values());
+    assertEquals(
+        new ExcelDataValidationRule.ExplicitList(List.of()),
+        WorkbookCommandConverter.toExcelDataValidationRule(explicitList));
+  }
+
+  @Test
   void comparisonRulesDelegateConditionalValidationToEngineRuleConstruction() {
     DataValidationRuleInput.WholeNumber between =
         new DataValidationRuleInput.WholeNumber(ExcelComparisonOperator.BETWEEN, "1", null);
@@ -81,8 +92,6 @@ class DataValidationRuleInputTest {
   @Test
   void validatesRuleInputs() {
     assertThrows(NullPointerException.class, () -> new DataValidationRuleInput.ExplicitList(null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new DataValidationRuleInput.ExplicitList(List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () -> new DataValidationRuleInput.ExplicitList(List.of("Queued", " ")));

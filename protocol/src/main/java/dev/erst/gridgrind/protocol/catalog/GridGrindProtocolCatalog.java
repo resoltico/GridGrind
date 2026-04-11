@@ -98,12 +98,11 @@ public final class GridGrindProtocolCatalog {
               "Copy one sheet into a new visible, unselected sheet."
                   + " newSheetName follows the same Excel sheet-name rules as ENSURE_SHEET."
                   + " position defaults to APPEND_AT_END when omitted."
-                  + " The copied sheet preserves supported sheet-local workbook content such as"
-                  + " formulas, validations, conditional formatting, comments, hyperlinks,"
-                  + " merged regions, and layout state."
-                  + " Sheets containing tables, or sheet-scoped formula-defined named ranges,"
-                  + " are rejected explicitly because they are not copyable under the current"
-                  + " product contract.",
+                  + " The copied sheet preserves sheet-local workbook content such as formulas,"
+                  + " validations, conditional formatting, comments, hyperlinks, merged regions,"
+                  + " layout state, sheet-scoped named ranges, sheet autofilters, and tables."
+                  + " Copied tables are renamed automatically when needed to keep workbook-global"
+                  + " table names unique.",
               "position"),
           descriptor(
               WorkbookOperation.SetActiveSheet.class,
@@ -128,11 +127,21 @@ public final class GridGrindProtocolCatalog {
               WorkbookOperation.SetSheetProtection.class,
               "SET_SHEET_PROTECTION",
               "Enable sheet protection with the exact supported lock flags."
-                  + " Password-bearing protection is intentionally out of scope."),
+                  + " password is optional; when provided it is hashed into the sheet-protection"
+                  + " metadata."),
           descriptor(
               WorkbookOperation.ClearSheetProtection.class,
               "CLEAR_SHEET_PROTECTION",
               "Disable sheet protection entirely."),
+          descriptor(
+              WorkbookOperation.SetWorkbookProtection.class,
+              "SET_WORKBOOK_PROTECTION",
+              "Enable workbook-level protection and optional workbook or revisions passwords."
+                  + " Omitted lock flags normalize to false and omitted passwords are cleared."),
+          descriptor(
+              WorkbookOperation.ClearWorkbookProtection.class,
+              "CLEAR_WORKBOOK_PROTECTION",
+              "Clear workbook-level protection and any stored workbook or revisions passwords."),
           descriptor(
               WorkbookOperation.MergeCells.class,
               "MERGE_CELLS",
@@ -240,7 +249,9 @@ public final class GridGrindProtocolCatalog {
               "Apply one authoritative supported print-layout state to a sheet."
                   + " Omitted nested fields normalize to default or clear state."
                   + " The supported surface covers print area, orientation, fit scaling,"
-                  + " repeating rows, repeating columns, and plain header or footer text."),
+                  + " repeating rows, repeating columns, plain header or footer text,"
+                  + " margins, centering, paper size, draft, black-and-white, copies,"
+                  + " first-page numbering, and explicit row or column breaks."),
           descriptor(
               WorkbookOperation.ClearPrintLayout.class,
               "CLEAR_PRINT_LAYOUT",
@@ -272,7 +283,9 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookOperation.SetComment.class,
               "SET_COMMENT",
-              "Attach a plain-text comment to one cell."),
+              "Attach a comment to one cell."
+                  + " Comments can carry ordered rich-text runs and an explicit anchor box;"
+                  + " runs must concatenate to text."),
           descriptor(
               WorkbookOperation.ClearComment.class,
               "CLEAR_COMMENT",
@@ -303,7 +316,8 @@ public final class GridGrindProtocolCatalog {
               "SET_CONDITIONAL_FORMATTING",
               "Create or replace one logical conditional-formatting block over the supplied"
                   + " sheet ranges."
-                  + " The write contract currently authors formula rules and cell-value rules."
+                  + " The write contract authors formula rules, cell-value rules, color scales,"
+                  + " data bars, icon sets, and top/bottom N rules."
                   + " Any existing conditional-formatting block that intersects the target ranges"
                   + " is removed first so the written block becomes authoritative on that"
                   + " coverage."),
@@ -318,7 +332,9 @@ public final class GridGrindProtocolCatalog {
               "SET_AUTOFILTER",
               "Create or replace one sheet-level autofilter range."
                   + " The range must include a nonblank header row and must not overlap"
-                  + " an existing table range."),
+                  + " an existing table range."
+                  + " criteria and sortState are optional and, when supplied, are authored"
+                  + " authoritatively alongside the range."),
           descriptor(
               WorkbookOperation.ClearAutofilter.class,
               "CLEAR_AUTOFILTER",
@@ -332,7 +348,10 @@ public final class GridGrindProtocolCatalog {
                   + " Header cells must be nonblank and unique (case-insensitive)."
                   + " Overlapping existing tables are rejected."
                   + " Any overlapping sheet-level autofilter is cleared so the table-owned"
-                  + " autofilter becomes authoritative on that range."),
+                  + " autofilter becomes authoritative on that range."
+                  + " The contract also supports advanced table metadata such as autofilter"
+                  + " presence, comment, published and insert-row flags, cell-style ids,"
+                  + " and per-column unique names, totals metadata, and calculated formulas."),
           descriptor(
               WorkbookOperation.DeleteTable.class,
               "DELETE_TABLE",
@@ -340,7 +359,8 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookOperation.SetNamedRange.class,
               "SET_NAMED_RANGE",
-              "Create or replace one workbook- or sheet-scoped named range."),
+              "Create or replace one workbook- or sheet-scoped named range."
+                  + " target can be an explicit sheet plus A1 range, or a formula-defined target."),
           descriptor(
               WorkbookOperation.DeleteNamedRange.class,
               "DELETE_NAMED_RANGE",
@@ -729,7 +749,8 @@ public final class GridGrindProtocolCatalog {
                   descriptor(
                       DataValidationRuleInput.ExplicitList.class,
                       "EXPLICIT_LIST",
-                      "Allow only one of the supplied explicit values."),
+                      "Allow only one of the supplied explicit values."
+                          + " An empty values array preserves Excel's explicit-empty-list state."),
                   descriptor(
                       DataValidationRuleInput.FormulaList.class,
                       "FORMULA_LIST",
@@ -769,6 +790,36 @@ public final class GridGrindProtocolCatalog {
                       "CUSTOM_FORMULA",
                       "Allow values that satisfy a custom formula."))),
           nestedTypeGroup(
+              "autofilterFilterCriterionTypes",
+              AutofilterFilterCriterionInput.class,
+              List.of(
+                  descriptor(
+                      AutofilterFilterCriterionInput.Values.class,
+                      "VALUES",
+                      "Retain rows whose cell values match one or more explicit values."),
+                  descriptor(
+                      AutofilterFilterCriterionInput.Custom.class,
+                      "CUSTOM",
+                      "Retain rows that satisfy one or two comparator-based custom conditions."),
+                  descriptor(
+                      AutofilterFilterCriterionInput.Dynamic.class,
+                      "DYNAMIC",
+                      "Retain rows using one dynamic-date or moving-window autofilter rule.",
+                      "value",
+                      "maxValue"),
+                  descriptor(
+                      AutofilterFilterCriterionInput.Top10.class,
+                      "TOP10",
+                      "Retain top or bottom N or percent values."),
+                  descriptor(
+                      AutofilterFilterCriterionInput.Color.class,
+                      "COLOR",
+                      "Retain rows matching one cell color or font color criterion."),
+                  descriptor(
+                      AutofilterFilterCriterionInput.Icon.class,
+                      "ICON",
+                      "Retain rows matching one icon-set member."))),
+          nestedTypeGroup(
               "conditionalFormattingRuleTypes",
               ConditionalFormattingRuleInput.class,
               List.of(
@@ -783,7 +834,26 @@ public final class GridGrindProtocolCatalog {
                       "Apply one cell-value comparison conditional-formatting rule."
                           + " formula2 is used only for BETWEEN and NOT_BETWEEN."
                           + " Supply one differential style.",
-                      "formula2"))),
+                      "formula2"),
+                  descriptor(
+                      ConditionalFormattingRuleInput.ColorScaleRule.class,
+                      "COLOR_SCALE_RULE",
+                      "Apply one color-scale conditional-formatting rule with ordered thresholds"
+                          + " and colors."),
+                  descriptor(
+                      ConditionalFormattingRuleInput.DataBarRule.class,
+                      "DATA_BAR_RULE",
+                      "Apply one data-bar conditional-formatting rule with explicit thresholds"
+                          + " and widths."),
+                  descriptor(
+                      ConditionalFormattingRuleInput.IconSetRule.class,
+                      "ICON_SET_RULE",
+                      "Apply one icon-set conditional-formatting rule with authored thresholds."),
+                  descriptor(
+                      ConditionalFormattingRuleInput.Top10Rule.class,
+                      "TOP10_RULE",
+                      "Apply one top/bottom-N conditional-formatting rule with a differential"
+                          + " style."))),
           nestedTypeGroup(
               "printAreaTypes",
               PrintAreaInput.class,
@@ -847,14 +917,22 @@ public final class GridGrindProtocolCatalog {
               "commentInputType",
               CommentInput.class,
               "CommentInput",
-              "Plain-text comment payload attached to one cell.",
-              List.of("visible")),
+              "Comment payload attached to one cell."
+                  + " Comments can carry ordered rich-text runs and an explicit anchor box.",
+              List.of("visible", "runs", "anchor")),
+          plainTypeDescriptor(
+              "commentAnchorInputType",
+              CommentAnchorInput.class,
+              "CommentAnchorInput",
+              "Explicit comment-anchor bounds measured in zero-based column and row indexes.",
+              List.of()),
           plainTypeDescriptor(
               "namedRangeTargetType",
               NamedRangeTarget.class,
               "NamedRangeTarget",
-              "Explicit sheet name and A1-style range address for named-range authoring.",
-              List.of()),
+              "Named-range target payload."
+                  + " Supply either sheetName plus range, or formula by itself.",
+              List.of("sheetName", "range", "formula")),
           plainTypeDescriptor(
               "sheetProtectionSettingsType",
               SheetProtectionSettings.class,
@@ -886,15 +964,25 @@ public final class GridGrindProtocolCatalog {
               CellFontInput.class,
               "CellFontInput",
               "Font patch for cell styling; at least one field must be set."
-                  + " Colors use #RRGGBB hex.",
+                  + " Colors can use RGB, theme, indexed, and tint semantics.",
               List.of(
                   "bold",
                   "italic",
                   "fontName",
                   "fontHeight",
                   "fontColor",
+                  "fontColorTheme",
+                  "fontColorIndexed",
+                  "fontColorTint",
                   "underline",
                   "strikeout")),
+          plainTypeDescriptor(
+              "colorInputType",
+              ColorInput.class,
+              "ColorInput",
+              "Color payload preserving RGB, theme, indexed, and tint semantics."
+                  + " At least one of rgb, theme, or indexed must be supplied.",
+              List.of("rgb", "theme", "indexed", "tint")),
           plainTypeDescriptor(
               "richTextRunInputType",
               RichTextRunInput.class,
@@ -908,8 +996,32 @@ public final class GridGrindProtocolCatalog {
               CellFillInput.class,
               "CellFillInput",
               "Fill patch for cell styling. pattern controls solid and patterned fills;"
-                  + " colors use #RRGGBB hex.",
-              List.of("pattern", "foregroundColor", "backgroundColor")),
+                  + " colors can use RGB, theme, indexed, and tint semantics."
+                  + " gradient is mutually exclusive with patterned fill fields.",
+              List.of(
+                  "pattern",
+                  "foregroundColor",
+                  "foregroundColorTheme",
+                  "foregroundColorIndexed",
+                  "foregroundColorTint",
+                  "backgroundColor",
+                  "backgroundColorTheme",
+                  "backgroundColorIndexed",
+                  "backgroundColorTint",
+                  "gradient")),
+          plainTypeDescriptor(
+              "cellGradientFillInputType",
+              CellGradientFillInput.class,
+              "CellGradientFillInput",
+              "Gradient fill payload for cell-style authoring."
+                  + " stops must contain at least two entries.",
+              List.of("type", "degree", "left", "right", "top", "bottom")),
+          plainTypeDescriptor(
+              "cellGradientStopInputType",
+              CellGradientStopInput.class,
+              "CellGradientStopInput",
+              "One gradient stop with a normalized position between 0.0 and 1.0.",
+              List.of()),
           plainTypeDescriptor(
               "cellBorderInputType",
               CellBorderInput.class,
@@ -921,8 +1033,8 @@ public final class GridGrindProtocolCatalog {
               "cellBorderSideInputType",
               CellBorderSideInput.class,
               "CellBorderSideInput",
-              "One border side defined by its border style and optional RGB color.",
-              List.of("style", "color")),
+              "One border side defined by its border style and optional color semantics.",
+              List.of("style", "color", "colorTheme", "colorIndexed", "colorTint")),
           plainTypeDescriptor(
               "cellProtectionInputType",
               CellProtectionInput.class,
@@ -949,12 +1061,42 @@ public final class GridGrindProtocolCatalog {
               "Optional error-box configuration shown when invalid data is entered.",
               List.of("showErrorBox")),
           plainTypeDescriptor(
+              "autofilterCustomConditionInputType",
+              AutofilterFilterCriterionInput.CustomConditionInput.class,
+              "AutofilterCustomConditionInput",
+              "One comparator-value pair nested inside a custom autofilter criterion.",
+              List.of()),
+          plainTypeDescriptor(
+              "autofilterFilterColumnInputType",
+              AutofilterFilterColumnInput.class,
+              "AutofilterFilterColumnInput",
+              "One authored autofilter filter-column payload with an explicit column criterion.",
+              List.of("showButton")),
+          plainTypeDescriptor(
+              "autofilterSortConditionInputType",
+              AutofilterSortConditionInput.class,
+              "AutofilterSortConditionInput",
+              "One authored sort condition nested inside an autofilter sort state.",
+              List.of("sortBy", "color", "iconId")),
+          plainTypeDescriptor(
+              "autofilterSortStateInputType",
+              AutofilterSortStateInput.class,
+              "AutofilterSortStateInput",
+              "Authored autofilter sort-state payload with one or more ordered sort conditions.",
+              List.of("caseSensitive", "columnSort", "sortMethod")),
+          plainTypeDescriptor(
               "conditionalFormattingBlockInputType",
               ConditionalFormattingBlockInput.class,
               "ConditionalFormattingBlockInput",
               "One authored conditional-formatting block with ordered target ranges and rules."
                   + " rules must not be empty; ranges must be unique.",
               List.of()),
+          plainTypeDescriptor(
+              "conditionalFormattingThresholdInputType",
+              ConditionalFormattingThresholdInput.class,
+              "ConditionalFormattingThresholdInput",
+              "Threshold payload shared by authored advanced conditional-formatting rules.",
+              List.of("formula", "value")),
           plainTypeDescriptor(
               "headerFooterTextInputType",
               HeaderFooterTextInput.class,
@@ -1005,13 +1147,67 @@ public final class GridGrindProtocolCatalog {
                   "repeatingRows",
                   "repeatingColumns",
                   "header",
-                  "footer")),
+                  "footer",
+                  "setup")),
+          plainTypeDescriptor(
+              "printMarginsInputType",
+              PrintMarginsInput.class,
+              "PrintMarginsInput",
+              "Explicit print margins measured in the workbook's stored inch-based values.",
+              List.of()),
+          plainTypeDescriptor(
+              "printSetupInputType",
+              PrintSetupInput.class,
+              "PrintSetupInput",
+              "Advanced page-setup payload nested under print-layout authoring."
+                  + " All fields are optional and normalize to defaults when omitted.",
+              List.of(
+                  "margins",
+                  "horizontallyCentered",
+                  "verticallyCentered",
+                  "paperSize",
+                  "draft",
+                  "blackAndWhite",
+                  "copies",
+                  "useFirstPageNumber",
+                  "firstPageNumber",
+                  "rowBreaks",
+                  "columnBreaks")),
+          plainTypeDescriptor(
+              "tableColumnInputType",
+              TableColumnInput.class,
+              "TableColumnInput",
+              "Advanced table-column metadata applied by zero-based ordinal column index.",
+              List.of(
+                  "uniqueName", "totalsRowLabel", "totalsRowFunction", "calculatedColumnFormula")),
           plainTypeDescriptor(
               "tableInputType",
               TableInput.class,
               "TableInput",
               "Workbook-global table definition for one SET_TABLE request.",
-              List.of("showTotalsRow")));
+              List.of(
+                  "showTotalsRow",
+                  "hasAutofilter",
+                  "comment",
+                  "published",
+                  "insertRow",
+                  "insertRowShift",
+                  "headerRowCellStyle",
+                  "dataCellStyle",
+                  "totalsRowCellStyle",
+                  "columns")),
+          plainTypeDescriptor(
+              "workbookProtectionInputType",
+              WorkbookProtectionInput.class,
+              "WorkbookProtectionInput",
+              "Workbook-protection payload covering workbook and revisions lock state plus"
+                  + " optional passwords.",
+              List.of(
+                  "structureLocked",
+                  "windowsLocked",
+                  "revisionsLocked",
+                  "workbookPassword",
+                  "revisionsPassword")));
   private static final Catalog CATALOG = buildCatalog();
 
   private GridGrindProtocolCatalog() {}

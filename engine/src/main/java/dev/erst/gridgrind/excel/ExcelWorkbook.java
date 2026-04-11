@@ -128,12 +128,28 @@ public final class ExcelWorkbook implements AutoCloseable {
   /** Enables sheet protection with the exact supported lock flags. */
   public ExcelWorkbook setSheetProtection(
       String sheetName, ExcelSheetProtectionSettings protection) {
-    return sheetStateController.setSheetProtection(this, sheetName, protection);
+    return setSheetProtection(sheetName, protection, null);
+  }
+
+  /** Enables sheet protection with the exact supported lock flags. */
+  public ExcelWorkbook setSheetProtection(
+      String sheetName, ExcelSheetProtectionSettings protection, String password) {
+    return sheetStateController.setSheetProtection(this, sheetName, protection, password);
   }
 
   /** Disables sheet protection entirely. */
   public ExcelWorkbook clearSheetProtection(String sheetName) {
     return sheetStateController.clearSheetProtection(this, sheetName);
+  }
+
+  /** Enables workbook-level protection and password hashes with authoritative settings. */
+  public ExcelWorkbook setWorkbookProtection(ExcelWorkbookProtectionSettings protection) {
+    return sheetStateController.setWorkbookProtection(this, protection);
+  }
+
+  /** Clears workbook-level protection and password hashes entirely. */
+  public ExcelWorkbook clearWorkbookProtection() {
+    return sheetStateController.clearWorkbookProtection(this);
   }
 
   /** Creates or replaces one named range in workbook or sheet scope. */

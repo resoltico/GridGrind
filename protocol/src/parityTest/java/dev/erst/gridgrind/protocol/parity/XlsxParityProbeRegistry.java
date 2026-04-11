@@ -1,29 +1,15 @@
 package dev.erst.gridgrind.protocol.parity;
 
-import dev.erst.gridgrind.protocol.catalog.TypeEntry;
-import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterFilterCriterionReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterSortConditionReport;
-import dev.erst.gridgrind.protocol.dto.CellInput;
-import dev.erst.gridgrind.protocol.dto.CellSelection;
-import dev.erst.gridgrind.protocol.dto.CommentInput;
-import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleReport;
-import dev.erst.gridgrind.protocol.dto.DataValidationEntryReport;
-import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
-import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
-import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
-import dev.erst.gridgrind.protocol.dto.RangeSelection;
-import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
-import dev.erst.gridgrind.protocol.dto.SheetSelection;
-import dev.erst.gridgrind.protocol.dto.TableEntryReport;
-import dev.erst.gridgrind.protocol.dto.TableSelection;
-import dev.erst.gridgrind.protocol.dto.WorkbookProtectionReport;
+import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.ExcelPrintOrientation;
+import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
-import java.lang.reflect.RecordComponent;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -35,6 +21,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -815,180 +802,824 @@ final class XlsxParityProbeRegistry {
   }
 
   private static ProbeResult probeWorkbookProtectionMutationGap(ProbeContext context) {
-    XlsxParityOracle.WorkbookProtectionSnapshot direct =
-        XlsxParityOracle.workbookProtection(
-            context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath());
-    boolean parityAchieved =
-        direct.passwordMatches() && XlsxParityGridGrind.hasOperationType("SET_WORKBOOK_PROTECTION");
-    return parityAchieved
+    XlsxParityScenarios.MaterializedScenario source =
+        context.copiedScenario(
+            XlsxParityScenarios.ADVANCED_NONDRAWING, "workbook-protection-mutation-source");
+    XlsxParityOracle.WorkbookProtectionSnapshot expected =
+        XlsxParityOracle.workbookProtection(source.workbookPath());
+
+    Path clearedPath = context.derivedWorkbook("workbook-protection-cleared");
+    GridGrindResponse.Success clearedSuccess =
+        XlsxParityGridGrind.mutateWorkbook(
+            source.workbookPath(),
+            clearedPath,
+            List.of(new WorkbookOperation.ClearWorkbookProtection()),
+            new WorkbookReadOperation.GetWorkbookProtection("protection"));
+    XlsxParityOracle.WorkbookProtectionSnapshot clearedDirect =
+        XlsxParityOracle.workbookProtection(clearedPath);
+    WorkbookProtectionReport clearedObserved =
+        XlsxParityGridGrind.read(
+                clearedSuccess, "protection", WorkbookReadResult.WorkbookProtectionResult.class)
+            .protection();
+    boolean clearedOk =
+        clearedDirect.equals(
+                new XlsxParityOracle.WorkbookProtectionSnapshot(
+                    false, false, false, false, false, false))
+            && matchesWorkbookProtectionReport(clearedObserved, clearedDirect);
+
+    Path restoredPath = context.derivedWorkbook("workbook-protection-restored");
+    GridGrindResponse.Success restoredSuccess =
+        XlsxParityGridGrind.mutateWorkbook(
+            clearedPath,
+            restoredPath,
+            List.of(
+                new WorkbookOperation.SetWorkbookProtection(
+                    new WorkbookProtectionInput(
+                        true, true, true, XlsxParityScenarios.WORKBOOK_PROTECTION_PASSWORD, null))),
+            new WorkbookReadOperation.GetWorkbookProtection("protection"));
+    XlsxParityOracle.WorkbookProtectionSnapshot restoredDirect =
+        XlsxParityOracle.workbookProtection(restoredPath);
+    WorkbookProtectionReport restoredObserved =
+        XlsxParityGridGrind.read(
+                restoredSuccess, "protection", WorkbookReadResult.WorkbookProtectionResult.class)
+            .protection();
+    boolean restoredOk =
+        restoredDirect.equals(expected)
+            && matchesWorkbookProtectionReport(restoredObserved, expected);
+
+    return clearedOk && restoredOk
         ? pass("Workbook-protection mutation parity is present.")
         : fail(
-            "POI can author workbook protection, but GridGrind exposes no write operation for it.");
+            "Workbook-protection mutation mismatch."
+                + " expected="
+                + expected
+                + " cleared="
+                + clearedDirect
+                + " restored="
+                + restoredDirect
+                + " observed="
+                + restoredObserved);
   }
 
   private static ProbeResult probeSheetPasswordMutationGap(ProbeContext context) {
     XlsxParityScenarios.MaterializedScenario advanced =
-        context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING);
-    boolean poiHasPassword =
-        XlsxParitySupport.call(
-            "inspect sheet-protection password in advanced parity workbook",
-            () -> {
-              try (XSSFWorkbook workbook =
-                  (XSSFWorkbook) WorkbookFactory.create(advanced.workbookPath().toFile())) {
-                return workbook
-                    .getSheet("Advanced")
-                    .validateSheetPassword(XlsxParityScenarios.SHEET_PROTECTION_PASSWORD);
-              }
-            });
-    TypeEntry setSheetProtection = operationType("SET_SHEET_PROTECTION");
-    boolean hasPasswordField = setSheetProtection.field("password") != null;
-    return poiHasPassword && !hasPasswordField
-        ? fail(
-            "GridGrind can toggle sheet-protection flags but cannot set or preserve sheet passwords.")
-        : pass("Password-bearing sheet-protection mutation parity is present.");
+        context.copiedScenario(
+            XlsxParityScenarios.ADVANCED_NONDRAWING, "sheet-password-mutation-source");
+    WorkbookReadResult.SheetSummaryResult expectedSummary =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                advanced.workbookPath(),
+                new WorkbookReadOperation.GetSheetSummary("summary", "Advanced")),
+            "summary",
+            WorkbookReadResult.SheetSummaryResult.class);
+    SheetProtectionSettings expectedSettings = sheetProtectionSettings(expectedSummary);
+    if (expectedSettings == null
+        || !sheetPasswordMatches(
+            advanced.workbookPath(), "Advanced", XlsxParityScenarios.SHEET_PROTECTION_PASSWORD)) {
+      return fail("Advanced parity workbook did not retain its expected protected-sheet password.");
+    }
+
+    Path clearedPath = context.derivedWorkbook("sheet-protection-cleared");
+    WorkbookReadResult.SheetSummaryResult clearedSummary =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                advanced.workbookPath(),
+                clearedPath,
+                List.of(new WorkbookOperation.ClearSheetProtection("Advanced")),
+                new WorkbookReadOperation.GetSheetSummary("summary", "Advanced")),
+            "summary",
+            WorkbookReadResult.SheetSummaryResult.class);
+    boolean clearedOk =
+        clearedSummary.sheet().protection()
+                instanceof GridGrindResponse.SheetProtectionReport.Unprotected
+            && !sheetPasswordMatches(
+                clearedPath, "Advanced", XlsxParityScenarios.SHEET_PROTECTION_PASSWORD);
+
+    Path restoredPath = context.derivedWorkbook("sheet-protection-restored");
+    WorkbookReadResult.SheetSummaryResult restoredSummary =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                clearedPath,
+                restoredPath,
+                List.of(
+                    new WorkbookOperation.SetSheetProtection(
+                        "Advanced",
+                        expectedSettings,
+                        XlsxParityScenarios.SHEET_PROTECTION_PASSWORD)),
+                new WorkbookReadOperation.GetSheetSummary("summary", "Advanced")),
+            "summary",
+            WorkbookReadResult.SheetSummaryResult.class);
+    boolean restoredOk =
+        restoredSummary.sheet().protection()
+                instanceof GridGrindResponse.SheetProtectionReport.Protected protectedReport
+            && protectedReport.settings().equals(expectedSettings)
+            && sheetPasswordMatches(
+                restoredPath, "Advanced", XlsxParityScenarios.SHEET_PROTECTION_PASSWORD);
+
+    return clearedOk && restoredOk
+        ? pass("Password-bearing sheet-protection mutation parity is present.")
+        : fail(
+            "Sheet-protection password mutation mismatch."
+                + " expectedSettings="
+                + expectedSettings
+                + " cleared="
+                + clearedSummary.sheet().protection()
+                + " restored="
+                + restoredSummary.sheet().protection());
   }
 
   private static ProbeResult probeSheetCopyGap(ProbeContext context) {
-    XlsxParityScenarios.MaterializedScenario core =
-        context.copiedScenario(XlsxParityScenarios.CORE_WORKBOOK, "sheet-copy-core");
-    boolean poiCopySucceeded =
-        XlsxParitySupport.call(
-            "clone table-bearing parity sheet with POI",
-            () -> {
-              try (XSSFWorkbook workbook =
-                  (XSSFWorkbook) WorkbookFactory.create(core.workbookPath().toFile())) {
-                workbook.cloneSheet(workbook.getSheetIndex("Queue"));
-                return workbook.getNumberOfSheets() == 3;
-              }
-            });
-    GridGrindResponse.Failure failure =
-        XlsxParityGridGrind.mutateWorkbookExpectingFailure(
-            core.workbookPath(),
+    SheetCopySourceObservation source = readSheetCopySource(context);
+    if (source.sourceTable() == null) {
+      return fail("Advanced parity workbook did not retain its expected source table.");
+    }
+    SheetCopyCopiedObservation copied = copySheetObservation(context, source);
+    List<String> mismatches = new ArrayList<>();
+    compareSheetCopyWorkbook(copied, mismatches);
+    compareSheetCopyComments(source, copied, mismatches);
+    compareSheetCopyPrint(source, copied, mismatches);
+    compareSheetCopyAutofilter(source, copied, mismatches);
+    compareSheetCopyFormatting(source, copied, mismatches);
+    compareSheetCopyProtection(source, copied, mismatches);
+    compareSheetCopyLocalNames(copied, mismatches);
+    compareSheetCopyTable(source, copied, mismatches);
+    return mismatches.isEmpty()
+        ? pass("Sheet-copy parity is present.")
+        : fail("Sheet-copy mutation mismatch: " + String.join("; ", mismatches));
+  }
+
+  private static SheetCopySourceObservation readSheetCopySource(ProbeContext context) {
+    XlsxParityScenarios.MaterializedScenario source =
+        context.copiedScenario(XlsxParityScenarios.ADVANCED_NONDRAWING, "sheet-copy-source");
+    WorkbookReadResult.CommentsResult sourceComments =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetComments(
+                    "comments", "Advanced", new CellSelection.Selected(List.of("E2")))),
+            "comments",
+            WorkbookReadResult.CommentsResult.class);
+    WorkbookReadResult.AutofiltersResult sourceAutofilters =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetAutofilters("filters", "Advanced")),
+            "filters",
+            WorkbookReadResult.AutofiltersResult.class);
+    WorkbookReadResult.ConditionalFormattingResult sourceFormatting =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetConditionalFormatting(
+                    "formatting", "Advanced", new RangeSelection.All())),
+            "formatting",
+            WorkbookReadResult.ConditionalFormattingResult.class);
+    WorkbookReadResult.TablesResult sourceTables =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetTables("tables", new TableSelection.All())),
+            "tables",
+            WorkbookReadResult.TablesResult.class);
+    WorkbookReadResult.SheetSummaryResult sourceSummary =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetSheetSummary("summary", "Advanced")),
+            "summary",
+            WorkbookReadResult.SheetSummaryResult.class);
+    return new SheetCopySourceObservation(
+        source,
+        sourceComments,
+        sourceAutofilters,
+        sourceFormatting,
+        sourceSummary,
+        findTable(sourceTables.tables(), "AdvancedTable"),
+        XlsxParityOracle.comment(source.workbookPath(), "Advanced", "E2"),
+        XlsxParityOracle.advancedPrint(source.workbookPath(), "Advanced"),
+        XlsxParityOracle.autofilter(source.workbookPath(), "Advanced"),
+        XlsxParityOracle.table(source.workbookPath(), "AdvancedTable"));
+  }
+
+  private static SheetCopyCopiedObservation copySheetObservation(
+      ProbeContext context, SheetCopySourceObservation source) {
+    Path copiedPath = context.derivedWorkbook("sheet-copy-advanced");
+    GridGrindResponse.Success copiedSuccess =
+        XlsxParityGridGrind.mutateWorkbook(
+            source.source().workbookPath(),
+            copiedPath,
             List.of(
                 new WorkbookOperation.CopySheet(
-                    "Queue", "Queue Replica", new SheetCopyPosition.AppendAtEnd())));
-    return poiCopySucceeded
-        ? fail(
-            "POI can clone the table-bearing sheet, but GridGrind still rejects it: "
-                + failure.problem().message())
-        : pass("Sheet-copy parity is present.");
+                    "Advanced", "Advanced Replica", new SheetCopyPosition.AppendAtEnd())),
+            new WorkbookReadOperation.GetWorkbookSummary("workbook"),
+            new WorkbookReadOperation.GetSheetSummary("summary", "Advanced Replica"),
+            new WorkbookReadOperation.GetComments(
+                "comments", "Advanced Replica", new CellSelection.Selected(List.of("E2"))),
+            new WorkbookReadOperation.GetAutofilters("filters", "Advanced Replica"),
+            new WorkbookReadOperation.GetConditionalFormatting(
+                "formatting", "Advanced Replica", new RangeSelection.All()),
+            new WorkbookReadOperation.GetTables("tables", new TableSelection.All()));
+    WorkbookReadResult.WorkbookSummaryResult copiedWorkbook =
+        XlsxParityGridGrind.read(
+            copiedSuccess, "workbook", WorkbookReadResult.WorkbookSummaryResult.class);
+    WorkbookReadResult.SheetSummaryResult copiedSummary =
+        XlsxParityGridGrind.read(
+            copiedSuccess, "summary", WorkbookReadResult.SheetSummaryResult.class);
+    WorkbookReadResult.CommentsResult copiedComments =
+        XlsxParityGridGrind.read(
+            copiedSuccess, "comments", WorkbookReadResult.CommentsResult.class);
+    WorkbookReadResult.AutofiltersResult copiedAutofilters =
+        XlsxParityGridGrind.read(
+            copiedSuccess, "filters", WorkbookReadResult.AutofiltersResult.class);
+    WorkbookReadResult.ConditionalFormattingResult copiedFormatting =
+        XlsxParityGridGrind.read(
+            copiedSuccess, "formatting", WorkbookReadResult.ConditionalFormattingResult.class);
+    WorkbookReadResult.TablesResult copiedTables =
+        XlsxParityGridGrind.read(copiedSuccess, "tables", WorkbookReadResult.TablesResult.class);
+
+    TableEntryReport copiedTable = findTableOnSheet(copiedTables.tables(), "Advanced Replica");
+    return new SheetCopyCopiedObservation(
+        copiedPath,
+        copiedWorkbook,
+        copiedSummary,
+        copiedComments,
+        copiedAutofilters,
+        copiedFormatting,
+        copiedTable,
+        XlsxParityOracle.comment(copiedPath, "Advanced Replica", "E2"),
+        XlsxParityOracle.advancedPrint(copiedPath, "Advanced Replica"),
+        XlsxParityOracle.autofilter(copiedPath, "Advanced Replica"),
+        copiedTable == null ? null : XlsxParityOracle.table(copiedPath, copiedTable.name()));
+  }
+
+  private static void compareSheetCopyWorkbook(
+      SheetCopyCopiedObservation copied, List<String> mismatches) {
+    if (!(copied.copiedWorkbook().workbook()
+            instanceof GridGrindResponse.WorkbookSummary.WithSheets workbook)
+        || !workbook.sheetNames().contains("Advanced Replica")) {
+      mismatches.add("workbookSummary=" + copied.copiedWorkbook().workbook());
+    }
+  }
+
+  private static void compareSheetCopyComments(
+      SheetCopySourceObservation source,
+      SheetCopyCopiedObservation copied,
+      List<String> mismatches) {
+    if (!source.sourceComments().comments().equals(copied.copiedComments().comments())
+        || !source.sourceComment().equals(copied.copiedComment())) {
+      mismatches.add(
+          "comments=%s copied=%s oracle=%s copiedOracle=%s"
+              .formatted(
+                  source.sourceComments().comments(),
+                  copied.copiedComments().comments(),
+                  source.sourceComment(),
+                  copied.copiedComment()));
+    }
+  }
+
+  private static void compareSheetCopyPrint(
+      SheetCopySourceObservation source,
+      SheetCopyCopiedObservation copied,
+      List<String> mismatches) {
+    if (!source.sourcePrint().equals(copied.copiedPrint())) {
+      mismatches.add("print=%s copied=%s".formatted(source.sourcePrint(), copied.copiedPrint()));
+    }
+  }
+
+  private static void compareSheetCopyAutofilter(
+      SheetCopySourceObservation source,
+      SheetCopyCopiedObservation copied,
+      List<String> mismatches) {
+    if (!source.sourceAutofilters().autofilters().equals(copied.copiedAutofilters().autofilters())
+        || !source.sourceAutofilter().equals(copied.copiedAutofilter())) {
+      mismatches.add(
+          "autofilter=%s copied=%s oracle=%s copiedOracle=%s"
+              .formatted(
+                  source.sourceAutofilters().autofilters(),
+                  copied.copiedAutofilters().autofilters(),
+                  source.sourceAutofilter(),
+                  copied.copiedAutofilter()));
+    }
+  }
+
+  private static void compareSheetCopyFormatting(
+      SheetCopySourceObservation source,
+      SheetCopyCopiedObservation copied,
+      List<String> mismatches) {
+    List<String> sourceKinds =
+        XlsxParityOracle.conditionalFormattingKinds(source.source().workbookPath(), "Advanced");
+    List<String> copiedKinds =
+        XlsxParityOracle.conditionalFormattingKinds(copied.copiedPath(), "Advanced Replica");
+    if (!source
+            .sourceFormatting()
+            .conditionalFormattingBlocks()
+            .equals(copied.copiedFormatting().conditionalFormattingBlocks())
+        || !sourceKinds.equals(copiedKinds)) {
+      mismatches.add(
+          "formatting=%s copied=%s kinds=%s copiedKinds=%s"
+              .formatted(
+                  source.sourceFormatting().conditionalFormattingBlocks(),
+                  copied.copiedFormatting().conditionalFormattingBlocks(),
+                  sourceKinds,
+                  copiedKinds));
+    }
+  }
+
+  private static void compareSheetCopyProtection(
+      SheetCopySourceObservation source,
+      SheetCopyCopiedObservation copied,
+      List<String> mismatches) {
+    if (!(copied.copiedSummary().sheet().protection()
+            instanceof GridGrindResponse.SheetProtectionReport.Protected protectedReport)
+        || !(source.sourceSummary().sheet().protection()
+            instanceof GridGrindResponse.SheetProtectionReport.Protected sourceProtected)
+        || !protectedReport.settings().equals(sourceProtected.settings())
+        || !sheetPasswordMatches(
+            copied.copiedPath(),
+            "Advanced Replica",
+            XlsxParityScenarios.SHEET_PROTECTION_PASSWORD)) {
+      mismatches.add(
+          "protection=%s copied=%s"
+              .formatted(
+                  source.sourceSummary().sheet().protection(),
+                  copied.copiedSummary().sheet().protection()));
+    }
+  }
+
+  private static void compareSheetCopyLocalNames(
+      SheetCopyCopiedObservation copied, List<String> mismatches) {
+    if (!hasCopiedSheetScopedFormulaName(copied.copiedPath())) {
+      mismatches.add("localNamedRanges=" + XlsxParityOracle.namedRanges(copied.copiedPath()));
+    }
+  }
+
+  private static boolean hasCopiedSheetScopedFormulaName(Path copiedPath) {
+    return XlsxParityOracle.namedRanges(copiedPath).stream()
+        .anyMatch(
+            snapshot ->
+                "SheetScopedFormulaBudget".equals(snapshot.name())
+                    && "Advanced Replica".equals(snapshot.scope())
+                    && snapshot.formulaDefined()
+                    && snapshot.refersToFormula().contains("Advanced Replica")
+                    && snapshot.refersToFormula().contains("$C$2:$C$5"));
+  }
+
+  private static void compareSheetCopyTable(
+      SheetCopySourceObservation source,
+      SheetCopyCopiedObservation copied,
+      List<String> mismatches) {
+    TableEntryReport copiedTable = copied.copiedTable();
+    TableEntryReport sourceTable = source.sourceTable();
+    if (copiedTable == null
+        || !tableMatchesReadReport(copiedTable, sourceTable, null, "Advanced Replica")
+        || copiedTable.name().equals(sourceTable.name())
+        || !source.sourceDirectTable().equals(copied.copiedDirectTable())) {
+      mismatches.add(
+          "table=%s copied=%s direct=%s copiedDirect=%s"
+              .formatted(
+                  sourceTable,
+                  copiedTable,
+                  source.sourceDirectTable(),
+                  copied.copiedDirectTable()));
+    }
   }
 
   private static ProbeResult probeAdvancedPrintMutationGap(ProbeContext context) {
-    XlsxParityOracle.AdvancedPrintSnapshot direct =
-        XlsxParityOracle.advancedPrint(
-            context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath());
-    Set<String> fields = componentNames(dev.erst.gridgrind.protocol.dto.PrintLayoutInput.class);
-    boolean surfaceCapable =
-        fields.contains("leftMargin")
-            && fields.contains("paperSize")
-            && fields.contains("copies")
-            && fields.contains("rowBreaks");
-    return direct.copies() > 0 && !surfaceCapable
-        ? fail("GridGrind has no authoring surface for advanced print setup.")
-        : pass("Advanced print-layout mutation parity is present.");
+    XlsxParityScenarios.MaterializedScenario source =
+        context.copiedScenario(
+            XlsxParityScenarios.ADVANCED_NONDRAWING, "advanced-print-mutation-source");
+    XlsxParityOracle.AdvancedPrintSnapshot expectedDirect =
+        XlsxParityOracle.advancedPrint(source.workbookPath(), "Advanced");
+    WorkbookReadResult.PrintLayoutResult expectedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetPrintLayout("print", "Advanced")),
+            "print",
+            WorkbookReadResult.PrintLayoutResult.class);
+
+    Path clearedPath = context.derivedWorkbook("advanced-print-cleared");
+    WorkbookReadResult.PrintLayoutResult clearedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                source.workbookPath(),
+                clearedPath,
+                List.of(new WorkbookOperation.ClearPrintLayout("Advanced")),
+                new WorkbookReadOperation.GetPrintLayout("print", "Advanced")),
+            "print",
+            WorkbookReadResult.PrintLayoutResult.class);
+    boolean clearedOk = clearedRead.layout().equals(defaultPrintLayoutReport("Advanced"));
+
+    Path restoredPath = context.derivedWorkbook("advanced-print-restored");
+    WorkbookReadResult.PrintLayoutResult restoredRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                clearedPath,
+                restoredPath,
+                List.of(
+                    new WorkbookOperation.SetPrintLayout("Advanced", advancedPrintLayoutInput())),
+                new WorkbookReadOperation.GetPrintLayout("print", "Advanced")),
+            "print",
+            WorkbookReadResult.PrintLayoutResult.class);
+    boolean restoredOk =
+        restoredRead.layout().equals(expectedRead.layout())
+            && XlsxParityOracle.advancedPrint(restoredPath, "Advanced").equals(expectedDirect);
+
+    return clearedOk && restoredOk
+        ? pass("Advanced print-layout mutation parity is present.")
+        : fail(
+            "Advanced print-layout mutation mismatch."
+                + " cleared="
+                + clearedRead.layout()
+                + " restored="
+                + restoredRead.layout()
+                + " expected="
+                + expectedRead.layout());
   }
 
   private static ProbeResult probeAdvancedStyleMutationGap(ProbeContext context) {
     XlsxParityScenarios.MaterializedScenario advanced =
         context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING);
-    XlsxParityOracle.StyleSnapshot themed =
+    XlsxParityScenarios.MaterializedScenario source =
+        context.copiedScenario(XlsxParityScenarios.CORE_WORKBOOK, "advanced-style-mutation-source");
+    XlsxParityOracle.StyleSnapshot expectedThemed =
         XlsxParityOracle.style(advanced.workbookPath(), "Advanced", "A3");
-    XlsxParityOracle.StyleSnapshot gradient =
+    XlsxParityOracle.StyleSnapshot expectedGradient =
         XlsxParityOracle.style(advanced.workbookPath(), "Advanced", "A4");
-    boolean directAdvanced =
-        themed.fontColorDescriptor().contains("theme=")
-            || themed.fillColorDescriptor().contains("theme=")
-            || themed.borderColorDescriptor().contains("indexed=")
-            || gradient.gradientFill();
-    boolean surfaceCapable =
-        componentNames(dev.erst.gridgrind.protocol.dto.CellFontInput.class).contains("theme")
-            && componentNames(dev.erst.gridgrind.protocol.dto.CellFillInput.class)
-                .contains("gradient");
-    return directAdvanced && !surfaceCapable
-        ? fail("GridGrind style mutation input only supports RGB-oriented style patches.")
-        : pass("Advanced style mutation parity is present.");
+
+    Path styledPath = context.derivedWorkbook("advanced-style-authored");
+    WorkbookReadResult.CellsResult styledCells =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                source.workbookPath(),
+                styledPath,
+                List.of(
+                    new WorkbookOperation.SetRange(
+                        "Ops",
+                        "A5:A6",
+                        List.of(
+                            List.of(new CellInput.Text("ThemeTintStyle")),
+                            List.of(new CellInput.Text("GradientFillStyle")))),
+                    new WorkbookOperation.ApplyStyle("Ops", "A5", advancedThemedStyleInput()),
+                    new WorkbookOperation.ApplyStyle("Ops", "A6", advancedGradientStyleInput())),
+                new WorkbookReadOperation.GetCells("cells", "Ops", List.of("A5", "A6"))),
+            "cells",
+            WorkbookReadResult.CellsResult.class);
+    Map<String, GridGrindResponse.CellReport> styledByAddress = byAddress(styledCells.cells());
+    boolean authoredOk =
+        XlsxParityOracle.style(styledPath, "Ops", "A5").equals(expectedThemed)
+            && XlsxParityOracle.style(styledPath, "Ops", "A6").equals(expectedGradient)
+            && matchesThemedStyle(styledByAddress.get("A5"), expectedThemed)
+            && matchesGradientStyle(styledByAddress.get("A6"), expectedGradient);
+
+    Path clearedPath = context.derivedWorkbook("advanced-style-cleared");
+    WorkbookReadResult.CellsResult clearedCells =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                styledPath,
+                clearedPath,
+                List.of(new WorkbookOperation.ClearRange("Ops", "A5:A6")),
+                new WorkbookReadOperation.GetCells("cells", "Ops", List.of("A5", "A6"))),
+            "cells",
+            WorkbookReadResult.CellsResult.class);
+    boolean clearedOk =
+        clearedCells.cells().stream()
+            .allMatch(GridGrindResponse.CellReport.BlankReport.class::isInstance);
+
+    return authoredOk && clearedOk
+        ? pass("Advanced style mutation parity is present.")
+        : fail(
+            "Advanced style mutation mismatch."
+                + " authoredOk="
+                + authoredOk
+                + " clearedOk="
+                + clearedOk
+                + " styled="
+                + styledCells.cells()
+                + " cleared="
+                + clearedCells.cells());
   }
 
   private static ProbeResult probeRichCommentMutationGap(ProbeContext context) {
-    XlsxParityOracle.CommentSnapshot direct =
-        XlsxParityOracle.comment(
-            context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath(),
-            "Advanced",
-            "E2");
-    boolean surfaceCapable =
-        componentNames(CommentInput.class).contains("anchor")
-            && componentNames(CommentInput.class).contains("runs");
-    return direct.runCount() > 1 && !surfaceCapable
-        ? fail("GridGrind comment mutation input is plain-text only.")
-        : pass("Rich comment mutation parity is present.");
+    XlsxParityScenarios.MaterializedScenario source =
+        context.copiedScenario(
+            XlsxParityScenarios.ADVANCED_NONDRAWING, "rich-comment-mutation-source");
+    XlsxParityOracle.CommentSnapshot expectedDirect =
+        XlsxParityOracle.comment(source.workbookPath(), "Advanced", "E2");
+    WorkbookReadResult.CommentsResult expectedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetComments(
+                    "comments", "Advanced", new CellSelection.Selected(List.of("E2")))),
+            "comments",
+            WorkbookReadResult.CommentsResult.class);
+
+    Path clearedPath = context.derivedWorkbook("rich-comment-cleared");
+    WorkbookReadResult.CommentsResult clearedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                source.workbookPath(),
+                clearedPath,
+                List.of(new WorkbookOperation.ClearComment("Advanced", "E2")),
+                new WorkbookReadOperation.GetComments(
+                    "comments", "Advanced", new CellSelection.Selected(List.of("E2")))),
+            "comments",
+            WorkbookReadResult.CommentsResult.class);
+    boolean clearedOk = clearedRead.comments().isEmpty();
+
+    Path restoredPath = context.derivedWorkbook("rich-comment-restored");
+    WorkbookReadResult.CommentsResult restoredRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                clearedPath,
+                restoredPath,
+                List.of(new WorkbookOperation.SetComment("Advanced", "E2", advancedCommentInput())),
+                new WorkbookReadOperation.GetComments(
+                    "comments", "Advanced", new CellSelection.Selected(List.of("E2")))),
+            "comments",
+            WorkbookReadResult.CommentsResult.class);
+    boolean restoredOk =
+        restoredRead.comments().equals(expectedRead.comments())
+            && XlsxParityOracle.comment(restoredPath, "Advanced", "E2").equals(expectedDirect);
+
+    return clearedOk && restoredOk
+        ? pass("Rich comment mutation parity is present.")
+        : fail(
+            "Rich comment mutation mismatch."
+                + " cleared="
+                + clearedRead.comments()
+                + " restored="
+                + restoredRead.comments()
+                + " expected="
+                + expectedRead.comments());
   }
 
   private static ProbeResult probeNamedRangeFormulaMutationGap(ProbeContext context) {
-    boolean directHasFormulaName =
-        XlsxParityOracle.namedRanges(
-                context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath())
-            .stream()
-            .anyMatch(XlsxParityOracle.NamedRangeSnapshot::formulaDefined);
-    boolean hasFormulaField =
-        componentNames(dev.erst.gridgrind.protocol.dto.NamedRangeTarget.class).contains("formula");
-    return directHasFormulaName && !hasFormulaField
-        ? fail("GridGrind can read formula-defined names but cannot author them.")
-        : pass("Formula-defined named-range mutation parity is present.");
+    XlsxParityScenarios.MaterializedScenario source =
+        context.copiedScenario(
+            XlsxParityScenarios.ADVANCED_NONDRAWING, "named-range-formula-mutation-source");
+    List<XlsxParityOracle.NamedRangeSnapshot> expectedDirect =
+        XlsxParityOracle.namedRanges(source.workbookPath()).stream()
+            .filter(XlsxParityOracle.NamedRangeSnapshot::formulaDefined)
+            .toList();
+    WorkbookReadResult.NamedRangesResult expectedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetNamedRanges("names", new NamedRangeSelection.All())),
+            "names",
+            WorkbookReadResult.NamedRangesResult.class);
+
+    Path clearedPath = context.derivedWorkbook("formula-named-ranges-cleared");
+    WorkbookReadResult.NamedRangesResult clearedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                source.workbookPath(),
+                clearedPath,
+                List.of(
+                    new WorkbookOperation.DeleteNamedRange(
+                        "WorkbookFormulaBudget", new NamedRangeScope.Workbook()),
+                    new WorkbookOperation.DeleteNamedRange(
+                        "SheetScopedFormulaBudget", new NamedRangeScope.Sheet("Advanced"))),
+                new WorkbookReadOperation.GetNamedRanges("names", new NamedRangeSelection.All())),
+            "names",
+            WorkbookReadResult.NamedRangesResult.class);
+    boolean clearedOk =
+        clearedRead.namedRanges().stream()
+            .noneMatch(
+                namedRange ->
+                    "WorkbookFormulaBudget".equals(namedRange.name())
+                        || "SheetScopedFormulaBudget".equals(namedRange.name()));
+
+    Path restoredPath = context.derivedWorkbook("formula-named-ranges-restored");
+    WorkbookReadResult.NamedRangesResult restoredRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                clearedPath,
+                restoredPath,
+                List.of(
+                    new WorkbookOperation.SetNamedRange(
+                        "WorkbookFormulaBudget",
+                        new NamedRangeScope.Workbook(),
+                        new NamedRangeTarget("SUM(Advanced!$B$2:$B$5)")),
+                    new WorkbookOperation.SetNamedRange(
+                        "SheetScopedFormulaBudget",
+                        new NamedRangeScope.Sheet("Advanced"),
+                        new NamedRangeTarget("SUM(Advanced!$C$2:$C$5)"))),
+                new WorkbookReadOperation.GetNamedRanges("names", new NamedRangeSelection.All())),
+            "names",
+            WorkbookReadResult.NamedRangesResult.class);
+    boolean restoredOk =
+        restoredRead.namedRanges().equals(expectedRead.namedRanges())
+            && XlsxParityOracle.namedRanges(restoredPath).stream()
+                .filter(XlsxParityOracle.NamedRangeSnapshot::formulaDefined)
+                .toList()
+                .equals(expectedDirect);
+
+    return clearedOk && restoredOk
+        ? pass("Formula-defined named-range mutation parity is present.")
+        : fail(
+            "Formula-defined named-range mutation mismatch."
+                + " cleared="
+                + clearedRead.namedRanges()
+                + " restored="
+                + restoredRead.namedRanges());
   }
 
   private static ProbeResult probeAutofilterCriteriaMutationGap(ProbeContext context) {
-    XlsxParityOracle.AutofilterSnapshot direct =
-        XlsxParityOracle.autofilter(
-            context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath(), "Advanced");
-    boolean surfaceCapable =
-        componentNames(WorkbookOperation.SetAutofilter.class).contains("criteria")
-            && componentNames(WorkbookOperation.SetAutofilter.class).contains("sortState");
-    boolean directHasAdvancedState = direct.filterColumnCount() > 0 && direct.hasSortState();
-    if (!directHasAdvancedState) {
-      return fail(
-          "Advanced autofilter scenario did not retain criteria/sort-state metadata: " + direct);
-    }
-    return surfaceCapable
+    XlsxParityScenarios.MaterializedScenario source =
+        context.copiedScenario(
+            XlsxParityScenarios.ADVANCED_NONDRAWING, "autofilter-criteria-mutation-source");
+    XlsxParityOracle.AutofilterSnapshot expectedDirect =
+        XlsxParityOracle.autofilter(source.workbookPath(), "Advanced");
+    WorkbookReadResult.AutofiltersResult expectedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetAutofilters("filters", "Advanced")),
+            "filters",
+            WorkbookReadResult.AutofiltersResult.class);
+
+    Path clearedPath = context.derivedWorkbook("autofilter-cleared");
+    WorkbookReadResult.AutofiltersResult clearedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                source.workbookPath(),
+                clearedPath,
+                List.of(new WorkbookOperation.ClearAutofilter("Advanced")),
+                new WorkbookReadOperation.GetAutofilters("filters", "Advanced")),
+            "filters",
+            WorkbookReadResult.AutofiltersResult.class);
+    boolean clearedOk =
+        clearedRead.autofilters().isEmpty()
+            && XlsxParityOracle.autofilter(clearedPath, "Advanced")
+                .equals(new XlsxParityOracle.AutofilterSnapshot("", List.of(), null));
+
+    Path restoredPath = context.derivedWorkbook("autofilter-restored");
+    WorkbookReadResult.AutofiltersResult restoredRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                clearedPath,
+                restoredPath,
+                List.of(
+                    new WorkbookOperation.SetAutofilter(
+                        "Advanced",
+                        "A1:C5",
+                        List.of(
+                            new AutofilterFilterColumnInput(
+                                0L,
+                                true,
+                                new AutofilterFilterCriterionInput.Values(List.of("R1C0"), false))),
+                        new AutofilterSortStateInput(
+                            "A2:C5",
+                            false,
+                            false,
+                            "",
+                            List.of(
+                                new AutofilterSortConditionInput("B2:B5", true, "", null, null))))),
+                new WorkbookReadOperation.GetAutofilters("filters", "Advanced")),
+            "filters",
+            WorkbookReadResult.AutofiltersResult.class);
+    boolean restoredOk =
+        restoredRead.autofilters().equals(expectedRead.autofilters())
+            && XlsxParityOracle.autofilter(restoredPath, "Advanced").equals(expectedDirect);
+
+    return clearedOk && restoredOk
         ? pass("Autofilter criteria mutation parity is present.")
         : fail(
-            "GridGrind can author only bare autofilter ranges, not filter criteria or sort state.");
+            "Autofilter criteria mutation mismatch."
+                + " cleared="
+                + clearedRead.autofilters()
+                + " restored="
+                + restoredRead.autofilters()
+                + " expected="
+                + expectedRead.autofilters());
   }
 
   private static ProbeResult probeTableAdvancedMutationGap(ProbeContext context) {
-    XlsxParityOracle.TableSnapshot direct =
-        XlsxParityOracle.table(
-            context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath(),
-            "AdvancedTable");
-    boolean surfaceCapable =
-        componentNames(dev.erst.gridgrind.protocol.dto.TableInput.class).contains("comment")
-            && componentNames(dev.erst.gridgrind.protocol.dto.TableInput.class)
-                .contains("published")
-            && componentNames(dev.erst.gridgrind.protocol.dto.TableInput.class)
-                .contains("calculatedColumns");
-    boolean directAdvanced =
-        direct.comment() != null
-            && direct.published()
-            && !direct.calculatedColumnFormula().isBlank();
-    return directAdvanced && !surfaceCapable
-        ? fail("GridGrind table mutation input covers only the core table contract.")
-        : pass("Advanced table mutation parity is present.");
+    XlsxParityScenarios.MaterializedScenario source =
+        context.copiedScenario(
+            XlsxParityScenarios.ADVANCED_NONDRAWING, "advanced-table-mutation-source");
+    XlsxParityOracle.TableSnapshot expectedDirect =
+        XlsxParityOracle.table(source.workbookPath(), "AdvancedTable");
+    WorkbookReadResult.TablesResult expectedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetTables("tables", new TableSelection.All())),
+            "tables",
+            WorkbookReadResult.TablesResult.class);
+    TableEntryReport expectedTable = findTable(expectedRead.tables(), "AdvancedTable");
+    if (expectedTable == null) {
+      return fail("Advanced parity workbook did not retain its expected advanced table.");
+    }
+
+    Path clearedPath = context.derivedWorkbook("advanced-table-cleared");
+    WorkbookReadResult.TablesResult clearedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                source.workbookPath(),
+                clearedPath,
+                List.of(new WorkbookOperation.DeleteTable("AdvancedTable", "Advanced")),
+                new WorkbookReadOperation.GetTables("tables", new TableSelection.All())),
+            "tables",
+            WorkbookReadResult.TablesResult.class);
+    boolean clearedOk = findTable(clearedRead.tables(), "AdvancedTable") == null;
+
+    Path restoredPath = context.derivedWorkbook("advanced-table-restored");
+    WorkbookReadResult.TablesResult restoredRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                clearedPath,
+                restoredPath,
+                List.of(new WorkbookOperation.SetTable(advancedTableInput())),
+                new WorkbookReadOperation.GetTables("tables", new TableSelection.All())),
+            "tables",
+            WorkbookReadResult.TablesResult.class);
+    TableEntryReport restoredTable = findTable(restoredRead.tables(), "AdvancedTable");
+    XlsxParityOracle.TableSnapshot restoredDirect =
+        XlsxParityOracle.table(restoredPath, "AdvancedTable");
+    boolean restoredOk =
+        restoredTable != null
+            && tableMatchesReadReport(restoredTable, expectedTable, "AdvancedTable", "Advanced")
+            && restoredDirect.equals(expectedDirect);
+
+    return clearedOk && restoredOk
+        ? pass("Advanced table mutation parity is present.")
+        : fail(
+            "Advanced table mutation mismatch."
+                + " cleared="
+                + clearedRead.tables()
+                + " restored="
+                + restoredRead.tables()
+                + " expected="
+                + expectedRead.tables()
+                + " expectedDirect="
+                + expectedDirect
+                + " restoredDirect="
+                + restoredDirect);
   }
 
   private static ProbeResult probeConditionalFormattingAdvancedMutationGap(ProbeContext context) {
-    boolean directHasUnmodeledFamily =
-        XlsxParityOracle.conditionalFormattingKinds(
-                context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath(),
-                "Advanced")
-            .stream()
-            .anyMatch(kind -> "top10".equalsIgnoreCase(kind));
-    Set<String> authoredKinds =
-        Set.of(
-            ConditionalFormattingRuleInput.FormulaRule.class.getSimpleName(),
-            ConditionalFormattingRuleInput.CellValueRule.class.getSimpleName());
-    return directHasUnmodeledFamily && authoredKinds.size() == 2
-        ? fail("GridGrind authors only formula and cell-value conditional-format rules.")
-        : pass("Advanced conditional-format mutation parity is present.");
+    XlsxParityScenarios.MaterializedScenario source =
+        context.copiedScenario(
+            XlsxParityScenarios.ADVANCED_NONDRAWING,
+            "advanced-conditional-formatting-mutation-source");
+    WorkbookReadResult.ConditionalFormattingResult expectedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                source.workbookPath(),
+                new WorkbookReadOperation.GetConditionalFormatting(
+                    "formatting", "Advanced", new RangeSelection.All())),
+            "formatting",
+            WorkbookReadResult.ConditionalFormattingResult.class);
+    List<String> expectedKinds =
+        XlsxParityOracle.conditionalFormattingKinds(source.workbookPath(), "Advanced");
+
+    Path clearedPath = context.derivedWorkbook("advanced-conditional-formatting-cleared");
+    WorkbookReadResult.ConditionalFormattingResult clearedRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                source.workbookPath(),
+                clearedPath,
+                List.of(
+                    new WorkbookOperation.ClearConditionalFormatting(
+                        "Advanced", new RangeSelection.All())),
+                new WorkbookReadOperation.GetConditionalFormatting(
+                    "formatting", "Advanced", new RangeSelection.All())),
+            "formatting",
+            WorkbookReadResult.ConditionalFormattingResult.class);
+    boolean clearedOk = clearedRead.conditionalFormattingBlocks().isEmpty();
+
+    Path restoredPath = context.derivedWorkbook("advanced-conditional-formatting-restored");
+    WorkbookReadResult.ConditionalFormattingResult restoredRead =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.mutateWorkbook(
+                clearedPath,
+                restoredPath,
+                advancedConditionalFormattingMutations(),
+                new WorkbookReadOperation.GetConditionalFormatting(
+                    "formatting", "Advanced", new RangeSelection.All())),
+            "formatting",
+            WorkbookReadResult.ConditionalFormattingResult.class);
+    boolean restoredOk =
+        restoredRead
+                .conditionalFormattingBlocks()
+                .equals(expectedRead.conditionalFormattingBlocks())
+            && XlsxParityOracle.conditionalFormattingKinds(restoredPath, "Advanced")
+                .equals(expectedKinds);
+
+    return clearedOk && restoredOk
+        ? pass("Advanced conditional-formatting mutation parity is present.")
+        : fail(
+            "Advanced conditional-formatting mutation mismatch."
+                + " cleared="
+                + clearedRead.conditionalFormattingBlocks()
+                + " restored="
+                + restoredRead.conditionalFormattingBlocks()
+                + " expected="
+                + expectedRead.conditionalFormattingBlocks());
   }
 
   private static ProbeResult probeFormulaCore(ProbeContext context) {
@@ -1195,17 +1826,231 @@ final class XlsxParityProbeRegistry {
                 GridGrindResponse.CellReport::address, Function.identity()));
   }
 
-  private static TypeEntry operationType(String id) {
-    return XlsxParityGridGrind.catalog().operationTypes().stream()
-        .filter(entry -> entry.id().equals(id))
-        .findFirst()
-        .orElseThrow(() -> new IllegalArgumentException("Unknown operation type " + id));
+  private static boolean matchesWorkbookProtectionReport(
+      WorkbookProtectionReport observed, XlsxParityOracle.WorkbookProtectionSnapshot direct) {
+    return observed.structureLocked() == direct.structureLocked()
+        && observed.windowsLocked() == direct.windowsLocked()
+        && observed.revisionLocked() == direct.revisionLocked()
+        && observed.workbookPasswordHashPresent() == direct.workbookPasswordHashPresent()
+        && observed.revisionsPasswordHashPresent() == direct.revisionsPasswordHashPresent();
   }
 
-  private static Set<String> componentNames(Class<?> recordType) {
-    return Arrays.stream(recordType.getRecordComponents())
-        .map(RecordComponent::getName)
-        .collect(Collectors.toUnmodifiableSet());
+  private static SheetProtectionSettings sheetProtectionSettings(
+      WorkbookReadResult.SheetSummaryResult summary) {
+    return switch (summary.sheet().protection()) {
+      case GridGrindResponse.SheetProtectionReport.Unprotected _ -> null;
+      case GridGrindResponse.SheetProtectionReport.Protected protectedReport ->
+          protectedReport.settings();
+    };
+  }
+
+  private static boolean sheetPasswordMatches(
+      Path workbookPath, String sheetName, String password) {
+    return XlsxParitySupport.call(
+        "validate protected-sheet password " + sheetName + "@" + workbookPath.getFileName(),
+        () -> {
+          try (XSSFWorkbook workbook =
+              (XSSFWorkbook) WorkbookFactory.create(workbookPath.toFile())) {
+            return workbook.getSheet(sheetName).validateSheetPassword(password);
+          }
+        });
+  }
+
+  private static PrintLayoutReport defaultPrintLayoutReport(String sheetName) {
+    return new PrintLayoutReport(
+        sheetName,
+        new PrintAreaReport.None(),
+        ExcelPrintOrientation.PORTRAIT,
+        new PrintScalingReport.Automatic(),
+        new PrintTitleRowsReport.None(),
+        new PrintTitleColumnsReport.None(),
+        new HeaderFooterTextReport("", "", ""),
+        new HeaderFooterTextReport("", "", ""),
+        PrintSetupReport.defaults());
+  }
+
+  private static PrintLayoutInput advancedPrintLayoutInput() {
+    return new PrintLayoutInput(
+        new PrintAreaInput.None(),
+        ExcelPrintOrientation.PORTRAIT,
+        new PrintScalingInput.Automatic(),
+        new PrintTitleRowsInput.None(),
+        new PrintTitleColumnsInput.None(),
+        HeaderFooterTextInput.blank(),
+        HeaderFooterTextInput.blank(),
+        new PrintSetupInput(
+            new PrintMarginsInput(0.35d, 0.55d, 0.60d, 0.45d, 0.3d, 0.3d),
+            true,
+            true,
+            8,
+            true,
+            true,
+            2,
+            true,
+            4,
+            List.of(6),
+            List.of(3)));
+  }
+
+  private static CellStyleInput advancedThemedStyleInput() {
+    return new CellStyleInput(
+        null,
+        null,
+        new CellFontInput(null, true, null, null, null, 6, null, -0.35d, null, null),
+        new CellFillInput(
+            ExcelFillPattern.SOLID, null, 3, null, 0.30d, null, null, null, null, null),
+        new CellBorderInput(
+            null,
+            null,
+            null,
+            new CellBorderSideInput(
+                ExcelBorderStyle.THIN,
+                null,
+                null,
+                Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex()),
+                null),
+            null),
+        null);
+  }
+
+  private static CellStyleInput advancedGradientStyleInput() {
+    return new CellStyleInput(
+        null,
+        null,
+        null,
+        new CellFillInput(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            new CellGradientFillInput(
+                "LINEAR",
+                45.0d,
+                null,
+                null,
+                null,
+                null,
+                List.of(
+                    new CellGradientStopInput(0.0d, new ColorInput("#1F497D")),
+                    new CellGradientStopInput(1.0d, new ColorInput(null, 4, null, 0.45d))))),
+        null,
+        null);
+  }
+
+  private static CommentInput advancedCommentInput() {
+    return new CommentInput(
+        "Lead review scheduled",
+        "GridGrind",
+        false,
+        List.of(
+            new RichTextRunInput(
+                "Lead",
+                new CellFontInput(true, null, null, null, null, 4, null, -0.20d, null, null)),
+            new RichTextRunInput(" ", null),
+            new RichTextRunInput(
+                "review scheduled",
+                new CellFontInput(
+                    null,
+                    true,
+                    null,
+                    null,
+                    null,
+                    null,
+                    Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex()),
+                    null,
+                    null,
+                    null))),
+        new CommentAnchorInput(4, 1, 8, 7));
+  }
+
+  private static TableInput advancedTableInput() {
+    return new TableInput(
+        "AdvancedTable",
+        "Advanced",
+        "H1:J5",
+        true,
+        false,
+        new TableStyleInput.None(),
+        "Parity advanced table",
+        true,
+        true,
+        true,
+        "ParityHeader",
+        "ParityData",
+        "ParityTotals",
+        List.of(
+            new TableColumnInput(0, "", "Total", "", ""),
+            new TableColumnInput(1, "", "", "SUM", "[@Sales]*2"),
+            new TableColumnInput(2, "owner-unique", "", "", "")));
+  }
+
+  private static List<WorkbookOperation> advancedConditionalFormattingMutations() {
+    WorkbookOperation.SetConditionalFormatting colorScale =
+        new WorkbookOperation.SetConditionalFormatting(
+            "Advanced",
+            new ConditionalFormattingBlockInput(
+                List.of("L2:L5"),
+                List.of(
+                    new ConditionalFormattingRuleInput.ColorScaleRule(
+                        false,
+                        List.of(
+                            new ConditionalFormattingThresholdInput(
+                                ExcelConditionalFormattingThresholdType.MIN, null, null),
+                            new ConditionalFormattingThresholdInput(
+                                ExcelConditionalFormattingThresholdType.PERCENTILE, null, 50.0d),
+                            new ConditionalFormattingThresholdInput(
+                                ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                        List.of(
+                            new ColorInput("#AA2211"),
+                            new ColorInput("#FFDD55"),
+                            new ColorInput("#11CC66"))))));
+    WorkbookOperation.SetConditionalFormatting dataBar =
+        new WorkbookOperation.SetConditionalFormatting(
+            "Advanced",
+            new ConditionalFormattingBlockInput(
+                List.of("M2:M5"),
+                List.of(
+                    new ConditionalFormattingRuleInput.DataBarRule(
+                        false,
+                        new ColorInput("#123456"),
+                        true,
+                        10,
+                        90,
+                        new ConditionalFormattingThresholdInput(
+                            ExcelConditionalFormattingThresholdType.MIN, null, null),
+                        new ConditionalFormattingThresholdInput(
+                            ExcelConditionalFormattingThresholdType.MAX, null, null)))));
+    WorkbookOperation.SetConditionalFormatting iconSet =
+        new WorkbookOperation.SetConditionalFormatting(
+            "Advanced",
+            new ConditionalFormattingBlockInput(
+                List.of("N2:N5"),
+                List.of(
+                    new ConditionalFormattingRuleInput.IconSetRule(
+                        false,
+                        ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
+                        true,
+                        true,
+                        List.of(
+                            new ConditionalFormattingThresholdInput(
+                                ExcelConditionalFormattingThresholdType.PERCENT, null, 0.0d),
+                            new ConditionalFormattingThresholdInput(
+                                ExcelConditionalFormattingThresholdType.PERCENT, null, 33.0d),
+                            new ConditionalFormattingThresholdInput(
+                                ExcelConditionalFormattingThresholdType.PERCENT, null, 67.0d))))));
+    WorkbookOperation.SetConditionalFormatting top10 =
+        new WorkbookOperation.SetConditionalFormatting(
+            "Advanced",
+            new ConditionalFormattingBlockInput(
+                List.of("K2:K5"),
+                List.of(
+                    new ConditionalFormattingRuleInput.Top10Rule(false, 10, false, false, null))));
+    return List.of(colorScale, dataBar, iconSet, top10);
   }
 
   private static ProbeResult pass(String detail) {
@@ -1225,6 +2070,53 @@ final class XlsxParityProbeRegistry {
 
   private static TableEntryReport findTable(List<TableEntryReport> tables, String name) {
     return tables.stream().filter(table -> name.equals(table.name())).findFirst().orElse(null);
+  }
+
+  private static TableEntryReport findTableOnSheet(
+      List<TableEntryReport> tables, String sheetName) {
+    return tables.stream()
+        .filter(table -> sheetName.equals(table.sheetName()))
+        .findFirst()
+        .orElse(null);
+  }
+
+  private static boolean tableMatchesReadReport(
+      TableEntryReport observed,
+      TableEntryReport expected,
+      String expectedName,
+      String expectedSheetName) {
+    return observed != null
+        && (expectedName == null || observed.name().equals(expectedName))
+        && (expectedSheetName == null || observed.sheetName().equals(expectedSheetName))
+        && observed.range().equals(expected.range())
+        && observed.headerRowCount() == expected.headerRowCount()
+        && observed.totalsRowCount() == expected.totalsRowCount()
+        && observed.columnNames().equals(expected.columnNames())
+        && normalizedTableColumns(observed.columns())
+            .equals(normalizedTableColumns(expected.columns()))
+        && observed.style().equals(expected.style())
+        && observed.hasAutofilter() == expected.hasAutofilter()
+        && observed.comment().equals(expected.comment())
+        && observed.published() == expected.published()
+        && observed.insertRow() == expected.insertRow()
+        && observed.insertRowShift() == expected.insertRowShift()
+        && observed.headerRowCellStyle().equals(expected.headerRowCellStyle())
+        && observed.dataCellStyle().equals(expected.dataCellStyle())
+        && observed.totalsRowCellStyle().equals(expected.totalsRowCellStyle());
+  }
+
+  private static List<String> normalizedTableColumns(List<TableColumnReport> columns) {
+    return columns.stream()
+        .map(
+            column ->
+                "%s|%s|%s|%s|%s"
+                    .formatted(
+                        column.name(),
+                        column.uniqueName(),
+                        column.totalsRowLabel(),
+                        column.totalsRowFunction(),
+                        column.calculatedColumnFormula()))
+        .toList();
   }
 
   private static boolean matchesColorDescriptor(
@@ -1282,6 +2174,31 @@ final class XlsxParityProbeRegistry {
       WorkbookReadResult.AutofiltersResult filtersOps,
       WorkbookReadResult.AutofiltersResult filtersQueue,
       WorkbookReadResult.TablesResult tables) {}
+
+  private record SheetCopySourceObservation(
+      XlsxParityScenarios.MaterializedScenario source,
+      WorkbookReadResult.CommentsResult sourceComments,
+      WorkbookReadResult.AutofiltersResult sourceAutofilters,
+      WorkbookReadResult.ConditionalFormattingResult sourceFormatting,
+      WorkbookReadResult.SheetSummaryResult sourceSummary,
+      TableEntryReport sourceTable,
+      XlsxParityOracle.CommentSnapshot sourceComment,
+      XlsxParityOracle.AdvancedPrintSnapshot sourcePrint,
+      XlsxParityOracle.AutofilterSnapshot sourceAutofilter,
+      XlsxParityOracle.TableSnapshot sourceDirectTable) {}
+
+  private record SheetCopyCopiedObservation(
+      Path copiedPath,
+      WorkbookReadResult.WorkbookSummaryResult copiedWorkbook,
+      WorkbookReadResult.SheetSummaryResult copiedSummary,
+      WorkbookReadResult.CommentsResult copiedComments,
+      WorkbookReadResult.AutofiltersResult copiedAutofilters,
+      WorkbookReadResult.ConditionalFormattingResult copiedFormatting,
+      TableEntryReport copiedTable,
+      XlsxParityOracle.CommentSnapshot copiedComment,
+      XlsxParityOracle.AdvancedPrintSnapshot copiedPrint,
+      XlsxParityOracle.AutofilterSnapshot copiedAutofilter,
+      XlsxParityOracle.TableSnapshot copiedDirectTable) {}
 
   /** Temporary-workspace cache and copy helper for materialized parity scenarios. */
   static final class ProbeContext {

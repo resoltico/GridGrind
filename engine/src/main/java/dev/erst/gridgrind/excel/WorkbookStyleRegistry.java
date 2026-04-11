@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -16,6 +17,8 @@ import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFill;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFont;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientFill;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientStop;
 
@@ -185,6 +188,10 @@ final class WorkbookStyleRegistry {
     if (fillPatch == null) {
       return;
     }
+    if (fillPatch.gradient() != null) {
+      applyGradientFillPatch(cellStyle, fillPatch.gradient());
+      return;
+    }
 
     ExcelFillPattern effectivePattern = effectiveFillPattern(cellStyle, fillPatch);
     if (effectivePattern != null) {
@@ -199,12 +206,48 @@ final class WorkbookStyleRegistry {
     }
     if (fillPatch.foregroundColor() != null) {
       cellStyle.setFillForegroundColor(
-          ExcelRgbColorSupport.toXssfColor(workbook, fillPatch.foregroundColor()));
+          ExcelColorSupport.toXssfColor(workbook, fillPatch.foregroundColor()));
     }
     if (fillPatch.backgroundColor() != null) {
       cellStyle.setFillBackgroundColor(
-          ExcelRgbColorSupport.toXssfColor(workbook, fillPatch.backgroundColor()));
+          ExcelColorSupport.toXssfColor(workbook, fillPatch.backgroundColor()));
     }
+  }
+
+  private void applyGradientFillPatch(XSSFCellStyle cellStyle, ExcelGradientFill gradientPatch) {
+    CTFill gradientFill = CTFill.Factory.newInstance();
+    CTGradientFill gradient = gradientFill.addNewGradientFill();
+    if (!"LINEAR".equalsIgnoreCase(gradientPatch.type())) {
+      gradient.setType(
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.STGradientType.Enum.forString(
+              gradientPatch.type().toLowerCase(Locale.ROOT)));
+    }
+    if (gradientPatch.degree() != null) {
+      gradient.setDegree(gradientPatch.degree());
+    }
+    if (gradientPatch.left() != null) {
+      gradient.setLeft(gradientPatch.left());
+    }
+    if (gradientPatch.right() != null) {
+      gradient.setRight(gradientPatch.right());
+    }
+    if (gradientPatch.top() != null) {
+      gradient.setTop(gradientPatch.top());
+    }
+    if (gradientPatch.bottom() != null) {
+      gradient.setBottom(gradientPatch.bottom());
+    }
+    for (ExcelGradientStop stop : gradientPatch.stops()) {
+      CTGradientStop ctStop = gradient.addNewStop();
+      ctStop.setPosition(stop.position());
+      ctStop.addNewColor().set(ExcelColorSupport.toXssfColor(workbook, stop.color()).getCTColor());
+    }
+    int gradientFillId =
+        workbook
+            .getStylesSource()
+            .putFill(new XSSFCellFill(gradientFill, workbook.getStylesSource().getIndexedColors()));
+    cellStyle.getCoreXf().setApplyFill(true);
+    cellStyle.getCoreXf().setFillId(gradientFillId);
   }
 
   private void clearFillColors(XSSFCellStyle cellStyle) {
@@ -253,7 +296,7 @@ final class WorkbookStyleRegistry {
       font.setFontHeight(fontPatch.fontHeight().points().doubleValue());
     }
     if (fontPatch.fontColor() != null) {
-      font.setColor(ExcelRgbColorSupport.toXssfColor(workbook, fontPatch.fontColor()));
+      applyFontColor(font, fontPatch.fontColor());
     }
     if (fontPatch.underline() != null) {
       font.setUnderline(fontPatch.underline() ? FontUnderline.SINGLE : FontUnderline.NONE);
@@ -262,6 +305,17 @@ final class WorkbookStyleRegistry {
       font.setStrikeout(fontPatch.strikeout());
     }
     return font;
+  }
+
+  private void applyFontColor(XSSFFont font, ExcelColor color) {
+    CTFont ctFont = font.getCTFont();
+    while (ctFont.sizeOfColorArray() > 1) {
+      ctFont.removeColor(ctFont.sizeOfColorArray() - 1);
+    }
+    if (ctFont.sizeOfColorArray() == 0) {
+      ctFont.addNewColor();
+    }
+    ctFont.getColorArray(0).set(ExcelColorSupport.toXssfColor(workbook, color).getCTColor());
   }
 
   private void applyBorderPatch(XSSFCellStyle cellStyle, ExcelBorder border) {
@@ -297,14 +351,14 @@ final class WorkbookStyleRegistry {
     return defaultSide != null ? defaultSide.style() : null;
   }
 
-  private String mergedBorderColor(ExcelBorderSide defaultSide, ExcelBorderSide explicitSide) {
+  private ExcelColor mergedBorderColor(ExcelBorderSide defaultSide, ExcelBorderSide explicitSide) {
     if (explicitSide != null && explicitSide.color() != null) {
       return explicitSide.color();
     }
     return defaultSide != null ? defaultSide.color() : null;
   }
 
-  private ExcelBorderSide effectiveBorderSide(ExcelBorderStyle style, String color) {
+  private ExcelBorderSide effectiveBorderSide(ExcelBorderStyle style, ExcelColor color) {
     if (style == null && color == null) {
       return null;
     }
@@ -328,7 +382,7 @@ final class WorkbookStyleRegistry {
       return;
     }
     if (sidePatch.color() != null) {
-      colorSetter.accept(ExcelRgbColorSupport.toXssfColor(workbook, sidePatch.color()));
+      colorSetter.accept(ExcelColorSupport.toXssfColor(workbook, sidePatch.color()));
     }
   }
 

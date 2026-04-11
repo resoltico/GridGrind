@@ -18,9 +18,6 @@ public sealed interface ExcelDataValidationRule
   record ExplicitList(List<String> values) implements ExcelDataValidationRule {
     public ExplicitList {
       values = copyValues(values);
-      if (values.isEmpty()) {
-        throw new IllegalArgumentException("values must not be empty");
-      }
     }
   }
 

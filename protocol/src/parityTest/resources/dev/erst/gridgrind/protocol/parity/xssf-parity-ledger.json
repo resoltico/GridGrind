@@ -504,8 +504,8 @@
       "subfamily": "mutation",
       "phase": 3,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-workbook-protection-mutation-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -514,7 +514,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Workbook-level protection mutation is not yet exposed."
+      "notes": "Workbook-level protection mutation supports clear, restore, and readback parity."
     },
     {
       "sequence": 28,
@@ -523,8 +523,8 @@
       "subfamily": "mutation",
       "phase": 3,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-sheet-password-mutation-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -533,7 +533,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Hash-bearing sheet password mutation is not yet modeled."
+      "notes": "Hash-bearing sheet password mutation supports clear, restore, and readback parity."
     },
     {
       "sequence": 29,
@@ -542,8 +542,8 @@
       "subfamily": "mutation",
       "phase": 3,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "PARTIAL",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-sheet-copy-gap",
       "scenarioIds": [
         "gridgrind-core-authoring",
@@ -553,7 +553,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Sheet copy still rejects or degrades advanced workbook-core structures."
+      "notes": "Sheet copy now preserves Phase 3 workbook-core structures, including protection hashes and scoped names."
     },
     {
       "sequence": 30,
@@ -581,8 +581,8 @@
       "subfamily": "mutation-advanced",
       "phase": 3,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-advanced-print-mutation-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -591,7 +591,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Advanced page setup and print metadata cannot yet be authored or preserved semantically."
+      "notes": "Advanced page setup and print metadata support clear, restore, and semantic readback parity."
     },
     {
       "sequence": 32,
@@ -638,8 +638,8 @@
       "subfamily": "mutation-theme-indexed-gradient",
       "phase": 3,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-advanced-style-mutation-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -648,7 +648,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Theme, indexed, tint, and gradient style mutation is not yet supported."
+      "notes": "Theme, indexed, tint, and gradient style mutation supports authored parity and factual readback."
     },
     {
       "sequence": 35,
@@ -676,8 +676,8 @@
       "subfamily": "mutation-rich-anchor",
       "phase": 3,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-rich-comment-mutation-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -686,7 +686,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Rich comment runs and anchors cannot yet be authored through the protocol."
+      "notes": "Rich comment runs and anchors support clear, restore, and semantic readback parity."
     },
     {
       "sequence": 37,
@@ -733,8 +733,8 @@
       "subfamily": "mutation-formula",
       "phase": 3,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-named-range-formula-mutation-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -743,7 +743,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Formula-defined name authoring is not yet available."
+      "notes": "Formula-defined named ranges support create, delete, restore, and factual readback parity."
     },
     {
       "sequence": 40,
@@ -790,8 +790,8 @@
       "subfamily": "mutation-criteria-sort",
       "phase": 3,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-autofilter-criteria-mutation-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -800,7 +800,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "GridGrind cannot yet author criteria-bearing filters or sort-state metadata."
+      "notes": "Criteria-bearing filters and sort-state metadata support clear, restore, and factual readback parity."
     },
     {
       "sequence": 43,
@@ -828,8 +828,8 @@
       "subfamily": "mutation-advanced",
       "phase": 3,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-table-advanced-mutation-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -838,7 +838,7 @@
         "Quick Guide",
         "XSSFTable API"
       ],
-      "notes": "Advanced table metadata mutation is not yet exposed."
+      "notes": "Advanced table metadata supports clear, restore, and factual readback parity."
     },
     {
       "sequence": 45,
@@ -866,8 +866,8 @@
       "subfamily": "mutation-advanced",
       "phase": 3,
       "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-conditional-formatting-advanced-mutation-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -876,7 +876,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Advanced POI-readable rule families still lack authoring parity."
+      "notes": "Advanced POI-readable rule families support clear, restore, and factual readback parity."
     },
     {
       "sequence": 47,

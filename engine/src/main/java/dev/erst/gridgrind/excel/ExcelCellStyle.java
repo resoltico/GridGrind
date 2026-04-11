@@ -32,7 +32,7 @@ public record ExcelCellStyle(
     return new ExcelCellStyle(
         null,
         null,
-        new ExcelCellFont(bold, italic, null, null, null, null, null),
+        new ExcelCellFont(bold, italic, null, null, (ExcelColor) null, null, null),
         null,
         null,
         null);

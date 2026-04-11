@@ -21,8 +21,8 @@
       "styleKinds" : { },
       "readCount" : 4,
       "readKinds" : {
-        "GET_PRINT_LAYOUT" : 2,
-        "GET_SHEET_LAYOUT" : 2
+        "GET_SHEET_LAYOUT" : 2,
+        "GET_PRINT_LAYOUT" : 2
       }
     }
   },

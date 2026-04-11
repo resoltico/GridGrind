@@ -114,6 +114,8 @@ public final class SequenceIntrospection {
       case WorkbookOperation.SetSheetVisibility _ -> "SET_SHEET_VISIBILITY";
       case WorkbookOperation.SetSheetProtection _ -> "SET_SHEET_PROTECTION";
       case WorkbookOperation.ClearSheetProtection _ -> "CLEAR_SHEET_PROTECTION";
+      case WorkbookOperation.SetWorkbookProtection _ -> "SET_WORKBOOK_PROTECTION";
+      case WorkbookOperation.ClearWorkbookProtection _ -> "CLEAR_WORKBOOK_PROTECTION";
       case WorkbookOperation.MergeCells _ -> "MERGE_CELLS";
       case WorkbookOperation.UnmergeCells _ -> "UNMERGE_CELLS";
       case WorkbookOperation.SetColumnWidth _ -> "SET_COLUMN_WIDTH";
@@ -174,6 +176,8 @@ public final class SequenceIntrospection {
       case WorkbookCommand.SetSheetVisibility _ -> "SET_SHEET_VISIBILITY";
       case WorkbookCommand.SetSheetProtection _ -> "SET_SHEET_PROTECTION";
       case WorkbookCommand.ClearSheetProtection _ -> "CLEAR_SHEET_PROTECTION";
+      case WorkbookCommand.SetWorkbookProtection _ -> "SET_WORKBOOK_PROTECTION";
+      case WorkbookCommand.ClearWorkbookProtection _ -> "CLEAR_WORKBOOK_PROTECTION";
       case WorkbookCommand.MergeCells _ -> "MERGE_CELLS";
       case WorkbookCommand.UnmergeCells _ -> "UNMERGE_CELLS";
       case WorkbookCommand.SetColumnWidth _ -> "SET_COLUMN_WIDTH";

@@ -62,7 +62,7 @@ final class ExcelRichTextSupport {
     }
     if (fontPatch.fontColor() != null) {
       font.addNewColor()
-          .setRgb(ExcelRgbColorSupport.toXssfColor(workbook, fontPatch.fontColor()).getARGB());
+          .set(ExcelColorSupport.toXssfColor(workbook, fontPatch.fontColor()).getCTColor());
     }
     if (fontPatch.underline() != null) {
       CTUnderlineProperty underline = font.addNewU();

@@ -16,6 +16,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDefinedName;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPageSetUpPr;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPageSetup;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetPr;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STOrientation;
 
 /** Applies and reads supported print-layout state for one sheet. */
 final class ExcelPrintLayoutController {
@@ -31,13 +32,35 @@ final class ExcelPrintLayoutController {
     applyRepeatingColumns(sheet, layout.repeatingColumns());
     applyHeader(sheet.getHeader(), layout.header());
     applyFooter(sheet.getFooter(), layout.footer());
+    applySetup(sheet, layout.setup());
     normalizePrintNodes(sheet);
   }
 
   /** Clears the supported print layout state from the provided sheet. */
   void clearPrintLayout(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    setPrintLayout(sheet, ExcelPrintLayout.defaults());
+    applyPrintArea(sheet, new ExcelPrintLayout.Area.None());
+    applyRepeatingRows(sheet, new ExcelPrintLayout.TitleRows.None());
+    applyRepeatingColumns(sheet, new ExcelPrintLayout.TitleColumns.None());
+    applyHeader(sheet.getHeader(), ExcelHeaderFooterText.blank());
+    applyFooter(sheet.getFooter(), ExcelHeaderFooterText.blank());
+    replaceBreaks(
+        sheet.getRowBreaks(), java.util.List.of(), sheet::removeRowBreak, sheet::setRowBreak);
+    replaceBreaks(
+        sheet.getColumnBreaks(),
+        java.util.List.of(),
+        sheet::removeColumnBreak,
+        sheet::setColumnBreak);
+    sheet.setHorizontallyCenter(false);
+    sheet.setVerticallyCenter(false);
+    sheet.setFitToPage(false);
+    if (sheet.getCTWorksheet().isSetPageSetup()) {
+      sheet.getCTWorksheet().unsetPageSetup();
+    }
+    if (sheet.getCTWorksheet().isSetPageMargins()) {
+      sheet.getCTWorksheet().unsetPageMargins();
+    }
+    normalizePrintNodes(sheet);
   }
 
   /** Returns the supported print layout state currently stored for the provided sheet. */
@@ -50,32 +73,34 @@ final class ExcelPrintLayoutController {
         repeatingRows(sheet),
         repeatingColumns(sheet),
         headerFooterText(sheet.getHeader()),
-        headerFooterText(sheet.getFooter()));
+        headerFooterText(sheet.getFooter()),
+        setup(sheet));
   }
 
   /** Returns the full factual print-layout snapshot currently stored for the provided sheet. */
   ExcelPrintLayoutSnapshot printLayoutSnapshot(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
+    ExcelPrintSetup setup = setup(sheet);
     return new ExcelPrintLayoutSnapshot(
         printLayout(sheet),
         new ExcelPrintSetupSnapshot(
             new ExcelPrintMarginsSnapshot(
-                sheet.getMargin(XSSFSheet.LeftMargin),
-                sheet.getMargin(XSSFSheet.RightMargin),
-                sheet.getMargin(XSSFSheet.TopMargin),
-                sheet.getMargin(XSSFSheet.BottomMargin),
-                sheet.getMargin(XSSFSheet.HeaderMargin),
-                sheet.getMargin(XSSFSheet.FooterMargin)),
-            sheet.getHorizontallyCenter(),
-            sheet.getVerticallyCenter(),
-            sheet.getPrintSetup().getPaperSize(),
-            sheet.getPrintSetup().getDraft(),
-            sheet.getPrintSetup().getNoColor(),
-            sheet.getPrintSetup().getCopies(),
-            sheet.getPrintSetup().getUsePage(),
-            sheet.getPrintSetup().getPageStart(),
-            IntStream.of(sheet.getRowBreaks()).boxed().toList(),
-            IntStream.of(sheet.getColumnBreaks()).boxed().toList()));
+                setup.margins().left(),
+                setup.margins().right(),
+                setup.margins().top(),
+                setup.margins().bottom(),
+                setup.margins().header(),
+                setup.margins().footer()),
+            setup.horizontallyCentered(),
+            setup.verticallyCentered(),
+            setup.paperSize(),
+            setup.draft(),
+            setup.blackAndWhite(),
+            setup.copies(),
+            setup.useFirstPageNumber(),
+            setup.firstPageNumber(),
+            setup.rowBreaks(),
+            setup.columnBreaks()));
   }
 
   private static void applyPrintArea(XSSFSheet sheet, ExcelPrintLayout.Area printArea) {
@@ -155,6 +180,48 @@ final class ExcelPrintLayoutController {
     footer.setRight(text.right());
   }
 
+  private static void applySetup(XSSFSheet sheet, ExcelPrintSetup setup) {
+    XSSFPrintSetup printSetup = sheet.getPrintSetup();
+    applyMargins(sheet, setup.margins());
+    sheet.setHorizontallyCenter(setup.horizontallyCentered());
+    sheet.setVerticallyCenter(setup.verticallyCentered());
+    printSetup.setPaperSize((short) setup.paperSize());
+    printSetup.setDraft(setup.draft());
+    printSetup.setNoColor(setup.blackAndWhite());
+    printSetup.setCopies((short) setup.copies());
+    printSetup.setUsePage(setup.useFirstPageNumber());
+    printSetup.setPageStart((short) setup.firstPageNumber());
+    replaceBreaks(
+        sheet.getRowBreaks(), setup.rowBreaks(), sheet::removeRowBreak, sheet::setRowBreak);
+    replaceBreaks(
+        sheet.getColumnBreaks(),
+        setup.columnBreaks(),
+        sheet::removeColumnBreak,
+        sheet::setColumnBreak);
+  }
+
+  private static void applyMargins(XSSFSheet sheet, ExcelPrintMargins margins) {
+    sheet.setMargin(XSSFSheet.LeftMargin, margins.left());
+    sheet.setMargin(XSSFSheet.RightMargin, margins.right());
+    sheet.setMargin(XSSFSheet.TopMargin, margins.top());
+    sheet.setMargin(XSSFSheet.BottomMargin, margins.bottom());
+    sheet.setMargin(XSSFSheet.HeaderMargin, margins.header());
+    sheet.setMargin(XSSFSheet.FooterMargin, margins.footer());
+  }
+
+  private static void replaceBreaks(
+      int[] existingBreaks,
+      java.util.List<Integer> authoredBreaks,
+      java.util.function.IntConsumer remover,
+      java.util.function.IntConsumer adder) {
+    for (int existingBreak : existingBreaks) {
+      remover.accept(existingBreak);
+    }
+    for (Integer authoredBreak : authoredBreaks) {
+      adder.accept(authoredBreak);
+    }
+  }
+
   private static ExcelPrintLayout.Area printArea(XSSFSheet sheet) {
     String printArea = storedPrintAreaFormulaOrNull(sheet);
     if (printArea == null || printArea.isBlank()) {
@@ -195,7 +262,10 @@ final class ExcelPrintLayoutController {
   }
 
   private static ExcelPrintOrientation orientation(XSSFSheet sheet) {
-    return sheet.getPrintSetup().getLandscape()
+    CTPageSetup pageSetup = pageSetupOrNull(sheet);
+    return pageSetup != null
+            && pageSetup.isSetOrientation()
+            && pageSetup.getOrientation() == STOrientation.LANDSCAPE
         ? ExcelPrintOrientation.LANDSCAPE
         : ExcelPrintOrientation.PORTRAIT;
   }
@@ -205,8 +275,10 @@ final class ExcelPrintLayoutController {
     if (pageSetUpPr == null || !pageSetUpPr.isSetFitToPage() || !pageSetUpPr.getFitToPage()) {
       return new ExcelPrintLayout.Scaling.Automatic();
     }
-    XSSFPrintSetup printSetup = sheet.getPrintSetup();
-    return new ExcelPrintLayout.Scaling.Fit(printSetup.getFitWidth(), printSetup.getFitHeight());
+    CTPageSetup pageSetup = pageSetupOrNull(sheet);
+    return new ExcelPrintLayout.Scaling.Fit(
+        pageSetup != null ? Math.toIntExact(pageSetup.getFitToWidth()) : 1,
+        pageSetup != null ? Math.toIntExact(pageSetup.getFitToHeight()) : 1);
   }
 
   static ExcelPrintLayout.TitleRows repeatingRows(XSSFSheet sheet) {
@@ -234,10 +306,41 @@ final class ExcelPrintLayoutController {
         Objects.toString(headerFooter.getRight(), ""));
   }
 
+  private static ExcelPrintSetup setup(XSSFSheet sheet) {
+    CTPageSetup pageSetup = pageSetupOrNull(sheet);
+    ExcelPrintSetup defaults = ExcelPrintSetup.defaults();
+    ExcelPrintMargins defaultMargins = defaults.margins();
+    ExcelPrintMargins margins =
+        sheet.getCTWorksheet().isSetPageMargins()
+            ? new ExcelPrintMargins(
+                sheet.getMargin(XSSFSheet.LeftMargin),
+                sheet.getMargin(XSSFSheet.RightMargin),
+                sheet.getMargin(XSSFSheet.TopMargin),
+                sheet.getMargin(XSSFSheet.BottomMargin),
+                sheet.getMargin(XSSFSheet.HeaderMargin),
+                sheet.getMargin(XSSFSheet.FooterMargin))
+            : defaultMargins;
+    return new ExcelPrintSetup(
+        margins,
+        sheet.getHorizontallyCenter(),
+        sheet.getVerticallyCenter(),
+        pageSetup != null ? Math.toIntExact(pageSetup.getPaperSize()) : defaults.paperSize(),
+        pageSetup != null ? pageSetup.getDraft() : defaults.draft(),
+        pageSetup != null ? pageSetup.getBlackAndWhite() : defaults.blackAndWhite(),
+        pageSetup != null ? Math.toIntExact(pageSetup.getCopies()) : defaults.copies(),
+        pageSetup != null ? pageSetup.getUseFirstPageNumber() : defaults.useFirstPageNumber(),
+        pageSetup != null
+            ? Math.toIntExact(pageSetup.getFirstPageNumber())
+            : defaults.firstPageNumber(),
+        IntStream.of(sheet.getRowBreaks()).boxed().toList(),
+        IntStream.of(sheet.getColumnBreaks()).boxed().toList());
+  }
+
   private static void normalizePrintNodes(XSSFSheet sheet) {
     normalizeHeaderFooterNode(sheet);
     normalizePageSetupNode(sheet);
     normalizePageSetupProperties(sheet);
+    normalizePageMarginsNode(sheet);
   }
 
   static void normalizeHeaderFooterNode(XSSFSheet sheet) {
@@ -268,16 +371,28 @@ final class ExcelPrintLayoutController {
 
   static boolean shouldUnsetPageSetupOrientation(XSSFSheet sheet, CTPageSetup pageSetup) {
     return pageSetup.isSetOrientation()
-        && !sheet.getPrintSetup().getLandscape()
+        && (pageSetup.getOrientation() == null
+            || pageSetup.getOrientation() == STOrientation.PORTRAIT)
         && !pageSetup.isSetFitToWidth()
         && !pageSetup.isSetFitToHeight();
   }
 
   static boolean isEmptyPageSetup(CTPageSetup pageSetup) {
+    ExcelPrintSetup defaults = ExcelPrintSetup.defaults();
     return !pageSetup.isSetOrientation()
         && !pageSetup.isSetFitToWidth()
         && !pageSetup.isSetFitToHeight()
-        && !pageSetup.isSetUsePrinterDefaults();
+        && !pageSetup.isSetUsePrinterDefaults()
+        && (!pageSetup.isSetPaperSize()
+            || Math.toIntExact(pageSetup.getPaperSize()) == defaults.paperSize())
+        && (!pageSetup.isSetDraft() || pageSetup.getDraft() == defaults.draft())
+        && (!pageSetup.isSetBlackAndWhite()
+            || pageSetup.getBlackAndWhite() == defaults.blackAndWhite())
+        && (!pageSetup.isSetCopies() || Math.toIntExact(pageSetup.getCopies()) == defaults.copies())
+        && (!pageSetup.isSetUseFirstPageNumber()
+            || pageSetup.getUseFirstPageNumber() == defaults.useFirstPageNumber())
+        && (!pageSetup.isSetFirstPageNumber()
+            || Math.toIntExact(pageSetup.getFirstPageNumber()) == defaults.firstPageNumber());
   }
 
   static void normalizePageSetupProperties(XSSFSheet sheet) {
@@ -294,6 +409,21 @@ final class ExcelPrintLayoutController {
     }
     if (!sheetPr.isSetPageSetUpPr()) {
       sheet.getCTWorksheet().unsetSheetPr();
+    }
+  }
+
+  static void normalizePageMarginsNode(XSSFSheet sheet) {
+    if (!sheet.getCTWorksheet().isSetPageMargins()) {
+      return;
+    }
+    ExcelPrintMargins defaults = ExcelPrintSetup.defaults().margins();
+    if (sheet.getMargin(XSSFSheet.LeftMargin) == defaults.left()
+        && sheet.getMargin(XSSFSheet.RightMargin) == defaults.right()
+        && sheet.getMargin(XSSFSheet.TopMargin) == defaults.top()
+        && sheet.getMargin(XSSFSheet.BottomMargin) == defaults.bottom()
+        && sheet.getMargin(XSSFSheet.HeaderMargin) == defaults.header()
+        && sheet.getMargin(XSSFSheet.FooterMargin) == defaults.footer()) {
+      sheet.getCTWorksheet().unsetPageMargins();
     }
   }
 

@@ -10,9 +10,9 @@
       "inputBytes" : 154,
       "commandCount" : 10,
       "commandKinds" : {
-        "GROUP_COLUMNS" : 8,
+        "SET_SHEET_PANE" : 1,
         "CREATE_SHEET" : 1,
-        "SET_SHEET_PANE" : 1
+        "GROUP_COLUMNS" : 8
       },
       "styleKinds" : { }
     }

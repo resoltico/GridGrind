@@ -10,10 +10,10 @@
       "inputBytes" : 94,
       "commandCount" : 7,
       "commandKinds" : {
-        "CLEAR_SHEET_PROTECTION" : 1,
         "GROUP_COLUMNS" : 1,
         "UNGROUP_COLUMNS" : 4,
-        "CREATE_SHEET" : 1
+        "CREATE_SHEET" : 1,
+        "CLEAR_SHEET_PROTECTION" : 1
       },
       "styleKinds" : { }
     }

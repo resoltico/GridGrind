@@ -184,4 +184,22 @@ class ConditionalFormattingInputTest {
             new ExcelDifferentialBorderSide(ExcelBorderStyle.DOTTED, "#506070")),
         WorkbookCommandConverter.toExcelDifferentialBorder(border));
   }
+
+  @Test
+  void allowsStyleLessDifferentialRuleFamiliesWhenPoiSupportsThem() {
+    assertEquals(
+        new ExcelConditionalFormattingRule.FormulaRule("A1>0", false, null),
+        WorkbookCommandConverter.toExcelConditionalFormattingRule(
+            new ConditionalFormattingRuleInput.FormulaRule("A1>0", false, null)));
+    assertEquals(
+        new ExcelConditionalFormattingRule.CellValueRule(
+            ExcelComparisonOperator.GREATER_THAN, "1", null, false, null),
+        WorkbookCommandConverter.toExcelConditionalFormattingRule(
+            new ConditionalFormattingRuleInput.CellValueRule(
+                ExcelComparisonOperator.GREATER_THAN, "1", null, false, null)));
+    assertEquals(
+        new ExcelConditionalFormattingRule.Top10Rule(10, false, false, false, null),
+        WorkbookCommandConverter.toExcelConditionalFormattingRule(
+            new ConditionalFormattingRuleInput.Top10Rule(false, 10, false, false, null)));
+  }
 }

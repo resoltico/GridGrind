@@ -7,7 +7,7 @@ Source Kind: EXISTING
 Persistence Kind: SAVE_AS
 Operation Count: 1
 Read Count: 3
-Read Kinds: GET_AUTOFILTERS=1, ANALYZE_WORKBOOK_FINDINGS=1, ANALYZE_NAMED_RANGE_HEALTH=1
+Read Kinds: ANALYZE_WORKBOOK_FINDINGS=1, ANALYZE_NAMED_RANGE_HEALTH=1, GET_AUTOFILTERS=1
 Response Kind: FAILURE
 Style Kinds: font=1, font_name=1
 Operation Kinds: APPLY_STYLE=1

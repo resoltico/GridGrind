@@ -532,12 +532,12 @@ public final class XlsxParityScenarios {
     XSSFColor boldColor = new XSSFColor();
     boldColor.setTheme(4);
     boldColor.setTint(-0.20d);
-    boldFont.setColor(boldColor);
+    boldFont.getCTFont().addNewColor().set(boldColor.getCTColor());
     XSSFFont italicFont = workbook.createFont();
     italicFont.setItalic(true);
     XSSFColor italicColor = new XSSFColor();
     italicColor.setIndexed(IndexedColors.DARK_GREEN.getIndex());
-    italicFont.setColor(italicColor);
+    italicFont.getCTFont().addNewColor().set(italicColor.getCTColor());
     richText.applyFont(0, 4, boldFont);
     richText.applyFont(5, richText.length(), italicFont);
     comment.setString(richText);

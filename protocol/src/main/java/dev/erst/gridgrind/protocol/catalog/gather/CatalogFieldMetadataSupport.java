@@ -50,6 +50,7 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(NamedRangeScope.class, "namedRangeScopeTypes"),
           Map.entry(NamedRangeSelector.class, "namedRangeSelectorTypes"),
           Map.entry(DataValidationRuleInput.class, "dataValidationRuleTypes"),
+          Map.entry(AutofilterFilterCriterionInput.class, "autofilterFilterCriterionTypes"),
           Map.entry(ConditionalFormattingRuleInput.class, "conditionalFormattingRuleTypes"),
           Map.entry(PrintAreaInput.class, "printAreaTypes"),
           Map.entry(PrintScalingInput.class, "printScalingTypes"),
@@ -60,26 +61,42 @@ public final class CatalogFieldMetadataSupport {
   private static final Map<Class<?>, String> PLAIN_FIELD_SHAPE_GROUPS =
       Map.ofEntries(
           Map.entry(CommentInput.class, "commentInputType"),
+          Map.entry(CommentAnchorInput.class, "commentAnchorInputType"),
           Map.entry(NamedRangeTarget.class, "namedRangeTargetType"),
           Map.entry(SheetProtectionSettings.class, "sheetProtectionSettingsType"),
           Map.entry(CellStyleInput.class, "cellStyleInputType"),
           Map.entry(CellAlignmentInput.class, "cellAlignmentInputType"),
           Map.entry(CellFontInput.class, "cellFontInputType"),
+          Map.entry(ColorInput.class, "colorInputType"),
           Map.entry(RichTextRunInput.class, "richTextRunInputType"),
           Map.entry(CellFillInput.class, "cellFillInputType"),
+          Map.entry(CellGradientFillInput.class, "cellGradientFillInputType"),
+          Map.entry(CellGradientStopInput.class, "cellGradientStopInputType"),
           Map.entry(CellBorderInput.class, "cellBorderInputType"),
           Map.entry(CellBorderSideInput.class, "cellBorderSideInputType"),
           Map.entry(CellProtectionInput.class, "cellProtectionInputType"),
           Map.entry(DataValidationInput.class, "dataValidationInputType"),
           Map.entry(DataValidationPromptInput.class, "dataValidationPromptInputType"),
           Map.entry(DataValidationErrorAlertInput.class, "dataValidationErrorAlertInputType"),
+          Map.entry(
+              AutofilterFilterCriterionInput.CustomConditionInput.class,
+              "autofilterCustomConditionInputType"),
+          Map.entry(AutofilterFilterColumnInput.class, "autofilterFilterColumnInputType"),
+          Map.entry(AutofilterSortConditionInput.class, "autofilterSortConditionInputType"),
+          Map.entry(AutofilterSortStateInput.class, "autofilterSortStateInputType"),
           Map.entry(ConditionalFormattingBlockInput.class, "conditionalFormattingBlockInputType"),
+          Map.entry(
+              ConditionalFormattingThresholdInput.class, "conditionalFormattingThresholdInputType"),
           Map.entry(HeaderFooterTextInput.class, "headerFooterTextInputType"),
           Map.entry(DifferentialStyleInput.class, "differentialStyleInputType"),
           Map.entry(DifferentialBorderInput.class, "differentialBorderInputType"),
           Map.entry(DifferentialBorderSideInput.class, "differentialBorderSideInputType"),
           Map.entry(PrintLayoutInput.class, "printLayoutInputType"),
-          Map.entry(TableInput.class, "tableInputType"));
+          Map.entry(PrintMarginsInput.class, "printMarginsInputType"),
+          Map.entry(PrintSetupInput.class, "printSetupInputType"),
+          Map.entry(TableColumnInput.class, "tableColumnInputType"),
+          Map.entry(TableInput.class, "tableInputType"),
+          Map.entry(WorkbookProtectionInput.class, "workbookProtectionInputType"));
 
   private CatalogFieldMetadataSupport() {}
 

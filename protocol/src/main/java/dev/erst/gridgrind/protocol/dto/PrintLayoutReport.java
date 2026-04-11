@@ -33,18 +33,7 @@ public record PrintLayoutReport(
         repeatingColumns,
         header,
         footer,
-        new PrintSetupReport(
-            new PrintMarginsReport(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d),
-            false,
-            false,
-            0,
-            false,
-            false,
-            0,
-            false,
-            0,
-            java.util.List.of(),
-            java.util.List.of()));
+        PrintSetupReport.defaults());
   }
 
   public PrintLayoutReport {

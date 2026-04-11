@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.35.0"
+version: "0.36.0"
 domain: DEVELOPER_JAZZER
 updated: "2026-04-11"
 route:
@@ -118,9 +118,10 @@ Target-specific strategy:
 - readable request seeds should omit fields that intentionally default when omission is the public
   contract, so replay guards the real defaulting behavior instead of only an explicit equivalent
   payload
-- readable request seeds should also track newly expanded factual read contracts when public
-  examples add them, so richer shapes such as workbook protection, rich comments, advanced print
-  setup, autofilter criteria or sort state, and advanced table metadata stay replayed end to end
+- readable request seeds should also track newly expanded factual read and mutation contracts when
+  public examples add them, so richer shapes such as workbook protection, rich comments, advanced
+  print setup, structured style colors or gradients, autofilter criteria or sort state, advanced
+  table metadata, and formula-defined named ranges stay replayed end to end
 - `protocol-workflow`, `engine-command-sequence`, and `xlsx-roundtrip` favor replay-verified
   binary seeds promoted from local corpus entries
 - the meaning of a promoted binary seed is defined by its replay expectation and replay details,

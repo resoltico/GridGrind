@@ -1,12 +1,16 @@
 package dev.erst.gridgrind.protocol.parity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
+import org.apache.poi.poifs.crypt.HashAlgorithm;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
 /** End-to-end parity-ledger verification for the Apache POI XSSF Phase 1 harness. */
@@ -84,6 +88,53 @@ final class XlsxParityTest {
         assertTrue(
             materialized.workbookPath().getFileName().toString().endsWith(".xlsx"), scenario.id());
       }
+    } finally {
+      deleteRecursively(temporaryRoot);
+    }
+  }
+
+  @Test
+  void workbookProtectionOracleRecognizesModernWorkbookAndRevisionsHashes() {
+    Path temporaryRoot =
+        XlsxParitySupport.call(
+            "create workbook-protection oracle temporary directory",
+            () -> Files.createTempDirectory("gridgrind-parity-protection-"));
+    try {
+      Path workbookPath = temporaryRoot.resolve("workbook-protection.xlsx");
+      XlsxParitySupport.call(
+          "write workbook-protection parity workbook",
+          () -> {
+            try (XSSFWorkbook workbook = new XSSFWorkbook();
+                OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.createSheet("Protection");
+              workbook.lockStructure();
+              workbook.lockWindows();
+              workbook.lockRevision();
+              workbook.setWorkbookPassword(
+                  XlsxParityScenarios.WORKBOOK_PROTECTION_PASSWORD, HashAlgorithm.sha512);
+              workbook.setRevisionsPassword("gridgrind-phase3-revisions", HashAlgorithm.sha512);
+              workbook.write(outputStream);
+            }
+            return null;
+          });
+
+      XlsxParityOracle.WorkbookProtectionSnapshot protection =
+          XlsxParityOracle.workbookProtection(workbookPath);
+
+      assertTrue(protection.structureLocked());
+      assertTrue(protection.windowsLocked());
+      assertTrue(protection.revisionLocked());
+      assertTrue(protection.workbookPasswordHashPresent());
+      assertTrue(protection.revisionsPasswordHashPresent());
+      assertTrue(protection.passwordMatches());
+      assertFalse(
+          XlsxParitySupport.call(
+              "validate mismatched workbook-protection password",
+              () -> {
+                try (XSSFWorkbook workbook = new XSSFWorkbook(workbookPath.toFile())) {
+                  return workbook.validateWorkbookPassword("not-the-phase-password");
+                }
+              }));
     } finally {
       deleteRecursively(temporaryRoot);
     }

@@ -6,14 +6,13 @@ public record ExcelCellFont(
     Boolean italic,
     String fontName,
     ExcelFontHeight fontHeight,
-    String fontColor,
+    ExcelColor fontColor,
     Boolean underline,
     Boolean strikeout) {
   public ExcelCellFont {
     if (fontName != null && fontName.isBlank()) {
       throw new IllegalArgumentException("fontName must not be blank");
     }
-    fontColor = ExcelRgbColorSupport.normalizeRgbHex(fontColor, "fontColor");
     if (bold == null
         && italic == null
         && fontName == null

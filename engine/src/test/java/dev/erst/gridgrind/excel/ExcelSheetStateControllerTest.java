@@ -132,4 +132,113 @@ class ExcelSheetStateControllerTest {
           controller.workbookProtection(workbook));
     }
   }
+
+  @Test
+  void setAndClearWorkbookProtectionRoundTripsAndRemovesEmptyNodes() throws IOException {
+    ExcelSheetStateController controller = new ExcelSheetStateController();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      ExcelWorkbookProtectionSettings protectedSettings =
+          new ExcelWorkbookProtectionSettings(true, true, true, "secret", "review");
+
+      controller.setWorkbookProtection(workbook, protectedSettings);
+
+      assertEquals(
+          new ExcelWorkbookProtectionSnapshot(true, true, true, true, true),
+          controller.workbookProtection(workbook));
+      assertTrue(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
+
+      controller.clearWorkbookProtection(workbook);
+
+      assertEquals(
+          new ExcelWorkbookProtectionSnapshot(false, false, false, false, false),
+          controller.workbookProtection(workbook));
+      assertFalse(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
+
+      controller.setWorkbookProtection(
+          workbook, new ExcelWorkbookProtectionSettings(false, false, false, null, null));
+
+      assertFalse(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
+    }
+  }
+
+  @Test
+  void excelWorkbookDelegatesWorkbookProtectionMutations() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      ExcelWorkbookProtectionSettings settings =
+          new ExcelWorkbookProtectionSettings(true, false, true, "secret", null);
+
+      workbook.setWorkbookProtection(settings);
+
+      assertEquals(
+          new ExcelWorkbookProtectionSnapshot(true, false, true, true, false),
+          workbook.workbookProtection());
+
+      workbook.clearWorkbookProtection();
+
+      assertEquals(
+          new ExcelWorkbookProtectionSnapshot(false, false, false, false, false),
+          workbook.workbookProtection());
+    }
+  }
+
+  @Test
+  void setWorkbookProtectionClearsStaleLegacyAndModernHashesWhenPasswordsAreOmitted()
+      throws IOException {
+    ExcelSheetStateController controller = new ExcelSheetStateController();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      var protection = workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
+      protection.setWorkbookPassword(new byte[] {0x01, 0x02});
+      protection.setWorkbookPasswordCharacterSet("1");
+      protection.setWorkbookAlgorithmName("SHA-512");
+      protection.setWorkbookHashValue(new byte[] {0x03, 0x04});
+      protection.setWorkbookSaltValue(new byte[] {0x05, 0x06});
+      protection.setWorkbookSpinCount(100000L);
+      protection.setRevisionsPassword(new byte[] {0x07, 0x08});
+      protection.setRevisionsPasswordCharacterSet("1");
+      protection.setRevisionsAlgorithmName("SHA-512");
+      protection.setRevisionsHashValue(new byte[] {0x09, 0x0A});
+      protection.setRevisionsSaltValue(new byte[] {0x0B, 0x0C});
+      protection.setRevisionsSpinCount(100000L);
+
+      controller.setWorkbookProtection(
+          workbook, new ExcelWorkbookProtectionSettings(true, false, true, null, null));
+
+      assertEquals(
+          new ExcelWorkbookProtectionSnapshot(true, false, true, false, false),
+          controller.workbookProtection(workbook));
+      assertTrue(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
+      var normalizedProtection = workbook.xssfWorkbook().getCTWorkbook().getWorkbookProtection();
+      assertFalse(normalizedProtection.isSetWorkbookPassword());
+      assertFalse(normalizedProtection.isSetWorkbookHashValue());
+      assertFalse(normalizedProtection.isSetWorkbookSaltValue());
+      assertFalse(normalizedProtection.isSetWorkbookSpinCount());
+      assertFalse(normalizedProtection.isSetWorkbookAlgorithmName());
+      assertFalse(normalizedProtection.isSetRevisionsPassword());
+      assertFalse(normalizedProtection.isSetRevisionsHashValue());
+      assertFalse(normalizedProtection.isSetRevisionsSaltValue());
+      assertFalse(normalizedProtection.isSetRevisionsSpinCount());
+      assertFalse(normalizedProtection.isSetRevisionsAlgorithmName());
+    }
+  }
+
+  @Test
+  void clearWorkbookProtectionIsIdempotentOnFreshWorkbooks() throws IOException {
+    ExcelSheetStateController controller = new ExcelSheetStateController();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+
+      controller.clearWorkbookProtection(workbook);
+
+      assertEquals(
+          new ExcelWorkbookProtectionSnapshot(false, false, false, false, false),
+          controller.workbookProtection(workbook));
+      assertFalse(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
+    }
+  }
 }

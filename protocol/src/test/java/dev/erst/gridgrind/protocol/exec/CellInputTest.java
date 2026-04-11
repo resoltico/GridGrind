@@ -45,7 +45,13 @@ class CellInputTest {
                 new ExcelRichTextRun(
                     " FY26",
                     new dev.erst.gridgrind.excel.ExcelCellFont(
-                        Boolean.TRUE, null, null, null, "#AABBCC", null, null)))),
+                        Boolean.TRUE,
+                        null,
+                        null,
+                        null,
+                        new dev.erst.gridgrind.excel.ExcelColor("#AABBCC"),
+                        null,
+                        null)))),
         richTextValue.value());
 
     ExcelCellValue.NumberValue numberValue =

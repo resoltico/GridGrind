@@ -3,6 +3,7 @@ package dev.erst.gridgrind.protocol.exec;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
@@ -51,14 +52,14 @@ class CellStyleInputTest {
     assertEquals("Aptos", engineStyle.font().fontName());
     assertEquals(230, engineStyle.font().fontHeight().twips());
     assertEquals(new BigDecimal("11.5"), engineStyle.font().fontHeight().points());
-    assertEquals("#00AA55", engineStyle.font().fontColor());
+    assertEquals(new ExcelColor("#00AA55"), engineStyle.font().fontColor());
     assertTrue(engineStyle.font().underline());
     assertFalse(engineStyle.font().strikeout());
     assertEquals(ExcelFillPattern.THIN_HORIZONTAL_BANDS, engineStyle.fill().pattern());
-    assertEquals("#FFF2CC", engineStyle.fill().foregroundColor());
-    assertEquals("#DDEBF7", engineStyle.fill().backgroundColor());
+    assertEquals(new ExcelColor("#FFF2CC"), engineStyle.fill().foregroundColor());
+    assertEquals(new ExcelColor("#DDEBF7"), engineStyle.fill().backgroundColor());
     assertEquals(ExcelBorderStyle.THICK, engineStyle.border().top().style());
-    assertEquals("#112233", engineStyle.border().top().color());
+    assertEquals(new ExcelColor("#112233"), engineStyle.border().top().color());
     assertFalse(engineStyle.protection().locked());
     assertTrue(engineStyle.protection().hiddenFormula());
   }

@@ -18,6 +18,8 @@ public sealed interface WorkbookCommand
         WorkbookCommand.SetSheetVisibility,
         WorkbookCommand.SetSheetProtection,
         WorkbookCommand.ClearSheetProtection,
+        WorkbookCommand.SetWorkbookProtection,
+        WorkbookCommand.ClearWorkbookProtection,
         WorkbookCommand.MergeCells,
         WorkbookCommand.UnmergeCells,
         WorkbookCommand.SetColumnWidth,
@@ -166,13 +168,22 @@ public sealed interface WorkbookCommand
   }
 
   /** Enables sheet protection with the exact supported lock flags. */
-  record SetSheetProtection(String sheetName, ExcelSheetProtectionSettings protection)
+  record SetSheetProtection(
+      String sheetName, ExcelSheetProtectionSettings protection, String password)
       implements WorkbookCommand {
+    /** Enables sheet protection without applying a password hash. */
+    public SetSheetProtection(String sheetName, ExcelSheetProtectionSettings protection) {
+      this(sheetName, protection, null);
+    }
+
     public SetSheetProtection {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(protection, "protection must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (password != null && password.isBlank()) {
+        throw new IllegalArgumentException("password must not be blank");
       }
     }
   }
@@ -186,6 +197,17 @@ public sealed interface WorkbookCommand
       }
     }
   }
+
+  /** Enables workbook-level protection and password hashes with authoritative settings. */
+  record SetWorkbookProtection(ExcelWorkbookProtectionSettings protection)
+      implements WorkbookCommand {
+    public SetWorkbookProtection {
+      Objects.requireNonNull(protection, "protection must not be null");
+    }
+  }
+
+  /** Clears workbook-level protection and password hashes entirely. */
+  record ClearWorkbookProtection() implements WorkbookCommand {}
 
   /** Merges an A1-style rectangular range into one displayed cell region. */
   record MergeCells(String sheetName, String range) implements WorkbookCommand {
@@ -665,15 +687,29 @@ public sealed interface WorkbookCommand
   }
 
   /** Creates or replaces one sheet-level autofilter range. */
-  record SetAutofilter(String sheetName, String range) implements WorkbookCommand {
+  record SetAutofilter(
+      String sheetName,
+      String range,
+      List<ExcelAutofilterFilterColumn> criteria,
+      ExcelAutofilterSortState sortState)
+      implements WorkbookCommand {
+    /** Creates a plain sheet-level autofilter without criteria or explicit sort state. */
+    public SetAutofilter(String sheetName, String range) {
+      this(sheetName, range, List.of(), null);
+    }
+
     public SetAutofilter {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(range, "range must not be null");
+      criteria = List.copyOf(Objects.requireNonNull(criteria, "criteria must not be null"));
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }
       if (range.isBlank()) {
         throw new IllegalArgumentException("range must not be blank");
+      }
+      for (ExcelAutofilterFilterColumn criterion : criteria) {
+        Objects.requireNonNull(criterion, "criteria must not contain null values");
       }
     }
   }

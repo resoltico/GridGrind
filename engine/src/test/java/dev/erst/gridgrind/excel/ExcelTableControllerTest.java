@@ -73,6 +73,259 @@ class ExcelTableControllerTest {
   }
 
   @Test
+  void setTable_acceptsCaseInsensitiveTotalsRowFunctions() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      populateTableCells(sheet, "Owner", "Amount");
+      sheet.setCell("A4", ExcelCellValue.text("Totals"));
+      sheet.setCell("B4", ExcelCellValue.number(3));
+
+      controller.setTable(
+          workbook,
+          new ExcelTableDefinition(
+              "Queue",
+              "Ops",
+              "A1:B4",
+              true,
+              false,
+              new ExcelTableStyle.None(),
+              "",
+              false,
+              false,
+              false,
+              "",
+              "",
+              "",
+              List.of(new ExcelTableColumnDefinition(1, "", "", "SUM", ""))));
+
+      ExcelTableSnapshot table =
+          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+
+      assertEquals("sum", table.columns().get(1).totalsRowFunction());
+    }
+  }
+
+  @Test
+  void setTable_roundTripsAndClearsAdvancedMetadata() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      populateTableCells(sheet, "Owner", "Task");
+      sheet.setCell("A4", ExcelCellValue.text("Totals"));
+      sheet.setCell("B4", ExcelCellValue.text("Done"));
+
+      controller.setTable(
+          workbook,
+          new ExcelTableDefinition(
+              "Queue",
+              "Ops",
+              "A1:B4",
+              true,
+              false,
+              new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false),
+              "Office queue",
+              true,
+              true,
+              true,
+              "Hdr",
+              "Data",
+              "Totals",
+              List.of(
+                  new ExcelTableColumnDefinition(0, "OwnerKey", "Total", "", ""),
+                  new ExcelTableColumnDefinition(1, "", "", "SUM", "UPPER([@Task])"))));
+
+      ExcelTableSnapshot authored =
+          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+      assertEquals("Office queue", authored.comment());
+      assertTrue(authored.published());
+      assertTrue(authored.insertRow());
+      assertTrue(authored.insertRowShift());
+      assertEquals("Hdr", authored.headerRowCellStyle());
+      assertEquals("Data", authored.dataCellStyle());
+      assertEquals("Totals", authored.totalsRowCellStyle());
+      assertEquals("OwnerKey", authored.columns().get(0).uniqueName());
+      assertEquals("Total", authored.columns().get(0).totalsRowLabel());
+      assertEquals("sum", authored.columns().get(1).totalsRowFunction());
+      assertEquals("UPPER([@Task])", authored.columns().get(1).calculatedColumnFormula());
+      assertFalse(authored.hasAutofilter());
+
+      controller.setTable(
+          workbook,
+          new ExcelTableDefinition(
+              "Queue",
+              "Ops",
+              "A1:B4",
+              true,
+              true,
+              new ExcelTableStyle.None(),
+              "Updated queue",
+              false,
+              false,
+              false,
+              "Hdr2",
+              "Data2",
+              "Totals2",
+              List.of(
+                  new ExcelTableColumnDefinition(0, "OwnerKey2", "Overall", "", ""),
+                  new ExcelTableColumnDefinition(1, "", "", "AVERAGE", "LOWER([@Task])"))));
+
+      ExcelTableSnapshot updated =
+          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+      assertEquals("Updated queue", updated.comment());
+      assertEquals("Hdr2", updated.headerRowCellStyle());
+      assertEquals("Data2", updated.dataCellStyle());
+      assertEquals("Totals2", updated.totalsRowCellStyle());
+      assertEquals("OwnerKey2", updated.columns().get(0).uniqueName());
+      assertEquals("Overall", updated.columns().get(0).totalsRowLabel());
+      assertEquals("average", updated.columns().get(1).totalsRowFunction());
+      assertEquals("LOWER([@Task])", updated.columns().get(1).calculatedColumnFormula());
+      assertTrue(updated.hasAutofilter());
+
+      controller.setTable(
+          workbook,
+          new ExcelTableDefinition(
+              "Queue",
+              "Ops",
+              "A1:B4",
+              true,
+              true,
+              new ExcelTableStyle.None(),
+              "",
+              false,
+              false,
+              false,
+              "",
+              "",
+              "",
+              List.of(
+                  new ExcelTableColumnDefinition(0, "", "", "", ""),
+                  new ExcelTableColumnDefinition(1, "", "", "", ""))));
+
+      ExcelTableSnapshot cleared =
+          controller.tables(workbook, new ExcelTableSelection.All()).getFirst();
+      assertEquals("", cleared.comment());
+      assertFalse(cleared.published());
+      assertFalse(cleared.insertRow());
+      assertFalse(cleared.insertRowShift());
+      assertEquals("", cleared.headerRowCellStyle());
+      assertEquals("", cleared.dataCellStyle());
+      assertEquals("", cleared.totalsRowCellStyle());
+      assertEquals("", cleared.columns().get(0).uniqueName());
+      assertEquals("", cleared.columns().get(0).totalsRowLabel());
+      assertEquals("", cleared.columns().get(1).totalsRowFunction());
+      assertEquals("", cleared.columns().get(1).calculatedColumnFormula());
+    }
+  }
+
+  @Test
+  void setTable_canRemoveExistingTableAutofilter() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      populateTableCells(sheet, "Owner", "Task");
+      sheet.setCell("A4", ExcelCellValue.text("Totals"));
+      sheet.setCell("B4", ExcelCellValue.text("Done"));
+
+      controller.setTable(
+          workbook,
+          new ExcelTableDefinition(
+              "Queue",
+              "Ops",
+              "A1:B4",
+              true,
+              true,
+              new ExcelTableStyle.None(),
+              "",
+              false,
+              false,
+              false,
+              "",
+              "",
+              "",
+              List.of()));
+      assertTrue(
+          controller.tables(workbook, new ExcelTableSelection.All()).getFirst().hasAutofilter());
+
+      controller.setTable(
+          workbook,
+          new ExcelTableDefinition(
+              "Queue",
+              "Ops",
+              "A1:B4",
+              true,
+              false,
+              new ExcelTableStyle.None(),
+              "",
+              false,
+              false,
+              false,
+              "",
+              "",
+              "",
+              List.of()));
+
+      assertFalse(
+          workbook.sheet("Ops").xssfSheet().getTables().getFirst().getCTTable().isSetAutoFilter());
+      assertFalse(
+          controller.tables(workbook, new ExcelTableSelection.All()).getFirst().hasAutofilter());
+    }
+  }
+
+  @Test
+  void setTable_rejectsOutOfRangeColumnsAndUnsupportedTotalsFunctions() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      populateTableCells(sheet, "Owner", "Task");
+
+      IllegalArgumentException outOfRangeFailure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  controller.setTable(
+                      workbook,
+                      new ExcelTableDefinition(
+                          "Queue",
+                          "Ops",
+                          "A1:B3",
+                          false,
+                          true,
+                          new ExcelTableStyle.None(),
+                          "",
+                          false,
+                          false,
+                          false,
+                          "",
+                          "",
+                          "",
+                          List.of(new ExcelTableColumnDefinition(2, "", "", "", "")))));
+      assertEquals(
+          "table columnIndex is outside the table range: 2", outOfRangeFailure.getMessage());
+
+      IllegalArgumentException unsupportedFunctionFailure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  controller.setTable(
+                      workbook,
+                      new ExcelTableDefinition(
+                          "Queue",
+                          "Ops",
+                          "A1:B3",
+                          false,
+                          true,
+                          new ExcelTableStyle.None(),
+                          "",
+                          false,
+                          false,
+                          false,
+                          "",
+                          "",
+                          "",
+                          List.of(new ExcelTableColumnDefinition(1, "", "", "mystery", "")))));
+      assertEquals(
+          "unsupported table totalsRowFunction: mystery", unsupportedFunctionFailure.getMessage());
+    }
+  }
+
+  @Test
   void setTable_acceptsFormulaAndNumericHeaders() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");

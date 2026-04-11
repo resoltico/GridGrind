@@ -1,0 +1,553 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "cli/build/generated-workbooks/gridgrind-advanced-mutation.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Advanced" },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Advanced",
+      "range": "A1:D6",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Owner" },
+          { "type": "TEXT", "text": "Task" },
+          { "type": "TEXT", "text": "Hours" },
+          { "type": "TEXT", "text": "Status" }
+        ],
+        [
+          { "type": "TEXT", "text": "Ada" },
+          { "type": "TEXT", "text": "Badge setup" },
+          { "type": "NUMBER", "number": 6 },
+          { "type": "TEXT", "text": "Queued" }
+        ],
+        [
+          { "type": "TEXT", "text": "Lin" },
+          { "type": "TEXT", "text": "Laptop handoff" },
+          { "type": "NUMBER", "number": 9 },
+          { "type": "TEXT", "text": "Done" }
+        ],
+        [
+          { "type": "TEXT", "text": "Sam" },
+          { "type": "TEXT", "text": "Desk labels" },
+          { "type": "NUMBER", "number": 4 },
+          { "type": "TEXT", "text": "Blocked" }
+        ],
+        [
+          { "type": "TEXT", "text": "Noa" },
+          { "type": "TEXT", "text": "Welcome kit" },
+          { "type": "NUMBER", "number": 8 },
+          { "type": "TEXT", "text": "Queued" }
+        ],
+        [
+          { "type": "TEXT", "text": "Total" },
+          { "type": "BLANK" },
+          { "type": "NUMBER", "number": 0 },
+          { "type": "BLANK" }
+        ]
+      ]
+    },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Advanced",
+      "range": "F1:H5",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Trip" },
+          { "type": "TEXT", "text": "State" },
+          { "type": "TEXT", "text": "Priority" }
+        ],
+        [
+          { "type": "TEXT", "text": "Badge runner" },
+          { "type": "TEXT", "text": "Queued" },
+          { "type": "NUMBER", "number": 2 }
+        ],
+        [
+          { "type": "TEXT", "text": "Floor signs" },
+          { "type": "TEXT", "text": "Done" },
+          { "type": "NUMBER", "number": 1 }
+        ],
+        [
+          { "type": "TEXT", "text": "Desk map" },
+          { "type": "TEXT", "text": "Queued" },
+          { "type": "NUMBER", "number": 3 }
+        ],
+        [
+          { "type": "TEXT", "text": "Printer setup" },
+          { "type": "TEXT", "text": "Blocked" },
+          { "type": "NUMBER", "number": 2 }
+        ]
+      ]
+    },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Advanced",
+      "range": "J1:L6",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Owner" },
+          { "type": "TEXT", "text": "Sales" },
+          { "type": "TEXT", "text": "Bonus" }
+        ],
+        [
+          { "type": "TEXT", "text": "Ada" },
+          { "type": "NUMBER", "number": 12 },
+          { "type": "BLANK" }
+        ],
+        [
+          { "type": "TEXT", "text": "Lin" },
+          { "type": "NUMBER", "number": 18 },
+          { "type": "BLANK" }
+        ],
+        [
+          { "type": "TEXT", "text": "Sam" },
+          { "type": "NUMBER", "number": 7 },
+          { "type": "BLANK" }
+        ],
+        [
+          { "type": "TEXT", "text": "Noa" },
+          { "type": "NUMBER", "number": 15 },
+          { "type": "BLANK" }
+        ],
+        [
+          { "type": "TEXT", "text": "Total" },
+          { "type": "NUMBER", "number": 0 },
+          { "type": "BLANK" }
+        ]
+      ]
+    },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Advanced",
+      "range": "N1:Q5",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Score" },
+          { "type": "TEXT", "text": "Heat" },
+          { "type": "TEXT", "text": "Load" },
+          { "type": "TEXT", "text": "Alert" }
+        ],
+        [
+          { "type": "NUMBER", "number": 10 },
+          { "type": "NUMBER", "number": 15 },
+          { "type": "NUMBER", "number": 35 },
+          { "type": "NUMBER", "number": 1 }
+        ],
+        [
+          { "type": "NUMBER", "number": 20 },
+          { "type": "NUMBER", "number": 45 },
+          { "type": "NUMBER", "number": 60 },
+          { "type": "NUMBER", "number": 2 }
+        ],
+        [
+          { "type": "NUMBER", "number": 30 },
+          { "type": "NUMBER", "number": 70 },
+          { "type": "NUMBER", "number": 80 },
+          { "type": "NUMBER", "number": 3 }
+        ],
+        [
+          { "type": "NUMBER", "number": 40 },
+          { "type": "NUMBER", "number": 95 },
+          { "type": "NUMBER", "number": 90 },
+          { "type": "NUMBER", "number": 2 }
+        ]
+      ]
+    },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Advanced",
+      "range": "S1:S3",
+      "rows": [
+        [{ "type": "TEXT", "text": "Style" }],
+        [{ "type": "TEXT", "text": "Theme fill" }],
+        [{ "type": "TEXT", "text": "Gradient fill" }]
+      ]
+    },
+    {
+      "type": "SET_COMMENT",
+      "sheetName": "Advanced",
+      "address": "B4",
+      "comment": {
+        "text": "Lead review scheduled.",
+        "author": "GridGrind",
+        "visible": false,
+        "runs": [
+          {
+            "text": "Lead",
+            "font": {
+              "bold": true,
+              "fontColorTheme": 4,
+              "fontColorTint": -0.2
+            }
+          },
+          { "text": " " },
+          {
+            "text": "review scheduled.",
+            "font": {
+              "italic": true,
+              "fontColorIndexed": 17
+            }
+          }
+        ],
+        "anchor": {
+          "firstColumn": 4,
+          "firstRow": 1,
+          "lastColumn": 8,
+          "lastRow": 7
+        }
+      }
+    },
+    {
+      "type": "SET_PRINT_LAYOUT",
+      "sheetName": "Advanced",
+      "printLayout": {
+        "printArea": { "type": "RANGE", "range": "A1:S20" },
+        "orientation": "LANDSCAPE",
+        "scaling": { "type": "FIT", "widthPages": 1, "heightPages": 0 },
+        "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 0 },
+        "repeatingColumns": { "type": "NONE" },
+        "header": { "left": "Advanced", "center": "Workbook Core Mutation Demo", "right": "" },
+        "footer": { "left": "", "center": "Internal", "right": "Page &P" },
+        "setup": {
+          "margins": {
+            "left": 0.35,
+            "right": 0.55,
+            "top": 0.6,
+            "bottom": 0.45,
+            "header": 0.3,
+            "footer": 0.3
+          },
+          "horizontallyCentered": true,
+          "verticallyCentered": true,
+          "paperSize": 8,
+          "draft": true,
+          "blackAndWhite": true,
+          "copies": 2,
+          "useFirstPageNumber": true,
+          "firstPageNumber": 4,
+          "rowBreaks": [6],
+          "columnBreaks": [3]
+        }
+      }
+    },
+    {
+      "type": "APPLY_STYLE",
+      "sheetName": "Advanced",
+      "range": "S2:S2",
+      "style": {
+        "font": {
+          "italic": true,
+          "fontColorTheme": 6,
+          "fontColorTint": -0.35
+        },
+        "fill": {
+          "pattern": "SOLID",
+          "foregroundColorTheme": 3,
+          "foregroundColorTint": 0.3
+        },
+        "border": {
+          "bottom": {
+            "style": "THIN",
+            "colorIndexed": 8
+          }
+        }
+      }
+    },
+    {
+      "type": "APPLY_STYLE",
+      "sheetName": "Advanced",
+      "range": "S3:S3",
+      "style": {
+        "fill": {
+          "gradient": {
+            "type": "LINEAR",
+            "degree": 45.0,
+            "stops": [
+              { "position": 0.0, "color": { "rgb": "#1F497D" } },
+              { "position": 1.0, "color": { "theme": 4, "tint": 0.45 } }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "type": "SET_NAMED_RANGE",
+      "name": "AdvancedHoursTotal",
+      "scope": { "type": "WORKBOOK" },
+      "target": { "formula": "SUM(Advanced!$C$2:$C$5)" }
+    },
+    {
+      "type": "SET_NAMED_RANGE",
+      "name": "AdvancedQueue",
+      "scope": { "type": "SHEET", "sheetName": "Advanced" },
+      "target": { "sheetName": "Advanced", "range": "A1:D6" }
+    },
+    {
+      "type": "SET_DATA_VALIDATION",
+      "sheetName": "Advanced",
+      "range": "D2:D5",
+      "validation": {
+        "rule": {
+          "type": "EXPLICIT_LIST",
+          "values": ["Queued", "Done", "Blocked"]
+        },
+        "allowBlank": false,
+        "prompt": {
+          "title": "Status",
+          "text": "Use one of the queue states."
+        },
+        "errorAlert": {
+          "style": "STOP",
+          "title": "Invalid status",
+          "text": "Choose Queued, Done, or Blocked."
+        }
+      }
+    },
+    {
+      "type": "SET_AUTOFILTER",
+      "sheetName": "Advanced",
+      "range": "F1:H5",
+      "criteria": [
+        {
+          "columnId": 1,
+          "showButton": true,
+          "criterion": {
+            "type": "VALUES",
+            "values": ["Queued", "Done"],
+            "includeBlank": false
+          }
+        }
+      ],
+      "sortState": {
+        "range": "F2:H5",
+        "caseSensitive": false,
+        "columnSort": false,
+        "sortMethod": "",
+        "conditions": [
+          {
+            "range": "H2:H5",
+            "descending": true,
+            "sortBy": ""
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_TABLE",
+      "table": {
+        "name": "AdvancedSales",
+        "sheetName": "Advanced",
+        "range": "J1:L6",
+        "showTotalsRow": true,
+        "hasAutofilter": false,
+        "comment": "Advanced table mutation demo",
+        "published": true,
+        "insertRow": true,
+        "insertRowShift": true,
+        "headerRowCellStyle": "AdvancedHeader",
+        "dataCellStyle": "AdvancedData",
+        "totalsRowCellStyle": "AdvancedTotals",
+        "style": { "type": "NONE" },
+        "columns": [
+          {
+            "columnIndex": 0,
+            "totalsRowLabel": "Total"
+          },
+          {
+            "columnIndex": 1,
+            "totalsRowFunction": "SUM"
+          },
+          {
+            "columnIndex": 2,
+            "uniqueName": "bonus-unique",
+            "calculatedColumnFormula": "[@Sales]*0.1"
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_CONDITIONAL_FORMATTING",
+      "sheetName": "Advanced",
+      "conditionalFormatting": {
+        "ranges": ["O2:O5"],
+        "rules": [
+          {
+            "type": "COLOR_SCALE_RULE",
+            "stopIfTrue": false,
+            "thresholds": [
+              { "type": "MIN" },
+              { "type": "PERCENTILE", "value": 50.0 },
+              { "type": "MAX" }
+            ],
+            "colors": [
+              { "rgb": "#AA2211" },
+              { "rgb": "#FFDD55" },
+              { "rgb": "#11CC66" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_CONDITIONAL_FORMATTING",
+      "sheetName": "Advanced",
+      "conditionalFormatting": {
+        "ranges": ["P2:P5"],
+        "rules": [
+          {
+            "type": "DATA_BAR_RULE",
+            "stopIfTrue": false,
+            "color": { "rgb": "#123456" },
+            "iconOnly": true,
+            "widthMin": 10,
+            "widthMax": 90,
+            "minThreshold": { "type": "MIN" },
+            "maxThreshold": { "type": "MAX" }
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_CONDITIONAL_FORMATTING",
+      "sheetName": "Advanced",
+      "conditionalFormatting": {
+        "ranges": ["Q2:Q5"],
+        "rules": [
+          {
+            "type": "ICON_SET_RULE",
+            "stopIfTrue": false,
+            "iconSet": "GYR_3_TRAFFIC_LIGHTS",
+            "iconOnly": true,
+            "reversed": true,
+            "thresholds": [
+              { "type": "PERCENT", "value": 0.0 },
+              { "type": "PERCENT", "value": 33.0 },
+              { "type": "PERCENT", "value": 67.0 }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_CONDITIONAL_FORMATTING",
+      "sheetName": "Advanced",
+      "conditionalFormatting": {
+        "ranges": ["N2:N5"],
+        "rules": [
+          {
+            "type": "TOP10_RULE",
+            "stopIfTrue": false,
+            "rank": 10,
+            "percent": false,
+            "bottom": false
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_SHEET_PROTECTION",
+      "sheetName": "Advanced",
+      "protection": {
+        "autoFilterLocked": true,
+        "deleteColumnsLocked": true,
+        "deleteRowsLocked": true,
+        "formatCellsLocked": true,
+        "formatColumnsLocked": false,
+        "formatRowsLocked": false,
+        "insertColumnsLocked": true,
+        "insertHyperlinksLocked": true,
+        "insertRowsLocked": true,
+        "objectsLocked": true,
+        "pivotTablesLocked": true,
+        "scenariosLocked": true,
+        "selectLockedCellsLocked": true,
+        "selectUnlockedCellsLocked": false,
+        "sortLocked": true
+      },
+      "password": "Sheet-2026"
+    },
+    {
+      "type": "SET_WORKBOOK_PROTECTION",
+      "protection": {
+        "structureLocked": true,
+        "windowsLocked": false,
+        "revisionsLocked": true,
+        "workbookPassword": "Vault-2026",
+        "revisionsPassword": "Revisions-2026"
+      }
+    },
+    { "type": "EVALUATE_FORMULAS" }
+  ],
+  "reads": [
+    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
+    { "type": "GET_WORKBOOK_PROTECTION", "requestId": "workbook-protection" },
+    {
+      "type": "GET_SHEET_SUMMARY",
+      "requestId": "sheet-summary",
+      "sheetName": "Advanced"
+    },
+    {
+      "type": "GET_CELLS",
+      "requestId": "cells",
+      "sheetName": "Advanced",
+      "addresses": ["B4", "S2", "S3"]
+    },
+    {
+      "type": "GET_COMMENTS",
+      "requestId": "comments",
+      "sheetName": "Advanced",
+      "selection": {
+        "type": "SELECTED",
+        "addresses": ["B4"]
+      }
+    },
+    {
+      "type": "GET_PRINT_LAYOUT",
+      "requestId": "print-layout",
+      "sheetName": "Advanced"
+    },
+    {
+      "type": "GET_NAMED_RANGES",
+      "requestId": "named-ranges",
+      "selection": { "type": "ALL" }
+    },
+    {
+      "type": "GET_DATA_VALIDATIONS",
+      "requestId": "data-validations",
+      "sheetName": "Advanced",
+      "selection": {
+        "type": "SELECTED",
+        "ranges": ["D2:D5"]
+      }
+    },
+    {
+      "type": "GET_AUTOFILTERS",
+      "requestId": "autofilters",
+      "sheetName": "Advanced"
+    },
+    {
+      "type": "GET_TABLES",
+      "requestId": "tables",
+      "selection": {
+        "type": "BY_NAMES",
+        "names": ["AdvancedSales"]
+      }
+    },
+    {
+      "type": "GET_CONDITIONAL_FORMATTING",
+      "requestId": "conditional-formatting",
+      "sheetName": "Advanced",
+      "selection": {
+        "type": "SELECTED",
+        "ranges": ["N2:Q5"]
+      }
+    },
+    {
+      "type": "ANALYZE_WORKBOOK_FINDINGS",
+      "requestId": "findings"
+    }
+  ]
+}

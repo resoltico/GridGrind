@@ -236,8 +236,17 @@ public final class ExcelSheet {
 
   /** Creates or replaces one sheet-level autofilter range. */
   public ExcelSheet setAutofilter(String range) {
+    return setAutofilter(range, List.of(), null);
+  }
+
+  /** Creates or replaces one sheet-level autofilter range plus authored criteria and sort state. */
+  public ExcelSheet setAutofilter(
+      String range,
+      List<ExcelAutofilterFilterColumn> criteria,
+      ExcelAutofilterSortState sortState) {
     requireNonBlank(range, "range");
-    autofilterController.setSheetAutofilter(xssfSheet(), range);
+    Objects.requireNonNull(criteria, "criteria must not be null");
+    autofilterController.setSheetAutofilter(xssfSheet(), range, criteria, sortState);
     return this;
   }
 
@@ -1148,15 +1157,19 @@ public final class ExcelSheet {
 
   private Comment newComment(int rowIndex, int columnIndex, ExcelComment comment) {
     ClientAnchor anchor = sheet.getWorkbook().getCreationHelper().createClientAnchor();
-    anchor.setRow1(rowIndex);
-    anchor.setRow2(rowIndex + 3);
-    anchor.setCol1(columnIndex);
-    anchor.setCol2(columnIndex + 3);
+    ExcelCommentAnchor authoredAnchor = comment.anchor();
+    anchor.setRow1(authoredAnchor == null ? rowIndex : authoredAnchor.firstRow());
+    anchor.setRow2(authoredAnchor == null ? rowIndex + 3 : authoredAnchor.lastRow());
+    anchor.setCol1(authoredAnchor == null ? columnIndex : authoredAnchor.firstColumn());
+    anchor.setCol2(authoredAnchor == null ? columnIndex + 3 : authoredAnchor.lastColumn());
     Comment poiComment = sheet.createDrawingPatriarch().createCellComment(anchor);
     poiComment.setAuthor(comment.author());
     poiComment.setVisible(comment.visible());
     poiComment.setString(
-        sheet.getWorkbook().getCreationHelper().createRichTextString(comment.text()));
+        comment.runs() == null
+            ? new XSSFRichTextString(comment.text())
+            : ExcelRichTextSupport.toPoiRichText(
+                (XSSFWorkbook) sheet.getWorkbook(), comment.runs()));
     return poiComment;
   }
 

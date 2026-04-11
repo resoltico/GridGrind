@@ -20,9 +20,9 @@
       },
       "readCount" : 3,
       "readKinds" : {
-        "GET_AUTOFILTERS" : 1,
         "ANALYZE_WORKBOOK_FINDINGS" : 1,
-        "ANALYZE_NAMED_RANGE_HEALTH" : 1
+        "ANALYZE_NAMED_RANGE_HEALTH" : 1,
+        "GET_AUTOFILTERS" : 1
       },
       "responseKind" : "FAILURE"
     }

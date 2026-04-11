@@ -49,6 +49,186 @@ class ExcelAutofilterControllerTest {
   }
 
   @Test
+  void setSheetAutofilter_writesAdvancedCriteriaAndSortStateDetails() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = populatedAutofilterWriteSheet(workbook);
+
+      controller.setSheetAutofilter(
+          sheet,
+          "A1:F3",
+          List.of(
+              new ExcelAutofilterFilterColumn(
+                  0L, false, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), true)),
+              new ExcelAutofilterFilterColumn(
+                  1L,
+                  true,
+                  new ExcelAutofilterFilterCriterion.Custom(
+                      true,
+                      List.of(
+                          new ExcelAutofilterFilterCriterion.CustomCondition("greaterThan", "1"),
+                          new ExcelAutofilterFilterCriterion.CustomCondition("equal", "Queue")))),
+              new ExcelAutofilterFilterColumn(
+                  2L, true, new ExcelAutofilterFilterCriterion.Dynamic("today", 1.0d, 2.0d)),
+              new ExcelAutofilterFilterColumn(
+                  3L, true, new ExcelAutofilterFilterCriterion.Top10(10, false, true)),
+              new ExcelAutofilterFilterColumn(
+                  4L,
+                  true,
+                  new ExcelAutofilterFilterCriterion.Color(false, new ExcelColor("#AABBCC"))),
+              new ExcelAutofilterFilterColumn(
+                  5L, true, new ExcelAutofilterFilterCriterion.Icon("3TrafficLights1", 2))),
+          new ExcelAutofilterSortState(
+              "A1:F3",
+              true,
+              true,
+              STSortMethod.STROKE.toString(),
+              List.of(
+                  new ExcelAutofilterSortCondition(
+                      "A2:A3",
+                      true,
+                      STSortBy.CELL_COLOR.toString(),
+                      new ExcelColor("#102030"),
+                      null),
+                  new ExcelAutofilterSortCondition(
+                      "B2:B3", false, STSortBy.ICON.toString(), null, 4))));
+
+      ExcelAutofilterSnapshot.SheetOwned snapshot =
+          assertInstanceOf(
+              ExcelAutofilterSnapshot.SheetOwned.class,
+              controller.sheetOwnedAutofilters(sheet).getFirst());
+
+      assertEquals("A1:F3", snapshot.range());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of("Ada"), true),
+          snapshot.filterColumns().get(0).criterion());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Custom(
+              true,
+              List.of(
+                  new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("greaterThan", "1"),
+                  new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("equal", "Queue"))),
+          snapshot.filterColumns().get(1).criterion());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Dynamic("today", 1.0d, 2.0d),
+          snapshot.filterColumns().get(2).criterion());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Top10(false, true, 10.0d, null),
+          snapshot.filterColumns().get(3).criterion());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Color(
+              false, new ExcelColorSnapshot("#AABBCC")),
+          snapshot.filterColumns().get(4).criterion());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2),
+          snapshot.filterColumns().get(5).criterion());
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "A2:A3",
+              true,
+              STSortBy.CELL_COLOR.toString(),
+              new ExcelColorSnapshot("#102030"),
+              null),
+          snapshot.sortState().conditions().get(0));
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "B2:B3", false, STSortBy.ICON.toString(), null, 4),
+          snapshot.sortState().conditions().get(1));
+    }
+  }
+
+  @Test
+  void setSheetAutofilter_rejectsUnsupportedCriterionTokens() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = populatedAutofilterWriteSheet(workbook);
+
+      assertEquals(
+          "unsupported autofilter custom operator: nope",
+          assertThrows(
+                  IllegalArgumentException.class,
+                  () ->
+                      controller.setSheetAutofilter(
+                          sheet,
+                          "A1:F3",
+                          List.of(
+                              new ExcelAutofilterFilterColumn(
+                                  0L,
+                                  true,
+                                  new ExcelAutofilterFilterCriterion.Custom(
+                                      false,
+                                      List.of(
+                                          new ExcelAutofilterFilterCriterion.CustomCondition(
+                                              "nope", "1"))))),
+                          null))
+              .getMessage());
+      assertEquals(
+          "unsupported autofilter dynamic type: tomorrowish",
+          assertThrows(
+                  IllegalArgumentException.class,
+                  () ->
+                      controller.setSheetAutofilter(
+                          sheet,
+                          "A1:F3",
+                          List.of(
+                              new ExcelAutofilterFilterColumn(
+                                  0L,
+                                  true,
+                                  new ExcelAutofilterFilterCriterion.Dynamic(
+                                      "tomorrowish", null, null))),
+                          null))
+              .getMessage());
+      assertEquals(
+          "unsupported autofilter icon set: unknown",
+          assertThrows(
+                  IllegalArgumentException.class,
+                  () ->
+                      controller.setSheetAutofilter(
+                          sheet,
+                          "A1:F3",
+                          List.of(
+                              new ExcelAutofilterFilterColumn(
+                                  0L, true, new ExcelAutofilterFilterCriterion.Icon("unknown", 0))),
+                          null))
+              .getMessage());
+      assertEquals(
+          "unsupported autofilter sort method: diagonal",
+          assertThrows(
+                  IllegalArgumentException.class,
+                  () ->
+                      controller.setSheetAutofilter(
+                          sheet,
+                          "A1:F3",
+                          List.of(),
+                          new ExcelAutofilterSortState(
+                              "A1:F3",
+                              false,
+                              false,
+                              "diagonal",
+                              List.of(
+                                  new ExcelAutofilterSortCondition(
+                                      "A2:A3", false, "", null, null)))))
+              .getMessage());
+      assertEquals(
+          "unsupported autofilter sortBy value: sideways",
+          assertThrows(
+                  IllegalArgumentException.class,
+                  () ->
+                      controller.setSheetAutofilter(
+                          sheet,
+                          "A1:F3",
+                          List.of(),
+                          new ExcelAutofilterSortState(
+                              "A1:F3",
+                              false,
+                              false,
+                              "",
+                              List.of(
+                                  new ExcelAutofilterSortCondition(
+                                      "A2:A3", false, "sideways", null, null)))))
+              .getMessage());
+    }
+  }
+
+  @Test
   void clearSheetAutofilter_removesFilterDatabaseNames() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = populatedSheet(workbook);
@@ -585,6 +765,29 @@ class ExcelAutofilterControllerTest {
     sheet.getRow(1).createCell(1).setCellValue("Queue");
     sheet.createRow(2).createCell(0).setCellValue("Lin");
     sheet.getRow(2).createCell(1).setCellValue("Pack");
+    return sheet;
+  }
+
+  private static XSSFSheet populatedAutofilterWriteSheet(XSSFWorkbook workbook) {
+    XSSFSheet sheet = workbook.createSheet("Ops");
+    sheet.createRow(0).createCell(0).setCellValue("Owner");
+    sheet.getRow(0).createCell(1).setCellValue("Task");
+    sheet.getRow(0).createCell(2).setCellValue("Stage");
+    sheet.getRow(0).createCell(3).setCellValue("Score");
+    sheet.getRow(0).createCell(4).setCellValue("Tone");
+    sheet.getRow(0).createCell(5).setCellValue("Flag");
+    sheet.createRow(1).createCell(0).setCellValue("Ada");
+    sheet.getRow(1).createCell(1).setCellValue("Queue");
+    sheet.getRow(1).createCell(2).setCellValue("Today");
+    sheet.getRow(1).createCell(3).setCellValue(4);
+    sheet.getRow(1).createCell(4).setCellValue("Amber");
+    sheet.getRow(1).createCell(5).setCellValue("High");
+    sheet.createRow(2).createCell(0).setCellValue("Lin");
+    sheet.getRow(2).createCell(1).setCellValue("Pack");
+    sheet.getRow(2).createCell(2).setCellValue("Today");
+    sheet.getRow(2).createCell(3).setCellValue(6);
+    sheet.getRow(2).createCell(4).setCellValue("Green");
+    sheet.getRow(2).createCell(5).setCellValue("Low");
     return sheet;
   }
 

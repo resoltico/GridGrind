@@ -33,6 +33,12 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = WorkbookOperation.ClearSheetProtection.class,
       name = "CLEAR_SHEET_PROTECTION"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.SetWorkbookProtection.class,
+      name = "SET_WORKBOOK_PROTECTION"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.ClearWorkbookProtection.class,
+      name = "CLEAR_WORKBOOK_PROTECTION"),
   @JsonSubTypes.Type(value = WorkbookOperation.MergeCells.class, name = "MERGE_CELLS"),
   @JsonSubTypes.Type(value = WorkbookOperation.UnmergeCells.class, name = "UNMERGE_CELLS"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetColumnWidth.class, name = "SET_COLUMN_WIDTH"),
@@ -159,11 +165,19 @@ public sealed interface WorkbookOperation {
   }
 
   /** Enables sheet protection with the exact supported lock flags. */
-  record SetSheetProtection(String sheetName, SheetProtectionSettings protection)
+  record SetSheetProtection(String sheetName, SheetProtectionSettings protection, String password)
       implements WorkbookOperation {
+    /** Enables sheet protection without applying a password hash. */
+    public SetSheetProtection(String sheetName, SheetProtectionSettings protection) {
+      this(sheetName, protection, null);
+    }
+
     public SetSheetProtection {
       Validation.requireSheetName(sheetName, "sheetName");
       Objects.requireNonNull(protection, "protection must not be null");
+      if (password != null && password.isBlank()) {
+        throw new IllegalArgumentException("password must not be blank");
+      }
     }
   }
 
@@ -173,6 +187,16 @@ public sealed interface WorkbookOperation {
       Validation.requireSheetName(sheetName, "sheetName");
     }
   }
+
+  /** Enables workbook-level protection and password hashes with authoritative settings. */
+  record SetWorkbookProtection(WorkbookProtectionInput protection) implements WorkbookOperation {
+    public SetWorkbookProtection {
+      Objects.requireNonNull(protection, "protection must not be null");
+    }
+  }
+
+  /** Clears workbook-level protection and password hashes entirely. */
+  record ClearWorkbookProtection() implements WorkbookOperation {}
 
   /** Merges an A1-style rectangular range into one displayed cell region. */
   record MergeCells(String sheetName, String range) implements WorkbookOperation {
@@ -487,10 +511,24 @@ public sealed interface WorkbookOperation {
   }
 
   /** Creates or replaces one sheet-level autofilter range. */
-  record SetAutofilter(String sheetName, String range) implements WorkbookOperation {
+  record SetAutofilter(
+      String sheetName,
+      String range,
+      List<AutofilterFilterColumnInput> criteria,
+      AutofilterSortStateInput sortState)
+      implements WorkbookOperation {
+    /** Creates a plain sheet-level autofilter without criteria or explicit sort state. */
+    public SetAutofilter(String sheetName, String range) {
+      this(sheetName, range, List.of(), null);
+    }
+
     public SetAutofilter {
       Validation.requireSheetName(sheetName, "sheetName");
       Validation.requireNonBlank(range, "range");
+      criteria = criteria == null ? List.of() : List.copyOf(criteria);
+      for (AutofilterFilterColumnInput criterion : criteria) {
+        Objects.requireNonNull(criterion, "criteria must not contain null values");
+      }
     }
   }
 
@@ -574,6 +612,8 @@ public sealed interface WorkbookOperation {
       case SetSheetVisibility _ -> "SET_SHEET_VISIBILITY";
       case SetSheetProtection _ -> "SET_SHEET_PROTECTION";
       case ClearSheetProtection _ -> "CLEAR_SHEET_PROTECTION";
+      case SetWorkbookProtection _ -> "SET_WORKBOOK_PROTECTION";
+      case ClearWorkbookProtection _ -> "CLEAR_WORKBOOK_PROTECTION";
       case MergeCells _ -> "MERGE_CELLS";
       case UnmergeCells _ -> "UNMERGE_CELLS";
       case SetColumnWidth _ -> "SET_COLUMN_WIDTH";

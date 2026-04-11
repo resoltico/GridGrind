@@ -45,8 +45,10 @@ only for deterministic nested-build verification (`test`, `check`). The scripts 
 - replay of the public defaulted-field contract for promoted JSON examples, including omitted
   optional fields that must still parse successfully
 - replay of the advanced factual readback contract for promoted JSON examples, including workbook
-  protection, rich comments, advanced print setup, autofilter criteria or sort state, and table
-  metadata
+  protection, rich comments, advanced print setup, structured style colors or gradients,
+  autofilter criteria or sort state, and table metadata
+- replay of the advanced workbook-core mutation contract for promoted JSON examples, including
+  password-bearing protection and formula-defined named ranges
 
 Active fuzz launcher tasks now preload a tiny project-owned premain agent before `JazzerHarnessRunner`
 starts. That bridge publishes JVM startup instrumentation to Byte Buddy up front so Java 26 active

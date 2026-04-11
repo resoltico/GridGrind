@@ -30,7 +30,7 @@ class ConditionalFormattingRuleReportTest {
     ConditionalFormattingRuleReport dataBar =
         WorkbookReadResultConverter.toConditionalFormattingRuleReport(
             new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
-                4, false, "#102030", true, false, 10, 90, minThreshold, maxThreshold));
+                4, false, "#102030", true, 10, 90, minThreshold, maxThreshold));
     ConditionalFormattingRuleReport iconSet =
         WorkbookReadResultConverter.toConditionalFormattingRuleReport(
             new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
@@ -87,12 +87,12 @@ class ConditionalFormattingRuleReportTest {
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleReport.DataBarRule(
-                1, false, "#102030", false, true, -1, 90, threshold, threshold));
+                1, false, "#102030", false, -1, 90, threshold, threshold));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ConditionalFormattingRuleReport.DataBarRule(
-                1, false, "#102030", false, true, 10, -1, threshold, threshold));
+                1, false, "#102030", false, 10, -1, threshold, threshold));
     assertThrows(
         NullPointerException.class,
         () ->

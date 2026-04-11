@@ -2,12 +2,27 @@ package dev.erst.gridgrind.excel;
 
 /** Fill patch applied through {@link ExcelCellStyle}. */
 public record ExcelCellFill(
-    ExcelFillPattern pattern, String foregroundColor, String backgroundColor) {
+    ExcelFillPattern pattern,
+    ExcelColor foregroundColor,
+    ExcelColor backgroundColor,
+    ExcelGradientFill gradient) {
+  /** Creates a pattern fill from simple RGB foreground/background values. */
+  public ExcelCellFill(ExcelFillPattern pattern, String foregroundColor, String backgroundColor) {
+    this(
+        pattern,
+        foregroundColor == null ? null : new ExcelColor(foregroundColor),
+        backgroundColor == null ? null : new ExcelColor(backgroundColor),
+        null);
+  }
+
   public ExcelCellFill {
-    foregroundColor = ExcelRgbColorSupport.normalizeRgbHex(foregroundColor, "foregroundColor");
-    backgroundColor = ExcelRgbColorSupport.normalizeRgbHex(backgroundColor, "backgroundColor");
-    if (pattern == null && foregroundColor == null && backgroundColor == null) {
+    if (pattern == null && foregroundColor == null && backgroundColor == null && gradient == null) {
       throw new IllegalArgumentException("fill must set at least one attribute");
+    }
+    if (gradient != null
+        && (pattern != null || foregroundColor != null || backgroundColor != null)) {
+      throw new IllegalArgumentException(
+          "gradient fills must not also set pattern, foregroundColor, or backgroundColor");
     }
     if (pattern == ExcelFillPattern.NONE && (foregroundColor != null || backgroundColor != null)) {
       throw new IllegalArgumentException("fill pattern NONE does not accept colors");

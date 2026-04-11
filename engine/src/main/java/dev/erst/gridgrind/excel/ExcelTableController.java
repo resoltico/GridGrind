@@ -12,6 +12,8 @@ import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTable;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTableColumn;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STTotalsRowFunction;
 
 /** Reads, writes, and analyzes workbook tables. */
 final class ExcelTableController {
@@ -46,23 +48,33 @@ final class ExcelTableController {
     requireNoOverlappingOtherTables(workbook, definition, targetRange, existingByName);
     validateStyle(workbook, definition.style());
 
-    if (existingByName != null) {
-      existingByName.sheet().removeTable(existingByName.table());
-    }
-
     XSSFTable table =
-        sheet.createTable(
-            new AreaReference(
-                ExcelSheetStructureSupport.formatRange(targetRange), SpreadsheetVersion.EXCEL2007));
+        existingByName == null
+            ? sheet.createTable(
+                new AreaReference(
+                    ExcelSheetStructureSupport.formatRange(targetRange),
+                    SpreadsheetVersion.EXCEL2007))
+            : existingByName.table();
+    if (existingByName != null) {
+      table.setArea(
+          new AreaReference(
+              ExcelSheetStructureSupport.formatRange(targetRange), SpreadsheetVersion.EXCEL2007));
+    }
     CTTable ctTable = table.getCTTable();
     ctTable.setHeaderRowCount(1);
     ctTable.setTotalsRowCount(definition.showTotalsRow() ? 1 : 0);
     ctTable.setTotalsRowShown(definition.showTotalsRow());
     table.setDisplayName(definition.name());
     table.setName(definition.name());
-    ExcelTableStructureSupport.applyAutofilter(table, targetRange, definition.showTotalsRow());
     ExcelTableStructureSupport.applyStyle(table, definition.style());
     table.updateHeaders();
+    applyTableMetadata(ctTable, definition);
+    applyColumnMetadata(table, definition.columns());
+    if (definition.hasAutofilter()) {
+      ExcelTableStructureSupport.applyAutofilter(table, targetRange, definition.showTotalsRow());
+    } else if (ctTable.isSetAutoFilter()) {
+      ctTable.unsetAutoFilter();
+    }
     clearOverlappingSheetAutofilter(sheet, targetRange);
   }
 
@@ -235,6 +247,105 @@ final class ExcelTableController {
           throw new IllegalArgumentException("unknown table style: " + named.name());
         }
       }
+    }
+  }
+
+  private static void applyTableMetadata(CTTable ctTable, ExcelTableDefinition definition) {
+    setOrUnset(
+        definition.comment(),
+        ctTable::setComment,
+        () -> {
+          if (ctTable.isSetComment()) {
+            ctTable.unsetComment();
+          }
+        });
+    ctTable.setPublished(definition.published());
+    ctTable.setInsertRow(definition.insertRow());
+    ctTable.setInsertRowShift(definition.insertRowShift());
+    setOrUnset(
+        definition.headerRowCellStyle(),
+        ctTable::setHeaderRowCellStyle,
+        () -> {
+          if (ctTable.isSetHeaderRowCellStyle()) {
+            ctTable.unsetHeaderRowCellStyle();
+          }
+        });
+    setOrUnset(
+        definition.dataCellStyle(),
+        ctTable::setDataCellStyle,
+        () -> {
+          if (ctTable.isSetDataCellStyle()) {
+            ctTable.unsetDataCellStyle();
+          }
+        });
+    setOrUnset(
+        definition.totalsRowCellStyle(),
+        ctTable::setTotalsRowCellStyle,
+        () -> {
+          if (ctTable.isSetTotalsRowCellStyle()) {
+            ctTable.unsetTotalsRowCellStyle();
+          }
+        });
+  }
+
+  private static void applyColumnMetadata(
+      XSSFTable table, List<ExcelTableColumnDefinition> columns) {
+    for (ExcelTableColumnDefinition definition : columns) {
+      if (definition.columnIndex() >= table.getColumns().size()) {
+        throw new IllegalArgumentException(
+            "table columnIndex is outside the table range: " + definition.columnIndex());
+      }
+      CTTableColumn column =
+          table.getCTTable().getTableColumns().getTableColumnArray(definition.columnIndex());
+      setOrUnset(
+          definition.uniqueName(),
+          column::setUniqueName,
+          () -> {
+            if (column.isSetUniqueName()) {
+              column.unsetUniqueName();
+            }
+          });
+      setOrUnset(
+          definition.totalsRowLabel(),
+          column::setTotalsRowLabel,
+          () -> {
+            if (column.isSetTotalsRowLabel()) {
+              column.unsetTotalsRowLabel();
+            }
+          });
+      if (definition.totalsRowFunction().isBlank()) {
+        if (column.isSetTotalsRowFunction()) {
+          column.unsetTotalsRowFunction();
+        }
+      } else {
+        STTotalsRowFunction.Enum totalsRowFunction =
+            STTotalsRowFunction.Enum.forString(definition.totalsRowFunction());
+        if (totalsRowFunction == null) {
+          throw new IllegalArgumentException(
+              "unsupported table totalsRowFunction: " + definition.totalsRowFunction());
+        }
+        column.setTotalsRowFunction(totalsRowFunction);
+      }
+      if (definition.calculatedColumnFormula().isBlank()) {
+        if (column.isSetCalculatedColumnFormula()) {
+          column.unsetCalculatedColumnFormula();
+        }
+      } else {
+        var formula =
+            column.isSetCalculatedColumnFormula()
+                ? column.getCalculatedColumnFormula()
+                : column.addNewCalculatedColumnFormula();
+        formula.setStringValue(definition.calculatedColumnFormula());
+      }
+    }
+  }
+
+  private static void setOrUnset(
+      String value, java.util.function.Consumer<String> setter, Runnable unsetter) {
+    if (value.isBlank()) {
+      unsetter.run();
+    } else {
+      setter.accept(value);
     }
   }
 
