@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.math.BigDecimal;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
@@ -171,6 +172,25 @@ class WorkbookStyleRegistryTest {
       malformedRgbFillStyle.setFillForegroundColor(new XSSFColor(new byte[] {0x11, 0x22}));
       cell.setCellStyle(malformedRgbFillStyle);
       assertNull(styleRegistry.snapshot(cell).fill().foregroundColor());
+    }
+  }
+
+  @Test
+  void snapshot_ignoresBorderColorsWhenEffectiveStyleIsNone() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
+
+      XSSFCellStyle style = workbook.createCellStyle();
+      XSSFColor indexedColor = new XSSFColor();
+      indexedColor.setIndexed(IndexedColors.DARK_RED.getIndex());
+      style.setBottomBorderColor(indexedColor);
+      cell.setCellStyle(style);
+
+      ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
+
+      assertEquals(ExcelBorderStyle.NONE, snapshot.border().bottom().style());
+      assertNull(snapshot.border().bottom().color());
     }
   }
 

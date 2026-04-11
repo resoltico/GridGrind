@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.33.0"
+version: "0.34.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-04-10"
+updated: "2026-04-11"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -77,7 +77,10 @@ The non-negotiable decisions are:
 - Root project-file formatting excludes local-only instruction and scratch areas,
   so local workspace state cannot break the canonical quality gates.
 - The root Gradle wrapper is reused; there is no second wrapper.
-- Wrapper scripts are the supported operator surface.
+- Wrapper scripts are the supported operator surface, and active fuzz through them is explicitly
+  `--no-daemon` plus wrapper-managed cleanup.
+- GitHub Actions must never run active fuzzing; `JazzerHarnessRunner` hard-blocks it when
+  `GITHUB_ACTIONS=true`.
 - Generated state stays under `jazzer/.local/`.
 - Only intentionally promoted regression inputs belong in versioned source.
 - Workbook scope remains `.xlsx` only.
@@ -127,12 +130,9 @@ The operator goal is not to maximize seed count. The goal is to preserve a stabl
 - representative expected-invalid cases
 - representative feature-family coverage
 
-Current promoted floor:
-- `protocol-request`: 33 committed seeds
-- `protocol-workflow`: 11 committed seeds
-- `engine-command-sequence`: 8 committed seeds
-- `xlsx-roundtrip`: 17 committed seeds
-- total promoted seed floor: 69 inputs
+The current per-harness seed counts and the exhaustive committed filename inventory live in
+[DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md). Keep that file authoritative
+instead of duplicating seed counts across multiple docs.
 
 ---
 
@@ -332,6 +332,14 @@ Nested-build verification model:
   enforces the repository contract of exactly one `@FuzzTest` per harness class and then delegates
   to Jazzer's own command-line `JUnitRunner` so internal command-line mode, `jazzer.max_duration`,
   and `jazzer.max_executions` are honored consistently
+- active fuzz wrappers force `--no-daemon` and tear down the launched Gradle client tree on
+  interrupt or timeout so the supported local surface does not leave a harness JVM behind
+- active fuzz harness execution hard-fails when `GITHUB_ACTIONS=true`, so GitHub remains a
+  deterministic-only verification surface even if someone wires an active fuzz task into a
+  workflow by mistake
+- active fuzz launcher JVMs preload the project-owned `JazzerPremainAgent`, which publishes
+  startup instrumentation to Byte Buddy before Jazzer's JUnit extension runs and avoids fragile
+  late attach behavior on Java 26
 
 Execution discipline:
 - do not run root Gradle builds and nested Jazzer Gradle builds in parallel
@@ -352,8 +360,8 @@ Execution discipline:
 
 Operator rule:
 - the scripts under `jazzer/bin/` are the supported entrypoints
-- raw `./gradlew --project-dir jazzer ...` remains available for debugging, but bypasses the
-  script contract
+- raw `./gradlew --project-dir jazzer ...` remains available only for deterministic nested-build
+  verification; active fuzzing is supported only through `jazzer/bin/*`
 
 `jazzer/bin/fuzz-all` is intentionally a shell sequencer over the four per-harness scripts so
 each harness still gets its own lock, run history, summary, and telemetry artifacts.
@@ -463,6 +471,14 @@ Configuration cache:
 - local JavaExec operator tasks intentionally run with `--no-configuration-cache` via the wrapper
   script because they are local-only utilities and do not benefit enough from cache participation
   to justify the extra Gradle noise
+
+Operator surfaces:
+- `./gradlew --project-dir jazzer test` and `./gradlew --project-dir jazzer check` are the
+  deterministic nested-build verification entrypoints
+- `jazzer/bin/*` is the supported live operator surface for active fuzzing, replay, promotion,
+  status, report, and cleanup
+- raw Gradle active-fuzz tasks are not a supported operator method and are intentionally excluded
+  from the documented fuzz workflow
 
 ---
 

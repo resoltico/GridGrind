@@ -344,7 +344,9 @@ final class WorkbookStyleRegistry {
 
   private static ExcelBorderSide borderSideSnapshot(
       BorderStyle borderStyle, XSSFColor borderColor) {
-    return new ExcelBorderSide(fromPoi(borderStyle), ExcelRgbColorSupport.toRgbHex(borderColor));
+    ExcelBorderStyle style = fromPoi(borderStyle);
+    return new ExcelBorderSide(
+        style, style == ExcelBorderStyle.NONE ? null : ExcelRgbColorSupport.toRgbHex(borderColor));
   }
 
   private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {

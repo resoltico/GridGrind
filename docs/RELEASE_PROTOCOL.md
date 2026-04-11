@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.33.0"
+version: "0.34.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-04-10"
+updated: "2026-04-11"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]

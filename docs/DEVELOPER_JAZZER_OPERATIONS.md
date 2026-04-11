@@ -1,7 +1,8 @@
+---
 afad: "3.5"
-version: "0.33.0"
+version: "0.34.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-04-10"
+updated: "2026-04-11"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -37,6 +38,24 @@ route:
 
 All supported scripts use the shared lock under `jazzer/.local/run-lock/`, so only one Jazzer
 command runs at a time.
+
+---
+
+## Choose the Surface
+
+- `./check.sh`: supported whole-repo local gate. Runs root verification first, then nested Jazzer
+  `check`, then packaging and Docker smoke.
+- `./gradlew --project-dir jazzer test` and `./gradlew --project-dir jazzer check`: deterministic
+  nested-build verification entrypoints. Safe for GitHub Actions because they do not start active
+  fuzzing.
+- `jazzer/bin/*`: the one supported Jazzer operator surface for active fuzzing, regression, replay,
+  promotion, reporting, and cleanup. Active fuzz through this surface forces `--no-daemon` and
+  owns interrupt and timeout teardown.
+
+Do not run active fuzzing through raw `./gradlew --project-dir jazzer ...` tasks. Those tasks are
+an implementation detail under the wrapper, not a supported fuzz operator interface.
+
+Live fuzzing is local-only. Active harness execution now hard-fails when `GITHUB_ACTIONS=true`.
 
 ---
 
@@ -87,6 +106,10 @@ What this produces:
 - `telemetry/*.json`
 - a new `history/<timestamp>/` directory
 
+For active fuzz, the wrapper also forces `--no-daemon` and tears down the launched Gradle client
+tree on interrupt or timeout. That keeps the supported local operator surface from leaving a live
+`JazzerHarnessRunner` behind after a canceled run.
+
 ### Run All Active Harnesses
 
 ```bash
@@ -95,6 +118,13 @@ jazzer/bin/fuzz-all -PjazzerMaxDuration=5m --console=plain
 
 `fuzz-all` is intentionally sequential. It calls the four per-harness scripts one by one so each
 harness gets its own summary and history directory.
+
+Each active fuzz launcher also preloads the project-owned `JazzerPremainAgent`, so live fuzzing on
+Java 26 starts with startup-time instrumentation already published to Byte Buddy instead of
+depending on a late attach.
+
+GitHub Actions must not use this surface. If `GITHUB_ACTIONS=true`, the harness runner exits
+before fuzzing starts.
 
 ### Replay Committed Regression Inputs
 
@@ -350,19 +380,18 @@ These commands do not touch committed regression inputs or promotion metadata.
 
 ---
 
-## Raw Gradle Equivalents
+## Deterministic Nested-Build Gradle Commands
 
-Raw Gradle remains available:
+Raw Gradle remains available only for deterministic nested-build verification:
 
 ```bash
 ./gradlew --project-dir jazzer test --console=plain
 ./gradlew --project-dir jazzer check --console=plain
-./gradlew --project-dir jazzer fuzzProtocolWorkflow -PjazzerMaxDuration=30m --console=plain
-./gradlew --project-dir jazzer jazzerReport -PjazzerTarget=protocol-workflow --console=plain
 ```
 
-But raw Gradle is not the preferred operator surface because it bypasses the wrapper-script lock and
-the wrapper-specific path normalization.
+For active fuzzing, use `jazzer/bin/*` and nothing else. That is the only documented operator path
+that owns run locking, per-target history, latest-summary artifacts, duration control, and
+interrupt cleanup.
 
 ---
 
@@ -384,6 +413,11 @@ Not expected:
 - running root Gradle verification and nested Jazzer verification in parallel without flakiness
 
 If one of those expectations fails, treat it as a Jazzer-layer bug.
+
+If you see `jcmd` during a Jazzer-adjacent local session, that is root `./check.sh` stall
+diagnostics collecting JVM thread dumps after a monitored stage stops making semantic progress.
+That diagnostic path is bounded to a small captured-process sample; the supported `jazzer/bin/*`
+happy path does not launch `jcmd`.
 
 Operator discipline:
 1. Prefer `./check.sh` when you want the supported sequential root-plus-nested verification flow.

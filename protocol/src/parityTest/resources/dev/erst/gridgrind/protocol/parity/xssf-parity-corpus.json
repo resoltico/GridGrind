@@ -1,0 +1,61 @@
+{
+  "version": "1.0.0",
+  "poiVersion": "5.5.1",
+  "scenarios": [
+    {
+      "id": "gridgrind-core-authoring",
+      "kind": "GRIDGRIND_REQUEST",
+      "description": "GridGrind-authored workbook covering the current modeled workbook-core contract."
+    },
+    {
+      "id": "poi-advanced-nondrawing",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook with advanced non-drawing workbook-core structures that GridGrind must eventually read and mutate losslessly."
+    },
+    {
+      "id": "poi-external-formula",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook with formulas bound to an external workbook reference."
+    },
+    {
+      "id": "poi-udf-formula",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook with a user-defined-function formula."
+    },
+    {
+      "id": "poi-drawing-image",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook containing a drawing patriarch and embedded raster image."
+    },
+    {
+      "id": "poi-chart",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook containing an XSSF chart."
+    },
+    {
+      "id": "poi-pivot",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook containing a pivot table."
+    },
+    {
+      "id": "poi-embedded-object",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook containing an embedded OLE package object."
+    },
+    {
+      "id": "poi-large-sheet",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI large workbook used to exercise event-model reads and streaming-write parity seams."
+    },
+    {
+      "id": "poi-signed-workbook",
+      "kind": "POI_SIGNED",
+      "description": "Direct-POI workbook signed at the OOXML package layer for signature validation and preservation probes."
+    },
+    {
+      "id": "poi-encrypted-workbook",
+      "kind": "POI_ENCRYPTED",
+      "description": "Direct-POI workbook encrypted with OOXML agile encryption."
+    }
+  ]
+}

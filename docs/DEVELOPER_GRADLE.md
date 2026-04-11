@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.33.0"
+version: "0.34.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-04-10"
+updated: "2026-04-11"
 route:
   keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
   questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
@@ -121,6 +121,7 @@ Rules:
 - do not reintroduce `buildSrc`
 - do not hardcode overlapping dependency versions inside `jazzer/`
 - do not make the root build depend on active fuzzing tasks
+- do not wire active Jazzer fuzz tasks into GitHub Actions; GitHub must remain deterministic-only
 - do not run root and nested Jazzer Gradle builds in parallel against the same workspace
 
 ---
@@ -140,6 +141,7 @@ These are the Gradle-level invariants worth preserving:
 - Jazzer-specific PMD and JaCoCo scopes live beside Jazzer task registration in the shared build
   logic
 - root `./gradlew check` stays focused on the product modules
+- active Jazzer fuzzing stays local-only; GitHub Actions must not become a live-fuzz surface
 - root `./check.sh` remains the supported whole-repo gate that sequences root verification, Jazzer
   verification, packaging, and Docker smoke checks
 

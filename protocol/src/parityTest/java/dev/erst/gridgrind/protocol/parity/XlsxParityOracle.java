@@ -1,0 +1,670 @@
+package dev.erst.gridgrind.protocol.parity;
+
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HexFormat;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.function.Function;
+import org.apache.poi.openxml4j.opc.OPCPackage;
+import org.apache.poi.openxml4j.opc.PackageAccess;
+import org.apache.poi.poifs.crypt.Decryptor;
+import org.apache.poi.poifs.crypt.EncryptionInfo;
+import org.apache.poi.poifs.crypt.dsig.SignatureConfig;
+import org.apache.poi.poifs.crypt.dsig.SignatureInfo;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.formula.OperationEvaluationContext;
+import org.apache.poi.ss.formula.eval.EvaluationException;
+import org.apache.poi.ss.formula.eval.NumberEval;
+import org.apache.poi.ss.formula.eval.OperandResolver;
+import org.apache.poi.ss.formula.eval.ValueEval;
+import org.apache.poi.ss.formula.functions.FreeRefFunction;
+import org.apache.poi.ss.formula.udf.DefaultUDFFinder;
+import org.apache.poi.ss.usermodel.Name;
+import org.apache.poi.ss.usermodel.SheetVisibility;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.eventusermodel.XSSFReader;
+import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFCellStyle;
+import org.apache.poi.xssf.usermodel.XSSFChart;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFComment;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFObjectData;
+import org.apache.poi.xssf.usermodel.XSSFPicture;
+import org.apache.poi.xssf.usermodel.XSSFPivotTable;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFTable;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
+
+/** Direct Apache POI oracle for parity tests. */
+final class XlsxParityOracle {
+  private XlsxParityOracle() {}
+
+  static CoreWorkbookSnapshot coreWorkbook(Path workbookPath) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFSheet ops = workbook.getSheet("Ops");
+          XSSFSheet queue = workbook.getSheet("Queue");
+          int queueIndex = workbook.getSheetIndex(queue);
+          XSSFCell formulaCell = cell(ops, "D3");
+          return new CoreWorkbookSnapshot(
+              sheetNames(workbook),
+              workbook.getSheetName(workbook.getActiveSheetIndex()),
+              selectedSheetNames(workbook),
+              workbook.getForceFormulaRecalculation(),
+              workbook.getSheetVisibility(queueIndex) != SheetVisibility.VISIBLE,
+              ops.getProtect(),
+              ops.getMergedRegion(0).formatAsString(),
+              cell(ops, "C4").getHyperlink().getAddress(),
+              cell(ops, "C4").getCellComment().getString().getString(),
+              cell(ops, "C4").getCellComment().getAuthor(),
+              cell(ops, "C4").getCellComment().isVisible(),
+              (int) ops.getCTWorksheet().getSheetViews().getSheetViewArray(0).getZoomScale(),
+              ops.getPaneInformation() == null
+                  ? "NONE"
+                  : "%s:%d:%d"
+                      .formatted(
+                          ops.getPaneInformation().isFreezePane() ? "FROZEN" : "SPLIT",
+                          ops.getPaneInformation().getHorizontalSplitPosition(),
+                          ops.getPaneInformation().getVerticalSplitPosition()),
+              ops.getColumnWidthInPixels(0) > 0.0d,
+              ops.getRow(0).getHeightInPoints(),
+              formulaCell.getCellFormula(),
+              workbook
+                  .getCreationHelper()
+                  .createFormulaEvaluator()
+                  .evaluate(formulaCell)
+                  .getNumberValue(),
+              ops.getCTWorksheet().getAutoFilter().getRef(),
+              queue.getTables().getFirst().getName(),
+              queue.getTables().getFirst().getColumns().stream()
+                  .map(column -> column.getName())
+                  .toList(),
+              ops.getSheetConditionalFormatting().getNumConditionalFormattings(),
+              dataValidationKinds(ops));
+        });
+  }
+
+  static WorkbookProtectionSnapshot workbookProtection(Path workbookPath) {
+    return withWorkbook(
+        workbookPath,
+        workbook ->
+            new WorkbookProtectionSnapshot(
+                workbook.isStructureLocked(),
+                workbook.isWindowsLocked(),
+                workbook.isRevisionLocked(),
+                workbook.validateWorkbookPassword(
+                    XlsxParityScenarios.WORKBOOK_PROTECTION_PASSWORD)));
+  }
+
+  static AdvancedPrintSnapshot advancedPrint(Path workbookPath) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFSheet sheet = workbook.getSheet("Advanced");
+          return new AdvancedPrintSnapshot(
+              sheet.getMargin(XSSFSheet.LeftMargin),
+              sheet.getMargin(XSSFSheet.RightMargin),
+              sheet.getMargin(XSSFSheet.TopMargin),
+              sheet.getMargin(XSSFSheet.BottomMargin),
+              sheet.getHorizontallyCenter(),
+              sheet.getVerticallyCenter(),
+              sheet.getPrintSetup().getPaperSize(),
+              sheet.getPrintSetup().getDraft(),
+              sheet.getPrintSetup().getNoColor(),
+              sheet.getPrintSetup().getCopies(),
+              sheet.getPrintSetup().getPageStart(),
+              sheet.getRowBreaks().length,
+              sheet.getColumnBreaks().length);
+        });
+  }
+
+  static CommentSnapshot comment(Path workbookPath, String sheetName, String address) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFComment comment = cell(workbook.getSheet(sheetName), address).getCellComment();
+          XSSFClientAnchor anchor = (XSSFClientAnchor) comment.getClientAnchor();
+          return new CommentSnapshot(
+              comment.getAuthor(),
+              comment.isVisible(),
+              comment.getString().numFormattingRuns() + 1,
+              anchor.getCol1(),
+              anchor.getRow1(),
+              anchor.getCol2(),
+              anchor.getRow2());
+        });
+  }
+
+  static StyleSnapshot style(Path workbookPath, String sheetName, String address) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFCellStyle style = cell(workbook.getSheet(sheetName), address).getCellStyle();
+          StylesFillSnapshot fillSnapshot = fillSnapshot(workbook, style);
+          XSSFColor fontColor = style.getFont().getXSSFColor();
+          XSSFColor fillColor = style.getFillForegroundColorColor();
+          XSSFColor borderColor = style.getBottomBorderXSSFColor();
+          return new StyleSnapshot(
+              colorDescriptor(fontColor),
+              colorDescriptor(fillColor),
+              colorDescriptor(borderColor),
+              fillSnapshot.gradientFill());
+        });
+  }
+
+  static List<NamedRangeSnapshot> namedRanges(Path workbookPath) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          List<NamedRangeSnapshot> snapshots = new ArrayList<>();
+          for (Name name : workbook.getAllNames()) {
+            snapshots.add(
+                new NamedRangeSnapshot(
+                    name.getNameName(),
+                    name.getSheetIndex() < 0
+                        ? "WORKBOOK"
+                        : workbook.getSheetName(name.getSheetIndex()),
+                    name.getRefersToFormula(),
+                    isFormulaDefined(name)));
+          }
+          snapshots.sort(Comparator.comparing(NamedRangeSnapshot::name));
+          return List.copyOf(snapshots);
+        });
+  }
+
+  static List<String> dataValidationKinds(Path workbookPath, String sheetName) {
+    return withWorkbook(
+        workbookPath, workbook -> dataValidationKinds(workbook.getSheet(sheetName)));
+  }
+
+  static AutofilterSnapshot autofilter(Path workbookPath, String sheetName) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFSheet sheet = workbook.getSheet(sheetName);
+          if (!sheet.getCTWorksheet().isSetAutoFilter()) {
+            return new AutofilterSnapshot("", 0, false, "");
+          }
+          var autoFilter = sheet.getCTWorksheet().getAutoFilter();
+          return new AutofilterSnapshot(
+              autoFilter.getRef(),
+              autoFilter.sizeOfFilterColumnArray(),
+              autoFilter.isSetSortState(),
+              autoFilter.isSetSortState() ? autoFilter.getSortState().getRef() : "");
+        });
+  }
+
+  static TableSnapshot table(Path workbookPath, String tableName) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+            for (XSSFTable table : workbook.getSheetAt(sheetIndex).getTables()) {
+              if (table.getName().equals(tableName)) {
+                var ctTable = table.getCTTable();
+                var amountColumn = ctTable.getTableColumns().getTableColumnArray(1);
+                var ownerColumn = ctTable.getTableColumns().getTableColumnArray(2);
+                return new TableSnapshot(
+                    ctTable.getComment(),
+                    ctTable.getPublished(),
+                    ctTable.getInsertRow(),
+                    ctTable.getInsertRowShift(),
+                    ctTable.getHeaderRowCellStyle(),
+                    ctTable.getDataCellStyle(),
+                    ctTable.getTotalsRowCellStyle(),
+                    ctTable.getTableColumns().getTableColumnArray(0).getTotalsRowLabel(),
+                    amountColumn.getTotalsRowFunction().toString(),
+                    amountColumn.getCalculatedColumnFormula().getStringValue(),
+                    ownerColumn.getUniqueName());
+              }
+            }
+          }
+          throw new IllegalArgumentException("Unknown table " + tableName);
+        });
+  }
+
+  static List<String> conditionalFormattingKinds(Path workbookPath, String sheetName) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFSheet sheet = workbook.getSheet(sheetName);
+          List<String> kinds = new ArrayList<>();
+          for (CTConditionalFormatting block :
+              sheet.getCTWorksheet().getConditionalFormattingArray()) {
+            for (var rule : block.getCfRuleArray()) {
+              kinds.add(rule.getType().toString());
+            }
+          }
+          kinds.sort(Comparator.naturalOrder());
+          return List.copyOf(kinds);
+        });
+  }
+
+  static double evaluateFormula(Path workbookPath, String sheetName, String address) {
+    return withWorkbook(
+        workbookPath,
+        workbook ->
+            workbook
+                .getCreationHelper()
+                .createFormulaEvaluator()
+                .evaluate(cell(workbook.getSheet(sheetName), address))
+                .getNumberValue());
+  }
+
+  static double evaluateExternalFormula(Path workbookPath, Path referencedWorkbookPath) {
+    return XlsxParitySupport.call(
+        "evaluate external-formula parity workbook",
+        () -> {
+          try (Workbook referencedWorkbook =
+                  WorkbookFactory.create(referencedWorkbookPath.toFile());
+              XSSFWorkbook workbook =
+                  (XSSFWorkbook) WorkbookFactory.create(workbookPath.toFile())) {
+            workbook.linkExternalWorkbook(
+                referencedWorkbookPath.getFileName().toString(), referencedWorkbook);
+            var evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+            evaluator.setupReferencedWorkbooks(
+                java.util.Map.of(
+                    referencedWorkbookPath.getFileName().toString(),
+                    referencedWorkbook.getCreationHelper().createFormulaEvaluator()));
+            return evaluator
+                .evaluate(workbook.getSheet("Ops").getRow(0).getCell(1))
+                .getNumberValue();
+          }
+        });
+  }
+
+  static double evaluateUdfFormula(Path workbookPath) {
+    return XlsxParitySupport.call(
+        "evaluate UDF parity workbook",
+        () -> {
+          try (XSSFWorkbook workbook =
+              (XSSFWorkbook) WorkbookFactory.create(workbookPath.toFile())) {
+            workbook.addToolPack(
+                new DefaultUDFFinder(
+                    new String[] {"DOUBLE"},
+                    new FreeRefFunction[] {
+                      (ValueEval[] args, OperationEvaluationContext ec) -> {
+                        try {
+                          ValueEval value =
+                              OperandResolver.getSingleValue(
+                                  args[0], ec.getRowIndex(), ec.getColumnIndex());
+                          return new NumberEval(OperandResolver.coerceValueToDouble(value) * 2.0d);
+                        } catch (EvaluationException exception) {
+                          return exception.getErrorEval();
+                        }
+                      }
+                    }));
+            return workbook
+                .getCreationHelper()
+                .createFormulaEvaluator()
+                .evaluate(workbook.getSheet("Ops").getRow(0).getCell(1))
+                .getNumberValue();
+          }
+        });
+  }
+
+  static DrawingSnapshot drawing(Path workbookPath) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFDrawing drawing = workbook.getSheetAt(0).createDrawingPatriarch();
+          XSSFPicture picture =
+              drawing.getShapes().stream()
+                  .filter(XSSFPicture.class::isInstance)
+                  .map(XSSFPicture.class::cast)
+                  .findFirst()
+                  .orElseThrow(() -> new IllegalStateException("Expected picture shape"));
+          XSSFClientAnchor anchor = picture.getClientAnchor();
+          return new DrawingSnapshot(
+              drawing.getShapes().size(),
+              anchor.getCol1(),
+              anchor.getRow1(),
+              anchor.getCol2(),
+              anchor.getRow2(),
+              sha256(picture.getPictureData().getData()));
+        });
+  }
+
+  static EmbeddedObjectSnapshot embeddedObject(Path workbookPath) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFDrawing drawing = workbook.getSheetAt(0).createDrawingPatriarch();
+          XSSFObjectData objectData =
+              drawing.getShapes().stream()
+                  .filter(XSSFObjectData.class::isInstance)
+                  .map(XSSFObjectData.class::cast)
+                  .findFirst()
+                  .orElseThrow(() -> new IllegalStateException("Expected embedded object"));
+          byte[] objectBytes =
+              XlsxParitySupport.call(
+                  "read embedded-object bytes from parity workbook", objectData::getObjectData);
+          return new EmbeddedObjectSnapshot(
+              drawing.getShapes().size(), objectData.getFileName(), sha256(objectBytes));
+        });
+  }
+
+  static ChartSnapshot chart(Path workbookPath) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFDrawing drawing = workbook.getSheet("Chart").createDrawingPatriarch();
+          XSSFChart chart = drawing.getCharts().getFirst();
+          return new ChartSnapshot(
+              drawing.getCharts().size(),
+              chart.getTitleText() == null ? "" : chart.getTitleText().getString(),
+              chart.getCTChart().getPlotArea().sizeOfBarChartArray());
+        });
+  }
+
+  static PivotSnapshot pivot(Path workbookPath) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFSheet pivotSheet = workbook.getSheet("Pivot");
+          XSSFPivotTable pivotTable =
+              pivotSheet.getRelations().stream()
+                  .filter(XSSFPivotTable.class::isInstance)
+                  .map(XSSFPivotTable.class::cast)
+                  .findFirst()
+                  .orElseThrow(() -> new IllegalStateException("Expected pivot table relation"));
+          return new PivotSnapshot(
+              1,
+              pivotTable
+                  .getPivotCacheDefinition()
+                  .getCTPivotCacheDefinition()
+                  .getCacheSource()
+                  .getWorksheetSource()
+                  .getRef(),
+              pivotTable.getRowLabelColumns());
+        });
+  }
+
+  static int eventModelRowCount(Path workbookPath) {
+    return XlsxParitySupport.call(
+        "count event-model rows in parity workbook",
+        () -> {
+          try (OPCPackage pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ)) {
+            XSSFReader reader = new XSSFReader(pkg);
+            Iterator<InputStream> sheets = reader.getSheetsData();
+            if (!sheets.hasNext()) {
+              throw new IllegalStateException("Expected at least one sheet");
+            }
+            String xml = new String(sheets.next().readAllBytes(), StandardCharsets.UTF_8);
+            return countOccurrences(xml, "<row");
+          }
+        });
+  }
+
+  static Path sxssfWriteWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "write SXSSF parity workbook",
+        () -> {
+          Path workbookPath = temporaryRoot.resolve("sxssf-written.xlsx");
+          try (SXSSFWorkbook workbook = new SXSSFWorkbook(50);
+              var outputStream = Files.newOutputStream(workbookPath)) {
+            var sheet = workbook.createSheet("Streamed");
+            for (int rowIndex = 0; rowIndex < 1500; rowIndex++) {
+              var row = sheet.createRow(rowIndex);
+              row.createCell(0).setCellValue("R" + rowIndex);
+              row.createCell(1).setCellValue(rowIndex);
+            }
+            workbook.write(outputStream);
+          }
+          return workbookPath;
+        });
+  }
+
+  static boolean encryptedWorkbookOpens(Path workbookPath) {
+    return XlsxParitySupport.call(
+        "open encrypted parity workbook through POI",
+        () -> {
+          try (POIFSFileSystem fileSystem = new POIFSFileSystem(workbookPath.toFile());
+              InputStream decryptedStream = decryptedWorkbookStream(fileSystem);
+              Workbook workbook = WorkbookFactory.create(decryptedStream)) {
+            return "Encrypted workbook"
+                .equals(workbook.getSheet("Encrypted").getRow(0).getCell(0).getStringCellValue());
+          }
+        });
+  }
+
+  static boolean signatureValid(Path workbookPath) {
+    return XlsxParitySupport.call(
+        "verify parity workbook signature",
+        () -> {
+          try (OPCPackage pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ)) {
+            SignatureInfo signatureInfo = new SignatureInfo();
+            signatureInfo.setSignatureConfig(new SignatureConfig());
+            signatureInfo.setOpcPackage(pkg);
+            return signatureInfo.verifySignature();
+          }
+        });
+  }
+
+  private static List<String> dataValidationKinds(XSSFSheet sheet) {
+    List<String> kinds = new ArrayList<>();
+    CTDataValidations dataValidations = sheet.getCTWorksheet().getDataValidations();
+    if (dataValidations == null) {
+      return List.of();
+    }
+    for (CTDataValidation validation : dataValidations.getDataValidationArray()) {
+      if (validation.getType() == null) {
+        kinds.add("UNKNOWN");
+        continue;
+      }
+      if ("list".equalsIgnoreCase(validation.getType().toString())) {
+        String formula1 = validation.isSetFormula1() ? validation.getFormula1() : "";
+        if ("\"\"".equals(formula1)) {
+          kinds.add("EMPTY_EXPLICIT_LIST");
+          continue;
+        }
+        if (formula1.isBlank()) {
+          kinds.add("MISSING_FORMULA");
+          continue;
+        }
+      }
+      kinds.add(validation.getType().toString().toUpperCase(Locale.ROOT));
+    }
+    kinds.sort(Comparator.naturalOrder());
+    return List.copyOf(kinds);
+  }
+
+  private static InputStream decryptedWorkbookStream(POIFSFileSystem fileSystem) {
+    return XlsxParitySupport.call(
+        "decrypt parity workbook stream",
+        () -> {
+          EncryptionInfo encryptionInfo = new EncryptionInfo(fileSystem);
+          Decryptor decryptor = Decryptor.getInstance(encryptionInfo);
+          if (!decryptor.verifyPassword(XlsxParityScenarios.ENCRYPTION_PASSWORD)) {
+            throw new IllegalStateException(
+                "Failed to verify parity workbook encryption password.");
+          }
+          return decryptor.getDataStream(fileSystem);
+        });
+  }
+
+  private static StylesFillSnapshot fillSnapshot(XSSFWorkbook workbook, XSSFCellStyle style) {
+    long fillId = style.getCoreXf().getFillId();
+    XSSFCellFill fill = workbook.getStylesSource().getFillAt((int) fillId);
+    return new StylesFillSnapshot(fill.getCTFill().isSetGradientFill());
+  }
+
+  private static String colorDescriptor(XSSFColor color) {
+    if (color == null) {
+      return "none";
+    }
+    List<String> parts = new ArrayList<>();
+    if (color.isRGB()) {
+      parts.add("rgb=" + HexFormat.of().formatHex(color.getRGB()));
+    }
+    if (color.isThemed()) {
+      parts.add("theme=" + color.getTheme());
+    }
+    if (color.isIndexed()) {
+      parts.add("indexed=" + color.getIndexed());
+    }
+    if (color.hasTint()) {
+      parts.add("tint=" + color.getTint());
+    }
+    return String.join("|", parts);
+  }
+
+  private static XSSFCell cell(XSSFSheet sheet, String address) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    var reference = new org.apache.poi.ss.util.CellReference(address);
+    return sheet.getRow(reference.getRow()).getCell(reference.getCol());
+  }
+
+  private static boolean isFormulaDefined(Name name) {
+    String formula = name.getRefersToFormula();
+    return formula != null && formula.contains("(");
+  }
+
+  private static List<String> sheetNames(XSSFWorkbook workbook) {
+    List<String> names = new ArrayList<>();
+    for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+      names.add(workbook.getSheetName(sheetIndex));
+    }
+    return List.copyOf(names);
+  }
+
+  private static List<String> selectedSheetNames(XSSFWorkbook workbook) {
+    List<String> selected = new ArrayList<>();
+    for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+      if (workbook.getSheetAt(sheetIndex).isSelected()) {
+        selected.add(workbook.getSheetName(sheetIndex));
+      }
+    }
+    return List.copyOf(selected);
+  }
+
+  private static int countOccurrences(String text, String token) {
+    int count = 0;
+    int index = 0;
+    index = text.indexOf(token, index);
+    while (index >= 0) {
+      count++;
+      index += token.length();
+      index = text.indexOf(token, index);
+    }
+    return count;
+  }
+
+  private static String sha256(byte[] bytes) {
+    return XlsxParitySupport.call(
+        "compute SHA-256 digest for parity snapshot",
+        () -> HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes)));
+  }
+
+  private static <T> T withWorkbook(Path workbookPath, Function<XSSFWorkbook, T> function) {
+    return XlsxParitySupport.call(
+        "open parity workbook " + workbookPath,
+        () -> {
+          try (XSSFWorkbook workbook =
+              (XSSFWorkbook) WorkbookFactory.create(workbookPath.toFile())) {
+            return function.apply(workbook);
+          }
+        });
+  }
+
+  record CoreWorkbookSnapshot(
+      List<String> sheetNames,
+      String activeSheetName,
+      List<String> selectedSheetNames,
+      boolean forceFormulaRecalculation,
+      boolean queueHidden,
+      boolean opsProtected,
+      String mergedRegion,
+      String hyperlinkTarget,
+      String commentText,
+      String commentAuthor,
+      boolean commentVisible,
+      int zoomPercent,
+      String paneDescriptor,
+      boolean hasColumnSizing,
+      float rowZeroHeightPoints,
+      String formulaText,
+      double formulaValue,
+      String sheetAutofilterRange,
+      String tableName,
+      List<String> tableColumns,
+      int conditionalFormattingBlockCount,
+      List<String> dataValidationKinds) {}
+
+  record WorkbookProtectionSnapshot(
+      boolean structureLocked,
+      boolean windowsLocked,
+      boolean revisionLocked,
+      boolean passwordMatches) {}
+
+  record AdvancedPrintSnapshot(
+      double leftMargin,
+      double rightMargin,
+      double topMargin,
+      double bottomMargin,
+      boolean horizontallyCentered,
+      boolean verticallyCentered,
+      short paperSize,
+      boolean draft,
+      boolean noColor,
+      short copies,
+      short pageStart,
+      int rowBreakCount,
+      int columnBreakCount) {}
+
+  record CommentSnapshot(
+      String author, boolean visible, int runCount, int col1, int row1, int col2, int row2) {}
+
+  record StyleSnapshot(
+      String fontColorDescriptor,
+      String fillColorDescriptor,
+      String borderColorDescriptor,
+      boolean gradientFill) {}
+
+  record NamedRangeSnapshot(
+      String name, String scope, String refersToFormula, boolean formulaDefined) {}
+
+  record AutofilterSnapshot(
+      String range, int filterColumnCount, boolean hasSortState, String sortStateRange) {}
+
+  record TableSnapshot(
+      String comment,
+      boolean published,
+      boolean insertRow,
+      boolean insertRowShift,
+      String headerRowCellStyle,
+      String dataCellStyle,
+      String totalsRowCellStyle,
+      String totalsRowLabel,
+      String totalsRowFunction,
+      String calculatedColumnFormula,
+      String uniqueName) {}
+
+  record DrawingSnapshot(
+      int shapeCount, int col1, int row1, int col2, int row2, String pictureDigest) {}
+
+  record EmbeddedObjectSnapshot(int shapeCount, String fileName, String objectDigest) {}
+
+  record ChartSnapshot(int chartCount, String title, int barChartCount) {}
+
+  record PivotSnapshot(int pivotCount, String sourceRef, List<Integer> rowLabelColumns) {}
+
+  private record StylesFillSnapshot(boolean gradientFill) {}
+}

@@ -10,7 +10,9 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
@@ -55,6 +57,61 @@ class PromotionMetadataTest {
             "replay text must exist for " + metadataPath.getFileName());
       }
     }
+  }
+
+  @Test
+  void promotedMetadataDirectoryContainsOnlyJsonAndTextArtifacts() throws IOException {
+    Path metadataRoot = JazzerHarness.promotedMetadataRoot(Path.of(""));
+    try (Stream<Path> stream = Files.walk(metadataRoot)) {
+      List<Path> unexpectedArtifacts =
+          stream
+              .filter(Files::isRegularFile)
+              .filter(
+                  path -> {
+                    String fileName = path.getFileName().toString();
+                    return !fileName.endsWith(".json") && !fileName.endsWith(".txt");
+                  })
+              .sorted()
+              .toList();
+
+      assertEquals(
+          List.of(),
+          unexpectedArtifacts,
+          "Promoted metadata directories must contain only .json and .txt artifacts.");
+    }
+  }
+
+  @Test
+  void everyReplayTextArtifactIsReferencedByJsonMetadata() throws IOException {
+    Path projectDirectory = Path.of("").toAbsolutePath().normalize();
+    Path metadataRoot = JazzerHarness.promotedMetadataRoot(projectDirectory);
+
+    Set<Path> referencedReplayTexts = new HashSet<>();
+    try (Stream<Path> stream = Files.walk(metadataRoot)) {
+      for (Path metadataPath :
+          stream
+              .filter(path -> path.getFileName().toString().endsWith(".json"))
+              .sorted()
+              .toList()) {
+        PromotionMetadata metadata = JazzerJson.read(metadataPath, PromotionMetadata.class);
+        referencedReplayTexts.add(metadata.replayTextPath(projectDirectory));
+      }
+    }
+
+    List<Path> orphanReplayTexts;
+    try (Stream<Path> stream = Files.walk(metadataRoot)) {
+      orphanReplayTexts =
+          stream
+              .filter(path -> path.getFileName().toString().endsWith(".txt"))
+              .filter(path -> !referencedReplayTexts.contains(path.toAbsolutePath().normalize()))
+              .sorted()
+              .toList();
+    }
+
+    assertEquals(
+        List.of(),
+        orphanReplayTexts,
+        "Every committed replay text artifact must be referenced by one promoted-metadata entry.");
   }
 
   @Test

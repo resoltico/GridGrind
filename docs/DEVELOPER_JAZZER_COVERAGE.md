@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.33.0"
+version: "0.34.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-04-10"
+updated: "2026-04-11"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 33 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 35 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
-| `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 8 |
-| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 17 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 69 total across harnesses |
+| `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 9 |
+| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 18 |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 73 total across harnesses |
 
 ---
 
@@ -177,61 +177,93 @@ These tests are not fuzz harnesses. They protect the Jazzer infrastructure itsel
 
 ## Current Promoted Input Inventory
 
-Committed custom seeds currently in source control:
+Committed custom seeds currently in source control. This list is exhaustive and should match the
+checked-in `*Inputs` directories exactly.
 
-| Harness | Input | Meaning |
-|:--------|:------|:--------|
-| `protocol-request` | `sheet_management_request.json` | readable valid request seed taken from the public sheet-management example |
-| `protocol-request` | `budget_request.json` | readable budget workflow seed with range writes, style, formulas, and explicit workbook/cell/window/schema reads |
-| `protocol-request` | `data_validation_request.json` | readable validation workflow seed covering validation authoring, partial clearing, factual validation reads, and validation-health analysis |
-| `protocol-request` | `table_autofilter_request.json` | readable table-and-autofilter workflow seed covering sheet filters, table authoring, factual reads, and both health-analysis families |
-| `protocol-request` | `excel_authoring_essentials_request.json` | readable authoring seed covering URL and FILE hyperlinks, comments, named ranges, and explicit metadata plus named-range reads |
-| `protocol-request` | `file_hyperlink_health_request.json` | readable hyperlink-analysis seed covering FILE path inputs, `file:` URI normalization, hyperlink metadata reads, and hyperlink-health analysis |
-| `protocol-request` | `live_workflow_create.json` | readable multi-sheet finance workflow with append-row and formula authoring |
-| `protocol-request` | `live_workflow_revise.json` | readable existing-workbook revision seed with overwrite persistence |
-| `protocol-request` | `row_column_structure_request.json` | readable B3 structural-edit seed covering row and column insertion, deletion, shifting, visibility, grouping, and `GET_SHEET_LAYOUT` reads |
-| `protocol-request` | `structural_layout_request.json` | readable structural-layout seed covering merge, sizing, pane state, zoom, and print layout |
-| `protocol-request` | `formatting_depth_request.json` | readable formatting-depth seed covering typed `fontHeight`, fill, color, and border patches |
-| `protocol-request` | `invalid_data_validation_empty_explicit_list.json` | readable expected-invalid seed covering empty explicit-list validation rejection |
-| `protocol-request` | `invalid_font_height_request.json` | readable expected-invalid seed covering typed `fontHeight` validation |
-| `protocol-request` | `invalid_request_shape_missing_request_id.json` | readable expected-invalid seed covering missing required read fields and `INVALID_REQUEST_SHAPE` replay classification |
-| `protocol-request` | `invalid_request_shape_unknown_read_type.json` | readable expected-invalid seed covering unknown read discriminators and `INVALID_REQUEST_SHAPE` replay classification |
-| `protocol-workflow` | `set_cell_failure_case.bin` | structured workflow seed that replays to a protocol `FAILURE` response with one `SET_CELL` operation |
-| `protocol-workflow` | `ensure_sheet_set_range_success.bin` | structured workflow seed that replays to a protocol `SUCCESS` response with `ENSURE_SHEET` plus `SET_RANGE` |
-| `protocol-workflow` | `apply_style_success.bin` | structured workflow seed that replays to a protocol `SUCCESS` response dominated by `APPLY_STYLE` |
-| `protocol-workflow` | `append_row_failure.bin` | structured workflow seed that replays to a protocol `FAILURE` response dominated by `APPEND_ROW` |
-| `protocol-workflow` | `auto_size_failure.bin` | structured workflow seed that replays to a protocol `FAILURE` response dominated by `AUTO_SIZE_COLUMNS` |
-| `protocol-workflow` | `existing_overwrite_apply_style_success.bin` | structured workflow seed that replays through `EXISTING` plus `OVERWRITE` with style application |
-| `protocol-workflow` | `existing_overwrite_hyperlink_failure.bin` | structured workflow seed that replays through `EXISTING` plus `OVERWRITE` with hyperlink operations in a protocol failure path |
-| `protocol-workflow` | `save_as_apply_style_failure.bin` | structured workflow seed that exercises `SAVE_AS` plus style-bearing protocol failure handling |
-| `protocol-workflow` | `save_as_named_range_failure.bin` | structured workflow seed that exercises `SAVE_AS` plus repeated named-range operations in a protocol failure path |
-| `protocol-workflow` | `set_comment_clear_range_failure.bin` | structured workflow seed that exercises comment mutation together with later range clearing in a protocol failure path |
-| `protocol-workflow` | `existing_overwrite_set_autofilter_failure.bin` | structured workflow seed that replays through `EXISTING` plus `OVERWRITE` with autofilter operations in a protocol failure path |
-| `engine-command-sequence` | `invalid_cell_address_case.bin` | direct engine seed that replays to an expected `InvalidCellAddressException` |
-| `engine-command-sequence` | `create_sheet_only_success.bin` | direct engine seed that replays to successful repeated `CREATE_SHEET` commands |
-| `engine-command-sequence` | `create_sheet_set_range_success.bin` | direct engine seed that replays to successful `CREATE_SHEET` plus `SET_RANGE` commands |
-| `engine-command-sequence` | `apply_style_alignment_success.bin` | direct engine seed that replays to successful alignment-only style application |
-| `engine-command-sequence` | `apply_style_formatting_depth_success.bin` | direct engine seed that replays to successful formatting-depth style application |
-| `engine-command-sequence` | `invalid_formula_parser_state_case.bin` | direct engine seed that replays to the expected-invalid malformed-formula parser-state case fixed from a former Jazzer finding |
-| `engine-command-sequence` | `set_hyperlink_clear_comment_invalid_sheet.bin` | direct engine seed that replays to an expected-invalid mixed hyperlink/comment command case against a missing sheet |
-| `engine-command-sequence` | `delete_last_visible_sheet_invalid.bin` | direct engine seed promoted from a live B1 finding to assert that deleting the last visible sheet is classified as expected-invalid instead of crashing view-state normalization |
-| `xlsx-roundtrip` | `create_sheet_roundtrip_case.bin` | successful round-trip seed dominated by repeated `CREATE_SHEET` commands |
-| `xlsx-roundtrip` | `single_sheet_roundtrip_case.bin` | minimal successful round-trip seed that creates one sheet and persists cleanly |
-| `xlsx-roundtrip` | `create_sheet_set_range_roundtrip_case.bin` | successful round-trip seed that persists `CREATE_SHEET` plus `SET_RANGE` commands |
-| `xlsx-roundtrip` | `apply_style_alignment_roundtrip_success.bin` | successful round-trip seed that preserves alignment-only style state after reopen |
-| `xlsx-roundtrip` | `apply_style_formatting_depth_roundtrip_success.bin` | successful round-trip seed that preserves formatting-depth style state after reopen |
-| `xlsx-roundtrip` | `border_all_none_missing_color_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that clearing border sides back to `NONE` no longer trips POI's unsafe border-color unset path |
-| `xlsx-roundtrip` | `append_row_preserves_styled_blank_row_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert style preservation when `APPEND_ROW` reuses styled blank rows |
-| `xlsx-roundtrip` | `append_row_datetime_style_patch_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that date-time append writes relayer their required number format onto styled blank rows |
-| `xlsx-roundtrip` | `table_header_rewrite_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that table header rewrites keep persisted table metadata synchronized through reopen |
-| `xlsx-roundtrip` | `table_header_style_display_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that header-range style patches keep typed table header metadata synchronized through reopen |
-| `xlsx-roundtrip` | `clear_sheet_protection_unprotected_roundtrip_success.bin` | successful round-trip seed promoted from a live B1 finding to assert that clearing protection on an already unprotected sheet is an idempotent no-op instead of a POI-backed crash |
-| `xlsx-roundtrip` | `named_range_normalization_roundtrip_success.bin` | successful round-trip seed that preserves named-range state while normalizing reversed target ordering |
-| `xlsx-roundtrip` | `named_range_shift_overwrite_invalid.bin` | expected-invalid round-trip seed proving that destructive row shifts against range-backed named ranges are rejected before POI can rewrite them into broken `#REF!` formulas |
-| `xlsx-roundtrip` | `partial_collapsed_column_ungroup_roundtrip_success.bin` | successful round-trip seed promoted from a live finding to assert that partial ungrouping of a collapsed grouped column band preserves Excel's persisted boundary-column collapsed marker through reopen |
-| `xlsx-roundtrip` | `hyperlink_comment_invalid_row_case.bin` | expected-invalid round-trip seed that exercises hyperlink and comment commands alongside invalid row mutation input |
-| `xlsx-roundtrip` | `set_hyperlink_replacement_roundtrip_success.bin` | successful round-trip seed that preserves the latest hyperlink target after repeated writes to the same cell |
-| `xlsx-roundtrip` | `set_table_missing_sheet_invalid_roundtrip.bin` | expected-invalid round-trip seed that exercises table authoring across missing-sheet failure classification |
+### `protocol-request` (35)
+
+- `budget_request.json`
+- `clear_on_empty_cells.json`
+- `conditional_formatting_request.json`
+- `data_validation_request.json`
+- `delete_last_sheet.json`
+- `duplicate_request_id.json`
+- `excel_authoring_essentials_request.json`
+- `file_hyperlink_health_request.json`
+- `formatting_depth_request.json`
+- `formula_equals_prefix.json`
+- `get_cells_invalid_address.json`
+- `get_cells_out_of_bounds_address.json`
+- `get_window_overflow.json`
+- `introspection_analysis_request.json`
+- `invalid_data_validation_empty_explicit_list.json`
+- `invalid_email_no_at_sign.json`
+- `invalid_font_height_request.json`
+- `invalid_request_shape_missing_request_id.json`
+- `invalid_request_shape_null_primitive_boolean.json`
+- `invalid_request_shape_null_primitive_int.json`
+- `invalid_request_shape_unknown_read_type.json`
+- `live_workflow_create.json`
+- `live_workflow_revise.json`
+- `pane_and_print_reset_request.json`
+- `rich_text_request.json`
+- `row_column_structure_request.json`
+- `schema_empty_sheet.json`
+- `schema_formula_cells.json`
+- `sheet_management_request.json`
+- `sheet_name_too_long.json`
+- `structural_layout_request.json`
+- `table_autofilter_request.json`
+- `unknown_field_rejection.json`
+- `window_size_limit_exceeded.json`
+- `workbook_health_request.json`
+
+### `protocol-workflow` (11)
+
+- `append_row_failure.bin`
+- `apply_style_success.bin`
+- `auto_size_failure.bin`
+- `ensure_sheet_set_range_success.bin`
+- `existing_overwrite_apply_style_success.bin`
+- `existing_overwrite_hyperlink_failure.bin`
+- `existing_overwrite_set_autofilter_failure.bin`
+- `save_as_apply_style_failure.bin`
+- `save_as_named_range_failure.bin`
+- `set_cell_failure_case.bin`
+- `set_comment_clear_range_failure.bin`
+
+### `engine-command-sequence` (9)
+
+- `apply_style_alignment_success.bin`
+- `apply_style_formatting_depth_success.bin`
+- `create_sheet_only_success.bin`
+- `create_sheet_set_range_success.bin`
+- `delete_last_visible_sheet_invalid.bin`
+- `invalid_cell_address_case.bin`
+- `invalid_formula_parser_state_case.bin`
+- `overlapping_collapsed_then_expanded_group_columns_expected_invalid.bin`
+- `set_hyperlink_clear_comment_invalid_sheet.bin`
+
+### `xlsx-roundtrip` (18)
+
+- `append_row_datetime_style_patch_roundtrip_success.bin`
+- `append_row_preserves_styled_blank_row_roundtrip_success.bin`
+- `apply_style_alignment_roundtrip_success.bin`
+- `apply_style_formatting_depth_roundtrip_success.bin`
+- `border_all_none_missing_color_roundtrip_success.bin`
+- `clear_sheet_protection_unprotected_roundtrip_success.bin`
+- `create_sheet_roundtrip_case.bin`
+- `create_sheet_set_range_roundtrip_case.bin`
+- `hyperlink_comment_invalid_row_case.bin`
+- `named_range_normalization_roundtrip_success.bin`
+- `named_range_shift_overwrite_invalid.bin`
+- `partial_collapsed_column_ungroup_roundtrip_success.bin`
+- `redundant_noop_ungroup_columns_roundtrip_success.bin`
+- `set_hyperlink_replacement_roundtrip_success.bin`
+- `set_table_missing_sheet_invalid_roundtrip.bin`
+- `single_sheet_roundtrip_case.bin`
+- `table_header_rewrite_roundtrip_success.bin`
+- `table_header_style_display_roundtrip_success.bin`
 
 Matching promotion metadata lives under:
 

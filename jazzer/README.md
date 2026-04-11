@@ -33,12 +33,22 @@ before running any Jazzer command. See [docs/DEVELOPER_JAVA.md](../docs/DEVELOPE
 - `jazzer/bin/clean-local-findings`
 - `jazzer/bin/clean-local-corpus`
 
-Use the scripts instead of raw Gradle when possible. They provide:
+Use the scripts for active fuzzing and day-to-day Jazzer operator work. Raw Gradle remains useful
+only for deterministic nested-build verification (`test`, `check`). The scripts provide:
 - the local run lock
 - per-target run history
 - latest-summary artifacts
 - path normalization for replay and promotion
+- the active-fuzz duration watchdog
+- active-fuzz `--no-daemon` launch isolation plus interrupt and timeout cleanup
 - explicit separation between generated local corpus and committed custom seeds
+
+Active fuzz launcher tasks now preload a tiny project-owned premain agent before `JazzerHarnessRunner`
+starts. That bridge publishes JVM startup instrumentation to Byte Buddy up front so Java 26 active
+fuzzing does not depend on a late external self-attach.
+
+Active fuzzing is local-only. GitHub Actions must stay on deterministic verification only, and the
+active harness runner now rejects live fuzzing when `GITHUB_ACTIONS=true`.
 
 ## Common Commands
 
@@ -70,6 +80,11 @@ Run one harness:
 ```bash
 jazzer/bin/fuzz-protocol-workflow -PjazzerMaxDuration=30m --console=plain
 ```
+
+This is the supported live-fuzz operator surface. The wrapper records run history and summaries
+around the underlying Gradle task, forces active fuzz onto `--no-daemon`, and tears down the
+Gradle client process tree on interrupt or timeout so a supported local run does not leave a live
+harness behind.
 
 Run all four active harnesses sequentially:
 
@@ -180,22 +195,23 @@ Committed regression inputs and promotion metadata live under:
 - `jazzer/src/fuzz/resources/.../*Inputs/...`
 - `jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/`
 
-The committed promoted seed floor currently contains 46 inputs across the four replayable
-harnesses.
+See [docs/DEVELOPER_JAZZER_COVERAGE.md](../docs/DEVELOPER_JAZZER_COVERAGE.md) for the current
+committed seed inventory and per-harness counts.
 
 Run root Gradle verification and nested Jazzer verification sequentially, not in parallel.
 They share the same workspace and composite-build outputs, and parallel runs can create stale or
 misleading local build state.
 
-## Raw Gradle Form
+## Deterministic Gradle Verification
 
-Raw Gradle still works when needed:
+Raw Gradle remains available only for deterministic nested-build verification:
 
 ```bash
-./gradlew --project-dir jazzer <task>
+./gradlew --project-dir jazzer test --console=plain
+./gradlew --project-dir jazzer check --console=plain
 ```
 
-But raw Gradle is not the supported operator surface.
+For active fuzzing, use `jazzer/bin/*` and nothing else. That is the only supported operator path.
 
 ## Full References
 

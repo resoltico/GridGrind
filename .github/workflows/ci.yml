@@ -33,6 +33,8 @@ jobs:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
       - name: Check and enforce coverage
+        # Deliberately excludes nested Jazzer active fuzzing. GitHub Actions stays on
+        # deterministic verification only; live fuzzing is a local-only operator workflow.
         run: ./gradlew check --no-daemon
 
   docker-smoke:

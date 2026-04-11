@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.33.0
+docker pull ghcr.io/resoltico/gridgrind:0.34.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -127,10 +127,25 @@ That local whole-repo gate runs the root quality checks, nested Jazzer verificat
 smoke checks, and Docker smoke coverage in one supported sequence. Jazzer-specific operator flows
 also remain available through the scripts under [`jazzer/bin`](./jazzer/bin/).
 
-Root `./gradlew check` stays focused on `engine`, `protocol`, and `cli`. The nested Jazzer build
-remains local-only on purpose and has its own `./gradlew --project-dir jazzer check` flow, which
-applies shared Spotless and PMD conventions plus Jazzer-specific coverage and regression gates
-without pulling active fuzzing into GitHub CI.
+For direct Apache POI `.xlsx` parity measurement, run:
+
+```bash
+./gradlew parity
+```
+
+That task materializes the committed XSSF golden corpus, opens it through a direct-POI oracle,
+compares GridGrind against the canonical parity ledger, and fails as soon as observed parity
+status drifts from the checked-in baseline.
+
+Root `./gradlew check` stays focused on `engine`, `protocol`, and `cli`, and now includes the
+protocol module's parity verification. The nested Jazzer build remains local-only on purpose and
+has its own `./gradlew --project-dir jazzer check` flow for deterministic nested verification.
+Use `jazzer/bin/*` for active fuzzing, replay, promotion, and other local Jazzer operator work.
+GitHub Actions intentionally never runs active fuzzing, and active Jazzer harness execution now
+hard-fails when `GITHUB_ACTIONS=true`. Active fuzz launcher tasks also preload a tiny
+project-owned premain agent so Java 26 live fuzzing does not depend on a late external attach. The
+supported wrappers also force active fuzz onto `--no-daemon` and own interrupt cleanup so canceled
+local runs do not strand a live harness JVM.
 
 ---
 
