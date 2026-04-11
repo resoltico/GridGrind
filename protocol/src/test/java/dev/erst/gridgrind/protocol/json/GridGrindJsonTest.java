@@ -118,6 +118,36 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void roundTripsFormulaEnvironmentRequestsAndOmitsNullFormulaEnvironmentFromTemplate()
+      throws IOException {
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.ExistingFile("budget.xlsx"),
+            new GridGrindRequest.WorkbookPersistence.None(),
+            new FormulaEnvironmentInput(
+                List.of(new FormulaExternalWorkbookInput("rates.xlsx", "tmp/rates.xlsx")),
+                FormulaMissingWorkbookPolicy.USE_CACHED_VALUE,
+                List.of(
+                    new FormulaUdfToolpackInput(
+                        "math",
+                        List.of(new FormulaUdfFunctionInput("DOUBLE", 1, null, "ARG1*2"))))),
+            List.of(
+                new WorkbookOperation.EvaluateFormulaCells(
+                    List.of(new FormulaCellTargetInput("Budget", "B4"))),
+                new WorkbookOperation.ClearFormulaCaches()),
+            List.of());
+
+    GridGrindRequest decoded = GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(request));
+    String templateJson =
+        new String(
+            GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()),
+            StandardCharsets.UTF_8);
+
+    assertEquals(request, decoded);
+    assertFalse(templateJson.contains("formulaEnvironment"));
+  }
+
+  @Test
   void roundTripsStructuredResponses() throws IOException {
     GridGrindResponse expected =
         new GridGrindResponse.Success(

@@ -1,9 +1,22 @@
 package dev.erst.gridgrind.protocol.parity;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.ExcelFormulaEnvironment;
+import dev.erst.gridgrind.excel.ExcelFormulaExternalWorkbookBinding;
+import dev.erst.gridgrind.excel.ExcelFormulaMissingWorkbookPolicy;
+import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.protocol.dto.FormulaEnvironmentInput;
+import dev.erst.gridgrind.protocol.dto.FormulaExternalWorkbookInput;
+import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
+import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
+import dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
+import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,6 +43,7 @@ final class XlsxParityTest {
             XlsxParityScenarios.ADVANCED_NONDRAWING,
             XlsxParityScenarios.EXTERNAL_FORMULA,
             XlsxParityScenarios.UDF_FORMULA,
+            XlsxParityScenarios.FORMULA_LIFECYCLE,
             XlsxParityScenarios.DRAWING_IMAGE,
             XlsxParityScenarios.CHART,
             XlsxParityScenarios.PIVOT,
@@ -135,6 +149,66 @@ final class XlsxParityTest {
                   return workbook.validateWorkbookPassword("not-the-phase-password");
                 }
               }));
+    } finally {
+      deleteRecursively(temporaryRoot);
+    }
+  }
+
+  @Test
+  void externalFormulaCorpusScenarioOpensThroughGridGrindFormulaEnvironment() {
+    Path temporaryRoot =
+        XlsxParitySupport.call(
+            "create external-formula corpus temporary directory",
+            () -> Files.createTempDirectory("gridgrind-parity-external-open-"));
+    try {
+      XlsxParityScenarios.MaterializedScenario scenario =
+          XlsxParityScenarios.materialize(XlsxParityScenarios.EXTERNAL_FORMULA, temporaryRoot);
+      assertDoesNotThrow(
+          () -> {
+            try (ExcelWorkbook workbook =
+                ExcelWorkbook.open(
+                    scenario.workbookPath(),
+                    new ExcelFormulaEnvironment(
+                        List.of(
+                            new ExcelFormulaExternalWorkbookBinding(
+                                "referenced.xlsx", scenario.attachment("referencedWorkbook"))),
+                        ExcelFormulaMissingWorkbookPolicy.ERROR,
+                        List.of()))) {
+              workbook.evaluateAllFormulas();
+            }
+          });
+    } finally {
+      deleteRecursively(temporaryRoot);
+    }
+  }
+
+  @Test
+  void externalFormulaCorpusScenarioExecutesThroughProtocolExecutor() {
+    Path temporaryRoot =
+        XlsxParitySupport.call(
+            "create external-formula protocol temporary directory",
+            () -> Files.createTempDirectory("gridgrind-parity-external-protocol-"));
+    try {
+      XlsxParityScenarios.MaterializedScenario scenario =
+          XlsxParityScenarios.materialize(XlsxParityScenarios.EXTERNAL_FORMULA, temporaryRoot);
+      Path outputPath = temporaryRoot.resolve("output.xlsx");
+      GridGrindResponse response =
+          new DefaultGridGrindRequestExecutor()
+              .execute(
+                  new GridGrindRequest(
+                      new GridGrindRequest.WorkbookSource.ExistingFile(
+                          scenario.workbookPath().toString()),
+                      new GridGrindRequest.WorkbookPersistence.SaveAs(outputPath.toString()),
+                      new FormulaEnvironmentInput(
+                          List.of(
+                              new FormulaExternalWorkbookInput(
+                                  "referenced.xlsx",
+                                  scenario.attachment("referencedWorkbook").toString())),
+                          dev.erst.gridgrind.protocol.dto.FormulaMissingWorkbookPolicy.ERROR,
+                          List.of()),
+                      List.of(new WorkbookOperation.EvaluateFormulas()),
+                      List.of(new WorkbookReadOperation.GetCells("cells", "Ops", List.of("B1")))));
+      assertInstanceOf(GridGrindResponse.Success.class, response);
     } finally {
       deleteRecursively(temporaryRoot);
     }

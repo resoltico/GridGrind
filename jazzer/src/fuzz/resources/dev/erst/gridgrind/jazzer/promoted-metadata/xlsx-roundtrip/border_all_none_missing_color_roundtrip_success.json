@@ -10,11 +10,10 @@
       "inputBytes" : 38,
       "commandCount" : 8,
       "commandKinds" : {
-        "CREATE_SHEET" : 7,
-        "APPLY_STYLE" : 1
+        "APPLY_STYLE" : 1,
+        "CREATE_SHEET" : 7
       },
       "styleKinds" : {
-        "italic" : 1,
         "fill_pattern" : 1,
         "font" : 1,
         "fill_pattern_solid" : 1,
@@ -24,7 +23,8 @@
         "border_all_none" : 1,
         "border_all" : 1,
         "fill_color" : 1,
-        "fill_foreground_color" : 1
+        "fill_foreground_color" : 1,
+        "italic" : 1
       }
     }
   },

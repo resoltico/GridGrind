@@ -3,6 +3,8 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -606,6 +608,57 @@ class WorkbookCommandExecutorTest {
   }
 
   @Test
+  void appliesFormulaLifecycleCommandsThroughExecutor() throws IOException {
+    WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget");
+      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.sheet("Budget").setCell("C1", ExcelCellValue.formula("A1*3"));
+
+      executor.apply(workbook, new WorkbookCommand.EvaluateAllFormulas());
+      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(4.0d));
+
+      executor.apply(
+          workbook,
+          new WorkbookCommand.EvaluateFormulaCells(
+              List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
+
+      assertEquals(
+          8.0d,
+          ((ExcelCellSnapshot.NumberSnapshot)
+                  ((ExcelCellSnapshot.FormulaSnapshot) workbook.sheet("Budget").snapshotCell("B1"))
+                      .evaluation())
+              .numberValue());
+      assertEquals("6.0", cachedFormulaValue(workbook, "Budget", 0, 2));
+
+      executor.apply(workbook, new WorkbookCommand.ClearFormulaCaches());
+      assertNull(cachedFormulaValue(workbook, "Budget", 0, 1));
+      assertNull(cachedFormulaValue(workbook, "Budget", 0, 2));
+
+      executor.apply(workbook, new WorkbookCommand.ForceFormulaRecalculationOnOpen());
+      assertTrue(workbook.forceFormulaRecalculationOnOpenEnabled());
+    }
+  }
+
+  @Test
+  void rejectsUnexpectedCommandsInPrivateCommandFamilies() throws Exception {
+    WorkbookCommand unexpected = new WorkbookCommand.EvaluateAllFormulas();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget");
+
+      assertPrivateHelperRejects("applyWorkbookScopeCommand", workbook, unexpected);
+      assertPrivateHelperRejects("applySheetStructureCommand", workbook, unexpected);
+      assertPrivateHelperRejects("applyCellValueCommand", workbook, unexpected);
+      assertPrivateHelperRejects("applyWorkbookMetadataCommand", workbook, unexpected);
+      assertPrivateHelperRejects(
+          "applyFormulaCommand", workbook, new WorkbookCommand.CreateSheet("Ops"));
+    }
+  }
+
+  @Test
   void validatesNullWorkbooksCommandsAndCommandEntries() throws IOException {
     WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 
@@ -639,5 +692,32 @@ class WorkbookCommandExecutorTest {
     return new ExcelSheetProtectionSettings(
         true, false, true, false, true, false, true, false, true, false, true, false, true, false,
         true);
+  }
+
+  private static void assertPrivateHelperRejects(
+      String methodName, ExcelWorkbook workbook, WorkbookCommand command)
+      throws ReflectiveOperationException {
+    Method method =
+        accessibleMethod(
+            WorkbookCommandExecutor.class, methodName, ExcelWorkbook.class, WorkbookCommand.class);
+
+    InvocationTargetException failure =
+        assertThrows(InvocationTargetException.class, () -> method.invoke(null, workbook, command));
+    assertInstanceOf(IllegalStateException.class, failure.getCause());
+  }
+
+  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
+  private static Method accessibleMethod(Class<?> type, String name, Class<?>... parameterTypes)
+      throws ReflectiveOperationException {
+    Method method = type.getDeclaredMethod(name, parameterTypes);
+    method.setAccessible(true);
+    return method;
+  }
+
+  private static String cachedFormulaValue(
+      ExcelWorkbook workbook, String sheetName, int rowIndex, int columnIndex) {
+    org.apache.poi.xssf.usermodel.XSSFCell cell =
+        workbook.xssfWorkbook().getSheet(sheetName).getRow(rowIndex).getCell(columnIndex);
+    return cell.getCTCell().isSetV() ? cell.getCTCell().getV() : null;
   }
 }

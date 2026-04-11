@@ -100,6 +100,7 @@ public final class XlsxParityScenarios {
   static final String ADVANCED_NONDRAWING = "poi-advanced-nondrawing";
   static final String EXTERNAL_FORMULA = "poi-external-formula";
   static final String UDF_FORMULA = "poi-udf-formula";
+  static final String FORMULA_LIFECYCLE = "poi-formula-lifecycle";
   static final String DRAWING_IMAGE = "poi-drawing-image";
   static final String CHART = "poi-chart";
   static final String PIVOT = "poi-pivot";
@@ -126,6 +127,7 @@ public final class XlsxParityScenarios {
               case ADVANCED_NONDRAWING -> materializeAdvancedNonDrawingWorkbook(temporaryRoot);
               case EXTERNAL_FORMULA -> materializeExternalFormulaWorkbook(temporaryRoot);
               case UDF_FORMULA -> materializeUdfFormulaWorkbook(temporaryRoot);
+              case FORMULA_LIFECYCLE -> materializeFormulaLifecycleWorkbook(temporaryRoot);
               case DRAWING_IMAGE -> materializeDrawingWorkbook(temporaryRoot);
               case CHART -> materializeChartWorkbook(temporaryRoot);
               case PIVOT -> materializePivotWorkbook(temporaryRoot);
@@ -262,6 +264,12 @@ public final class XlsxParityScenarios {
                 .getRow(0)
                 .createCell(1)
                 .setCellFormula("[" + referencedWorkbookPath.getFileName() + "]Rates!$A$1");
+            var evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+            evaluator.setupReferencedWorkbooks(
+                Map.of(
+                    referencedWorkbookPath.getFileName().toString(),
+                    referencedWorkbook.getCreationHelper().createFormulaEvaluator()));
+            evaluator.evaluateFormulaCell(sheet.getRow(0).getCell(1));
             try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
               workbook.write(outputStream);
             }
@@ -269,6 +277,30 @@ public final class XlsxParityScenarios {
 
           return new MaterializedScenario(
               workbookPath, Map.of("referencedWorkbook", referencedWorkbookPath));
+        });
+  }
+
+  private static MaterializedScenario materializeFormulaLifecycleWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize formula-lifecycle parity workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(FORMULA_LIFECYCLE));
+          Path workbookPath = scenarioDirectory.resolve("formula-lifecycle.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Budget");
+            sheet.createRow(0).createCell(0).setCellValue(2.0d);
+            sheet.getRow(0).createCell(1).setCellFormula("A1*2");
+            sheet.getRow(0).createCell(2).setCellFormula("A1*3");
+            workbook.getCreationHelper().createFormulaEvaluator().evaluateAll();
+            sheet.getRow(0).getCell(0).setCellValue(4.0d);
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
         });
   }
 

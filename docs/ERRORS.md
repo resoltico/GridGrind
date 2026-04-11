@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.36.0"
+version: "0.37.0"
 domain: ERRORS
 updated: "2026-04-11"
 route:
@@ -71,6 +71,8 @@ route:
 | Code | Trigger |
 |:-----|:--------|
 | `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax. |
+| `MISSING_EXTERNAL_WORKBOOK` | Formula evaluation needs an external workbook binding that was not supplied and cached-value fallback is not enabled. |
+| `UNREGISTERED_USER_DEFINED_FUNCTION` | Formula evaluation encountered a UDF that is not registered in `formulaEnvironment`. |
 | `UNSUPPORTED_FORMULA` | Formula syntax is valid but the function or construct is not supported by Apache POI. |
 
 ### Resource (`RESOURCE` category)
@@ -102,7 +104,7 @@ route:
 |:---------|:--------|
 | `ARGUMENTS` | CLI argument was unrecognized or malformed. Fix the command invocation. |
 | `REQUEST` | Request JSON is malformed, does not match the protocol shape, or violates semantic validation. Fix the request. |
-| `FORMULA` | Formula is syntactically invalid or unsupported by Apache POI. Fix the formula. |
+| `FORMULA` | Formula syntax is invalid, evaluation is missing required external/UDF configuration, or the construct is unsupported by Apache POI. Fix the formula or evaluator setup. |
 | `RESOURCE` | Referenced workbook, sheet, or cell does not exist. Fix the path or name. |
 | `IO` | Filesystem failure reading or writing a file. Check paths, permissions, and disk state. |
 | `INTERNAL` | Unexpected engine error. Capture details and escalate. |
@@ -169,5 +171,6 @@ Each entry carries:
 | `message` | Product-owned diagnostic message for this entry. |
 | `stage` | Pipeline stage where this diagnostic originated, or `null` if not attributed to a stage. |
 
-Agents should inspect `code` to distinguish between, for example, `INVALID_FORMULA` and
-`UNSUPPORTED_FORMULA`, without depending on Java exception class names or parser-library details.
+Agents should inspect `code` to distinguish between, for example, `INVALID_FORMULA`,
+`MISSING_EXTERNAL_WORKBOOK`, `UNREGISTERED_USER_DEFINED_FUNCTION`, and `UNSUPPORTED_FORMULA`
+without depending on Java exception class names or parser-library details.

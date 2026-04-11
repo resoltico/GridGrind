@@ -1,0 +1,87 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "cli/build/generated-workbooks/gridgrind-formula-environment.xlsx"
+  },
+  "formulaEnvironment": {
+    "udfToolpacks": [
+      {
+        "name": "math",
+        "functions": [
+          {
+            "name": "DOUBLE",
+            "minimumArgumentCount": 1,
+            "formulaTemplate": "ARG1*2"
+          }
+        ]
+      }
+    ]
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Budget" },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Budget",
+      "range": "A1:C3",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Item" },
+          { "type": "TEXT", "text": "Hours" },
+          { "type": "TEXT", "text": "Rate" }
+        ],
+        [
+          { "type": "TEXT", "text": "Onboarding" },
+          { "type": "NUMBER", "number": 4 },
+          { "type": "NUMBER", "number": 120 }
+        ],
+        [
+          { "type": "TEXT", "text": "Support" },
+          { "type": "NUMBER", "number": 3 },
+          { "type": "NUMBER", "number": 90 }
+        ]
+      ]
+    },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Budget",
+      "address": "D2",
+      "value": { "type": "FORMULA", "formula": "DOUBLE(B2)" }
+    },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Budget",
+      "address": "E2",
+      "value": { "type": "FORMULA", "formula": "B2*C2" }
+    },
+    { "type": "EVALUATE_FORMULAS" },
+    {
+      "type": "SET_CELL",
+      "sheetName": "Budget",
+      "address": "B2",
+      "value": { "type": "NUMBER", "number": 6 }
+    },
+    {
+      "type": "EVALUATE_FORMULA_CELLS",
+      "cells": [{ "sheetName": "Budget", "address": "D2" }]
+    },
+    { "type": "CLEAR_FORMULA_CACHES" }
+  ],
+  "reads": [
+    {
+      "type": "GET_CELLS",
+      "requestId": "formula-cells",
+      "sheetName": "Budget",
+      "addresses": ["B2", "D2", "E2"]
+    },
+    {
+      "type": "GET_FORMULA_SURFACE",
+      "requestId": "formula-surface",
+      "selection": {
+        "type": "SELECTED",
+        "sheetNames": ["Budget"]
+      }
+    }
+  ]
+}

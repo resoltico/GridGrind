@@ -12,32 +12,32 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 3,
       "operationKinds" : {
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
-        "APPLY_STYLE" : 2
+        "APPLY_STYLE" : 2,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
       },
       "styleKinds" : {
-        "border_right" : 1,
-        "font_color" : 1,
         "border_all_color" : 1,
         "font" : 2,
         "fill_foreground_color" : 1,
         "border_all_none" : 1,
-        "border" : 2,
-        "font_height" : 1,
-        "strikeout" : 2,
         "fill_color" : 1,
+        "border" : 2,
+        "strikeout" : 2,
+        "font_height" : 1,
         "border_all" : 2,
         "fill_patterned" : 1,
         "font_height_twips" : 1,
         "fill_pattern_solid" : 1,
         "fill" : 2,
         "underline" : 2,
-        "fill_pattern" : 2
+        "fill_pattern" : 2,
+        "border_right" : 1,
+        "font_color" : 1
       },
       "readCount" : 3,
       "readKinds" : {
-        "ANALYZE_WORKBOOK_FINDINGS" : 1,
-        "GET_AUTOFILTERS" : 2
+        "GET_AUTOFILTERS" : 2,
+        "ANALYZE_WORKBOOK_FINDINGS" : 1
       },
       "responseKind" : "SUCCESS"
     }

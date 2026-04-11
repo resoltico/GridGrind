@@ -10,9 +10,10 @@
       "inputBytes" : 107,
       "commandCount" : 6,
       "commandKinds" : {
-        "CLEAR_CONDITIONAL_FORMATTING" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3,
         "CREATE_SHEET" : 1,
+        "CLEAR_CONDITIONAL_FORMATTING" : 1,
+        "CLEAR_FORMULA_CACHES" : 2,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
         "CLEAR_SHEET_PROTECTION" : 1
       },
       "styleKinds" : { }

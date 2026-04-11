@@ -333,14 +333,23 @@ final class XlsxParityOracle {
                 .getNumberValue());
   }
 
+  static String cachedFormulaRawValue(Path workbookPath, String sheetName, String address) {
+    return withWorkbook(
+        workbookPath,
+        workbook -> {
+          XSSFCell cell = cell(workbook.getSheet(sheetName), address);
+          return cell.getCTCell().isSetV() ? cell.getCTCell().getV() : null;
+        });
+  }
+
   static double evaluateExternalFormula(Path workbookPath, Path referencedWorkbookPath) {
     return XlsxParitySupport.call(
         "evaluate external-formula parity workbook",
         () -> {
-          try (Workbook referencedWorkbook =
-                  WorkbookFactory.create(referencedWorkbookPath.toFile());
-              XSSFWorkbook workbook =
-                  (XSSFWorkbook) WorkbookFactory.create(workbookPath.toFile())) {
+          try (InputStream referencedStream = Files.newInputStream(referencedWorkbookPath);
+              Workbook referencedWorkbook = WorkbookFactory.create(referencedStream);
+              InputStream workbookStream = Files.newInputStream(workbookPath);
+              XSSFWorkbook workbook = new XSSFWorkbook(workbookStream)) {
             workbook.linkExternalWorkbook(
                 referencedWorkbookPath.getFileName().toString(), referencedWorkbook);
             var evaluator = workbook.getCreationHelper().createFormulaEvaluator();
@@ -355,12 +364,43 @@ final class XlsxParityOracle {
         });
   }
 
+  static boolean externalFormulaFailsWithoutBinding(Path workbookPath) {
+    return XlsxParitySupport.call(
+        "evaluate external-formula parity workbook without bindings",
+        () -> {
+          try (InputStream workbookStream = Files.newInputStream(workbookPath);
+              XSSFWorkbook workbook = new XSSFWorkbook(workbookStream)) {
+            var evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+            evaluator.setIgnoreMissingWorkbooks(false);
+            evaluator.evaluate(workbook.getSheet("Ops").getRow(0).getCell(1));
+            return false;
+          } catch (RuntimeException exception) {
+            return true;
+          }
+        });
+  }
+
+  static double evaluateExternalFormulaUsingCachedValue(Path workbookPath) {
+    return XlsxParitySupport.call(
+        "evaluate external-formula parity workbook with cached-value fallback",
+        () -> {
+          try (InputStream workbookStream = Files.newInputStream(workbookPath);
+              XSSFWorkbook workbook = new XSSFWorkbook(workbookStream)) {
+            var evaluator = workbook.getCreationHelper().createFormulaEvaluator();
+            evaluator.setIgnoreMissingWorkbooks(true);
+            return evaluator
+                .evaluate(workbook.getSheet("Ops").getRow(0).getCell(1))
+                .getNumberValue();
+          }
+        });
+  }
+
   static double evaluateUdfFormula(Path workbookPath) {
     return XlsxParitySupport.call(
         "evaluate UDF parity workbook",
         () -> {
-          try (XSSFWorkbook workbook =
-              (XSSFWorkbook) WorkbookFactory.create(workbookPath.toFile())) {
+          try (InputStream workbookStream = Files.newInputStream(workbookPath);
+              XSSFWorkbook workbook = new XSSFWorkbook(workbookStream)) {
             workbook.addToolPack(
                 new DefaultUDFFinder(
                     new String[] {"DOUBLE"},

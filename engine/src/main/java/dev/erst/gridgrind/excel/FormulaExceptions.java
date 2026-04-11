@@ -1,10 +1,25 @@
 package dev.erst.gridgrind.excel;
 
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.poi.ss.formula.atp.AnalysisToolPak;
+import org.apache.poi.ss.formula.eval.FunctionEval;
+import org.apache.poi.ss.formula.function.FunctionMetadataRegistry;
+
 /**
  * Translates raw Apache POI formula evaluation exceptions into typed GridGrind exception hierarchy
  * entries.
  */
 final class FormulaExceptions {
+  private static final Pattern EXTERNAL_WORKBOOK_NAME_PATTERN =
+      Pattern.compile("Could not resolve external workbook name '([^']+)'");
+  private static final Pattern EXTERNAL_WORKBOOK_REFERENCE_PATTERN =
+      Pattern.compile("\\[([^\\[\\]]+)]");
+
   private FormulaExceptions() {}
 
   /**
@@ -21,6 +36,59 @@ final class FormulaExceptions {
    */
   static RuntimeException wrap(
       String sheetName, String address, String formula, RuntimeException exception) {
+    return wrap(
+        ExcelFormulaEnvironment.defaults().runtimeContext(),
+        sheetName,
+        address,
+        formula,
+        exception);
+  }
+
+  static RuntimeException wrap(
+      ExcelFormulaRuntime formulaRuntime,
+      String sheetName,
+      String address,
+      String formula,
+      RuntimeException exception) {
+    return wrap(formulaRuntime.context(), sheetName, address, formula, exception);
+  }
+
+  private static RuntimeException wrap(
+      ExcelFormulaRuntimeContext context,
+      String sheetName,
+      String address,
+      String formula,
+      RuntimeException exception) {
+    if (isMissingExternalWorkbookFailure(exception)) {
+      String workbookName = missingExternalWorkbookName(exception, formula);
+      return new MissingExternalWorkbookException(
+          sheetName,
+          address,
+          formula,
+          workbookName,
+          "Missing external workbook"
+              + workbookLabel(workbookName)
+              + " at "
+              + location(sheetName, address)
+              + ": "
+              + formula,
+          exception);
+    }
+    if (isUnregisteredUserDefinedFunctionFailure(context, exception, formula)) {
+      String functionName = leadingFunctionName(formula);
+      return new UnregisteredUserDefinedFunctionException(
+          sheetName,
+          address,
+          formula,
+          functionName,
+          "User-defined function "
+              + functionName
+              + " is not registered at "
+              + location(sheetName, address)
+              + ": "
+              + formula,
+          exception);
+    }
     if (isUnsupportedFormulaFailure(exception)) {
       return new UnsupportedFormulaException(
           sheetName,
@@ -51,6 +119,10 @@ final class FormulaExceptions {
   private static boolean isUnsupportedFormulaFailure(Throwable exception) {
     return hasTypeNameContaining(exception, ".ss.formula.eval.")
         && hasTypeNameContaining(exception, "NotImplemented");
+  }
+
+  static boolean isMissingExternalWorkbookFailure(Throwable exception) {
+    return hasTypeNameContaining(exception, "WorkbookNotFoundException");
   }
 
   private static boolean isUnhandledFormulaEvaluationFailure(Throwable exception) {
@@ -100,6 +172,61 @@ final class FormulaExceptions {
     return functionName == null ? "" : " function " + functionName;
   }
 
+  private static String workbookLabel(String workbookName) {
+    return workbookName == null ? "" : " " + workbookName;
+  }
+
+  static String missingExternalWorkbookName(Throwable exception, String formula) {
+    for (Throwable current = exception; current != null; current = current.getCause()) {
+      String message = current.getMessage();
+      if (message == null) {
+        continue;
+      }
+      Matcher matcher = EXTERNAL_WORKBOOK_NAME_PATTERN.matcher(message);
+      if (matcher.find()) {
+        return matcher.group(1);
+      }
+    }
+    List<String> referencedNames = externalWorkbookNames(formula);
+    return referencedNames.isEmpty() ? null : referencedNames.getFirst();
+  }
+
+  static boolean isUnregisteredUserDefinedFunctionFailure(
+      ExcelFormulaRuntimeContext context, Throwable exception, String formula) {
+    if (!isUnsupportedFormulaFailure(exception)) {
+      return false;
+    }
+    String functionName = leadingFunctionName(formula);
+    if (functionName == null) {
+      return false;
+    }
+    String normalized = functionName.toUpperCase(Locale.ROOT);
+    if (isKnownBuiltinFunction(normalized)) {
+      return false;
+    }
+    return !context.hasUserDefinedFunction(normalized)
+        && messageMentionsFunctionName(exception, normalized);
+  }
+
+  private static boolean isKnownBuiltinFunction(String normalizedFunctionName) {
+    return FunctionMetadataRegistry.getFunctionByName(normalizedFunctionName) != null
+        || FunctionEval.getSupportedFunctionNames().contains(normalizedFunctionName)
+        || FunctionEval.getNotSupportedFunctionNames().contains(normalizedFunctionName)
+        || AnalysisToolPak.getSupportedFunctionNames().contains(normalizedFunctionName)
+        || AnalysisToolPak.getNotSupportedFunctionNames().contains(normalizedFunctionName);
+  }
+
+  private static boolean messageMentionsFunctionName(
+      Throwable exception, String normalizedFunctionName) {
+    for (Throwable current = exception; current != null; current = current.getCause()) {
+      String message = current.getMessage();
+      if (message != null && message.toUpperCase(Locale.ROOT).contains(normalizedFunctionName)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static String leadingFunctionName(String formula) {
     if (formula == null) {
       return null;
@@ -119,5 +246,17 @@ final class FormulaExceptions {
       }
     }
     return candidate;
+  }
+
+  static List<String> externalWorkbookNames(String formula) {
+    if (formula == null || formula.isBlank()) {
+      return List.of();
+    }
+    Matcher matcher = EXTERNAL_WORKBOOK_REFERENCE_PATTERN.matcher(formula);
+    Set<String> names = new LinkedHashSet<>();
+    while (matcher.find()) {
+      names.add(matcher.group(1));
+    }
+    return List.copyOf(names);
   }
 }

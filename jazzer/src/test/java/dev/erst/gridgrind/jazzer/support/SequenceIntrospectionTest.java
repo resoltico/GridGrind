@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelFormulaCellTarget;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -22,6 +23,7 @@ import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
 import dev.erst.gridgrind.protocol.dto.DifferentialStyleInput;
+import dev.erst.gridgrind.protocol.dto.FormulaCellTargetInput;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
@@ -150,6 +152,14 @@ class SequenceIntrospectionTest {
         "DELETE_TABLE",
         SequenceIntrospection.operationKind(
             new WorkbookOperation.DeleteTable("BudgetTable", "Budget")));
+    assertEquals(
+        "EVALUATE_FORMULA_CELLS",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.EvaluateFormulaCells(
+                List.of(new FormulaCellTargetInput("Budget", "C2")))));
+    assertEquals(
+        "CLEAR_FORMULA_CACHES",
+        SequenceIntrospection.operationKind(new WorkbookOperation.ClearFormulaCaches()));
 
     assertEquals(
         1L,
@@ -270,6 +280,14 @@ class SequenceIntrospectionTest {
         "DELETE_TABLE",
         SequenceIntrospection.commandKind(
             new WorkbookCommand.DeleteTable("BudgetTable", "Budget")));
+    assertEquals(
+        "EVALUATE_FORMULA_CELLS",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.EvaluateFormulaCells(
+                List.of(new ExcelFormulaCellTarget("Budget", "C2")))));
+    assertEquals(
+        "CLEAR_FORMULA_CACHES",
+        SequenceIntrospection.commandKind(new WorkbookCommand.ClearFormulaCaches()));
 
     assertEquals(
         1L,

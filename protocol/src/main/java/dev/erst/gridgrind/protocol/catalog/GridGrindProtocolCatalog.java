@@ -27,8 +27,16 @@ public final class GridGrindProtocolCatalog {
           GridGrindProtocolVersion.current(),
           new GridGrindRequest.WorkbookSource.New(),
           new GridGrindRequest.WorkbookPersistence.None(),
+          null,
           List.of(),
           List.of());
+  private static final TypeEntry REQUEST_TYPE =
+      typeEntry(
+          GridGrindRequest.class,
+          "GridGrindRequest",
+          "Complete GridGrind request for workbook source, formula environment, mutations,"
+              + " reads, and persistence.",
+          List.of("protocolVersion", "persistence", "formulaEnvironment", "operations", "reads"));
   private static final List<TypeDescriptor> SOURCE_TYPES =
       List.of(
           descriptor(
@@ -379,7 +387,19 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookOperation.EvaluateFormulas.class,
               "EVALUATE_FORMULAS",
-              "Evaluate workbook formulas immediately."),
+              "Evaluate every formula cell immediately and persist the refreshed cached results."),
+          descriptor(
+              WorkbookOperation.EvaluateFormulaCells.class,
+              "EVALUATE_FORMULA_CELLS",
+              "Evaluate one or more explicit formula cells and persist only their cached results."
+                  + " Use this when a request needs targeted recalculation after a subset of"
+                  + " workbook edits."),
+          descriptor(
+              WorkbookOperation.ClearFormulaCaches.class,
+              "CLEAR_FORMULA_CACHES",
+              "Clear all persisted cached formula results from the workbook and reset the"
+                  + " in-process evaluator cache so later formula reads recompute from workbook"
+                  + " state or external bindings."),
           descriptor(
               WorkbookOperation.ForceFormulaRecalculationOnOpen.class,
               "FORCE_FORMULA_RECALCULATION_ON_OPEN",
@@ -914,6 +934,39 @@ public final class GridGrindProtocolCatalog {
   private static final List<PlainTypeDescriptor> PLAIN_TYPE_DESCRIPTORS =
       List.of(
           plainTypeDescriptor(
+              "formulaEnvironmentInputType",
+              FormulaEnvironmentInput.class,
+              "FormulaEnvironmentInput",
+              "Request-scoped formula-evaluation environment covering external workbook bindings,"
+                  + " missing-workbook policy, and template-backed UDF toolpacks.",
+              List.of("externalWorkbooks", "missingWorkbookPolicy", "udfToolpacks")),
+          plainTypeDescriptor(
+              "formulaExternalWorkbookInputType",
+              FormulaExternalWorkbookInput.class,
+              "FormulaExternalWorkbookInput",
+              "One external workbook binding keyed by the workbook name used inside formulas.",
+              List.of()),
+          plainTypeDescriptor(
+              "formulaUdfToolpackInputType",
+              FormulaUdfToolpackInput.class,
+              "FormulaUdfToolpackInput",
+              "One named collection of template-backed user-defined functions.",
+              List.of()),
+          plainTypeDescriptor(
+              "formulaUdfFunctionInputType",
+              FormulaUdfFunctionInput.class,
+              "FormulaUdfFunctionInput",
+              "One template-backed user-defined function."
+                  + " formulaTemplate may reference ARG1, ARG2, and higher placeholders."
+                  + " maximumArgumentCount defaults to minimumArgumentCount when omitted.",
+              List.of("maximumArgumentCount")),
+          plainTypeDescriptor(
+              "formulaCellTargetInputType",
+              FormulaCellTargetInput.class,
+              "FormulaCellTargetInput",
+              "One explicit formula-cell target used by EVALUATE_FORMULA_CELLS.",
+              List.of()),
+          plainTypeDescriptor(
               "commentInputType",
               CommentInput.class,
               "CommentInput",
@@ -1233,6 +1286,7 @@ public final class GridGrindProtocolCatalog {
   private static List<TypeEntry> allEntries() {
     return Stream.concat(
             Stream.of(
+                    List.of(CATALOG.requestType()),
                     CATALOG.sourceTypes(),
                     CATALOG.persistenceTypes(),
                     CATALOG.operationTypes(),
@@ -1254,6 +1308,7 @@ public final class GridGrindProtocolCatalog {
     return new Catalog(
         GridGrindProtocolVersion.current(),
         DISCRIMINATOR_FIELD,
+        REQUEST_TYPE,
         publicEntries(SOURCE_TYPES),
         publicEntries(PERSISTENCE_TYPES),
         publicEntries(OPERATION_TYPES),

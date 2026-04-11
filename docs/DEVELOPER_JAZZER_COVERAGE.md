@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.36.0"
+version: "0.37.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-04-11"
 route:
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 37 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 38 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 9 |
 | `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 18 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 75 total across harnesses |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 76 total across harnesses |
 
 ---
 
@@ -37,6 +37,8 @@ Surface:
 - raw request bytes
 - JSON decoding
 - request-model validation
+- top-level `formulaEnvironment` payloads for external workbooks, missing-workbook policy, and
+  template-backed UDF toolpacks
 - ordered `reads` payloads, selectors, and request/result correlation IDs
 - style payloads including typed `fontHeight`, structured color, fill, gradient, and border input
   shapes
@@ -47,8 +49,8 @@ What it asserts:
 - valid payloads produce a non-null `GridGrindRequest`
 - invalid JSON and invalid request shapes are classified as expected-invalid outcomes
 - promoted public examples continue to parse with their real defaulted-field contract, such as
-  `SET_TABLE` requests that omit `showTotalsRow`, richer factual readback examples, and the
-  advanced workbook-core mutation example
+  `SET_TABLE` requests that omit `showTotalsRow`, the formula-environment request, richer factual
+  readback examples, and the advanced workbook-core mutation example
 
 Telemetry signals:
 - iteration count
@@ -67,10 +69,13 @@ What it does not cover:
 Surface:
 - ordered operation sequences generated from raw bytes
 - `DefaultGridGrindRequestExecutor.execute(...)`
+- formula-environment-aware execution setup for external workbook bindings, missing-workbook
+  policy, and template-backed UDF toolpacks
 - response-shape invariants
 - explicit read execution and ordered read-result shaping
 - source-type and persistence-type combinations for `.xlsx` workflows
-- hyperlink, comment, named-range, and data-validation operations in protocol execution paths
+- hyperlink, comment, named-range, data-validation, and formula-lifecycle operations in protocol
+  execution paths
 
 What it asserts:
 - generated workflows remain constructor-valid or are rejected as generated-invalid inputs
@@ -99,7 +104,8 @@ Surface:
 - ordered `WorkbookCommand` sequences generated from raw bytes
 - direct `WorkbookCommandExecutor.apply(...)`
 - workbook structural invariants
-- hyperlink, comment, named-range, data-validation, table, and autofilter command execution paths
+- hyperlink, comment, named-range, data-validation, table, autofilter, and formula-lifecycle
+  command execution paths
 
 What it asserts:
 - workbook shape remains coherent after successful execution
@@ -123,7 +129,7 @@ Surface:
 - ordered `WorkbookCommand` sequences
 - save to `.xlsx`
 - reopen with Apache POI `XSSFWorkbook`
-- table and autofilter persistence boundaries after bounded command sequences
+- table, autofilter, and formula-cache persistence boundaries after bounded command sequences
 
 What it asserts:
 - successful command sequences can be saved and reopened
@@ -135,6 +141,7 @@ What it asserts:
 - data-validation state remains readable and normalized after reopen when those commands succeed
 - table and autofilter commands remain structurally coherent after reopen when those commands
   succeed or are classified as expected-invalid
+- explicit formula-cache clearing removes persisted cached formula values before reopen
 - table header rewrites, header clears, and header-range style patches keep persisted table-column
   metadata converged with the visible header cells after reopen
 
@@ -184,7 +191,7 @@ These tests are not fuzz harnesses. They protect the Jazzer infrastructure itsel
 Committed custom seeds currently in source control. This list is exhaustive and should match the
 checked-in `*Inputs` directories exactly.
 
-### `protocol-request` (37)
+### `protocol-request` (38)
 
 - `advanced_mutation_request.json`
 - `advanced_readback_request.json`
@@ -197,6 +204,7 @@ checked-in `*Inputs` directories exactly.
 - `excel_authoring_essentials_request.json`
 - `file_hyperlink_health_request.json`
 - `formatting_depth_request.json`
+- `formula_environment_request.json`
 - `formula_equals_prefix.json`
 - `get_cells_invalid_address.json`
 - `get_cells_out_of_bounds_address.json`

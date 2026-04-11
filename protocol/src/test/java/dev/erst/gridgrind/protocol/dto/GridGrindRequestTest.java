@@ -67,7 +67,8 @@ class GridGrindRequestTest {
     assertThrows(NullPointerException.class, () -> new GridGrindRequest(null, null, null, null));
     assertEquals(
         GridGrindProtocolVersion.V1,
-        new GridGrindRequest(null, new GridGrindRequest.WorkbookSource.New(), null, null, null)
+        new GridGrindRequest(
+                null, new GridGrindRequest.WorkbookSource.New(), null, null, null, null)
             .protocolVersion());
 
     assertThrows(
@@ -140,6 +141,19 @@ class GridGrindRequestTest {
                 "surface",
                 new NamedRangeSelection.Selected(
                     List.of(new NamedRangeSelector.WorkbookScope("BudgetTotal")))));
+  }
+
+  @Test
+  void normalizesEmptyFormulaEnvironmentToNull() {
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            null,
+            new FormulaEnvironmentInput(List.of(), null, List.of()),
+            null,
+            null);
+
+    assertNull(request.formulaEnvironment());
   }
 
   @Test

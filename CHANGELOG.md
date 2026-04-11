@@ -5,6 +5,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.37.0] - 2026-04-12
+
+### Added
+
+- Added [examples/formula-environment-request.json](./examples/formula-environment-request.json),
+  a runnable example covering top-level `formulaEnvironment`, template-backed UDF
+  registration, targeted formula evaluation, and explicit formula-cache clearing.
+- Added the matching promoted Jazzer protocol-request seed for the formula-environment example, so
+  the public request now stays replay-verified in the committed regression floor.
+
+### Changed
+
+- Public docs, quick-reference snippets, README guidance, and the internal XSSF parity records now
+  describe the completed formula-evaluation contract explicitly: external workbook bindings,
+  missing-workbook policy control, template-backed UDF toolpacks, targeted formula evaluation, and
+  explicit persisted-cache clearing.
+
+### Fixed
+
+- `CLEAR_FORMULA_CACHES` now clears persisted formula cached results in the workbook while normal
+  post-mutation invalidation still resets only the in-process evaluator cache, so explicit
+  lifecycle control is honest without changing ordinary mutation parity semantics.
+- The direct-POI parity oracle now evaluates external-link and UDF scenarios through read-only
+  input streams before applying transient evaluator configuration, so parity measurement no longer
+  mutates the corpus workbook it is measuring.
+- Jazzer generation, labeling, and `.xlsx` round-trip verification now cover targeted formula
+  evaluation and explicit cache clearing, so the fuzz support layer no longer lags behind the
+  shipped formula contract.
+- Formula-health analysis and request/command dispatch now route the completed formula-lifecycle
+  families through explicit type-owned paths, removing stale unreachable fallback branches and
+  making the verification surface match the runtime architecture more directly.
+
 ## [0.36.0] - 2026-04-11
 
 ### Added
@@ -35,7 +67,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   advanced table metadata, six conditional-format rule families, and formula-defined names.
 - The internal XSSF parity oracle now detects workbook and revisions password-hash presence across
   both legacy and modern OOXML workbook-protection fields, so parity verification no longer reports
-  a false Phase 3 regression on SHA-512-authored workbooks.
+  a false regression on SHA-512-authored workbooks.
 
 ## [0.35.0] - 2026-04-11
 
@@ -1355,7 +1387,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.36.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.37.0...HEAD
+[0.37.0]: https://github.com/resoltico/GridGrind/compare/v0.36.0...v0.37.0
 [0.36.0]: https://github.com/resoltico/GridGrind/compare/v0.35.0...v0.36.0
 [0.35.0]: https://github.com/resoltico/GridGrind/compare/v0.34.0...v0.35.0
 [0.34.0]: https://github.com/resoltico/GridGrind/compare/v0.33.0...v0.34.0

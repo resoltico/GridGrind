@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.36.0
+docker pull ghcr.io/resoltico/gridgrind:0.37.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -167,6 +167,9 @@ The whole pipeline is a complete extraction or nothing at all. `.xlsx` only; `.x
 and `.xlsb` are rejected.
 
 Two contract details matter often in agent-generated requests:
+- `formulaEnvironment` is optional. Use it when server-side evaluation needs external workbook
+  bindings, cached-value fallback for missing external references, or template-backed UDF
+  registration.
 - `SET_TABLE.table.showTotalsRow` is optional. Omit it unless the table really includes a totals
   row; the default is `false`.
 - Column structural edits are workbook-wide guarded. `INSERT_COLUMNS`, `DELETE_COLUMNS`, and
@@ -190,7 +193,10 @@ table metadata, and workbook-health analysis. The committed
 [examples/advanced-mutation-request.json](examples/advanced-mutation-request.json) example shows
 the full workbook-core mutation surface for password-bearing protection, formula-defined named
 ranges, advanced table and autofilter mutation, advanced conditional formatting, rich comments,
-and advanced page setup.
+and advanced page setup. The committed
+[examples/formula-environment-request.json](examples/formula-environment-request.json) example
+shows the Phase 4 formula surface: top-level `formulaEnvironment`, template-backed UDF
+registration, targeted formula evaluation, and explicit formula-cache clearing.
 
 ### Alice — building an inventory sheet
 

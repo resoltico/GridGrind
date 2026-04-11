@@ -2,9 +2,74 @@ package dev.erst.gridgrind.excel;
 
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Set;
 
 /** Applies validated workbook commands to a workbook instance. */
 public final class WorkbookCommandExecutor {
+  private static final Set<Class<? extends WorkbookCommand>> WORKBOOK_SCOPE_COMMAND_TYPES =
+      Set.of(
+          WorkbookCommand.CreateSheet.class,
+          WorkbookCommand.RenameSheet.class,
+          WorkbookCommand.DeleteSheet.class,
+          WorkbookCommand.MoveSheet.class,
+          WorkbookCommand.CopySheet.class,
+          WorkbookCommand.SetActiveSheet.class,
+          WorkbookCommand.SetSelectedSheets.class,
+          WorkbookCommand.SetSheetVisibility.class,
+          WorkbookCommand.SetSheetProtection.class,
+          WorkbookCommand.ClearSheetProtection.class,
+          WorkbookCommand.SetWorkbookProtection.class,
+          WorkbookCommand.ClearWorkbookProtection.class);
+
+  private static final Set<Class<? extends WorkbookCommand>> SHEET_STRUCTURE_COMMAND_TYPES =
+      Set.of(
+          WorkbookCommand.MergeCells.class,
+          WorkbookCommand.UnmergeCells.class,
+          WorkbookCommand.SetColumnWidth.class,
+          WorkbookCommand.SetRowHeight.class,
+          WorkbookCommand.InsertRows.class,
+          WorkbookCommand.DeleteRows.class,
+          WorkbookCommand.ShiftRows.class,
+          WorkbookCommand.InsertColumns.class,
+          WorkbookCommand.DeleteColumns.class,
+          WorkbookCommand.ShiftColumns.class,
+          WorkbookCommand.SetRowVisibility.class,
+          WorkbookCommand.SetColumnVisibility.class,
+          WorkbookCommand.GroupRows.class,
+          WorkbookCommand.UngroupRows.class,
+          WorkbookCommand.GroupColumns.class,
+          WorkbookCommand.UngroupColumns.class,
+          WorkbookCommand.SetSheetPane.class,
+          WorkbookCommand.SetSheetZoom.class,
+          WorkbookCommand.SetPrintLayout.class,
+          WorkbookCommand.ClearPrintLayout.class);
+
+  private static final Set<Class<? extends WorkbookCommand>> CELL_VALUE_COMMAND_TYPES =
+      Set.of(
+          WorkbookCommand.SetCell.class,
+          WorkbookCommand.SetRange.class,
+          WorkbookCommand.ClearRange.class,
+          WorkbookCommand.AppendRow.class,
+          WorkbookCommand.AutoSizeColumns.class);
+
+  private static final Set<Class<? extends WorkbookCommand>> WORKBOOK_METADATA_COMMAND_TYPES =
+      Set.of(
+          WorkbookCommand.SetHyperlink.class,
+          WorkbookCommand.ClearHyperlink.class,
+          WorkbookCommand.SetComment.class,
+          WorkbookCommand.ClearComment.class,
+          WorkbookCommand.ApplyStyle.class,
+          WorkbookCommand.SetDataValidation.class,
+          WorkbookCommand.ClearDataValidations.class,
+          WorkbookCommand.SetConditionalFormatting.class,
+          WorkbookCommand.ClearConditionalFormatting.class,
+          WorkbookCommand.SetAutofilter.class,
+          WorkbookCommand.ClearAutofilter.class,
+          WorkbookCommand.SetTable.class,
+          WorkbookCommand.DeleteTable.class,
+          WorkbookCommand.SetNamedRange.class,
+          WorkbookCommand.DeleteNamedRange.class);
+
   /** Applies one or more commands in order. */
   public ExcelWorkbook apply(ExcelWorkbook workbook, WorkbookCommand... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
@@ -25,6 +90,39 @@ public final class WorkbookCommandExecutor {
   }
 
   private void applyOne(ExcelWorkbook workbook, WorkbookCommand command) {
+    if (isWorkbookScopeCommand(command)) {
+      applyWorkbookScopeCommand(workbook, command);
+    } else if (isSheetStructureCommand(command)) {
+      applySheetStructureCommand(workbook, command);
+    } else if (isCellValueCommand(command)) {
+      applyCellValueCommand(workbook, command);
+    } else if (isWorkbookMetadataCommand(command)) {
+      applyWorkbookMetadataCommand(workbook, command);
+    } else {
+      applyFormulaCommand(workbook, command);
+    }
+    if (requiresFormulaRuntimeInvalidation(command)) {
+      workbook.invalidateFormulaRuntime();
+    }
+  }
+
+  private static boolean isWorkbookScopeCommand(WorkbookCommand command) {
+    return WORKBOOK_SCOPE_COMMAND_TYPES.contains(command.getClass());
+  }
+
+  private static boolean isSheetStructureCommand(WorkbookCommand command) {
+    return SHEET_STRUCTURE_COMMAND_TYPES.contains(command.getClass());
+  }
+
+  private static boolean isCellValueCommand(WorkbookCommand command) {
+    return CELL_VALUE_COMMAND_TYPES.contains(command.getClass());
+  }
+
+  private static boolean isWorkbookMetadataCommand(WorkbookCommand command) {
+    return WORKBOOK_METADATA_COMMAND_TYPES.contains(command.getClass());
+  }
+
+  private static void applyWorkbookScopeCommand(ExcelWorkbook workbook, WorkbookCommand command) {
     switch (command) {
       case WorkbookCommand.CreateSheet createSheet ->
           workbook.getOrCreateSheet(createSheet.sheetName());
@@ -53,6 +151,12 @@ public final class WorkbookCommandExecutor {
       case WorkbookCommand.SetWorkbookProtection setWorkbookProtection ->
           workbook.setWorkbookProtection(setWorkbookProtection.protection());
       case WorkbookCommand.ClearWorkbookProtection _ -> workbook.clearWorkbookProtection();
+      default -> throw new IllegalStateException("Unhandled workbook-scope command: " + command);
+    }
+  }
+
+  private static void applySheetStructureCommand(ExcelWorkbook workbook, WorkbookCommand command) {
+    switch (command) {
       case WorkbookCommand.MergeCells mergeCells ->
           workbook.sheet(mergeCells.sheetName()).mergeCells(mergeCells.range());
       case WorkbookCommand.UnmergeCells unmergeCells ->
@@ -115,12 +219,31 @@ public final class WorkbookCommandExecutor {
           workbook.sheet(setPrintLayout.sheetName()).setPrintLayout(setPrintLayout.printLayout());
       case WorkbookCommand.ClearPrintLayout clearPrintLayout ->
           workbook.sheet(clearPrintLayout.sheetName()).clearPrintLayout();
+      default -> throw new IllegalStateException("Unhandled sheet-structure command: " + command);
+    }
+  }
+
+  private static void applyCellValueCommand(ExcelWorkbook workbook, WorkbookCommand command) {
+    switch (command) {
       case WorkbookCommand.SetCell setCell ->
           workbook.sheet(setCell.sheetName()).setCell(setCell.address(), setCell.value());
       case WorkbookCommand.SetRange setRange ->
           workbook.sheet(setRange.sheetName()).setRange(setRange.range(), setRange.rows());
       case WorkbookCommand.ClearRange clearRange ->
           workbook.sheet(clearRange.sheetName()).clearRange(clearRange.range());
+      case WorkbookCommand.AppendRow appendRow ->
+          workbook
+              .sheet(appendRow.sheetName())
+              .appendRow(appendRow.values().toArray(ExcelCellValue[]::new));
+      case WorkbookCommand.AutoSizeColumns autoSizeColumns ->
+          workbook.sheet(autoSizeColumns.sheetName()).autoSizeColumns();
+      default -> throw new IllegalStateException("Unhandled cell-value command: " + command);
+    }
+  }
+
+  private static void applyWorkbookMetadataCommand(
+      ExcelWorkbook workbook, WorkbookCommand command) {
+    switch (command) {
       case WorkbookCommand.SetHyperlink setHyperlink ->
           workbook
               .sheet(setHyperlink.sheetName())
@@ -165,15 +288,29 @@ public final class WorkbookCommandExecutor {
           workbook.setNamedRange(setNamedRange.definition());
       case WorkbookCommand.DeleteNamedRange deleteNamedRange ->
           workbook.deleteNamedRange(deleteNamedRange.name(), deleteNamedRange.scope());
-      case WorkbookCommand.AppendRow appendRow ->
-          workbook
-              .sheet(appendRow.sheetName())
-              .appendRow(appendRow.values().toArray(ExcelCellValue[]::new));
-      case WorkbookCommand.AutoSizeColumns autoSizeColumns ->
-          workbook.sheet(autoSizeColumns.sheetName()).autoSizeColumns();
+      default -> throw new IllegalStateException("Unhandled workbook-metadata command: " + command);
+    }
+  }
+
+  private static void applyFormulaCommand(ExcelWorkbook workbook, WorkbookCommand command) {
+    switch (command) {
       case WorkbookCommand.EvaluateAllFormulas _ -> workbook.evaluateAllFormulas();
+      case WorkbookCommand.EvaluateFormulaCells evaluateFormulaCells ->
+          workbook.evaluateFormulaCells(evaluateFormulaCells.cells());
+      case WorkbookCommand.ClearFormulaCaches _ -> workbook.clearFormulaCaches();
       case WorkbookCommand.ForceFormulaRecalculationOnOpen _ ->
           workbook.forceFormulaRecalculationOnOpen();
+      default -> throw new IllegalStateException("Unhandled formula command: " + command);
     }
+  }
+
+  private static boolean requiresFormulaRuntimeInvalidation(WorkbookCommand command) {
+    return switch (command) {
+      case WorkbookCommand.EvaluateAllFormulas _ -> false;
+      case WorkbookCommand.EvaluateFormulaCells _ -> false;
+      case WorkbookCommand.ClearFormulaCaches _ -> false;
+      case WorkbookCommand.ForceFormulaRecalculationOnOpen _ -> false;
+      default -> true;
+    };
   }
 }

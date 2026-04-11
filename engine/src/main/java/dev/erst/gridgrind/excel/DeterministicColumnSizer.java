@@ -65,6 +65,7 @@ final class DeterministicColumnSizer {
               : dataFormatter.formatCellValue(cell);
     } catch (RuntimeException exception) {
       throw FormulaExceptions.wrap(
+          formulaRuntime,
           sheetName,
           new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
           cell.getCellType() == CellType.FORMULA ? cell.getCellFormula() : null,

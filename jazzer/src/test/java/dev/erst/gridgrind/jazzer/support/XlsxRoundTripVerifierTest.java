@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.excel.ExcelBorder;
@@ -47,6 +49,10 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -183,6 +189,23 @@ class XlsxRoundTripVerifierTest {
             new WorkbookCommand.UngroupColumns("Budget", new ExcelColumnSpan(1, 1)));
 
     assertRoundTripReadable(tempDirectory, commands);
+  }
+
+  @Test
+  void requireRoundTripReadable_persistsExplicitFormulaCacheClearing(@TempDir Path tempDirectory)
+      throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Budget"),
+            new WorkbookCommand.SetCell("Budget", "A1", ExcelCellValue.number(2.0d)),
+            new WorkbookCommand.SetCell("Budget", "B1", ExcelCellValue.formula("A1*2")),
+            new WorkbookCommand.SetCell("Budget", "C1", ExcelCellValue.formula("A1*3")),
+            new WorkbookCommand.EvaluateAllFormulas(),
+            new WorkbookCommand.ClearFormulaCaches());
+
+    Path workbookPath = saveWorkbook(tempDirectory, commands);
+    assertNull(cachedFormulaRawValue(workbookPath, "Budget", "B1"));
+    assertNull(cachedFormulaRawValue(workbookPath, "Budget", "C1"));
   }
 
   /** Preserves richer Wave 2 formatting depth patches through save and reopen. */
@@ -669,5 +692,17 @@ class XlsxRoundTripVerifierTest {
     return new ExcelSheetProtectionSettings(
         false, true, false, true, false, true, false, true, false, true, false, true, false, true,
         false);
+  }
+
+  private static String cachedFormulaRawValue(Path workbookPath, String sheetName, String address)
+      throws IOException {
+    try (XSSFWorkbook workbook = (XSSFWorkbook) WorkbookFactory.create(workbookPath.toFile())) {
+      var reference = new org.apache.poi.ss.util.CellReference(address);
+      XSSFCell cell =
+          (XSSFCell)
+              workbook.getSheet(sheetName).getRow(reference.getRow()).getCell(reference.getCol());
+      assertSame(CellType.FORMULA, cell.getCellType());
+      return cell.getCTCell().isSetV() ? cell.getCTCell().getV() : null;
+    }
   }
 }

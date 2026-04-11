@@ -23,6 +23,11 @@
       "description": "Direct-POI workbook with a user-defined-function formula."
     },
     {
+      "id": "poi-formula-lifecycle",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook with intentionally stale cached formula results for lifecycle-control probes."
+    },
+    {
       "id": "poi-drawing-image",
       "kind": "POI_DIRECT",
       "description": "Direct-POI workbook containing a drawing patriarch and embedded raster image."

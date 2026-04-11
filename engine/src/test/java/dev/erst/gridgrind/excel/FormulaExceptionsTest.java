@@ -2,6 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Set;
+import org.apache.poi.ss.formula.atp.AnalysisToolPak;
+import org.apache.poi.ss.formula.eval.FunctionEval;
 import org.junit.jupiter.api.Test;
 
 /** Tests for FormulaExceptions POI exception translation. */
@@ -38,6 +43,31 @@ class FormulaExceptionsTest {
         FormulaExceptions.wrap(
             "Budget", "A1", "A1", new org.apache.poi.ss.formula.FakeFormulaFailure(null));
     assertEquals("Invalid formula at Budget!A1: A1", nullMessage.getMessage());
+
+    RuntimeException missingExternalWorkbook =
+        FormulaExceptions.wrap(
+            "Budget",
+            "D4",
+            "[Rates.xlsx]Sheet1!A1",
+            new IllegalStateException(
+                "outer",
+                new FakeWorkbookNotFoundException(
+                    "Could not resolve external workbook name 'Rates.xlsx'.")));
+    assertInstanceOf(MissingExternalWorkbookException.class, missingExternalWorkbook);
+    assertEquals(
+        "Missing external workbook Rates.xlsx at Budget!D4: [Rates.xlsx]Sheet1!A1",
+        missingExternalWorkbook.getMessage());
+
+    RuntimeException unregisteredUdf =
+        FormulaExceptions.wrap(
+            "Budget",
+            "E4",
+            "DOUBLE(A1)",
+            new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException("DOUBLE"));
+    assertInstanceOf(UnregisteredUserDefinedFunctionException.class, unregisteredUdf);
+    assertEquals(
+        "User-defined function DOUBLE is not registered at Budget!E4: DOUBLE(A1)",
+        unregisteredUdf.getMessage());
   }
 
   @Test
@@ -81,5 +111,110 @@ class FormulaExceptionsTest {
     assertEquals("TEXTAFTER", FormulaExceptions.leadingFunctionName("TEXTAFTER(\"a,b\",\",\")"));
     assertEquals(
         "_XLFN.TEXTAFTER", FormulaExceptions.leadingFunctionName("_XLFN.TEXTAFTER(\"a,b\",\",\")"));
+  }
+
+  @Test
+  void exposesTypedExceptionFieldsAndWorkbookNameFallbacks() {
+    MissingExternalWorkbookException missing =
+        new MissingExternalWorkbookException(
+            "Budget", "D4", "[Rates.xlsx]Sheet1!A1", "Rates.xlsx", "missing", null);
+    assertEquals("Budget", missing.sheetName());
+    assertEquals("D4", missing.address());
+    assertEquals("[Rates.xlsx]Sheet1!A1", missing.formula());
+    assertEquals("Rates.xlsx", missing.workbookName());
+
+    UnregisteredUserDefinedFunctionException unregistered =
+        new UnregisteredUserDefinedFunctionException(
+            "Budget", "E4", "DOUBLE(A1)", "DOUBLE", "missing", null);
+    assertEquals("Budget", unregistered.sheetName());
+    assertEquals("E4", unregistered.address());
+    assertEquals("DOUBLE(A1)", unregistered.formula());
+    assertEquals("DOUBLE", unregistered.functionName());
+
+    assertEquals(
+        "Rates.xlsx",
+        FormulaExceptions.missingExternalWorkbookName(
+            new IllegalStateException("no workbook label available"),
+            "[Rates.xlsx]Sheet1!A1+[Rates.xlsx]Sheet1!B1+[Other.xlsx]Sheet1!C1"));
+    assertNull(
+        FormulaExceptions.missingExternalWorkbookName(
+            new IllegalStateException("no workbook label available"), null));
+    assertEquals(
+        List.of("Rates.xlsx", "Other.xlsx"),
+        FormulaExceptions.externalWorkbookNames(
+            "[Rates.xlsx]Sheet1!A1+[Rates.xlsx]Sheet1!B1+[Other.xlsx]Sheet1!C1"));
+  }
+
+  @Test
+  void handlesNullMessagesRegisteredFunctionsAndBuiltinCatalogs() throws Exception {
+    RuntimeException missingWithoutLabel =
+        FormulaExceptions.wrap(
+            "Budget",
+            "D4",
+            "A1",
+            new IllegalStateException("outer", new FakeWorkbookNotFoundException(null)));
+    assertInstanceOf(MissingExternalWorkbookException.class, missingWithoutLabel);
+    assertEquals("Missing external workbook at Budget!D4: A1", missingWithoutLabel.getMessage());
+
+    assertEquals(
+        "Rates.xlsx",
+        FormulaExceptions.missingExternalWorkbookName(
+            new IllegalStateException(null, new FakeWorkbookNotFoundException("ignore me")),
+            "[Rates.xlsx]Sheet1!A1"));
+    assertEquals(List.of(), FormulaExceptions.externalWorkbookNames(" "));
+
+    ExcelFormulaRuntimeContext registeredContext =
+        new ExcelFormulaRuntimeContext(
+            Set.of(), ExcelFormulaMissingWorkbookPolicy.ERROR, Set.of("DOUBLE"));
+    assertFalse(
+        FormulaExceptions.isUnregisteredUserDefinedFunctionFailure(
+            registeredContext,
+            new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException("DOUBLE"),
+            "DOUBLE(A1)"));
+
+    Method messageMentionsFunctionName =
+        accessibleMethod(
+            FormulaExceptions.class, "messageMentionsFunctionName", Throwable.class, String.class);
+    assertEquals(
+        false,
+        messageMentionsFunctionName.invoke(null, new RuntimeException((String) null), "DOUBLE"));
+    assertEquals(
+        true,
+        messageMentionsFunctionName.invoke(
+            null, new RuntimeException("function double is unknown"), "DOUBLE"));
+
+    Method isKnownBuiltinFunction =
+        accessibleMethod(FormulaExceptions.class, "isKnownBuiltinFunction", String.class);
+    assertEquals(true, isKnownBuiltinFunction.invoke(null, "SUM"));
+
+    String unsupportedPoiFunction =
+        FunctionEval.getNotSupportedFunctionNames().stream().findFirst().orElseThrow();
+    assertEquals(true, isKnownBuiltinFunction.invoke(null, unsupportedPoiFunction));
+
+    String supportedAtpFunction =
+        AnalysisToolPak.getSupportedFunctionNames().stream().findFirst().orElseThrow();
+    assertEquals(true, isKnownBuiltinFunction.invoke(null, supportedAtpFunction));
+
+    String unsupportedAtpFunction =
+        AnalysisToolPak.getNotSupportedFunctionNames().stream().findFirst().orElseThrow();
+    assertEquals(true, isKnownBuiltinFunction.invoke(null, unsupportedAtpFunction));
+    assertEquals(false, isKnownBuiltinFunction.invoke(null, "GRIDGRIND_UNKNOWN_FN"));
+  }
+
+  /** Test-only stand-in used to exercise workbook-missing classification. */
+  private static final class FakeWorkbookNotFoundException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    private FakeWorkbookNotFoundException(String message) {
+      super(message);
+    }
+  }
+
+  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
+  private static Method accessibleMethod(Class<?> type, String name, Class<?>... parameterTypes)
+      throws ReflectiveOperationException {
+    Method method = type.getDeclaredMethod(name, parameterTypes);
+    method.setAccessible(true);
+    return method;
   }
 }

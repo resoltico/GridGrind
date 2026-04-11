@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.36.0"
+version: "0.37.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-11"
 route:
@@ -36,6 +36,7 @@ group supplies the accepted JSON shape.
   "protocolVersion": "V1",
   "source": { "type": "NEW" },
   "persistence": { "type": "SAVE_AS", "path": "output.xlsx" },
+  "formulaEnvironment": { ... },
   "operations": [],
   "reads": []
 }
@@ -47,6 +48,34 @@ Path model:
 - `OVERWRITE` writes back to `source.path`; it does not accept its own `path` field.
 - Relative paths in `--request`, `--response`, `source.path`, and `persistence.path` resolve from
   the current working directory.
+
+`formulaEnvironment` is optional. Use it when evaluation needs external workbook bindings,
+cached-value fallback for unresolved external references, or template-backed UDFs.
+
+## Formula Environment
+
+```json
+{
+  "formulaEnvironment": {
+    "externalWorkbooks": [
+      { "workbookName": "rates.xlsx", "path": "fixtures/rates.xlsx" }
+    ],
+    "missingWorkbookPolicy": "USE_CACHED_VALUE",
+    "udfToolpacks": [
+      {
+        "name": "math",
+        "functions": [
+          {
+            "name": "DOUBLE",
+            "minimumArgumentCount": 1,
+            "formulaTemplate": "ARG1*2"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
 
 ## Coordinate Systems
 
@@ -966,6 +995,24 @@ accepted and stored as `"A1:B4"`. Formula-defined targets must set `formula` onl
 
 ```json
 { "type": "EVALUATE_FORMULAS" }
+```
+
+## EVALUATE_FORMULA_CELLS
+
+```json
+{
+  "type": "EVALUATE_FORMULA_CELLS",
+  "cells": [
+    { "sheetName": "Budget", "address": "D2" },
+    { "sheetName": "Budget", "address": "E2" }
+  ]
+}
+```
+
+## CLEAR_FORMULA_CACHES
+
+```json
+{ "type": "CLEAR_FORMULA_CACHES" }
 ```
 
 ## FORCE_FORMULA_RECALCULATION_ON_OPEN

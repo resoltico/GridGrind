@@ -1633,10 +1633,10 @@ class DefaultGridGrindRequestExecutorTest {
                                 "Data", "C1", new CellInput.Formula("TEXTAFTER(\"a,b\",\",\")")),
                             new WorkbookOperation.EvaluateFormulas()))));
 
-    assertEquals(GridGrindProblemCode.UNSUPPORTED_FORMULA, failure.problem().code());
+    assertEquals(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, failure.problem().code());
     assertEquals("APPLY_OPERATION", failure.problem().context().stage());
     assertEquals(
-        "Unsupported formula function TEXTAFTER at Data!C1: TEXTAFTER(\"a,b\",\",\")",
+        "User-defined function TEXTAFTER is not registered at Data!C1: TEXTAFTER(\"a,b\",\",\")",
         failure.problem().message());
     assertEquals("Data", failure.problem().context().sheetName());
     assertEquals("C1", failure.problem().context().address());

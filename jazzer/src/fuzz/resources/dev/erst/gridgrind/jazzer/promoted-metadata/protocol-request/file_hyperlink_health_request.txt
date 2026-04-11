@@ -8,6 +8,6 @@ Source Kind: NEW
 Persistence Kind: SAVE_AS
 Operation Count: 5
 Read Count: 2
-Read Kinds: ANALYZE_HYPERLINK_HEALTH=1, GET_HYPERLINKS=1
+Read Kinds: GET_HYPERLINKS=1, ANALYZE_HYPERLINK_HEALTH=1
 Style Kinds: (none)
 Operation Kinds: SET_HYPERLINK=3, SET_RANGE=1, ENSURE_SHEET=1

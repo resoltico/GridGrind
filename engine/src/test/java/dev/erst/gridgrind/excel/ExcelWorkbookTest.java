@@ -84,6 +84,55 @@ class ExcelWorkbookTest {
   }
 
   @Test
+  void createAndOpenWithFormulaEnvironmentExposeRuntimeContextAndValidateFormulaTargets()
+      throws IOException {
+    Path directory = Files.createTempDirectory("gridgrind-formula-workbook-");
+    Path referencedWorkbookPath = directory.resolve("rates.xlsx");
+    Path workbookPath = directory.resolve("budget.xlsx");
+
+    try (XSSFWorkbook referencedWorkbook = new XSSFWorkbook()) {
+      referencedWorkbook.createSheet("Rates").createRow(0).createCell(0).setCellValue(7.5d);
+      try (var outputStream = Files.newOutputStream(referencedWorkbookPath)) {
+        referencedWorkbook.write(outputStream);
+      }
+    }
+
+    ExcelFormulaEnvironment environment =
+        new ExcelFormulaEnvironment(
+            List.of(new ExcelFormulaExternalWorkbookBinding("rates.xlsx", referencedWorkbookPath)),
+            ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE,
+            List.of(
+                new ExcelFormulaUdfToolpack(
+                    "math", List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1*2")))));
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create(environment)) {
+      assertTrue(workbook.formulaRuntimeContext().hasExternalWorkbookBinding("RATES.XLSX"));
+      assertTrue(workbook.formulaRuntimeContext().hasUserDefinedFunction("double"));
+      workbook.getOrCreateSheet("Budget");
+      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+      workbook.evaluateAllFormulas();
+      workbook.save(workbookPath);
+
+      assertThrows(
+          IllegalArgumentException.class,
+          () -> workbook.evaluateFormulaCells(List.of(new ExcelFormulaCellTarget("Budget", "A1"))));
+      assertThrows(
+          InvalidCellAddressException.class,
+          () -> workbook.evaluateFormulaCells(List.of(new ExcelFormulaCellTarget("Budget", ":"))));
+      assertThrows(
+          CellNotFoundException.class,
+          () ->
+              workbook.evaluateFormulaCells(List.of(new ExcelFormulaCellTarget("Budget", "Z99"))));
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath, environment)) {
+      assertTrue(reopened.formulaRuntimeContext().hasExternalWorkbookBinding("rates.xlsx"));
+      assertTrue(reopened.formulaRuntimeContext().hasUserDefinedFunction("DOUBLE"));
+    }
+  }
+
+  @Test
   void renamesDeletesAndMovesSheetsAcrossSaves() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-sheet-management-");
 
@@ -539,6 +588,113 @@ class ExcelWorkbookTest {
     assertEquals("Only .xlsx workbooks are supported", exception.getMessage());
   }
 
+  @SuppressWarnings({"PMD.CloseResource", "PMD.UseTryWithResources"})
+  @Test
+  void validatesFormulaEnvironmentOverloadsAndCloseFailureAggregation() throws Exception {
+    ExcelFormulaEnvironment defaults = ExcelFormulaEnvironment.defaults();
+
+    assertThrows(NullPointerException.class, () -> ExcelWorkbook.open(null, defaults));
+
+    Path missingPath =
+        Files.createTempDirectory("gridgrind-missing-env-").resolve("missing-with-env.xlsx");
+    WorkbookNotFoundException missingWorkbook =
+        assertThrows(
+            WorkbookNotFoundException.class, () -> ExcelWorkbook.open(missingPath, defaults));
+    assertEquals(missingPath.toAbsolutePath(), missingWorkbook.workbookPath());
+
+    Path legacyWorkbookPath = Files.createTempFile("gridgrind-legacy-env-", ".xls");
+    try (HSSFWorkbook workbook = new HSSFWorkbook();
+        var outputStream = Files.newOutputStream(legacyWorkbookPath)) {
+      workbook.createSheet("Budget").createRow(0).createCell(0).setCellValue("Legacy");
+      workbook.write(outputStream);
+    }
+    IllegalArgumentException unsupportedFormat =
+        assertThrows(
+            IllegalArgumentException.class, () -> ExcelWorkbook.open(legacyWorkbookPath, defaults));
+    assertEquals("Only .xlsx workbooks are supported", unsupportedFormat.getMessage());
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create(null)) {
+      assertEquals(
+          ExcelFormulaEnvironment.defaults().runtimeContext(), workbook.formulaRuntimeContext());
+      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Header"));
+      assertThrows(
+          CellNotFoundException.class,
+          () -> workbook.evaluateFormulaCells(List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
+    }
+
+    ThrowingCloseWorkbook workbookDelegate = new ThrowingCloseWorkbook("workbook close failure");
+    ExcelWorkbook workbook =
+        new ExcelWorkbook(
+            workbookDelegate, new ThrowingCloseFormulaRuntime("runtime close failure"));
+    try {
+      IOException failure = assertThrows(IOException.class, workbook::close);
+      assertEquals("runtime close failure", failure.getMessage());
+      assertEquals(1, failure.getSuppressed().length);
+      assertEquals("workbook close failure", failure.getSuppressed()[0].getMessage());
+    } finally {
+      workbookDelegate.disableCloseFailure();
+      workbookDelegate.close();
+    }
+
+    ThrowingCloseWorkbook workbookOnlyFailure = new ThrowingCloseWorkbook("workbook only failure");
+    ExcelWorkbook workbookWithHealthyRuntime =
+        new ExcelWorkbook(
+            workbookOnlyFailure, workbookOnlyFailure.getCreationHelper().createFormulaEvaluator());
+    try {
+      IOException failure = assertThrows(IOException.class, workbookWithHealthyRuntime::close);
+      assertEquals("workbook only failure", failure.getMessage());
+      assertEquals(0, failure.getSuppressed().length);
+    } finally {
+      workbookOnlyFailure.disableCloseFailure();
+      workbookOnlyFailure.close();
+    }
+  }
+
+  @Test
+  void clearFormulaCachesRemovesInlineStringAndTypeMetadata() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("\"hello\""));
+      workbook.evaluateAllFormulas();
+
+      org.apache.poi.xssf.usermodel.XSSFCell cell =
+          workbook.xssfWorkbook().getSheet("Budget").getRow(0).getCell(0);
+      var ctCell = cell.getCTCell();
+      if (ctCell.isSetV()) {
+        ctCell.unsetV();
+      }
+      ctCell.addNewIs().setT("hello");
+      ctCell.setT(org.openxmlformats.schemas.spreadsheetml.x2006.main.STCellType.INLINE_STR);
+      assertTrue(ctCell.isSetIs());
+      assertTrue(ctCell.isSetT());
+
+      workbook.clearFormulaCaches();
+
+      assertFalse(ctCell.isSetV());
+      assertFalse(ctCell.isSetIs());
+      assertFalse(ctCell.isSetT());
+    }
+  }
+
+  @Test
+  void clearFormulaCachesLeavesUnsetTypeMetadataUnset() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.evaluateAllFormulas();
+
+      org.apache.poi.xssf.usermodel.XSSFCell cell =
+          workbook.xssfWorkbook().getSheet("Budget").getRow(0).getCell(0);
+      var ctCell = cell.getCTCell();
+      if (ctCell.isSetT()) {
+        ctCell.unsetT();
+      }
+      assertFalse(ctCell.isSetT());
+
+      workbook.clearFormulaCaches();
+
+      assertFalse(ctCell.isSetT());
+    }
+  }
+
   @Test
   void savesToPathsWithoutParentDirectories() throws IOException {
     Path relativePath = Path.of("gridgrind-relative-" + UUID.randomUUID() + ".xlsx");
@@ -891,5 +1047,61 @@ class ExcelWorkbookTest {
       }
     }
     return true;
+  }
+
+  /** Test-only workbook that can fail on close so lifecycle aggregation is observable. */
+  private static final class ThrowingCloseWorkbook extends XSSFWorkbook {
+    private final String message;
+    private boolean failOnClose = true;
+
+    private ThrowingCloseWorkbook(String message) {
+      this.message = message;
+    }
+
+    private void disableCloseFailure() {
+      failOnClose = false;
+    }
+
+    @Override
+    public void close() throws IOException {
+      if (failOnClose) {
+        throw new IOException(message);
+      }
+      super.close();
+    }
+  }
+
+  /** Test-only runtime that surfaces close failures without adding evaluation behavior. */
+  private record ThrowingCloseFormulaRuntime(String message) implements ExcelFormulaRuntime {
+    @Override
+    public org.apache.poi.ss.usermodel.CellValue evaluate(org.apache.poi.ss.usermodel.Cell cell) {
+      return null;
+    }
+
+    @Override
+    public org.apache.poi.ss.usermodel.CellType evaluateFormulaCell(
+        org.apache.poi.ss.usermodel.Cell cell) {
+      return org.apache.poi.ss.usermodel.CellType._NONE;
+    }
+
+    @Override
+    public void clearCachedResults() {}
+
+    @Override
+    public String displayValue(
+        org.apache.poi.ss.usermodel.DataFormatter formatter,
+        org.apache.poi.ss.usermodel.Cell cell) {
+      return "";
+    }
+
+    @Override
+    public ExcelFormulaRuntimeContext context() {
+      return ExcelFormulaEnvironment.defaults().runtimeContext();
+    }
+
+    @Override
+    public void close() throws IOException {
+      throw new IOException(message);
+    }
   }
 }

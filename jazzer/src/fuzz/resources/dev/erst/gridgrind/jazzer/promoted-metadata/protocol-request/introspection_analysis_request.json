@@ -29,10 +29,6 @@
       "styleKinds" : { },
       "readCount" : 16,
       "readKinds" : {
-        "ANALYZE_FORMULA_HEALTH" : 1,
-        "GET_CELLS" : 1,
-        "GET_NAMED_RANGES" : 1,
-        "GET_PRINT_LAYOUT" : 1,
         "ANALYZE_WORKBOOK_FINDINGS" : 1,
         "GET_COMMENTS" : 1,
         "GET_NAMED_RANGE_SURFACE" : 1,
@@ -44,7 +40,11 @@
         "ANALYZE_HYPERLINK_HEALTH" : 1,
         "GET_SHEET_SCHEMA" : 1,
         "GET_FORMULA_SURFACE" : 1,
-        "GET_WORKBOOK_SUMMARY" : 1
+        "GET_WORKBOOK_SUMMARY" : 1,
+        "ANALYZE_FORMULA_HEALTH" : 1,
+        "GET_CELLS" : 1,
+        "GET_NAMED_RANGES" : 1,
+        "GET_PRINT_LAYOUT" : 1
       }
     }
   },

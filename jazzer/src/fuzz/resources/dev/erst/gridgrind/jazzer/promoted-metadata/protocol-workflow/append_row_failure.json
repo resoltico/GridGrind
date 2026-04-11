@@ -17,8 +17,8 @@
       "styleKinds" : { },
       "readCount" : 6,
       "readKinds" : {
-        "GET_NAMED_RANGE_SURFACE" : 4,
-        "GET_WORKBOOK_SUMMARY" : 2
+        "GET_WORKBOOK_SUMMARY" : 2,
+        "GET_NAMED_RANGE_SURFACE" : 4
       },
       "responseKind" : "FAILURE"
     }

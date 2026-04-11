@@ -904,9 +904,9 @@
       "subfamily": "external-workbooks",
       "phase": 4,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
-      "probeId": "probe-formula-external-gap",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-formula-external",
       "scenarioIds": [
         "poi-external-formula"
       ],
@@ -914,18 +914,36 @@
         "Formula Evaluation",
         "Quick Guide"
       ],
-      "notes": "External workbook references are available in POI but not yet orchestrated by GridGrind."
+      "notes": "External workbook bindings now let GridGrind evaluate cross-workbook formulas and persist refreshed cached results."
     },
     {
       "sequence": 49,
+      "id": "phase-4-formula-evaluation-missing-workbook-policy",
+      "capability": "formula-evaluation",
+      "subfamily": "missing-workbook-policy",
+      "phase": 4,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-formula-missing-workbook-policy",
+      "scenarioIds": [
+        "poi-external-formula"
+      ],
+      "primarySources": [
+        "Formula Evaluation"
+      ],
+      "notes": "GridGrind now matches POI's strict-versus-cached handling for unresolved external workbook references."
+    },
+    {
+      "sequence": 50,
       "id": "phase-4-formula-evaluation-udf-toolpacks",
       "capability": "formula-evaluation",
       "subfamily": "udf-toolpacks",
       "phase": 4,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
-      "probeId": "probe-formula-udf-gap",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-formula-udf",
       "scenarioIds": [
         "poi-udf-formula"
       ],
@@ -933,28 +951,28 @@
         "Formula Evaluation",
         "User Defined Functions"
       ],
-      "notes": "POI UDF toolpacks have no GridGrind registration surface yet."
+      "notes": "Template-backed UDF toolpacks now let GridGrind evaluate registered user-defined functions and persist refreshed cached results."
     },
     {
-      "sequence": 50,
+      "sequence": 51,
       "id": "phase-4-formula-evaluation-lifecycle-controls",
       "capability": "formula-evaluation",
       "subfamily": "lifecycle-controls",
       "phase": 4,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
-      "probeId": "probe-formula-lifecycle-gap",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-formula-lifecycle",
       "scenarioIds": [
-        "gridgrind-core-authoring"
+        "poi-formula-lifecycle"
       ],
       "primarySources": [
         "Formula Evaluation"
       ],
-      "notes": "Evaluator lifecycle control remains narrower than POI's surface."
+      "notes": "GridGrind now exposes targeted formula evaluation and explicit persisted cache clearing for formula lifecycle control."
     },
     {
-      "sequence": 51,
+      "sequence": 52,
       "id": "phase-5-drawings-and-images-preservation",
       "capability": "drawings-and-images",
       "subfamily": "preservation",
@@ -973,7 +991,7 @@
       "notes": "GridGrind preserves drawing parts on unrelated edits but does not yet model them."
     },
     {
-      "sequence": 52,
+      "sequence": 53,
       "id": "phase-5-embedded-objects-preservation",
       "capability": "embedded-objects",
       "subfamily": "preservation",
@@ -992,7 +1010,7 @@
       "notes": "Embedded object package parts survive unrelated edits today, but there is no explicit surface."
     },
     {
-      "sequence": 53,
+      "sequence": 54,
       "id": "phase-6-charts-preservation",
       "capability": "charts",
       "subfamily": "preservation",
@@ -1011,7 +1029,7 @@
       "notes": "Chart package parts are preserved across unrelated edits without first-class modeling."
     },
     {
-      "sequence": 54,
+      "sequence": 55,
       "id": "phase-7-pivot-tables-preservation",
       "capability": "pivot-tables",
       "subfamily": "preservation",
@@ -1030,7 +1048,7 @@
       "notes": "Pivot-table package parts are preserved across unrelated edits without first-class modeling."
     },
     {
-      "sequence": 55,
+      "sequence": 56,
       "id": "phase-8-event-model-read",
       "capability": "event-model-read",
       "subfamily": "read",
@@ -1049,7 +1067,7 @@
       "notes": "POI event-model reads are not yet available through GridGrind."
     },
     {
-      "sequence": 56,
+      "sequence": 57,
       "id": "phase-8-sxssf-streaming-write",
       "capability": "sxssf-streaming-write",
       "subfamily": "write",
@@ -1068,7 +1086,7 @@
       "notes": "Streaming write parity via SXSSF is not yet available."
     },
     {
-      "sequence": 57,
+      "sequence": 58,
       "id": "phase-9-ooxml-encryption",
       "capability": "ooxml-encryption",
       "subfamily": "read-write",
@@ -1086,7 +1104,7 @@
       "notes": "Encrypted OOXML workbook handling is absent from GridGrind."
     },
     {
-      "sequence": 58,
+      "sequence": 59,
       "id": "phase-9-ooxml-signing",
       "capability": "ooxml-signing",
       "subfamily": "read-write",

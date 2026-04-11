@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.36.0"
+version: "0.37.0"
 domain: OPERATIONS
 updated: "2026-04-11"
 route:
@@ -35,6 +35,7 @@ group that defines their accepted JSON structure.
   "protocolVersion": "V1",
   "source":      { ... },
   "persistence": { ... },
+  "formulaEnvironment": { ... },
   "operations":  [ ... ],
   "reads":       [ ... ]
 }
@@ -45,11 +46,53 @@ group that defines their accepted JSON structure.
 | `protocolVersion` | No | Wire-contract version. Defaults to `V1`. Include it — future breaking revisions will be explicit. |
 | `source` | Yes | Where the workbook comes from. |
 | `persistence` | No | Where and whether to save. Omit to run operations without saving. |
+| `formulaEnvironment` | No | Request-scoped evaluator configuration for external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. |
 | `operations` | No | Ordered list of workbook mutations. |
 | `reads` | No | Ordered post-mutation introspection and analysis operations. |
 
 Every tagged request union uses `type` as its discriminator field: `source`, `persistence`,
 `operations`, `reads`, cell values, hyperlink targets, selections, and named-range scopes.
+
+### Formula Environment
+
+`formulaEnvironment` is optional. Omit it for the default evaluator. Supply it when server-side
+formula evaluation needs external workbook bindings, cached-value fallback for unresolved external
+references, or template-backed UDFs.
+
+```json
+{
+  "formulaEnvironment": {
+    "externalWorkbooks": [
+      {
+        "workbookName": "rates.xlsx",
+        "path": "fixtures/rates.xlsx"
+      }
+    ],
+    "missingWorkbookPolicy": "USE_CACHED_VALUE",
+    "udfToolpacks": [
+      {
+        "name": "math",
+        "functions": [
+          {
+            "name": "DOUBLE",
+            "minimumArgumentCount": 1,
+            "formulaTemplate": "ARG1*2"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `externalWorkbooks` | No | Workbook-name to path bindings used to satisfy formulas such as `[rates.xlsx]Sheet1!A1`. |
+| `missingWorkbookPolicy` | No | `ERROR` or `USE_CACHED_VALUE`. Defaults to `ERROR`. |
+| `udfToolpacks` | No | Named collections of template-backed UDFs. |
+
+For `udfToolpacks.functions`, `maximumArgumentCount` is optional and defaults to
+`minimumArgumentCount`. `formulaTemplate` may reference `ARG1`, `ARG2`, and higher placeholders.
 
 ## Coordinate Systems
 
@@ -1889,6 +1932,43 @@ data written earlier in the same request.
 
 ```json
 { "type": "EVALUATE_FORMULAS" }
+```
+
+No additional fields.
+
+---
+
+### EVALUATE_FORMULA_CELLS
+
+Recalculate one or more explicit formula cells and persist only those refreshed cached results.
+Use this when a request needs targeted recalculation after a narrow workbook edit.
+
+```json
+{
+  "type": "EVALUATE_FORMULA_CELLS",
+  "cells": [
+    { "sheetName": "Budget", "address": "D2" },
+    { "sheetName": "Budget", "address": "E2" }
+  ]
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `cells` | Yes | Ordered non-empty list of explicit formula-cell targets. |
+
+Each target must point at an existing formula cell.
+
+---
+
+### CLEAR_FORMULA_CACHES
+
+Clear all persisted cached formula results from the workbook and reset the in-process evaluator
+state. Later formula reads in the same request still evaluate live, but saved workbooks no longer
+carry stale cached values.
+
+```json
+{ "type": "CLEAR_FORMULA_CACHES" }
 ```
 
 No additional fields.

@@ -16,6 +16,7 @@ import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
@@ -31,6 +32,11 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   private ExcelWorkbook(XSSFWorkbook workbook) {
     this(workbook, ExcelFormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator()));
+  }
+
+  private ExcelWorkbook(XSSFWorkbook workbook, ExcelFormulaEnvironment formulaEnvironment)
+      throws IOException {
+    this(workbook, ExcelFormulaRuntime.poi(workbook, formulaEnvironment));
   }
 
   ExcelWorkbook(XSSFWorkbook workbook, ExcelFormulaRuntime formulaRuntime) {
@@ -52,6 +58,12 @@ public final class ExcelWorkbook implements AutoCloseable {
     return new ExcelWorkbook(new XSSFWorkbook());
   }
 
+  /** Creates an empty XLSX workbook with the supplied formula-evaluation environment. */
+  public static ExcelWorkbook create(ExcelFormulaEnvironment formulaEnvironment)
+      throws IOException {
+    return new ExcelWorkbook(new XSSFWorkbook(), formulaEnvironment);
+  }
+
   /** Opens an existing workbook file from disk. */
   public static ExcelWorkbook open(Path workbookPath) throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
@@ -64,6 +76,25 @@ public final class ExcelWorkbook implements AutoCloseable {
     try (InputStream inputStream = Files.newInputStream(absolutePath)) {
       try {
         return new ExcelWorkbook(new XSSFWorkbook(inputStream));
+      } catch (NotOfficeXmlFileException exception) {
+        throw new IllegalArgumentException("Only .xlsx workbooks are supported", exception);
+      }
+    }
+  }
+
+  /** Opens an existing workbook file from disk with the supplied formula environment. */
+  public static ExcelWorkbook open(Path workbookPath, ExcelFormulaEnvironment formulaEnvironment)
+      throws IOException {
+    Objects.requireNonNull(workbookPath, "workbookPath must not be null");
+
+    Path absolutePath = workbookPath.toAbsolutePath();
+    if (!Files.exists(absolutePath)) {
+      throw new WorkbookNotFoundException(absolutePath);
+    }
+
+    try (InputStream inputStream = Files.newInputStream(absolutePath)) {
+      try {
+        return new ExcelWorkbook(new XSSFWorkbook(inputStream), formulaEnvironment);
       } catch (NotOfficeXmlFileException exception) {
         throw new IllegalArgumentException("Only .xlsx workbooks are supported", exception);
       }
@@ -188,6 +219,7 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   /** Evaluates every formula cell currently present in the workbook. */
   public ExcelWorkbook evaluateAllFormulas() {
+    formulaRuntime.clearCachedResults();
     for (Sheet sheet : workbook) {
       for (Row row : sheet) {
         for (Cell cell : row) {
@@ -200,11 +232,41 @@ public final class ExcelWorkbook implements AutoCloseable {
     return this;
   }
 
+  /** Evaluates one or more explicit formula-cell targets and stores their cached results. */
+  public ExcelWorkbook evaluateFormulaCells(List<ExcelFormulaCellTarget> cells) {
+    Objects.requireNonNull(cells, "cells must not be null");
+    formulaRuntime.clearCachedResults();
+    for (ExcelFormulaCellTarget target : cells) {
+      Objects.requireNonNull(target, "cells must not contain nulls");
+      Cell cell = requiredCell(target.sheetName(), target.address());
+      if (cell.getCellType() != CellType.FORMULA) {
+        throw new IllegalArgumentException(
+            "Cell " + target.sheetName() + "!" + target.address() + " is not a formula cell");
+      }
+      evaluateFormulaCell(target.sheetName(), cell);
+    }
+    return this;
+  }
+
+  /** Clears persisted formula cached results and resets the in-process evaluator state. */
+  public ExcelWorkbook clearFormulaCaches() {
+    clearPersistedFormulaCaches();
+    invalidateFormulaRuntime();
+    return this;
+  }
+
+  /** Resets only the in-process evaluator cache after workbook mutations. */
+  ExcelWorkbook invalidateFormulaRuntime() {
+    formulaRuntime.clearCachedResults();
+    return this;
+  }
+
   private void evaluateFormulaCell(String sheetName, Cell cell) {
     try {
-      formulaRuntime.evaluate(cell);
+      formulaRuntime.evaluateFormulaCell(cell);
     } catch (RuntimeException exception) {
       throw FormulaExceptions.wrap(
+          formulaRuntime,
           sheetName,
           new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
           cell.getCellFormula(),
@@ -265,6 +327,11 @@ public final class ExcelWorkbook implements AutoCloseable {
     return workbook.getForceFormulaRecalculation();
   }
 
+  /** Returns the evaluator environment facts used by formula reads and diagnostics. */
+  ExcelFormulaRuntimeContext formulaRuntimeContext() {
+    return formulaRuntime.context();
+  }
+
   /** Returns the workbook-level summary facts including active and selected sheet state. */
   WorkbookReadResult.WorkbookSummary workbookSummary() {
     return sheetStateController.summarizeWorkbook(this);
@@ -299,12 +366,51 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   @Override
   public void close() throws IOException {
-    workbook.close();
+    IOException failure = null;
+    try {
+      formulaRuntime.close();
+    } catch (IOException exception) {
+      failure = exception;
+    }
+    try {
+      workbook.close();
+    } catch (IOException exception) {
+      if (failure == null) {
+        failure = exception;
+      } else {
+        failure.addSuppressed(exception);
+      }
+    }
+    if (failure != null) {
+      throw failure;
+    }
   }
 
   /** Returns the mutable XSSF workbook delegate used by workbook-scoped controllers. */
   XSSFWorkbook xssfWorkbook() {
     return workbook;
+  }
+
+  private Cell requiredCell(String sheetName, String address) {
+    CellReference reference = parseCellReference(address);
+    Sheet sheet = requiredSheet(sheetName);
+    Row row = sheet.getRow(reference.getRow());
+    if (row == null) {
+      throw new CellNotFoundException(address);
+    }
+    Cell cell = row.getCell(reference.getCol());
+    if (cell == null) {
+      throw new CellNotFoundException(address);
+    }
+    return cell;
+  }
+
+  private static CellReference parseCellReference(String address) {
+    try {
+      return new CellReference(address);
+    } catch (IllegalArgumentException exception) {
+      throw new InvalidCellAddressException(address, exception);
+    }
   }
 
   private Sheet requiredSheet(String sheetName) {
@@ -323,6 +429,32 @@ public final class ExcelWorkbook implements AutoCloseable {
       throw new SheetNotFoundException(sheetName);
     }
     return sheetIndex;
+  }
+
+  private void clearPersistedFormulaCaches() {
+    for (Sheet sheet : workbook) {
+      for (Row row : sheet) {
+        for (Cell cell : row) {
+          if (cell.getCellType() == CellType.FORMULA) {
+            clearPersistedFormulaCache(cell);
+          }
+        }
+      }
+    }
+  }
+
+  private static void clearPersistedFormulaCache(Cell cell) {
+    XSSFCell xssfCell = (XSSFCell) cell;
+    var ctCell = xssfCell.getCTCell();
+    if (ctCell.isSetV()) {
+      ctCell.unsetV();
+    }
+    if (ctCell.isSetIs()) {
+      ctCell.unsetIs();
+    }
+    if (ctCell.isSetT()) {
+      ctCell.unsetT();
+    }
   }
 
   private Name requiredName(String name, ExcelNamedRangeScope scope) {

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.protocol.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
@@ -15,6 +16,7 @@ public record GridGrindRequest(
     GridGrindProtocolVersion protocolVersion,
     WorkbookSource source,
     WorkbookPersistence persistence,
+    @JsonInclude(JsonInclude.Include.NON_NULL) FormulaEnvironmentInput formulaEnvironment,
     List<WorkbookOperation> operations,
     List<WorkbookReadOperation> reads) {
   public GridGrindRequest {
@@ -22,6 +24,8 @@ public record GridGrindRequest(
         protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
     Objects.requireNonNull(source, "source must not be null");
     persistence = persistence == null ? new WorkbookPersistence.None() : persistence;
+    formulaEnvironment =
+        formulaEnvironment == null || formulaEnvironment.isEmpty() ? null : formulaEnvironment;
     operations = copyOperations(operations);
     reads = copyReads(reads);
   }
@@ -30,9 +34,25 @@ public record GridGrindRequest(
   public GridGrindRequest(
       WorkbookSource source,
       WorkbookPersistence persistence,
+      FormulaEnvironmentInput formulaEnvironment,
       List<WorkbookOperation> operations,
       List<WorkbookReadOperation> reads) {
-    this(GridGrindProtocolVersion.current(), source, persistence, operations, reads);
+    this(
+        GridGrindProtocolVersion.current(),
+        source,
+        persistence,
+        formulaEnvironment,
+        operations,
+        reads);
+  }
+
+  /** Creates a request with the current protocol version and no explicit formula environment. */
+  public GridGrindRequest(
+      WorkbookSource source,
+      WorkbookPersistence persistence,
+      List<WorkbookOperation> operations,
+      List<WorkbookReadOperation> reads) {
+    this(GridGrindProtocolVersion.current(), source, persistence, null, operations, reads);
   }
 
   /** Describes where the input workbook comes from. */
@@ -102,14 +122,14 @@ public record GridGrindRequest(
     return copy;
   }
 
-  private static void requireNonBlank(String value, String fieldName) {
+  static void requireNonBlank(String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
   }
 
-  private static void requireXlsxWorkbookPath(String path) { // LIM-002
+  static void requireXlsxWorkbookPath(String path) { // LIM-002
     requireNonBlank(path, "path");
     if (!path.toLowerCase(Locale.ROOT).endsWith(".xlsx")) {
       throw new IllegalArgumentException(

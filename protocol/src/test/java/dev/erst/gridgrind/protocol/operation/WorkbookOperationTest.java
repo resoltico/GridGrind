@@ -203,6 +203,11 @@ class WorkbookOperationTest {
     WorkbookOperation.AutoSizeColumns autoSizeColumns =
         new WorkbookOperation.AutoSizeColumns("Budget");
     WorkbookOperation.EvaluateFormulas evaluateFormulas = new WorkbookOperation.EvaluateFormulas();
+    WorkbookOperation.EvaluateFormulaCells evaluateFormulaCells =
+        new WorkbookOperation.EvaluateFormulaCells(
+            List.of(new FormulaCellTargetInput("Budget", "B4")));
+    WorkbookOperation.ClearFormulaCaches clearFormulaCaches =
+        new WorkbookOperation.ClearFormulaCaches();
     WorkbookOperation.ForceFormulaRecalculationOnOpen recalcOnOpen =
         new WorkbookOperation.ForceFormulaRecalculationOnOpen();
 
@@ -234,6 +239,9 @@ class WorkbookOperationTest {
     assertEquals("SET_TABLE", setTable.operationType());
     assertEquals("DELETE_TABLE", deleteTable.operationType());
     assertEquals("EVALUATE_FORMULAS", evaluateFormulas.operationType());
+    assertEquals(List.of(new FormulaCellTargetInput("Budget", "B4")), evaluateFormulaCells.cells());
+    assertEquals("EVALUATE_FORMULA_CELLS", evaluateFormulaCells.operationType());
+    assertEquals("CLEAR_FORMULA_CACHES", clearFormulaCaches.operationType());
     assertEquals("FORCE_FORMULA_RECALCULATION_ON_OPEN", recalcOnOpen.operationType());
   }
 
@@ -265,6 +273,16 @@ class WorkbookOperationTest {
         NullPointerException.class, () -> new WorkbookOperation.ClearSheetProtection(null));
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookOperation.AppendRow("Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookOperation.EvaluateFormulaCells(List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookOperation.EvaluateFormulaCells(
+                List.of(
+                    new FormulaCellTargetInput("Budget", "B4"),
+                    new FormulaCellTargetInput("Budget", "B4"))));
     assertThrows(NullPointerException.class, () -> new WorkbookOperation.AutoSizeColumns(null));
     assertThrows(IllegalArgumentException.class, () -> new WorkbookOperation.AutoSizeColumns(" "));
     assertThrows(

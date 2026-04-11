@@ -475,7 +475,8 @@ public final class ExcelSheet {
       try {
         evaluatedCell = formulaRuntime.evaluate(cell);
       } catch (RuntimeException exception) {
-        throw FormulaExceptions.wrap(name(), address, cell.getCellFormula(), exception);
+        throw FormulaExceptions.wrap(
+            formulaRuntime, name(), address, cell.getCellFormula(), exception);
       }
       if (evaluatedCell == null || evaluatedCell.getCellType() != CellType.NUMERIC) {
         throw new IllegalStateException("Cell does not evaluate to a numeric value: " + address);
@@ -494,7 +495,8 @@ public final class ExcelSheet {
       try {
         evaluatedCell = formulaRuntime.evaluate(cell);
       } catch (RuntimeException exception) {
-        throw FormulaExceptions.wrap(name(), address, cell.getCellFormula(), exception);
+        throw FormulaExceptions.wrap(
+            formulaRuntime, name(), address, cell.getCellFormula(), exception);
       }
       if (evaluatedCell == null || evaluatedCell.getCellType() != CellType.BOOLEAN) {
         throw new IllegalStateException("Cell does not evaluate to a boolean value: " + address);
@@ -690,6 +692,7 @@ public final class ExcelSheet {
   /** Returns derived findings for formula health on this sheet. */
   List<WorkbookAnalysis.AnalysisFinding> formulaHealthFindings() {
     List<WorkbookAnalysis.AnalysisFinding> findings = new ArrayList<>();
+    ExcelFormulaRuntimeContext formulaContext = formulaRuntime.context();
     for (Row row : sheet) {
       for (Cell cell : row) {
         if (cell.getCellType() != CellType.FORMULA) {
@@ -698,15 +701,52 @@ public final class ExcelSheet {
         String address = cellAddress(cell);
         String formula = cell.getCellFormula();
         WorkbookAnalysis.AnalysisLocation.Cell location = cellLocation(address);
-        if (containsExternalWorkbookReference(formula)) {
+        List<String> externalWorkbookNames = FormulaExceptions.externalWorkbookNames(formula);
+        boolean hasStaticMissingExternalWorkbookFinding = false;
+        for (String workbookName : externalWorkbookNames) {
+          if (formulaContext.hasExternalWorkbookBinding(workbookName)) {
+            continue;
+          }
+          if (formulaContext.missingWorkbookPolicy()
+              == ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE) {
+            findings.add(
+                new WorkbookAnalysis.AnalysisFinding(
+                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_USES_CACHED_EXTERNAL_VALUE,
+                    WorkbookAnalysis.AnalysisSeverity.INFO,
+                    "External workbook uses cached result",
+                    "Formula references external workbook "
+                        + workbookName
+                        + " and will fall back to the cached formula result when the workbook is missing.",
+                    location,
+                    List.of(formula, workbookName)));
+          } else {
+            hasStaticMissingExternalWorkbookFinding = true;
+            findings.add(
+                new WorkbookAnalysis.AnalysisFinding(
+                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
+                    WorkbookAnalysis.AnalysisSeverity.ERROR,
+                    "External workbook is missing or unbound",
+                    "Formula references external workbook "
+                        + workbookName
+                        + " but no binding is configured.",
+                    location,
+                    List.of(formula, workbookName)));
+          }
+        }
+        String leadingFunctionName = FormulaExceptions.leadingFunctionName(formula);
+        if (leadingFunctionName != null
+            && referencesUnregisteredUserDefinedFunction(
+                formulaContext, leadingFunctionName, formula)) {
           findings.add(
               new WorkbookAnalysis.AnalysisFinding(
-                  WorkbookAnalysis.AnalysisFindingCode.FORMULA_EXTERNAL_REFERENCE,
-                  WorkbookAnalysis.AnalysisSeverity.WARNING,
-                  "External workbook reference",
-                  "Formula references an external workbook and may not evaluate deterministically.",
+                  WorkbookAnalysis.AnalysisFindingCode.FORMULA_UNREGISTERED_USER_DEFINED_FUNCTION,
+                  WorkbookAnalysis.AnalysisSeverity.ERROR,
+                  "User-defined function is not registered",
+                  "Formula references user-defined function "
+                      + leadingFunctionName
+                      + " but the current formula environment does not register it.",
                   location,
-                  List.of(formula)));
+                  List.of(formula, leadingFunctionName)));
         }
         volatileFunctions(formula)
             .forEach(
@@ -734,18 +774,48 @@ public final class ExcelSheet {
                     List.of(formula)));
           }
         } catch (RuntimeException exception) {
-          findings.add(
-              new WorkbookAnalysis.AnalysisFinding(
-                  WorkbookAnalysis.AnalysisFindingCode.FORMULA_EVALUATION_FAILURE,
-                  WorkbookAnalysis.AnalysisSeverity.ERROR,
-                  "Formula evaluation failed",
-                  "Formula evaluation failed: " + exceptionMessage(exception),
-                  location,
-                  List.of(formula, exception.getClass().getSimpleName())));
+          if (FormulaExceptions.isMissingExternalWorkbookFailure(exception)) {
+            if (!hasStaticMissingExternalWorkbookFinding) {
+              String workbookName =
+                  FormulaExceptions.missingExternalWorkbookName(exception, formula);
+              findings.add(
+                  new WorkbookAnalysis.AnalysisFinding(
+                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
+                      WorkbookAnalysis.AnalysisSeverity.ERROR,
+                      "External workbook is missing or unbound",
+                      "Formula evaluation failed because external workbook "
+                          + workbookName
+                          + " could not be resolved.",
+                      location,
+                      List.of(formula, workbookName == null ? "" : workbookName)));
+            }
+          } else if (FormulaExceptions.isUnregisteredUserDefinedFunctionFailure(
+              formulaContext, exception, formula)) {
+            // The static pass above already emits the authoritative finding for this category
+            // using the same formula text and runtime context, so reaching this path can only
+            // duplicate an existing unregistered-UDF finding.
+          } else {
+            findings.add(
+                new WorkbookAnalysis.AnalysisFinding(
+                    WorkbookAnalysis.AnalysisFindingCode.FORMULA_EVALUATION_FAILURE,
+                    WorkbookAnalysis.AnalysisSeverity.ERROR,
+                    "Formula evaluation failed",
+                    "Formula evaluation failed: " + exceptionMessage(exception),
+                    location,
+                    List.of(formula, exception.getClass().getSimpleName())));
+          }
         }
       }
     }
     return List.copyOf(findings);
+  }
+
+  private static boolean referencesUnregisteredUserDefinedFunction(
+      ExcelFormulaRuntimeContext formulaContext, String functionName, String formula) {
+    return FormulaExceptions.isUnregisteredUserDefinedFunctionFailure(
+        formulaContext,
+        new org.apache.poi.ss.formula.eval.NotImplementedFunctionException(functionName),
+        formula);
   }
 
   /** Returns derived conditional-formatting health findings on this sheet. */
@@ -846,6 +916,7 @@ public final class ExcelSheet {
           cell.setCellFormula(formulaValue.expression());
         } catch (RuntimeException exception) {
           throw FormulaExceptions.wrap(
+              formulaRuntime,
               name(),
               new CellReference(rowIndex, columnIndex).formatAsString(),
               formulaValue.expression(),
@@ -930,7 +1001,7 @@ public final class ExcelSheet {
               ? formulaRuntime.displayValue(dataFormatter, cell)
               : dataFormatter.formatCellValue(cell);
     } catch (RuntimeException exception) {
-      throw FormulaExceptions.wrap(name(), address, formulaExpression, exception);
+      throw FormulaExceptions.wrap(formulaRuntime, name(), address, formulaExpression, exception);
     }
     ExcelCellStyleSnapshot style = styleRegistry.snapshot(cell);
     ExcelCellMetadataSnapshot metadata = metadata(cell);
@@ -941,7 +1012,7 @@ public final class ExcelSheet {
       try {
         evaluatedCell = formulaRuntime.evaluate(cell);
       } catch (RuntimeException exception) {
-        throw FormulaExceptions.wrap(name(), address, formula, exception);
+        throw FormulaExceptions.wrap(formulaRuntime, name(), address, formula, exception);
       }
 
       CellType evalType = evaluatedCell != null ? evaluatedCell.getCellType() : CellType.BLANK;
