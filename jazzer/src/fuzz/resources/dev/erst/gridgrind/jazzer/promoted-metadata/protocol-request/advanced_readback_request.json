@@ -1,0 +1,43 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "examples/advanced-readback-request.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/advanced_readback_request.json",
+  "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 5279,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 8,
+      "operationKinds" : {
+        "ENSURE_SHEET" : 1,
+        "SET_RANGE" : 2,
+        "SET_COMMENT" : 1,
+        "SET_PRINT_LAYOUT" : 1,
+        "SET_DATA_VALIDATION" : 1,
+        "SET_TABLE" : 1,
+        "SET_AUTOFILTER" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 11,
+      "readKinds" : {
+        "GET_WORKBOOK_SUMMARY" : 1,
+        "GET_WORKBOOK_PROTECTION" : 1,
+        "GET_CELLS" : 1,
+        "GET_COMMENTS" : 1,
+        "GET_PRINT_LAYOUT" : 1,
+        "GET_DATA_VALIDATIONS" : 1,
+        "GET_AUTOFILTERS" : 1,
+        "GET_TABLES" : 1,
+        "ANALYZE_DATA_VALIDATION_HEALTH" : 1,
+        "ANALYZE_AUTOFILTER_HEALTH" : 1,
+        "ANALYZE_TABLE_HEALTH" : 1
+      }
+    }
+  },
+  "promotedAt" : "2026-04-11T06:38:59.600000Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/advanced_readback_request.txt"
+}

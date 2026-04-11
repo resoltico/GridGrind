@@ -115,10 +115,13 @@ final class ExcelTableController {
       if (!tableHandle.table().getCTTable().isSetAutoFilter()) {
         continue;
       }
-      String rawRange =
-          Objects.requireNonNullElse(tableHandle.table().getCTTable().getAutoFilter().getRef(), "");
+      var autoFilter = tableHandle.table().getCTTable().getAutoFilter();
       autofilters.add(
-          new ExcelAutofilterSnapshot.TableOwned(rawRange, tableHandle.table().getName()));
+          new ExcelAutofilterSnapshot.TableOwned(
+              Objects.requireNonNullElse(autoFilter.getRef(), ""),
+              tableHandle.table().getName(),
+              autofilterController.filterColumns(workbook.xssfWorkbook(), autoFilter),
+              autofilterController.sortState(workbook.xssfWorkbook(), autoFilter)));
     }
     return List.copyOf(autofilters);
   }

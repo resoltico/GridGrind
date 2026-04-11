@@ -618,10 +618,10 @@ class ExcelWorkbookTest {
     assertEquals(ExcelVerticalAlignment.TOP, style.alignment().verticalAlignment());
     assertEquals("Aptos", style.font().fontName());
     assertEquals(new BigDecimal("11.5"), style.font().fontHeight().points());
-    assertEquals("#1F4E78", style.font().fontColor());
+    assertEquals(rgb("#1F4E78"), style.font().fontColor());
     assertTrue(style.font().underline());
     assertTrue(style.font().strikeout());
-    assertEquals("#FFF2CC", style.fill().foregroundColor());
+    assertEquals(rgb("#FFF2CC"), style.fill().foregroundColor());
     assertEquals(ExcelBorderStyle.THIN, style.border().top().style());
     assertEquals(ExcelBorderStyle.DOUBLE, style.border().right().style());
     assertEquals(ExcelBorderStyle.THIN, style.border().bottom().style());
@@ -654,7 +654,9 @@ class ExcelWorkbookTest {
     ExcelCellMetadataSnapshot metadata = XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1");
     assertEquals(
         new ExcelHyperlink.Url("https://example.com/report"), metadata.hyperlink().orElseThrow());
-    assertEquals(new ExcelComment("Review", "GridGrind", true), metadata.comment().orElseThrow());
+    assertEquals(
+        new ExcelComment("Review", "GridGrind", true),
+        metadata.comment().orElseThrow().toPlainComment());
     List<ExcelNamedRangeSnapshot> namedRanges = XlsxRoundTrip.namedRanges(workbookPath);
     assertEquals(2, namedRanges.size());
     assertTrue(
@@ -860,6 +862,10 @@ class ExcelWorkbookTest {
     return new ExcelSheetProtectionSettings(
         true, false, true, false, true, false, true, false, true, false, true, false, true, false,
         true);
+  }
+
+  private static ExcelColorSnapshot rgb(String rgb) {
+    return new ExcelColorSnapshot(rgb);
   }
 
   private static boolean columnDefinitionsAreCanonical(XSSFSheet sheet) {

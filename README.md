@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.34.0
+docker pull ghcr.io/resoltico/gridgrind:0.35.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -166,6 +166,13 @@ health check before deciding whether to file a report.
 The whole pipeline is a complete extraction or nothing at all. `.xlsx` only; `.xls`, `.xlsm`,
 and `.xlsb` are rejected.
 
+Two contract details matter often in agent-generated requests:
+- `SET_TABLE.table.showTotalsRow` is optional. Omit it unless the table really includes a totals
+  row; the default is `false`.
+- Column structural edits are workbook-wide guarded. `INSERT_COLUMNS`, `DELETE_COLUMNS`, and
+  `SHIFT_COLUMNS` are rejected when any formula cells or formula-defined named ranges exist
+  anywhere in the workbook.
+
 ---
 
 ## Examples
@@ -173,7 +180,13 @@ and `.xlsb` are rejected.
 Write any `.xlsx` workbook structure from a single JSON request. Read back exactly the facts you
 need. Run health analysis in the same pass or on its own. See [docs/OPERATIONS.md](docs/OPERATIONS.md)
 for the full field reference and [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) for
-copy-paste snippets for every type.
+copy-paste snippets for every type. The committed
+[examples/table-autofilter-request.json](examples/table-autofilter-request.json) example shows the
+defaulted `SET_TABLE` shape with `showTotalsRow` omitted. The committed
+[examples/advanced-readback-request.json](examples/advanced-readback-request.json) example shows
+the richer factual readback surface for workbook protection, comment runs and anchors, advanced
+print setup, autofilter criteria and sort state, advanced table metadata, and workbook-health
+analysis.
 
 ### Alice — building an inventory sheet
 

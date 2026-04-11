@@ -45,7 +45,6 @@
         "name": "DispatchQueue",
         "sheetName": "Dispatch",
         "range": "A1:C4",
-        "showTotalsRow": false,
         "style": { "type": "NONE" }
       }
     },

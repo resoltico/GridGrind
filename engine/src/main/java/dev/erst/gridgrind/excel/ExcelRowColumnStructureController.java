@@ -8,16 +8,16 @@ import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCols;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
 
 /** Owns structural row and column editing plus layout normalization for one XSSF sheet. */
 final class ExcelRowColumnStructureController {
@@ -785,11 +785,13 @@ final class ExcelRowColumnStructureController {
   }
 
   private static List<String> dataValidationRanges(XSSFSheet sheet) {
+    CTDataValidations dataValidations = sheet.getCTWorksheet().getDataValidations();
+    if (dataValidations == null) {
+      return List.of();
+    }
     List<String> ranges = new ArrayList<>();
-    for (DataValidation validation : sheet.getDataValidations()) {
-      for (CellRangeAddress address : validation.getRegions().getCellRangeAddresses()) {
-        ranges.add(address.formatAsString());
-      }
+    for (CTDataValidation validation : dataValidations.getDataValidationArray()) {
+      ranges.addAll(ExcelSqrefSupport.normalizedSqref(validation.getSqref()));
     }
     return List.copyOf(ranges);
   }

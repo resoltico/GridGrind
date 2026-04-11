@@ -254,6 +254,11 @@ public final class ExcelWorkbook implements AutoCloseable {
     return sheetStateController.summarizeWorkbook(this);
   }
 
+  /** Returns the workbook-level protection facts currently stored in the workbook. */
+  ExcelWorkbookProtectionSnapshot workbookProtection() {
+    return sheetStateController.workbookProtection(this);
+  }
+
   /** Returns the summary facts for one sheet, including visibility and protection state. */
   WorkbookReadResult.SheetSummary sheetSummary(String sheetName) {
     return sheetStateController.summarizeSheet(this, sheetName);

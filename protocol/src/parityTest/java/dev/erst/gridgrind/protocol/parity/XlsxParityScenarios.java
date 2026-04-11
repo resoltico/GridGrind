@@ -43,6 +43,7 @@ import org.apache.poi.poifs.crypt.dsig.SignatureConfig;
 import org.apache.poi.poifs.crypt.dsig.SignatureInfo;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.SpreadsheetVersion;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.ConditionalFormattingThreshold;
 import org.apache.poi.ss.usermodel.DataConsolidateFunction;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -555,16 +556,16 @@ public final class XlsxParityScenarios {
           XSSFCellStyle themedStyle = workbook.createCellStyle();
           XSSFFont themedFont = workbook.createFont();
           themedFont.setItalic(true);
-          XSSFColor themedFontColor = new XSSFColor();
-          themedFontColor.setTheme(6);
+          var themedFontColor = themedFont.getCTFont().addNewColor();
+          themedFontColor.setTheme(6L);
           themedFontColor.setTint(-0.35d);
-          themedFont.setColor(themedFontColor);
           themedStyle.setFont(themedFont);
           themedStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
           XSSFColor themedFillColor = new XSSFColor();
           themedFillColor.setTheme(3);
           themedFillColor.setTint(0.30d);
           themedStyle.setFillForegroundColor(themedFillColor);
+          themedStyle.setBorderBottom(BorderStyle.THIN);
           XSSFColor indexedBorderColor = new XSSFColor();
           indexedBorderColor.setIndexed(IndexedColors.DARK_RED.getIndex());
           themedStyle.setBottomBorderColor(indexedBorderColor);
@@ -572,20 +573,17 @@ public final class XlsxParityScenarios {
 
           StylesTable stylesTable = workbook.getStylesSource();
           XSSFCellStyle gradientStyle = workbook.createCellStyle();
-          CTFill gradientFill =
-              CTFill.Factory.parse(
-                  """
-                  <fill xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-                    <gradientFill degree="45">
-                      <stop position="0">
-                        <color rgb="FF1F497D"/>
-                      </stop>
-                      <stop position="1">
-                        <color theme="4" tint="0.45"/>
-                      </stop>
-                    </gradientFill>
-                  </fill>
-                  """);
+          CTFill gradientFill = CTFill.Factory.newInstance();
+          var gradient = gradientFill.addNewGradientFill();
+          gradient.setDegree(45d);
+          var firstStop = gradient.addNewStop();
+          firstStop.setPosition(0d);
+          firstStop.addNewColor().setRgb(new byte[] {(byte) 0xFF, 0x1F, 0x49, 0x7D});
+          var secondStop = gradient.addNewStop();
+          secondStop.setPosition(1d);
+          var secondStopColor = secondStop.addNewColor();
+          secondStopColor.setTheme(4L);
+          secondStopColor.setTint(0.45d);
           int gradientFillId =
               stylesTable.putFill(new XSSFCellFill(gradientFill, stylesTable.getIndexedColors()));
           gradientStyle.getCoreXf().setApplyFill(true);
@@ -617,21 +615,15 @@ public final class XlsxParityScenarios {
     XlsxParitySupport.call(
         "create advanced parity autofilter",
         () -> {
-          CTAutoFilter autoFilter =
-              CTAutoFilter.Factory.parse(
-                  """
-                  <autoFilter xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ref="A1:C5">
-                    <filterColumn colId="0">
-                      <filters>
-                        <filter val="R1C0"/>
-                      </filters>
-                    </filterColumn>
-                    <sortState ref="A2:C5">
-                      <sortCondition descending="true" ref="B2:B5"/>
-                    </sortState>
-                  </autoFilter>
-                  """);
-          sheet.getCTWorksheet().setAutoFilter(autoFilter);
+          sheet.setAutoFilter(CellRangeAddress.valueOf("A1:C5"));
+          CTAutoFilter autoFilter = sheet.getCTWorksheet().getAutoFilter();
+          var filterColumn = autoFilter.addNewFilterColumn();
+          filterColumn.setColId(0L);
+          filterColumn.addNewFilters().addNewFilter().setVal("R1C0");
+          var sortState = autoFilter.addNewSortState();
+          sortState.setRef("A2:C5");
+          sortState.addNewSortCondition().setRef("B2:B5");
+          sortState.getSortConditionArray(0).setDescending(true);
           return null;
         });
   }

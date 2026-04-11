@@ -43,6 +43,7 @@ import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFObjectData;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -109,6 +110,8 @@ final class XlsxParityOracle {
                 workbook.isStructureLocked(),
                 workbook.isWindowsLocked(),
                 workbook.isRevisionLocked(),
+                workbook.getCTWorkbook().getWorkbookProtection().isSetWorkbookPassword(),
+                workbook.getCTWorkbook().getWorkbookProtection().isSetRevisionsPassword(),
                 workbook.validateWorkbookPassword(
                     XlsxParityScenarios.WORKBOOK_PROTECTION_PASSWORD)));
   }
@@ -129,9 +132,10 @@ final class XlsxParityOracle {
               sheet.getPrintSetup().getDraft(),
               sheet.getPrintSetup().getNoColor(),
               sheet.getPrintSetup().getCopies(),
+              sheet.getPrintSetup().getUsePage(),
               sheet.getPrintSetup().getPageStart(),
-              sheet.getRowBreaks().length,
-              sheet.getColumnBreaks().length);
+              java.util.Arrays.stream(sheet.getRowBreaks()).boxed().toList(),
+              java.util.Arrays.stream(sheet.getColumnBreaks()).boxed().toList());
         });
   }
 
@@ -144,7 +148,7 @@ final class XlsxParityOracle {
           return new CommentSnapshot(
               comment.getAuthor(),
               comment.isVisible(),
-              comment.getString().numFormattingRuns() + 1,
+              richTextRunCount(comment.getString()),
               anchor.getCol1(),
               anchor.getRow1(),
               anchor.getCol2(),
@@ -200,14 +204,46 @@ final class XlsxParityOracle {
         workbook -> {
           XSSFSheet sheet = workbook.getSheet(sheetName);
           if (!sheet.getCTWorksheet().isSetAutoFilter()) {
-            return new AutofilterSnapshot("", 0, false, "");
+            return new AutofilterSnapshot("", List.of(), null);
           }
           var autoFilter = sheet.getCTWorksheet().getAutoFilter();
           return new AutofilterSnapshot(
               autoFilter.getRef(),
-              autoFilter.sizeOfFilterColumnArray(),
-              autoFilter.isSetSortState(),
-              autoFilter.isSetSortState() ? autoFilter.getSortState().getRef() : "");
+              java.util.Arrays.stream(autoFilter.getFilterColumnArray())
+                  .map(
+                      filterColumn ->
+                          new FilterColumnSnapshot(
+                              filterColumn.getColId(),
+                              filterColumn.isSetFilters()
+                                  ? java.util.Arrays.stream(
+                                          filterColumn.getFilters().getFilterArray())
+                                      .map(
+                                          filter -> Objects.requireNonNullElse(filter.getVal(), ""))
+                                      .toList()
+                                  : List.of(),
+                              filterColumn.isSetFilters() && filterColumn.getFilters().getBlank()))
+                  .toList(),
+              autoFilter.isSetSortState()
+                  ? new SortStateSnapshot(
+                      autoFilter.getSortState().getRef(),
+                      autoFilter.getSortState().isSetCaseSensitive()
+                          && autoFilter.getSortState().getCaseSensitive(),
+                      autoFilter.getSortState().isSetColumnSort()
+                          && autoFilter.getSortState().getColumnSort(),
+                      autoFilter.getSortState().isSetSortMethod()
+                          ? autoFilter.getSortState().getSortMethod().toString()
+                          : "",
+                      java.util.Arrays.stream(autoFilter.getSortState().getSortConditionArray())
+                          .map(
+                              condition ->
+                                  new SortConditionSnapshot(
+                                      condition.getRef(),
+                                      condition.isSetDescending() && condition.getDescending(),
+                                      condition.isSetSortBy()
+                                          ? condition.getSortBy().toString()
+                                          : ""))
+                          .toList())
+                  : null);
         });
   }
 
@@ -573,6 +609,11 @@ final class XlsxParityOracle {
         () -> HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes)));
   }
 
+  private static int richTextRunCount(XSSFRichTextString richText) {
+    int xmlRunCount = richText.getCTRst().sizeOfRArray();
+    return xmlRunCount == 0 && !richText.getString().isEmpty() ? 1 : xmlRunCount;
+  }
+
   private static <T> T withWorkbook(Path workbookPath, Function<XSSFWorkbook, T> function) {
     return XlsxParitySupport.call(
         "open parity workbook " + workbookPath,
@@ -612,6 +653,8 @@ final class XlsxParityOracle {
       boolean structureLocked,
       boolean windowsLocked,
       boolean revisionLocked,
+      boolean workbookPasswordHashPresent,
+      boolean revisionsPasswordHashPresent,
       boolean passwordMatches) {}
 
   record AdvancedPrintSnapshot(
@@ -625,9 +668,10 @@ final class XlsxParityOracle {
       boolean draft,
       boolean noColor,
       short copies,
+      boolean usePage,
       short pageStart,
-      int rowBreakCount,
-      int columnBreakCount) {}
+      List<Integer> rowBreaks,
+      List<Integer> columnBreaks) {}
 
   record CommentSnapshot(
       String author, boolean visible, int runCount, int col1, int row1, int col2, int row2) {}
@@ -642,7 +686,30 @@ final class XlsxParityOracle {
       String name, String scope, String refersToFormula, boolean formulaDefined) {}
 
   record AutofilterSnapshot(
-      String range, int filterColumnCount, boolean hasSortState, String sortStateRange) {}
+      String range, List<FilterColumnSnapshot> filterColumns, SortStateSnapshot sortState) {
+    int filterColumnCount() {
+      return filterColumns.size();
+    }
+
+    boolean hasSortState() {
+      return sortState != null;
+    }
+
+    String sortStateRange() {
+      return sortState == null ? "" : sortState.range();
+    }
+  }
+
+  record FilterColumnSnapshot(long columnId, List<String> values, boolean includeBlank) {}
+
+  record SortStateSnapshot(
+      String range,
+      boolean caseSensitive,
+      boolean columnSort,
+      String sortMethod,
+      List<SortConditionSnapshot> conditions) {}
+
+  record SortConditionSnapshot(String range, boolean descending, String sortBy) {}
 
   record TableSnapshot(
       String comment,

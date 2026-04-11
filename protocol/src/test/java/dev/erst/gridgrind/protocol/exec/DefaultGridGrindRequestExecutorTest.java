@@ -3,7 +3,7 @@ package dev.erst.gridgrind.protocol.exec;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
+import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
@@ -15,6 +15,7 @@ import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelComment;
+import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
@@ -31,7 +32,9 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPrintMarginsSnapshot;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.ExcelPrintSetupSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -208,12 +211,12 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(2, cell.richText().size());
     assertEquals("Budget", cell.richText().get(0).text());
     assertEquals("Aptos", cell.richText().get(0).font().fontName());
-    assertEquals("#112233", cell.richText().get(0).font().fontColor());
+    assertEquals(rgb("#112233"), cell.richText().get(0).font().fontColor());
     assertTrue(cell.richText().get(0).font().italic());
     assertFalse(cell.richText().get(0).font().bold());
     assertEquals(" FY26", cell.richText().get(1).text());
     assertEquals("Aptos", cell.richText().get(1).font().fontName());
-    assertEquals("#FF0000", cell.richText().get(1).font().fontColor());
+    assertEquals(rgb("#FF0000"), cell.richText().get(1).font().fontColor());
     assertTrue(cell.richText().get(1).font().bold());
     assertTrue(cell.richText().get(1).font().italic());
   }
@@ -658,7 +661,10 @@ class DefaultGridGrindRequestExecutorTest {
         XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1").hyperlink().orElseThrow());
     assertEquals(
         new ExcelComment("Review", "GridGrind", true),
-        XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1").comment().orElseThrow());
+        XlsxRoundTrip.cellMetadata(workbookPath, "Budget", "A1")
+            .comment()
+            .orElseThrow()
+            .toPlainComment());
     assertEquals(2, XlsxRoundTrip.namedRanges(workbookPath).size());
   }
 
@@ -954,9 +960,23 @@ class DefaultGridGrindRequestExecutorTest {
                   1,
                   0,
                   List.of("Item", "Amount", "Billable"),
+                  List.of(
+                      new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
+                          1L, "Item", "", "", "", ""),
+                      new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
+                          2L, "Amount", "", "", "", ""),
+                      new dev.erst.gridgrind.excel.ExcelTableColumnSnapshot(
+                          3L, "Billable", "", "", "", "")),
                   new dev.erst.gridgrind.excel.ExcelTableStyleSnapshot.Named(
                       "TableStyleMedium2", false, false, true, false),
-                  true)),
+                  true,
+                  "",
+                  false,
+                  false,
+                  false,
+                  "",
+                  "",
+                  "")),
           reopenedTables.tables());
     }
   }
@@ -1880,19 +1900,19 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals("Aptos", style.font().fontName());
     assertEquals(230, style.font().fontHeight().twips());
     assertEquals(new BigDecimal("11.5"), style.font().fontHeight().points());
-    assertEquals("#1F4E78", style.font().fontColor());
+    assertEquals(rgb("#1F4E78"), style.font().fontColor());
     assertTrue(style.font().underline());
     assertTrue(style.font().strikeout());
     assertEquals(
         dev.erst.gridgrind.excel.ExcelFillPattern.THIN_HORIZONTAL_BANDS, style.fill().pattern());
-    assertEquals("#FFF2CC", style.fill().foregroundColor());
-    assertEquals("#DDEBF7", style.fill().backgroundColor());
+    assertEquals(rgb("#FFF2CC"), style.fill().foregroundColor());
+    assertEquals(rgb("#DDEBF7"), style.fill().backgroundColor());
     assertEquals(ExcelBorderStyle.THIN, style.border().top().style());
     assertEquals(ExcelBorderStyle.DOUBLE, style.border().right().style());
     assertEquals(ExcelBorderStyle.THIN, style.border().bottom().style());
     assertEquals(ExcelBorderStyle.THIN, style.border().left().style());
-    assertEquals("#102030", style.border().top().color());
-    assertEquals("#203040", style.border().right().color());
+    assertEquals(rgb("#102030"), style.border().top().color());
+    assertEquals(rgb("#203040"), style.border().right().color());
     assertFalse(style.protection().locked());
     assertTrue(style.protection().hiddenFormula());
     assertEquals(
@@ -2677,6 +2697,9 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookReadCommand workbookSummary =
         WorkbookReadCommandConverter.toReadCommand(
             new WorkbookReadOperation.GetWorkbookSummary("workbook"));
+    WorkbookReadCommand workbookProtection =
+        WorkbookReadCommandConverter.toReadCommand(
+            new WorkbookReadOperation.GetWorkbookProtection("workbook-protection"));
     WorkbookReadCommand namedRanges =
         WorkbookReadCommandConverter.toReadCommand(
             new WorkbookReadOperation.GetNamedRanges(
@@ -2739,6 +2762,7 @@ class DefaultGridGrindRequestExecutorTest {
                 "surface", new NamedRangeSelection.All()));
 
     assertInstanceOf(WorkbookReadCommand.GetWorkbookSummary.class, workbookSummary);
+    assertInstanceOf(WorkbookReadCommand.GetWorkbookProtection.class, workbookProtection);
     assertInstanceOf(WorkbookReadCommand.GetNamedRanges.class, namedRanges);
     assertInstanceOf(WorkbookReadCommand.GetSheetSummary.class, sheetSummary);
     assertInstanceOf(WorkbookReadCommand.GetCells.class, cells);
@@ -2950,7 +2974,8 @@ class DefaultGridGrindRequestExecutorTest {
                 "Budget",
                 List.of(
                     new dev.erst.gridgrind.excel.WorkbookReadResult.CellComment(
-                        "A1", new ExcelComment("Review", "GridGrind", false)))));
+                        "A1",
+                        new ExcelCommentSnapshot("Review", "GridGrind", false, null, null)))));
     WorkbookReadResult layout =
         WorkbookReadResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayoutResult(
@@ -2970,14 +2995,16 @@ class DefaultGridGrindRequestExecutorTest {
             new dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult(
                 "printLayout",
                 "Budget",
-                new dev.erst.gridgrind.excel.ExcelPrintLayout(
-                    new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.Range("A1:B20"),
-                    ExcelPrintOrientation.LANDSCAPE,
-                    new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Fit(1, 0),
-                    new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.Band(0, 0),
-                    new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.Band(0, 0),
-                    new dev.erst.gridgrind.excel.ExcelHeaderFooterText("Budget", "", ""),
-                    new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "Page &P", ""))));
+                new dev.erst.gridgrind.excel.ExcelPrintLayoutSnapshot(
+                    new dev.erst.gridgrind.excel.ExcelPrintLayout(
+                        new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.Range("A1:B20"),
+                        ExcelPrintOrientation.LANDSCAPE,
+                        new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Fit(1, 0),
+                        new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.Band(0, 0),
+                        new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.Band(0, 0),
+                        new dev.erst.gridgrind.excel.ExcelHeaderFooterText("Budget", "", ""),
+                        new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "Page &P", "")),
+                    defaultPrintSetupSnapshot())));
     WorkbookReadResult conditionalFormatting =
         WorkbookReadResultConverter.toReadResult(
             new dev.erst.gridgrind.excel.WorkbookReadResult.ConditionalFormattingResult(
@@ -3369,14 +3396,16 @@ class DefaultGridGrindRequestExecutorTest {
                 new dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult(
                     "print-layout",
                     "Budget",
-                    new dev.erst.gridgrind.excel.ExcelPrintLayout(
-                        new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.None(),
-                        ExcelPrintOrientation.PORTRAIT,
-                        new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Automatic(),
-                        new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.None(),
-                        new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.None(),
-                        new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", ""),
-                        new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", "")))));
+                    new dev.erst.gridgrind.excel.ExcelPrintLayoutSnapshot(
+                        new dev.erst.gridgrind.excel.ExcelPrintLayout(
+                            new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.None(),
+                            ExcelPrintOrientation.PORTRAIT,
+                            new dev.erst.gridgrind.excel.ExcelPrintLayout.Scaling.Automatic(),
+                            new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleRows.None(),
+                            new dev.erst.gridgrind.excel.ExcelPrintLayout.TitleColumns.None(),
+                            new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", ""),
+                            new dev.erst.gridgrind.excel.ExcelHeaderFooterText("", "", "")),
+                        defaultPrintSetupSnapshot()))));
 
     PaneReport.Split pane = assertInstanceOf(PaneReport.Split.class, layout.layout().pane());
     assertEquals(1200, pane.xSplitPosition());
@@ -3449,6 +3478,7 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(
         List.of(
             "GET_WORKBOOK_SUMMARY",
+            "GET_WORKBOOK_PROTECTION",
             "GET_NAMED_RANGES",
             "GET_SHEET_SUMMARY",
             "GET_CELLS",
@@ -3476,6 +3506,8 @@ class DefaultGridGrindRequestExecutorTest {
         List.of(
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetWorkbookSummary("workbook")),
+            DefaultGridGrindRequestExecutor.readType(
+                new WorkbookReadOperation.GetWorkbookProtection("workbook-protection")),
             DefaultGridGrindRequestExecutor.readType(
                 new WorkbookReadOperation.GetNamedRanges("ranges", new NamedRangeSelection.All())),
             DefaultGridGrindRequestExecutor.readType(
@@ -3548,6 +3580,8 @@ class DefaultGridGrindRequestExecutorTest {
     RuntimeException runtimeException = new RuntimeException("x");
 
     WorkbookReadOperation workbook = new WorkbookReadOperation.GetWorkbookSummary("workbook");
+    WorkbookReadOperation workbookProtection =
+        new WorkbookReadOperation.GetWorkbookProtection("workbook-protection");
     WorkbookReadOperation namedRanges =
         new WorkbookReadOperation.GetNamedRanges("ranges", new NamedRangeSelection.All());
     WorkbookReadOperation sheet = new WorkbookReadOperation.GetSheetSummary("sheet", "Budget");
@@ -3609,6 +3643,7 @@ class DefaultGridGrindRequestExecutorTest {
         new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings");
 
     assertReadContext(workbook, null, null, null, runtimeException);
+    assertReadContext(workbookProtection, null, null, null, runtimeException);
     assertReadContext(namedRanges, null, null, null, runtimeException);
     assertReadContext(sheet, "Budget", null, null, runtimeException);
     assertReadContext(cells, "Budget", null, null, runtimeException);
@@ -4137,17 +4172,36 @@ class DefaultGridGrindRequestExecutorTest {
             false),
         new ExcelCellFillSnapshot(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, null, null),
         new ExcelBorderSnapshot(
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null)),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
         new ExcelCellProtectionSnapshot(true, false));
+  }
+
+  private static ExcelPrintSetupSnapshot defaultPrintSetupSnapshot() {
+    return new ExcelPrintSetupSnapshot(
+        new ExcelPrintMarginsSnapshot(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d),
+        false,
+        false,
+        0,
+        false,
+        false,
+        0,
+        false,
+        0,
+        List.of(),
+        List.of());
   }
 
   private static SheetProtectionSettings protectionSettings() {
     return new SheetProtectionSettings(
         false, true, false, true, false, true, false, true, false, true, false, true, false, true,
         false);
+  }
+
+  private static CellColorReport rgb(String rgb) {
+    return new CellColorReport(rgb);
   }
 
   private static ExcelSheetProtectionSettings excelProtectionSettings() {

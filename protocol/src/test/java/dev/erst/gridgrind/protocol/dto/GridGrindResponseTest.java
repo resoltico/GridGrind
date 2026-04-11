@@ -314,7 +314,7 @@ class GridGrindResponseTest {
                     false,
                     "Aptos",
                     new FontHeightReport(220, new BigDecimal("11")),
-                    "#AABBCC",
+                    rgb("#AABBCC"),
                     false,
                     false)));
 
@@ -844,28 +844,32 @@ class GridGrindResponseTest {
     CellFillReport noFill =
         new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, null, null);
     CellFillReport patternedFill =
-        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.BRICKS, null, "#aabbcc");
+        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.BRICKS, null, rgb("#aabbcc"));
 
     assertEquals(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, noFill.pattern());
     assertNull(noFill.foregroundColor());
     assertNull(noFill.backgroundColor());
-    assertEquals("#AABBCC", patternedFill.backgroundColor());
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, "#112233", null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, null, "#112233"));
+    assertEquals(rgb("#AABBCC"), patternedFill.backgroundColor());
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new CellFillReport(
-                dev.erst.gridgrind.excel.ExcelFillPattern.NONE, "#112233", "#445566"));
+                dev.erst.gridgrind.excel.ExcelFillPattern.NONE, rgb("#112233"), null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new CellFillReport(
-                dev.erst.gridgrind.excel.ExcelFillPattern.SOLID, "#112233", "#445566"));
+                dev.erst.gridgrind.excel.ExcelFillPattern.NONE, null, rgb("#112233")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellFillReport(
+                dev.erst.gridgrind.excel.ExcelFillPattern.NONE, rgb("#112233"), rgb("#445566")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellFillReport(
+                dev.erst.gridgrind.excel.ExcelFillPattern.SOLID, rgb("#112233"), rgb("#445566")));
   }
 
   private static GridGrindResponse.CellStyleReport defaultCellStyleReport() {
@@ -878,16 +882,20 @@ class GridGrindResponseTest {
             false,
             "Aptos",
             new FontHeightReport(230, new BigDecimal("11.5")),
-            "#1F4E78",
+            rgb("#1F4E78"),
             true,
             false),
-        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.SOLID, "#FFF2CC", null),
+        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.SOLID, rgb("#FFF2CC"), null),
         new CellBorderReport(
             new CellBorderSideReport(ExcelBorderStyle.THIN, null),
             new CellBorderSideReport(ExcelBorderStyle.DOUBLE, null),
             new CellBorderSideReport(ExcelBorderStyle.THIN, null),
             new CellBorderSideReport(ExcelBorderStyle.THIN, null)),
         new CellProtectionReport(true, false));
+  }
+
+  private static CellColorReport rgb(String rgb) {
+    return new CellColorReport(rgb);
   }
 
   private static SheetProtectionSettings protectionSettings() {

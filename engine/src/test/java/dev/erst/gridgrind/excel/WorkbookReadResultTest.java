@@ -334,10 +334,10 @@ class WorkbookReadResultTest {
             false),
         new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, null),
         new ExcelBorderSnapshot(
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null)),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
         new ExcelCellProtectionSnapshot(true, false));
   }
 
@@ -368,7 +368,7 @@ class WorkbookReadResultTest {
         new ArrayList<>(
             List.of(
                 new WorkbookReadResult.CellComment(
-                    "A1", new ExcelComment("Review", "GridGrind", false))));
+                    "A1", new ExcelCommentSnapshot("Review", "GridGrind", false, null, null))));
     List<WorkbookReadResult.ColumnLayout> columns =
         new ArrayList<>(List.of(new WorkbookReadResult.ColumnLayout(0, 12.5, false, 0, false)));
     List<WorkbookReadResult.RowLayout> resultRows =
@@ -467,7 +467,7 @@ class WorkbookReadResultTest {
             "layout",
             new WorkbookReadResult.SheetLayout(
                 "Budget", new ExcelSheetPane.Frozen(1, 1, 1, 1), 125, columns, resultRows)),
-        new WorkbookReadResult.PrintLayoutResult("print", "Budget", defaultPrintLayout()),
+        new WorkbookReadResult.PrintLayoutResult("print", "Budget", defaultPrintLayoutSnapshot()),
         new WorkbookReadResult.DataValidationsResult("validations", "Budget", validations),
         new WorkbookReadResult.ConditionalFormattingHealthResult(
             "conditionalFormattingHealth",
@@ -499,7 +499,7 @@ class WorkbookReadResultTest {
     assertEquals("Review", fixture.commentsResult().comments().getFirst().comment().text());
     assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), fixture.layoutResult().layout().pane());
     assertEquals(125, fixture.layoutResult().layout().zoomPercent());
-    assertEquals(defaultPrintLayout(), fixture.printLayoutResult().printLayout());
+    assertEquals(defaultPrintLayoutSnapshot(), fixture.printLayoutResult().printLayout());
     assertEquals(
         "A2:A5", fixture.dataValidationsResult().validations().getFirst().ranges().getFirst());
     assertEquals(
@@ -575,5 +575,22 @@ class WorkbookReadResultTest {
         new ExcelPrintLayout.TitleColumns.Band(0, 0),
         new ExcelHeaderFooterText("Budget", "", "2026"),
         new ExcelHeaderFooterText("", "Confidential", ""));
+  }
+
+  private static ExcelPrintLayoutSnapshot defaultPrintLayoutSnapshot() {
+    return new ExcelPrintLayoutSnapshot(
+        defaultPrintLayout(),
+        new ExcelPrintSetupSnapshot(
+            new ExcelPrintMarginsSnapshot(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d),
+            false,
+            false,
+            0,
+            false,
+            false,
+            0,
+            false,
+            0,
+            List.of(),
+            List.of()));
   }
 }

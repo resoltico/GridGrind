@@ -4,13 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
-import org.apache.poi.xssf.model.ThemesTable;
-import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTBooleanProperty;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColor;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFont;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTRElt;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTRPrElt;
@@ -76,7 +73,7 @@ final class ExcelRichTextSupport {
   }
 
   private static ExcelCellFontSnapshot merge(
-      ExcelCellFontSnapshot baseFont, ExcelCellFont fontPatch) {
+      ExcelCellFontSnapshot baseFont, RunFontPatch fontPatch) {
     if (fontPatch == null) {
       return baseFont;
     }
@@ -90,7 +87,7 @@ final class ExcelRichTextSupport {
         fontPatch.strikeout() != null ? fontPatch.strikeout() : baseFont.strikeout());
   }
 
-  private static ExcelCellFont runFontPatch(XSSFWorkbook workbook, CTRElt run) {
+  private static RunFontPatch runFontPatch(XSSFWorkbook workbook, CTRElt run) {
     CTRPrElt properties = run.getRPr();
     if (properties == null) {
       return null;
@@ -100,14 +97,14 @@ final class ExcelRichTextSupport {
     Boolean italic = readItalic(properties);
     String fontName = readFontName(properties);
     ExcelFontHeight fontHeight = readFontHeight(properties);
-    String fontColor = readFontColor(workbook, properties);
+    ExcelColorSnapshot fontColor = readFontColor(workbook, properties);
     Boolean underline = readUnderline(properties);
     Boolean strikeout = readStrikeout(properties);
     if (allFontAttributesNull(
         bold, italic, fontName, fontHeight, fontColor, underline, strikeout)) {
       return null;
     }
-    return new ExcelCellFont(bold, italic, fontName, fontHeight, fontColor, underline, strikeout);
+    return new RunFontPatch(bold, italic, fontName, fontHeight, fontColor, underline, strikeout);
   }
 
   private static Boolean readBold(CTRPrElt properties) {
@@ -130,9 +127,9 @@ final class ExcelRichTextSupport {
         java.math.BigDecimal.valueOf(properties.getSzArray(0).getVal()));
   }
 
-  private static String readFontColor(XSSFWorkbook workbook, CTRPrElt properties) {
+  private static ExcelColorSnapshot readFontColor(XSSFWorkbook workbook, CTRPrElt properties) {
     return properties.sizeOfColorArray() > 0
-        ? toRgbHex(workbook, properties.getColorArray(0))
+        ? ExcelColorSnapshotSupport.snapshot(workbook, properties.getColorArray(0))
         : null;
   }
 
@@ -150,7 +147,7 @@ final class ExcelRichTextSupport {
       Boolean italic,
       String fontName,
       ExcelFontHeight fontHeight,
-      String fontColor,
+      ExcelColorSnapshot fontColor,
       Boolean underline,
       Boolean strikeout) {
     return bold == null
@@ -178,12 +175,13 @@ final class ExcelRichTextSupport {
     supplier.get().setVal(value);
   }
 
-  private static String toRgbHex(XSSFWorkbook workbook, CTColor color) {
-    XSSFColor xssfColor = XSSFColor.from(color, workbook.getStylesSource().getIndexedColors());
-    ThemesTable themes = workbook.getStylesSource().getTheme();
-    if (themes != null) {
-      themes.inheritFromThemeAsRequired(xssfColor);
-    }
-    return ExcelRgbColorSupport.toRgbHex(xssfColor);
-  }
+  /** Partial font override captured from one rich-text run. */
+  private record RunFontPatch(
+      Boolean bold,
+      Boolean italic,
+      String fontName,
+      ExcelFontHeight fontHeight,
+      ExcelColorSnapshot fontColor,
+      Boolean underline,
+      Boolean strikeout) {}
 }

@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.34.0"
+version: "0.35.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-04-11"
 route:
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 35 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 36 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 9 |
 | `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 18 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 73 total across harnesses |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 74 total across harnesses |
 
 ---
 
@@ -45,6 +45,8 @@ What it asserts:
 - no unexpected crash during parsing
 - valid payloads produce a non-null `GridGrindRequest`
 - invalid JSON and invalid request shapes are classified as expected-invalid outcomes
+- promoted public examples continue to parse with their real defaulted-field contract, such as
+  `SET_TABLE` requests that omit `showTotalsRow`
 
 Telemetry signals:
 - iteration count
@@ -180,8 +182,9 @@ These tests are not fuzz harnesses. They protect the Jazzer infrastructure itsel
 Committed custom seeds currently in source control. This list is exhaustive and should match the
 checked-in `*Inputs` directories exactly.
 
-### `protocol-request` (35)
+### `protocol-request` (36)
 
+- `advanced_readback_request.json`
 - `budget_request.json`
 - `clear_on_empty_cells.json`
 - `conditional_formatting_request.json`
@@ -290,6 +293,9 @@ The current Jazzer layer is strongest at:
   verified binary workflow seeds
 - validation-aware request and round-trip coverage for the data-validation authoring family
 - validation-aware request and round-trip coverage for the table and autofilter authoring family
+- readable public example coverage for the advanced readback contract, including workbook
+  protection, rich comments, advanced print setup, autofilter criteria or sort state, and table
+  metadata
 - explicit regression coverage for workbook-view invariants such as rejecting deletion of the
   last visible sheet
 - normalized local-file hyperlink path semantics in request seeds and `.xlsx` round-trip

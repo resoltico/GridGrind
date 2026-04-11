@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.Objects;
+import java.util.stream.IntStream;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Footer;
 import org.apache.poi.ss.usermodel.Header;
@@ -50,6 +51,31 @@ final class ExcelPrintLayoutController {
         repeatingColumns(sheet),
         headerFooterText(sheet.getHeader()),
         headerFooterText(sheet.getFooter()));
+  }
+
+  /** Returns the full factual print-layout snapshot currently stored for the provided sheet. */
+  ExcelPrintLayoutSnapshot printLayoutSnapshot(XSSFSheet sheet) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return new ExcelPrintLayoutSnapshot(
+        printLayout(sheet),
+        new ExcelPrintSetupSnapshot(
+            new ExcelPrintMarginsSnapshot(
+                sheet.getMargin(XSSFSheet.LeftMargin),
+                sheet.getMargin(XSSFSheet.RightMargin),
+                sheet.getMargin(XSSFSheet.TopMargin),
+                sheet.getMargin(XSSFSheet.BottomMargin),
+                sheet.getMargin(XSSFSheet.HeaderMargin),
+                sheet.getMargin(XSSFSheet.FooterMargin)),
+            sheet.getHorizontallyCenter(),
+            sheet.getVerticallyCenter(),
+            sheet.getPrintSetup().getPaperSize(),
+            sheet.getPrintSetup().getDraft(),
+            sheet.getPrintSetup().getNoColor(),
+            sheet.getPrintSetup().getCopies(),
+            sheet.getPrintSetup().getUsePage(),
+            sheet.getPrintSetup().getPageStart(),
+            IntStream.of(sheet.getRowBreaks()).boxed().toList(),
+            IntStream.of(sheet.getColumnBreaks()).boxed().toList()));
   }
 
   private static void applyPrintArea(XSSFSheet sheet, ExcelPrintLayout.Area printArea) {

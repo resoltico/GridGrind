@@ -358,7 +358,8 @@ class ExcelSheetTest {
       assertEquals(220, styledValue.style().font().fontHeight().twips());
       assertFalse(styledValue.style().font().underline());
       assertFalse(styledValue.style().font().strikeout());
-      assertEquals("#000000", styledValue.style().font().fontColor());
+      assertEquals(
+          new ExcelColorSnapshot(null, null, 8, null), styledValue.style().font().fontColor());
       assertNull(styledValue.style().fill().foregroundColor());
       assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().top().style());
       assertEquals(ExcelBorderStyle.NONE, styledValue.style().border().right().style());
@@ -381,7 +382,7 @@ class ExcelSheetTest {
       assertEquals(ExcelVerticalAlignment.BOTTOM, cleared.style().alignment().verticalAlignment());
       assertEquals("Calibri", cleared.style().font().fontName());
       assertEquals(220, cleared.style().font().fontHeight().twips());
-      assertEquals("#000000", cleared.style().font().fontColor());
+      assertEquals(new ExcelColorSnapshot(null, null, 8, null), cleared.style().font().fontColor());
       assertFalse(cleared.style().font().underline());
       assertFalse(cleared.style().font().strikeout());
       assertNull(cleared.style().fill().foregroundColor());
@@ -457,10 +458,10 @@ class ExcelSheetTest {
       assertEquals(ExcelVerticalAlignment.TOP, styled.style().alignment().verticalAlignment());
       assertEquals("Aptos", styled.style().font().fontName());
       assertEquals(280, styled.style().font().fontHeight().twips());
-      assertEquals("#1F4E78", styled.style().font().fontColor());
+      assertEquals(rgb("#1F4E78"), styled.style().font().fontColor());
       assertTrue(styled.style().font().underline());
       assertTrue(styled.style().font().strikeout());
-      assertEquals("#FFF2CC", styled.style().fill().foregroundColor());
+      assertEquals(rgb("#FFF2CC"), styled.style().fill().foregroundColor());
       assertEquals(ExcelBorderStyle.THIN, styled.style().border().top().style());
       assertEquals(ExcelBorderStyle.DOUBLE, styled.style().border().right().style());
       assertEquals(ExcelBorderStyle.THIN, styled.style().border().bottom().style());
@@ -486,7 +487,7 @@ class ExcelSheetTest {
           snapshot.metadata().hyperlink().orElseThrow());
       assertEquals(
           new ExcelComment("Review", "GridGrind", true),
-          snapshot.metadata().comment().orElseThrow());
+          snapshot.metadata().comment().orElseThrow().toPlainComment());
 
       List<ExcelPreviewRow> preview = sheet.preview(1, 1);
       assertEquals(1, preview.size());
@@ -680,7 +681,7 @@ class ExcelSheetTest {
           sheet.snapshotCell("A4").metadata().hyperlink().orElseThrow());
       assertEquals(
           new ExcelComment("Note", "GridGrind", false),
-          sheet.snapshotCell("B5").metadata().comment().orElseThrow());
+          sheet.snapshotCell("B5").metadata().comment().orElseThrow().toPlainComment());
     }
   }
 
@@ -708,7 +709,7 @@ class ExcelSheetTest {
           (ExcelCellSnapshot.TextSnapshot)
               sheet.setCell("A1", ExcelCellValue.text("Quarterly report")).snapshotCell("A1");
       assertEquals("Quarterly report", textSnapshot.stringValue());
-      assertEquals("#AABBCC", textSnapshot.style().fill().foregroundColor());
+      assertEquals(rgb("#AABBCC"), textSnapshot.style().fill().foregroundColor());
       assertEquals(ExcelBorderStyle.THIN, textSnapshot.style().border().top().style());
       assertEquals(
           ExcelHorizontalAlignment.CENTER, textSnapshot.style().alignment().horizontalAlignment());
@@ -717,19 +718,19 @@ class ExcelSheetTest {
           textSnapshot.metadata().hyperlink().orElseThrow());
       assertEquals(
           new ExcelComment("Review", "GridGrind", false),
-          textSnapshot.metadata().comment().orElseThrow());
+          textSnapshot.metadata().comment().orElseThrow().toPlainComment());
 
       ExcelCellSnapshot.BlankSnapshot blankSnapshot =
           (ExcelCellSnapshot.BlankSnapshot)
               sheet.setCell("A1", ExcelCellValue.blank()).snapshotCell("A1");
-      assertEquals("#AABBCC", blankSnapshot.style().fill().foregroundColor());
+      assertEquals(rgb("#AABBCC"), blankSnapshot.style().fill().foregroundColor());
       assertEquals(ExcelBorderStyle.THIN, blankSnapshot.style().border().top().style());
       assertEquals(
           new ExcelHyperlink.Url("https://example.com/report"),
           blankSnapshot.metadata().hyperlink().orElseThrow());
       assertEquals(
           new ExcelComment("Review", "GridGrind", false),
-          blankSnapshot.metadata().comment().orElseThrow());
+          blankSnapshot.metadata().comment().orElseThrow().toPlainComment());
     }
   }
 
@@ -763,7 +764,7 @@ class ExcelSheetTest {
                   .snapshotCell("B1");
 
       assertEquals("yyyy-mm-dd", dateSnapshot.style().numberFormat());
-      assertEquals("#DDEBF7", dateSnapshot.style().fill().foregroundColor());
+      assertEquals(rgb("#DDEBF7"), dateSnapshot.style().fill().foregroundColor());
       assertTrue(dateSnapshot.style().font().bold());
       assertTrue(dateSnapshot.style().alignment().wrapText());
       assertEquals(
@@ -771,7 +772,7 @@ class ExcelSheetTest {
       assertEquals(ExcelBorderStyle.DOUBLE, dateSnapshot.style().border().right().style());
 
       assertEquals("yyyy-mm-dd hh:mm:ss", dateTimeSnapshot.style().numberFormat());
-      assertEquals("#DDEBF7", dateTimeSnapshot.style().fill().foregroundColor());
+      assertEquals(rgb("#DDEBF7"), dateTimeSnapshot.style().fill().foregroundColor());
       assertTrue(dateTimeSnapshot.style().font().bold());
       assertTrue(dateTimeSnapshot.style().alignment().wrapText());
       assertEquals(
@@ -821,7 +822,7 @@ class ExcelSheetTest {
       assertEquals("Quarterly", firstRun.text());
       assertEquals("Aptos", firstRun.font().fontName());
       assertEquals(new ExcelFontHeight(260), firstRun.font().fontHeight());
-      assertEquals("#112233", firstRun.font().fontColor());
+      assertEquals(rgb("#112233"), firstRun.font().fontColor());
       assertFalse(firstRun.font().bold());
       assertTrue(firstRun.font().italic());
 
@@ -829,7 +830,7 @@ class ExcelSheetTest {
       assertEquals(" Report", secondRun.text());
       assertEquals("Aptos", secondRun.font().fontName());
       assertEquals(new ExcelFontHeight(260), secondRun.font().fontHeight());
-      assertEquals("#FF0000", secondRun.font().fontColor());
+      assertEquals(rgb("#FF0000"), secondRun.font().fontColor());
       assertTrue(secondRun.font().bold());
       assertTrue(secondRun.font().italic());
     }
@@ -870,13 +871,13 @@ class ExcelSheetTest {
       ExcelCellSnapshot.BlankSnapshot untouchedStyledCell =
           (ExcelCellSnapshot.BlankSnapshot) sheet.snapshotCell("A2");
 
-      assertEquals("#CDCDCD", firstCell.style().fill().foregroundColor());
-      assertEquals("#A3A3A3", firstCell.style().font().fontColor());
+      assertEquals(rgb("#CDCDCD"), firstCell.style().fill().foregroundColor());
+      assertEquals(rgb("#A3A3A3"), firstCell.style().font().fontColor());
       assertTrue(firstCell.style().font().strikeout());
       assertEquals(ExcelBorderStyle.DASH_DOT, firstCell.style().border().top().style());
-      assertEquals("#CDCDCD", secondCell.style().fill().foregroundColor());
+      assertEquals(rgb("#CDCDCD"), secondCell.style().fill().foregroundColor());
       assertEquals(ExcelBorderStyle.DASH_DOT, secondCell.style().border().top().style());
-      assertEquals("#CDCDCD", untouchedStyledCell.style().fill().foregroundColor());
+      assertEquals(rgb("#CDCDCD"), untouchedStyledCell.style().fill().foregroundColor());
       assertEquals(ExcelBorderStyle.DASH_DOT, untouchedStyledCell.style().border().top().style());
     }
   }
@@ -919,7 +920,7 @@ class ExcelSheetTest {
 
       assertEquals("yyyy-mm-dd hh:mm:ss", appendedFirstCell.style().numberFormat());
       assertEquals("yyyy-mm-dd hh:mm:ss", appendedSecondCell.style().numberFormat());
-      assertEquals("#603A79", appendedFirstCell.style().fill().foregroundColor());
+      assertEquals(rgb("#603A79"), appendedFirstCell.style().fill().foregroundColor());
       assertTrue(appendedFirstCell.style().font().bold());
       assertTrue(appendedFirstCell.style().alignment().wrapText());
       assertEquals(
@@ -1416,6 +1417,90 @@ class ExcelSheetTest {
   }
 
   @Test
+  void commentSnapshotPreservesRichRunsAndAnchorMetadata() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      Row row = poiSheet.createRow(0);
+      Cell cell = row.createCell(0);
+      Comment comment = emptyComment(poiWorkbook, poiSheet);
+      org.apache.poi.xssf.usermodel.XSSFRichTextString richText =
+          new org.apache.poi.xssf.usermodel.XSSFRichTextString();
+      richText.append("Hi ");
+      var accentFont = poiWorkbook.createFont();
+      accentFont.setBold(true);
+      richText.append("there", accentFont);
+      comment.setString(richText);
+      comment.setAuthor("GridGrind");
+      comment.setVisible(true);
+      cell.setCellComment(comment);
+
+      ExcelCommentSnapshot snapshot = ExcelSheet.commentSnapshot(cell);
+
+      assertEquals("Hi there", snapshot.text());
+      assertEquals("GridGrind", snapshot.author());
+      assertEquals(new ExcelCommentAnchorSnapshot(0, 0, 3, 3), snapshot.anchor());
+      assertNotNull(snapshot.runs());
+      assertEquals(2, snapshot.runs().runs().size());
+      assertEquals("Hi ", snapshot.runs().runs().get(0).text());
+      assertEquals("there", snapshot.runs().runs().get(1).text());
+    }
+  }
+
+  @Test
+  void commentSnapshotReturnsNullForMissingIncompleteAndNonXssfComments() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      Row row = poiSheet.createRow(0);
+      Cell blankCell = row.createCell(0);
+      Cell emptyStringCell = row.createCell(1);
+      emptyStringCell.setCellComment(emptyComment(poiWorkbook, poiSheet));
+      Cell blankAuthorCell = row.createCell(2);
+      blankAuthorCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", " ", false));
+      Cell validCommentCell = row.createCell(3);
+      validCommentCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", "GridGrind", true));
+      Cell blankTextCell = row.createCell(4);
+      blankTextCell.setCellComment(comment(poiWorkbook, poiSheet, " ", "GridGrind", false));
+      Cell nullAuthorCell = row.createCell(5);
+      nullAuthorCell.setCellComment(comment(poiWorkbook, poiSheet, "Review", null, false));
+
+      assertNull(ExcelSheet.commentSnapshot((Cell) null));
+      assertNull(ExcelSheet.commentSnapshot((Comment) null));
+      assertNull(ExcelSheet.commentSnapshot(blankCell));
+      assertNull(ExcelSheet.commentSnapshot(emptyStringCell));
+      assertNull(ExcelSheet.commentSnapshot(blankAuthorCell.getCellComment()));
+      assertNull(ExcelSheet.commentSnapshot(blankTextCell.getCellComment()));
+      assertNull(ExcelSheet.commentSnapshot(nullAuthorCell.getCellComment()));
+
+      ExcelCommentSnapshot directSnapshot =
+          ExcelSheet.commentSnapshot(validCommentCell.getCellComment());
+      assertEquals("Review", directSnapshot.text());
+      assertEquals("GridGrind", directSnapshot.author());
+      assertTrue(directSnapshot.visible());
+      assertNull(directSnapshot.runs());
+
+      ExcelCommentSnapshot noAnchorSnapshot =
+          ExcelSheet.commentSnapshot(
+              commentWithoutAnchor(poiSheet, validCommentCell.getCellComment()));
+      assertEquals("Review", noAnchorSnapshot.text());
+      assertNull(noAnchorSnapshot.anchor());
+    }
+
+    try (var poiWorkbook = new org.apache.poi.hssf.usermodel.HSSFWorkbook()) {
+      var poiSheet = poiWorkbook.createSheet("Legacy");
+      var row = poiSheet.createRow(0);
+      var cell = row.createCell(0);
+      var drawing = poiSheet.createDrawingPatriarch();
+      var comment = drawing.createCellComment(new org.apache.poi.hssf.usermodel.HSSFClientAnchor());
+      comment.setString(new org.apache.poi.hssf.usermodel.HSSFRichTextString("Legacy"));
+      comment.setAuthor("GridGrind");
+      cell.setCellComment(comment);
+
+      assertNull(ExcelSheet.commentSnapshot(comment));
+      assertNull(ExcelSheet.commentSnapshot(cell));
+    }
+  }
+
+  @Test
   void derivesFormulaHealthFindingsAcrossExternalVolatileErrorAndFailureCases() throws Exception {
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       Sheet poiSheet = poiWorkbook.createSheet("Budget");
@@ -1844,6 +1929,24 @@ class ExcelSheetTest {
     anchor.setCol1(0);
     anchor.setCol2(3);
     return sheet.createDrawingPatriarch().createCellComment(anchor);
+  }
+
+  private static Comment commentWithoutAnchor(Sheet sheet, Comment comment) {
+    var commentsTable = new org.apache.poi.xssf.model.CommentsTable();
+    commentsTable.setSheet(sheet);
+    var anchorless =
+        new org.apache.poi.xssf.usermodel.XSSFComment(
+            commentsTable,
+            commentsTable.newComment(new org.apache.poi.ss.util.CellAddress("A1")),
+            null);
+    anchorless.setString(comment.getString());
+    anchorless.setAuthor(comment.getAuthor());
+    anchorless.setVisible(comment.isVisible());
+    return anchorless;
+  }
+
+  private static ExcelColorSnapshot rgb(String rgb) {
+    return new ExcelColorSnapshot(rgb);
   }
 
   @Test

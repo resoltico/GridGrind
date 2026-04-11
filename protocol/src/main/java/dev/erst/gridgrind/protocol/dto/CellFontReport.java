@@ -8,12 +8,11 @@ public record CellFontReport(
     boolean italic,
     String fontName,
     FontHeightReport fontHeight,
-    String fontColor,
+    CellColorReport fontColor,
     boolean underline,
     boolean strikeout) {
   public CellFontReport {
     Objects.requireNonNull(fontName, "fontName must not be null");
     Objects.requireNonNull(fontHeight, "fontHeight must not be null");
-    fontColor = ProtocolRgbColorSupport.normalizeRgbHex(fontColor, "fontColor");
   }
 }

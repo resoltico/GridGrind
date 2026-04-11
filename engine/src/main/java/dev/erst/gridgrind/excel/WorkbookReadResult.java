@@ -19,6 +19,7 @@ public sealed interface WorkbookReadResult
   /** Marker for fact-only workbook reads. */
   sealed interface Introspection extends WorkbookReadResult
       permits WorkbookSummaryResult,
+          WorkbookProtectionResult,
           NamedRangesResult,
           SheetSummaryResult,
           CellsResult,
@@ -53,6 +54,15 @@ public sealed interface WorkbookReadResult
     public WorkbookSummaryResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(workbook, "workbook must not be null");
+    }
+  }
+
+  /** Returns workbook-level protection facts. */
+  record WorkbookProtectionResult(String requestId, ExcelWorkbookProtectionSnapshot protection)
+      implements Introspection {
+    public WorkbookProtectionResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(protection, "protection must not be null");
     }
   }
 
@@ -130,7 +140,7 @@ public sealed interface WorkbookReadResult
   }
 
   /** Returns supported print-layout metadata for one sheet. */
-  record PrintLayoutResult(String requestId, String sheetName, ExcelPrintLayout printLayout)
+  record PrintLayoutResult(String requestId, String sheetName, ExcelPrintLayoutSnapshot printLayout)
       implements Introspection {
     public PrintLayoutResult {
       requestId = requireNonBlank(requestId, "requestId");
@@ -432,7 +442,7 @@ public sealed interface WorkbookReadResult
   }
 
   /** Comment metadata associated with one concrete cell address. */
-  record CellComment(String address, ExcelComment comment) {
+  record CellComment(String address, ExcelCommentSnapshot comment) {
     public CellComment {
       address = requireNonBlank(address, "address");
       Objects.requireNonNull(comment, "comment must not be null");

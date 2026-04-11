@@ -11,8 +11,47 @@ public record TableEntryReport(
     int headerRowCount,
     int totalsRowCount,
     List<String> columnNames,
+    List<TableColumnReport> columns,
     TableStyleReport style,
-    boolean hasAutofilter) {
+    boolean hasAutofilter,
+    String comment,
+    boolean published,
+    boolean insertRow,
+    boolean insertRowShift,
+    String headerRowCellStyle,
+    String dataCellStyle,
+    String totalsRowCellStyle) {
+  /** Creates a table report with defaulted per-column metadata and optional flags. */
+  public TableEntryReport(
+      String name,
+      String sheetName,
+      String range,
+      int headerRowCount,
+      int totalsRowCount,
+      List<String> columnNames,
+      TableStyleReport style,
+      boolean hasAutofilter) {
+    this(
+        name,
+        sheetName,
+        range,
+        headerRowCount,
+        totalsRowCount,
+        columnNames,
+        columnNames.stream()
+            .map(columnName -> new TableColumnReport(0L, columnName, "", "", "", ""))
+            .toList(),
+        style,
+        hasAutofilter,
+        "",
+        false,
+        false,
+        false,
+        "",
+        "",
+        "");
+  }
+
   public TableEntryReport {
     Objects.requireNonNull(name, "name must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -31,6 +70,15 @@ public record TableEntryReport(
     for (String columnName : columnNames) {
       Objects.requireNonNull(columnName, "columnNames must not contain nulls");
     }
+    Objects.requireNonNull(columns, "columns must not be null");
+    columns = List.copyOf(columns);
+    for (TableColumnReport column : columns) {
+      Objects.requireNonNull(column, "columns must not contain nulls");
+    }
+    comment = comment == null ? "" : comment;
+    headerRowCellStyle = headerRowCellStyle == null ? "" : headerRowCellStyle;
+    dataCellStyle = dataCellStyle == null ? "" : dataCellStyle;
+    totalsRowCellStyle = totalsRowCellStyle == null ? "" : totalsRowCellStyle;
     Objects.requireNonNull(style, "style must not be null");
   }
 }

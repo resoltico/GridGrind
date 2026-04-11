@@ -1,12 +1,14 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTable;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTableColumn;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTableStyleInfo;
 
 /** Shared catalog and snapshot helpers for factual workbook table metadata. */
@@ -73,8 +75,18 @@ final class ExcelTableCatalogSupport {
         table.getColumns().stream()
             .map(column -> Objects.requireNonNullElse(column.getName(), ""))
             .toList(),
+        Arrays.stream(ctTable.getTableColumns().getTableColumnArray())
+            .map(ExcelTableCatalogSupport::toColumnSnapshot)
+            .toList(),
         toStyleSnapshot(table),
-        ctTable.isSetAutoFilter());
+        ctTable.isSetAutoFilter(),
+        Objects.requireNonNullElse(ctTable.getComment(), ""),
+        ctTable.getPublished(),
+        ctTable.getInsertRow(),
+        ctTable.getInsertRowShift(),
+        Objects.requireNonNullElse(ctTable.getHeaderRowCellStyle(), ""),
+        Objects.requireNonNullElse(ctTable.getDataCellStyle(), ""),
+        Objects.requireNonNullElse(ctTable.getTotalsRowCellStyle(), ""));
   }
 
   /** Converts POI table-style metadata into the factual GridGrind snapshot shape. */
@@ -92,5 +104,17 @@ final class ExcelTableCatalogSupport {
         styleInfo.getShowLastColumn(),
         styleInfo.getShowRowStripes(),
         styleInfo.getShowColumnStripes());
+  }
+
+  private static ExcelTableColumnSnapshot toColumnSnapshot(CTTableColumn column) {
+    return new ExcelTableColumnSnapshot(
+        column.getId(),
+        Objects.requireNonNullElse(column.getName(), ""),
+        Objects.requireNonNullElse(column.getUniqueName(), ""),
+        Objects.requireNonNullElse(column.getTotalsRowLabel(), ""),
+        column.isSetTotalsRowFunction() ? column.getTotalsRowFunction().toString() : "",
+        column.isSetCalculatedColumnFormula()
+            ? Objects.requireNonNullElse(column.getCalculatedColumnFormula().getStringValue(), "")
+            : "");
   }
 }

@@ -1,9 +1,11 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import javax.xml.namespace.QName;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
 import org.apache.poi.ss.usermodel.DataValidationHelper;
@@ -79,9 +81,13 @@ final class ExcelDataValidationController {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
 
+    CTDataValidations dataValidations = sheet.getCTWorksheet().getDataValidations();
+    if (dataValidations == null) {
+      return List.of();
+    }
     List<ExcelDataValidationSnapshot> snapshots = new ArrayList<>();
-    for (XSSFDataValidation validation : sheet.getDataValidations()) {
-      List<String> ranges = ranges(validation.getRegions());
+    for (CTDataValidation validation : dataValidations.getDataValidationArray()) {
+      List<String> ranges = ExcelSqrefSupport.normalizedSqref(validation.getSqref());
       if (!matchesSelection(ranges, selection)) {
         continue;
       }
@@ -93,7 +99,8 @@ final class ExcelDataValidationController {
   /** Returns the number of raw data-validation structures currently present on the sheet. */
   int dataValidationCount(XSSFSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    return sheet.getDataValidations().size();
+    CTDataValidations dataValidations = sheet.getCTWorksheet().getDataValidations();
+    return dataValidations == null ? 0 : dataValidations.sizeOfDataValidationArray();
   }
 
   /** Returns derived findings for data-validation health on this sheet. */
@@ -110,15 +117,7 @@ final class ExcelDataValidationController {
         case ExcelDataValidationSnapshot.Supported supported ->
             findings.addAll(supportedFindings(sheetName, supported));
         case ExcelDataValidationSnapshot.Unsupported unsupported ->
-            findings.add(
-                new WorkbookAnalysis.AnalysisFinding(
-                    WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
-                    WorkbookAnalysis.AnalysisSeverity.WARNING,
-                    "Unsupported data-validation rule",
-                    unsupported.detail(),
-                    new WorkbookAnalysis.AnalysisLocation.Range(
-                        sheetName, unsupported.ranges().getFirst()),
-                    unsupported.ranges()));
+            findings.add(unsupportedFinding(sheetName, unsupported));
       }
     }
     findings.addAll(overlapFindings(sheetName, snapshots));
@@ -266,14 +265,6 @@ final class ExcelDataValidationController {
     };
   }
 
-  private static List<String> ranges(CellRangeAddressList regions) {
-    List<String> ranges = new ArrayList<>();
-    for (CellRangeAddress region : regions.getCellRangeAddresses()) {
-      ranges.add(region.formatAsString());
-    }
-    return List.copyOf(ranges);
-  }
-
   private static boolean matchesSelection(List<String> ranges, ExcelRangeSelection selection) {
     return switch (selection) {
       case ExcelRangeSelection.All _ -> true;
@@ -316,6 +307,30 @@ final class ExcelDataValidationController {
     };
   }
 
+  static ExcelDataValidationSnapshot toSnapshot(CTDataValidation validation, List<String> ranges) {
+    Objects.requireNonNull(validation, "validation must not be null");
+    Objects.requireNonNull(ranges, "ranges must not be null");
+
+    String type = Objects.requireNonNullElse(rawAttribute(validation, "type"), "");
+    return switch (type.toLowerCase(Locale.ROOT)) {
+      case "none", "" ->
+          new ExcelDataValidationSnapshot.Unsupported(
+              ranges, "ANY", "Excel 'any value' validation is not modeled by GridGrind.");
+      case "list" -> listSnapshot(validation, ranges);
+      case "whole" -> comparisonSnapshot(validation, ranges, ComparisonFamily.INTEGER);
+      case "decimal" -> comparisonSnapshot(validation, ranges, ComparisonFamily.DECIMAL);
+      case "date" -> comparisonSnapshot(validation, ranges, ComparisonFamily.DATE);
+      case "time" -> comparisonSnapshot(validation, ranges, ComparisonFamily.TIME);
+      case "textlength" -> comparisonSnapshot(validation, ranges, ComparisonFamily.TEXT_LENGTH);
+      case "custom" -> customFormulaSnapshot(validation, ranges);
+      default ->
+          new ExcelDataValidationSnapshot.Unsupported(
+              ranges,
+              "UNKNOWN",
+              "Unsupported data-validation type: " + Objects.requireNonNullElse(type, "UNKNOWN"));
+    };
+  }
+
   private static ExcelDataValidationSnapshot listSnapshot(
       XSSFDataValidation validation, List<String> ranges) {
     DataValidationConstraint constraint = validation.getValidationConstraint();
@@ -323,7 +338,7 @@ final class ExcelDataValidationController {
     if (explicitValues != null) {
       if (explicitValues.length == 0) {
         return new ExcelDataValidationSnapshot.Unsupported(
-            ranges, "INVALID_EXPLICIT_LIST", "Explicit list has no values.");
+            ranges, "EMPTY_EXPLICIT_LIST", "Explicit list has no values.");
       }
       return new ExcelDataValidationSnapshot.Supported(
           ranges,
@@ -351,6 +366,36 @@ final class ExcelDataValidationController {
             errorAlert(validation)));
   }
 
+  private static ExcelDataValidationSnapshot listSnapshot(
+      CTDataValidation validation, List<String> ranges) {
+    String formula1 = validation.isSetFormula1() ? validation.getFormula1() : "";
+    if ("\"\"".equals(formula1)) {
+      return new ExcelDataValidationSnapshot.Unsupported(
+          ranges, "EMPTY_EXPLICIT_LIST", "Explicit list has no values.");
+    }
+    if (formula1.isBlank()) {
+      return new ExcelDataValidationSnapshot.Unsupported(
+          ranges,
+          "MISSING_FORMULA",
+          "List validation is missing both explicit values and formula1.");
+    }
+    ExcelDataValidationRule rule;
+    if (formula1.length() >= 2 && formula1.startsWith("\"") && formula1.endsWith("\"")) {
+      String rawValues = formula1.substring(1, formula1.length() - 1);
+      rule = new ExcelDataValidationRule.ExplicitList(Arrays.asList(rawValues.split(",")));
+    } else {
+      rule = new ExcelDataValidationRule.FormulaList(formula1);
+    }
+    return new ExcelDataValidationSnapshot.Supported(
+        ranges,
+        new ExcelDataValidationDefinition(
+            rule,
+            validation.isSetAllowBlank() && validation.getAllowBlank(),
+            suppressDropDownArrow(validation),
+            prompt(validation),
+            errorAlert(validation)));
+  }
+
   private static ExcelDataValidationSnapshot comparisonSnapshot(
       XSSFDataValidation validation,
       List<String> ranges,
@@ -370,19 +415,20 @@ final class ExcelDataValidationController {
           "UNKNOWN_OPERATOR",
           family.label + " validation uses an unsupported comparison operator.");
     }
+    String formula2 = constraint.getFormula2();
+    if (requiresUpperBound(operator) && (formula2 == null || formula2.isBlank())) {
+      return new ExcelDataValidationSnapshot.Unsupported(
+          ranges,
+          "MISSING_FORMULA",
+          family.label + " validation is missing formula2 for " + operatorLabel(operator) + ".");
+    }
     ExcelDataValidationRule rule =
         switch (family) {
-          case INTEGER ->
-              new ExcelDataValidationRule.WholeNumber(operator, formula1, constraint.getFormula2());
-          case DECIMAL ->
-              new ExcelDataValidationRule.DecimalNumber(
-                  operator, formula1, constraint.getFormula2());
-          case DATE ->
-              new ExcelDataValidationRule.DateRule(operator, formula1, constraint.getFormula2());
-          case TIME ->
-              new ExcelDataValidationRule.TimeRule(operator, formula1, constraint.getFormula2());
-          case TEXT_LENGTH ->
-              new ExcelDataValidationRule.TextLength(operator, formula1, constraint.getFormula2());
+          case INTEGER -> new ExcelDataValidationRule.WholeNumber(operator, formula1, formula2);
+          case DECIMAL -> new ExcelDataValidationRule.DecimalNumber(operator, formula1, formula2);
+          case DATE -> new ExcelDataValidationRule.DateRule(operator, formula1, formula2);
+          case TIME -> new ExcelDataValidationRule.TimeRule(operator, formula1, formula2);
+          case TEXT_LENGTH -> new ExcelDataValidationRule.TextLength(operator, formula1, formula2);
         };
     return new ExcelDataValidationSnapshot.Supported(
         ranges,
@@ -390,6 +436,47 @@ final class ExcelDataValidationController {
             rule,
             validation.getEmptyCellAllowed(),
             validation.getSuppressDropDownArrow(),
+            prompt(validation),
+            errorAlert(validation)));
+  }
+
+  private static ExcelDataValidationSnapshot comparisonSnapshot(
+      CTDataValidation validation, List<String> ranges, ComparisonFamily family) {
+    String formula1 = validation.isSetFormula1() ? validation.getFormula1() : "";
+    if (formula1.isBlank()) {
+      return new ExcelDataValidationSnapshot.Unsupported(
+          ranges, "MISSING_FORMULA", family.label + " validation is missing formula1.");
+    }
+    ExcelComparisonOperator operator;
+    try {
+      operator = comparisonOperator(validation);
+    } catch (IllegalArgumentException exception) {
+      return new ExcelDataValidationSnapshot.Unsupported(
+          ranges,
+          "UNKNOWN_OPERATOR",
+          family.label + " validation uses an unsupported comparison operator.");
+    }
+    String formula2 = validation.isSetFormula2() ? validation.getFormula2() : null;
+    if (requiresUpperBound(operator) && (formula2 == null || formula2.isBlank())) {
+      return new ExcelDataValidationSnapshot.Unsupported(
+          ranges,
+          "MISSING_FORMULA",
+          family.label + " validation is missing formula2 for " + operatorLabel(operator) + ".");
+    }
+    ExcelDataValidationRule rule =
+        switch (family) {
+          case INTEGER -> new ExcelDataValidationRule.WholeNumber(operator, formula1, formula2);
+          case DECIMAL -> new ExcelDataValidationRule.DecimalNumber(operator, formula1, formula2);
+          case DATE -> new ExcelDataValidationRule.DateRule(operator, formula1, formula2);
+          case TIME -> new ExcelDataValidationRule.TimeRule(operator, formula1, formula2);
+          case TEXT_LENGTH -> new ExcelDataValidationRule.TextLength(operator, formula1, formula2);
+        };
+    return new ExcelDataValidationSnapshot.Supported(
+        ranges,
+        new ExcelDataValidationDefinition(
+            rule,
+            validation.isSetAllowBlank() && validation.getAllowBlank(),
+            suppressDropDownArrow(validation),
             prompt(validation),
             errorAlert(validation)));
   }
@@ -411,7 +498,24 @@ final class ExcelDataValidationController {
             errorAlert(validation)));
   }
 
-  private static ExcelDataValidationPrompt prompt(XSSFDataValidation validation) {
+  private static ExcelDataValidationSnapshot customFormulaSnapshot(
+      CTDataValidation validation, List<String> ranges) {
+    String formula1 = validation.isSetFormula1() ? validation.getFormula1() : "";
+    if (formula1.isBlank()) {
+      return new ExcelDataValidationSnapshot.Unsupported(
+          ranges, "MISSING_FORMULA", "Custom formula validation is missing formula1.");
+    }
+    return new ExcelDataValidationSnapshot.Supported(
+        ranges,
+        new ExcelDataValidationDefinition(
+            new ExcelDataValidationRule.CustomFormula(formula1),
+            validation.isSetAllowBlank() && validation.getAllowBlank(),
+            suppressDropDownArrow(validation),
+            prompt(validation),
+            errorAlert(validation)));
+  }
+
+  static ExcelDataValidationPrompt prompt(XSSFDataValidation validation) {
     String title = validation.getPromptBoxTitle();
     String text = validation.getPromptBoxText();
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
@@ -420,7 +524,17 @@ final class ExcelDataValidationController {
     return new ExcelDataValidationPrompt(title, text, validation.getShowPromptBox());
   }
 
-  private static ExcelDataValidationErrorAlert errorAlert(XSSFDataValidation validation) {
+  static ExcelDataValidationPrompt prompt(CTDataValidation validation) {
+    String title = validation.isSetPromptTitle() ? validation.getPromptTitle() : null;
+    String text = validation.isSetPrompt() ? validation.getPrompt() : null;
+    if (title == null || title.isBlank() || text == null || text.isBlank()) {
+      return null;
+    }
+    return new ExcelDataValidationPrompt(
+        title, text, validation.isSetShowInputMessage() && validation.getShowInputMessage());
+  }
+
+  static ExcelDataValidationErrorAlert errorAlert(XSSFDataValidation validation) {
     String title = validation.getErrorBoxTitle();
     String text = validation.getErrorBoxText();
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
@@ -431,6 +545,19 @@ final class ExcelDataValidationController {
         title,
         text,
         validation.getShowErrorBox());
+  }
+
+  static ExcelDataValidationErrorAlert errorAlert(CTDataValidation validation) {
+    String title = validation.isSetErrorTitle() ? validation.getErrorTitle() : null;
+    String text = validation.isSetError() ? validation.getError() : null;
+    if (title == null || title.isBlank() || text == null || text.isBlank()) {
+      return null;
+    }
+    return new ExcelDataValidationErrorAlert(
+        errorStyle(validation),
+        title,
+        text,
+        validation.isSetShowErrorMessage() && validation.getShowErrorMessage());
   }
 
   private static List<WorkbookAnalysis.AnalysisFinding> supportedFindings(
@@ -478,6 +605,94 @@ final class ExcelDataValidationController {
               findings, location, customFormula.formula(), "custom validation formula");
     }
     return List.copyOf(findings);
+  }
+
+  private static WorkbookAnalysis.AnalysisFinding unsupportedFinding(
+      String sheetName, ExcelDataValidationSnapshot.Unsupported unsupported) {
+    WorkbookAnalysis.AnalysisLocation.Range location =
+        new WorkbookAnalysis.AnalysisLocation.Range(sheetName, unsupported.ranges().getFirst());
+    return switch (unsupported.kind()) {
+      case "EMPTY_EXPLICIT_LIST" ->
+          new WorkbookAnalysis.AnalysisFinding(
+              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
+              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              "Explicit-list validation is empty",
+              "Explicit-list validation contains no values.",
+              location,
+              unsupported.ranges());
+      case "MISSING_FORMULA", "MALFORMED_RULE" ->
+          new WorkbookAnalysis.AnalysisFinding(
+              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE,
+              WorkbookAnalysis.AnalysisSeverity.ERROR,
+              "Data-validation rule is malformed",
+              unsupported.detail(),
+              location,
+              unsupported.ranges());
+      default ->
+          new WorkbookAnalysis.AnalysisFinding(
+              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
+              WorkbookAnalysis.AnalysisSeverity.WARNING,
+              "Unsupported data-validation rule",
+              unsupported.detail(),
+              location,
+              unsupported.ranges());
+    };
+  }
+
+  static ExcelComparisonOperator comparisonOperator(CTDataValidation validation) {
+    String operator = Objects.requireNonNullElse(rawAttribute(validation, "operator"), "between");
+    return switch (operator) {
+      case "between" -> ExcelComparisonOperator.BETWEEN;
+      case "notBetween" -> ExcelComparisonOperator.NOT_BETWEEN;
+      case "equal" -> ExcelComparisonOperator.NOT_EQUAL;
+      case "notEqual" -> ExcelComparisonOperator.EQUAL;
+      case "greaterThan" -> ExcelComparisonOperator.LESS_THAN;
+      case "lessThan" -> ExcelComparisonOperator.GREATER_THAN;
+      case "greaterThanOrEqual" -> ExcelComparisonOperator.LESS_OR_EQUAL;
+      case "lessThanOrEqual" -> ExcelComparisonOperator.GREATER_OR_EQUAL;
+      default ->
+          throw new IllegalArgumentException("Unsupported raw validation operator: " + operator);
+    };
+  }
+
+  private static boolean suppressDropDownArrow(CTDataValidation validation) {
+    return !validation.isSetShowDropDown() || !validation.getShowDropDown();
+  }
+
+  static ExcelDataValidationErrorStyle errorStyle(CTDataValidation validation) {
+    String errorStyle = Objects.requireNonNullElse(rawAttribute(validation, "errorStyle"), "stop");
+    return switch (errorStyle) {
+      case "stop" -> ExcelDataValidationErrorStyle.STOP;
+      case "warning" -> ExcelDataValidationErrorStyle.WARNING;
+      case "information" -> ExcelDataValidationErrorStyle.INFORMATION;
+      default ->
+          throw new IllegalArgumentException(
+              "Unsupported raw validation error style: " + errorStyle);
+    };
+  }
+
+  private static String rawAttribute(CTDataValidation validation, String attributeName) {
+    try (var cursor = validation.newCursor()) {
+      return cursor.getAttributeText(new QName("", attributeName));
+    }
+  }
+
+  private static boolean requiresUpperBound(ExcelComparisonOperator operator) {
+    return operator == ExcelComparisonOperator.BETWEEN
+        || operator == ExcelComparisonOperator.NOT_BETWEEN;
+  }
+
+  static String operatorLabel(ExcelComparisonOperator operator) {
+    return switch (operator) {
+      case BETWEEN -> "between operator";
+      case NOT_BETWEEN -> "not-between operator";
+      case EQUAL -> "equal operator";
+      case NOT_EQUAL -> "not-equal operator";
+      case GREATER_THAN -> "greater-than operator";
+      case GREATER_OR_EQUAL -> "greater-or-equal operator";
+      case LESS_THAN -> "less-than operator";
+      case LESS_OR_EQUAL -> "less-or-equal operator";
+    };
   }
 
   private static void addBrokenFormulaFindingIfNeeded(

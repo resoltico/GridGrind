@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.34.0"
+version: "0.35.0"
 domain: OPERATIONS
 updated: "2026-04-11"
 route:
@@ -1464,7 +1464,6 @@ table-column metadata converged with the visible header cells.
     "name": "InventoryTable",
     "sheetName": "Inventory",
     "range": "A1:C200",
-    "showTotalsRow": false,
     "style": { "type": "NONE" }
   }
 }
@@ -1503,6 +1502,9 @@ table-column metadata converged with the visible header cells.
 | `range` | Yes | Rectangular A1-style table range. Must include at least a header row plus one data row; with `showTotalsRow=true`, it must include one additional totals row. |
 | `showTotalsRow` | No | Whether the table includes a totals row. Defaults to `false`. |
 | `style` | Yes | Table style definition: `NONE` or `NAMED`. |
+
+Omit `showTotalsRow` when the table has no totals row. Setting `"showTotalsRow": false` is
+accepted but redundant.
 
 Supported table-style variants:
 
@@ -1709,6 +1711,29 @@ Response shapes:
 
 `selectedSheetNames` are returned in workbook order, not request order.
 
+### GET_WORKBOOK_PROTECTION
+
+Returns workbook-level protection facts such as structure, windows, and revisions lock state plus
+whether the workbook stores password hashes for the workbook or revisions protection domains.
+
+```json
+{ "type": "GET_WORKBOOK_PROTECTION", "requestId": "workbook-protection" }
+```
+
+Response shape:
+
+```json
+{
+  "protection": {
+    "structureLocked": false,
+    "windowsLocked": false,
+    "revisionLocked": false,
+    "workbookPasswordHashPresent": false,
+    "revisionsPasswordHashPresent": false
+  }
+}
+```
+
 ### GET_NAMED_RANGES
 
 Returns exact named-range reports selected by workbook-wide or exact-selector input.
@@ -1804,7 +1829,7 @@ common fields:
 | `displayValue` | Formatted string as Excel would render it. |
 | `style` | Nested style snapshot with `numberFormat`, `alignment`, `font`, `fill`, `border`, and `protection`. |
 | `hyperlink` | Optional hyperlink metadata attached at snapshot time. |
-| `comment` | Optional comment metadata attached at snapshot time. |
+| `comment` | Optional comment metadata attached at snapshot time, including plain text, visibility, optional rich-text runs, and optional anchor bounds when present. |
 
 Type-specific value fields (present only on matching `effectiveType`):
 
@@ -1823,6 +1848,15 @@ Type-specific value fields (present only on matching `effectiveType`):
 `FontHeightInput` format which uses a discriminated `{"type": "POINTS", "points": 13}` object.
 Agents that read a font height and want to write it back must use the `FontHeightInput` write
 format, not the read-back shape.
+
+**read-side color and gradient shape:** factual read results use structured color objects rather
+than raw `#RRGGBB` strings. `style.font.fontColor`, `style.fill.foregroundColor`,
+`style.fill.backgroundColor`, and `style.border.*.color` are `CellColorReport` objects with
+`rgb` plus optional `theme`, `indexed`, and `tint` facts when Excel stores them. Gradient fills
+come back under `style.fill.gradient` with `type`, optional geometry (`degree`, `left`, `right`,
+`top`, `bottom`), and ordered `stops` carrying `position` plus structured colors. The write-side
+style contract remains narrower: authored style inputs still accept only `#RRGGBB` colors and do
+not currently write theme, indexed, tint, or gradient semantics.
 
 ### GET_WINDOW
 
@@ -1922,6 +1956,11 @@ Cell-selection payloads use:
 }
 ```
 
+Each returned entry includes the cell `address` plus a `comment` object. `comment.runs` is an
+optional ordered rich-text run list whose text concatenates exactly to `comment.text`.
+`comment.anchor` is optional and, when present, exposes zero-based comment-box bounds as
+`firstColumn`, `firstRow`, `lastColumn`, and `lastRow`.
+
 ### GET_SHEET_LAYOUT
 
 Returns pane state, effective zoom, and per-row or per-column layout facts for one sheet. Row and
@@ -1953,6 +1992,10 @@ Returns the supported print-layout state for one sheet.
   "sheetName": "Inventory"
 }
 ```
+
+The returned `printLayout.setup` object carries advanced page-setup facts: `margins`,
+`horizontallyCentered`, `verticallyCentered`, `paperSize`, `draft`, `blackAndWhite`, `copies`,
+`useFirstPageNumber`, `firstPageNumber`, and explicit `rowBreaks` plus `columnBreaks`.
 
 ### GET_DATA_VALIDATIONS
 
@@ -2006,6 +2049,9 @@ stored ranges plus an ordered rule list. Rule reports may be one of:
 - `ICON_SET_RULE`
 - `UNSUPPORTED_RULE`
 
+Unreadable raw OOXML rule-family metadata degrades to `UNSUPPORTED_RULE` so malformed loaded
+workbooks can still be inspected instead of aborting the read.
+
 ```json
 {
   "type": "GET_CONDITIONAL_FORMATTING",
@@ -2042,6 +2088,22 @@ Returns factual autofilter metadata for one sheet. The result may include:
 }
 ```
 
+Each returned autofilter includes its stored `range`, persisted `filterColumns`, and optional
+`sortState`. `filterColumns[*].criterion` is one of:
+
+- `VALUES`
+- `CUSTOM`
+- `DYNAMIC`
+- `TOP10`
+- `COLOR`
+- `ICON`
+
+When present, `sortState` carries `range`, `caseSensitive`, `columnSort`, `sortMethod`, and the
+ordered `conditions` Excel stores for the autofilter.
+
+GridGrind reports persisted sort-state and sort-condition ranges exactly as stored, including
+blank raw ranges, so malformed workbook metadata is surfaced factually instead of being dropped.
+
 ### GET_TABLES
 
 Returns factual table metadata selected by workbook-global table name or all tables.
@@ -2073,8 +2135,19 @@ Each returned table includes:
 - `headerRowCount`
 - `totalsRowCount`
 - `columnNames`
+- `columns`
 - `style`
 - `hasAutofilter`
+- `comment`
+- `published`
+- `insertRow`
+- `insertRowShift`
+- `headerRowCellStyle`
+- `dataCellStyle`
+- `totalsRowCellStyle`
+
+Each `columns[*]` entry includes the persisted table-column `id`, visible `name`, `uniqueName`,
+`totalsRowLabel`, `totalsRowFunction`, and `calculatedColumnFormula`.
 
 Table-selection payloads use:
 

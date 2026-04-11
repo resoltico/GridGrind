@@ -1,10 +1,26 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Name;
+import org.apache.poi.xssf.model.StylesTable;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilters;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDxf;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDynamicFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilterColumn;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilters;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTIconFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSortCondition;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSortState;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10;
 
 /** Reads, writes, and analyzes sheet-owned autofilter structures on one XSSF sheet. */
 final class ExcelAutofilterController {
@@ -48,9 +64,12 @@ final class ExcelAutofilterController {
     if (!sheet.getCTWorksheet().isSetAutoFilter()) {
       return List.of();
     }
-    String rawRange =
-        Objects.requireNonNullElse(sheet.getCTWorksheet().getAutoFilter().getRef(), "");
-    return List.of(new ExcelAutofilterSnapshot.SheetOwned(rawRange));
+    CTAutoFilter autoFilter = sheet.getCTWorksheet().getAutoFilter();
+    return List.of(
+        new ExcelAutofilterSnapshot.SheetOwned(
+            Objects.requireNonNullElse(autoFilter.getRef(), ""),
+            filterColumns(sheet.getWorkbook(), autoFilter),
+            sortState(sheet.getWorkbook(), autoFilter)));
   }
 
   /** Returns the number of sheet-owned autofilters currently present on one sheet. */
@@ -139,5 +158,180 @@ final class ExcelAutofilterController {
           "sheet-level autofilter range must not overlap an existing table range: "
               + String.join(", ", overlaps));
     }
+  }
+
+  List<ExcelAutofilterFilterColumnSnapshot> filterColumns(
+      XSSFWorkbook workbook, CTAutoFilter autoFilter) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(autoFilter, "autoFilter must not be null");
+
+    return Arrays.stream(autoFilter.getFilterColumnArray())
+        .map(filterColumn -> filterColumnSnapshot(workbook, filterColumn))
+        .toList();
+  }
+
+  ExcelAutofilterSortStateSnapshot sortState(XSSFWorkbook workbook, CTAutoFilter autoFilter) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(autoFilter, "autoFilter must not be null");
+    if (!autoFilter.isSetSortState()) {
+      return null;
+    }
+    CTSortState sortState = autoFilter.getSortState();
+    return new ExcelAutofilterSortStateSnapshot(
+        Objects.requireNonNullElse(sortState.getRef(), ""),
+        sortState.isSetCaseSensitive() && sortState.getCaseSensitive(),
+        sortState.isSetColumnSort() && sortState.getColumnSort(),
+        sortState.isSetSortMethod() ? sortState.getSortMethod().toString() : "",
+        Arrays.stream(sortState.getSortConditionArray())
+            .map(condition -> sortConditionSnapshot(workbook, condition))
+            .toList());
+  }
+
+  private static ExcelAutofilterFilterColumnSnapshot filterColumnSnapshot(
+      XSSFWorkbook workbook, CTFilterColumn filterColumn) {
+    return new ExcelAutofilterFilterColumnSnapshot(
+        filterColumn.getColId(),
+        showButton(filterColumn),
+        criterionSnapshot(workbook, filterColumn));
+  }
+
+  private static boolean showButton(CTFilterColumn filterColumn) {
+    if (filterColumn.isSetShowButton()) {
+      return filterColumn.getShowButton();
+    }
+    return !filterColumn.isSetHiddenButton() || !filterColumn.getHiddenButton();
+  }
+
+  private static ExcelAutofilterFilterCriterionSnapshot criterionSnapshot(
+      XSSFWorkbook workbook, CTFilterColumn filterColumn) {
+    if (filterColumn.isSetFilters()) {
+      return valuesCriterion(filterColumn.getFilters());
+    }
+    if (filterColumn.isSetCustomFilters()) {
+      return customCriterion(filterColumn.getCustomFilters());
+    }
+    if (filterColumn.isSetDynamicFilter()) {
+      return dynamicCriterion(filterColumn.getDynamicFilter());
+    }
+    if (filterColumn.isSetTop10()) {
+      return top10Criterion(filterColumn.getTop10());
+    }
+    if (filterColumn.isSetColorFilter()) {
+      return colorCriterion(workbook, filterColumn.getColorFilter());
+    }
+    if (filterColumn.isSetIconFilter()) {
+      return iconCriterion(filterColumn.getIconFilter());
+    }
+    return new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false);
+  }
+
+  static ExcelAutofilterFilterCriterionSnapshot valuesCriterion(CTFilters filters) {
+    List<String> values = new ArrayList<>();
+    for (CTFilter filter : filters.getFilterArray()) {
+      values.add(Objects.requireNonNullElse(filter.getVal(), ""));
+    }
+    return new ExcelAutofilterFilterCriterionSnapshot.Values(
+        List.copyOf(values), filters.isSetBlank() && filters.getBlank());
+  }
+
+  static ExcelAutofilterFilterCriterionSnapshot customCriterion(CTCustomFilters customFilters) {
+    return new ExcelAutofilterFilterCriterionSnapshot.Custom(
+        customFilters.isSetAnd() && customFilters.getAnd(),
+        Arrays.stream(customFilters.getCustomFilterArray())
+            .map(ExcelAutofilterController::customCondition)
+            .toList());
+  }
+
+  private static ExcelAutofilterFilterCriterionSnapshot.CustomCondition customCondition(
+      CTCustomFilter customFilter) {
+    String operator =
+        customFilter.isSetOperator() ? customFilter.getOperator().toString() : "equal";
+    return new ExcelAutofilterFilterCriterionSnapshot.CustomCondition(
+        operator, Objects.requireNonNullElse(customFilter.getVal(), ""));
+  }
+
+  static ExcelAutofilterFilterCriterionSnapshot dynamicCriterion(CTDynamicFilter dynamicFilter) {
+    return new ExcelAutofilterFilterCriterionSnapshot.Dynamic(
+        dynamicFilter.getType() == null ? "UNKNOWN" : dynamicFilter.getType().toString(),
+        dynamicFilter.isSetVal() ? dynamicFilter.getVal() : null,
+        dynamicFilter.isSetMaxVal() ? dynamicFilter.getMaxVal() : null);
+  }
+
+  static ExcelAutofilterFilterCriterionSnapshot top10Criterion(CTTop10 top10) {
+    return new ExcelAutofilterFilterCriterionSnapshot.Top10(
+        !top10.isSetTop() || top10.getTop(),
+        top10.isSetPercent() && top10.getPercent(),
+        top10.getVal(),
+        top10.isSetFilterVal() ? top10.getFilterVal() : null);
+  }
+
+  static ExcelAutofilterFilterCriterionSnapshot colorCriterion(
+      XSSFWorkbook workbook, CTColorFilter colorFilter) {
+    return new ExcelAutofilterFilterCriterionSnapshot.Color(
+        colorFilter.isSetCellColor() && colorFilter.getCellColor(),
+        colorFilter.isSetDxfId()
+            ? dxfColor(
+                workbook,
+                colorFilter.getDxfId(),
+                colorFilter.isSetCellColor() && colorFilter.getCellColor())
+            : null);
+  }
+
+  static ExcelAutofilterFilterCriterionSnapshot iconCriterion(CTIconFilter iconFilter) {
+    return new ExcelAutofilterFilterCriterionSnapshot.Icon(
+        iconFilter.getIconSet() == null ? "UNKNOWN" : iconFilter.getIconSet().toString(),
+        iconFilter.isSetIconId() ? Math.toIntExact(iconFilter.getIconId()) : 0);
+  }
+
+  static ExcelAutofilterSortConditionSnapshot sortConditionSnapshot(
+      XSSFWorkbook workbook, CTSortCondition sortCondition) {
+    boolean sortByCellColor =
+        sortCondition.isSetSortBy()
+            && "cellColor".equalsIgnoreCase(sortCondition.getSortBy().toString());
+    boolean sortByFontColor =
+        sortCondition.isSetSortBy()
+            && "fontColor".equalsIgnoreCase(sortCondition.getSortBy().toString());
+    return new ExcelAutofilterSortConditionSnapshot(
+        Objects.requireNonNullElse(sortCondition.getRef(), ""),
+        sortCondition.isSetDescending() && sortCondition.getDescending(),
+        sortCondition.isSetSortBy() ? sortCondition.getSortBy().toString() : "",
+        sortCondition.isSetDxfId()
+            ? dxfColor(workbook, sortCondition.getDxfId(), sortByCellColor || !sortByFontColor)
+            : null,
+        sortCondition.isSetIconId() ? Math.toIntExact(sortCondition.getIconId()) : null);
+  }
+
+  static ExcelColorSnapshot dxfColor(XSSFWorkbook workbook, long dxfId, boolean cellColor) {
+    CTDxf dxf = dxfAt(workbook.getStylesSource(), dxfId);
+    if (dxf == null) {
+      return null;
+    }
+    if (cellColor
+        && dxf.isSetFill()
+        && dxf.getFill().isSetPatternFill()
+        && dxf.getFill().getPatternFill().isSetFgColor()) {
+      return ExcelColorSnapshotSupport.snapshot(
+          workbook, dxf.getFill().getPatternFill().getFgColor());
+    }
+    if (!cellColor && dxf.isSetFont() && dxf.getFont().sizeOfColorArray() > 0) {
+      return ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0));
+    }
+    if (dxf.isSetFill()
+        && dxf.getFill().isSetPatternFill()
+        && dxf.getFill().getPatternFill().isSetFgColor()) {
+      return ExcelColorSnapshotSupport.snapshot(
+          workbook, dxf.getFill().getPatternFill().getFgColor());
+    }
+    if (dxf.isSetFont() && dxf.getFont().sizeOfColorArray() > 0) {
+      return ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0));
+    }
+    return null;
+  }
+
+  static CTDxf dxfAt(StylesTable stylesTable, long dxfId) {
+    if (dxfId < 0L || dxfId >= stylesTable._getDXfsSize()) {
+      return null;
+    }
+    return stylesTable.getDxfAt(Math.toIntExact(dxfId));
   }
 }

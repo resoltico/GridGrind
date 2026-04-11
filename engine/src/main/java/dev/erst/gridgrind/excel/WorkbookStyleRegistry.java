@@ -15,6 +15,9 @@ import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientFill;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientStop;
 
 /**
  * Caches and creates POI CellStyle and Font instances for a single workbook, merging protocol style
@@ -90,7 +93,7 @@ final class WorkbookStyleRegistry {
         font.getItalic(),
         font.getFontName(),
         new ExcelFontHeight(font.getFontHeight()),
-        ExcelRgbColorSupport.toRgbHex(font.getXSSFColor()),
+        ExcelColorSnapshotSupport.snapshot(font.getXSSFColor()),
         font.getUnderline() != FontUnderline.NONE.getByteValue(),
         font.getStrikeout());
   }
@@ -330,23 +333,55 @@ final class WorkbookStyleRegistry {
   }
 
   private ExcelCellFillSnapshot fillSnapshot(XSSFCellStyle style) {
+    XSSFCellFill fill = fill(style);
+    if (fill.getCTFill().isSetGradientFill()) {
+      return new ExcelCellFillSnapshot(
+          ExcelFillPattern.NONE,
+          null,
+          null,
+          gradientFillSnapshot(fill.getCTFill().getGradientFill()));
+    }
     ExcelFillPattern pattern = fromPoi(style.getFillPattern());
     if (pattern == ExcelFillPattern.NONE) {
-      return new ExcelCellFillSnapshot(pattern, null, null);
+      return new ExcelCellFillSnapshot(pattern, null, null, null);
     }
     return new ExcelCellFillSnapshot(
         pattern,
-        ExcelRgbColorSupport.toRgbHex(style.getFillForegroundColorColor()),
+        ExcelColorSnapshotSupport.snapshot(style.getFillForegroundColorColor()),
         pattern == ExcelFillPattern.SOLID
             ? null
-            : ExcelRgbColorSupport.toRgbHex(style.getFillBackgroundColorColor()));
+            : ExcelColorSnapshotSupport.snapshot(style.getFillBackgroundColorColor()),
+        null);
   }
 
-  private static ExcelBorderSide borderSideSnapshot(
+  private XSSFCellFill fill(XSSFCellStyle style) {
+    long fillId = style.getCoreXf().getFillId();
+    return workbook.getStylesSource().getFillAt((int) fillId);
+  }
+
+  ExcelGradientFillSnapshot gradientFillSnapshot(CTGradientFill fill) {
+    String type = fill.isSetType() ? fill.getType().toString() : "LINEAR";
+    java.util.List<ExcelGradientStopSnapshot> stops =
+        java.util.Arrays.stream(fill.getStopArray()).map(this::gradientStopSnapshot).toList();
+    return new ExcelGradientFillSnapshot(
+        type,
+        fill.isSetDegree() ? fill.getDegree() : null,
+        fill.isSetLeft() ? fill.getLeft() : null,
+        fill.isSetRight() ? fill.getRight() : null,
+        fill.isSetTop() ? fill.getTop() : null,
+        fill.isSetBottom() ? fill.getBottom() : null,
+        stops);
+  }
+
+  private ExcelGradientStopSnapshot gradientStopSnapshot(CTGradientStop stop) {
+    return new ExcelGradientStopSnapshot(
+        stop.getPosition(), ExcelColorSnapshotSupport.snapshot(workbook, stop.getColor()));
+  }
+
+  private static ExcelBorderSideSnapshot borderSideSnapshot(
       BorderStyle borderStyle, XSSFColor borderColor) {
     ExcelBorderStyle style = fromPoi(borderStyle);
-    return new ExcelBorderSide(
-        style, style == ExcelBorderStyle.NONE ? null : ExcelRgbColorSupport.toRgbHex(borderColor));
+    return new ExcelBorderSideSnapshot(style, ExcelColorSnapshotSupport.snapshot(borderColor));
   }
 
   private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {

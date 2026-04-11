@@ -105,6 +105,10 @@ class GridGrindRequestTest {
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookReadOperation.GetWorkbookSummary(" "));
     assertThrows(
+        NullPointerException.class, () -> new WorkbookReadOperation.GetWorkbookProtection(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookReadOperation.GetWorkbookProtection(" "));
+    assertThrows(
         NullPointerException.class, () -> new WorkbookReadOperation.GetNamedRanges("ranges", null));
     assertThrows(
         IllegalArgumentException.class,

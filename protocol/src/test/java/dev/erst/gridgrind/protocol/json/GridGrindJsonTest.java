@@ -44,6 +44,34 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void readsSetTableRequestsWithoutShowTotalsRowUsingFalseDefault() throws IOException {
+    GridGrindRequest request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "source": { "type": "NEW" },
+              "operations": [
+                {
+                  "type": "SET_TABLE",
+                  "table": {
+                    "name": "MiniTable",
+                    "sheetName": "Budget",
+                    "range": "A1:B3",
+                    "style": { "type": "NONE" }
+                  }
+                }
+              ],
+              "reads": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+
+    WorkbookOperation.SetTable operation =
+        assertInstanceOf(WorkbookOperation.SetTable.class, request.operations().getFirst());
+    assertFalse(operation.table().showTotalsRow());
+  }
+
+  @Test
   void readsRequestsFromInputStreamsWithoutClosingThem() throws IOException {
     try (TrackingInputStream inputStream =
         new TrackingInputStream(
@@ -199,7 +227,7 @@ class GridGrindJsonTest {
                                         baseRunFont.italic(),
                                         baseRunFont.fontName(),
                                         baseRunFont.fontHeight(),
-                                        "#C00000",
+                                        rgb("#C00000"),
                                         baseRunFont.underline(),
                                         baseRunFont.strikeout()))))))));
 
@@ -220,7 +248,7 @@ class GridGrindJsonTest {
     assertEquals("Q2 ", cell.richText().get(0).text());
     assertEquals("Budget", cell.richText().get(1).text());
     assertTrue(cell.richText().get(1).font().bold());
-    assertEquals("#C00000", cell.richText().get(1).font().fontColor());
+    assertEquals(rgb("#C00000"), cell.richText().get(1).font().fontColor());
   }
 
   @Test
@@ -1221,16 +1249,20 @@ class GridGrindJsonTest {
             false,
             "Aptos",
             new FontHeightReport(230, new BigDecimal("11.5")),
-            "#1F4E78",
+            rgb("#1F4E78"),
             true,
             false),
-        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.SOLID, "#FFF2CC", null),
+        new CellFillReport(dev.erst.gridgrind.excel.ExcelFillPattern.SOLID, rgb("#FFF2CC"), null),
         new CellBorderReport(
             new CellBorderSideReport(ExcelBorderStyle.THIN, null),
             new CellBorderSideReport(ExcelBorderStyle.DOUBLE, null),
             new CellBorderSideReport(ExcelBorderStyle.THIN, null),
             new CellBorderSideReport(ExcelBorderStyle.THIN, null)),
         new CellProtectionReport(true, false));
+  }
+
+  private static CellColorReport rgb(String rgb) {
+    return new CellColorReport(rgb);
   }
 
   private static SheetProtectionSettings protectionSettings() {

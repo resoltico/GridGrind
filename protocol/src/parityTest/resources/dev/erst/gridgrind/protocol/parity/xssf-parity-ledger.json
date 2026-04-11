@@ -48,8 +48,8 @@
       "subfamily": "read",
       "phase": 2,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-workbook-protection-read-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -58,7 +58,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "POI exposes workbook-level protection state that GridGrind does not yet model."
+      "notes": "Workbook protection reads expose structure, windows, revision lock state, and password-hash presence."
     },
     {
       "sequence": 4,
@@ -124,8 +124,8 @@
       "subfamily": "read-advanced",
       "phase": 2,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-advanced-print-read-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -134,7 +134,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Advanced page-setup and print metadata remain unmodeled on read."
+      "notes": "Advanced print-layout reads preserve page-setup flags, margins, copies, first-page numbering, and manual breaks."
     },
     {
       "sequence": 8,
@@ -181,8 +181,8 @@
       "subfamily": "read-theme-indexed-gradient",
       "phase": 2,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-advanced-style-read-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -191,7 +191,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Theme, indexed, tint, and gradient style semantics are still normalized away."
+      "notes": "Style snapshots preserve theme, indexed, tint, and gradient semantics on read."
     },
     {
       "sequence": 11,
@@ -219,8 +219,8 @@
       "subfamily": "read-rich-anchor",
       "phase": 2,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-rich-comment-read-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -229,7 +229,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Rich comment runs and anchor metadata are not exposed on read."
+      "notes": "Comment reads expose ordered rich-text runs and anchor bounds when present."
     },
     {
       "sequence": 13,
@@ -314,8 +314,8 @@
       "subfamily": "analysis-fine-diagnostics",
       "phase": 2,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "PARTIAL",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-data-validation-analysis-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -324,7 +324,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Distinct malformed validation states are collapsed into broader findings."
+      "notes": "Data-validation health distinguishes malformed raw-validation states instead of collapsing them into broader findings."
     },
     {
       "sequence": 18,
@@ -352,8 +352,8 @@
       "subfamily": "read-criteria-sort",
       "phase": 2,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-autofilter-criteria-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -362,7 +362,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "Filter-column criteria and sort-state metadata are not modeled on read."
+      "notes": "Autofilter reads expose persisted filter-column criteria and sort-state metadata."
     },
     {
       "sequence": 20,
@@ -390,8 +390,8 @@
       "subfamily": "read-advanced",
       "phase": 2,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-table-advanced-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -400,7 +400,7 @@
         "Quick Guide",
         "XSSFTable API"
       ],
-      "notes": "Advanced table metadata such as totals, published flags, and per-column extras remain unmodeled."
+      "notes": "Table reads expose totals, published and insert-row flags, named cell-style ids, and per-column metadata."
     },
     {
       "sequence": 22,
@@ -447,8 +447,8 @@
       "subfamily": "read-all-xssf",
       "phase": 2,
       "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
-      "gridGrindStatus": "PARTIAL",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-conditional-formatting-unmodeled-read-gap",
       "scenarioIds": [
         "poi-advanced-nondrawing"
@@ -457,7 +457,7 @@
         "Quick Guide",
         "XSSFSheet API"
       ],
-      "notes": "GridGrind still loses some POI-readable XSSF conditional-format rule families."
+      "notes": "Conditional-format reads cover the POI-readable XSSF rule families modeled by GridGrind, with explicit unsupported coverage where POI exposes structures GridGrind does not semantically model."
     },
     {
       "sequence": 25,

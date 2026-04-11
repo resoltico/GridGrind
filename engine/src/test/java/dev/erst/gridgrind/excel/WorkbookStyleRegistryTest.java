@@ -10,6 +10,7 @@ import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
 import org.junit.jupiter.api.Test;
 
 /** Tests for WorkbookStyleRegistry utilities, merge behavior, and style snapshots. */
@@ -49,10 +50,10 @@ class WorkbookStyleRegistryTest {
       assertEquals("Aptos", snapshot.font().fontName());
       assertEquals(300, snapshot.font().fontHeight().twips());
       assertEquals(new BigDecimal("15"), snapshot.font().fontHeight().points());
-      assertEquals("#112233", snapshot.font().fontColor());
+      assertEquals(rgb("#112233"), snapshot.font().fontColor());
       assertTrue(snapshot.font().underline());
       assertTrue(snapshot.font().strikeout());
-      assertEquals("#FFF2CC", snapshot.fill().foregroundColor());
+      assertEquals(rgb("#FFF2CC"), snapshot.fill().foregroundColor());
       assertEquals(ExcelBorderStyle.MEDIUM, snapshot.border().top().style());
       assertEquals(ExcelBorderStyle.MEDIUM, snapshot.border().right().style());
       assertEquals(ExcelBorderStyle.MEDIUM, snapshot.border().bottom().style());
@@ -83,7 +84,7 @@ class WorkbookStyleRegistryTest {
                   null)));
 
       ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
-      assertEquals("#DDEBF7", snapshot.fill().foregroundColor());
+      assertEquals(rgb("#DDEBF7"), snapshot.fill().foregroundColor());
       assertEquals(ExcelBorderStyle.THIN, snapshot.border().top().style());
       assertEquals(ExcelBorderStyle.DOUBLE, snapshot.border().right().style());
       assertEquals(ExcelBorderStyle.THIN, snapshot.border().bottom().style());
@@ -145,7 +146,7 @@ class WorkbookStyleRegistryTest {
                   null,
                   null,
                   null)));
-      assertEquals("#445566", styleRegistry.snapshot(cell).font().fontColor());
+      assertEquals(rgb("#445566"), styleRegistry.snapshot(cell).font().fontColor());
     }
   }
 
@@ -176,7 +177,7 @@ class WorkbookStyleRegistryTest {
   }
 
   @Test
-  void snapshot_ignoresBorderColorsWhenEffectiveStyleIsNone() throws Exception {
+  void snapshot_preservesBorderColorsWhenEffectiveStyleIsNone() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
       Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
@@ -190,7 +191,9 @@ class WorkbookStyleRegistryTest {
       ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
 
       assertEquals(ExcelBorderStyle.NONE, snapshot.border().bottom().style());
-      assertNull(snapshot.border().bottom().color());
+      assertEquals(
+          new ExcelColorSnapshot(null, null, (int) IndexedColors.DARK_RED.getIndex(), null),
+          snapshot.border().bottom().color());
     }
   }
 
@@ -228,12 +231,12 @@ class WorkbookStyleRegistryTest {
       assertTrue(snapshot.alignment().wrapText());
       assertEquals(45, snapshot.alignment().textRotation());
       assertEquals(3, snapshot.alignment().indentation());
-      assertEquals("#102030", snapshot.font().fontColor());
+      assertEquals(rgb("#102030"), snapshot.font().fontColor());
       assertEquals(ExcelFillPattern.THIN_HORIZONTAL_BANDS, snapshot.fill().pattern());
-      assertEquals("#FFF2CC", snapshot.fill().foregroundColor());
-      assertEquals("#DDEBF7", snapshot.fill().backgroundColor());
-      assertEquals("#203040", snapshot.border().top().color());
-      assertEquals("#304050", snapshot.border().right().color());
+      assertEquals(rgb("#FFF2CC"), snapshot.fill().foregroundColor());
+      assertEquals(rgb("#DDEBF7"), snapshot.fill().backgroundColor());
+      assertEquals(rgb("#203040"), snapshot.border().top().color());
+      assertEquals(rgb("#304050"), snapshot.border().right().color());
       assertFalse(snapshot.protection().locked());
       assertTrue(snapshot.protection().hiddenFormula());
     }
@@ -253,13 +256,13 @@ class WorkbookStyleRegistryTest {
       ExcelCellStyleSnapshot dateSnapshot = styleRegistry.snapshot(cell);
       assertEquals("yyyy-mm-dd", dateSnapshot.numberFormat());
       assertEquals("Aptos", dateSnapshot.font().fontName());
-      assertEquals("#FFF2CC", dateSnapshot.fill().foregroundColor());
+      assertEquals(rgb("#FFF2CC"), dateSnapshot.fill().foregroundColor());
 
       cell.setCellStyle(styleRegistry.localDateTimeStyle(cell));
       ExcelCellStyleSnapshot dateTimeSnapshot = styleRegistry.snapshot(cell);
       assertEquals("yyyy-mm-dd hh:mm:ss", dateTimeSnapshot.numberFormat());
       assertEquals(ExcelBorderStyle.MEDIUM, dateTimeSnapshot.border().top().style());
-      assertEquals("#112233", dateTimeSnapshot.font().fontColor());
+      assertEquals(rgb("#112233"), dateTimeSnapshot.font().fontColor());
     }
   }
 
@@ -313,10 +316,10 @@ class WorkbookStyleRegistryTest {
                       null))));
       ExcelCellStyleSnapshot mergedBorderSnapshot = styleRegistry.snapshot(cell);
       assertEquals(ExcelBorderStyle.THIN, mergedBorderSnapshot.border().top().style());
-      assertEquals("#445566", mergedBorderSnapshot.border().top().color());
+      assertEquals(rgb("#445566"), mergedBorderSnapshot.border().top().color());
       assertEquals(ExcelBorderStyle.DOUBLE, mergedBorderSnapshot.border().right().style());
-      assertEquals("#112233", mergedBorderSnapshot.border().right().color());
-      assertEquals("#112233", mergedBorderSnapshot.border().bottom().color());
+      assertEquals(rgb("#112233"), mergedBorderSnapshot.border().right().color());
+      assertEquals(rgb("#112233"), mergedBorderSnapshot.border().bottom().color());
 
       cell.setCellStyle(
           styleRegistry.mergedStyle(
@@ -328,7 +331,7 @@ class WorkbookStyleRegistryTest {
       assertEquals(ExcelBorderStyle.NONE, clearedBorderSnapshot.border().top().style());
       assertNull(clearedBorderSnapshot.border().top().color());
       assertEquals(ExcelBorderStyle.DOUBLE, clearedBorderSnapshot.border().right().style());
-      assertEquals("#112233", clearedBorderSnapshot.border().right().color());
+      assertEquals(rgb("#112233"), clearedBorderSnapshot.border().right().color());
 
       assertThrows(
           IllegalArgumentException.class,
@@ -405,7 +408,7 @@ class WorkbookStyleRegistryTest {
                       null,
                       null,
                       null))));
-      assertEquals("#112233", styleRegistry.snapshot(cell).border().top().color());
+      assertEquals(rgb("#112233"), styleRegistry.snapshot(cell).border().top().color());
 
       cell.setCellStyle(
           styleRegistry.mergedStyle(
@@ -457,6 +460,73 @@ class WorkbookStyleRegistryTest {
     }
   }
 
+  @Test
+  void snapshot_readsGradientFillStopsAndWorkbookColorSemantics() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
+      XSSFCellStyle style = workbook.createCellStyle();
+      XSSFCellFill styleFill =
+          workbook.getStylesSource().getFillAt((int) style.getCoreXf().getFillId());
+      if (styleFill.getCTFill().isSetPatternFill()) {
+        styleFill.getCTFill().unsetPatternFill();
+      }
+      var gradientFill = styleFill.getCTFill().addNewGradientFill();
+      gradientFill.setDegree(45.0d);
+      var firstStop = gradientFill.addNewStop();
+      firstStop.setPosition(0.0d);
+      firstStop.addNewColor().setRgb(new byte[] {(byte) 0xFF, 0x11, 0x22, 0x33});
+      var secondStop = gradientFill.addNewStop();
+      secondStop.setPosition(1.0d);
+      secondStop.addNewColor().setIndexed(10L);
+      cell.setCellStyle(style);
+
+      ExcelCellFillSnapshot snapshot = styleRegistry.snapshot(cell).fill();
+
+      assertEquals(ExcelFillPattern.NONE, snapshot.pattern());
+      assertNotNull(snapshot.gradient());
+      assertEquals("LINEAR", snapshot.gradient().type());
+      assertEquals(45.0d, snapshot.gradient().degree());
+      assertEquals(2, snapshot.gradient().stops().size());
+      assertEquals(new ExcelColorSnapshot("#112233"), snapshot.gradient().stops().get(0).color());
+      assertEquals(
+          new ExcelColorSnapshot(null, null, 10, null), snapshot.gradient().stops().get(1).color());
+    }
+  }
+
+  @Test
+  void gradientFillSnapshotReflectsExplicitPathOffsets() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      var gradient =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientFill.Factory.newInstance();
+      gradient.setType(org.openxmlformats.schemas.spreadsheetml.x2006.main.STGradientType.PATH);
+      gradient.setLeft(0.1d);
+      gradient.setRight(0.2d);
+      gradient.setTop(0.3d);
+      gradient.setBottom(0.4d);
+      var firstStop = gradient.addNewStop();
+      firstStop.setPosition(0.0d);
+      firstStop.addNewColor().setTheme(2L);
+      var secondStop = gradient.addNewStop();
+      secondStop.setPosition(1.0d);
+      secondStop.addNewColor().setIndexed(5L);
+
+      ExcelGradientFillSnapshot snapshot = styleRegistry.gradientFillSnapshot(gradient);
+
+      assertEquals(
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.STGradientType.PATH.toString(),
+          snapshot.type());
+      assertNull(snapshot.degree());
+      assertEquals(0.1d, snapshot.left());
+      assertEquals(0.2d, snapshot.right());
+      assertEquals(0.3d, snapshot.top());
+      assertEquals(0.4d, snapshot.bottom());
+      assertEquals(new ExcelColorSnapshot(null, 2, null, null), snapshot.stops().get(0).color());
+      assertEquals(new ExcelColorSnapshot(null, null, 5, null), snapshot.stops().get(1).color());
+    }
+  }
+
   private ExcelCellStyle fillPatch(ExcelCellFill fill) {
     return new ExcelCellStyle(null, null, null, fill, null, null);
   }
@@ -490,12 +560,16 @@ class WorkbookStyleRegistryTest {
       assertNull(snapshot.backgroundColor());
       return;
     }
-    assertEquals(foregroundColor, snapshot.foregroundColor());
+    assertEquals(rgb(foregroundColor), snapshot.foregroundColor());
     if (pattern == ExcelFillPattern.SOLID) {
       assertNull(snapshot.backgroundColor());
       return;
     }
-    assertEquals(backgroundColor, snapshot.backgroundColor());
+    assertEquals(rgb(backgroundColor), snapshot.backgroundColor());
+  }
+
+  private static ExcelColorSnapshot rgb(String rgb) {
+    return new ExcelColorSnapshot(rgb);
   }
 
   private XSSFCellStyle styledBaseCellStyle(XSSFWorkbook workbook) {

@@ -8,12 +8,11 @@ public record ExcelCellFontSnapshot(
     boolean italic,
     String fontName,
     ExcelFontHeight fontHeight,
-    String fontColor,
+    ExcelColorSnapshot fontColor,
     boolean underline,
     boolean strikeout) {
   public ExcelCellFontSnapshot {
     Objects.requireNonNull(fontName, "fontName must not be null");
     Objects.requireNonNull(fontHeight, "fontHeight must not be null");
-    fontColor = ExcelRgbColorSupport.normalizeRgbHex(fontColor, "fontColor");
   }
 }

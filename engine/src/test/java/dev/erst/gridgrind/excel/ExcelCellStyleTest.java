@@ -171,26 +171,26 @@ class ExcelCellStyleTest {
     assertThrows(NullPointerException.class, () -> new ExcelCellFillSnapshot(null, null, null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCellFillSnapshot(ExcelFillPattern.NONE, "#112233", null));
+        () -> new ExcelCellFillSnapshot(ExcelFillPattern.NONE, rgb("#112233"), null));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, "#112233"));
+        () -> new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, rgb("#112233")));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new ExcelCellFillSnapshot(ExcelFillPattern.SOLID, "#112233", "#445566"));
+        () -> new ExcelCellFillSnapshot(ExcelFillPattern.SOLID, rgb("#112233"), rgb("#445566")));
 
     ExcelCellFill patternedFill = new ExcelCellFill(ExcelFillPattern.BRICKS, "#aa00cc", "#00bb11");
     ExcelCellFillSnapshot noFillSnapshot =
         new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, null);
     ExcelCellFillSnapshot patternedSnapshot =
-        new ExcelCellFillSnapshot(ExcelFillPattern.BRICKS, "#aa00cc", "#00bb11");
+        new ExcelCellFillSnapshot(ExcelFillPattern.BRICKS, rgb("#aa00cc"), rgb("#00bb11"));
     assertEquals(ExcelFillPattern.NONE, noFillSnapshot.pattern());
     assertNull(noFillSnapshot.foregroundColor());
     assertNull(noFillSnapshot.backgroundColor());
     assertEquals("#AA00CC", patternedFill.foregroundColor());
     assertEquals("#00BB11", patternedFill.backgroundColor());
-    assertEquals("#AA00CC", patternedSnapshot.foregroundColor());
-    assertEquals("#00BB11", patternedSnapshot.backgroundColor());
+    assertEquals(rgb("#AA00CC"), patternedSnapshot.foregroundColor());
+    assertEquals(rgb("#00BB11"), patternedSnapshot.backgroundColor());
   }
 
   @Test
@@ -206,5 +206,9 @@ class ExcelCellStyleTest {
     assertTrue(strikeoutOnly.strikeout());
     assertFalse(hiddenOnly.hiddenFormula());
     assertNull(hiddenOnly.locked());
+  }
+
+  private static ExcelColorSnapshot rgb(String rgb) {
+    return new ExcelColorSnapshot(rgb);
   }
 }

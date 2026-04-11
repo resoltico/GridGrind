@@ -47,8 +47,8 @@ final class ExcelSheetIntrospector {
   }
 
   /** Returns supported print-layout metadata for one sheet. */
-  ExcelPrintLayout printLayout(ExcelSheet sheet) {
+  ExcelPrintLayoutSnapshot printLayout(ExcelSheet sheet) {
     Objects.requireNonNull(sheet, "sheet must not be null");
-    return sheet.printLayout();
+    return sheet.printLayoutSnapshot();
   }
 }

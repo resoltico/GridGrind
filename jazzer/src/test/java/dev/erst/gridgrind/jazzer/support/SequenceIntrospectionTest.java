@@ -289,6 +289,7 @@ class SequenceIntrospectionTest {
             List.of(),
             List.of(
                 new WorkbookReadOperation.GetWorkbookSummary("summary"),
+                new WorkbookReadOperation.GetWorkbookProtection("workbook-protection"),
                 new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
                 new WorkbookReadOperation.GetDataValidations(
                     "validations", "Budget", new RangeSelection.All()),
@@ -309,8 +310,10 @@ class SequenceIntrospectionTest {
                     "named-range-health", new NamedRangeSelection.All()),
                 new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings")));
 
-    assertEquals(13, SequenceIntrospection.readCount(request));
+    assertEquals(14, SequenceIntrospection.readCount(request));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
+    assertEquals(
+        1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_PROTECTION"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DATA_VALIDATIONS"));
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("GET_CONDITIONAL_FORMATTING"));

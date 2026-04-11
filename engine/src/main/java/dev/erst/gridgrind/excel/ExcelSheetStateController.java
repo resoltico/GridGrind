@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbookProtection;
 
 /** Owns workbook-level active, selected, visibility, protection, and summary state. */
 final class ExcelSheetStateController {
@@ -45,6 +46,22 @@ final class ExcelSheetStateController {
         excelSheet.physicalRowCount(),
         excelSheet.lastRowIndex(),
         excelSheet.lastColumnIndex());
+  }
+
+  /** Returns workbook-level protection facts including password-hash presence. */
+  ExcelWorkbookProtectionSnapshot workbookProtection(ExcelWorkbook workbook) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+
+    CTWorkbookProtection protection =
+        workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection()
+            ? workbook.xssfWorkbook().getCTWorkbook().getWorkbookProtection()
+            : null;
+    return new ExcelWorkbookProtectionSnapshot(
+        workbook.xssfWorkbook().isStructureLocked(),
+        workbook.xssfWorkbook().isWindowsLocked(),
+        workbook.xssfWorkbook().isRevisionLocked(),
+        protection != null && protection.isSetWorkbookPassword(),
+        protection != null && protection.isSetRevisionsPassword());
   }
 
   /** Renames an existing sheet to a new destination name. */
