@@ -261,7 +261,7 @@ class ExcelDataValidationControllerTest {
         invokeToSnapshot(new StubConstraint(999, 0, null, "1", null), List.of("B2")));
     assertEquals(
         new ExcelDataValidationSnapshot.Unsupported(
-            List.of("C0"), "INVALID_EXPLICIT_LIST", "Explicit list has no values."),
+            List.of("C0"), "EMPTY_EXPLICIT_LIST", "Explicit list has no values."),
         invokeToSnapshot(
             new StubConstraint(
                 DataValidationConstraint.ValidationType.LIST, 0, new String[0], null, null),
@@ -387,6 +387,555 @@ class ExcelDataValidationControllerTest {
   }
 
   @Test
+  void xssfMetadataHelpersCoverPromptErrorAndSupportedFormulaPayloads() {
+    assertNull(
+        ExcelDataValidationController.prompt(
+            xssfListStub().overridePrompt(null, "Choose one workflow state.", true)));
+    assertNull(
+        ExcelDataValidationController.prompt(
+            xssfListStub().overridePrompt(" ", "Choose one workflow state.", true)));
+    assertNull(
+        ExcelDataValidationController.prompt(xssfListStub().overridePrompt("Status", null, true)));
+    assertNull(
+        ExcelDataValidationController.prompt(xssfListStub().overridePrompt("Status", " ", true)));
+    assertEquals(
+        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false),
+        ExcelDataValidationController.prompt(
+            xssfListStub().overridePrompt("Status", "Choose one workflow state.", false)));
+
+    assertNull(
+        ExcelDataValidationController.errorAlert(
+            xssfListStub()
+                .overrideError(
+                    null, "Use an allowed value.", true, DataValidation.ErrorStyle.STOP)));
+    assertNull(
+        ExcelDataValidationController.errorAlert(
+            xssfListStub()
+                .overrideError(
+                    " ", "Use an allowed value.", true, DataValidation.ErrorStyle.STOP)));
+    assertNull(
+        ExcelDataValidationController.errorAlert(
+            xssfListStub()
+                .overrideError("Invalid status", null, true, DataValidation.ErrorStyle.STOP)));
+    assertNull(
+        ExcelDataValidationController.errorAlert(
+            xssfListStub()
+                .overrideError("Invalid status", " ", true, DataValidation.ErrorStyle.STOP)));
+    assertEquals(
+        new ExcelDataValidationErrorAlert(
+            ExcelDataValidationErrorStyle.INFORMATION, "Heads up", "Use an allowed value.", false),
+        ExcelDataValidationController.errorAlert(
+            xssfListStub()
+                .overrideError(
+                    "Heads up", "Use an allowed value.", false, DataValidation.ErrorStyle.INFO)));
+
+    ExcelDataValidationSnapshot.Supported formulaListSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            ExcelDataValidationController.toSnapshot(
+                new StubXssfDataValidation(
+                        new StubConstraint(
+                            DataValidationConstraint.ValidationType.LIST,
+                            0,
+                            null,
+                            "Statuses",
+                            null))
+                    .overridePrompt("Status", "Choose one workflow state.", false)
+                    .overrideError(
+                        "Heads up",
+                        "Read the allowed values.",
+                        false,
+                        DataValidation.ErrorStyle.WARNING),
+                List.of("C1:C3")));
+    assertEquals(
+        new ExcelDataValidationRule.FormulaList("Statuses"),
+        formulaListSnapshot.validation().rule());
+    assertEquals(
+        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false),
+        formulaListSnapshot.validation().prompt());
+    assertEquals(
+        new ExcelDataValidationErrorAlert(
+            ExcelDataValidationErrorStyle.WARNING, "Heads up", "Read the allowed values.", false),
+        formulaListSnapshot.validation().errorAlert());
+
+    ExcelDataValidationSnapshot.Supported customFormulaSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            ExcelDataValidationController.toSnapshot(
+                new StubXssfDataValidation(
+                        new StubConstraint(
+                            DataValidationConstraint.ValidationType.FORMULA,
+                            0,
+                            null,
+                            "LEN(D1)>0",
+                            null))
+                    .overridePrompt("Prompt", "Keep the value.", true)
+                    .overrideError(
+                        "Invalid value",
+                        "Formula must pass.",
+                        true,
+                        DataValidation.ErrorStyle.STOP),
+                List.of("D1")));
+    assertEquals(
+        new ExcelDataValidationRule.CustomFormula("LEN(D1)>0"),
+        customFormulaSnapshot.validation().rule());
+  }
+
+  @Test
+  void rawCtMetadataHelpersCoverPromptAndErrorBranches() {
+    CTDataValidation promptDefaults = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    promptDefaults.setPromptTitle("Status");
+    promptDefaults.setPrompt("Choose one workflow state.");
+    assertEquals(
+        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false),
+        ExcelDataValidationController.prompt(promptDefaults));
+
+    CTDataValidation promptBlankTitle =
+        rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    promptBlankTitle.setPromptTitle(" ");
+    promptBlankTitle.setPrompt("Choose one workflow state.");
+    assertNull(ExcelDataValidationController.prompt(promptBlankTitle));
+
+    CTDataValidation promptMissingText =
+        rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    promptMissingText.setPromptTitle("Status");
+    assertNull(ExcelDataValidationController.prompt(promptMissingText));
+
+    CTDataValidation errorDefaults = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    errorDefaults.setErrorTitle("Invalid status");
+    errorDefaults.setError("Use one of the allowed values.");
+    assertEquals(
+        new ExcelDataValidationErrorAlert(
+            ExcelDataValidationErrorStyle.STOP,
+            "Invalid status",
+            "Use one of the allowed values.",
+            false),
+        ExcelDataValidationController.errorAlert(errorDefaults));
+
+    CTDataValidation warningError = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    warningError.setErrorTitle("Warning");
+    warningError.setError("Watch this value.");
+    warningError.setShowErrorMessage(true);
+    warningError.setErrorStyle(
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.WARNING);
+    assertEquals(
+        new ExcelDataValidationErrorAlert(
+            ExcelDataValidationErrorStyle.WARNING, "Warning", "Watch this value.", true),
+        ExcelDataValidationController.errorAlert(warningError));
+
+    CTDataValidation infoError = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    infoError.setErrorTitle("Info");
+    infoError.setError("Read the list.");
+    infoError.setErrorStyle(
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.INFORMATION);
+    assertEquals(
+        new ExcelDataValidationErrorAlert(
+            ExcelDataValidationErrorStyle.INFORMATION, "Info", "Read the list.", false),
+        ExcelDataValidationController.errorAlert(infoError));
+
+    CTDataValidation blankErrorTitle = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    blankErrorTitle.setErrorTitle(" ");
+    blankErrorTitle.setError("Use one of the allowed values.");
+    assertNull(ExcelDataValidationController.errorAlert(blankErrorTitle));
+
+    CTDataValidation missingErrorText =
+        rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    missingErrorText.setErrorTitle("Invalid status");
+    assertNull(ExcelDataValidationController.errorAlert(missingErrorText));
+  }
+
+  @Test
+  void rawEnumMappingsAndLabelsCoverDefaultedAndMalformedMetadata() {
+    CTDataValidation defaultWhole = rawValidation(STDataValidationType.WHOLE, "B1", "1");
+    assertEquals(
+        new ExcelDataValidationSnapshot.Unsupported(
+            List.of("B1"),
+            "MISSING_FORMULA",
+            "whole-number validation is missing formula2 for between operator."),
+        ExcelDataValidationController.toSnapshot(defaultWhole, List.of("B1")));
+
+    assertEquals(
+        ExcelComparisonOperator.BETWEEN,
+        ExcelDataValidationController.comparisonOperator(rawWholeOperator(null)));
+    assertEquals(
+        ExcelComparisonOperator.NOT_BETWEEN,
+        ExcelDataValidationController.comparisonOperator(
+            rawWholeOperator(
+                org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
+                    .NOT_BETWEEN)));
+    assertEquals(
+        ExcelComparisonOperator.NOT_EQUAL,
+        ExcelDataValidationController.comparisonOperator(
+            rawWholeOperator(
+                org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
+                    .EQUAL)));
+    assertEquals(
+        ExcelComparisonOperator.EQUAL,
+        ExcelDataValidationController.comparisonOperator(
+            rawWholeOperator(
+                org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
+                    .NOT_EQUAL)));
+    assertEquals(
+        ExcelComparisonOperator.LESS_THAN,
+        ExcelDataValidationController.comparisonOperator(
+            rawWholeOperator(
+                org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
+                    .GREATER_THAN)));
+    assertEquals(
+        ExcelComparisonOperator.GREATER_THAN,
+        ExcelDataValidationController.comparisonOperator(
+            rawWholeOperator(
+                org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
+                    .LESS_THAN)));
+    assertEquals(
+        ExcelComparisonOperator.LESS_OR_EQUAL,
+        ExcelDataValidationController.comparisonOperator(
+            rawWholeOperator(
+                org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
+                    .GREATER_THAN_OR_EQUAL)));
+    assertEquals(
+        ExcelComparisonOperator.GREATER_OR_EQUAL,
+        ExcelDataValidationController.comparisonOperator(
+            rawWholeOperator(
+                org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
+                    .LESS_THAN_OR_EQUAL)));
+
+    assertEquals(
+        ExcelDataValidationErrorStyle.STOP,
+        ExcelDataValidationController.errorStyle(CTDataValidation.Factory.newInstance()));
+    CTDataValidation warningStyle = CTDataValidation.Factory.newInstance();
+    warningStyle.setErrorStyle(
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.WARNING);
+    assertEquals(
+        ExcelDataValidationErrorStyle.WARNING,
+        ExcelDataValidationController.errorStyle(warningStyle));
+    CTDataValidation informationStyle = CTDataValidation.Factory.newInstance();
+    informationStyle.setErrorStyle(
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.INFORMATION);
+    assertEquals(
+        ExcelDataValidationErrorStyle.INFORMATION,
+        ExcelDataValidationController.errorStyle(informationStyle));
+
+    CTDataValidation invalidOperator = rawWholeOperator(null);
+    try (var cursor = invalidOperator.newCursor()) {
+      cursor.setAttributeText(new javax.xml.namespace.QName("", "operator"), "mystery");
+    }
+    IllegalArgumentException operatorFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ExcelDataValidationController.comparisonOperator(invalidOperator));
+    assertEquals("Unsupported raw validation operator: mystery", operatorFailure.getMessage());
+
+    CTDataValidation invalidErrorStyle = CTDataValidation.Factory.newInstance();
+    try (var cursor = invalidErrorStyle.newCursor()) {
+      cursor.setAttributeText(new javax.xml.namespace.QName("", "errorStyle"), "mystery");
+    }
+    IllegalArgumentException errorStyleFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> ExcelDataValidationController.errorStyle(invalidErrorStyle));
+    assertEquals("Unsupported raw validation error style: mystery", errorStyleFailure.getMessage());
+
+    assertEquals(
+        "between operator",
+        ExcelDataValidationController.operatorLabel(ExcelComparisonOperator.BETWEEN));
+    assertEquals(
+        "not-between operator",
+        ExcelDataValidationController.operatorLabel(ExcelComparisonOperator.NOT_BETWEEN));
+    assertEquals(
+        "equal operator",
+        ExcelDataValidationController.operatorLabel(ExcelComparisonOperator.EQUAL));
+    assertEquals(
+        "not-equal operator",
+        ExcelDataValidationController.operatorLabel(ExcelComparisonOperator.NOT_EQUAL));
+    assertEquals(
+        "greater-than operator",
+        ExcelDataValidationController.operatorLabel(ExcelComparisonOperator.GREATER_THAN));
+    assertEquals(
+        "greater-or-equal operator",
+        ExcelDataValidationController.operatorLabel(ExcelComparisonOperator.GREATER_OR_EQUAL));
+    assertEquals(
+        "less-than operator",
+        ExcelDataValidationController.operatorLabel(ExcelComparisonOperator.LESS_THAN));
+    assertEquals(
+        "less-or-equal operator",
+        ExcelDataValidationController.operatorLabel(ExcelComparisonOperator.LESS_OR_EQUAL));
+  }
+
+  @Test
+  void directSnapshotDispatchCoversRemainingXssfAndRawComparisonFamilies() {
+    ExcelDataValidationSnapshot.Supported decimalSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            invokeToSnapshot(
+                new StubConstraint(
+                    DataValidationConstraint.ValidationType.DECIMAL,
+                    ComparisonOperator.GT,
+                    null,
+                    "0.5",
+                    null),
+                List.of("A1")));
+    assertEquals(
+        new ExcelDataValidationRule.DecimalNumber(
+            ExcelComparisonOperator.GREATER_THAN, "0.5", null),
+        decimalSnapshot.validation().rule());
+
+    ExcelDataValidationSnapshot.Supported dateSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            invokeToSnapshot(
+                new StubConstraint(
+                    DataValidationConstraint.ValidationType.DATE,
+                    ComparisonOperator.EQUAL,
+                    null,
+                    "DATE(2026,4,1)",
+                    null),
+                List.of("B1")));
+    assertEquals(
+        new ExcelDataValidationRule.DateRule(ExcelComparisonOperator.EQUAL, "DATE(2026,4,1)", null),
+        dateSnapshot.validation().rule());
+
+    ExcelDataValidationSnapshot.Supported timeSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            invokeToSnapshot(
+                new StubConstraint(
+                    DataValidationConstraint.ValidationType.TIME,
+                    ComparisonOperator.GT,
+                    null,
+                    "TIME(9,0,0)",
+                    null),
+                List.of("C1")));
+    assertEquals(
+        new ExcelDataValidationRule.TimeRule(
+            ExcelComparisonOperator.GREATER_THAN, "TIME(9,0,0)", null),
+        timeSnapshot.validation().rule());
+
+    ExcelDataValidationSnapshot.Supported textLengthSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            invokeToSnapshot(
+                new StubConstraint(
+                    DataValidationConstraint.ValidationType.TEXT_LENGTH,
+                    ComparisonOperator.LE,
+                    null,
+                    "20",
+                    null),
+                List.of("D1")));
+    assertEquals(
+        new ExcelDataValidationRule.TextLength(ExcelComparisonOperator.LESS_OR_EQUAL, "20", null),
+        textLengthSnapshot.validation().rule());
+
+    ExcelDataValidationSnapshot.Supported wholeBetweenSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            invokeToSnapshot(
+                new StubConstraint(
+                    DataValidationConstraint.ValidationType.INTEGER,
+                    ComparisonOperator.BETWEEN,
+                    null,
+                    "1",
+                    "9"),
+                List.of("E1")));
+    assertEquals(
+        new ExcelDataValidationRule.WholeNumber(ExcelComparisonOperator.BETWEEN, "1", "9"),
+        wholeBetweenSnapshot.validation().rule());
+    assertEquals(
+        new ExcelDataValidationSnapshot.Unsupported(
+            List.of("F1"),
+            "MISSING_FORMULA",
+            "whole-number validation is missing formula2 for between operator."),
+        invokeToSnapshot(
+            new StubConstraint(
+                DataValidationConstraint.ValidationType.INTEGER,
+                ComparisonOperator.BETWEEN,
+                null,
+                "1",
+                null),
+            List.of("F1")));
+    assertEquals(
+        new ExcelDataValidationSnapshot.Unsupported(
+            List.of("G1"), "MISSING_FORMULA", "Custom formula validation is missing formula1."),
+        ExcelDataValidationController.toSnapshot(
+            rawValidation(STDataValidationType.CUSTOM, "G1", null), List.of("G1")));
+
+    CTDataValidation allowBlankComparison = rawValidation(STDataValidationType.WHOLE, "H1", "1");
+    allowBlankComparison.setOperator(
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.NOT_BETWEEN);
+    allowBlankComparison.setFormula2("9");
+    allowBlankComparison.setAllowBlank(true);
+    ExcelDataValidationSnapshot.Supported allowBlankComparisonSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            ExcelDataValidationController.toSnapshot(allowBlankComparison, List.of("H1")));
+    assertTrue(allowBlankComparisonSnapshot.validation().allowBlank());
+
+    CTDataValidation blankFormula2 = rawValidation(STDataValidationType.WHOLE, "I1", "1");
+    blankFormula2.setOperator(
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.BETWEEN);
+    blankFormula2.setFormula2(" ");
+    assertEquals(
+        new ExcelDataValidationSnapshot.Unsupported(
+            List.of("I1"),
+            "MISSING_FORMULA",
+            "whole-number validation is missing formula2 for between operator."),
+        ExcelDataValidationController.toSnapshot(blankFormula2, List.of("I1")));
+
+    assertEquals(
+        new ExcelDataValidationSnapshot.Unsupported(
+            List.of("J1"), "MISSING_FORMULA", "whole-number validation is missing formula1."),
+        ExcelDataValidationController.toSnapshot(
+            rawValidation(STDataValidationType.WHOLE, "J1", null), List.of("J1")));
+
+    CTDataValidation customAllowBlank =
+        rawValidation(STDataValidationType.CUSTOM, "K1", "LEN(K1)>0");
+    customAllowBlank.setAllowBlank(true);
+    ExcelDataValidationSnapshot.Supported customAllowBlankSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            ExcelDataValidationController.toSnapshot(customAllowBlank, List.of("K1")));
+    assertTrue(customAllowBlankSnapshot.validation().allowBlank());
+
+    assertEquals(
+        new ExcelDataValidationSnapshot.Supported(
+            List.of("L1"),
+            new ExcelDataValidationDefinition(
+                new ExcelDataValidationRule.FormulaList("\"Queued"), false, true, null, null)),
+        ExcelDataValidationController.toSnapshot(
+            rawValidation(STDataValidationType.LIST, "L1", "\"Queued"), List.of("L1")));
+
+    CTDataValidation unknownType = CTDataValidation.Factory.newInstance();
+    unknownType.setSqref(List.of("M1"));
+    try (var cursor = unknownType.newCursor()) {
+      cursor.setAttributeText(new javax.xml.namespace.QName("", "type"), "mystery");
+    }
+    assertEquals(
+        new ExcelDataValidationSnapshot.Unsupported(
+            List.of("M1"), "UNKNOWN", "Unsupported data-validation type: mystery"),
+        ExcelDataValidationController.toSnapshot(unknownType, List.of("M1")));
+  }
+
+  @Test
+  void rawCtSnapshotsMapSupportedFamiliesOperatorsAndMetadata() throws Exception {
+    CTDataValidation explicitList = CTDataValidation.Factory.newInstance();
+    explicitList.setType(STDataValidationType.LIST);
+    explicitList.setSqref(List.of("A1:A3"));
+    explicitList.setFormula1("\"Queued,Done\"");
+    explicitList.setAllowBlank(true);
+    explicitList.setShowDropDown(false);
+    explicitList.setPromptTitle("Status");
+    explicitList.setPrompt("Choose one workflow state.");
+    explicitList.setShowInputMessage(true);
+    explicitList.setErrorTitle("Invalid status");
+    explicitList.setError("Use one of the allowed values.");
+    explicitList.setShowErrorMessage(true);
+    explicitList.setErrorStyle(
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.WARNING);
+
+    ExcelDataValidationSnapshot.Supported explicitListSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            ExcelDataValidationController.toSnapshot(explicitList, List.of("A1:A3")));
+    assertEquals(
+        new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
+        explicitListSnapshot.validation().rule());
+    assertEquals(
+        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", true),
+        explicitListSnapshot.validation().prompt());
+    assertEquals(
+        ExcelDataValidationErrorStyle.WARNING,
+        explicitListSnapshot.validation().errorAlert().style());
+    assertTrue(explicitListSnapshot.validation().suppressDropDownArrow());
+
+    CTDataValidation formulaList = CTDataValidation.Factory.newInstance();
+    formulaList.setType(STDataValidationType.LIST);
+    formulaList.setSqref(List.of("B1:B3"));
+    formulaList.setFormula1("Statuses");
+    formulaList.setShowDropDown(true);
+    formulaList.setErrorTitle("Heads up");
+    formulaList.setError("Read the allowed values.");
+    formulaList.setShowErrorMessage(true);
+    formulaList.setErrorStyle(
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationErrorStyle.INFORMATION);
+
+    ExcelDataValidationSnapshot.Supported formulaListSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            ExcelDataValidationController.toSnapshot(formulaList, List.of("B1:B3")));
+    assertEquals(
+        new ExcelDataValidationRule.FormulaList("Statuses"),
+        formulaListSnapshot.validation().rule());
+    assertFalse(formulaListSnapshot.validation().suppressDropDownArrow());
+    assertEquals(
+        ExcelDataValidationErrorStyle.INFORMATION,
+        formulaListSnapshot.validation().errorAlert().style());
+
+    assertRawComparisonSnapshot(
+        STDataValidationType.WHOLE,
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.BETWEEN,
+        ExcelComparisonOperator.BETWEEN);
+    assertRawComparisonSnapshot(
+        STDataValidationType.DECIMAL,
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.NOT_BETWEEN,
+        ExcelComparisonOperator.NOT_BETWEEN);
+    assertRawComparisonSnapshot(
+        STDataValidationType.DATE,
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.EQUAL,
+        ExcelComparisonOperator.NOT_EQUAL);
+    assertRawComparisonSnapshot(
+        STDataValidationType.TIME,
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.NOT_EQUAL,
+        ExcelComparisonOperator.EQUAL);
+    assertRawComparisonSnapshot(
+        STDataValidationType.TEXT_LENGTH,
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.GREATER_THAN,
+        ExcelComparisonOperator.LESS_THAN);
+    assertRawComparisonSnapshot(
+        STDataValidationType.WHOLE,
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.LESS_THAN,
+        ExcelComparisonOperator.GREATER_THAN);
+    assertRawComparisonSnapshot(
+        STDataValidationType.DECIMAL,
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
+            .GREATER_THAN_OR_EQUAL,
+        ExcelComparisonOperator.LESS_OR_EQUAL);
+    assertRawComparisonSnapshot(
+        STDataValidationType.DATE,
+        org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
+            .LESS_THAN_OR_EQUAL,
+        ExcelComparisonOperator.GREATER_OR_EQUAL);
+
+    CTDataValidation custom = CTDataValidation.Factory.newInstance();
+    custom.setType(STDataValidationType.CUSTOM);
+    custom.setSqref(List.of("C1:C3"));
+    custom.setFormula1("LEN(C1)>0");
+    ExcelDataValidationSnapshot.Supported customSnapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            ExcelDataValidationController.toSnapshot(custom, List.of("C1:C3")));
+    assertEquals(
+        new ExcelDataValidationRule.CustomFormula("LEN(C1)>0"), customSnapshot.validation().rule());
+  }
+
+  @Test
+  void rawCtSnapshotsSurfaceUnknownOperators() throws Exception {
+    CTDataValidation invalidOperator = CTDataValidation.Factory.newInstance();
+    invalidOperator.setType(STDataValidationType.WHOLE);
+    invalidOperator.setSqref(List.of("D1"));
+    invalidOperator.setFormula1("1");
+    try (var cursor = invalidOperator.newCursor()) {
+      cursor.setAttributeText(new javax.xml.namespace.QName("", "operator"), "mystery");
+    }
+
+    assertEquals(
+        new ExcelDataValidationSnapshot.Unsupported(
+            List.of("D1"),
+            "UNKNOWN_OPERATOR",
+            "whole-number validation uses an unsupported comparison operator."),
+        ExcelDataValidationController.toSnapshot(invalidOperator, List.of("D1")));
+  }
+
+  @Test
   void dataValidationHealthFindingsCoverBrokenFormulaFamiliesAndOverlap() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
@@ -499,6 +1048,43 @@ class ExcelDataValidationControllerTest {
     }
   }
 
+  @Test
+  void countAndHealthAnalysisHandleMalformedRawRulesWithoutUsingPoiWrappers() throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      addRawValidation(sheet, "E2", STDataValidationType.LIST, "\"\"");
+      addRawValidation(sheet, "F2", STDataValidationType.LIST, null);
+      addRawValidation(sheet, "G2", STDataValidationType.TEXT_LENGTH, "20");
+
+      assertEquals(3, controller.dataValidationCount(sheet));
+      List<ExcelDataValidationSnapshot> snapshots =
+          controller.dataValidations(sheet, new ExcelRangeSelection.All());
+      assertEquals(3, snapshots.size());
+      assertEquals(
+          new ExcelDataValidationSnapshot.Unsupported(
+              List.of("E2"), "EMPTY_EXPLICIT_LIST", "Explicit list has no values."),
+          snapshots.get(0));
+      assertEquals(
+          new ExcelDataValidationSnapshot.Unsupported(
+              List.of("F2"),
+              "MISSING_FORMULA",
+              "List validation is missing both explicit values and formula1."),
+          snapshots.get(1));
+      ExcelDataValidationSnapshot.Supported textLength =
+          assertInstanceOf(ExcelDataValidationSnapshot.Supported.class, snapshots.get(2));
+      assertEquals(List.of("G2"), textLength.ranges());
+      assertInstanceOf(ExcelDataValidationRule.TextLength.class, textLength.validation().rule());
+      assertEquals(
+          List.of(
+              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
+              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE),
+          controller.dataValidationHealthFindings("Budget", sheet).stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .distinct()
+              .toList());
+    }
+  }
+
   private static ExcelDataValidationDefinition explicitListValidation() {
     return new ExcelDataValidationDefinition(
         new ExcelDataValidationRule.ExplicitList(List.of("Queued", "Done")),
@@ -523,6 +1109,41 @@ class ExcelDataValidationControllerTest {
   private ExcelDataValidationSnapshot invokeToSnapshot(
       StubConstraint constraint, List<String> ranges) {
     return ExcelDataValidationController.toSnapshot(new StubXssfDataValidation(constraint), ranges);
+  }
+
+  private void assertRawComparisonSnapshot(
+      STDataValidationType.Enum type,
+      org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.Enum operator,
+      ExcelComparisonOperator expectedOperator) {
+    CTDataValidation validation = CTDataValidation.Factory.newInstance();
+    validation.setType(type);
+    validation.setSqref(List.of("Z1"));
+    validation.setFormula1("1");
+    if (operator
+            == org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.BETWEEN
+        || operator
+            == org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator
+                .NOT_BETWEEN) {
+      validation.setFormula2("2");
+    }
+    validation.setOperator(operator);
+
+    ExcelDataValidationSnapshot.Supported snapshot =
+        assertInstanceOf(
+            ExcelDataValidationSnapshot.Supported.class,
+            ExcelDataValidationController.toSnapshot(validation, List.of("Z1")));
+
+    ExcelDataValidationRule rule = snapshot.validation().rule();
+    ExcelComparisonOperator actualOperator =
+        switch (rule) {
+          case ExcelDataValidationRule.WholeNumber wholeNumber -> wholeNumber.operator();
+          case ExcelDataValidationRule.DecimalNumber decimalNumber -> decimalNumber.operator();
+          case ExcelDataValidationRule.DateRule dateRule -> dateRule.operator();
+          case ExcelDataValidationRule.TimeRule timeRule -> timeRule.operator();
+          case ExcelDataValidationRule.TextLength textLength -> textLength.operator();
+          default -> throw new AssertionError("unexpected rule type: " + rule);
+        };
+    assertEquals(expectedOperator, actualOperator);
   }
 
   private static ExcelDataValidationDefinition expectedRoundTripDefinition(
@@ -585,6 +1206,11 @@ class ExcelDataValidationControllerTest {
 
   private static void addRawValidation(
       XSSFSheet sheet, String range, STDataValidationType.Enum type) {
+    addRawValidation(sheet, range, type, null);
+  }
+
+  private static void addRawValidation(
+      XSSFSheet sheet, String range, STDataValidationType.Enum type, String formula1) {
     CTDataValidations dataValidations =
         sheet.getCTWorksheet().isSetDataValidations()
             ? sheet.getCTWorksheet().getDataValidations()
@@ -592,7 +1218,40 @@ class ExcelDataValidationControllerTest {
     CTDataValidation validation = dataValidations.addNewDataValidation();
     validation.setType(type);
     validation.setSqref(List.of(range));
+    if (formula1 != null) {
+      validation.setFormula1(formula1);
+    }
+    if (type == STDataValidationType.TEXT_LENGTH) {
+      validation.setOperator(
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.LESS_THAN);
+    }
     syncCount(sheet);
+  }
+
+  private static CTDataValidation rawValidation(
+      STDataValidationType.Enum type, String range, String formula1) {
+    CTDataValidation validation = CTDataValidation.Factory.newInstance();
+    validation.setType(type);
+    validation.setSqref(List.of(range));
+    if (formula1 != null) {
+      validation.setFormula1(formula1);
+    }
+    return validation;
+  }
+
+  private static CTDataValidation rawWholeOperator(
+      org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationOperator.Enum operator) {
+    CTDataValidation validation = rawValidation(STDataValidationType.WHOLE, "Z1", "1");
+    if (operator != null) {
+      validation.setOperator(operator);
+    }
+    return validation;
+  }
+
+  private static StubXssfDataValidation xssfListStub() {
+    return new StubXssfDataValidation(
+        new StubConstraint(
+            DataValidationConstraint.ValidationType.LIST, 0, new String[] {"Queued"}, null, null));
   }
 
   /** Immutable fake POI constraint used to drive controller snapshot branches deterministically. */

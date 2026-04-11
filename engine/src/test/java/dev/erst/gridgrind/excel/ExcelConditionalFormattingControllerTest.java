@@ -362,6 +362,72 @@ class ExcelConditionalFormattingControllerTest {
   }
 
   @Test
+  void toSnapshotFallsBackToConditionTypeWhenRawCfTypeIsUnset() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      seedConditionalFormattingValues(sheet);
+      var formatting = sheet.getSheetConditionalFormatting();
+      XSSFConditionalFormattingRule formulaRule =
+          formatting.createConditionalFormattingRule("A1>0");
+      formatting.addConditionalFormatting(
+          new CellRangeAddress[] {CellRangeAddress.valueOf("A1:A3")}, formulaRule);
+      var ctRule = ctBlock(sheet, "A1:A3").getCfRuleArray(0);
+      ctRule.unsetType();
+
+      ExcelConditionalFormattingRuleSnapshot.UnsupportedRule snapshot =
+          assertInstanceOf(
+              ExcelConditionalFormattingRuleSnapshot.UnsupportedRule.class,
+              ExcelConditionalFormattingController.toSnapshot(
+                  sheet, formatting.getConditionalFormattingAt(0).getRule(0), ctRule));
+
+      assertEquals("UNKNOWN", snapshot.kind());
+      assertEquals("Rule family metadata is missing or unreadable.", snapshot.detail());
+    }
+  }
+
+  @Test
+  void toSnapshotDegradesUnreadableAndUnsupportedRuleFamiliesInsteadOfCrashing() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      seedConditionalFormattingValues(sheet);
+      var formatting = sheet.getSheetConditionalFormatting();
+
+      XSSFConditionalFormattingRule unreadableRule =
+          formatting.createConditionalFormattingRule("A1>0");
+      formatting.addConditionalFormatting(
+          new CellRangeAddress[] {CellRangeAddress.valueOf("A1:A3")}, unreadableRule);
+      var unreadableCtRule = ctBlock(sheet, "A1:A3").getCfRuleArray(0);
+      try (var cursor = unreadableCtRule.newCursor()) {
+        cursor.setAttributeText(new javax.xml.namespace.QName("", "type"), "mystery");
+      }
+      ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unreadableSnapshot =
+          assertInstanceOf(
+              ExcelConditionalFormattingRuleSnapshot.UnsupportedRule.class,
+              ExcelConditionalFormattingController.toSnapshot(
+                  sheet, formatting.getConditionalFormattingAt(0).getRule(0), unreadableCtRule));
+      assertEquals("UNKNOWN", unreadableSnapshot.kind());
+      assertEquals("Rule family metadata is missing or unreadable.", unreadableSnapshot.detail());
+
+      XSSFConditionalFormattingRule unsupportedFamilyRule =
+          formatting.createConditionalFormattingRule("B1>0");
+      formatting.addConditionalFormatting(
+          new CellRangeAddress[] {CellRangeAddress.valueOf("B1:B3")}, unsupportedFamilyRule);
+      var unsupportedFamilyCtRule = ctBlock(sheet, "B1:B3").getCfRuleArray(0);
+      unsupportedFamilyCtRule.setType(
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.STCfType.ABOVE_AVERAGE);
+      ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedFamilySnapshot =
+          assertInstanceOf(
+              ExcelConditionalFormattingRuleSnapshot.UnsupportedRule.class,
+              ExcelConditionalFormattingController.toSnapshot(
+                  sheet,
+                  formatting.getConditionalFormattingAt(1).getRule(0),
+                  unsupportedFamilyCtRule));
+      assertEquals("ABOVE_AVERAGE", unsupportedFamilySnapshot.kind());
+      assertEquals("Rule family is not modeled by GridGrind.", unsupportedFamilySnapshot.detail());
+    }
+  }
+
+  @Test
   void helperMethodsExposeStableLabelsAndFormulaValidation() throws Exception {
     ExcelDifferentialStyleSnapshot style =
         new ExcelDifferentialStyleSnapshot(
@@ -414,10 +480,14 @@ class ExcelConditionalFormattingControllerTest {
                     new ExcelConditionalFormattingThresholdSnapshot(
                         ExcelConditionalFormattingThresholdType.MIN, null, 0.0d)))));
     assertEquals(
+        "TOP10_RULE",
+        ExcelConditionalFormattingController.ruleLabel(
+            new ExcelConditionalFormattingRuleSnapshot.Top10Rule(6, true, 7, true, true, style)));
+    assertEquals(
         "UNSUPPORTED_RULE(DATA_BAR)",
         ExcelConditionalFormattingController.ruleLabel(
             new ExcelConditionalFormattingRuleSnapshot.UnsupportedRule(
-                6, false, "data_bar", "detail")));
+                7, false, "data_bar", "detail")));
     var explicitUnsupportedType =
         org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCfRule.Factory.newInstance();
     explicitUnsupportedType.setType(
@@ -656,24 +726,48 @@ class ExcelConditionalFormattingControllerTest {
           "CELL_VALUE_IS",
           "unsupported comparison payload");
 
-      XSSFConditionalFormattingRule unsupportedFamily =
+      XSSFConditionalFormattingRule top10Family =
           formatting.createConditionalFormattingRule("E1>0");
       formatting.addConditionalFormatting(
-          new CellRangeAddress[] {CellRangeAddress.valueOf("E1:E3")}, unsupportedFamily);
-      var unsupportedFamilyCtRule = ctBlock(sheet, "E1:E3").getCfRuleArray(0);
-      unsupportedFamilyCtRule.setType(
+          new CellRangeAddress[] {CellRangeAddress.valueOf("E1:E3")}, top10Family);
+      var top10FamilyCtRule = ctBlock(sheet, "E1:E3").getCfRuleArray(0);
+      top10FamilyCtRule.setType(
           org.openxmlformats.schemas.spreadsheetml.x2006.main.STCfType.TOP_10);
-      assertUnsupportedRule(
-          ExcelConditionalFormattingController.toSnapshot(
-              sheet, formatting.getConditionalFormattingAt(4).getRule(0), unsupportedFamilyCtRule),
-          "TOP_10",
-          "not modeled");
+      ExcelConditionalFormattingRuleSnapshot.Top10Rule top10 =
+          assertInstanceOf(
+              ExcelConditionalFormattingRuleSnapshot.Top10Rule.class,
+              ExcelConditionalFormattingController.toSnapshot(
+                  sheet, formatting.getConditionalFormattingAt(4).getRule(0), top10FamilyCtRule));
+      assertEquals(10, top10.rank());
+      assertFalse(top10.percent());
+      assertFalse(top10.bottom());
+
+      XSSFConditionalFormattingRule explicitTop10 =
+          formatting.createConditionalFormattingRule("F1>0");
+      formatting.addConditionalFormatting(
+          new CellRangeAddress[] {CellRangeAddress.valueOf("F1:F3")}, explicitTop10);
+      var explicitTop10CtRule = ctBlock(sheet, "F1:F3").getCfRuleArray(0);
+      explicitTop10CtRule.setType(
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.STCfType.TOP_10);
+      explicitTop10CtRule.setRank(7L);
+      explicitTop10CtRule.setPercent(true);
+      explicitTop10CtRule.setBottom(true);
+      explicitTop10CtRule.setStopIfTrue(true);
+      ExcelConditionalFormattingRuleSnapshot.Top10Rule explicitTop10Snapshot =
+          assertInstanceOf(
+              ExcelConditionalFormattingRuleSnapshot.Top10Rule.class,
+              ExcelConditionalFormattingController.toSnapshot(
+                  sheet, formatting.getConditionalFormattingAt(5).getRule(0), explicitTop10CtRule));
+      assertEquals(7, explicitTop10Snapshot.rank());
+      assertTrue(explicitTop10Snapshot.percent());
+      assertTrue(explicitTop10Snapshot.bottom());
+      assertTrue(explicitTop10Snapshot.stopIfTrue());
 
       XSSFConditionalFormattingRule iconSetCatchRule =
           formatting.createConditionalFormattingRule(IconMultiStateFormatting.IconSet.GYR_3_ARROW);
       formatting.addConditionalFormatting(
-          new CellRangeAddress[] {CellRangeAddress.valueOf("F1:F3")}, iconSetCatchRule);
-      var iconSetCatchCtRule = ctBlock(sheet, "F1:F3").getCfRuleArray(0);
+          new CellRangeAddress[] {CellRangeAddress.valueOf("G1:G3")}, iconSetCatchRule);
+      var iconSetCatchCtRule = ctBlock(sheet, "G1:G3").getCfRuleArray(0);
       iconSetCatchCtRule
           .getIconSet()
           .getCfvoArray(0)
@@ -681,7 +775,7 @@ class ExcelConditionalFormattingControllerTest {
       iconSetCatchCtRule.getIconSet().getCfvoArray(0).setVal(" ");
       assertUnsupportedRule(
           ExcelConditionalFormattingController.toSnapshot(
-              sheet, formatting.getConditionalFormattingAt(5).getRule(0), iconSetCatchCtRule),
+              sheet, formatting.getConditionalFormattingAt(6).getRule(0), iconSetCatchCtRule),
           "ICON_SET",
           "unsupported threshold or icon-set payload");
     }

@@ -11,8 +11,47 @@ public record ExcelTableSnapshot(
     int headerRowCount,
     int totalsRowCount,
     List<String> columnNames,
+    List<ExcelTableColumnSnapshot> columns,
     ExcelTableStyleSnapshot style,
-    boolean hasAutofilter) {
+    boolean hasAutofilter,
+    String comment,
+    boolean published,
+    boolean insertRow,
+    boolean insertRowShift,
+    String headerRowCellStyle,
+    String dataCellStyle,
+    String totalsRowCellStyle) {
+  /** Creates a table snapshot with defaulted per-column metadata and optional flags. */
+  public ExcelTableSnapshot(
+      String name,
+      String sheetName,
+      String range,
+      int headerRowCount,
+      int totalsRowCount,
+      List<String> columnNames,
+      ExcelTableStyleSnapshot style,
+      boolean hasAutofilter) {
+    this(
+        name,
+        sheetName,
+        range,
+        headerRowCount,
+        totalsRowCount,
+        columnNames,
+        columnNames.stream()
+            .map(columnName -> new ExcelTableColumnSnapshot(0L, columnName, "", "", "", ""))
+            .toList(),
+        style,
+        hasAutofilter,
+        "",
+        false,
+        false,
+        false,
+        "",
+        "",
+        "");
+  }
+
   public ExcelTableSnapshot {
     Objects.requireNonNull(name, "name must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
@@ -31,6 +70,15 @@ public record ExcelTableSnapshot(
     for (String columnName : columnNames) {
       Objects.requireNonNull(columnName, "columnNames must not contain nulls");
     }
+    Objects.requireNonNull(columns, "columns must not be null");
+    columns = List.copyOf(columns);
+    for (ExcelTableColumnSnapshot column : columns) {
+      Objects.requireNonNull(column, "columns must not contain nulls");
+    }
+    comment = comment == null ? "" : comment;
+    headerRowCellStyle = headerRowCellStyle == null ? "" : headerRowCellStyle;
+    dataCellStyle = dataCellStyle == null ? "" : dataCellStyle;
+    totalsRowCellStyle = totalsRowCellStyle == null ? "" : totalsRowCellStyle;
     Objects.requireNonNull(style, "style must not be null");
   }
 }

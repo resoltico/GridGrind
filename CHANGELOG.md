@@ -5,6 +5,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.35.0] - 2026-04-11
+
+### Added
+
+- GridGrind now exposes the Phase 2 factual read-parity surface for workbook protection, rich comment runs
+  and anchors, advanced print setup, structured theme or indexed or tinted color facts,
+  gradient fills, autofilter criteria and sort state, advanced table metadata, and the
+  remaining POI-readable XSSF conditional-formatting families modeled by GridGrind.
+- Added [examples/advanced-readback-request.json](./examples/advanced-readback-request.json) plus
+  the matching promoted Jazzer seed so the richer factual readback contract is both publicly
+  demonstrated and replay-verified.
+
+### Changed
+
+- The CLI help now states that column structural edits are blocked by any workbook formulas, not
+  just formulas on the sheet being edited.
+- The protocol catalog, public docs, README, and the promoted `table_autofilter_request.json`
+  Jazzer seed now use the real defaulted `SET_TABLE` contract: omit `showTotalsRow` unless the
+  table actually includes a totals row.
+- The public docs, quick reference, README, Jazzer docs, and parity records now describe the full
+  richer readback contract instead of the earlier narrowed summaries.
+
+### Fixed
+
+- `SET_TABLE` now treats `showTotalsRow` as a genuinely optional request field that defaults to
+  `false`, matching the protocol catalog and black-box CLI behavior.
+- The protocol catalog builder now rejects any future attempt to mark a primitive record component
+  as optional, so catalog optionality cannot drift away from JSON deserialization semantics again.
+- Data-validation health analysis now preserves distinct malformed raw-validation states instead of
+  collapsing them into broader findings, and row or column structural-edit guards now tolerate
+  malformed raw validation records without crashing while computing unsupported-formula checks.
+- Advanced readback now degrades malformed raw conditional-formatting family metadata and malformed
+  raw data-validation enum metadata into factual unsupported reports instead of crashing before the
+  workbook can be inspected.
+- Persisted autofilter sort-state and sort-condition ranges are now reported exactly as stored,
+  including blank raw ranges, so malformed workbook metadata is surfaced to callers instead of
+  being rejected during factual readback.
+- The advanced XSSF parity corpus now correctly materializes workbook autofilters, theme or tinted
+  font colors, and gradient fills, so the parity oracle measures the intended Phase 2 read
+  surface instead of an underspecified fixture subset.
+
 ## [0.34.0] - 2026-04-11
 
 ### Added
@@ -1282,7 +1323,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.34.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.35.0...HEAD
+[0.35.0]: https://github.com/resoltico/GridGrind/compare/v0.34.0...v0.35.0
 [0.34.0]: https://github.com/resoltico/GridGrind/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/resoltico/GridGrind/compare/v0.32.2...v0.33.0
 [0.32.2]: https://github.com/resoltico/GridGrind/compare/v0.32.1...v0.32.2

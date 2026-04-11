@@ -517,11 +517,30 @@ public sealed interface GridGrindResponse {
     }
   }
 
-  /** Plain-text comment facts returned for analyzed cells that carry a comment. */
-  record CommentReport(String text, String author, boolean visible) {
+  /** Factual comment metadata returned for analyzed cells that carry a comment. */
+  record CommentReport(
+      String text,
+      String author,
+      boolean visible,
+      java.util.List<RichTextRunReport> runs,
+      CommentAnchorReport anchor) {
+    /** Creates a plain comment report without rich runs or anchor metadata. */
+    public CommentReport(String text, String author, boolean visible) {
+      this(text, author, visible, null, null);
+    }
+
     public CommentReport {
       Objects.requireNonNull(text, "text must not be null");
       Objects.requireNonNull(author, "author must not be null");
+      if (runs != null) {
+        runs = copyValues(runs, "runs");
+        if (!text.equals(
+            runs.stream()
+                .map(RichTextRunReport::text)
+                .collect(java.util.stream.Collectors.joining()))) {
+          throw new IllegalArgumentException("comment runs must concatenate to the plain text");
+        }
+      }
     }
   }
 

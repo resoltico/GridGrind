@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
-import dev.erst.gridgrind.excel.ExcelBorderSide;
+import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
@@ -11,6 +11,7 @@ import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellProtectionSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
+import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
@@ -1212,19 +1213,20 @@ public final class XlsxRoundTripVerifier {
             font.getItalic(),
             font.getFontName(),
             new ExcelFontHeight(font.getFontHeight()),
-            toRgbHex(font.getXSSFColor()),
+            toColorSnapshot(font.getXSSFColor()),
             font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
             font.getStrikeout()),
         fillSnapshot(style),
         new ExcelBorderSnapshot(
-            new ExcelBorderSide(
-                fromPoi(style.getBorderTop()), toRgbHex(style.getTopBorderXSSFColor())),
-            new ExcelBorderSide(
-                fromPoi(style.getBorderRight()), toRgbHex(style.getRightBorderXSSFColor())),
-            new ExcelBorderSide(
-                fromPoi(style.getBorderBottom()), toRgbHex(style.getBottomBorderXSSFColor())),
-            new ExcelBorderSide(
-                fromPoi(style.getBorderLeft()), toRgbHex(style.getLeftBorderXSSFColor()))),
+            new ExcelBorderSideSnapshot(
+                fromPoi(style.getBorderTop()), toColorSnapshot(style.getTopBorderXSSFColor())),
+            new ExcelBorderSideSnapshot(
+                fromPoi(style.getBorderRight()), toColorSnapshot(style.getRightBorderXSSFColor())),
+            new ExcelBorderSideSnapshot(
+                fromPoi(style.getBorderBottom()),
+                toColorSnapshot(style.getBottomBorderXSSFColor())),
+            new ExcelBorderSideSnapshot(
+                fromPoi(style.getBorderLeft()), toColorSnapshot(style.getLeftBorderXSSFColor()))),
         new ExcelCellProtectionSnapshot(style.getLocked(), style.getHidden()));
   }
 
@@ -1235,8 +1237,10 @@ public final class XlsxRoundTripVerifier {
     }
     return new ExcelCellFillSnapshot(
         pattern,
-        toRgbHex(style.getFillForegroundColorColor()),
-        pattern == ExcelFillPattern.SOLID ? null : toRgbHex(style.getFillBackgroundColorColor()));
+        toColorSnapshot(style.getFillForegroundColorColor()),
+        pattern == ExcelFillPattern.SOLID
+            ? null
+            : toColorSnapshot(style.getFillBackgroundColorColor()));
   }
 
   private static void requireColorShape(XSSFColor color, String label) {
@@ -1248,15 +1252,28 @@ public final class XlsxRoundTripVerifier {
     }
   }
 
-  private static String toRgbHex(XSSFColor color) {
+  private static ExcelColorSnapshot toColorSnapshot(XSSFColor color) {
     if (color == null) {
       return null;
     }
     byte[] rgb = color.getRGB();
-    if (rgb == null || rgb.length != 3) {
+    String rgbHex = null;
+    if (rgb != null) {
+      if (rgb.length != 3) {
+        return null;
+      }
+      rgbHex = "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
+    }
+    Integer theme = color.isThemed() ? color.getTheme() : null;
+    Integer indexed = color.isIndexed() ? Short.toUnsignedInt(color.getIndexed()) : null;
+    Double tint = color.hasTint() ? color.getTint() : null;
+    if (theme != null || indexed != null) {
+      rgbHex = null;
+    }
+    if (rgbHex == null && theme == null && indexed == null) {
       return null;
     }
-    return "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
+    return new ExcelColorSnapshot(rgbHex, theme, indexed, tint);
   }
 
   private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {
@@ -1410,7 +1427,8 @@ public final class XlsxRoundTripVerifier {
   private record ExpectedCellMetadata(ExcelHyperlink hyperlink, ExcelComment comment) {
     private static ExpectedCellMetadata from(ExcelCellMetadataSnapshot metadata) {
       return new ExpectedCellMetadata(
-          metadata.hyperlink().orElse(null), metadata.comment().orElse(null));
+          metadata.hyperlink().orElse(null),
+          metadata.comment().map(derivedComment -> derivedComment.toPlainComment()).orElse(null));
     }
   }
 

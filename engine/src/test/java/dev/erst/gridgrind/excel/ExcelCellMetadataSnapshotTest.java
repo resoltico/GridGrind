@@ -16,10 +16,12 @@ class ExcelCellMetadataSnapshotTest {
     ExcelCellMetadataSnapshot snapshot =
         ExcelCellMetadataSnapshot.of(
             new ExcelHyperlink.Document("Budget!B4"),
-            new ExcelComment("Review", "GridGrind", false));
+            new ExcelCommentSnapshot("Review", "GridGrind", false, null, null));
 
     assertEquals(Optional.of(new ExcelHyperlink.Document("Budget!B4")), snapshot.hyperlink());
-    assertEquals(Optional.of(new ExcelComment("Review", "GridGrind", false)), snapshot.comment());
+    assertEquals(
+        Optional.of(new ExcelCommentSnapshot("Review", "GridGrind", false, null, null)),
+        snapshot.comment());
   }
 
   @Test

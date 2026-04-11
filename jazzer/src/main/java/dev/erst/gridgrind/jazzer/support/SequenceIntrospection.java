@@ -225,6 +225,7 @@ public final class SequenceIntrospection {
     Objects.requireNonNull(read, "read must not be null");
     return switch (read) {
       case WorkbookReadOperation.GetWorkbookSummary _ -> "GET_WORKBOOK_SUMMARY";
+      case WorkbookReadOperation.GetWorkbookProtection _ -> "GET_WORKBOOK_PROTECTION";
       case WorkbookReadOperation.GetNamedRanges _ -> "GET_NAMED_RANGES";
       case WorkbookReadOperation.GetSheetSummary _ -> "GET_SHEET_SUMMARY";
       case WorkbookReadOperation.GetCells _ -> "GET_CELLS";

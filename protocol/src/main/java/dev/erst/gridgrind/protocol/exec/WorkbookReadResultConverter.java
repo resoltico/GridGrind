@@ -15,6 +15,9 @@ final class WorkbookReadResultConverter {
       case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult workbookSummary ->
           new WorkbookReadResult.WorkbookSummaryResult(
               workbookSummary.requestId(), toWorkbookSummary(workbookSummary.workbook()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookProtectionResult protection ->
+          new WorkbookReadResult.WorkbookProtectionResult(
+              protection.requestId(), toWorkbookProtectionReport(protection.protection()));
       case dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangesResult namedRanges ->
           new WorkbookReadResult.NamedRangesResult(
               namedRanges.requestId(),
@@ -215,6 +218,17 @@ final class WorkbookReadResultConverter {
     return new GridGrindResponse.CommentReport(comment.text(), comment.author(), comment.visible());
   }
 
+  /** Converts workbook-core workbook-protection state into the protocol response shape. */
+  static WorkbookProtectionReport toWorkbookProtectionReport(
+      ExcelWorkbookProtectionSnapshot protection) {
+    return new WorkbookProtectionReport(
+        protection.structureLocked(),
+        protection.windowsLocked(),
+        protection.revisionLocked(),
+        protection.workbookPasswordHashPresent(),
+        protection.revisionsPasswordHashPresent());
+  }
+
   static DataValidationEntryReport toDataValidationEntryReport(
       ExcelDataValidationSnapshot snapshot) {
     return switch (snapshot) {
@@ -329,6 +343,14 @@ final class WorkbookReadResultConverter {
               iconSetRule.thresholds().stream()
                   .map(WorkbookReadResultConverter::toConditionalFormattingThresholdReport)
                   .toList());
+      case ExcelConditionalFormattingRuleSnapshot.Top10Rule top10Rule ->
+          new ConditionalFormattingRuleReport.Top10Rule(
+              top10Rule.priority(),
+              top10Rule.stopIfTrue(),
+              top10Rule.rank(),
+              top10Rule.percent(),
+              top10Rule.bottom(),
+              toDifferentialStyleReport(top10Rule.style()));
       case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
           new ConditionalFormattingRuleReport.UnsupportedRule(
               unsupportedRule.priority(),
@@ -395,7 +417,10 @@ final class WorkbookReadResultConverter {
             style.alignment().indentation()),
         toCellFontReport(style.font()),
         new CellFillReport(
-            style.fill().pattern(), style.fill().foregroundColor(), style.fill().backgroundColor()),
+            style.fill().pattern(),
+            toCellColorReport(style.fill().foregroundColor()),
+            toCellColorReport(style.fill().backgroundColor()),
+            toCellGradientFillReport(style.fill().gradient())),
         new CellBorderReport(
             toCellBorderSideReport(style.border().top()),
             toCellBorderSideReport(style.border().right()),
@@ -410,13 +435,13 @@ final class WorkbookReadResultConverter {
         font.italic(),
         font.fontName(),
         toFontHeightReport(font.fontHeight()),
-        font.fontColor(),
+        toCellColorReport(font.fontColor()),
         font.underline(),
         font.strikeout());
   }
 
-  static CellBorderSideReport toCellBorderSideReport(ExcelBorderSide side) {
-    return new CellBorderSideReport(side.style(), side.color());
+  static CellBorderSideReport toCellBorderSideReport(ExcelBorderSideSnapshot side) {
+    return new CellBorderSideReport(side.style(), toCellColorReport(side.color()));
   }
 
   private static GridGrindResponse.WindowReport toWindowReport(
@@ -481,13 +506,31 @@ final class WorkbookReadResultConverter {
       dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult printLayout) {
     return new PrintLayoutReport(
         printLayout.sheetName(),
-        toPrintAreaReport(printLayout.printLayout().printArea()),
-        printLayout.printLayout().orientation(),
-        toPrintScalingReport(printLayout.printLayout().scaling()),
-        toPrintTitleRowsReport(printLayout.printLayout().repeatingRows()),
-        toPrintTitleColumnsReport(printLayout.printLayout().repeatingColumns()),
-        toHeaderFooterTextReport(printLayout.printLayout().header()),
-        toHeaderFooterTextReport(printLayout.printLayout().footer()));
+        toPrintAreaReport(printLayout.printLayout().layout().printArea()),
+        printLayout.printLayout().layout().orientation(),
+        toPrintScalingReport(printLayout.printLayout().layout().scaling()),
+        toPrintTitleRowsReport(printLayout.printLayout().layout().repeatingRows()),
+        toPrintTitleColumnsReport(printLayout.printLayout().layout().repeatingColumns()),
+        toHeaderFooterTextReport(printLayout.printLayout().layout().header()),
+        toHeaderFooterTextReport(printLayout.printLayout().layout().footer()),
+        new PrintSetupReport(
+            new PrintMarginsReport(
+                printLayout.printLayout().setup().margins().left(),
+                printLayout.printLayout().setup().margins().right(),
+                printLayout.printLayout().setup().margins().top(),
+                printLayout.printLayout().setup().margins().bottom(),
+                printLayout.printLayout().setup().margins().header(),
+                printLayout.printLayout().setup().margins().footer()),
+            printLayout.printLayout().setup().horizontallyCentered(),
+            printLayout.printLayout().setup().verticallyCentered(),
+            printLayout.printLayout().setup().paperSize(),
+            printLayout.printLayout().setup().draft(),
+            printLayout.printLayout().setup().blackAndWhite(),
+            printLayout.printLayout().setup().copies(),
+            printLayout.printLayout().setup().useFirstPageNumber(),
+            printLayout.printLayout().setup().firstPageNumber(),
+            printLayout.printLayout().setup().rowBreaks(),
+            printLayout.printLayout().setup().columnBreaks()));
   }
 
   private static PaneReport toPaneReport(ExcelSheetPane pane) {
@@ -611,6 +654,31 @@ final class WorkbookReadResultConverter {
     return richText.runs().stream()
         .map(run -> new RichTextRunReport(run.text(), toCellFontReport(run.font())))
         .toList();
+  }
+
+  private static CellColorReport toCellColorReport(ExcelColorSnapshot color) {
+    return color == null
+        ? null
+        : new CellColorReport(color.rgb(), color.theme(), color.indexed(), color.tint());
+  }
+
+  private static CellGradientFillReport toCellGradientFillReport(
+      ExcelGradientFillSnapshot gradient) {
+    return gradient == null
+        ? null
+        : new CellGradientFillReport(
+            gradient.type(),
+            gradient.degree(),
+            gradient.left(),
+            gradient.right(),
+            gradient.top(),
+            gradient.bottom(),
+            gradient.stops().stream()
+                .map(
+                    stop ->
+                        new CellGradientStopReport(
+                            stop.position(), toCellColorReport(stop.color())))
+                .toList());
   }
 
   private static GridGrindResponse.FormulaSurfaceReport toFormulaSurfaceReport(
@@ -798,9 +866,20 @@ final class WorkbookReadResultConverter {
   private static AutofilterEntryReport toAutofilterEntryReport(ExcelAutofilterSnapshot snapshot) {
     return switch (snapshot) {
       case ExcelAutofilterSnapshot.SheetOwned sheetOwned ->
-          new AutofilterEntryReport.SheetOwned(sheetOwned.range());
+          new AutofilterEntryReport.SheetOwned(
+              sheetOwned.range(),
+              sheetOwned.filterColumns().stream()
+                  .map(WorkbookReadResultConverter::toAutofilterFilterColumnReport)
+                  .toList(),
+              toAutofilterSortStateReport(sheetOwned.sortState()));
       case ExcelAutofilterSnapshot.TableOwned tableOwned ->
-          new AutofilterEntryReport.TableOwned(tableOwned.range(), tableOwned.tableName());
+          new AutofilterEntryReport.TableOwned(
+              tableOwned.range(),
+              tableOwned.tableName(),
+              tableOwned.filterColumns().stream()
+                  .map(WorkbookReadResultConverter::toAutofilterFilterColumnReport)
+                  .toList(),
+              toAutofilterSortStateReport(tableOwned.sortState()));
     };
   }
 
@@ -812,8 +891,101 @@ final class WorkbookReadResultConverter {
         snapshot.headerRowCount(),
         snapshot.totalsRowCount(),
         snapshot.columnNames(),
+        snapshot.columns().stream().map(WorkbookReadResultConverter::toTableColumnReport).toList(),
         toTableStyleReport(snapshot.style()),
-        snapshot.hasAutofilter());
+        snapshot.hasAutofilter(),
+        snapshot.comment(),
+        snapshot.published(),
+        snapshot.insertRow(),
+        snapshot.insertRowShift(),
+        snapshot.headerRowCellStyle(),
+        snapshot.dataCellStyle(),
+        snapshot.totalsRowCellStyle());
+  }
+
+  private static GridGrindResponse.CommentReport toCommentReport(ExcelCommentSnapshot comment) {
+    if (comment == null) {
+      return null;
+    }
+    return new GridGrindResponse.CommentReport(
+        comment.text(),
+        comment.author(),
+        comment.visible(),
+        toRichTextRunReports(comment.runs()),
+        comment.anchor() == null
+            ? null
+            : new CommentAnchorReport(
+                comment.anchor().firstColumn(),
+                comment.anchor().firstRow(),
+                comment.anchor().lastColumn(),
+                comment.anchor().lastRow()));
+  }
+
+  private static AutofilterFilterColumnReport toAutofilterFilterColumnReport(
+      ExcelAutofilterFilterColumnSnapshot filterColumn) {
+    return new AutofilterFilterColumnReport(
+        filterColumn.columnId(),
+        filterColumn.showButton(),
+        toAutofilterFilterCriterionReport(filterColumn.criterion()));
+  }
+
+  private static AutofilterFilterCriterionReport toAutofilterFilterCriterionReport(
+      ExcelAutofilterFilterCriterionSnapshot criterion) {
+    return switch (criterion) {
+      case ExcelAutofilterFilterCriterionSnapshot.Values values ->
+          new AutofilterFilterCriterionReport.Values(values.values(), values.includeBlank());
+      case ExcelAutofilterFilterCriterionSnapshot.Custom custom ->
+          new AutofilterFilterCriterionReport.Custom(
+              custom.and(),
+              custom.conditions().stream()
+                  .map(
+                      condition ->
+                          new AutofilterFilterCriterionReport.CustomConditionReport(
+                              condition.operator(), condition.value()))
+                  .toList());
+      case ExcelAutofilterFilterCriterionSnapshot.Dynamic dynamic ->
+          new AutofilterFilterCriterionReport.Dynamic(
+              dynamic.type(), dynamic.value(), dynamic.maxValue());
+      case ExcelAutofilterFilterCriterionSnapshot.Top10 top10 ->
+          new AutofilterFilterCriterionReport.Top10(
+              top10.top(), top10.percent(), top10.value(), top10.filterValue());
+      case ExcelAutofilterFilterCriterionSnapshot.Color color ->
+          new AutofilterFilterCriterionReport.Color(
+              color.cellColor(), toCellColorReport(color.color()));
+      case ExcelAutofilterFilterCriterionSnapshot.Icon icon ->
+          new AutofilterFilterCriterionReport.Icon(icon.iconSet(), icon.iconId());
+    };
+  }
+
+  private static AutofilterSortStateReport toAutofilterSortStateReport(
+      ExcelAutofilterSortStateSnapshot sortState) {
+    return sortState == null
+        ? null
+        : new AutofilterSortStateReport(
+            sortState.range(),
+            sortState.caseSensitive(),
+            sortState.columnSort(),
+            sortState.sortMethod(),
+            sortState.conditions().stream()
+                .map(
+                    condition ->
+                        new AutofilterSortConditionReport(
+                            condition.range(),
+                            condition.descending(),
+                            condition.sortBy(),
+                            toCellColorReport(condition.color()),
+                            condition.iconId()))
+                .toList());
+  }
+
+  private static TableColumnReport toTableColumnReport(ExcelTableColumnSnapshot column) {
+    return new TableColumnReport(
+        column.id(),
+        column.name(),
+        column.uniqueName(),
+        column.totalsRowLabel(),
+        column.totalsRowFunction(),
+        column.calculatedColumnFormula());
   }
 
   private static TableStyleReport toTableStyleReport(ExcelTableStyleSnapshot snapshot) {

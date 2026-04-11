@@ -1,0 +1,200 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "cli/build/generated-workbooks/gridgrind-advanced-readback.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Operations" },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Operations",
+      "range": "A1:C5",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Owner" },
+          { "type": "TEXT", "text": "Task" },
+          { "type": "TEXT", "text": "Status" }
+        ],
+        [
+          { "type": "TEXT", "text": "Ada" },
+          { "type": "TEXT", "text": "Badge setup" },
+          { "type": "TEXT", "text": "Queued" }
+        ],
+        [
+          { "type": "TEXT", "text": "Lin" },
+          { "type": "TEXT", "text": "Laptop handoff" },
+          { "type": "TEXT", "text": "Done" }
+        ],
+        [
+          { "type": "TEXT", "text": "Sam" },
+          { "type": "TEXT", "text": "Desk labels" },
+          { "type": "TEXT", "text": "Blocked" }
+        ],
+        [
+          { "type": "TEXT", "text": "Noa" },
+          { "type": "TEXT", "text": "Welcome kit" },
+          { "type": "TEXT", "text": "Queued" }
+        ]
+      ]
+    },
+    {
+      "type": "SET_COMMENT",
+      "sheetName": "Operations",
+      "address": "B4",
+      "comment": {
+        "text": "Blocked pending facilities sign-off.",
+        "author": "GridGrind",
+        "visible": true
+      }
+    },
+    {
+      "type": "SET_PRINT_LAYOUT",
+      "sheetName": "Operations",
+      "printLayout": {
+        "printArea": { "type": "RANGE", "range": "A1:F12" },
+        "orientation": "LANDSCAPE",
+        "scaling": { "type": "FIT", "widthPages": 1, "heightPages": 0 },
+        "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 0 },
+        "repeatingColumns": { "type": "NONE" },
+        "header": { "left": "Operations", "center": "Queue Snapshot", "right": "" },
+        "footer": { "left": "", "center": "Internal", "right": "Page &P" }
+      }
+    },
+    {
+      "type": "SET_DATA_VALIDATION",
+      "sheetName": "Operations",
+      "range": "C2:C5",
+      "validation": {
+        "rule": {
+          "type": "EXPLICIT_LIST",
+          "values": ["Queued", "Done", "Blocked"]
+        },
+        "allowBlank": false,
+        "prompt": {
+          "title": "Status",
+          "text": "Use one of the queue states."
+        }
+      }
+    },
+    {
+      "type": "SET_TABLE",
+      "table": {
+        "name": "OperationsQueue",
+        "sheetName": "Operations",
+        "range": "A1:C5",
+        "style": {
+          "type": "NAMED",
+          "name": "TableStyleMedium2",
+          "showFirstColumn": false,
+          "showLastColumn": false,
+          "showRowStripes": true,
+          "showColumnStripes": false
+        }
+      }
+    },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Operations",
+      "range": "E1:F5",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Trip" },
+          { "type": "TEXT", "text": "State" }
+        ],
+        [
+          { "type": "TEXT", "text": "Badge runner" },
+          { "type": "TEXT", "text": "Queued" }
+        ],
+        [
+          { "type": "TEXT", "text": "Floor signs" },
+          { "type": "TEXT", "text": "Done" }
+        ],
+        [
+          { "type": "TEXT", "text": "Desk map" },
+          { "type": "TEXT", "text": "Queued" }
+        ],
+        [
+          { "type": "TEXT", "text": "Printer setup" },
+          { "type": "TEXT", "text": "Blocked" }
+        ]
+      ]
+    },
+    {
+      "type": "SET_AUTOFILTER",
+      "sheetName": "Operations",
+      "range": "E1:F5"
+    }
+  ],
+  "reads": [
+    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
+    { "type": "GET_WORKBOOK_PROTECTION", "requestId": "workbook-protection" },
+    {
+      "type": "GET_CELLS",
+      "requestId": "cells",
+      "sheetName": "Operations",
+      "addresses": ["B4", "E2"]
+    },
+    {
+      "type": "GET_COMMENTS",
+      "requestId": "comments",
+      "sheetName": "Operations",
+      "selection": {
+        "type": "SELECTED",
+        "addresses": ["B4"]
+      }
+    },
+    {
+      "type": "GET_PRINT_LAYOUT",
+      "requestId": "print-layout",
+      "sheetName": "Operations"
+    },
+    {
+      "type": "GET_DATA_VALIDATIONS",
+      "requestId": "data-validations",
+      "sheetName": "Operations",
+      "selection": {
+        "type": "SELECTED",
+        "ranges": ["C2:C5"]
+      }
+    },
+    {
+      "type": "GET_AUTOFILTERS",
+      "requestId": "autofilters",
+      "sheetName": "Operations"
+    },
+    {
+      "type": "GET_TABLES",
+      "requestId": "tables",
+      "selection": {
+        "type": "BY_NAMES",
+        "names": ["OperationsQueue"]
+      }
+    },
+    {
+      "type": "ANALYZE_DATA_VALIDATION_HEALTH",
+      "requestId": "data-validation-health",
+      "selection": {
+        "type": "SELECTED",
+        "sheetNames": ["Operations"]
+      }
+    },
+    {
+      "type": "ANALYZE_AUTOFILTER_HEALTH",
+      "requestId": "autofilter-health",
+      "selection": {
+        "type": "SELECTED",
+        "sheetNames": ["Operations"]
+      }
+    },
+    {
+      "type": "ANALYZE_TABLE_HEALTH",
+      "requestId": "table-health",
+      "selection": {
+        "type": "BY_NAMES",
+        "names": ["OperationsQueue"]
+      }
+    }
+  ]
+}

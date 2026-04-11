@@ -183,7 +183,7 @@ class ExcelRichTextSupportTest {
       assertFalse(alpha.font().italic());
       assertEquals("Courier New", alpha.font().fontName());
       assertEquals(ExcelFontHeight.fromPoints(new BigDecimal("14")), alpha.font().fontHeight());
-      assertEquals("#123456", alpha.font().fontColor());
+      assertEquals(new ExcelColorSnapshot("#123456"), alpha.font().fontColor());
       assertFalse(alpha.font().underline());
       assertTrue(alpha.font().strikeout());
 
@@ -193,7 +193,7 @@ class ExcelRichTextSupportTest {
       assertTrue(beta.font().italic());
       assertEquals(baseFont().fontName(), beta.font().fontName());
       assertEquals(baseFont().fontHeight(), beta.font().fontHeight());
-      assertEquals("#ABCDEF", beta.font().fontColor());
+      assertEquals(new ExcelColorSnapshot("#ABCDEF"), beta.font().fontColor());
       assertTrue(beta.font().underline());
       assertFalse(beta.font().strikeout());
 
@@ -243,7 +243,7 @@ class ExcelRichTextSupportTest {
       assertTrue(font.italic());
       assertEquals("Fira Code", font.fontName());
       assertEquals(ExcelFontHeight.fromPoints(new BigDecimal("18")), font.fontHeight());
-      assertEquals("#00AA11", font.fontColor());
+      assertEquals(new ExcelColorSnapshot("#00AA11"), font.fontColor());
       assertTrue(font.underline());
       assertTrue(font.strikeout());
     }
@@ -286,7 +286,7 @@ class ExcelRichTextSupportTest {
       assertEquals(
           ExcelFontHeight.fromPoints(new BigDecimal("13")),
           snapshot.runs().get(1).font().fontHeight());
-      assertEquals("#ABCDEF", snapshot.runs().get(2).font().fontColor());
+      assertEquals(new ExcelColorSnapshot("#ABCDEF"), snapshot.runs().get(2).font().fontColor());
       assertFalse(snapshot.runs().get(3).font().underline());
       assertTrue(snapshot.runs().get(4).font().strikeout());
     }
@@ -298,7 +298,7 @@ class ExcelRichTextSupportTest {
         true,
         "Aptos",
         ExcelFontHeight.fromPoints(new BigDecimal("11")),
-        "#654321",
+        new ExcelColorSnapshot("#654321"),
         true,
         false);
   }
@@ -311,10 +311,10 @@ class ExcelRichTextSupportTest {
         baseFont(),
         new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, null),
         new ExcelBorderSnapshot(
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null),
-            new ExcelBorderSide(ExcelBorderStyle.NONE, null)),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
+            new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null)),
         new ExcelCellProtectionSnapshot(true, false));
   }
 }

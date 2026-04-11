@@ -15,14 +15,22 @@ import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.protocol.dto.AnalysisFindingCode;
 import dev.erst.gridgrind.protocol.dto.AnalysisSeverity;
 import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterFilterCriterionReport;
 import dev.erst.gridgrind.protocol.dto.AutofilterHealthReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterSortConditionReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterSortStateReport;
 import dev.erst.gridgrind.protocol.dto.CellAlignmentReport;
 import dev.erst.gridgrind.protocol.dto.CellBorderReport;
 import dev.erst.gridgrind.protocol.dto.CellBorderSideReport;
+import dev.erst.gridgrind.protocol.dto.CellColorReport;
 import dev.erst.gridgrind.protocol.dto.CellFillReport;
 import dev.erst.gridgrind.protocol.dto.CellFontReport;
+import dev.erst.gridgrind.protocol.dto.CellGradientFillReport;
+import dev.erst.gridgrind.protocol.dto.CellGradientStopReport;
 import dev.erst.gridgrind.protocol.dto.CellProtectionReport;
 import dev.erst.gridgrind.protocol.dto.CellSelection;
+import dev.erst.gridgrind.protocol.dto.CommentAnchorReport;
 import dev.erst.gridgrind.protocol.dto.DataValidationEntryReport;
 import dev.erst.gridgrind.protocol.dto.DataValidationHealthReport;
 import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
@@ -38,7 +46,9 @@ import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.dto.PaneReport;
 import dev.erst.gridgrind.protocol.dto.PrintAreaReport;
 import dev.erst.gridgrind.protocol.dto.PrintLayoutReport;
+import dev.erst.gridgrind.protocol.dto.PrintMarginsReport;
 import dev.erst.gridgrind.protocol.dto.PrintScalingReport;
+import dev.erst.gridgrind.protocol.dto.PrintSetupReport;
 import dev.erst.gridgrind.protocol.dto.PrintTitleColumnsReport;
 import dev.erst.gridgrind.protocol.dto.PrintTitleRowsReport;
 import dev.erst.gridgrind.protocol.dto.RangeSelection;
@@ -46,10 +56,12 @@ import dev.erst.gridgrind.protocol.dto.RequestWarning;
 import dev.erst.gridgrind.protocol.dto.RichTextRunReport;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
 import dev.erst.gridgrind.protocol.dto.SheetSelection;
+import dev.erst.gridgrind.protocol.dto.TableColumnReport;
 import dev.erst.gridgrind.protocol.dto.TableEntryReport;
 import dev.erst.gridgrind.protocol.dto.TableHealthReport;
 import dev.erst.gridgrind.protocol.dto.TableSelection;
 import dev.erst.gridgrind.protocol.dto.TableStyleReport;
+import dev.erst.gridgrind.protocol.dto.WorkbookProtectionReport;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.io.IOException;
@@ -480,6 +492,178 @@ class WorkbookInvariantChecksTest {
         () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
   }
 
+  @Test
+  void acceptsSuccessResponsesWithAdvancedPhaseTwoReadShapes(@TempDir Path tempDirectory)
+      throws IOException {
+    Path workbookPath = tempDirectory.resolve("advanced.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindResponse.CommentReport anchoredComment =
+        new GridGrindResponse.CommentReport(
+            "Review",
+            "GridGrind",
+            true,
+            List.of(
+                new RichTextRunReport(
+                    "Review",
+                    new CellFontReport(
+                        false,
+                        false,
+                        "Calibri",
+                        new FontHeightReport(220, new BigDecimal("11")),
+                        rgb("#C00000"),
+                        false,
+                        false))),
+            new CommentAnchorReport(1, 2, 4, 6));
+    GridGrindResponse.CellStyleReport advancedStyle =
+        new GridGrindResponse.CellStyleReport(
+            "General",
+            new CellAlignmentReport(
+                false, ExcelHorizontalAlignment.GENERAL, ExcelVerticalAlignment.BOTTOM, 0, 0),
+            new CellFontReport(
+                false,
+                false,
+                "Calibri",
+                new FontHeightReport(220, new BigDecimal("11")),
+                indexed(8),
+                false,
+                false),
+            new CellFillReport(
+                ExcelFillPattern.NONE,
+                null,
+                null,
+                new CellGradientFillReport(
+                    "LINEAR",
+                    45.0d,
+                    null,
+                    null,
+                    null,
+                    null,
+                    List.of(
+                        new CellGradientStopReport(0.0d, rgb("#1F497D")),
+                        new CellGradientStopReport(1.0d, themed(4, 0.45d))))),
+            new CellBorderReport(
+                new CellBorderSideReport(ExcelBorderStyle.NONE, indexed(16)),
+                new CellBorderSideReport(ExcelBorderStyle.NONE, null),
+                new CellBorderSideReport(ExcelBorderStyle.NONE, null),
+                new CellBorderSideReport(ExcelBorderStyle.NONE, null)),
+            new CellProtectionReport(true, false));
+
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                "advanced.xlsx", workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadResult.WorkbookProtectionResult(
+                    "workbook-protection",
+                    new WorkbookProtectionReport(true, false, true, true, false)),
+                new WorkbookReadResult.CellsResult(
+                    "cells",
+                    "Budget",
+                    List.of(
+                        new GridGrindResponse.CellReport.TextReport(
+                            "A1",
+                            "STRING",
+                            "Review",
+                            advancedStyle,
+                            null,
+                            anchoredComment,
+                            "Review",
+                            List.of(
+                                new RichTextRunReport(
+                                    "Review",
+                                    new CellFontReport(
+                                        false,
+                                        false,
+                                        "Calibri",
+                                        new FontHeightReport(220, new BigDecimal("11")),
+                                        rgb("#C00000"),
+                                        false,
+                                        false)))))),
+                new WorkbookReadResult.CommentsResult(
+                    "comments",
+                    "Budget",
+                    List.of(new GridGrindResponse.CellCommentReport("A1", anchoredComment))),
+                new WorkbookReadResult.PrintLayoutResult(
+                    "print-layout",
+                    new PrintLayoutReport(
+                        "Budget",
+                        new PrintAreaReport.Range("A1:C20"),
+                        ExcelPrintOrientation.LANDSCAPE,
+                        new PrintScalingReport.Fit(1, 0),
+                        new PrintTitleRowsReport.Band(0, 0),
+                        new PrintTitleColumnsReport.None(),
+                        new HeaderFooterTextReport("Budget", "Quarterly", ""),
+                        new HeaderFooterTextReport("", "Confidential", "Page &P"),
+                        new PrintSetupReport(
+                            new PrintMarginsReport(0.5d, 0.5d, 0.75d, 0.75d, 0.3d, 0.3d),
+                            true,
+                            false,
+                            9,
+                            false,
+                            true,
+                            2,
+                            true,
+                            3,
+                            List.of(4, 9),
+                            List.of(1)))),
+                new WorkbookReadResult.AutofiltersResult(
+                    "autofilters",
+                    "Budget",
+                    List.of(
+                        new AutofilterEntryReport.TableOwned(
+                            "A1:C5",
+                            "BudgetTable",
+                            List.of(
+                                new AutofilterFilterColumnReport(
+                                    1L,
+                                    true,
+                                    new AutofilterFilterCriterionReport.Values(
+                                        List.of("Open", "Closed"), true))),
+                            new AutofilterSortStateReport(
+                                "A2:C5",
+                                false,
+                                false,
+                                "",
+                                List.of(
+                                    new AutofilterSortConditionReport(
+                                        "B2:B5", true, "", null, null)))))),
+                new WorkbookReadResult.TablesResult(
+                    "tables",
+                    List.of(
+                        new TableEntryReport(
+                            "BudgetTable",
+                            "Budget",
+                            "A1:C5",
+                            1,
+                            1,
+                            List.of("Item", "Status", "Owner"),
+                            List.of(
+                                new TableColumnReport(1L, "Item", "", "", "", ""),
+                                new TableColumnReport(2L, "Status", "", "", "sum", ""),
+                                new TableColumnReport(
+                                    3L,
+                                    "Owner",
+                                    "owner_unique",
+                                    "",
+                                    "",
+                                    "CONCAT([@Owner],\"-\",[@Status])")),
+                            new TableStyleReport.Named(
+                                "TableStyleMedium2", false, false, true, false),
+                            true,
+                            "Team queue",
+                            true,
+                            false,
+                            true,
+                            "HeaderStyle",
+                            "DataStyle",
+                            "TotalsStyle")))));
+
+    assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
+  }
+
   private static GridGrindResponse.CellStyleReport defaultStyle() {
     return new GridGrindResponse.CellStyleReport(
         "General",
@@ -505,6 +689,18 @@ class WorkbookInvariantChecksTest {
   private static GridGrindResponse.CellReport.TextReport textCell(String address, String value) {
     return new GridGrindResponse.CellReport.TextReport(
         address, "STRING", value, defaultStyle(), null, null, value, null);
+  }
+
+  private static CellColorReport rgb(String rgb) {
+    return new CellColorReport(rgb);
+  }
+
+  private static CellColorReport indexed(int indexed) {
+    return new CellColorReport(null, null, indexed, null);
+  }
+
+  private static CellColorReport themed(int theme, double tint) {
+    return new CellColorReport(null, theme, null, tint);
   }
 
   private static SheetProtectionSettings protocolProtectionSettings() {

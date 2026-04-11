@@ -11,6 +11,7 @@ public sealed interface ExcelConditionalFormattingRuleSnapshot
         ExcelConditionalFormattingRuleSnapshot.ColorScaleRule,
         ExcelConditionalFormattingRuleSnapshot.DataBarRule,
         ExcelConditionalFormattingRuleSnapshot.IconSetRule,
+        ExcelConditionalFormattingRuleSnapshot.Top10Rule,
         ExcelConditionalFormattingRuleSnapshot.UnsupportedRule {
 
   /** Persisted priority value loaded from the workbook. */
@@ -101,6 +102,23 @@ public sealed interface ExcelConditionalFormattingRuleSnapshot
       requirePriority(priority);
       Objects.requireNonNull(iconSet, "iconSet must not be null");
       thresholds = copyThresholds(thresholds, "thresholds");
+    }
+  }
+
+  /** Top-10 rule reported with rank, percent, and bottom-state flags plus differential style. */
+  record Top10Rule(
+      int priority,
+      boolean stopIfTrue,
+      int rank,
+      boolean percent,
+      boolean bottom,
+      ExcelDifferentialStyleSnapshot style)
+      implements ExcelConditionalFormattingRuleSnapshot {
+    public Top10Rule {
+      requirePriority(priority);
+      if (rank < 0) {
+        throw new IllegalArgumentException("rank must not be negative");
+      }
     }
   }
 

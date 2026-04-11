@@ -109,7 +109,7 @@ final class ExcelSheetCopyController {
   private static void copyComments(
       List<WorkbookReadResult.CellComment> comments, ExcelSheet targetSheet) {
     for (WorkbookReadResult.CellComment comment : comments) {
-      targetSheet.setComment(comment.address(), comment.comment());
+      targetSheet.setComment(comment.address(), comment.comment().toPlainComment());
     }
   }
 
@@ -320,6 +320,11 @@ final class ExcelSheetCopyController {
               "cannot copy sheet '"
                   + sourceSheetName
                   + "': conditional-formatting icon sets are not copyable");
+      case ExcelConditionalFormattingRuleSnapshot.Top10Rule _ ->
+          throw new IllegalArgumentException(
+              "cannot copy sheet '"
+                  + sourceSheetName
+                  + "': conditional-formatting top-10 rules are not copyable");
       case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
           throw new IllegalArgumentException(
               "cannot copy sheet '"

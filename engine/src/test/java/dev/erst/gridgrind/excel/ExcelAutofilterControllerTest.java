@@ -13,6 +13,12 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDxf;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STDynamicFilterType;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STFilterOperator;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STIconSetType;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STSortBy;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STSortMethod;
 
 /** Tests for direct sheet-autofilter authoring, introspection, and health analysis. */
 class ExcelAutofilterControllerTest {
@@ -119,6 +125,110 @@ class ExcelAutofilterControllerTest {
   }
 
   @Test
+  void sheetOwnedAutofilters_readsHiddenButtonOverrides() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = populatedSheet(workbook);
+      var autoFilter = sheet.getCTWorksheet().addNewAutoFilter();
+      autoFilter.setRef("A1:B3");
+      var hiddenButton = autoFilter.addNewFilterColumn();
+      hiddenButton.setColId(0L);
+      hiddenButton.setHiddenButton(true);
+      hiddenButton.addNewFilters();
+      var visibleButton = autoFilter.addNewFilterColumn();
+      visibleButton.setColId(1L);
+      visibleButton.setHiddenButton(false);
+      visibleButton.addNewFilters();
+
+      assertEquals(
+          List.of(
+              new ExcelAutofilterSnapshot.SheetOwned(
+                  "A1:B3",
+                  List.of(
+                      new ExcelAutofilterFilterColumnSnapshot(
+                          0L,
+                          false,
+                          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false)),
+                      new ExcelAutofilterFilterColumnSnapshot(
+                          1L,
+                          true,
+                          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false))),
+                  null)),
+          controller.sheetOwnedAutofilters(sheet));
+    }
+  }
+
+  @Test
+  void sheetOwnedAutofilters_readsPersistedCriteriaDetails() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      ExcelAutofilterSnapshot.SheetOwned snapshot = persistedAutofilterSnapshot(workbook);
+
+      assertEquals("A1:H5", snapshot.range());
+      assertEquals(8, snapshot.filterColumns().size());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of("Queued", ""), true),
+          snapshot.filterColumns().get(0).criterion());
+      ExcelAutofilterFilterCriterionSnapshot.Custom custom =
+          assertInstanceOf(
+              ExcelAutofilterFilterCriterionSnapshot.Custom.class,
+              snapshot.filterColumns().get(1).criterion());
+      assertTrue(custom.and());
+      assertEquals("lessThan", custom.conditions().getFirst().operator());
+      assertEquals("equal", custom.conditions().get(1).operator());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Dynamic("today", 1.0d, 2.0d),
+          snapshot.filterColumns().get(2).criterion());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Top10(false, true, 10.0d, 8.0d),
+          snapshot.filterColumns().get(3).criterion());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Color(true, new ExcelColorSnapshot("#AABBCC")),
+          snapshot.filterColumns().get(4).criterion());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2),
+          snapshot.filterColumns().get(5).criterion());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false),
+          snapshot.filterColumns().get(6).criterion());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Color(false, null),
+          snapshot.filterColumns().get(7).criterion());
+    }
+  }
+
+  @Test
+  void sheetOwnedAutofilters_readsPersistedSortStateDetails() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      ExcelAutofilterSnapshot.SheetOwned snapshot = persistedAutofilterSnapshot(workbook);
+      ExcelAutofilterSortStateSnapshot sortSnapshot = snapshot.sortState();
+      assertEquals("A1:H5", sortSnapshot.range());
+      assertTrue(sortSnapshot.caseSensitive());
+      assertTrue(sortSnapshot.columnSort());
+      assertEquals(STSortMethod.STROKE.toString(), sortSnapshot.sortMethod());
+      assertEquals(4, sortSnapshot.conditions().size());
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "A2:A5", true, STSortBy.CELL_COLOR.toString(), new ExcelColorSnapshot("#AABBCC"), 1),
+          sortSnapshot.conditions().get(0));
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "B2:B5",
+              false,
+              STSortBy.FONT_COLOR.toString(),
+              new ExcelColorSnapshot("#102030"),
+              null),
+          sortSnapshot.conditions().get(1));
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "C2:C5", false, "", new ExcelColorSnapshot("#AABBCC"), null),
+          sortSnapshot.conditions().get(2));
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "D2:D5", false, STSortBy.ICON.toString(), null, 3),
+          sortSnapshot.conditions().get(3));
+    }
+  }
+
+  @Test
   void setSheetAutofilter_rejectsBlankHeaderRows() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
@@ -131,6 +241,189 @@ class ExcelAutofilterControllerTest {
 
       assertEquals(
           "autofilter range must include a nonblank header row: A1:B2", failure.getMessage());
+    }
+  }
+
+  @Test
+  void helperSnapshotsPreserveDefaultsAndDxfFallbacks() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      long fillDxfId = putFillDxf(workbook, new byte[] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC});
+      long fontDxfId = putFontDxf(workbook, new byte[] {0x10, 0x20, 0x30});
+      long emptyDxfId = workbook.getStylesSource().putDxf(CTDxf.Factory.newInstance()) - 1L;
+
+      var values =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilters.Factory.newInstance();
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false),
+          ExcelAutofilterController.valuesCriterion(values));
+
+      var customFilters =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilters.Factory.newInstance();
+      customFilters.addNewCustomFilter().setVal("Ada");
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Custom(
+              false,
+              List.of(new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("equal", "Ada"))),
+          ExcelAutofilterController.customCriterion(customFilters));
+
+      var dynamic =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDynamicFilter.Factory.newInstance();
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Dynamic("UNKNOWN", null, null),
+          ExcelAutofilterController.dynamicCriterion(dynamic));
+
+      var top10 = org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
+      top10.setVal(5.0d);
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 5.0d, null),
+          ExcelAutofilterController.top10Criterion(top10));
+
+      var icon =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTIconFilter.Factory.newInstance();
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Icon("UNKNOWN", 0),
+          ExcelAutofilterController.iconCriterion(icon));
+
+      assertEquals(
+          new ExcelColorSnapshot("#AABBCC"),
+          ExcelAutofilterController.dxfColor(workbook, fillDxfId, true));
+      assertEquals(
+          new ExcelColorSnapshot("#102030"),
+          ExcelAutofilterController.dxfColor(workbook, fontDxfId, false));
+      assertEquals(
+          new ExcelColorSnapshot("#AABBCC"),
+          ExcelAutofilterController.dxfColor(workbook, fillDxfId, false));
+      assertEquals(
+          new ExcelColorSnapshot("#102030"),
+          ExcelAutofilterController.dxfColor(workbook, fontDxfId, true));
+      assertNull(ExcelAutofilterController.dxfColor(workbook, emptyDxfId, true));
+      assertNull(ExcelAutofilterController.dxfColor(workbook, 99L, true));
+      assertNull(ExcelAutofilterController.dxfAt(workbook.getStylesSource(), -1L));
+      assertNotNull(ExcelAutofilterController.dxfAt(workbook.getStylesSource(), fillDxfId));
+
+      var autoFilter =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter.Factory.newInstance();
+      var sortState = autoFilter.addNewSortState();
+      sortState.addNewSortCondition().setRef("A2:A5");
+      ExcelAutofilterSortStateSnapshot sortSnapshot = controller.sortState(workbook, autoFilter);
+      assertEquals("", sortSnapshot.range());
+      assertEquals("", sortSnapshot.sortMethod());
+    }
+  }
+
+  @Test
+  void directColorAndSortHelpersCoverRemainingAutofilterBranches() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      long fillDxfId = putFillDxf(workbook, new byte[] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC});
+      long fontDxfId = putFontDxf(workbook, new byte[] {0x10, 0x20, 0x30});
+      long mixedDxfId =
+          putFillAndFontDxf(
+              workbook,
+              new byte[] {0x21, 0x43, 0x65},
+              new byte[] {(byte) 0xFE, (byte) 0xDC, (byte) 0xBA});
+
+      var absentColorFilter =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter.Factory.newInstance();
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Color(false, null),
+          ExcelAutofilterController.colorCriterion(workbook, absentColorFilter));
+
+      var fillColorFilter =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter.Factory.newInstance();
+      fillColorFilter.setCellColor(true);
+      fillColorFilter.setDxfId(fillDxfId);
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Color(true, new ExcelColorSnapshot("#AABBCC")),
+          ExcelAutofilterController.colorCriterion(workbook, fillColorFilter));
+
+      var fontColorFilter =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter.Factory.newInstance();
+      fontColorFilter.setDxfId(fontDxfId);
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Color(
+              false, new ExcelColorSnapshot("#102030")),
+          ExcelAutofilterController.colorCriterion(workbook, fontColorFilter));
+
+      assertEquals(
+          new ExcelColorSnapshot("#214365"),
+          ExcelAutofilterController.dxfColor(workbook, mixedDxfId, true));
+      assertEquals(
+          new ExcelColorSnapshot("#FEDCBA"),
+          ExcelAutofilterController.dxfColor(workbook, mixedDxfId, false));
+
+      var autoFilter =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter.Factory.newInstance();
+      assertNull(controller.sortState(workbook, autoFilter));
+
+      var sortState = autoFilter.addNewSortState();
+      sortState.setRef("A1:E5");
+
+      var plainSort = sortState.addNewSortCondition();
+      plainSort.setRef("A2:A5");
+
+      var cellColorSort = sortState.addNewSortCondition();
+      cellColorSort.setRef("B2:B5");
+      cellColorSort.setDescending(true);
+      cellColorSort.setSortBy(STSortBy.CELL_COLOR);
+      cellColorSort.setDxfId(fillDxfId);
+
+      var fontColorSort = sortState.addNewSortCondition();
+      fontColorSort.setRef("C2:C5");
+      fontColorSort.setSortBy(STSortBy.FONT_COLOR);
+      fontColorSort.setDxfId(fontDxfId);
+
+      var fallbackFillSort = sortState.addNewSortCondition();
+      fallbackFillSort.setRef("D2:D5");
+      fallbackFillSort.setDxfId(fillDxfId);
+
+      var iconOnlySort = sortState.addNewSortCondition();
+      iconOnlySort.setRef("E2:E5");
+      iconOnlySort.setSortBy(STSortBy.ICON);
+      iconOnlySort.setIconId(4L);
+
+      ExcelAutofilterSortStateSnapshot snapshot = controller.sortState(workbook, autoFilter);
+      assertEquals("A1:E5", snapshot.range());
+      assertFalse(snapshot.caseSensitive());
+      assertFalse(snapshot.columnSort());
+      assertEquals("", snapshot.sortMethod());
+      assertEquals(5, snapshot.conditions().size());
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot("A2:A5", false, "", null, null),
+          snapshot.conditions().get(0));
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "B2:B5",
+              true,
+              STSortBy.CELL_COLOR.toString(),
+              new ExcelColorSnapshot("#AABBCC"),
+              null),
+          snapshot.conditions().get(1));
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "C2:C5",
+              false,
+              STSortBy.FONT_COLOR.toString(),
+              new ExcelColorSnapshot("#102030"),
+              null),
+          snapshot.conditions().get(2));
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "D2:D5", false, "", new ExcelColorSnapshot("#AABBCC"), null),
+          snapshot.conditions().get(3));
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "E2:E5", false, STSortBy.ICON.toString(), null, 4),
+          snapshot.conditions().get(4));
+
+      var reflectedIconSort =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSortCondition.Factory.newInstance();
+      reflectedIconSort.setRef("F2:F5");
+      reflectedIconSort.setSortBy(STSortBy.ICON);
+      reflectedIconSort.setIconId(2L);
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot(
+              "F2:F5", false, STSortBy.ICON.toString(), null, 2),
+          ExcelAutofilterController.sortConditionSnapshot(workbook, reflectedIconSort));
     }
   }
 
@@ -297,5 +590,122 @@ class ExcelAutofilterControllerTest {
 
   private static boolean isFilterDatabaseName(org.apache.poi.ss.usermodel.Name name) {
     return "_XLNM._FILTERDATABASE".equalsIgnoreCase(name.getNameName());
+  }
+
+  private static long putFillDxf(XSSFWorkbook workbook, byte[] rgb) {
+    CTDxf dxf = CTDxf.Factory.newInstance();
+    dxf.addNewFill().addNewPatternFill().addNewFgColor().setRgb(rgb);
+    return workbook.getStylesSource().putDxf(dxf) - 1L;
+  }
+
+  private static long putFontDxf(XSSFWorkbook workbook, byte[] rgb) {
+    CTDxf dxf = CTDxf.Factory.newInstance();
+    dxf.addNewFont().addNewColor().setRgb(rgb);
+    return workbook.getStylesSource().putDxf(dxf) - 1L;
+  }
+
+  private static long putFillAndFontDxf(XSSFWorkbook workbook, byte[] fillRgb, byte[] fontRgb) {
+    CTDxf dxf = CTDxf.Factory.newInstance();
+    dxf.addNewFill().addNewPatternFill().addNewFgColor().setRgb(fillRgb);
+    dxf.addNewFont().addNewColor().setRgb(fontRgb);
+    return workbook.getStylesSource().putDxf(dxf) - 1L;
+  }
+
+  private ExcelAutofilterSnapshot.SheetOwned persistedAutofilterSnapshot(XSSFWorkbook workbook) {
+    XSSFSheet sheet = populatedSheet(workbook);
+    long fillDxfId = putFillDxf(workbook, new byte[] {(byte) 0xAA, (byte) 0xBB, (byte) 0xCC});
+    long fontDxfId = putFontDxf(workbook, new byte[] {0x10, 0x20, 0x30});
+    var autoFilter = sheet.getCTWorksheet().addNewAutoFilter();
+    autoFilter.setRef("A1:H5");
+    addPersistedFilterColumns(autoFilter, fillDxfId);
+    addPersistedSortState(autoFilter, fillDxfId, fontDxfId);
+    return assertInstanceOf(
+        ExcelAutofilterSnapshot.SheetOwned.class,
+        controller.sheetOwnedAutofilters(sheet).getFirst());
+  }
+
+  private static void addPersistedFilterColumns(
+      org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter autoFilter, long fillDxfId) {
+    var valuesColumn = autoFilter.addNewFilterColumn();
+    valuesColumn.setColId(0L);
+    valuesColumn.setShowButton(false);
+    var values = valuesColumn.addNewFilters();
+    values.setBlank(true);
+    values.addNewFilter().setVal("Queued");
+    values.addNewFilter();
+
+    var customColumn = autoFilter.addNewFilterColumn();
+    customColumn.setColId(1L);
+    var customFilters = customColumn.addNewCustomFilters();
+    customFilters.setAnd(true);
+    var lessThan = customFilters.addNewCustomFilter();
+    lessThan.setOperator(STFilterOperator.LESS_THAN);
+    lessThan.setVal("10");
+    customFilters.addNewCustomFilter().setVal("Ada");
+
+    var dynamicColumn = autoFilter.addNewFilterColumn();
+    dynamicColumn.setColId(2L);
+    var dynamicFilter = dynamicColumn.addNewDynamicFilter();
+    dynamicFilter.setType(STDynamicFilterType.TODAY);
+    dynamicFilter.setVal(1.0d);
+    dynamicFilter.setMaxVal(2.0d);
+
+    var top10Column = autoFilter.addNewFilterColumn();
+    top10Column.setColId(3L);
+    var top10 = top10Column.addNewTop10();
+    top10.setTop(false);
+    top10.setPercent(true);
+    top10.setVal(10.0d);
+    top10.setFilterVal(8.0d);
+
+    var colorColumn = autoFilter.addNewFilterColumn();
+    colorColumn.setColId(4L);
+    var colorFilter = colorColumn.addNewColorFilter();
+    colorFilter.setCellColor(true);
+    colorFilter.setDxfId(fillDxfId);
+
+    var iconColumn = autoFilter.addNewFilterColumn();
+    iconColumn.setColId(5L);
+    var iconFilter = iconColumn.addNewIconFilter();
+    iconFilter.setIconSet(STIconSetType.X_3_TRAFFIC_LIGHTS_1);
+    iconFilter.setIconId(2L);
+
+    autoFilter.addNewFilterColumn().setColId(6L);
+    var missingDxfColorColumn = autoFilter.addNewFilterColumn();
+    missingDxfColorColumn.setColId(7L);
+    missingDxfColorColumn.addNewColorFilter().setDxfId(99L);
+  }
+
+  private static void addPersistedSortState(
+      org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter autoFilter,
+      long fillDxfId,
+      long fontDxfId) {
+    var sortState = autoFilter.addNewSortState();
+    sortState.setRef("A1:H5");
+    sortState.setCaseSensitive(true);
+    sortState.setColumnSort(true);
+    sortState.setSortMethod(STSortMethod.STROKE);
+
+    var cellColorSort = sortState.addNewSortCondition();
+    cellColorSort.setRef("A2:A5");
+    cellColorSort.setDescending(true);
+    cellColorSort.setSortBy(STSortBy.CELL_COLOR);
+    cellColorSort.setDxfId(fillDxfId);
+    cellColorSort.setIconId(1L);
+
+    var fontColorSort = sortState.addNewSortCondition();
+    fontColorSort.setRef("B2:B5");
+    fontColorSort.setSortBy(STSortBy.FONT_COLOR);
+    fontColorSort.setDxfId(fontDxfId);
+
+    var fallbackFillSort = sortState.addNewSortCondition();
+    fallbackFillSort.setRef("C2:C5");
+    fallbackFillSort.setDxfId(fillDxfId);
+
+    var missingDxfSort = sortState.addNewSortCondition();
+    missingDxfSort.setRef("D2:D5");
+    missingDxfSort.setSortBy(STSortBy.ICON);
+    missingDxfSort.setDxfId(99L);
+    missingDxfSort.setIconId(3L);
   }
 }

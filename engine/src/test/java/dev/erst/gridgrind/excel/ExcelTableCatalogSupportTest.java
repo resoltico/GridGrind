@@ -77,6 +77,19 @@ class ExcelTableCatalogSupportTest {
       ExcelTableStructureSupport.applyAutofilter(table, ExcelRange.parse("A1:B3"), false);
       ExcelTableStructureSupport.applyStyle(
           table, new ExcelTableStyle.Named("TableStyleMedium2", true, false, true, false));
+      table.getCTTable().setComment("Queue comment");
+      table.getCTTable().setPublished(true);
+      table.getCTTable().setInsertRow(true);
+      table.getCTTable().setInsertRowShift(false);
+      table.getCTTable().setHeaderRowCellStyle("HeaderStyle");
+      table.getCTTable().setDataCellStyle("DataStyle");
+      table.getCTTable().setTotalsRowCellStyle("TotalsStyle");
+      var amountColumn = table.getCTTable().getTableColumns().getTableColumnArray(1);
+      amountColumn.setUniqueName("UniqueAmount");
+      amountColumn.setTotalsRowLabel("Total");
+      amountColumn.setTotalsRowFunction(
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.STTotalsRowFunction.SUM);
+      amountColumn.addNewCalculatedColumnFormula().setStringValue("[@Task]&\"!\"");
 
       ExcelTableSnapshot snapshot = ExcelTableCatalogSupport.toSnapshot("Ops", table);
 
@@ -84,6 +97,12 @@ class ExcelTableCatalogSupportTest {
       assertEquals(List.of("Owner", "Task"), snapshot.columnNames());
       assertTrue(snapshot.hasAutofilter());
       assertInstanceOf(ExcelTableStyleSnapshot.Named.class, snapshot.style());
+      assertEquals("Queue comment", snapshot.comment());
+      assertEquals("HeaderStyle", snapshot.headerRowCellStyle());
+      assertEquals("UniqueAmount", snapshot.columns().get(1).uniqueName());
+      assertEquals("Total", snapshot.columns().get(1).totalsRowLabel());
+      assertEquals("sum", snapshot.columns().get(1).totalsRowFunction());
+      assertEquals("[@Task]&\"!\"", snapshot.columns().get(1).calculatedColumnFormula());
     }
   }
 }

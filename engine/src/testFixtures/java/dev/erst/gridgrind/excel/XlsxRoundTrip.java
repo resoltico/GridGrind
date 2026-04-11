@@ -19,6 +19,9 @@ import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientFill;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientStop;
 
 /** Creates temporary workbook paths and reopens saved `.xlsx` files for structural inspection. */
 public final class XlsxRoundTrip {
@@ -214,19 +217,15 @@ public final class XlsxRoundTrip {
                   font.getItalic(),
                   font.getFontName(),
                   new ExcelFontHeight(font.getFontHeight()),
-                  toRgbHex(font.getXSSFColor()),
+                  colorSnapshot(font.getXSSFColor()),
                   font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
                   font.getStrikeout()),
-              fillSnapshot(style),
+              fillSnapshot((XSSFWorkbook) sheet.getWorkbook(), style),
               new ExcelBorderSnapshot(
-                  new ExcelBorderSide(
-                      fromPoi(style.getBorderTop()), toRgbHex(style.getTopBorderXSSFColor())),
-                  new ExcelBorderSide(
-                      fromPoi(style.getBorderRight()), toRgbHex(style.getRightBorderXSSFColor())),
-                  new ExcelBorderSide(
-                      fromPoi(style.getBorderBottom()), toRgbHex(style.getBottomBorderXSSFColor())),
-                  new ExcelBorderSide(
-                      fromPoi(style.getBorderLeft()), toRgbHex(style.getLeftBorderXSSFColor()))),
+                  borderSideSnapshot(style.getBorderTop(), style.getTopBorderXSSFColor()),
+                  borderSideSnapshot(style.getBorderRight(), style.getRightBorderXSSFColor()),
+                  borderSideSnapshot(style.getBorderBottom(), style.getBottomBorderXSSFColor()),
+                  borderSideSnapshot(style.getBorderLeft(), style.getLeftBorderXSSFColor())),
               new ExcelCellProtectionSnapshot(style.getLocked(), style.getHidden()));
         });
   }
@@ -248,7 +247,7 @@ public final class XlsxRoundTrip {
           if (cell == null) {
             throw new CellNotFoundException(address);
           }
-          return ExcelCellMetadataSnapshot.of(hyperlink(cell), comment(cell));
+          return ExcelCellMetadataSnapshot.of(hyperlink(cell), commentSnapshot(cell));
         });
   }
 
@@ -352,15 +351,29 @@ public final class XlsxRoundTrip {
     T read(XSSFSheet sheet);
   }
 
-  private static ExcelCellFillSnapshot fillSnapshot(XSSFCellStyle style) {
+  private static ExcelCellFillSnapshot fillSnapshot(XSSFWorkbook workbook, XSSFCellStyle style) {
+    XSSFCellFill fill = fill(workbook, style);
+    if (fill.getCTFill().isSetGradientFill()) {
+      return new ExcelCellFillSnapshot(
+          ExcelFillPattern.NONE,
+          null,
+          null,
+          gradientFillSnapshot(workbook, fill.getCTFill().getGradientFill()));
+    }
     ExcelFillPattern pattern = fromPoi(style.getFillPattern());
     if (pattern == ExcelFillPattern.NONE) {
       return new ExcelCellFillSnapshot(pattern, null, null);
     }
     return new ExcelCellFillSnapshot(
         pattern,
-        toRgbHex(style.getFillForegroundColorColor()),
-        pattern == ExcelFillPattern.SOLID ? null : toRgbHex(style.getFillBackgroundColorColor()));
+        colorSnapshot(style.getFillForegroundColorColor()),
+        pattern == ExcelFillPattern.SOLID
+            ? null
+            : colorSnapshot(style.getFillBackgroundColorColor()));
+  }
+
+  private static XSSFCellFill fill(XSSFWorkbook workbook, XSSFCellStyle style) {
+    return workbook.getStylesSource().getFillAt((int) style.getCoreXf().getFillId());
   }
 
   private static ExcelHyperlink hyperlink(XSSFCell cell) {
@@ -385,7 +398,7 @@ public final class XlsxRoundTrip {
     }
   }
 
-  private static ExcelComment comment(XSSFCell cell) {
+  private static ExcelCommentSnapshot commentSnapshot(XSSFCell cell) {
     var comment = cell.getCellComment();
     if (comment == null || comment.getString() == null) {
       return null;
@@ -395,7 +408,7 @@ public final class XlsxRoundTrip {
     if (text == null || text.isBlank() || author == null || author.isBlank()) {
       return null;
     }
-    return new ExcelComment(text, author, comment.isVisible());
+    return ExcelSheet.commentSnapshot(cell);
   }
 
   private static boolean shouldExpose(org.apache.poi.ss.usermodel.Name name) {
@@ -414,15 +427,51 @@ public final class XlsxRoundTrip {
     return new ExcelNamedRangeScope.SheetScope(workbook.getSheetName(sheetIndex));
   }
 
-  private static String toRgbHex(XSSFColor color) {
+  private static ExcelColorSnapshot colorSnapshot(XSSFColor color) {
     if (color == null) {
       return null;
     }
     byte[] rgb = color.getRGB();
-    if (rgb == null || rgb.length != 3) {
+    String rgbHex =
+        rgb == null || rgb.length != 3
+            ? null
+            : "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
+    Integer theme = color.isThemed() ? color.getTheme() : null;
+    Integer indexed = color.isIndexed() ? Short.toUnsignedInt(color.getIndexed()) : null;
+    Double tint = color.hasTint() ? color.getTint() : null;
+    if (rgbHex == null && theme == null && indexed == null) {
       return null;
     }
-    return "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
+    return new ExcelColorSnapshot(rgbHex, theme, indexed, tint);
+  }
+
+  private static ExcelGradientFillSnapshot gradientFillSnapshot(
+      XSSFWorkbook workbook, CTGradientFill fill) {
+    List<ExcelGradientStopSnapshot> stops =
+        java.util.Arrays.stream(fill.getStopArray())
+            .map(stop -> gradientStopSnapshot(workbook, stop))
+            .toList();
+    return new ExcelGradientFillSnapshot(
+        fill.isSetType() ? fill.getType().toString() : "LINEAR",
+        fill.isSetDegree() ? fill.getDegree() : null,
+        fill.isSetLeft() ? fill.getLeft() : null,
+        fill.isSetRight() ? fill.getRight() : null,
+        fill.isSetTop() ? fill.getTop() : null,
+        fill.isSetBottom() ? fill.getBottom() : null,
+        stops);
+  }
+
+  private static ExcelGradientStopSnapshot gradientStopSnapshot(
+      XSSFWorkbook workbook, CTGradientStop stop) {
+    return new ExcelGradientStopSnapshot(
+        stop.getPosition(), ExcelColorSnapshotSupport.snapshot(workbook, stop.getColor()));
+  }
+
+  private static ExcelBorderSideSnapshot borderSideSnapshot(
+      BorderStyle borderStyle, XSSFColor borderColor) {
+    ExcelBorderStyle style = fromPoi(borderStyle);
+    return new ExcelBorderSideSnapshot(
+        style, style == ExcelBorderStyle.NONE ? null : colorSnapshot(borderColor));
   }
 
   private static ExcelHorizontalAlignment fromPoi(HorizontalAlignment alignment) {

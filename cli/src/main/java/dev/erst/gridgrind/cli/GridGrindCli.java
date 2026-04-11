@@ -200,7 +200,7 @@ public final class GridGrindCli {
           Column widthCharacters:   > 0 and <= 255 (Excel limit).
           Row heightPoints:         > 0 and <= 1638.35 (Excel limit: 32767 twips).
           Row structural edits:     rejected when they would move tables, sheet autofilters, or data validations; deletes/shifts also reject destructive range-backed named ranges.
-          Column structural edits:  same ownership rule; deletes/shifts also reject destructive range-backed named ranges; all column edits reject formulas or formula-defined names.
+          Column structural edits:  same ownership rule; deletes/shifts also reject destructive range-backed named ranges; all column edits reject any workbook formulas or formula-defined names.
           DATE / DATE_TIME inputs:  stored as numeric serial; GET_CELLS returns declaredType=NUMBER.
 
         Request:

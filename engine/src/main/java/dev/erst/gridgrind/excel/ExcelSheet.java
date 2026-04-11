@@ -17,10 +17,14 @@ import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFComment;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** High-level sheet wrapper for typed reads, writes, and previews. */
 @SuppressWarnings("PMD.ExcessivePublicCount")
@@ -621,6 +625,11 @@ public final class ExcelSheet {
     return printLayoutController.printLayout(xssfSheet());
   }
 
+  /** Returns the full factual print-layout snapshot currently stored for this sheet. */
+  public ExcelPrintLayoutSnapshot printLayoutSnapshot() {
+    return printLayoutController.printLayoutSnapshot(xssfSheet());
+  }
+
   /** Returns data-validation metadata for the selected ranges on this sheet. */
   public List<ExcelDataValidationSnapshot> dataValidations(ExcelRangeSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
@@ -1152,7 +1161,7 @@ public final class ExcelSheet {
   }
 
   private ExcelCellMetadataSnapshot metadata(Cell cell) {
-    return ExcelCellMetadataSnapshot.of(hyperlink(cell), comment(cell));
+    return ExcelCellMetadataSnapshot.of(hyperlink(cell), commentSnapshot(cell));
   }
 
   private List<WorkbookReadResult.CellHyperlink> allUsedHyperlinks() {
@@ -1190,7 +1199,7 @@ public final class ExcelSheet {
     List<WorkbookReadResult.CellComment> comments = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
-        ExcelComment comment = comment(cell);
+        ExcelCommentSnapshot comment = commentSnapshot(cell);
         if (comment != null) {
           comments.add(
               new WorkbookReadResult.CellComment(
@@ -1209,7 +1218,7 @@ public final class ExcelSheet {
       if (cell == null) {
         continue;
       }
-      ExcelComment comment = comment(cell);
+      ExcelCommentSnapshot comment = commentSnapshot(cell);
       if (comment != null) {
         comments.add(new WorkbookReadResult.CellComment(address, comment));
       }
@@ -1287,6 +1296,56 @@ public final class ExcelSheet {
       return null;
     }
     return new ExcelComment(text, author, visible);
+  }
+
+  /**
+   * Returns the full factual workbook-core comment snapshot for the cell, or null when incomplete.
+   */
+  static ExcelCommentSnapshot commentSnapshot(Cell cell) {
+    return cell == null
+        ? null
+        : commentSnapshot(cell.getSheet().getWorkbook(), cell.getCellComment());
+  }
+
+  /**
+   * Returns the full factual workbook-core comment snapshot for the POI comment, or null when
+   * incomplete.
+   */
+  static ExcelCommentSnapshot commentSnapshot(Comment comment) {
+    return commentSnapshot(null, comment);
+  }
+
+  private static ExcelCommentSnapshot commentSnapshot(Workbook workbook, Comment comment) {
+    if (!(comment instanceof XSSFComment xssfComment)
+        || xssfComment.getString() == null
+        || xssfComment.getAuthor() == null
+        || xssfComment.getAuthor().isBlank()) {
+      return null;
+    }
+    ExcelComment plainComment =
+        comment(
+            xssfComment.getString().getString(), xssfComment.getAuthor(), xssfComment.isVisible());
+    if (plainComment == null) {
+      return null;
+    }
+    ExcelCommentAnchorSnapshot anchor = null;
+    if (xssfComment.getClientAnchor() instanceof XSSFClientAnchor clientAnchor) {
+      anchor =
+          new ExcelCommentAnchorSnapshot(
+              clientAnchor.getCol1(),
+              clientAnchor.getRow1(),
+              clientAnchor.getCol2(),
+              clientAnchor.getRow2());
+    }
+    ExcelRichTextSnapshot runs =
+        workbook == null
+            ? null
+            : ExcelRichTextSupport.snapshot(
+                (XSSFWorkbook) workbook,
+                xssfComment.getString(),
+                WorkbookStyleRegistry.snapshotFont(((XSSFWorkbook) workbook).getFontAt(0)));
+    return new ExcelCommentSnapshot(
+        plainComment.text(), plainComment.author(), plainComment.visible(), runs, anchor);
   }
 
   /** Converts the workbook-core hyperlink type into the matching Apache POI hyperlink type. */

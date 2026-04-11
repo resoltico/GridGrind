@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.34.0"
+version: "0.35.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-11"
 route:
@@ -715,7 +715,6 @@ tables.
     "name": "DispatchQueue",
     "sheetName": "Sheet1",
     "range": "A1:C20",
-    "showTotalsRow": false,
     "style": { "type": "NONE" }
   }
 }
@@ -837,6 +836,15 @@ a caller-defined `requestId`.
 { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" }
 ```
 
+## GET_WORKBOOK_PROTECTION
+
+```json
+{ "type": "GET_WORKBOOK_PROTECTION", "requestId": "workbook-protection" }
+```
+
+Returns `structureLocked`, `windowsLocked`, `revisionLocked`, and whether workbook or revisions
+password hashes are present.
+
 ## GET_NAMED_RANGES
 
 ```json
@@ -877,6 +885,8 @@ a caller-defined `requestId`.
 
 String cells return `stringValue` and, when the stored cell contains authored rich text, an
 optional ordered `richText` run list with effective per-run font facts.
+Read-side style colors are structured objects with `rgb` plus optional `theme`, `indexed`, and
+`tint`; gradient fills appear under `style.fill.gradient`.
 
 ## GET_WINDOW
 
@@ -942,6 +952,9 @@ responses use the `path` field with a normalized plain path string.
 }
 ```
 
+Returned comments can include ordered rich-text `runs` plus an `anchor` with zero-based
+`firstColumn`, `firstRow`, `lastColumn`, and `lastRow` bounds.
+
 ## GET_SHEET_LAYOUT
 
 ```json
@@ -956,6 +969,9 @@ where Excel exposes that state.
 ```json
 { "type": "GET_PRINT_LAYOUT", "requestId": "print-layout", "sheetName": "Sheet1" }
 ```
+
+`printLayout.setup` carries advanced page-setup facts such as margins, copies, first-page
+numbering, and explicit row or column breaks.
 
 ## GET_DATA_VALIDATIONS
 
@@ -987,7 +1003,8 @@ where Excel exposes that state.
 }
 ```
 
-Entries are `SHEET` or `TABLE`.
+Entries are `SHEET` or `TABLE` and can include persisted `filterColumns` plus `sortState`.
+Persisted sort-state metadata is reported exactly as stored, including blank raw ranges.
 
 ## GET_CONDITIONAL_FORMATTING
 
@@ -1011,6 +1028,7 @@ Entries are `SHEET` or `TABLE`.
 
 Read entries may report `FORMULA_RULE`, `CELL_VALUE_RULE`, `COLOR_SCALE_RULE`, `DATA_BAR_RULE`,
 `ICON_SET_RULE`, or `UNSUPPORTED_RULE`.
+Malformed loaded rule metadata degrades to `UNSUPPORTED_RULE` instead of aborting the read.
 
 ## GET_TABLES
 
@@ -1029,6 +1047,10 @@ Read entries may report `FORMULA_RULE`, `CELL_VALUE_RULE`, `COLOR_SCALE_RULE`, `
   }
 }
 ```
+
+Returned tables include persisted `columns` metadata plus advanced flags and style names such as
+`comment`, `published`, `insertRow`, `insertRowShift`, `headerRowCellStyle`, `dataCellStyle`, and
+`totalsRowCellStyle`.
 
 ## GET_FORMULA_SURFACE
 

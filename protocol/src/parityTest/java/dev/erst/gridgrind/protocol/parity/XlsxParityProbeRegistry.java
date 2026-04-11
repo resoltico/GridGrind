@@ -2,8 +2,8 @@ package dev.erst.gridgrind.protocol.parity;
 
 import dev.erst.gridgrind.protocol.catalog.TypeEntry;
 import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
-import dev.erst.gridgrind.protocol.dto.CellFillReport;
-import dev.erst.gridgrind.protocol.dto.CellFontReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterSortConditionReport;
 import dev.erst.gridgrind.protocol.dto.CellInput;
 import dev.erst.gridgrind.protocol.dto.CellSelection;
 import dev.erst.gridgrind.protocol.dto.CommentInput;
@@ -18,6 +18,7 @@ import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
 import dev.erst.gridgrind.protocol.dto.SheetSelection;
 import dev.erst.gridgrind.protocol.dto.TableEntryReport;
 import dev.erst.gridgrind.protocol.dto.TableSelection;
+import dev.erst.gridgrind.protocol.dto.WorkbookProtectionReport;
 import dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
@@ -476,32 +477,59 @@ final class XlsxParityProbeRegistry {
         context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING);
     XlsxParityOracle.WorkbookProtectionSnapshot direct =
         XlsxParityOracle.workbookProtection(advanced.workbookPath());
+    GridGrindResponse.Success success =
+        XlsxParityGridGrind.readWorkbook(
+            advanced.workbookPath(), new WorkbookReadOperation.GetWorkbookProtection("protection"));
+    WorkbookReadResult.WorkbookProtectionResult protection =
+        XlsxParityGridGrind.read(
+            success, "protection", WorkbookReadResult.WorkbookProtectionResult.class);
+    WorkbookProtectionReport observed = protection.protection();
     boolean parityAchieved =
-        direct.structureLocked()
-            && direct.windowsLocked()
-            && direct.revisionLocked()
-            && direct.passwordMatches()
-            && XlsxParityGridGrind.hasReadType("GET_WORKBOOK_PROTECTION");
+        XlsxParityGridGrind.hasReadType("GET_WORKBOOK_PROTECTION")
+            && direct.structureLocked() == observed.structureLocked()
+            && direct.windowsLocked() == observed.windowsLocked()
+            && direct.revisionLocked() == observed.revisionLocked()
+            && direct.workbookPasswordHashPresent() == observed.workbookPasswordHashPresent()
+            && direct.revisionsPasswordHashPresent() == observed.revisionsPasswordHashPresent();
     return parityAchieved
         ? pass("Workbook-protection read parity is present.")
         : fail(
-            "Workbook protection exists in POI, but GridGrind exposes no dedicated read surface.");
+            "Workbook-protection read mismatch." + " direct=" + direct + " observed=" + observed);
   }
 
   private static ProbeResult probeAdvancedPrintReadGap(ProbeContext context) {
     XlsxParityOracle.AdvancedPrintSnapshot direct =
         XlsxParityOracle.advancedPrint(
             context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath());
-    Set<String> fields = componentNames(dev.erst.gridgrind.protocol.dto.PrintLayoutReport.class);
-    boolean surfaceCapable =
-        direct.leftMargin() > 0.0d
-            && fields.contains("leftMargin")
-            && fields.contains("rightMargin")
-            && fields.contains("paperSize")
-            && fields.contains("copies");
-    return surfaceCapable
+    GridGrindResponse.Success success =
+        XlsxParityGridGrind.readWorkbook(
+            context.scenario(XlsxParityScenarios.ADVANCED_NONDRAWING).workbookPath(),
+            new WorkbookReadOperation.GetPrintLayout("print", "Advanced"));
+    WorkbookReadResult.PrintLayoutResult print =
+        XlsxParityGridGrind.read(success, "print", WorkbookReadResult.PrintLayoutResult.class);
+    boolean parityAchieved =
+        approximatelyEquals(direct.leftMargin(), print.layout().setup().margins().left())
+            && approximatelyEquals(direct.rightMargin(), print.layout().setup().margins().right())
+            && approximatelyEquals(direct.topMargin(), print.layout().setup().margins().top())
+            && approximatelyEquals(direct.bottomMargin(), print.layout().setup().margins().bottom())
+            && direct.horizontallyCentered() == print.layout().setup().horizontallyCentered()
+            && direct.verticallyCentered() == print.layout().setup().verticallyCentered()
+            && direct.paperSize() == print.layout().setup().paperSize()
+            && direct.draft() == print.layout().setup().draft()
+            && direct.noColor() == print.layout().setup().blackAndWhite()
+            && direct.copies() == print.layout().setup().copies()
+            && direct.usePage() == print.layout().setup().useFirstPageNumber()
+            && direct.pageStart() == print.layout().setup().firstPageNumber()
+            && direct.rowBreaks().equals(print.layout().setup().rowBreaks())
+            && direct.columnBreaks().equals(print.layout().setup().columnBreaks());
+    return parityAchieved
         ? pass("Advanced print-layout read parity is present.")
-        : fail("POI exposes advanced print setup, but GridGrind's read report is core-only.");
+        : fail(
+            "Advanced print-layout read mismatch."
+                + " direct="
+                + direct
+                + " observed="
+                + print.layout().setup());
   }
 
   private static ProbeResult probeAdvancedStyleReadGap(ProbeContext context) {
@@ -518,22 +546,44 @@ final class XlsxParityProbeRegistry {
     WorkbookReadResult.CellsResult cells =
         XlsxParityGridGrind.read(success, "cells", WorkbookReadResult.CellsResult.class);
     Map<String, GridGrindResponse.CellReport> byAddress = byAddress(cells.cells());
-    Set<String> fontFields = componentNames(CellFontReport.class);
-    Set<String> fillFields = componentNames(CellFillReport.class);
-    boolean directAdvanced =
-        themed.fontColorDescriptor().contains("theme=")
-            || themed.fillColorDescriptor().contains("theme=")
-            || themed.borderColorDescriptor().contains("indexed=")
-            || gradient.gradientFill();
-    boolean surfaceCapable =
-        fontFields.contains("theme")
-            && fontFields.contains("tint")
-            && fillFields.contains("gradient")
-            && fillFields.contains("theme");
-    boolean observedCells = byAddress.size() == 2;
-    return directAdvanced && observedCells && !surfaceCapable
-        ? fail("GridGrind style reads normalize away theme/indexed/tint/gradient semantics.")
-        : pass("Advanced style read parity is present.");
+    GridGrindResponse.CellReport themedCell = byAddress.get("A3");
+    GridGrindResponse.CellReport gradientCell = byAddress.get("A4");
+    boolean themedOk = matchesThemedStyle(themedCell, themed);
+    boolean gradientOk = matchesGradientStyle(gradientCell, gradient);
+    return themedOk && gradientOk
+        ? pass("Advanced style read parity is present.")
+        : fail(
+            "Advanced style read mismatch."
+                + " themedDirect="
+                + themed
+                + " themedObserved="
+                + (themedCell == null ? null : themedCell.style())
+                + " gradientDirect="
+                + gradient
+                + " gradientObserved="
+                + (gradientCell == null ? null : gradientCell.style().fill()));
+  }
+
+  private static boolean matchesThemedStyle(
+      GridGrindResponse.CellReport themedCell, XlsxParityOracle.StyleSnapshot themed) {
+    return themedCell != null
+        && matchesColorDescriptor(
+            themedCell.style().font().fontColor(), themed.fontColorDescriptor())
+        && matchesColorDescriptor(
+            themedCell.style().fill().foregroundColor(), themed.fillColorDescriptor())
+        && matchesColorDescriptor(
+            themedCell.style().border().bottom().color(), themed.borderColorDescriptor());
+  }
+
+  private static boolean matchesGradientStyle(
+      GridGrindResponse.CellReport gradientCell, XlsxParityOracle.StyleSnapshot gradient) {
+    return gradient.gradientFill()
+        && gradientCell != null
+        && gradientCell.style().fill().gradient() != null
+        && approximatelyEquals(45.0d, gradientCell.style().fill().gradient().degree())
+        && gradientCell.style().fill().gradient().stops().size() == 2
+        && matchesColorDescriptor(
+            gradientCell.style().fill().gradient().stops().get(1).color(), "theme=4|tint=0.45");
   }
 
   private static ProbeResult probeRichCommentReadGap(ProbeContext context) {
@@ -548,15 +598,25 @@ final class XlsxParityProbeRegistry {
                 "comments", "Advanced", new CellSelection.Selected(List.of("E2"))));
     WorkbookReadResult.CommentsResult comments =
         XlsxParityGridGrind.read(success, "comments", WorkbookReadResult.CommentsResult.class);
-    boolean commentVisible =
+    boolean parityAchieved =
         comments.comments().size() == 1
-            && comments.comments().getFirst().comment().author().equals(direct.author());
-    boolean surfaceCapable =
-        componentNames(GridGrindResponse.CommentReport.class).contains("anchor")
-            && componentNames(GridGrindResponse.CommentReport.class).contains("runs");
-    return direct.runCount() > 1 && commentVisible && !surfaceCapable
-        ? fail("GridGrind comment reads are plain-text only and omit anchor metadata.")
-        : pass("Rich comment read parity is present.");
+            && comments.comments().getFirst().comment().author().equals(direct.author())
+            && comments.comments().getFirst().comment().visible() == direct.visible()
+            && comments.comments().getFirst().comment().runs() != null
+            && comments.comments().getFirst().comment().runs().size() == direct.runCount()
+            && comments.comments().getFirst().comment().anchor() != null
+            && comments.comments().getFirst().comment().anchor().firstColumn() == direct.col1()
+            && comments.comments().getFirst().comment().anchor().firstRow() == direct.row1()
+            && comments.comments().getFirst().comment().anchor().lastColumn() == direct.col2()
+            && comments.comments().getFirst().comment().anchor().lastRow() == direct.row2();
+    return parityAchieved
+        ? pass("Rich comment read parity is present.")
+        : fail(
+            "Rich comment read mismatch."
+                + " direct="
+                + direct
+                + " observed="
+                + comments.comments());
   }
 
   private static ProbeResult probeDataValidationAnalysisGap(ProbeContext context) {
@@ -604,27 +664,35 @@ final class XlsxParityProbeRegistry {
             new WorkbookReadOperation.GetAutofilters("filters", "Advanced"));
     WorkbookReadResult.AutofiltersResult filters =
         XlsxParityGridGrind.read(success, "filters", WorkbookReadResult.AutofiltersResult.class);
-    boolean observed =
-        filters.autofilters().size() == 1
-            && filters.autofilters().getFirst().range().equals(direct.range());
-    boolean surfaceCapable =
-        componentNames(AutofilterEntryReport.SheetOwned.class).contains("filterColumns")
-            && componentNames(AutofilterEntryReport.SheetOwned.class).contains("sortState");
-    boolean directHasAdvancedState = direct.filterColumnCount() > 0 && direct.hasSortState();
-    if (!directHasAdvancedState) {
+    if (direct.filterColumnCount() == 0 || !direct.hasSortState()) {
       return fail(
           "Advanced autofilter scenario did not retain criteria/sort-state metadata: " + direct);
     }
-    return observed && surfaceCapable
+    boolean parityAchieved =
+        filters.autofilters().size() == 1
+            && filters.autofilters().getFirst() instanceof AutofilterEntryReport.SheetOwned observed
+            && observed.range().equals(direct.range())
+            && observed.filterColumns().size() == direct.filterColumns().size()
+            && observed.filterColumns().getFirst().columnId()
+                == direct.filterColumns().getFirst().columnId()
+            && observed.filterColumns().getFirst().criterion()
+                instanceof AutofilterFilterCriterionReport.Values values
+            && values.values().equals(direct.filterColumns().getFirst().values())
+            && values.includeBlank() == direct.filterColumns().getFirst().includeBlank()
+            && observed.sortState() != null
+            && observed.sortState().range().equals(direct.sortState().range())
+            && observed.sortState().conditions().size() == direct.sortState().conditions().size()
+            && sortConditionsMatch(
+                observed.sortState().conditions().getFirst(),
+                direct.sortState().conditions().getFirst());
+    return parityAchieved
         ? pass("Autofilter criteria and sort-state read parity is present.")
         : fail(
-            "GridGrind reads autofilter ownership but not criteria or sort state."
+            "Autofilter criteria and sort-state read mismatch."
                 + " direct="
                 + direct
                 + " observed="
-                + observed
-                + " surfaceCapable="
-                + surfaceCapable);
+                + filters.autofilters());
   }
 
   private static ProbeResult probeTableAdvancedReadGap(ProbeContext context) {
@@ -638,20 +706,26 @@ final class XlsxParityProbeRegistry {
             new WorkbookReadOperation.GetTables("tables", new TableSelection.All()));
     WorkbookReadResult.TablesResult tables =
         XlsxParityGridGrind.read(success, "tables", WorkbookReadResult.TablesResult.class);
-    boolean observed =
-        tables.tables().stream().anyMatch(table -> "AdvancedTable".equals(table.name()));
-    boolean surfaceCapable =
-        componentNames(TableEntryReport.class).contains("comment")
-            && componentNames(TableEntryReport.class).contains("published")
-            && componentNames(TableEntryReport.class).contains("totalsRowFunction");
-    boolean directAdvanced =
-        direct.comment() != null
-            && direct.published()
-            && direct.insertRow()
-            && !direct.uniqueName().isBlank();
-    return directAdvanced && observed && !surfaceCapable
-        ? fail("GridGrind reads core table facts only and omits advanced table metadata.")
-        : pass("Advanced table read parity is present.");
+    TableEntryReport observed = findTable(tables.tables(), "AdvancedTable");
+    boolean parityAchieved =
+        observed != null
+            && direct.comment().equals(observed.comment())
+            && direct.published() == observed.published()
+            && direct.insertRow() == observed.insertRow()
+            && direct.insertRowShift() == observed.insertRowShift()
+            && direct.headerRowCellStyle().equals(observed.headerRowCellStyle())
+            && direct.dataCellStyle().equals(observed.dataCellStyle())
+            && direct.totalsRowCellStyle().equals(observed.totalsRowCellStyle())
+            && observed.columns().size() >= 3
+            && direct.totalsRowLabel().equals(observed.columns().get(0).totalsRowLabel())
+            && direct.totalsRowFunction().equals(observed.columns().get(1).totalsRowFunction())
+            && direct
+                .calculatedColumnFormula()
+                .equals(observed.columns().get(1).calculatedColumnFormula())
+            && direct.uniqueName().equals(observed.columns().get(2).uniqueName());
+    return parityAchieved
+        ? pass("Advanced table read parity is present.")
+        : fail("Advanced table read mismatch." + " direct=" + direct + " observed=" + observed);
   }
 
   private static ProbeResult probeConditionalFormattingModeledRead(ProbeContext context) {
@@ -701,11 +775,22 @@ final class XlsxParityProbeRegistry {
             .filter(ConditionalFormattingRuleReport.UnsupportedRule.class::isInstance)
             .map(ConditionalFormattingRuleReport.UnsupportedRule.class::cast)
             .anyMatch(rule -> "TOP_10".equals(rule.kind()));
+    boolean hasTop10Rule =
+        formatting.conditionalFormattingBlocks().stream()
+            .flatMap(block -> block.rules().stream())
+            .anyMatch(ConditionalFormattingRuleReport.Top10Rule.class::isInstance);
     return directKinds.stream().anyMatch(kind -> "top10".equalsIgnoreCase(kind))
-            && hasUnsupportedTop10
-        ? fail(
-            "GridGrind still degrades unmodeled XSSF conditional-format families to UnsupportedRule.")
-        : pass("Full conditional-format read parity is present.");
+            && hasTop10Rule
+            && !hasUnsupportedTop10
+        ? pass("Full conditional-format read parity is present.")
+        : fail(
+            "Conditional-format read mismatch."
+                + " directKinds="
+                + directKinds
+                + " hasTop10Rule="
+                + hasTop10Rule
+                + " hasUnsupportedTop10="
+                + hasUnsupportedTop10);
   }
 
   private static ProbeResult probeCoreMutation(ProbeContext context) {
@@ -1129,6 +1214,54 @@ final class XlsxParityProbeRegistry {
 
   private static ProbeResult fail(String detail) {
     return new ProbeResult(XlsxParityLedger.ExpectedOutcome.FAIL, detail);
+  }
+
+  private static boolean sortConditionsMatch(
+      AutofilterSortConditionReport observed, XlsxParityOracle.SortConditionSnapshot direct) {
+    return observed.range().equals(direct.range())
+        && observed.descending() == direct.descending()
+        && observed.sortBy().equals(direct.sortBy());
+  }
+
+  private static TableEntryReport findTable(List<TableEntryReport> tables, String name) {
+    return tables.stream().filter(table -> name.equals(table.name())).findFirst().orElse(null);
+  }
+
+  private static boolean matchesColorDescriptor(
+      dev.erst.gridgrind.protocol.dto.CellColorReport color, String descriptor) {
+    if (descriptor == null || descriptor.isBlank()) {
+      return color == null;
+    }
+    if (color == null) {
+      return false;
+    }
+    List<String> parts = Arrays.asList(descriptor.split("\\|"));
+    for (String part : parts) {
+      if (part.startsWith("rgb=")) {
+        String expected = "#" + part.substring("rgb=".length());
+        if (!expected.equals(color.rgb())) {
+          return false;
+        }
+      } else if (part.startsWith("theme=")) {
+        if (!Integer.valueOf(part.substring("theme=".length())).equals(color.theme())) {
+          return false;
+        }
+      } else if (part.startsWith("indexed=")) {
+        if (!Integer.valueOf(part.substring("indexed=".length())).equals(color.indexed())) {
+          return false;
+        }
+      } else if (part.startsWith("tint=")
+          && (color.tint() == null
+              || !approximatelyEquals(
+                  Double.parseDouble(part.substring("tint=".length())), color.tint()))) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean approximatelyEquals(double left, double right) {
+    return Math.abs(left - right) <= 0.000001d;
   }
 
   record ProbeResult(XlsxParityLedger.ExpectedOutcome outcome, String detail) {}

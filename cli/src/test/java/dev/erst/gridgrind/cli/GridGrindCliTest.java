@@ -139,6 +139,69 @@ class GridGrindCliTest {
   }
 
   @Test
+  void acceptsSetTableRequestsThatOmitShowTotalsRow() throws IOException {
+    String request =
+        """
+            {
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "operations": [
+                { "type": "ENSURE_SHEET", "sheetName": "Dispatch" },
+                {
+                  "type": "SET_RANGE",
+                  "sheetName": "Dispatch",
+                  "range": "A1:B3",
+                  "rows": [
+                    [
+                      { "type": "TEXT", "text": "Owner" },
+                      { "type": "TEXT", "text": "Task" }
+                    ],
+                    [
+                      { "type": "TEXT", "text": "Ada" },
+                      { "type": "TEXT", "text": "Onboarding" }
+                    ],
+                    [
+                      { "type": "TEXT", "text": "Lin" },
+                      { "type": "TEXT", "text": "Badge run" }
+                    ]
+                  ]
+                },
+                {
+                  "type": "SET_TABLE",
+                  "table": {
+                    "name": "DispatchQueue",
+                    "sheetName": "Dispatch",
+                    "range": "A1:B3",
+                    "style": { "type": "NONE" }
+                  }
+                }
+              ],
+              "reads": [
+                { "type": "GET_TABLES", "requestId": "tables", "selection": { "type": "ALL" } }
+              ]
+            }
+            """;
+
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[0],
+                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertInstanceOf(GridGrindResponse.Success.class, response);
+    GridGrindResponse.Success success = (GridGrindResponse.Success) response;
+    WorkbookReadResult.TablesResult tables =
+        (WorkbookReadResult.TablesResult) success.reads().getFirst();
+    assertEquals(1, tables.tables().size());
+    assertEquals(0, tables.tables().getFirst().totalsRowCount());
+  }
+
+  @Test
   void readsJsonRequestFromFileAndWritesJsonResponseToFile() throws IOException {
     Path requestPath = Files.createTempFile("gridgrind-request-", ".json");
     Path responsePath =
@@ -329,7 +392,7 @@ class GridGrindCliTest {
             "Row structural edits:     rejected when they would move tables, sheet autofilters, or data validations; deletes/shifts also reject destructive range-backed named ranges."));
     assertTrue(
         help.contains(
-            "Column structural edits:  same ownership rule; deletes/shifts also reject destructive range-backed named ranges; all column edits reject formulas or formula-defined names."));
+            "Column structural edits:  same ownership rule; deletes/shifts also reject destructive range-backed named ranges; all column edits reject any workbook formulas or formula-defined names."));
   }
 
   @Test

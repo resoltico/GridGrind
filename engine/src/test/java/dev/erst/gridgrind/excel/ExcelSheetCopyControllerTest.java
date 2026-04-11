@@ -169,6 +169,16 @@ class ExcelSheetCopyControllerTest {
                         "Source"))
             .getMessage());
     assertEquals(
+        "cannot copy sheet 'Source': conditional-formatting top-10 rules are not copyable",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    ExcelSheetCopyController.copyableRule(
+                        new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
+                            1, false, 10, true, false, supportedStyle()),
+                        "Source"))
+            .getMessage());
+    assertEquals(
         "cannot copy sheet 'Source': unsupported conditional-formatting rule 'TOP10' is not copyable",
         assertThrows(
                 IllegalArgumentException.class,

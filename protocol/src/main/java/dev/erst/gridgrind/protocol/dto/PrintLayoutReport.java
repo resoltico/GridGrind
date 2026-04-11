@@ -12,7 +12,41 @@ public record PrintLayoutReport(
     PrintTitleRowsReport repeatingRows,
     PrintTitleColumnsReport repeatingColumns,
     HeaderFooterTextReport header,
-    HeaderFooterTextReport footer) {
+    HeaderFooterTextReport footer,
+    PrintSetupReport setup) {
+  /** Creates a print-layout report with defaulted advanced page-setup facts. */
+  public PrintLayoutReport(
+      String sheetName,
+      PrintAreaReport printArea,
+      ExcelPrintOrientation orientation,
+      PrintScalingReport scaling,
+      PrintTitleRowsReport repeatingRows,
+      PrintTitleColumnsReport repeatingColumns,
+      HeaderFooterTextReport header,
+      HeaderFooterTextReport footer) {
+    this(
+        sheetName,
+        printArea,
+        orientation,
+        scaling,
+        repeatingRows,
+        repeatingColumns,
+        header,
+        footer,
+        new PrintSetupReport(
+            new PrintMarginsReport(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d),
+            false,
+            false,
+            0,
+            false,
+            false,
+            0,
+            false,
+            0,
+            java.util.List.of(),
+            java.util.List.of()));
+  }
+
   public PrintLayoutReport {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(printArea, "printArea must not be null");
@@ -22,6 +56,7 @@ public record PrintLayoutReport(
     Objects.requireNonNull(repeatingColumns, "repeatingColumns must not be null");
     Objects.requireNonNull(header, "header must not be null");
     Objects.requireNonNull(footer, "footer must not be null");
+    Objects.requireNonNull(setup, "setup must not be null");
     if (sheetName.isBlank()) {
       throw new IllegalArgumentException("sheetName must not be blank");
     }

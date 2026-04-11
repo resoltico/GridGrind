@@ -25,6 +25,7 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = ConditionalFormattingRuleReport.IconSetRule.class,
       name = "ICON_SET_RULE"),
+  @JsonSubTypes.Type(value = ConditionalFormattingRuleReport.Top10Rule.class, name = "TOP10_RULE"),
   @JsonSubTypes.Type(
       value = ConditionalFormattingRuleReport.UnsupportedRule.class,
       name = "UNSUPPORTED_RULE")
@@ -35,6 +36,7 @@ public sealed interface ConditionalFormattingRuleReport
         ConditionalFormattingRuleReport.ColorScaleRule,
         ConditionalFormattingRuleReport.DataBarRule,
         ConditionalFormattingRuleReport.IconSetRule,
+        ConditionalFormattingRuleReport.Top10Rule,
         ConditionalFormattingRuleReport.UnsupportedRule {
 
   /** Persisted priority value loaded from the workbook. */
@@ -131,6 +133,23 @@ public sealed interface ConditionalFormattingRuleReport
       requirePriority(priority);
       Objects.requireNonNull(iconSet, "iconSet must not be null");
       thresholds = copyThresholds(thresholds);
+    }
+  }
+
+  /** Top-10 rule reported with rank, percent, and bottom-state flags plus differential style. */
+  record Top10Rule(
+      int priority,
+      boolean stopIfTrue,
+      int rank,
+      boolean percent,
+      boolean bottom,
+      DifferentialStyleReport style)
+      implements ConditionalFormattingRuleReport {
+    public Top10Rule {
+      requirePriority(priority);
+      if (rank < 0) {
+        throw new IllegalArgumentException("rank must not be negative");
+      }
     }
   }
 

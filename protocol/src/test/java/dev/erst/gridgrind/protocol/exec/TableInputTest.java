@@ -48,4 +48,16 @@ class TableInputTest {
         NullPointerException.class,
         () -> new TableInput("BudgetTable", "Budget", "A1:C4", false, null));
   }
+
+  @Test
+  void defaultsMissingTotalsRowFlagToFalse() {
+    TableInput input =
+        new TableInput("BudgetTable", "Budget", "A1:C4", null, new TableStyleInput.None());
+
+    assertFalse(input.showTotalsRow());
+    assertEquals(
+        new ExcelTableDefinition(
+            "BudgetTable", "Budget", "A1:C4", false, new ExcelTableStyle.None()),
+        WorkbookCommandConverter.toExcelTableDefinition(input));
+  }
 }

@@ -85,6 +85,22 @@ class GridGrindProtocolCatalogTest {
   }
 
   @Test
+  void requiredFieldsRejectsPrimitiveOptionalFields() {
+    IllegalStateException failure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                GridGrindProtocolCatalog.requiredFields(
+                    PrimitiveOptionalRecord.class, List.of("enabled")));
+
+    assertEquals(
+        "Catalog optional field 'enabled' on "
+            + PrimitiveOptionalRecord.class.getName()
+            + " uses primitive component type boolean",
+        failure.getMessage());
+  }
+
+  @Test
   void validateCoverageRejectsTypesWithoutTypeDiscriminatorMetadata() {
     IllegalStateException failure =
         assertThrows(
@@ -477,7 +493,7 @@ class GridGrindProtocolCatalogTest {
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
     assertEquals(52, catalog.operationTypes().size());
-    assertEquals(25, catalog.readTypes().size());
+    assertEquals(26, catalog.readTypes().size());
     assertEquals(
         List.of(
             "cellInputTypes",
@@ -669,6 +685,8 @@ class GridGrindProtocolCatalogTest {
         new FieldShape.NestedTypeGroupRef("tableStyleTypes"),
         fieldNamed(tableGroup.type(), "style").shape());
     assertEquals(FieldRequirement.REQUIRED, fieldNamed(tableGroup.type(), "name").requirement());
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(tableGroup.type(), "showTotalsRow").requirement());
 
     FieldEntry tableSelectionNames =
         fieldNamed(nestedTypeEntry(catalog, "tableSelectionTypes", "BY_NAMES"), "names");
@@ -834,6 +852,11 @@ class GridGrindProtocolCatalogTest {
             .summary()
             .contains("workbook.kind=EMPTY"),
         "GET_WORKBOOK_SUMMARY summary must describe the empty-workbook variant");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_WORKBOOK_PROTECTION")
+            .summary()
+            .contains("revisions lock state"),
+        "GET_WORKBOOK_PROTECTION summary must mention revisions lock state");
     assertTrue(
         entryNamed(catalog.readTypes(), "GET_SHEET_SUMMARY").summary().contains("visibility"),
         "GET_SHEET_SUMMARY summary must mention visibility");
@@ -1106,6 +1129,8 @@ class GridGrindProtocolCatalogTest {
 
     record Alternative() implements TaggedUnionForValidation {}
   }
+
+  private record PrimitiveOptionalRecord(boolean enabled) {}
 
   private record UnsupportedType(String displayName) implements Type {
     @Override

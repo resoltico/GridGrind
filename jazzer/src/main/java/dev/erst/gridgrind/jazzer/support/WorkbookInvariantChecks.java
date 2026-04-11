@@ -1,19 +1,26 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterFilterCriterionReport;
 import dev.erst.gridgrind.protocol.dto.AutofilterHealthReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterSortConditionReport;
+import dev.erst.gridgrind.protocol.dto.AutofilterSortStateReport;
 import dev.erst.gridgrind.protocol.dto.CellAlignmentReport;
 import dev.erst.gridgrind.protocol.dto.CellBorderReport;
 import dev.erst.gridgrind.protocol.dto.CellBorderSideReport;
+import dev.erst.gridgrind.protocol.dto.CellColorReport;
 import dev.erst.gridgrind.protocol.dto.CellFillReport;
 import dev.erst.gridgrind.protocol.dto.CellFontReport;
+import dev.erst.gridgrind.protocol.dto.CellGradientFillReport;
+import dev.erst.gridgrind.protocol.dto.CellGradientStopReport;
 import dev.erst.gridgrind.protocol.dto.CellProtectionReport;
+import dev.erst.gridgrind.protocol.dto.CommentAnchorReport;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleReport;
@@ -27,10 +34,15 @@ import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
 import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.dto.PaneReport;
 import dev.erst.gridgrind.protocol.dto.PrintLayoutReport;
+import dev.erst.gridgrind.protocol.dto.PrintMarginsReport;
+import dev.erst.gridgrind.protocol.dto.PrintSetupReport;
 import dev.erst.gridgrind.protocol.dto.RequestWarning;
+import dev.erst.gridgrind.protocol.dto.RichTextRunReport;
+import dev.erst.gridgrind.protocol.dto.TableColumnReport;
 import dev.erst.gridgrind.protocol.dto.TableEntryReport;
 import dev.erst.gridgrind.protocol.dto.TableHealthReport;
 import dev.erst.gridgrind.protocol.dto.TableStyleReport;
+import dev.erst.gridgrind.protocol.dto.WorkbookProtectionReport;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.nio.file.Files;
@@ -193,6 +205,9 @@ public final class WorkbookInvariantChecks {
             (WorkbookReadResult.WorkbookSummaryResult) readResult;
         requireWorkbookSummaryShape(result.workbook());
       }
+      case WorkbookReadOperation.GetWorkbookProtection _ ->
+          requireWorkbookProtectionShape(
+              ((WorkbookReadResult.WorkbookProtectionResult) readResult).protection());
       case WorkbookReadOperation.GetNamedRanges _ -> {
         WorkbookReadResult.NamedRangesResult result =
             (WorkbookReadResult.NamedRangesResult) readResult;
@@ -320,6 +335,7 @@ public final class WorkbookInvariantChecks {
   private static String readResultKind(WorkbookReadResult readResult) {
     return switch (readResult) {
       case WorkbookReadResult.WorkbookSummaryResult _ -> "GET_WORKBOOK_SUMMARY";
+      case WorkbookReadResult.WorkbookProtectionResult _ -> "GET_WORKBOOK_PROTECTION";
       case WorkbookReadResult.NamedRangesResult _ -> "GET_NAMED_RANGES";
       case WorkbookReadResult.SheetSummaryResult _ -> "GET_SHEET_SUMMARY";
       case WorkbookReadResult.CellsResult _ -> "GET_CELLS";
@@ -355,6 +371,8 @@ public final class WorkbookInvariantChecks {
     switch (readResult) {
       case WorkbookReadResult.WorkbookSummaryResult result ->
           requireWorkbookSummaryShape(result.workbook());
+      case WorkbookReadResult.WorkbookProtectionResult result ->
+          requireWorkbookProtectionShape(result.protection());
       case WorkbookReadResult.NamedRangesResult result ->
           result.namedRanges().forEach(WorkbookInvariantChecks::requireNamedRangeShape);
       case WorkbookReadResult.SheetSummaryResult result -> requireSheetSummaryShape(result.sheet());
@@ -587,10 +605,7 @@ public final class WorkbookInvariantChecks {
     require(comment.address() != null, "comment address must not be null");
     require(!comment.address().isBlank(), "comment address must not be blank");
     require(comment.comment() != null, "comment metadata must not be null");
-    require(comment.comment().text() != null, "comment text must not be null");
-    require(comment.comment().author() != null, "comment author must not be null");
-    require(!comment.comment().text().isBlank(), "comment text must not be blank");
-    require(!comment.comment().author().isBlank(), "comment author must not be blank");
+    requireCommentReportShape(comment.comment());
   }
 
   private static void requireSheetLayoutShape(GridGrindResponse.SheetLayoutReport layout) {
@@ -646,6 +661,7 @@ public final class WorkbookInvariantChecks {
     require(layout.repeatingColumns() != null, "repeatingColumns must not be null");
     require(layout.header() != null, "header must not be null");
     require(layout.footer() != null, "footer must not be null");
+    requirePrintSetupShape(layout.setup());
   }
 
   private static void requireDataValidationEntryShape(
@@ -666,6 +682,11 @@ public final class WorkbookInvariantChecks {
 
   private static void requireAutofilterEntryShape(AutofilterEntryReport autofilter) {
     requireNonBlank(autofilter.range(), "autofilter range");
+    require(autofilter.filterColumns() != null, "autofilter filterColumns must not be null");
+    autofilter.filterColumns().forEach(WorkbookInvariantChecks::requireAutofilterFilterColumnShape);
+    if (autofilter.sortState() != null) {
+      requireAutofilterSortStateShape(autofilter.sortState());
+    }
     switch (autofilter) {
       case AutofilterEntryReport.SheetOwned _ -> {}
       case AutofilterEntryReport.TableOwned tableOwned ->
@@ -698,9 +719,19 @@ public final class WorkbookInvariantChecks {
     require(table.headerRowCount() >= 0, "table headerRowCount must not be negative");
     require(table.totalsRowCount() >= 0, "table totalsRowCount must not be negative");
     require(table.columnNames() != null, "table columnNames must not be null");
+    require(table.columns() != null, "table columns must not be null");
+    require(
+        table.columnNames().size() == table.columns().size(),
+        "table columnNames size must match columns size");
     table
         .columnNames()
         .forEach(columnName -> require(columnName != null, "table column name must not be null"));
+    for (int index = 0; index < table.columns().size(); index++) {
+      requireTableColumnShape(table.columns().get(index));
+      require(
+          table.columnNames().get(index).equals(table.columns().get(index).name()),
+          "table columnNames must align with columns");
+    }
     require(table.style() != null, "table style must not be null");
     requireTableStyleShape(table.style());
   }
@@ -760,6 +791,12 @@ public final class WorkbookInvariantChecks {
         iconSetRule
             .thresholds()
             .forEach(WorkbookInvariantChecks::requireConditionalFormattingThresholdShape);
+      }
+      case ConditionalFormattingRuleReport.Top10Rule top10Rule -> {
+        require(top10Rule.rank() >= 0, "conditional formatting rank must not be negative");
+        if (top10Rule.style() != null) {
+          requireDifferentialStyleShape(top10Rule.style());
+        }
       }
       case ConditionalFormattingRuleReport.UnsupportedRule unsupportedRule -> {
         requireNonBlank(unsupportedRule.kind(), "conditional formatting kind");
@@ -1091,10 +1128,29 @@ public final class WorkbookInvariantChecks {
       requireHyperlinkShape(cellReport.hyperlink());
     }
     if (cellReport.comment() != null) {
-      require(cellReport.comment().text() != null, "comment text must not be null");
-      require(cellReport.comment().author() != null, "comment author must not be null");
-      require(!cellReport.comment().text().isBlank(), "comment text must not be blank");
-      require(!cellReport.comment().author().isBlank(), "comment author must not be blank");
+      requireCommentReportShape(cellReport.comment());
+    }
+  }
+
+  private static void requireCommentReportShape(GridGrindResponse.CommentReport comment) {
+    require(comment.text() != null, "comment text must not be null");
+    require(comment.author() != null, "comment author must not be null");
+    require(!comment.text().isBlank(), "comment text must not be blank");
+    require(!comment.author().isBlank(), "comment author must not be blank");
+    if (comment.runs() != null) {
+      require(!comment.runs().isEmpty(), "comment runs must not be empty");
+      StringBuilder builder = new StringBuilder();
+      for (RichTextRunReport run : comment.runs()) {
+        require(run != null, "comment runs must not contain null values");
+        require(run.text() != null, "comment run text must not be null");
+        require(!run.text().isEmpty(), "comment run text must not be empty");
+        requireCellFontShape(run.font());
+        builder.append(run.text());
+      }
+      require(builder.toString().equals(comment.text()), "comment runs must concatenate to text");
+    }
+    if (comment.anchor() != null) {
+      requireCommentAnchorShape(comment.anchor());
     }
   }
 
@@ -1178,7 +1234,7 @@ public final class WorkbookInvariantChecks {
     require(!font.fontName().isBlank(), "fontName must not be blank");
     requireFontHeightShape(font.fontHeight());
     if (font.fontColor() != null) {
-      requireNonBlank(font.fontColor(), "fontColor");
+      requireCellColorShape(font.fontColor(), "fontColor");
     }
   }
 
@@ -1186,17 +1242,23 @@ public final class WorkbookInvariantChecks {
     require(fill != null, "fill must not be null");
     require(fill.pattern() != null, "fill pattern must not be null");
     if (fill.foregroundColor() != null) {
-      requireNonBlank(fill.foregroundColor(), "fill foregroundColor");
+      requireCellColorShape(fill.foregroundColor(), "fill foregroundColor");
     }
     if (fill.backgroundColor() != null) {
-      requireNonBlank(fill.backgroundColor(), "fill backgroundColor");
+      requireCellColorShape(fill.backgroundColor(), "fill backgroundColor");
     }
-    if (fill.pattern() == ExcelFillPattern.NONE) {
+    if (fill.gradient() != null) {
+      requireCellGradientFillShape(fill.gradient());
+      require(
+          fill.foregroundColor() == null && fill.backgroundColor() == null,
+          "gradient fills must not carry flat colors");
+    }
+    if (fill.pattern() == ExcelFillPattern.NONE && fill.gradient() == null) {
       require(
           fill.foregroundColor() == null && fill.backgroundColor() == null,
           "fill pattern NONE must not carry colors");
     }
-    if (fill.pattern() == ExcelFillPattern.SOLID) {
+    if (fill.pattern() == ExcelFillPattern.SOLID && fill.gradient() == null) {
       require(fill.backgroundColor() == null, "SOLID fills must not carry backgroundColor");
     }
   }
@@ -1213,10 +1275,155 @@ public final class WorkbookInvariantChecks {
     require(side != null, label + " border side must not be null");
     require(side.style() != null, label + " border style must not be null");
     if (side.color() != null) {
-      requireNonBlank(side.color(), label + " border color");
+      requireCellColorShape(side.color(), label + " border color");
+    }
+  }
+
+  private static void requireWorkbookProtectionShape(WorkbookProtectionReport protection) {
+    require(protection != null, "workbook protection must not be null");
+  }
+
+  private static void requireCommentAnchorShape(CommentAnchorReport anchor) {
+    require(anchor.firstColumn() >= 0, "comment anchor firstColumn must not be negative");
+    require(anchor.firstRow() >= 0, "comment anchor firstRow must not be negative");
+    require(anchor.lastColumn() >= anchor.firstColumn(), "comment anchor columns must be ordered");
+    require(anchor.lastRow() >= anchor.firstRow(), "comment anchor rows must be ordered");
+  }
+
+  private static void requirePrintSetupShape(PrintSetupReport setup) {
+    require(setup != null, "print setup must not be null");
+    requirePrintMarginsShape(setup.margins());
+    require(setup.paperSize() >= 0, "print setup paperSize must not be negative");
+    require(setup.copies() >= 0, "print setup copies must not be negative");
+    require(setup.firstPageNumber() >= 0, "print setup firstPageNumber must not be negative");
+    require(setup.rowBreaks() != null, "print setup rowBreaks must not be null");
+    require(setup.columnBreaks() != null, "print setup columnBreaks must not be null");
+    setup
+        .rowBreaks()
+        .forEach(rowBreak -> require(rowBreak >= 0, "print setup rowBreak must not be negative"));
+    setup
+        .columnBreaks()
+        .forEach(
+            columnBreak ->
+                require(columnBreak >= 0, "print setup columnBreak must not be negative"));
+  }
+
+  private static void requirePrintMarginsShape(PrintMarginsReport margins) {
+    require(margins != null, "print margins must not be null");
+  }
+
+  private static void requireAutofilterFilterColumnShape(
+      AutofilterFilterColumnReport filterColumn) {
+    require(filterColumn != null, "autofilter filterColumn must not be null");
+    require(filterColumn.columnId() >= 0L, "autofilter columnId must not be negative");
+    requireAutofilterCriterionShape(filterColumn.criterion());
+  }
+
+  private static void requireAutofilterCriterionShape(AutofilterFilterCriterionReport criterion) {
+    require(criterion != null, "autofilter criterion must not be null");
+    switch (criterion) {
+      case AutofilterFilterCriterionReport.Values values -> {
+        require(values.values() != null, "autofilter values must not be null");
+        values
+            .values()
+            .forEach(value -> require(value != null, "autofilter value must not be null"));
+      }
+      case AutofilterFilterCriterionReport.Custom custom -> {
+        require(custom.conditions() != null, "autofilter custom conditions must not be null");
+        require(!custom.conditions().isEmpty(), "autofilter custom conditions must not be empty");
+        custom
+            .conditions()
+            .forEach(
+                condition -> {
+                  require(condition != null, "autofilter custom condition must not be null");
+                  requireNonBlank(condition.operator(), "autofilter custom operator");
+                  requireNonBlank(condition.value(), "autofilter custom value");
+                });
+      }
+      case AutofilterFilterCriterionReport.Dynamic dynamic -> {
+        requireNonBlank(dynamic.type(), "autofilter dynamic type");
+        if (dynamic.value() != null) {
+          require(Double.isFinite(dynamic.value()), "autofilter dynamic value must be finite");
+        }
+        if (dynamic.maxValue() != null) {
+          require(
+              Double.isFinite(dynamic.maxValue()), "autofilter dynamic maxValue must be finite");
+        }
+      }
+      case AutofilterFilterCriterionReport.Top10 top10 -> {
+        require(Double.isFinite(top10.value()), "autofilter top10 value must be finite");
+        require(top10.value() >= 0.0d, "autofilter top10 value must not be negative");
+        if (top10.filterValue() != null) {
+          require(
+              Double.isFinite(top10.filterValue()), "autofilter top10 filterValue must be finite");
+        }
+      }
+      case AutofilterFilterCriterionReport.Color color -> {
+        if (color.color() != null) {
+          requireCellColorShape(color.color(), "autofilter color");
+        }
+      }
+      case AutofilterFilterCriterionReport.Icon icon -> {
+        requireNonBlank(icon.iconSet(), "autofilter iconSet");
+        require(icon.iconId() >= 0, "autofilter iconId must not be negative");
+      }
+    }
+  }
+
+  private static void requireAutofilterSortStateShape(AutofilterSortStateReport sortState) {
+    require(sortState != null, "autofilter sortState must not be null");
+    requireNonBlank(sortState.range(), "autofilter sortState range");
+    require(sortState.conditions() != null, "autofilter sortState conditions must not be null");
+    sortState.conditions().forEach(WorkbookInvariantChecks::requireAutofilterSortConditionShape);
+  }
+
+  private static void requireAutofilterSortConditionShape(AutofilterSortConditionReport condition) {
+    require(condition != null, "autofilter sort condition must not be null");
+    requireNonBlank(condition.range(), "autofilter sort condition range");
+    if (condition.color() != null) {
+      requireCellColorShape(condition.color(), "autofilter sort color");
+    }
+    if (condition.iconId() != null) {
+      require(condition.iconId() >= 0, "autofilter sort iconId must not be negative");
+    }
+  }
+
+  private static void requireTableColumnShape(TableColumnReport column) {
+    require(column != null, "table column must not be null");
+    require(column.id() >= 0L, "table column id must not be negative");
+    require(column.name() != null, "table column name must not be null");
+  }
+
+  private static void requireCellGradientFillShape(CellGradientFillReport gradient) {
+    require(gradient != null, "gradient fill must not be null");
+    requireNonBlank(gradient.type(), "gradient fill type");
+    require(gradient.stops() != null, "gradient fill stops must not be null");
+    require(!gradient.stops().isEmpty(), "gradient fill stops must not be empty");
+    for (CellGradientStopReport stop : gradient.stops()) {
+      require(stop != null, "gradient fill stop must not be null");
       require(
-          side.style() != ExcelBorderStyle.NONE,
-          label + " border color requires a visible border style");
+          Double.isFinite(stop.position()) && stop.position() >= 0.0d && stop.position() <= 1.0d,
+          "gradient fill stop position must be between 0.0 and 1.0");
+      requireCellColorShape(stop.color(), "gradient fill stop color");
+    }
+  }
+
+  private static void requireCellColorShape(CellColorReport color, String label) {
+    require(color != null, label + " must not be null");
+    require(
+        color.rgb() != null || color.theme() != null || color.indexed() != null,
+        label + " must expose rgb, theme, or indexed semantics");
+    if (color.rgb() != null) {
+      requireNonBlank(color.rgb(), label + " rgb");
+    }
+    if (color.theme() != null) {
+      require(color.theme() >= 0, label + " theme must not be negative");
+    }
+    if (color.indexed() != null) {
+      require(color.indexed() >= 0, label + " indexed must not be negative");
+    }
+    if (color.tint() != null) {
+      require(Double.isFinite(color.tint()), label + " tint must be finite");
     }
   }
 

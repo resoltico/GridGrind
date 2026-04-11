@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import javax.xml.namespace.QName;
 import org.apache.poi.ss.formula.FormulaParser;
 import org.apache.poi.ss.formula.FormulaType;
 import org.apache.poi.ss.usermodel.ConditionType;
@@ -170,6 +171,7 @@ final class ExcelConditionalFormattingController {
           case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule _ -> {}
           case ExcelConditionalFormattingRuleSnapshot.DataBarRule _ -> {}
           case ExcelConditionalFormattingRuleSnapshot.IconSetRule _ -> {}
+          case ExcelConditionalFormattingRuleSnapshot.Top10Rule _ -> {}
         }
       }
     }
@@ -295,7 +297,20 @@ final class ExcelConditionalFormattingController {
         ExcelConditionalFormattingStyleSupport.snapshotStyle(
             sheet.getWorkbook().getStylesSource(), ctRule);
 
-    ConditionType conditionType = rule.getConditionType();
+    String rawType = rawCfType(ctRule);
+    if (rawType != null && "top10".equalsIgnoreCase(rawType)) {
+      return top10RuleSnapshot(ctRule, style);
+    }
+
+    ConditionType conditionType;
+    try {
+      conditionType = rule.getConditionType();
+    } catch (RuntimeException exception) {
+      return unsupportedRule(ctRule, "UNKNOWN", "Rule family metadata is missing or unreadable.");
+    }
+    if (conditionType == null) {
+      return unsupportedRule(ctRule, "UNKNOWN", "Rule family metadata is missing or unreadable.");
+    }
     if (conditionType == ConditionType.FORMULA) {
       return formulaRuleSnapshot(rule, ctRule, style);
     }
@@ -413,8 +428,9 @@ final class ExcelConditionalFormattingController {
 
   /** Returns the stable unsupported-rule kind label for one unmodeled conditional-format family. */
   static String unsupportedKind(ConditionType conditionType, CTCfRule ctRule) {
-    if (ctRule.isSetType()) {
-      return normalizedUnsupportedKind(ctRule.getType().toString());
+    String rawType = rawCfType(ctRule);
+    if (rawType != null) {
+      return normalizedUnsupportedKind(rawType);
     }
     if (conditionType == ConditionType.FORMULA) {
       return "FORMULA";
@@ -432,6 +448,12 @@ final class ExcelConditionalFormattingController {
       return "ICON_SET";
     }
     return normalizedUnsupportedKind(conditionType.toString());
+  }
+
+  private static String rawCfType(CTCfRule ctRule) {
+    try (var cursor = ctRule.newCursor()) {
+      return cursor.getAttributeText(new QName("", "type"));
+    }
   }
 
   /** Normalizes one raw conditional-format family name into GridGrind's stable uppercase kind. */
@@ -484,6 +506,7 @@ final class ExcelConditionalFormattingController {
       case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule _ -> "COLOR_SCALE_RULE";
       case ExcelConditionalFormattingRuleSnapshot.DataBarRule _ -> "DATA_BAR_RULE";
       case ExcelConditionalFormattingRuleSnapshot.IconSetRule _ -> "ICON_SET_RULE";
+      case ExcelConditionalFormattingRuleSnapshot.Top10Rule _ -> "TOP10_RULE";
       case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
           "UNSUPPORTED_RULE(" + unsupportedRule.kind().toUpperCase(Locale.ROOT) + ")";
     };
@@ -589,6 +612,17 @@ final class ExcelConditionalFormattingController {
           "Icon-set rule uses unsupported threshold or icon-set payload: "
               + exception.getMessage());
     }
+  }
+
+  private static ExcelConditionalFormattingRuleSnapshot top10RuleSnapshot(
+      CTCfRule ctRule, ExcelDifferentialStyleSnapshot style) {
+    return new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
+        ctRule.getPriority(),
+        ctRule.getStopIfTrue(),
+        ctRule.isSetRank() ? Math.toIntExact(ctRule.getRank()) : 10,
+        ctRule.isSetPercent() && ctRule.getPercent(),
+        ctRule.isSetBottom() && ctRule.getBottom(),
+        style);
   }
 
   private record BlockRuleContext(

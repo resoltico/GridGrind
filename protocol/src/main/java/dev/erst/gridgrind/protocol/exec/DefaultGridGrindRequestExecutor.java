@@ -484,6 +484,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   static String readType(WorkbookReadOperation read) {
     return switch (read) {
       case WorkbookReadOperation.GetWorkbookSummary _ -> "GET_WORKBOOK_SUMMARY";
+      case WorkbookReadOperation.GetWorkbookProtection _ -> "GET_WORKBOOK_PROTECTION";
       case WorkbookReadOperation.GetNamedRanges _ -> "GET_NAMED_RANGES";
       case WorkbookReadOperation.GetSheetSummary _ -> "GET_SHEET_SUMMARY";
       case WorkbookReadOperation.GetCells _ -> "GET_CELLS";
@@ -535,6 +536,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.AnalyzeAutofilterHealth op -> singleSheetName(op.selection());
       case WorkbookReadOperation.AnalyzeHyperlinkHealth op -> singleSheetName(op.selection());
       case WorkbookReadOperation.GetWorkbookSummary _ -> null;
+      case WorkbookReadOperation.GetWorkbookProtection _ -> null;
       case WorkbookReadOperation.GetNamedRanges _ -> null;
       case WorkbookReadOperation.GetTables _ -> null;
       case WorkbookReadOperation.GetNamedRangeSurface _ -> null;
@@ -554,6 +556,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetWindow op -> op.topLeftAddress();
       case WorkbookReadOperation.GetSheetSchema op -> op.topLeftAddress();
       case WorkbookReadOperation.GetWorkbookSummary _ -> null;
+      case WorkbookReadOperation.GetWorkbookProtection _ -> null;
       case WorkbookReadOperation.GetNamedRanges _ -> null;
       case WorkbookReadOperation.GetSheetSummary _ -> null;
       case WorkbookReadOperation.GetCells _ -> null;
@@ -587,6 +590,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     }
     return switch (read) {
       case WorkbookReadOperation.GetWorkbookSummary _ -> null;
+      case WorkbookReadOperation.GetWorkbookProtection _ -> null;
       case WorkbookReadOperation.GetNamedRanges _ -> null;
       case WorkbookReadOperation.GetSheetSummary _ -> null;
       case WorkbookReadOperation.GetCells _ -> null;

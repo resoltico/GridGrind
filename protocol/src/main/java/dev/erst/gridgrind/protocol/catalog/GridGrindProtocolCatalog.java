@@ -178,24 +178,26 @@ public final class GridGrindProtocolCatalog {
               "INSERT_COLUMNS",
               "Insert one or more blank columns before columnIndex."
                   + " columnIndex must be <= last existing column + 1."
-                  + " GridGrind rejects column inserts when formulas or formula-defined names"
-                  + " exist, or when the edit would move tables, sheet autofilters, or data"
-                  + " validations."),
+                  + " GridGrind rejects column inserts when the workbook contains formula cells"
+                  + " or formula-defined names, or when the edit would move tables,"
+                  + " sheet autofilters, or data validations."),
           descriptor(
               WorkbookOperation.DeleteColumns.class,
               "DELETE_COLUMNS",
               "Delete one inclusive zero-based column band."
-                  + " GridGrind rejects column deletes when formulas or formula-defined names"
-                  + " exist, or when the edit would move or truncate tables, sheet autofilters,"
-                  + " or data validations, or truncate range-backed named ranges."),
+                  + " GridGrind rejects column deletes when the workbook contains formula cells"
+                  + " or formula-defined names, or when the edit would move or truncate tables,"
+                  + " sheet autofilters, or data validations, or truncate range-backed named"
+                  + " ranges."),
           descriptor(
               WorkbookOperation.ShiftColumns.class,
               "SHIFT_COLUMNS",
               "Move one inclusive zero-based column band by delta columns."
                   + " delta must not be 0."
-                  + " GridGrind rejects column shifts when formulas or formula-defined names"
-                  + " exist, or when the edit would move tables, sheet autofilters, or data"
-                  + " validations, or partially move or overwrite range-backed named ranges."),
+                  + " GridGrind rejects column shifts when the workbook contains formula cells"
+                  + " or formula-defined names, or when the edit would move tables,"
+                  + " sheet autofilters, or data validations, or partially move or overwrite"
+                  + " range-backed named ranges."),
           descriptor(
               WorkbookOperation.SetRowVisibility.class,
               "SET_ROW_VISIBILITY",
@@ -372,6 +374,11 @@ public final class GridGrindProtocolCatalog {
                   + " Empty workbooks return workbook.kind=EMPTY;"
                   + " non-empty workbooks return workbook.kind=WITH_SHEETS with activeSheetName"
                   + " and selectedSheetNames."),
+          descriptor(
+              WorkbookReadOperation.GetWorkbookProtection.class,
+              "GET_WORKBOOK_PROTECTION",
+              "Return workbook-level protection facts including structure, windows, and"
+                  + " revisions lock state plus whether password hashes are present."),
           descriptor(
               WorkbookReadOperation.GetNamedRanges.class,
               "GET_NAMED_RANGES",
@@ -1162,12 +1169,27 @@ public final class GridGrindProtocolCatalog {
             "Catalog optional field '%s' does not exist on %s"
                 .formatted(optionalField, recordType.getName()));
       }
+      RecordComponent component = componentNamed(recordType, optionalField);
+      if (component.getType().isPrimitive()) {
+        throw new IllegalStateException(
+            "Catalog optional field '%s' on %s uses primitive component type %s"
+                .formatted(
+                    optionalField, recordType.getName(), component.getType().getSimpleName()));
+      }
     }
     return recordFields.stream().filter(field -> !optionalFields.contains(field)).toList();
   }
 
   private static List<String> recordFields(Class<? extends Record> recordType) {
     return Arrays.stream(recordType.getRecordComponents()).map(RecordComponent::getName).toList();
+  }
+
+  private static RecordComponent componentNamed(
+      Class<? extends Record> recordType, String fieldName) {
+    return Arrays.stream(recordType.getRecordComponents())
+        .filter(component -> component.getName().equals(fieldName))
+        .findFirst()
+        .orElseThrow();
   }
 
   private static void validateCoverage(Class<?> sealedType, List<TypeDescriptor> descriptors) {

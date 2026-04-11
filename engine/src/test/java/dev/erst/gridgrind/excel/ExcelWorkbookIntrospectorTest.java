@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +33,8 @@ class ExcelWorkbookIntrospectorTest {
       assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), results.layout().layout().pane());
       assertEquals(130, results.layout().layout().zoomPercent());
       assertEquals(
-          ExcelPrintOrientation.LANDSCAPE, results.printLayout().printLayout().orientation());
+          ExcelPrintOrientation.LANDSCAPE,
+          results.printLayout().printLayout().layout().orientation());
       assertEquals(1, results.formulaSurface().analysis().totalFormulaCellCount());
       assertEquals(
           "SUM(B2:B3)",
@@ -167,6 +169,36 @@ class ExcelWorkbookIntrospectorTest {
                 ExcelWorkbookIntrospector.matchSelector(
                     namedRanges, new ExcelNamedRangeSelector.SheetScope("SharedName", "Budget")));
     assertEquals("SharedName", wrongSheetSelector.name());
+  }
+
+  @Test
+  void executesWorkbookProtectionIntrospectionAgainstWorkbookState() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget");
+      workbook.xssfWorkbook().lockStructure();
+      workbook.xssfWorkbook().lockRevision();
+      workbook.xssfWorkbook().setWorkbookPassword("secret", HashAlgorithm.sha512);
+      var protection =
+          workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection()
+              ? workbook.xssfWorkbook().getCTWorkbook().getWorkbookProtection()
+              : workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
+      protection.setWorkbookPassword(new byte[] {0x01, 0x02});
+
+      WorkbookReadResult.WorkbookProtectionResult result =
+          assertInstanceOf(
+              WorkbookReadResult.WorkbookProtectionResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetWorkbookProtection("workbook-protection")));
+
+      assertEquals("workbook-protection", result.requestId());
+      assertTrue(result.protection().structureLocked());
+      assertFalse(result.protection().windowsLocked());
+      assertTrue(result.protection().revisionLocked());
+      assertTrue(result.protection().workbookPasswordHashPresent());
+      assertFalse(result.protection().revisionsPasswordHashPresent());
+    }
   }
 
   @Test

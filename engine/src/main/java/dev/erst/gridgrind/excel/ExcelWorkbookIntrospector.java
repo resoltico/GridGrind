@@ -36,6 +36,9 @@ final class ExcelWorkbookIntrospector {
       case WorkbookReadCommand.GetWorkbookSummary getWorkbookSummary ->
           new WorkbookReadResult.WorkbookSummaryResult(
               getWorkbookSummary.requestId(), workbook.workbookSummary());
+      case WorkbookReadCommand.GetWorkbookProtection getWorkbookProtection ->
+          new WorkbookReadResult.WorkbookProtectionResult(
+              getWorkbookProtection.requestId(), workbook.workbookProtection());
       case WorkbookReadCommand.GetNamedRanges getNamedRanges ->
           new WorkbookReadResult.NamedRangesResult(
               getNamedRanges.requestId(), selectNamedRanges(workbook, getNamedRanges.selection()));
