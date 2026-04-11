@@ -10,9 +10,9 @@
       "inputBytes" : 63,
       "commandCount" : 4,
       "commandKinds" : {
-        "GROUP_COLUMNS" : 2,
+        "DELETE_TABLE" : 1,
         "CREATE_SHEET" : 1,
-        "DELETE_TABLE" : 1
+        "GROUP_COLUMNS" : 2
       },
       "styleKinds" : { }
     }

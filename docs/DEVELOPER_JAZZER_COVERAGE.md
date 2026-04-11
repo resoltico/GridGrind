@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.35.0"
+version: "0.36.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-04-11"
 route:
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 36 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 37 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 9 |
 | `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 18 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 74 total across harnesses |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 75 total across harnesses |
 
 ---
 
@@ -38,7 +38,8 @@ Surface:
 - JSON decoding
 - request-model validation
 - ordered `reads` payloads, selectors, and request/result correlation IDs
-- style payloads including typed `fontHeight`, fill, color, and border input shapes
+- style payloads including typed `fontHeight`, structured color, fill, gradient, and border input
+  shapes
 - hyperlink, comment, named-range, data-validation, table, and autofilter payload shapes
 
 What it asserts:
@@ -46,7 +47,8 @@ What it asserts:
 - valid payloads produce a non-null `GridGrindRequest`
 - invalid JSON and invalid request shapes are classified as expected-invalid outcomes
 - promoted public examples continue to parse with their real defaulted-field contract, such as
-  `SET_TABLE` requests that omit `showTotalsRow`
+  `SET_TABLE` requests that omit `showTotalsRow`, richer factual readback examples, and the
+  advanced workbook-core mutation example
 
 Telemetry signals:
 - iteration count
@@ -182,8 +184,9 @@ These tests are not fuzz harnesses. They protect the Jazzer infrastructure itsel
 Committed custom seeds currently in source control. This list is exhaustive and should match the
 checked-in `*Inputs` directories exactly.
 
-### `protocol-request` (36)
+### `protocol-request` (37)
 
+- `advanced_mutation_request.json`
 - `advanced_readback_request.json`
 - `budget_request.json`
 - `clear_on_empty_cells.json`

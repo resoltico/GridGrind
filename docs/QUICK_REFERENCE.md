@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.35.0"
+version: "0.36.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-11"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
 ---
 
 # Quick Reference
@@ -140,6 +140,10 @@ separate `path` field. `SAVE_AS` creates missing parent directories automaticall
 }
 ```
 
+Sheet copy preserves non-drawing workbook-core structures such as tables, validations,
+conditional formatting, comments, hyperlinks, local names, protection metadata, and print layout.
+Drawing-family content such as pictures and charts remains outside the current copy contract.
+
 ## SET_ACTIVE_SHEET
 
 ```json
@@ -180,7 +184,8 @@ separate `path` field. `SAVE_AS` creates missing parent directories automaticall
     "selectLockedCellsLocked": true,
     "selectUnlockedCellsLocked": false,
     "sortLocked": true
-  }
+  },
+  "password": "Sheet-2026"
 }
 ```
 
@@ -188,6 +193,27 @@ separate `path` field. `SAVE_AS` creates missing parent directories automaticall
 
 ```json
 { "type": "CLEAR_SHEET_PROTECTION", "sheetName": "Budget Review" }
+```
+
+## SET_WORKBOOK_PROTECTION
+
+```json
+{
+  "type": "SET_WORKBOOK_PROTECTION",
+  "protection": {
+    "structureLocked": true,
+    "windowsLocked": false,
+    "revisionsLocked": true,
+    "workbookPassword": "Vault-2026",
+    "revisionsPassword": "Revisions-2026"
+  }
+}
+```
+
+## CLEAR_WORKBOOK_PROTECTION
+
+```json
+{ "type": "CLEAR_WORKBOOK_PROTECTION" }
 ```
 
 ## MERGE_CELLS
@@ -415,7 +441,27 @@ band (`LIM-018`) and also rejects formula-bearing workbooks (`LIM-017`).
     "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 1 },
     "repeatingColumns": { "type": "BAND", "firstColumnIndex": 0, "lastColumnIndex": 0 },
     "header": { "left": "Inventory", "center": "Q2", "right": "Internal" },
-    "footer": { "left": "", "center": "Prepared by GridGrind", "right": "Page 1" }
+    "footer": { "left": "", "center": "Prepared by GridGrind", "right": "Page 1" },
+    "setup": {
+      "margins": {
+        "left": 0.35,
+        "right": 0.55,
+        "top": 0.6,
+        "bottom": 0.45,
+        "header": 0.3,
+        "footer": 0.3
+      },
+      "horizontallyCentered": true,
+      "verticallyCentered": true,
+      "paperSize": 8,
+      "draft": true,
+      "blackAndWhite": true,
+      "copies": 2,
+      "useFirstPageNumber": true,
+      "firstPageNumber": 4,
+      "rowBreaks": [6],
+      "columnBreaks": [3]
+    }
   }
 }
 ```
@@ -494,14 +540,39 @@ one exists, so use absolute paths when you want cwd-independent health checks.
   "sheetName": "Sheet1",
   "address": "B2",
   "comment": {
-    "text": "Reviewed by finance.",
+    "text": "Lead review scheduled.",
     "author": "GridGrind",
-    "visible": true
+    "visible": false,
+    "runs": [
+      {
+        "text": "Lead",
+        "font": {
+          "bold": true,
+          "fontColorTheme": 4,
+          "fontColorTint": -0.2
+        }
+      },
+      { "text": " " },
+      {
+        "text": "review scheduled.",
+        "font": {
+          "italic": true,
+          "fontColorIndexed": 17
+        }
+      }
+    ],
+    "anchor": {
+      "firstColumn": 4,
+      "firstRow": 1,
+      "lastColumn": 8,
+      "lastRow": 7
+    }
   }
 }
 ```
 
-If `visible` is omitted, it defaults to `false`.
+If `visible` is omitted, it defaults to `false`. When `runs` are present, their text must
+concatenate exactly to `comment.text`.
 
 ## CLEAR_COMMENT
 
@@ -551,13 +622,41 @@ If `visible` is omitted, it defaults to `false`.
 }
 ```
 
+```json
+{
+  "type": "APPLY_STYLE",
+  "sheetName": "Sheet1",
+  "range": "J2:J3",
+  "style": {
+    "font": {
+      "fontColorTheme": 6,
+      "fontColorTint": -0.35
+    },
+    "fill": {
+      "gradient": {
+        "type": "LINEAR",
+        "degree": 45.0,
+        "stops": [
+          { "position": 0.0, "color": { "rgb": "#1F497D" } },
+          { "position": 1.0, "color": { "theme": 4, "tint": 0.45 } }
+        ]
+      }
+    },
+    "border": {
+      "bottom": { "style": "THIN", "colorIndexed": 8 }
+    }
+  }
+}
+```
+
 `style` groups are `numberFormat`, `alignment`, `font`, `fill`, `border`, and `protection`.
 `alignment.horizontalAlignment` values: `"LEFT"` `"CENTER"` `"RIGHT"` `"GENERAL"`
 `alignment.verticalAlignment` values: `"TOP"` `"CENTER"` `"BOTTOM"`
 `alignment.textRotation` uses explicit `0..180` degrees. `alignment.indentation` uses Excel's `0..250` cell-indent scale.
 `font.fontHeight` accepts either `{ "type": "POINTS", "points": 11.5 }` or `{ "type": "TWIPS", "twips": 230 }`.
-`font.fontColor`, `fill.foregroundColor`, `fill.backgroundColor`, and `border.*.color` use `#RRGGBB`.
-`fill.backgroundColor` is for patterned fills only; `SOLID` fills use `foregroundColor` only.
+Color-bearing write fields accept RGB (`fontColor`, `fill.foregroundColor`, `fill.backgroundColor`, `border.*.color`), theme (`fontColorTheme`, `fill.foregroundColorTheme`, `fill.backgroundColorTheme`, `border.*.colorTheme`), or indexed (`fontColorIndexed`, `fill.foregroundColorIndexed`, `fill.backgroundColorIndexed`, `border.*.colorIndexed`) bases plus optional tint companions.
+`fill.backgroundColor` and its theme/indexed variants are for patterned fills only; `SOLID` fills use foreground fields only.
+`fill.gradient` authors gradient fills and is mutually exclusive with patterned fill fields.
 `border.all` sets the default side style or color; explicit sides override it.
 `border.*.color` requires a visible style on that side, either directly or via `border.all`.
 
@@ -648,24 +747,29 @@ range.
   "type": "SET_CONDITIONAL_FORMATTING",
   "sheetName": "Sheet1",
   "conditionalFormatting": {
-    "ranges": ["A2:D20"],
+    "ranges": ["K2:K20"],
     "rules": [
       {
-        "type": "FORMULA_RULE",
-        "formula": "$D2=\"Blocked\"",
-        "stopIfTrue": true,
-        "style": {
-          "fillColor": "#FFF2CC",
-          "fontColor": "#7F6000",
-          "italic": true
-        }
+        "type": "COLOR_SCALE_RULE",
+        "stopIfTrue": false,
+        "thresholds": [
+          { "type": "MIN" },
+          { "type": "PERCENTILE", "value": 50.0 },
+          { "type": "MAX" }
+        ],
+        "colors": [
+          { "rgb": "#AA2211" },
+          { "rgb": "#FFDD55" },
+          { "rgb": "#11CC66" }
+        ]
       }
     ]
   }
 }
 ```
 
-Write support covers `FORMULA_RULE` and `CELL_VALUE_RULE`.
+Write support covers `FORMULA_RULE`, `CELL_VALUE_RULE`, `COLOR_SCALE_RULE`, `DATA_BAR_RULE`,
+`ICON_SET_RULE`, and `TOP10_RULE`.
 
 ## CLEAR_CONDITIONAL_FORMATTING
 
@@ -691,11 +795,37 @@ Write support covers `FORMULA_RULE` and `CELL_VALUE_RULE`.
 {
   "type": "SET_AUTOFILTER",
   "sheetName": "Sheet1",
-  "range": "A1:C20"
+  "range": "A1:C20",
+  "criteria": [
+    {
+      "columnId": 2,
+      "showButton": true,
+      "criterion": {
+        "type": "VALUES",
+        "values": ["Queued", "Done"],
+        "includeBlank": false
+      }
+    }
+  ],
+  "sortState": {
+    "range": "A2:C20",
+    "caseSensitive": false,
+    "columnSort": false,
+    "sortMethod": "",
+    "conditions": [
+      {
+        "range": "C2:C20",
+        "descending": true,
+        "sortBy": ""
+      }
+    ]
+  }
 }
 ```
 
 The range must include a nonblank header row and must not overlap any existing table range.
+`criteria` defaults to `[]`; `sortState` is optional. `columnId` is zero-based within the
+autofilter range.
 
 ## CLEAR_AUTOFILTER
 
@@ -725,6 +855,14 @@ tables.
     "sheetName": "Sheet1",
     "range": "A1:C20",
     "showTotalsRow": true,
+    "hasAutofilter": false,
+    "comment": "Dispatch tracker",
+    "published": true,
+    "insertRow": true,
+    "insertRowShift": true,
+    "headerRowCellStyle": "DispatchHeader",
+    "dataCellStyle": "DispatchData",
+    "totalsRowCellStyle": "DispatchTotals",
     "style": {
       "type": "NAMED",
       "name": "TableStyleMedium2",
@@ -732,7 +870,12 @@ tables.
       "showLastColumn": false,
       "showRowStripes": true,
       "showColumnStripes": false
-    }
+    },
+    "columns": [
+      { "columnIndex": 0, "totalsRowLabel": "Total" },
+      { "columnIndex": 1, "totalsRowFunction": "SUM" },
+      { "columnIndex": 2, "uniqueName": "status-unique" }
+    ]
   }
 }
 ```
@@ -740,7 +883,9 @@ tables.
 Table names are workbook-global. Header cells in the first row of the range must be nonblank and
 unique case-insensitively. Overlapping different-name tables are rejected. Later value writes and
 style patches that touch the table header row keep the table's persisted column metadata aligned
-with the visible header cells.
+with the visible header cells. `showTotalsRow` is optional and defaults to `false`; when
+`totalsRowFunction` is present in a column entry, input is case-insensitive and canonicalized to
+Excel's lowercase stored token family.
 
 ## DELETE_TABLE
 
@@ -792,10 +937,16 @@ Sizing is deterministic and content-based, so headless and Docker runs match loc
   "scope": { "type": "SHEET", "sheetName": "Budget" },
   "target": { "sheetName": "Budget", "range": "A1:B4" }
 }
+{
+  "type": "SET_NAMED_RANGE",
+  "name": "BudgetRollup",
+  "scope": { "type": "WORKBOOK" },
+  "target": { "formula": "SUM(Budget!$B$2:$B$5)" }
+}
 ```
 
 Named-range targets are normalized to top-left:`bottom-right` order. For example, `"B4:A1"` is
-accepted and stored as `"A1:B4"`.
+accepted and stored as `"A1:B4"`. Formula-defined targets must set `formula` only.
 
 ## DELETE_NAMED_RANGE
 

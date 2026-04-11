@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.35.0
+docker pull ghcr.io/resoltico/gridgrind:0.36.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -185,8 +185,12 @@ copy-paste snippets for every type. The committed
 defaulted `SET_TABLE` shape with `showTotalsRow` omitted. The committed
 [examples/advanced-readback-request.json](examples/advanced-readback-request.json) example shows
 the richer factual readback surface for workbook protection, comment runs and anchors, advanced
-print setup, autofilter criteria and sort state, advanced table metadata, and workbook-health
-analysis.
+print setup, structured style colors and gradients, autofilter criteria and sort state, advanced
+table metadata, and workbook-health analysis. The committed
+[examples/advanced-mutation-request.json](examples/advanced-mutation-request.json) example shows
+the full workbook-core mutation surface for password-bearing protection, formula-defined named
+ranges, advanced table and autofilter mutation, advanced conditional formatting, rich comments,
+and advanced page setup.
 
 ### Alice — building an inventory sheet
 

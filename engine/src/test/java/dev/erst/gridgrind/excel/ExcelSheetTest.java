@@ -435,7 +435,13 @@ class ExcelSheetTest {
               new ExcelCellAlignment(
                   true, ExcelHorizontalAlignment.CENTER, ExcelVerticalAlignment.TOP, null, null),
               new ExcelCellFont(
-                  true, false, "Aptos", new ExcelFontHeight(280), "#1F4E78", true, false),
+                  true,
+                  false,
+                  "Aptos",
+                  new ExcelFontHeight(280),
+                  new ExcelColor("#1F4E78"),
+                  true,
+                  false),
               new ExcelCellFill(ExcelFillPattern.SOLID, "#FFF2CC", null),
               new ExcelBorder(new ExcelBorderSide(ExcelBorderStyle.THIN), null, null, null, null),
               null));
@@ -798,14 +804,26 @@ class ExcelSheetTest {
                       new ExcelRichTextRun(
                           " Report",
                           new ExcelCellFont(
-                              Boolean.TRUE, null, null, null, "#FF0000", null, null))))));
+                              Boolean.TRUE,
+                              null,
+                              null,
+                              null,
+                              new ExcelColor("#FF0000"),
+                              null,
+                              null))))));
       sheet.applyStyle(
           "A1",
           new ExcelCellStyle(
               null,
               null,
               new ExcelCellFont(
-                  null, Boolean.TRUE, "Aptos", new ExcelFontHeight(260), "#112233", null, null),
+                  null,
+                  Boolean.TRUE,
+                  "Aptos",
+                  new ExcelFontHeight(260),
+                  new ExcelColor("#112233"),
+                  null,
+                  null),
               null,
               null,
               null));
@@ -854,7 +872,7 @@ class ExcelSheetTest {
                   null,
                   "Aptos",
                   ExcelFontHeight.fromPoints(new java.math.BigDecimal("15.2")),
-                  "#A3A3A3",
+                  new ExcelColor("#A3A3A3"),
                   null,
                   Boolean.TRUE),
               new ExcelCellFill(ExcelFillPattern.SOLID, "#CDCDCD", null),

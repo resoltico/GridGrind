@@ -393,6 +393,12 @@ public final class XlsxRoundTripVerifier {
         case WorkbookCommand.ClearSheetProtection _ -> {
           // Sheet protection is tracked independently from cell-level expectations.
         }
+        case WorkbookCommand.SetWorkbookProtection _ -> {
+          // Workbook protection is tracked independently from cell-level expectations.
+        }
+        case WorkbookCommand.ClearWorkbookProtection _ -> {
+          // Workbook protection is tracked independently from cell-level expectations.
+        }
         case WorkbookCommand.MergeCells _ -> {
           // Merge state does not add new candidate cells.
         }

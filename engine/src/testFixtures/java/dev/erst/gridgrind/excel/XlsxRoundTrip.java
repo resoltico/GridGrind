@@ -170,11 +170,7 @@ public final class XlsxRoundTrip {
     requireNonBlank(sheetName, "sheetName");
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      return ((WorkbookReadResult.SheetLayoutResult)
-              new WorkbookReadExecutor()
-                  .apply(workbook, new WorkbookReadCommand.GetSheetLayout("layout", sheetName))
-                  .getFirst())
-          .layout();
+      return workbook.sheet(sheetName).layout();
     }
   }
 

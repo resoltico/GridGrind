@@ -111,6 +111,186 @@ class ExcelConditionalFormattingControllerTest {
   }
 
   @Test
+  void authoredBlocksCanPersistDifferentialRuleFamiliesWithoutStyles() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      seedConditionalFormattingValues(sheet);
+
+      controller.setConditionalFormatting(
+          sheet,
+          new ExcelConditionalFormattingBlockDefinition(
+              List.of("A1:A3"),
+              List.of(
+                  new ExcelConditionalFormattingRule.FormulaRule("A1>0", false, null),
+                  new ExcelConditionalFormattingRule.CellValueRule(
+                      ExcelComparisonOperator.GREATER_THAN, "1", null, false, null),
+                  new ExcelConditionalFormattingRule.Top10Rule(10, false, false, false, null))));
+
+      assertEquals(
+          List.of(
+              new ExcelConditionalFormattingBlockSnapshot(
+                  List.of("A1:A3"),
+                  List.of(
+                      new ExcelConditionalFormattingRuleSnapshot.FormulaRule(
+                          1, false, "A1>0", null),
+                      new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
+                          2, false, ExcelComparisonOperator.GREATER_THAN, "1", null, null),
+                      new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
+                          3, false, 10, false, false, null)))),
+          controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
+    }
+  }
+
+  @Test
+  void authoredAdvancedThresholdRulesSupportMinMaxWithoutValues() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      seedConditionalFormattingValues(sheet);
+
+      controller.setConditionalFormatting(
+          sheet,
+          new ExcelConditionalFormattingBlockDefinition(
+              List.of("A1:A3"),
+              List.of(
+                  new ExcelConditionalFormattingRule.ColorScaleRule(
+                      List.of(
+                          new ExcelConditionalFormattingThreshold(
+                              ExcelConditionalFormattingThresholdType.MIN, null, null),
+                          new ExcelConditionalFormattingThreshold(
+                              ExcelConditionalFormattingThresholdType.PERCENTILE, null, 50.0d),
+                          new ExcelConditionalFormattingThreshold(
+                              ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                      List.of(
+                          new ExcelColor("#AA2211"),
+                          new ExcelColor("#FFDD55"),
+                          new ExcelColor("#11CC66")),
+                      false),
+                  new ExcelConditionalFormattingRule.DataBarRule(
+                      new ExcelColor("#123456"),
+                      true,
+                      10,
+                      90,
+                      new ExcelConditionalFormattingThreshold(
+                          ExcelConditionalFormattingThresholdType.MIN, null, null),
+                      new ExcelConditionalFormattingThreshold(
+                          ExcelConditionalFormattingThresholdType.MAX, null, null),
+                      false))));
+
+      assertEquals(
+          List.of(
+              new ExcelConditionalFormattingBlockSnapshot(
+                  List.of("A1:A3"),
+                  List.of(
+                      new ExcelConditionalFormattingRuleSnapshot.ColorScaleRule(
+                          1,
+                          false,
+                          List.of(
+                              new ExcelConditionalFormattingThresholdSnapshot(
+                                  ExcelConditionalFormattingThresholdType.MIN, null, null),
+                              new ExcelConditionalFormattingThresholdSnapshot(
+                                  ExcelConditionalFormattingThresholdType.PERCENTILE, null, 50.0d),
+                              new ExcelConditionalFormattingThresholdSnapshot(
+                                  ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                          List.of("#AA2211", "#FFDD55", "#11CC66")),
+                      new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
+                          2,
+                          false,
+                          "#123456",
+                          true,
+                          10,
+                          90,
+                          new ExcelConditionalFormattingThresholdSnapshot(
+                              ExcelConditionalFormattingThresholdType.MIN, null, null),
+                          new ExcelConditionalFormattingThresholdSnapshot(
+                              ExcelConditionalFormattingThresholdType.MAX, null, null))))),
+          controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
+    }
+  }
+
+  @Test
+  void authoredIconSetRulesRoundTripFormulaAndValueThresholds() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      seedConditionalFormattingValues(sheet);
+
+      controller.setConditionalFormatting(
+          sheet,
+          new ExcelConditionalFormattingBlockDefinition(
+              List.of("A1:A3"),
+              List.of(
+                  new ExcelConditionalFormattingRule.IconSetRule(
+                      ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
+                      true,
+                      false,
+                      List.of(
+                          new ExcelConditionalFormattingThreshold(
+                              ExcelConditionalFormattingThresholdType.FORMULA, "A1*2", null),
+                          new ExcelConditionalFormattingThreshold(
+                              ExcelConditionalFormattingThresholdType.NUMBER, null, 40.0d),
+                          new ExcelConditionalFormattingThreshold(
+                              ExcelConditionalFormattingThresholdType.MAX, null, null)),
+                      true))));
+
+      assertEquals(
+          List.of(
+              new ExcelConditionalFormattingBlockSnapshot(
+                  List.of("A1:A3"),
+                  List.of(
+                      new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
+                          1,
+                          true,
+                          ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
+                          true,
+                          false,
+                          List.of(
+                              new ExcelConditionalFormattingThresholdSnapshot(
+                                  ExcelConditionalFormattingThresholdType.FORMULA, "A1*2", null),
+                              new ExcelConditionalFormattingThresholdSnapshot(
+                                  ExcelConditionalFormattingThresholdType.NUMBER, null, 40.0d),
+                              new ExcelConditionalFormattingThresholdSnapshot(
+                                  ExcelConditionalFormattingThresholdType.MAX, null, null)))))),
+          controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
+    }
+  }
+
+  @Test
+  void authoredTop10RulesRoundTripStyledPayloads() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      seedConditionalFormattingValues(sheet);
+
+      controller.setConditionalFormatting(
+          sheet,
+          new ExcelConditionalFormattingBlockDefinition(
+              List.of("A1:A3"),
+              List.of(
+                  new ExcelConditionalFormattingRule.Top10Rule(
+                      7,
+                      true,
+                      true,
+                      true,
+                      new ExcelDifferentialStyle(
+                          null, true, null, null, "#223344", null, null, null, null)))));
+
+      assertEquals(
+          List.of(
+              new ExcelConditionalFormattingBlockSnapshot(
+                  List.of("A1:A3"),
+                  List.of(
+                      new ExcelConditionalFormattingRuleSnapshot.Top10Rule(
+                          1,
+                          true,
+                          7,
+                          true,
+                          true,
+                          new ExcelDifferentialStyleSnapshot(
+                              null, true, null, null, "#223344", null, null, null, null,
+                              List.of()))))),
+          controller.conditionalFormatting(sheet, new ExcelRangeSelection.All()));
+    }
+  }
+
+  @Test
   void healthyGreaterThanRuleSupportsSelectionFilteringAndSheetDelegation() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
@@ -460,7 +640,6 @@ class ExcelConditionalFormattingControllerTest {
                 false,
                 "#223344",
                 false,
-                true,
                 0,
                 100,
                 new ExcelConditionalFormattingThresholdSnapshot(

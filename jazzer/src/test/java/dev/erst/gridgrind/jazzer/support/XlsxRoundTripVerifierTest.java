@@ -10,6 +10,7 @@ import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
@@ -115,7 +116,7 @@ class XlsxRoundTripVerifierTest {
                         null,
                         "Aptos",
                         ExcelFontHeight.fromPoints(new BigDecimal("15.2")),
-                        "#A3A3A3",
+                        new ExcelColor("#A3A3A3"),
                         null,
                         Boolean.TRUE),
                     new ExcelCellFill(ExcelFillPattern.SOLID, "#CDCDCD", null),
@@ -202,7 +203,7 @@ class XlsxRoundTripVerifierTest {
                 Boolean.TRUE,
                 "Arial",
                 ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
-                "#112233",
+                new ExcelColor("#112233"),
                 Boolean.TRUE,
                 Boolean.TRUE),
             new ExcelCellFill(ExcelFillPattern.SOLID, "#445566", null),
@@ -264,7 +265,13 @@ class XlsxRoundTripVerifierTest {
                             new ExcelRichTextRun(
                                 " FY26",
                                 new ExcelCellFont(
-                                    Boolean.TRUE, null, null, null, "#FF0000", null, null)))))),
+                                    Boolean.TRUE,
+                                    null,
+                                    null,
+                                    null,
+                                    new ExcelColor("#FF0000"),
+                                    null,
+                                    null)))))),
             new WorkbookCommand.ApplyStyle(
                 "Budget",
                 "A1",
@@ -276,7 +283,7 @@ class XlsxRoundTripVerifierTest {
                         Boolean.TRUE,
                         "Aptos",
                         new ExcelFontHeight(260),
-                        "#112233",
+                        new ExcelColor("#112233"),
                         null,
                         null),
                     null,

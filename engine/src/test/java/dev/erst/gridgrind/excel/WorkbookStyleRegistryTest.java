@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.math.BigDecimal;
+import java.util.List;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IndexedColors;
@@ -142,11 +143,210 @@ class WorkbookStyleRegistryTest {
               new ExcelCellStyle(
                   null,
                   null,
-                  new ExcelCellFont(null, null, null, null, "#445566", null, null),
+                  new ExcelCellFont(null, null, null, null, new ExcelColor("#445566"), null, null),
                   null,
                   null,
                   null)));
       assertEquals(rgb("#445566"), styleRegistry.snapshot(cell).font().fontColor());
+    }
+  }
+
+  @Test
+  void mergedStyle_preservesThemeIndexedAndTintFontColors() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
+
+      cell.setCellStyle(
+          styleRegistry.mergedStyle(
+              cell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  new ExcelCellFont(
+                      null, true, null, null, new ExcelColor(null, 6, null, -0.35d), null, null),
+                  null,
+                  null,
+                  null)));
+      assertEquals(
+          new ExcelColorSnapshot(null, 6, null, -0.35d),
+          styleRegistry.snapshot(cell).font().fontColor());
+
+      cell.setCellStyle(
+          styleRegistry.mergedStyle(
+              cell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  new ExcelCellFont(
+                      null,
+                      null,
+                      null,
+                      null,
+                      new ExcelColor(
+                          null, null, Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex()), null),
+                      null,
+                      null),
+                  null,
+                  null,
+                  null)));
+      assertEquals(
+          new ExcelColorSnapshot(
+              null, null, Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex()), null),
+          styleRegistry.snapshot(cell).font().fontColor());
+    }
+  }
+
+  @Test
+  void mergedStyle_appliesGradientFillPatchesAndCollapsesExtraFontColorNodes() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
+      cell.setCellStyle(styledBaseCellStyle(workbook));
+
+      cell.setCellStyle(
+          styleRegistry.mergedStyle(
+              cell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  new ExcelCellFont(
+                      null, null, null, null, new ExcelColor(null, 6, null, -0.35d), null, null),
+                  new ExcelCellFill(
+                      null,
+                      null,
+                      null,
+                      new ExcelGradientFill(
+                          "PATH",
+                          null,
+                          0.1d,
+                          0.2d,
+                          0.3d,
+                          0.4d,
+                          List.of(
+                              new ExcelGradientStop(0.0d, new ExcelColor("#112233")),
+                              new ExcelGradientStop(1.0d, new ExcelColor(null, null, 5, null))))),
+                  null,
+                  null)));
+
+      XSSFCellStyle snapshotStyle = (XSSFCellStyle) cell.getCellStyle();
+      XSSFFont snapshotFont = workbook.getFontAt(snapshotStyle.getFontIndexAsInt());
+      var gradientFill =
+          workbook
+              .getStylesSource()
+              .getFillAt((int) snapshotStyle.getCoreXf().getFillId())
+              .getCTFill()
+              .getGradientFill();
+
+      assertEquals(6L, snapshotFont.getCTFont().getColorArray(0).getTheme());
+      assertEquals(-0.35d, snapshotFont.getCTFont().getColorArray(0).getTint());
+      assertNotNull(gradientFill);
+      assertEquals("path", gradientFill.getType().toString());
+      assertEquals(0.1d, gradientFill.getLeft());
+      assertEquals(
+          "#112233",
+          ExcelColorSnapshotSupport.snapshot(workbook, gradientFill.getStopArray(0).getColor())
+              .rgb());
+      assertEquals(
+          5,
+          ExcelColorSnapshotSupport.snapshot(workbook, gradientFill.getStopArray(1).getColor())
+              .indexed());
+    }
+  }
+
+  @Test
+  void mergedStyle_collapsesDuplicateFontColorsAndSupportsLinearGradientDefaults()
+      throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
+
+      XSSFCellStyle style = workbook.createCellStyle();
+      XSSFFont font = workbook.createFont();
+      font.setFontName("Aptos");
+      font.getCTFont().addNewColor().setRgb(new byte[] {0x01, 0x02, 0x03});
+      font.getCTFont().addNewColor().setTheme(2L);
+      font.getCTFont().addNewColor().setIndexed(5L);
+      style.setFont(font);
+      cell.setCellStyle(style);
+
+      cell.setCellStyle(
+          styleRegistry.mergedStyle(
+              cell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  new ExcelCellFont(null, null, null, null, new ExcelColor("#445566"), null, null),
+                  new ExcelCellFill(
+                      null,
+                      null,
+                      null,
+                      new ExcelGradientFill(
+                          "LINEAR",
+                          37.5d,
+                          null,
+                          null,
+                          null,
+                          null,
+                          List.of(
+                              new ExcelGradientStop(0.0d, new ExcelColor("#112233")),
+                              new ExcelGradientStop(1.0d, new ExcelColor("#445566"))))),
+                  null,
+                  null)));
+
+      XSSFCellStyle mergedStyle = (XSSFCellStyle) cell.getCellStyle();
+      XSSFFont mergedFont = workbook.getFontAt(mergedStyle.getFontIndexAsInt());
+      var gradientFill =
+          workbook
+              .getStylesSource()
+              .getFillAt((int) mergedStyle.getCoreXf().getFillId())
+              .getCTFill()
+              .getGradientFill();
+
+      assertEquals(1, mergedFont.getCTFont().sizeOfColorArray());
+      assertEquals(
+          "#445566",
+          ExcelColorSnapshotSupport.snapshot(workbook, mergedFont.getCTFont().getColorArray(0))
+              .rgb());
+      assertNotNull(gradientFill);
+      assertFalse(gradientFill.isSetType());
+      assertEquals(37.5d, gradientFill.getDegree());
+    }
+  }
+
+  @Test
+  void mergedStyle_appliesFontColorWhenBaseFontHasNoColorNode() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
+
+      XSSFCellStyle style = workbook.createCellStyle();
+      XSSFFont font = workbook.createFont();
+      font.setFontName("Aptos");
+      while (font.getCTFont().sizeOfColorArray() > 0) {
+        font.getCTFont().removeColor(font.getCTFont().sizeOfColorArray() - 1);
+      }
+      style.setFont(font);
+      cell.setCellStyle(style);
+
+      cell.setCellStyle(
+          styleRegistry.mergedStyle(
+              cell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  new ExcelCellFont(null, null, null, null, new ExcelColor("#102030"), null, null),
+                  null,
+                  null,
+                  null)));
+
+      XSSFCellStyle mergedStyle = (XSSFCellStyle) cell.getCellStyle();
+      XSSFFont mergedFont = workbook.getFontAt(mergedStyle.getFontIndexAsInt());
+      assertEquals(1, mergedFont.getCTFont().sizeOfColorArray());
+      assertEquals(
+          "#102030",
+          ExcelColorSnapshotSupport.snapshot(workbook, mergedFont.getCTFont().getColorArray(0))
+              .rgb());
     }
   }
 
@@ -215,14 +415,14 @@ class WorkbookStyleRegistryTest {
                       false,
                       "Aptos",
                       ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
-                      "#102030",
+                      new ExcelColor("#102030"),
                       true,
                       false),
                   new ExcelCellFill(ExcelFillPattern.THIN_HORIZONTAL_BANDS, "#FFF2CC", "#DDEBF7"),
                   new ExcelBorder(
-                      new ExcelBorderSide(ExcelBorderStyle.THIN, "#203040"),
+                      new ExcelBorderSide(ExcelBorderStyle.THIN, new ExcelColor("#203040")),
                       null,
-                      new ExcelBorderSide(ExcelBorderStyle.DOUBLE, "#304050"),
+                      new ExcelBorderSide(ExcelBorderStyle.DOUBLE, new ExcelColor("#304050")),
                       null,
                       null),
                   new ExcelCellProtection(false, true))));
@@ -309,8 +509,8 @@ class WorkbookStyleRegistryTest {
               cell,
               borderPatch(
                   new ExcelBorder(
-                      new ExcelBorderSide(ExcelBorderStyle.THIN, "#112233"),
-                      new ExcelBorderSide(null, "#445566"),
+                      new ExcelBorderSide(ExcelBorderStyle.THIN, new ExcelColor("#112233")),
+                      new ExcelBorderSide(null, new ExcelColor("#445566")),
                       new ExcelBorderSide(ExcelBorderStyle.DOUBLE, null),
                       null,
                       null))));
@@ -340,7 +540,11 @@ class WorkbookStyleRegistryTest {
                   cell,
                   borderPatch(
                       new ExcelBorder(
-                          null, new ExcelBorderSide(null, "#778899"), null, null, null))));
+                          null,
+                          new ExcelBorderSide(null, new ExcelColor("#778899")),
+                          null,
+                          null,
+                          null))));
 
       Cell blankCell = workbook.getSheet("Budget").createRow(1).createCell(0);
       assertThrows(
@@ -350,7 +554,11 @@ class WorkbookStyleRegistryTest {
                   blankCell,
                   borderPatch(
                       new ExcelBorder(
-                          null, new ExcelBorderSide(null, "#99AABB"), null, null, null))));
+                          null,
+                          new ExcelBorderSide(null, new ExcelColor("#99AABB")),
+                          null,
+                          null,
+                          null))));
 
       assertThrows(
           IllegalArgumentException.class,
@@ -360,7 +568,7 @@ class WorkbookStyleRegistryTest {
                   borderPatch(
                       new ExcelBorder(
                           new ExcelBorderSide(ExcelBorderStyle.NONE),
-                          new ExcelBorderSide(null, "#CC8844"),
+                          new ExcelBorderSide(null, new ExcelColor("#CC8844")),
                           null,
                           null,
                           null))));
@@ -403,7 +611,7 @@ class WorkbookStyleRegistryTest {
               cell,
               borderPatch(
                   new ExcelBorder(
-                      new ExcelBorderSide(ExcelBorderStyle.THIN, "#112233"),
+                      new ExcelBorderSide(ExcelBorderStyle.THIN, new ExcelColor("#112233")),
                       null,
                       null,
                       null,

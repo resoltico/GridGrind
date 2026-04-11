@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.35.0"
+version: "0.36.0"
 domain: DEVELOPER
 updated: "2026-04-11"
 route:
@@ -234,6 +234,8 @@ These runnable examples cover the core operation surface:
 | File | What It Tests |
 |:-----|:-------------|
 | `examples/budget-request.json` | Range write, style, formula, workbook summary, cells, window, and schema reads |
+| `examples/advanced-readback-request.json` | Rich factual readback for workbook protection, rich comments, advanced print setup, structured style colors, autofilter criteria or sort state, and advanced table metadata |
+| `examples/advanced-mutation-request.json` | Workbook-core mutation parity example for password-bearing protection, formula-defined names, advanced table/autofilter mutation, advanced conditional formatting, and rich comments |
 | `examples/data-validation-request.json` | Validation authoring, partial clearing, factual validation reads, and validation-health analysis |
 | `examples/excel-authoring-essentials-request.json` | Hyperlink, comment, named-range authoring plus explicit metadata and named-range reads |
 | `examples/file-hyperlink-health-request.json` | File-hyperlink authoring plus explicit hyperlink metadata and hyperlink-health analysis |

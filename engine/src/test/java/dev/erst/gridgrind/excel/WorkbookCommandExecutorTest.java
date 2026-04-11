@@ -300,6 +300,30 @@ class WorkbookCommandExecutorTest {
   }
 
   @Test
+  void appliesWorkbookProtectionCommands() throws IOException {
+    WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget");
+
+      executor.apply(
+          workbook,
+          new WorkbookCommand.SetWorkbookProtection(
+              new ExcelWorkbookProtectionSettings(true, false, true, "secret", "review")));
+
+      assertEquals(
+          new ExcelWorkbookProtectionSnapshot(true, false, true, true, true),
+          workbook.workbookProtection());
+
+      executor.apply(workbook, new WorkbookCommand.ClearWorkbookProtection());
+
+      assertEquals(
+          new ExcelWorkbookProtectionSnapshot(false, false, false, false, false),
+          workbook.workbookProtection());
+    }
+  }
+
+  @Test
   void appliesClearPrintLayoutThroughIterableCommands() throws IOException {
     WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 

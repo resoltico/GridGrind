@@ -64,6 +64,46 @@ class WorkbookCommandTest {
     assertEquals(new ExcelColumnSpan(4, 6), ungroupColumns.columns());
   }
 
+  @Test
+  void buildsWorkbookProtectionAndAdvancedAutofilterCommands() {
+    List<ExcelAutofilterFilterColumn> criteria =
+        new ArrayList<>(
+            List.of(
+                new ExcelAutofilterFilterColumn(
+                    0L, false, new ExcelAutofilterFilterCriterion.Values(List.of("Ada"), true))));
+    WorkbookCommand.SetSheetProtection sheetProtection =
+        new WorkbookCommand.SetSheetProtection("Budget", protectionSettings(), "gridgrind");
+    WorkbookCommand.SetWorkbookProtection workbookProtection =
+        new WorkbookCommand.SetWorkbookProtection(
+            new ExcelWorkbookProtectionSettings(true, false, true, "book", "review"));
+    WorkbookCommand.ClearWorkbookProtection clearWorkbookProtection =
+        new WorkbookCommand.ClearWorkbookProtection();
+    WorkbookCommand.SetAutofilter setAutofilter =
+        new WorkbookCommand.SetAutofilter(
+            "Budget",
+            "A1:C4",
+            criteria,
+            new ExcelAutofilterSortState(
+                "A1:C4",
+                true,
+                false,
+                "",
+                List.of(new ExcelAutofilterSortCondition("A2:A4", false, "", null, null))));
+
+    criteria.clear();
+
+    assertEquals("gridgrind", sheetProtection.password());
+    assertEquals("book", workbookProtection.protection().workbookPassword());
+    assertNotNull(clearWorkbookProtection);
+    assertEquals(1, setAutofilter.criteria().size());
+    assertFalse(setAutofilter.criteria().getFirst().showButton());
+    assertTrue(setAutofilter.sortState().caseSensitive());
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.SetSheetProtection("Budget", protectionSettings(), " "));
+  }
+
   private CreatedCommands createSupportedCommands(
       List<ExcelCellValue> values, List<List<ExcelCellValue>> rows, ExcelCellStyle style) {
     return new CreatedCommands(

@@ -28,9 +28,14 @@ final class WorkbookCommandConverter {
           new WorkbookCommand.SetSheetVisibility(op.sheetName(), op.visibility());
       case WorkbookOperation.SetSheetProtection op ->
           new WorkbookCommand.SetSheetProtection(
-              op.sheetName(), toExcelSheetProtectionSettings(op.protection()));
+              op.sheetName(), toExcelSheetProtectionSettings(op.protection()), op.password());
       case WorkbookOperation.ClearSheetProtection op ->
           new WorkbookCommand.ClearSheetProtection(op.sheetName());
+      case WorkbookOperation.SetWorkbookProtection op ->
+          new WorkbookCommand.SetWorkbookProtection(
+              toExcelWorkbookProtectionSettings(op.protection()));
+      case WorkbookOperation.ClearWorkbookProtection _ ->
+          new WorkbookCommand.ClearWorkbookProtection();
       case WorkbookOperation.MergeCells op ->
           new WorkbookCommand.MergeCells(op.sheetName(), op.range());
       case WorkbookOperation.UnmergeCells op ->
@@ -113,7 +118,13 @@ final class WorkbookCommandConverter {
           new WorkbookCommand.ClearConditionalFormatting(
               op.sheetName(), toExcelRangeSelection(op.selection()));
       case WorkbookOperation.SetAutofilter op ->
-          new WorkbookCommand.SetAutofilter(op.sheetName(), op.range());
+          new WorkbookCommand.SetAutofilter(
+              op.sheetName(),
+              op.range(),
+              op.criteria().stream()
+                  .map(WorkbookCommandConverter::toExcelAutofilterFilterColumn)
+                  .toList(),
+              toExcelAutofilterSortState(op.sortState()));
       case WorkbookOperation.ClearAutofilter op ->
           new WorkbookCommand.ClearAutofilter(op.sheetName());
       case WorkbookOperation.SetTable op ->
@@ -172,7 +183,21 @@ final class WorkbookCommandConverter {
   }
 
   static ExcelComment toExcelComment(CommentInput comment) {
-    return new ExcelComment(comment.text(), comment.author(), comment.visible());
+    return new ExcelComment(
+        comment.text(),
+        comment.author(),
+        comment.visible(),
+        comment.runs() == null
+            ? null
+            : new ExcelRichText(
+                comment.runs().stream().map(WorkbookCommandConverter::toExcelRichTextRun).toList()),
+        comment.anchor() == null
+            ? null
+            : new ExcelCommentAnchor(
+                comment.anchor().firstColumn(),
+                comment.anchor().firstRow(),
+                comment.anchor().lastColumn(),
+                comment.anchor().lastRow()));
   }
 
   static ExcelRowSpan toExcelRowSpan(RowSpanInput rows) {
@@ -219,7 +244,8 @@ final class WorkbookCommandConverter {
         font.italic(),
         font.fontName(),
         toExcelFontHeight(font.fontHeight()),
-        font.fontColor(),
+        toExcelColor(
+            font.fontColor(), font.fontColorTheme(), font.fontColorIndexed(), font.fontColorTint()),
         font.underline(),
         font.strikeout());
   }
@@ -228,7 +254,19 @@ final class WorkbookCommandConverter {
     if (fill == null) {
       return null;
     }
-    return new ExcelCellFill(fill.pattern(), fill.foregroundColor(), fill.backgroundColor());
+    return new ExcelCellFill(
+        fill.pattern(),
+        toExcelColor(
+            fill.foregroundColor(),
+            fill.foregroundColorTheme(),
+            fill.foregroundColorIndexed(),
+            fill.foregroundColorTint()),
+        toExcelColor(
+            fill.backgroundColor(),
+            fill.backgroundColorTheme(),
+            fill.backgroundColorIndexed(),
+            fill.backgroundColorTint()),
+        toExcelGradientFill(fill.gradient()));
   }
 
   static ExcelCellProtection toExcelCellProtection(CellProtectionInput protection) {
@@ -261,7 +299,11 @@ final class WorkbookCommandConverter {
   }
 
   static ExcelBorderSide toExcelBorderSide(CellBorderSideInput side) {
-    return side == null ? null : new ExcelBorderSide(side.style(), side.color());
+    return side == null
+        ? null
+        : new ExcelBorderSide(
+            side.style(),
+            toExcelColor(side.color(), side.colorTheme(), side.colorIndexed(), side.colorTint()));
   }
 
   static ExcelDataValidationDefinition toExcelDataValidationDefinition(
@@ -338,10 +380,45 @@ final class WorkbookCommandConverter {
               cellValueRule.formula2(),
               cellValueRule.stopIfTrue(),
               toExcelDifferentialStyle(cellValueRule.style()));
+      case ConditionalFormattingRuleInput.ColorScaleRule colorScaleRule ->
+          new ExcelConditionalFormattingRule.ColorScaleRule(
+              colorScaleRule.thresholds().stream()
+                  .map(WorkbookCommandConverter::toExcelConditionalFormattingThreshold)
+                  .toList(),
+              colorScaleRule.colors().stream().map(WorkbookCommandConverter::toExcelColor).toList(),
+              colorScaleRule.stopIfTrue());
+      case ConditionalFormattingRuleInput.DataBarRule dataBarRule ->
+          new ExcelConditionalFormattingRule.DataBarRule(
+              toExcelColor(dataBarRule.color()),
+              dataBarRule.iconOnly(),
+              dataBarRule.widthMin(),
+              dataBarRule.widthMax(),
+              toExcelConditionalFormattingThreshold(dataBarRule.minThreshold()),
+              toExcelConditionalFormattingThreshold(dataBarRule.maxThreshold()),
+              dataBarRule.stopIfTrue());
+      case ConditionalFormattingRuleInput.IconSetRule iconSetRule ->
+          new ExcelConditionalFormattingRule.IconSetRule(
+              iconSetRule.iconSet(),
+              iconSetRule.iconOnly(),
+              iconSetRule.reversed(),
+              iconSetRule.thresholds().stream()
+                  .map(WorkbookCommandConverter::toExcelConditionalFormattingThreshold)
+                  .toList(),
+              iconSetRule.stopIfTrue());
+      case ConditionalFormattingRuleInput.Top10Rule top10Rule ->
+          new ExcelConditionalFormattingRule.Top10Rule(
+              top10Rule.rank(),
+              top10Rule.percent(),
+              top10Rule.bottom(),
+              top10Rule.stopIfTrue(),
+              toExcelDifferentialStyle(top10Rule.style()));
     };
   }
 
   static ExcelDifferentialStyle toExcelDifferentialStyle(DifferentialStyleInput style) {
+    if (style == null) {
+      return null;
+    }
     return new ExcelDifferentialStyle(
         style.numberFormat(),
         style.bold(),
@@ -377,7 +454,25 @@ final class WorkbookCommandConverter {
         table.sheetName(),
         table.range(),
         table.showTotalsRow(),
-        toExcelTableStyle(table.style()));
+        table.hasAutofilter(),
+        toExcelTableStyle(table.style()),
+        table.comment(),
+        table.published(),
+        table.insertRow(),
+        table.insertRowShift(),
+        table.headerRowCellStyle(),
+        table.dataCellStyle(),
+        table.totalsRowCellStyle(),
+        table.columns().stream()
+            .map(
+                column ->
+                    new ExcelTableColumnDefinition(
+                        column.columnIndex(),
+                        column.uniqueName(),
+                        column.totalsRowLabel(),
+                        column.totalsRowFunction(),
+                        column.calculatedColumnFormula()))
+            .toList());
   }
 
   static ExcelTableStyle toExcelTableStyle(TableStyleInput style) {
@@ -401,7 +496,9 @@ final class WorkbookCommandConverter {
   }
 
   static ExcelNamedRangeTarget toExcelNamedRangeTarget(NamedRangeTarget target) {
-    return new ExcelNamedRangeTarget(target.sheetName(), target.range());
+    return target.formula() != null
+        ? new ExcelNamedRangeTarget(target.formula())
+        : new ExcelNamedRangeTarget(target.sheetName(), target.range());
   }
 
   /** Converts a protocol sheet copy-position variant into the engine position type. */
@@ -431,6 +528,16 @@ final class WorkbookCommandConverter {
         settings.selectLockedCellsLocked(),
         settings.selectUnlockedCellsLocked(),
         settings.sortLocked());
+  }
+
+  private static ExcelWorkbookProtectionSettings toExcelWorkbookProtectionSettings(
+      WorkbookProtectionInput protection) {
+    return new ExcelWorkbookProtectionSettings(
+        protection.structureLocked(),
+        protection.windowsLocked(),
+        protection.revisionsLocked(),
+        protection.workbookPassword(),
+        protection.revisionsPassword());
   }
 
   private static ExcelSheetPane toExcelSheetPane(PaneInput pane) {
@@ -463,7 +570,124 @@ final class WorkbookCommandConverter {
         new ExcelHeaderFooterText(
             printLayout.footer().left(),
             printLayout.footer().center(),
-            printLayout.footer().right()));
+            printLayout.footer().right()),
+        toExcelPrintSetup(printLayout.setup()));
+  }
+
+  private static ExcelColor toExcelColor(String rgb, Integer theme, Integer indexed, Double tint) {
+    if (rgb == null && theme == null && indexed == null) {
+      return null;
+    }
+    return new ExcelColor(rgb, theme, indexed, tint);
+  }
+
+  private static ExcelGradientFill toExcelGradientFill(CellGradientFillInput gradient) {
+    if (gradient == null) {
+      return null;
+    }
+    return new ExcelGradientFill(
+        gradient.type(),
+        gradient.degree(),
+        gradient.left(),
+        gradient.right(),
+        gradient.top(),
+        gradient.bottom(),
+        gradient.stops().stream()
+            .map(stop -> new ExcelGradientStop(stop.position(), toExcelColor(stop.color())))
+            .toList());
+  }
+
+  private static ExcelColor toExcelColor(ColorInput color) {
+    if (color == null) {
+      return null;
+    }
+    return new ExcelColor(color.rgb(), color.theme(), color.indexed(), color.tint());
+  }
+
+  private static ExcelConditionalFormattingThreshold toExcelConditionalFormattingThreshold(
+      ConditionalFormattingThresholdInput threshold) {
+    return new ExcelConditionalFormattingThreshold(
+        threshold.type(), threshold.formula(), threshold.value());
+  }
+
+  private static ExcelPrintSetup toExcelPrintSetup(PrintSetupInput setup) {
+    return new ExcelPrintSetup(
+        new ExcelPrintMargins(
+            setup.margins().left(),
+            setup.margins().right(),
+            setup.margins().top(),
+            setup.margins().bottom(),
+            setup.margins().header(),
+            setup.margins().footer()),
+        setup.horizontallyCentered(),
+        setup.verticallyCentered(),
+        setup.paperSize(),
+        setup.draft(),
+        setup.blackAndWhite(),
+        setup.copies(),
+        setup.useFirstPageNumber(),
+        setup.firstPageNumber(),
+        setup.rowBreaks(),
+        setup.columnBreaks());
+  }
+
+  private static ExcelAutofilterFilterColumn toExcelAutofilterFilterColumn(
+      AutofilterFilterColumnInput column) {
+    return new ExcelAutofilterFilterColumn(
+        column.columnId(),
+        column.showButton(),
+        toExcelAutofilterFilterCriterion(column.criterion()));
+  }
+
+  private static ExcelAutofilterFilterCriterion toExcelAutofilterFilterCriterion(
+      AutofilterFilterCriterionInput criterion) {
+    return switch (criterion) {
+      case AutofilterFilterCriterionInput.Values values ->
+          new ExcelAutofilterFilterCriterion.Values(values.values(), values.includeBlank());
+      case AutofilterFilterCriterionInput.Custom custom ->
+          new ExcelAutofilterFilterCriterion.Custom(
+              custom.and(),
+              custom.conditions().stream()
+                  .map(
+                      condition ->
+                          new ExcelAutofilterFilterCriterion.CustomCondition(
+                              condition.operator(), condition.value()))
+                  .toList());
+      case AutofilterFilterCriterionInput.Dynamic dynamic ->
+          new ExcelAutofilterFilterCriterion.Dynamic(
+              dynamic.type(), dynamic.value(), dynamic.maxValue());
+      case AutofilterFilterCriterionInput.Top10 top10 ->
+          new ExcelAutofilterFilterCriterion.Top10(top10.value(), top10.top(), top10.percent());
+      case AutofilterFilterCriterionInput.Color color ->
+          new ExcelAutofilterFilterCriterion.Color(color.cellColor(), toExcelColor(color.color()));
+      case AutofilterFilterCriterionInput.Icon icon ->
+          new ExcelAutofilterFilterCriterion.Icon(icon.iconSet(), icon.iconId());
+    };
+  }
+
+  private static ExcelAutofilterSortState toExcelAutofilterSortState(
+      AutofilterSortStateInput sortState) {
+    if (sortState == null) {
+      return null;
+    }
+    return new ExcelAutofilterSortState(
+        sortState.range(),
+        sortState.caseSensitive(),
+        sortState.columnSort(),
+        sortState.sortMethod(),
+        sortState.conditions().stream()
+            .map(WorkbookCommandConverter::toExcelAutofilterSortCondition)
+            .toList());
+  }
+
+  private static ExcelAutofilterSortCondition toExcelAutofilterSortCondition(
+      AutofilterSortConditionInput condition) {
+    return new ExcelAutofilterSortCondition(
+        condition.range(),
+        condition.descending(),
+        condition.sortBy(),
+        toExcelColor(condition.color()),
+        condition.iconId());
   }
 
   private static ExcelPrintLayout.Area toExcelPrintArea(PrintAreaInput printArea) {

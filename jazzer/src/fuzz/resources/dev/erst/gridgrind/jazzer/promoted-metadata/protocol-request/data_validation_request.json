@@ -21,9 +21,9 @@
       "styleKinds" : { },
       "readCount" : 3,
       "readKinds" : {
-        "GET_CELLS" : 1,
         "GET_DATA_VALIDATIONS" : 1,
-        "ANALYZE_DATA_VALIDATION_HEALTH" : 1
+        "ANALYZE_DATA_VALIDATION_HEALTH" : 1,
+        "GET_CELLS" : 1
       }
     }
   },

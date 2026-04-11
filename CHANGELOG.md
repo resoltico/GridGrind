@@ -5,11 +5,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.36.0] - 2026-04-11
+
+### Added
+
+- Added [examples/advanced-mutation-request.json](./examples/advanced-mutation-request.json), a
+  runnable workbook-core mutation example covering password-bearing protection, formula-defined
+  named ranges, advanced table and autofilter mutation, advanced conditional formatting, rich
+  comments, advanced page setup, and structured style colors.
+
+### Changed
+
+- Public docs, quick-reference snippets, README guidance, the internal XSSF capability inventory,
+  and the internal parity execution spec now describe the completed non-drawing workbook-core
+  mutation contract explicitly instead of the earlier partial summaries.
+- [examples/advanced-readback-request.json](./examples/advanced-readback-request.json) now
+  materializes the richer factual readback surface it advertises, including workbook protection,
+  rich comment runs and anchors, advanced page setup, structured style colors and gradients,
+  autofilter criteria and sort state, and advanced table metadata.
+
+### Fixed
+
+- `SET_PRINT_LAYOUT` docs now cover the supported advanced page-setup payload instead of only the
+  earlier core print-layout subset.
+- Public contract docs now describe the real `SET_SHEET_PROTECTION`,
+  `SET_WORKBOOK_PROTECTION`, `SET_COMMENT`, `APPLY_STYLE`, `SET_AUTOFILTER`, `SET_TABLE`,
+  `SET_CONDITIONAL_FORMATTING`, and `SET_NAMED_RANGE` surfaces, including password-bearing
+  protection, rich comments, structured color writes, gradient fills, advanced filter metadata,
+  advanced table metadata, six conditional-format rule families, and formula-defined names.
+- The internal XSSF parity oracle now detects workbook and revisions password-hash presence across
+  both legacy and modern OOXML workbook-protection fields, so parity verification no longer reports
+  a false Phase 3 regression on SHA-512-authored workbooks.
+
 ## [0.35.0] - 2026-04-11
 
 ### Added
 
-- GridGrind now exposes the Phase 2 factual read-parity surface for workbook protection, rich comment runs
+- GridGrind now exposes read-parity surface for workbook protection, rich comment runs
   and anchors, advanced print setup, structured theme or indexed or tinted color facts,
   gradient fills, autofilter criteria and sort state, advanced table metadata, and the
   remaining POI-readable XSSF conditional-formatting families modeled by GridGrind.
@@ -1323,7 +1355,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.35.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.36.0...HEAD
+[0.36.0]: https://github.com/resoltico/GridGrind/compare/v0.35.0...v0.36.0
 [0.35.0]: https://github.com/resoltico/GridGrind/compare/v0.34.0...v0.35.0
 [0.34.0]: https://github.com/resoltico/GridGrind/compare/v0.33.0...v0.34.0
 [0.33.0]: https://github.com/resoltico/GridGrind/compare/v0.32.2...v0.33.0

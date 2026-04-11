@@ -27,4 +27,39 @@ public record ExcelCommentSnapshot(
   public ExcelComment toPlainComment() {
     return new ExcelComment(text, author, visible);
   }
+
+  /** Returns the full authoring view of this factual comment snapshot. */
+  public ExcelComment toAuthoringComment() {
+    return new ExcelComment(
+        text,
+        author,
+        visible,
+        runs == null
+            ? null
+            : new ExcelRichText(
+                runs.runs().stream()
+                    .map(
+                        run ->
+                            new ExcelRichTextRun(
+                                run.text(),
+                                new ExcelCellFont(
+                                    run.font().bold(),
+                                    run.font().italic(),
+                                    run.font().fontName(),
+                                    run.font().fontHeight(),
+                                    run.font().fontColor() == null
+                                        ? null
+                                        : new ExcelColor(
+                                            run.font().fontColor().rgb(),
+                                            run.font().fontColor().theme(),
+                                            run.font().fontColor().indexed(),
+                                            run.font().fontColor().tint()),
+                                    run.font().underline(),
+                                    run.font().strikeout())))
+                    .toList()),
+        anchor == null
+            ? null
+            : new ExcelCommentAnchor(
+                anchor.firstColumn(), anchor.firstRow(), anchor.lastColumn(), anchor.lastRow()));
+  }
 }

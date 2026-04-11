@@ -2,10 +2,13 @@ package dev.erst.gridgrind.protocol.exec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
+import dev.erst.gridgrind.protocol.dto.TableColumnInput;
 import dev.erst.gridgrind.protocol.dto.TableInput;
 import dev.erst.gridgrind.protocol.dto.TableStyleInput;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Tests for protocol-facing table authoring input invariants and conversion. */
@@ -58,6 +61,44 @@ class TableInputTest {
     assertEquals(
         new ExcelTableDefinition(
             "BudgetTable", "Budget", "A1:C4", false, new ExcelTableStyle.None()),
+        WorkbookCommandConverter.toExcelTableDefinition(input));
+  }
+
+  @Test
+  void normalizesTotalsRowFunctionsToLowercaseForProtocolWrites() {
+    TableInput input =
+        new TableInput(
+            "BudgetTable",
+            "Budget",
+            "A1:C4",
+            true,
+            true,
+            new TableStyleInput.None(),
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            List.of(new TableColumnInput(1, "", "Total", " SUM ", "")));
+
+    assertEquals(
+        new ExcelTableDefinition(
+            "BudgetTable",
+            "Budget",
+            "A1:C4",
+            true,
+            true,
+            new ExcelTableStyle.None(),
+            "",
+            false,
+            false,
+            false,
+            "",
+            "",
+            "",
+            List.of(new ExcelTableColumnDefinition(1, "", "Total", "sum", ""))),
         WorkbookCommandConverter.toExcelTableDefinition(input));
   }
 }

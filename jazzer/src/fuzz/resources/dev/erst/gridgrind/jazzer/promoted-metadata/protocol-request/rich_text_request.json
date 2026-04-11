@@ -13,24 +13,24 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 4,
       "operationKinds" : {
+        "APPLY_STYLE" : 1,
         "SET_CELL" : 2,
-        "ENSURE_SHEET" : 1,
-        "APPLY_STYLE" : 1
+        "ENSURE_SHEET" : 1
       },
       "styleKinds" : {
-        "vertical_alignment" : 1,
-        "font_height" : 1,
         "alignment" : 1,
         "font_color" : 1,
         "wrap_text" : 1,
         "font" : 1,
         "font_name" : 1,
-        "font_height_points" : 1
+        "font_height_points" : 1,
+        "vertical_alignment" : 1,
+        "font_height" : 1
       },
       "readCount" : 2,
       "readKinds" : {
-        "GET_WINDOW" : 1,
-        "GET_CELLS" : 1
+        "GET_CELLS" : 1,
+        "GET_WINDOW" : 1
       }
     }
   },

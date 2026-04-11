@@ -9,8 +9,11 @@ import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelCellProtection;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
+import dev.erst.gridgrind.excel.ExcelGradientFill;
+import dev.erst.gridgrind.excel.ExcelGradientStop;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
@@ -290,7 +293,7 @@ public final class FuzzDataDecoders {
         data.consumeBoolean() ? Boolean.FALSE : null,
         includeName ? (data.consumeBoolean() ? "Aptos" : "Aptos Display") : null,
         data.consumeBoolean() ? nextExcelFontHeight(data) : null,
-        data.consumeBoolean() ? nextRgbHex(data) : null,
+        data.consumeBoolean() ? nextExcelColor(data) : null,
         data.consumeBoolean() ? Boolean.TRUE : null,
         data.consumeBoolean() ? Boolean.FALSE : null);
   }
@@ -301,22 +304,24 @@ public final class FuzzDataDecoders {
       case 1 -> new ExcelCellFont(null, Boolean.FALSE, null, null, null, null, null);
       case 2 -> new ExcelCellFont(null, null, "Aptos", null, null, null, null);
       case 3 -> new ExcelCellFont(null, null, null, nextExcelFontHeight(data), null, null, null);
-      case 4 -> new ExcelCellFont(null, null, null, null, nextRgbHex(data), null, null);
+      case 4 -> new ExcelCellFont(null, null, null, null, nextExcelColor(data), null, null);
       case 5 -> new ExcelCellFont(null, null, null, null, null, Boolean.TRUE, null);
       default -> new ExcelCellFont(null, null, null, null, null, null, Boolean.FALSE);
     };
   }
 
   private static ExcelCellFill nextFill(GridGrindFuzzData data) {
-    return switch (data.consumeInt(0, 3)) {
-      case 0 -> new ExcelCellFill(ExcelFillPattern.SOLID, nextRgbHex(data), null);
+    return switch (data.consumeInt(0, 4)) {
+      case 0 -> new ExcelCellFill(ExcelFillPattern.SOLID, nextExcelColor(data), null, null);
       case 1 ->
           new ExcelCellFill(
               nextPatternFill(data),
-              nextRgbHex(data),
-              data.consumeBoolean() ? nextRgbHex(data) : null);
-      case 2 -> new ExcelCellFill(null, nextRgbHex(data), null);
-      default -> new ExcelCellFill(nextPatternFill(data), null, null);
+              nextExcelColor(data),
+              data.consumeBoolean() ? nextExcelColor(data) : null,
+              null);
+      case 2 -> new ExcelCellFill(null, nextExcelColor(data), null, null);
+      case 3 -> new ExcelCellFill(null, null, null, nextGradientFill(data));
+      default -> new ExcelCellFill(nextPatternFill(data), null, null, null);
     };
   }
 
@@ -381,6 +386,35 @@ public final class FuzzDataDecoders {
         .formatted(data.consumeInt(0, 255), data.consumeInt(0, 255), data.consumeInt(0, 255));
   }
 
+  private static ExcelColor nextExcelColor(GridGrindFuzzData data) {
+    return switch (data.consumeInt(0, 2)) {
+      case 0 -> new ExcelColor(nextRgbHex(data));
+      case 1 ->
+          new ExcelColor(
+              null, data.consumeInt(0, 9), null, data.consumeBoolean() ? nextTint(data) : null);
+      default ->
+          new ExcelColor(
+              null, null, data.consumeInt(0, 64), data.consumeBoolean() ? nextTint(data) : null);
+    };
+  }
+
+  private static ExcelGradientFill nextGradientFill(GridGrindFuzzData data) {
+    return new ExcelGradientFill(
+        data.consumeBoolean() ? "LINEAR" : "PATH",
+        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 180.0d) : null,
+        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
+        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
+        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
+        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
+        List.of(
+            new ExcelGradientStop(0.0d, nextExcelColor(data)),
+            new ExcelGradientStop(1.0d, nextExcelColor(data))));
+  }
+
+  private static double nextTint(GridGrindFuzzData data) {
+    return data.consumeRegularDouble(-1.0d, 1.0d);
+  }
+
   private static CellFontInput toCellFontInput(ExcelCellFont font) {
     if (font == null) {
       return null;
@@ -390,7 +424,10 @@ public final class FuzzDataDecoders {
         font.italic(),
         font.fontName(),
         font.fontHeight() == null ? null : new FontHeightInput.Twips(font.fontHeight().twips()),
-        font.fontColor(),
+        font.fontColor() == null ? null : font.fontColor().rgb(),
+        font.fontColor() == null ? null : font.fontColor().theme(),
+        font.fontColor() == null ? null : font.fontColor().indexed(),
+        font.fontColor() == null ? null : font.fontColor().tint(),
         font.underline(),
         font.strikeout());
   }
@@ -415,6 +452,7 @@ public final class FuzzDataDecoders {
     ExcelBorderStyle[] values = ExcelBorderStyle.values();
     ExcelBorderStyle style = values[data.consumeInt(0, values.length - 1)];
     return new ExcelBorderSide(
-        style, style == ExcelBorderStyle.NONE || !data.consumeBoolean() ? null : nextRgbHex(data));
+        style,
+        style == ExcelBorderStyle.NONE || !data.consumeBoolean() ? null : nextExcelColor(data));
   }
 }

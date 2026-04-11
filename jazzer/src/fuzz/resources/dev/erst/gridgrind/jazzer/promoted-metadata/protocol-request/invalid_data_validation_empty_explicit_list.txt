@@ -1,15 +1,13 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_data_validation_empty_explicit_list.json
 Harness: protocol-request
-Outcome: EXPECTED_INVALID
-Kind: InvalidRequestException
-Message: values must not be empty
+Outcome: SUCCESS
 Input Bytes: 395
-Decode Outcome: INVALID_REQUEST
-Source Kind: NOT_PARSED
-Persistence Kind: NOT_PARSED
-Operation Count: 0
+Decode Outcome: PARSED
+Source Kind: NEW
+Persistence Kind: NONE
+Operation Count: 2
 Read Count: 0
 Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: (none)
+Operation Kinds: ENSURE_SHEET=1, SET_DATA_VALIDATION=1

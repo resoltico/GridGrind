@@ -126,8 +126,7 @@ class ExcelDataValidationModelTest {
     values.clear();
 
     assertEquals(List.of("Queued", "Done"), explicitList.values());
-    assertThrows(
-        IllegalArgumentException.class, () -> new ExcelDataValidationRule.ExplicitList(List.of()));
+    assertEquals(List.of(), new ExcelDataValidationRule.ExplicitList(List.of()).values());
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelDataValidationRule.ExplicitList(List.of("Queued", " ")));

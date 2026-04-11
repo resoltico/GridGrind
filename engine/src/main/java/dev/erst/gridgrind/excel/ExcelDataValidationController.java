@@ -231,7 +231,9 @@ final class ExcelDataValidationController {
       DataValidationHelper helper, ExcelDataValidationRule rule) {
     return switch (rule) {
       case ExcelDataValidationRule.ExplicitList explicitList ->
-          helper.createExplicitListConstraint(explicitList.values().toArray(String[]::new));
+          explicitList.values().isEmpty()
+              ? helper.createFormulaListConstraint("\"\"")
+              : helper.createExplicitListConstraint(explicitList.values().toArray(String[]::new));
       case ExcelDataValidationRule.FormulaList formulaList ->
           helper.createFormulaListConstraint(formulaList.formula());
       case ExcelDataValidationRule.WholeNumber wholeNumber ->
@@ -336,14 +338,14 @@ final class ExcelDataValidationController {
     DataValidationConstraint constraint = validation.getValidationConstraint();
     String[] explicitValues = constraint.getExplicitListValues();
     if (explicitValues != null) {
-      if (explicitValues.length == 0) {
-        return new ExcelDataValidationSnapshot.Unsupported(
-            ranges, "EMPTY_EXPLICIT_LIST", "Explicit list has no values.");
-      }
+      List<String> explicitListValues =
+          "\"\"".equals(Objects.requireNonNullElse(constraint.getFormula1(), ""))
+              ? List.of()
+              : List.of(explicitValues);
       return new ExcelDataValidationSnapshot.Supported(
           ranges,
           new ExcelDataValidationDefinition(
-              new ExcelDataValidationRule.ExplicitList(List.of(explicitValues)),
+              new ExcelDataValidationRule.ExplicitList(explicitListValues),
               validation.getEmptyCellAllowed(),
               validation.getSuppressDropDownArrow(),
               prompt(validation),
@@ -369,10 +371,6 @@ final class ExcelDataValidationController {
   private static ExcelDataValidationSnapshot listSnapshot(
       CTDataValidation validation, List<String> ranges) {
     String formula1 = validation.isSetFormula1() ? validation.getFormula1() : "";
-    if ("\"\"".equals(formula1)) {
-      return new ExcelDataValidationSnapshot.Unsupported(
-          ranges, "EMPTY_EXPLICIT_LIST", "Explicit list has no values.");
-    }
     if (formula1.isBlank()) {
       return new ExcelDataValidationSnapshot.Unsupported(
           ranges,
@@ -380,7 +378,9 @@ final class ExcelDataValidationController {
           "List validation is missing both explicit values and formula1.");
     }
     ExcelDataValidationRule rule;
-    if (formula1.length() >= 2 && formula1.startsWith("\"") && formula1.endsWith("\"")) {
+    if ("\"\"".equals(formula1)) {
+      rule = new ExcelDataValidationRule.ExplicitList(List.of());
+    } else if (formula1.length() >= 2 && formula1.startsWith("\"") && formula1.endsWith("\"")) {
       String rawValues = formula1.substring(1, formula1.length() - 1);
       rule = new ExcelDataValidationRule.ExplicitList(Arrays.asList(rawValues.split(",")));
     } else {
@@ -566,7 +566,18 @@ final class ExcelDataValidationController {
     WorkbookAnalysis.AnalysisLocation.Range location =
         new WorkbookAnalysis.AnalysisLocation.Range(sheetName, supported.ranges().getFirst());
     switch (supported.validation().rule()) {
-      case ExcelDataValidationRule.ExplicitList _ -> {}
+      case ExcelDataValidationRule.ExplicitList explicitList -> {
+        if (explicitList.values().isEmpty()) {
+          findings.add(
+              new WorkbookAnalysis.AnalysisFinding(
+                  WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
+                  WorkbookAnalysis.AnalysisSeverity.ERROR,
+                  "Explicit-list validation is empty",
+                  "Explicit-list validation contains no values.",
+                  location,
+                  supported.ranges()));
+        }
+      }
       case ExcelDataValidationRule.FormulaList formulaList ->
           addBrokenFormulaFindingIfNeeded(
               findings, location, formulaList.formula(), "list validation formula");
@@ -611,32 +622,22 @@ final class ExcelDataValidationController {
       String sheetName, ExcelDataValidationSnapshot.Unsupported unsupported) {
     WorkbookAnalysis.AnalysisLocation.Range location =
         new WorkbookAnalysis.AnalysisLocation.Range(sheetName, unsupported.ranges().getFirst());
-    return switch (unsupported.kind()) {
-      case "EMPTY_EXPLICIT_LIST" ->
-          new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_EMPTY_EXPLICIT_LIST,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
-              "Explicit-list validation is empty",
-              "Explicit-list validation contains no values.",
-              location,
-              unsupported.ranges());
-      case "MISSING_FORMULA", "MALFORMED_RULE" ->
-          new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE,
-              WorkbookAnalysis.AnalysisSeverity.ERROR,
-              "Data-validation rule is malformed",
-              unsupported.detail(),
-              location,
-              unsupported.ranges());
-      default ->
-          new WorkbookAnalysis.AnalysisFinding(
-              WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
-              WorkbookAnalysis.AnalysisSeverity.WARNING,
-              "Unsupported data-validation rule",
-              unsupported.detail(),
-              location,
-              unsupported.ranges());
-    };
+    if ("MISSING_FORMULA".equals(unsupported.kind())) {
+      return new WorkbookAnalysis.AnalysisFinding(
+          WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_MALFORMED_RULE,
+          WorkbookAnalysis.AnalysisSeverity.ERROR,
+          "Data-validation rule is malformed",
+          unsupported.detail(),
+          location,
+          unsupported.ranges());
+    }
+    return new WorkbookAnalysis.AnalysisFinding(
+        WorkbookAnalysis.AnalysisFindingCode.DATA_VALIDATION_UNSUPPORTED_RULE,
+        WorkbookAnalysis.AnalysisSeverity.WARNING,
+        "Unsupported data-validation rule",
+        unsupported.detail(),
+        location,
+        unsupported.ranges());
   }
 
   static ExcelComparisonOperator comparisonOperator(CTDataValidation validation) {

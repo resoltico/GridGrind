@@ -22,7 +22,7 @@ class ExcelCellStyleTest {
                 null,
                 "Aptos",
                 ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
-                "#00AAFF",
+                new ExcelColor("#00AAFF"),
                 true,
                 false),
             new ExcelCellFill(ExcelFillPattern.SOLID, "#FFF2CC", null),
@@ -37,10 +37,10 @@ class ExcelCellStyleTest {
     assertEquals("Aptos", fontAndFill.font().fontName());
     assertEquals(230, fontAndFill.font().fontHeight().twips());
     assertEquals(new BigDecimal("11.5"), fontAndFill.font().fontHeight().points());
-    assertEquals("#00AAFF", fontAndFill.font().fontColor());
+    assertEquals(new ExcelColor("#00AAFF"), fontAndFill.font().fontColor());
     assertTrue(fontAndFill.font().underline());
     assertFalse(fontAndFill.font().strikeout());
-    assertEquals("#FFF2CC", fontAndFill.fill().foregroundColor());
+    assertEquals(new ExcelColor("#FFF2CC"), fontAndFill.fill().foregroundColor());
     assertEquals(ExcelBorderStyle.THIN, fontAndFill.border().all().style());
   }
 
@@ -57,12 +57,8 @@ class ExcelCellStyleTest {
         () -> new ExcelCellFont(null, null, " ", null, null, null, null));
     assertThrows(IllegalArgumentException.class, () -> new ExcelFontHeight(0));
     assertThrows(IllegalArgumentException.class, () -> new ExcelFontHeight(Short.MAX_VALUE + 1));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelCellFont(null, null, null, null, "#12ab", null, null));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> new ExcelCellFont(null, null, null, null, " ", null, null));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelColor("#12ab"));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelColor(" "));
     assertThrows(
         IllegalArgumentException.class, () -> new ExcelCellFill(ExcelFillPattern.SOLID, " ", null));
     assertThrows(IllegalArgumentException.class, () -> ExcelCellStyle.alignment(null, null));
@@ -89,11 +85,11 @@ class ExcelCellStyleTest {
         new ExcelCellStyle(
             null,
             null,
-            new ExcelCellFont(null, null, null, null, "#aa00cc", null, null),
+            new ExcelCellFont(null, null, null, null, new ExcelColor("#aa00cc"), null, null),
             null,
             null,
             null);
-    assertEquals("#AA00CC", fontColorOnly.font().fontColor());
+    assertEquals(new ExcelColor("#AA00CC"), fontColorOnly.font().fontColor());
 
     ExcelCellStyle fontHeightOnly =
         new ExcelCellStyle(
@@ -113,7 +109,7 @@ class ExcelCellStyleTest {
             new ExcelCellFill(ExcelFillPattern.SOLID, "#abc123", null),
             null,
             null);
-    assertEquals("#ABC123", fillColorOnly.fill().foregroundColor());
+    assertEquals(new ExcelColor("#ABC123"), fillColorOnly.fill().foregroundColor());
 
     ExcelCellStyle borderOnly =
         new ExcelCellStyle(
@@ -187,8 +183,8 @@ class ExcelCellStyleTest {
     assertEquals(ExcelFillPattern.NONE, noFillSnapshot.pattern());
     assertNull(noFillSnapshot.foregroundColor());
     assertNull(noFillSnapshot.backgroundColor());
-    assertEquals("#AA00CC", patternedFill.foregroundColor());
-    assertEquals("#00BB11", patternedFill.backgroundColor());
+    assertEquals(new ExcelColor("#AA00CC"), patternedFill.foregroundColor());
+    assertEquals(new ExcelColor("#00BB11"), patternedFill.backgroundColor());
     assertEquals(rgb("#AA00CC"), patternedSnapshot.foregroundColor());
     assertEquals(rgb("#00BB11"), patternedSnapshot.backgroundColor());
   }

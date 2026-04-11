@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.35.0"
+version: "0.36.0"
 domain: OPERATIONS
 updated: "2026-04-11"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-data-validations, get-autofilters, get-tables, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol, coordinates, rowindex, columnindex, warnings]
-  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol, coordinates, rowindex, columnindex, warnings]
+  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
 ---
 
 # Operations Reference
@@ -254,8 +254,9 @@ the operation runs, after all earlier operations in the same request.
 Copy one sheet into a new visible, unselected sheet. The copied sheet is placed either at the end
 of workbook order or at an explicit zero-based index. GridGrind preserves supported sheet-local
 content such as formulas, validations, conditional formatting, comments, hyperlinks, merged
-regions, and layout state. Sheets containing tables or sheet-scoped formula-defined named ranges
-are rejected explicitly because they are not copyable under the current product contract.
+regions, tables, sheet-scoped names, protection metadata, and layout state. Drawing-family
+content such as pictures and charts remains outside the current copy contract, so sheet copy is
+complete for non-drawing workbook-core structures and intentionally partial for drawing families.
 
 ```json
 {
@@ -335,8 +336,9 @@ last visible sheet is rejected.
 
 ### SET_SHEET_PROTECTION
 
-Enable sheet protection with the exact supported lock flags. Password-bearing protection is out of
-scope; GridGrind authors and reports only the supported lock-state surface.
+Enable sheet protection with the exact supported lock flags and an optional password. When
+`password` is provided, GridGrind writes a password hash into the sheet-protection XML while
+preserving the explicit authored lock flags.
 
 ```json
 {
@@ -358,7 +360,8 @@ scope; GridGrind authors and reports only the supported lock-state surface.
     "selectLockedCellsLocked": true,
     "selectUnlockedCellsLocked": false,
     "sortLocked": true
-  }
+  },
+  "password": "Sheet-2026"
 }
 ```
 
@@ -366,12 +369,13 @@ scope; GridGrind authors and reports only the supported lock-state surface.
 |:------|:---------|:------------|
 | `sheetName` | Yes | Existing target sheet. |
 | `protection` | Yes | Supported lock-flag payload. |
+| `password` | No | Optional nonblank sheet-protection password. Omit it to protect the sheet without a stored password hash. |
 
 ---
 
 ### CLEAR_SHEET_PROTECTION
 
-Disable sheet protection entirely.
+Disable sheet protection entirely and clear any stored password hash.
 
 ```json
 { "type": "CLEAR_SHEET_PROTECTION", "sheetName": "Budget Review" }
@@ -380,6 +384,54 @@ Disable sheet protection entirely.
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `sheetName` | Yes | Existing target sheet. |
+
+---
+
+### SET_WORKBOOK_PROTECTION
+
+Enable workbook-level protection with authoritative lock flags and optional workbook or revisions
+passwords. Omitted booleans normalize to `false`; omitted passwords clear the corresponding stored
+hash.
+
+```json
+{
+  "type": "SET_WORKBOOK_PROTECTION",
+  "protection": {
+    "structureLocked": true,
+    "windowsLocked": false,
+    "revisionsLocked": true,
+    "workbookPassword": "Vault-2026",
+    "revisionsPassword": "Revisions-2026"
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `protection` | Yes | Workbook protection payload carrying structure/windows/revisions lock flags plus optional passwords. |
+
+`protection` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `structureLocked` | No | Lock workbook structure. Defaults to `false`. |
+| `windowsLocked` | No | Lock workbook windows. Defaults to `false`. |
+| `revisionsLocked` | No | Lock workbook revisions. Defaults to `false`. |
+| `workbookPassword` | No | Optional nonblank workbook-protection password. Omit to clear the workbook password hash. |
+| `revisionsPassword` | No | Optional nonblank revisions-protection password. Omit to clear the revisions password hash. |
+
+---
+
+### CLEAR_WORKBOOK_PROTECTION
+
+Disable workbook-level protection entirely and remove any stored workbook or revisions password
+hashes.
+
+```json
+{ "type": "CLEAR_WORKBOOK_PROTECTION" }
+```
+
+No additional fields.
 
 ---
 
@@ -845,7 +897,27 @@ to default or cleared state.
     "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 1 },
     "repeatingColumns": { "type": "BAND", "firstColumnIndex": 0, "lastColumnIndex": 0 },
     "header": { "left": "Inventory", "center": "Q2", "right": "Internal" },
-    "footer": { "left": "", "center": "Prepared by GridGrind", "right": "Page 1" }
+    "footer": { "left": "", "center": "Prepared by GridGrind", "right": "Page 1" },
+    "setup": {
+      "margins": {
+        "left": 0.35,
+        "right": 0.55,
+        "top": 0.6,
+        "bottom": 0.45,
+        "header": 0.3,
+        "footer": 0.3
+      },
+      "horizontallyCentered": true,
+      "verticallyCentered": true,
+      "paperSize": 8,
+      "draft": true,
+      "blackAndWhite": true,
+      "copies": 2,
+      "useFirstPageNumber": true,
+      "firstPageNumber": 4,
+      "rowBreaks": [6],
+      "columnBreaks": [3]
+    }
   }
 }
 ```
@@ -866,6 +938,7 @@ to default or cleared state.
 | `repeatingColumns` | No | `NONE` or `BAND`. Defaults to `NONE`. |
 | `header` | No | Plain `left`, `center`, and `right` text segments. Defaults to blank text. |
 | `footer` | No | Plain `left`, `center`, and `right` text segments. Defaults to blank text. |
+| `setup` | No | Advanced page-setup payload. Defaults to the supported Excel baseline for margins, centering, copies, and page numbering. |
 
 Nested constraints:
 
@@ -876,6 +949,22 @@ Nested constraints:
   `lastRowIndex >= firstRowIndex` and `lastRowIndex <= 1048575`.
 - `repeatingColumns.type = "BAND"` requires a zero-based inclusive column band with
   `lastColumnIndex >= firstColumnIndex` and `lastColumnIndex <= 16383`.
+
+`printLayout.setup` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `margins` | No | `left`, `right`, `top`, `bottom`, `header`, and `footer` margins in inches. Each value must be finite and non-negative. |
+| `horizontallyCentered` | No | Center printed content horizontally on the page. Defaults to `false`. |
+| `verticallyCentered` | No | Center printed content vertically on the page. Defaults to `false`. |
+| `paperSize` | No | Excel paper-size code. Defaults to `0` when omitted. |
+| `draft` | No | Draft-print flag. Defaults to `false`. |
+| `blackAndWhite` | No | Black-and-white print flag. Defaults to `false`. |
+| `copies` | No | Explicit copy count. Defaults to `0` when omitted. |
+| `useFirstPageNumber` | No | Whether `firstPageNumber` is authoritative. Defaults to `false`. |
+| `firstPageNumber` | No | Explicit first page number. Defaults to `0` when omitted. |
+| `rowBreaks` | No | Ordered list of zero-based row indexes for explicit row breaks. Defaults to `[]`. |
+| `columnBreaks` | No | Ordered list of zero-based column indexes for explicit column breaks. Defaults to `[]`. |
 
 ### CLEAR_PRINT_LAYOUT
 
@@ -1021,7 +1110,9 @@ No-op when the cell does not physically exist.
 
 ### SET_COMMENT
 
-Attach or replace one plain-text comment on one cell. The cell is created if needed.
+Attach or replace one comment on one cell. The cell is created if needed. GridGrind always
+requires the authoritative plain `text` plus `author`, and can also author ordered rich-text
+`runs` and an explicit comment `anchor`.
 
 ```json
 {
@@ -1029,9 +1120,33 @@ Attach or replace one plain-text comment on one cell. The cell is created if nee
   "sheetName": "Inventory",
   "address": "B4",
   "comment": {
-    "text": "Verified by finance.",
+    "text": "Lead review scheduled.",
     "author": "GridGrind",
-    "visible": true
+    "visible": false,
+    "runs": [
+      {
+        "text": "Lead",
+        "font": {
+          "bold": true,
+          "fontColorTheme": 4,
+          "fontColorTint": -0.2
+        }
+      },
+      { "text": " " },
+      {
+        "text": "review scheduled.",
+        "font": {
+          "italic": true,
+          "fontColorIndexed": 17
+        }
+      }
+    ],
+    "anchor": {
+      "firstColumn": 4,
+      "firstRow": 1,
+      "lastColumn": 8,
+      "lastRow": 7
+    }
   }
 }
 ```
@@ -1040,9 +1155,19 @@ Attach or replace one plain-text comment on one cell. The cell is created if nee
 |:------|:---------|:------------|
 | `sheetName` | Yes | Target sheet. |
 | `address` | Yes | A1-notation cell address. |
-| `comment` | Yes | Plain-text comment payload. |
+| `comment` | Yes | Comment payload. |
 
 `comment.visible` defaults to `false` when omitted.
+
+`comment` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `text` | Yes | Authoritative plain text of the comment. Must be nonblank. |
+| `author` | Yes | Nonblank comment author. |
+| `visible` | No | Whether the comment box is shown by default. Defaults to `false`. |
+| `runs` | No | Ordered rich-text run list. When present, the concatenated run text must equal `comment.text` exactly. |
+| `anchor` | No | Explicit comment-box bounds using zero-based `firstColumn`, `firstRow`, `lastColumn`, and `lastRow`. |
 
 ---
 
@@ -1101,6 +1226,36 @@ unspecified style properties are left untouched.
 }
 ```
 
+```json
+{
+  "type": "APPLY_STYLE",
+  "sheetName": "Inventory",
+  "range": "J2:J3",
+  "style": {
+    "font": {
+      "fontColorTheme": 6,
+      "fontColorTint": -0.35
+    },
+    "fill": {
+      "gradient": {
+        "type": "LINEAR",
+        "degree": 45.0,
+        "stops": [
+          { "position": 0.0, "color": { "rgb": "#1F497D" } },
+          { "position": 1.0, "color": { "theme": 4, "tint": 0.45 } }
+        ]
+      }
+    },
+    "border": {
+      "bottom": {
+        "style": "THIN",
+        "colorIndexed": 8
+      }
+    }
+  }
+}
+```
+
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `sheetName` | Yes | Target sheet. |
@@ -1137,6 +1292,9 @@ Font patch:
 | `font.fontName` | string | Excel font family name, e.g. `"Aptos"` |
 | `font.fontHeight` | object | Typed font height. See below. |
 | `font.fontColor` | string | RGB hex string in `#RRGGBB` form. Lowercase input is normalized to uppercase. |
+| `font.fontColorTheme` | integer | Theme color index for the font color. |
+| `font.fontColorIndexed` | integer | Indexed color slot for the font color. |
+| `font.fontColorTint` | number | Optional tint applied to the chosen font color base. Requires `fontColor`, `fontColorTheme`, or `fontColorIndexed`. |
 | `font.underline` | boolean | `true` adds a single underline, `false` removes it |
 | `font.strikeout` | boolean | `true` / `false` |
 
@@ -1148,12 +1306,17 @@ Font-height input:
 | `font.fontHeight.points` | number | Required when `type` is `"POINTS"`. Must resolve exactly to whole twips, e.g. `11`, `11.5`, `13.25` |
 | `font.fontHeight.twips` | integer | Required when `type` is `"TWIPS"`. Positive exact twip value where `20` twips = `1` point |
 
-Color notes:
+Structured color notes:
 
-- `font.fontColor`, `fill.foregroundColor`, `fill.backgroundColor`, and `border.*.color`
-  must match `#RRGGBB`.
-- Lowercase hex input is accepted and normalized to uppercase.
-- This contract does not support alpha channels, theme colors, indexed colors, or gradient fills.
+- Color-bearing write fields use one base color family plus an optional tint:
+  - RGB: `font.fontColor`, `fill.foregroundColor`, `fill.backgroundColor`, `border.*.color`
+  - theme: `font.fontColorTheme`, `fill.foregroundColorTheme`, `fill.backgroundColorTheme`,
+    `border.*.colorTheme`
+  - indexed: `font.fontColorIndexed`, `fill.foregroundColorIndexed`,
+    `fill.backgroundColorIndexed`, `border.*.colorIndexed`
+- Lowercase RGB hex input is accepted and normalized to uppercase.
+- A tint field requires one corresponding RGB/theme/indexed base field.
+- Alpha channels are not part of the public contract.
 
 Fill patch:
 
@@ -1161,13 +1324,34 @@ Fill patch:
 |:------|:-----|:-------|
 | `fill.pattern` | string | `ExcelFillPattern` value such as `"SOLID"`, `"THIN_HORIZONTAL_BANDS"`, `"SQUARES"` |
 | `fill.foregroundColor` | string | Foreground RGB color in `#RRGGBB` form |
+| `fill.foregroundColorTheme` | integer | Foreground theme color index |
+| `fill.foregroundColorIndexed` | integer | Foreground indexed color slot |
+| `fill.foregroundColorTint` | number | Optional tint for the chosen foreground base color |
 | `fill.backgroundColor` | string | Background RGB color in `#RRGGBB` form for patterned fills |
+| `fill.backgroundColorTheme` | integer | Background theme color index for patterned fills |
+| `fill.backgroundColorIndexed` | integer | Background indexed color slot for patterned fills |
+| `fill.backgroundColorTint` | number | Optional tint for the chosen background base color |
+| `fill.gradient` | object | Gradient fill payload. When present, pattern/foreground/background fields must be omitted. |
 
 Fill notes:
 
 - `fill.pattern="NONE"` does not allow colors.
 - `fill.pattern="SOLID"` uses `foregroundColor` only; `backgroundColor` is not allowed.
-- Patterned fills beyond solid are part of the public contract. Gradient fills are not.
+- Patterned fills beyond solid are part of the public contract.
+- Gradient fills are authored through `fill.gradient` and are mutually exclusive with patterned
+  fill fields.
+
+`fill.gradient` fields:
+
+| Field | Type | Values |
+|:------|:-----|:-------|
+| `type` | string | Gradient type, e.g. `"LINEAR"` or `"PATH"`. Defaults to `"LINEAR"` when omitted. |
+| `degree` | number | Optional angle for linear gradients. |
+| `left` | number | Optional left offset for path gradients. |
+| `right` | number | Optional right offset for path gradients. |
+| `top` | number | Optional top offset for path gradients. |
+| `bottom` | number | Optional bottom offset for path gradients. |
+| `stops` | array | Ordered gradient stops; each stop has `position` in `0.0..1.0` and a structured `color` object using `rgb`, `theme`, `indexed`, and optional `tint`. |
 
 Border patch:
 
@@ -1185,6 +1369,9 @@ Each border-side object can set a visible style, an RGB color, or both:
 |:------|:-----|:-------|
 | `style` | string | `"NONE"`, `"THIN"`, `"MEDIUM"`, `"DASHED"`, `"DOTTED"`, `"THICK"`, `"DOUBLE"`, `"HAIR"`, `"MEDIUM_DASHED"`, `"DASH_DOT"`, `"MEDIUM_DASH_DOT"`, `"DASH_DOT_DOT"`, `"MEDIUM_DASH_DOT_DOT"`, `"SLANTED_DASH_DOT"` |
 | `color` | string | Optional RGB color in `#RRGGBB` form |
+| `colorTheme` | integer | Optional theme color index |
+| `colorIndexed` | integer | Optional indexed color slot |
+| `colorTint` | number | Optional tint applied to the chosen border-color base |
 
 Border notes:
 
@@ -1194,6 +1381,7 @@ Border notes:
 - A border color requires an effective visible style on that side, either set on the side itself
   or inherited from `border.all`.
 - `style="NONE"` does not allow a `color`.
+- `colorTint` requires `color`, `colorTheme`, or `colorIndexed`.
 
 Protection patch:
 
@@ -1327,13 +1515,18 @@ ranges, preserving any remaining coverage fragments around the cleared area.
 ### SET_CONDITIONAL_FORMATTING
 
 Creates or replaces one logical conditional-formatting block on the sheet. The block owns one or
-more target ranges and one ordered rule list. Phase A authoring supports two rule families:
+more target ranges and one ordered rule list. Authoring supports six rule families:
 
 - `FORMULA_RULE`
 - `CELL_VALUE_RULE`
+- `COLOR_SCALE_RULE`
+- `DATA_BAR_RULE`
+- `ICON_SET_RULE`
+- `TOP10_RULE`
 
-The `style` payload is differential, not a whole-cell style patch. Supported authored attributes
-are `numberFormat`, `bold`, `italic`, `fontHeight`, `fontColor`, `underline`, `strikeout`,
+For `FORMULA_RULE`, `CELL_VALUE_RULE`, and `TOP10_RULE`, the optional `style` payload is
+differential, not a whole-cell style patch. Supported differential-style attributes are
+`numberFormat`, `bold`, `italic`, `fontHeight`, `fontColor`, `underline`, `strikeout`,
 `fillColor`, and per-side differential borders.
 
 ```json
@@ -1365,22 +1558,37 @@ are `numberFormat`, `bold`, `italic`, `fontHeight`, `fontColor`, `underline`, `s
   "type": "SET_CONDITIONAL_FORMATTING",
   "sheetName": "Inventory",
   "conditionalFormatting": {
-    "ranges": ["A2:D200"],
+    "ranges": ["K2:K200"],
     "rules": [
       {
-        "type": "FORMULA_RULE",
-        "formula": "$D2=\"Blocked\"",
-        "stopIfTrue": true,
-        "style": {
-          "fillColor": "#FFF2CC",
-          "fontColor": "#7F6000",
-          "italic": true
-        }
+        "type": "COLOR_SCALE_RULE",
+        "stopIfTrue": false,
+        "thresholds": [
+          { "type": "MIN" },
+          { "type": "PERCENTILE", "value": 50.0 },
+          { "type": "MAX" }
+        ],
+        "colors": [
+          { "rgb": "#AA2211" },
+          { "rgb": "#FFDD55" },
+          { "rgb": "#11CC66" }
+        ]
       }
     ]
   }
 }
 ```
+
+Rule family summary:
+
+| Rule type | Required fields | Notes |
+|:----------|:----------------|:------|
+| `FORMULA_RULE` | `formula` | Optional `style`. |
+| `CELL_VALUE_RULE` | `operator`, `formula1` | Optional `formula2` for between/not-between operators and optional `style`. |
+| `COLOR_SCALE_RULE` | `thresholds`, `colors` | Threshold and color list sizes must match and must contain at least two control points. |
+| `DATA_BAR_RULE` | `color`, `widthMin`, `widthMax`, `minThreshold`, `maxThreshold` | `iconOnly` controls whether only the bar glyph is shown. No direction field is exposed. |
+| `ICON_SET_RULE` | `iconSet`, `thresholds` | Threshold count must match the chosen icon-set family. |
+| `TOP10_RULE` | `rank` | Optional `style`; `percent` and `bottom` control Top/Bottom N vs percent behavior. |
 
 ### CLEAR_CONDITIONAL_FORMATTING
 
@@ -1412,13 +1620,39 @@ the selected A1 ranges.
 ### SET_AUTOFILTER
 
 Create or replace one sheet-level autofilter range. The range must be rectangular, include a
-nonblank header row, and must not overlap any existing table range on the same sheet.
+nonblank header row, and must not overlap any existing table range on the same sheet. Optional
+`criteria` author persisted filter-column rules; optional `sortState` authors persisted sort-state
+metadata on the same autofilter.
 
 ```json
 {
   "type": "SET_AUTOFILTER",
   "sheetName": "Inventory",
-  "range": "A1:C200"
+  "range": "A1:C200",
+  "criteria": [
+    {
+      "columnId": 2,
+      "showButton": true,
+      "criterion": {
+        "type": "VALUES",
+        "values": ["Queued", "Done"],
+        "includeBlank": false
+      }
+    }
+  ],
+  "sortState": {
+    "range": "A2:C200",
+    "caseSensitive": false,
+    "columnSort": false,
+    "sortMethod": "",
+    "conditions": [
+      {
+        "range": "C2:C200",
+        "descending": true,
+        "sortBy": ""
+      }
+    ]
+  }
 }
 ```
 
@@ -1426,9 +1660,40 @@ nonblank header row, and must not overlap any existing table range on the same s
 |:------|:---------|:------------|
 | `sheetName` | Yes | Existing target sheet. |
 | `range` | Yes | Rectangular A1-style range. The first row is treated as the filter header row. |
+| `criteria` | No | Ordered authored filter-column list. Defaults to `[]`. |
+| `sortState` | No | Authored sort-state payload. Omit it to leave the autofilter without persisted sort metadata. |
 
-If a sheet already has a sheet-level autofilter, the new range replaces it. This operation does
-not create filter criteria or sort metadata.
+If a sheet already has a sheet-level autofilter, the new range replaces it.
+
+`criteria[*]` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `columnId` | Yes | Zero-based column offset within the autofilter range. |
+| `showButton` | No | Whether Excel shows the dropdown button for that filter column. Defaults to `true`. |
+| `criterion` | Yes | One authored criterion payload. |
+
+`criterion` variants:
+
+- `VALUES`: `values` plus `includeBlank`
+- `CUSTOM`: `and` plus one or more `{ "operator": "...", "value": "..." }` conditions
+- `DYNAMIC`: Excel dynamic-filter token in `type` plus optional numeric `value` and `maxValue`
+- `TOP10`: `value`, `top`, and `percent`
+- `COLOR`: `cellColor` plus a structured `color` object using `rgb`, `theme`, `indexed`, and optional `tint`
+- `ICON`: `iconSet` plus `iconId`
+
+`sortState` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `range` | Yes | A1-style range covered by the stored sort state. |
+| `caseSensitive` | No | Case-sensitive sort flag. Defaults to `false`. |
+| `columnSort` | No | Column-oriented sort flag. Defaults to `false`. |
+| `sortMethod` | No | Excel sort-method token. Defaults to `""`. |
+| `conditions` | Yes | Ordered list of sort conditions. Must not be empty. |
+
+Each `sortState.conditions[*]` entry carries `range`, `descending`, optional `sortBy`, optional
+structured `color`, and optional `iconId`. Use blank `sortBy` for ordinary value sorts.
 
 ---
 
@@ -1477,6 +1742,14 @@ table-column metadata converged with the visible header cells.
     "sheetName": "Inventory",
     "range": "A1:C200",
     "showTotalsRow": true,
+    "hasAutofilter": false,
+    "comment": "Inventory tracker",
+    "published": true,
+    "insertRow": true,
+    "insertRowShift": true,
+    "headerRowCellStyle": "InventoryHeader",
+    "dataCellStyle": "InventoryData",
+    "totalsRowCellStyle": "InventoryTotals",
     "style": {
       "type": "NAMED",
       "name": "TableStyleMedium2",
@@ -1484,7 +1757,12 @@ table-column metadata converged with the visible header cells.
       "showLastColumn": false,
       "showRowStripes": true,
       "showColumnStripes": false
-    }
+    },
+    "columns": [
+      { "columnIndex": 0, "totalsRowLabel": "Total" },
+      { "columnIndex": 1, "totalsRowFunction": "SUM" },
+      { "columnIndex": 2, "uniqueName": "status-unique" }
+    ]
   }
 }
 ```
@@ -1501,7 +1779,16 @@ table-column metadata converged with the visible header cells.
 | `sheetName` | Yes | Existing sheet that owns the table. |
 | `range` | Yes | Rectangular A1-style table range. Must include at least a header row plus one data row; with `showTotalsRow=true`, it must include one additional totals row. |
 | `showTotalsRow` | No | Whether the table includes a totals row. Defaults to `false`. |
+| `hasAutofilter` | No | Whether the table owns an autofilter. Defaults to `true`. |
 | `style` | Yes | Table style definition: `NONE` or `NAMED`. |
+| `comment` | No | Table comment metadata. Defaults to `""`. |
+| `published` | No | Published flag. Defaults to `false`. |
+| `insertRow` | No | Insert-row flag. Defaults to `false`. |
+| `insertRowShift` | No | Insert-row-shift flag. Defaults to `false`. |
+| `headerRowCellStyle` | No | Header-row cell-style metadata. Defaults to `""`. |
+| `dataCellStyle` | No | Data-cell style metadata. Defaults to `""`. |
+| `totalsRowCellStyle` | No | Totals-row cell-style metadata. Defaults to `""`. |
+| `columns` | No | Advanced authored column metadata. Defaults to `[]`. |
 
 Omit `showTotalsRow` when the table has no totals row. Setting `"showTotalsRow": false` is
 accepted but redundant.
@@ -1512,6 +1799,16 @@ Supported table-style variants:
 - `{"type":"NAMED","name":"TableStyleMedium2","showFirstColumn":false,"showLastColumn":false,"showRowStripes":true,"showColumnStripes":false}`
 
 Named styles must exist in the workbook style source or the write fails.
+
+`columns[*]` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `columnIndex` | Yes | Zero-based table-column ordinal inside the table range. |
+| `uniqueName` | No | Optional unique-name metadata. Defaults to `""`. |
+| `totalsRowLabel` | No | Optional totals-row label. Defaults to `""`. |
+| `totalsRowFunction` | No | Optional totals-row function token. Input is case-insensitive and canonicalized to Excel's lowercase token family. Defaults to `""`. |
+| `calculatedColumnFormula` | No | Optional calculated-column formula. Defaults to `""`. |
 
 ---
 
@@ -1614,7 +1911,7 @@ No additional fields.
 ### SET_NAMED_RANGE
 
 Create or replace one named range in workbook scope or sheet scope. Targets are explicit
-sheet-qualified cells or rectangular ranges.
+sheet-qualified cells or rectangular ranges, or formula-defined name targets.
 
 ```json
 {
@@ -1634,11 +1931,20 @@ sheet-qualified cells or rectangular ranges.
 }
 ```
 
+```json
+{
+  "type": "SET_NAMED_RANGE",
+  "name": "BudgetRollup",
+  "scope": { "type": "WORKBOOK" },
+  "target": { "formula": "SUM(Budget!$B$2:$B$5)" }
+}
+```
+
 | Field | Required | Description |
 |:------|:---------|:------------|
 | `name` | Yes | Defined-name identifier. Must not collide with A1 or R1C1 reference syntax and must not use the reserved `_xlnm.` prefix. |
 | `scope` | Yes | Workbook or sheet scope payload. |
-| `target` | Yes | Explicit sheet-qualified cell or rectangular range target. Reversed range endpoints are normalized to top-left:`bottom-right`. |
+| `target` | Yes | Either an explicit sheet-qualified cell/range target or a formula-defined target. Reversed explicit range endpoints are normalized to top-left:`bottom-right`. Formula-defined targets must set `formula` only, not `sheetName`/`range`. |
 
 ---
 
@@ -1855,8 +2161,11 @@ than raw `#RRGGBB` strings. `style.font.fontColor`, `style.fill.foregroundColor`
 `rgb` plus optional `theme`, `indexed`, and `tint` facts when Excel stores them. Gradient fills
 come back under `style.fill.gradient` with `type`, optional geometry (`degree`, `left`, `right`,
 `top`, `bottom`), and ordered `stops` carrying `position` plus structured colors. The write-side
-style contract remains narrower: authored style inputs still accept only `#RRGGBB` colors and do
-not currently write theme, indexed, tint, or gradient semantics.
+style contract uses asymmetric field names rather than the read-back object shape:
+`fontColor`/`fontColorTheme`/`fontColorIndexed`/`fontColorTint`, corresponding
+foreground/background/border color fields, and `fill.gradient`. Agents that read a
+`CellColorReport` and want to write it back must translate the structured report into those
+write-side fields rather than echo the read-back object verbatim.
 
 ### GET_WINDOW
 

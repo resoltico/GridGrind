@@ -66,6 +66,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -1917,6 +1918,113 @@ class DefaultGridGrindRequestExecutorTest {
     assertTrue(style.protection().hiddenFormula());
     assertEquals(
         style, toResponseStyleReport(XlsxRoundTrip.cellStyle(workbookPath, "Budget", "A1")));
+  }
+
+  @Test
+  void executesAdvancedStyleWorkflowWithThemeIndexedAndGradientColors() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-advanced-style-", ".xlsx");
+    Files.deleteIfExists(workbookPath);
+
+    GridGrindResponse.Success success =
+        success(
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request(
+                        new GridGrindRequest.WorkbookSource.New(),
+                        new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                        List.of(
+                            new WorkbookOperation.EnsureSheet("Budget"),
+                            new WorkbookOperation.SetRange(
+                                "Budget",
+                                "A1:A2",
+                                List.of(
+                                    List.of(new CellInput.Text("ThemeTintStyle")),
+                                    List.of(new CellInput.Text("GradientFillStyle")))),
+                            new WorkbookOperation.ApplyStyle(
+                                "Budget",
+                                "A1",
+                                new CellStyleInput(
+                                    null,
+                                    null,
+                                    new CellFontInput(
+                                        null, true, null, null, null, 6, null, -0.35d, null, null),
+                                    new CellFillInput(
+                                        dev.erst.gridgrind.excel.ExcelFillPattern.SOLID,
+                                        null,
+                                        3,
+                                        null,
+                                        0.30d,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null),
+                                    new CellBorderInput(
+                                        null,
+                                        null,
+                                        null,
+                                        new CellBorderSideInput(
+                                            ExcelBorderStyle.THIN,
+                                            null,
+                                            null,
+                                            Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex()),
+                                            null),
+                                        null),
+                                    null)),
+                            new WorkbookOperation.ApplyStyle(
+                                "Budget",
+                                "A2",
+                                new CellStyleInput(
+                                    null,
+                                    null,
+                                    null,
+                                    new CellFillInput(
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        new CellGradientFillInput(
+                                            "LINEAR",
+                                            45.0d,
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            List.of(
+                                                new CellGradientStopInput(
+                                                    0.0d, new ColorInput("#1F497D")),
+                                                new CellGradientStopInput(
+                                                    1.0d, new ColorInput(null, 4, null, 0.45d))))),
+                                    null,
+                                    null))),
+                        new WorkbookReadOperation.GetCells(
+                            "cells", "Budget", List.of("A1", "A2")))));
+
+    WorkbookReadResult.CellsResult cells =
+        read(success, "cells", WorkbookReadResult.CellsResult.class);
+    GridGrindResponse.CellStyleReport themedStyle = cells.cells().get(0).style();
+    GridGrindResponse.CellStyleReport gradientStyle = cells.cells().get(1).style();
+
+    assertTrue(Files.exists(workbookPath));
+    assertEquals(new CellColorReport(null, 6, null, -0.35d), themedStyle.font().fontColor());
+    assertEquals(new CellColorReport(null, 3, null, 0.30d), themedStyle.fill().foregroundColor());
+    assertEquals(
+        new CellColorReport(
+            null, null, Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex()), null),
+        themedStyle.border().bottom().color());
+    assertNotNull(gradientStyle.fill().gradient());
+    assertEquals(45.0d, gradientStyle.fill().gradient().degree());
+    assertEquals(
+        new CellColorReport("#1F497D", null, null, null),
+        gradientStyle.fill().gradient().stops().get(0).color());
+    assertEquals(
+        new CellColorReport(null, 4, null, 0.45d),
+        gradientStyle.fill().gradient().stops().get(1).color());
   }
 
   @Test

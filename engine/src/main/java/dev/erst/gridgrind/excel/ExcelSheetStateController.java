@@ -4,6 +4,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbookProtection;
 
@@ -60,8 +61,8 @@ final class ExcelSheetStateController {
         workbook.xssfWorkbook().isStructureLocked(),
         workbook.xssfWorkbook().isWindowsLocked(),
         workbook.xssfWorkbook().isRevisionLocked(),
-        protection != null && protection.isSetWorkbookPassword(),
-        protection != null && protection.isSetRevisionsPassword());
+        workbookPasswordHashPresent(protection),
+        revisionsPasswordHashPresent(protection));
   }
 
   /** Renames an existing sheet to a new destination name. */
@@ -195,13 +196,19 @@ final class ExcelSheetStateController {
 
   /** Enables sheet protection with the exact supported lock flags. */
   ExcelWorkbook setSheetProtection(
-      ExcelWorkbook workbook, String sheetName, ExcelSheetProtectionSettings protection) {
+      ExcelWorkbook workbook,
+      String sheetName,
+      ExcelSheetProtectionSettings protection,
+      String password) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     ExcelWorkbookSheetSupport.requireSheetName(sheetName, "sheetName");
     Objects.requireNonNull(protection, "protection must not be null");
 
     XSSFSheet sheet = ExcelWorkbookSheetSupport.requiredSheet(workbook.xssfWorkbook(), sheetName);
-    sheet.protectSheet("");
+    sheet.protectSheet(password == null ? "" : password);
+    if (password != null) {
+      sheet.setSheetPassword(password, HashAlgorithm.sha512);
+    }
     ExcelSheetProtectionSupport.apply(sheet, protection);
     return workbook;
   }
@@ -214,5 +221,77 @@ final class ExcelSheetStateController {
     XSSFSheet sheet = ExcelWorkbookSheetSupport.requiredSheet(workbook.xssfWorkbook(), sheetName);
     ExcelSheetProtectionSupport.clear(sheet);
     return workbook;
+  }
+
+  /** Applies workbook-level protection and password hashes authoritatively. */
+  ExcelWorkbook setWorkbookProtection(
+      ExcelWorkbook workbook, ExcelWorkbookProtectionSettings protection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(protection, "protection must not be null");
+
+    workbook.xssfWorkbook().unLock();
+    if (!workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection()) {
+      workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
+    }
+    if (protection.structureLocked()) {
+      workbook.xssfWorkbook().lockStructure();
+    }
+    if (protection.windowsLocked()) {
+      workbook.xssfWorkbook().lockWindows();
+    }
+    if (protection.revisionsLocked()) {
+      workbook.xssfWorkbook().lockRevision();
+    }
+    if (protection.workbookPassword() != null) {
+      workbook
+          .xssfWorkbook()
+          .setWorkbookPassword(protection.workbookPassword(), HashAlgorithm.sha512);
+    }
+    if (protection.revisionsPassword() != null) {
+      workbook
+          .xssfWorkbook()
+          .setRevisionsPassword(protection.revisionsPassword(), HashAlgorithm.sha512);
+    }
+    normalizeWorkbookProtectionNode(workbook);
+    return workbook;
+  }
+
+  /** Clears workbook-level protection and password hashes entirely. */
+  ExcelWorkbook clearWorkbookProtection(ExcelWorkbook workbook) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    workbook.xssfWorkbook().unLock();
+    return workbook;
+  }
+
+  private static void normalizeWorkbookProtectionNode(ExcelWorkbook workbook) {
+    CTWorkbookProtection protection =
+        workbook.xssfWorkbook().getCTWorkbook().getWorkbookProtection();
+    boolean hasLocks =
+        workbook.xssfWorkbook().isStructureLocked()
+            || workbook.xssfWorkbook().isWindowsLocked()
+            || workbook.xssfWorkbook().isRevisionLocked();
+    boolean hasPasswords =
+        workbookPasswordHashPresent(protection) || revisionsPasswordHashPresent(protection);
+    if (!hasLocks && !hasPasswords) {
+      workbook.xssfWorkbook().getCTWorkbook().unsetWorkbookProtection();
+    }
+  }
+
+  private static boolean workbookPasswordHashPresent(CTWorkbookProtection protection) {
+    return protection != null
+        && (protection.isSetWorkbookPassword()
+            || protection.isSetWorkbookHashValue()
+            || protection.isSetWorkbookSaltValue()
+            || protection.isSetWorkbookSpinCount()
+            || protection.isSetWorkbookAlgorithmName());
+  }
+
+  private static boolean revisionsPasswordHashPresent(CTWorkbookProtection protection) {
+    return protection != null
+        && (protection.isSetRevisionsPassword()
+            || protection.isSetRevisionsHashValue()
+            || protection.isSetRevisionsSaltValue()
+            || protection.isSetRevisionsSpinCount()
+            || protection.isSetRevisionsAlgorithmName());
   }
 }

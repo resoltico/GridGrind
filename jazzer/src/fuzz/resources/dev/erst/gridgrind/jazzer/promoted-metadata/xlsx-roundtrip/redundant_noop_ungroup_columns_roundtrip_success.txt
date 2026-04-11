@@ -5,4 +5,4 @@ Outcome: SUCCESS
 Input Bytes: 154
 Command Count: 10
 Style Kinds: (none)
-Command Kinds: GROUP_COLUMNS=8, CREATE_SHEET=1, SET_SHEET_PANE=1
+Command Kinds: GROUP_COLUMNS=8, SET_SHEET_PANE=1, CREATE_SHEET=1

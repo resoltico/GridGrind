@@ -7,4 +7,4 @@ Message: table not found on expected sheet: KTable@K
 Input Bytes: 63
 Command Count: 4
 Style Kinds: (none)
-Command Kinds: GROUP_COLUMNS=2, CREATE_SHEET=1, DELETE_TABLE=1
+Command Kinds: GROUP_COLUMNS=2, DELETE_TABLE=1, CREATE_SHEET=1

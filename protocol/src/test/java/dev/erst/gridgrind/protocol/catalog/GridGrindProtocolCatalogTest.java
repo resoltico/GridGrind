@@ -492,7 +492,7 @@ class GridGrindProtocolCatalogTest {
     assertEquals("type", catalog.discriminatorField());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
-    assertEquals(52, catalog.operationTypes().size());
+    assertEquals(54, catalog.operationTypes().size());
     assertEquals(26, catalog.readTypes().size());
     assertEquals(
         List.of(
@@ -511,6 +511,7 @@ class GridGrindProtocolCatalogTest {
             "namedRangeSelectorTypes",
             "fontHeightTypes",
             "dataValidationRuleTypes",
+            "autofilterFilterCriterionTypes",
             "conditionalFormattingRuleTypes",
             "printAreaTypes",
             "printScalingTypes",
@@ -521,26 +522,39 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         List.of(
             "commentInputType",
+            "commentAnchorInputType",
             "namedRangeTargetType",
             "sheetProtectionSettingsType",
             "cellStyleInputType",
             "cellAlignmentInputType",
             "cellFontInputType",
+            "colorInputType",
             "richTextRunInputType",
             "cellFillInputType",
+            "cellGradientFillInputType",
+            "cellGradientStopInputType",
             "cellBorderInputType",
             "cellBorderSideInputType",
             "cellProtectionInputType",
             "dataValidationInputType",
             "dataValidationPromptInputType",
             "dataValidationErrorAlertInputType",
+            "autofilterCustomConditionInputType",
+            "autofilterFilterColumnInputType",
+            "autofilterSortConditionInputType",
+            "autofilterSortStateInputType",
             "conditionalFormattingBlockInputType",
+            "conditionalFormattingThresholdInputType",
             "headerFooterTextInputType",
             "differentialStyleInputType",
             "differentialBorderInputType",
             "differentialBorderSideInputType",
             "printLayoutInputType",
-            "tableInputType"),
+            "printMarginsInputType",
+            "printSetupInputType",
+            "tableColumnInputType",
+            "tableInputType",
+            "workbookProtectionInputType"),
         catalog.plainTypes().stream().map(PlainTypeGroup::group).toList());
   }
 
@@ -567,9 +581,11 @@ class GridGrindProtocolCatalogTest {
 
     PlainTypeGroup namedRangeGroup = plainGroup(catalog, "namedRangeTargetType");
     assertEquals(
-        FieldRequirement.REQUIRED, fieldNamed(namedRangeGroup.type(), "sheetName").requirement());
+        FieldRequirement.OPTIONAL, fieldNamed(namedRangeGroup.type(), "sheetName").requirement());
     assertEquals(
-        FieldRequirement.REQUIRED, fieldNamed(namedRangeGroup.type(), "range").requirement());
+        FieldRequirement.OPTIONAL, fieldNamed(namedRangeGroup.type(), "range").requirement());
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(namedRangeGroup.type(), "formula").requirement());
 
     TypeEntry copySheet = entryNamed(catalog.operationTypes(), "COPY_SHEET");
     assertEquals(FieldRequirement.OPTIONAL, fieldNamed(copySheet, "position").requirement());
@@ -835,8 +851,8 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         entryNamed(catalog.operationTypes(), "COPY_SHEET")
             .summary()
-            .contains("Sheets containing tables"),
-        "COPY_SHEET summary must describe explicit non-copyable sheet families");
+            .contains("tables are renamed automatically"),
+        "COPY_SHEET summary must describe how copied tables stay workbook-global unique");
     assertTrue(
         entryNamed(catalog.operationTypes(), "SET_SELECTED_SHEETS")
             .summary()

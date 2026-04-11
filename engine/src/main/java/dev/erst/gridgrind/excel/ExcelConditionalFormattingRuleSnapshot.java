@@ -63,13 +63,12 @@ public sealed interface ExcelConditionalFormattingRuleSnapshot
     }
   }
 
-  /** Data-bar rule reported with thresholds, direction, widths, and RGB fill color. */
+  /** Data-bar rule reported with thresholds, widths, and RGB fill color. */
   record DataBarRule(
       int priority,
       boolean stopIfTrue,
       String color,
       boolean iconOnly,
-      boolean leftToRight,
       int widthMin,
       int widthMax,
       ExcelConditionalFormattingThresholdSnapshot minThreshold,

@@ -13,10 +13,10 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 5,
       "operationKinds" : {
-        "SET_CONDITIONAL_FORMATTING" : 2,
         "CLEAR_CONDITIONAL_FORMATTING" : 1,
         "SET_RANGE" : 1,
-        "ENSURE_SHEET" : 1
+        "ENSURE_SHEET" : 1,
+        "SET_CONDITIONAL_FORMATTING" : 2
       },
       "styleKinds" : { },
       "readCount" : 2,

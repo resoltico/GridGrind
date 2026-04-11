@@ -369,15 +369,16 @@ class ExcelWorkbookTest {
           new ExcelTableDefinition(
               "OpsTable", "Tables", "A1:B2", false, new ExcelTableStyle.None()));
 
-      IllegalArgumentException tableFailure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () ->
-                  workbook.copySheet(
-                      "Tables", "Tables Copy", new ExcelSheetCopyPosition.AppendAtEnd()));
+      workbook.copySheet("Tables", "Tables Copy", new ExcelSheetCopyPosition.AppendAtEnd());
+
+      assertEquals(List.of("Tables", "Tables Copy"), workbook.sheetNames());
+      assertEquals(1, workbook.xssfWorkbook().getSheet("Tables").getTables().size());
+      assertEquals(1, workbook.xssfWorkbook().getSheet("Tables Copy").getTables().size());
       assertEquals(
-          "cannot copy sheet 'Tables': sheets containing tables are not copyable",
-          tableFailure.getMessage());
+          "OpsTable", workbook.xssfWorkbook().getSheet("Tables").getTables().getFirst().getName());
+      assertEquals(
+          "OpsTable_Copy2",
+          workbook.xssfWorkbook().getSheet("Tables Copy").getTables().getFirst().getName());
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
@@ -387,17 +388,20 @@ class ExcelWorkbookTest {
       localFormula.setSheetIndex(workbook.xssfWorkbook().getSheetIndex("FormulaNames"));
       localFormula.setRefersToFormula("SUM(FormulaNames!$A$1:$A$2)");
 
-      IllegalArgumentException nameFailure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () ->
-                  workbook.copySheet(
-                      "FormulaNames",
-                      "FormulaNames Copy",
-                      new ExcelSheetCopyPosition.AppendAtEnd()));
+      workbook.copySheet(
+          "FormulaNames", "FormulaNames Copy", new ExcelSheetCopyPosition.AppendAtEnd());
+
       assertEquals(
-          "cannot copy sheet 'FormulaNames': sheet-scoped formula-defined named ranges are not copyable",
-          nameFailure.getMessage());
+          List.of(
+              new ExcelNamedRangeSnapshot.FormulaSnapshot(
+                  "LocalFormula",
+                  new ExcelNamedRangeScope.SheetScope("FormulaNames"),
+                  "SUM(FormulaNames!$A$1:$A$2)"),
+              new ExcelNamedRangeSnapshot.FormulaSnapshot(
+                  "LocalFormula",
+                  new ExcelNamedRangeScope.SheetScope("FormulaNames Copy"),
+                  "SUM('FormulaNames Copy'!$A$1:$A$2)")),
+          workbook.namedRanges());
     }
   }
 
@@ -596,7 +600,7 @@ class ExcelWorkbookTest {
                       false,
                       "Aptos",
                       ExcelFontHeight.fromPoints(new BigDecimal("11.5")),
-                      "#1F4E78",
+                      new ExcelColor("#1F4E78"),
                       true,
                       true),
                   new ExcelCellFill(ExcelFillPattern.SOLID, "#FFF2CC", null),

@@ -671,6 +671,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.SetSheetVisibility _ -> null;
       case WorkbookOperation.SetSheetProtection _ -> null;
       case WorkbookOperation.ClearSheetProtection _ -> null;
+      case WorkbookOperation.SetWorkbookProtection _ -> null;
+      case WorkbookOperation.ClearWorkbookProtection _ -> null;
       case WorkbookOperation.MergeCells _ -> null;
       case WorkbookOperation.UnmergeCells _ -> null;
       case WorkbookOperation.SetColumnWidth _ -> null;
@@ -729,6 +731,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.SetSheetVisibility op -> op.sheetName();
           case WorkbookOperation.SetSheetProtection op -> op.sheetName();
           case WorkbookOperation.ClearSheetProtection op -> op.sheetName();
+          case WorkbookOperation.SetWorkbookProtection _ -> null;
+          case WorkbookOperation.ClearWorkbookProtection _ -> null;
           case WorkbookOperation.MergeCells op -> op.sheetName();
           case WorkbookOperation.UnmergeCells op -> op.sheetName();
           case WorkbookOperation.SetColumnWidth op -> op.sheetName();
@@ -798,6 +802,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.SetSheetVisibility _ -> null;
           case WorkbookOperation.SetSheetProtection _ -> null;
           case WorkbookOperation.ClearSheetProtection _ -> null;
+          case WorkbookOperation.SetWorkbookProtection _ -> null;
+          case WorkbookOperation.ClearWorkbookProtection _ -> null;
           case WorkbookOperation.MergeCells _ -> null;
           case WorkbookOperation.UnmergeCells _ -> null;
           case WorkbookOperation.SetColumnWidth _ -> null;
@@ -866,6 +872,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.SetSheetVisibility _ -> null;
           case WorkbookOperation.SetSheetProtection _ -> null;
           case WorkbookOperation.ClearSheetProtection _ -> null;
+          case WorkbookOperation.SetWorkbookProtection _ -> null;
+          case WorkbookOperation.ClearWorkbookProtection _ -> null;
           case WorkbookOperation.SetColumnWidth _ -> null;
           case WorkbookOperation.SetRowHeight _ -> null;
           case WorkbookOperation.InsertRows _ -> null;
@@ -918,6 +926,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.SetSheetVisibility _ -> null;
           case WorkbookOperation.SetSheetProtection _ -> null;
           case WorkbookOperation.ClearSheetProtection _ -> null;
+          case WorkbookOperation.SetWorkbookProtection _ -> null;
+          case WorkbookOperation.ClearWorkbookProtection _ -> null;
           case WorkbookOperation.MergeCells _ -> null;
           case WorkbookOperation.UnmergeCells _ -> null;
           case WorkbookOperation.SetColumnWidth _ -> null;

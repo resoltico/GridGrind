@@ -16,6 +16,22 @@ public record PrintSetupReport(
     int firstPageNumber,
     List<Integer> rowBreaks,
     List<Integer> columnBreaks) {
+  /** Returns the factual advanced page-setup defaults for an unconfigured sheet. */
+  public static PrintSetupReport defaults() {
+    return new PrintSetupReport(
+        PrintMarginsReport.defaults(),
+        false,
+        false,
+        1,
+        false,
+        false,
+        1,
+        false,
+        1,
+        List.of(),
+        List.of());
+  }
+
   public PrintSetupReport {
     Objects.requireNonNull(margins, "margins must not be null");
     if (paperSize < 0) {

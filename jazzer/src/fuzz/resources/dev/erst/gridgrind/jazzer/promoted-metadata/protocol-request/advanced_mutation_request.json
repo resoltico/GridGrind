@@ -1,0 +1,58 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "../examples/advanced-mutation-request.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/advanced_mutation_request.json",
+  "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 14843,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 22,
+      "operationKinds" : {
+        "SET_COMMENT" : 1,
+        "SET_PRINT_LAYOUT" : 1,
+        "SET_CONDITIONAL_FORMATTING" : 4,
+        "SET_AUTOFILTER" : 1,
+        "SET_SHEET_PROTECTION" : 1,
+        "SET_TABLE" : 1,
+        "SET_NAMED_RANGE" : 2,
+        "SET_DATA_VALIDATION" : 1,
+        "ENSURE_SHEET" : 1,
+        "SET_WORKBOOK_PROTECTION" : 1,
+        "EVALUATE_FORMULAS" : 1,
+        "SET_RANGE" : 5,
+        "APPLY_STYLE" : 2
+      },
+      "styleKinds" : {
+        "fill" : 2,
+        "fill_pattern_solid" : 1,
+        "font" : 1,
+        "border" : 1,
+        "italic" : 1,
+        "fill_pattern" : 1,
+        "border_bottom" : 1
+      },
+      "readCount" : 12,
+      "readKinds" : {
+        "GET_DATA_VALIDATIONS" : 1,
+        "GET_COMMENTS" : 1,
+        "GET_AUTOFILTERS" : 1,
+        "GET_WORKBOOK_SUMMARY" : 1,
+        "GET_CELLS" : 1,
+        "GET_PRINT_LAYOUT" : 1,
+        "GET_TABLES" : 1,
+        "GET_NAMED_RANGES" : 1,
+        "GET_SHEET_SUMMARY" : 1,
+        "GET_WORKBOOK_PROTECTION" : 1,
+        "ANALYZE_WORKBOOK_FINDINGS" : 1,
+        "GET_CONDITIONAL_FORMATTING" : 1
+      }
+    }
+  },
+  "promotedAt" : "2026-04-11T11:53:36.970111Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/advanced_mutation_request.txt"
+}

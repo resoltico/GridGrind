@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -145,6 +146,53 @@ class ExcelRichTextSupportTest {
   }
 
   @Test
+  void richTextRoundTripsThemeAndIndexedFontColors() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFRichTextString richText =
+          ExcelRichTextSupport.toPoiRichText(
+              workbook,
+              new ExcelRichText(
+                  List.of(
+                      new ExcelRichTextRun(
+                          "Lead",
+                          new ExcelCellFont(
+                              true,
+                              null,
+                              null,
+                              null,
+                              new ExcelColor(null, 4, null, -0.20d),
+                              null,
+                              null)),
+                      new ExcelRichTextRun(" ", null),
+                      new ExcelRichTextRun(
+                          "review scheduled",
+                          new ExcelCellFont(
+                              null,
+                              true,
+                              null,
+                              null,
+                              new ExcelColor(
+                                  null,
+                                  null,
+                                  Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex()),
+                                  null),
+                              null,
+                              null)))));
+
+      ExcelRichTextSnapshot snapshot =
+          ExcelRichTextSupport.snapshot(workbook, richText, baseFont());
+
+      assertEquals(
+          new ExcelColorSnapshot(null, 4, null, -0.20d), snapshot.runs().get(0).font().fontColor());
+      assertEquals(baseFont().fontColor(), snapshot.runs().get(1).font().fontColor());
+      assertEquals(
+          new ExcelColorSnapshot(
+              null, null, Short.toUnsignedInt(IndexedColors.DARK_GREEN.getIndex()), null),
+          snapshot.runs().get(2).font().fontColor());
+    }
+  }
+
+  @Test
   void roundTripsExplicitRunOverridesAndInheritedBaseFontValues() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       ExcelRichText richText =
@@ -157,13 +205,19 @@ class ExcelRichTextSupportTest {
                           Boolean.FALSE,
                           "Courier New",
                           ExcelFontHeight.fromPoints(new BigDecimal("14")),
-                          "#123456",
+                          new ExcelColor("#123456"),
                           Boolean.FALSE,
                           Boolean.TRUE)),
                   new ExcelRichTextRun(
                       " Beta",
                       new ExcelCellFont(
-                          Boolean.TRUE, null, null, null, "#ABCDEF", Boolean.TRUE, Boolean.FALSE)),
+                          Boolean.TRUE,
+                          null,
+                          null,
+                          null,
+                          new ExcelColor("#ABCDEF"),
+                          Boolean.TRUE,
+                          Boolean.FALSE)),
                   new ExcelRichTextRun(
                       " Delta",
                       new ExcelCellFont(null, Boolean.FALSE, null, null, null, null, null)),
@@ -268,7 +322,9 @@ class ExcelRichTextSupportTest {
                           null,
                           null)),
                   new ExcelRichTextRun(
-                      " Color", new ExcelCellFont(null, null, null, null, "#ABCDEF", null, null)),
+                      " Color",
+                      new ExcelCellFont(
+                          null, null, null, null, new ExcelColor("#ABCDEF"), null, null)),
                   new ExcelRichTextRun(
                       " Underline",
                       new ExcelCellFont(null, null, null, null, null, Boolean.FALSE, null)),
