@@ -57,9 +57,10 @@ final class XlsxParityProbeRegistry {
       case "probe-conditional-formatting-advanced-mutation-gap" ->
           probeConditionalFormattingAdvancedMutationGap(context);
       case "probe-formula-core" -> probeFormulaCore(context);
-      case "probe-formula-external-gap" -> probeFormulaExternalGap(context);
-      case "probe-formula-udf-gap" -> probeFormulaUdfGap(context);
-      case "probe-formula-lifecycle-gap" -> probeFormulaLifecycleGap();
+      case "probe-formula-external" -> probeFormulaExternal(context);
+      case "probe-formula-missing-workbook-policy" -> probeFormulaMissingWorkbookPolicy(context);
+      case "probe-formula-udf" -> probeFormulaUdf(context);
+      case "probe-formula-lifecycle" -> probeFormulaLifecycle(context);
       case "probe-drawing-preservation" -> probeDrawingPreservation(context);
       case "probe-embedded-object-preservation" -> probeEmbeddedObjectPreservation(context);
       case "probe-chart-preservation" -> probeChartPreservation(context);
@@ -1634,56 +1635,166 @@ final class XlsxParityProbeRegistry {
         : fail("GridGrind formula evaluation diverged on the core workbook.");
   }
 
-  private static ProbeResult probeFormulaExternalGap(ProbeContext context) {
+  private static ProbeResult probeFormulaExternal(ProbeContext context) {
     XlsxParityScenarios.MaterializedScenario external =
-        context.copiedScenario(XlsxParityScenarios.EXTERNAL_FORMULA, "formula-external-source");
+        context.scenario(XlsxParityScenarios.EXTERNAL_FORMULA);
     double poiValue =
         XlsxParityOracle.evaluateExternalFormula(
             external.workbookPath(), external.attachment("referencedWorkbook"));
-    GridGrindResponse.Failure failure =
+    Path outputPath = context.derivedWorkbook("formula-external");
+    GridGrindResponse.Success success =
+        XlsxParityGridGrind.mutateWorkbook(
+            external.workbookPath(),
+            outputPath,
+            externalFormulaEnvironment(external.attachment("referencedWorkbook")),
+            List.of(new WorkbookOperation.EvaluateFormulas()),
+            new WorkbookReadOperation.GetCells("cells", "Ops", List.of("B1")));
+    GridGrindResponse.CellReport.FormulaReport formula =
+        cast(
+            GridGrindResponse.CellReport.FormulaReport.class,
+            XlsxParityGridGrind.read(success, "cells", WorkbookReadResult.CellsResult.class)
+                .cells()
+                .getFirst());
+    GridGrindResponse.CellReport.NumberReport evaluation =
+        cast(GridGrindResponse.CellReport.NumberReport.class, formula.evaluation());
+    String cachedValue = XlsxParityOracle.cachedFormulaRawValue(outputPath, "Ops", "B1");
+    return poiValue == 7.5d && evaluation.numberValue() == poiValue && "7.5".equals(cachedValue)
+        ? pass("External-workbook formula bindings evaluate and persist cached results.")
+        : fail(
+            "External-workbook formula parity mismatch."
+                + " poiValue="
+                + poiValue
+                + " gridValue="
+                + evaluation.numberValue()
+                + " cachedValue="
+                + cachedValue);
+  }
+
+  private static ProbeResult probeFormulaMissingWorkbookPolicy(ProbeContext context) {
+    XlsxParityScenarios.MaterializedScenario external =
+        context.scenario(XlsxParityScenarios.EXTERNAL_FORMULA);
+    boolean poiStrictFails =
+        XlsxParityOracle.externalFormulaFailsWithoutBinding(external.workbookPath());
+    double poiCachedValue =
+        XlsxParityOracle.evaluateExternalFormulaUsingCachedValue(external.workbookPath());
+    GridGrindResponse.Failure strictFailure =
         XlsxParityGridGrind.mutateWorkbookExpectingFailure(
             external.workbookPath(), List.of(new WorkbookOperation.EvaluateFormulas()));
-    return poiValue == 7.5d
-        ? fail(
-            "POI can evaluate external workbook references, but GridGrind cannot configure them: "
-                + failure.problem().message())
-        : pass("External-workbook formula parity is present.");
+    GridGrindResponse.Success cachedSuccess =
+        XlsxParityGridGrind.readWorkbook(
+            external.workbookPath(),
+            missingWorkbookCachedValueEnvironment(),
+            new WorkbookReadOperation.GetCells("cells", "Ops", List.of("B1")));
+    GridGrindResponse.CellReport.FormulaReport cachedFormula =
+        cast(
+            GridGrindResponse.CellReport.FormulaReport.class,
+            XlsxParityGridGrind.read(cachedSuccess, "cells", WorkbookReadResult.CellsResult.class)
+                .cells()
+                .getFirst());
+    GridGrindResponse.CellReport.NumberReport cachedEvaluation =
+        cast(GridGrindResponse.CellReport.NumberReport.class, cachedFormula.evaluation());
+    return poiStrictFails
+            && poiCachedValue == 7.5d
+            && strictFailure.problem().code() == GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK
+            && cachedEvaluation.numberValue() == poiCachedValue
+        ? pass("Missing-workbook policy control matches POI strict and cached-value behavior.")
+        : fail(
+            "Missing-workbook policy parity mismatch."
+                + " poiStrictFails="
+                + poiStrictFails
+                + " poiCachedValue="
+                + poiCachedValue
+                + " gridStrictCode="
+                + strictFailure.problem().code()
+                + " gridCachedValue="
+                + cachedEvaluation.numberValue());
   }
 
-  private static ProbeResult probeFormulaUdfGap(ProbeContext context) {
+  private static ProbeResult probeFormulaUdf(ProbeContext context) {
     XlsxParityScenarios.MaterializedScenario udf =
-        context.copiedScenario(XlsxParityScenarios.UDF_FORMULA, "formula-udf-source");
+        context.scenario(XlsxParityScenarios.UDF_FORMULA);
     double poiValue = XlsxParityOracle.evaluateUdfFormula(udf.workbookPath());
-    GridGrindResponse.Failure failure =
-        XlsxParityGridGrind.mutateWorkbookExpectingFailure(
-            udf.workbookPath(), List.of(new WorkbookOperation.EvaluateFormulas()));
-    return poiValue == 42.0d
-        ? fail(
-            "POI can evaluate registered UDFs, but GridGrind has no UDF registration seam: "
-                + failure.problem().message())
-        : pass("UDF-backed formula parity is present.");
+    Path outputPath = context.derivedWorkbook("formula-udf");
+    GridGrindResponse.Success success =
+        XlsxParityGridGrind.mutateWorkbook(
+            udf.workbookPath(),
+            outputPath,
+            udfFormulaEnvironment(),
+            List.of(new WorkbookOperation.EvaluateFormulas()),
+            new WorkbookReadOperation.GetCells("cells", "Ops", List.of("B1")));
+    GridGrindResponse.CellReport.FormulaReport formula =
+        cast(
+            GridGrindResponse.CellReport.FormulaReport.class,
+            XlsxParityGridGrind.read(success, "cells", WorkbookReadResult.CellsResult.class)
+                .cells()
+                .getFirst());
+    GridGrindResponse.CellReport.NumberReport evaluation =
+        cast(GridGrindResponse.CellReport.NumberReport.class, formula.evaluation());
+    String cachedValue = XlsxParityOracle.cachedFormulaRawValue(outputPath, "Ops", "B1");
+    return poiValue == 42.0d && evaluation.numberValue() == poiValue && "42.0".equals(cachedValue)
+        ? pass("Template-backed UDF toolpacks evaluate and persist cached results.")
+        : fail(
+            "UDF-backed formula parity mismatch."
+                + " poiValue="
+                + poiValue
+                + " gridValue="
+                + evaluation.numberValue()
+                + " cachedValue="
+                + cachedValue);
   }
 
-  private static ProbeResult probeFormulaLifecycleGap() {
-    boolean poiHasLifecycleControls =
-        XlsxParitySupport.call(
-            "inspect POI formula-evaluator lifecycle methods",
-            () ->
-                org.apache.poi.ss.usermodel.FormulaEvaluator.class
-                        .getMethod("clearAllCachedResultValues")
-                        .getReturnType()
-                        .equals(void.class)
-                    && org.apache.poi.ss.usermodel.FormulaEvaluator.class
-                        .getMethod("evaluateFormulaCell", org.apache.poi.ss.usermodel.Cell.class)
-                        .getReturnType()
-                        .getSimpleName()
-                        .contains("CellType"));
-    boolean gridGrindHasDedicatedOps =
-        XlsxParityGridGrind.hasOperationType("EVALUATE_FORMULA_CELL")
-            || XlsxParityGridGrind.hasOperationType("CLEAR_FORMULA_CACHES");
-    return poiHasLifecycleControls && !gridGrindHasDedicatedOps
-        ? fail("POI exposes targeted evaluator lifecycle controls that GridGrind does not surface.")
-        : pass("Formula evaluator lifecycle parity is present.");
+  private static ProbeResult probeFormulaLifecycle(ProbeContext context) {
+    XlsxParityScenarios.MaterializedScenario lifecycle =
+        context.scenario(XlsxParityScenarios.FORMULA_LIFECYCLE);
+    String originalB1 =
+        XlsxParityOracle.cachedFormulaRawValue(lifecycle.workbookPath(), "Budget", "B1");
+    String originalC1 =
+        XlsxParityOracle.cachedFormulaRawValue(lifecycle.workbookPath(), "Budget", "C1");
+
+    Path targetedPath = context.derivedWorkbook("formula-lifecycle-targeted");
+    XlsxParityGridGrind.mutateWorkbook(
+        lifecycle.workbookPath(),
+        targetedPath,
+        List.of(
+            new WorkbookOperation.EvaluateFormulaCells(
+                List.of(new FormulaCellTargetInput("Budget", "B1")))));
+    String targetedB1 = XlsxParityOracle.cachedFormulaRawValue(targetedPath, "Budget", "B1");
+    String targetedC1 = XlsxParityOracle.cachedFormulaRawValue(targetedPath, "Budget", "C1");
+
+    Path clearedPath = context.derivedWorkbook("formula-lifecycle-cleared");
+    XlsxParityGridGrind.mutateWorkbook(
+        lifecycle.workbookPath(), clearedPath, List.of(new WorkbookOperation.ClearFormulaCaches()));
+    String clearedB1 = XlsxParityOracle.cachedFormulaRawValue(clearedPath, "Budget", "B1");
+    String clearedC1 = XlsxParityOracle.cachedFormulaRawValue(clearedPath, "Budget", "C1");
+
+    boolean hasDedicatedOps =
+        XlsxParityGridGrind.hasOperationType("EVALUATE_FORMULA_CELLS")
+            && XlsxParityGridGrind.hasOperationType("CLEAR_FORMULA_CACHES");
+    return hasDedicatedOps
+            && "4.0".equals(originalB1)
+            && "6.0".equals(originalC1)
+            && "8.0".equals(targetedB1)
+            && "6.0".equals(targetedC1)
+            && clearedB1 == null
+            && clearedC1 == null
+        ? pass(
+            "Formula lifecycle controls support targeted evaluation and explicit cache clearing.")
+        : fail(
+            "Formula lifecycle parity mismatch."
+                + " hasDedicatedOps="
+                + hasDedicatedOps
+                + " originalB1="
+                + originalB1
+                + " originalC1="
+                + originalC1
+                + " targetedB1="
+                + targetedB1
+                + " targetedC1="
+                + targetedC1
+                + " clearedB1="
+                + clearedB1
+                + " clearedC1="
+                + clearedC1);
   }
 
   private static ProbeResult probeDrawingPreservation(ProbeContext context) {
@@ -1812,6 +1923,29 @@ final class XlsxParityProbeRegistry {
         ? fail(
             "GridGrind preserves the file format but cannot maintain or author OOXML signatures.")
         : pass("OOXML signing parity is present.");
+  }
+
+  private static FormulaEnvironmentInput externalFormulaEnvironment(Path referencedWorkbookPath) {
+    return new FormulaEnvironmentInput(
+        List.of(
+            new FormulaExternalWorkbookInput(
+                "referenced.xlsx", referencedWorkbookPath.toAbsolutePath().toString())),
+        FormulaMissingWorkbookPolicy.ERROR,
+        List.of());
+  }
+
+  private static FormulaEnvironmentInput missingWorkbookCachedValueEnvironment() {
+    return new FormulaEnvironmentInput(
+        List.of(), FormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of());
+  }
+
+  private static FormulaEnvironmentInput udfFormulaEnvironment() {
+    return new FormulaEnvironmentInput(
+        List.of(),
+        FormulaMissingWorkbookPolicy.ERROR,
+        List.of(
+            new FormulaUdfToolpackInput(
+                "math", List.of(new FormulaUdfFunctionInput("DOUBLE", 1, null, "ARG1*2")))));
   }
 
   private static <T> T cast(Class<T> type, Object value) {

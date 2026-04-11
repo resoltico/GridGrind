@@ -20,8 +20,8 @@
       "styleKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "ANALYZE_HYPERLINK_HEALTH" : 1,
-        "GET_HYPERLINKS" : 1
+        "GET_HYPERLINKS" : 1,
+        "ANALYZE_HYPERLINK_HEALTH" : 1
       }
     }
   },

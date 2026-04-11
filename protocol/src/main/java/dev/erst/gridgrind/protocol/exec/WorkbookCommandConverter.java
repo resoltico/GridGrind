@@ -146,6 +146,10 @@ final class WorkbookCommandConverter {
       case WorkbookOperation.AutoSizeColumns op ->
           new WorkbookCommand.AutoSizeColumns(op.sheetName());
       case WorkbookOperation.EvaluateFormulas _ -> new WorkbookCommand.EvaluateAllFormulas();
+      case WorkbookOperation.EvaluateFormulaCells op ->
+          new WorkbookCommand.EvaluateFormulaCells(
+              FormulaEnvironmentConverter.toExcelFormulaCellTargets(op.cells()));
+      case WorkbookOperation.ClearFormulaCaches _ -> new WorkbookCommand.ClearFormulaCaches();
       case WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
           new WorkbookCommand.ForceFormulaRecalculationOnOpen();
     };

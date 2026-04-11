@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import java.util.Objects;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
@@ -77,6 +78,25 @@ final class FormulaRuntimeTestDouble implements ExcelFormulaRuntime {
   }
 
   @Override
+  public CellType evaluateFormulaCell(Cell cell) {
+    Objects.requireNonNull(cell, "cell must not be null");
+    if (evaluateFailure != null) {
+      throw evaluateFailure;
+    }
+    if (returnNullEvaluation) {
+      return CellType._NONE;
+    }
+    return Objects.requireNonNull(delegate, "delegate must not be null").evaluateFormulaCell(cell);
+  }
+
+  @Override
+  public void clearCachedResults() {
+    if (delegate != null) {
+      delegate.clearCachedResults();
+    }
+  }
+
+  @Override
   public String displayValue(DataFormatter formatter, Cell cell) {
     Objects.requireNonNull(formatter, "formatter must not be null");
     Objects.requireNonNull(cell, "cell must not be null");
@@ -85,5 +105,12 @@ final class FormulaRuntimeTestDouble implements ExcelFormulaRuntime {
     }
     return Objects.requireNonNull(delegate, "delegate must not be null")
         .displayValue(formatter, cell);
+  }
+
+  @Override
+  public ExcelFormulaRuntimeContext context() {
+    return delegate == null
+        ? ExcelFormulaEnvironment.defaults().runtimeContext()
+        : delegate.context();
   }
 }

@@ -157,6 +157,8 @@ public final class SequenceIntrospection {
       case WorkbookOperation.AppendRow _ -> "APPEND_ROW";
       case WorkbookOperation.AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
       case WorkbookOperation.EvaluateFormulas _ -> "EVALUATE_FORMULAS";
+      case WorkbookOperation.EvaluateFormulaCells _ -> "EVALUATE_FORMULA_CELLS";
+      case WorkbookOperation.ClearFormulaCaches _ -> "CLEAR_FORMULA_CACHES";
       case WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
           "FORCE_FORMULA_RECALCULATION_ON_OPEN";
     };
@@ -219,6 +221,8 @@ public final class SequenceIntrospection {
       case WorkbookCommand.AppendRow _ -> "APPEND_ROW";
       case WorkbookCommand.AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
       case WorkbookCommand.EvaluateAllFormulas _ -> "EVALUATE_ALL_FORMULAS";
+      case WorkbookCommand.EvaluateFormulaCells _ -> "EVALUATE_FORMULA_CELLS";
+      case WorkbookCommand.ClearFormulaCaches _ -> "CLEAR_FORMULA_CACHES";
       case WorkbookCommand.ForceFormulaRecalculationOnOpen _ ->
           "FORCE_FORMULA_RECALCULATION_ON_OPEN";
     };

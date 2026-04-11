@@ -171,6 +171,9 @@ class WorkbookCommandTest {
         new WorkbookCommand.AppendRow("Budget", values),
         new WorkbookCommand.AutoSizeColumns("Budget"),
         new WorkbookCommand.EvaluateAllFormulas(),
+        new WorkbookCommand.EvaluateFormulaCells(
+            List.of(new ExcelFormulaCellTarget("Budget", "B4"))),
+        new WorkbookCommand.ClearFormulaCaches(),
         new WorkbookCommand.ForceFormulaRecalculationOnOpen());
   }
 
@@ -223,7 +226,34 @@ class WorkbookCommandTest {
     assertEquals(1, commands.appendRow().values().size());
     assertEquals("Budget", commands.autoSizeColumns().sheetName());
     assertNotNull(commands.evaluate());
+    assertEquals(
+        List.of(new ExcelFormulaCellTarget("Budget", "B4")),
+        commands.evaluateFormulaCells().cells());
+    assertNotNull(commands.clearFormulaCaches());
     assertNotNull(commands.recalc());
+  }
+
+  @Test
+  void validatesFormulaLifecycleCommandInputs() {
+    assertThrows(NullPointerException.class, () -> new WorkbookCommand.EvaluateFormulaCells(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookCommand.EvaluateFormulaCells(List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.EvaluateFormulaCells(List.of((ExcelFormulaCellTarget) null)));
+    assertThrows(NullPointerException.class, () -> new ExcelFormulaCellTarget(null, "A1"));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelFormulaCellTarget(" ", "A1"));
+    assertThrows(NullPointerException.class, () -> new ExcelFormulaCellTarget("Budget", null));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelFormulaCellTarget("Budget", " "));
+
+    WorkbookCommand.EvaluateFormulaCells evaluateFormulaCells =
+        new WorkbookCommand.EvaluateFormulaCells(
+            List.of(new ExcelFormulaCellTarget("Budget", "C2")));
+    WorkbookCommand.ClearFormulaCaches clearFormulaCaches =
+        new WorkbookCommand.ClearFormulaCaches();
+
+    assertEquals(List.of(new ExcelFormulaCellTarget("Budget", "C2")), evaluateFormulaCells.cells());
+    assertNotNull(clearFormulaCaches);
   }
 
   @Test
@@ -753,6 +783,8 @@ class WorkbookCommandTest {
       WorkbookCommand.AppendRow appendRow,
       WorkbookCommand.AutoSizeColumns autoSizeColumns,
       WorkbookCommand.EvaluateAllFormulas evaluate,
+      WorkbookCommand.EvaluateFormulaCells evaluateFormulaCells,
+      WorkbookCommand.ClearFormulaCaches clearFormulaCaches,
       WorkbookCommand.ForceFormulaRecalculationOnOpen recalc) {}
 
   private static ExcelPrintLayout defaultPrintLayout() {

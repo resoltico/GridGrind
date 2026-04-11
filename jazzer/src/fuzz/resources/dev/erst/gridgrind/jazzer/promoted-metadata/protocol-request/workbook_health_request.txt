@@ -8,6 +8,6 @@ Source Kind: NEW
 Persistence Kind: NONE
 Operation Count: 5
 Read Count: 2
-Read Kinds: ANALYZE_WORKBOOK_FINDINGS=1, GET_CELLS=1
+Read Kinds: GET_CELLS=1, ANALYZE_WORKBOOK_FINDINGS=1
 Style Kinds: (none)
 Operation Kinds: SET_CELL=3, ENSURE_SHEET=2

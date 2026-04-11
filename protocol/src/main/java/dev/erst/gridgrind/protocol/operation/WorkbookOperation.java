@@ -10,6 +10,7 @@ import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.dto.ProtocolDefinedNameValidation;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 /** One validated workbook operation expressed in protocol form. */
 @SuppressWarnings("PMD.ExcessivePublicCount")
@@ -90,6 +91,12 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = WorkbookOperation.AppendRow.class, name = "APPEND_ROW"),
   @JsonSubTypes.Type(value = WorkbookOperation.AutoSizeColumns.class, name = "AUTO_SIZE_COLUMNS"),
   @JsonSubTypes.Type(value = WorkbookOperation.EvaluateFormulas.class, name = "EVALUATE_FORMULAS"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.EvaluateFormulaCells.class,
+      name = "EVALUATE_FORMULA_CELLS"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.ClearFormulaCaches.class,
+      name = "CLEAR_FORMULA_CACHES"),
   @JsonSubTypes.Type(
       value = WorkbookOperation.ForceFormulaRecalculationOnOpen.class,
       name = "FORCE_FORMULA_RECALCULATION_ON_OPEN")
@@ -596,6 +603,21 @@ public sealed interface WorkbookOperation {
   /** Evaluates all formulas in the workbook at operation time. */
   record EvaluateFormulas() implements WorkbookOperation {}
 
+  /** Evaluates one or more concrete formula cells and stores their cached results. */
+  record EvaluateFormulaCells(List<FormulaCellTargetInput> cells) implements WorkbookOperation {
+    public EvaluateFormulaCells {
+      Objects.requireNonNull(cells, "cells must not be null");
+      cells = List.copyOf(cells);
+      if (cells.isEmpty()) {
+        throw new IllegalArgumentException("cells must not be empty");
+      }
+      Validation.requireDistinctFormulaCellTargets(cells);
+    }
+  }
+
+  /** Clears all evaluator caches so later formula reads recompute from workbook state. */
+  record ClearFormulaCaches() implements WorkbookOperation {}
+
   /** Marks the workbook so that Excel recalculates all formulas on next open. */
   record ForceFormulaRecalculationOnOpen() implements WorkbookOperation {}
 
@@ -655,6 +677,8 @@ public sealed interface WorkbookOperation {
       case AppendRow _ -> "APPEND_ROW";
       case AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
       case EvaluateFormulas _ -> "EVALUATE_FORMULAS";
+      case EvaluateFormulaCells _ -> "EVALUATE_FORMULA_CELLS";
+      case ClearFormulaCaches _ -> "CLEAR_FORMULA_CACHES";
       case ForceFormulaRecalculationOnOpen _ -> "FORCE_FORMULA_RECALCULATION_ON_OPEN";
     };
   }
@@ -789,6 +813,21 @@ public sealed interface WorkbookOperation {
     static void requireDistinct(List<String> values, String fieldName) {
       if (new java.util.LinkedHashSet<>(values).size() != values.size()) {
         throw new IllegalArgumentException(fieldName + " must not contain duplicates");
+      }
+    }
+
+    static void requireDistinctFormulaCellTargets(List<FormulaCellTargetInput> cells) {
+      Set<String> seen = new java.util.LinkedHashSet<>();
+      for (FormulaCellTargetInput cell : cells) {
+        Objects.requireNonNull(cell, "cells must not contain nulls");
+        String key = (cell.sheetName() + "!" + cell.address()).toUpperCase(java.util.Locale.ROOT);
+        if (!seen.add(key)) {
+          throw new IllegalArgumentException(
+              "cells must not contain duplicate sheetName/address targets: "
+                  + cell.sheetName()
+                  + "!"
+                  + cell.address());
+        }
       }
     }
 

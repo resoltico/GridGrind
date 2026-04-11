@@ -12,9 +12,71 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /** Default request executor that applies the GridGrind workflow against the workbook core. */
 public final class DefaultGridGrindRequestExecutor implements GridGrindRequestExecutor {
+  private static final Set<Class<? extends WorkbookOperation>> WORKBOOK_SCOPE_OPERATION_TYPES =
+      Set.of(
+          WorkbookOperation.EnsureSheet.class,
+          WorkbookOperation.RenameSheet.class,
+          WorkbookOperation.DeleteSheet.class,
+          WorkbookOperation.MoveSheet.class,
+          WorkbookOperation.CopySheet.class,
+          WorkbookOperation.SetActiveSheet.class,
+          WorkbookOperation.SetSelectedSheets.class,
+          WorkbookOperation.SetSheetVisibility.class,
+          WorkbookOperation.SetSheetProtection.class,
+          WorkbookOperation.ClearSheetProtection.class,
+          WorkbookOperation.SetWorkbookProtection.class,
+          WorkbookOperation.ClearWorkbookProtection.class);
+
+  private static final Set<Class<? extends WorkbookOperation>> SHEET_STRUCTURE_OPERATION_TYPES =
+      Set.of(
+          WorkbookOperation.MergeCells.class,
+          WorkbookOperation.UnmergeCells.class,
+          WorkbookOperation.SetColumnWidth.class,
+          WorkbookOperation.SetRowHeight.class,
+          WorkbookOperation.InsertRows.class,
+          WorkbookOperation.DeleteRows.class,
+          WorkbookOperation.ShiftRows.class,
+          WorkbookOperation.InsertColumns.class,
+          WorkbookOperation.DeleteColumns.class,
+          WorkbookOperation.ShiftColumns.class,
+          WorkbookOperation.SetRowVisibility.class,
+          WorkbookOperation.SetColumnVisibility.class,
+          WorkbookOperation.GroupRows.class,
+          WorkbookOperation.UngroupRows.class,
+          WorkbookOperation.GroupColumns.class,
+          WorkbookOperation.UngroupColumns.class,
+          WorkbookOperation.SetSheetPane.class,
+          WorkbookOperation.SetSheetZoom.class,
+          WorkbookOperation.SetPrintLayout.class,
+          WorkbookOperation.ClearPrintLayout.class);
+
+  private static final Set<Class<? extends WorkbookOperation>> SHEET_CONTENT_OPERATION_TYPES =
+      Set.of(
+          WorkbookOperation.SetCell.class,
+          WorkbookOperation.SetRange.class,
+          WorkbookOperation.ClearRange.class,
+          WorkbookOperation.SetHyperlink.class,
+          WorkbookOperation.ClearHyperlink.class,
+          WorkbookOperation.SetComment.class,
+          WorkbookOperation.ClearComment.class,
+          WorkbookOperation.ApplyStyle.class,
+          WorkbookOperation.SetDataValidation.class,
+          WorkbookOperation.ClearDataValidations.class,
+          WorkbookOperation.SetConditionalFormatting.class,
+          WorkbookOperation.ClearConditionalFormatting.class,
+          WorkbookOperation.SetAutofilter.class,
+          WorkbookOperation.ClearAutofilter.class,
+          WorkbookOperation.SetTable.class,
+          WorkbookOperation.DeleteTable.class,
+          WorkbookOperation.SetNamedRange.class,
+          WorkbookOperation.DeleteNamedRange.class,
+          WorkbookOperation.AppendRow.class,
+          WorkbookOperation.AutoSizeColumns.class);
+
   private final WorkbookCommandExecutor commandExecutor;
   private final WorkbookReadExecutor readExecutor;
   private final WorkbookCloser workbookCloser;
@@ -57,7 +119,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
     ExcelWorkbook workbook;
     try {
-      workbook = openWorkbook(request.source());
+      workbook = openWorkbook(request.source(), request.formulaEnvironment());
     } catch (Exception exception) {
       return new GridGrindResponse.Failure(
           protocolVersion,
@@ -153,11 +215,15 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     };
   }
 
-  private ExcelWorkbook openWorkbook(GridGrindRequest.WorkbookSource source) throws IOException {
+  private ExcelWorkbook openWorkbook(
+      GridGrindRequest.WorkbookSource source, FormulaEnvironmentInput formulaEnvironment)
+      throws IOException {
+    ExcelFormulaEnvironment configuredEnvironment =
+        FormulaEnvironmentConverter.toExcelFormulaEnvironment(formulaEnvironment);
     return switch (source) {
-      case GridGrindRequest.WorkbookSource.New _ -> ExcelWorkbook.create();
+      case GridGrindRequest.WorkbookSource.New _ -> ExcelWorkbook.create(configuredEnvironment);
       case GridGrindRequest.WorkbookSource.ExistingFile existingFile ->
-          ExcelWorkbook.open(Path.of(existingFile.path()));
+          ExcelWorkbook.open(Path.of(existingFile.path()), configuredEnvironment);
     };
   }
 
@@ -206,6 +272,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case CellNotFoundException _ -> GridGrindProblemCode.CELL_NOT_FOUND;
       case InvalidCellAddressException _ -> GridGrindProblemCode.INVALID_CELL_ADDRESS;
       case InvalidRangeAddressException _ -> GridGrindProblemCode.INVALID_RANGE_ADDRESS;
+      case MissingExternalWorkbookException _ -> GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK;
+      case UnregisteredUserDefinedFunctionException _ ->
+          GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION;
       case UnsupportedFormulaException _ -> GridGrindProblemCode.UNSUPPORTED_FORMULA;
       case InvalidFormulaException _ -> GridGrindProblemCode.INVALID_FORMULA;
       case IOException _ -> GridGrindProblemCode.IO_ERROR;
@@ -713,74 +782,99 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.AppendRow _ -> null;
       case WorkbookOperation.AutoSizeColumns _ -> null;
       case WorkbookOperation.EvaluateFormulas _ -> null;
+      case WorkbookOperation.EvaluateFormulaCells _ -> null;
+      case WorkbookOperation.ClearFormulaCaches _ -> null;
       case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
     };
   }
 
   /** Returns the sheet name associated with one write operation or exception. */
   static String sheetNameFor(WorkbookOperation operation, Exception exception) {
-    String fromOperation =
-        switch (operation) {
-          case WorkbookOperation.EnsureSheet op -> op.sheetName();
-          case WorkbookOperation.RenameSheet op -> op.sheetName();
-          case WorkbookOperation.DeleteSheet op -> op.sheetName();
-          case WorkbookOperation.MoveSheet op -> op.sheetName();
-          case WorkbookOperation.CopySheet op -> op.sourceSheetName();
-          case WorkbookOperation.SetActiveSheet op -> op.sheetName();
-          case WorkbookOperation.SetSelectedSheets _ -> null;
-          case WorkbookOperation.SetSheetVisibility op -> op.sheetName();
-          case WorkbookOperation.SetSheetProtection op -> op.sheetName();
-          case WorkbookOperation.ClearSheetProtection op -> op.sheetName();
-          case WorkbookOperation.SetWorkbookProtection _ -> null;
-          case WorkbookOperation.ClearWorkbookProtection _ -> null;
-          case WorkbookOperation.MergeCells op -> op.sheetName();
-          case WorkbookOperation.UnmergeCells op -> op.sheetName();
-          case WorkbookOperation.SetColumnWidth op -> op.sheetName();
-          case WorkbookOperation.SetRowHeight op -> op.sheetName();
-          case WorkbookOperation.InsertRows op -> op.sheetName();
-          case WorkbookOperation.DeleteRows op -> op.sheetName();
-          case WorkbookOperation.ShiftRows op -> op.sheetName();
-          case WorkbookOperation.InsertColumns op -> op.sheetName();
-          case WorkbookOperation.DeleteColumns op -> op.sheetName();
-          case WorkbookOperation.ShiftColumns op -> op.sheetName();
-          case WorkbookOperation.SetRowVisibility op -> op.sheetName();
-          case WorkbookOperation.SetColumnVisibility op -> op.sheetName();
-          case WorkbookOperation.GroupRows op -> op.sheetName();
-          case WorkbookOperation.UngroupRows op -> op.sheetName();
-          case WorkbookOperation.GroupColumns op -> op.sheetName();
-          case WorkbookOperation.UngroupColumns op -> op.sheetName();
-          case WorkbookOperation.SetSheetPane op -> op.sheetName();
-          case WorkbookOperation.SetSheetZoom op -> op.sheetName();
-          case WorkbookOperation.SetPrintLayout op -> op.sheetName();
-          case WorkbookOperation.ClearPrintLayout op -> op.sheetName();
-          case WorkbookOperation.SetCell op -> op.sheetName();
-          case WorkbookOperation.SetRange op -> op.sheetName();
-          case WorkbookOperation.ClearRange op -> op.sheetName();
-          case WorkbookOperation.SetHyperlink op -> op.sheetName();
-          case WorkbookOperation.ClearHyperlink op -> op.sheetName();
-          case WorkbookOperation.SetComment op -> op.sheetName();
-          case WorkbookOperation.ClearComment op -> op.sheetName();
-          case WorkbookOperation.ApplyStyle op -> op.sheetName();
-          case WorkbookOperation.SetDataValidation op -> op.sheetName();
-          case WorkbookOperation.ClearDataValidations op -> op.sheetName();
-          case WorkbookOperation.SetConditionalFormatting op -> op.sheetName();
-          case WorkbookOperation.ClearConditionalFormatting op -> op.sheetName();
-          case WorkbookOperation.SetAutofilter op -> op.sheetName();
-          case WorkbookOperation.ClearAutofilter op -> op.sheetName();
-          case WorkbookOperation.SetTable op -> op.table().sheetName();
-          case WorkbookOperation.DeleteTable op -> op.sheetName();
-          case WorkbookOperation.SetNamedRange op -> op.target().sheetName();
-          case WorkbookOperation.DeleteNamedRange op ->
-              switch (op.scope()) {
-                case NamedRangeScope.Workbook _ -> null;
-                case NamedRangeScope.Sheet sheetScope -> sheetScope.sheetName();
-              };
-          case WorkbookOperation.AppendRow op -> op.sheetName();
-          case WorkbookOperation.AutoSizeColumns op -> op.sheetName();
-          case WorkbookOperation.EvaluateFormulas _ -> null;
-          case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
-        };
+    String fromOperation = null;
+    if (WORKBOOK_SCOPE_OPERATION_TYPES.contains(operation.getClass())) {
+      fromOperation = sheetNameForWorkbookScopeOperation(operation);
+    } else if (SHEET_STRUCTURE_OPERATION_TYPES.contains(operation.getClass())) {
+      fromOperation = sheetNameForSheetStructureOperation(operation);
+    } else if (SHEET_CONTENT_OPERATION_TYPES.contains(operation.getClass())) {
+      fromOperation = sheetNameForSheetContentOperation(operation);
+    }
     return fromOperation != null ? fromOperation : sheetNameFor(exception);
+  }
+
+  private static String sheetNameForWorkbookScopeOperation(WorkbookOperation operation) {
+    return switch (operation) {
+      case WorkbookOperation.EnsureSheet op -> op.sheetName();
+      case WorkbookOperation.RenameSheet op -> op.sheetName();
+      case WorkbookOperation.DeleteSheet op -> op.sheetName();
+      case WorkbookOperation.MoveSheet op -> op.sheetName();
+      case WorkbookOperation.CopySheet op -> op.sourceSheetName();
+      case WorkbookOperation.SetActiveSheet op -> op.sheetName();
+      case WorkbookOperation.SetSelectedSheets _ -> null;
+      case WorkbookOperation.SetSheetVisibility op -> op.sheetName();
+      case WorkbookOperation.SetSheetProtection op -> op.sheetName();
+      case WorkbookOperation.ClearSheetProtection op -> op.sheetName();
+      case WorkbookOperation.SetWorkbookProtection _ -> null;
+      case WorkbookOperation.ClearWorkbookProtection _ -> null;
+      default ->
+          throw new IllegalStateException("Unhandled workbook-scope operation: " + operation);
+    };
+  }
+
+  private static String sheetNameForSheetStructureOperation(WorkbookOperation operation) {
+    return switch (operation) {
+      case WorkbookOperation.MergeCells op -> op.sheetName();
+      case WorkbookOperation.UnmergeCells op -> op.sheetName();
+      case WorkbookOperation.SetColumnWidth op -> op.sheetName();
+      case WorkbookOperation.SetRowHeight op -> op.sheetName();
+      case WorkbookOperation.InsertRows op -> op.sheetName();
+      case WorkbookOperation.DeleteRows op -> op.sheetName();
+      case WorkbookOperation.ShiftRows op -> op.sheetName();
+      case WorkbookOperation.InsertColumns op -> op.sheetName();
+      case WorkbookOperation.DeleteColumns op -> op.sheetName();
+      case WorkbookOperation.ShiftColumns op -> op.sheetName();
+      case WorkbookOperation.SetRowVisibility op -> op.sheetName();
+      case WorkbookOperation.SetColumnVisibility op -> op.sheetName();
+      case WorkbookOperation.GroupRows op -> op.sheetName();
+      case WorkbookOperation.UngroupRows op -> op.sheetName();
+      case WorkbookOperation.GroupColumns op -> op.sheetName();
+      case WorkbookOperation.UngroupColumns op -> op.sheetName();
+      case WorkbookOperation.SetSheetPane op -> op.sheetName();
+      case WorkbookOperation.SetSheetZoom op -> op.sheetName();
+      case WorkbookOperation.SetPrintLayout op -> op.sheetName();
+      case WorkbookOperation.ClearPrintLayout op -> op.sheetName();
+      default ->
+          throw new IllegalStateException("Unhandled sheet-structure operation: " + operation);
+    };
+  }
+
+  private static String sheetNameForSheetContentOperation(WorkbookOperation operation) {
+    return switch (operation) {
+      case WorkbookOperation.SetCell op -> op.sheetName();
+      case WorkbookOperation.SetRange op -> op.sheetName();
+      case WorkbookOperation.ClearRange op -> op.sheetName();
+      case WorkbookOperation.SetHyperlink op -> op.sheetName();
+      case WorkbookOperation.ClearHyperlink op -> op.sheetName();
+      case WorkbookOperation.SetComment op -> op.sheetName();
+      case WorkbookOperation.ClearComment op -> op.sheetName();
+      case WorkbookOperation.ApplyStyle op -> op.sheetName();
+      case WorkbookOperation.SetDataValidation op -> op.sheetName();
+      case WorkbookOperation.ClearDataValidations op -> op.sheetName();
+      case WorkbookOperation.SetConditionalFormatting op -> op.sheetName();
+      case WorkbookOperation.ClearConditionalFormatting op -> op.sheetName();
+      case WorkbookOperation.SetAutofilter op -> op.sheetName();
+      case WorkbookOperation.ClearAutofilter op -> op.sheetName();
+      case WorkbookOperation.SetTable op -> op.table().sheetName();
+      case WorkbookOperation.DeleteTable op -> op.sheetName();
+      case WorkbookOperation.SetNamedRange op -> op.target().sheetName();
+      case WorkbookOperation.DeleteNamedRange op ->
+          switch (op.scope()) {
+            case NamedRangeScope.Workbook _ -> null;
+            case NamedRangeScope.Sheet sheetScope -> sheetScope.sheetName();
+          };
+      case WorkbookOperation.AppendRow op -> op.sheetName();
+      case WorkbookOperation.AutoSizeColumns op -> op.sheetName();
+      default -> throw new IllegalStateException("Unhandled sheet-content operation: " + operation);
+    };
   }
 
   /** Returns the cell address associated with one write operation or exception. */
@@ -840,6 +934,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.AppendRow _ -> null;
           case WorkbookOperation.AutoSizeColumns _ -> null;
           case WorkbookOperation.EvaluateFormulas _ -> null;
+          case WorkbookOperation.EvaluateFormulaCells _ -> null;
+          case WorkbookOperation.ClearFormulaCaches _ -> null;
           case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
         };
     return fromOperation != null ? fromOperation : addressFor(exception);
@@ -905,6 +1001,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.DeleteNamedRange _ -> null;
           case WorkbookOperation.AutoSizeColumns _ -> null;
           case WorkbookOperation.EvaluateFormulas _ -> null;
+          case WorkbookOperation.EvaluateFormulaCells _ -> null;
+          case WorkbookOperation.ClearFormulaCaches _ -> null;
           case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
         };
     return fromOperation != null ? fromOperation : rangeFor(exception);
@@ -967,6 +1065,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           case WorkbookOperation.AppendRow _ -> null;
           case WorkbookOperation.AutoSizeColumns _ -> null;
           case WorkbookOperation.EvaluateFormulas _ -> null;
+          case WorkbookOperation.EvaluateFormulaCells _ -> null;
+          case WorkbookOperation.ClearFormulaCaches _ -> null;
           case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
         };
     return fromOperation != null ? fromOperation : namedRangeNameFor(exception);

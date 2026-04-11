@@ -61,6 +61,8 @@ public sealed interface WorkbookCommand
         WorkbookCommand.AppendRow,
         WorkbookCommand.AutoSizeColumns,
         WorkbookCommand.EvaluateAllFormulas,
+        WorkbookCommand.EvaluateFormulaCells,
+        WorkbookCommand.ClearFormulaCaches,
         WorkbookCommand.ForceFormulaRecalculationOnOpen {
 
   record CreateSheet(String sheetName) implements WorkbookCommand {
@@ -785,6 +787,23 @@ public sealed interface WorkbookCommand
   }
 
   record EvaluateAllFormulas() implements WorkbookCommand {}
+
+  /** Evaluates one or more explicit formula-cell targets and stores their cached results. */
+  record EvaluateFormulaCells(List<ExcelFormulaCellTarget> cells) implements WorkbookCommand {
+    public EvaluateFormulaCells {
+      Objects.requireNonNull(cells, "cells must not be null");
+      cells = List.copyOf(cells);
+      if (cells.isEmpty()) {
+        throw new IllegalArgumentException("cells must not be empty");
+      }
+      for (ExcelFormulaCellTarget cell : cells) {
+        Objects.requireNonNull(cell, "cells must not contain nulls");
+      }
+    }
+  }
+
+  /** Clears all cached evaluator results. */
+  record ClearFormulaCaches() implements WorkbookCommand {}
 
   record ForceFormulaRecalculationOnOpen() implements WorkbookCommand {}
 

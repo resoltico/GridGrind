@@ -37,6 +37,16 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Invalid formula",
       "Fix the formula syntax or workbook references, then retry."),
+  MISSING_EXTERNAL_WORKBOOK(
+      GridGrindProblemCategory.FORMULA,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Missing external workbook",
+      "Bind the referenced external workbook or switch to cached-value evaluation."),
+  UNREGISTERED_USER_DEFINED_FUNCTION(
+      GridGrindProblemCategory.FORMULA,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Unregistered user-defined function",
+      "Register the required UDF in formulaEnvironment or skip server-side evaluation."),
   UNSUPPORTED_FORMULA(
       GridGrindProblemCategory.FORMULA,
       GridGrindProblemRecovery.CHANGE_REQUEST,

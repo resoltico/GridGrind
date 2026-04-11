@@ -13,18 +13,18 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 6,
       "operationKinds" : {
-        "SET_TABLE" : 1,
         "SET_RANGE" : 2,
         "ENSURE_SHEET" : 1,
-        "SET_AUTOFILTER" : 2
+        "SET_AUTOFILTER" : 2,
+        "SET_TABLE" : 1
       },
       "styleKinds" : { },
       "readCount" : 4,
       "readKinds" : {
-        "ANALYZE_AUTOFILTER_HEALTH" : 1,
         "ANALYZE_TABLE_HEALTH" : 1,
         "GET_TABLES" : 1,
-        "GET_AUTOFILTERS" : 1
+        "GET_AUTOFILTERS" : 1,
+        "ANALYZE_AUTOFILTER_HEALTH" : 1
       }
     }
   },

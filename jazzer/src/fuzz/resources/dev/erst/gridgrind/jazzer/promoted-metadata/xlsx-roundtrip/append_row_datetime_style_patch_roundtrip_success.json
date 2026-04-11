@@ -10,16 +10,16 @@
       "inputBytes" : 228,
       "commandCount" : 2,
       "commandKinds" : {
-        "CREATE_SHEET" : 1,
-        "APPLY_STYLE" : 1
+        "APPLY_STYLE" : 1,
+        "CREATE_SHEET" : 1
       },
       "styleKinds" : {
-        "fill_pattern" : 1,
-        "fill" : 1,
         "fill_background_color" : 1,
         "locked" : 1,
         "protection" : 1,
         "fill_color" : 1,
+        "fill" : 1,
+        "fill_pattern" : 1,
         "fill_patterned" : 1,
         "fill_foreground_color" : 1
       }

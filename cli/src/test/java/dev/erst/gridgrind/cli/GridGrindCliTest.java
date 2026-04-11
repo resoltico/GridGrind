@@ -1199,6 +1199,9 @@ class GridGrindCliTest {
     assertTrue(
         help.contains("persistence is optional"), "help must mention that persistence is optional");
     assertTrue(
+        help.contains("formulaEnvironment is optional"),
+        "help must mention that formulaEnvironment is optional");
+    assertTrue(
         help.contains("operations is optional"), "help must mention that operations is optional");
     assertTrue(help.contains("reads is optional"), "help must mention that reads is optional");
   }

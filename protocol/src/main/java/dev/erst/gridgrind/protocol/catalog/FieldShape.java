@@ -9,12 +9,14 @@ import java.util.Objects;
 @JsonSubTypes({
   @JsonSubTypes.Type(value = FieldShape.Scalar.class, name = "SCALAR"),
   @JsonSubTypes.Type(value = FieldShape.ListShape.class, name = "LIST"),
+  @JsonSubTypes.Type(value = FieldShape.TopLevelTypeSetRef.class, name = "TOP_LEVEL_TYPE_SET"),
   @JsonSubTypes.Type(value = FieldShape.NestedTypeGroupRef.class, name = "NESTED_TYPE_GROUP"),
   @JsonSubTypes.Type(value = FieldShape.PlainTypeGroupRef.class, name = "PLAIN_TYPE_GROUP")
 })
 public sealed interface FieldShape
     permits FieldShape.Scalar,
         FieldShape.ListShape,
+        FieldShape.TopLevelTypeSetRef,
         FieldShape.NestedTypeGroupRef,
         FieldShape.PlainTypeGroupRef {
 
@@ -29,6 +31,16 @@ public sealed interface FieldShape
   record ListShape(FieldShape elementShape) implements FieldShape {
     public ListShape {
       Objects.requireNonNull(elementShape, "elementShape must not be null");
+    }
+  }
+
+  /** Reference to one top-level discriminated family published elsewhere in the catalog. */
+  record TopLevelTypeSetRef(String typeSet) implements FieldShape {
+    public TopLevelTypeSetRef {
+      Objects.requireNonNull(typeSet, "typeSet must not be null");
+      if (typeSet.isBlank()) {
+        throw new IllegalArgumentException("typeSet must not be blank");
+      }
     }
   }
 

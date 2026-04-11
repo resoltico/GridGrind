@@ -1,0 +1,13 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/formula_environment_request.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 2097
+Decode Outcome: PARSED
+Source Kind: NEW
+Persistence Kind: SAVE_AS
+Operation Count: 8
+Read Count: 2
+Read Kinds: GET_FORMULA_SURFACE=1, GET_CELLS=1
+Style Kinds: (none)
+Operation Kinds: SET_CELL=3, EVALUATE_FORMULAS=1, SET_RANGE=1, EVALUATE_FORMULA_CELLS=1, CLEAR_FORMULA_CACHES=1, ENSURE_SHEET=1

@@ -206,6 +206,7 @@ public final class GridGrindCli {
         Request:
           protocolVersion is optional; omit it and the current version is assumed.
           persistence is optional; omit it and the workbook stays in memory only (NONE).
+          formulaEnvironment is optional; omit it for the default evaluator, or supply it to bind external workbooks, choose missing-workbook policy, and register template-backed UDFs.
           operations is optional; omit or send [] to skip mutations.
           reads is optional; omit or send [] to skip introspection.
           operations run before reads; reads are non-mutating and run last.

@@ -58,9 +58,21 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(PrintTitleColumnsInput.class, "printTitleColumnsTypes"),
           Map.entry(TableStyleInput.class, "tableStyleTypes"),
           Map.entry(FontHeightInput.class, "fontHeightTypes"));
+  private static final Map<Class<?>, String> TOP_LEVEL_FIELD_SHAPE_TYPE_SETS =
+      Map.ofEntries(
+          Map.entry(GridGrindRequest.WorkbookSource.class, "sourceTypes"),
+          Map.entry(GridGrindRequest.WorkbookPersistence.class, "persistenceTypes"),
+          Map.entry(
+              dev.erst.gridgrind.protocol.operation.WorkbookOperation.class, "operationTypes"),
+          Map.entry(dev.erst.gridgrind.protocol.read.WorkbookReadOperation.class, "readTypes"));
   private static final Map<Class<?>, String> PLAIN_FIELD_SHAPE_GROUPS =
       Map.ofEntries(
           Map.entry(CommentInput.class, "commentInputType"),
+          Map.entry(FormulaEnvironmentInput.class, "formulaEnvironmentInputType"),
+          Map.entry(FormulaExternalWorkbookInput.class, "formulaExternalWorkbookInputType"),
+          Map.entry(FormulaUdfToolpackInput.class, "formulaUdfToolpackInputType"),
+          Map.entry(FormulaUdfFunctionInput.class, "formulaUdfFunctionInputType"),
+          Map.entry(FormulaCellTargetInput.class, "formulaCellTargetInputType"),
           Map.entry(CommentAnchorInput.class, "commentAnchorInputType"),
           Map.entry(NamedRangeTarget.class, "namedRangeTargetType"),
           Map.entry(SheetProtectionSettings.class, "sheetProtectionSettingsType"),
@@ -155,6 +167,10 @@ public final class CatalogFieldMetadataSupport {
     }
     if (classType.isEnum()) {
       return new FieldShape.Scalar(ScalarType.STRING);
+    }
+    String topLevelTypeSet = TOP_LEVEL_FIELD_SHAPE_TYPE_SETS.get(classType);
+    if (topLevelTypeSet != null) {
+      return new FieldShape.TopLevelTypeSetRef(topLevelTypeSet);
     }
     String nestedGroup = NESTED_FIELD_SHAPE_GROUPS.get(classType);
     if (nestedGroup != null) {

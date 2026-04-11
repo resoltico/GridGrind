@@ -7,6 +7,8 @@ import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.time.DateTimeException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -118,6 +120,11 @@ class DefaultGridGrindRequestExecutorCoverageTest {
         DefaultGridGrindRequestExecutor.problemCodeFor(
             new InvalidFormulaException("Budget", "B4", "SUM(", "invalid", null)));
     assertEquals(
+        GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK,
+        DefaultGridGrindRequestExecutor.problemCodeFor(
+            new MissingExternalWorkbookException(
+                "Budget", "B4", "[Rates.xlsx]Sheet1!A1", "Rates.xlsx", "missing", null)));
+    assertEquals(
         GridGrindProblemCode.IO_ERROR,
         DefaultGridGrindRequestExecutor.problemCodeFor(new IOException("disk")));
     assertEquals(
@@ -207,6 +214,54 @@ class DefaultGridGrindRequestExecutorCoverageTest {
         DefaultGridGrindRequestExecutor.namedRangeNameFor(
             new NamedRangeNotFoundException(
                 "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
+  }
+
+  @Test
+  void coversFormulaLifecycleOperationContextExtractionAndRejectsPrivateHelperMismatches()
+      throws ReflectiveOperationException {
+    WorkbookOperation.EvaluateFormulaCells evaluateFormulaCells =
+        new WorkbookOperation.EvaluateFormulaCells(
+            List.of(new FormulaCellTargetInput("Budget", "B4")));
+    WorkbookOperation.ClearFormulaCaches clearFormulaCaches =
+        new WorkbookOperation.ClearFormulaCaches();
+    RuntimeException failure = new IllegalStateException("boom");
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(evaluateFormulaCells, failure));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(clearFormulaCaches, failure));
+    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(evaluateFormulaCells, failure));
+    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(clearFormulaCaches, failure));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(evaluateFormulaCells, failure));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(clearFormulaCaches, failure));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(evaluateFormulaCells, failure));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(clearFormulaCaches, failure));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(evaluateFormulaCells, failure));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(clearFormulaCaches, failure));
+
+    assertPrivateSheetNameHelperRejects(
+        "sheetNameForWorkbookScopeOperation",
+        new WorkbookOperation.SetCell("Budget", "A1", new CellInput.Text("x")));
+    assertPrivateSheetNameHelperRejects(
+        "sheetNameForSheetStructureOperation", new WorkbookOperation.SetActiveSheet("Budget"));
+    assertPrivateSheetNameHelperRejects(
+        "sheetNameForSheetContentOperation", new WorkbookOperation.EnsureSheet("Budget"));
+  }
+
+  private static void assertPrivateSheetNameHelperRejects(
+      String methodName, WorkbookOperation operation) throws ReflectiveOperationException {
+    Method method =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class, methodName, WorkbookOperation.class);
+    InvocationTargetException failure =
+        assertThrows(InvocationTargetException.class, () -> method.invoke(null, operation));
+    assertInstanceOf(IllegalStateException.class, failure.getCause());
+  }
+
+  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
+  private static Method accessibleMethod(Class<?> type, String name, Class<?>... parameterTypes)
+      throws ReflectiveOperationException {
+    Method method = type.getDeclaredMethod(name, parameterTypes);
+    method.setAccessible(true);
+    return method;
   }
 
   private static CellStyleInput styleInput(

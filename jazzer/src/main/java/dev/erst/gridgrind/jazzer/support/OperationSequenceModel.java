@@ -11,6 +11,7 @@ import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelDataValidationPrompt;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
+import dev.erst.gridgrind.excel.ExcelFormulaCellTarget;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
@@ -38,6 +39,7 @@ import dev.erst.gridgrind.protocol.dto.DataValidationInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationPromptInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
 import dev.erst.gridgrind.protocol.dto.DifferentialStyleInput;
+import dev.erst.gridgrind.protocol.dto.FormulaCellTargetInput;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.HeaderFooterTextInput;
 import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
@@ -334,6 +336,10 @@ public final class OperationSequenceModel {
           switch (selectorSlot(selector)) {
             case 0x0 -> new WorkbookOperation.AutoSizeColumns(targetSheet);
             case 0x1 -> new WorkbookOperation.EvaluateFormulas();
+            case 0x2 ->
+                new WorkbookOperation.EvaluateFormulaCells(
+                    nextFormulaCellTargets(data, primarySheet, secondarySheet, validAddress));
+            case 0x3 -> new WorkbookOperation.ClearFormulaCaches();
             default -> new WorkbookOperation.ForceFormulaRecalculationOnOpen();
           };
     };
@@ -550,6 +556,10 @@ public final class OperationSequenceModel {
           switch (selectorSlot(selector)) {
             case 0x0 -> new WorkbookCommand.AutoSizeColumns(targetSheet);
             case 0x1 -> new WorkbookCommand.EvaluateAllFormulas();
+            case 0x2 ->
+                new WorkbookCommand.EvaluateFormulaCells(
+                    nextExcelFormulaCellTargets(data, primarySheet, secondarySheet, validAddress));
+            case 0x3 -> new WorkbookCommand.ClearFormulaCaches();
             default -> new WorkbookCommand.ForceFormulaRecalculationOnOpen();
           };
     };
@@ -716,6 +726,52 @@ public final class OperationSequenceModel {
       second = validAddress ? ("A1".equals(first) ? "B2" : "A1") : "ZZZ999999";
     }
     return List.of(first, second);
+  }
+
+  private static List<FormulaCellTargetInput> nextFormulaCellTargets(
+      GridGrindFuzzData data, String primarySheet, String secondarySheet, boolean validAddress) {
+    FormulaCellTargetInput first =
+        new FormulaCellTargetInput(
+            data.consumeBoolean() ? primarySheet : secondarySheet,
+            nextFormulaTargetAddress(data, validAddress));
+    if (selectorSlot(nextSelectorByte(data)) == 0) {
+      return List.of(first);
+    }
+    FormulaCellTargetInput second =
+        new FormulaCellTargetInput(
+            data.consumeBoolean() ? primarySheet : secondarySheet,
+            nextFormulaTargetAddress(data, validAddress));
+    if (first.equals(second)) {
+      second = alternateFormulaCellTarget(first, primarySheet, secondarySheet, validAddress);
+    }
+    return List.of(first, second);
+  }
+
+  private static List<ExcelFormulaCellTarget> nextExcelFormulaCellTargets(
+      GridGrindFuzzData data, String primarySheet, String secondarySheet, boolean validAddress) {
+    List<FormulaCellTargetInput> cells =
+        nextFormulaCellTargets(data, primarySheet, secondarySheet, validAddress);
+    return cells.stream()
+        .map(cell -> new ExcelFormulaCellTarget(cell.sheetName(), cell.address()))
+        .toList();
+  }
+
+  private static String nextFormulaTargetAddress(GridGrindFuzzData data, boolean validAddress) {
+    return validAddress ? "C2" : FuzzDataDecoders.nextNonBlankCellAddress(data, false);
+  }
+
+  private static FormulaCellTargetInput alternateFormulaCellTarget(
+      FormulaCellTargetInput first,
+      String primarySheet,
+      String secondarySheet,
+      boolean validAddress) {
+    String alternateSheet = first.sheetName().equals(primarySheet) ? secondarySheet : primarySheet;
+    if (!alternateSheet.equals(first.sheetName())) {
+      return new FormulaCellTargetInput(alternateSheet, first.address());
+    }
+    String alternateAddress =
+        validAddress ? ("C2".equals(first.address()) ? "D2" : "C2") : "ZZZ999999";
+    return new FormulaCellTargetInput(first.sheetName(), alternateAddress);
   }
 
   private static IndexSpan nextIndexSpan(GridGrindFuzzData data, int upperBound) {
@@ -972,6 +1028,8 @@ public final class OperationSequenceModel {
       primary.getRow(0).createCell(1).setCellValue("HeaderB");
       primary.createRow(1).createCell(0).setCellValue("seed");
       primary.getRow(1).createCell(1).setCellValue(2.0d);
+      primary.getRow(1).createCell(2).setCellFormula("B2*2");
+      primary.getRow(1).createCell(3).setCellFormula("C2+1");
       primary.createRow(4).createCell(4).setCellValue("Queue");
       primary.getRow(4).createCell(5).setCellValue("Owner");
       primary.createRow(5).createCell(4).setCellValue("seed");
@@ -982,6 +1040,8 @@ public final class OperationSequenceModel {
         secondary.getRow(0).createCell(1).setCellValue("HeaderB");
         secondary.createRow(1).createCell(0).setCellValue("seed");
         secondary.getRow(1).createCell(1).setCellValue(3.0d);
+        secondary.getRow(1).createCell(2).setCellFormula("B2*3");
+        secondary.getRow(1).createCell(3).setCellFormula("C2+1");
       }
       Files.createDirectories(sourcePath.getParent());
       try (OutputStream outputStream = Files.newOutputStream(sourcePath)) {

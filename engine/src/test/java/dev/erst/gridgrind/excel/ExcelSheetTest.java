@@ -8,10 +8,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.CellValue;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Comment;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.FormulaError;
 import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.PaneType;
@@ -1539,7 +1543,7 @@ class ExcelSheetTest {
               .toList()
               .containsAll(
                   List.of(
-                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_EXTERNAL_REFERENCE,
+                      WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
                       WorkbookAnalysis.AnalysisFindingCode.FORMULA_VOLATILE_FUNCTION,
                       WorkbookAnalysis.AnalysisFindingCode.FORMULA_ERROR_RESULT)));
     }
@@ -1587,6 +1591,149 @@ class ExcelSheetTest {
               new WorkbookStyleRegistry(poiWorkbook),
               FormulaRuntimeTestDouble.nullEvaluation(baseEvaluator));
       assertEquals(List.of(), nullEvaluated.formulaHealthFindings());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsDoNotDuplicateStaticMissingExternalWorkbookFindings() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      poiWorkbook.setCellFormulaValidation(false);
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiSheet.createRow(0).createCell(0).setCellFormula("[Rates.xlsx]Sheet1!A1");
+      ExcelSheet sheet =
+          new ExcelSheet(
+              poiSheet,
+              new WorkbookStyleRegistry(poiWorkbook),
+              FormulaRuntimeTestDouble.alwaysFail(
+                  new IllegalStateException(
+                      "outer",
+                      new LocalWorkbookNotFoundException(
+                          "Could not resolve external workbook name 'Rates.xlsx'."))));
+
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
+          findings.getFirst().code());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsDoNotDuplicateStaticUnregisteredUdfFindings() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiSheet.createRow(0).createCell(0).setCellValue(21.0d);
+      poiSheet.getRow(0).createCell(1).setCellFormula("DOUBLE(A1)");
+      ExcelSheet sheet =
+          new ExcelSheet(
+              poiSheet,
+              new WorkbookStyleRegistry(poiWorkbook),
+              FormulaRuntimeTestDouble.alwaysFail(
+                  new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException(
+                      "DOUBLE")));
+
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.FORMULA_UNREGISTERED_USER_DEFINED_FUNCTION,
+          findings.getFirst().code());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsRespectBoundAndCachedExternalWorkbookPolicies() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      poiWorkbook.setCellFormulaValidation(false);
+
+      Sheet boundSheet = poiWorkbook.createSheet("Bound");
+      boundSheet.createRow(0).createCell(0).setCellFormula("[Rates.xlsx]Sheet1!A1");
+      ExcelSheet bound =
+          new ExcelSheet(
+              boundSheet,
+              new WorkbookStyleRegistry(poiWorkbook),
+              new StaticContextFormulaRuntime(
+                  new ExcelFormulaRuntimeContext(
+                      Set.of("Rates.xlsx"), ExcelFormulaMissingWorkbookPolicy.ERROR, Set.of()),
+                  null,
+                  null));
+      assertEquals(List.of(), bound.formulaHealthFindings());
+
+      Sheet cachedSheet = poiWorkbook.createSheet("Cached");
+      cachedSheet.createRow(0).createCell(0).setCellFormula("[Forecast.xlsx]Sheet1!A1");
+      ExcelSheet cached =
+          new ExcelSheet(
+              cachedSheet,
+              new WorkbookStyleRegistry(poiWorkbook),
+              new StaticContextFormulaRuntime(
+                  new ExcelFormulaRuntimeContext(
+                      Set.of(), ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE, Set.of()),
+                  null,
+                  null));
+
+      List<WorkbookAnalysis.AnalysisFinding> findings = cached.formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.FORMULA_USES_CACHED_EXTERNAL_VALUE,
+          findings.getFirst().code());
+      assertEquals(WorkbookAnalysis.AnalysisSeverity.INFO, findings.getFirst().severity());
+      assertEquals(
+          List.of("[Forecast.xlsx]Sheet1!A1", "Forecast.xlsx"), findings.getFirst().evidence());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsReportRuntimeMissingExternalWorkbookWhenStaticScanCannotInferIt()
+      throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiSheet.createRow(0).createCell(0).setCellFormula("SUM(A2)");
+      ExcelSheet sheet =
+          new ExcelSheet(
+              poiSheet,
+              new WorkbookStyleRegistry(poiWorkbook),
+              new StaticContextFormulaRuntime(
+                  ExcelFormulaEnvironment.defaults().runtimeContext(),
+                  new IllegalStateException(
+                      "outer",
+                      new LocalWorkbookNotFoundException(
+                          "Could not resolve external workbook name 'Rates.xlsx'.")),
+                  null));
+
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
+          findings.getFirst().code());
+      assertEquals(List.of("SUM(A2)", "Rates.xlsx"), findings.getFirst().evidence());
+    }
+  }
+
+  @Test
+  void formulaHealthFindingsLeaveMissingWorkbookEvidenceBlankWhenWorkbookNameCannotBeDerived()
+      throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
+      Sheet poiSheet = poiWorkbook.createSheet("Budget");
+      poiSheet.createRow(0).createCell(0).setCellFormula("SUM(A2)");
+      ExcelSheet sheet =
+          new ExcelSheet(
+              poiSheet,
+              new WorkbookStyleRegistry(poiWorkbook),
+              new StaticContextFormulaRuntime(
+                  ExcelFormulaEnvironment.defaults().runtimeContext(),
+                  new IllegalStateException("outer", new LocalWorkbookNotFoundException(null)),
+                  null));
+
+      List<WorkbookAnalysis.AnalysisFinding> findings = sheet.formulaHealthFindings();
+
+      assertEquals(1, findings.size());
+      assertEquals(
+          WorkbookAnalysis.AnalysisFindingCode.FORMULA_MISSING_EXTERNAL_WORKBOOK,
+          findings.getFirst().code());
+      assertEquals(List.of("SUM(A2)", ""), findings.getFirst().evidence());
     }
   }
 
@@ -1986,6 +2133,49 @@ class ExcelSheetTest {
       ExcelCellSnapshot blankInExistingRow = sheet.snapshotCell("B1");
       assertInstanceOf(ExcelCellSnapshot.BlankSnapshot.class, blankInExistingRow);
       assertEquals("B1", blankInExistingRow.address());
+    }
+  }
+
+  /** Local test-only type name that trips missing-workbook classification. */
+  private static final class LocalWorkbookNotFoundException extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    private LocalWorkbookNotFoundException(String message) {
+      super(message);
+    }
+  }
+
+  /** Test-only formula runtime with explicit context and optional evaluation/display failures. */
+  private record StaticContextFormulaRuntime(
+      ExcelFormulaRuntimeContext context,
+      RuntimeException evaluateFailure,
+      RuntimeException displayFailure)
+      implements ExcelFormulaRuntime {
+    @Override
+    public CellValue evaluate(Cell cell) {
+      if (evaluateFailure != null) {
+        throw evaluateFailure;
+      }
+      return null;
+    }
+
+    @Override
+    public CellType evaluateFormulaCell(Cell cell) {
+      if (evaluateFailure != null) {
+        throw evaluateFailure;
+      }
+      return CellType._NONE;
+    }
+
+    @Override
+    public void clearCachedResults() {}
+
+    @Override
+    public String displayValue(DataFormatter formatter, Cell cell) {
+      if (displayFailure != null) {
+        throw displayFailure;
+      }
+      return "";
     }
   }
 }

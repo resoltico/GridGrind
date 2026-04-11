@@ -6,7 +6,10 @@ package dev.erst.gridgrind.excel;
  * formula context fields directly.
  */
 public sealed interface FormulaException
-    permits InvalidFormulaException, UnsupportedFormulaException {
+    permits InvalidFormulaException,
+        MissingExternalWorkbookException,
+        UnregisteredUserDefinedFunctionException,
+        UnsupportedFormulaException {
   /** Name of the sheet containing the failing formula cell. */
   String sheetName();
 

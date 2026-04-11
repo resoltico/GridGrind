@@ -43,12 +43,14 @@ only for deterministic nested-build verification (`test`, `check`). The scripts 
 - active-fuzz `--no-daemon` launch isolation plus interrupt and timeout cleanup
 - explicit separation between generated local corpus and committed custom seeds
 - replay of the public defaulted-field contract for promoted JSON examples, including omitted
-  optional fields that must still parse successfully
+  optional fields that must still parse successfully, plus top-level `formulaEnvironment`
+  payloads that must preserve their request shape
 - replay of the advanced factual readback contract for promoted JSON examples, including workbook
   protection, rich comments, advanced print setup, structured style colors or gradients,
   autofilter criteria or sort state, and table metadata
 - replay of the advanced workbook-core mutation contract for promoted JSON examples, including
-  password-bearing protection and formula-defined named ranges
+  password-bearing protection, formula-defined named ranges, targeted formula evaluation, and
+  explicit formula-cache clearing
 
 Active fuzz launcher tasks now preload a tiny project-owned premain agent before `JazzerHarnessRunner`
 starts. That bridge publishes JVM startup instrumentation to Byte Buddy up front so Java 26 active

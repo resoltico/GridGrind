@@ -329,6 +329,7 @@ class GridGrindProtocolCatalogTest {
         new Catalog(
             null,
             "type",
+            sourceType,
             List.of(sourceType),
             List.of(sourceType),
             List.of(sourceType),
@@ -368,6 +369,7 @@ class GridGrindProtocolCatalogTest {
             new Catalog(
                 GridGrindProtocolVersion.current(),
                 "type",
+                new TypeEntry("REQUEST", "Summary", List.of()),
                 List.of(),
                 List.of(),
                 List.of(),
@@ -380,6 +382,7 @@ class GridGrindProtocolCatalogTest {
             new Catalog(
                 GridGrindProtocolVersion.current(),
                 "type",
+                new TypeEntry("REQUEST", "Summary", List.of()),
                 List.of(),
                 List.of(),
                 List.of(),
@@ -490,9 +493,10 @@ class GridGrindProtocolCatalogTest {
   private static void assertCatalogInventory(Catalog catalog) {
     assertEquals(GridGrindProtocolVersion.V1, catalog.protocolVersion());
     assertEquals("type", catalog.discriminatorField());
+    assertEquals("GridGrindRequest", catalog.requestType().id());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
-    assertEquals(54, catalog.operationTypes().size());
+    assertEquals(56, catalog.operationTypes().size());
     assertEquals(26, catalog.readTypes().size());
     assertEquals(
         List.of(
@@ -521,6 +525,11 @@ class GridGrindProtocolCatalogTest {
         catalog.nestedTypes().stream().map(NestedTypeGroup::group).toList());
     assertEquals(
         List.of(
+            "formulaEnvironmentInputType",
+            "formulaExternalWorkbookInputType",
+            "formulaUdfToolpackInputType",
+            "formulaUdfFunctionInputType",
+            "formulaCellTargetInputType",
             "commentInputType",
             "commentAnchorInputType",
             "namedRangeTargetType",
@@ -559,11 +568,31 @@ class GridGrindProtocolCatalogTest {
   }
 
   private static void assertCatalogFieldShapes(Catalog catalog) {
+    assertCatalogRequestFieldShapes(catalog);
     assertCatalogCoreFieldShapes(catalog);
     assertCatalogStyleFieldShapes(catalog);
     assertCatalogValidationAndTableFieldShapes(catalog);
     assertCatalogConditionalFormattingFieldShapes(catalog);
     assertCatalogPrintAndPaneFieldShapes(catalog);
+  }
+
+  private static void assertCatalogRequestFieldShapes(Catalog catalog) {
+    TypeEntry requestType = catalog.requestType();
+    assertEquals(
+        new FieldShape.TopLevelTypeSetRef("sourceTypes"),
+        fieldNamed(requestType, "source").shape());
+    assertEquals(
+        new FieldShape.TopLevelTypeSetRef("persistenceTypes"),
+        fieldNamed(requestType, "persistence").shape());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("formulaEnvironmentInputType"),
+        fieldNamed(requestType, "formulaEnvironment").shape());
+    assertEquals(
+        new FieldShape.ListShape(new FieldShape.TopLevelTypeSetRef("operationTypes")),
+        fieldNamed(requestType, "operations").shape());
+    assertEquals(
+        new FieldShape.ListShape(new FieldShape.TopLevelTypeSetRef("readTypes")),
+        fieldNamed(requestType, "reads").shape());
   }
 
   private static void assertCatalogCoreFieldShapes(Catalog catalog) {

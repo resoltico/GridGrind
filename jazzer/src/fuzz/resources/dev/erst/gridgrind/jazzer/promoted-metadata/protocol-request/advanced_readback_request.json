@@ -13,15 +13,15 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 10,
       "operationKinds" : {
-        "SET_AUTOFILTER" : 1,
-        "SET_RANGE" : 1,
         "SET_DATA_VALIDATION" : 1,
         "APPLY_STYLE" : 2,
         "SET_PRINT_LAYOUT" : 1,
         "SET_COMMENT" : 1,
         "SET_WORKBOOK_PROTECTION" : 1,
         "ENSURE_SHEET" : 1,
-        "SET_TABLE" : 1
+        "SET_TABLE" : 1,
+        "SET_AUTOFILTER" : 1,
+        "SET_RANGE" : 1
       },
       "styleKinds" : {
         "fill" : 2,
@@ -34,9 +34,6 @@
       },
       "readCount" : 11,
       "readKinds" : {
-        "ANALYZE_AUTOFILTER_HEALTH" : 1,
-        "ANALYZE_TABLE_HEALTH" : 1,
-        "GET_WORKBOOK_PROTECTION" : 1,
         "ANALYZE_DATA_VALIDATION_HEALTH" : 1,
         "GET_CELLS" : 1,
         "GET_WORKBOOK_SUMMARY" : 1,
@@ -44,7 +41,10 @@
         "GET_DATA_VALIDATIONS" : 1,
         "GET_PRINT_LAYOUT" : 1,
         "GET_AUTOFILTERS" : 1,
-        "GET_COMMENTS" : 1
+        "GET_COMMENTS" : 1,
+        "ANALYZE_AUTOFILTER_HEALTH" : 1,
+        "ANALYZE_TABLE_HEALTH" : 1,
+        "GET_WORKBOOK_PROTECTION" : 1
       }
     }
   },
