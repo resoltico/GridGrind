@@ -10,9 +10,9 @@
       "inputBytes" : 72,
       "commandCount" : 4,
       "commandKinds" : {
-        "CLEAR_FORMULA_CACHES" : 1,
         "CREATE_SHEET" : 1,
-        "SET_SHEET_VISIBILITY" : 2
+        "SET_SHEET_VISIBILITY" : 2,
+        "CLEAR_SHEET_PROTECTION" : 1
       },
       "styleKinds" : { }
     }

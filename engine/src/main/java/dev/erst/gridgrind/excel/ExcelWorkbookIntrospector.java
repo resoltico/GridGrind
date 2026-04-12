@@ -85,6 +85,10 @@ final class ExcelWorkbookIntrospector {
               getCharts.requestId(),
               getCharts.sheetName(),
               documentIntrospector.charts(workbook, getCharts.sheetName()));
+      case WorkbookReadCommand.GetPivotTables getPivotTables ->
+          new WorkbookReadResult.PivotTablesResult(
+              getPivotTables.requestId(),
+              documentIntrospector.pivotTables(workbook, getPivotTables.selection()));
       case WorkbookReadCommand.GetDrawingObjectPayload getDrawingObjectPayload ->
           new WorkbookReadResult.DrawingObjectPayloadResult(
               getDrawingObjectPayload.requestId(),

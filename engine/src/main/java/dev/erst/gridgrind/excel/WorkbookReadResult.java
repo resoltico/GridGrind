@@ -30,6 +30,7 @@ public sealed interface WorkbookReadResult
           CommentsResult,
           DrawingObjectsResult,
           ChartsResult,
+          PivotTablesResult,
           DrawingObjectPayloadResult,
           SheetLayoutResult,
           PrintLayoutResult,
@@ -48,6 +49,7 @@ public sealed interface WorkbookReadResult
           ConditionalFormattingHealthResult,
           AutofilterHealthResult,
           TableHealthResult,
+          PivotTableHealthResult,
           HyperlinkHealthResult,
           NamedRangeHealthResult,
           WorkbookFindingsResult {}
@@ -229,6 +231,15 @@ public sealed interface WorkbookReadResult
     }
   }
 
+  /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
+  record PivotTablesResult(String requestId, List<ExcelPivotTableSnapshot> pivotTables)
+      implements Introspection {
+    public PivotTablesResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      pivotTables = copyValues(pivotTables, "pivotTables");
+    }
+  }
+
   /** Returns grouped formula usage facts across one or more sheets. */
   record FormulaSurfaceResult(String requestId, FormulaSurface analysis) implements Introspection {
     public FormulaSurfaceResult {
@@ -294,6 +305,15 @@ public sealed interface WorkbookReadResult
   record TableHealthResult(String requestId, WorkbookAnalysis.TableHealth analysis)
       implements Analysis {
     public TableHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns pivot-table-health findings for one analysis read. */
+  record PivotTableHealthResult(String requestId, WorkbookAnalysis.PivotTableHealth analysis)
+      implements Analysis {
+    public PivotTableHealthResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }

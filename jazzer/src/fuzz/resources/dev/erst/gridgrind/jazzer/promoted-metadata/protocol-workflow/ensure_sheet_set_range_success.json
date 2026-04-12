@@ -10,14 +10,15 @@
       "inputBytes" : 30,
       "sourceKind" : "NEW",
       "persistenceKind" : "NONE",
-      "operationCount" : 3,
+      "operationCount" : 1,
       "operationKinds" : {
-        "ENSURE_SHEET" : 2,
         "SET_COMMENT" : 1
       },
       "styleKinds" : { },
-      "readCount" : 0,
-      "readKinds" : { },
+      "readCount" : 1,
+      "readKinds" : {
+        "GET_WORKBOOK_SUMMARY" : 1
+      },
       "responseKind" : "FAILURE"
     }
   },

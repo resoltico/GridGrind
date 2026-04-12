@@ -16,6 +16,7 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -803,5 +804,177 @@ class AdvancedMutationProtocolTypesTest {
                 null,
                 null,
                 List.of((TableColumnInput) null)));
+  }
+
+  @Test
+  void pivotInputsSelectionsAndCellAddressValidationNormalizeAndValidate() {
+    PivotTableInput input =
+        new PivotTableInput(
+            "Sales Pivot 2026",
+            "Report",
+            new PivotTableInput.Source.Range("Data", "A1:D5"),
+            new PivotTableInput.Anchor("$C$5"),
+            List.of("Region"),
+            List.of("Stage"),
+            List.of("Owner"),
+            List.of(
+                new PivotTableInput.DataField(
+                    "Amount", ExcelPivotDataConsolidateFunction.SUM, null, "#,##0.00")));
+    PivotTableInput tableSourceInput =
+        new PivotTableInput(
+            "Sales Table Pivot",
+            "Report",
+            new PivotTableInput.Source.Table("SalesTable2026"),
+            new PivotTableInput.Anchor("D7"),
+            null,
+            null,
+            null,
+            List.of(
+                new PivotTableInput.DataField(
+                    "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", null)));
+    PivotTableSelection.ByNames selection =
+        new PivotTableSelection.ByNames(List.of("Sales Pivot 2026", "Ops Pivot"));
+
+    assertEquals("$C$5", input.anchor().topLeftAddress());
+    assertEquals("Amount", input.dataFields().getFirst().displayName());
+    assertEquals(List.of("Sales Pivot 2026", "Ops Pivot"), selection.names());
+    assertEquals(List.of(), tableSourceInput.rowLabels());
+    assertEquals(List.of(), tableSourceInput.columnLabels());
+    assertEquals(List.of(), tableSourceInput.reportFilters());
+    assertEquals(
+        "SalesTable2026", ((PivotTableInput.Source.Table) tableSourceInput.source()).name());
+    assertEquals("B12", ProtocolCellAddressValidation.validateAddress("B12"));
+    assertEquals("PivotSource", new PivotTableInput.Source.NamedRange("PivotSource").name());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new PivotTableInput.Source.NamedRange("Sales Pivot 2026"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new PivotTableInput.Source.Table("Sales Table"));
+    assertThrows(NullPointerException.class, () -> new PivotTableInput.Source.Range("Data", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new PivotTableInput.Source.Range("Data", " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableInput(
+                "Sales Pivot 2026",
+                "Report",
+                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new PivotTableInput.Anchor("C5"),
+                List.of("Region"),
+                List.of("Stage"),
+                List.of("Owner"),
+                List.of(
+                    new PivotTableInput.DataField(
+                        "Region", ExcelPivotDataConsolidateFunction.SUM, "Total", null))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableInput(
+                "Sales Pivot 2026",
+                "Report",
+                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new PivotTableInput.Anchor("C5"),
+                List.of("Region", "region"),
+                List.of(),
+                List.of(),
+                List.of(
+                    new PivotTableInput.DataField(
+                        "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", null))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableInput(
+                "Sales Pivot 2026",
+                "Report",
+                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new PivotTableInput.Anchor("C5"),
+                List.of("Region"),
+                List.of("region"),
+                List.of(),
+                List.of(
+                    new PivotTableInput.DataField(
+                        "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", null))));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new PivotTableInput(
+                "Sales Pivot 2026",
+                "Report",
+                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new PivotTableInput.Anchor("C5"),
+                List.of((String) null),
+                List.of(),
+                List.of(),
+                List.of(
+                    new PivotTableInput.DataField(
+                        "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", null))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableInput(
+                "Sales Pivot 2026",
+                "Report",
+                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new PivotTableInput.Anchor("C5"),
+                List.of(" "),
+                List.of(),
+                List.of(),
+                List.of(
+                    new PivotTableInput.DataField(
+                        "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", null))));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new PivotTableInput(
+                "Sales Pivot 2026",
+                "Report",
+                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new PivotTableInput.Anchor("C5"),
+                List.of(),
+                List.of(),
+                List.of(),
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableInput(
+                "Sales Pivot 2026",
+                "Report",
+                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new PivotTableInput.Anchor("C5"),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new PivotTableInput.DataField("Amount", null, "Total", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableInput.DataField(
+                " ", ExcelPivotDataConsolidateFunction.SUM, "Total", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableInput.DataField(
+                "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total", " "));
+    assertThrows(IllegalArgumentException.class, () -> new PivotTableInput.Anchor("Sheet1!A1"));
+    assertThrows(
+        NullPointerException.class, () -> ProtocolCellAddressValidation.validateAddress(null));
+    assertThrows(
+        IllegalArgumentException.class, () -> ProtocolCellAddressValidation.validateAddress(" "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ProtocolCellAddressValidation.validateAddress("XFE1"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ProtocolCellAddressValidation.validateAddress("Sheet1!A1"));
+    assertThrows(NullPointerException.class, () -> new PivotTableSelection.ByNames(null));
+    assertThrows(IllegalArgumentException.class, () -> new PivotTableSelection.ByNames(List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new PivotTableSelection.ByNames(List.of("Sales Pivot 2026", "sales pivot 2026")));
   }
 }

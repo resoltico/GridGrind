@@ -3,7 +3,7 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFu
 Harness: protocol-workflow
 Outcome: EXPECTED_INVALID
 Kind: IllegalArgumentException
-Message: name must start with a letter or underscore and contain only letters, digits, underscore, or period
+Message: name must not be blank
 Input Bytes: 53
 Source Kind: NOT_GENERATED
 Persistence Kind: NOT_GENERATED

@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Base64;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -138,29 +140,23 @@ class JazzerReplaySupportTest {
   }
 
   @Test
-  void replayClassifiesNamedRangeShiftArtifactAsExpectedInvalidRoundTripInput() {
+  void replayClassifiesNamedRangeShiftArtifactAsSuccess() {
     byte[] input = artifactBytes("named-range-shift-overwrite-invalid.b64");
 
     ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.xlsxRoundTrip(), input);
 
-    assertInstanceOf(ReplayOutcome.ExpectedInvalid.class, outcome);
-    ReplayOutcome.ExpectedInvalid expectedInvalid = (ReplayOutcome.ExpectedInvalid) outcome;
-    assertEquals("IllegalArgumentException", expectedInvalid.invalidKind());
-    assertEquals(
-        "SHIFT_ROWS cannot move named range 'Name9' on sheet 'I'; row structural edits that would overwrite or partially move range-backed named ranges are not supported",
-        expectedInvalid.message());
+    assertInstanceOf(ReplayOutcome.Success.class, outcome);
+    ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;
     assertEquals(
         new XlsxRoundTripDetails(
             83,
-            9,
+            4,
             Map.of(
-                "CREATE_SHEET", 4L,
+                "CREATE_SHEET", 1L,
                 "FORCE_FORMULA_RECALCULATION_ON_OPEN", 2L,
-                "RENAME_SHEET", 1L,
-                "SET_NAMED_RANGE", 1L,
-                "SHIFT_ROWS", 1L),
+                "SET_NAMED_RANGE", 1L),
             Map.of()),
-        expectedInvalid.details());
+        success.details());
   }
 
   @Test
@@ -174,29 +170,59 @@ class JazzerReplaySupportTest {
     assertEquals(
         new XlsxRoundTripDetails(
             94,
-            7,
+            6,
             Map.of(
                 "CLEAR_SHEET_PROTECTION", 1L,
                 "CREATE_SHEET", 1L,
-                "GROUP_COLUMNS", 1L,
                 "UNGROUP_COLUMNS", 4L),
             Map.of()),
         success.details());
   }
 
+  @Test
+  void replayClassifiesAppendRowFailureWorkflowArtifactUsingCurrentReplayContract() {
+    byte[] input =
+        fileBytes(
+            "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/append_row_failure.bin");
+
+    ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.protocolWorkflow(), input);
+
+    assertInstanceOf(ReplayOutcome.Success.class, outcome);
+    ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;
+    assertEquals(
+        new ProtocolWorkflowDetails(
+            67, "NEW", "NONE", 0, Map.of(), Map.of(), 0, Map.of(), "SUCCESS"),
+        success.details());
+  }
+
   private static byte[] artifactBytes(String resourceName) {
+    return Base64.getDecoder()
+        .decode(
+            new String(
+                    resourceBytes("/dev/erst/gridgrind/jazzer/tool/" + resourceName),
+                    StandardCharsets.US_ASCII)
+                .replaceAll("\\s+", ""));
+  }
+
+  private static byte[] resourceBytes(String resourcePath) {
     try (InputStream inputStream =
-        JazzerReplaySupportTest.class.getResourceAsStream(
-            "/dev/erst/gridgrind/jazzer/tool/" + resourceName)) {
+        JazzerReplaySupportTest.class.getResourceAsStream(resourcePath)) {
       if (inputStream == null) {
-        throw new IllegalStateException("missing replay artifact resource: " + resourceName);
+        throw new IllegalStateException("missing replay artifact resource: " + resourcePath);
       }
-      String base64 =
-          new String(inputStream.readAllBytes(), StandardCharsets.US_ASCII).replaceAll("\\s+", "");
-      return Base64.getDecoder().decode(base64);
+      return inputStream.readAllBytes();
     } catch (IOException exception) {
       throw new UncheckedIOException(
-          "failed to load replay artifact resource: " + resourceName, exception);
+          "failed to load replay artifact resource: " + resourcePath, exception);
+    }
+  }
+
+  private static byte[] fileBytes(String relativePath) {
+    try {
+      return Files.readAllBytes(Path.of(relativePath));
+    } catch (IOException exception) {
+      throw new UncheckedIOException(
+          "failed to load replay artifact file: " + relativePath, exception);
     }
   }
 }

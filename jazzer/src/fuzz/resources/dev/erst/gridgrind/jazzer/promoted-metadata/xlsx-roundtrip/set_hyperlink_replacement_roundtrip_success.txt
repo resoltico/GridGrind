@@ -3,7 +3,7 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTest
 Harness: xlsx-roundtrip
 Outcome: EXPECTED_INVALID
 Kind: SheetNotFoundException
-Message: Sheet does not exist: U
+Message: Sheet does not exist: C
 Input Bytes: 82
 Command Count: 4
 Style Kinds: (none)

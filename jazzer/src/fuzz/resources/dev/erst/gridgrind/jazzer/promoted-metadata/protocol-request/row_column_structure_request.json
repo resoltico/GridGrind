@@ -30,8 +30,8 @@
       "styleKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "GET_SHEET_LAYOUT" : 1,
-        "GET_CELLS" : 1
+        "GET_CELLS" : 1,
+        "GET_SHEET_LAYOUT" : 1
       }
     }
   },

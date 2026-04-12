@@ -13,11 +13,11 @@
       "persistenceKind" : "NONE",
       "operationCount" : 5,
       "operationKinds" : {
-        "CLEAR_RANGE" : 1,
         "CLEAR_HYPERLINK" : 1,
         "SET_CELL" : 1,
         "CLEAR_COMMENT" : 1,
-        "ENSURE_SHEET" : 1
+        "ENSURE_SHEET" : 1,
+        "CLEAR_RANGE" : 1
       },
       "styleKinds" : { },
       "readCount" : 1,

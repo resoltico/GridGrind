@@ -3,7 +3,7 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTest
 Harness: xlsx-roundtrip
 Outcome: EXPECTED_INVALID
 Kind: IllegalArgumentException
-Message: name must not collide with A1-style cell reference syntax
+Message: name must not use the reserved _xlnm. prefix
 Input Bytes: 231
 Command Count: 0
 Style Kinds: (none)

@@ -8,6 +8,6 @@ Persistence Kind: NONE
 Operation Count: 3
 Read Count: 0
 Read Kinds: (none)
-Response Kind: FAILURE
-Style Kinds: horizontal_alignment=1, alignment=1, border=1, border_all=1, border_all_none=1, vertical_alignment=1, indentation=1
-Operation Kinds: APPLY_STYLE=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1, ENSURE_SHEET=1
+Response Kind: SUCCESS
+Style Kinds: (none)
+Operation Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=2, ENSURE_SHEET=1

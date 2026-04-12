@@ -10,17 +10,12 @@
       "inputBytes" : 67,
       "sourceKind" : "NEW",
       "persistenceKind" : "NONE",
-      "operationCount" : 1,
-      "operationKinds" : {
-        "CLEAR_SHEET_PROTECTION" : 1
-      },
+      "operationCount" : 0,
+      "operationKinds" : { },
       "styleKinds" : { },
-      "readCount" : 6,
-      "readKinds" : {
-        "GET_WORKBOOK_SUMMARY" : 2,
-        "GET_NAMED_RANGE_SURFACE" : 4
-      },
-      "responseKind" : "FAILURE"
+      "readCount" : 0,
+      "readKinds" : { },
+      "responseKind" : "SUCCESS"
     }
   },
   "promotedAt" : "2026-03-26T04:15:59.580999Z",

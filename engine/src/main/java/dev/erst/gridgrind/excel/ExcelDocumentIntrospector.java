@@ -9,6 +9,7 @@ final class ExcelDocumentIntrospector {
   private final ExcelConditionalFormattingController conditionalFormattingController;
   private final ExcelAutofilterController autofilterController;
   private final ExcelTableController tableController;
+  private final ExcelPivotTableController pivotTableController;
   private final ExcelDrawingController drawingController;
 
   ExcelDocumentIntrospector() {
@@ -17,6 +18,7 @@ final class ExcelDocumentIntrospector {
         new ExcelConditionalFormattingController(),
         new ExcelAutofilterController(),
         new ExcelTableController(),
+        new ExcelPivotTableController(),
         new ExcelDrawingController());
   }
 
@@ -25,6 +27,7 @@ final class ExcelDocumentIntrospector {
       ExcelConditionalFormattingController conditionalFormattingController,
       ExcelAutofilterController autofilterController,
       ExcelTableController tableController,
+      ExcelPivotTableController pivotTableController,
       ExcelDrawingController drawingController) {
     this.dataValidationController =
         Objects.requireNonNull(
@@ -36,6 +39,8 @@ final class ExcelDocumentIntrospector {
         Objects.requireNonNull(autofilterController, "autofilterController must not be null");
     this.tableController =
         Objects.requireNonNull(tableController, "tableController must not be null");
+    this.pivotTableController =
+        Objects.requireNonNull(pivotTableController, "pivotTableController must not be null");
     this.drawingController =
         Objects.requireNonNull(drawingController, "drawingController must not be null");
   }
@@ -73,6 +78,14 @@ final class ExcelDocumentIntrospector {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(selection, "selection must not be null");
     return tableController.tables(workbook, selection);
+  }
+
+  /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
+  List<ExcelPivotTableSnapshot> pivotTables(
+      ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+    return pivotTableController.pivotTables(workbook, selection);
   }
 
   /** Returns factual drawing-object metadata for one sheet. */

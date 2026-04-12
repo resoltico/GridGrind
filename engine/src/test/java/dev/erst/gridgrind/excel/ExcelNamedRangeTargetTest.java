@@ -11,7 +11,7 @@ class ExcelNamedRangeTargetTest {
     ExcelNamedRangeTarget target = new ExcelNamedRangeTarget("Budget", "B4:A1");
 
     assertEquals("A1:B4", target.range());
-    assertEquals("Budget!$A$1:Budget!$B$4", target.refersToFormula());
+    assertEquals("Budget!$A$1:$B$4", target.refersToFormula());
   }
 
   @Test
@@ -20,9 +20,9 @@ class ExcelNamedRangeTargetTest {
     assertEquals("Budget!$B$4", new ExcelNamedRangeTarget("Budget", "B4").refersToFormula());
     assertEquals("B4:C4", new ExcelNamedRangeTarget("Budget", "B4:C4").range());
     assertEquals(
-        "Budget!$B$4:Budget!$C$4", new ExcelNamedRangeTarget("Budget", "B4:C4").refersToFormula());
+        "Budget!$B$4:$C$4", new ExcelNamedRangeTarget("Budget", "B4:C4").refersToFormula());
     assertEquals(
-        "Budget!$B$4:Budget!$C$5", new ExcelNamedRangeTarget("Budget", "B4:C5").refersToFormula());
+        "Budget!$B$4:$C$5", new ExcelNamedRangeTarget("Budget", "B4:C5").refersToFormula());
   }
 
   @Test

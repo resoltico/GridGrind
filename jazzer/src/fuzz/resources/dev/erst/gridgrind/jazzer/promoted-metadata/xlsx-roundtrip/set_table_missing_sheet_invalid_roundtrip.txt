@@ -3,6 +3,6 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTest
 Harness: xlsx-roundtrip
 Outcome: SUCCESS
 Input Bytes: 60
-Command Count: 4
+Command Count: 10
 Style Kinds: (none)
-Command Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=4
+Command Kinds: CREATE_SHEET=7, FORCE_FORMULA_RECALCULATION_ON_OPEN=3

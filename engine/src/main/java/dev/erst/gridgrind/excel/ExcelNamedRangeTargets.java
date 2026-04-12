@@ -24,7 +24,7 @@ public final class ExcelNamedRangeTargets {
     if (refersToFormula.isBlank()) {
       return Optional.empty();
     }
-    String normalizedFormula = normalizeRepeatedSheetPrefix(refersToFormula);
+    String normalizedFormula = normalizeAreaFormulaForPoi(refersToFormula);
     if (!AreaReference.isContiguous(normalizedFormula)) {
       return Optional.empty();
     }
@@ -49,7 +49,7 @@ public final class ExcelNamedRangeTargets {
     }
   }
 
-  private static String normalizeRepeatedSheetPrefix(String refersToFormula) {
+  static String normalizeAreaFormulaForPoi(String refersToFormula) {
     int separatorIndex = refersToFormula.indexOf(':');
     if (separatorIndex < 0) {
       return refersToFormula;

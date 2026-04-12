@@ -145,6 +145,7 @@ public final class SequenceIntrospection {
       case WorkbookOperation.ClearComment _ -> "CLEAR_COMMENT";
       case WorkbookOperation.SetPicture _ -> "SET_PICTURE";
       case WorkbookOperation.SetChart _ -> "SET_CHART";
+      case WorkbookOperation.SetPivotTable _ -> "SET_PIVOT_TABLE";
       case WorkbookOperation.SetShape _ -> "SET_SHAPE";
       case WorkbookOperation.SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
       case WorkbookOperation.SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
@@ -158,6 +159,7 @@ public final class SequenceIntrospection {
       case WorkbookOperation.ClearAutofilter _ -> "CLEAR_AUTOFILTER";
       case WorkbookOperation.SetTable _ -> "SET_TABLE";
       case WorkbookOperation.DeleteTable _ -> "DELETE_TABLE";
+      case WorkbookOperation.DeletePivotTable _ -> "DELETE_PIVOT_TABLE";
       case WorkbookOperation.SetNamedRange _ -> "SET_NAMED_RANGE";
       case WorkbookOperation.DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case WorkbookOperation.AppendRow _ -> "APPEND_ROW";
@@ -215,6 +217,7 @@ public final class SequenceIntrospection {
       case WorkbookCommand.ClearComment _ -> "CLEAR_COMMENT";
       case WorkbookCommand.SetPicture _ -> "SET_PICTURE";
       case WorkbookCommand.SetChart _ -> "SET_CHART";
+      case WorkbookCommand.SetPivotTable _ -> "SET_PIVOT_TABLE";
       case WorkbookCommand.SetShape _ -> "SET_SHAPE";
       case WorkbookCommand.SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
       case WorkbookCommand.SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
@@ -228,6 +231,7 @@ public final class SequenceIntrospection {
       case WorkbookCommand.ClearAutofilter _ -> "CLEAR_AUTOFILTER";
       case WorkbookCommand.SetTable _ -> "SET_TABLE";
       case WorkbookCommand.DeleteTable _ -> "DELETE_TABLE";
+      case WorkbookCommand.DeletePivotTable _ -> "DELETE_PIVOT_TABLE";
       case WorkbookCommand.SetNamedRange _ -> "SET_NAMED_RANGE";
       case WorkbookCommand.DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case WorkbookCommand.AppendRow _ -> "APPEND_ROW";
@@ -255,6 +259,7 @@ public final class SequenceIntrospection {
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetDrawingObjects _ -> "GET_DRAWING_OBJECTS";
       case WorkbookReadOperation.GetCharts _ -> "GET_CHARTS";
+      case WorkbookReadOperation.GetPivotTables _ -> "GET_PIVOT_TABLES";
       case WorkbookReadOperation.GetDrawingObjectPayload _ -> "GET_DRAWING_OBJECT_PAYLOAD";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadOperation.GetPrintLayout _ -> "GET_PRINT_LAYOUT";
@@ -271,6 +276,7 @@ public final class SequenceIntrospection {
           "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
       case WorkbookReadOperation.AnalyzeAutofilterHealth _ -> "ANALYZE_AUTOFILTER_HEALTH";
       case WorkbookReadOperation.AnalyzeTableHealth _ -> "ANALYZE_TABLE_HEALTH";
+      case WorkbookReadOperation.AnalyzePivotTableHealth _ -> "ANALYZE_PIVOT_TABLE_HEALTH";
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> "ANALYZE_HYPERLINK_HEALTH";
       case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> "ANALYZE_NAMED_RANGE_HEALTH";
       case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> "ANALYZE_WORKBOOK_FINDINGS";

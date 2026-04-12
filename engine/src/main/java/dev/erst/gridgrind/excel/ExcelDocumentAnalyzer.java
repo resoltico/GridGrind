@@ -10,20 +10,23 @@ final class ExcelDocumentAnalyzer {
   private final ExcelConditionalFormattingController conditionalFormattingController;
   private final ExcelAutofilterController autofilterController;
   private final ExcelTableController tableController;
+  private final ExcelPivotTableController pivotTableController;
 
   ExcelDocumentAnalyzer() {
     this(
         new ExcelDataValidationController(),
         new ExcelConditionalFormattingController(),
         new ExcelAutofilterController(),
-        new ExcelTableController());
+        new ExcelTableController(),
+        new ExcelPivotTableController());
   }
 
   ExcelDocumentAnalyzer(
       ExcelDataValidationController dataValidationController,
       ExcelConditionalFormattingController conditionalFormattingController,
       ExcelAutofilterController autofilterController,
-      ExcelTableController tableController) {
+      ExcelTableController tableController,
+      ExcelPivotTableController pivotTableController) {
     this.dataValidationController =
         Objects.requireNonNull(
             dataValidationController, "dataValidationController must not be null");
@@ -34,6 +37,8 @@ final class ExcelDocumentAnalyzer {
         Objects.requireNonNull(autofilterController, "autofilterController must not be null");
     this.tableController =
         Objects.requireNonNull(tableController, "tableController must not be null");
+    this.pivotTableController =
+        Objects.requireNonNull(pivotTableController, "pivotTableController must not be null");
   }
 
   /** Returns data-validation-health findings for the selected sheets. */
@@ -110,6 +115,20 @@ final class ExcelDocumentAnalyzer {
         tableController.tableHealthFindings(workbook, selection);
     return new WorkbookAnalysis.TableHealth(
         selectedTables.size(), summarizeFindings(findings), List.copyOf(findings));
+  }
+
+  /** Returns pivot-table-health findings for the selected workbook-global pivot tables. */
+  WorkbookAnalysis.PivotTableHealth pivotTableHealth(
+      ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+
+    List<ExcelPivotTableSnapshot> selectedPivots =
+        pivotTableController.pivotTables(workbook, selection);
+    List<WorkbookAnalysis.AnalysisFinding> findings =
+        pivotTableController.pivotTableHealthFindings(workbook, selection);
+    return new WorkbookAnalysis.PivotTableHealth(
+        selectedPivots.size(), summarizeFindings(findings), List.copyOf(findings));
   }
 
   private List<String> selectSheets(ExcelWorkbook workbook, ExcelSheetSelection selection) {

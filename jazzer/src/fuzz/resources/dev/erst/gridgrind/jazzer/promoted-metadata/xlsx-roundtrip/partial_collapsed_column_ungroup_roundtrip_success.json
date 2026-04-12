@@ -8,12 +8,11 @@
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 94,
-      "commandCount" : 7,
+      "commandCount" : 6,
       "commandKinds" : {
-        "GROUP_COLUMNS" : 1,
-        "UNGROUP_COLUMNS" : 4,
         "CREATE_SHEET" : 1,
-        "CLEAR_SHEET_PROTECTION" : 1
+        "CLEAR_SHEET_PROTECTION" : 1,
+        "UNGROUP_COLUMNS" : 4
       },
       "styleKinds" : { }
     }

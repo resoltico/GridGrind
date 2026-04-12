@@ -38,6 +38,8 @@ import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
 import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.dto.PaneReport;
+import dev.erst.gridgrind.protocol.dto.PivotTableHealthReport;
+import dev.erst.gridgrind.protocol.dto.PivotTableReport;
 import dev.erst.gridgrind.protocol.dto.PrintLayoutReport;
 import dev.erst.gridgrind.protocol.dto.PrintMarginsReport;
 import dev.erst.gridgrind.protocol.dto.PrintSetupReport;
@@ -156,6 +158,15 @@ public final class WorkbookInvariantChecks {
                   .charts()
                   .forEach(WorkbookInvariantChecks::requireEngineChartShape);
             });
+    ((dev.erst.gridgrind.excel.WorkbookReadResult.PivotTablesResult)
+            readExecutor
+                .apply(
+                    workbook,
+                    new WorkbookReadCommand.GetPivotTables(
+                        "pivot-shape", new dev.erst.gridgrind.excel.ExcelPivotTableSelection.All()))
+                .getFirst())
+        .pivotTables()
+        .forEach(WorkbookInvariantChecks::requireEnginePivotTableShape);
   }
 
   private static void requirePersistenceMatchesRequest(
@@ -287,6 +298,11 @@ public final class WorkbookInvariantChecks {
         require(expected.sheetName().equals(result.sheetName()), "charts sheet mismatch");
         result.charts().forEach(WorkbookInvariantChecks::requireChartReportShape);
       }
+      case WorkbookReadOperation.GetPivotTables _ -> {
+        WorkbookReadResult.PivotTablesResult result =
+            (WorkbookReadResult.PivotTablesResult) readResult;
+        result.pivotTables().forEach(WorkbookInvariantChecks::requirePivotTableShape);
+      }
       case WorkbookReadOperation.GetDrawingObjectPayload expected -> {
         WorkbookReadResult.DrawingObjectPayloadResult result =
             (WorkbookReadResult.DrawingObjectPayloadResult) readResult;
@@ -364,6 +380,9 @@ public final class WorkbookInvariantChecks {
               ((WorkbookReadResult.AutofilterHealthResult) readResult).analysis());
       case WorkbookReadOperation.AnalyzeTableHealth _ ->
           requireTableHealthShape(((WorkbookReadResult.TableHealthResult) readResult).analysis());
+      case WorkbookReadOperation.AnalyzePivotTableHealth _ ->
+          requirePivotTableHealthShape(
+              ((WorkbookReadResult.PivotTableHealthResult) readResult).analysis());
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ ->
           requireHyperlinkHealthShape(
               ((WorkbookReadResult.HyperlinkHealthResult) readResult).analysis());
@@ -389,6 +408,7 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.CommentsResult _ -> "GET_COMMENTS";
       case WorkbookReadResult.DrawingObjectsResult _ -> "GET_DRAWING_OBJECTS";
       case WorkbookReadResult.ChartsResult _ -> "GET_CHARTS";
+      case WorkbookReadResult.PivotTablesResult _ -> "GET_PIVOT_TABLES";
       case WorkbookReadResult.DrawingObjectPayloadResult _ -> "GET_DRAWING_OBJECT_PAYLOAD";
       case WorkbookReadResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadResult.PrintLayoutResult _ -> "GET_PRINT_LAYOUT";
@@ -405,6 +425,7 @@ public final class WorkbookInvariantChecks {
           "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
       case WorkbookReadResult.AutofilterHealthResult _ -> "ANALYZE_AUTOFILTER_HEALTH";
       case WorkbookReadResult.TableHealthResult _ -> "ANALYZE_TABLE_HEALTH";
+      case WorkbookReadResult.PivotTableHealthResult _ -> "ANALYZE_PIVOT_TABLE_HEALTH";
       case WorkbookReadResult.HyperlinkHealthResult _ -> "ANALYZE_HYPERLINK_HEALTH";
       case WorkbookReadResult.NamedRangeHealthResult _ -> "ANALYZE_NAMED_RANGE_HEALTH";
       case WorkbookReadResult.WorkbookFindingsResult _ -> "ANALYZE_WORKBOOK_FINDINGS";
@@ -458,6 +479,8 @@ public final class WorkbookInvariantChecks {
         require(!result.sheetName().isBlank(), "charts sheetName must not be blank");
         result.charts().forEach(WorkbookInvariantChecks::requireChartReportShape);
       }
+      case WorkbookReadResult.PivotTablesResult result ->
+          result.pivotTables().forEach(WorkbookInvariantChecks::requirePivotTableShape);
       case WorkbookReadResult.DrawingObjectPayloadResult result -> {
         require(result.sheetName() != null, "drawing payload sheetName must not be null");
         require(!result.sheetName().isBlank(), "drawing payload sheetName must not be blank");
@@ -501,6 +524,8 @@ public final class WorkbookInvariantChecks {
           requireAutofilterHealthShape(result.analysis());
       case WorkbookReadResult.TableHealthResult result ->
           requireTableHealthShape(result.analysis());
+      case WorkbookReadResult.PivotTableHealthResult result ->
+          requirePivotTableHealthShape(result.analysis());
       case WorkbookReadResult.HyperlinkHealthResult result ->
           requireHyperlinkHealthShape(result.analysis());
       case WorkbookReadResult.NamedRangeHealthResult result ->
@@ -950,6 +975,84 @@ public final class WorkbookInvariantChecks {
     }
   }
 
+  private static void requireEnginePivotTableShape(
+      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot pivotTable) {
+    require(pivotTable != null, "engine pivot table must not be null");
+    requireNonBlank(pivotTable.name(), "engine pivot table name");
+    requireNonBlank(pivotTable.sheetName(), "engine pivot table sheetName");
+    requireEnginePivotTableAnchorShape(pivotTable.anchor());
+    switch (pivotTable) {
+      case dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Supported supported -> {
+        requireEnginePivotTableSourceShape(supported.source());
+        supported.rowLabels().forEach(WorkbookInvariantChecks::requireEnginePivotTableFieldShape);
+        supported
+            .columnLabels()
+            .forEach(WorkbookInvariantChecks::requireEnginePivotTableFieldShape);
+        supported
+            .reportFilters()
+            .forEach(WorkbookInvariantChecks::requireEnginePivotTableFieldShape);
+        require(
+            !supported.dataFields().isEmpty(), "engine pivot table dataFields must not be empty");
+        supported
+            .dataFields()
+            .forEach(WorkbookInvariantChecks::requireEnginePivotTableDataFieldShape);
+      }
+      case dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Unsupported unsupported ->
+          requireNonBlank(unsupported.detail(), "engine pivot table detail");
+    }
+  }
+
+  private static void requireEnginePivotTableSourceShape(
+      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Source source) {
+    require(source != null, "engine pivot table source must not be null");
+    switch (source) {
+      case dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Source.Range range -> {
+        requireNonBlank(range.sheetName(), "engine pivot range source sheetName");
+        requireNonBlank(range.range(), "engine pivot range source range");
+      }
+      case dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Source.NamedRange namedRange -> {
+        requireNonBlank(namedRange.name(), "engine pivot named-range source name");
+        requireNonBlank(namedRange.sheetName(), "engine pivot named-range source sheetName");
+        requireNonBlank(namedRange.range(), "engine pivot named-range source range");
+      }
+      case dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Source.Table table -> {
+        requireNonBlank(table.name(), "engine pivot table source name");
+        requireNonBlank(table.sheetName(), "engine pivot table source sheetName");
+        requireNonBlank(table.range(), "engine pivot table source range");
+      }
+    }
+  }
+
+  private static void requireEnginePivotTableAnchorShape(
+      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Anchor anchor) {
+    require(anchor != null, "engine pivot table anchor must not be null");
+    requireNonBlank(anchor.topLeftAddress(), "engine pivot table anchor topLeftAddress");
+    requireNonBlank(anchor.locationRange(), "engine pivot table anchor locationRange");
+  }
+
+  private static void requireEnginePivotTableFieldShape(
+      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.Field field) {
+    require(field != null, "engine pivot table field must not be null");
+    require(
+        field.sourceColumnIndex() >= 0,
+        "engine pivot field sourceColumnIndex must not be negative");
+    requireNonBlank(field.sourceColumnName(), "engine pivot field sourceColumnName");
+  }
+
+  private static void requireEnginePivotTableDataFieldShape(
+      dev.erst.gridgrind.excel.ExcelPivotTableSnapshot.DataField dataField) {
+    require(dataField != null, "engine pivot table dataField must not be null");
+    require(
+        dataField.sourceColumnIndex() >= 0,
+        "engine pivot dataField sourceColumnIndex must not be negative");
+    requireNonBlank(dataField.sourceColumnName(), "engine pivot dataField sourceColumnName");
+    require(dataField.function() != null, "engine pivot dataField function must not be null");
+    requireNonBlank(dataField.displayName(), "engine pivot dataField displayName");
+    if (dataField.valueFormat() != null) {
+      requireNonBlank(dataField.valueFormat(), "engine pivot dataField valueFormat");
+    }
+  }
+
   private static void requireEngineChartAxisShape(
       dev.erst.gridgrind.excel.ExcelChartSnapshot.Axis axis) {
     require(axis != null, "engine chart axis must not be null");
@@ -1208,6 +1311,70 @@ public final class WorkbookInvariantChecks {
     }
     require(table.style() != null, "table style must not be null");
     requireTableStyleShape(table.style());
+  }
+
+  private static void requirePivotTableShape(PivotTableReport pivotTable) {
+    require(pivotTable != null, "pivot table must not be null");
+    requireNonBlank(pivotTable.name(), "pivot table name");
+    requireNonBlank(pivotTable.sheetName(), "pivot table sheetName");
+    requirePivotTableAnchorShape(pivotTable.anchor());
+    switch (pivotTable) {
+      case PivotTableReport.Supported supported -> {
+        requirePivotTableSourceShape(supported.source());
+        supported.rowLabels().forEach(WorkbookInvariantChecks::requirePivotTableFieldShape);
+        supported.columnLabels().forEach(WorkbookInvariantChecks::requirePivotTableFieldShape);
+        supported.reportFilters().forEach(WorkbookInvariantChecks::requirePivotTableFieldShape);
+        require(!supported.dataFields().isEmpty(), "pivot table dataFields must not be empty");
+        supported.dataFields().forEach(WorkbookInvariantChecks::requirePivotTableDataFieldShape);
+      }
+      case PivotTableReport.Unsupported unsupported ->
+          requireNonBlank(unsupported.detail(), "pivot table detail");
+    }
+  }
+
+  private static void requirePivotTableSourceShape(PivotTableReport.Source source) {
+    require(source != null, "pivot table source must not be null");
+    switch (source) {
+      case PivotTableReport.Source.Range range -> {
+        requireNonBlank(range.sheetName(), "pivot range source sheetName");
+        requireNonBlank(range.range(), "pivot range source range");
+      }
+      case PivotTableReport.Source.NamedRange namedRange -> {
+        requireNonBlank(namedRange.name(), "pivot named-range source name");
+        requireNonBlank(namedRange.sheetName(), "pivot named-range source sheetName");
+        requireNonBlank(namedRange.range(), "pivot named-range source range");
+      }
+      case PivotTableReport.Source.Table table -> {
+        requireNonBlank(table.name(), "pivot table source name");
+        requireNonBlank(table.sheetName(), "pivot table source sheetName");
+        requireNonBlank(table.range(), "pivot table source range");
+      }
+    }
+  }
+
+  private static void requirePivotTableAnchorShape(PivotTableReport.Anchor anchor) {
+    require(anchor != null, "pivot table anchor must not be null");
+    requireNonBlank(anchor.topLeftAddress(), "pivot table anchor topLeftAddress");
+    requireNonBlank(anchor.locationRange(), "pivot table anchor locationRange");
+  }
+
+  private static void requirePivotTableFieldShape(PivotTableReport.Field field) {
+    require(field != null, "pivot table field must not be null");
+    require(field.sourceColumnIndex() >= 0, "pivot field sourceColumnIndex must not be negative");
+    requireNonBlank(field.sourceColumnName(), "pivot field sourceColumnName");
+  }
+
+  private static void requirePivotTableDataFieldShape(PivotTableReport.DataField dataField) {
+    require(dataField != null, "pivot table dataField must not be null");
+    require(
+        dataField.sourceColumnIndex() >= 0,
+        "pivot dataField sourceColumnIndex must not be negative");
+    requireNonBlank(dataField.sourceColumnName(), "pivot dataField sourceColumnName");
+    require(dataField.function() != null, "pivot dataField function must not be null");
+    requireNonBlank(dataField.displayName(), "pivot dataField displayName");
+    if (dataField.valueFormat() != null) {
+      requireNonBlank(dataField.valueFormat(), "pivot dataField valueFormat");
+    }
   }
 
   private static void requireConditionalFormattingRuleShape(ConditionalFormattingRuleReport rule) {
@@ -1495,6 +1662,11 @@ public final class WorkbookInvariantChecks {
 
   private static void requireTableHealthShape(TableHealthReport analysis) {
     require(analysis.checkedTableCount() >= 0, "checkedTableCount must not be negative");
+    requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
+  }
+
+  private static void requirePivotTableHealthShape(PivotTableHealthReport analysis) {
+    require(analysis.checkedPivotTableCount() >= 0, "checkedPivotTableCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
 

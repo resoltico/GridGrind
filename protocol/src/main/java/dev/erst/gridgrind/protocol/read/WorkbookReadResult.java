@@ -31,6 +31,7 @@ import java.util.Objects;
       value = WorkbookReadResult.DrawingObjectsResult.class,
       name = "GET_DRAWING_OBJECTS"),
   @JsonSubTypes.Type(value = WorkbookReadResult.ChartsResult.class, name = "GET_CHARTS"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.PivotTablesResult.class, name = "GET_PIVOT_TABLES"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.DrawingObjectPayloadResult.class,
       name = "GET_DRAWING_OBJECT_PAYLOAD"),
@@ -67,6 +68,9 @@ import java.util.Objects;
       value = WorkbookReadResult.TableHealthResult.class,
       name = "ANALYZE_TABLE_HEALTH"),
   @JsonSubTypes.Type(
+      value = WorkbookReadResult.PivotTableHealthResult.class,
+      name = "ANALYZE_PIVOT_TABLE_HEALTH"),
+  @JsonSubTypes.Type(
       value = WorkbookReadResult.HyperlinkHealthResult.class,
       name = "ANALYZE_HYPERLINK_HEALTH"),
   @JsonSubTypes.Type(
@@ -95,6 +99,7 @@ public sealed interface WorkbookReadResult
           CommentsResult,
           DrawingObjectsResult,
           ChartsResult,
+          PivotTablesResult,
           DrawingObjectPayloadResult,
           SheetLayoutResult,
           PrintLayoutResult,
@@ -113,6 +118,7 @@ public sealed interface WorkbookReadResult
           ConditionalFormattingHealthResult,
           AutofilterHealthResult,
           TableHealthResult,
+          PivotTableHealthResult,
           HyperlinkHealthResult,
           NamedRangeHealthResult,
           WorkbookFindingsResult {}
@@ -223,6 +229,15 @@ public sealed interface WorkbookReadResult
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       charts = copyValues(charts, "charts");
+    }
+  }
+
+  /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
+  record PivotTablesResult(String requestId, List<PivotTableReport> pivotTables)
+      implements Introspection {
+    public PivotTablesResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      pivotTables = copyValues(pivotTables, "pivotTables");
     }
   }
 
@@ -365,6 +380,15 @@ public sealed interface WorkbookReadResult
   /** Returns table-health findings. */
   record TableHealthResult(String requestId, TableHealthReport analysis) implements Analysis {
     public TableHealthResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(analysis, "analysis must not be null");
+    }
+  }
+
+  /** Returns pivot-table-health findings. */
+  record PivotTableHealthResult(String requestId, PivotTableHealthReport analysis)
+      implements Analysis {
+    public PivotTableHealthResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }

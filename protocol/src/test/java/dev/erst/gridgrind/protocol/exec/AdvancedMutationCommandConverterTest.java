@@ -39,6 +39,8 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import dev.erst.gridgrind.excel.ExcelShapeDefinition;
@@ -68,6 +70,7 @@ import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
 import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.dto.PictureDataInput;
 import dev.erst.gridgrind.protocol.dto.PictureInput;
+import dev.erst.gridgrind.protocol.dto.PivotTableInput;
 import dev.erst.gridgrind.protocol.dto.RichTextRunInput;
 import dev.erst.gridgrind.protocol.dto.ShapeInput;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
@@ -265,6 +268,94 @@ class AdvancedMutationCommandConverterTest {
         embeddedObjectCommand.embeddedObject());
     assertEquals("OpsPicture", moveCommand.objectName());
     assertEquals("OpsPicture", deleteCommand.objectName());
+  }
+
+  @Test
+  void convertsPivotTableMutationOperations() {
+    WorkbookCommand.SetPivotTable setPivotTable =
+        assertInstanceOf(
+            WorkbookCommand.SetPivotTable.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.SetPivotTable(
+                    new PivotTableInput(
+                        "Sales Pivot 2026",
+                        "Report",
+                        new PivotTableInput.Source.Range("Data", "A1:D5"),
+                        new PivotTableInput.Anchor("C5"),
+                        List.of("Region"),
+                        List.of("Stage"),
+                        List.of("Owner"),
+                        List.of(
+                            new PivotTableInput.DataField(
+                                "Amount",
+                                ExcelPivotDataConsolidateFunction.SUM,
+                                null,
+                                "#,##0.00"))))));
+    WorkbookCommand.SetPivotTable setPivotTableFromNamedRange =
+        assertInstanceOf(
+            WorkbookCommand.SetPivotTable.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.SetPivotTable(
+                    new PivotTableInput(
+                        "Named Source Pivot",
+                        "Report",
+                        new PivotTableInput.Source.NamedRange("PivotSource"),
+                        new PivotTableInput.Anchor("A3"),
+                        List.of("Region"),
+                        List.of(),
+                        List.of(),
+                        List.of(
+                            new PivotTableInput.DataField(
+                                "Amount",
+                                ExcelPivotDataConsolidateFunction.SUM,
+                                "Total Amount",
+                                null))))));
+    WorkbookCommand.SetPivotTable setPivotTableFromTable =
+        assertInstanceOf(
+            WorkbookCommand.SetPivotTable.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.SetPivotTable(
+                    new PivotTableInput(
+                        "Table Source Pivot",
+                        "Report",
+                        new PivotTableInput.Source.Table("SalesTable2026"),
+                        new PivotTableInput.Anchor("G4"),
+                        List.of("Region"),
+                        List.of(),
+                        List.of(),
+                        List.of(
+                            new PivotTableInput.DataField(
+                                "Amount",
+                                ExcelPivotDataConsolidateFunction.SUM,
+                                "Total Amount",
+                                null))))));
+    WorkbookCommand.DeletePivotTable deletePivotTable =
+        assertInstanceOf(
+            WorkbookCommand.DeletePivotTable.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.DeletePivotTable("Sales Pivot 2026", "Report")));
+
+    assertEquals(
+        new ExcelPivotTableDefinition(
+            "Sales Pivot 2026",
+            "Report",
+            new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+            new ExcelPivotTableDefinition.Anchor("C5"),
+            List.of("Region"),
+            List.of("Stage"),
+            List.of("Owner"),
+            List.of(
+                new ExcelPivotTableDefinition.DataField(
+                    "Amount", ExcelPivotDataConsolidateFunction.SUM, "Amount", "#,##0.00"))),
+        setPivotTable.definition());
+    assertEquals(
+        new ExcelPivotTableDefinition.Source.NamedRange("PivotSource"),
+        setPivotTableFromNamedRange.definition().source());
+    assertEquals(
+        new ExcelPivotTableDefinition.Source.Table("SalesTable2026"),
+        setPivotTableFromTable.definition().source());
+    assertEquals("Sales Pivot 2026", deletePivotTable.name());
+    assertEquals("Report", deletePivotTable.sheetName());
   }
 
   @Test

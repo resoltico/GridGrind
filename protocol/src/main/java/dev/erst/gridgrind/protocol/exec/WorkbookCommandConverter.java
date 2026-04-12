@@ -108,6 +108,8 @@ final class WorkbookCommandConverter {
           new WorkbookCommand.SetPicture(op.sheetName(), toExcelPictureDefinition(op.picture()));
       case WorkbookOperation.SetChart op ->
           new WorkbookCommand.SetChart(op.sheetName(), toExcelChartDefinition(op.chart()));
+      case WorkbookOperation.SetPivotTable op ->
+          new WorkbookCommand.SetPivotTable(toExcelPivotTableDefinition(op.pivotTable()));
       case WorkbookOperation.SetShape op ->
           new WorkbookCommand.SetShape(op.sheetName(), toExcelShapeDefinition(op.shape()));
       case WorkbookOperation.SetEmbeddedObject op ->
@@ -146,6 +148,8 @@ final class WorkbookCommandConverter {
           new WorkbookCommand.SetTable(toExcelTableDefinition(op.table()));
       case WorkbookOperation.DeleteTable op ->
           new WorkbookCommand.DeleteTable(op.name(), op.sheetName());
+      case WorkbookOperation.DeletePivotTable op ->
+          new WorkbookCommand.DeletePivotTable(op.name(), op.sheetName());
       case WorkbookOperation.SetNamedRange op ->
           new WorkbookCommand.SetNamedRange(
               new ExcelNamedRangeDefinition(
@@ -602,6 +606,41 @@ final class WorkbookCommandConverter {
                         column.totalsRowFunction(),
                         column.calculatedColumnFormula()))
             .toList());
+  }
+
+  static ExcelPivotTableDefinition toExcelPivotTableDefinition(PivotTableInput pivotTable) {
+    return new ExcelPivotTableDefinition(
+        pivotTable.name(),
+        pivotTable.sheetName(),
+        toExcelPivotTableSource(pivotTable.source()),
+        new ExcelPivotTableDefinition.Anchor(pivotTable.anchor().topLeftAddress()),
+        pivotTable.rowLabels(),
+        pivotTable.columnLabels(),
+        pivotTable.reportFilters(),
+        pivotTable.dataFields().stream()
+            .map(WorkbookCommandConverter::toExcelPivotTableDataField)
+            .toList());
+  }
+
+  private static ExcelPivotTableDefinition.Source toExcelPivotTableSource(
+      PivotTableInput.Source source) {
+    return switch (source) {
+      case PivotTableInput.Source.Range range ->
+          new ExcelPivotTableDefinition.Source.Range(range.sheetName(), range.range());
+      case PivotTableInput.Source.NamedRange namedRange ->
+          new ExcelPivotTableDefinition.Source.NamedRange(namedRange.name());
+      case PivotTableInput.Source.Table table ->
+          new ExcelPivotTableDefinition.Source.Table(table.name());
+    };
+  }
+
+  private static ExcelPivotTableDefinition.DataField toExcelPivotTableDataField(
+      PivotTableInput.DataField dataField) {
+    return new ExcelPivotTableDefinition.DataField(
+        dataField.sourceColumnName(),
+        dataField.function(),
+        dataField.displayName(),
+        dataField.valueFormat());
   }
 
   static ExcelTableStyle toExcelTableStyle(TableStyleInput style) {

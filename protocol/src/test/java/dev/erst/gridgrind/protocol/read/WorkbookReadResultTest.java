@@ -97,6 +97,52 @@ class WorkbookReadResultTest {
   }
 
   @Test
+  void pivotReadResultsCopyEntriesAndRejectInvalidState() {
+    WorkbookReadResult.PivotTablesResult pivotTables =
+        new WorkbookReadResult.PivotTablesResult(
+            "pivots",
+            List.of(
+                new PivotTableReport.Supported(
+                    "Sales Pivot 2026",
+                    "Report",
+                    new PivotTableReport.Anchor("C5", "C5:G9"),
+                    new PivotTableReport.Source.Range("Data", "A1:D5"),
+                    List.of(new PivotTableReport.Field(0, "Region")),
+                    List.of(new PivotTableReport.Field(1, "Stage")),
+                    List.of(new PivotTableReport.Field(2, "Owner")),
+                    List.of(
+                        new PivotTableReport.DataField(
+                            3,
+                            "Amount",
+                            dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                            "Total Amount",
+                            "#,##0.00")),
+                    true)));
+    PivotTableHealthReport health =
+        new PivotTableHealthReport(
+            1,
+            new GridGrindResponse.AnalysisSummaryReport(1, 0, 1, 0),
+            List.of(
+                new GridGrindResponse.AnalysisFindingReport(
+                    AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
+                    AnalysisSeverity.WARNING,
+                    "Pivot table name is missing",
+                    "GridGrind assigned a synthetic identifier for readback.",
+                    new GridGrindResponse.AnalysisLocationReport.Sheet("Report"),
+                    List.of("_GG_PIVOT_Report_A3"))));
+    WorkbookReadResult.PivotTableHealthResult pivotTableHealth =
+        new WorkbookReadResult.PivotTableHealthResult("pivot-health", health);
+
+    assertEquals("Sales Pivot 2026", pivotTables.pivotTables().getFirst().name());
+    assertEquals(1, pivotTableHealth.analysis().checkedPivotTableCount());
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookReadResult.PivotTablesResult("pivots", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.PivotTableHealthResult("pivot-health", null));
+  }
+
+  @Test
   void dataValidationResultsCopyEntriesAndRejectInvalidState() {
     WorkbookReadResult.DataValidationsResult result =
         new WorkbookReadResult.DataValidationsResult(

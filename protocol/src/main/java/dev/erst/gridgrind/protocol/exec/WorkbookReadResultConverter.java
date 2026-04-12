@@ -75,6 +75,12 @@ final class WorkbookReadResultConverter {
               charts.requestId(),
               charts.sheetName(),
               charts.charts().stream().map(WorkbookReadResultConverter::toChartReport).toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.PivotTablesResult pivotTables ->
+          new WorkbookReadResult.PivotTablesResult(
+              pivotTables.requestId(),
+              pivotTables.pivotTables().stream()
+                  .map(WorkbookReadResultConverter::toPivotTableReport)
+                  .toList());
       case dev.erst.gridgrind.excel.WorkbookReadResult.DrawingObjectPayloadResult drawingPayload ->
           new WorkbookReadResult.DrawingObjectPayloadResult(
               drawingPayload.requestId(),
@@ -143,6 +149,9 @@ final class WorkbookReadResultConverter {
       case dev.erst.gridgrind.excel.WorkbookReadResult.TableHealthResult tableHealth ->
           new WorkbookReadResult.TableHealthResult(
               tableHealth.requestId(), toTableHealthReport(tableHealth.analysis()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.PivotTableHealthResult pivotTableHealth ->
+          new WorkbookReadResult.PivotTableHealthResult(
+              pivotTableHealth.requestId(), toPivotTableHealthReport(pivotTableHealth.analysis()));
       case dev.erst.gridgrind.excel.WorkbookReadResult.HyperlinkHealthResult hyperlinkHealth ->
           new WorkbookReadResult.HyperlinkHealthResult(
               hyperlinkHealth.requestId(), toHyperlinkHealthReport(hyperlinkHealth.analysis()));
@@ -1005,6 +1014,16 @@ final class WorkbookReadResultConverter {
             .toList());
   }
 
+  private static PivotTableHealthReport toPivotTableHealthReport(
+      WorkbookAnalysis.PivotTableHealth analysis) {
+    return new PivotTableHealthReport(
+        analysis.checkedPivotTableCount(),
+        toAnalysisSummaryReport(analysis.summary()),
+        analysis.findings().stream()
+            .map(WorkbookReadResultConverter::toAnalysisFindingReport)
+            .toList());
+  }
+
   private static GridGrindResponse.HyperlinkHealthReport toHyperlinkHealthReport(
       WorkbookAnalysis.HyperlinkHealth analysis) {
     return new GridGrindResponse.HyperlinkHealthReport(
@@ -1106,6 +1125,67 @@ final class WorkbookReadResultConverter {
         snapshot.headerRowCellStyle(),
         snapshot.dataCellStyle(),
         snapshot.totalsRowCellStyle());
+  }
+
+  private static PivotTableReport toPivotTableReport(ExcelPivotTableSnapshot snapshot) {
+    return switch (snapshot) {
+      case ExcelPivotTableSnapshot.Supported supported ->
+          new PivotTableReport.Supported(
+              supported.name(),
+              supported.sheetName(),
+              new PivotTableReport.Anchor(
+                  supported.anchor().topLeftAddress(), supported.anchor().locationRange()),
+              toPivotTableSourceReport(supported.source()),
+              supported.rowLabels().stream()
+                  .map(
+                      field ->
+                          new PivotTableReport.Field(
+                              field.sourceColumnIndex(), field.sourceColumnName()))
+                  .toList(),
+              supported.columnLabels().stream()
+                  .map(
+                      field ->
+                          new PivotTableReport.Field(
+                              field.sourceColumnIndex(), field.sourceColumnName()))
+                  .toList(),
+              supported.reportFilters().stream()
+                  .map(
+                      field ->
+                          new PivotTableReport.Field(
+                              field.sourceColumnIndex(), field.sourceColumnName()))
+                  .toList(),
+              supported.dataFields().stream()
+                  .map(
+                      dataField ->
+                          new PivotTableReport.DataField(
+                              dataField.sourceColumnIndex(),
+                              dataField.sourceColumnName(),
+                              dataField.function(),
+                              dataField.displayName(),
+                              dataField.valueFormat()))
+                  .toList(),
+              supported.valuesAxisOnColumns());
+      case ExcelPivotTableSnapshot.Unsupported unsupported ->
+          new PivotTableReport.Unsupported(
+              unsupported.name(),
+              unsupported.sheetName(),
+              new PivotTableReport.Anchor(
+                  unsupported.anchor().topLeftAddress(), unsupported.anchor().locationRange()),
+              unsupported.detail());
+    };
+  }
+
+  private static PivotTableReport.Source toPivotTableSourceReport(
+      ExcelPivotTableSnapshot.Source source) {
+    return switch (source) {
+      case ExcelPivotTableSnapshot.Source.Range range ->
+          new PivotTableReport.Source.Range(range.sheetName(), range.range());
+      case ExcelPivotTableSnapshot.Source.NamedRange namedRange ->
+          new PivotTableReport.Source.NamedRange(
+              namedRange.name(), namedRange.sheetName(), namedRange.range());
+      case ExcelPivotTableSnapshot.Source.Table table ->
+          new PivotTableReport.Source.Table(table.name(), table.sheetName(), table.range());
+    };
   }
 
   private static GridGrindResponse.CommentReport toCommentReport(ExcelCommentSnapshot comment) {

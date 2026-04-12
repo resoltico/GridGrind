@@ -52,6 +52,7 @@ final class XlsxParityTest {
             XlsxParityScenarios.CHART_AUTHORING,
             XlsxParityScenarios.CHART_UNSUPPORTED,
             XlsxParityScenarios.PIVOT,
+            XlsxParityScenarios.PIVOT_AUTHORING,
             XlsxParityScenarios.EMBEDDED_OBJECT,
             XlsxParityScenarios.LARGE_SHEET,
             XlsxParityScenarios.SIGNED_WORKBOOK,

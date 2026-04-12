@@ -2,19 +2,17 @@
   "targetKey" : "xlsx-roundtrip",
   "sourcePath" : ".local/runs/xlsx-roundtrip/crash-6e575d4a7285ab740363ca1aaecd2f7ffb933eff",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/named_range_shift_overwrite_invalid.bin",
-  "replayOutcome" : "EXPECTED_INVALID",
+  "replayOutcome" : "SUCCESS",
   "expectation" : {
-    "outcomeKind" : "EXPECTED_INVALID",
+    "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 83,
-      "commandCount" : 9,
+      "commandCount" : 4,
       "commandKinds" : {
-        "CREATE_SHEET" : 4,
-        "SHIFT_ROWS" : 1,
-        "SET_NAMED_RANGE" : 1,
-        "RENAME_SHEET" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2,
+        "CREATE_SHEET" : 1,
+        "SET_NAMED_RANGE" : 1
       },
       "styleKinds" : { }
     }

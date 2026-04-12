@@ -338,12 +338,12 @@ class ExcelWorkbookTest {
             new ExcelNamedRangeSnapshot.RangeSnapshot(
                 "LocalBudget",
                 new ExcelNamedRangeScope.SheetScope("Source"),
-                "Source!$A$1:Source!$B$3",
+                "Source!$A$1:$B$3",
                 new ExcelNamedRangeTarget("Source", "A1:B3")),
             new ExcelNamedRangeSnapshot.RangeSnapshot(
                 "LocalBudget",
                 new ExcelNamedRangeScope.SheetScope("Replica"),
-                "Replica!$A$1:Replica!$B$3",
+                "Replica!$A$1:$B$3",
                 new ExcelNamedRangeTarget("Replica", "A1:B3"))),
         XlsxRoundTrip.namedRanges(workbookPath));
     assertEquals(

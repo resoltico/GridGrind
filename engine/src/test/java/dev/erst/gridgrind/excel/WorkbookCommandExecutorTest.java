@@ -302,6 +302,89 @@ class WorkbookCommandExecutorTest {
   }
 
   @Test
+  void appliesPivotTableCommandsAndSurfacesReadback() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+
+      executor.apply(
+          workbook,
+          new WorkbookCommand.CreateSheet("Data"),
+          new WorkbookCommand.CreateSheet("Report"),
+          new WorkbookCommand.SetRange(
+              "Data",
+              "A1:D5",
+              List.of(
+                  List.of(
+                      ExcelCellValue.text("Region"),
+                      ExcelCellValue.text("Stage"),
+                      ExcelCellValue.text("Owner"),
+                      ExcelCellValue.text("Amount")),
+                  List.of(
+                      ExcelCellValue.text("North"),
+                      ExcelCellValue.text("Plan"),
+                      ExcelCellValue.text("Ada"),
+                      ExcelCellValue.number(10)),
+                  List.of(
+                      ExcelCellValue.text("North"),
+                      ExcelCellValue.text("Do"),
+                      ExcelCellValue.text("Ada"),
+                      ExcelCellValue.number(15)),
+                  List.of(
+                      ExcelCellValue.text("South"),
+                      ExcelCellValue.text("Plan"),
+                      ExcelCellValue.text("Lin"),
+                      ExcelCellValue.number(7)),
+                  List.of(
+                      ExcelCellValue.text("South"),
+                      ExcelCellValue.text("Do"),
+                      ExcelCellValue.text("Lin"),
+                      ExcelCellValue.number(12)))),
+          new WorkbookCommand.SetPivotTable(
+              new ExcelPivotTableDefinition(
+                  "Ops Pivot",
+                  "Report",
+                  new ExcelPivotTableDefinition.Source.Range("Data", "A1:D5"),
+                  new ExcelPivotTableDefinition.Anchor("A3"),
+                  List.of("Region"),
+                  List.of("Stage"),
+                  List.of(),
+                  List.of(
+                      new ExcelPivotTableDefinition.DataField(
+                          "Amount",
+                          ExcelPivotDataConsolidateFunction.SUM,
+                          "Total Amount",
+                          "#,##0.00")))));
+
+      WorkbookReadResult.PivotTablesResult pivotTables =
+          assertInstanceOf(
+              WorkbookReadResult.PivotTablesResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetPivotTables(
+                          "pivots", new ExcelPivotTableSelection.All())));
+      ExcelPivotTableSnapshot.Supported pivot =
+          assertInstanceOf(
+              ExcelPivotTableSnapshot.Supported.class, pivotTables.pivotTables().getFirst());
+
+      assertEquals("Ops Pivot", pivot.name());
+      assertEquals("Amount", pivot.dataFields().getFirst().sourceColumnName());
+
+      executor.apply(workbook, new WorkbookCommand.DeletePivotTable("Ops Pivot", "Report"));
+
+      WorkbookReadResult.PivotTablesResult afterDelete =
+          assertInstanceOf(
+              WorkbookReadResult.PivotTablesResult.class,
+              new ExcelWorkbookIntrospector()
+                  .execute(
+                      workbook,
+                      new WorkbookReadCommand.GetPivotTables(
+                          "pivots", new ExcelPivotTableSelection.All())));
+      assertEquals(List.of(), afterDelete.pivotTables());
+    }
+  }
+
+  @Test
   void appliesDrawingCommandsThroughTheWorkbookCommandSurface() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();

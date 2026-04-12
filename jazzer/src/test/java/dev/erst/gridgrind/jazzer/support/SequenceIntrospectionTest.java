@@ -22,6 +22,8 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -47,6 +49,8 @@ import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.dto.PictureDataInput;
 import dev.erst.gridgrind.protocol.dto.PictureInput;
+import dev.erst.gridgrind.protocol.dto.PivotTableInput;
+import dev.erst.gridgrind.protocol.dto.PivotTableSelection;
 import dev.erst.gridgrind.protocol.dto.RangeSelection;
 import dev.erst.gridgrind.protocol.dto.ShapeInput;
 import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
@@ -122,6 +126,10 @@ class SequenceIntrospectionTest {
         "SET_CHART",
         SequenceIntrospection.operationKind(
             new WorkbookOperation.SetChart("Budget", protocolChartInput())));
+    assertEquals(
+        "SET_PIVOT_TABLE",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetPivotTable(protocolPivotTableInput())));
     assertEquals(
         "SET_DRAWING_OBJECT_ANCHOR",
         SequenceIntrospection.operationKind(
@@ -200,6 +208,10 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.operationKind(
             new WorkbookOperation.DeleteTable("BudgetTable", "Budget")));
     assertEquals(
+        "DELETE_PIVOT_TABLE",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.DeletePivotTable("OpsPivot", "Budget")));
+    assertEquals(
         "EVALUATE_FORMULA_CELLS",
         SequenceIntrospection.operationKind(
             new WorkbookOperation.EvaluateFormulaCells(
@@ -274,6 +286,10 @@ class SequenceIntrospectionTest {
         "SET_CHART",
         SequenceIntrospection.commandKind(
             new WorkbookCommand.SetChart("Budget", excelChartDefinition())));
+    assertEquals(
+        "SET_PIVOT_TABLE",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetPivotTable(excelPivotTableDefinition())));
     assertEquals(
         "SET_DRAWING_OBJECT_ANCHOR",
         SequenceIntrospection.commandKind(
@@ -352,6 +368,10 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.commandKind(
             new WorkbookCommand.DeleteTable("BudgetTable", "Budget")));
     assertEquals(
+        "DELETE_PIVOT_TABLE",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.DeletePivotTable("OpsPivot", "Budget")));
+    assertEquals(
         "EVALUATE_FORMULA_CELLS",
         SequenceIntrospection.commandKind(
             new WorkbookCommand.EvaluateFormulaCells(
@@ -384,6 +404,8 @@ class SequenceIntrospectionTest {
                 new WorkbookReadOperation.GetDrawingObjectPayload(
                     "drawing-payload", "Budget", "OpsPicture"),
                 new WorkbookReadOperation.GetCharts("charts", "Budget"),
+                new WorkbookReadOperation.GetPivotTables(
+                    "pivots", new PivotTableSelection.ByNames(List.of("OpsPivot"))),
                 new WorkbookReadOperation.GetDataValidations(
                     "validations", "Budget", new RangeSelection.All()),
                 new WorkbookReadOperation.GetConditionalFormatting(
@@ -399,11 +421,13 @@ class SequenceIntrospectionTest {
                     "autofilter-health", new SheetSelection.All()),
                 new WorkbookReadOperation.AnalyzeTableHealth(
                     "table-health", new TableSelection.All()),
+                new WorkbookReadOperation.AnalyzePivotTableHealth(
+                    "pivot-table-health", new PivotTableSelection.All()),
                 new WorkbookReadOperation.AnalyzeNamedRangeHealth(
                     "named-range-health", new NamedRangeSelection.All()),
                 new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings")));
 
-    assertEquals(17, SequenceIntrospection.readCount(request));
+    assertEquals(19, SequenceIntrospection.readCount(request));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_PROTECTION"));
@@ -411,6 +435,7 @@ class SequenceIntrospectionTest {
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DRAWING_OBJECT_PAYLOAD"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_CHARTS"));
+    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_PIVOT_TABLES"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DATA_VALIDATIONS"));
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("GET_CONDITIONAL_FORMATTING"));
@@ -426,6 +451,8 @@ class SequenceIntrospectionTest {
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_AUTOFILTER_HEALTH"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_TABLE_HEALTH"));
+    assertEquals(
+        1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_PIVOT_TABLE_HEALTH"));
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_NAMED_RANGE_HEALTH"));
     assertEquals(
@@ -490,6 +517,20 @@ class SequenceIntrospectionTest {
                 new ChartInput.DataSource("Budget!$B$2:$B$4"))));
   }
 
+  private static PivotTableInput protocolPivotTableInput() {
+    return new PivotTableInput(
+        "OpsPivot",
+        "Budget",
+        new PivotTableInput.Source.Range("Budget", "A1:C4"),
+        new PivotTableInput.Anchor("F4"),
+        List.of("Month"),
+        List.of(),
+        List.of(),
+        List.of(
+            new PivotTableInput.DataField(
+                "Actual", ExcelPivotDataConsolidateFunction.SUM, "Total Actual", null)));
+  }
+
   private static ExcelDrawingAnchor.TwoCell excelAnchor() {
     return new ExcelDrawingAnchor.TwoCell(
         new ExcelDrawingMarker(0, 0, 0, 0), new ExcelDrawingMarker(2, 3, 0, 0), null);
@@ -536,5 +577,19 @@ class SequenceIntrospectionTest {
                 new ExcelChartDefinition.Title.Text("Actual"),
                 new ExcelChartDefinition.DataSource("Budget!$A$2:$A$4"),
                 new ExcelChartDefinition.DataSource("Budget!$B$2:$B$4"))));
+  }
+
+  private static ExcelPivotTableDefinition excelPivotTableDefinition() {
+    return new ExcelPivotTableDefinition(
+        "OpsPivot",
+        "Budget",
+        new ExcelPivotTableDefinition.Source.Range("Budget", "A1:C4"),
+        new ExcelPivotTableDefinition.Anchor("F4"),
+        List.of("Month"),
+        List.of(),
+        List.of(),
+        List.of(
+            new ExcelPivotTableDefinition.DataField(
+                "Actual", ExcelPivotDataConsolidateFunction.SUM, "Total Actual", null)));
   }
 }

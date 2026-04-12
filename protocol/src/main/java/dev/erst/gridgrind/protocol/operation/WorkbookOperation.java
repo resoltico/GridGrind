@@ -3,6 +3,7 @@ package dev.erst.gridgrind.protocol.operation;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelSheetNames;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
@@ -71,6 +72,7 @@ import java.util.Set;
   @JsonSubTypes.Type(value = WorkbookOperation.ClearComment.class, name = "CLEAR_COMMENT"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetPicture.class, name = "SET_PICTURE"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetChart.class, name = "SET_CHART"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetPivotTable.class, name = "SET_PIVOT_TABLE"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetShape.class, name = "SET_SHAPE"),
   @JsonSubTypes.Type(
       value = WorkbookOperation.SetEmbeddedObject.class,
@@ -98,6 +100,7 @@ import java.util.Set;
   @JsonSubTypes.Type(value = WorkbookOperation.ClearAutofilter.class, name = "CLEAR_AUTOFILTER"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetTable.class, name = "SET_TABLE"),
   @JsonSubTypes.Type(value = WorkbookOperation.DeleteTable.class, name = "DELETE_TABLE"),
+  @JsonSubTypes.Type(value = WorkbookOperation.DeletePivotTable.class, name = "DELETE_PIVOT_TABLE"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetNamedRange.class, name = "SET_NAMED_RANGE"),
   @JsonSubTypes.Type(value = WorkbookOperation.DeleteNamedRange.class, name = "DELETE_NAMED_RANGE"),
   @JsonSubTypes.Type(value = WorkbookOperation.AppendRow.class, name = "APPEND_ROW"),
@@ -497,6 +500,13 @@ public sealed interface WorkbookOperation {
     }
   }
 
+  /** Creates or replaces one workbook-global pivot-table definition. */
+  record SetPivotTable(PivotTableInput pivotTable) implements WorkbookOperation {
+    public SetPivotTable {
+      Objects.requireNonNull(pivotTable, "pivotTable must not be null");
+    }
+  }
+
   /** Creates or replaces one simple-shape or connector drawing object on one sheet. */
   record SetShape(String sheetName, ShapeInput shape) implements WorkbookOperation {
     public SetShape {
@@ -624,6 +634,14 @@ public sealed interface WorkbookOperation {
     }
   }
 
+  /** Deletes one existing pivot table by workbook-global name and expected sheet. */
+  record DeletePivotTable(String name, String sheetName) implements WorkbookOperation {
+    public DeletePivotTable {
+      Validation.requirePivotTableName(name);
+      Validation.requireSheetName(sheetName, "sheetName");
+    }
+  }
+
   /** Creates or replaces one typed named range in workbook or sheet scope. */
   record SetNamedRange(String name, NamedRangeScope scope, NamedRangeTarget target)
       implements WorkbookOperation {
@@ -728,6 +746,7 @@ public sealed interface WorkbookOperation {
       case ClearComment _ -> "CLEAR_COMMENT";
       case SetPicture _ -> "SET_PICTURE";
       case SetChart _ -> "SET_CHART";
+      case SetPivotTable _ -> "SET_PIVOT_TABLE";
       case SetShape _ -> "SET_SHAPE";
       case SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
       case SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
@@ -741,6 +760,7 @@ public sealed interface WorkbookOperation {
       case ClearAutofilter _ -> "CLEAR_AUTOFILTER";
       case SetTable _ -> "SET_TABLE";
       case DeleteTable _ -> "DELETE_TABLE";
+      case DeletePivotTable _ -> "DELETE_PIVOT_TABLE";
       case SetNamedRange _ -> "SET_NAMED_RANGE";
       case DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case AppendRow _ -> "APPEND_ROW";
@@ -845,6 +865,10 @@ public sealed interface WorkbookOperation {
 
     static void requireTableName(String name) {
       ProtocolDefinedNameValidation.validateName(name);
+    }
+
+    static void requirePivotTableName(String name) {
+      ExcelPivotTableNaming.validateName(name);
     }
 
     static void requireFinitePositive(double value, String fieldName) {

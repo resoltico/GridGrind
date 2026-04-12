@@ -37,6 +37,8 @@ class WorkbookReadCommandTest {
         new WorkbookReadCommand.GetAutofilters("autofilters", "Budget");
     WorkbookReadCommand.GetTables tables =
         new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All());
+    WorkbookReadCommand.GetPivotTables pivotTables =
+        new WorkbookReadCommand.GetPivotTables("pivots", new ExcelPivotTableSelection.All());
     WorkbookReadCommand.GetFormulaSurface formulaSurface =
         new WorkbookReadCommand.GetFormulaSurface(
             "formula", new ExcelSheetSelection.Selected(List.of("Budget")));
@@ -59,6 +61,9 @@ class WorkbookReadCommandTest {
     WorkbookReadCommand.AnalyzeTableHealth tableHealth =
         new WorkbookReadCommand.AnalyzeTableHealth(
             "tableHealth", new ExcelTableSelection.ByNames(List.of("BudgetTable")));
+    WorkbookReadCommand.AnalyzePivotTableHealth pivotTableHealth =
+        new WorkbookReadCommand.AnalyzePivotTableHealth(
+            "pivotTableHealth", new ExcelPivotTableSelection.ByNames(List.of("Budget Pivot")));
     WorkbookReadCommand.AnalyzeHyperlinkHealth hyperlinkHealth =
         new WorkbookReadCommand.AnalyzeHyperlinkHealth(
             "hyperlinkHealth", new ExcelSheetSelection.All());
@@ -80,6 +85,7 @@ class WorkbookReadCommandTest {
     assertEquals("Budget", dataValidations.sheetName());
     assertEquals("Budget", autofilters.sheetName());
     assertInstanceOf(ExcelTableSelection.All.class, tables.selection());
+    assertInstanceOf(ExcelPivotTableSelection.All.class, pivotTables.selection());
     assertInstanceOf(ExcelSheetSelection.Selected.class, formulaSurface.selection());
     assertEquals(3, schema.rowCount());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeSurface.selection());
@@ -88,6 +94,7 @@ class WorkbookReadCommandTest {
     assertInstanceOf(ExcelSheetSelection.All.class, conditionalFormattingHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, autofilterHealth.selection());
     assertInstanceOf(ExcelTableSelection.ByNames.class, tableHealth.selection());
+    assertInstanceOf(ExcelPivotTableSelection.ByNames.class, pivotTableHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, hyperlinkHealth.selection());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeHealth.selection());
     assertEquals("workbookFindings", workbookFindings.requestId());
@@ -146,6 +153,8 @@ class WorkbookReadCommandTest {
     assertThrows(
         NullPointerException.class, () -> new WorkbookReadCommand.GetTables("tables", null));
     assertThrows(
+        NullPointerException.class, () -> new WorkbookReadCommand.GetPivotTables("pivots", null));
+    assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadCommand.GetFormulaSurface("formula", null));
     assertThrows(
@@ -171,6 +180,9 @@ class WorkbookReadCommandTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadCommand.AnalyzeTableHealth("tableHealth", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadCommand.AnalyzePivotTableHealth("pivotTableHealth", null));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadCommand.AnalyzeHyperlinkHealth("hyperlinkHealth", null));

@@ -12,22 +12,13 @@
       "persistenceKind" : "NONE",
       "operationCount" : 3,
       "operationKinds" : {
-        "APPLY_STYLE" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
-        "ENSURE_SHEET" : 1
+        "ENSURE_SHEET" : 1,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2
       },
-      "styleKinds" : {
-        "horizontal_alignment" : 1,
-        "alignment" : 1,
-        "border" : 1,
-        "border_all" : 1,
-        "border_all_none" : 1,
-        "vertical_alignment" : 1,
-        "indentation" : 1
-      },
+      "styleKinds" : { },
       "readCount" : 0,
       "readKinds" : { },
-      "responseKind" : "FAILURE"
+      "responseKind" : "SUCCESS"
     }
   },
   "promotedAt" : "2026-03-26T04:16:00.687436Z",

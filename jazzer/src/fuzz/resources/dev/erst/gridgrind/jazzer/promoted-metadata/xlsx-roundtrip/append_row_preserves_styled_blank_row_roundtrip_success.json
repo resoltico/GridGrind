@@ -8,13 +8,9 @@
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 107,
-      "commandCount" : 6,
+      "commandCount" : 1,
       "commandKinds" : {
-        "CREATE_SHEET" : 1,
-        "CLEAR_CONDITIONAL_FORMATTING" : 1,
-        "CLEAR_FORMULA_CACHES" : 2,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
-        "CLEAR_SHEET_PROTECTION" : 1
+        "EVALUATE_ALL_FORMULAS" : 1
       },
       "styleKinds" : { }
     }

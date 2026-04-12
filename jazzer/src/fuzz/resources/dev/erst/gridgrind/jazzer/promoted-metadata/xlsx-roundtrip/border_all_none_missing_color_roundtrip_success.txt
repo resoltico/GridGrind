@@ -1,8 +1,10 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/border_all_none_missing_color_roundtrip_success.bin
 Harness: xlsx-roundtrip
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: SheetNotFoundException
+Message: Sheet does not exist: LL
 Input Bytes: 38
 Command Count: 8
-Style Kinds: fill_pattern=1, font=1, fill_pattern_solid=1, border=1, font_color=1, fill=1, border_all_none=1, border_all=1, fill_color=1, fill_foreground_color=1, italic=1
-Command Kinds: CREATE_SHEET=7, APPLY_STYLE=1
+Style Kinds: (none)
+Command Kinds: CREATE_SHEET=7, APPEND_ROW=1

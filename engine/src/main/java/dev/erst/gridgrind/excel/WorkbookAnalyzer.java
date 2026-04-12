@@ -56,6 +56,10 @@ final class WorkbookAnalyzer {
           new WorkbookReadResult.TableHealthResult(
               analyzeTableHealth.requestId(),
               tableHealth(workbook, analyzeTableHealth.selection()));
+      case WorkbookReadCommand.AnalyzePivotTableHealth analyzePivotTableHealth ->
+          new WorkbookReadResult.PivotTableHealthResult(
+              analyzePivotTableHealth.requestId(),
+              pivotTableHealth(workbook, analyzePivotTableHealth.selection()));
       case WorkbookReadCommand.AnalyzeHyperlinkHealth analyzeHyperlinkHealth ->
           new WorkbookReadResult.HyperlinkHealthResult(
               analyzeHyperlinkHealth.requestId(),
@@ -113,6 +117,13 @@ final class WorkbookAnalyzer {
     return documentAnalyzer.tableHealth(workbook, selection);
   }
 
+  WorkbookAnalysis.PivotTableHealth pivotTableHealth(
+      ExcelWorkbook workbook, ExcelPivotTableSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+    return documentAnalyzer.pivotTableHealth(workbook, selection);
+  }
+
   WorkbookAnalysis.HyperlinkHealth hyperlinkHealth(
       ExcelWorkbook workbook, WorkbookLocation workbookLocation, ExcelSheetSelection selection) {
     Objects.requireNonNull(workbook, "workbook must not be null");
@@ -161,6 +172,7 @@ final class WorkbookAnalyzer {
         conditionalFormattingHealth(workbook, new ExcelSheetSelection.All()).findings());
     combined.addAll(autofilterHealth(workbook, new ExcelSheetSelection.All()).findings());
     combined.addAll(tableHealth(workbook, new ExcelTableSelection.All()).findings());
+    combined.addAll(pivotTableHealth(workbook, new ExcelPivotTableSelection.All()).findings());
     combined.addAll(
         hyperlinkHealth(workbook, workbookLocation, new ExcelSheetSelection.All()).findings());
     combined.addAll(namedRangeHealth(workbook, new ExcelNamedRangeSelection.All()).findings());

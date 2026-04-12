@@ -13,22 +13,22 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 8,
       "operationKinds" : {
-        "EVALUATE_FORMULAS" : 1,
         "SET_NAMED_RANGE" : 2,
         "SET_HYPERLINK" : 2,
         "SET_RANGE" : 1,
         "SET_COMMENT" : 1,
-        "ENSURE_SHEET" : 1
+        "ENSURE_SHEET" : 1,
+        "EVALUATE_FORMULAS" : 1
       },
       "styleKinds" : { },
       "readCount" : 6,
       "readKinds" : {
-        "GET_CELLS" : 1,
         "GET_NAMED_RANGE_SURFACE" : 1,
         "GET_HYPERLINKS" : 1,
         "GET_COMMENTS" : 1,
         "GET_NAMED_RANGES" : 1,
-        "GET_WINDOW" : 1
+        "GET_WINDOW" : 1,
+        "GET_CELLS" : 1
       }
     }
   },

@@ -8,9 +8,9 @@
     "details" : {
       "type" : "ENGINE_COMMAND_SEQUENCE",
       "inputBytes" : 17,
-      "commandCount" : 6,
+      "commandCount" : 9,
       "commandKinds" : {
-        "CREATE_SHEET" : 6
+        "CREATE_SHEET" : 9
       },
       "styleKinds" : { }
     }

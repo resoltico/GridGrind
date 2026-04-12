@@ -68,6 +68,11 @@
       "description": "Direct-POI workbook containing a pivot table."
     },
     {
+      "id": "gridgrind-pivot-authoring",
+      "kind": "GRIDGRIND_REQUEST",
+      "description": "GridGrind-authored workbook containing range-, named-range-, and table-backed supported XSSF pivot tables."
+    },
+    {
       "id": "poi-embedded-object",
       "kind": "POI_DIRECT",
       "description": "Direct-POI workbook containing an embedded OLE package object."

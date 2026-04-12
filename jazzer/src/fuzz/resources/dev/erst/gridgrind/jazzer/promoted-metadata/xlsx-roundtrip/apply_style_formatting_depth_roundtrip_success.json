@@ -8,9 +8,9 @@
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 17,
-      "commandCount" : 4,
+      "commandCount" : 3,
       "commandKinds" : {
-        "CREATE_SHEET" : 4
+        "CREATE_SHEET" : 3
       },
       "styleKinds" : { }
     }

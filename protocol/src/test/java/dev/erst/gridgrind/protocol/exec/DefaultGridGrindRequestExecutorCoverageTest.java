@@ -375,6 +375,120 @@ class DefaultGridGrindRequestExecutorCoverageTest {
             failure));
   }
 
+  @Test
+  void coversPivotReadAndWriteContextExtraction() {
+    WorkbookOperation.SetPivotTable pivotFromRange =
+        new WorkbookOperation.SetPivotTable(
+            new PivotTableInput(
+                "Sales Pivot 2026",
+                "Report",
+                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new PivotTableInput.Anchor("C5"),
+                List.of("Region"),
+                List.of("Stage"),
+                List.of("Owner"),
+                List.of(
+                    new PivotTableInput.DataField(
+                        "Amount", ExcelPivotDataConsolidateFunction.SUM, null, "#,##0.00"))));
+    WorkbookOperation.SetPivotTable pivotFromNamedRange =
+        new WorkbookOperation.SetPivotTable(
+            new PivotTableInput(
+                "Named Pivot",
+                "Report",
+                new PivotTableInput.Source.NamedRange("PivotSource"),
+                new PivotTableInput.Anchor("A3"),
+                List.of("Region"),
+                List.of(),
+                List.of(),
+                List.of(
+                    new PivotTableInput.DataField(
+                        "Amount", ExcelPivotDataConsolidateFunction.SUM, null, null))));
+    WorkbookOperation.DeletePivotTable deletePivotTable =
+        new WorkbookOperation.DeletePivotTable("Sales Pivot 2026", "Report");
+    WorkbookReadOperation.GetPivotTables getPivotTables =
+        new WorkbookReadOperation.GetPivotTables(
+            "pivots", new PivotTableSelection.ByNames(List.of("Sales Pivot 2026")));
+    WorkbookReadOperation.AnalyzePivotTableHealth analyzePivotTableHealth =
+        new WorkbookReadOperation.AnalyzePivotTableHealth(
+            "pivot-health", new PivotTableSelection.All());
+    RuntimeException failure = new IllegalStateException("boom");
+
+    assertEquals("GET_PIVOT_TABLES", DefaultGridGrindRequestExecutor.readType(getPivotTables));
+    assertEquals(
+        "ANALYZE_PIVOT_TABLE_HEALTH",
+        DefaultGridGrindRequestExecutor.readType(analyzePivotTableHealth));
+    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(getPivotTables));
+    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(analyzePivotTableHealth));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(getPivotTables, failure));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(analyzePivotTableHealth, failure));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(getPivotTables, failure));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(analyzePivotTableHealth, failure));
+
+    assertEquals("Report", DefaultGridGrindRequestExecutor.sheetNameFor(pivotFromRange, failure));
+    assertEquals("C5", DefaultGridGrindRequestExecutor.addressFor(pivotFromRange, failure));
+    assertEquals("A1:D5", DefaultGridGrindRequestExecutor.rangeFor(pivotFromRange, failure));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(pivotFromNamedRange, failure));
+    assertEquals(
+        "PivotSource",
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(pivotFromNamedRange, failure));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(pivotFromRange, failure));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(pivotFromRange, failure));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(deletePivotTable, failure));
+    assertEquals("Report", DefaultGridGrindRequestExecutor.sheetNameFor(deletePivotTable, failure));
+  }
+
+  @Test
+  void coversAdditionalPivotFormulaAndSelectionContextExtraction() {
+    WorkbookReadOperation.GetFormulaSurface getFormulaSurface =
+        new WorkbookReadOperation.GetFormulaSurface(
+            "formula-surface", new SheetSelection.Selected(List.of("Budget")));
+    WorkbookReadOperation.AnalyzeFormulaHealth analyzeFormulaHealth =
+        new WorkbookReadOperation.AnalyzeFormulaHealth(
+            "formula-health", new SheetSelection.Selected(List.of("Budget")));
+    WorkbookReadOperation.GetWindow getWindow =
+        new WorkbookReadOperation.GetWindow("window", "Budget", "B2", 3, 4);
+    WorkbookReadOperation.GetSheetSchema getSheetSchema =
+        new WorkbookReadOperation.GetSheetSchema("sheet-schema", "Budget", "C3", 5, 2);
+    WorkbookOperation.SetCell setFormulaCell =
+        new WorkbookOperation.SetCell("Budget", "D4", new CellInput.Formula("SUM(A1:A3)"));
+    WorkbookOperation.SetPivotTable pivotFromTable =
+        new WorkbookOperation.SetPivotTable(
+            new PivotTableInput(
+                "Table Source Pivot",
+                "Report",
+                new PivotTableInput.Source.Table("SalesTable2026"),
+                new PivotTableInput.Anchor("G4"),
+                List.of("Region"),
+                List.of(),
+                List.of(),
+                List.of(
+                    new PivotTableInput.DataField(
+                        "Amount", ExcelPivotDataConsolidateFunction.SUM, "Total Amount", null))));
+    WorkbookOperation.SetNamedRange setNamedRange =
+        new WorkbookOperation.SetNamedRange(
+            "BudgetTotal", new NamedRangeScope.Workbook(), new NamedRangeTarget("Budget", "B4"));
+    WorkbookOperation.DeleteNamedRange deleteNamedRange =
+        new WorkbookOperation.DeleteNamedRange("BudgetTotal", new NamedRangeScope.Workbook());
+    RuntimeException failure = new IllegalStateException("boom");
+    InvalidFormulaException invalidFormula =
+        new InvalidFormulaException("Budget", "D4", "SUM(", "bad formula", null);
+
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(getFormulaSurface));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(analyzeFormulaHealth));
+    assertEquals("B2", DefaultGridGrindRequestExecutor.addressFor(getWindow, failure));
+    assertEquals("C3", DefaultGridGrindRequestExecutor.addressFor(getSheetSchema, failure));
+    assertEquals("SUM(A1:A3)", DefaultGridGrindRequestExecutor.formulaFor(setFormulaCell, failure));
+    assertEquals(
+        "SUM(", DefaultGridGrindRequestExecutor.formulaFor(setFormulaCell, invalidFormula));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(pivotFromTable, failure));
+    assertEquals(
+        "BudgetTotal", DefaultGridGrindRequestExecutor.namedRangeNameFor(setNamedRange, failure));
+    assertEquals(
+        "BudgetTotal",
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(deleteNamedRange, failure));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(pivotFromTable, failure));
+  }
+
   private static void assertPrivateSheetNameHelperRejects(
       String methodName, WorkbookOperation operation) throws ReflectiveOperationException {
     Method method =

@@ -24,6 +24,116 @@ import org.junit.jupiter.api.Test;
 /** Tests for the richer factual readback protocol types added for advanced XSSF parity. */
 class AdvancedReadProtocolTypesTest {
   @Test
+  void pivotReportsHealthReportsAndReadOperationsValidateRichShapes() {
+    PivotTableReport.Source.Range rangeSource = new PivotTableReport.Source.Range("Data", "A1:D5");
+    PivotTableReport.Source.Table tableSource =
+        new PivotTableReport.Source.Table("SalesTable2026", "Data", "A1:D5");
+    PivotTableReport.Supported supported =
+        new PivotTableReport.Supported(
+            "Sales Pivot 2026",
+            "Report",
+            new PivotTableReport.Anchor("C5", "C5:G9"),
+            new PivotTableReport.Source.NamedRange("PivotSource", "Data", "A1:D5"),
+            List.of(new PivotTableReport.Field(0, "Region")),
+            List.of(new PivotTableReport.Field(1, "Stage")),
+            List.of(new PivotTableReport.Field(2, "Owner")),
+            List.of(
+                new PivotTableReport.DataField(
+                    3,
+                    "Amount",
+                    dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                    "Total Amount",
+                    "#,##0.00")),
+            true);
+    PivotTableReport.Unsupported unsupported =
+        new PivotTableReport.Unsupported(
+            "Broken Pivot",
+            "Report",
+            new PivotTableReport.Anchor("A3", "A3:C8"),
+            "Pivot cache source no longer resolves cleanly.");
+    PivotTableHealthReport health =
+        new PivotTableHealthReport(
+            1,
+            new GridGrindResponse.AnalysisSummaryReport(1, 0, 1, 0),
+            List.of(
+                new GridGrindResponse.AnalysisFindingReport(
+                    AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
+                    AnalysisSeverity.WARNING,
+                    "Pivot table name is missing",
+                    "GridGrind assigned a synthetic identifier for readback.",
+                    new GridGrindResponse.AnalysisLocationReport.Sheet("Report"),
+                    List.of("_GG_PIVOT_Report_A3"))));
+    WorkbookReadOperation.GetPivotTables getPivotTables =
+        new WorkbookReadOperation.GetPivotTables("pivots", new PivotTableSelection.All());
+    WorkbookReadOperation.AnalyzePivotTableHealth analyzePivotTableHealth =
+        new WorkbookReadOperation.AnalyzePivotTableHealth(
+            "pivot-health", new PivotTableSelection.ByNames(List.of("Sales Pivot 2026")));
+    WorkbookReadResult.PivotTablesResult pivotTablesResult =
+        new WorkbookReadResult.PivotTablesResult("pivots", List.of(supported, unsupported));
+    WorkbookReadResult.PivotTableHealthResult pivotTableHealthResult =
+        new WorkbookReadResult.PivotTableHealthResult("pivot-health", health);
+
+    assertTrue(supported.valuesAxisOnColumns());
+    assertEquals("A1:D5", rangeSource.range());
+    assertEquals("SalesTable2026", tableSource.name());
+    assertEquals("PivotSource", ((PivotTableReport.Source.NamedRange) supported.source()).name());
+    assertEquals("Pivot cache source no longer resolves cleanly.", unsupported.detail());
+    assertEquals(1, health.checkedPivotTableCount());
+    assertEquals("pivots", getPivotTables.requestId());
+    assertEquals(
+        List.of("Sales Pivot 2026"),
+        ((PivotTableSelection.ByNames) analyzePivotTableHealth.selection()).names());
+    assertEquals(2, pivotTablesResult.pivotTables().size());
+    assertEquals(1, pivotTableHealthResult.analysis().summary().warningCount());
+    assertThrows(IllegalArgumentException.class, () -> new PivotTableReport.Field(-1, "Region"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableReport.DataField(
+                -1,
+                "Amount",
+                dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                "Total Amount",
+                "#,##0.00"));
+    assertThrows(
+        NullPointerException.class,
+        () -> new PivotTableReport.DataField(0, "Amount", null, "Total Amount", "#,##0.00"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableReport.DataField(
+                0,
+                "Amount",
+                dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                " ",
+                "#,##0.00"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableReport.DataField(
+                0,
+                "Amount",
+                dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                "Total Amount",
+                " "));
+    assertThrows(
+        IllegalArgumentException.class, () -> new PivotTableReport.Source.Range("Data", " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableReport.Unsupported(
+                "Broken Pivot", "Report", new PivotTableReport.Anchor("A3", "A3:C8"), " "));
+    assertThrows(IllegalArgumentException.class, () -> new PivotTableReport.Anchor(" ", "A3:C8"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new PivotTableHealthReport(
+                -1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookReadOperation.GetPivotTables("pivots", null));
+  }
+
+  @Test
   void cellColorAndGradientReportsValidateRichReadShapes() {
     assertEquals(new CellColorReport("#ABCDEF"), new CellColorReport("#abcdef"));
     assertEquals(4, new CellColorReport(null, 4, null, 0.45d).theme());

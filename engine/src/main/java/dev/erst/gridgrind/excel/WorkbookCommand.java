@@ -49,6 +49,7 @@ public sealed interface WorkbookCommand
         WorkbookCommand.ClearComment,
         WorkbookCommand.SetPicture,
         WorkbookCommand.SetChart,
+        WorkbookCommand.SetPivotTable,
         WorkbookCommand.SetShape,
         WorkbookCommand.SetEmbeddedObject,
         WorkbookCommand.SetDrawingObjectAnchor,
@@ -62,6 +63,7 @@ public sealed interface WorkbookCommand
         WorkbookCommand.ClearAutofilter,
         WorkbookCommand.SetTable,
         WorkbookCommand.DeleteTable,
+        WorkbookCommand.DeletePivotTable,
         WorkbookCommand.SetNamedRange,
         WorkbookCommand.DeleteNamedRange,
         WorkbookCommand.AppendRow,
@@ -649,6 +651,13 @@ public sealed interface WorkbookCommand
     }
   }
 
+  /** Creates or replaces one workbook-global pivot-table definition. */
+  record SetPivotTable(ExcelPivotTableDefinition definition) implements WorkbookCommand {
+    public SetPivotTable {
+      Objects.requireNonNull(definition, "definition must not be null");
+    }
+  }
+
   /** Creates or replaces one simple-shape or connector drawing object on a single sheet. */
   record SetShape(String sheetName, ExcelShapeDefinition shape) implements WorkbookCommand {
     public SetShape {
@@ -819,6 +828,17 @@ public sealed interface WorkbookCommand
   record DeleteTable(String name, String sheetName) implements WorkbookCommand {
     public DeleteTable {
       name = ExcelTableDefinition.validateName(name);
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Deletes one existing pivot table by workbook-global name and expected sheet. */
+  record DeletePivotTable(String name, String sheetName) implements WorkbookCommand {
+    public DeletePivotTable {
+      name = ExcelPivotTableDefinition.validateName(name);
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
