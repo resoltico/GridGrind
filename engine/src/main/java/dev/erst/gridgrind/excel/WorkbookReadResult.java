@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -28,6 +29,7 @@ public sealed interface WorkbookReadResult
           HyperlinksResult,
           CommentsResult,
           DrawingObjectsResult,
+          ChartsResult,
           DrawingObjectPayloadResult,
           SheetLayoutResult,
           PrintLayoutResult,
@@ -141,6 +143,16 @@ public sealed interface WorkbookReadResult
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       drawingObjects = copyValues(drawingObjects, "drawingObjects");
+    }
+  }
+
+  /** Returns factual chart metadata for one sheet. */
+  record ChartsResult(String requestId, String sheetName, List<ExcelChartSnapshot> charts)
+      implements Introspection {
+    public ChartsResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      charts = copyValues(charts, "charts");
     }
   }
 
@@ -714,10 +726,10 @@ public sealed interface WorkbookReadResult
 
   private static <T> List<T> copyValues(List<T> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
-    List<T> copy = List.copyOf(values);
-    for (T value : copy) {
-      Objects.requireNonNull(value, fieldName + " must not contain nulls");
+    List<T> copy = new ArrayList<>(values.size());
+    for (T value : values) {
+      copy.add(Objects.requireNonNull(value, fieldName + " must not contain nulls"));
     }
-    return copy;
+    return List.copyOf(copy);
   }
 }

@@ -48,6 +48,7 @@ public sealed interface WorkbookCommand
         WorkbookCommand.SetComment,
         WorkbookCommand.ClearComment,
         WorkbookCommand.SetPicture,
+        WorkbookCommand.SetChart,
         WorkbookCommand.SetShape,
         WorkbookCommand.SetEmbeddedObject,
         WorkbookCommand.SetDrawingObjectAnchor,
@@ -631,6 +632,17 @@ public sealed interface WorkbookCommand
     public SetPicture {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(picture, "picture must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Creates or mutates one supported simple chart on a single sheet. */
+  record SetChart(String sheetName, ExcelChartDefinition chart) implements WorkbookCommand {
+    public SetChart {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(chart, "chart must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }

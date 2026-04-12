@@ -3,6 +3,9 @@ package dev.erst.gridgrind.protocol.operation;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
@@ -206,6 +209,36 @@ class WorkbookOperationTest {
     assertEquals("SET_EMBEDDED_OBJECT", setEmbeddedObject.operationType());
     assertEquals("SET_DRAWING_OBJECT_ANCHOR", setDrawingObjectAnchor.operationType());
     assertEquals("DELETE_DRAWING_OBJECT", deleteDrawingObject.operationType());
+  }
+
+  @Test
+  void buildsChartOperationsAndUsesPhase6OperationType() {
+    DrawingAnchorInput.TwoCell anchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 2, 0, 0),
+            new DrawingMarkerInput(6, 12, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    ChartInput.Bar chart =
+        new ChartInput.Bar(
+            "OpsChart",
+            anchor,
+            new ChartInput.Title.Text("Roadmap"),
+            new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            ExcelChartDisplayBlanksAs.SPAN,
+            false,
+            true,
+            ExcelChartBarDirection.COLUMN,
+            List.of(
+                new ChartInput.Series(
+                    new ChartInput.Title.Formula("B1"),
+                    new ChartInput.DataSource("A2:A4"),
+                    new ChartInput.DataSource("B2:B4"))));
+    WorkbookOperation.SetChart setChart = new WorkbookOperation.SetChart("Budget", chart);
+
+    assertEquals("OpsChart", setChart.chart().name());
+    assertEquals("Budget", setChart.sheetName());
+    assertEquals("SET_CHART", setChart.operationType());
+    assertThrows(NullPointerException.class, () -> new WorkbookOperation.SetChart("Budget", null));
   }
 
   @Test

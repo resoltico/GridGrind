@@ -144,6 +144,7 @@ public final class SequenceIntrospection {
       case WorkbookOperation.SetComment _ -> "SET_COMMENT";
       case WorkbookOperation.ClearComment _ -> "CLEAR_COMMENT";
       case WorkbookOperation.SetPicture _ -> "SET_PICTURE";
+      case WorkbookOperation.SetChart _ -> "SET_CHART";
       case WorkbookOperation.SetShape _ -> "SET_SHAPE";
       case WorkbookOperation.SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
       case WorkbookOperation.SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
@@ -213,6 +214,7 @@ public final class SequenceIntrospection {
       case WorkbookCommand.SetComment _ -> "SET_COMMENT";
       case WorkbookCommand.ClearComment _ -> "CLEAR_COMMENT";
       case WorkbookCommand.SetPicture _ -> "SET_PICTURE";
+      case WorkbookCommand.SetChart _ -> "SET_CHART";
       case WorkbookCommand.SetShape _ -> "SET_SHAPE";
       case WorkbookCommand.SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
       case WorkbookCommand.SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
@@ -252,6 +254,7 @@ public final class SequenceIntrospection {
       case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetDrawingObjects _ -> "GET_DRAWING_OBJECTS";
+      case WorkbookReadOperation.GetCharts _ -> "GET_CHARTS";
       case WorkbookReadOperation.GetDrawingObjectPayload _ -> "GET_DRAWING_OBJECT_PAYLOAD";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadOperation.GetPrintLayout _ -> "GET_PRINT_LAYOUT";

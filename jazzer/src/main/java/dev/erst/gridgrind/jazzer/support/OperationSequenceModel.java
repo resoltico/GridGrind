@@ -2,6 +2,10 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDefinition;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
@@ -39,6 +43,7 @@ import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.protocol.dto.CellSelection;
+import dev.erst.gridgrind.protocol.dto.ChartInput;
 import dev.erst.gridgrind.protocol.dto.ColumnSpanInput;
 import dev.erst.gridgrind.protocol.dto.CommentInput;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingBlockInput;
@@ -93,6 +98,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 /** Builds bounded protocol requests and workbook command sequences for Jazzer harnesses. */
 public final class OperationSequenceModel {
   private static final String DRAWING_PICTURE_NAME = "OpsPicture";
+  private static final String DRAWING_CHART_NAME = "OpsChart";
   private static final String DRAWING_SHAPE_NAME = "OpsShape";
   private static final String DRAWING_CONNECTOR_NAME = "OpsConnector";
   private static final String DRAWING_EMBEDDED_OBJECT_NAME = "OpsEmbed";
@@ -255,13 +261,14 @@ public final class OperationSequenceModel {
                 new WorkbookOperation.ClearComment(
                     targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
             case 0x4 -> new WorkbookOperation.SetPicture(targetSheet, nextPictureInput(data));
-            case 0x5 -> new WorkbookOperation.SetShape(targetSheet, nextShapeInput(data));
-            case 0x6 ->
-                new WorkbookOperation.SetEmbeddedObject(targetSheet, nextEmbeddedObjectInput(data));
+            case 0x5 -> new WorkbookOperation.SetChart(targetSheet, nextChartInput(data));
+            case 0x6 -> new WorkbookOperation.SetShape(targetSheet, nextShapeInput(data));
             case 0x7 ->
+                new WorkbookOperation.SetEmbeddedObject(targetSheet, nextEmbeddedObjectInput(data));
+            case 0x8 ->
                 new WorkbookOperation.SetDrawingObjectAnchor(
                     targetSheet, nextDrawingObjectName(data), nextDrawingAnchorInput(data));
-            case 0x8 ->
+            case 0x9 ->
                 new WorkbookOperation.DeleteDrawingObject(targetSheet, nextDrawingObjectName(data));
             default ->
                 new WorkbookOperation.ApplyStyle(
@@ -482,14 +489,15 @@ public final class OperationSequenceModel {
                     targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
             case 0x4 ->
                 new WorkbookCommand.SetPicture(targetSheet, nextExcelPictureDefinition(data));
-            case 0x5 -> new WorkbookCommand.SetShape(targetSheet, nextExcelShapeDefinition(data));
-            case 0x6 ->
+            case 0x5 -> new WorkbookCommand.SetChart(targetSheet, nextExcelChartDefinition(data));
+            case 0x6 -> new WorkbookCommand.SetShape(targetSheet, nextExcelShapeDefinition(data));
+            case 0x7 ->
                 new WorkbookCommand.SetEmbeddedObject(
                     targetSheet, nextExcelEmbeddedObjectDefinition(data));
-            case 0x7 ->
+            case 0x8 ->
                 new WorkbookCommand.SetDrawingObjectAnchor(
                     targetSheet, nextDrawingObjectName(data), nextExcelDrawingAnchor(data));
-            case 0x8 ->
+            case 0x9 ->
                 new WorkbookCommand.DeleteDrawingObject(targetSheet, nextDrawingObjectName(data));
             default ->
                 new WorkbookCommand.ApplyStyle(
@@ -673,7 +681,7 @@ public final class OperationSequenceModel {
             case 0x4 ->
                 new WorkbookReadOperation.GetDrawingObjectPayload(
                     requestId, targetSheet, nextDrawingBinaryObjectName(data));
-            case 0x5 -> new WorkbookReadOperation.GetSheetLayout(requestId, targetSheet);
+            case 0x5 -> new WorkbookReadOperation.GetCharts(requestId, targetSheet);
             case 0x6 -> new WorkbookReadOperation.GetPrintLayout(requestId, targetSheet);
             default ->
                 new WorkbookReadOperation.GetFormulaSurface(
@@ -1072,24 +1080,38 @@ public final class OperationSequenceModel {
       throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       var primary = workbook.createSheet(primarySheet);
-      primary.createRow(0).createCell(0).setCellValue("HeaderA");
-      primary.getRow(0).createCell(1).setCellValue("HeaderB");
-      primary.createRow(1).createCell(0).setCellValue("seed");
+      primary.createRow(0).createCell(0).setCellValue("Month");
+      primary.getRow(0).createCell(1).setCellValue("Plan");
+      primary.getRow(0).createCell(2).setCellValue("Actual");
+      primary.createRow(1).createCell(0).setCellValue("Jan");
       primary.getRow(1).createCell(1).setCellValue(2.0d);
-      primary.getRow(1).createCell(2).setCellFormula("B2*2");
-      primary.getRow(1).createCell(3).setCellFormula("C2+1");
+      primary.getRow(1).createCell(2).setCellValue(4.0d);
+      primary.getRow(1).createCell(3).setCellFormula("B2*2");
+      primary.createRow(2).createCell(0).setCellValue("Feb");
+      primary.getRow(2).createCell(1).setCellValue(3.0d);
+      primary.getRow(2).createCell(2).setCellValue(6.0d);
+      primary.createRow(3).createCell(0).setCellValue("Mar");
+      primary.getRow(3).createCell(1).setCellValue(5.0d);
+      primary.getRow(3).createCell(2).setCellValue(7.0d);
       primary.createRow(4).createCell(4).setCellValue("Queue");
       primary.getRow(4).createCell(5).setCellValue("Owner");
       primary.createRow(5).createCell(4).setCellValue("seed");
       primary.getRow(5).createCell(5).setCellValue("GridGrind");
       if (data.consumeBoolean()) {
         var secondary = workbook.createSheet(secondarySheet);
-        secondary.createRow(0).createCell(0).setCellValue("HeaderA");
-        secondary.getRow(0).createCell(1).setCellValue("HeaderB");
-        secondary.createRow(1).createCell(0).setCellValue("seed");
+        secondary.createRow(0).createCell(0).setCellValue("Month");
+        secondary.getRow(0).createCell(1).setCellValue("Plan");
+        secondary.getRow(0).createCell(2).setCellValue("Actual");
+        secondary.createRow(1).createCell(0).setCellValue("Jan");
         secondary.getRow(1).createCell(1).setCellValue(3.0d);
-        secondary.getRow(1).createCell(2).setCellFormula("B2*3");
-        secondary.getRow(1).createCell(3).setCellFormula("C2+1");
+        secondary.getRow(1).createCell(2).setCellValue(9.0d);
+        secondary.getRow(1).createCell(3).setCellFormula("B2*3");
+        secondary.createRow(2).createCell(0).setCellValue("Feb");
+        secondary.getRow(2).createCell(1).setCellValue(4.0d);
+        secondary.getRow(2).createCell(2).setCellValue(8.0d);
+        secondary.createRow(3).createCell(0).setCellValue("Mar");
+        secondary.getRow(3).createCell(1).setCellValue(6.0d);
+        secondary.getRow(3).createCell(2).setCellValue(10.0d);
       }
       Files.createDirectories(sourcePath.getParent());
       try (OutputStream outputStream = Files.newOutputStream(sourcePath)) {
@@ -1127,6 +1149,49 @@ public final class OperationSequenceModel {
         nextPictureDataInput(),
         nextDrawingAnchorInput(data),
         data.consumeBoolean() ? "Queue preview" : null);
+  }
+
+  private static ChartInput nextChartInput(GridGrindFuzzData data) {
+    DrawingAnchorInput.TwoCell anchor = nextDrawingAnchorInput(data);
+    ChartInput.Title title = nextChartTitleInput(data);
+    ChartInput.Legend legend = nextChartLegendInput(data);
+    ExcelChartDisplayBlanksAs displayBlanksAs = nextChartDisplayBlanksAs(data);
+    boolean plotOnlyVisibleCells = data.consumeBoolean();
+    boolean varyColors = data.consumeBoolean();
+    return switch (selectorSlot(nextSelectorByte(data)) % 3) {
+      case 0 ->
+          new ChartInput.Bar(
+              DRAWING_CHART_NAME,
+              anchor,
+              title,
+              legend,
+              displayBlanksAs,
+              plotOnlyVisibleCells,
+              varyColors,
+              nextChartBarDirection(data),
+              nextChartSeriesInputs(data, false));
+      case 1 ->
+          new ChartInput.Line(
+              DRAWING_CHART_NAME,
+              anchor,
+              title,
+              legend,
+              displayBlanksAs,
+              plotOnlyVisibleCells,
+              varyColors,
+              nextChartSeriesInputs(data, false));
+      default ->
+          new ChartInput.Pie(
+              DRAWING_CHART_NAME,
+              anchor,
+              title,
+              legend,
+              displayBlanksAs,
+              plotOnlyVisibleCells,
+              varyColors,
+              data.consumeBoolean() ? data.consumeInt(0, 360) : null,
+              nextChartSeriesInputs(data, true));
+    };
   }
 
   private static ShapeInput nextShapeInput(GridGrindFuzzData data) {
@@ -1183,6 +1248,139 @@ public final class OperationSequenceModel {
         data.consumeBoolean() ? "Queue preview" : null);
   }
 
+  private static ExcelChartDefinition nextExcelChartDefinition(GridGrindFuzzData data) {
+    ExcelDrawingAnchor.TwoCell anchor = nextExcelDrawingAnchor(data);
+    ExcelChartDefinition.Title title = nextExcelChartTitle(data);
+    ExcelChartDefinition.Legend legend = nextExcelChartLegend(data);
+    ExcelChartDisplayBlanksAs displayBlanksAs = nextChartDisplayBlanksAs(data);
+    boolean plotOnlyVisibleCells = data.consumeBoolean();
+    boolean varyColors = data.consumeBoolean();
+    return switch (selectorSlot(nextSelectorByte(data)) % 3) {
+      case 0 ->
+          new ExcelChartDefinition.Bar(
+              DRAWING_CHART_NAME,
+              anchor,
+              title,
+              legend,
+              displayBlanksAs,
+              plotOnlyVisibleCells,
+              varyColors,
+              nextChartBarDirection(data),
+              nextExcelChartSeries(data, false));
+      case 1 ->
+          new ExcelChartDefinition.Line(
+              DRAWING_CHART_NAME,
+              anchor,
+              title,
+              legend,
+              displayBlanksAs,
+              plotOnlyVisibleCells,
+              varyColors,
+              nextExcelChartSeries(data, false));
+      default ->
+          new ExcelChartDefinition.Pie(
+              DRAWING_CHART_NAME,
+              anchor,
+              title,
+              legend,
+              displayBlanksAs,
+              plotOnlyVisibleCells,
+              varyColors,
+              data.consumeBoolean() ? data.consumeInt(0, 360) : null,
+              nextExcelChartSeries(data, true));
+    };
+  }
+
+  private static ChartInput.Title nextChartTitleInput(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data)) % 3) {
+      case 0 -> new ChartInput.Title.None();
+      case 1 -> new ChartInput.Title.Text("Chart " + data.consumeInt(0, 9));
+      default -> new ChartInput.Title.Formula(data.consumeBoolean() ? "B1" : "C1");
+    };
+  }
+
+  private static ExcelChartDefinition.Title nextExcelChartTitle(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data)) % 3) {
+      case 0 -> new ExcelChartDefinition.Title.None();
+      case 1 -> new ExcelChartDefinition.Title.Text("Chart " + data.consumeInt(0, 9));
+      default -> new ExcelChartDefinition.Title.Formula(data.consumeBoolean() ? "B1" : "C1");
+    };
+  }
+
+  private static ChartInput.Legend nextChartLegendInput(GridGrindFuzzData data) {
+    return data.consumeBoolean()
+        ? new ChartInput.Legend.Hidden()
+        : new ChartInput.Legend.Visible(nextChartLegendPosition(data));
+  }
+
+  private static ExcelChartDefinition.Legend nextExcelChartLegend(GridGrindFuzzData data) {
+    return data.consumeBoolean()
+        ? new ExcelChartDefinition.Legend.Hidden()
+        : new ExcelChartDefinition.Legend.Visible(nextChartLegendPosition(data));
+  }
+
+  private static ExcelChartLegendPosition nextChartLegendPosition(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data)) % 5) {
+      case 0 -> ExcelChartLegendPosition.BOTTOM;
+      case 1 -> ExcelChartLegendPosition.LEFT;
+      case 2 -> ExcelChartLegendPosition.RIGHT;
+      case 3 -> ExcelChartLegendPosition.TOP;
+      default -> ExcelChartLegendPosition.TOP_RIGHT;
+    };
+  }
+
+  private static ExcelChartDisplayBlanksAs nextChartDisplayBlanksAs(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data)) % 3) {
+      case 0 -> ExcelChartDisplayBlanksAs.GAP;
+      case 1 -> ExcelChartDisplayBlanksAs.SPAN;
+      default -> ExcelChartDisplayBlanksAs.ZERO;
+    };
+  }
+
+  private static ExcelChartBarDirection nextChartBarDirection(GridGrindFuzzData data) {
+    return data.consumeBoolean() ? ExcelChartBarDirection.COLUMN : ExcelChartBarDirection.BAR;
+  }
+
+  private static List<ChartInput.Series> nextChartSeriesInputs(
+      GridGrindFuzzData data, boolean pieChart) {
+    List<ChartInput.Series> series = new ArrayList<>();
+    series.add(nextChartSeriesInput(data, "B1", "B2:B4"));
+    if (!pieChart && data.consumeBoolean()) {
+      series.add(nextChartSeriesInput(data, "C1", "C2:C4"));
+    }
+    return List.copyOf(series);
+  }
+
+  private static List<ExcelChartDefinition.Series> nextExcelChartSeries(
+      GridGrindFuzzData data, boolean pieChart) {
+    List<ExcelChartDefinition.Series> series = new ArrayList<>();
+    series.add(nextExcelChartSeries(data, "B1", "B2:B4"));
+    if (!pieChart && data.consumeBoolean()) {
+      series.add(nextExcelChartSeries(data, "C1", "C2:C4"));
+    }
+    return List.copyOf(series);
+  }
+
+  private static ChartInput.Series nextChartSeriesInput(
+      GridGrindFuzzData data, String titleFormula, String valuesFormula) {
+    return new ChartInput.Series(
+        data.consumeBoolean()
+            ? new ChartInput.Title.Formula(titleFormula)
+            : new ChartInput.Title.Text("Series " + data.consumeInt(0, 9)),
+        new ChartInput.DataSource("A2:A4"),
+        new ChartInput.DataSource(valuesFormula));
+  }
+
+  private static ExcelChartDefinition.Series nextExcelChartSeries(
+      GridGrindFuzzData data, String titleFormula, String valuesFormula) {
+    return new ExcelChartDefinition.Series(
+        data.consumeBoolean()
+            ? new ExcelChartDefinition.Title.Formula(titleFormula)
+            : new ExcelChartDefinition.Title.Text("Series " + data.consumeInt(0, 9)),
+        new ExcelChartDefinition.DataSource("A2:A4"),
+        new ExcelChartDefinition.DataSource(valuesFormula));
+  }
+
   private static ExcelShapeDefinition nextExcelShapeDefinition(GridGrindFuzzData data) {
     if (data.consumeBoolean()) {
       return new ExcelShapeDefinition(
@@ -1236,10 +1434,11 @@ public final class OperationSequenceModel {
   }
 
   private static String nextDrawingObjectName(GridGrindFuzzData data) {
-    return switch (selectorSlot(nextSelectorByte(data)) & 0x3) {
+    return switch (selectorSlot(nextSelectorByte(data)) % 5) {
       case 0 -> DRAWING_PICTURE_NAME;
-      case 1 -> DRAWING_SHAPE_NAME;
-      case 2 -> DRAWING_CONNECTOR_NAME;
+      case 1 -> DRAWING_CHART_NAME;
+      case 2 -> DRAWING_SHAPE_NAME;
+      case 3 -> DRAWING_CONNECTOR_NAME;
       default -> DRAWING_EMBEDDED_OBJECT_NAME;
     };
   }

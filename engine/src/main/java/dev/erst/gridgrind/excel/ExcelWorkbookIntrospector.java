@@ -80,6 +80,11 @@ final class ExcelWorkbookIntrospector {
               getDrawingObjects.requestId(),
               getDrawingObjects.sheetName(),
               documentIntrospector.drawingObjects(workbook, getDrawingObjects.sheetName()));
+      case WorkbookReadCommand.GetCharts getCharts ->
+          new WorkbookReadResult.ChartsResult(
+              getCharts.requestId(),
+              getCharts.sheetName(),
+              documentIntrospector.charts(workbook, getCharts.sheetName()));
       case WorkbookReadCommand.GetDrawingObjectPayload getDrawingObjectPayload ->
           new WorkbookReadResult.DrawingObjectPayloadResult(
               getDrawingObjectPayload.requestId(),

@@ -82,6 +82,13 @@ final class ExcelDocumentIntrospector {
     return drawingController.drawingObjects(workbook.sheet(sheetName).xssfSheet());
   }
 
+  /** Returns factual chart metadata for one sheet. */
+  List<ExcelChartSnapshot> charts(ExcelWorkbook workbook, String sheetName) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(sheetName, "sheetName must not be null");
+    return drawingController.charts(workbook.sheet(sheetName).xssfSheet());
+  }
+
   /** Returns the extracted binary payload for one existing drawing object on one sheet. */
   ExcelDrawingObjectPayload drawingObjectPayload(
       ExcelWorkbook workbook, String sheetName, String objectName) {

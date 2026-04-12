@@ -393,6 +393,15 @@ class GridGrindCliTest {
     assertTrue(
         help.contains(
             "Column structural edits:  same ownership rule; deletes/shifts also reject destructive range-backed named ranges; all column edits reject any workbook formulas or formula-defined names."));
+    assertTrue(
+        help.contains(
+            "Chart mutations:          SET_CHART authors BAR, LINE, and PIE only; unsupported loaded chart detail is preserved on unrelated edits and rejected for authoritative mutation."));
+    assertTrue(
+        help.contains(
+            "Chart title formulas:     SET_CHART title FORMULA and series.title FORMULA must resolve to one cell, directly or through one defined name."));
+    assertTrue(
+        help.contains(
+            "Drawing validation:       failed SET_SHAPE / SET_CHART validation leaves existing drawing state unchanged and creates no partial artifacts."));
   }
 
   @Test
@@ -1133,6 +1142,7 @@ class GridGrindCliTest {
         help.contains("250,000"), "help must state the GET_WINDOW / GET_SHEET_SCHEMA cell limit");
     assertTrue(help.contains("255"), "help must state the column width limit");
     assertTrue(help.contains("1638"), "help must state the row height limit");
+    assertTrue(help.contains("BAR, LINE, and PIE"), "help must state the authored chart boundary");
     assertTrue(
         help.contains("NUMBER"),
         "help must note that DATE/DATE_TIME inputs are stored as NUMBER on read-back");

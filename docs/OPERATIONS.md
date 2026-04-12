@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.38.0"
+version: "0.39.0"
 domain: OPERATIONS
 updated: "2026-04-12"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-picture, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-drawing-objects, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol, coordinates, rowindex, columnindex, warnings]
-  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I add a picture in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol, coordinates, rowindex, columnindex, warnings]
+  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I add a picture in gridgrind", "how do I author a chart in gridgrind", "how do I read charts in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
 ---
 
 # Operations Reference
@@ -222,7 +222,7 @@ Create a sheet if it does not already exist. Does nothing if the sheet exists.
 All mutation operations (`SET_CELL`, `SET_RANGE`, `CLEAR_RANGE`, `APPLY_STYLE`,
 `SET_DATA_VALIDATION`, `CLEAR_DATA_VALIDATIONS`, `SET_CONDITIONAL_FORMATTING`,
 `CLEAR_CONDITIONAL_FORMATTING`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`,
-`CLEAR_COMMENT`, `SET_PICTURE`, `SET_SHAPE`, `SET_EMBEDDED_OBJECT`,
+`CLEAR_COMMENT`, `SET_PICTURE`, `SET_CHART`, `SET_SHAPE`, `SET_EMBEDDED_OBJECT`,
 `SET_DRAWING_OBJECT_ANCHOR`, `DELETE_DRAWING_OBJECT`, `SET_AUTOFILTER`,
 `CLEAR_AUTOFILTER`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the target sheet to already exist.
 `SET_TABLE` also requires the target `table.sheetName` to exist. Use `ENSURE_SHEET` before the
@@ -1345,6 +1345,10 @@ Create or replace one named simple shape or connector on one sheet.
 | `presetGeometryToken` | No | Optional preset geometry token for `SIMPLE_SHAPE`. Defaults to `rect` when omitted. Not allowed for `CONNECTOR`. |
 | `text` | No | Optional nonblank text for `SIMPLE_SHAPE`. Not allowed for `CONNECTOR`. |
 
+Validation failures are non-mutating. If `presetGeometryToken` is unsupported, GridGrind rejects
+the request without deleting an existing object of the same name and without leaving a partial new
+shape behind.
+
 ---
 
 ### SET_EMBEDDED_OBJECT
@@ -1391,6 +1395,90 @@ image.
 | `base64Data` | Yes | Base64-encoded embedded payload bytes. |
 | `previewImage` | Yes | Preview picture payload shown by Excel for the object. |
 | `anchor` | Yes | Authored drawing anchor. Phase 5 supports only `TWO_CELL`. |
+
+---
+
+### SET_CHART
+
+Create or mutate one named supported simple chart on one sheet. Supported authored families are
+`BAR`, `LINE`, and `PIE`. Series bind to workbook ranges or defined names. Existing unsupported
+chart detail is preserved on unrelated edits and rejected for authoritative mutation.
+
+```json
+{
+  "type": "SET_CHART",
+  "sheetName": "Ops",
+  "chart": {
+    "type": "BAR",
+    "name": "OpsChart",
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": { "columnIndex": 4, "rowIndex": 0, "dx": 0, "dy": 0 },
+      "to": { "columnIndex": 8, "rowIndex": 12, "dx": 0, "dy": 0 },
+      "behavior": "MOVE_AND_RESIZE"
+    },
+    "title": { "type": "TEXT", "text": "Roadmap" },
+    "legend": { "type": "VISIBLE", "position": "TOP_RIGHT" },
+    "displayBlanksAs": "SPAN",
+    "plotOnlyVisibleCells": false,
+    "varyColors": true,
+    "barDirection": "COLUMN",
+    "series": [
+      {
+        "title": { "type": "TEXT", "text": "Plan" },
+        "categories": { "formula": "ChartCategories" },
+        "values": { "formula": "Ops!$B$2:$B$4" }
+      },
+      {
+        "title": { "type": "TEXT", "text": "Actual" },
+        "categories": { "formula": "ChartCategories" },
+        "values": { "formula": "ChartActual" }
+      }
+    ]
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Target sheet. |
+| `chart` | Yes | Authoritative supported-chart payload. |
+
+`chart` common fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `type` | Yes | `BAR`, `LINE`, or `PIE`. |
+| `name` | Yes | Nonblank sheet-local chart name. Reuses the existing chart when the name already exists. |
+| `anchor` | Yes | Authored chart-frame anchor. Currently only `TWO_CELL` is supported. |
+| `title` | No | `NONE`, `TEXT`, or `FORMULA`. Defaults to `NONE`. |
+| `legend` | No | `HIDDEN` or `VISIBLE`. `VISIBLE.position` defaults to `RIGHT` when omitted. |
+| `displayBlanksAs` | No | `GAP`, `SPAN`, or `ZERO`. Defaults to `GAP`. |
+| `plotOnlyVisibleCells` | No | Whether hidden cells are ignored. Defaults to `true`. |
+| `varyColors` | No | Whether Excel varies series colors automatically. Defaults to `false`. |
+| `series` | Yes | Ordered non-empty series list. |
+
+`series` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `title` | No | `NONE`, `TEXT`, or `FORMULA`. Defaults to `NONE`. |
+| `categories` | Yes | Workbook-bound category source formula. |
+| `values` | Yes | Workbook-bound value source formula. |
+
+Variant-specific fields:
+
+| Chart type | Field | Required | Description |
+|:-----------|:------|:---------|:------------|
+| `BAR` | `barDirection` | No | `COLUMN` or `BAR`. Defaults to `COLUMN`. |
+| `PIE` | `firstSliceAngle` | No | Integer between `0` and `360`. |
+
+`categories.formula` and `values.formula` accept either contiguous A1-style references such as
+`Ops!$B$2:$B$4` or defined names such as `ChartActual`.
+Formula-backed chart titles and series titles must resolve to one cell, either directly or
+through a defined name that resolves to one cell.
+Validation failures are non-mutating: GridGrind rejects invalid authored chart payloads without
+creating a partial chart or partially mutating an existing supported chart.
 
 ---
 
@@ -2572,6 +2660,7 @@ Returned entries are one of:
 
 - `PICTURE` with `format`, `contentType`, byte size or digest facts, optional pixel size, optional
   `description`, and a factual `anchor`
+- `CHART` with `supported`, ordered `plotTypeTokens`, title text, and a factual `anchor`
 - `SHAPE` with `kind`, optional `presetGeometryToken`, optional `text`, `childCount`, and a
   factual `anchor`
 - `EMBEDDED_OBJECT` with `packagingKind`, content type, digest facts, optional label or file name
@@ -2580,6 +2669,42 @@ Returned entries are one of:
 Read-side anchors can be `TWO_CELL`, `ONE_CELL`, or `ABSOLUTE`. `TWO_CELL` markers expose
 zero-based `columnIndex`, `rowIndex`, `dx`, and `dy`. `ONE_CELL` and `ABSOLUTE` anchors expose
 their size fields in EMUs.
+
+### GET_CHARTS
+
+Returns factual chart metadata for one sheet. Supported simple `BAR`, `LINE`, and `PIE` charts are
+modeled authoritatively. Unsupported plot families or multi-plot combinations are surfaced as
+explicit `UNSUPPORTED` entries with preserved plot-type tokens.
+
+```json
+{
+  "type": "GET_CHARTS",
+  "requestId": "charts",
+  "sheetName": "Ops"
+}
+```
+
+Response shape: `{ "charts": [ ... ] }`.
+
+Returned entries are one of:
+
+- `BAR` with chart `anchor`, `title`, `legend`, `displayBlanksAs`, `plotOnlyVisibleCells`,
+  `varyColors`, `barDirection`, ordered `axes`, and ordered `series`
+- `LINE` with chart `anchor`, `title`, `legend`, `displayBlanksAs`, `plotOnlyVisibleCells`,
+  `varyColors`, ordered `axes`, and ordered `series`
+- `PIE` with chart `anchor`, `title`, `legend`, `displayBlanksAs`, `plotOnlyVisibleCells`,
+  `varyColors`, optional `firstSliceAngle`, and ordered `series`
+- `UNSUPPORTED` with chart `anchor`, ordered `plotTypeTokens`, and human-readable `detail`
+
+Series titles are returned as `NONE`, `TEXT`, or `FORMULA`. Series data sources are returned as
+`STRING_REFERENCE`, `NUMERIC_REFERENCE`, `STRING_LITERAL`, or `NUMERIC_LITERAL`. Read-side anchors
+reuse the same factual `TWO_CELL`, `ONE_CELL`, or `ABSOLUTE` shapes described by
+`GET_DRAWING_OBJECTS`.
+Blank loaded chart titles normalize to `NONE`. Sparse literal source caches preserve declared point
+order by surfacing missing positions as empty strings. If a workbook still contains a graphic frame
+but its chart relationship is missing, `GET_CHARTS` omits the broken authoritative chart entry and
+`GET_DRAWING_OBJECTS` reports the surviving frame as a read-only `GRAPHIC_FRAME` shape instead of
+failing the sheet read.
 
 ### GET_DRAWING_OBJECT_PAYLOAD
 

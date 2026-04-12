@@ -306,13 +306,27 @@ public final class GridGrindProtocolCatalog {
                   + " currently supports TWO_CELL anchors."
                   + " Reusing an existing object name replaces that picture authoritatively."),
           descriptor(
+              WorkbookOperation.SetChart.class,
+              "SET_CHART",
+              "Create or mutate one named simple chart on a sheet."
+                  + " Supported authored families are BAR, LINE, and PIE."
+                  + " series bind to contiguous ranges or defined names and anchors currently"
+                  + " support only TWO_CELL."
+                  + " Chart and series FORMULA titles must resolve to one cell."
+                  + " Failed validation leaves existing drawing state unchanged and creates no"
+                  + " partial chart artifacts."
+                  + " Existing unsupported chart detail is preserved on unrelated edits and"
+                  + " rejected for authoritative mutation."),
+          descriptor(
               WorkbookOperation.SetShape.class,
               "SET_SHAPE",
               "Create or replace one named authored drawing shape on a sheet."
                   + " kind currently supports only SIMPLE_SHAPE and CONNECTOR."
                   + " SIMPLE_SHAPE defaults presetGeometryToken to rect when omitted."
                   + " anchor uses the explicit DrawingAnchorInput discriminated shape and"
-                  + " currently supports TWO_CELL anchors."),
+                  + " currently supports TWO_CELL anchors."
+                  + " Failed validation leaves existing drawing state unchanged and creates no"
+                  + " partial shape artifacts."),
           descriptor(
               WorkbookOperation.SetEmbeddedObject.class,
               "SET_EMBEDDED_OBJECT",
@@ -515,8 +529,15 @@ public final class GridGrindProtocolCatalog {
               "GET_DRAWING_OBJECTS",
               "Return factual drawing-object metadata for one sheet."
                   + " Read families include pictures, simple shapes, connectors, groups,"
-                  + " graphic frames, and embedded objects with truthful anchor and package"
+                  + " charts, graphic frames, and embedded objects with truthful anchor and package"
                   + " facts."),
+          descriptor(
+              WorkbookReadOperation.GetCharts.class,
+              "GET_CHARTS",
+              "Return factual chart metadata for one sheet."
+                  + " Supported simple BAR, LINE, and PIE charts are modeled authoritatively;"
+                  + " unsupported plot families or multi-plot combinations are surfaced as"
+                  + " explicit UNSUPPORTED entries with preserved plot-type tokens."),
           descriptor(
               WorkbookReadOperation.GetDrawingObjectPayload.class,
               "GET_DRAWING_OBJECT_PAYLOAD",
@@ -805,6 +826,66 @@ public final class GridGrindProtocolCatalog {
                           + " behavior defaults to MOVE_AND_RESIZE when omitted.",
                       "behavior"))),
           nestedTypeGroup(
+              "chartInputTypes",
+              ChartInput.class,
+              List.of(
+                  descriptor(
+                      ChartInput.Bar.class,
+                      "BAR",
+                      "Authored simple bar chart."
+                          + " title, legend, displayBlanksAs, plotOnlyVisibleCells, varyColors,"
+                          + " and barDirection default when omitted.",
+                      "title",
+                      "legend",
+                      "displayBlanksAs",
+                      "plotOnlyVisibleCells",
+                      "varyColors",
+                      "barDirection"),
+                  descriptor(
+                      ChartInput.Line.class,
+                      "LINE",
+                      "Authored simple line chart."
+                          + " title, legend, displayBlanksAs, plotOnlyVisibleCells, and"
+                          + " varyColors default when omitted.",
+                      "title",
+                      "legend",
+                      "displayBlanksAs",
+                      "plotOnlyVisibleCells",
+                      "varyColors"),
+                  descriptor(
+                      ChartInput.Pie.class,
+                      "PIE",
+                      "Authored simple pie chart."
+                          + " title, legend, displayBlanksAs, plotOnlyVisibleCells,"
+                          + " varyColors, and firstSliceAngle are optional.",
+                      "title",
+                      "legend",
+                      "displayBlanksAs",
+                      "plotOnlyVisibleCells",
+                      "varyColors",
+                      "firstSliceAngle"))),
+          nestedTypeGroup(
+              "chartTitleInputTypes",
+              ChartInput.Title.class,
+              List.of(
+                  descriptor(
+                      ChartInput.Title.None.class, "NONE", "Remove any chart or series title."),
+                  descriptor(ChartInput.Title.Text.class, "TEXT", "Use one explicit static title."),
+                  descriptor(
+                      ChartInput.Title.Formula.class,
+                      "FORMULA",
+                      "Bind the chart or series title to one workbook formula that resolves"
+                          + " to one cell."))),
+          nestedTypeGroup(
+              "chartLegendInputTypes",
+              ChartInput.Legend.class,
+              List.of(
+                  descriptor(ChartInput.Legend.Hidden.class, "HIDDEN", "Hide the legend entirely."),
+                  descriptor(
+                      ChartInput.Legend.Visible.class,
+                      "VISIBLE",
+                      "Show the legend at one explicit position."))),
+          nestedTypeGroup(
               "fontHeightTypes",
               FontHeightInput.class,
               List.of(
@@ -1033,6 +1114,18 @@ public final class GridGrindProtocolCatalog {
               "One zero-based drawing marker with explicit column, row, and in-cell offsets.",
               List.of()),
           plainTypeDescriptor(
+              "chartSeriesInputType",
+              ChartInput.Series.class,
+              "ChartSeriesInput",
+              "One authored chart series with a title plus category and value data sources.",
+              List.of("title")),
+          plainTypeDescriptor(
+              "chartDataSourceInputType",
+              ChartInput.DataSource.class,
+              "ChartDataSourceInput",
+              "One contiguous chart source bound by formula or defined name.",
+              List.of()),
+          plainTypeDescriptor(
               "pictureDataInputType",
               PictureDataInput.class,
               "PictureDataInput",
@@ -1050,7 +1143,8 @@ public final class GridGrindProtocolCatalog {
               "ShapeInput",
               "Named simple-shape or connector authoring payload for SET_SHAPE."
                   + " kind is limited to the authored drawing shape family."
-                  + " presetGeometryToken defaults to rect for SIMPLE_SHAPE when omitted.",
+                  + " presetGeometryToken defaults to rect for SIMPLE_SHAPE when omitted."
+                  + " Invalid presetGeometryToken values are rejected non-mutatingly.",
               List.of("presetGeometryToken", "text")),
           plainTypeDescriptor(
               "embeddedObjectInputType",

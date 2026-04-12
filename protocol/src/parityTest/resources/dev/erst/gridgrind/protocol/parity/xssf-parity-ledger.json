@@ -1068,14 +1068,14 @@
     },
     {
       "sequence": 57,
-      "id": "phase-6-charts-preservation",
+      "id": "phase-6-charts-readback",
       "capability": "charts",
-      "subfamily": "preservation",
+      "subfamily": "readback",
       "phase": 6,
       "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
-      "gridGrindStatus": "ABSENT",
+      "gridGrindStatus": "COMPLETE",
       "expectedOutcome": "PASS",
-      "probeId": "probe-chart-preservation",
+      "probeId": "probe-chart-readback",
       "scenarioIds": [
         "poi-chart"
       ],
@@ -1083,10 +1083,88 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "Chart package parts are preserved across unrelated edits without first-class modeling."
+      "notes": "GridGrind now reads supported simple charts and chart drawing inventory with direct POI agreement."
     },
     {
       "sequence": 58,
+      "id": "phase-6-charts-authoring",
+      "capability": "charts",
+      "subfamily": "authoring",
+      "phase": 6,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-chart-authoring",
+      "scenarioIds": [
+        "gridgrind-chart-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "Limitations"
+      ],
+      "notes": "GridGrind now authors named-range-backed supported simple charts and rereads them losslessly."
+    },
+    {
+      "sequence": 59,
+      "id": "phase-6-charts-mutation",
+      "capability": "charts",
+      "subfamily": "mutation",
+      "phase": 6,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-chart-mutation",
+      "scenarioIds": [
+        "poi-chart"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "Limitations"
+      ],
+      "notes": "GridGrind now mutates supported simple charts on existing workbooks after workbook-core edits without breaking chart relations."
+    },
+    {
+      "sequence": 60,
+      "id": "phase-6-charts-preservation",
+      "capability": "charts",
+      "subfamily": "preservation",
+      "phase": 6,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-chart-preservation",
+      "scenarioIds": [
+        "poi-chart",
+        "gridgrind-chart-authoring",
+        "poi-chart-unsupported"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "Limitations"
+      ],
+      "notes": "All Phase 6 chart corpus workbooks now preserve chart package relations, anchors, and unsupported detail across unrelated edits."
+    },
+    {
+      "sequence": 61,
+      "id": "phase-6-charts-unsupported-detail",
+      "capability": "charts",
+      "subfamily": "unsupported-detail",
+      "phase": 6,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-chart-unsupported",
+      "scenarioIds": [
+        "poi-chart-unsupported"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "Limitations"
+      ],
+      "notes": "Unsupported multi-plot chart detail is surfaced truthfully, preserved non-lossily, and rejects authoritative mutation."
+    },
+    {
+      "sequence": 62,
       "id": "phase-7-pivot-tables-preservation",
       "capability": "pivot-tables",
       "subfamily": "preservation",
@@ -1105,7 +1183,7 @@
       "notes": "Pivot-table package parts are preserved across unrelated edits without first-class modeling."
     },
     {
-      "sequence": 59,
+      "sequence": 63,
       "id": "phase-8-event-model-read",
       "capability": "event-model-read",
       "subfamily": "read",
@@ -1124,7 +1202,7 @@
       "notes": "POI event-model reads are not yet available through GridGrind."
     },
     {
-      "sequence": 60,
+      "sequence": 64,
       "id": "phase-8-sxssf-streaming-write",
       "capability": "sxssf-streaming-write",
       "subfamily": "write",
@@ -1143,7 +1221,7 @@
       "notes": "Streaming write parity via SXSSF is not yet available."
     },
     {
-      "sequence": 61,
+      "sequence": 65,
       "id": "phase-9-ooxml-encryption",
       "capability": "ooxml-encryption",
       "subfamily": "read-write",
@@ -1161,7 +1239,7 @@
       "notes": "Encrypted OOXML workbook handling is absent from GridGrind."
     },
     {
-      "sequence": 62,
+      "sequence": 66,
       "id": "phase-9-ooxml-signing",
       "capability": "ooxml-signing",
       "subfamily": "read-write",

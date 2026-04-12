@@ -70,6 +70,7 @@ import java.util.Set;
   @JsonSubTypes.Type(value = WorkbookOperation.SetComment.class, name = "SET_COMMENT"),
   @JsonSubTypes.Type(value = WorkbookOperation.ClearComment.class, name = "CLEAR_COMMENT"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetPicture.class, name = "SET_PICTURE"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetChart.class, name = "SET_CHART"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetShape.class, name = "SET_SHAPE"),
   @JsonSubTypes.Type(
       value = WorkbookOperation.SetEmbeddedObject.class,
@@ -488,6 +489,14 @@ public sealed interface WorkbookOperation {
     }
   }
 
+  /** Creates or mutates one supported simple chart on one sheet. */
+  record SetChart(String sheetName, ChartInput chart) implements WorkbookOperation {
+    public SetChart {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(chart, "chart must not be null");
+    }
+  }
+
   /** Creates or replaces one simple-shape or connector drawing object on one sheet. */
   record SetShape(String sheetName, ShapeInput shape) implements WorkbookOperation {
     public SetShape {
@@ -718,6 +727,7 @@ public sealed interface WorkbookOperation {
       case SetComment _ -> "SET_COMMENT";
       case ClearComment _ -> "CLEAR_COMMENT";
       case SetPicture _ -> "SET_PICTURE";
+      case SetChart _ -> "SET_CHART";
       case SetShape _ -> "SET_SHAPE";
       case SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
       case SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";

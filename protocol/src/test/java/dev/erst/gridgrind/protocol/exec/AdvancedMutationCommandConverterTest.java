@@ -1,8 +1,10 @@
 package dev.erst.gridgrind.protocol.exec;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
@@ -15,6 +17,10 @@ import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDefinition;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCommentAnchor;
@@ -49,6 +55,7 @@ import dev.erst.gridgrind.protocol.dto.CellFontInput;
 import dev.erst.gridgrind.protocol.dto.CellGradientFillInput;
 import dev.erst.gridgrind.protocol.dto.CellGradientStopInput;
 import dev.erst.gridgrind.protocol.dto.CellStyleInput;
+import dev.erst.gridgrind.protocol.dto.ChartInput;
 import dev.erst.gridgrind.protocol.dto.ColorInput;
 import dev.erst.gridgrind.protocol.dto.CommentAnchorInput;
 import dev.erst.gridgrind.protocol.dto.CommentInput;
@@ -258,6 +265,184 @@ class AdvancedMutationCommandConverterTest {
         embeddedObjectCommand.embeddedObject());
     assertEquals("OpsPicture", moveCommand.objectName());
     assertEquals("OpsPicture", deleteCommand.objectName());
+  }
+
+  @Test
+  void convertsChartMutationOperationsAcrossSupportedFamilies() {
+    DrawingAnchorInput.TwoCell anchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 2, 3, 4),
+            new DrawingMarkerInput(7, 12, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    ChartInput.Series firstSeries =
+        new ChartInput.Series(
+            new ChartInput.Title.Formula("B1"),
+            new ChartInput.DataSource("A2:A4"),
+            new ChartInput.DataSource("B2:B4"));
+    ChartInput.Series secondSeries =
+        new ChartInput.Series(
+            new ChartInput.Title.Text("Actual"),
+            new ChartInput.DataSource("ChartCategories"),
+            new ChartInput.DataSource("ChartActual"));
+
+    WorkbookCommand.SetChart lineCommand =
+        assertInstanceOf(
+            WorkbookCommand.SetChart.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.SetChart(
+                    "Ops",
+                    new ChartInput.Line(
+                        "TrendChart",
+                        anchor,
+                        new ChartInput.Title.Text("Trend"),
+                        new ChartInput.Legend.Hidden(),
+                        ExcelChartDisplayBlanksAs.ZERO,
+                        false,
+                        true,
+                        List.of(firstSeries)))));
+    WorkbookCommand.SetChart pieCommand =
+        assertInstanceOf(
+            WorkbookCommand.SetChart.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.SetChart(
+                    "Ops",
+                    new ChartInput.Pie(
+                        "ShareChart",
+                        anchor,
+                        new ChartInput.Title.Formula("C1"),
+                        null,
+                        null,
+                        null,
+                        null,
+                        120,
+                        List.of(secondSeries)))));
+
+    assertEquals("Ops", lineCommand.sheetName());
+    ExcelChartDefinition.Line lineChart =
+        assertInstanceOf(ExcelChartDefinition.Line.class, lineCommand.chart());
+    assertEquals(new ExcelChartDefinition.Title.Text("Trend"), lineChart.title());
+    assertEquals(new ExcelChartDefinition.Legend.Hidden(), lineChart.legend());
+    assertEquals(ExcelChartDisplayBlanksAs.ZERO, lineChart.displayBlanksAs());
+    assertFalse(lineChart.plotOnlyVisibleCells());
+    assertTrue(lineChart.varyColors());
+    assertEquals(
+        new ExcelChartDefinition.Series(
+            new ExcelChartDefinition.Title.Formula("B1"),
+            new ExcelChartDefinition.DataSource("A2:A4"),
+            new ExcelChartDefinition.DataSource("B2:B4")),
+        lineChart.series().getFirst());
+
+    ExcelChartDefinition.Pie pieChart =
+        assertInstanceOf(ExcelChartDefinition.Pie.class, pieCommand.chart());
+    assertEquals(new ExcelChartDefinition.Title.Formula("C1"), pieChart.title());
+    assertEquals(
+        new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT), pieChart.legend());
+    assertEquals(ExcelChartDisplayBlanksAs.GAP, pieChart.displayBlanksAs());
+    assertTrue(pieChart.plotOnlyVisibleCells());
+    assertFalse(pieChart.varyColors());
+    assertEquals(120, pieChart.firstSliceAngle());
+    assertEquals(
+        new ExcelChartDefinition.Series(
+            new ExcelChartDefinition.Title.Text("Actual"),
+            new ExcelChartDefinition.DataSource("ChartCategories"),
+            new ExcelChartDefinition.DataSource("ChartActual")),
+        pieChart.series().getFirst());
+  }
+
+  @Test
+  void directChartHelperConversionsCoverStandaloneSwitchBranches() {
+    DrawingAnchorInput.TwoCell anchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(2, 3, 0, 0),
+            new DrawingMarkerInput(9, 16, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    ChartInput.Series barSeries =
+        new ChartInput.Series(
+            new ChartInput.Title.None(),
+            new ChartInput.DataSource("Summary!$A$2:$A$4"),
+            new ChartInput.DataSource("Summary!$B$2:$B$4"));
+    ChartInput barInput =
+        new ChartInput.Bar(
+            "OpsBar",
+            anchor,
+            new ChartInput.Title.Formula("Summary!$B$1"),
+            new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP),
+            ExcelChartDisplayBlanksAs.SPAN,
+            false,
+            true,
+            ExcelChartBarDirection.BAR,
+            List.of(barSeries));
+    ChartInput lineInput =
+        new ChartInput.Line(
+            "OpsLine",
+            anchor,
+            new ChartInput.Title.Text("Trend"),
+            new ChartInput.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.ZERO,
+            true,
+            false,
+            List.of(
+                new ChartInput.Series(
+                    new ChartInput.Title.Formula("Summary!$C$1"),
+                    new ChartInput.DataSource("ChartCategories"),
+                    new ChartInput.DataSource("ChartActual"))));
+    ChartInput pieInput =
+        new ChartInput.Pie(
+            "OpsPie",
+            anchor,
+            new ChartInput.Title.Text("Share"),
+            new ChartInput.Legend.Visible(ExcelChartLegendPosition.LEFT),
+            ExcelChartDisplayBlanksAs.GAP,
+            true,
+            true,
+            90,
+            List.of(
+                new ChartInput.Series(
+                    new ChartInput.Title.Text("Actual"),
+                    new ChartInput.DataSource("ChartCategories"),
+                    new ChartInput.DataSource("ChartActual"))));
+
+    ExcelChartDefinition.Bar bar =
+        assertInstanceOf(
+            ExcelChartDefinition.Bar.class,
+            WorkbookCommandConverter.toExcelChartDefinition(barInput));
+    ExcelChartDefinition.Line line =
+        assertInstanceOf(
+            ExcelChartDefinition.Line.class,
+            WorkbookCommandConverter.toExcelChartDefinition(lineInput));
+    ExcelChartDefinition.Pie pie =
+        assertInstanceOf(
+            ExcelChartDefinition.Pie.class,
+            WorkbookCommandConverter.toExcelChartDefinition(pieInput));
+    WorkbookOperation barOperation = new WorkbookOperation.SetChart("Ops", barInput);
+    WorkbookCommand.SetChart barCommand =
+        assertInstanceOf(
+            WorkbookCommand.SetChart.class, WorkbookCommandConverter.toCommand(barOperation));
+
+    assertEquals(new ExcelChartDefinition.Title.Formula("Summary!$B$1"), bar.title());
+    assertEquals(
+        new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP), bar.legend());
+    assertEquals(ExcelChartDisplayBlanksAs.SPAN, bar.displayBlanksAs());
+    assertFalse(bar.plotOnlyVisibleCells());
+    assertTrue(bar.varyColors());
+    assertEquals(ExcelChartBarDirection.BAR, bar.barDirection());
+    assertEquals(
+        new ExcelChartDefinition.Series(
+            new ExcelChartDefinition.Title.None(),
+            new ExcelChartDefinition.DataSource("Summary!$A$2:$A$4"),
+            new ExcelChartDefinition.DataSource("Summary!$B$2:$B$4")),
+        bar.series().getFirst());
+    assertEquals(new ExcelChartDefinition.Title.Text("Trend"), line.title());
+    assertEquals(new ExcelChartDefinition.Legend.Hidden(), line.legend());
+    assertEquals(
+        new ExcelChartDefinition.Title.Formula("Summary!$C$1"), line.series().getFirst().title());
+    assertEquals(new ExcelChartDefinition.Title.Text("Share"), pie.title());
+    assertEquals(
+        new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.LEFT), pie.legend());
+    assertTrue(pie.varyColors());
+    assertEquals(90, pie.firstSliceAngle());
+    assertEquals("Ops", barCommand.sheetName());
+    assertEquals(bar, barCommand.chart());
   }
 
   @Test

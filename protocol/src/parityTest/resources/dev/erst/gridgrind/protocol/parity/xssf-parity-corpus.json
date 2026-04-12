@@ -50,7 +50,17 @@
     {
       "id": "poi-chart",
       "kind": "POI_DIRECT",
-      "description": "Direct-POI workbook containing an XSSF chart."
+      "description": "Direct-POI workbook containing one supported simple XSSF bar chart."
+    },
+    {
+      "id": "gridgrind-chart-authoring",
+      "kind": "GRIDGRIND_REQUEST",
+      "description": "GridGrind-authored workbook containing one named-range-backed supported simple XSSF chart."
+    },
+    {
+      "id": "poi-chart-unsupported",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook containing an unsupported multi-plot XSSF combo chart."
     },
     {
       "id": "poi-pivot",

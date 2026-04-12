@@ -4,6 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDefinition;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
@@ -25,6 +29,7 @@ import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.WorkbookCommand;
+import dev.erst.gridgrind.protocol.dto.ChartInput;
 import dev.erst.gridgrind.protocol.dto.CommentInput;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingBlockInput;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleInput;
@@ -113,6 +118,10 @@ class SequenceIntrospectionTest {
         "SET_EMBEDDED_OBJECT",
         SequenceIntrospection.operationKind(
             new WorkbookOperation.SetEmbeddedObject("Budget", protocolEmbeddedObjectInput())));
+    assertEquals(
+        "SET_CHART",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetChart("Budget", protocolChartInput())));
     assertEquals(
         "SET_DRAWING_OBJECT_ANCHOR",
         SequenceIntrospection.operationKind(
@@ -262,6 +271,10 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.commandKind(
             new WorkbookCommand.SetEmbeddedObject("Budget", excelEmbeddedObjectDefinition())));
     assertEquals(
+        "SET_CHART",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetChart("Budget", excelChartDefinition())));
+    assertEquals(
         "SET_DRAWING_OBJECT_ANCHOR",
         SequenceIntrospection.commandKind(
             new WorkbookCommand.SetDrawingObjectAnchor("Budget", "OpsPicture", excelAnchor())));
@@ -370,6 +383,7 @@ class SequenceIntrospectionTest {
                 new WorkbookReadOperation.GetDrawingObjects("drawing-objects", "Budget"),
                 new WorkbookReadOperation.GetDrawingObjectPayload(
                     "drawing-payload", "Budget", "OpsPicture"),
+                new WorkbookReadOperation.GetCharts("charts", "Budget"),
                 new WorkbookReadOperation.GetDataValidations(
                     "validations", "Budget", new RangeSelection.All()),
                 new WorkbookReadOperation.GetConditionalFormatting(
@@ -389,13 +403,14 @@ class SequenceIntrospectionTest {
                     "named-range-health", new NamedRangeSelection.All()),
                 new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings")));
 
-    assertEquals(16, SequenceIntrospection.readCount(request));
+    assertEquals(17, SequenceIntrospection.readCount(request));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_PROTECTION"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DRAWING_OBJECTS"));
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DRAWING_OBJECT_PAYLOAD"));
+    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_CHARTS"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DATA_VALIDATIONS"));
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("GET_CONDITIONAL_FORMATTING"));
@@ -458,6 +473,23 @@ class SequenceIntrospectionTest {
         protocolAnchor());
   }
 
+  private static ChartInput.Bar protocolChartInput() {
+    return new ChartInput.Bar(
+        "OpsChart",
+        protocolAnchor(),
+        new ChartInput.Title.Text("Roadmap"),
+        new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+        ExcelChartDisplayBlanksAs.SPAN,
+        false,
+        true,
+        ExcelChartBarDirection.COLUMN,
+        List.of(
+            new ChartInput.Series(
+                new ChartInput.Title.Text("Actual"),
+                new ChartInput.DataSource("Budget!$A$2:$A$4"),
+                new ChartInput.DataSource("Budget!$B$2:$B$4"))));
+  }
+
   private static ExcelDrawingAnchor.TwoCell excelAnchor() {
     return new ExcelDrawingAnchor.TwoCell(
         new ExcelDrawingMarker(0, 0, 0, 0), new ExcelDrawingMarker(2, 3, 0, 0), null);
@@ -487,5 +519,22 @@ class SequenceIntrospectionTest {
         ExcelPictureFormat.PNG,
         new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
         excelAnchor());
+  }
+
+  private static ExcelChartDefinition.Bar excelChartDefinition() {
+    return new ExcelChartDefinition.Bar(
+        "OpsChart",
+        excelAnchor(),
+        new ExcelChartDefinition.Title.Text("Roadmap"),
+        new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+        ExcelChartDisplayBlanksAs.SPAN,
+        false,
+        true,
+        ExcelChartBarDirection.COLUMN,
+        List.of(
+            new ExcelChartDefinition.Series(
+                new ExcelChartDefinition.Title.Text("Actual"),
+                new ExcelChartDefinition.DataSource("Budget!$A$2:$A$4"),
+                new ExcelChartDefinition.DataSource("Budget!$B$2:$B$4"))));
   }
 }

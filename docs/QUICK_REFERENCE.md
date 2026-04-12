@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.38.0"
+version: "0.39.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-12"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-drawing-objects, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind chart example", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
 ---
 
 # Quick Reference
@@ -671,6 +671,8 @@ Authored drawing mutations currently accept only `TWO_CELL` anchors with zero-ba
 
 `kind` is `SIMPLE_SHAPE` or `CONNECTOR`. `presetGeometryToken` and `text` are only for
 `SIMPLE_SHAPE`, and `presetGeometryToken` defaults to `rect` when omitted.
+Failed validation is non-mutating: unsupported preset geometry does not delete an existing object
+or leave a partial new shape behind.
 
 ## SET_EMBEDDED_OBJECT
 
@@ -698,6 +700,52 @@ Authored drawing mutations currently accept only `TWO_CELL` anchors with zero-ba
 ```
 
 `previewImage` reuses the same `format` plus `base64Data` shape as `SET_PICTURE.picture.image`.
+
+## SET_CHART
+
+```json
+{
+  "type": "SET_CHART",
+  "sheetName": "Ops",
+  "chart": {
+    "type": "BAR",
+    "name": "OpsChart",
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": { "columnIndex": 4, "rowIndex": 0, "dx": 0, "dy": 0 },
+      "to": { "columnIndex": 8, "rowIndex": 12, "dx": 0, "dy": 0 },
+      "behavior": "MOVE_AND_RESIZE"
+    },
+    "title": { "type": "TEXT", "text": "Roadmap" },
+    "legend": { "type": "VISIBLE", "position": "TOP_RIGHT" },
+    "displayBlanksAs": "SPAN",
+    "plotOnlyVisibleCells": false,
+    "varyColors": true,
+    "barDirection": "COLUMN",
+    "series": [
+      {
+        "title": { "type": "TEXT", "text": "Plan" },
+        "categories": { "formula": "ChartCategories" },
+        "values": { "formula": "Ops!$B$2:$B$4" }
+      },
+      {
+        "title": { "type": "TEXT", "text": "Actual" },
+        "categories": { "formula": "ChartCategories" },
+        "values": { "formula": "ChartActual" }
+      }
+    ]
+  }
+}
+```
+
+Formula-backed chart titles and series titles must resolve to one cell, either directly or through
+one defined name that resolves to one cell. `categories.formula` and `values.formula` may still
+target one contiguous range or one defined name that resolves to one contiguous range. Failed
+validation is non-mutating: invalid chart payloads do not create partial charts or half-mutate an
+existing supported chart.
+
+Supported authored families are `BAR`, `LINE`, and `PIE`. Authored chart anchors currently accept
+only `TWO_CELL`, and series formulas can point at contiguous ranges or defined names.
 
 ## SET_DRAWING_OBJECT_ANCHOR
 
@@ -1270,8 +1318,22 @@ Returned comments can include ordered rich-text `runs` plus an `anchor` with zer
 { "type": "GET_DRAWING_OBJECTS", "requestId": "drawing-objects", "sheetName": "Ops" }
 ```
 
-Returned entries are `PICTURE`, `SHAPE`, or `EMBEDDED_OBJECT`. Read anchors can be `TWO_CELL`,
+Returned entries are `PICTURE`, `CHART`, `SHAPE`, or `EMBEDDED_OBJECT`. `CHART` entries expose
+`supported`, ordered `plotTypeTokens`, and title text. Read anchors can be `TWO_CELL`,
 `ONE_CELL`, or `ABSOLUTE`.
+
+## GET_CHARTS
+
+```json
+{ "type": "GET_CHARTS", "requestId": "charts", "sheetName": "Ops" }
+```
+
+Returned chart entries are `BAR`, `LINE`, `PIE`, or `UNSUPPORTED`. Supported simple charts include
+ordered `axes` plus `series`; unsupported plot families preserve `plotTypeTokens` and `detail`.
+Blank loaded chart titles normalize to `NONE`. Sparse literal caches surface missing positions as
+empty strings. If a chart relation is gone but the graphic frame still exists, `GET_CHARTS` skips
+the broken chart and `GET_DRAWING_OBJECTS` reports the surviving frame as read-only
+`GRAPHIC_FRAME`.
 
 ## GET_DRAWING_OBJECT_PAYLOAD
 

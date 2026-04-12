@@ -11,10 +11,12 @@ import dev.erst.gridgrind.excel.ExcelCellMetadataSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellProtectionSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
+import dev.erst.gridgrind.excel.ExcelChartSnapshot;
 import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
+import dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
@@ -303,6 +305,8 @@ public final class XlsxRoundTripVerifier {
         expectedDataValidations(workbook),
         expectedConditionalFormatting(workbook),
         expectedAutofilters(workbook),
+        expectedDrawingObjects(workbook),
+        expectedCharts(workbook),
         expectedTables(workbook));
   }
 
@@ -525,6 +529,9 @@ public final class XlsxRoundTripVerifier {
         }
         case WorkbookCommand.SetEmbeddedObject _ -> {
           // Drawing objects are validated through workbook readability, not candidate cell grids.
+        }
+        case WorkbookCommand.SetChart _ -> {
+          // Charts are validated through workbook-level drawing and chart snapshots.
         }
         case WorkbookCommand.SetDrawingObjectAnchor _ -> {
           // Anchor mutation changes drawing geometry only.
@@ -778,6 +785,23 @@ public final class XlsxRoundTripVerifier {
     return Map.copyOf(expected);
   }
 
+  private static Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects(
+      ExcelWorkbook workbook) {
+    LinkedHashMap<String, List<ExcelDrawingObjectSnapshot>> expected = new LinkedHashMap<>();
+    for (String sheetName : workbook.sheetNames()) {
+      expected.put(sheetName, List.copyOf(workbook.sheet(sheetName).drawingObjects()));
+    }
+    return Map.copyOf(expected);
+  }
+
+  private static Map<String, List<ExcelChartSnapshot>> expectedCharts(ExcelWorkbook workbook) {
+    LinkedHashMap<String, List<ExcelChartSnapshot>> expected = new LinkedHashMap<>();
+    for (String sheetName : workbook.sheetNames()) {
+      expected.put(sheetName, List.copyOf(workbook.sheet(sheetName).charts()));
+    }
+    return Map.copyOf(expected);
+  }
+
   private static List<ExcelTableSnapshot> expectedTables(ExcelWorkbook workbook) {
     WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
     var result =
@@ -871,6 +895,33 @@ public final class XlsxRoundTripVerifier {
               "richText",
               cellEntry.getValue(),
               textSnapshot.richText());
+        }
+      }
+      for (Map.Entry<String, List<ExcelDrawingObjectSnapshot>> entry :
+          expectedWorkbookState.expectedDrawingObjects().entrySet()) {
+        List<ExcelDrawingObjectSnapshot> actualDrawingObjects =
+            workbook.sheet(entry.getKey()).drawingObjects();
+        if (!entry.getValue().equals(actualDrawingObjects)) {
+          throw new IllegalStateException(
+              "drawing objects changed across round-trip for "
+                  + entry.getKey()
+                  + ": expected "
+                  + entry.getValue()
+                  + " but was "
+                  + actualDrawingObjects);
+        }
+      }
+      for (Map.Entry<String, List<ExcelChartSnapshot>> entry :
+          expectedWorkbookState.expectedCharts().entrySet()) {
+        List<ExcelChartSnapshot> actualCharts = workbook.sheet(entry.getKey()).charts();
+        if (!entry.getValue().equals(actualCharts)) {
+          throw new IllegalStateException(
+              "charts changed across round-trip for "
+                  + entry.getKey()
+                  + ": expected "
+                  + entry.getValue()
+                  + " but was "
+                  + actualCharts);
         }
       }
     }
@@ -1435,6 +1486,8 @@ public final class XlsxRoundTripVerifier {
       Map<String, List<ExcelDataValidationSnapshot>> expectedDataValidations,
       Map<String, List<ExcelConditionalFormattingBlockSnapshot>> expectedConditionalFormatting,
       Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters,
+      Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects,
+      Map<String, List<ExcelChartSnapshot>> expectedCharts,
       List<ExcelTableSnapshot> expectedTables) {}
 
   private record ExpectedWorkbookFootprint(

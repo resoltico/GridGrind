@@ -70,6 +70,11 @@ final class WorkbookReadResultConverter {
               drawingObjects.drawingObjects().stream()
                   .map(WorkbookReadResultConverter::toDrawingObjectReport)
                   .toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.ChartsResult charts ->
+          new WorkbookReadResult.ChartsResult(
+              charts.requestId(),
+              charts.sheetName(),
+              charts.charts().stream().map(WorkbookReadResultConverter::toChartReport).toList());
       case dev.erst.gridgrind.excel.WorkbookReadResult.DrawingObjectPayloadResult drawingPayload ->
           new WorkbookReadResult.DrawingObjectPayloadResult(
               drawingPayload.requestId(),
@@ -244,6 +249,13 @@ final class WorkbookReadResultConverter {
               picture.widthPixels(),
               picture.heightPixels(),
               picture.description());
+      case ExcelDrawingObjectSnapshot.Chart chart ->
+          new DrawingObjectReport.Chart(
+              chart.name(),
+              toDrawingAnchorReport(chart.anchor()),
+              chart.supported(),
+              chart.plotTypeTokens(),
+              chart.title());
       case ExcelDrawingObjectSnapshot.Shape shape ->
           new DrawingObjectReport.Shape(
               shape.name(),
@@ -266,6 +278,96 @@ final class WorkbookReadResultConverter {
               embeddedObject.previewFormat(),
               embeddedObject.previewByteSize(),
               embeddedObject.previewSha256());
+    };
+  }
+
+  static ChartReport toChartReport(ExcelChartSnapshot snapshot) {
+    return switch (snapshot) {
+      case ExcelChartSnapshot.Bar bar ->
+          new ChartReport.Bar(
+              bar.name(),
+              toDrawingAnchorReport(bar.anchor()),
+              toChartTitleReport(bar.title()),
+              toChartLegendReport(bar.legend()),
+              bar.displayBlanksAs(),
+              bar.plotOnlyVisibleCells(),
+              bar.varyColors(),
+              bar.barDirection(),
+              bar.axes().stream().map(WorkbookReadResultConverter::toChartAxisReport).toList(),
+              bar.series().stream().map(WorkbookReadResultConverter::toChartSeriesReport).toList());
+      case ExcelChartSnapshot.Line line ->
+          new ChartReport.Line(
+              line.name(),
+              toDrawingAnchorReport(line.anchor()),
+              toChartTitleReport(line.title()),
+              toChartLegendReport(line.legend()),
+              line.displayBlanksAs(),
+              line.plotOnlyVisibleCells(),
+              line.varyColors(),
+              line.axes().stream().map(WorkbookReadResultConverter::toChartAxisReport).toList(),
+              line.series().stream()
+                  .map(WorkbookReadResultConverter::toChartSeriesReport)
+                  .toList());
+      case ExcelChartSnapshot.Pie pie ->
+          new ChartReport.Pie(
+              pie.name(),
+              toDrawingAnchorReport(pie.anchor()),
+              toChartTitleReport(pie.title()),
+              toChartLegendReport(pie.legend()),
+              pie.displayBlanksAs(),
+              pie.plotOnlyVisibleCells(),
+              pie.varyColors(),
+              pie.firstSliceAngle(),
+              pie.series().stream().map(WorkbookReadResultConverter::toChartSeriesReport).toList());
+      case ExcelChartSnapshot.Unsupported unsupported ->
+          new ChartReport.Unsupported(
+              unsupported.name(),
+              toDrawingAnchorReport(unsupported.anchor()),
+              unsupported.plotTypeTokens(),
+              unsupported.detail());
+    };
+  }
+
+  private static ChartReport.Title toChartTitleReport(ExcelChartSnapshot.Title title) {
+    return switch (title) {
+      case ExcelChartSnapshot.Title.None _ -> new ChartReport.Title.None();
+      case ExcelChartSnapshot.Title.Text text -> new ChartReport.Title.Text(text.text());
+      case ExcelChartSnapshot.Title.Formula formula ->
+          new ChartReport.Title.Formula(formula.formula(), formula.cachedText());
+    };
+  }
+
+  private static ChartReport.Legend toChartLegendReport(ExcelChartSnapshot.Legend legend) {
+    return switch (legend) {
+      case ExcelChartSnapshot.Legend.Hidden _ -> new ChartReport.Legend.Hidden();
+      case ExcelChartSnapshot.Legend.Visible visible ->
+          new ChartReport.Legend.Visible(visible.position());
+    };
+  }
+
+  private static ChartReport.Axis toChartAxisReport(ExcelChartSnapshot.Axis axis) {
+    return new ChartReport.Axis(axis.kind(), axis.position(), axis.crosses(), axis.visible());
+  }
+
+  private static ChartReport.Series toChartSeriesReport(ExcelChartSnapshot.Series series) {
+    return new ChartReport.Series(
+        toChartTitleReport(series.title()),
+        toChartDataSourceReport(series.categories()),
+        toChartDataSourceReport(series.values()));
+  }
+
+  private static ChartReport.DataSource toChartDataSourceReport(
+      ExcelChartSnapshot.DataSource source) {
+    return switch (source) {
+      case ExcelChartSnapshot.DataSource.StringReference reference ->
+          new ChartReport.DataSource.StringReference(reference.formula(), reference.cachedValues());
+      case ExcelChartSnapshot.DataSource.NumericReference reference ->
+          new ChartReport.DataSource.NumericReference(
+              reference.formula(), reference.formatCode(), reference.cachedValues());
+      case ExcelChartSnapshot.DataSource.StringLiteral literal ->
+          new ChartReport.DataSource.StringLiteral(literal.values());
+      case ExcelChartSnapshot.DataSource.NumericLiteral literal ->
+          new ChartReport.DataSource.NumericLiteral(literal.formatCode(), literal.values());
     };
   }
 

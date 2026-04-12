@@ -1,5 +1,15 @@
 package dev.erst.gridgrind.protocol.parity;
 
+import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.protocol.dto.ChartReport;
+import dev.erst.gridgrind.protocol.dto.DrawingAnchorReport;
+import dev.erst.gridgrind.protocol.dto.DrawingMarkerReport;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -36,6 +46,19 @@ import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.SheetVisibility;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
+import org.apache.poi.xddf.usermodel.chart.AxisPosition;
+import org.apache.poi.xddf.usermodel.chart.BarDirection;
+import org.apache.poi.xddf.usermodel.chart.LegendPosition;
+import org.apache.poi.xddf.usermodel.chart.XDDFBarChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartLegend;
+import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
+import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFPieChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
 import org.apache.poi.xssf.eventusermodel.XSSFReader;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
@@ -58,6 +81,8 @@ import org.apache.poi.xssf.usermodel.XSSFSimpleShape;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
+import org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx;
+import org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
@@ -502,16 +527,27 @@ final class XlsxParityOracle {
         });
   }
 
-  static ChartSnapshot chart(Path workbookPath) {
+  static List<ChartReport> charts(Path workbookPath, String sheetName) {
     return withWorkbook(
         workbookPath,
         workbook -> {
-          XSSFDrawing drawing = workbook.getSheet("Chart").createDrawingPatriarch();
-          XSSFChart chart = drawing.getCharts().getFirst();
-          return new ChartSnapshot(
-              drawing.getCharts().size(),
-              chart.getTitleText() == null ? "" : chart.getTitleText().getString(),
-              chart.getCTChart().getPlotArea().sizeOfBarChartArray());
+          XSSFSheet sheet = workbook.getSheet(sheetName);
+          if (sheet == null) {
+            throw new IllegalStateException("Expected sheet " + sheetName);
+          }
+          XSSFDrawing drawing = sheet.getDrawingPatriarch();
+          if (drawing == null) {
+            return List.of();
+          }
+          drawing.getShapes();
+          List<ChartReport> charts = new ArrayList<>();
+          for (XSSFChart chart : drawing.getCharts()) {
+            charts.add(chartReport(chart));
+          }
+          charts.sort(
+              Comparator.comparing(ChartReport::name)
+                  .thenComparing(chart -> chart.getClass().getSimpleName()));
+          return List.copyOf(charts);
         });
   }
 
@@ -842,6 +878,7 @@ final class XlsxParityOracle {
   /** Canonical direct-POI snapshot of one authored drawing object. */
   sealed interface DirectDrawingObjectSnapshot
       permits PictureDrawingObjectSnapshot,
+          ChartDrawingObjectSnapshot,
           ShapeDrawingObjectSnapshot,
           EmbeddedObjectDrawingObjectSnapshot {
     String name();
@@ -851,6 +888,14 @@ final class XlsxParityOracle {
 
   record PictureDrawingObjectSnapshot(
       String name, DrawingAnchorSnapshot anchor, String pictureDigest)
+      implements DirectDrawingObjectSnapshot {}
+
+  record ChartDrawingObjectSnapshot(
+      String name,
+      DrawingAnchorSnapshot anchor,
+      boolean supported,
+      List<String> plotTypeTokens,
+      String title)
       implements DirectDrawingObjectSnapshot {}
 
   record ShapeDrawingObjectSnapshot(
@@ -869,8 +914,6 @@ final class XlsxParityOracle {
   record DrawingAnchorSnapshot(int col1, int row1, int col2, int row2) {}
 
   record CellCommentSnapshot(String address, String text, String author, boolean visible) {}
-
-  record ChartSnapshot(int chartCount, String title, int barChartCount) {}
 
   record PivotSnapshot(int pivotCount, String sourceRef, List<Integer> rowLabelColumns) {}
 
@@ -900,6 +943,15 @@ final class XlsxParityOracle {
           group.getShapeName(), anchor, "GROUP", null, null, drawing.getShapes(group).size());
     }
     if (shape instanceof XSSFGraphicFrame graphicFrame) {
+      XSSFChart chart = chartForGraphicFrame(drawing, graphicFrame);
+      if (chart != null) {
+        return new ChartDrawingObjectSnapshot(
+            resolvedChartName(chart),
+            anchor,
+            !(chartReport(chart) instanceof ChartReport.Unsupported),
+            chartPlotTypeTokens(chart),
+            chartTitleSummary(chart));
+      }
       return new ShapeDrawingObjectSnapshot(
           graphicFrame.getShapeName(), anchor, "GRAPHIC_FRAME", null, null, 0);
     }
@@ -919,6 +971,341 @@ final class XlsxParityOracle {
     }
     throw new IllegalStateException(
         "Unsupported drawing shape type: " + shape.getClass().getName());
+  }
+
+  private static ChartReport chartReport(XSSFChart chart) {
+    XSSFGraphicFrame graphicFrame = requiredGraphicFrame(chart);
+    List<XDDFChartData> chartData = chart.getChartSeries();
+    List<String> plotTypeTokens = chartPlotTypeTokens(chartData);
+    DrawingAnchorReport anchor = drawingAnchorReport(graphicFrame);
+    if (chartData.size() != 1) {
+      return new ChartReport.Unsupported(
+          resolvedChartName(chart),
+          anchor,
+          plotTypeTokens,
+          "Only single-plot simple charts are modeled authoritatively.");
+    }
+
+    XDDFChartData data = chartData.getFirst();
+    try {
+      return switch (data) {
+        case XDDFBarChartData bar ->
+            new ChartReport.Bar(
+                resolvedChartName(chart),
+                anchor,
+                titleReport(chart),
+                legendReport(chart),
+                displayBlanksReport(chart),
+                chart.isPlotOnlyVisibleCells(),
+                varyColors(chart, bar),
+                fromPoiBarDirection(bar.getBarDirection()),
+                axes(chart),
+                series(bar));
+        case XDDFLineChartData line ->
+            new ChartReport.Line(
+                resolvedChartName(chart),
+                anchor,
+                titleReport(chart),
+                legendReport(chart),
+                displayBlanksReport(chart),
+                chart.isPlotOnlyVisibleCells(),
+                varyColors(chart, line),
+                axes(chart),
+                series(line));
+        case XDDFPieChartData pie ->
+            new ChartReport.Pie(
+                resolvedChartName(chart),
+                anchor,
+                titleReport(chart),
+                legendReport(chart),
+                displayBlanksReport(chart),
+                chart.isPlotOnlyVisibleCells(),
+                varyColors(chart, pie),
+                pie.getFirstSliceAngle(),
+                series(pie));
+        default ->
+            new ChartReport.Unsupported(
+                resolvedChartName(chart),
+                anchor,
+                plotTypeTokens,
+                "Chart plot family is outside the current modeled simple-chart contract.");
+      };
+    } catch (RuntimeException exception) {
+      return new ChartReport.Unsupported(
+          resolvedChartName(chart), anchor, plotTypeTokens, exception.getMessage());
+    }
+  }
+
+  private static XSSFChart chartForGraphicFrame(
+      XSSFDrawing drawing, XSSFGraphicFrame graphicFrame) {
+    drawing.getShapes();
+    for (XSSFChart chart : drawing.getCharts()) {
+      XSSFGraphicFrame chartFrame = chart.getGraphicFrame();
+      if (chartFrame != null && chartFrame.getId() == graphicFrame.getId()) {
+        return chart;
+      }
+    }
+    return null;
+  }
+
+  private static XSSFGraphicFrame requiredGraphicFrame(XSSFChart chart) {
+    XSSFGraphicFrame graphicFrame = chart.getGraphicFrame();
+    if (graphicFrame == null) {
+      throw new IllegalStateException(
+          "Chart '" + chart.getPackagePart().getPartName() + "' is missing its graphic frame");
+    }
+    return graphicFrame;
+  }
+
+  private static String resolvedChartName(XSSFChart chart) {
+    XSSFGraphicFrame graphicFrame = requiredGraphicFrame(chart);
+    String name = graphicFrame.getName();
+    return name == null || name.isBlank() ? "Chart-" + graphicFrame.getId() : name;
+  }
+
+  private static String chartTitleSummary(XSSFChart chart) {
+    return switch (titleReport(chart)) {
+      case ChartReport.Title.None _ -> "";
+      case ChartReport.Title.Text text -> text.text();
+      case ChartReport.Title.Formula formula ->
+          formula.cachedText().isEmpty() ? formula.formula() : formula.cachedText();
+    };
+  }
+
+  private static DrawingAnchorReport drawingAnchorReport(XSSFShape shape) {
+    if (!(shape.getAnchor() instanceof XSSFClientAnchor anchor)) {
+      throw new IllegalStateException(
+          "Unsupported drawing anchor type: "
+              + (shape.getAnchor() == null ? "null" : shape.getAnchor().getClass().getName()));
+    }
+    return new DrawingAnchorReport.TwoCell(
+        new DrawingMarkerReport(
+            anchor.getCol1(), anchor.getRow1(), anchor.getDx1(), anchor.getDy1()),
+        new DrawingMarkerReport(
+            anchor.getCol2(), anchor.getRow2(), anchor.getDx2(), anchor.getDy2()),
+        toDrawingBehavior(anchor.getAnchorType()));
+  }
+
+  private static ExcelDrawingAnchorBehavior toDrawingBehavior(
+      org.apache.poi.ss.usermodel.ClientAnchor.AnchorType anchorType) {
+    return switch (anchorType) {
+      case MOVE_AND_RESIZE -> ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE;
+      case MOVE_DONT_RESIZE -> ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE;
+      case DONT_MOVE_AND_RESIZE -> ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE;
+      default ->
+          throw new IllegalArgumentException("Unsupported drawing anchor behavior: " + anchorType);
+    };
+  }
+
+  private static ChartReport.Title titleReport(XSSFChart chart) {
+    if (!chart.getCTChart().isSetTitle()) {
+      return new ChartReport.Title.None();
+    }
+    String formula = chart.getTitleFormula();
+    if (formula != null) {
+      return new ChartReport.Title.Formula(formula, cachedTitleText(chart));
+    }
+    XSSFRichTextString titleText = chart.getTitleText();
+    return titleText == null
+        ? new ChartReport.Title.None()
+        : new ChartReport.Title.Text(titleText.getString());
+  }
+
+  private static String cachedTitleText(XSSFChart chart) {
+    if (!chart.getCTChart().isSetTitle()
+        || !chart.getCTChart().getTitle().isSetTx()
+        || !chart.getCTChart().getTitle().getTx().isSetStrRef()
+        || !chart.getCTChart().getTitle().getTx().getStrRef().isSetStrCache()
+        || chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().sizeOfPtArray() == 0) {
+      return "";
+    }
+    return chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV();
+  }
+
+  private static ChartReport.Legend legendReport(XSSFChart chart) {
+    if (!chart.getCTChart().isSetLegend()) {
+      return new ChartReport.Legend.Hidden();
+    }
+    return new ChartReport.Legend.Visible(
+        fromPoiLegendPosition(new XDDFChartLegend(chart.getCTChart()).getPosition()));
+  }
+
+  private static ExcelChartDisplayBlanksAs displayBlanksReport(XSSFChart chart) {
+    return chart.getCTChart().isSetDispBlanksAs()
+        ? fromPoiDisplayBlanks(chart.getCTChart().getDispBlanksAs().getVal())
+        : ExcelChartDisplayBlanksAs.GAP;
+  }
+
+  private static List<ChartReport.Axis> axes(XSSFChart chart) {
+    List<ChartReport.Axis> axes = new ArrayList<>();
+    for (XDDFChartAxis axis : chart.getAxes()) {
+      axes.add(
+          new ChartReport.Axis(
+              axisKind(axis),
+              fromPoiAxisPosition(axis.getPosition()),
+              fromPoiAxisCrosses(axis.getCrosses()),
+              axis.isVisible()));
+    }
+    return List.copyOf(axes);
+  }
+
+  private static List<ChartReport.Series> series(XDDFBarChartData data) {
+    List<ChartReport.Series> series = new ArrayList<>();
+    for (int index = 0; index < data.getSeriesCount(); index++) {
+      XDDFChartData.Series value = data.getSeries(index);
+      series.add(series(value, ((XDDFBarChartData.Series) value).getCTBarSer().getTx()));
+    }
+    return List.copyOf(series);
+  }
+
+  private static List<ChartReport.Series> series(XDDFLineChartData data) {
+    List<ChartReport.Series> series = new ArrayList<>();
+    for (int index = 0; index < data.getSeriesCount(); index++) {
+      XDDFChartData.Series value = data.getSeries(index);
+      series.add(series(value, ((XDDFLineChartData.Series) value).getCTLineSer().getTx()));
+    }
+    return List.copyOf(series);
+  }
+
+  private static List<ChartReport.Series> series(XDDFPieChartData data) {
+    List<ChartReport.Series> series = new ArrayList<>();
+    for (int index = 0; index < data.getSeriesCount(); index++) {
+      XDDFChartData.Series value = data.getSeries(index);
+      series.add(series(value, ((XDDFPieChartData.Series) value).getCTPieSer().getTx()));
+    }
+    return List.copyOf(series);
+  }
+
+  private static ChartReport.Series series(XDDFChartData.Series series, CTSerTx title) {
+    return new ChartReport.Series(
+        seriesTitle(title),
+        dataSource(series.getCategoryData()),
+        dataSource(series.getValuesData()));
+  }
+
+  private static ChartReport.Title seriesTitle(CTSerTx title) {
+    if (title == null) {
+      return new ChartReport.Title.None();
+    }
+    if (title.isSetStrRef()) {
+      String cachedText =
+          title.getStrRef().isSetStrCache() && title.getStrRef().getStrCache().sizeOfPtArray() > 0
+              ? title.getStrRef().getStrCache().getPtArray(0).getV()
+              : "";
+      return new ChartReport.Title.Formula(title.getStrRef().getF(), cachedText);
+    }
+    return title.isSetV() ? new ChartReport.Title.Text(title.getV()) : new ChartReport.Title.None();
+  }
+
+  private static ChartReport.DataSource dataSource(XDDFDataSource<?> source) {
+    if (source == null) {
+      throw new IllegalStateException("Chart series is missing its data source");
+    }
+    List<String> values = new ArrayList<>();
+    for (int index = 0; index < source.getPointCount(); index++) {
+      Object point = source.getPointAt(index);
+      values.add(point == null ? "" : point.toString());
+    }
+    if (source.isReference()) {
+      return source.isNumeric()
+          ? new ChartReport.DataSource.NumericReference(
+              source.getDataRangeReference(), source.getFormatCode(), values)
+          : new ChartReport.DataSource.StringReference(source.getDataRangeReference(), values);
+    }
+    return source.isNumeric()
+        ? new ChartReport.DataSource.NumericLiteral(source.getFormatCode(), values)
+        : new ChartReport.DataSource.StringLiteral(values);
+  }
+
+  private static List<String> chartPlotTypeTokens(XSSFChart chart) {
+    return chartPlotTypeTokens(chart.getChartSeries());
+  }
+
+  private static List<String> chartPlotTypeTokens(List<XDDFChartData> chartData) {
+    List<String> tokens = new ArrayList<>();
+    for (XDDFChartData value : chartData) {
+      tokens.add(
+          switch (value) {
+            case XDDFBarChartData _ -> "BAR";
+            case XDDFLineChartData _ -> "LINE";
+            case XDDFPieChartData _ -> "PIE";
+            default -> value.getClass().getSimpleName();
+          });
+    }
+    return List.copyOf(tokens);
+  }
+
+  private static boolean varyColors(XSSFChart chart, XDDFBarChartData unused) {
+    return chart.getCTChart().getPlotArea().sizeOfBarChartArray() > 0
+        && chart.getCTChart().getPlotArea().getBarChartArray(0).isSetVaryColors()
+        && chart.getCTChart().getPlotArea().getBarChartArray(0).getVaryColors().getVal();
+  }
+
+  private static boolean varyColors(XSSFChart chart, XDDFLineChartData unused) {
+    return chart.getCTChart().getPlotArea().sizeOfLineChartArray() > 0
+        && chart.getCTChart().getPlotArea().getLineChartArray(0).isSetVaryColors()
+        && chart.getCTChart().getPlotArea().getLineChartArray(0).getVaryColors().getVal();
+  }
+
+  private static boolean varyColors(XSSFChart chart, XDDFPieChartData unused) {
+    return chart.getCTChart().getPlotArea().sizeOfPieChartArray() > 0
+        && chart.getCTChart().getPlotArea().getPieChartArray(0).isSetVaryColors()
+        && chart.getCTChart().getPlotArea().getPieChartArray(0).getVaryColors().getVal();
+  }
+
+  private static ExcelChartAxisKind axisKind(XDDFChartAxis axis) {
+    return switch (axis) {
+      case XDDFCategoryAxis _ -> ExcelChartAxisKind.CATEGORY;
+      case XDDFValueAxis _ -> ExcelChartAxisKind.VALUE;
+      default ->
+          throw new IllegalArgumentException(
+              "Chart axis family is outside the current modeled simple-chart contract: "
+                  + axis.getClass().getName());
+    };
+  }
+
+  private static ExcelChartBarDirection fromPoiBarDirection(BarDirection direction) {
+    return switch (direction) {
+      case COL -> ExcelChartBarDirection.COLUMN;
+      case BAR -> ExcelChartBarDirection.BAR;
+    };
+  }
+
+  private static ExcelChartLegendPosition fromPoiLegendPosition(LegendPosition position) {
+    return switch (position) {
+      case BOTTOM -> ExcelChartLegendPosition.BOTTOM;
+      case LEFT -> ExcelChartLegendPosition.LEFT;
+      case RIGHT -> ExcelChartLegendPosition.RIGHT;
+      case TOP -> ExcelChartLegendPosition.TOP;
+      case TOP_RIGHT -> ExcelChartLegendPosition.TOP_RIGHT;
+    };
+  }
+
+  private static ExcelChartDisplayBlanksAs fromPoiDisplayBlanks(STDispBlanksAs.Enum displayBlanks) {
+    return switch (displayBlanks.intValue()) {
+      case STDispBlanksAs.INT_GAP -> ExcelChartDisplayBlanksAs.GAP;
+      case STDispBlanksAs.INT_SPAN -> ExcelChartDisplayBlanksAs.SPAN;
+      case STDispBlanksAs.INT_ZERO -> ExcelChartDisplayBlanksAs.ZERO;
+      default ->
+          throw new IllegalArgumentException("Unsupported displayBlanksAs token: " + displayBlanks);
+    };
+  }
+
+  private static ExcelChartAxisPosition fromPoiAxisPosition(AxisPosition position) {
+    return switch (position) {
+      case BOTTOM -> ExcelChartAxisPosition.BOTTOM;
+      case LEFT -> ExcelChartAxisPosition.LEFT;
+      case RIGHT -> ExcelChartAxisPosition.RIGHT;
+      case TOP -> ExcelChartAxisPosition.TOP;
+    };
+  }
+
+  private static ExcelChartAxisCrosses fromPoiAxisCrosses(AxisCrosses crosses) {
+    return switch (crosses) {
+      case AUTO_ZERO -> ExcelChartAxisCrosses.AUTO_ZERO;
+      case MAX -> ExcelChartAxisCrosses.MAX;
+      case MIN -> ExcelChartAxisCrosses.MIN;
+    };
   }
 
   private static DrawingAnchorSnapshot drawingAnchor(XSSFShape shape) {

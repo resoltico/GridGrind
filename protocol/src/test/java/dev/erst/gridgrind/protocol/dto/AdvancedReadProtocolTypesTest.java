@@ -2,6 +2,12 @@ package dev.erst.gridgrind.protocol.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
@@ -10,6 +16,7 @@ import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -705,6 +712,245 @@ class AdvancedReadProtocolTypesTest {
                 "cGF5bG9hZA==",
                 null,
                 " "));
+  }
+
+  @Test
+  void chartReportsValidateReadShapes() {
+    DrawingMarkerReport from = new DrawingMarkerReport(1, 2, 0, 0);
+    DrawingMarkerReport to = new DrawingMarkerReport(6, 12, 0, 0);
+    DrawingAnchorReport.TwoCell anchor =
+        new DrawingAnchorReport.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    ChartReport.Axis categoryAxis =
+        new ChartReport.Axis(
+            ExcelChartAxisKind.CATEGORY,
+            ExcelChartAxisPosition.BOTTOM,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true);
+    ChartReport.Axis valueAxis =
+        new ChartReport.Axis(
+            ExcelChartAxisKind.VALUE,
+            ExcelChartAxisPosition.LEFT,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true);
+    ChartReport.Series series =
+        new ChartReport.Series(
+            new ChartReport.Title.Formula("Chart!$B$1", "Plan"),
+            new ChartReport.DataSource.StringReference(
+                "ChartCategories", List.of("Jan", "Feb", "Mar")),
+            new ChartReport.DataSource.NumericReference(
+                "ChartValues", null, List.of("10.0", "18.0", "15.0")));
+    ChartReport.Bar bar =
+        new ChartReport.Bar(
+            "OpsChart",
+            anchor,
+            new ChartReport.Title.Text("Roadmap"),
+            new ChartReport.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            ExcelChartDisplayBlanksAs.SPAN,
+            false,
+            true,
+            ExcelChartBarDirection.COLUMN,
+            List.of(categoryAxis, valueAxis),
+            List.of(series));
+    ChartReport.Line line =
+        new ChartReport.Line(
+            "TrendChart",
+            anchor,
+            new ChartReport.Title.None(),
+            new ChartReport.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.GAP,
+            true,
+            false,
+            List.of(categoryAxis, valueAxis),
+            List.of(
+                new ChartReport.Series(
+                    new ChartReport.Title.None(),
+                    new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
+                    new ChartReport.DataSource.NumericLiteral("0.0", List.of("10", "18")))));
+    ChartReport.Pie pie =
+        new ChartReport.Pie(
+            "Pie",
+            anchor,
+            new ChartReport.Title.None(),
+            new ChartReport.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.GAP,
+            true,
+            false,
+            180,
+            List.of(series));
+    ChartReport.Unsupported unsupported =
+        new ChartReport.Unsupported(
+            "ComboChart",
+            anchor,
+            List.of("BAR", "LINE"),
+            "Only single-plot simple charts are modeled authoritatively.");
+    DrawingObjectReport.Chart drawingChart =
+        new DrawingObjectReport.Chart("OpsChart", anchor, true, List.of("BAR"), "Roadmap");
+
+    assertEquals("Roadmap", ((ChartReport.Title.Text) bar.title()).text());
+    assertEquals(2, bar.axes().size());
+    assertEquals(2, line.axes().size());
+    assertEquals(180, pie.firstSliceAngle());
+    assertEquals(
+        "ChartValues",
+        ((ChartReport.DataSource.NumericReference) bar.series().getFirst().values()).formula());
+    assertEquals(
+        List.of("Jan", "Feb"),
+        ((ChartReport.DataSource.StringLiteral) line.series().getFirst().categories()).values());
+    assertEquals(
+        List.of("10", "18"),
+        ((ChartReport.DataSource.NumericLiteral) line.series().getFirst().values()).values());
+    assertEquals(List.of("BAR", "LINE"), unsupported.plotTypeTokens());
+    assertTrue(drawingChart.supported());
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ChartReport.Bar(
+                " ",
+                anchor,
+                new ChartReport.Title.Text("Roadmap"),
+                new ChartReport.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                ExcelChartDisplayBlanksAs.SPAN,
+                false,
+                true,
+                ExcelChartBarDirection.COLUMN,
+                List.of(categoryAxis),
+                List.of(series)));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new ChartReport.Axis(
+                null, ExcelChartAxisPosition.BOTTOM, ExcelChartAxisCrosses.AUTO_ZERO, true));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ChartReport.Pie(
+                "Pie",
+                anchor,
+                new ChartReport.Title.None(),
+                new ChartReport.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.GAP,
+                true,
+                false,
+                361,
+                List.of(series)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ChartReport.DataSource.StringReference(" ", List.of("Jan")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ChartReport.DataSource.NumericReference("ChartValues", " ", List.of("10.0")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ChartReport.DataSource.NumericLiteral(" ", List.of("10.0")));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new ChartReport.Line(
+                "Trend",
+                anchor,
+                null,
+                new ChartReport.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.GAP,
+                true,
+                false,
+                List.of(categoryAxis),
+                List.of(series)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DrawingObjectReport.Chart("OpsChart", anchor, true, List.of(" "), "Roadmap"));
+  }
+
+  @Test
+  void chartReportCollectionsDefensivelyCopyAndRejectEmptySeries() {
+    DrawingAnchorReport.TwoCell anchor =
+        new DrawingAnchorReport.TwoCell(
+            new DrawingMarkerReport(1, 2, 0, 0),
+            new DrawingMarkerReport(6, 12, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    ChartReport.Axis categoryAxis =
+        new ChartReport.Axis(
+            ExcelChartAxisKind.CATEGORY,
+            ExcelChartAxisPosition.BOTTOM,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true);
+    ChartReport.Axis valueAxis =
+        new ChartReport.Axis(
+            ExcelChartAxisKind.VALUE,
+            ExcelChartAxisPosition.LEFT,
+            ExcelChartAxisCrosses.MIN,
+            false);
+    ChartReport.Series lineSeries =
+        new ChartReport.Series(
+            new ChartReport.Title.None(),
+            new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
+            new ChartReport.DataSource.NumericLiteral(null, List.of("10", "18")));
+    List<ChartReport.Axis> axes = new ArrayList<>(List.of(categoryAxis, valueAxis));
+    List<ChartReport.Series> lineSeriesValues = new ArrayList<>(List.of(lineSeries));
+    ChartReport.Line copiedLine =
+        new ChartReport.Line(
+            "CopiedLine",
+            anchor,
+            new ChartReport.Title.Text("Trend"),
+            new ChartReport.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.GAP,
+            true,
+            false,
+            axes,
+            lineSeriesValues);
+    List<String> labels = new ArrayList<>(List.of("Jan", "Feb"));
+    ChartReport.DataSource.StringLiteral copiedLiteral =
+        new ChartReport.DataSource.StringLiteral(labels);
+    ChartReport.DataSource.NumericReference formattedReference =
+        new ChartReport.DataSource.NumericReference("ChartValues", "0.0", List.of("10.0"));
+    ChartReport.Pie pieWithoutAngle =
+        new ChartReport.Pie(
+            "CopiedPie",
+            anchor,
+            new ChartReport.Title.None(),
+            new ChartReport.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.ZERO,
+            false,
+            true,
+            null,
+            List.of(lineSeries));
+
+    axes.clear();
+    lineSeriesValues.clear();
+    labels.clear();
+
+    assertEquals(2, copiedLine.axes().size());
+    assertEquals(1, copiedLine.series().size());
+    assertEquals(List.of("Jan", "Feb"), copiedLiteral.values());
+    assertEquals("0.0", formattedReference.formatCode());
+    assertNull(pieWithoutAngle.firstSliceAngle());
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ChartReport.Line(
+                "EmptyLine",
+                anchor,
+                new ChartReport.Title.None(),
+                new ChartReport.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.GAP,
+                true,
+                false,
+                List.of(categoryAxis),
+                List.of()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ChartReport.Pie(
+                "EmptyPie",
+                anchor,
+                new ChartReport.Title.None(),
+                new ChartReport.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.GAP,
+                true,
+                false,
+                null,
+                List.of()));
   }
 
   @Test

@@ -35,6 +35,8 @@ final class WorkbookReadCommandConverter {
               op.requestId(), op.sheetName(), toExcelCellSelection(op.selection()));
       case WorkbookReadOperation.GetDrawingObjects op ->
           new WorkbookReadCommand.GetDrawingObjects(op.requestId(), op.sheetName());
+      case WorkbookReadOperation.GetCharts op ->
+          new WorkbookReadCommand.GetCharts(op.requestId(), op.sheetName());
       case WorkbookReadOperation.GetDrawingObjectPayload op ->
           new WorkbookReadCommand.GetDrawingObjectPayload(
               op.requestId(), op.sheetName(), op.objectName());

@@ -4,8 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDefinition;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
@@ -16,6 +22,8 @@ import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.WorkbookCommand;
+import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.protocol.dto.AnalysisFindingCode;
 import dev.erst.gridgrind.protocol.dto.AnalysisSeverity;
 import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
@@ -34,6 +42,7 @@ import dev.erst.gridgrind.protocol.dto.CellGradientFillReport;
 import dev.erst.gridgrind.protocol.dto.CellGradientStopReport;
 import dev.erst.gridgrind.protocol.dto.CellProtectionReport;
 import dev.erst.gridgrind.protocol.dto.CellSelection;
+import dev.erst.gridgrind.protocol.dto.ChartReport;
 import dev.erst.gridgrind.protocol.dto.CommentAnchorReport;
 import dev.erst.gridgrind.protocol.dto.DataValidationEntryReport;
 import dev.erst.gridgrind.protocol.dto.DataValidationHealthReport;
@@ -793,6 +802,130 @@ class WorkbookInvariantChecksTest {
 
     assertDoesNotThrow(
         () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
+  }
+
+  @Test
+  void acceptsSuccessResponsesWithChartReadShapes(@TempDir Path tempDirectory) throws IOException {
+    Path workbookPath = tempDirectory.resolve("chart.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs("chart.xlsx", workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadResult.DrawingObjectsResult(
+                    "drawing-objects",
+                    "Ops",
+                    List.of(
+                        new DrawingObjectReport.Chart(
+                            "OpsChart", twoCellAnchor(), true, List.of("BAR"), "Roadmap"))),
+                new WorkbookReadResult.ChartsResult("charts", "Ops", List.of(chartReport()))));
+
+    assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
+  }
+
+  @Test
+  void acceptsWorkflowOutcomeShapeForChartReads(@TempDir Path tempDirectory) throws IOException {
+    Path workbookPath = tempDirectory.resolve("chart.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadOperation.GetDrawingObjects("drawing-objects", "Ops"),
+                new WorkbookReadOperation.GetCharts("charts", "Ops")));
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                workbookPath.toString(), workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadResult.DrawingObjectsResult(
+                    "drawing-objects",
+                    "Ops",
+                    List.of(
+                        new DrawingObjectReport.Chart(
+                            "OpsChart", twoCellAnchor(), true, List.of("BAR"), "Roadmap"))),
+                new WorkbookReadResult.ChartsResult("charts", "Ops", List.of(chartReport()))));
+
+    assertDoesNotThrow(
+        () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
+  }
+
+  @Test
+  void acceptsWorkbookShapeWithCharts() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Ops").setCell("A1", ExcelCellValue.text("Month"));
+      workbook.getOrCreateSheet("Ops").setCell("B1", ExcelCellValue.text("Actual"));
+      workbook.getOrCreateSheet("Ops").setCell("A2", ExcelCellValue.text("Jan"));
+      workbook.getOrCreateSheet("Ops").setCell("B2", ExcelCellValue.number(12.0d));
+      workbook.getOrCreateSheet("Ops").setCell("A3", ExcelCellValue.text("Feb"));
+      workbook.getOrCreateSheet("Ops").setCell("B3", ExcelCellValue.number(18.0d));
+      workbook.getOrCreateSheet("Ops").setCell("A4", ExcelCellValue.text("Mar"));
+      workbook.getOrCreateSheet("Ops").setCell("B4", ExcelCellValue.number(15.0d));
+      new WorkbookCommandExecutor()
+          .apply(
+              workbook,
+              List.of(
+                  new WorkbookCommand.SetChart(
+                      "Ops",
+                      new ExcelChartDefinition.Bar(
+                          "OpsChart",
+                          new ExcelDrawingAnchor.TwoCell(
+                              new ExcelDrawingMarker(0, 0, 0, 0),
+                              new ExcelDrawingMarker(2, 8, 0, 0),
+                              null),
+                          new ExcelChartDefinition.Title.Text("Roadmap"),
+                          new ExcelChartDefinition.Legend.Visible(
+                              ExcelChartLegendPosition.TOP_RIGHT),
+                          ExcelChartDisplayBlanksAs.SPAN,
+                          false,
+                          true,
+                          ExcelChartBarDirection.COLUMN,
+                          List.of(
+                              new ExcelChartDefinition.Series(
+                                  new ExcelChartDefinition.Title.Text("Actual"),
+                                  new ExcelChartDefinition.DataSource("Ops!$A$2:$A$4"),
+                                  new ExcelChartDefinition.DataSource("Ops!$B$2:$B$4")))))));
+
+      assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
+    }
+  }
+
+  private static ChartReport.Bar chartReport() {
+    return new ChartReport.Bar(
+        "OpsChart",
+        twoCellAnchor(),
+        new ChartReport.Title.Text("Roadmap"),
+        new ChartReport.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+        ExcelChartDisplayBlanksAs.SPAN,
+        false,
+        true,
+        ExcelChartBarDirection.COLUMN,
+        List.of(
+            new ChartReport.Axis(
+                dev.erst.gridgrind.excel.ExcelChartAxisKind.CATEGORY,
+                dev.erst.gridgrind.excel.ExcelChartAxisPosition.BOTTOM,
+                dev.erst.gridgrind.excel.ExcelChartAxisCrosses.AUTO_ZERO,
+                true),
+            new ChartReport.Axis(
+                dev.erst.gridgrind.excel.ExcelChartAxisKind.VALUE,
+                dev.erst.gridgrind.excel.ExcelChartAxisPosition.LEFT,
+                dev.erst.gridgrind.excel.ExcelChartAxisCrosses.AUTO_ZERO,
+                true)),
+        List.of(
+            new ChartReport.Series(
+                new ChartReport.Title.Text("Actual"),
+                new ChartReport.DataSource.StringReference(
+                    "Ops!$A$2:$A$4", List.of("Jan", "Feb", "Mar")),
+                new ChartReport.DataSource.NumericReference(
+                    "Ops!$B$2:$B$4", "General", List.of("12", "18", "15")))));
   }
 
   private static GridGrindResponse.CellStyleReport defaultStyle() {

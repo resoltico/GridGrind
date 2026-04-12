@@ -24,6 +24,7 @@ public sealed interface WorkbookReadCommand
           GetHyperlinks,
           GetComments,
           GetDrawingObjects,
+          GetCharts,
           GetDrawingObjectPayload,
           GetSheetLayout,
           GetPrintLayout,
@@ -139,6 +140,14 @@ public sealed interface WorkbookReadCommand
   /** Returns factual drawing-object metadata for one sheet. */
   record GetDrawingObjects(String requestId, String sheetName) implements Introspection {
     public GetDrawingObjects {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Returns factual chart metadata for one sheet. */
+  record GetCharts(String requestId, String sheetName) implements Introspection {
+    public GetCharts {
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
     }

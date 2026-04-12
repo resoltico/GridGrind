@@ -64,6 +64,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           WorkbookOperation.SetComment.class,
           WorkbookOperation.ClearComment.class,
           WorkbookOperation.SetPicture.class,
+          WorkbookOperation.SetChart.class,
           WorkbookOperation.SetShape.class,
           WorkbookOperation.SetEmbeddedObject.class,
           WorkbookOperation.SetDrawingObjectAnchor.class,
@@ -567,6 +568,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetDrawingObjects _ -> "GET_DRAWING_OBJECTS";
+      case WorkbookReadOperation.GetCharts _ -> "GET_CHARTS";
       case WorkbookReadOperation.GetDrawingObjectPayload _ -> "GET_DRAWING_OBJECT_PAYLOAD";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadOperation.GetPrintLayout _ -> "GET_PRINT_LAYOUT";
@@ -599,6 +601,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks op -> op.sheetName();
       case WorkbookReadOperation.GetComments op -> op.sheetName();
       case WorkbookReadOperation.GetDrawingObjects op -> op.sheetName();
+      case WorkbookReadOperation.GetCharts op -> op.sheetName();
       case WorkbookReadOperation.GetDrawingObjectPayload op -> op.sheetName();
       case WorkbookReadOperation.GetSheetLayout op -> op.sheetName();
       case WorkbookReadOperation.GetPrintLayout op -> op.sheetName();
@@ -642,6 +645,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> null;
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetDrawingObjects _ -> null;
+      case WorkbookReadOperation.GetCharts _ -> null;
       case WorkbookReadOperation.GetDrawingObjectPayload _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
       case WorkbookReadOperation.GetPrintLayout _ -> null;
@@ -679,6 +683,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetHyperlinks _ -> null;
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetDrawingObjects _ -> null;
+      case WorkbookReadOperation.GetCharts _ -> null;
       case WorkbookReadOperation.GetDrawingObjectPayload _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
       case WorkbookReadOperation.GetPrintLayout _ -> null;
@@ -782,6 +787,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.SetComment _ -> null;
       case WorkbookOperation.ClearComment _ -> null;
       case WorkbookOperation.SetPicture _ -> null;
+      case WorkbookOperation.SetChart _ -> null;
       case WorkbookOperation.SetShape _ -> null;
       case WorkbookOperation.SetEmbeddedObject _ -> null;
       case WorkbookOperation.SetDrawingObjectAnchor _ -> null;
@@ -875,6 +881,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.SetComment op -> op.sheetName();
       case WorkbookOperation.ClearComment op -> op.sheetName();
       case WorkbookOperation.SetPicture op -> op.sheetName();
+      case WorkbookOperation.SetChart op -> op.sheetName();
       case WorkbookOperation.SetShape op -> op.sheetName();
       case WorkbookOperation.SetEmbeddedObject op -> op.sheetName();
       case WorkbookOperation.SetDrawingObjectAnchor op -> op.sheetName();

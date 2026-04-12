@@ -3,6 +3,7 @@ package dev.erst.gridgrind.protocol.read;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.protocol.dto.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,6 +30,7 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = WorkbookReadResult.DrawingObjectsResult.class,
       name = "GET_DRAWING_OBJECTS"),
+  @JsonSubTypes.Type(value = WorkbookReadResult.ChartsResult.class, name = "GET_CHARTS"),
   @JsonSubTypes.Type(
       value = WorkbookReadResult.DrawingObjectPayloadResult.class,
       name = "GET_DRAWING_OBJECT_PAYLOAD"),
@@ -92,6 +94,7 @@ public sealed interface WorkbookReadResult
           HyperlinksResult,
           CommentsResult,
           DrawingObjectsResult,
+          ChartsResult,
           DrawingObjectPayloadResult,
           SheetLayoutResult,
           PrintLayoutResult,
@@ -210,6 +213,16 @@ public sealed interface WorkbookReadResult
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       drawingObjects = copyValues(drawingObjects, "drawingObjects");
+    }
+  }
+
+  /** Returns factual chart metadata for one sheet. */
+  record ChartsResult(String requestId, String sheetName, List<ChartReport> charts)
+      implements Introspection {
+    public ChartsResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      charts = copyValues(charts, "charts");
     }
   }
 
@@ -394,10 +407,10 @@ public sealed interface WorkbookReadResult
 
   private static <T> List<T> copyValues(List<T> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
-    List<T> copy = List.copyOf(values);
-    for (T value : copy) {
-      Objects.requireNonNull(value, fieldName + " must not contain nulls");
+    List<T> copy = new ArrayList<>(values.size());
+    for (T value : values) {
+      copy.add(Objects.requireNonNull(value, fieldName + " must not contain nulls"));
     }
-    return copy;
+    return List.copyOf(copy);
   }
 }

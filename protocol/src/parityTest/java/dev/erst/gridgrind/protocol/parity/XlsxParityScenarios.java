@@ -2,6 +2,9 @@ package dev.erst.gridgrind.protocol.parity;
 
 import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
@@ -109,6 +112,8 @@ public final class XlsxParityScenarios {
   static final String DRAWING_COMMENTS = "poi-drawing-comments";
   static final String DRAWING_MERGED_IMAGE = "poi-drawing-merged-image";
   static final String CHART = "poi-chart";
+  static final String CHART_AUTHORING = "gridgrind-chart-authoring";
+  static final String CHART_UNSUPPORTED = "poi-chart-unsupported";
   static final String PIVOT = "poi-pivot";
   static final String EMBEDDED_OBJECT = "poi-embedded-object";
   static final String LARGE_SHEET = "poi-large-sheet";
@@ -139,6 +144,8 @@ public final class XlsxParityScenarios {
               case DRAWING_COMMENTS -> materializeDrawingCommentsWorkbook(temporaryRoot);
               case DRAWING_MERGED_IMAGE -> materializeDrawingMergedImageWorkbook(temporaryRoot);
               case CHART -> materializeChartWorkbook(temporaryRoot);
+              case CHART_AUTHORING -> materializeChartAuthoringWorkbook(temporaryRoot);
+              case CHART_UNSUPPORTED -> materializeUnsupportedChartWorkbook(temporaryRoot);
               case PIVOT -> materializePivotWorkbook(temporaryRoot);
               case EMBEDDED_OBJECT -> materializeEmbeddedObjectWorkbook(temporaryRoot);
               case LARGE_SHEET -> materializeLargeSheetWorkbook(temporaryRoot);
@@ -436,18 +443,13 @@ public final class XlsxParityScenarios {
 
           try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet("Chart");
-            sheet.createRow(0).createCell(0).setCellValue("Month");
-            sheet.getRow(0).createCell(1).setCellValue("Value");
-            sheet.createRow(1).createCell(0).setCellValue("Jan");
-            sheet.getRow(1).createCell(1).setCellValue(10d);
-            sheet.createRow(2).createCell(0).setCellValue("Feb");
-            sheet.getRow(2).createCell(1).setCellValue(22d);
-            sheet.createRow(3).createCell(0).setCellValue("Mar");
-            sheet.getRow(3).createCell(1).setCellValue(15d);
+            seedChartData(sheet);
 
             XSSFDrawing drawing = sheet.createDrawingPatriarch();
             XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 3, 0, 10, 18);
             var chart = drawing.createChart(anchor);
+            chart.getGraphicFrame().setName("OpsChart");
+            chart.setTitleText("Roadmap");
             chart.getOrAddLegend().setPosition(LegendPosition.TOP_RIGHT);
             XDDFCategoryAxis categoryAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
             XDDFValueAxis valueAxis = chart.createValueAxis(AxisPosition.LEFT);
@@ -461,9 +463,76 @@ public final class XlsxParityScenarios {
             XDDFBarChartData chartData =
                 (XDDFBarChartData) chart.createData(ChartTypes.BAR, categoryAxis, valueAxis);
             chartData.setBarDirection(BarDirection.COL);
+            chartData.setVaryColors(true);
             var series = chartData.addSeries(categories, values);
-            series.setTitle("Series", null);
+            series.setTitle("B1", null);
+            chart.displayBlanksAs(org.apache.poi.xddf.usermodel.chart.DisplayBlanks.SPAN);
+            chart.setPlotOnlyVisibleCells(false);
             chart.plot(chartData);
+
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeChartAuthoringWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize chart authoring parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(CHART_AUTHORING));
+          Path workbookPath = scenarioDirectory.resolve("chart-authoring.xlsx");
+
+          GridGrindResponse response =
+              new DefaultGridGrindRequestExecutor().execute(chartAuthoringRequest(workbookPath));
+          if (!(response instanceof GridGrindResponse.Success)) {
+            throw new IllegalStateException(
+                "Chart authoring parity workbook request must succeed: " + response);
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeUnsupportedChartWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize unsupported chart parity workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(CHART_UNSUPPORTED));
+          Path workbookPath = scenarioDirectory.resolve("chart-unsupported.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Chart");
+            seedChartData(sheet);
+
+            XSSFDrawing drawing = sheet.createDrawingPatriarch();
+            XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 4, 1, 11, 16);
+            var chart = drawing.createChart(anchor);
+            chart.getGraphicFrame().setName("ComboChart");
+            chart.getOrAddLegend().setPosition(LegendPosition.TOP_RIGHT);
+            XDDFCategoryAxis categoryAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
+            XDDFValueAxis valueAxis = chart.createValueAxis(AxisPosition.LEFT);
+            valueAxis.setCrosses(AxisCrosses.AUTO_ZERO);
+            var categories =
+                XDDFDataSourcesFactory.fromStringCellRange(
+                    sheet, CellRangeAddress.valueOf("A2:A4"));
+            var barValues =
+                XDDFDataSourcesFactory.fromNumericCellRange(
+                    sheet, CellRangeAddress.valueOf("B2:B4"));
+            var lineValues =
+                XDDFDataSourcesFactory.fromNumericCellRange(
+                    sheet, CellRangeAddress.valueOf("C2:C4"));
+            XDDFBarChartData barData =
+                (XDDFBarChartData) chart.createData(ChartTypes.BAR, categoryAxis, valueAxis);
+            barData.addSeries(categories, barValues).setTitle("Plan", null);
+            chart.plot(barData);
+            var lineData = chart.createData(ChartTypes.LINE, categoryAxis, valueAxis);
+            lineData.addSeries(categories, lineValues).setTitle("Actual", null);
+            chart.plot(lineData);
 
             try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
               workbook.write(outputStream);
@@ -1127,6 +1196,56 @@ public final class XlsxParityScenarios {
         List.of());
   }
 
+  private static GridGrindRequest chartAuthoringRequest(Path workbookPath) {
+    return new GridGrindRequest(
+        new GridGrindRequest.WorkbookSource.New(),
+        new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+        null,
+        List.of(
+            new WorkbookOperation.EnsureSheet("Chart"),
+            new WorkbookOperation.SetCell("Chart", "A1", new CellInput.Text("Month")),
+            new WorkbookOperation.SetCell("Chart", "B1", new CellInput.Text("Plan")),
+            new WorkbookOperation.SetCell("Chart", "C1", new CellInput.Text("Actual")),
+            new WorkbookOperation.SetCell("Chart", "A2", new CellInput.Text("Jan")),
+            new WorkbookOperation.SetCell("Chart", "B2", new CellInput.Numeric(10d)),
+            new WorkbookOperation.SetCell("Chart", "C2", new CellInput.Numeric(12d)),
+            new WorkbookOperation.SetCell("Chart", "A3", new CellInput.Text("Feb")),
+            new WorkbookOperation.SetCell("Chart", "B3", new CellInput.Numeric(18d)),
+            new WorkbookOperation.SetCell("Chart", "C3", new CellInput.Numeric(16d)),
+            new WorkbookOperation.SetCell("Chart", "A4", new CellInput.Text("Mar")),
+            new WorkbookOperation.SetCell("Chart", "B4", new CellInput.Numeric(15d)),
+            new WorkbookOperation.SetCell("Chart", "C4", new CellInput.Numeric(21d)),
+            new WorkbookOperation.SetNamedRange(
+                "ChartCategories",
+                new NamedRangeScope.Workbook(),
+                new NamedRangeTarget("Chart", "A2:A4")),
+            new WorkbookOperation.SetNamedRange(
+                "ChartActual",
+                new NamedRangeScope.Workbook(),
+                new NamedRangeTarget("Chart", "C2:C4")),
+            new WorkbookOperation.SetChart(
+                "Chart",
+                new ChartInput.Bar(
+                    "OpsChart",
+                    twoCellAnchorInput(4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                    new ChartInput.Title.Text("Roadmap"),
+                    new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                    ExcelChartDisplayBlanksAs.SPAN,
+                    false,
+                    true,
+                    ExcelChartBarDirection.COLUMN,
+                    List.of(
+                        new ChartInput.Series(
+                            new ChartInput.Title.Formula("B1"),
+                            new ChartInput.DataSource("A2:A4"),
+                            new ChartInput.DataSource("B2:B4")),
+                        new ChartInput.Series(
+                            new ChartInput.Title.Formula("C1"),
+                            new ChartInput.DataSource("ChartCategories"),
+                            new ChartInput.DataSource("ChartActual")))))),
+        List.of());
+  }
+
   private static PictureDataInput pictureDataInput() {
     return new PictureDataInput(
         ExcelPictureFormat.PNG, Base64.getEncoder().encodeToString(PNG_PIXEL_BYTES));
@@ -1153,6 +1272,21 @@ public final class XlsxParityScenarios {
         row.createCell(columnIndex).setCellValue("R" + rowIndex + "C" + columnIndex);
       }
     }
+  }
+
+  private static void seedChartData(XSSFSheet sheet) {
+    sheet.createRow(0).createCell(0).setCellValue("Month");
+    sheet.getRow(0).createCell(1).setCellValue("Plan");
+    sheet.getRow(0).createCell(2).setCellValue("Actual");
+    sheet.createRow(1).createCell(0).setCellValue("Jan");
+    sheet.getRow(1).createCell(1).setCellValue(10d);
+    sheet.getRow(1).createCell(2).setCellValue(12d);
+    sheet.createRow(2).createCell(0).setCellValue("Feb");
+    sheet.getRow(2).createCell(1).setCellValue(18d);
+    sheet.getRow(2).createCell(2).setCellValue(16d);
+    sheet.createRow(3).createCell(0).setCellValue("Mar");
+    sheet.getRow(3).createCell(1).setCellValue(15d);
+    sheet.getRow(3).createCell(2).setCellValue(21d);
   }
 
   private static final byte[] PNG_PIXEL_BYTES =

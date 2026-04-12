@@ -433,7 +433,9 @@ class GridGrindProtocolCatalogTest {
   void entryForReturnsMatchingEntryByOperationId() {
     assertTrue(GridGrindProtocolCatalog.entryFor("SET_CELL").isPresent());
     assertEquals("SET_CELL", GridGrindProtocolCatalog.entryFor("SET_CELL").get().id());
+    assertTrue(GridGrindProtocolCatalog.entryFor("SET_CHART").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("GET_WINDOW").isPresent());
+    assertTrue(GridGrindProtocolCatalog.entryFor("GET_CHARTS").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("NEW").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("SAVE_AS").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("FORMULA").isPresent());
@@ -496,8 +498,8 @@ class GridGrindProtocolCatalogTest {
     assertEquals("GridGrindRequest", catalog.requestType().id());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
-    assertEquals(61, catalog.operationTypes().size());
-    assertEquals(28, catalog.readTypes().size());
+    assertEquals(62, catalog.operationTypes().size());
+    assertEquals(29, catalog.readTypes().size());
     assertEquals(
         List.of(
             "cellInputTypes",
@@ -514,6 +516,9 @@ class GridGrindProtocolCatalogTest {
             "namedRangeScopeTypes",
             "namedRangeSelectorTypes",
             "drawingAnchorInputTypes",
+            "chartInputTypes",
+            "chartTitleInputTypes",
+            "chartLegendInputTypes",
             "fontHeightTypes",
             "dataValidationRuleTypes",
             "autofilterFilterCriterionTypes",
@@ -532,6 +537,8 @@ class GridGrindProtocolCatalogTest {
             "formulaUdfFunctionInputType",
             "formulaCellTargetInputType",
             "drawingMarkerInputType",
+            "chartSeriesInputType",
+            "chartDataSourceInputType",
             "pictureDataInputType",
             "pictureInputType",
             "shapeInputType",
@@ -662,6 +669,40 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         new FieldShape.PlainTypeGroupRef("drawingMarkerInputType"),
         fieldNamed(drawingAnchorEntry, "to").shape());
+
+    TypeEntry barChartEntry = nestedTypeEntry(catalog, "chartInputTypes", "BAR");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("drawingAnchorInputTypes"),
+        fieldNamed(barChartEntry, "anchor").shape());
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("chartTitleInputTypes"),
+        fieldNamed(barChartEntry, "title").shape());
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("chartLegendInputTypes"),
+        fieldNamed(barChartEntry, "legend").shape());
+    assertEquals(
+        new FieldShape.ListShape(new FieldShape.PlainTypeGroupRef("chartSeriesInputType")),
+        fieldNamed(barChartEntry, "series").shape());
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(barChartEntry, "barDirection").requirement());
+
+    PlainTypeGroup chartSeriesGroup = plainGroup(catalog, "chartSeriesInputType");
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(chartSeriesGroup.type(), "title").requirement());
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("chartTitleInputTypes"),
+        fieldNamed(chartSeriesGroup.type(), "title").shape());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("chartDataSourceInputType"),
+        fieldNamed(chartSeriesGroup.type(), "categories").shape());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("chartDataSourceInputType"),
+        fieldNamed(chartSeriesGroup.type(), "values").shape());
+
+    PlainTypeGroup chartDataSourceGroup = plainGroup(catalog, "chartDataSourceInputType");
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.STRING),
+        fieldNamed(chartDataSourceGroup.type(), "formula").shape());
 
     PlainTypeGroup namedRangeGroup = plainGroup(catalog, "namedRangeTargetType");
     assertEquals(
@@ -966,6 +1007,9 @@ class GridGrindProtocolCatalogTest {
             .contains("DrawingAnchorInput"),
         "SET_PICTURE summary must mention the explicit authored drawing-anchor shape");
     assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_CHART").summary().contains("BAR, LINE, and PIE"),
+        "SET_CHART summary must state the supported simple-chart families");
+    assertTrue(
         entryNamed(catalog.operationTypes(), "SET_SHAPE")
             .summary()
             .contains("SIMPLE_SHAPE and CONNECTOR"),
@@ -976,10 +1020,11 @@ class GridGrindProtocolCatalogTest {
             .contains("Read-only loaded families"),
         "SET_DRAWING_OBJECT_ANCHOR summary must describe the read-only loaded families");
     assertTrue(
-        entryNamed(catalog.readTypes(), "GET_DRAWING_OBJECTS")
-            .summary()
-            .contains("embedded objects"),
+        entryNamed(catalog.readTypes(), "GET_DRAWING_OBJECTS").summary().contains("charts"),
         "GET_DRAWING_OBJECTS summary must describe the factual drawing families");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_CHARTS").summary().contains("UNSUPPORTED"),
+        "GET_CHARTS summary must explain unsupported chart surfacing");
     assertTrue(
         entryNamed(catalog.readTypes(), "GET_DRAWING_OBJECT_PAYLOAD")
             .summary()
@@ -1184,6 +1229,10 @@ class GridGrindProtocolCatalogTest {
         new FieldShape.PlainTypeGroupRef("pictureInputType"),
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_PICTURE"), "picture").shape(),
         "SET_PICTURE.picture must point to pictureInputType");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("chartInputTypes"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_CHART"), "chart").shape(),
+        "SET_CHART.chart must point to chartInputTypes");
     assertEquals(
         new FieldShape.PlainTypeGroupRef("shapeInputType"),
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_SHAPE"), "shape").shape(),
