@@ -157,6 +157,15 @@ class WorkbookReadResultConverterTest {
                             "rect",
                             "Queue",
                             0),
+                        new ExcelDrawingObjectSnapshot.Chart(
+                            "OpsChart",
+                            new ExcelDrawingAnchor.TwoCell(
+                                new ExcelDrawingMarker(1, 2, 0, 0),
+                                new ExcelDrawingMarker(6, 12, 0, 0),
+                                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
+                            true,
+                            List.of("BAR"),
+                            "Roadmap"),
                         new ExcelDrawingObjectSnapshot.EmbeddedObject(
                             "OpsEmbed",
                             new ExcelDrawingAnchor.Absolute(1L, 2L, 10L, 20L, null),
@@ -187,8 +196,7 @@ class WorkbookReadResultConverterTest {
                             "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
                         "Payload",
                         "payload.txt"))));
-
-    assertEquals(3, drawingObjects.drawingObjects().size());
+    assertEquals(4, drawingObjects.drawingObjects().size());
     DrawingObjectReport.Picture picture =
         assertInstanceOf(DrawingObjectReport.Picture.class, drawingObjects.drawingObjects().get(0));
     assertEquals(ExcelPictureFormat.PNG, picture.format());
@@ -196,10 +204,13 @@ class WorkbookReadResultConverterTest {
         ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE,
         assertInstanceOf(DrawingAnchorReport.TwoCell.class, picture.anchor()).behavior());
     assertInstanceOf(DrawingObjectReport.Shape.class, drawingObjects.drawingObjects().get(1));
+    DrawingObjectReport.Chart chartObject =
+        assertInstanceOf(DrawingObjectReport.Chart.class, drawingObjects.drawingObjects().get(2));
+    assertTrue(chartObject.supported());
+    assertEquals(List.of("BAR"), chartObject.plotTypeTokens());
     assertInstanceOf(
-        DrawingObjectReport.EmbeddedObject.class, drawingObjects.drawingObjects().get(2));
+        DrawingObjectReport.EmbeddedObject.class, drawingObjects.drawingObjects().get(3));
     assertEquals("cGF5bG9hZA==", drawingPayload.payload().base64Data());
-
     DrawingObjectPayloadReport.Picture picturePayload =
         assertInstanceOf(
             DrawingObjectPayloadReport.Picture.class,
@@ -215,6 +226,241 @@ class WorkbookReadResultConverterTest {
                     "Queue preview")));
     assertEquals("OpsPicture.png", picturePayload.fileName());
     assertEquals("cGljdHVyZQ==", picturePayload.base64Data());
+  }
+
+  @Test
+  void convertsChartReadResultsIntoProtocolShapes() {
+    WorkbookReadResult.ChartsResult charts =
+        assertInstanceOf(
+            WorkbookReadResult.ChartsResult.class,
+            WorkbookReadResultConverter.toReadResult(baseChartsResult()));
+    ChartReport.Bar chartReport =
+        assertInstanceOf(ChartReport.Bar.class, charts.charts().getFirst());
+    assertEquals("Roadmap", ((ChartReport.Title.Text) chartReport.title()).text());
+    assertEquals(
+        "ChartValues",
+        ((ChartReport.DataSource.NumericReference) chartReport.series().getFirst().values())
+            .formula());
+
+    WorkbookReadResult.ChartsResult advancedCharts =
+        assertInstanceOf(
+            WorkbookReadResult.ChartsResult.class,
+            WorkbookReadResultConverter.toReadResult(advancedChartsResult()));
+    ChartReport.Line lineReport =
+        assertInstanceOf(ChartReport.Line.class, advancedCharts.charts().get(0));
+    assertTrue(lineReport.title() instanceof ChartReport.Title.None);
+    assertEquals(
+        List.of("Jan", "Feb"),
+        ((ChartReport.DataSource.StringLiteral) lineReport.series().getFirst().categories())
+            .values());
+    assertEquals(
+        List.of("10", "18"),
+        ((ChartReport.DataSource.NumericLiteral) lineReport.series().getFirst().values()).values());
+    ChartReport.Pie pieReport =
+        assertInstanceOf(ChartReport.Pie.class, advancedCharts.charts().get(1));
+    assertEquals(120, pieReport.firstSliceAngle());
+    assertEquals("Actual", ((ChartReport.Title.Formula) pieReport.title()).cachedText());
+    ChartReport.Unsupported unsupportedChart =
+        assertInstanceOf(ChartReport.Unsupported.class, advancedCharts.charts().get(2));
+    assertEquals(List.of("AREA"), unsupportedChart.plotTypeTokens());
+  }
+
+  @Test
+  void directChartReportConversionCoversStandaloneSwitchBranches() {
+    ExcelChartSnapshot lineSnapshot =
+        new ExcelChartSnapshot.Line(
+            "OpsLine",
+            new ExcelDrawingAnchor.TwoCell(
+                new ExcelDrawingMarker(2, 3, 0, 0),
+                new ExcelDrawingMarker(7, 14, 0, 0),
+                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+            new ExcelChartSnapshot.Title.None(),
+            new ExcelChartSnapshot.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.GAP,
+            true,
+            false,
+            List.of(
+                new ExcelChartSnapshot.Axis(
+                    ExcelChartAxisKind.CATEGORY,
+                    ExcelChartAxisPosition.TOP,
+                    ExcelChartAxisCrosses.AUTO_ZERO,
+                    true),
+                new ExcelChartSnapshot.Axis(
+                    ExcelChartAxisKind.VALUE,
+                    ExcelChartAxisPosition.RIGHT,
+                    ExcelChartAxisCrosses.MAX,
+                    false)),
+            List.of(
+                new ExcelChartSnapshot.Series(
+                    new ExcelChartSnapshot.Title.None(),
+                    new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan", "Feb")),
+                    new ExcelChartSnapshot.DataSource.NumericLiteral("0.0", List.of("10", "18")))));
+    ExcelChartSnapshot pieSnapshot =
+        new ExcelChartSnapshot.Pie(
+            "OpsPie",
+            new ExcelDrawingAnchor.TwoCell(
+                new ExcelDrawingMarker(8, 3, 0, 0),
+                new ExcelDrawingMarker(13, 14, 0, 0),
+                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+            new ExcelChartSnapshot.Title.Formula("Budget!$C$1", "Actual"),
+            new ExcelChartSnapshot.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.ZERO,
+            false,
+            true,
+            120,
+            List.of(
+                new ExcelChartSnapshot.Series(
+                    new ExcelChartSnapshot.Title.Text("Actual"),
+                    new ExcelChartSnapshot.DataSource.StringReference(
+                        "ChartCategories", List.of("Jan", "Feb")),
+                    new ExcelChartSnapshot.DataSource.NumericReference(
+                        "ChartActual", "0.0", List.of("12", "16")))));
+    ExcelChartSnapshot unsupportedSnapshot =
+        new ExcelChartSnapshot.Unsupported(
+            "AreaOnly",
+            new ExcelDrawingAnchor.TwoCell(
+                new ExcelDrawingMarker(14, 3, 0, 0),
+                new ExcelDrawingMarker(19, 14, 0, 0),
+                ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+            List.of("AREA"),
+            "Only simple single-plot charts are modeled.");
+
+    ChartReport.Line lineReport =
+        assertInstanceOf(
+            ChartReport.Line.class,
+            WorkbookReadResultConverter.toChartReport((ExcelChartSnapshot) lineSnapshot));
+    ChartReport.Pie pieReport =
+        assertInstanceOf(
+            ChartReport.Pie.class,
+            WorkbookReadResultConverter.toChartReport((ExcelChartSnapshot) pieSnapshot));
+    ChartReport.Unsupported unsupportedReport =
+        assertInstanceOf(
+            ChartReport.Unsupported.class,
+            WorkbookReadResultConverter.toChartReport((ExcelChartSnapshot) unsupportedSnapshot));
+
+    assertTrue(lineReport.title() instanceof ChartReport.Title.None);
+    assertTrue(lineReport.legend() instanceof ChartReport.Legend.Hidden);
+    assertEquals(
+        List.of("Jan", "Feb"),
+        assertInstanceOf(
+                ChartReport.DataSource.StringLiteral.class,
+                lineReport.series().getFirst().categories())
+            .values());
+    assertEquals(
+        "0.0",
+        assertInstanceOf(
+                ChartReport.DataSource.NumericLiteral.class,
+                lineReport.series().getFirst().values())
+            .formatCode());
+    assertEquals(
+        "Actual",
+        assertInstanceOf(ChartReport.Title.Formula.class, pieReport.title()).cachedText());
+    assertEquals(
+        List.of("12", "16"),
+        assertInstanceOf(
+                ChartReport.DataSource.NumericReference.class,
+                pieReport.series().getFirst().values())
+            .cachedValues());
+    assertEquals(List.of("AREA"), unsupportedReport.plotTypeTokens());
+  }
+
+  private static dev.erst.gridgrind.excel.WorkbookReadResult.ChartsResult baseChartsResult() {
+    return new dev.erst.gridgrind.excel.WorkbookReadResult.ChartsResult(
+        "charts",
+        "Budget",
+        List.of(
+            new ExcelChartSnapshot.Bar(
+                "OpsChart",
+                new ExcelDrawingAnchor.TwoCell(
+                    new ExcelDrawingMarker(1, 2, 0, 0),
+                    new ExcelDrawingMarker(6, 12, 0, 0),
+                    ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
+                new ExcelChartSnapshot.Title.Text("Roadmap"),
+                new ExcelChartSnapshot.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                ExcelChartDisplayBlanksAs.SPAN,
+                false,
+                true,
+                ExcelChartBarDirection.COLUMN,
+                List.of(
+                    new ExcelChartSnapshot.Axis(
+                        ExcelChartAxisKind.CATEGORY,
+                        ExcelChartAxisPosition.BOTTOM,
+                        ExcelChartAxisCrosses.AUTO_ZERO,
+                        true),
+                    new ExcelChartSnapshot.Axis(
+                        ExcelChartAxisKind.VALUE,
+                        ExcelChartAxisPosition.LEFT,
+                        ExcelChartAxisCrosses.AUTO_ZERO,
+                        true)),
+                List.of(
+                    new ExcelChartSnapshot.Series(
+                        new ExcelChartSnapshot.Title.Formula("Chart!$B$1", "Plan"),
+                        new ExcelChartSnapshot.DataSource.StringReference(
+                            "ChartCategories", List.of("Jan", "Feb", "Mar")),
+                        new ExcelChartSnapshot.DataSource.NumericReference(
+                            "ChartValues", null, List.of("10.0", "18.0", "15.0")))))));
+  }
+
+  private static dev.erst.gridgrind.excel.WorkbookReadResult.ChartsResult advancedChartsResult() {
+    return new dev.erst.gridgrind.excel.WorkbookReadResult.ChartsResult(
+        "charts-advanced",
+        "Budget",
+        List.of(
+            new ExcelChartSnapshot.Line(
+                "TrendChart",
+                new ExcelDrawingAnchor.TwoCell(
+                    new ExcelDrawingMarker(2, 3, 0, 0),
+                    new ExcelDrawingMarker(7, 14, 0, 0),
+                    ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                new ExcelChartSnapshot.Title.None(),
+                new ExcelChartSnapshot.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.GAP,
+                true,
+                false,
+                List.of(
+                    new ExcelChartSnapshot.Axis(
+                        ExcelChartAxisKind.CATEGORY,
+                        ExcelChartAxisPosition.BOTTOM,
+                        ExcelChartAxisCrosses.AUTO_ZERO,
+                        true),
+                    new ExcelChartSnapshot.Axis(
+                        ExcelChartAxisKind.VALUE,
+                        ExcelChartAxisPosition.LEFT,
+                        ExcelChartAxisCrosses.MIN,
+                        true)),
+                List.of(
+                    new ExcelChartSnapshot.Series(
+                        new ExcelChartSnapshot.Title.None(),
+                        new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan", "Feb")),
+                        new ExcelChartSnapshot.DataSource.NumericLiteral(
+                            "0.0", List.of("10", "18"))))),
+            new ExcelChartSnapshot.Pie(
+                "ShareChart",
+                new ExcelDrawingAnchor.TwoCell(
+                    new ExcelDrawingMarker(8, 3, 0, 0),
+                    new ExcelDrawingMarker(13, 14, 0, 0),
+                    ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                new ExcelChartSnapshot.Title.Formula("Budget!$C$1", "Actual"),
+                new ExcelChartSnapshot.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.ZERO,
+                false,
+                true,
+                120,
+                List.of(
+                    new ExcelChartSnapshot.Series(
+                        new ExcelChartSnapshot.Title.Text("Actual"),
+                        new ExcelChartSnapshot.DataSource.StringReference(
+                            "ChartCategories", List.of("Jan", "Feb")),
+                        new ExcelChartSnapshot.DataSource.NumericReference(
+                            "ChartActual", "0.0", List.of("12", "16"))))),
+            new ExcelChartSnapshot.Unsupported(
+                "AreaOnly",
+                new ExcelDrawingAnchor.TwoCell(
+                    new ExcelDrawingMarker(14, 3, 0, 0),
+                    new ExcelDrawingMarker(19, 14, 0, 0),
+                    ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                List.of("AREA"),
+                "Chart plot family is outside the current modeled simple-chart contract.")));
   }
 
   private static ExcelCellSnapshot advancedCell() {

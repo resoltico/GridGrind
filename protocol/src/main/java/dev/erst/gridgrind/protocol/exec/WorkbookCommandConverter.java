@@ -106,6 +106,8 @@ final class WorkbookCommandConverter {
           new WorkbookCommand.ClearComment(op.sheetName(), op.address());
       case WorkbookOperation.SetPicture op ->
           new WorkbookCommand.SetPicture(op.sheetName(), toExcelPictureDefinition(op.picture()));
+      case WorkbookOperation.SetChart op ->
+          new WorkbookCommand.SetChart(op.sheetName(), toExcelChartDefinition(op.chart()));
       case WorkbookOperation.SetShape op ->
           new WorkbookCommand.SetShape(op.sheetName(), toExcelShapeDefinition(op.shape()));
       case WorkbookOperation.SetEmbeddedObject op ->
@@ -226,6 +228,43 @@ final class WorkbookCommandConverter {
         picture.description());
   }
 
+  static ExcelChartDefinition toExcelChartDefinition(ChartInput chart) {
+    return switch (chart) {
+      case ChartInput.Bar bar ->
+          new ExcelChartDefinition.Bar(
+              bar.name(),
+              toExcelDrawingAnchor(bar.anchor()),
+              toExcelChartTitle(bar.title()),
+              toExcelChartLegend(bar.legend()),
+              bar.displayBlanksAs(),
+              bar.plotOnlyVisibleCells(),
+              bar.varyColors(),
+              bar.barDirection(),
+              bar.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Line line ->
+          new ExcelChartDefinition.Line(
+              line.name(),
+              toExcelDrawingAnchor(line.anchor()),
+              toExcelChartTitle(line.title()),
+              toExcelChartLegend(line.legend()),
+              line.displayBlanksAs(),
+              line.plotOnlyVisibleCells(),
+              line.varyColors(),
+              line.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Pie pie ->
+          new ExcelChartDefinition.Pie(
+              pie.name(),
+              toExcelDrawingAnchor(pie.anchor()),
+              toExcelChartTitle(pie.title()),
+              toExcelChartLegend(pie.legend()),
+              pie.displayBlanksAs(),
+              pie.plotOnlyVisibleCells(),
+              pie.varyColors(),
+              pie.firstSliceAngle(),
+              pie.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+    };
+  }
+
   static ExcelShapeDefinition toExcelShapeDefinition(ShapeInput shape) {
     return new ExcelShapeDefinition(
         shape.name(),
@@ -264,6 +303,30 @@ final class WorkbookCommandConverter {
                   twoCell.to().dy()),
               twoCell.behavior());
     };
+  }
+
+  private static ExcelChartDefinition.Title toExcelChartTitle(ChartInput.Title title) {
+    return switch (title) {
+      case ChartInput.Title.None _ -> new ExcelChartDefinition.Title.None();
+      case ChartInput.Title.Text text -> new ExcelChartDefinition.Title.Text(text.text());
+      case ChartInput.Title.Formula formula ->
+          new ExcelChartDefinition.Title.Formula(formula.formula());
+    };
+  }
+
+  private static ExcelChartDefinition.Legend toExcelChartLegend(ChartInput.Legend legend) {
+    return switch (legend) {
+      case ChartInput.Legend.Hidden _ -> new ExcelChartDefinition.Legend.Hidden();
+      case ChartInput.Legend.Visible visible ->
+          new ExcelChartDefinition.Legend.Visible(visible.position());
+    };
+  }
+
+  private static ExcelChartDefinition.Series toExcelChartSeries(ChartInput.Series series) {
+    return new ExcelChartDefinition.Series(
+        toExcelChartTitle(series.title()),
+        new ExcelChartDefinition.DataSource(series.categories().formula()),
+        new ExcelChartDefinition.DataSource(series.values().formula()));
   }
 
   static ExcelRowSpan toExcelRowSpan(RowSpanInput rows) {

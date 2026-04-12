@@ -260,6 +260,8 @@ class DefaultGridGrindRequestExecutorCoverageTest {
             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
     WorkbookReadOperation.GetDrawingObjects getDrawingObjects =
         new WorkbookReadOperation.GetDrawingObjects("drawing", "Budget");
+    WorkbookReadOperation.GetCharts getCharts =
+        new WorkbookReadOperation.GetCharts("charts", "Budget");
     WorkbookReadOperation.GetDrawingObjectPayload getDrawingObjectPayload =
         new WorkbookReadOperation.GetDrawingObjectPayload("payload", "Budget", "OpsPicture");
     WorkbookOperation.SetPicture setPicture =
@@ -289,28 +291,51 @@ class DefaultGridGrindRequestExecutorCoverageTest {
         new WorkbookOperation.SetDrawingObjectAnchor("Budget", "OpsPicture", drawingAnchor);
     WorkbookOperation.DeleteDrawingObject deleteDrawingObject =
         new WorkbookOperation.DeleteDrawingObject("Budget", "OpsPicture");
+    WorkbookOperation.SetChart setChart =
+        new WorkbookOperation.SetChart(
+            "Budget",
+            new ChartInput.Bar(
+                "OpsChart",
+                drawingAnchor,
+                new ChartInput.Title.Text("Roadmap"),
+                new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                ExcelChartDisplayBlanksAs.SPAN,
+                false,
+                true,
+                ExcelChartBarDirection.COLUMN,
+                List.of(
+                    new ChartInput.Series(
+                        new ChartInput.Title.Formula("B1"),
+                        new ChartInput.DataSource("A2:A4"),
+                        new ChartInput.DataSource("B2:B4")))));
     RuntimeException failure = new IllegalStateException("boom");
 
     assertEquals(
         "GET_DRAWING_OBJECTS", DefaultGridGrindRequestExecutor.readType(getDrawingObjects));
+    assertEquals("GET_CHARTS", DefaultGridGrindRequestExecutor.readType(getCharts));
     assertEquals(
         "GET_DRAWING_OBJECT_PAYLOAD",
         DefaultGridGrindRequestExecutor.readType(getDrawingObjectPayload));
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(getDrawingObjects));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(getCharts));
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(getDrawingObjectPayload));
     assertNull(DefaultGridGrindRequestExecutor.addressFor(getDrawingObjects, failure));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(getCharts, failure));
     assertNull(DefaultGridGrindRequestExecutor.addressFor(getDrawingObjectPayload, failure));
     assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(getDrawingObjects, failure));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(getCharts, failure));
     assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(getDrawingObjectPayload, failure));
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(setPicture, failure));
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(setShape, failure));
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(setEmbeddedObject, failure));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setChart, failure));
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(setDrawingObjectAnchor, failure));
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(deleteDrawingObject, failure));
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setPicture, failure));
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setShape, failure));
     assertEquals(
         "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setEmbeddedObject, failure));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setChart, failure));
     assertEquals(
         "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setDrawingObjectAnchor, failure));
     assertEquals(

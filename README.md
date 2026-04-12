@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.38.0
+docker pull ghcr.io/resoltico/gridgrind:0.39.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -154,11 +154,12 @@ local runs do not strand a live harness JVM.
 A request has three parts that always run in this order:
 
 **Operations** write to the workbook — create sheets, fill cells, apply styles, insert rows, build
-tables, set formulas, and author pictures, shapes, or embedded objects. They run in sequence; the
-first failure stops everything.
+tables, set formulas, and author pictures, shapes, embedded objects, or supported simple charts.
+They run in sequence; the first failure stops everything.
 
 **Reads** observe the workbook after all operations succeed — cell windows, schemas, hyperlinks,
-table definitions, formula health, validation health, and more. Non-mutating.
+table definitions, drawing inventories, chart metadata, formula health, validation health, and
+more. Non-mutating.
 
 **Persistence** writes the file after all reads succeed. Omit it or set `NONE` to keep the
 workbook in memory only — useful when you only need the read results, or when Bob is running his
@@ -174,10 +175,23 @@ Two contract details matter often in agent-generated requests:
 - `SET_TABLE.table.showTotalsRow` is optional. Omit it unless the table really includes a totals
   row; the default is `false`.
 - Authored drawing mutations use explicit zero-based anchors. `SET_PICTURE`, `SET_SHAPE`,
-  `SET_EMBEDDED_OBJECT`, and `SET_DRAWING_OBJECT_ANCHOR` currently accept only
+  `SET_EMBEDDED_OBJECT`, `SET_CHART`, and `SET_DRAWING_OBJECT_ANCHOR` currently accept only
   `DrawingAnchorInput` payloads of type `TWO_CELL`.
+- `SET_SHAPE` and `SET_CHART` validate before mutating. Failed authored shape or chart requests do
+  not leave partial drawing artifacts behind.
+- `GET_CHARTS` returns supported simple `BAR`, `LINE`, and `PIE` charts authoritatively.
+  Unsupported plot families or multi-plot combinations are returned as explicit `UNSUPPORTED`
+  entries with preserved plot-type tokens.
+- Formula-backed chart titles and series titles must resolve to one cell, either directly or
+  through a defined name. Category and value series sources may still target contiguous ranges or
+  defined names.
+- Loaded chart metadata degrades truthfully instead of aborting sheet reads: blank stored titles
+  come back as `NONE`, sparse literal caches keep missing points as empty strings, and a surviving
+  orphaned graphic frame is reported as a read-only `GRAPHIC_FRAME` drawing object when its chart
+  relation is gone.
 - `GET_DRAWING_OBJECT_PAYLOAD` extracts binary bytes only for named pictures and embedded objects.
-  Use `GET_DRAWING_OBJECTS` for shape metadata and factual one-cell, two-cell, or absolute anchors.
+  Use `GET_DRAWING_OBJECTS` for picture, chart, shape, and embedded-object metadata plus factual
+  one-cell, two-cell, or absolute anchors.
 - Column structural edits are workbook-wide guarded. `INSERT_COLUMNS`, `DELETE_COLUMNS`, and
   `SHIFT_COLUMNS` are rejected when any formula cells or formula-defined named ranges exist
   anywhere in the workbook.
@@ -203,6 +217,10 @@ and advanced page setup. The committed
 [examples/drawing-media-request.json](examples/drawing-media-request.json) example shows the Phase
 5 drawing and media surface: picture, shape, and embedded-object authoring, explicit anchor
 replacement, drawing payload extraction, and comment coexistence on the same sheet. The committed
+[examples/chart-request.json](examples/chart-request.json) example shows the Phase 6 chart
+surface: supported `BAR` chart authoring, named-range-backed series binding, explicit chart-anchor
+replacement, `GET_CHARTS` factual readback, and matching chart inventory in
+`GET_DRAWING_OBJECTS`. The committed
 [examples/formula-environment-request.json](examples/formula-environment-request.json) example
 shows the Phase 4 formula surface: top-level `formulaEnvironment`, template-backed UDF
 registration, targeted formula evaluation, and explicit formula-cache clearing.

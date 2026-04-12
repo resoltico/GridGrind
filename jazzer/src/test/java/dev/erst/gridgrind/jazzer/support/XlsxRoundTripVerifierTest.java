@@ -14,6 +14,10 @@ import dev.erst.gridgrind.excel.ExcelCellFill;
 import dev.erst.gridgrind.excel.ExcelCellFont;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDefinition;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelColor;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelComment;
@@ -334,6 +338,48 @@ class XlsxRoundTripVerifierTest {
                         new ExcelDrawingMarker(8, 9, 0, 0),
                         null))),
             new WorkbookCommand.SetDrawingObjectAnchor("Ops", "OpsPicture", movedAnchor));
+
+    assertRoundTripReadable(tempDirectory, commands);
+  }
+
+  /** Preserves authored chart state and chart drawing anchors through save and reopen. */
+  @Test
+  void requireRoundTripReadable_preservesChartAuthoring(@TempDir Path tempDirectory)
+      throws IOException {
+    ExcelDrawingAnchor.TwoCell initialAnchor =
+        new ExcelDrawingAnchor.TwoCell(
+            new ExcelDrawingMarker(0, 0, 0, 0), new ExcelDrawingMarker(3, 8, 0, 0), null);
+    ExcelDrawingAnchor.TwoCell movedAnchor =
+        new ExcelDrawingAnchor.TwoCell(
+            new ExcelDrawingMarker(1, 2, 0, 0), new ExcelDrawingMarker(4, 10, 0, 0), null);
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Ops"),
+            new WorkbookCommand.SetRange(
+                "Ops",
+                "A1:B4",
+                List.of(
+                    List.of(ExcelCellValue.text("Month"), ExcelCellValue.text("Actual")),
+                    List.of(ExcelCellValue.text("Jan"), ExcelCellValue.number(12.0d)),
+                    List.of(ExcelCellValue.text("Feb"), ExcelCellValue.number(18.0d)),
+                    List.of(ExcelCellValue.text("Mar"), ExcelCellValue.number(15.0d)))),
+            new WorkbookCommand.SetChart(
+                "Ops",
+                new ExcelChartDefinition.Bar(
+                    "OpsChart",
+                    initialAnchor,
+                    new ExcelChartDefinition.Title.Text("Roadmap"),
+                    new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                    ExcelChartDisplayBlanksAs.SPAN,
+                    false,
+                    true,
+                    ExcelChartBarDirection.COLUMN,
+                    List.of(
+                        new ExcelChartDefinition.Series(
+                            new ExcelChartDefinition.Title.Text("Actual"),
+                            new ExcelChartDefinition.DataSource("Ops!$A$2:$A$4"),
+                            new ExcelChartDefinition.DataSource("Ops!$B$2:$B$4"))))),
+            new WorkbookCommand.SetDrawingObjectAnchor("Ops", "OpsChart", movedAnchor));
 
     assertRoundTripReadable(tempDirectory, commands);
   }

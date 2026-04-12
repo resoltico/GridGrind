@@ -59,6 +59,7 @@ public final class WorkbookCommandExecutor {
           WorkbookCommand.SetComment.class,
           WorkbookCommand.ClearComment.class,
           WorkbookCommand.SetPicture.class,
+          WorkbookCommand.SetChart.class,
           WorkbookCommand.SetShape.class,
           WorkbookCommand.SetEmbeddedObject.class,
           WorkbookCommand.SetDrawingObjectAnchor.class,
@@ -263,6 +264,8 @@ public final class WorkbookCommandExecutor {
           workbook.sheet(clearComment.sheetName()).clearComment(clearComment.address());
       case WorkbookCommand.SetPicture setPicture ->
           workbook.sheet(setPicture.sheetName()).setPicture(setPicture.picture());
+      case WorkbookCommand.SetChart setChart ->
+          workbook.sheet(setChart.sheetName()).setChart(setChart.chart());
       case WorkbookCommand.SetShape setShape ->
           workbook.sheet(setShape.sheetName()).setShape(setShape.shape());
       case WorkbookCommand.SetEmbeddedObject setEmbeddedObject ->

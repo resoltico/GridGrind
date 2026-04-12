@@ -3,6 +3,13 @@ package dev.erst.gridgrind.protocol.json;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
@@ -145,6 +152,79 @@ class GridGrindJsonTest {
 
     assertEquals(request, decoded);
     assertFalse(templateJson.contains("formulaEnvironment"));
+  }
+
+  @Test
+  void roundTripsChartRequestsAndResponses() throws IOException {
+    DrawingAnchorInput.TwoCell anchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 2, 0, 0),
+            new DrawingMarkerInput(6, 12, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    ChartInput.Bar chart =
+        new ChartInput.Bar(
+            "OpsChart",
+            anchor,
+            new ChartInput.Title.Text("Roadmap"),
+            new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            ExcelChartDisplayBlanksAs.SPAN,
+            false,
+            true,
+            ExcelChartBarDirection.COLUMN,
+            List.of(
+                new ChartInput.Series(
+                    new ChartInput.Title.Formula("B1"),
+                    new ChartInput.DataSource("A2:A4"),
+                    new ChartInput.DataSource("B2:B4"))));
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.None(),
+            List.of(new WorkbookOperation.SetChart("Budget", chart)),
+            List.of(new WorkbookReadOperation.GetCharts("charts", "Budget")));
+    GridGrindResponse expected =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            List.of(),
+            List.of(
+                new WorkbookReadResult.ChartsResult(
+                    "charts",
+                    "Budget",
+                    List.of(
+                        new ChartReport.Bar(
+                            "OpsChart",
+                            new DrawingAnchorReport.TwoCell(
+                                new DrawingMarkerReport(1, 2, 0, 0),
+                                new DrawingMarkerReport(6, 12, 0, 0),
+                                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
+                            new ChartReport.Title.Text("Roadmap"),
+                            new ChartReport.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                            ExcelChartDisplayBlanksAs.SPAN,
+                            false,
+                            true,
+                            ExcelChartBarDirection.COLUMN,
+                            List.of(
+                                new ChartReport.Axis(
+                                    ExcelChartAxisKind.CATEGORY,
+                                    ExcelChartAxisPosition.BOTTOM,
+                                    ExcelChartAxisCrosses.AUTO_ZERO,
+                                    true),
+                                new ChartReport.Axis(
+                                    ExcelChartAxisKind.VALUE,
+                                    ExcelChartAxisPosition.LEFT,
+                                    ExcelChartAxisCrosses.AUTO_ZERO,
+                                    true)),
+                            List.of(
+                                new ChartReport.Series(
+                                    new ChartReport.Title.Formula("Budget!$B$1", "Plan"),
+                                    new ChartReport.DataSource.StringReference(
+                                        "A2:A4", List.of("Jan", "Feb", "Mar")),
+                                    new ChartReport.DataSource.NumericReference(
+                                        "B2:B4", null, List.of("10.0", "18.0", "15.0")))))))));
+
+    assertEquals(request, GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(request)));
+    assertEquals(expected, GridGrindJson.readResponse(GridGrindJson.writeResponseBytes(expected)));
   }
 
   @Test

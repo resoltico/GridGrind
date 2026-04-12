@@ -8,6 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
@@ -192,6 +195,117 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new EmbeddedObjectInput(
                 "OpsEmbed", "Payload", "payload.txt", " ", "cGF5bG9hZA==", pictureData, anchor));
+  }
+
+  @Test
+  void chartInputsNormalizeAndValidate() {
+    DrawingAnchorInput.TwoCell anchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 2, 0, 0), new DrawingMarkerInput(6, 12, 0, 0), null);
+    ChartInput.Series firstSeries =
+        new ChartInput.Series(
+            new ChartInput.Title.Formula("B1"),
+            new ChartInput.DataSource("A2:A4"),
+            new ChartInput.DataSource("B2:B4"));
+    ChartInput.Series secondSeries =
+        new ChartInput.Series(
+            null,
+            new ChartInput.DataSource("ChartCategories"),
+            new ChartInput.DataSource("ChartActual"));
+    ChartInput.Bar bar =
+        new ChartInput.Bar(
+            "OpsChart", anchor, null, null, null, null, null, null, List.of(firstSeries));
+    ChartInput.Line line =
+        new ChartInput.Line(
+            "TrendChart",
+            anchor,
+            new ChartInput.Title.Text("Trend"),
+            new ChartInput.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.ZERO,
+            false,
+            true,
+            List.of(secondSeries));
+    ChartInput.Line defaultLine =
+        new ChartInput.Line(
+            "DefaultTrend", anchor, null, null, null, null, null, List.of(secondSeries));
+    ChartInput.Pie pie =
+        new ChartInput.Pie(
+            "ShareChart", anchor, null, null, null, null, null, 180, List.of(secondSeries));
+    ChartInput.Pie defaultPie =
+        new ChartInput.Pie(
+            "DefaultShare", anchor, null, null, null, null, null, null, List.of(secondSeries));
+    ChartInput.Pie explicitPie =
+        new ChartInput.Pie(
+            "ExplicitShare",
+            anchor,
+            new ChartInput.Title.Text("Share"),
+            new ChartInput.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.ZERO,
+            false,
+            true,
+            90,
+            List.of(secondSeries));
+
+    assertTrue(bar.title() instanceof ChartInput.Title.None);
+    assertEquals(new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT), bar.legend());
+    assertEquals(ExcelChartDisplayBlanksAs.GAP, bar.displayBlanksAs());
+    assertTrue(bar.plotOnlyVisibleCells());
+    assertFalse(bar.varyColors());
+    assertEquals(ExcelChartBarDirection.COLUMN, bar.barDirection());
+    assertEquals("B1", ((ChartInput.Title.Formula) bar.series().getFirst().title()).formula());
+    assertTrue(secondSeries.title() instanceof ChartInput.Title.None);
+    assertEquals(ExcelChartDisplayBlanksAs.ZERO, line.displayBlanksAs());
+    assertFalse(line.plotOnlyVisibleCells());
+    assertTrue(line.varyColors());
+    assertEquals(180, pie.firstSliceAngle());
+    assertTrue(defaultLine.title() instanceof ChartInput.Title.None);
+    assertEquals(
+        new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT), defaultLine.legend());
+    assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultLine.displayBlanksAs());
+    assertTrue(defaultLine.plotOnlyVisibleCells());
+    assertFalse(defaultLine.varyColors());
+    assertTrue(defaultPie.title() instanceof ChartInput.Title.None);
+    assertEquals(
+        new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT), defaultPie.legend());
+    assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultPie.displayBlanksAs());
+    assertTrue(defaultPie.plotOnlyVisibleCells());
+    assertFalse(defaultPie.varyColors());
+    assertNull(defaultPie.firstSliceAngle());
+    assertEquals(new ChartInput.Title.Text("Share"), explicitPie.title());
+    assertEquals(new ChartInput.Legend.Hidden(), explicitPie.legend());
+    assertEquals(ExcelChartDisplayBlanksAs.ZERO, explicitPie.displayBlanksAs());
+    assertFalse(explicitPie.plotOnlyVisibleCells());
+    assertTrue(explicitPie.varyColors());
+    assertEquals(90, explicitPie.firstSliceAngle());
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ChartInput.Bar(
+                " ", anchor, null, null, null, null, null, null, List.of(firstSeries)));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new ChartInput.Line(
+                "OpsChart", null, null, null, null, null, null, List.of(firstSeries)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ChartInput.Pie(
+                "OpsChart", anchor, null, null, null, null, null, 361, List.of(firstSeries)));
+    assertThrows(IllegalArgumentException.class, () -> new ChartInput.Title.Text(" "));
+    assertThrows(IllegalArgumentException.class, () -> new ChartInput.Title.Formula(" "));
+    assertThrows(NullPointerException.class, () -> new ChartInput.Legend.Visible(null));
+    assertThrows(IllegalArgumentException.class, () -> new ChartInput.DataSource(" "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ChartInput.Bar("OpsChart", anchor, null, null, null, null, null, null, List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new ChartInput.Line(
+                "OpsChart", anchor, null, null, null, null, null, List.of(firstSeries, null)));
   }
 
   @Test

@@ -20,6 +20,7 @@ import dev.erst.gridgrind.protocol.dto.CellFontReport;
 import dev.erst.gridgrind.protocol.dto.CellGradientFillReport;
 import dev.erst.gridgrind.protocol.dto.CellGradientStopReport;
 import dev.erst.gridgrind.protocol.dto.CellProtectionReport;
+import dev.erst.gridgrind.protocol.dto.ChartReport;
 import dev.erst.gridgrind.protocol.dto.CommentAnchorReport;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingHealthReport;
@@ -126,16 +127,35 @@ public final class WorkbookInvariantChecks {
     workbook
         .sheetNames()
         .forEach(
-            sheetName ->
-                requireEngineSheetSummaryShape(
-                    ((dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult)
-                            readExecutor
-                                .apply(
-                                    workbook,
-                                    new WorkbookReadCommand.GetSheetSummary(
-                                        "sheet-shape-" + sheetName, sheetName))
-                                .getFirst())
-                        .sheet()));
+            sheetName -> {
+              requireEngineSheetSummaryShape(
+                  ((dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummaryResult)
+                          readExecutor
+                              .apply(
+                                  workbook,
+                                  new WorkbookReadCommand.GetSheetSummary(
+                                      "sheet-shape-" + sheetName, sheetName))
+                              .getFirst())
+                      .sheet());
+              ((dev.erst.gridgrind.excel.WorkbookReadResult.DrawingObjectsResult)
+                      readExecutor
+                          .apply(
+                              workbook,
+                              new WorkbookReadCommand.GetDrawingObjects(
+                                  "drawing-shape-" + sheetName, sheetName))
+                          .getFirst())
+                  .drawingObjects()
+                  .forEach(WorkbookInvariantChecks::requireEngineDrawingObjectShape);
+              ((dev.erst.gridgrind.excel.WorkbookReadResult.ChartsResult)
+                      readExecutor
+                          .apply(
+                              workbook,
+                              new WorkbookReadCommand.GetCharts(
+                                  "chart-shape-" + sheetName, sheetName))
+                          .getFirst())
+                  .charts()
+                  .forEach(WorkbookInvariantChecks::requireEngineChartShape);
+            });
   }
 
   private static void requirePersistenceMatchesRequest(
@@ -262,6 +282,11 @@ public final class WorkbookInvariantChecks {
         require(expected.sheetName().equals(result.sheetName()), "drawing objects sheet mismatch");
         result.drawingObjects().forEach(WorkbookInvariantChecks::requireDrawingObjectShape);
       }
+      case WorkbookReadOperation.GetCharts expected -> {
+        WorkbookReadResult.ChartsResult result = (WorkbookReadResult.ChartsResult) readResult;
+        require(expected.sheetName().equals(result.sheetName()), "charts sheet mismatch");
+        result.charts().forEach(WorkbookInvariantChecks::requireChartReportShape);
+      }
       case WorkbookReadOperation.GetDrawingObjectPayload expected -> {
         WorkbookReadResult.DrawingObjectPayloadResult result =
             (WorkbookReadResult.DrawingObjectPayloadResult) readResult;
@@ -363,6 +388,7 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.HyperlinksResult _ -> "GET_HYPERLINKS";
       case WorkbookReadResult.CommentsResult _ -> "GET_COMMENTS";
       case WorkbookReadResult.DrawingObjectsResult _ -> "GET_DRAWING_OBJECTS";
+      case WorkbookReadResult.ChartsResult _ -> "GET_CHARTS";
       case WorkbookReadResult.DrawingObjectPayloadResult _ -> "GET_DRAWING_OBJECT_PAYLOAD";
       case WorkbookReadResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadResult.PrintLayoutResult _ -> "GET_PRINT_LAYOUT";
@@ -426,6 +452,11 @@ public final class WorkbookInvariantChecks {
         require(result.sheetName() != null, "drawing objects sheetName must not be null");
         require(!result.sheetName().isBlank(), "drawing objects sheetName must not be blank");
         result.drawingObjects().forEach(WorkbookInvariantChecks::requireDrawingObjectShape);
+      }
+      case WorkbookReadResult.ChartsResult result -> {
+        require(result.sheetName() != null, "charts sheetName must not be null");
+        require(!result.sheetName().isBlank(), "charts sheetName must not be blank");
+        result.charts().forEach(WorkbookInvariantChecks::requireChartReportShape);
       }
       case WorkbookReadResult.DrawingObjectPayloadResult result -> {
         require(result.sheetName() != null, "drawing payload sheetName must not be null");
@@ -545,6 +576,7 @@ public final class WorkbookInvariantChecks {
     requireDrawingAnchorShape(drawingObject.anchor());
     switch (drawingObject) {
       case DrawingObjectReport.Picture picture -> requirePictureDrawingObjectShape(picture);
+      case DrawingObjectReport.Chart chart -> requireChartDrawingObjectShape(chart);
       case DrawingObjectReport.Shape shape -> requireShapeDrawingObjectShape(shape);
       case DrawingObjectReport.EmbeddedObject embeddedObject ->
           requireEmbeddedDrawingObjectShape(embeddedObject);
@@ -564,6 +596,12 @@ public final class WorkbookInvariantChecks {
     if (picture.description() != null) {
       require(!picture.description().isBlank(), "picture description must not be blank");
     }
+  }
+
+  private static void requireChartDrawingObjectShape(DrawingObjectReport.Chart chart) {
+    require(chart.plotTypeTokens() != null, "chart plotTypeTokens must not be null");
+    chart.plotTypeTokens().forEach(token -> requireNonBlank(token, "chart plotTypeToken"));
+    require(chart.title() != null, "chart title must not be null");
   }
 
   private static void requireShapeDrawingObjectShape(DrawingObjectReport.Shape shape) {
@@ -668,6 +706,106 @@ public final class WorkbookInvariantChecks {
     require(marker.dy() >= 0, "drawing marker dy must not be negative");
   }
 
+  private static void requireChartReportShape(ChartReport chart) {
+    require(chart != null, "chart report must not be null");
+    requireNonBlank(chart.name(), "chart name");
+    requireDrawingAnchorShape(chart.anchor());
+    switch (chart) {
+      case ChartReport.Bar bar -> {
+        require(bar.title() != null, "bar chart title must not be null");
+        require(bar.legend() != null, "bar chart legend must not be null");
+        require(bar.displayBlanksAs() != null, "bar chart displayBlanksAs must not be null");
+        require(bar.barDirection() != null, "bar chart barDirection must not be null");
+        bar.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
+        bar.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
+      case ChartReport.Line line -> {
+        require(line.title() != null, "line chart title must not be null");
+        require(line.legend() != null, "line chart legend must not be null");
+        require(line.displayBlanksAs() != null, "line chart displayBlanksAs must not be null");
+        line.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
+        line.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
+      case ChartReport.Pie pie -> {
+        require(pie.title() != null, "pie chart title must not be null");
+        require(pie.legend() != null, "pie chart legend must not be null");
+        require(pie.displayBlanksAs() != null, "pie chart displayBlanksAs must not be null");
+        if (pie.firstSliceAngle() != null) {
+          require(
+              pie.firstSliceAngle() >= 0 && pie.firstSliceAngle() <= 360,
+              "pie chart firstSliceAngle must be between 0 and 360");
+        }
+        pie.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
+      case ChartReport.Unsupported unsupported -> {
+        unsupported
+            .plotTypeTokens()
+            .forEach(token -> requireNonBlank(token, "unsupported chart plotTypeToken"));
+        requireNonBlank(unsupported.detail(), "unsupported chart detail");
+      }
+    }
+  }
+
+  private static void requireChartAxisShape(ChartReport.Axis axis) {
+    require(axis != null, "chart axis must not be null");
+    require(axis.kind() != null, "chart axis kind must not be null");
+    require(axis.position() != null, "chart axis position must not be null");
+    require(axis.crosses() != null, "chart axis crosses must not be null");
+  }
+
+  private static void requireChartSeriesShape(ChartReport.Series series) {
+    require(series != null, "chart series must not be null");
+    requireChartTitleShape(series.title());
+    requireChartDataSourceShape(series.categories());
+    requireChartDataSourceShape(series.values());
+  }
+
+  private static void requireChartTitleShape(ChartReport.Title title) {
+    require(title != null, "chart title must not be null");
+    switch (title) {
+      case ChartReport.Title.None _ -> {}
+      case ChartReport.Title.Text text ->
+          require(text.text() != null, "chart title text must not be null");
+      case ChartReport.Title.Formula formula -> {
+        requireNonBlank(formula.formula(), "chart title formula");
+        require(formula.cachedText() != null, "chart title cachedText must not be null");
+      }
+    }
+  }
+
+  private static void requireChartDataSourceShape(ChartReport.DataSource source) {
+    require(source != null, "chart data source must not be null");
+    switch (source) {
+      case ChartReport.DataSource.StringReference reference -> {
+        requireNonBlank(reference.formula(), "chart string-reference formula");
+        require(
+            reference.cachedValues() != null,
+            "chart string-reference cachedValues must not be null");
+      }
+      case ChartReport.DataSource.NumericReference reference -> {
+        requireNonBlank(reference.formula(), "chart numeric-reference formula");
+        require(
+            reference.cachedValues() != null,
+            "chart numeric-reference cachedValues must not be null");
+        if (reference.formatCode() != null) {
+          require(
+              !reference.formatCode().isBlank(),
+              "chart numeric-reference formatCode must not be blank");
+        }
+      }
+      case ChartReport.DataSource.StringLiteral literal ->
+          require(literal.values() != null, "chart string-literal values must not be null");
+      case ChartReport.DataSource.NumericLiteral literal -> {
+        require(literal.values() != null, "chart numeric-literal values must not be null");
+        if (literal.formatCode() != null) {
+          require(
+              !literal.formatCode().isBlank(),
+              "chart numeric-literal formatCode must not be blank");
+        }
+      }
+    }
+  }
+
   private static void requireEngineWorkbookSummaryShape(
       dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummary workbook) {
     require(workbook != null, "engine workbook summary must not be null");
@@ -732,6 +870,182 @@ public final class WorkbookInvariantChecks {
               protectedSheet.settings() != null,
               "engine protected sheet settings must not be null");
     }
+  }
+
+  private static void requireEngineDrawingObjectShape(
+      dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot drawingObject) {
+    require(drawingObject != null, "engine drawing object must not be null");
+    requireNonBlank(drawingObject.name(), "engine drawing object name");
+    requireEngineDrawingAnchorShape(drawingObject.anchor());
+    switch (drawingObject) {
+      case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.Picture picture -> {
+        requireNonBlank(picture.contentType(), "engine picture contentType");
+        requireNonBlank(picture.sha256(), "engine picture sha256");
+        require(picture.byteSize() > 0L, "engine picture byteSize must be positive");
+      }
+      case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.Chart chart -> {
+        require(chart.plotTypeTokens() != null, "engine chart plotTypeTokens must not be null");
+        chart
+            .plotTypeTokens()
+            .forEach(token -> requireNonBlank(token, "engine chart plotTypeToken"));
+        require(chart.title() != null, "engine chart title must not be null");
+      }
+      case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.Shape shape -> {
+        if (shape.presetGeometryToken() != null) {
+          require(
+              !shape.presetGeometryToken().isBlank(),
+              "engine shape presetGeometryToken must not be blank");
+        }
+        if (shape.text() != null) {
+          require(!shape.text().isBlank(), "engine shape text must not be blank");
+        }
+        require(shape.childCount() >= 0, "engine shape childCount must not be negative");
+      }
+      case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.EmbeddedObject embeddedObject -> {
+        requireNonBlank(embeddedObject.contentType(), "engine embedded contentType");
+        requireNonBlank(embeddedObject.sha256(), "engine embedded sha256");
+        require(embeddedObject.byteSize() > 0L, "engine embedded byteSize must be positive");
+      }
+    }
+  }
+
+  private static void requireEngineChartShape(dev.erst.gridgrind.excel.ExcelChartSnapshot chart) {
+    require(chart != null, "engine chart must not be null");
+    requireNonBlank(chart.name(), "engine chart name");
+    requireEngineDrawingAnchorShape(chart.anchor());
+    switch (chart) {
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Bar bar -> {
+        require(bar.title() != null, "engine bar chart title must not be null");
+        require(bar.legend() != null, "engine bar chart legend must not be null");
+        require(bar.displayBlanksAs() != null, "engine bar chart displayBlanksAs must not be null");
+        require(bar.barDirection() != null, "engine bar chart barDirection must not be null");
+        bar.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
+        bar.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Line line -> {
+        require(line.title() != null, "engine line chart title must not be null");
+        require(line.legend() != null, "engine line chart legend must not be null");
+        require(
+            line.displayBlanksAs() != null, "engine line chart displayBlanksAs must not be null");
+        line.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
+        line.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Pie pie -> {
+        require(pie.title() != null, "engine pie chart title must not be null");
+        require(pie.legend() != null, "engine pie chart legend must not be null");
+        require(pie.displayBlanksAs() != null, "engine pie chart displayBlanksAs must not be null");
+        if (pie.firstSliceAngle() != null) {
+          require(
+              pie.firstSliceAngle() >= 0 && pie.firstSliceAngle() <= 360,
+              "engine pie chart firstSliceAngle must be between 0 and 360");
+        }
+        pie.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Unsupported unsupported -> {
+        unsupported
+            .plotTypeTokens()
+            .forEach(token -> requireNonBlank(token, "engine unsupported chart plotTypeToken"));
+        requireNonBlank(unsupported.detail(), "engine unsupported chart detail");
+      }
+    }
+  }
+
+  private static void requireEngineChartAxisShape(
+      dev.erst.gridgrind.excel.ExcelChartSnapshot.Axis axis) {
+    require(axis != null, "engine chart axis must not be null");
+    require(axis.kind() != null, "engine chart axis kind must not be null");
+    require(axis.position() != null, "engine chart axis position must not be null");
+    require(axis.crosses() != null, "engine chart axis crosses must not be null");
+  }
+
+  private static void requireEngineChartSeriesShape(
+      dev.erst.gridgrind.excel.ExcelChartSnapshot.Series series) {
+    require(series != null, "engine chart series must not be null");
+    requireEngineChartTitleShape(series.title());
+    requireEngineChartDataSourceShape(series.categories());
+    requireEngineChartDataSourceShape(series.values());
+  }
+
+  private static void requireEngineChartTitleShape(
+      dev.erst.gridgrind.excel.ExcelChartSnapshot.Title title) {
+    require(title != null, "engine chart title must not be null");
+    switch (title) {
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Title.None _ -> {}
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Title.Text text ->
+          require(text.text() != null, "engine chart title text must not be null");
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Title.Formula formula -> {
+        requireNonBlank(formula.formula(), "engine chart title formula");
+        require(formula.cachedText() != null, "engine chart title cachedText must not be null");
+      }
+    }
+  }
+
+  private static void requireEngineChartDataSourceShape(
+      dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource source) {
+    require(source != null, "engine chart data source must not be null");
+    switch (source) {
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource.StringReference reference -> {
+        requireNonBlank(reference.formula(), "engine chart string-reference formula");
+        require(
+            reference.cachedValues() != null,
+            "engine chart string-reference cachedValues must not be null");
+      }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource.NumericReference reference -> {
+        requireNonBlank(reference.formula(), "engine chart numeric-reference formula");
+        require(
+            reference.cachedValues() != null,
+            "engine chart numeric-reference cachedValues must not be null");
+        if (reference.formatCode() != null) {
+          require(
+              !reference.formatCode().isBlank(),
+              "engine chart numeric-reference formatCode must not be blank");
+        }
+      }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource.StringLiteral literal ->
+          require(literal.values() != null, "engine chart string-literal values must not be null");
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.DataSource.NumericLiteral literal -> {
+        require(literal.values() != null, "engine chart numeric-literal values must not be null");
+        if (literal.formatCode() != null) {
+          require(
+              !literal.formatCode().isBlank(),
+              "engine chart numeric-literal formatCode must not be blank");
+        }
+      }
+    }
+  }
+
+  private static void requireEngineDrawingAnchorShape(
+      dev.erst.gridgrind.excel.ExcelDrawingAnchor anchor) {
+    require(anchor != null, "engine drawing anchor must not be null");
+    switch (anchor) {
+      case dev.erst.gridgrind.excel.ExcelDrawingAnchor.TwoCell twoCell -> {
+        requireEngineDrawingMarkerShape(twoCell.from());
+        requireEngineDrawingMarkerShape(twoCell.to());
+        require(twoCell.behavior() != null, "engine two-cell anchor behavior must not be null");
+      }
+      case dev.erst.gridgrind.excel.ExcelDrawingAnchor.OneCell oneCell -> {
+        requireEngineDrawingMarkerShape(oneCell.from());
+        require(oneCell.widthEmu() > 0L, "engine one-cell widthEmu must be positive");
+        require(oneCell.heightEmu() > 0L, "engine one-cell heightEmu must be positive");
+        require(oneCell.behavior() != null, "engine one-cell anchor behavior must not be null");
+      }
+      case dev.erst.gridgrind.excel.ExcelDrawingAnchor.Absolute absolute -> {
+        require(absolute.xEmu() >= 0L, "engine absolute xEmu must not be negative");
+        require(absolute.yEmu() >= 0L, "engine absolute yEmu must not be negative");
+        require(absolute.widthEmu() > 0L, "engine absolute widthEmu must be positive");
+        require(absolute.heightEmu() > 0L, "engine absolute heightEmu must be positive");
+        require(absolute.behavior() != null, "engine absolute anchor behavior must not be null");
+      }
+    }
+  }
+
+  private static void requireEngineDrawingMarkerShape(
+      dev.erst.gridgrind.excel.ExcelDrawingMarker marker) {
+    require(marker != null, "engine drawing marker must not be null");
+    require(marker.columnIndex() >= 0, "engine drawing marker columnIndex must not be negative");
+    require(marker.rowIndex() >= 0, "engine drawing marker rowIndex must not be negative");
+    require(marker.dx() >= 0, "engine drawing marker dx must not be negative");
+    require(marker.dy() >= 0, "engine drawing marker dy must not be negative");
   }
 
   private static void requireWindowShape(GridGrindResponse.WindowReport window) {

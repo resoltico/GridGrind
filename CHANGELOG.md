@@ -5,6 +5,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.39.0] - 2026-04-12
+
+### Added
+
+- Added [examples/chart-request.json](./examples/chart-request.json), a runnable example covering
+  supported `BAR` chart authoring, named-range-backed series binding, explicit chart-anchor
+  replacement, factual `GET_CHARTS` readback, and matching chart inventory in
+  `GET_DRAWING_OBJECTS`.
+- Added the matching promoted Jazzer protocol-request seed plus deterministic Jazzer support
+  coverage for chart authoring and chart readback, so the public example is replay-verified and
+  the fuzz-support layer now exercises the chart contract directly.
+
+### Changed
+
+- Public docs, quick-reference snippets, and README guidance now document the shipped chart
+  contract explicitly: `SET_CHART`, `GET_CHARTS`, supported simple `BAR` or `LINE` or `PIE`
+  families, named-range-backed series formulas, and explicit `UNSUPPORTED` readback for
+  unsupported plot families.
+- `SET_SHAPE` and `SET_CHART` validation is now explicitly non-mutating: failed authored shape or
+  chart requests leave existing drawing state untouched instead of leaking partial artifacts.
+
+### Fixed
+
+- Jazzer `.xlsx` round-trip verification now asserts chart and drawing-object preservation across
+  reopen instead of treating charts as an untracked blind spot.
+- Jazzer request labeling, workflow-shape validation, and workbook-shape invariants now model
+  `SET_CHART`, `GET_CHARTS`, and chart-backed drawing inventory as first-class protocol surface.
+- Failed `SET_SHAPE` preset validation and failed `SET_CHART` preflight no longer leave partial
+  shapes, chart frames, or half-mutated existing charts behind.
+- Chart factual reads now normalize blank stored OOXML titles to `NONE`, preserve sparse literal
+  cache positions as empty-string gaps instead of aborting the read, and degrade broken chart
+  relationships into truthful surviving drawing facts when a graphic frame remains.
+- The chart controller now owns explicit POI translation and relation-removal seams, so
+  chart-family enum mapping and chart-part deletion are regression-tested directly instead of
+  hiding inside one large controller branch.
+
 ## [0.38.0] - 2026-04-12
 
 ### Added
@@ -1414,7 +1450,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.38.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.39.0...HEAD
+[0.39.0]: https://github.com/resoltico/GridGrind/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/resoltico/GridGrind/compare/v0.37.0...v0.38.0
 [0.37.0]: https://github.com/resoltico/GridGrind/compare/v0.36.0...v0.37.0
 [0.36.0]: https://github.com/resoltico/GridGrind/compare/v0.35.0...v0.36.0

@@ -1,10 +1,12 @@
 package dev.erst.gridgrind.excel;
 
+import java.util.List;
 import java.util.Objects;
 
 /** Immutable factual drawing-object snapshot returned by workbook reads. */
 public sealed interface ExcelDrawingObjectSnapshot
     permits ExcelDrawingObjectSnapshot.Picture,
+        ExcelDrawingObjectSnapshot.Chart,
         ExcelDrawingObjectSnapshot.Shape,
         ExcelDrawingObjectSnapshot.EmbeddedObject {
 
@@ -43,6 +45,25 @@ public sealed interface ExcelDrawingObjectSnapshot
       if (description != null && description.isBlank()) {
         throw new IllegalArgumentException("description must not be blank");
       }
+    }
+  }
+
+  /** Factual chart snapshot surfaced through the drawing-object inventory. */
+  record Chart(
+      String name,
+      ExcelDrawingAnchor anchor,
+      boolean supported,
+      List<String> plotTypeTokens,
+      String title)
+      implements ExcelDrawingObjectSnapshot {
+    public Chart {
+      validateCommon(name, anchor);
+      plotTypeTokens =
+          List.copyOf(Objects.requireNonNull(plotTypeTokens, "plotTypeTokens must not be null"));
+      for (String plotTypeToken : plotTypeTokens) {
+        requireNonBlank(plotTypeToken, "plotTypeTokens value");
+      }
+      Objects.requireNonNull(title, "title must not be null");
     }
   }
 

@@ -49,6 +49,8 @@ final class XlsxParityTest {
             XlsxParityScenarios.DRAWING_COMMENTS,
             XlsxParityScenarios.DRAWING_MERGED_IMAGE,
             XlsxParityScenarios.CHART,
+            XlsxParityScenarios.CHART_AUTHORING,
+            XlsxParityScenarios.CHART_UNSUPPORTED,
             XlsxParityScenarios.PIVOT,
             XlsxParityScenarios.EMBEDDED_OBJECT,
             XlsxParityScenarios.LARGE_SHEET,

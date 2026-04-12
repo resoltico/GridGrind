@@ -142,6 +142,17 @@ class WorkbookReadOperationTest {
   }
 
   @Test
+  void getChartsRequiresSheetName() {
+    WorkbookReadOperation.GetCharts operation =
+        new WorkbookReadOperation.GetCharts("charts", "Budget");
+
+    assertEquals("charts", operation.requestId());
+    assertEquals("Budget", operation.sheetName());
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookReadOperation.GetCharts("charts", " "));
+  }
+
+  @Test
   void getTablesAndAnalyzeTableHealthRequireTableSelection() {
     WorkbookReadOperation.GetTables getTables =
         new WorkbookReadOperation.GetTables("tables", new TableSelection.All());

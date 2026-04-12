@@ -31,6 +31,7 @@ import java.util.Set;
   @JsonSubTypes.Type(
       value = WorkbookReadOperation.GetDrawingObjects.class,
       name = "GET_DRAWING_OBJECTS"),
+  @JsonSubTypes.Type(value = WorkbookReadOperation.GetCharts.class, name = "GET_CHARTS"),
   @JsonSubTypes.Type(
       value = WorkbookReadOperation.GetDrawingObjectPayload.class,
       name = "GET_DRAWING_OBJECT_PAYLOAD"),
@@ -94,6 +95,7 @@ public sealed interface WorkbookReadOperation
           GetHyperlinks,
           GetComments,
           GetDrawingObjects,
+          GetCharts,
           GetDrawingObjectPayload,
           GetSheetLayout,
           GetPrintLayout,
@@ -208,6 +210,14 @@ public sealed interface WorkbookReadOperation
   /** Returns factual drawing-object metadata for one sheet. */
   record GetDrawingObjects(String requestId, String sheetName) implements Introspection {
     public GetDrawingObjects {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Returns factual chart metadata for one sheet. */
+  record GetCharts(String requestId, String sheetName) implements Introspection {
+    public GetCharts {
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
     }

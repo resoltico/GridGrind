@@ -5,17 +5,20 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import java.util.List;
 import java.util.Objects;
 
 /** Factual drawing-object report returned by drawing reads. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
   @JsonSubTypes.Type(value = DrawingObjectReport.Picture.class, name = "PICTURE"),
+  @JsonSubTypes.Type(value = DrawingObjectReport.Chart.class, name = "CHART"),
   @JsonSubTypes.Type(value = DrawingObjectReport.Shape.class, name = "SHAPE"),
   @JsonSubTypes.Type(value = DrawingObjectReport.EmbeddedObject.class, name = "EMBEDDED_OBJECT")
 })
 public sealed interface DrawingObjectReport
     permits DrawingObjectReport.Picture,
+        DrawingObjectReport.Chart,
         DrawingObjectReport.Shape,
         DrawingObjectReport.EmbeddedObject {
 
@@ -54,6 +57,25 @@ public sealed interface DrawingObjectReport
       if (description != null && description.isBlank()) {
         throw new IllegalArgumentException("description must not be blank");
       }
+    }
+  }
+
+  /** Factual chart report surfaced through the drawing-object inventory. */
+  record Chart(
+      String name,
+      DrawingAnchorReport anchor,
+      boolean supported,
+      List<String> plotTypeTokens,
+      String title)
+      implements DrawingObjectReport {
+    public Chart {
+      validateCommon(name, anchor);
+      plotTypeTokens =
+          List.copyOf(Objects.requireNonNull(plotTypeTokens, "plotTypeTokens must not be null"));
+      for (String plotTypeToken : plotTypeTokens) {
+        requireNonBlank(plotTypeToken, "plotTypeTokens value");
+      }
+      Objects.requireNonNull(title, "title must not be null");
     }
   }
 

@@ -3,6 +3,12 @@ package dev.erst.gridgrind.protocol.read;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
@@ -276,6 +282,55 @@ class WorkbookReadResultTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookReadResult.DrawingObjectPayloadResult("payload", "Budget", null));
+  }
+
+  @Test
+  void chartReadResultsCopyEntriesAndRejectInvalidState() {
+    DrawingAnchorReport.TwoCell anchor =
+        new DrawingAnchorReport.TwoCell(
+            new DrawingMarkerReport(1, 2, 0, 0),
+            new DrawingMarkerReport(6, 12, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    ChartReport.Bar chart =
+        new ChartReport.Bar(
+            "OpsChart",
+            anchor,
+            new ChartReport.Title.Text("Roadmap"),
+            new ChartReport.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+            ExcelChartDisplayBlanksAs.SPAN,
+            false,
+            true,
+            ExcelChartBarDirection.COLUMN,
+            List.of(
+                new ChartReport.Axis(
+                    ExcelChartAxisKind.CATEGORY,
+                    ExcelChartAxisPosition.BOTTOM,
+                    ExcelChartAxisCrosses.AUTO_ZERO,
+                    true),
+                new ChartReport.Axis(
+                    ExcelChartAxisKind.VALUE,
+                    ExcelChartAxisPosition.LEFT,
+                    ExcelChartAxisCrosses.AUTO_ZERO,
+                    true)),
+            List.of(
+                new ChartReport.Series(
+                    new ChartReport.Title.Formula("Chart!$B$1", "Plan"),
+                    new ChartReport.DataSource.StringReference("ChartCategories", List.of("Jan")),
+                    new ChartReport.DataSource.NumericReference(
+                        "ChartValues", null, List.of("10.0")))));
+    WorkbookReadResult.ChartsResult charts =
+        new WorkbookReadResult.ChartsResult("charts", "Budget", List.of(chart));
+
+    assertEquals("OpsChart", charts.charts().getFirst().name());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.ChartsResult(" ", "Budget", List.of(chart)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.ChartsResult("charts", " ", List.of(chart)));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.ChartsResult("charts", "Budget", null));
   }
 
   @Test

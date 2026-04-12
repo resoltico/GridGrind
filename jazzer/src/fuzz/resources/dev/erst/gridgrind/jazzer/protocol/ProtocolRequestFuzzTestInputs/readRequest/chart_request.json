@@ -1,0 +1,97 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "cli/build/generated-workbooks/gridgrind-chart.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Ops" },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Ops",
+      "range": "A1:C4",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Month" },
+          { "type": "TEXT", "text": "Plan" },
+          { "type": "TEXT", "text": "Actual" }
+        ],
+        [
+          { "type": "TEXT", "text": "Jan" },
+          { "type": "NUMBER", "number": 10 },
+          { "type": "NUMBER", "number": 12 }
+        ],
+        [
+          { "type": "TEXT", "text": "Feb" },
+          { "type": "NUMBER", "number": 18 },
+          { "type": "NUMBER", "number": 17 }
+        ],
+        [
+          { "type": "TEXT", "text": "Mar" },
+          { "type": "NUMBER", "number": 15 },
+          { "type": "NUMBER", "number": 16 }
+        ]
+      ]
+    },
+    {
+      "type": "SET_NAMED_RANGE",
+      "name": "ChartCategories",
+      "scope": { "type": "WORKBOOK" },
+      "target": { "sheetName": "Ops", "range": "A2:A4" }
+    },
+    {
+      "type": "SET_NAMED_RANGE",
+      "name": "ChartActual",
+      "scope": { "type": "WORKBOOK" },
+      "target": { "sheetName": "Ops", "range": "C2:C4" }
+    },
+    {
+      "type": "SET_CHART",
+      "sheetName": "Ops",
+      "chart": {
+        "type": "BAR",
+        "name": "OpsChart",
+        "anchor": {
+          "type": "TWO_CELL",
+          "from": { "columnIndex": 4, "rowIndex": 0, "dx": 0, "dy": 0 },
+          "to": { "columnIndex": 8, "rowIndex": 12, "dx": 0, "dy": 0 },
+          "behavior": "MOVE_AND_RESIZE"
+        },
+        "title": { "type": "TEXT", "text": "Roadmap" },
+        "legend": { "type": "VISIBLE", "position": "TOP_RIGHT" },
+        "displayBlanksAs": "SPAN",
+        "plotOnlyVisibleCells": false,
+        "varyColors": true,
+        "barDirection": "COLUMN",
+        "series": [
+          {
+            "title": { "type": "TEXT", "text": "Plan" },
+            "categories": { "formula": "ChartCategories" },
+            "values": { "formula": "Ops!$B$2:$B$4" }
+          },
+          {
+            "title": { "type": "TEXT", "text": "Actual" },
+            "categories": { "formula": "ChartCategories" },
+            "values": { "formula": "ChartActual" }
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_DRAWING_OBJECT_ANCHOR",
+      "sheetName": "Ops",
+      "objectName": "OpsChart",
+      "anchor": {
+        "type": "TWO_CELL",
+        "from": { "columnIndex": 5, "rowIndex": 0, "dx": 0, "dy": 0 },
+        "to": { "columnIndex": 9, "rowIndex": 12, "dx": 0, "dy": 0 },
+        "behavior": "MOVE_AND_RESIZE"
+      }
+    }
+  ],
+  "reads": [
+    { "type": "GET_CHARTS", "requestId": "charts", "sheetName": "Ops" },
+    { "type": "GET_DRAWING_OBJECTS", "requestId": "drawing-objects", "sheetName": "Ops" }
+  ]
+}

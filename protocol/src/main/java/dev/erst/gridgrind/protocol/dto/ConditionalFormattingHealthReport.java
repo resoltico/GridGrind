@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.protocol.dto;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -19,10 +20,10 @@ public record ConditionalFormattingHealthReport(
 
   private static <T> List<T> copyValues(List<T> values, String fieldName) {
     Objects.requireNonNull(values, fieldName + " must not be null");
-    List<T> copy = List.copyOf(values);
-    for (T value : copy) {
-      Objects.requireNonNull(value, fieldName + " must not contain nulls");
+    List<T> copy = new ArrayList<>(values.size());
+    for (T value : values) {
+      copy.add(Objects.requireNonNull(value, fieldName + " must not contain nulls"));
     }
-    return copy;
+    return List.copyOf(copy);
   }
 }

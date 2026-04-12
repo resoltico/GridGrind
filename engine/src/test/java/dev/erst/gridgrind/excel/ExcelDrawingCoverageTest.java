@@ -789,23 +789,20 @@ class ExcelDrawingCoverageTest {
       List<ExcelDrawingObjectSnapshot> snapshots = controller.drawingObjects(sheet);
       String chartName =
           snapshots.stream()
-              .filter(ExcelDrawingObjectSnapshot.Shape.class::isInstance)
-              .map(ExcelDrawingObjectSnapshot.Shape.class::cast)
-              .filter(snapshot -> snapshot.kind() == ExcelDrawingShapeKind.GRAPHIC_FRAME)
-              .map(ExcelDrawingObjectSnapshot.Shape::name)
+              .filter(ExcelDrawingObjectSnapshot.Chart.class::isInstance)
+              .map(ExcelDrawingObjectSnapshot.Chart.class::cast)
+              .map(ExcelDrawingObjectSnapshot.Chart::name)
               .findFirst()
               .orElseThrow();
       assertEquals(6, snapshots.size());
+      assertEquals(
+          1L,
+          snapshots.stream().filter(ExcelDrawingObjectSnapshot.Chart.class::isInstance).count());
       assertTrue(
           snapshots.stream()
               .filter(ExcelDrawingObjectSnapshot.Shape.class::isInstance)
               .map(ExcelDrawingObjectSnapshot.Shape.class::cast)
               .anyMatch(snapshot -> snapshot.kind() == ExcelDrawingShapeKind.GROUP));
-      assertTrue(
-          snapshots.stream()
-              .filter(ExcelDrawingObjectSnapshot.Shape.class::isInstance)
-              .map(ExcelDrawingObjectSnapshot.Shape.class::cast)
-              .anyMatch(snapshot -> snapshot.kind() == ExcelDrawingShapeKind.GRAPHIC_FRAME));
 
       assertThrows(
           DrawingObjectNotFoundException.class,
@@ -813,9 +810,16 @@ class ExcelDrawingCoverageTest {
       assertThrows(
           IllegalArgumentException.class,
           () -> controller.drawingObjectPayload(sheet, simpleShape.getShapeName()));
-      assertThrows(
-          IllegalArgumentException.class,
-          () -> controller.setDrawingObjectAnchor(sheet, chartName, anchor(1, 1, 2, 2)));
+      controller.setDrawingObjectAnchor(sheet, chartName, anchor(1, 1, 2, 2));
+      assertEquals(
+          anchor(1, 1, 2, 2),
+          controller.drawingObjects(sheet).stream()
+              .filter(ExcelDrawingObjectSnapshot.Chart.class::isInstance)
+              .map(ExcelDrawingObjectSnapshot.Chart.class::cast)
+              .filter(snapshot -> snapshot.name().equals(chartName))
+              .findFirst()
+              .orElseThrow()
+              .anchor());
       assertThrows(
           IllegalArgumentException.class,
           () ->
@@ -855,8 +859,13 @@ class ExcelDrawingCoverageTest {
               .presetGeometryToken());
       assertTrue(
           invoke(controller, "resolvedName", String.class, simpleShape).startsWith("Shape-"));
-      assertThrows(
-          IllegalArgumentException.class, () -> controller.deleteDrawingObject(sheet, chartName));
+      controller.deleteDrawingObject(sheet, chartName);
+      assertTrue(
+          controller.drawingObjects(sheet).stream()
+              .noneMatch(
+                  snapshot ->
+                      snapshot instanceof ExcelDrawingObjectSnapshot.Chart chart
+                          && chart.name().equals(chartName)));
 
       simpleShape.getCTShape().getNvSpPr().getCNvPr().setName("Duplicate");
       connector.getCTConnector().getNvCxnSpPr().getCNvPr().setName("Duplicate");
@@ -875,14 +884,14 @@ class ExcelDrawingCoverageTest {
       controller.deleteDrawingObject(sheet, simpleShape.getShapeName());
       controller.deleteDrawingObject(sheet, connector.getShapeName());
       controller.deleteDrawingObject(sheet, group.getShapeName());
-      assertEquals(
-          2,
+      List<String> remainingNames =
           controller.drawingObjects(sheet).stream()
               .map(ExcelDrawingObjectSnapshot::name)
               .filter(
                   name ->
                       !List.of("OpsEmbed", "OpsPicture", "OpsShape", "OpsConnector").contains(name))
-              .count());
+              .toList();
+      assertEquals(List.of(), remainingNames);
 
       IllegalStateException unsupportedSnapshot =
           assertInvocationFailure(

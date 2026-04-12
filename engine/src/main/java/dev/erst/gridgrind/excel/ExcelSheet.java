@@ -199,6 +199,13 @@ public final class ExcelSheet {
     return this;
   }
 
+  /** Creates or mutates one supported simple chart on this sheet. */
+  public ExcelSheet setChart(ExcelChartDefinition definition) {
+    Objects.requireNonNull(definition, "definition must not be null");
+    drawingController.setChart(xssfSheet(), definition);
+    return this;
+  }
+
   /** Creates or replaces one simple-shape or connector drawing object on this sheet. */
   public ExcelSheet setShape(ExcelShapeDefinition definition) {
     Objects.requireNonNull(definition, "definition must not be null");
@@ -698,6 +705,11 @@ public final class ExcelSheet {
   /** Returns factual drawing-object metadata for this sheet. */
   public List<ExcelDrawingObjectSnapshot> drawingObjects() {
     return drawingController.drawingObjects(xssfSheet());
+  }
+
+  /** Returns factual chart metadata for this sheet. */
+  public List<ExcelChartSnapshot> charts() {
+    return drawingController.charts(xssfSheet());
   }
 
   /** Returns the extracted binary payload for one existing drawing object on this sheet. */
