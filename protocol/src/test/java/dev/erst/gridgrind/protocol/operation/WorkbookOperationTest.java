@@ -2,11 +2,14 @@ package dev.erst.gridgrind.protocol.operation;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
@@ -156,6 +159,53 @@ class WorkbookOperationTest {
     assertFalse(setComment.comment().visible());
     assertEquals("A1", clearComment.address());
     assertEquals(style, applyStyle.style());
+  }
+
+  @Test
+  void buildsDrawingOperationsAndUsesPhase5OperationTypes() {
+    DrawingAnchorInput.TwoCell anchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 2, 3, 4),
+            new DrawingMarkerInput(4, 6, 7, 8),
+            ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    PictureDataInput pictureData =
+        new PictureDataInput(
+            ExcelPictureFormat.PNG,
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
+    WorkbookOperation.SetPicture setPicture =
+        new WorkbookOperation.SetPicture(
+            "Budget", new PictureInput("OpsPicture", pictureData, anchor, "Queue preview"));
+    WorkbookOperation.SetShape setShape =
+        new WorkbookOperation.SetShape(
+            "Budget",
+            new ShapeInput(
+                "OpsShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, anchor, "rect", "Queue"));
+    WorkbookOperation.SetEmbeddedObject setEmbeddedObject =
+        new WorkbookOperation.SetEmbeddedObject(
+            "Budget",
+            new EmbeddedObjectInput(
+                "OpsEmbed",
+                "Payload",
+                "payload.txt",
+                "payload.txt",
+                "cGF5bG9hZA==",
+                pictureData,
+                anchor));
+    WorkbookOperation.SetDrawingObjectAnchor setDrawingObjectAnchor =
+        new WorkbookOperation.SetDrawingObjectAnchor("Budget", "OpsPicture", anchor);
+    WorkbookOperation.DeleteDrawingObject deleteDrawingObject =
+        new WorkbookOperation.DeleteDrawingObject("Budget", "OpsPicture");
+
+    assertEquals("OpsPicture", setPicture.picture().name());
+    assertEquals("OpsShape", setShape.shape().name());
+    assertEquals("OpsEmbed", setEmbeddedObject.embeddedObject().name());
+    assertEquals("OpsPicture", setDrawingObjectAnchor.objectName());
+    assertEquals("OpsPicture", deleteDrawingObject.objectName());
+    assertEquals("SET_PICTURE", setPicture.operationType());
+    assertEquals("SET_SHAPE", setShape.operationType());
+    assertEquals("SET_EMBEDDED_OBJECT", setEmbeddedObject.operationType());
+    assertEquals("SET_DRAWING_OBJECT_ANCHOR", setDrawingObjectAnchor.operationType());
+    assertEquals("DELETE_DRAWING_OBJECT", deleteDrawingObject.operationType());
   }
 
   @Test
@@ -374,6 +424,17 @@ class WorkbookOperationTest {
         NullPointerException.class, () -> new WorkbookOperation.SetHyperlink("Budget", "A1", null));
     assertThrows(
         NullPointerException.class, () -> new WorkbookOperation.SetComment("Budget", "A1", null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.SetPicture("Budget", null));
+    assertThrows(NullPointerException.class, () -> new WorkbookOperation.SetShape("Budget", null));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookOperation.SetEmbeddedObject("Budget", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.SetDrawingObjectAnchor("Budget", "OpsPicture", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookOperation.DeleteDrawingObject("Budget", null));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookOperation.SetDataValidation("Budget", "A1", null));
@@ -763,6 +824,52 @@ class WorkbookOperationTest {
             .operationType());
     assertEquals(
         "CLEAR_COMMENT", new WorkbookOperation.ClearComment("Budget", "A1").operationType());
+    DrawingAnchorInput.TwoCell drawingAnchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 2, 0, 0),
+            new DrawingMarkerInput(2, 3, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    PictureDataInput pictureData =
+        new PictureDataInput(
+            ExcelPictureFormat.PNG,
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
+    assertEquals(
+        "SET_PICTURE",
+        new WorkbookOperation.SetPicture(
+                "Budget",
+                new PictureInput("OpsPicture", pictureData, drawingAnchor, "Queue preview"))
+            .operationType());
+    assertEquals(
+        "SET_SHAPE",
+        new WorkbookOperation.SetShape(
+                "Budget",
+                new ShapeInput(
+                    "OpsShape",
+                    ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                    drawingAnchor,
+                    "rect",
+                    "Queue"))
+            .operationType());
+    assertEquals(
+        "SET_EMBEDDED_OBJECT",
+        new WorkbookOperation.SetEmbeddedObject(
+                "Budget",
+                new EmbeddedObjectInput(
+                    "OpsEmbed",
+                    "Payload",
+                    "payload.txt",
+                    "payload.txt",
+                    "cGF5bG9hZA==",
+                    pictureData,
+                    drawingAnchor))
+            .operationType());
+    assertEquals(
+        "SET_DRAWING_OBJECT_ANCHOR",
+        new WorkbookOperation.SetDrawingObjectAnchor("Budget", "OpsPicture", drawingAnchor)
+            .operationType());
+    assertEquals(
+        "DELETE_DRAWING_OBJECT",
+        new WorkbookOperation.DeleteDrawingObject("Budget", "OpsPicture").operationType());
     assertEquals(
         "APPLY_STYLE", new WorkbookOperation.ApplyStyle("Budget", "A1", style).operationType());
     assertEquals(

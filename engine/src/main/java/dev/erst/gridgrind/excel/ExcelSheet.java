@@ -38,6 +38,7 @@ public final class ExcelSheet {
   private final ExcelAutofilterController autofilterController;
   private final ExcelPrintLayoutController printLayoutController;
   private final ExcelRowColumnStructureController rowColumnStructureController;
+  private final ExcelDrawingController drawingController;
 
   ExcelSheet(Sheet sheet, WorkbookStyleRegistry styleRegistry, ExcelFormulaRuntime formulaRuntime) {
     this.sheet = sheet;
@@ -49,6 +50,7 @@ public final class ExcelSheet {
     this.autofilterController = new ExcelAutofilterController();
     this.printLayoutController = new ExcelPrintLayoutController();
     this.rowColumnStructureController = new ExcelRowColumnStructureController();
+    this.drawingController = new ExcelDrawingController();
   }
 
   /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
@@ -111,6 +113,7 @@ public final class ExcelSheet {
             rowValues.get(columnOffset));
       }
     }
+    drawingController.cleanupEmptyDrawingPatriarch(xssfSheet());
     syncTableHeaders(excelRange);
     return this;
   }
@@ -174,6 +177,7 @@ public final class ExcelSheet {
     CellReference cellReference = parseCellReference(address);
     Cell cell = getOrCreateCell(cellReference.getRow(), cellReference.getCol());
     cell.setCellComment(newComment(cellReference.getRow(), cellReference.getCol(), comment));
+    drawingController.cleanupEmptyDrawingPatriarch(xssfSheet());
     return this;
   }
 
@@ -184,6 +188,43 @@ public final class ExcelSheet {
     if (cell != null) {
       cell.removeCellComment();
     }
+    drawingController.cleanupEmptyDrawingPatriarch(xssfSheet());
+    return this;
+  }
+
+  /** Creates or replaces one picture-backed drawing object on this sheet. */
+  public ExcelSheet setPicture(ExcelPictureDefinition definition) {
+    Objects.requireNonNull(definition, "definition must not be null");
+    drawingController.setPicture(xssfSheet(), definition);
+    return this;
+  }
+
+  /** Creates or replaces one simple-shape or connector drawing object on this sheet. */
+  public ExcelSheet setShape(ExcelShapeDefinition definition) {
+    Objects.requireNonNull(definition, "definition must not be null");
+    drawingController.setShape(xssfSheet(), definition);
+    return this;
+  }
+
+  /** Creates or replaces one embedded-object drawing object on this sheet. */
+  public ExcelSheet setEmbeddedObject(ExcelEmbeddedObjectDefinition definition) {
+    Objects.requireNonNull(definition, "definition must not be null");
+    drawingController.setEmbeddedObject(xssfSheet(), definition);
+    return this;
+  }
+
+  /** Moves one existing drawing object by replacing its anchor authoritatively. */
+  public ExcelSheet setDrawingObjectAnchor(String objectName, ExcelDrawingAnchor.TwoCell anchor) {
+    requireNonBlank(objectName, "objectName");
+    Objects.requireNonNull(anchor, "anchor must not be null");
+    drawingController.setDrawingObjectAnchor(xssfSheet(), objectName, anchor);
+    return this;
+  }
+
+  /** Deletes one existing drawing object by sheet-local name. */
+  public ExcelSheet deleteDrawingObject(String objectName) {
+    requireNonBlank(objectName, "objectName");
+    drawingController.deleteDrawingObject(xssfSheet(), objectName);
     return this;
   }
 
@@ -652,6 +693,17 @@ public final class ExcelSheet {
       ExcelRangeSelection selection) {
     Objects.requireNonNull(selection, "selection must not be null");
     return conditionalFormattingController.conditionalFormatting(xssfSheet(), selection);
+  }
+
+  /** Returns factual drawing-object metadata for this sheet. */
+  public List<ExcelDrawingObjectSnapshot> drawingObjects() {
+    return drawingController.drawingObjects(xssfSheet());
+  }
+
+  /** Returns the extracted binary payload for one existing drawing object on this sheet. */
+  public ExcelDrawingObjectPayload drawingObjectPayload(String objectName) {
+    requireNonBlank(objectName, "objectName");
+    return drawingController.drawingObjectPayload(xssfSheet(), objectName);
   }
 
   /** Returns every formula cell currently present on the sheet. */

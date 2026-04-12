@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.37.0"
+version: "0.38.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-11"
+updated: "2026-04-12"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-drawing-objects, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
 ---
 
 # Quick Reference
@@ -609,6 +609,117 @@ concatenate exactly to `comment.text`.
 { "type": "CLEAR_COMMENT", "sheetName": "Sheet1", "address": "B2" }
 ```
 
+## SET_PICTURE
+
+```json
+{
+  "type": "SET_PICTURE",
+  "sheetName": "Ops",
+  "picture": {
+    "name": "OpsPicture",
+    "image": {
+      "format": "PNG",
+      "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+    },
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": { "columnIndex": 0, "rowIndex": 4, "dx": 0, "dy": 0 },
+      "to": { "columnIndex": 2, "rowIndex": 8, "dx": 0, "dy": 0 },
+      "behavior": "MOVE_AND_RESIZE"
+    },
+    "description": "Queue preview"
+  }
+}
+```
+
+Authored drawing mutations currently accept only `TWO_CELL` anchors with zero-based `from` and
+`to` markers. `behavior` defaults to `MOVE_AND_RESIZE` when omitted.
+
+## SET_SHAPE
+
+```json
+{
+  "type": "SET_SHAPE",
+  "sheetName": "Ops",
+  "shape": {
+    "name": "OpsShape",
+    "kind": "SIMPLE_SHAPE",
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": { "columnIndex": 3, "rowIndex": 4, "dx": 0, "dy": 0 },
+      "to": { "columnIndex": 5, "rowIndex": 7, "dx": 0, "dy": 0 },
+      "behavior": "MOVE_DONT_RESIZE"
+    },
+    "presetGeometryToken": "roundRect",
+    "text": "Queue"
+  }
+}
+{
+  "type": "SET_SHAPE",
+  "sheetName": "Ops",
+  "shape": {
+    "name": "OpsConnector",
+    "kind": "CONNECTOR",
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": { "columnIndex": 3, "rowIndex": 8, "dx": 0, "dy": 0 },
+      "to": { "columnIndex": 6, "rowIndex": 9, "dx": 0, "dy": 0 }
+    }
+  }
+}
+```
+
+`kind` is `SIMPLE_SHAPE` or `CONNECTOR`. `presetGeometryToken` and `text` are only for
+`SIMPLE_SHAPE`, and `presetGeometryToken` defaults to `rect` when omitted.
+
+## SET_EMBEDDED_OBJECT
+
+```json
+{
+  "type": "SET_EMBEDDED_OBJECT",
+  "sheetName": "Ops",
+  "embeddedObject": {
+    "name": "OpsEmbed",
+    "label": "Ops payload",
+    "fileName": "ops-payload.txt",
+    "command": "open",
+    "base64Data": "R3JpZEdyaW5kIGVtYmVkZGVkIHBheWxvYWQ=",
+    "previewImage": {
+      "format": "PNG",
+      "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+    },
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": { "columnIndex": 6, "rowIndex": 4, "dx": 0, "dy": 0 },
+      "to": { "columnIndex": 8, "rowIndex": 9, "dx": 0, "dy": 0 }
+    }
+  }
+}
+```
+
+`previewImage` reuses the same `format` plus `base64Data` shape as `SET_PICTURE.picture.image`.
+
+## SET_DRAWING_OBJECT_ANCHOR
+
+```json
+{
+  "type": "SET_DRAWING_OBJECT_ANCHOR",
+  "sheetName": "Ops",
+  "objectName": "OpsPicture",
+  "anchor": {
+    "type": "TWO_CELL",
+    "from": { "columnIndex": 1, "rowIndex": 5, "dx": 0, "dy": 0 },
+    "to": { "columnIndex": 3, "rowIndex": 9, "dx": 0, "dy": 0 }
+  }
+}
+```
+
+## DELETE_DRAWING_OBJECT
+
+```json
+{ "type": "DELETE_DRAWING_OBJECT", "sheetName": "Ops", "objectName": "OpsConnector" }
+```
+
 ## APPLY_STYLE
 
 ```json
@@ -1152,6 +1263,35 @@ responses use the `path` field with a normalized plain path string.
 
 Returned comments can include ordered rich-text `runs` plus an `anchor` with zero-based
 `firstColumn`, `firstRow`, `lastColumn`, and `lastRow` bounds.
+
+## GET_DRAWING_OBJECTS
+
+```json
+{ "type": "GET_DRAWING_OBJECTS", "requestId": "drawing-objects", "sheetName": "Ops" }
+```
+
+Returned entries are `PICTURE`, `SHAPE`, or `EMBEDDED_OBJECT`. Read anchors can be `TWO_CELL`,
+`ONE_CELL`, or `ABSOLUTE`.
+
+## GET_DRAWING_OBJECT_PAYLOAD
+
+```json
+{
+  "type": "GET_DRAWING_OBJECT_PAYLOAD",
+  "requestId": "picture-payload",
+  "sheetName": "Ops",
+  "objectName": "OpsPicture"
+}
+{
+  "type": "GET_DRAWING_OBJECT_PAYLOAD",
+  "requestId": "embedded-payload",
+  "sheetName": "Ops",
+  "objectName": "OpsEmbed"
+}
+```
+
+Payload extraction is only for named pictures and embedded objects. Non-binary drawing shapes such
+as connectors and simple shapes are rejected.
 
 ## GET_SHEET_LAYOUT
 

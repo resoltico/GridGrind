@@ -47,6 +47,11 @@ public sealed interface WorkbookCommand
         WorkbookCommand.ClearHyperlink,
         WorkbookCommand.SetComment,
         WorkbookCommand.ClearComment,
+        WorkbookCommand.SetPicture,
+        WorkbookCommand.SetShape,
+        WorkbookCommand.SetEmbeddedObject,
+        WorkbookCommand.SetDrawingObjectAnchor,
+        WorkbookCommand.DeleteDrawingObject,
         WorkbookCommand.ApplyStyle,
         WorkbookCommand.SetDataValidation,
         WorkbookCommand.ClearDataValidations,
@@ -617,6 +622,71 @@ public sealed interface WorkbookCommand
       }
       if (address.isBlank()) {
         throw new IllegalArgumentException("address must not be blank");
+      }
+    }
+  }
+
+  /** Creates or replaces one picture-backed drawing object on a single sheet. */
+  record SetPicture(String sheetName, ExcelPictureDefinition picture) implements WorkbookCommand {
+    public SetPicture {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(picture, "picture must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Creates or replaces one simple-shape or connector drawing object on a single sheet. */
+  record SetShape(String sheetName, ExcelShapeDefinition shape) implements WorkbookCommand {
+    public SetShape {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(shape, "shape must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Creates or replaces one embedded-object drawing object on a single sheet. */
+  record SetEmbeddedObject(String sheetName, ExcelEmbeddedObjectDefinition embeddedObject)
+      implements WorkbookCommand {
+    public SetEmbeddedObject {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(embeddedObject, "embeddedObject must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Moves one existing drawing object by replacing its anchor authoritatively. */
+  record SetDrawingObjectAnchor(
+      String sheetName, String objectName, ExcelDrawingAnchor.TwoCell anchor)
+      implements WorkbookCommand {
+    public SetDrawingObjectAnchor {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(objectName, "objectName must not be null");
+      Objects.requireNonNull(anchor, "anchor must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (objectName.isBlank()) {
+        throw new IllegalArgumentException("objectName must not be blank");
+      }
+    }
+  }
+
+  /** Deletes one existing drawing object by sheet-local name. */
+  record DeleteDrawingObject(String sheetName, String objectName) implements WorkbookCommand {
+    public DeleteDrawingObject {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(objectName, "objectName must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (objectName.isBlank()) {
+        throw new IllegalArgumentException("objectName must not be blank");
       }
     }
   }

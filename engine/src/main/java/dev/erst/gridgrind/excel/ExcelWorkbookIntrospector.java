@@ -75,6 +75,19 @@ final class ExcelWorkbookIntrospector {
               getComments.sheetName(),
               sheetIntrospector.comments(
                   workbook.sheet(getComments.sheetName()), getComments.selection()));
+      case WorkbookReadCommand.GetDrawingObjects getDrawingObjects ->
+          new WorkbookReadResult.DrawingObjectsResult(
+              getDrawingObjects.requestId(),
+              getDrawingObjects.sheetName(),
+              documentIntrospector.drawingObjects(workbook, getDrawingObjects.sheetName()));
+      case WorkbookReadCommand.GetDrawingObjectPayload getDrawingObjectPayload ->
+          new WorkbookReadResult.DrawingObjectPayloadResult(
+              getDrawingObjectPayload.requestId(),
+              getDrawingObjectPayload.sheetName(),
+              documentIntrospector.drawingObjectPayload(
+                  workbook,
+                  getDrawingObjectPayload.sheetName(),
+                  getDrawingObjectPayload.objectName()));
       case WorkbookReadCommand.GetSheetLayout getSheetLayout ->
           new WorkbookReadResult.SheetLayoutResult(
               getSheetLayout.requestId(),

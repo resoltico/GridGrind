@@ -28,6 +28,12 @@ import java.util.Set;
       name = "GET_MERGED_REGIONS"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetHyperlinks.class, name = "GET_HYPERLINKS"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetComments.class, name = "GET_COMMENTS"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadOperation.GetDrawingObjects.class,
+      name = "GET_DRAWING_OBJECTS"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadOperation.GetDrawingObjectPayload.class,
+      name = "GET_DRAWING_OBJECT_PAYLOAD"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetSheetLayout.class, name = "GET_SHEET_LAYOUT"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetPrintLayout.class, name = "GET_PRINT_LAYOUT"),
   @JsonSubTypes.Type(
@@ -87,6 +93,8 @@ public sealed interface WorkbookReadOperation
           GetMergedRegions,
           GetHyperlinks,
           GetComments,
+          GetDrawingObjects,
+          GetDrawingObjectPayload,
           GetSheetLayout,
           GetPrintLayout,
           GetDataValidations,
@@ -194,6 +202,24 @@ public sealed interface WorkbookReadOperation
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Returns factual drawing-object metadata for one sheet. */
+  record GetDrawingObjects(String requestId, String sheetName) implements Introspection {
+    public GetDrawingObjects {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Returns the extracted binary payload for one existing drawing object on one sheet. */
+  record GetDrawingObjectPayload(String requestId, String sheetName, String objectName)
+      implements Introspection {
+    public GetDrawingObjectPayload {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      objectName = requireNonBlank(objectName, "objectName");
     }
   }
 

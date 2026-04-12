@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.protocol.parity;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -19,6 +20,10 @@ import org.apache.poi.poifs.crypt.Decryptor;
 import org.apache.poi.poifs.crypt.EncryptionInfo;
 import org.apache.poi.poifs.crypt.dsig.SignatureConfig;
 import org.apache.poi.poifs.crypt.dsig.SignatureInfo;
+import org.apache.poi.poifs.filesystem.DirectoryNode;
+import org.apache.poi.poifs.filesystem.FileMagic;
+import org.apache.poi.poifs.filesystem.Ole10Native;
+import org.apache.poi.poifs.filesystem.Ole10NativeException;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.poi.ss.formula.OperationEvaluationContext;
 import org.apache.poi.ss.formula.eval.EvaluationException;
@@ -39,12 +44,17 @@ import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFComment;
+import org.apache.poi.xssf.usermodel.XSSFConnector;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
 import org.apache.poi.xssf.usermodel.XSSFObjectData;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFShape;
+import org.apache.poi.xssf.usermodel.XSSFShapeGroup;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFSimpleShape;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
@@ -426,43 +436,69 @@ final class XlsxParityOracle {
   }
 
   static DrawingSnapshot drawing(Path workbookPath) {
-    return withWorkbook(
-        workbookPath,
-        workbook -> {
-          XSSFDrawing drawing = workbook.getSheetAt(0).createDrawingPatriarch();
-          XSSFPicture picture =
-              drawing.getShapes().stream()
-                  .filter(XSSFPicture.class::isInstance)
-                  .map(XSSFPicture.class::cast)
-                  .findFirst()
-                  .orElseThrow(() -> new IllegalStateException("Expected picture shape"));
-          XSSFClientAnchor anchor = picture.getClientAnchor();
-          return new DrawingSnapshot(
-              drawing.getShapes().size(),
-              anchor.getCol1(),
-              anchor.getRow1(),
-              anchor.getCol2(),
-              anchor.getRow2(),
-              sha256(picture.getPictureData().getData()));
-        });
+    DrawingSheetSnapshot snapshot = drawingSheet(workbookPath, "Ops");
+    PictureDrawingObjectSnapshot picture =
+        snapshot.objects().stream()
+            .filter(PictureDrawingObjectSnapshot.class::isInstance)
+            .map(PictureDrawingObjectSnapshot.class::cast)
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("Expected picture shape"));
+    return new DrawingSnapshot(
+        snapshot.objects().size(),
+        picture.anchor().col1(),
+        picture.anchor().row1(),
+        picture.anchor().col2(),
+        picture.anchor().row2(),
+        picture.pictureDigest());
   }
 
   static EmbeddedObjectSnapshot embeddedObject(Path workbookPath) {
+    DrawingSheetSnapshot snapshot = drawingSheet(workbookPath, "Objects");
+    EmbeddedObjectDrawingObjectSnapshot objectData =
+        snapshot.objects().stream()
+            .filter(EmbeddedObjectDrawingObjectSnapshot.class::isInstance)
+            .map(EmbeddedObjectDrawingObjectSnapshot.class::cast)
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("Expected embedded object"));
+    return new EmbeddedObjectSnapshot(
+        snapshot.objects().size(), objectData.fileName(), objectData.objectDigest());
+  }
+
+  static DrawingSheetSnapshot drawingSheet(Path workbookPath, String sheetName) {
     return withWorkbook(
         workbookPath,
         workbook -> {
-          XSSFDrawing drawing = workbook.getSheetAt(0).createDrawingPatriarch();
-          XSSFObjectData objectData =
-              drawing.getShapes().stream()
-                  .filter(XSSFObjectData.class::isInstance)
-                  .map(XSSFObjectData.class::cast)
-                  .findFirst()
-                  .orElseThrow(() -> new IllegalStateException("Expected embedded object"));
-          byte[] objectBytes =
-              XlsxParitySupport.call(
-                  "read embedded-object bytes from parity workbook", objectData::getObjectData);
-          return new EmbeddedObjectSnapshot(
-              drawing.getShapes().size(), objectData.getFileName(), sha256(objectBytes));
+          XSSFSheet sheet = workbook.getSheet(sheetName);
+          if (sheet == null) {
+            throw new IllegalStateException("Expected sheet " + sheetName);
+          }
+          XSSFDrawing drawing = sheet.getDrawingPatriarch();
+          List<DirectDrawingObjectSnapshot> objects = new ArrayList<>();
+          if (drawing != null) {
+            for (XSSFShape shape : drawing.getShapes()) {
+              objects.add(drawingObjectSnapshot(drawing, shape));
+            }
+          }
+
+          List<String> mergedRegions = new ArrayList<>();
+          for (int index = 0; index < sheet.getNumMergedRegions(); index++) {
+            mergedRegions.add(sheet.getMergedRegion(index).formatAsString());
+          }
+
+          List<CellCommentSnapshot> comments =
+              sheet.getCellComments().entrySet().stream()
+                  .sorted(Comparator.comparing(entry -> entry.getKey().formatAsString()))
+                  .map(
+                      entry ->
+                          new CellCommentSnapshot(
+                              entry.getKey().formatAsString(),
+                              entry.getValue().getString().getString(),
+                              entry.getValue().getAuthor(),
+                              entry.getValue().isVisible()))
+                  .toList();
+
+          return new DrawingSheetSnapshot(
+              List.copyOf(objects), List.copyOf(mergedRegions), comments);
         });
   }
 
@@ -798,9 +834,163 @@ final class XlsxParityOracle {
 
   record EmbeddedObjectSnapshot(int shapeCount, String fileName, String objectDigest) {}
 
+  record DrawingSheetSnapshot(
+      List<DirectDrawingObjectSnapshot> objects,
+      List<String> mergedRegions,
+      List<CellCommentSnapshot> comments) {}
+
+  /** Canonical direct-POI snapshot of one authored drawing object. */
+  sealed interface DirectDrawingObjectSnapshot
+      permits PictureDrawingObjectSnapshot,
+          ShapeDrawingObjectSnapshot,
+          EmbeddedObjectDrawingObjectSnapshot {
+    String name();
+
+    DrawingAnchorSnapshot anchor();
+  }
+
+  record PictureDrawingObjectSnapshot(
+      String name, DrawingAnchorSnapshot anchor, String pictureDigest)
+      implements DirectDrawingObjectSnapshot {}
+
+  record ShapeDrawingObjectSnapshot(
+      String name,
+      DrawingAnchorSnapshot anchor,
+      String kind,
+      String presetGeometryToken,
+      String text,
+      int childCount)
+      implements DirectDrawingObjectSnapshot {}
+
+  record EmbeddedObjectDrawingObjectSnapshot(
+      String name, DrawingAnchorSnapshot anchor, String fileName, String objectDigest)
+      implements DirectDrawingObjectSnapshot {}
+
+  record DrawingAnchorSnapshot(int col1, int row1, int col2, int row2) {}
+
+  record CellCommentSnapshot(String address, String text, String author, boolean visible) {}
+
   record ChartSnapshot(int chartCount, String title, int barChartCount) {}
 
   record PivotSnapshot(int pivotCount, String sourceRef, List<Integer> rowLabelColumns) {}
 
   private record StylesFillSnapshot(boolean gradientFill) {}
+
+  private static DirectDrawingObjectSnapshot drawingObjectSnapshot(
+      XSSFDrawing drawing, XSSFShape shape) {
+    DrawingAnchorSnapshot anchor = drawingAnchor(shape);
+    if (shape instanceof XSSFPicture picture) {
+      return new PictureDrawingObjectSnapshot(
+          picture.getShapeName(), anchor, sha256(picture.getPictureData().getData()));
+    }
+    if (shape instanceof XSSFObjectData objectData) {
+      byte[] objectBytes =
+          XlsxParitySupport.call(
+              "read embedded-object bytes from parity workbook", objectData::getObjectData);
+      EmbeddedObjectOracleReadback readback = embeddedObjectReadback(objectData, objectBytes);
+      return new EmbeddedObjectDrawingObjectSnapshot(
+          objectData.getShapeName(), anchor, readback.fileName(), sha256(readback.payloadBytes()));
+    }
+    if (shape instanceof XSSFConnector connector) {
+      return new ShapeDrawingObjectSnapshot(
+          connector.getShapeName(), anchor, "CONNECTOR", null, null, 0);
+    }
+    if (shape instanceof XSSFShapeGroup group) {
+      return new ShapeDrawingObjectSnapshot(
+          group.getShapeName(), anchor, "GROUP", null, null, drawing.getShapes(group).size());
+    }
+    if (shape instanceof XSSFGraphicFrame graphicFrame) {
+      return new ShapeDrawingObjectSnapshot(
+          graphicFrame.getShapeName(), anchor, "GRAPHIC_FRAME", null, null, 0);
+    }
+    if (shape instanceof XSSFSimpleShape simpleShape) {
+      String presetGeometryToken =
+          simpleShape.getCTShape().getSpPr() == null
+                  || !simpleShape.getCTShape().getSpPr().isSetPrstGeom()
+              ? null
+              : simpleShape.getCTShape().getSpPr().getPrstGeom().getPrst().toString();
+      return new ShapeDrawingObjectSnapshot(
+          simpleShape.getShapeName(),
+          anchor,
+          "SIMPLE_SHAPE",
+          presetGeometryToken,
+          simpleShape.getText(),
+          0);
+    }
+    throw new IllegalStateException(
+        "Unsupported drawing shape type: " + shape.getClass().getName());
+  }
+
+  private static DrawingAnchorSnapshot drawingAnchor(XSSFShape shape) {
+    if (!(shape.getAnchor() instanceof XSSFClientAnchor anchor)) {
+      throw new IllegalStateException(
+          "Unsupported drawing anchor type: "
+              + (shape.getAnchor() == null ? "null" : shape.getAnchor().getClass().getName()));
+    }
+    return new DrawingAnchorSnapshot(
+        anchor.getCol1(), anchor.getRow1(), anchor.getCol2(), anchor.getRow2());
+  }
+
+  private static EmbeddedObjectOracleReadback embeddedObjectReadback(
+      XSSFObjectData objectData, byte[] objectBytes) {
+    byte[] payloadBytes = objectBytes;
+    String fileName = objectData.getFileName();
+    try {
+      if (looksLikeOle2Storage(objectBytes)) {
+        Ole10Native nativeData = ole10Native(objectBytes);
+        payloadBytes = nativeData.getDataBuffer();
+        fileName = firstNonBlank(nativeData.getFileName2(), nativeData.getFileName(), fileName);
+      }
+    } catch (Ole10NativeException | RuntimeException exception) {
+      // Preserve the truthful raw-package fallback when POI exposes a non-Ole10Native object.
+      payloadBytes = objectBytes;
+    } catch (java.io.IOException exception) {
+      throw new IllegalStateException(
+          "Failed to inspect direct POI embedded object payload", exception);
+    }
+    return new EmbeddedObjectOracleReadback(fileName, payloadBytes);
+  }
+
+  private static boolean looksLikeOle2Storage(byte[] bytes) throws java.io.IOException {
+    try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
+      return FileMagic.valueOf(FileMagic.prepareToCheckMagic(input)) == FileMagic.OLE2;
+    }
+  }
+
+  private static Ole10Native ole10Native(byte[] bytes)
+      throws java.io.IOException, Ole10NativeException {
+    try (POIFSFileSystem filesystem = new POIFSFileSystem(new ByteArrayInputStream(bytes))) {
+      DirectoryNode directory = filesystem.getRoot();
+      return Ole10Native.createFromEmbeddedOleObject(directory);
+    }
+  }
+
+  private static String firstNonBlank(String first, String second, String fallback) {
+    if (first != null && !first.isBlank()) {
+      return first;
+    }
+    if (second != null && !second.isBlank()) {
+      return second;
+    }
+    return fallback;
+  }
+
+  /** Immutable direct-POI readback of one embedded-object payload and filename. */
+  private static final class EmbeddedObjectOracleReadback {
+    private final String fileName;
+    private final byte[] payloadBytes;
+
+    private EmbeddedObjectOracleReadback(String fileName, byte[] payloadBytes) {
+      this.fileName = fileName;
+      this.payloadBytes = payloadBytes.clone();
+    }
+
+    private String fileName() {
+      return fileName;
+    }
+
+    private byte[] payloadBytes() {
+      return payloadBytes.clone();
+    }
+  }
 }

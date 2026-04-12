@@ -27,6 +27,8 @@ public sealed interface WorkbookReadResult
           MergedRegionsResult,
           HyperlinksResult,
           CommentsResult,
+          DrawingObjectsResult,
+          DrawingObjectPayloadResult,
           SheetLayoutResult,
           PrintLayoutResult,
           DataValidationsResult,
@@ -128,6 +130,28 @@ public sealed interface WorkbookReadResult
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       comments = copyValues(comments, "comments");
+    }
+  }
+
+  /** Returns factual drawing-object metadata for one sheet. */
+  record DrawingObjectsResult(
+      String requestId, String sheetName, List<ExcelDrawingObjectSnapshot> drawingObjects)
+      implements Introspection {
+    public DrawingObjectsResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      drawingObjects = copyValues(drawingObjects, "drawingObjects");
+    }
+  }
+
+  /** Returns the extracted binary payload for one existing drawing object. */
+  record DrawingObjectPayloadResult(
+      String requestId, String sheetName, ExcelDrawingObjectPayload payload)
+      implements Introspection {
+    public DrawingObjectPayloadResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(payload, "payload must not be null");
     }
   }
 

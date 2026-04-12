@@ -33,6 +33,11 @@ final class WorkbookReadCommandConverter {
       case WorkbookReadOperation.GetComments op ->
           new WorkbookReadCommand.GetComments(
               op.requestId(), op.sheetName(), toExcelCellSelection(op.selection()));
+      case WorkbookReadOperation.GetDrawingObjects op ->
+          new WorkbookReadCommand.GetDrawingObjects(op.requestId(), op.sheetName());
+      case WorkbookReadOperation.GetDrawingObjectPayload op ->
+          new WorkbookReadCommand.GetDrawingObjectPayload(
+              op.requestId(), op.sheetName(), op.objectName());
       case WorkbookReadOperation.GetSheetLayout op ->
           new WorkbookReadCommand.GetSheetLayout(op.requestId(), op.sheetName());
       case WorkbookReadOperation.GetPrintLayout op ->

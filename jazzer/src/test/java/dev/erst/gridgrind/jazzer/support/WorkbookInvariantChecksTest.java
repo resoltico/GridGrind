@@ -5,8 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
@@ -34,6 +38,10 @@ import dev.erst.gridgrind.protocol.dto.CommentAnchorReport;
 import dev.erst.gridgrind.protocol.dto.DataValidationEntryReport;
 import dev.erst.gridgrind.protocol.dto.DataValidationHealthReport;
 import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
+import dev.erst.gridgrind.protocol.dto.DrawingAnchorReport;
+import dev.erst.gridgrind.protocol.dto.DrawingMarkerReport;
+import dev.erst.gridgrind.protocol.dto.DrawingObjectPayloadReport;
+import dev.erst.gridgrind.protocol.dto.DrawingObjectReport;
 import dev.erst.gridgrind.protocol.dto.FontHeightReport;
 import dev.erst.gridgrind.protocol.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
@@ -664,6 +672,129 @@ class WorkbookInvariantChecksTest {
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
   }
 
+  @Test
+  void acceptsSuccessResponsesWithDrawingReadShapes(@TempDir Path tempDirectory)
+      throws IOException {
+    Path workbookPath = tempDirectory.resolve("drawing.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                "drawing.xlsx", workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadResult.DrawingObjectsResult(
+                    "drawing-objects",
+                    "Ops",
+                    List.of(
+                        new DrawingObjectReport.Picture(
+                            "OpsPicture",
+                            twoCellAnchor(),
+                            ExcelPictureFormat.PNG,
+                            "image/png",
+                            68L,
+                            "abc123",
+                            1,
+                            1,
+                            "Queue preview"),
+                        new DrawingObjectReport.Shape(
+                            "OpsShape",
+                            new DrawingAnchorReport.OneCell(
+                                new DrawingMarkerReport(2, 3, 0, 0),
+                                914_400L,
+                                457_200L,
+                                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
+                            ExcelDrawingShapeKind.SIMPLE_SHAPE,
+                            "rect",
+                            "Queue",
+                            0),
+                        new DrawingObjectReport.EmbeddedObject(
+                            "OpsEmbed",
+                            new DrawingAnchorReport.Absolute(
+                                0L,
+                                0L,
+                                914_400L,
+                                914_400L,
+                                ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE),
+                            ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                            "Ops payload",
+                            "ops-payload.txt",
+                            "open",
+                            "application/octet-stream",
+                            17L,
+                            "def456",
+                            ExcelPictureFormat.PNG,
+                            68L,
+                            "preview789"))),
+                new WorkbookReadResult.DrawingObjectPayloadResult(
+                    "drawing-payload",
+                    "Ops",
+                    new DrawingObjectPayloadReport.EmbeddedObject(
+                        "OpsEmbed",
+                        ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                        "application/octet-stream",
+                        "ops-payload.txt",
+                        "def456",
+                        "R3JpZEdyaW5kIHBheWxvYWQ=",
+                        "Ops payload",
+                        "open"))));
+
+    assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
+  }
+
+  @Test
+  void acceptsWorkflowOutcomeShapeForDrawingReads(@TempDir Path tempDirectory) throws IOException {
+    Path workbookPath = tempDirectory.resolve("drawing.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadOperation.GetDrawingObjects("drawing-objects", "Ops"),
+                new WorkbookReadOperation.GetDrawingObjectPayload(
+                    "drawing-payload", "Ops", "OpsPicture")));
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                workbookPath.toString(), workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadResult.DrawingObjectsResult(
+                    "drawing-objects",
+                    "Ops",
+                    List.of(
+                        new DrawingObjectReport.Picture(
+                            "OpsPicture",
+                            twoCellAnchor(),
+                            ExcelPictureFormat.PNG,
+                            "image/png",
+                            68L,
+                            "abc123",
+                            1,
+                            1,
+                            null))),
+                new WorkbookReadResult.DrawingObjectPayloadResult(
+                    "drawing-payload",
+                    "Ops",
+                    new DrawingObjectPayloadReport.Picture(
+                        "OpsPicture",
+                        ExcelPictureFormat.PNG,
+                        "image/png",
+                        "OpsPicture.png",
+                        "abc123",
+                        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=",
+                        null))));
+
+    assertDoesNotThrow(
+        () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
+  }
+
   private static GridGrindResponse.CellStyleReport defaultStyle() {
     return new GridGrindResponse.CellStyleReport(
         "General",
@@ -701,6 +832,13 @@ class WorkbookInvariantChecksTest {
 
   private static CellColorReport themed(int theme, double tint) {
     return new CellColorReport(null, theme, null, tint);
+  }
+
+  private static DrawingAnchorReport.TwoCell twoCellAnchor() {
+    return new DrawingAnchorReport.TwoCell(
+        new DrawingMarkerReport(0, 0, 0, 0),
+        new DrawingMarkerReport(2, 3, 0, 0),
+        ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
   }
 
   private static SheetProtectionSettings protocolProtectionSettings() {

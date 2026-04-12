@@ -3,8 +3,14 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
+import org.apache.poi.xssf.usermodel.XSSFComment;
+import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
@@ -25,6 +31,38 @@ class ExcelSheetCopyControllerTest {
           new WorkbookReadResult.SheetProtection.Protected(protectionSettings()),
           workbook.sheetSummary("Replica").protection());
       assertEquals(0, workbook.sheetSummary("Replica").physicalRowCount());
+    }
+  }
+
+  @Test
+  void copySheetSupportsReopenedPoiCommentWorkbooks() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-comments-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Source");
+      sheet.createRow(0).createCell(0).setCellValue("Lead");
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+      XSSFClientAnchor anchor = drawing.createAnchor(64, 24, 448, 96, 0, 0, 3, 3);
+      XSSFComment comment = drawing.createCellComment(anchor);
+      comment.setString(new XSSFRichTextString("Review"));
+      comment.setAuthor("GridGrind");
+      sheet.getRow(0).getCell(0).setCellComment(comment);
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      assertDoesNotThrow(
+          () -> workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd()));
+      assertEquals(
+          "Review",
+          workbook
+              .sheet("Replica")
+              .comments(new ExcelCellSelection.AllUsedCells())
+              .getFirst()
+              .comment()
+              .text());
     }
   }
 

@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
@@ -21,6 +23,9 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.ExcelDrawingMarker;
+import dev.erst.gridgrind.excel.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
@@ -28,10 +33,13 @@ import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
+import dev.erst.gridgrind.excel.ExcelPictureDefinition;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
+import dev.erst.gridgrind.excel.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -58,6 +66,9 @@ import org.junit.jupiter.api.io.TempDir;
 
 /** Covers deterministic `.xlsx` round-trip cases that previously surfaced as fuzz findings. */
 class XlsxRoundTripVerifierTest {
+  private static final String PNG_PIXEL_BASE64 =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
+
   /** Preserves alignment-only style patches through save and reopen. */
   @Test
   void requireRoundTripReadable_preservesAlignmentOnlyStyle(@TempDir Path tempDirectory)
@@ -267,6 +278,62 @@ class XlsxRoundTripVerifierTest {
                     "BudgetTable",
                     new ExcelNamedRangeScope.SheetScope("Sheet1"),
                     new ExcelNamedRangeTarget("Sheet1", "A1:B2"))));
+
+    assertRoundTripReadable(tempDirectory, commands);
+  }
+
+  /** Preserves authored pictures, shapes, and embedded objects through save and reopen. */
+  @Test
+  void requireRoundTripReadable_preservesDrawingAndEmbeddedObjectAuthoring(
+      @TempDir Path tempDirectory) throws IOException {
+    ExcelDrawingAnchor.TwoCell firstAnchor =
+        new ExcelDrawingAnchor.TwoCell(
+            new ExcelDrawingMarker(0, 4, 0, 0), new ExcelDrawingMarker(2, 8, 0, 0), null);
+    ExcelDrawingAnchor.TwoCell movedAnchor =
+        new ExcelDrawingAnchor.TwoCell(
+            new ExcelDrawingMarker(1, 5, 0, 0), new ExcelDrawingMarker(3, 9, 0, 0), null);
+    byte[] pngBytes = java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64);
+
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Ops"),
+            new WorkbookCommand.SetComment(
+                "Ops", "B2", new ExcelComment("Review", "GridGrind", false)),
+            new WorkbookCommand.SetPicture(
+                "Ops",
+                new ExcelPictureDefinition(
+                    "OpsPicture",
+                    new ExcelBinaryData(pngBytes),
+                    ExcelPictureFormat.PNG,
+                    firstAnchor,
+                    "Queue preview")),
+            new WorkbookCommand.SetShape(
+                "Ops",
+                new ExcelShapeDefinition(
+                    "OpsShape",
+                    ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                    new ExcelDrawingAnchor.TwoCell(
+                        new ExcelDrawingMarker(3, 4, 0, 0),
+                        new ExcelDrawingMarker(5, 8, 0, 0),
+                        null),
+                    "roundRect",
+                    "Queue")),
+            new WorkbookCommand.SetEmbeddedObject(
+                "Ops",
+                new ExcelEmbeddedObjectDefinition(
+                    "OpsEmbed",
+                    "Ops payload",
+                    "ops-payload.txt",
+                    "open",
+                    new ExcelBinaryData(
+                        "GridGrind payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                    ExcelPictureFormat.PNG,
+                    new ExcelBinaryData(pngBytes),
+                    new ExcelDrawingAnchor.TwoCell(
+                        new ExcelDrawingMarker(6, 4, 0, 0),
+                        new ExcelDrawingMarker(8, 9, 0, 0),
+                        null))),
+            new WorkbookCommand.SetDrawingObjectAnchor("Ops", "OpsPicture", movedAnchor));
 
     assertRoundTripReadable(tempDirectory, commands);
   }

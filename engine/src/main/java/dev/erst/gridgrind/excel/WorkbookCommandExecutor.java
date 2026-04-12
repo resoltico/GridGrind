@@ -58,6 +58,11 @@ public final class WorkbookCommandExecutor {
           WorkbookCommand.ClearHyperlink.class,
           WorkbookCommand.SetComment.class,
           WorkbookCommand.ClearComment.class,
+          WorkbookCommand.SetPicture.class,
+          WorkbookCommand.SetShape.class,
+          WorkbookCommand.SetEmbeddedObject.class,
+          WorkbookCommand.SetDrawingObjectAnchor.class,
+          WorkbookCommand.DeleteDrawingObject.class,
           WorkbookCommand.ApplyStyle.class,
           WorkbookCommand.SetDataValidation.class,
           WorkbookCommand.ClearDataValidations.class,
@@ -256,6 +261,23 @@ public final class WorkbookCommandExecutor {
               .setComment(setComment.address(), setComment.comment());
       case WorkbookCommand.ClearComment clearComment ->
           workbook.sheet(clearComment.sheetName()).clearComment(clearComment.address());
+      case WorkbookCommand.SetPicture setPicture ->
+          workbook.sheet(setPicture.sheetName()).setPicture(setPicture.picture());
+      case WorkbookCommand.SetShape setShape ->
+          workbook.sheet(setShape.sheetName()).setShape(setShape.shape());
+      case WorkbookCommand.SetEmbeddedObject setEmbeddedObject ->
+          workbook
+              .sheet(setEmbeddedObject.sheetName())
+              .setEmbeddedObject(setEmbeddedObject.embeddedObject());
+      case WorkbookCommand.SetDrawingObjectAnchor setDrawingObjectAnchor ->
+          workbook
+              .sheet(setDrawingObjectAnchor.sheetName())
+              .setDrawingObjectAnchor(
+                  setDrawingObjectAnchor.objectName(), setDrawingObjectAnchor.anchor());
+      case WorkbookCommand.DeleteDrawingObject deleteDrawingObject ->
+          workbook
+              .sheet(deleteDrawingObject.sheetName())
+              .deleteDrawingObject(deleteDrawingObject.objectName());
       case WorkbookCommand.ApplyStyle applyStyle ->
           workbook.sheet(applyStyle.sheetName()).applyStyle(applyStyle.range(), applyStyle.style());
       case WorkbookCommand.SetDataValidation setDataValidation ->

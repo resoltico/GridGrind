@@ -302,6 +302,69 @@ class WorkbookCommandExecutorTest {
   }
 
   @Test
+  void appliesDrawingCommandsThroughTheWorkbookCommandSurface() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+      ExcelDrawingAnchor.TwoCell firstAnchor =
+          new ExcelDrawingAnchor.TwoCell(
+              new ExcelDrawingMarker(1, 1),
+              new ExcelDrawingMarker(4, 6),
+              ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+      ExcelDrawingAnchor.TwoCell movedAnchor =
+          new ExcelDrawingAnchor.TwoCell(
+              new ExcelDrawingMarker(6, 2),
+              new ExcelDrawingMarker(9, 7),
+              ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+      byte[] pngBytes =
+          java.util.Base64.getDecoder()
+              .decode(
+                  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
+
+      executor.apply(
+          workbook,
+          new WorkbookCommand.CreateSheet("Ops"),
+          new WorkbookCommand.SetPicture(
+              "Ops",
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(pngBytes),
+                  ExcelPictureFormat.PNG,
+                  firstAnchor,
+                  "Queue preview")),
+          new WorkbookCommand.SetShape(
+              "Ops",
+              new ExcelShapeDefinition(
+                  "OpsShape",
+                  ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                  firstAnchor,
+                  "rect",
+                  "Queue")),
+          new WorkbookCommand.SetEmbeddedObject(
+              "Ops",
+              new ExcelEmbeddedObjectDefinition(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new ExcelBinaryData(pngBytes),
+                  firstAnchor)),
+          new WorkbookCommand.SetDrawingObjectAnchor("Ops", "OpsShape", movedAnchor),
+          new WorkbookCommand.DeleteDrawingObject("Ops", "OpsPicture"));
+
+      List<ExcelDrawingObjectSnapshot> drawingObjects = workbook.sheet("Ops").drawingObjects();
+      assertEquals(
+          List.of("OpsShape", "OpsEmbed"),
+          drawingObjects.stream().map(ExcelDrawingObjectSnapshot::name).toList());
+      assertEquals(
+          movedAnchor,
+          assertInstanceOf(ExcelDrawingObjectSnapshot.Shape.class, drawingObjects.getFirst())
+              .anchor());
+    }
+  }
+
+  @Test
   void appliesWorkbookProtectionCommands() throws IOException {
     WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
 

@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.37.0
+docker pull ghcr.io/resoltico/gridgrind:0.38.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -154,7 +154,8 @@ local runs do not strand a live harness JVM.
 A request has three parts that always run in this order:
 
 **Operations** write to the workbook — create sheets, fill cells, apply styles, insert rows, build
-tables, set formulas. They run in sequence; the first failure stops everything.
+tables, set formulas, and author pictures, shapes, or embedded objects. They run in sequence; the
+first failure stops everything.
 
 **Reads** observe the workbook after all operations succeed — cell windows, schemas, hyperlinks,
 table definitions, formula health, validation health, and more. Non-mutating.
@@ -172,6 +173,11 @@ Two contract details matter often in agent-generated requests:
   registration.
 - `SET_TABLE.table.showTotalsRow` is optional. Omit it unless the table really includes a totals
   row; the default is `false`.
+- Authored drawing mutations use explicit zero-based anchors. `SET_PICTURE`, `SET_SHAPE`,
+  `SET_EMBEDDED_OBJECT`, and `SET_DRAWING_OBJECT_ANCHOR` currently accept only
+  `DrawingAnchorInput` payloads of type `TWO_CELL`.
+- `GET_DRAWING_OBJECT_PAYLOAD` extracts binary bytes only for named pictures and embedded objects.
+  Use `GET_DRAWING_OBJECTS` for shape metadata and factual one-cell, two-cell, or absolute anchors.
 - Column structural edits are workbook-wide guarded. `INSERT_COLUMNS`, `DELETE_COLUMNS`, and
   `SHIFT_COLUMNS` are rejected when any formula cells or formula-defined named ranges exist
   anywhere in the workbook.
@@ -194,6 +200,9 @@ table metadata, and workbook-health analysis. The committed
 the full workbook-core mutation surface for password-bearing protection, formula-defined named
 ranges, advanced table and autofilter mutation, advanced conditional formatting, rich comments,
 and advanced page setup. The committed
+[examples/drawing-media-request.json](examples/drawing-media-request.json) example shows the Phase
+5 drawing and media surface: picture, shape, and embedded-object authoring, explicit anchor
+replacement, drawing payload extraction, and comment coexistence on the same sheet. The committed
 [examples/formula-environment-request.json](examples/formula-environment-request.json) example
 shows the Phase 4 formula surface: top-level `formulaEnvironment`, template-backed UDF
 registration, targeted formula evaluation, and explicit formula-cache clearing.

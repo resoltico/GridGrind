@@ -63,6 +63,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           WorkbookOperation.ClearHyperlink.class,
           WorkbookOperation.SetComment.class,
           WorkbookOperation.ClearComment.class,
+          WorkbookOperation.SetPicture.class,
+          WorkbookOperation.SetShape.class,
+          WorkbookOperation.SetEmbeddedObject.class,
+          WorkbookOperation.SetDrawingObjectAnchor.class,
+          WorkbookOperation.DeleteDrawingObject.class,
           WorkbookOperation.ApplyStyle.class,
           WorkbookOperation.SetDataValidation.class,
           WorkbookOperation.ClearDataValidations.class,
@@ -561,6 +566,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetMergedRegions _ -> "GET_MERGED_REGIONS";
       case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
+      case WorkbookReadOperation.GetDrawingObjects _ -> "GET_DRAWING_OBJECTS";
+      case WorkbookReadOperation.GetDrawingObjectPayload _ -> "GET_DRAWING_OBJECT_PAYLOAD";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadOperation.GetPrintLayout _ -> "GET_PRINT_LAYOUT";
       case WorkbookReadOperation.GetDataValidations _ -> "GET_DATA_VALIDATIONS";
@@ -591,6 +598,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetMergedRegions op -> op.sheetName();
       case WorkbookReadOperation.GetHyperlinks op -> op.sheetName();
       case WorkbookReadOperation.GetComments op -> op.sheetName();
+      case WorkbookReadOperation.GetDrawingObjects op -> op.sheetName();
+      case WorkbookReadOperation.GetDrawingObjectPayload op -> op.sheetName();
       case WorkbookReadOperation.GetSheetLayout op -> op.sheetName();
       case WorkbookReadOperation.GetPrintLayout op -> op.sheetName();
       case WorkbookReadOperation.GetDataValidations op -> op.sheetName();
@@ -632,6 +641,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetMergedRegions _ -> null;
       case WorkbookReadOperation.GetHyperlinks _ -> null;
       case WorkbookReadOperation.GetComments _ -> null;
+      case WorkbookReadOperation.GetDrawingObjects _ -> null;
+      case WorkbookReadOperation.GetDrawingObjectPayload _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
       case WorkbookReadOperation.GetPrintLayout _ -> null;
       case WorkbookReadOperation.GetDataValidations _ -> null;
@@ -667,6 +678,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetMergedRegions _ -> null;
       case WorkbookReadOperation.GetHyperlinks _ -> null;
       case WorkbookReadOperation.GetComments _ -> null;
+      case WorkbookReadOperation.GetDrawingObjects _ -> null;
+      case WorkbookReadOperation.GetDrawingObjectPayload _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
       case WorkbookReadOperation.GetPrintLayout _ -> null;
       case WorkbookReadOperation.GetDataValidations _ -> null;
@@ -768,6 +781,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.ClearHyperlink _ -> null;
       case WorkbookOperation.SetComment _ -> null;
       case WorkbookOperation.ClearComment _ -> null;
+      case WorkbookOperation.SetPicture _ -> null;
+      case WorkbookOperation.SetShape _ -> null;
+      case WorkbookOperation.SetEmbeddedObject _ -> null;
+      case WorkbookOperation.SetDrawingObjectAnchor _ -> null;
+      case WorkbookOperation.DeleteDrawingObject _ -> null;
       case WorkbookOperation.ApplyStyle _ -> null;
       case WorkbookOperation.SetDataValidation _ -> null;
       case WorkbookOperation.ClearDataValidations _ -> null;
@@ -856,6 +874,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.ClearHyperlink op -> op.sheetName();
       case WorkbookOperation.SetComment op -> op.sheetName();
       case WorkbookOperation.ClearComment op -> op.sheetName();
+      case WorkbookOperation.SetPicture op -> op.sheetName();
+      case WorkbookOperation.SetShape op -> op.sheetName();
+      case WorkbookOperation.SetEmbeddedObject op -> op.sheetName();
+      case WorkbookOperation.SetDrawingObjectAnchor op -> op.sheetName();
+      case WorkbookOperation.DeleteDrawingObject op -> op.sheetName();
       case WorkbookOperation.ApplyStyle op -> op.sheetName();
       case WorkbookOperation.SetDataValidation op -> op.sheetName();
       case WorkbookOperation.ClearDataValidations op -> op.sheetName();
@@ -879,197 +902,58 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
   /** Returns the cell address associated with one write operation or exception. */
   static String addressFor(WorkbookOperation operation, Exception exception) {
-    String fromOperation =
-        switch (operation) {
-          case WorkbookOperation.SetCell op -> op.address();
-          case WorkbookOperation.SetHyperlink op -> op.address();
-          case WorkbookOperation.ClearHyperlink op -> op.address();
-          case WorkbookOperation.SetComment op -> op.address();
-          case WorkbookOperation.ClearComment op -> op.address();
-          case WorkbookOperation.EnsureSheet _ -> null;
-          case WorkbookOperation.RenameSheet _ -> null;
-          case WorkbookOperation.DeleteSheet _ -> null;
-          case WorkbookOperation.MoveSheet _ -> null;
-          case WorkbookOperation.CopySheet _ -> null;
-          case WorkbookOperation.SetActiveSheet _ -> null;
-          case WorkbookOperation.SetSelectedSheets _ -> null;
-          case WorkbookOperation.SetSheetVisibility _ -> null;
-          case WorkbookOperation.SetSheetProtection _ -> null;
-          case WorkbookOperation.ClearSheetProtection _ -> null;
-          case WorkbookOperation.SetWorkbookProtection _ -> null;
-          case WorkbookOperation.ClearWorkbookProtection _ -> null;
-          case WorkbookOperation.MergeCells _ -> null;
-          case WorkbookOperation.UnmergeCells _ -> null;
-          case WorkbookOperation.SetColumnWidth _ -> null;
-          case WorkbookOperation.SetRowHeight _ -> null;
-          case WorkbookOperation.InsertRows _ -> null;
-          case WorkbookOperation.DeleteRows _ -> null;
-          case WorkbookOperation.ShiftRows _ -> null;
-          case WorkbookOperation.InsertColumns _ -> null;
-          case WorkbookOperation.DeleteColumns _ -> null;
-          case WorkbookOperation.ShiftColumns _ -> null;
-          case WorkbookOperation.SetRowVisibility _ -> null;
-          case WorkbookOperation.SetColumnVisibility _ -> null;
-          case WorkbookOperation.GroupRows _ -> null;
-          case WorkbookOperation.UngroupRows _ -> null;
-          case WorkbookOperation.GroupColumns _ -> null;
-          case WorkbookOperation.UngroupColumns _ -> null;
-          case WorkbookOperation.SetSheetPane _ -> null;
-          case WorkbookOperation.SetSheetZoom _ -> null;
-          case WorkbookOperation.SetPrintLayout _ -> null;
-          case WorkbookOperation.ClearPrintLayout _ -> null;
-          case WorkbookOperation.SetRange _ -> null;
-          case WorkbookOperation.ClearRange _ -> null;
-          case WorkbookOperation.ApplyStyle _ -> null;
-          case WorkbookOperation.SetDataValidation _ -> null;
-          case WorkbookOperation.ClearDataValidations _ -> null;
-          case WorkbookOperation.SetConditionalFormatting _ -> null;
-          case WorkbookOperation.ClearConditionalFormatting _ -> null;
-          case WorkbookOperation.SetAutofilter _ -> null;
-          case WorkbookOperation.ClearAutofilter _ -> null;
-          case WorkbookOperation.SetTable _ -> null;
-          case WorkbookOperation.DeleteTable _ -> null;
-          case WorkbookOperation.SetNamedRange _ -> null;
-          case WorkbookOperation.DeleteNamedRange _ -> null;
-          case WorkbookOperation.AppendRow _ -> null;
-          case WorkbookOperation.AutoSizeColumns _ -> null;
-          case WorkbookOperation.EvaluateFormulas _ -> null;
-          case WorkbookOperation.EvaluateFormulaCells _ -> null;
-          case WorkbookOperation.ClearFormulaCaches _ -> null;
-          case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
-        };
+    String fromOperation = addressFromOperation(operation);
     return fromOperation != null ? fromOperation : addressFor(exception);
   }
 
   /** Returns the range string associated with one write operation or exception. */
   static String rangeFor(WorkbookOperation operation, Exception exception) {
-    String fromOperation =
-        switch (operation) {
-          case WorkbookOperation.SetRange op -> op.range();
-          case WorkbookOperation.ClearRange op -> op.range();
-          case WorkbookOperation.ApplyStyle op -> op.range();
-          case WorkbookOperation.SetDataValidation op -> op.range();
-          case WorkbookOperation.SetConditionalFormatting op ->
-              op.conditionalFormatting().ranges().size() == 1
-                  ? op.conditionalFormatting().ranges().getFirst()
-                  : null;
-          case WorkbookOperation.SetAutofilter op -> op.range();
-          case WorkbookOperation.SetTable op -> op.table().range();
-          case WorkbookOperation.MergeCells op -> op.range();
-          case WorkbookOperation.UnmergeCells op -> op.range();
-          case WorkbookOperation.SetNamedRange op -> op.target().range();
-          case WorkbookOperation.EnsureSheet _ -> null;
-          case WorkbookOperation.RenameSheet _ -> null;
-          case WorkbookOperation.DeleteSheet _ -> null;
-          case WorkbookOperation.MoveSheet _ -> null;
-          case WorkbookOperation.CopySheet _ -> null;
-          case WorkbookOperation.SetActiveSheet _ -> null;
-          case WorkbookOperation.SetSelectedSheets _ -> null;
-          case WorkbookOperation.SetSheetVisibility _ -> null;
-          case WorkbookOperation.SetSheetProtection _ -> null;
-          case WorkbookOperation.ClearSheetProtection _ -> null;
-          case WorkbookOperation.SetWorkbookProtection _ -> null;
-          case WorkbookOperation.ClearWorkbookProtection _ -> null;
-          case WorkbookOperation.SetColumnWidth _ -> null;
-          case WorkbookOperation.SetRowHeight _ -> null;
-          case WorkbookOperation.InsertRows _ -> null;
-          case WorkbookOperation.DeleteRows _ -> null;
-          case WorkbookOperation.ShiftRows _ -> null;
-          case WorkbookOperation.InsertColumns _ -> null;
-          case WorkbookOperation.DeleteColumns _ -> null;
-          case WorkbookOperation.ShiftColumns _ -> null;
-          case WorkbookOperation.SetRowVisibility _ -> null;
-          case WorkbookOperation.SetColumnVisibility _ -> null;
-          case WorkbookOperation.GroupRows _ -> null;
-          case WorkbookOperation.UngroupRows _ -> null;
-          case WorkbookOperation.GroupColumns _ -> null;
-          case WorkbookOperation.UngroupColumns _ -> null;
-          case WorkbookOperation.SetSheetPane _ -> null;
-          case WorkbookOperation.SetSheetZoom _ -> null;
-          case WorkbookOperation.SetPrintLayout _ -> null;
-          case WorkbookOperation.ClearPrintLayout _ -> null;
-          case WorkbookOperation.SetCell _ -> null;
-          case WorkbookOperation.SetHyperlink _ -> null;
-          case WorkbookOperation.ClearHyperlink _ -> null;
-          case WorkbookOperation.SetComment _ -> null;
-          case WorkbookOperation.ClearComment _ -> null;
-          case WorkbookOperation.AppendRow _ -> null;
-          case WorkbookOperation.ClearDataValidations _ -> null;
-          case WorkbookOperation.ClearConditionalFormatting _ -> null;
-          case WorkbookOperation.ClearAutofilter _ -> null;
-          case WorkbookOperation.DeleteTable _ -> null;
-          case WorkbookOperation.DeleteNamedRange _ -> null;
-          case WorkbookOperation.AutoSizeColumns _ -> null;
-          case WorkbookOperation.EvaluateFormulas _ -> null;
-          case WorkbookOperation.EvaluateFormulaCells _ -> null;
-          case WorkbookOperation.ClearFormulaCaches _ -> null;
-          case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
-        };
+    String fromOperation = rangeFromOperation(operation);
     return fromOperation != null ? fromOperation : rangeFor(exception);
   }
 
   /** Returns the named-range identifier associated with one write operation or exception. */
   static String namedRangeNameFor(WorkbookOperation operation, Exception exception) {
-    String fromOperation =
-        switch (operation) {
-          case WorkbookOperation.SetNamedRange op -> op.name();
-          case WorkbookOperation.DeleteNamedRange op -> op.name();
-          case WorkbookOperation.EnsureSheet _ -> null;
-          case WorkbookOperation.RenameSheet _ -> null;
-          case WorkbookOperation.DeleteSheet _ -> null;
-          case WorkbookOperation.MoveSheet _ -> null;
-          case WorkbookOperation.CopySheet _ -> null;
-          case WorkbookOperation.SetActiveSheet _ -> null;
-          case WorkbookOperation.SetSelectedSheets _ -> null;
-          case WorkbookOperation.SetSheetVisibility _ -> null;
-          case WorkbookOperation.SetSheetProtection _ -> null;
-          case WorkbookOperation.ClearSheetProtection _ -> null;
-          case WorkbookOperation.SetWorkbookProtection _ -> null;
-          case WorkbookOperation.ClearWorkbookProtection _ -> null;
-          case WorkbookOperation.MergeCells _ -> null;
-          case WorkbookOperation.UnmergeCells _ -> null;
-          case WorkbookOperation.SetColumnWidth _ -> null;
-          case WorkbookOperation.SetRowHeight _ -> null;
-          case WorkbookOperation.InsertRows _ -> null;
-          case WorkbookOperation.DeleteRows _ -> null;
-          case WorkbookOperation.ShiftRows _ -> null;
-          case WorkbookOperation.InsertColumns _ -> null;
-          case WorkbookOperation.DeleteColumns _ -> null;
-          case WorkbookOperation.ShiftColumns _ -> null;
-          case WorkbookOperation.SetRowVisibility _ -> null;
-          case WorkbookOperation.SetColumnVisibility _ -> null;
-          case WorkbookOperation.GroupRows _ -> null;
-          case WorkbookOperation.UngroupRows _ -> null;
-          case WorkbookOperation.GroupColumns _ -> null;
-          case WorkbookOperation.UngroupColumns _ -> null;
-          case WorkbookOperation.SetSheetPane _ -> null;
-          case WorkbookOperation.SetSheetZoom _ -> null;
-          case WorkbookOperation.SetPrintLayout _ -> null;
-          case WorkbookOperation.ClearPrintLayout _ -> null;
-          case WorkbookOperation.SetCell _ -> null;
-          case WorkbookOperation.SetRange _ -> null;
-          case WorkbookOperation.ClearRange _ -> null;
-          case WorkbookOperation.SetHyperlink _ -> null;
-          case WorkbookOperation.ClearHyperlink _ -> null;
-          case WorkbookOperation.SetComment _ -> null;
-          case WorkbookOperation.ClearComment _ -> null;
-          case WorkbookOperation.ApplyStyle _ -> null;
-          case WorkbookOperation.SetDataValidation _ -> null;
-          case WorkbookOperation.ClearDataValidations _ -> null;
-          case WorkbookOperation.SetConditionalFormatting _ -> null;
-          case WorkbookOperation.ClearConditionalFormatting _ -> null;
-          case WorkbookOperation.SetAutofilter _ -> null;
-          case WorkbookOperation.ClearAutofilter _ -> null;
-          case WorkbookOperation.SetTable _ -> null;
-          case WorkbookOperation.DeleteTable _ -> null;
-          case WorkbookOperation.AppendRow _ -> null;
-          case WorkbookOperation.AutoSizeColumns _ -> null;
-          case WorkbookOperation.EvaluateFormulas _ -> null;
-          case WorkbookOperation.EvaluateFormulaCells _ -> null;
-          case WorkbookOperation.ClearFormulaCaches _ -> null;
-          case WorkbookOperation.ForceFormulaRecalculationOnOpen _ -> null;
-        };
+    String fromOperation = namedRangeNameFromOperation(operation);
     return fromOperation != null ? fromOperation : namedRangeNameFor(exception);
+  }
+
+  private static String addressFromOperation(WorkbookOperation operation) {
+    return switch (operation) {
+      case WorkbookOperation.SetCell op -> op.address();
+      case WorkbookOperation.SetHyperlink op -> op.address();
+      case WorkbookOperation.ClearHyperlink op -> op.address();
+      case WorkbookOperation.SetComment op -> op.address();
+      case WorkbookOperation.ClearComment op -> op.address();
+      default -> null;
+    };
+  }
+
+  private static String rangeFromOperation(WorkbookOperation operation) {
+    return switch (operation) {
+      case WorkbookOperation.SetRange op -> op.range();
+      case WorkbookOperation.ClearRange op -> op.range();
+      case WorkbookOperation.ApplyStyle op -> op.range();
+      case WorkbookOperation.SetDataValidation op -> op.range();
+      case WorkbookOperation.SetConditionalFormatting op ->
+          op.conditionalFormatting().ranges().size() == 1
+              ? op.conditionalFormatting().ranges().getFirst()
+              : null;
+      case WorkbookOperation.SetAutofilter op -> op.range();
+      case WorkbookOperation.SetTable op -> op.table().range();
+      case WorkbookOperation.MergeCells op -> op.range();
+      case WorkbookOperation.UnmergeCells op -> op.range();
+      case WorkbookOperation.SetNamedRange op -> op.target().range();
+      default -> null;
+    };
+  }
+
+  private static String namedRangeNameFromOperation(WorkbookOperation operation) {
+    return switch (operation) {
+      case WorkbookOperation.SetNamedRange op -> op.name();
+      case WorkbookOperation.DeleteNamedRange op -> op.name();
+      default -> null;
+    };
   }
 
   /** Functional interface for closing an ExcelWorkbook after request execution. */

@@ -5,6 +5,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.38.0] - 2026-04-12
+
+### Added
+
+- Added [examples/drawing-media-request.json](./examples/drawing-media-request.json), a runnable
+  example covering picture, shape, and embedded-object authoring, explicit drawing-anchor
+  replacement, drawing payload extraction, and comment coexistence on the same sheet.
+- Added the matching promoted Jazzer protocol-request seed plus deterministic Jazzer support
+  coverage for drawing-media workflows, so the public example is replay-verified and the nested
+  round-trip or invariant layer now asserts the drawing contract directly.
+
+### Changed
+
+- Public docs, quick-reference snippets, README guidance, and the internal XSSF parity and
+  inventory records now describe the shipped drawing, image, and embedded-object platform
+  explicitly, including authored two-cell anchors, factual read-side anchor variants, and
+  drawing-payload extraction boundaries.
+
+### Fixed
+
+- Jazzer sequence labeling, workflow generation, response invariants, and `.xlsx` round-trip
+  verification now model the drawing-media command and read surface instead of silently lagging
+  behind it.
+- The direct-POI parity oracle now stores embedded-object payload bytes behind a defensive
+  immutable class, keeping the parity build warning-free under Error Prone's array-component
+  checks.
+
 ## [0.37.0] - 2026-04-12
 
 ### Added
@@ -1387,7 +1414,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.37.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.38.0...HEAD
+[0.38.0]: https://github.com/resoltico/GridGrind/compare/v0.37.0...v0.38.0
 [0.37.0]: https://github.com/resoltico/GridGrind/compare/v0.36.0...v0.37.0
 [0.36.0]: https://github.com/resoltico/GridGrind/compare/v0.35.0...v0.36.0
 [0.35.0]: https://github.com/resoltico/GridGrind/compare/v0.34.0...v0.35.0

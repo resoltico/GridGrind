@@ -1,0 +1,36 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "../examples/drawing-media-request.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/drawing_media_request.json",
+  "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 4209,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 9,
+      "operationKinds" : {
+        "SET_RANGE" : 1,
+        "SET_PICTURE" : 1,
+        "SET_COMMENT" : 1,
+        "SET_SHAPE" : 2,
+        "DELETE_DRAWING_OBJECT" : 1,
+        "SET_EMBEDDED_OBJECT" : 1,
+        "SET_DRAWING_OBJECT_ANCHOR" : 1,
+        "ENSURE_SHEET" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 4,
+      "readKinds" : {
+        "GET_DRAWING_OBJECT_PAYLOAD" : 2,
+        "GET_DRAWING_OBJECTS" : 1,
+        "GET_COMMENTS" : 1
+      }
+    }
+  },
+  "promotedAt" : "2026-04-12T01:10:10.994781Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/drawing_media_request.txt"
+}

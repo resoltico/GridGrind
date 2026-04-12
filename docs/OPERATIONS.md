@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.37.0"
+version: "0.38.0"
 domain: OPERATIONS
-updated: "2026-04-11"
+updated: "2026-04-12"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol, coordinates, rowindex, columnindex, warnings]
-  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-picture, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-drawing-objects, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol, coordinates, rowindex, columnindex, warnings]
+  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I add a picture in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
 ---
 
 # Operations Reference
@@ -222,9 +222,11 @@ Create a sheet if it does not already exist. Does nothing if the sheet exists.
 All mutation operations (`SET_CELL`, `SET_RANGE`, `CLEAR_RANGE`, `APPLY_STYLE`,
 `SET_DATA_VALIDATION`, `CLEAR_DATA_VALIDATIONS`, `SET_CONDITIONAL_FORMATTING`,
 `CLEAR_CONDITIONAL_FORMATTING`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`,
-`CLEAR_COMMENT`, `SET_AUTOFILTER`, `CLEAR_AUTOFILTER`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`)
-require the target sheet to already exist. `SET_TABLE` also requires the target `table.sheetName`
-to exist. Use `ENSURE_SHEET` before the first write to any sheet.
+`CLEAR_COMMENT`, `SET_PICTURE`, `SET_SHAPE`, `SET_EMBEDDED_OBJECT`,
+`SET_DRAWING_OBJECT_ANCHOR`, `DELETE_DRAWING_OBJECT`, `SET_AUTOFILTER`,
+`CLEAR_AUTOFILTER`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the target sheet to already exist.
+`SET_TABLE` also requires the target `table.sheetName` to exist. Use `ENSURE_SHEET` before the
+first write to any sheet.
 
 ```json
 { "type": "ENSURE_SHEET", "sheetName": "Inventory" }
@@ -1227,6 +1229,208 @@ No-op when the cell does not physically exist.
 |:------|:---------|:------------|
 | `sheetName` | Yes | Target sheet. |
 | `address` | Yes | A1-notation cell address. |
+
+---
+
+### SET_PICTURE
+
+Create or replace one named picture-backed drawing object on one sheet. Authored drawing mutations
+currently accept only `anchor.type = "TWO_CELL"` with zero-based `from` and `to` markers.
+
+```json
+{
+  "type": "SET_PICTURE",
+  "sheetName": "Ops",
+  "picture": {
+    "name": "OpsPicture",
+    "image": {
+      "format": "PNG",
+      "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+    },
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": { "columnIndex": 0, "rowIndex": 4, "dx": 0, "dy": 0 },
+      "to": { "columnIndex": 2, "rowIndex": 8, "dx": 0, "dy": 0 },
+      "behavior": "MOVE_AND_RESIZE"
+    },
+    "description": "Queue preview"
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Target sheet. |
+| `picture` | Yes | Authoritative picture payload. |
+
+`picture` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `name` | Yes | Nonblank sheet-local drawing-object name. Replaces any existing drawing object of the same name. |
+| `image` | Yes | Binary picture payload with `format` plus base64 bytes. |
+| `anchor` | Yes | Authored drawing anchor. Phase 5 supports only `TWO_CELL`. |
+| `description` | No | Optional nonblank descriptive text stored on the picture. |
+
+`image.format` accepts `EMF`, `WMF`, `PICT`, `JPEG`, `PNG`, or `DIB`.
+
+`anchor` currently uses:
+
+```json
+{
+  "type": "TWO_CELL",
+  "from": { "columnIndex": 0, "rowIndex": 4, "dx": 0, "dy": 0 },
+  "to": { "columnIndex": 2, "rowIndex": 8, "dx": 0, "dy": 0 },
+  "behavior": "MOVE_AND_RESIZE"
+}
+```
+
+`from` and `to` markers use zero-based cell indexes plus non-negative raw cell-relative offsets in
+`dx` and `dy`. `behavior` accepts `MOVE_AND_RESIZE`, `MOVE_DONT_RESIZE`, or
+`DONT_MOVE_AND_RESIZE` and defaults to `MOVE_AND_RESIZE` when omitted.
+
+---
+
+### SET_SHAPE
+
+Create or replace one named simple shape or connector on one sheet.
+
+```json
+{
+  "type": "SET_SHAPE",
+  "sheetName": "Ops",
+  "shape": {
+    "name": "OpsShape",
+    "kind": "SIMPLE_SHAPE",
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": { "columnIndex": 3, "rowIndex": 4, "dx": 0, "dy": 0 },
+      "to": { "columnIndex": 5, "rowIndex": 7, "dx": 0, "dy": 0 },
+      "behavior": "MOVE_DONT_RESIZE"
+    },
+    "presetGeometryToken": "roundRect",
+    "text": "Queue"
+  }
+}
+```
+
+```json
+{
+  "type": "SET_SHAPE",
+  "sheetName": "Ops",
+  "shape": {
+    "name": "OpsConnector",
+    "kind": "CONNECTOR",
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": { "columnIndex": 3, "rowIndex": 8, "dx": 0, "dy": 0 },
+      "to": { "columnIndex": 6, "rowIndex": 9, "dx": 0, "dy": 0 }
+    }
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Target sheet. |
+| `shape` | Yes | Authoritative shape payload. |
+
+`shape` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `name` | Yes | Nonblank sheet-local drawing-object name. |
+| `kind` | Yes | `SIMPLE_SHAPE` or `CONNECTOR`. |
+| `anchor` | Yes | Authored drawing anchor. Phase 5 supports only `TWO_CELL`. |
+| `presetGeometryToken` | No | Optional preset geometry token for `SIMPLE_SHAPE`. Defaults to `rect` when omitted. Not allowed for `CONNECTOR`. |
+| `text` | No | Optional nonblank text for `SIMPLE_SHAPE`. Not allowed for `CONNECTOR`. |
+
+---
+
+### SET_EMBEDDED_OBJECT
+
+Create or replace one named embedded object with an authoritative package payload and preview
+image.
+
+```json
+{
+  "type": "SET_EMBEDDED_OBJECT",
+  "sheetName": "Ops",
+  "embeddedObject": {
+    "name": "OpsEmbed",
+    "label": "Ops payload",
+    "fileName": "ops-payload.txt",
+    "command": "open",
+    "base64Data": "R3JpZEdyaW5kIGVtYmVkZGVkIHBheWxvYWQ=",
+    "previewImage": {
+      "format": "PNG",
+      "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+    },
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": { "columnIndex": 6, "rowIndex": 4, "dx": 0, "dy": 0 },
+      "to": { "columnIndex": 8, "rowIndex": 9, "dx": 0, "dy": 0 }
+    }
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Target sheet. |
+| `embeddedObject` | Yes | Authoritative embedded-object payload. |
+
+`embeddedObject` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `name` | Yes | Nonblank sheet-local drawing-object name. |
+| `label` | Yes | Nonblank display label stored on the embedded object. |
+| `fileName` | Yes | Nonblank embedded file name surfaced again in payload reads when available. |
+| `command` | Yes | Nonblank command string stored on the object metadata. |
+| `base64Data` | Yes | Base64-encoded embedded payload bytes. |
+| `previewImage` | Yes | Preview picture payload shown by Excel for the object. |
+| `anchor` | Yes | Authored drawing anchor. Phase 5 supports only `TWO_CELL`. |
+
+---
+
+### SET_DRAWING_OBJECT_ANCHOR
+
+Move one existing named drawing object by replacing its anchor authoritatively.
+
+```json
+{
+  "type": "SET_DRAWING_OBJECT_ANCHOR",
+  "sheetName": "Ops",
+  "objectName": "OpsPicture",
+  "anchor": {
+    "type": "TWO_CELL",
+    "from": { "columnIndex": 1, "rowIndex": 5, "dx": 0, "dy": 0 },
+    "to": { "columnIndex": 3, "rowIndex": 9, "dx": 0, "dy": 0 }
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Target sheet. |
+| `objectName` | Yes | Existing sheet-local drawing-object name. |
+| `anchor` | Yes | Replacement authored drawing anchor. Phase 5 supports only `TWO_CELL`. |
+
+---
+
+### DELETE_DRAWING_OBJECT
+
+Delete one existing named drawing object from one sheet.
+
+```json
+{ "type": "DELETE_DRAWING_OBJECT", "sheetName": "Ops", "objectName": "OpsConnector" }
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Target sheet. |
+| `objectName` | Yes | Existing sheet-local drawing-object name to delete. |
 
 ---
 
@@ -2349,6 +2553,68 @@ Each returned entry includes the cell `address` plus a `comment` object. `commen
 optional ordered rich-text run list whose text concatenates exactly to `comment.text`.
 `comment.anchor` is optional and, when present, exposes zero-based comment-box bounds as
 `firstColumn`, `firstRow`, `lastColumn`, and `lastRow`.
+
+### GET_DRAWING_OBJECTS
+
+Returns factual drawing-object metadata for one sheet.
+
+```json
+{
+  "type": "GET_DRAWING_OBJECTS",
+  "requestId": "drawing-objects",
+  "sheetName": "Ops"
+}
+```
+
+Response shape: `{ "drawingObjects": [ ... ] }`.
+
+Returned entries are one of:
+
+- `PICTURE` with `format`, `contentType`, byte size or digest facts, optional pixel size, optional
+  `description`, and a factual `anchor`
+- `SHAPE` with `kind`, optional `presetGeometryToken`, optional `text`, `childCount`, and a
+  factual `anchor`
+- `EMBEDDED_OBJECT` with `packagingKind`, content type, digest facts, optional label or file name
+  or command metadata, optional preview-image facts, and a factual `anchor`
+
+Read-side anchors can be `TWO_CELL`, `ONE_CELL`, or `ABSOLUTE`. `TWO_CELL` markers expose
+zero-based `columnIndex`, `rowIndex`, `dx`, and `dy`. `ONE_CELL` and `ABSOLUTE` anchors expose
+their size fields in EMUs.
+
+### GET_DRAWING_OBJECT_PAYLOAD
+
+Returns the extracted binary payload for one existing named picture or embedded object on one
+sheet.
+
+```json
+{
+  "type": "GET_DRAWING_OBJECT_PAYLOAD",
+  "requestId": "picture-payload",
+  "sheetName": "Ops",
+  "objectName": "OpsPicture"
+}
+```
+
+```json
+{
+  "type": "GET_DRAWING_OBJECT_PAYLOAD",
+  "requestId": "embedded-payload",
+  "sheetName": "Ops",
+  "objectName": "OpsEmbed"
+}
+```
+
+Response shape: `{ "payload": { ... } }`.
+
+Returned payload entries are:
+
+- `PICTURE` with `format`, `contentType`, `fileName`, `sha256`, `base64Data`, and optional
+  `description`
+- `EMBEDDED_OBJECT` with `packagingKind`, `contentType`, optional `fileName`, `sha256`,
+  `base64Data`, and optional `label` or `command`
+
+Named non-binary shapes such as connectors and simple shapes are rejected because they do not own
+an extractable binary payload.
 
 ### GET_SHEET_LAYOUT
 

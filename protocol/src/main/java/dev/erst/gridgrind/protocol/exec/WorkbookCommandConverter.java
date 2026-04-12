@@ -3,6 +3,7 @@ package dev.erst.gridgrind.protocol.exec;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
+import java.util.Base64;
 
 /** Converts protocol write operations and style inputs into workbook-core commands. */
 final class WorkbookCommandConverter {
@@ -103,6 +104,18 @@ final class WorkbookCommandConverter {
               op.sheetName(), op.address(), toExcelComment(op.comment()));
       case WorkbookOperation.ClearComment op ->
           new WorkbookCommand.ClearComment(op.sheetName(), op.address());
+      case WorkbookOperation.SetPicture op ->
+          new WorkbookCommand.SetPicture(op.sheetName(), toExcelPictureDefinition(op.picture()));
+      case WorkbookOperation.SetShape op ->
+          new WorkbookCommand.SetShape(op.sheetName(), toExcelShapeDefinition(op.shape()));
+      case WorkbookOperation.SetEmbeddedObject op ->
+          new WorkbookCommand.SetEmbeddedObject(
+              op.sheetName(), toExcelEmbeddedObjectDefinition(op.embeddedObject()));
+      case WorkbookOperation.SetDrawingObjectAnchor op ->
+          new WorkbookCommand.SetDrawingObjectAnchor(
+              op.sheetName(), op.objectName(), toExcelDrawingAnchor(op.anchor()));
+      case WorkbookOperation.DeleteDrawingObject op ->
+          new WorkbookCommand.DeleteDrawingObject(op.sheetName(), op.objectName());
       case WorkbookOperation.ApplyStyle op ->
           new WorkbookCommand.ApplyStyle(op.sheetName(), op.range(), toExcelCellStyle(op.style()));
       case WorkbookOperation.SetDataValidation op ->
@@ -202,6 +215,55 @@ final class WorkbookCommandConverter {
                 comment.anchor().firstRow(),
                 comment.anchor().lastColumn(),
                 comment.anchor().lastRow()));
+  }
+
+  static ExcelPictureDefinition toExcelPictureDefinition(PictureInput picture) {
+    return new ExcelPictureDefinition(
+        picture.name(),
+        new ExcelBinaryData(Base64.getDecoder().decode(picture.image().base64Data())),
+        picture.image().format(),
+        toExcelDrawingAnchor(picture.anchor()),
+        picture.description());
+  }
+
+  static ExcelShapeDefinition toExcelShapeDefinition(ShapeInput shape) {
+    return new ExcelShapeDefinition(
+        shape.name(),
+        shape.kind(),
+        toExcelDrawingAnchor(shape.anchor()),
+        shape.presetGeometryToken(),
+        shape.text());
+  }
+
+  static ExcelEmbeddedObjectDefinition toExcelEmbeddedObjectDefinition(
+      EmbeddedObjectInput embeddedObject) {
+    return new ExcelEmbeddedObjectDefinition(
+        embeddedObject.name(),
+        embeddedObject.label(),
+        embeddedObject.fileName(),
+        embeddedObject.command(),
+        new ExcelBinaryData(Base64.getDecoder().decode(embeddedObject.base64Data())),
+        embeddedObject.previewImage().format(),
+        new ExcelBinaryData(Base64.getDecoder().decode(embeddedObject.previewImage().base64Data())),
+        toExcelDrawingAnchor(embeddedObject.anchor()));
+  }
+
+  static ExcelDrawingAnchor.TwoCell toExcelDrawingAnchor(DrawingAnchorInput anchor) {
+    return switch (anchor) {
+      case DrawingAnchorInput.TwoCell twoCell ->
+          new ExcelDrawingAnchor.TwoCell(
+              new ExcelDrawingMarker(
+                  twoCell.from().columnIndex(),
+                  twoCell.from().rowIndex(),
+                  twoCell.from().dx(),
+                  twoCell.from().dy()),
+              new ExcelDrawingMarker(
+                  twoCell.to().columnIndex(),
+                  twoCell.to().rowIndex(),
+                  twoCell.to().dx(),
+                  twoCell.to().dy()),
+              twoCell.behavior());
+    };
   }
 
   static ExcelRowSpan toExcelRowSpan(RowSpanInput rows) {

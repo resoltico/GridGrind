@@ -973,33 +973,90 @@
     },
     {
       "sequence": 52,
-      "id": "phase-5-drawings-and-images-preservation",
+      "id": "phase-5-drawings-and-images-readback",
       "capability": "drawings-and-images",
-      "subfamily": "preservation",
+      "subfamily": "readback",
       "phase": 5,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
+      "gridGrindStatus": "COMPLETE",
       "expectedOutcome": "PASS",
-      "probeId": "probe-drawing-preservation",
+      "probeId": "probe-drawing-readback",
       "scenarioIds": [
         "poi-drawing-image"
       ],
       "primarySources": [
         "Quick Guide",
-        "XSSFSheet API"
+        "XSSFDrawing API"
       ],
-      "notes": "GridGrind preserves drawing parts on unrelated edits but does not yet model them."
+      "notes": "GridGrind now reads named picture-backed drawing objects, their anchors, and extracted payload digests directly from loaded workbooks."
     },
     {
       "sequence": 53,
-      "id": "phase-5-embedded-objects-preservation",
+      "id": "phase-5-drawings-and-images-authoring",
+      "capability": "drawings-and-images",
+      "subfamily": "authoring-and-mutation",
+      "phase": 5,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-drawing-authoring",
+      "scenarioIds": [
+        "gridgrind-drawing-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFDrawing API"
+      ],
+      "notes": "GridGrind now authors pictures, simple shapes, connectors, and embedded objects, supports in-place two-cell anchor mutation, and persists that surface in direct POI agreement."
+    },
+    {
+      "sequence": 54,
+      "id": "phase-5-drawings-comments-coexistence",
+      "capability": "drawings-and-comments",
+      "subfamily": "coexistence",
+      "phase": 5,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-drawing-comment-coexistence",
+      "scenarioIds": [
+        "poi-drawing-comments"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFSheet API"
+      ],
+      "notes": "Comment set and clear operations now coexist with drawing parts without leaving empty drawing relationships behind or damaging existing pictures."
+    },
+    {
+      "sequence": 55,
+      "id": "phase-5-drawings-and-images-merged-region-preservation",
+      "capability": "drawings-and-images",
+      "subfamily": "merged-region-preservation",
+      "phase": 5,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-drawing-merged-image-preservation",
+      "scenarioIds": [
+        "poi-drawing-merged-image"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "XSSFDrawing API"
+      ],
+      "notes": "Unrelated workbook edits now preserve picture-backed drawing parts and merged-region state together."
+    },
+    {
+      "sequence": 56,
+      "id": "phase-5-embedded-objects-platform",
       "capability": "embedded-objects",
-      "subfamily": "preservation",
+      "subfamily": "readback-and-preservation",
       "phase": 5,
       "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
-      "gridGrindStatus": "ABSENT",
+      "gridGrindStatus": "COMPLETE",
       "expectedOutcome": "PASS",
-      "probeId": "probe-embedded-object-preservation",
+      "probeId": "probe-embedded-object-platform",
       "scenarioIds": [
         "poi-embedded-object"
       ],
@@ -1007,10 +1064,10 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "Embedded object package parts survive unrelated edits today, but there is no explicit surface."
+      "notes": "GridGrind now reads extracted embedded-object payloads and preserves existing embedded OLE parts across unrelated workbook edits."
     },
     {
-      "sequence": 54,
+      "sequence": 57,
       "id": "phase-6-charts-preservation",
       "capability": "charts",
       "subfamily": "preservation",
@@ -1029,7 +1086,7 @@
       "notes": "Chart package parts are preserved across unrelated edits without first-class modeling."
     },
     {
-      "sequence": 55,
+      "sequence": 58,
       "id": "phase-7-pivot-tables-preservation",
       "capability": "pivot-tables",
       "subfamily": "preservation",
@@ -1048,7 +1105,7 @@
       "notes": "Pivot-table package parts are preserved across unrelated edits without first-class modeling."
     },
     {
-      "sequence": 56,
+      "sequence": 59,
       "id": "phase-8-event-model-read",
       "capability": "event-model-read",
       "subfamily": "read",
@@ -1067,7 +1124,7 @@
       "notes": "POI event-model reads are not yet available through GridGrind."
     },
     {
-      "sequence": 57,
+      "sequence": 60,
       "id": "phase-8-sxssf-streaming-write",
       "capability": "sxssf-streaming-write",
       "subfamily": "write",
@@ -1086,7 +1143,7 @@
       "notes": "Streaming write parity via SXSSF is not yet available."
     },
     {
-      "sequence": 58,
+      "sequence": 61,
       "id": "phase-9-ooxml-encryption",
       "capability": "ooxml-encryption",
       "subfamily": "read-write",
@@ -1104,7 +1161,7 @@
       "notes": "Encrypted OOXML workbook handling is absent from GridGrind."
     },
     {
-      "sequence": 59,
+      "sequence": 62,
       "id": "phase-9-ooxml-signing",
       "capability": "ooxml-signing",
       "subfamily": "read-write",

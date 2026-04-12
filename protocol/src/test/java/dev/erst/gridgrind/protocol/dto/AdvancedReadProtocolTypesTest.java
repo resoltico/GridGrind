@@ -2,7 +2,11 @@ package dev.erst.gridgrind.protocol.dto;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.math.BigDecimal;
@@ -336,6 +340,371 @@ class AdvancedReadProtocolTypesTest {
                 "QueueTable",
                 Arrays.asList(sheetOwned.filterColumns().getFirst(), null),
                 sortState));
+  }
+
+  @Test
+  void drawingReportsValidateReadShapes() {
+    DrawingMarkerReport from = new DrawingMarkerReport(1, 2, 3, 4);
+    DrawingMarkerReport to = new DrawingMarkerReport(4, 6, 0, 0);
+    DrawingAnchorReport.TwoCell twoCell =
+        new DrawingAnchorReport.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    DrawingAnchorReport.TwoCell defaultTwoCell = new DrawingAnchorReport.TwoCell(from, to, null);
+    DrawingAnchorReport.OneCell oneCell = new DrawingAnchorReport.OneCell(from, 10L, 20L, null);
+    DrawingAnchorReport.Absolute absolute =
+        new DrawingAnchorReport.Absolute(1L, 2L, 10L, 20L, null);
+    DrawingObjectReport.Picture picture =
+        new DrawingObjectReport.Picture(
+            "OpsPicture",
+            twoCell,
+            ExcelPictureFormat.PNG,
+            "image/png",
+            68L,
+            "abc123",
+            null,
+            null,
+            "Queue preview");
+    DrawingObjectReport.Shape shape =
+        new DrawingObjectReport.Shape(
+            "OpsShape", oneCell, ExcelDrawingShapeKind.SIMPLE_SHAPE, "rect", "Queue", 0);
+    DrawingObjectReport.EmbeddedObject embeddedObject =
+        new DrawingObjectReport.EmbeddedObject(
+            "OpsEmbed",
+            absolute,
+            ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+            "Payload",
+            "payload.txt",
+            "payload.txt",
+            "application/octet-stream",
+            7L,
+            "def456",
+            null,
+            null,
+            null);
+    DrawingObjectPayloadReport.Picture picturePayload =
+        new DrawingObjectPayloadReport.Picture(
+            "OpsPicture",
+            ExcelPictureFormat.PNG,
+            "image/png",
+            "OpsPicture.png",
+            "abc123",
+            "cGljdHVyZQ==",
+            "Queue preview");
+    DrawingObjectPayloadReport.EmbeddedObject embeddedPayload =
+        new DrawingObjectPayloadReport.EmbeddedObject(
+            "OpsEmbed",
+            ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+            "application/octet-stream",
+            "payload.txt",
+            "def456",
+            "cGF5bG9hZA==",
+            "Payload",
+            "payload.txt");
+
+    assertEquals(ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE, defaultTwoCell.behavior());
+    assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, oneCell.behavior());
+    assertEquals(ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE, absolute.behavior());
+    assertEquals("Queue preview", picture.description());
+    assertEquals(ExcelDrawingShapeKind.SIMPLE_SHAPE, shape.kind());
+    assertEquals("payload.txt", embeddedObject.fileName());
+    assertEquals("OpsPicture.png", picturePayload.fileName());
+    assertEquals("Payload", embeddedPayload.label());
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(-1, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, -1, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, 0, -1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, 0, 0, -1));
+    assertThrows(
+        IllegalArgumentException.class, () -> new DrawingAnchorReport.OneCell(from, 0L, 20L, null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new DrawingAnchorReport.OneCell(from, 10L, 0L, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DrawingAnchorReport.Absolute(-1L, 2L, 10L, 20L, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DrawingAnchorReport.Absolute(1L, -2L, 10L, 20L, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DrawingAnchorReport.Absolute(1L, 2L, 0L, 20L, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new DrawingAnchorReport.Absolute(1L, 2L, 10L, 0L, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.Picture(
+                " ",
+                twoCell,
+                ExcelPictureFormat.PNG,
+                "image/png",
+                68L,
+                "abc123",
+                null,
+                null,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.Picture(
+                "OpsPicture",
+                twoCell,
+                ExcelPictureFormat.PNG,
+                "image/png",
+                0L,
+                "abc123",
+                null,
+                null,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.Picture(
+                "OpsPicture",
+                twoCell,
+                ExcelPictureFormat.PNG,
+                "image/png",
+                68L,
+                "abc123",
+                -1,
+                null,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.Picture(
+                "OpsPicture",
+                twoCell,
+                ExcelPictureFormat.PNG,
+                "image/png",
+                68L,
+                "abc123",
+                null,
+                -1,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.Picture(
+                "OpsPicture",
+                twoCell,
+                ExcelPictureFormat.PNG,
+                "image/png",
+                68L,
+                "abc123",
+                null,
+                null,
+                " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.Shape(
+                "OpsShape", twoCell, ExcelDrawingShapeKind.SIMPLE_SHAPE, " ", null, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.Shape(
+                "OpsShape", twoCell, ExcelDrawingShapeKind.SIMPLE_SHAPE, "rect", " ", 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.Shape(
+                "OpsShape", twoCell, ExcelDrawingShapeKind.SIMPLE_SHAPE, "rect", null, -1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.EmbeddedObject(
+                "OpsEmbed",
+                absolute,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                " ",
+                "payload.txt",
+                "payload.txt",
+                "application/octet-stream",
+                7L,
+                "def456",
+                null,
+                null,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.EmbeddedObject(
+                "OpsEmbed",
+                absolute,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                "Payload",
+                " ",
+                "payload.txt",
+                "application/octet-stream",
+                7L,
+                "def456",
+                null,
+                null,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.EmbeddedObject(
+                "OpsEmbed",
+                absolute,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                "Payload",
+                "payload.txt",
+                " ",
+                "application/octet-stream",
+                7L,
+                "def456",
+                null,
+                null,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.EmbeddedObject(
+                "OpsEmbed",
+                absolute,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                "Payload",
+                "payload.txt",
+                "payload.txt",
+                "application/octet-stream",
+                0L,
+                "def456",
+                null,
+                null,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.EmbeddedObject(
+                "OpsEmbed",
+                absolute,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                "Payload",
+                "payload.txt",
+                "payload.txt",
+                "application/octet-stream",
+                7L,
+                "def456",
+                null,
+                4L,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.EmbeddedObject(
+                "OpsEmbed",
+                absolute,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                "Payload",
+                "payload.txt",
+                "payload.txt",
+                "application/octet-stream",
+                7L,
+                "def456",
+                ExcelPictureFormat.PNG,
+                4L,
+                " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.EmbeddedObject(
+                "OpsEmbed",
+                absolute,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                "Payload",
+                "payload.txt",
+                "payload.txt",
+                "application/octet-stream",
+                7L,
+                "def456",
+                null,
+                null,
+                "abc123"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectReport.EmbeddedObject(
+                "OpsEmbed",
+                absolute,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                "Payload",
+                "payload.txt",
+                "payload.txt",
+                "application/octet-stream",
+                7L,
+                "def456",
+                ExcelPictureFormat.PNG,
+                0L,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectPayloadReport.Picture(
+                " ",
+                ExcelPictureFormat.PNG,
+                "image/png",
+                "OpsPicture.png",
+                "abc123",
+                "cGljdHVyZQ==",
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectPayloadReport.Picture(
+                "OpsPicture",
+                ExcelPictureFormat.PNG,
+                "image/png",
+                "OpsPicture.png",
+                "abc123",
+                "not-base64",
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectPayloadReport.Picture(
+                "OpsPicture",
+                ExcelPictureFormat.PNG,
+                "image/png",
+                "OpsPicture.png",
+                "abc123",
+                "cGljdHVyZQ==",
+                " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectPayloadReport.EmbeddedObject(
+                "OpsEmbed",
+                ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+                "application/octet-stream",
+                " ",
+                "def456",
+                "cGF5bG9hZA==",
+                null,
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectPayloadReport.EmbeddedObject(
+                "OpsEmbed",
+                ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+                "application/octet-stream",
+                "payload.txt",
+                "def456",
+                "cGF5bG9hZA==",
+                " ",
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingObjectPayloadReport.EmbeddedObject(
+                "OpsEmbed",
+                ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+                "application/octet-stream",
+                "payload.txt",
+                "def456",
+                "cGF5bG9hZA==",
+                null,
+                " "));
   }
 
   @Test

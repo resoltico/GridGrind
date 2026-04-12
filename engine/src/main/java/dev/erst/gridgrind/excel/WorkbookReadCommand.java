@@ -23,6 +23,8 @@ public sealed interface WorkbookReadCommand
           GetMergedRegions,
           GetHyperlinks,
           GetComments,
+          GetDrawingObjects,
+          GetDrawingObjectPayload,
           GetSheetLayout,
           GetPrintLayout,
           GetDataValidations,
@@ -131,6 +133,24 @@ public sealed interface WorkbookReadCommand
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Returns factual drawing-object metadata for one sheet. */
+  record GetDrawingObjects(String requestId, String sheetName) implements Introspection {
+    public GetDrawingObjects {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Returns the extracted binary payload for one existing drawing object on one sheet. */
+  record GetDrawingObjectPayload(String requestId, String sheetName, String objectName)
+      implements Introspection {
+    public GetDrawingObjectPayload {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      objectName = requireNonBlank(objectName, "objectName");
     }
   }
 
