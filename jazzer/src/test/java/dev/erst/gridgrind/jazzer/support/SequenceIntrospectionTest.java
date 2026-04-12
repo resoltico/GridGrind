@@ -2,15 +2,23 @@ package dev.erst.gridgrind.jazzer.support;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.ExcelDrawingMarker;
+import dev.erst.gridgrind.excel.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.ExcelFormulaCellTarget;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
+import dev.erst.gridgrind.excel.ExcelPictureDefinition;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
@@ -23,13 +31,19 @@ import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
 import dev.erst.gridgrind.protocol.dto.DifferentialStyleInput;
+import dev.erst.gridgrind.protocol.dto.DrawingAnchorInput;
+import dev.erst.gridgrind.protocol.dto.DrawingMarkerInput;
+import dev.erst.gridgrind.protocol.dto.EmbeddedObjectInput;
 import dev.erst.gridgrind.protocol.dto.FormulaCellTargetInput;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
 import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
 import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
+import dev.erst.gridgrind.protocol.dto.PictureDataInput;
+import dev.erst.gridgrind.protocol.dto.PictureInput;
 import dev.erst.gridgrind.protocol.dto.RangeSelection;
+import dev.erst.gridgrind.protocol.dto.ShapeInput;
 import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
 import dev.erst.gridgrind.protocol.dto.SheetSelection;
@@ -43,6 +57,9 @@ import org.junit.jupiter.api.Test;
 
 /** Tests for SequenceIntrospection operation and command labeling. */
 class SequenceIntrospectionTest {
+  private static final String PNG_PIXEL_BASE64 =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
+
   @Test
   void reportsWaveThreeOperationKinds() {
     assertEquals(
@@ -84,6 +101,27 @@ class SequenceIntrospectionTest {
     assertEquals(
         "CLEAR_COMMENT",
         SequenceIntrospection.operationKind(new WorkbookOperation.ClearComment("Budget", "A1")));
+    assertEquals(
+        "SET_PICTURE",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetPicture("Budget", protocolPictureInput())));
+    assertEquals(
+        "SET_SHAPE",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetShape("Budget", protocolShapeInput())));
+    assertEquals(
+        "SET_EMBEDDED_OBJECT",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetEmbeddedObject("Budget", protocolEmbeddedObjectInput())));
+    assertEquals(
+        "SET_DRAWING_OBJECT_ANCHOR",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.SetDrawingObjectAnchor(
+                "Budget", "OpsPicture", protocolAnchor())));
+    assertEquals(
+        "DELETE_DRAWING_OBJECT",
+        SequenceIntrospection.operationKind(
+            new WorkbookOperation.DeleteDrawingObject("Budget", "OpsPicture")));
     assertEquals(
         "SET_NAMED_RANGE",
         SequenceIntrospection.operationKind(
@@ -212,6 +250,26 @@ class SequenceIntrospectionTest {
         "CLEAR_COMMENT",
         SequenceIntrospection.commandKind(new WorkbookCommand.ClearComment("Budget", "A1")));
     assertEquals(
+        "SET_PICTURE",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetPicture("Budget", excelPictureDefinition())));
+    assertEquals(
+        "SET_SHAPE",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetShape("Budget", excelShapeDefinition())));
+    assertEquals(
+        "SET_EMBEDDED_OBJECT",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetEmbeddedObject("Budget", excelEmbeddedObjectDefinition())));
+    assertEquals(
+        "SET_DRAWING_OBJECT_ANCHOR",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetDrawingObjectAnchor("Budget", "OpsPicture", excelAnchor())));
+    assertEquals(
+        "DELETE_DRAWING_OBJECT",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.DeleteDrawingObject("Budget", "OpsPicture")));
+    assertEquals(
         "SET_NAMED_RANGE",
         SequenceIntrospection.commandKind(
             new WorkbookCommand.SetNamedRange(
@@ -309,6 +367,9 @@ class SequenceIntrospectionTest {
                 new WorkbookReadOperation.GetWorkbookSummary("summary"),
                 new WorkbookReadOperation.GetWorkbookProtection("workbook-protection"),
                 new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
+                new WorkbookReadOperation.GetDrawingObjects("drawing-objects", "Budget"),
+                new WorkbookReadOperation.GetDrawingObjectPayload(
+                    "drawing-payload", "Budget", "OpsPicture"),
                 new WorkbookReadOperation.GetDataValidations(
                     "validations", "Budget", new RangeSelection.All()),
                 new WorkbookReadOperation.GetConditionalFormatting(
@@ -328,10 +389,13 @@ class SequenceIntrospectionTest {
                     "named-range-health", new NamedRangeSelection.All()),
                 new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings")));
 
-    assertEquals(14, SequenceIntrospection.readCount(request));
+    assertEquals(16, SequenceIntrospection.readCount(request));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_PROTECTION"));
+    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DRAWING_OBJECTS"));
+    assertEquals(
+        1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DRAWING_OBJECT_PAYLOAD"));
     assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DATA_VALIDATIONS"));
     assertEquals(
         1L, SequenceIntrospection.readKinds(request.reads()).get("GET_CONDITIONAL_FORMATTING"));
@@ -363,5 +427,65 @@ class SequenceIntrospectionTest {
     return new ExcelSheetProtectionSettings(
         false, true, false, true, false, true, false, true, false, true, false, true, false, true,
         false);
+  }
+
+  private static DrawingAnchorInput.TwoCell protocolAnchor() {
+    return new DrawingAnchorInput.TwoCell(
+        new DrawingMarkerInput(0, 0, 0, 0), new DrawingMarkerInput(2, 3, 0, 0), null);
+  }
+
+  private static PictureInput protocolPictureInput() {
+    return new PictureInput(
+        "OpsPicture",
+        new PictureDataInput(ExcelPictureFormat.PNG, PNG_PIXEL_BASE64),
+        protocolAnchor(),
+        "Queue preview");
+  }
+
+  private static ShapeInput protocolShapeInput() {
+    return new ShapeInput(
+        "OpsShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, protocolAnchor(), "rect", "Queue");
+  }
+
+  private static EmbeddedObjectInput protocolEmbeddedObjectInput() {
+    return new EmbeddedObjectInput(
+        "OpsEmbed",
+        "Ops payload",
+        "ops-payload.txt",
+        "open",
+        "R3JpZEdyaW5kIHBheWxvYWQ=",
+        new PictureDataInput(ExcelPictureFormat.PNG, PNG_PIXEL_BASE64),
+        protocolAnchor());
+  }
+
+  private static ExcelDrawingAnchor.TwoCell excelAnchor() {
+    return new ExcelDrawingAnchor.TwoCell(
+        new ExcelDrawingMarker(0, 0, 0, 0), new ExcelDrawingMarker(2, 3, 0, 0), null);
+  }
+
+  private static ExcelPictureDefinition excelPictureDefinition() {
+    return new ExcelPictureDefinition(
+        "OpsPicture",
+        new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+        ExcelPictureFormat.PNG,
+        excelAnchor(),
+        "Queue preview");
+  }
+
+  private static ExcelShapeDefinition excelShapeDefinition() {
+    return new ExcelShapeDefinition(
+        "OpsShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, excelAnchor(), "rect", "Queue");
+  }
+
+  private static ExcelEmbeddedObjectDefinition excelEmbeddedObjectDefinition() {
+    return new ExcelEmbeddedObjectDefinition(
+        "OpsEmbed",
+        "Ops payload",
+        "ops-payload.txt",
+        "open",
+        new ExcelBinaryData("GridGrind payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+        ExcelPictureFormat.PNG,
+        new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+        excelAnchor());
   }
 }

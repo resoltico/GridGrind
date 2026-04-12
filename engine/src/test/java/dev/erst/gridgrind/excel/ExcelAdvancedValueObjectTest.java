@@ -312,6 +312,81 @@ class ExcelAdvancedValueObjectTest {
   }
 
   @Test
+  void drawingValueObjectsNormalizeDefaultsAndValidate() {
+    ExcelBinaryData binary = new ExcelBinaryData(new byte[] {1, 2, 3});
+    ExcelDrawingMarker from = new ExcelDrawingMarker(1, 2, 3, 4);
+    ExcelDrawingMarker to = new ExcelDrawingMarker(4, 6);
+    ExcelDrawingAnchor.TwoCell twoCell =
+        new ExcelDrawingAnchor.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    ExcelPictureDefinition picture =
+        new ExcelPictureDefinition("OpsPicture", binary, ExcelPictureFormat.PNG, twoCell, null);
+    ExcelShapeDefinition shape =
+        new ExcelShapeDefinition(
+            "OpsShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, twoCell, " rect ", "Queue");
+    ExcelEmbeddedObjectDefinition embeddedObject =
+        new ExcelEmbeddedObjectDefinition(
+            "OpsEmbed",
+            "Payload",
+            "payload.txt",
+            "payload.txt",
+            new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+            ExcelPictureFormat.PNG,
+            binary,
+            twoCell);
+    ExcelDrawingObjectSnapshot.Shape groupSnapshot =
+        new ExcelDrawingObjectSnapshot.Shape(
+            "OpsGroup",
+            new ExcelDrawingAnchor.Absolute(1L, 2L, 10L, 20L, null),
+            ExcelDrawingShapeKind.GROUP,
+            null,
+            null,
+            2);
+    ExcelDrawingObjectPayload.EmbeddedObject payload =
+        new ExcelDrawingObjectPayload.EmbeddedObject(
+            "OpsEmbed",
+            ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+            "application/octet-stream",
+            "payload.txt",
+            "abc123",
+            new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+            "Payload",
+            "payload.txt");
+
+    assertNotEquals(binary.bytes(), binary.bytes());
+    assertEquals(3, binary.size());
+    assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, twoCell.behavior());
+    assertEquals(ExcelPictureFormat.PNG, picture.format());
+    assertEquals("rect", shape.presetGeometryToken());
+    assertEquals("payload.txt", embeddedObject.fileName());
+    assertEquals(2, groupSnapshot.childCount());
+    assertEquals("Payload", payload.label());
+    assertThrows(IllegalArgumentException.class, () -> new ExcelBinaryData(new byte[0]));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelDrawingMarker(-1, 0, 0, 0));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelDrawingAnchor.TwoCell(
+                new ExcelDrawingMarker(2, 2, 0, 0), new ExcelDrawingMarker(1, 2, 0, 0), null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelShapeDefinition(
+                "OpsShape", ExcelAuthoredDrawingShapeKind.CONNECTOR, twoCell, "rect", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelDrawingObjectPayload.EmbeddedObject(
+                "OpsEmbed",
+                ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+                "application/octet-stream",
+                " ",
+                "abc123",
+                binary,
+                null,
+                null));
+  }
+
+  @Test
   void namedRangeCommentAndTableContractsSupportAdvancedForms() {
     var authoringComment =
         new ExcelComment(

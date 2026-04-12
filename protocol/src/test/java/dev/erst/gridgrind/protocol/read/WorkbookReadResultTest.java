@@ -4,7 +4,11 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.protocol.dto.*;
 import java.util.List;
@@ -207,6 +211,71 @@ class WorkbookReadResultTest {
         () ->
             new WorkbookReadResult.ConditionalFormattingHealthResult(
                 "conditional-formatting-health", null));
+  }
+
+  @Test
+  void drawingReadResultsCopyEntriesAndRejectInvalidState() {
+    DrawingAnchorReport.TwoCell pictureAnchor =
+        new DrawingAnchorReport.TwoCell(
+            new DrawingMarkerReport(1, 2, 0, 0),
+            new DrawingMarkerReport(4, 6, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    DrawingAnchorReport.OneCell shapeAnchor =
+        new DrawingAnchorReport.OneCell(new DrawingMarkerReport(3, 4, 0, 0), 10L, 20L, null);
+    DrawingObjectReport.Picture picture =
+        new DrawingObjectReport.Picture(
+            "OpsPicture",
+            pictureAnchor,
+            ExcelPictureFormat.PNG,
+            "image/png",
+            68L,
+            "abc123",
+            null,
+            null,
+            "Queue preview");
+    DrawingObjectReport.Shape shape =
+        new DrawingObjectReport.Shape(
+            "OpsShape", shapeAnchor, ExcelDrawingShapeKind.SIMPLE_SHAPE, "rect", "Queue", 0);
+    WorkbookReadResult.DrawingObjectsResult drawingObjects =
+        new WorkbookReadResult.DrawingObjectsResult("drawing", "Budget", List.of(picture, shape));
+    WorkbookReadResult.DrawingObjectPayloadResult drawingPayload =
+        new WorkbookReadResult.DrawingObjectPayloadResult(
+            "payload",
+            "Budget",
+            new DrawingObjectPayloadReport.EmbeddedObject(
+                "OpsEmbed",
+                ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+                "application/octet-stream",
+                "payload.txt",
+                "def456",
+                "cGF5bG9hZA==",
+                "Payload",
+                "payload.txt"));
+
+    assertEquals("OpsPicture", drawingObjects.drawingObjects().getFirst().name());
+    assertEquals("OpsEmbed", drawingPayload.payload().name());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.DrawingObjectsResult(" ", "Budget", List.of(picture)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookReadResult.DrawingObjectsResult("drawing", " ", List.of(picture)));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.DrawingObjectsResult("drawing", "Budget", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.DrawingObjectPayloadResult(
+                " ", "Budget", drawingPayload.payload()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.DrawingObjectPayloadResult(
+                "payload", " ", drawingPayload.payload()));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.DrawingObjectPayloadResult("payload", "Budget", null));
   }
 
   @Test

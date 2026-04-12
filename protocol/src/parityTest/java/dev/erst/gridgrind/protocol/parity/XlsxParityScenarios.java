@@ -1,10 +1,13 @@
 package dev.erst.gridgrind.protocol.parity;
 
+import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
@@ -101,7 +104,10 @@ public final class XlsxParityScenarios {
   static final String EXTERNAL_FORMULA = "poi-external-formula";
   static final String UDF_FORMULA = "poi-udf-formula";
   static final String FORMULA_LIFECYCLE = "poi-formula-lifecycle";
+  static final String DRAWING_AUTHORING = "gridgrind-drawing-authoring";
   static final String DRAWING_IMAGE = "poi-drawing-image";
+  static final String DRAWING_COMMENTS = "poi-drawing-comments";
+  static final String DRAWING_MERGED_IMAGE = "poi-drawing-merged-image";
   static final String CHART = "poi-chart";
   static final String PIVOT = "poi-pivot";
   static final String EMBEDDED_OBJECT = "poi-embedded-object";
@@ -128,7 +134,10 @@ public final class XlsxParityScenarios {
               case EXTERNAL_FORMULA -> materializeExternalFormulaWorkbook(temporaryRoot);
               case UDF_FORMULA -> materializeUdfFormulaWorkbook(temporaryRoot);
               case FORMULA_LIFECYCLE -> materializeFormulaLifecycleWorkbook(temporaryRoot);
+              case DRAWING_AUTHORING -> materializeDrawingAuthoringWorkbook(temporaryRoot);
               case DRAWING_IMAGE -> materializeDrawingWorkbook(temporaryRoot);
+              case DRAWING_COMMENTS -> materializeDrawingCommentsWorkbook(temporaryRoot);
+              case DRAWING_MERGED_IMAGE -> materializeDrawingMergedImageWorkbook(temporaryRoot);
               case CHART -> materializeChartWorkbook(temporaryRoot);
               case PIVOT -> materializePivotWorkbook(temporaryRoot);
               case EMBEDDED_OBJECT -> materializeEmbeddedObjectWorkbook(temporaryRoot);
@@ -339,7 +348,76 @@ public final class XlsxParityScenarios {
             int pictureIndex = workbook.addPicture(PNG_PIXEL_BYTES, Workbook.PICTURE_TYPE_PNG);
             XSSFDrawing drawing = sheet.createDrawingPatriarch();
             XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 3, 1, 6, 8);
-            drawing.createPicture(anchor, pictureIndex);
+            drawing
+                .createPicture(anchor, pictureIndex)
+                .getCTPicture()
+                .getNvPicPr()
+                .getCNvPr()
+                .setName("OpsPicture");
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeDrawingCommentsWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize drawing-comments parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(DRAWING_COMMENTS));
+          Path workbookPath = scenarioDirectory.resolve("drawing-comments.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Ops");
+            seedMatrix(sheet, 4, 4);
+            int pictureIndex = workbook.addPicture(PNG_PIXEL_BYTES, Workbook.PICTURE_TYPE_PNG);
+            XSSFDrawing drawing = sheet.createDrawingPatriarch();
+            XSSFClientAnchor pictureAnchor = drawing.createAnchor(0, 0, 0, 0, 3, 1, 6, 8);
+            drawing
+                .createPicture(pictureAnchor, pictureIndex)
+                .getCTPicture()
+                .getNvPicPr()
+                .getCNvPr()
+                .setName("OpsPicture");
+            XSSFClientAnchor commentAnchor = drawing.createAnchor(64, 24, 448, 96, 0, 0, 3, 3);
+            XSSFComment comment = drawing.createCellComment(commentAnchor);
+            comment.setString(new XSSFRichTextString("Pinned"));
+            comment.setAuthor("GridGrind");
+            sheet.getRow(0).getCell(0).setCellComment(comment);
+
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeDrawingMergedImageWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize drawing-merged-image parity workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(DRAWING_MERGED_IMAGE));
+          Path workbookPath = scenarioDirectory.resolve("drawing-merged-image.xlsx");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Ops");
+            seedMatrix(sheet, 8, 6);
+            sheet.addMergedRegion(CellRangeAddress.valueOf("B2:D4"));
+            int pictureIndex = workbook.addPicture(PNG_PIXEL_BYTES, Workbook.PICTURE_TYPE_PNG);
+            XSSFDrawing drawing = sheet.createDrawingPatriarch();
+            XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 1, 1, 5, 7);
+            drawing
+                .createPicture(anchor, pictureIndex)
+                .getCTPicture()
+                .getNvPicPr()
+                .getCNvPr()
+                .setName("OpsPicture");
             try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
               workbook.write(outputStream);
             }
@@ -449,12 +527,34 @@ public final class XlsxParityScenarios {
                     "payload.txt");
             XSSFDrawing drawing = sheet.createDrawingPatriarch();
             XSSFClientAnchor anchor = drawing.createAnchor(0, 0, 0, 0, 1, 1, 5, 10);
-            drawing.createObjectData(anchor, storageId, pictureIndex);
+            drawing
+                .createObjectData(anchor, storageId, pictureIndex)
+                .getCTShape()
+                .getNvSpPr()
+                .getCNvPr()
+                .setName("OpsEmbed");
             try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
               workbook.write(outputStream);
             }
           }
 
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializeDrawingAuthoringWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize GridGrind drawing authoring workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(DRAWING_AUTHORING));
+          Path workbookPath = scenarioDirectory.resolve("drawing-authoring.xlsx");
+          GridGrindResponse response =
+              new DefaultGridGrindRequestExecutor().execute(drawingAuthoringRequest(workbookPath));
+          if (!(response instanceof GridGrindResponse.Success)) {
+            throw new IllegalStateException(
+                "GridGrind drawing authoring parity workbook request must succeed: " + response);
+          }
           return new MaterializedScenario(workbookPath, Map.of());
         });
   }
@@ -975,6 +1075,69 @@ public final class XlsxParityScenarios {
                 new WorkbookOperation.EvaluateFormulas(),
                 new WorkbookOperation.ForceFormulaRecalculationOnOpen()),
             List.of()));
+  }
+
+  private static GridGrindRequest drawingAuthoringRequest(Path workbookPath) {
+    return new GridGrindRequest(
+        new GridGrindRequest.WorkbookSource.New(),
+        new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+        null,
+        List.of(
+            new WorkbookOperation.EnsureSheet("Ops"),
+            new WorkbookOperation.SetPicture(
+                "Ops",
+                new PictureInput(
+                    "OpsPicture",
+                    pictureDataInput(),
+                    twoCellAnchorInput(1, 1, 4, 6, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                    "Queue preview")),
+            new WorkbookOperation.SetShape(
+                "Ops",
+                new ShapeInput(
+                    "OpsShape",
+                    ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                    twoCellAnchorInput(5, 1, 8, 5, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                    "rect",
+                    "Queue")),
+            new WorkbookOperation.SetShape(
+                "Ops",
+                new ShapeInput(
+                    "OpsConnector",
+                    ExcelAuthoredDrawingShapeKind.CONNECTOR,
+                    twoCellAnchorInput(9, 1, 11, 4, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                    null,
+                    null)),
+            new WorkbookOperation.SetEmbeddedObject(
+                "Ops",
+                new EmbeddedObjectInput(
+                    "OpsEmbed",
+                    "Payload",
+                    "payload.txt",
+                    "payload.txt",
+                    Base64.getEncoder()
+                        .encodeToString(
+                            "GridGrind embedded payload".getBytes(StandardCharsets.UTF_8)),
+                    pictureDataInput(),
+                    twoCellAnchorInput(12, 1, 15, 6, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE))),
+            new WorkbookOperation.SetDrawingObjectAnchor(
+                "Ops",
+                "OpsPicture",
+                twoCellAnchorInput(6, 2, 9, 7, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE)),
+            new WorkbookOperation.DeleteDrawingObject("Ops", "OpsConnector")),
+        List.of());
+  }
+
+  private static PictureDataInput pictureDataInput() {
+    return new PictureDataInput(
+        ExcelPictureFormat.PNG, Base64.getEncoder().encodeToString(PNG_PIXEL_BYTES));
+  }
+
+  private static DrawingAnchorInput.TwoCell twoCellAnchorInput(
+      int fromColumn, int fromRow, int toColumn, int toRow, ExcelDrawingAnchorBehavior behavior) {
+    return new DrawingAnchorInput.TwoCell(
+        new DrawingMarkerInput(fromColumn, fromRow, 0, 0),
+        new DrawingMarkerInput(toColumn, toRow, 0, 0),
+        behavior);
   }
 
   private static GridGrindRequest roundTripRequest(GridGrindRequest request) {

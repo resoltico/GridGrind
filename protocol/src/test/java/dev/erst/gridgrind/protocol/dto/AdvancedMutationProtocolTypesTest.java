@@ -6,10 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -78,6 +81,117 @@ class AdvancedMutationProtocolTypesTest {
                 true,
                 List.of(new RichTextRunInput("Ada", null)),
                 null));
+  }
+
+  @Test
+  void drawingInputsNormalizeAndValidate() {
+    DrawingMarkerInput from = new DrawingMarkerInput(1, 2, 3, 4);
+    DrawingMarkerInput to = new DrawingMarkerInput(4, 6);
+    DrawingAnchorInput.TwoCell anchor =
+        new DrawingAnchorInput.TwoCell(from, to, ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    DrawingAnchorInput.TwoCell defaultAnchor = new DrawingAnchorInput.TwoCell(from, to, null);
+    PictureDataInput pictureData =
+        new PictureDataInput(
+            ExcelPictureFormat.PNG,
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
+    PictureInput picture = new PictureInput("OpsPicture", pictureData, anchor, "Queue preview");
+    ShapeInput shape =
+        new ShapeInput(
+            "OpsShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, anchor, " rect ", "Queue");
+    ShapeInput defaultShape =
+        new ShapeInput(
+            "DefaultShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, anchor, " ", null);
+    ShapeInput connector =
+        new ShapeInput("OpsConnector", ExcelAuthoredDrawingShapeKind.CONNECTOR, anchor, null, null);
+    EmbeddedObjectInput embeddedObject =
+        new EmbeddedObjectInput(
+            "OpsEmbed",
+            "Payload",
+            "payload.txt",
+            "payload.txt",
+            "cGF5bG9hZA==",
+            pictureData,
+            anchor);
+
+    assertEquals(4, to.columnIndex());
+    assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, anchor.behavior());
+    assertEquals(ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE, defaultAnchor.behavior());
+    assertEquals(ExcelPictureFormat.PNG, picture.image().format());
+    assertEquals("Queue preview", picture.description());
+    assertEquals("rect", shape.presetGeometryToken());
+    assertEquals("rect", defaultShape.presetGeometryToken());
+    assertEquals(ExcelAuthoredDrawingShapeKind.CONNECTOR, connector.kind());
+    assertEquals("payload.txt", embeddedObject.fileName());
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(-1, 0, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(0, -1, 0, 0));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(0, 0, -1, 0));
+    assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(0, 0, 0, -1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingAnchorInput.TwoCell(
+                new DrawingMarkerInput(1, 2, 0, 0), new DrawingMarkerInput(1, 1, 0, 0), null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingAnchorInput.TwoCell(
+                new DrawingMarkerInput(2, 2, 0, 0), new DrawingMarkerInput(1, 2, 0, 0), null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingAnchorInput.TwoCell(
+                new DrawingMarkerInput(1, 2, 0, 4), new DrawingMarkerInput(2, 2, 0, 3), null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new DrawingAnchorInput.TwoCell(
+                new DrawingMarkerInput(1, 2, 4, 0), new DrawingMarkerInput(1, 3, 3, 0), null));
+    assertThrows(NullPointerException.class, () -> new PictureDataInput(null, "cGF5bG9hZA=="));
+    assertThrows(
+        IllegalArgumentException.class, () -> new PictureDataInput(ExcelPictureFormat.PNG, " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new PictureDataInput(ExcelPictureFormat.PNG, "not-base64"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new PictureInput(" ", pictureData, anchor, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new PictureInput("OpsPicture", pictureData, anchor, " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ShapeInput(" ", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, anchor, "rect", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ShapeInput(
+                "OpsShape", ExcelAuthoredDrawingShapeKind.CONNECTOR, anchor, "rect", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ShapeInput(
+                "OpsShape", ExcelAuthoredDrawingShapeKind.CONNECTOR, anchor, null, "Connector"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ShapeInput(
+                "OpsShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, anchor, "rect", " "));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new EmbeddedObjectInput(
+                "OpsEmbed",
+                "Payload",
+                "payload.txt",
+                "payload.txt",
+                "not-base64",
+                pictureData,
+                anchor));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new EmbeddedObjectInput(
+                "OpsEmbed", "Payload", "payload.txt", " ", "cGF5bG9hZA==", pictureData, anchor));
   }
 
   @Test

@@ -127,6 +127,94 @@ class WorkbookReadResultConverterTest {
     assertInstanceOf(
         ConditionalFormattingRuleReport.Top10Rule.class,
         conditionalFormatting.conditionalFormattingBlocks().getFirst().rules().getFirst());
+
+    WorkbookReadResult.DrawingObjectsResult drawingObjects =
+        assertInstanceOf(
+            WorkbookReadResult.DrawingObjectsResult.class,
+            WorkbookReadResultConverter.toReadResult(
+                new dev.erst.gridgrind.excel.WorkbookReadResult.DrawingObjectsResult(
+                    "drawing-objects",
+                    "Budget",
+                    List.of(
+                        new ExcelDrawingObjectSnapshot.Picture(
+                            "OpsPicture",
+                            new ExcelDrawingAnchor.TwoCell(
+                                new ExcelDrawingMarker(1, 2, 3, 4),
+                                new ExcelDrawingMarker(4, 6, 7, 8),
+                                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
+                            ExcelPictureFormat.PNG,
+                            "image/png",
+                            68L,
+                            "abc123",
+                            null,
+                            null,
+                            "Queue preview"),
+                        new ExcelDrawingObjectSnapshot.Shape(
+                            "OpsShape",
+                            new ExcelDrawingAnchor.OneCell(
+                                new ExcelDrawingMarker(5, 6, 0, 0), 10L, 20L, null),
+                            ExcelDrawingShapeKind.SIMPLE_SHAPE,
+                            "rect",
+                            "Queue",
+                            0),
+                        new ExcelDrawingObjectSnapshot.EmbeddedObject(
+                            "OpsEmbed",
+                            new ExcelDrawingAnchor.Absolute(1L, 2L, 10L, 20L, null),
+                            ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                            "Payload",
+                            "payload.txt",
+                            "payload.txt",
+                            "application/octet-stream",
+                            7L,
+                            "def456",
+                            null,
+                            null,
+                            null)))));
+    WorkbookReadResult.DrawingObjectPayloadResult drawingPayload =
+        assertInstanceOf(
+            WorkbookReadResult.DrawingObjectPayloadResult.class,
+            WorkbookReadResultConverter.toReadResult(
+                new dev.erst.gridgrind.excel.WorkbookReadResult.DrawingObjectPayloadResult(
+                    "drawing-payload",
+                    "Budget",
+                    new ExcelDrawingObjectPayload.EmbeddedObject(
+                        "OpsEmbed",
+                        ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+                        "application/octet-stream",
+                        "payload.txt",
+                        "def456",
+                        new ExcelBinaryData(
+                            "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                        "Payload",
+                        "payload.txt"))));
+
+    assertEquals(3, drawingObjects.drawingObjects().size());
+    DrawingObjectReport.Picture picture =
+        assertInstanceOf(DrawingObjectReport.Picture.class, drawingObjects.drawingObjects().get(0));
+    assertEquals(ExcelPictureFormat.PNG, picture.format());
+    assertEquals(
+        ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE,
+        assertInstanceOf(DrawingAnchorReport.TwoCell.class, picture.anchor()).behavior());
+    assertInstanceOf(DrawingObjectReport.Shape.class, drawingObjects.drawingObjects().get(1));
+    assertInstanceOf(
+        DrawingObjectReport.EmbeddedObject.class, drawingObjects.drawingObjects().get(2));
+    assertEquals("cGF5bG9hZA==", drawingPayload.payload().base64Data());
+
+    DrawingObjectPayloadReport.Picture picturePayload =
+        assertInstanceOf(
+            DrawingObjectPayloadReport.Picture.class,
+            WorkbookReadResultConverter.toDrawingObjectPayloadReport(
+                new ExcelDrawingObjectPayload.Picture(
+                    "OpsPicture",
+                    ExcelPictureFormat.PNG,
+                    "image/png",
+                    "OpsPicture.png",
+                    "abc123",
+                    new ExcelBinaryData(
+                        "picture".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                    "Queue preview")));
+    assertEquals("OpsPicture.png", picturePayload.fileName());
+    assertEquals("cGljdHVyZQ==", picturePayload.base64Data());
   }
 
   private static ExcelCellSnapshot advancedCell() {

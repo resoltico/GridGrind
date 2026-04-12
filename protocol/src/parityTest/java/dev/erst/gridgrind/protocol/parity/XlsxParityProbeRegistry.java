@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -61,8 +62,12 @@ final class XlsxParityProbeRegistry {
       case "probe-formula-missing-workbook-policy" -> probeFormulaMissingWorkbookPolicy(context);
       case "probe-formula-udf" -> probeFormulaUdf(context);
       case "probe-formula-lifecycle" -> probeFormulaLifecycle(context);
-      case "probe-drawing-preservation" -> probeDrawingPreservation(context);
-      case "probe-embedded-object-preservation" -> probeEmbeddedObjectPreservation(context);
+      case "probe-drawing-readback" -> probeDrawingReadback(context);
+      case "probe-drawing-authoring" -> probeDrawingAuthoring(context);
+      case "probe-drawing-comment-coexistence" -> probeDrawingCommentCoexistence(context);
+      case "probe-drawing-merged-image-preservation" ->
+          probeDrawingMergedImagePreservation(context);
+      case "probe-embedded-object-platform" -> probeEmbeddedObjectPlatform(context);
       case "probe-chart-preservation" -> probeChartPreservation(context);
       case "probe-pivot-preservation" -> probePivotPreservation(context);
       case "probe-event-model-gap" -> probeEventModelGap(context);
@@ -1797,39 +1802,214 @@ final class XlsxParityProbeRegistry {
                 + clearedC1);
   }
 
-  private static ProbeResult probeDrawingPreservation(ProbeContext context) {
+  private static ProbeResult probeDrawingReadback(ProbeContext context) {
     XlsxParityScenarios.MaterializedScenario drawing =
-        context.copiedScenario(XlsxParityScenarios.DRAWING_IMAGE, "drawing-source");
-    XlsxParityOracle.DrawingSnapshot before = XlsxParityOracle.drawing(drawing.workbookPath());
-    Path outputPath = context.derivedWorkbook("drawing-preserved");
+        context.scenario(XlsxParityScenarios.DRAWING_IMAGE);
+    XlsxParityOracle.DrawingSheetSnapshot direct =
+        XlsxParityOracle.drawingSheet(drawing.workbookPath(), "Ops");
+    GridGrindResponse.Success success =
+        XlsxParityGridGrind.readWorkbook(
+            drawing.workbookPath(),
+            new WorkbookReadOperation.GetDrawingObjects("drawing", "Ops"),
+            new WorkbookReadOperation.GetDrawingObjectPayload("payload", "Ops", "OpsPicture"));
+    WorkbookReadResult.DrawingObjectsResult drawingObjects =
+        XlsxParityGridGrind.read(success, "drawing", WorkbookReadResult.DrawingObjectsResult.class);
+    WorkbookReadResult.DrawingObjectPayloadResult payload =
+        XlsxParityGridGrind.read(
+            success, "payload", WorkbookReadResult.DrawingObjectPayloadResult.class);
+    if (!XlsxParityGridGrind.hasReadType("GET_DRAWING_OBJECTS")
+        || !XlsxParityGridGrind.hasReadType("GET_DRAWING_OBJECT_PAYLOAD")) {
+      return fail("GridGrind is missing the Phase 5 drawing read types.");
+    }
+    if (direct.objects().size() != 1
+        || !(direct.objects().getFirst()
+            instanceof XlsxParityOracle.PictureDrawingObjectSnapshot picture)
+        || !direct.mergedRegions().isEmpty()
+        || !direct.comments().isEmpty()) {
+      return fail("Phase 5 drawing corpus workbook is not in the expected picture-only shape.");
+    }
+    if (drawingObjects.drawingObjects().size() != 1
+        || !(drawingObjects.drawingObjects().getFirst()
+            instanceof DrawingObjectReport.Picture reportPicture)
+        || !(payload.payload() instanceof DrawingObjectPayloadReport.Picture picturePayload)) {
+      return fail("GridGrind did not return the expected picture drawing reports.");
+    }
+    boolean matches =
+        "OpsPicture".equals(reportPicture.name())
+            && matchesAnchor(reportPicture.anchor(), picture.anchor())
+            && picture.pictureDigest().equals(reportPicture.sha256())
+            && picture.pictureDigest().equals(picturePayload.sha256());
+    return matches
+        ? pass("GridGrind reads existing picture-backed drawing objects and payloads losslessly.")
+        : fail("GridGrind drawing readback diverged from the direct POI picture oracle.");
+  }
+
+  private static ProbeResult probeDrawingAuthoring(ProbeContext context) {
+    XlsxParityScenarios.MaterializedScenario drawing =
+        context.scenario(XlsxParityScenarios.DRAWING_AUTHORING);
+    XlsxParityOracle.DrawingSheetSnapshot direct =
+        XlsxParityOracle.drawingSheet(drawing.workbookPath(), "Ops");
+    GridGrindResponse.Success success =
+        XlsxParityGridGrind.readWorkbook(
+            drawing.workbookPath(),
+            new WorkbookReadOperation.GetDrawingObjects("drawing", "Ops"),
+            new WorkbookReadOperation.GetDrawingObjectPayload(
+                "picture-payload", "Ops", "OpsPicture"),
+            new WorkbookReadOperation.GetDrawingObjectPayload("embed-payload", "Ops", "OpsEmbed"));
+    WorkbookReadResult.DrawingObjectsResult drawingObjects =
+        XlsxParityGridGrind.read(success, "drawing", WorkbookReadResult.DrawingObjectsResult.class);
+    WorkbookReadResult.DrawingObjectPayloadResult picturePayload =
+        XlsxParityGridGrind.read(
+            success, "picture-payload", WorkbookReadResult.DrawingObjectPayloadResult.class);
+    WorkbookReadResult.DrawingObjectPayloadResult embedPayload =
+        XlsxParityGridGrind.read(
+            success, "embed-payload", WorkbookReadResult.DrawingObjectPayloadResult.class);
+    if (!XlsxParityGridGrind.hasOperationType("SET_PICTURE")
+        || !XlsxParityGridGrind.hasOperationType("SET_SHAPE")
+        || !XlsxParityGridGrind.hasOperationType("SET_EMBEDDED_OBJECT")
+        || !XlsxParityGridGrind.hasOperationType("SET_DRAWING_OBJECT_ANCHOR")
+        || !XlsxParityGridGrind.hasOperationType("DELETE_DRAWING_OBJECT")
+        || !XlsxParityGridGrind.hasReadType("GET_DRAWING_OBJECTS")
+        || !XlsxParityGridGrind.hasReadType("GET_DRAWING_OBJECT_PAYLOAD")) {
+      return fail("GridGrind is missing the Phase 5 drawing mutation or read contract.");
+    }
+    if (!direct.mergedRegions().isEmpty() || !direct.comments().isEmpty()) {
+      return fail("GridGrind-authored Phase 5 drawing workbook contains unexpected extra state.");
+    }
+    List<String> directNames =
+        direct.objects().stream().map(XlsxParityOracle.DirectDrawingObjectSnapshot::name).toList();
+    List<String> reportedNames =
+        drawingObjects.drawingObjects().stream().map(DrawingObjectReport::name).toList();
+    if (!directNames.equals(List.of("OpsPicture", "OpsShape", "OpsEmbed"))
+        || !directNames.equals(reportedNames)) {
+      return fail(
+          "GridGrind-authored drawing workbook did not persist the expected final drawing order."
+              + " direct="
+              + directNames
+              + " reported="
+              + reportedNames);
+    }
+
+    XlsxParityOracle.PictureDrawingObjectSnapshot directPicture =
+        directObject(direct, "OpsPicture", XlsxParityOracle.PictureDrawingObjectSnapshot.class);
+    XlsxParityOracle.ShapeDrawingObjectSnapshot directShape =
+        directObject(direct, "OpsShape", XlsxParityOracle.ShapeDrawingObjectSnapshot.class);
+    XlsxParityOracle.EmbeddedObjectDrawingObjectSnapshot directEmbedded =
+        directObject(
+            direct, "OpsEmbed", XlsxParityOracle.EmbeddedObjectDrawingObjectSnapshot.class);
+    DrawingObjectReport.Picture reportPicture =
+        drawingObjectReport(drawingObjects, "OpsPicture", DrawingObjectReport.Picture.class);
+    DrawingObjectReport.Shape reportShape =
+        drawingObjectReport(drawingObjects, "OpsShape", DrawingObjectReport.Shape.class);
+    DrawingObjectReport.EmbeddedObject reportEmbedded =
+        drawingObjectReport(drawingObjects, "OpsEmbed", DrawingObjectReport.EmbeddedObject.class);
+    if (!(picturePayload.payload()
+            instanceof DrawingObjectPayloadReport.Picture picturePayloadReport)
+        || !(embedPayload.payload()
+            instanceof DrawingObjectPayloadReport.EmbeddedObject embedPayloadReport)) {
+      return fail("GridGrind-authored drawing payload reads returned unexpected report types.");
+    }
+
+    boolean matches =
+        matchesAnchor(reportPicture.anchor(), directPicture.anchor())
+            && directPicture.pictureDigest().equals(reportPicture.sha256())
+            && directPicture.pictureDigest().equals(picturePayloadReport.sha256())
+            && matchesAnchor(reportShape.anchor(), directShape.anchor())
+            && "SIMPLE_SHAPE".equals(directShape.kind())
+            && reportShape.kind() == dev.erst.gridgrind.excel.ExcelDrawingShapeKind.SIMPLE_SHAPE
+            && Objects.equals(directShape.presetGeometryToken(), reportShape.presetGeometryToken())
+            && Objects.equals(directShape.text(), reportShape.text())
+            && matchesAnchor(reportEmbedded.anchor(), directEmbedded.anchor())
+            && directEmbedded.objectDigest().equals(reportEmbedded.sha256())
+            && directEmbedded.objectDigest().equals(embedPayloadReport.sha256())
+            && Objects.equals(directEmbedded.fileName(), reportEmbedded.fileName());
+    return matches
+        ? pass(
+            "GridGrind authors, mutates, persists, and rereads Phase 5 drawing objects with direct POI agreement.")
+        : fail("GridGrind-authored drawing workbook diverged from the direct POI oracle.");
+  }
+
+  private static ProbeResult probeDrawingCommentCoexistence(ProbeContext context) {
+    XlsxParityScenarios.MaterializedScenario drawing =
+        context.copiedScenario(XlsxParityScenarios.DRAWING_COMMENTS, "drawing-comments-source");
+    XlsxParityOracle.DrawingSheetSnapshot before =
+        XlsxParityOracle.drawingSheet(drawing.workbookPath(), "Ops");
+    Path outputPath = context.derivedWorkbook("drawing-comments-preserved");
     XlsxParityGridGrind.mutateWorkbook(
         drawing.workbookPath(),
         outputPath,
         List.of(
-            new WorkbookOperation.EnsureSheet("Scratch"),
-            new WorkbookOperation.SetCell("Scratch", "A1", new CellInput.Text("Touch"))));
-    XlsxParityOracle.DrawingSnapshot after = XlsxParityOracle.drawing(outputPath);
+            new WorkbookOperation.SetComment(
+                "Ops", "B2", new CommentInput("Transient", "GridGrind", false)),
+            new WorkbookOperation.ClearComment("Ops", "B2")));
+    XlsxParityOracle.DrawingSheetSnapshot after = XlsxParityOracle.drawingSheet(outputPath, "Ops");
     return before.equals(after)
-        ? pass("Unrelated GridGrind edits preserve existing pictures and anchors.")
-        : fail("Unrelated GridGrind edits changed picture-backed drawing state.");
+        ? pass(
+            "Comment operations coexist with drawing parts without corrupting pictures or comments.")
+        : fail("Comment operations changed drawing-backed or comment-backed sheet state.");
   }
 
-  private static ProbeResult probeEmbeddedObjectPreservation(ProbeContext context) {
+  private static ProbeResult probeDrawingMergedImagePreservation(ProbeContext context) {
+    XlsxParityScenarios.MaterializedScenario drawing =
+        context.copiedScenario(
+            XlsxParityScenarios.DRAWING_MERGED_IMAGE, "drawing-merged-image-source");
+    XlsxParityOracle.DrawingSheetSnapshot before =
+        XlsxParityOracle.drawingSheet(drawing.workbookPath(), "Ops");
+    Path outputPath = context.derivedWorkbook("drawing-merged-image-preserved");
+    XlsxParityGridGrind.mutateWorkbook(
+        drawing.workbookPath(),
+        outputPath,
+        List.of(new WorkbookOperation.SetCell("Ops", "F8", new CellInput.Text("Touch"))));
+    XlsxParityOracle.DrawingSheetSnapshot after = XlsxParityOracle.drawingSheet(outputPath, "Ops");
+    return !before.mergedRegions().isEmpty() && before.equals(after)
+        ? pass("Unrelated edits preserve pictures that coexist with merged regions.")
+        : fail("GridGrind changed merged-region or picture-backed drawing state.");
+  }
+
+  private static ProbeResult probeEmbeddedObjectPlatform(ProbeContext context) {
     XlsxParityScenarios.MaterializedScenario embedded =
         context.copiedScenario(XlsxParityScenarios.EMBEDDED_OBJECT, "embedded-object-source");
-    XlsxParityOracle.EmbeddedObjectSnapshot before =
-        XlsxParityOracle.embeddedObject(embedded.workbookPath());
-    Path outputPath = context.derivedWorkbook("embedded-preserved");
+    XlsxParityOracle.DrawingSheetSnapshot before =
+        XlsxParityOracle.drawingSheet(embedded.workbookPath(), "Objects");
+    GridGrindResponse.Success success =
+        XlsxParityGridGrind.readWorkbook(
+            embedded.workbookPath(),
+            new WorkbookReadOperation.GetDrawingObjects("drawing", "Objects"),
+            new WorkbookReadOperation.GetDrawingObjectPayload("payload", "Objects", "OpsEmbed"));
+    WorkbookReadResult.DrawingObjectsResult drawingObjects =
+        XlsxParityGridGrind.read(success, "drawing", WorkbookReadResult.DrawingObjectsResult.class);
+    WorkbookReadResult.DrawingObjectPayloadResult payload =
+        XlsxParityGridGrind.read(
+            success, "payload", WorkbookReadResult.DrawingObjectPayloadResult.class);
+    Path outputPath = context.derivedWorkbook("embedded-object-preserved");
     XlsxParityGridGrind.mutateWorkbook(
         embedded.workbookPath(),
         outputPath,
-        List.of(
-            new WorkbookOperation.EnsureSheet("Scratch"),
-            new WorkbookOperation.SetCell("Scratch", "A1", new CellInput.Text("Touch"))));
-    XlsxParityOracle.EmbeddedObjectSnapshot after = XlsxParityOracle.embeddedObject(outputPath);
-    return before.equals(after)
-        ? pass("Unrelated GridGrind edits preserve embedded OLE objects.")
-        : fail("Unrelated GridGrind edits changed embedded-object package state.");
+        List.of(new WorkbookOperation.SetCell("Objects", "G1", new CellInput.Text("Touch"))));
+    XlsxParityOracle.DrawingSheetSnapshot after =
+        XlsxParityOracle.drawingSheet(outputPath, "Objects");
+    if (!XlsxParityGridGrind.hasReadType("GET_DRAWING_OBJECTS")
+        || !XlsxParityGridGrind.hasReadType("GET_DRAWING_OBJECT_PAYLOAD")) {
+      return fail("GridGrind is missing the Phase 5 embedded-object read types.");
+    }
+    if (before.objects().size() != 1
+        || !(before.objects().getFirst()
+            instanceof XlsxParityOracle.EmbeddedObjectDrawingObjectSnapshot directEmbedded)
+        || !(drawingObjects.drawingObjects().getFirst()
+            instanceof DrawingObjectReport.EmbeddedObject reportEmbedded)
+        || !(payload.payload()
+            instanceof DrawingObjectPayloadReport.EmbeddedObject payloadEmbedded)) {
+      return fail("Embedded-object parity corpus did not surface the expected single OLE object.");
+    }
+    boolean readMatches =
+        "OpsEmbed".equals(reportEmbedded.name())
+            && matchesAnchor(reportEmbedded.anchor(), directEmbedded.anchor())
+            && directEmbedded.objectDigest().equals(reportEmbedded.sha256())
+            && directEmbedded.objectDigest().equals(payloadEmbedded.sha256())
+            && Objects.equals(directEmbedded.fileName(), reportEmbedded.fileName());
+    return readMatches && before.equals(after)
+        ? pass("GridGrind reads and preserves embedded OLE payloads without package drift.")
+        : fail("GridGrind embedded-object parity diverged from the direct POI oracle.");
   }
 
   private static ProbeResult probeChartPreservation(ProbeContext context) {
@@ -2251,6 +2431,46 @@ final class XlsxParityProbeRegistry {
                         column.totalsRowFunction(),
                         column.calculatedColumnFormula()))
         .toList();
+  }
+
+  private static boolean matchesAnchor(
+      DrawingAnchorReport anchor, XlsxParityOracle.DrawingAnchorSnapshot direct) {
+    if (!(anchor instanceof DrawingAnchorReport.TwoCell twoCell)) {
+      return false;
+    }
+    return twoCell.from().columnIndex() == direct.col1()
+        && twoCell.from().rowIndex() == direct.row1()
+        && twoCell.to().columnIndex() == direct.col2()
+        && twoCell.to().rowIndex() == direct.row2();
+  }
+
+  private static <T extends XlsxParityOracle.DirectDrawingObjectSnapshot> T directObject(
+      XlsxParityOracle.DrawingSheetSnapshot snapshot, String name, Class<T> type) {
+    return snapshot.objects().stream()
+        .filter(candidate -> candidate.name().equals(name))
+        .findFirst()
+        .filter(type::isInstance)
+        .map(type::cast)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Missing direct oracle drawing object "
+                        + name
+                        + " as "
+                        + type.getSimpleName()));
+  }
+
+  private static <T extends DrawingObjectReport> T drawingObjectReport(
+      WorkbookReadResult.DrawingObjectsResult result, String name, Class<T> type) {
+    return result.drawingObjects().stream()
+        .filter(candidate -> candidate.name().equals(name))
+        .findFirst()
+        .filter(type::isInstance)
+        .map(type::cast)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Missing GridGrind drawing report " + name + " as " + type.getSimpleName()));
   }
 
   private static boolean matchesColorDescriptor(

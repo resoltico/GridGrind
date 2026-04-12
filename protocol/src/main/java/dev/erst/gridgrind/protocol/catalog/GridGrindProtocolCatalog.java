@@ -299,6 +299,42 @@ public final class GridGrindProtocolCatalog {
               "CLEAR_COMMENT",
               "Remove the comment from one cell; no-op when the cell does not physically exist."),
           descriptor(
+              WorkbookOperation.SetPicture.class,
+              "SET_PICTURE",
+              "Create or replace one named picture on a sheet."
+                  + " anchor uses the explicit DrawingAnchorInput discriminated shape and"
+                  + " currently supports TWO_CELL anchors."
+                  + " Reusing an existing object name replaces that picture authoritatively."),
+          descriptor(
+              WorkbookOperation.SetShape.class,
+              "SET_SHAPE",
+              "Create or replace one named authored drawing shape on a sheet."
+                  + " kind currently supports only SIMPLE_SHAPE and CONNECTOR."
+                  + " SIMPLE_SHAPE defaults presetGeometryToken to rect when omitted."
+                  + " anchor uses the explicit DrawingAnchorInput discriminated shape and"
+                  + " currently supports TWO_CELL anchors."),
+          descriptor(
+              WorkbookOperation.SetEmbeddedObject.class,
+              "SET_EMBEDDED_OBJECT",
+              "Create or replace one named embedded OLE package on a sheet."
+                  + " previewImage supplies the visible preview raster required by Excel"
+                  + " and Apache POI."
+                  + " anchor uses the explicit DrawingAnchorInput discriminated shape and"
+                  + " currently supports TWO_CELL anchors."),
+          descriptor(
+              WorkbookOperation.SetDrawingObjectAnchor.class,
+              "SET_DRAWING_OBJECT_ANCHOR",
+              "Move one existing named picture, connector, simple shape, or embedded object"
+                  + " to a new authored anchor."
+                  + " anchor currently supports only TWO_CELL anchors."
+                  + " Read-only loaded families such as groups and graphic frames are rejected."),
+          descriptor(
+              WorkbookOperation.DeleteDrawingObject.class,
+              "DELETE_DRAWING_OBJECT",
+              "Delete one existing named drawing object from the sheet."
+                  + " Package relationships for picture media and embedded-object parts are"
+                  + " cleaned up when no other drawing object still references them."),
+          descriptor(
               WorkbookOperation.ApplyStyle.class,
               "APPLY_STYLE",
               "Apply a style patch to every cell in a range."
@@ -474,6 +510,20 @@ public final class GridGrindProtocolCatalog {
               WorkbookReadOperation.GetComments.class,
               "GET_COMMENTS",
               "Return comment metadata for selected cells."),
+          descriptor(
+              WorkbookReadOperation.GetDrawingObjects.class,
+              "GET_DRAWING_OBJECTS",
+              "Return factual drawing-object metadata for one sheet."
+                  + " Read families include pictures, simple shapes, connectors, groups,"
+                  + " graphic frames, and embedded objects with truthful anchor and package"
+                  + " facts."),
+          descriptor(
+              WorkbookReadOperation.GetDrawingObjectPayload.class,
+              "GET_DRAWING_OBJECT_PAYLOAD",
+              "Return the extracted binary payload for one existing named picture or embedded"
+                  + " object."
+                  + " Non-binary drawing shapes such as connectors and simple shapes are"
+                  + " rejected."),
           descriptor(
               WorkbookReadOperation.GetSheetLayout.class,
               "GET_SHEET_LAYOUT",
@@ -745,6 +795,16 @@ public final class GridGrindProtocolCatalog {
                       "SHEET_SCOPE",
                       "Match the sheet-scoped named range on one sheet."))),
           nestedTypeGroup(
+              "drawingAnchorInputTypes",
+              DrawingAnchorInput.class,
+              List.of(
+                  descriptor(
+                      DrawingAnchorInput.TwoCell.class,
+                      "TWO_CELL",
+                      "Authored two-cell drawing anchor with explicit start and end markers."
+                          + " behavior defaults to MOVE_AND_RESIZE when omitted.",
+                      "behavior"))),
+          nestedTypeGroup(
               "fontHeightTypes",
               FontHeightInput.class,
               List.of(
@@ -965,6 +1025,40 @@ public final class GridGrindProtocolCatalog {
               FormulaCellTargetInput.class,
               "FormulaCellTargetInput",
               "One explicit formula-cell target used by EVALUATE_FORMULA_CELLS.",
+              List.of()),
+          plainTypeDescriptor(
+              "drawingMarkerInputType",
+              DrawingMarkerInput.class,
+              "DrawingMarkerInput",
+              "One zero-based drawing marker with explicit column, row, and in-cell offsets.",
+              List.of()),
+          plainTypeDescriptor(
+              "pictureDataInputType",
+              PictureDataInput.class,
+              "PictureDataInput",
+              "One picture payload with explicit format and base64-encoded binary data.",
+              List.of()),
+          plainTypeDescriptor(
+              "pictureInputType",
+              PictureInput.class,
+              "PictureInput",
+              "Named picture-authoring payload for SET_PICTURE.",
+              List.of("description")),
+          plainTypeDescriptor(
+              "shapeInputType",
+              ShapeInput.class,
+              "ShapeInput",
+              "Named simple-shape or connector authoring payload for SET_SHAPE."
+                  + " kind is limited to the authored drawing shape family."
+                  + " presetGeometryToken defaults to rect for SIMPLE_SHAPE when omitted.",
+              List.of("presetGeometryToken", "text")),
+          plainTypeDescriptor(
+              "embeddedObjectInputType",
+              EmbeddedObjectInput.class,
+              "EmbeddedObjectInput",
+              "Named embedded-object authoring payload for SET_EMBEDDED_OBJECT."
+                  + " base64Data holds the embedded package bytes and previewImage holds the"
+                  + " visible preview raster.",
               List.of()),
           plainTypeDescriptor(
               "commentInputType",

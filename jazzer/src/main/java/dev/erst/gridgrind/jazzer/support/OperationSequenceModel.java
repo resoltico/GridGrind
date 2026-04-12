@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
@@ -11,6 +13,10 @@ import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelDataValidationPrompt;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.ExcelDrawingMarker;
+import dev.erst.gridgrind.excel.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.ExcelFormulaCellTarget;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -18,10 +24,13 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPictureDefinition;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelPrintLayout;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
+import dev.erst.gridgrind.excel.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -39,6 +48,9 @@ import dev.erst.gridgrind.protocol.dto.DataValidationInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationPromptInput;
 import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
 import dev.erst.gridgrind.protocol.dto.DifferentialStyleInput;
+import dev.erst.gridgrind.protocol.dto.DrawingAnchorInput;
+import dev.erst.gridgrind.protocol.dto.DrawingMarkerInput;
+import dev.erst.gridgrind.protocol.dto.EmbeddedObjectInput;
 import dev.erst.gridgrind.protocol.dto.FormulaCellTargetInput;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.HeaderFooterTextInput;
@@ -48,6 +60,8 @@ import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.dto.NamedRangeSelector;
 import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.dto.PaneInput;
+import dev.erst.gridgrind.protocol.dto.PictureDataInput;
+import dev.erst.gridgrind.protocol.dto.PictureInput;
 import dev.erst.gridgrind.protocol.dto.PrintAreaInput;
 import dev.erst.gridgrind.protocol.dto.PrintLayoutInput;
 import dev.erst.gridgrind.protocol.dto.PrintScalingInput;
@@ -55,6 +69,7 @@ import dev.erst.gridgrind.protocol.dto.PrintTitleColumnsInput;
 import dev.erst.gridgrind.protocol.dto.PrintTitleRowsInput;
 import dev.erst.gridgrind.protocol.dto.RangeSelection;
 import dev.erst.gridgrind.protocol.dto.RowSpanInput;
+import dev.erst.gridgrind.protocol.dto.ShapeInput;
 import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
 import dev.erst.gridgrind.protocol.dto.SheetSelection;
@@ -65,9 +80,11 @@ import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
@@ -75,6 +92,13 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** Builds bounded protocol requests and workbook command sequences for Jazzer harnesses. */
 public final class OperationSequenceModel {
+  private static final String DRAWING_PICTURE_NAME = "OpsPicture";
+  private static final String DRAWING_SHAPE_NAME = "OpsShape";
+  private static final String DRAWING_CONNECTOR_NAME = "OpsConnector";
+  private static final String DRAWING_EMBEDDED_OBJECT_NAME = "OpsEmbed";
+  private static final String PNG_PIXEL_BASE64 =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
+
   private OperationSequenceModel() {}
 
   /** Returns a bounded protocol workflow plus any owned local scratch paths it created. */
@@ -230,6 +254,15 @@ public final class OperationSequenceModel {
             case 0x3 ->
                 new WorkbookOperation.ClearComment(
                     targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
+            case 0x4 -> new WorkbookOperation.SetPicture(targetSheet, nextPictureInput(data));
+            case 0x5 -> new WorkbookOperation.SetShape(targetSheet, nextShapeInput(data));
+            case 0x6 ->
+                new WorkbookOperation.SetEmbeddedObject(targetSheet, nextEmbeddedObjectInput(data));
+            case 0x7 ->
+                new WorkbookOperation.SetDrawingObjectAnchor(
+                    targetSheet, nextDrawingObjectName(data), nextDrawingAnchorInput(data));
+            case 0x8 ->
+                new WorkbookOperation.DeleteDrawingObject(targetSheet, nextDrawingObjectName(data));
             default ->
                 new WorkbookOperation.ApplyStyle(
                     targetSheet,
@@ -447,6 +480,17 @@ public final class OperationSequenceModel {
             case 0x3 ->
                 new WorkbookCommand.ClearComment(
                     targetSheet, FuzzDataDecoders.nextNonBlankCellAddress(data, validAddress));
+            case 0x4 ->
+                new WorkbookCommand.SetPicture(targetSheet, nextExcelPictureDefinition(data));
+            case 0x5 -> new WorkbookCommand.SetShape(targetSheet, nextExcelShapeDefinition(data));
+            case 0x6 ->
+                new WorkbookCommand.SetEmbeddedObject(
+                    targetSheet, nextExcelEmbeddedObjectDefinition(data));
+            case 0x7 ->
+                new WorkbookCommand.SetDrawingObjectAnchor(
+                    targetSheet, nextDrawingObjectName(data), nextExcelDrawingAnchor(data));
+            case 0x8 ->
+                new WorkbookCommand.DeleteDrawingObject(targetSheet, nextDrawingObjectName(data));
             default ->
                 new WorkbookCommand.ApplyStyle(
                     targetSheet,
@@ -625,8 +669,12 @@ public final class OperationSequenceModel {
             case 0x2 ->
                 new WorkbookReadOperation.GetComments(
                     requestId, targetSheet, nextCellSelection(data, validAddress));
-            case 0x3 -> new WorkbookReadOperation.GetSheetLayout(requestId, targetSheet);
-            case 0x4 -> new WorkbookReadOperation.GetPrintLayout(requestId, targetSheet);
+            case 0x3 -> new WorkbookReadOperation.GetDrawingObjects(requestId, targetSheet);
+            case 0x4 ->
+                new WorkbookReadOperation.GetDrawingObjectPayload(
+                    requestId, targetSheet, nextDrawingBinaryObjectName(data));
+            case 0x5 -> new WorkbookReadOperation.GetSheetLayout(requestId, targetSheet);
+            case 0x6 -> new WorkbookReadOperation.GetPrintLayout(requestId, targetSheet);
             default ->
                 new WorkbookReadOperation.GetFormulaSurface(
                     requestId, nextSheetSelection(data, primarySheet, secondarySheet));
@@ -1071,6 +1119,133 @@ public final class OperationSequenceModel {
   private static CommentInput nextCommentInput(GridGrindFuzzData data) {
     return new CommentInput(
         "Note " + nextNamedRangeName(data, true), "GridGrind", data.consumeBoolean());
+  }
+
+  private static PictureInput nextPictureInput(GridGrindFuzzData data) {
+    return new PictureInput(
+        DRAWING_PICTURE_NAME,
+        nextPictureDataInput(),
+        nextDrawingAnchorInput(data),
+        data.consumeBoolean() ? "Queue preview" : null);
+  }
+
+  private static ShapeInput nextShapeInput(GridGrindFuzzData data) {
+    if (data.consumeBoolean()) {
+      return new ShapeInput(
+          DRAWING_SHAPE_NAME,
+          ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+          nextDrawingAnchorInput(data),
+          data.consumeBoolean() ? "roundRect" : "rect",
+          data.consumeBoolean() ? "Queue" : null);
+    }
+    return new ShapeInput(
+        DRAWING_CONNECTOR_NAME,
+        ExcelAuthoredDrawingShapeKind.CONNECTOR,
+        nextDrawingAnchorInput(data),
+        null,
+        null);
+  }
+
+  private static EmbeddedObjectInput nextEmbeddedObjectInput(GridGrindFuzzData data) {
+    return new EmbeddedObjectInput(
+        DRAWING_EMBEDDED_OBJECT_NAME,
+        "Ops payload",
+        "ops-payload.txt",
+        "open",
+        Base64.getEncoder()
+            .encodeToString(
+                ("GridGrind payload " + data.consumeInt(0, 9)).getBytes(StandardCharsets.UTF_8)),
+        nextPictureDataInput(),
+        nextDrawingAnchorInput(data));
+  }
+
+  private static DrawingAnchorInput.TwoCell nextDrawingAnchorInput(GridGrindFuzzData data) {
+    int firstColumn = data.consumeInt(0, 4);
+    int firstRow = data.consumeInt(0, 8);
+    int lastColumn = data.consumeInt(firstColumn + 1, firstColumn + 3);
+    int lastRow = data.consumeInt(firstRow + 1, firstRow + 4);
+    return new DrawingAnchorInput.TwoCell(
+        new DrawingMarkerInput(firstColumn, firstRow, 0, 0),
+        new DrawingMarkerInput(lastColumn, lastRow, 0, 0),
+        nextDrawingAnchorBehavior(data));
+  }
+
+  private static PictureDataInput nextPictureDataInput() {
+    return new PictureDataInput(ExcelPictureFormat.PNG, PNG_PIXEL_BASE64);
+  }
+
+  private static ExcelPictureDefinition nextExcelPictureDefinition(GridGrindFuzzData data) {
+    return new ExcelPictureDefinition(
+        DRAWING_PICTURE_NAME,
+        new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+        ExcelPictureFormat.PNG,
+        nextExcelDrawingAnchor(data),
+        data.consumeBoolean() ? "Queue preview" : null);
+  }
+
+  private static ExcelShapeDefinition nextExcelShapeDefinition(GridGrindFuzzData data) {
+    if (data.consumeBoolean()) {
+      return new ExcelShapeDefinition(
+          DRAWING_SHAPE_NAME,
+          ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+          nextExcelDrawingAnchor(data),
+          data.consumeBoolean() ? "roundRect" : "rect",
+          data.consumeBoolean() ? "Queue" : null);
+    }
+    return new ExcelShapeDefinition(
+        DRAWING_CONNECTOR_NAME,
+        ExcelAuthoredDrawingShapeKind.CONNECTOR,
+        nextExcelDrawingAnchor(data),
+        null,
+        null);
+  }
+
+  private static ExcelEmbeddedObjectDefinition nextExcelEmbeddedObjectDefinition(
+      GridGrindFuzzData data) {
+    return new ExcelEmbeddedObjectDefinition(
+        DRAWING_EMBEDDED_OBJECT_NAME,
+        "Ops payload",
+        "ops-payload.txt",
+        "open",
+        new ExcelBinaryData(
+            ("GridGrind payload " + data.consumeInt(0, 9)).getBytes(StandardCharsets.UTF_8)),
+        ExcelPictureFormat.PNG,
+        new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+        nextExcelDrawingAnchor(data));
+  }
+
+  private static ExcelDrawingAnchor.TwoCell nextExcelDrawingAnchor(GridGrindFuzzData data) {
+    DrawingAnchorInput.TwoCell anchor = nextDrawingAnchorInput(data);
+    return new ExcelDrawingAnchor.TwoCell(
+        new ExcelDrawingMarker(
+            anchor.from().columnIndex(),
+            anchor.from().rowIndex(),
+            anchor.from().dx(),
+            anchor.from().dy()),
+        new ExcelDrawingMarker(
+            anchor.to().columnIndex(), anchor.to().rowIndex(), anchor.to().dx(), anchor.to().dy()),
+        anchor.behavior());
+  }
+
+  private static ExcelDrawingAnchorBehavior nextDrawingAnchorBehavior(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data)) & 0x3) {
+      case 0 -> ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE;
+      case 1 -> ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE;
+      default -> ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE;
+    };
+  }
+
+  private static String nextDrawingObjectName(GridGrindFuzzData data) {
+    return switch (selectorSlot(nextSelectorByte(data)) & 0x3) {
+      case 0 -> DRAWING_PICTURE_NAME;
+      case 1 -> DRAWING_SHAPE_NAME;
+      case 2 -> DRAWING_CONNECTOR_NAME;
+      default -> DRAWING_EMBEDDED_OBJECT_NAME;
+    };
+  }
+
+  private static String nextDrawingBinaryObjectName(GridGrindFuzzData data) {
+    return data.consumeBoolean() ? DRAWING_PICTURE_NAME : DRAWING_EMBEDDED_OBJECT_NAME;
   }
 
   private static DataValidationInput nextDataValidationInput(GridGrindFuzzData data) {

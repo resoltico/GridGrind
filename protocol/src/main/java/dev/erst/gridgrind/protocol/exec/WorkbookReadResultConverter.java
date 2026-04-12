@@ -3,6 +3,7 @@ package dev.erst.gridgrind.protocol.exec;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
+import java.util.Base64;
 import java.util.List;
 
 /** Converts workbook-core read results into protocol response shapes. */
@@ -62,6 +63,18 @@ final class WorkbookReadResultConverter {
               comments.comments().stream()
                   .map(WorkbookReadResultConverter::toCellCommentReport)
                   .toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.DrawingObjectsResult drawingObjects ->
+          new WorkbookReadResult.DrawingObjectsResult(
+              drawingObjects.requestId(),
+              drawingObjects.sheetName(),
+              drawingObjects.drawingObjects().stream()
+                  .map(WorkbookReadResultConverter::toDrawingObjectReport)
+                  .toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.DrawingObjectPayloadResult drawingPayload ->
+          new WorkbookReadResult.DrawingObjectPayloadResult(
+              drawingPayload.requestId(),
+              drawingPayload.sheetName(),
+              toDrawingObjectPayloadReport(drawingPayload.payload()));
       case dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayoutResult sheetLayout ->
           new WorkbookReadResult.SheetLayoutResult(
               sheetLayout.requestId(), toSheetLayoutReport(sheetLayout.layout()));
@@ -216,6 +229,97 @@ final class WorkbookReadResultConverter {
       return null;
     }
     return new GridGrindResponse.CommentReport(comment.text(), comment.author(), comment.visible());
+  }
+
+  static DrawingObjectReport toDrawingObjectReport(ExcelDrawingObjectSnapshot snapshot) {
+    return switch (snapshot) {
+      case ExcelDrawingObjectSnapshot.Picture picture ->
+          new DrawingObjectReport.Picture(
+              picture.name(),
+              toDrawingAnchorReport(picture.anchor()),
+              picture.format(),
+              picture.contentType(),
+              picture.byteSize(),
+              picture.sha256(),
+              picture.widthPixels(),
+              picture.heightPixels(),
+              picture.description());
+      case ExcelDrawingObjectSnapshot.Shape shape ->
+          new DrawingObjectReport.Shape(
+              shape.name(),
+              toDrawingAnchorReport(shape.anchor()),
+              shape.kind(),
+              shape.presetGeometryToken(),
+              shape.text(),
+              shape.childCount());
+      case ExcelDrawingObjectSnapshot.EmbeddedObject embeddedObject ->
+          new DrawingObjectReport.EmbeddedObject(
+              embeddedObject.name(),
+              toDrawingAnchorReport(embeddedObject.anchor()),
+              embeddedObject.packagingKind(),
+              embeddedObject.label(),
+              embeddedObject.fileName(),
+              embeddedObject.command(),
+              embeddedObject.contentType(),
+              embeddedObject.byteSize(),
+              embeddedObject.sha256(),
+              embeddedObject.previewFormat(),
+              embeddedObject.previewByteSize(),
+              embeddedObject.previewSha256());
+    };
+  }
+
+  static DrawingObjectPayloadReport toDrawingObjectPayloadReport(
+      ExcelDrawingObjectPayload payload) {
+    return switch (payload) {
+      case ExcelDrawingObjectPayload.Picture picture ->
+          new DrawingObjectPayloadReport.Picture(
+              picture.name(),
+              picture.format(),
+              picture.contentType(),
+              picture.fileName(),
+              picture.sha256(),
+              Base64.getEncoder().encodeToString(picture.data().bytes()),
+              picture.description());
+      case ExcelDrawingObjectPayload.EmbeddedObject embeddedObject ->
+          new DrawingObjectPayloadReport.EmbeddedObject(
+              embeddedObject.name(),
+              embeddedObject.packagingKind(),
+              embeddedObject.contentType(),
+              embeddedObject.fileName(),
+              embeddedObject.sha256(),
+              Base64.getEncoder().encodeToString(embeddedObject.data().bytes()),
+              embeddedObject.label(),
+              embeddedObject.command());
+    };
+  }
+
+  static DrawingAnchorReport toDrawingAnchorReport(ExcelDrawingAnchor anchor) {
+    return switch (anchor) {
+      case ExcelDrawingAnchor.TwoCell twoCell ->
+          new DrawingAnchorReport.TwoCell(
+              toDrawingMarkerReport(twoCell.from()),
+              toDrawingMarkerReport(twoCell.to()),
+              twoCell.behavior());
+      case ExcelDrawingAnchor.OneCell oneCell ->
+          new DrawingAnchorReport.OneCell(
+              toDrawingMarkerReport(oneCell.from()),
+              oneCell.widthEmu(),
+              oneCell.heightEmu(),
+              oneCell.behavior());
+      case ExcelDrawingAnchor.Absolute absolute ->
+          new DrawingAnchorReport.Absolute(
+              absolute.xEmu(),
+              absolute.yEmu(),
+              absolute.widthEmu(),
+              absolute.heightEmu(),
+              absolute.behavior());
+    };
+  }
+
+  static DrawingMarkerReport toDrawingMarkerReport(ExcelDrawingMarker marker) {
+    return new DrawingMarkerReport(
+        marker.columnIndex(), marker.rowIndex(), marker.dx(), marker.dy());
   }
 
   /** Converts workbook-core workbook-protection state into the protocol response shape. */

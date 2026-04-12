@@ -202,6 +202,60 @@ class ExcelWorkbookIntrospectorTest {
   }
 
   @Test
+  void executesDrawingIntrospectionAgainstWorkbookState() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet
+          .setPicture(
+              new ExcelPictureDefinition(
+                  "OpsPicture",
+                  new ExcelBinaryData(
+                      java.util.Base64.getDecoder()
+                          .decode(
+                              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=")),
+                  ExcelPictureFormat.PNG,
+                  new ExcelDrawingAnchor.TwoCell(
+                      new ExcelDrawingMarker(1, 2),
+                      new ExcelDrawingMarker(4, 6),
+                      ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                  "Queue preview"))
+          .setEmbeddedObject(
+              new ExcelEmbeddedObjectDefinition(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new ExcelBinaryData(
+                      java.util.Base64.getDecoder()
+                          .decode(
+                              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=")),
+                  new ExcelDrawingAnchor.TwoCell(
+                      new ExcelDrawingMarker(5, 2),
+                      new ExcelDrawingMarker(8, 6),
+                      ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE)));
+
+      ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
+      WorkbookReadResult.DrawingObjectsResult drawingObjects =
+          assertInstanceOf(
+              WorkbookReadResult.DrawingObjectsResult.class,
+              introspector.execute(
+                  workbook, new WorkbookReadCommand.GetDrawingObjects("drawing", "Ops")));
+      WorkbookReadResult.DrawingObjectPayloadResult drawingPayload =
+          assertInstanceOf(
+              WorkbookReadResult.DrawingObjectPayloadResult.class,
+              introspector.execute(
+                  workbook,
+                  new WorkbookReadCommand.GetDrawingObjectPayload("payload", "Ops", "OpsEmbed")));
+
+      assertEquals(2, drawingObjects.drawingObjects().size());
+      assertEquals("OpsPicture", drawingObjects.drawingObjects().getFirst().name());
+      assertEquals("OpsEmbed", drawingPayload.payload().name());
+    }
+  }
+
+  @Test
   void rejectsNullWorkbookAndCommands() {
     ExcelWorkbookIntrospector introspector = new ExcelWorkbookIntrospector();
 

@@ -496,8 +496,8 @@ class GridGrindProtocolCatalogTest {
     assertEquals("GridGrindRequest", catalog.requestType().id());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
-    assertEquals(56, catalog.operationTypes().size());
-    assertEquals(26, catalog.readTypes().size());
+    assertEquals(61, catalog.operationTypes().size());
+    assertEquals(28, catalog.readTypes().size());
     assertEquals(
         List.of(
             "cellInputTypes",
@@ -513,6 +513,7 @@ class GridGrindProtocolCatalogTest {
             "namedRangeSelectionTypes",
             "namedRangeScopeTypes",
             "namedRangeSelectorTypes",
+            "drawingAnchorInputTypes",
             "fontHeightTypes",
             "dataValidationRuleTypes",
             "autofilterFilterCriterionTypes",
@@ -530,6 +531,11 @@ class GridGrindProtocolCatalogTest {
             "formulaUdfToolpackInputType",
             "formulaUdfFunctionInputType",
             "formulaCellTargetInputType",
+            "drawingMarkerInputType",
+            "pictureDataInputType",
+            "pictureInputType",
+            "shapeInputType",
+            "embeddedObjectInputType",
             "commentInputType",
             "commentAnchorInputType",
             "namedRangeTargetType",
@@ -607,6 +613,55 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         new FieldShape.Scalar(ScalarType.BOOLEAN),
         fieldNamed(commentGroup.type(), "visible").shape());
+
+    PlainTypeGroup pictureDataGroup = plainGroup(catalog, "pictureDataInputType");
+    assertTrue(
+        fieldNamed(pictureDataGroup.type(), "format").enumValues().contains("PNG"),
+        "pictureDataInputType.format must expose picture format enum values");
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.STRING),
+        fieldNamed(pictureDataGroup.type(), "base64Data").shape());
+
+    PlainTypeGroup pictureGroup = plainGroup(catalog, "pictureInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("pictureDataInputType"),
+        fieldNamed(pictureGroup.type(), "image").shape());
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("drawingAnchorInputTypes"),
+        fieldNamed(pictureGroup.type(), "anchor").shape());
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(pictureGroup.type(), "description").requirement());
+
+    PlainTypeGroup shapeGroup = plainGroup(catalog, "shapeInputType");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("drawingAnchorInputTypes"),
+        fieldNamed(shapeGroup.type(), "anchor").shape());
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        fieldNamed(shapeGroup.type(), "presetGeometryToken").requirement());
+    assertFalse(
+        fieldNamed(shapeGroup.type(), "kind").enumValues().contains("GROUP"),
+        "shapeInputType.kind must not advertise read-only drawing-group variants");
+    assertEquals(
+        List.of("SIMPLE_SHAPE", "CONNECTOR"), fieldNamed(shapeGroup.type(), "kind").enumValues());
+
+    PlainTypeGroup embeddedObjectGroup = plainGroup(catalog, "embeddedObjectInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("pictureDataInputType"),
+        fieldNamed(embeddedObjectGroup.type(), "previewImage").shape());
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("drawingAnchorInputTypes"),
+        fieldNamed(embeddedObjectGroup.type(), "anchor").shape());
+
+    TypeEntry drawingAnchorEntry = nestedTypeEntry(catalog, "drawingAnchorInputTypes", "TWO_CELL");
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(drawingAnchorEntry, "behavior").requirement());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("drawingMarkerInputType"),
+        fieldNamed(drawingAnchorEntry, "from").shape());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("drawingMarkerInputType"),
+        fieldNamed(drawingAnchorEntry, "to").shape());
 
     PlainTypeGroup namedRangeGroup = plainGroup(catalog, "namedRangeTargetType");
     assertEquals(
@@ -906,6 +961,31 @@ class GridGrindProtocolCatalogTest {
         entryNamed(catalog.readTypes(), "GET_SHEET_SUMMARY").summary().contains("visibility"),
         "GET_SHEET_SUMMARY summary must mention visibility");
     assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_PICTURE")
+            .summary()
+            .contains("DrawingAnchorInput"),
+        "SET_PICTURE summary must mention the explicit authored drawing-anchor shape");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_SHAPE")
+            .summary()
+            .contains("SIMPLE_SHAPE and CONNECTOR"),
+        "SET_SHAPE summary must state the authored shape-kind boundary");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_DRAWING_OBJECT_ANCHOR")
+            .summary()
+            .contains("Read-only loaded families"),
+        "SET_DRAWING_OBJECT_ANCHOR summary must describe the read-only loaded families");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_DRAWING_OBJECTS")
+            .summary()
+            .contains("embedded objects"),
+        "GET_DRAWING_OBJECTS summary must describe the factual drawing families");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_DRAWING_OBJECT_PAYLOAD")
+            .summary()
+            .contains("Non-binary drawing shapes"),
+        "GET_DRAWING_OBJECT_PAYLOAD summary must explain non-binary rejection");
+    assertTrue(
         entryNamed(catalog.operationTypes(), "AUTO_SIZE_COLUMNS")
             .summary()
             .contains("deterministically"),
@@ -1100,6 +1180,24 @@ class GridGrindProtocolCatalogTest {
         new FieldShape.PlainTypeGroupRef("printLayoutInputType"),
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_PRINT_LAYOUT"), "printLayout").shape(),
         "SET_PRINT_LAYOUT.printLayout must point to printLayoutInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("pictureInputType"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_PICTURE"), "picture").shape(),
+        "SET_PICTURE.picture must point to pictureInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("shapeInputType"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_SHAPE"), "shape").shape(),
+        "SET_SHAPE.shape must point to shapeInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("embeddedObjectInputType"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_EMBEDDED_OBJECT"), "embeddedObject")
+            .shape(),
+        "SET_EMBEDDED_OBJECT.embeddedObject must point to embeddedObjectInputType");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("drawingAnchorInputTypes"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_DRAWING_OBJECT_ANCHOR"), "anchor")
+            .shape(),
+        "SET_DRAWING_OBJECT_ANCHOR.anchor must point to drawingAnchorInputTypes");
   }
 
   private static List<String> ids(List<TypeEntry> entries) {

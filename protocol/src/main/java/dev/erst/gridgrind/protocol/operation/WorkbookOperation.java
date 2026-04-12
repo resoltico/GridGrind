@@ -69,6 +69,17 @@ import java.util.Set;
   @JsonSubTypes.Type(value = WorkbookOperation.ClearHyperlink.class, name = "CLEAR_HYPERLINK"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetComment.class, name = "SET_COMMENT"),
   @JsonSubTypes.Type(value = WorkbookOperation.ClearComment.class, name = "CLEAR_COMMENT"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetPicture.class, name = "SET_PICTURE"),
+  @JsonSubTypes.Type(value = WorkbookOperation.SetShape.class, name = "SET_SHAPE"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.SetEmbeddedObject.class,
+      name = "SET_EMBEDDED_OBJECT"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.SetDrawingObjectAnchor.class,
+      name = "SET_DRAWING_OBJECT_ANCHOR"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.DeleteDrawingObject.class,
+      name = "DELETE_DRAWING_OBJECT"),
   @JsonSubTypes.Type(value = WorkbookOperation.ApplyStyle.class, name = "APPLY_STYLE"),
   @JsonSubTypes.Type(
       value = WorkbookOperation.SetDataValidation.class,
@@ -469,6 +480,49 @@ public sealed interface WorkbookOperation {
     }
   }
 
+  /** Creates or replaces one picture-backed drawing object on one sheet. */
+  record SetPicture(String sheetName, PictureInput picture) implements WorkbookOperation {
+    public SetPicture {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(picture, "picture must not be null");
+    }
+  }
+
+  /** Creates or replaces one simple-shape or connector drawing object on one sheet. */
+  record SetShape(String sheetName, ShapeInput shape) implements WorkbookOperation {
+    public SetShape {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(shape, "shape must not be null");
+    }
+  }
+
+  /** Creates or replaces one embedded-object drawing object on one sheet. */
+  record SetEmbeddedObject(String sheetName, EmbeddedObjectInput embeddedObject)
+      implements WorkbookOperation {
+    public SetEmbeddedObject {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(embeddedObject, "embeddedObject must not be null");
+    }
+  }
+
+  /** Moves one existing drawing object by replacing its anchor authoritatively. */
+  record SetDrawingObjectAnchor(String sheetName, String objectName, DrawingAnchorInput anchor)
+      implements WorkbookOperation {
+    public SetDrawingObjectAnchor {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Validation.requireNonBlank(objectName, "objectName");
+      Objects.requireNonNull(anchor, "anchor must not be null");
+    }
+  }
+
+  /** Deletes one existing drawing object by sheet-local name. */
+  record DeleteDrawingObject(String sheetName, String objectName) implements WorkbookOperation {
+    public DeleteDrawingObject {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Validation.requireNonBlank(objectName, "objectName");
+    }
+  }
+
   /** Applies a style patch to every cell in the specified range. */
   record ApplyStyle(String sheetName, String range, CellStyleInput style)
       implements WorkbookOperation {
@@ -663,6 +717,11 @@ public sealed interface WorkbookOperation {
       case ClearHyperlink _ -> "CLEAR_HYPERLINK";
       case SetComment _ -> "SET_COMMENT";
       case ClearComment _ -> "CLEAR_COMMENT";
+      case SetPicture _ -> "SET_PICTURE";
+      case SetShape _ -> "SET_SHAPE";
+      case SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
+      case SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
+      case DeleteDrawingObject _ -> "DELETE_DRAWING_OBJECT";
       case ApplyStyle _ -> "APPLY_STYLE";
       case SetDataValidation _ -> "SET_DATA_VALIDATION";
       case ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";

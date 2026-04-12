@@ -517,6 +517,21 @@ public final class XlsxRoundTripVerifier {
                 candidateCoordinatesBySheet,
                 clearComment.sheetName(),
                 CellCoordinate.fromAddress(clearComment.address()));
+        case WorkbookCommand.SetPicture _ -> {
+          // Drawing objects are validated through workbook readability, not candidate cell grids.
+        }
+        case WorkbookCommand.SetShape _ -> {
+          // Drawing objects are validated through workbook readability, not candidate cell grids.
+        }
+        case WorkbookCommand.SetEmbeddedObject _ -> {
+          // Drawing objects are validated through workbook readability, not candidate cell grids.
+        }
+        case WorkbookCommand.SetDrawingObjectAnchor _ -> {
+          // Anchor mutation changes drawing geometry only.
+        }
+        case WorkbookCommand.DeleteDrawingObject _ -> {
+          // Drawing deletion does not alter candidate cell tracking.
+        }
         case WorkbookCommand.ApplyStyle applyStyle ->
             forEachCell(
                 applyStyle.range(),

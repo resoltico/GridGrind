@@ -26,6 +26,12 @@ import java.util.Objects;
       name = "GET_MERGED_REGIONS"),
   @JsonSubTypes.Type(value = WorkbookReadResult.HyperlinksResult.class, name = "GET_HYPERLINKS"),
   @JsonSubTypes.Type(value = WorkbookReadResult.CommentsResult.class, name = "GET_COMMENTS"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.DrawingObjectsResult.class,
+      name = "GET_DRAWING_OBJECTS"),
+  @JsonSubTypes.Type(
+      value = WorkbookReadResult.DrawingObjectPayloadResult.class,
+      name = "GET_DRAWING_OBJECT_PAYLOAD"),
   @JsonSubTypes.Type(value = WorkbookReadResult.SheetLayoutResult.class, name = "GET_SHEET_LAYOUT"),
   @JsonSubTypes.Type(value = WorkbookReadResult.PrintLayoutResult.class, name = "GET_PRINT_LAYOUT"),
   @JsonSubTypes.Type(
@@ -85,6 +91,8 @@ public sealed interface WorkbookReadResult
           MergedRegionsResult,
           HyperlinksResult,
           CommentsResult,
+          DrawingObjectsResult,
+          DrawingObjectPayloadResult,
           SheetLayoutResult,
           PrintLayoutResult,
           DataValidationsResult,
@@ -191,6 +199,28 @@ public sealed interface WorkbookReadResult
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       comments = copyValues(comments, "comments");
+    }
+  }
+
+  /** Returns factual drawing-object metadata for one sheet. */
+  record DrawingObjectsResult(
+      String requestId, String sheetName, List<DrawingObjectReport> drawingObjects)
+      implements Introspection {
+    public DrawingObjectsResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      drawingObjects = copyValues(drawingObjects, "drawingObjects");
+    }
+  }
+
+  /** Returns the extracted binary payload for one existing drawing object. */
+  record DrawingObjectPayloadResult(
+      String requestId, String sheetName, DrawingObjectPayloadReport payload)
+      implements Introspection {
+    public DrawingObjectPayloadResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      sheetName = requireNonBlank(sheetName, "sheetName");
+      Objects.requireNonNull(payload, "payload must not be null");
     }
   }
 

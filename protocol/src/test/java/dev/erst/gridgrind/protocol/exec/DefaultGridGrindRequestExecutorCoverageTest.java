@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.*;
 import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
+import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -244,6 +245,109 @@ class DefaultGridGrindRequestExecutorCoverageTest {
         "sheetNameForSheetStructureOperation", new WorkbookOperation.SetActiveSheet("Budget"));
     assertPrivateSheetNameHelperRejects(
         "sheetNameForSheetContentOperation", new WorkbookOperation.EnsureSheet("Budget"));
+  }
+
+  @Test
+  void coversDrawingReadHelpersDrawingWriteHelpersAndNamedRangeSelectionExtraction() {
+    DrawingAnchorInput.TwoCell drawingAnchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 2, 0, 0),
+            new DrawingMarkerInput(2, 3, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    PictureDataInput pictureData =
+        new PictureDataInput(
+            ExcelPictureFormat.PNG,
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
+    WorkbookReadOperation.GetDrawingObjects getDrawingObjects =
+        new WorkbookReadOperation.GetDrawingObjects("drawing", "Budget");
+    WorkbookReadOperation.GetDrawingObjectPayload getDrawingObjectPayload =
+        new WorkbookReadOperation.GetDrawingObjectPayload("payload", "Budget", "OpsPicture");
+    WorkbookOperation.SetPicture setPicture =
+        new WorkbookOperation.SetPicture(
+            "Budget", new PictureInput("OpsPicture", pictureData, drawingAnchor, "Queue preview"));
+    WorkbookOperation.SetShape setShape =
+        new WorkbookOperation.SetShape(
+            "Budget",
+            new ShapeInput(
+                "OpsShape",
+                ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                drawingAnchor,
+                "rect",
+                "Queue"));
+    WorkbookOperation.SetEmbeddedObject setEmbeddedObject =
+        new WorkbookOperation.SetEmbeddedObject(
+            "Budget",
+            new EmbeddedObjectInput(
+                "OpsEmbed",
+                "Payload",
+                "payload.txt",
+                "payload.txt",
+                "cGF5bG9hZA==",
+                pictureData,
+                drawingAnchor));
+    WorkbookOperation.SetDrawingObjectAnchor setDrawingObjectAnchor =
+        new WorkbookOperation.SetDrawingObjectAnchor("Budget", "OpsPicture", drawingAnchor);
+    WorkbookOperation.DeleteDrawingObject deleteDrawingObject =
+        new WorkbookOperation.DeleteDrawingObject("Budget", "OpsPicture");
+    RuntimeException failure = new IllegalStateException("boom");
+
+    assertEquals(
+        "GET_DRAWING_OBJECTS", DefaultGridGrindRequestExecutor.readType(getDrawingObjects));
+    assertEquals(
+        "GET_DRAWING_OBJECT_PAYLOAD",
+        DefaultGridGrindRequestExecutor.readType(getDrawingObjectPayload));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(getDrawingObjects));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(getDrawingObjectPayload));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(getDrawingObjects, failure));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(getDrawingObjectPayload, failure));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(getDrawingObjects, failure));
+    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(getDrawingObjectPayload, failure));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setPicture, failure));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setShape, failure));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setEmbeddedObject, failure));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setDrawingObjectAnchor, failure));
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(deleteDrawingObject, failure));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setPicture, failure));
+    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setShape, failure));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setEmbeddedObject, failure));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setDrawingObjectAnchor, failure));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(deleteDrawingObject, failure));
+    assertEquals(
+        "BudgetTotal",
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(
+            new WorkbookReadOperation.GetNamedRangeSurface(
+                "named-range-surface",
+                new NamedRangeSelection.Selected(
+                    List.of(new NamedRangeSelector.ByName("BudgetTotal")))),
+            failure));
+    assertEquals(
+        "BudgetScoped",
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(
+            new WorkbookReadOperation.AnalyzeNamedRangeHealth(
+                "named-range-health",
+                new NamedRangeSelection.Selected(
+                    List.of(new NamedRangeSelector.WorkbookScope("BudgetScoped")))),
+            failure));
+    assertEquals(
+        "SheetScoped",
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(
+            new WorkbookReadOperation.AnalyzeNamedRangeHealth(
+                "named-range-health",
+                new NamedRangeSelection.Selected(
+                    List.of(new NamedRangeSelector.SheetScope("SheetScoped", "Budget")))),
+            failure));
+    assertNull(
+        DefaultGridGrindRequestExecutor.namedRangeNameFor(
+            new WorkbookReadOperation.GetNamedRangeSurface(
+                "named-range-surface",
+                new NamedRangeSelection.Selected(
+                    List.of(
+                        new NamedRangeSelector.ByName("BudgetTotal"),
+                        new NamedRangeSelector.WorkbookScope("BudgetScoped")))),
+            failure));
   }
 
   private static void assertPrivateSheetNameHelperRejects(

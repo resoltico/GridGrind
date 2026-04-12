@@ -143,6 +143,11 @@ public final class SequenceIntrospection {
       case WorkbookOperation.ClearHyperlink _ -> "CLEAR_HYPERLINK";
       case WorkbookOperation.SetComment _ -> "SET_COMMENT";
       case WorkbookOperation.ClearComment _ -> "CLEAR_COMMENT";
+      case WorkbookOperation.SetPicture _ -> "SET_PICTURE";
+      case WorkbookOperation.SetShape _ -> "SET_SHAPE";
+      case WorkbookOperation.SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
+      case WorkbookOperation.SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
+      case WorkbookOperation.DeleteDrawingObject _ -> "DELETE_DRAWING_OBJECT";
       case WorkbookOperation.ApplyStyle _ -> "APPLY_STYLE";
       case WorkbookOperation.SetDataValidation _ -> "SET_DATA_VALIDATION";
       case WorkbookOperation.ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
@@ -207,6 +212,11 @@ public final class SequenceIntrospection {
       case WorkbookCommand.ClearHyperlink _ -> "CLEAR_HYPERLINK";
       case WorkbookCommand.SetComment _ -> "SET_COMMENT";
       case WorkbookCommand.ClearComment _ -> "CLEAR_COMMENT";
+      case WorkbookCommand.SetPicture _ -> "SET_PICTURE";
+      case WorkbookCommand.SetShape _ -> "SET_SHAPE";
+      case WorkbookCommand.SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
+      case WorkbookCommand.SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
+      case WorkbookCommand.DeleteDrawingObject _ -> "DELETE_DRAWING_OBJECT";
       case WorkbookCommand.ApplyStyle _ -> "APPLY_STYLE";
       case WorkbookCommand.SetDataValidation _ -> "SET_DATA_VALIDATION";
       case WorkbookCommand.ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
@@ -241,6 +251,8 @@ public final class SequenceIntrospection {
       case WorkbookReadOperation.GetMergedRegions _ -> "GET_MERGED_REGIONS";
       case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
+      case WorkbookReadOperation.GetDrawingObjects _ -> "GET_DRAWING_OBJECTS";
+      case WorkbookReadOperation.GetDrawingObjectPayload _ -> "GET_DRAWING_OBJECT_PAYLOAD";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadOperation.GetPrintLayout _ -> "GET_PRINT_LAYOUT";
       case WorkbookReadOperation.GetDataValidations _ -> "GET_DATA_VALIDATIONS";

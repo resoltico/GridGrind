@@ -28,6 +28,10 @@ import dev.erst.gridgrind.protocol.dto.ConditionalFormattingThresholdReport;
 import dev.erst.gridgrind.protocol.dto.DifferentialBorderReport;
 import dev.erst.gridgrind.protocol.dto.DifferentialBorderSideReport;
 import dev.erst.gridgrind.protocol.dto.DifferentialStyleReport;
+import dev.erst.gridgrind.protocol.dto.DrawingAnchorReport;
+import dev.erst.gridgrind.protocol.dto.DrawingMarkerReport;
+import dev.erst.gridgrind.protocol.dto.DrawingObjectPayloadReport;
+import dev.erst.gridgrind.protocol.dto.DrawingObjectReport;
 import dev.erst.gridgrind.protocol.dto.FontHeightReport;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
@@ -252,6 +256,21 @@ public final class WorkbookInvariantChecks {
         WorkbookReadResult.CommentsResult result = (WorkbookReadResult.CommentsResult) readResult;
         require(expected.sheetName().equals(result.sheetName()), "comments sheet mismatch");
       }
+      case WorkbookReadOperation.GetDrawingObjects expected -> {
+        WorkbookReadResult.DrawingObjectsResult result =
+            (WorkbookReadResult.DrawingObjectsResult) readResult;
+        require(expected.sheetName().equals(result.sheetName()), "drawing objects sheet mismatch");
+        result.drawingObjects().forEach(WorkbookInvariantChecks::requireDrawingObjectShape);
+      }
+      case WorkbookReadOperation.GetDrawingObjectPayload expected -> {
+        WorkbookReadResult.DrawingObjectPayloadResult result =
+            (WorkbookReadResult.DrawingObjectPayloadResult) readResult;
+        require(expected.sheetName().equals(result.sheetName()), "drawing payload sheet mismatch");
+        requireDrawingObjectPayloadShape(result.payload());
+        require(
+            expected.objectName().equals(result.payload().name()),
+            "drawing payload objectName mismatch");
+      }
       case WorkbookReadOperation.GetSheetLayout expected -> {
         WorkbookReadResult.SheetLayoutResult result =
             (WorkbookReadResult.SheetLayoutResult) readResult;
@@ -343,6 +362,8 @@ public final class WorkbookInvariantChecks {
       case WorkbookReadResult.MergedRegionsResult _ -> "GET_MERGED_REGIONS";
       case WorkbookReadResult.HyperlinksResult _ -> "GET_HYPERLINKS";
       case WorkbookReadResult.CommentsResult _ -> "GET_COMMENTS";
+      case WorkbookReadResult.DrawingObjectsResult _ -> "GET_DRAWING_OBJECTS";
+      case WorkbookReadResult.DrawingObjectPayloadResult _ -> "GET_DRAWING_OBJECT_PAYLOAD";
       case WorkbookReadResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadResult.PrintLayoutResult _ -> "GET_PRINT_LAYOUT";
       case WorkbookReadResult.DataValidationsResult _ -> "GET_DATA_VALIDATIONS";
@@ -400,6 +421,16 @@ public final class WorkbookInvariantChecks {
         require(result.sheetName() != null, "comments sheetName must not be null");
         require(!result.sheetName().isBlank(), "comments sheetName must not be blank");
         result.comments().forEach(WorkbookInvariantChecks::requireCommentEntryShape);
+      }
+      case WorkbookReadResult.DrawingObjectsResult result -> {
+        require(result.sheetName() != null, "drawing objects sheetName must not be null");
+        require(!result.sheetName().isBlank(), "drawing objects sheetName must not be blank");
+        result.drawingObjects().forEach(WorkbookInvariantChecks::requireDrawingObjectShape);
+      }
+      case WorkbookReadResult.DrawingObjectPayloadResult result -> {
+        require(result.sheetName() != null, "drawing payload sheetName must not be null");
+        require(!result.sheetName().isBlank(), "drawing payload sheetName must not be blank");
+        requireDrawingObjectPayloadShape(result.payload());
       }
       case WorkbookReadResult.SheetLayoutResult result -> requireSheetLayoutShape(result.layout());
       case WorkbookReadResult.PrintLayoutResult result -> requirePrintLayoutShape(result.layout());
@@ -506,6 +537,135 @@ public final class WorkbookInvariantChecks {
       case GridGrindResponse.SheetProtectionReport.Protected protectedReport ->
           require(protectedReport.settings() != null, "protected sheet settings must not be null");
     }
+  }
+
+  private static void requireDrawingObjectShape(DrawingObjectReport drawingObject) {
+    require(drawingObject != null, "drawing object must not be null");
+    requireNonBlank(drawingObject.name(), "drawing object name");
+    requireDrawingAnchorShape(drawingObject.anchor());
+    switch (drawingObject) {
+      case DrawingObjectReport.Picture picture -> requirePictureDrawingObjectShape(picture);
+      case DrawingObjectReport.Shape shape -> requireShapeDrawingObjectShape(shape);
+      case DrawingObjectReport.EmbeddedObject embeddedObject ->
+          requireEmbeddedDrawingObjectShape(embeddedObject);
+    }
+  }
+
+  private static void requirePictureDrawingObjectShape(DrawingObjectReport.Picture picture) {
+    requireNonBlank(picture.contentType(), "picture contentType");
+    requireNonBlank(picture.sha256(), "picture sha256");
+    require(picture.byteSize() > 0L, "picture byteSize must be positive");
+    if (picture.widthPixels() != null) {
+      require(picture.widthPixels() >= 0, "picture widthPixels must not be negative");
+    }
+    if (picture.heightPixels() != null) {
+      require(picture.heightPixels() >= 0, "picture heightPixels must not be negative");
+    }
+    if (picture.description() != null) {
+      require(!picture.description().isBlank(), "picture description must not be blank");
+    }
+  }
+
+  private static void requireShapeDrawingObjectShape(DrawingObjectReport.Shape shape) {
+    if (shape.presetGeometryToken() != null) {
+      require(
+          !shape.presetGeometryToken().isBlank(), "shape presetGeometryToken must not be blank");
+    }
+    if (shape.text() != null) {
+      require(!shape.text().isBlank(), "shape text must not be blank");
+    }
+    require(shape.childCount() >= 0, "shape childCount must not be negative");
+  }
+
+  private static void requireEmbeddedDrawingObjectShape(
+      DrawingObjectReport.EmbeddedObject embeddedObject) {
+    requireNonBlank(embeddedObject.contentType(), "embedded object contentType");
+    requireNonBlank(embeddedObject.sha256(), "embedded object sha256");
+    require(embeddedObject.byteSize() > 0L, "embedded object byteSize must be positive");
+    if (embeddedObject.label() != null) {
+      require(!embeddedObject.label().isBlank(), "embedded object label must not be blank");
+    }
+    if (embeddedObject.fileName() != null) {
+      require(!embeddedObject.fileName().isBlank(), "embedded object fileName must not be blank");
+    }
+    if (embeddedObject.command() != null) {
+      require(!embeddedObject.command().isBlank(), "embedded object command must not be blank");
+    }
+    if (embeddedObject.previewByteSize() != null) {
+      require(
+          embeddedObject.previewByteSize() > 0L,
+          "embedded object previewByteSize must be positive");
+      require(
+          embeddedObject.previewFormat() != null,
+          "embedded object previewByteSize requires previewFormat");
+    }
+    if (embeddedObject.previewSha256() != null) {
+      require(
+          !embeddedObject.previewSha256().isBlank(),
+          "embedded object previewSha256 must not be blank");
+      require(
+          embeddedObject.previewFormat() != null,
+          "embedded object previewSha256 requires previewFormat");
+    }
+  }
+
+  private static void requireDrawingObjectPayloadShape(DrawingObjectPayloadReport payload) {
+    require(payload != null, "drawing payload must not be null");
+    requireNonBlank(payload.name(), "drawing payload name");
+    requireNonBlank(payload.contentType(), "drawing payload contentType");
+    requireNonBlank(payload.sha256(), "drawing payload sha256");
+    requireNonBlank(payload.base64Data(), "drawing payload base64Data");
+    switch (payload) {
+      case DrawingObjectPayloadReport.Picture picture -> {
+        requireNonBlank(picture.fileName(), "picture payload fileName");
+        if (picture.description() != null) {
+          require(
+              !picture.description().isBlank(), "picture payload description must not be blank");
+        }
+      }
+      case DrawingObjectPayloadReport.EmbeddedObject embeddedObject -> {
+        if (embeddedObject.fileName() != null) {
+          require(
+              !embeddedObject.fileName().isBlank(), "embedded payload fileName must not be blank");
+        }
+        if (embeddedObject.label() != null) {
+          require(!embeddedObject.label().isBlank(), "embedded payload label must not be blank");
+        }
+        if (embeddedObject.command() != null) {
+          require(
+              !embeddedObject.command().isBlank(), "embedded payload command must not be blank");
+        }
+      }
+    }
+  }
+
+  private static void requireDrawingAnchorShape(DrawingAnchorReport anchor) {
+    require(anchor != null, "drawing anchor must not be null");
+    switch (anchor) {
+      case DrawingAnchorReport.TwoCell twoCell -> {
+        requireDrawingMarkerShape(twoCell.from());
+        requireDrawingMarkerShape(twoCell.to());
+      }
+      case DrawingAnchorReport.OneCell oneCell -> {
+        requireDrawingMarkerShape(oneCell.from());
+        require(oneCell.widthEmu() > 0L, "one-cell widthEmu must be positive");
+        require(oneCell.heightEmu() > 0L, "one-cell heightEmu must be positive");
+      }
+      case DrawingAnchorReport.Absolute absolute -> {
+        require(absolute.xEmu() >= 0L, "absolute xEmu must not be negative");
+        require(absolute.yEmu() >= 0L, "absolute yEmu must not be negative");
+        require(absolute.widthEmu() > 0L, "absolute widthEmu must be positive");
+        require(absolute.heightEmu() > 0L, "absolute heightEmu must be positive");
+      }
+    }
+  }
+
+  private static void requireDrawingMarkerShape(DrawingMarkerReport marker) {
+    require(marker != null, "drawing marker must not be null");
+    require(marker.columnIndex() >= 0, "drawing marker columnIndex must not be negative");
+    require(marker.rowIndex() >= 0, "drawing marker rowIndex must not be negative");
+    require(marker.dx() >= 0, "drawing marker dx must not be negative");
+    require(marker.dy() >= 0, "drawing marker dy must not be negative");
   }
 
   private static void requireEngineWorkbookSummaryShape(

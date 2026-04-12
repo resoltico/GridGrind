@@ -28,9 +28,24 @@
       "description": "Direct-POI workbook with intentionally stale cached formula results for lifecycle-control probes."
     },
     {
+      "id": "gridgrind-drawing-authoring",
+      "kind": "GRIDGRIND_REQUEST",
+      "description": "GridGrind-authored workbook covering the Phase 5 picture, shape, anchor-mutation, and embedded-object surface."
+    },
+    {
       "id": "poi-drawing-image",
       "kind": "POI_DIRECT",
       "description": "Direct-POI workbook containing a drawing patriarch and embedded raster image."
+    },
+    {
+      "id": "poi-drawing-comments",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook containing a picture plus sheet comments on the same sheet."
+    },
+    {
+      "id": "poi-drawing-merged-image",
+      "kind": "POI_DIRECT",
+      "description": "Direct-POI workbook containing a raster image alongside merged regions."
     },
     {
       "id": "poi-chart",

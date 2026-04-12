@@ -2,6 +2,7 @@ package dev.erst.gridgrind.protocol.exec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
@@ -24,6 +25,7 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
@@ -32,6 +34,7 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelPrintMarginsSnapshot;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelPrintSetupSnapshot;
@@ -154,6 +157,83 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals("A1", window.topLeftAddress());
     assertEquals(4, window.rows().size());
     assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
+  }
+
+  @Test
+  void executesDrawingWorkflowAndReturnsDrawingReadResults() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-drawing-request-", ".xlsx");
+    Files.deleteIfExists(workbookPath);
+
+    DrawingAnchorInput.TwoCell firstAnchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 1, 0, 0),
+            new DrawingMarkerInput(4, 6, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    DrawingAnchorInput.TwoCell movedAnchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(6, 2, 0, 0),
+            new DrawingMarkerInput(9, 7, 0, 0),
+            ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    PictureDataInput pictureData =
+        new PictureDataInput(
+            ExcelPictureFormat.PNG,
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
+
+    GridGrindResponse.Success success =
+        success(
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request(
+                        new GridGrindRequest.WorkbookSource.New(),
+                        new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                        List.of(
+                            new WorkbookOperation.EnsureSheet("Ops"),
+                            new WorkbookOperation.SetPicture(
+                                "Ops",
+                                new PictureInput("OpsPicture", pictureData, firstAnchor, null)),
+                            new WorkbookOperation.SetShape(
+                                "Ops",
+                                new ShapeInput(
+                                    "OpsShape",
+                                    ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                                    firstAnchor,
+                                    "rect",
+                                    "Queue")),
+                            new WorkbookOperation.SetEmbeddedObject(
+                                "Ops",
+                                new EmbeddedObjectInput(
+                                    "OpsEmbed",
+                                    "Payload",
+                                    "payload.txt",
+                                    "payload.txt",
+                                    "cGF5bG9hZA==",
+                                    pictureData,
+                                    firstAnchor)),
+                            new WorkbookOperation.SetDrawingObjectAnchor(
+                                "Ops", "OpsPicture", movedAnchor),
+                            new WorkbookOperation.DeleteDrawingObject("Ops", "OpsShape")),
+                        new WorkbookReadOperation.GetDrawingObjects("drawing", "Ops"),
+                        new WorkbookReadOperation.GetDrawingObjectPayload(
+                            "payload", "Ops", "OpsEmbed"))));
+
+    WorkbookReadResult.DrawingObjectsResult drawingObjects =
+        read(success, "drawing", WorkbookReadResult.DrawingObjectsResult.class);
+    WorkbookReadResult.DrawingObjectPayloadResult payload =
+        read(success, "payload", WorkbookReadResult.DrawingObjectPayloadResult.class);
+
+    assertEquals(workbookPath.toAbsolutePath().toString(), savedPath(success));
+    assertTrue(Files.exists(workbookPath));
+    assertEquals(2, drawingObjects.drawingObjects().size());
+    assertEquals(
+        List.of("OpsPicture", "OpsEmbed"),
+        drawingObjects.drawingObjects().stream().map(DrawingObjectReport::name).toList());
+    assertEquals(
+        ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE,
+        assertInstanceOf(
+                DrawingAnchorReport.TwoCell.class,
+                drawingObjects.drawingObjects().getFirst().anchor())
+            .behavior());
+    assertEquals("cGF5bG9hZA==", payload.payload().base64Data());
   }
 
   @Test

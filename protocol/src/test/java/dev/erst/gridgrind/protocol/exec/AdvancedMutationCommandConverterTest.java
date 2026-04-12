@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortState;
+import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelCellFill;
@@ -20,13 +22,20 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
+import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.ExcelDrawingMarker;
+import dev.erst.gridgrind.excel.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.ExcelGradientFill;
 import dev.erst.gridgrind.excel.ExcelGradientStop;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
+import dev.erst.gridgrind.excel.ExcelPictureDefinition;
+import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
+import dev.erst.gridgrind.excel.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.protocol.dto.AutofilterFilterColumnInput;
@@ -45,9 +54,15 @@ import dev.erst.gridgrind.protocol.dto.CommentAnchorInput;
 import dev.erst.gridgrind.protocol.dto.CommentInput;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.protocol.dto.ConditionalFormattingThresholdInput;
+import dev.erst.gridgrind.protocol.dto.DrawingAnchorInput;
+import dev.erst.gridgrind.protocol.dto.DrawingMarkerInput;
+import dev.erst.gridgrind.protocol.dto.EmbeddedObjectInput;
 import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
 import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
+import dev.erst.gridgrind.protocol.dto.PictureDataInput;
+import dev.erst.gridgrind.protocol.dto.PictureInput;
 import dev.erst.gridgrind.protocol.dto.RichTextRunInput;
+import dev.erst.gridgrind.protocol.dto.ShapeInput;
 import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
 import dev.erst.gridgrind.protocol.dto.WorkbookProtectionInput;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
@@ -56,6 +71,9 @@ import org.junit.jupiter.api.Test;
 
 /** Focused command-converter coverage for advanced workbook-core mutation payloads. */
 class AdvancedMutationCommandConverterTest {
+  private static final String PNG_PIXEL_BASE64 =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
+
   @Test
   void convertsAdvancedCommentProtectionAutofilterAndNamedRangeOperations() {
     WorkbookCommand.SetComment commentCommand =
@@ -148,6 +166,98 @@ class AdvancedMutationCommandConverterTest {
                     true, false, false, false, false, false, false, false, false, false, false,
                     false, false, false, false),
                 " "));
+  }
+
+  @Test
+  void convertsDrawingMutationOperations() {
+    DrawingAnchorInput.TwoCell anchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 2, 3, 4),
+            new DrawingMarkerInput(4, 6, 7, 8),
+            ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE);
+    PictureDataInput pictureData = new PictureDataInput(ExcelPictureFormat.PNG, PNG_PIXEL_BASE64);
+
+    WorkbookCommand.SetPicture pictureCommand =
+        assertInstanceOf(
+            WorkbookCommand.SetPicture.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.SetPicture(
+                    "Ops", new PictureInput("OpsPicture", pictureData, anchor, "Queue preview"))));
+    WorkbookCommand.SetShape shapeCommand =
+        assertInstanceOf(
+            WorkbookCommand.SetShape.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.SetShape(
+                    "Ops",
+                    new ShapeInput(
+                        "OpsShape",
+                        ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                        anchor,
+                        "rect",
+                        "Queue"))));
+    WorkbookCommand.SetEmbeddedObject embeddedObjectCommand =
+        assertInstanceOf(
+            WorkbookCommand.SetEmbeddedObject.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.SetEmbeddedObject(
+                    "Ops",
+                    new EmbeddedObjectInput(
+                        "OpsEmbed",
+                        "Payload",
+                        "payload.txt",
+                        "payload.txt",
+                        "cGF5bG9hZA==",
+                        pictureData,
+                        anchor))));
+    WorkbookCommand.SetDrawingObjectAnchor moveCommand =
+        assertInstanceOf(
+            WorkbookCommand.SetDrawingObjectAnchor.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.SetDrawingObjectAnchor("Ops", "OpsPicture", anchor)));
+    WorkbookCommand.DeleteDrawingObject deleteCommand =
+        assertInstanceOf(
+            WorkbookCommand.DeleteDrawingObject.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.DeleteDrawingObject("Ops", "OpsPicture")));
+
+    assertEquals(
+        new ExcelPictureDefinition(
+            "OpsPicture",
+            new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+            ExcelPictureFormat.PNG,
+            new ExcelDrawingAnchor.TwoCell(
+                new ExcelDrawingMarker(1, 2, 3, 4),
+                new ExcelDrawingMarker(4, 6, 7, 8),
+                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
+            "Queue preview"),
+        pictureCommand.picture());
+    assertEquals(
+        new ExcelShapeDefinition(
+            "OpsShape",
+            ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+            new ExcelDrawingAnchor.TwoCell(
+                new ExcelDrawingMarker(1, 2, 3, 4),
+                new ExcelDrawingMarker(4, 6, 7, 8),
+                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE),
+            "rect",
+            "Queue"),
+        shapeCommand.shape());
+    assertEquals(
+        new ExcelEmbeddedObjectDefinition(
+            "OpsEmbed",
+            "Payload",
+            "payload.txt",
+            "payload.txt",
+            new ExcelBinaryData("payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+            ExcelPictureFormat.PNG,
+            new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+            new ExcelDrawingAnchor.TwoCell(
+                new ExcelDrawingMarker(1, 2, 3, 4),
+                new ExcelDrawingMarker(4, 6, 7, 8),
+                ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE)),
+        embeddedObjectCommand.embeddedObject());
+    assertEquals("OpsPicture", moveCommand.objectName());
+    assertEquals("OpsPicture", deleteCommand.objectName());
   }
 
   @Test
