@@ -27,6 +27,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   private final WorkbookStyleRegistry styleRegistry;
   private final ExcelFormulaRuntime formulaRuntime;
   private final ExcelTableController tableController;
+  private final ExcelPivotTableController pivotTableController;
   private final ExcelSheetCopyController sheetCopyController;
   private final ExcelSheetStateController sheetStateController;
 
@@ -44,6 +45,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     this.styleRegistry = new WorkbookStyleRegistry(workbook);
     this.formulaRuntime = Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
     this.tableController = new ExcelTableController();
+    this.pivotTableController = new ExcelPivotTableController();
     this.sheetCopyController = new ExcelSheetCopyController();
     this.sheetStateController = new ExcelSheetStateController();
   }
@@ -214,6 +216,19 @@ public final class ExcelWorkbook implements AutoCloseable {
   /** Deletes one existing table by workbook-global name and expected sheet name. */
   public ExcelWorkbook deleteTable(String name, String sheetName) {
     tableController.deleteTable(this, name, sheetName);
+    return this;
+  }
+
+  /** Creates or replaces one workbook-global pivot-table definition. */
+  public ExcelWorkbook setPivotTable(ExcelPivotTableDefinition definition) {
+    Objects.requireNonNull(definition, "definition must not be null");
+    pivotTableController.setPivotTable(this, definition);
+    return this;
+  }
+
+  /** Deletes one existing pivot table by workbook-global name and expected sheet name. */
+  public ExcelWorkbook deletePivotTable(String name, String sheetName) {
+    pivotTableController.deletePivotTable(this, name, sheetName);
     return this;
   }
 

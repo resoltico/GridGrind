@@ -8,10 +8,10 @@
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 38,
-      "commandCount" : 9,
+      "commandCount" : 8,
       "commandKinds" : {
-        "CLEAR_SHEET_PROTECTION" : 1,
-        "CREATE_SHEET" : 8
+        "CREATE_SHEET" : 7,
+        "CLEAR_SHEET_PROTECTION" : 1
       },
       "styleKinds" : { }
     }

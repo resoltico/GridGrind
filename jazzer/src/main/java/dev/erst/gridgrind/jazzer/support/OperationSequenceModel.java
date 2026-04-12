@@ -30,6 +30,8 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.ExcelPrintLayout;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
@@ -67,6 +69,8 @@ import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.dto.PaneInput;
 import dev.erst.gridgrind.protocol.dto.PictureDataInput;
 import dev.erst.gridgrind.protocol.dto.PictureInput;
+import dev.erst.gridgrind.protocol.dto.PivotTableInput;
+import dev.erst.gridgrind.protocol.dto.PivotTableSelection;
 import dev.erst.gridgrind.protocol.dto.PrintAreaInput;
 import dev.erst.gridgrind.protocol.dto.PrintLayoutInput;
 import dev.erst.gridgrind.protocol.dto.PrintScalingInput;
@@ -99,6 +103,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 public final class OperationSequenceModel {
   private static final String DRAWING_PICTURE_NAME = "OpsPicture";
   private static final String DRAWING_CHART_NAME = "OpsChart";
+  private static final String PIVOT_TABLE_NAME = "OpsPivot";
   private static final String DRAWING_SHAPE_NAME = "OpsShape";
   private static final String DRAWING_CONNECTOR_NAME = "OpsConnector";
   private static final String DRAWING_EMBEDDED_OBJECT_NAME = "OpsEmbed";
@@ -118,16 +123,30 @@ public final class OperationSequenceModel {
     List<WorkbookReadOperation> reads = new ArrayList<>();
     String workbookNamedRange = nextNamedRangeName(data, true);
     String sheetNamedRange = nextNamedRangeName(data, true);
+    String pivotTableName = nextPivotTableName(data, true);
 
     int operationCount = data.consumeInt(0, 8);
     for (int index = 0; index < operationCount; index++) {
       operations.add(
-          nextOperation(data, primarySheet, secondarySheet, workbookNamedRange, sheetNamedRange));
+          nextOperation(
+              data,
+              primarySheet,
+              secondarySheet,
+              workbookNamedRange,
+              sheetNamedRange,
+              pivotTableName));
     }
     int readCount = data.consumeInt(0, 6);
     for (int index = 0; index < readCount; index++) {
       reads.add(
-          nextRead(data, index, primarySheet, secondarySheet, workbookNamedRange, sheetNamedRange));
+          nextRead(
+              data,
+              index,
+              primarySheet,
+              secondarySheet,
+              workbookNamedRange,
+              sheetNamedRange,
+              pivotTableName));
     }
     WorkflowStorage workflowStorage = nextWorkflowStorage(primarySheet, secondarySheet, data);
     return new GeneratedProtocolWorkflow(
@@ -148,10 +167,17 @@ public final class OperationSequenceModel {
     List<WorkbookCommand> commands = new ArrayList<>();
     String workbookNamedRange = nextNamedRangeName(data, true);
     String sheetNamedRange = nextNamedRangeName(data, true);
+    String pivotTableName = nextPivotTableName(data, true);
     int commandCount = data.consumeInt(1, 10);
     for (int index = 0; index < commandCount; index++) {
       commands.add(
-          nextCommand(data, primarySheet, secondarySheet, workbookNamedRange, sheetNamedRange));
+          nextCommand(
+              data,
+              primarySheet,
+              secondarySheet,
+              workbookNamedRange,
+              sheetNamedRange,
+              pivotTableName));
     }
     return List.copyOf(commands);
   }
@@ -161,7 +187,8 @@ public final class OperationSequenceModel {
       String primarySheet,
       String secondarySheet,
       String workbookNamedRange,
-      String sheetNamedRange) {
+      String sheetNamedRange,
+      String pivotTableName) {
     String targetSheet = data.consumeBoolean() ? primarySheet : secondarySheet;
     boolean validAddress = data.consumeBoolean();
     boolean validRange = data.consumeBoolean();
@@ -301,7 +328,20 @@ public final class OperationSequenceModel {
             case 0x2 ->
                 new WorkbookOperation.SetTable(
                     nextTableInput(data, targetSheet, tableName, validRange));
-            default -> new WorkbookOperation.DeleteTable(tableName, targetSheet);
+            case 0x3 -> new WorkbookOperation.DeleteTable(tableName, targetSheet);
+            case 0x4 ->
+                new WorkbookOperation.SetPivotTable(
+                    nextPivotTableInput(
+                        data,
+                        targetSheet,
+                        pivotTableName,
+                        workbookNamedRange,
+                        tableName,
+                        validName,
+                        validRange));
+            default ->
+                new WorkbookOperation.DeletePivotTable(
+                    validName ? pivotTableName : nextPivotTableName(data, false), targetSheet);
           };
       case 0x6 ->
           switch (selectorSlot(selector)) {
@@ -390,7 +430,8 @@ public final class OperationSequenceModel {
       String primarySheet,
       String secondarySheet,
       String workbookNamedRange,
-      String sheetNamedRange) {
+      String sheetNamedRange,
+      String pivotTableName) {
     String targetSheet = data.consumeBoolean() ? primarySheet : secondarySheet;
     boolean validAddress = data.consumeBoolean();
     boolean validRange = data.consumeBoolean();
@@ -530,7 +571,20 @@ public final class OperationSequenceModel {
             case 0x2 ->
                 new WorkbookCommand.SetTable(
                     nextExcelTableDefinition(data, targetSheet, tableName, validRange));
-            default -> new WorkbookCommand.DeleteTable(tableName, targetSheet);
+            case 0x3 -> new WorkbookCommand.DeleteTable(tableName, targetSheet);
+            case 0x4 ->
+                new WorkbookCommand.SetPivotTable(
+                    nextExcelPivotTableDefinition(
+                        data,
+                        targetSheet,
+                        pivotTableName,
+                        workbookNamedRange,
+                        tableName,
+                        validName,
+                        validRange));
+            default ->
+                new WorkbookCommand.DeletePivotTable(
+                    validName ? pivotTableName : nextPivotTableName(data, false), targetSheet);
           };
       case 0x6 ->
           switch (selectorSlot(selector)) {
@@ -623,7 +677,8 @@ public final class OperationSequenceModel {
       String primarySheet,
       String secondarySheet,
       String workbookNamedRange,
-      String sheetNamedRange) {
+      String sheetNamedRange,
+      String pivotTableName) {
     String requestId = "read-" + index;
     String targetSheet = data.consumeBoolean() ? primarySheet : secondarySheet;
     boolean validAddress = data.consumeBoolean();
@@ -703,8 +758,14 @@ public final class OperationSequenceModel {
                 new WorkbookReadOperation.GetTables(
                     requestId, nextTableSelection(data, primarySheet, secondarySheet));
             case 0x1 ->
+                new WorkbookReadOperation.GetPivotTables(
+                    requestId, nextPivotTableSelection(data, pivotTableName, validName));
+            case 0x2 ->
                 new WorkbookReadOperation.AnalyzeTableHealth(
                     requestId, nextTableSelection(data, primarySheet, secondarySheet));
+            case 0x3 ->
+                new WorkbookReadOperation.AnalyzePivotTableHealth(
+                    requestId, nextPivotTableSelection(data, pivotTableName, validName));
             default ->
                 new WorkbookReadOperation.AnalyzeAutofilterHealth(
                     requestId, nextSheetSelection(data, primarySheet, secondarySheet));
@@ -1647,6 +1708,99 @@ public final class OperationSequenceModel {
     };
   }
 
+  private static PivotTableSelection nextPivotTableSelection(
+      GridGrindFuzzData data, String pivotTableName, boolean validName) {
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> new PivotTableSelection.All();
+      default ->
+          new PivotTableSelection.ByNames(
+              List.of(validName ? pivotTableName : nextPivotTableName(data, false)));
+    };
+  }
+
+  private static PivotTableInput nextPivotTableInput(
+      GridGrindFuzzData data,
+      String targetSheet,
+      String pivotTableName,
+      String namedRangeName,
+      String tableName,
+      boolean validName,
+      boolean validRange) {
+    return new PivotTableInput(
+        validName ? pivotTableName : nextPivotTableName(data, false),
+        targetSheet,
+        nextPivotTableSource(data, targetSheet, namedRangeName, tableName, validName, validRange),
+        new PivotTableInput.Anchor(data.consumeBoolean() ? "F4" : "A6"),
+        List.of("Month"),
+        List.of(),
+        List.of(),
+        List.of(
+            new PivotTableInput.DataField(
+                "Actual", ExcelPivotDataConsolidateFunction.SUM, "Total Actual", null)));
+  }
+
+  private static PivotTableInput.Source nextPivotTableSource(
+      GridGrindFuzzData data,
+      String targetSheet,
+      String namedRangeName,
+      String tableName,
+      boolean validName,
+      boolean validRange) {
+    return switch (selectorSlot(nextSelectorByte(data)) % 3) {
+      case 0 ->
+          new PivotTableInput.Source.Range(
+              targetSheet, validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false));
+      case 1 ->
+          new PivotTableInput.Source.NamedRange(
+              validName ? namedRangeName : nextNamedRangeName(data, false));
+      default ->
+          new PivotTableInput.Source.Table(
+              validName ? tableName : nextTableName(data, false, targetSheet));
+    };
+  }
+
+  private static ExcelPivotTableDefinition nextExcelPivotTableDefinition(
+      GridGrindFuzzData data,
+      String targetSheet,
+      String pivotTableName,
+      String namedRangeName,
+      String tableName,
+      boolean validName,
+      boolean validRange) {
+    return new ExcelPivotTableDefinition(
+        validName ? pivotTableName : nextPivotTableName(data, false),
+        targetSheet,
+        nextExcelPivotTableSource(
+            data, targetSheet, namedRangeName, tableName, validName, validRange),
+        new ExcelPivotTableDefinition.Anchor(data.consumeBoolean() ? "F4" : "A6"),
+        List.of("Month"),
+        List.of(),
+        List.of(),
+        List.of(
+            new ExcelPivotTableDefinition.DataField(
+                "Actual", ExcelPivotDataConsolidateFunction.SUM, "Total Actual", null)));
+  }
+
+  private static ExcelPivotTableDefinition.Source nextExcelPivotTableSource(
+      GridGrindFuzzData data,
+      String targetSheet,
+      String namedRangeName,
+      String tableName,
+      boolean validName,
+      boolean validRange) {
+    return switch (selectorSlot(nextSelectorByte(data)) % 3) {
+      case 0 ->
+          new ExcelPivotTableDefinition.Source.Range(
+              targetSheet, validRange ? "A1:C4" : FuzzDataDecoders.nextNonBlankRange(data, false));
+      case 1 ->
+          new ExcelPivotTableDefinition.Source.NamedRange(
+              validName ? namedRangeName : nextNamedRangeName(data, false));
+      default ->
+          new ExcelPivotTableDefinition.Source.Table(
+              validName ? tableName : nextTableName(data, false, targetSheet));
+    };
+  }
+
   private static String nextTableName(GridGrindFuzzData data, boolean valid, String sheetName) {
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     if (!valid) {
@@ -1681,6 +1835,18 @@ public final class OperationSequenceModel {
       case 2 -> "Report_Value";
       case 3 -> "Summary.Total";
       default -> "Name" + data.consumeInt(1, 9);
+    };
+  }
+
+  private static String nextPivotTableName(GridGrindFuzzData data, boolean valid) {
+    Objects.requireNonNull(data, "data must not be null");
+    if (!valid) {
+      return "";
+    }
+    return switch (selectorSlot(nextSelectorByte(data))) {
+      case 0 -> PIVOT_TABLE_NAME;
+      case 1 -> "Budget Pivot";
+      default -> "Pivot " + data.consumeInt(1, 9);
     };
   }
 

@@ -13,8 +13,8 @@
       "persistenceKind" : "NONE",
       "operationCount" : 5,
       "operationKinds" : {
-        "SET_CELL" : 3,
-        "ENSURE_SHEET" : 2
+        "ENSURE_SHEET" : 2,
+        "SET_CELL" : 3
       },
       "styleKinds" : { },
       "readCount" : 2,

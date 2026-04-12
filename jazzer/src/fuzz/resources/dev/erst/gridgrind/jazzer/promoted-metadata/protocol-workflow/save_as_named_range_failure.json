@@ -16,15 +16,9 @@
         "APPLY_STYLE" : 2
       },
       "styleKinds" : {
-        "fill" : 2,
-        "hidden_formula" : 2,
-        "italic" : 2,
-        "alignment" : 2,
-        "indentation" : 2,
-        "underline" : 2,
         "vertical_alignment" : 2,
+        "underline" : 2,
         "strikeout" : 2,
-        "fill_pattern" : 2,
         "border_top" : 2,
         "font_name" : 2,
         "border_bottom" : 2,
@@ -37,11 +31,17 @@
         "font" : 2,
         "text_rotation" : 2,
         "fill_patterned" : 2,
-        "bold" : 2,
-        "font_height" : 1,
+        "bold" : 1,
+        "font_height" : 2,
         "wrap_text" : 2,
-        "font_height_twips" : 1,
-        "border" : 2
+        "font_height_twips" : 2,
+        "border" : 2,
+        "fill" : 2,
+        "hidden_formula" : 2,
+        "italic" : 1,
+        "alignment" : 2,
+        "indentation" : 2,
+        "fill_pattern" : 2
       },
       "readCount" : 6,
       "readKinds" : {

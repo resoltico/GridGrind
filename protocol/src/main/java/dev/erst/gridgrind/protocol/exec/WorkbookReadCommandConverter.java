@@ -37,6 +37,9 @@ final class WorkbookReadCommandConverter {
           new WorkbookReadCommand.GetDrawingObjects(op.requestId(), op.sheetName());
       case WorkbookReadOperation.GetCharts op ->
           new WorkbookReadCommand.GetCharts(op.requestId(), op.sheetName());
+      case WorkbookReadOperation.GetPivotTables op ->
+          new WorkbookReadCommand.GetPivotTables(
+              op.requestId(), toExcelPivotTableSelection(op.selection()));
       case WorkbookReadOperation.GetDrawingObjectPayload op ->
           new WorkbookReadCommand.GetDrawingObjectPayload(
               op.requestId(), op.sheetName(), op.objectName());
@@ -78,6 +81,9 @@ final class WorkbookReadCommandConverter {
       case WorkbookReadOperation.AnalyzeTableHealth op ->
           new WorkbookReadCommand.AnalyzeTableHealth(
               op.requestId(), toExcelTableSelection(op.selection()));
+      case WorkbookReadOperation.AnalyzePivotTableHealth op ->
+          new WorkbookReadCommand.AnalyzePivotTableHealth(
+              op.requestId(), toExcelPivotTableSelection(op.selection()));
       case WorkbookReadOperation.AnalyzeHyperlinkHealth op ->
           new WorkbookReadCommand.AnalyzeHyperlinkHealth(
               op.requestId(), toExcelSheetSelection(op.selection()));
@@ -93,6 +99,14 @@ final class WorkbookReadCommandConverter {
     return switch (selection) {
       case TableSelection.All _ -> new ExcelTableSelection.All();
       case TableSelection.ByNames byNames -> new ExcelTableSelection.ByNames(byNames.names());
+    };
+  }
+
+  static ExcelPivotTableSelection toExcelPivotTableSelection(PivotTableSelection selection) {
+    return switch (selection) {
+      case PivotTableSelection.All _ -> new ExcelPivotTableSelection.All();
+      case PivotTableSelection.ByNames byNames ->
+          new ExcelPivotTableSelection.ByNames(byNames.names());
     };
   }
 

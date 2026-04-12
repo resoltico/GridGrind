@@ -39,6 +39,20 @@ class WorkbookAnalyzerTest {
       workbook.setTable(
           new ExcelTableDefinition("Queue", "Budget", "D1:E3", false, new ExcelTableStyle.None()));
       budget.xssfSheet().getTables().getFirst().getCTTable().getAutoFilter().setRef("D1:E2");
+      workbook.getOrCreateSheet("PivotReport");
+      workbook.setPivotTable(
+          new ExcelPivotTableDefinition(
+              "Queue Pivot",
+              "PivotReport",
+              new ExcelPivotTableDefinition.Source.Range("Budget", "D1:E3"),
+              new ExcelPivotTableDefinition.Anchor("A3"),
+              List.of("Owner"),
+              List.of(),
+              List.of(),
+              List.of(
+                  new ExcelPivotTableDefinition.DataField(
+                      "Task", ExcelPivotDataConsolidateFunction.COUNT, "Task Count", null))));
+      workbook.xssfWorkbook().getPivotTables().getFirst().getCTPivotTableDefinition().setName(null);
 
       WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
 
@@ -90,6 +104,14 @@ class WorkbookAnalyzerTest {
                   new WorkbookLocation.StoredWorkbook(workbookPath),
                   new WorkbookReadCommand.AnalyzeTableHealth(
                       "tableHealth", new ExcelTableSelection.All())));
+      WorkbookReadResult.PivotTableHealthResult pivotTableHealth =
+          cast(
+              WorkbookReadResult.PivotTableHealthResult.class,
+              analyzer.execute(
+                  workbook,
+                  new WorkbookLocation.StoredWorkbook(workbookPath),
+                  new WorkbookReadCommand.AnalyzePivotTableHealth(
+                      "pivotTableHealth", new ExcelPivotTableSelection.All())));
       WorkbookReadResult.WorkbookFindingsResult workbookFindings =
           cast(
               WorkbookReadResult.WorkbookFindingsResult.class,
@@ -143,7 +165,15 @@ class WorkbookAnalyzerTest {
       assertEquals(1, tableHealth.analysis().checkedTableCount());
       assertEquals(0, tableHealth.analysis().summary().totalCount());
 
-      assertTrue(workbookFindings.analysis().summary().totalCount() >= 7);
+      assertEquals(1, pivotTableHealth.analysis().checkedPivotTableCount());
+      assertEquals(
+          List.of(WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME),
+          pivotTableHealth.analysis().findings().stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .distinct()
+              .toList());
+
+      assertTrue(workbookFindings.analysis().summary().totalCount() >= 8);
       assertEquals(
           workbookFindings.analysis().summary().totalCount(),
           workbookFindings.analysis().findings().size());
@@ -152,6 +182,11 @@ class WorkbookAnalyzerTest {
               .map(WorkbookAnalysis.AnalysisFinding::code)
               .toList()
               .contains(WorkbookAnalysis.AnalysisFindingCode.AUTOFILTER_TABLE_MISMATCH));
+      assertTrue(
+          workbookFindings.analysis().findings().stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .toList()
+              .contains(WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME));
     }
   }
 

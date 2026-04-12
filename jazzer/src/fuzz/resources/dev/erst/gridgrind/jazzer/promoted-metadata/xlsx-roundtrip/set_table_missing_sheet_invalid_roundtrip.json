@@ -8,9 +8,10 @@
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 60,
-      "commandCount" : 4,
+      "commandCount" : 10,
       "commandKinds" : {
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 4
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3,
+        "CREATE_SHEET" : 7
       },
       "styleKinds" : { }
     }

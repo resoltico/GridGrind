@@ -13,20 +13,13 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 7,
       "operationKinds" : {
-        "APPLY_STYLE" : 3,
         "EVALUATE_FORMULAS" : 1,
         "SET_RANGE" : 1,
         "AUTO_SIZE_COLUMNS" : 1,
-        "ENSURE_SHEET" : 1
+        "ENSURE_SHEET" : 1,
+        "APPLY_STYLE" : 3
       },
       "styleKinds" : {
-        "bold" : 2,
-        "border_top_color" : 1,
-        "indentation" : 1,
-        "font_color" : 2,
-        "fill_foreground_color" : 2,
-        "fill_pattern_solid" : 1,
-        "font_height_points" : 1,
         "fill_color" : 2,
         "wrap_text" : 1,
         "border_all_color" : 2,
@@ -50,7 +43,14 @@
         "border_bottom_color" : 1,
         "horizontal_alignment" : 3,
         "fill_pattern" : 2,
-        "text_rotation" : 1
+        "text_rotation" : 1,
+        "bold" : 2,
+        "border_top_color" : 1,
+        "indentation" : 1,
+        "font_color" : 2,
+        "fill_foreground_color" : 2,
+        "fill_pattern_solid" : 1,
+        "font_height_points" : 1
       },
       "readCount" : 3,
       "readKinds" : {

@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.39.0"
+version: "0.40.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-12"
+updated: "2026-04-13"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind chart example", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-chart, set-pivot-table, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, delete-pivot-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind chart example", "gridgrind pivot table example", "how do I read pivot tables in gridgrind", "how do I lint pivot tables in gridgrind", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
 ---
 
 # Quick Reference
@@ -1085,6 +1085,89 @@ Excel's lowercase stored token family.
 }
 ```
 
+## SET_PIVOT_TABLE
+
+```json
+{
+  "type": "SET_PIVOT_TABLE",
+  "pivotTable": {
+    "name": "SalesPivot",
+    "sheetName": "Report",
+    "source": {
+      "type": "RANGE",
+      "sheetName": "Sheet1",
+      "range": "A1:D20"
+    },
+    "anchor": { "topLeftAddress": "C5" },
+    "rowLabels": ["Region"],
+    "columnLabels": ["Stage"],
+    "reportFilters": [],
+    "dataFields": [
+      {
+        "sourceColumnName": "Amount",
+        "function": "SUM",
+        "displayName": "Total Amount",
+        "valueFormat": "#,##0.00"
+      }
+    ]
+  }
+}
+{
+  "type": "SET_PIVOT_TABLE",
+  "pivotTable": {
+    "name": "NamedPivot",
+    "sheetName": "NamedReport",
+    "source": { "type": "NAMED_RANGE", "name": "PivotSource" },
+    "anchor": { "topLeftAddress": "A3" },
+    "rowLabels": ["Region"],
+    "columnLabels": [],
+    "reportFilters": ["Owner"],
+    "dataFields": [
+      {
+        "sourceColumnName": "Amount",
+        "function": "SUM"
+      }
+    ]
+  }
+}
+{
+  "type": "SET_PIVOT_TABLE",
+  "pivotTable": {
+    "name": "TablePivot",
+    "sheetName": "TableReport",
+    "source": { "type": "TABLE", "name": "DispatchQueue" },
+    "anchor": { "topLeftAddress": "F4" },
+    "rowLabels": ["Stage"],
+    "columnLabels": [],
+    "reportFilters": [],
+    "dataFields": [
+      {
+        "sourceColumnName": "Amount",
+        "function": "SUM",
+        "displayName": "Total Amount"
+      }
+    ]
+  }
+}
+```
+
+Supported authored pivot sources are `RANGE`, `NAMED_RANGE`, and `TABLE`. `rowLabels`,
+`columnLabels`, `reportFilters`, and `dataFields` must use disjoint source columns because POI
+persists only one role per pivot field. When `reportFilters` is non-empty,
+`anchor.topLeftAddress` must be on Excel row `3` or lower so the page-filter layout has room
+above the rendered body. Supported `dataFields[*].function` values are `SUM`, `COUNT`,
+`COUNT_NUMS`, `AVERAGE`, `MAX`, `MIN`, `PRODUCT`, `STD_DEV`, `STD_DEVP`, `VAR`, and `VARP`.
+
+## DELETE_PIVOT_TABLE
+
+```json
+{
+  "type": "DELETE_PIVOT_TABLE",
+  "name": "SalesPivot",
+  "sheetName": "Report"
+}
+```
+
 ## APPEND_ROW
 
 ```json
@@ -1452,6 +1535,29 @@ Returned tables include persisted `columns` metadata plus advanced flags and sty
 `comment`, `published`, `insertRow`, `insertRowShift`, `headerRowCellStyle`, `dataCellStyle`, and
 `totalsRowCellStyle`.
 
+## GET_PIVOT_TABLES
+
+```json
+{
+  "type": "GET_PIVOT_TABLES",
+  "requestId": "pivots",
+  "selection": { "type": "ALL" }
+}
+{
+  "type": "GET_PIVOT_TABLES",
+  "requestId": "selected-pivots",
+  "selection": {
+    "type": "BY_NAMES",
+    "names": ["SalesPivot", "NamedPivot"]
+  }
+}
+```
+
+Returned entries are `SUPPORTED` or `UNSUPPORTED`. Supported pivot reports include factual `source`,
+stored `anchor`, `rowLabels`, `columnLabels`, `reportFilters`, `dataFields`, and
+`valuesAxisOnColumns`. Unsupported or malformed loaded pivots are preserved as explicit
+`UNSUPPORTED` entries with a human-readable `detail` instead of aborting the read.
+
 ## GET_FORMULA_SURFACE
 
 ```json
@@ -1576,6 +1682,27 @@ Returned tables include persisted `columns` metadata plus advanced flags and sty
 }
 ```
 
+## ANALYZE_PIVOT_TABLE_HEALTH
+
+```json
+{
+  "type": "ANALYZE_PIVOT_TABLE_HEALTH",
+  "requestId": "pivot-health",
+  "selection": { "type": "ALL" }
+}
+{
+  "type": "ANALYZE_PIVOT_TABLE_HEALTH",
+  "requestId": "selected-pivot-health",
+  "selection": {
+    "type": "BY_NAMES",
+    "names": ["SalesPivot", "NamedPivot"]
+  }
+}
+```
+
+Pivot health reports findings such as missing cache parts, missing workbook cache definitions,
+broken sources, duplicate names, synthetic fallback names, or unsupported persisted detail.
+
 ## ANALYZE_HYPERLINK_HEALTH
 
 ```json
@@ -1612,8 +1739,8 @@ Unsaved workbooks report unresolved relative file targets instead of treating th
 ```
 
 `ANALYZE_WORKBOOK_FINDINGS` aggregates every shipped health family: formula, data validation,
-conditional formatting, autofilter, table, hyperlink, and named range. It is the primary
-workbook-health check and pairs naturally with `persistence.type=NONE`.
+conditional formatting, autofilter, table, pivot table, hyperlink, and named range. It is the
+primary workbook-health check and pairs naturally with `persistence.type=NONE`.
 
 Selection snippets:
 
@@ -1630,6 +1757,14 @@ Selection snippets:
 {
   "type": "SELECTED",
   "sheetNames": ["Sheet1", "Sheet2"]
+}
+```
+
+```json
+{ "type": "ALL" }
+{
+  "type": "BY_NAMES",
+  "names": ["SalesPivot", "NamedPivot"]
 }
 ```
 

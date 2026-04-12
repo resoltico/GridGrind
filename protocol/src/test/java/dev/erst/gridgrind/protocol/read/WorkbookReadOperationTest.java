@@ -169,4 +169,22 @@ class WorkbookReadOperationTest {
         NullPointerException.class,
         () -> new WorkbookReadOperation.AnalyzeTableHealth("table-health", null));
   }
+
+  @Test
+  void getPivotTablesAndAnalyzePivotTableHealthRequirePivotSelection() {
+    WorkbookReadOperation.GetPivotTables getPivotTables =
+        new WorkbookReadOperation.GetPivotTables(
+            "pivots", new PivotTableSelection.ByNames(List.of("Sales Pivot 2026")));
+    WorkbookReadOperation.AnalyzePivotTableHealth analyzePivotTableHealth =
+        new WorkbookReadOperation.AnalyzePivotTableHealth(
+            "pivot-health", new PivotTableSelection.All());
+
+    assertEquals("pivots", getPivotTables.requestId());
+    assertInstanceOf(PivotTableSelection.All.class, analyzePivotTableHealth.selection());
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookReadOperation.GetPivotTables("pivots", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadOperation.AnalyzePivotTableHealth("pivot-health", null));
+  }
 }

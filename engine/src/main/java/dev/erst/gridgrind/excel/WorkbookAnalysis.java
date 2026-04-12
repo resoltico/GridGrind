@@ -11,6 +11,7 @@ public sealed interface WorkbookAnalysis
         WorkbookAnalysis.ConditionalFormattingHealth,
         WorkbookAnalysis.AutofilterHealth,
         WorkbookAnalysis.TableHealth,
+        WorkbookAnalysis.PivotTableHealth,
         WorkbookAnalysis.HyperlinkHealth,
         WorkbookAnalysis.NamedRangeHealth,
         WorkbookAnalysis.WorkbookFindings {
@@ -48,6 +49,13 @@ public sealed interface WorkbookAnalysis
     TABLE_DUPLICATE_HEADER,
     TABLE_BROKEN_REFERENCE,
     TABLE_STYLE_MISMATCH,
+    PIVOT_TABLE_MISSING_NAME,
+    PIVOT_TABLE_DUPLICATE_NAME,
+    PIVOT_TABLE_MISSING_CACHE_DEFINITION,
+    PIVOT_TABLE_MISSING_WORKBOOK_CACHE,
+    PIVOT_TABLE_MISSING_CACHE_RECORDS,
+    PIVOT_TABLE_BROKEN_SOURCE,
+    PIVOT_TABLE_UNSUPPORTED_DETAIL,
     HYPERLINK_MALFORMED_TARGET,
     HYPERLINK_MISSING_FILE_TARGET,
     HYPERLINK_MISSING_DOCUMENT_SHEET,
@@ -202,6 +210,19 @@ public sealed interface WorkbookAnalysis
     public TableHealth {
       if (checkedTableCount < 0) {
         throw new IllegalArgumentException("checkedTableCount must not be negative");
+      }
+      Objects.requireNonNull(summary, "summary must not be null");
+      findings = copyValues(findings, "findings");
+    }
+  }
+
+  /** Pivot-table-health analysis for one selected pivot-table set. */
+  record PivotTableHealth(
+      int checkedPivotTableCount, AnalysisSummary summary, List<AnalysisFinding> findings)
+      implements WorkbookAnalysis {
+    public PivotTableHealth {
+      if (checkedPivotTableCount < 0) {
+        throw new IllegalArgumentException("checkedPivotTableCount must not be negative");
       }
       Objects.requireNonNull(summary, "summary must not be null");
       findings = copyValues(findings, "findings");

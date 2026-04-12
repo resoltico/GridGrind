@@ -1,0 +1,33 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "../examples/pivot-request.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/pivot_request.json",
+  "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 4070,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 10,
+      "operationKinds" : {
+        "SET_NAMED_RANGE" : 1,
+        "SET_RANGE" : 1,
+        "ENSURE_SHEET" : 4,
+        "SET_PIVOT_TABLE" : 3,
+        "SET_TABLE" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 3,
+      "readKinds" : {
+        "ANALYZE_PIVOT_TABLE_HEALTH" : 1,
+        "GET_PIVOT_TABLES" : 1,
+        "GET_TABLES" : 1
+      }
+    }
+  },
+  "promotedAt" : "2026-04-12T15:52:05.867003Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/pivot_request.txt"
+}

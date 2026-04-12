@@ -229,6 +229,122 @@ class WorkbookReadResultConverterTest {
   }
 
   @Test
+  void convertsPivotReadResultsIntoProtocolShapes() {
+    WorkbookReadResult.PivotTablesResult pivotTables =
+        assertInstanceOf(
+            WorkbookReadResult.PivotTablesResult.class,
+            WorkbookReadResultConverter.toReadResult(
+                new dev.erst.gridgrind.excel.WorkbookReadResult.PivotTablesResult(
+                    "pivots",
+                    List.of(
+                        new ExcelPivotTableSnapshot.Supported(
+                            "Sales Pivot 2026",
+                            "Report",
+                            new ExcelPivotTableSnapshot.Anchor("C5", "C5:G9"),
+                            new ExcelPivotTableSnapshot.Source.Table("SalesTable", "Data", "A1:D5"),
+                            List.of(new ExcelPivotTableSnapshot.Field(0, "Region")),
+                            List.of(new ExcelPivotTableSnapshot.Field(1, "Stage")),
+                            List.of(new ExcelPivotTableSnapshot.Field(2, "Owner")),
+                            List.of(
+                                new ExcelPivotTableSnapshot.DataField(
+                                    3,
+                                    "Amount",
+                                    ExcelPivotDataConsolidateFunction.SUM,
+                                    "Total Amount",
+                                    "#,##0.00")),
+                            true),
+                        new ExcelPivotTableSnapshot.Unsupported(
+                            "Broken Pivot",
+                            "Report",
+                            new ExcelPivotTableSnapshot.Anchor("A3", "A3:C8"),
+                            "Pivot cache source no longer resolves cleanly.")))));
+    WorkbookReadResult.PivotTableHealthResult pivotTableHealth =
+        assertInstanceOf(
+            WorkbookReadResult.PivotTableHealthResult.class,
+            WorkbookReadResultConverter.toReadResult(
+                new dev.erst.gridgrind.excel.WorkbookReadResult.PivotTableHealthResult(
+                    "pivot-health",
+                    new WorkbookAnalysis.PivotTableHealth(
+                        1,
+                        new WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0),
+                        List.of(
+                            new WorkbookAnalysis.AnalysisFinding(
+                                WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
+                                WorkbookAnalysis.AnalysisSeverity.WARNING,
+                                "Pivot table name is missing",
+                                "GridGrind assigned a synthetic identifier for readback.",
+                                new WorkbookAnalysis.AnalysisLocation.Sheet("Report"),
+                                List.of("_GG_PIVOT_Report_A3")))))));
+
+    PivotTableReport.Supported supported =
+        assertInstanceOf(PivotTableReport.Supported.class, pivotTables.pivotTables().getFirst());
+    PivotTableReport.Unsupported unsupported =
+        assertInstanceOf(PivotTableReport.Unsupported.class, pivotTables.pivotTables().get(1));
+
+    assertEquals("SalesTable", ((PivotTableReport.Source.Table) supported.source()).name());
+    assertEquals("Amount", supported.dataFields().getFirst().sourceColumnName());
+    assertTrue(supported.valuesAxisOnColumns());
+    assertEquals("Pivot cache source no longer resolves cleanly.", unsupported.detail());
+    assertEquals(1, pivotTableHealth.analysis().checkedPivotTableCount());
+    assertEquals(
+        AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
+        pivotTableHealth.analysis().findings().getFirst().code());
+  }
+
+  @Test
+  void convertsPivotSourceVariantsIntoProtocolShapes() {
+    WorkbookReadResult.PivotTablesResult pivotTables =
+        assertInstanceOf(
+            WorkbookReadResult.PivotTablesResult.class,
+            WorkbookReadResultConverter.toReadResult(
+                new dev.erst.gridgrind.excel.WorkbookReadResult.PivotTablesResult(
+                    "pivots",
+                    List.of(
+                        new ExcelPivotTableSnapshot.Supported(
+                            "Range Pivot",
+                            "Report",
+                            new ExcelPivotTableSnapshot.Anchor("C5", "C5:G9"),
+                            new ExcelPivotTableSnapshot.Source.Range("Data", "A1:D5"),
+                            List.of(),
+                            List.of(),
+                            List.of(),
+                            List.of(
+                                new ExcelPivotTableSnapshot.DataField(
+                                    3,
+                                    "Amount",
+                                    ExcelPivotDataConsolidateFunction.SUM,
+                                    "Total Amount",
+                                    null)),
+                            false),
+                        new ExcelPivotTableSnapshot.Supported(
+                            "Named Range Pivot",
+                            "Report",
+                            new ExcelPivotTableSnapshot.Anchor("A3", "A3:E8"),
+                            new ExcelPivotTableSnapshot.Source.NamedRange(
+                                "PivotSource", "Data", "A1:D5"),
+                            List.of(),
+                            List.of(),
+                            List.of(),
+                            List.of(
+                                new ExcelPivotTableSnapshot.DataField(
+                                    3,
+                                    "Amount",
+                                    ExcelPivotDataConsolidateFunction.SUM,
+                                    "Total Amount",
+                                    null)),
+                            false)))));
+
+    PivotTableReport.Supported rangePivot =
+        assertInstanceOf(PivotTableReport.Supported.class, pivotTables.pivotTables().getFirst());
+    PivotTableReport.Supported namedRangePivot =
+        assertInstanceOf(PivotTableReport.Supported.class, pivotTables.pivotTables().get(1));
+
+    assertEquals("Data", ((PivotTableReport.Source.Range) rangePivot.source()).sheetName());
+    assertEquals(
+        "PivotSource", ((PivotTableReport.Source.NamedRange) namedRangePivot.source()).name());
+  }
+
+  @Test
   void convertsChartReadResultsIntoProtocolShapes() {
     WorkbookReadResult.ChartsResult charts =
         assertInstanceOf(

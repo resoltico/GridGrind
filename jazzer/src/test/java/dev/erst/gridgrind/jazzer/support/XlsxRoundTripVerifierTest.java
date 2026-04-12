@@ -39,6 +39,8 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
@@ -380,6 +382,93 @@ class XlsxRoundTripVerifierTest {
                             new ExcelChartDefinition.DataSource("Ops!$A$2:$A$4"),
                             new ExcelChartDefinition.DataSource("Ops!$B$2:$B$4"))))),
             new WorkbookCommand.SetDrawingObjectAnchor("Ops", "OpsChart", movedAnchor));
+
+    assertRoundTripReadable(tempDirectory, commands);
+  }
+
+  /** Preserves authored pivot tables through save, reopen, and workbook-level rereads. */
+  @Test
+  void requireRoundTripReadable_preservesPivotAuthoring(@TempDir Path tempDirectory)
+      throws IOException {
+    List<WorkbookCommand> commands =
+        List.of(
+            new WorkbookCommand.CreateSheet("Data"),
+            new WorkbookCommand.CreateSheet("RangeReport"),
+            new WorkbookCommand.CreateSheet("NamedReport"),
+            new WorkbookCommand.CreateSheet("TableReport"),
+            new WorkbookCommand.SetRange(
+                "Data",
+                "A1:C4",
+                List.of(
+                    List.of(
+                        ExcelCellValue.text("Month"),
+                        ExcelCellValue.text("Region"),
+                        ExcelCellValue.text("Actual")),
+                    List.of(
+                        ExcelCellValue.text("Jan"),
+                        ExcelCellValue.text("North"),
+                        ExcelCellValue.number(12.0d)),
+                    List.of(
+                        ExcelCellValue.text("Feb"),
+                        ExcelCellValue.text("North"),
+                        ExcelCellValue.number(18.0d)),
+                    List.of(
+                        ExcelCellValue.text("Mar"),
+                        ExcelCellValue.text("South"),
+                        ExcelCellValue.number(15.0d)))),
+            new WorkbookCommand.SetNamedRange(
+                new ExcelNamedRangeDefinition(
+                    "PivotSource",
+                    new ExcelNamedRangeScope.WorkbookScope(),
+                    new ExcelNamedRangeTarget("Data", "A1:C4"))),
+            new WorkbookCommand.SetTable(
+                new ExcelTableDefinition(
+                    "SalesTable", "Data", "A1:C4", false, new ExcelTableStyle.None())),
+            new WorkbookCommand.SetPivotTable(
+                new ExcelPivotTableDefinition(
+                    "Range Pivot",
+                    "RangeReport",
+                    new ExcelPivotTableDefinition.Source.Range("Data", "A1:C4"),
+                    new ExcelPivotTableDefinition.Anchor("C5"),
+                    List.of("Month"),
+                    List.of(),
+                    List.of(),
+                    List.of(
+                        new ExcelPivotTableDefinition.DataField(
+                            "Actual",
+                            ExcelPivotDataConsolidateFunction.SUM,
+                            "Total Actual",
+                            "#,##0.00")))),
+            new WorkbookCommand.SetPivotTable(
+                new ExcelPivotTableDefinition(
+                    "Named Pivot",
+                    "NamedReport",
+                    new ExcelPivotTableDefinition.Source.NamedRange("PivotSource"),
+                    new ExcelPivotTableDefinition.Anchor("A3"),
+                    List.of("Region"),
+                    List.of(),
+                    List.of(),
+                    List.of(
+                        new ExcelPivotTableDefinition.DataField(
+                            "Actual",
+                            ExcelPivotDataConsolidateFunction.SUM,
+                            "Total Actual",
+                            "#,##0.00")))),
+            new WorkbookCommand.SetPivotTable(
+                new ExcelPivotTableDefinition(
+                    "Table Pivot",
+                    "TableReport",
+                    new ExcelPivotTableDefinition.Source.Table("SalesTable"),
+                    new ExcelPivotTableDefinition.Anchor("F4"),
+                    List.of("Month"),
+                    List.of(),
+                    List.of(),
+                    List.of(
+                        new ExcelPivotTableDefinition.DataField(
+                            "Actual",
+                            ExcelPivotDataConsolidateFunction.SUM,
+                            "Total Actual",
+                            "#,##0.00")))));
 
     assertRoundTripReadable(tempDirectory, commands);
   }

@@ -5,6 +5,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.40.0] - 2026-04-13
+
+### Added
+
+- Added limited XSSF pivot-table parity to the public `.xlsx` contract with `SET_PIVOT_TABLE`,
+  `DELETE_PIVOT_TABLE`, `GET_PIVOT_TABLES`, and `ANALYZE_PIVOT_TABLE_HEALTH`.
+- Added [examples/pivot-request.json](./examples/pivot-request.json), a runnable example covering
+  range-backed, named-range-backed, and table-backed pivot authoring plus factual pivot readback
+  and pivot-health analysis.
+- Added the matching promoted Jazzer protocol-request seed so the public pivot example is
+  replay-verified in the committed regression floor.
+
+### Changed
+
+- Public docs, quick-reference snippets, README guidance, now describe the shipped pivot-table
+  surface explicitly, including supported source kinds, authored anchor rules, explicit
+  unsupported readback, and pivot-health analysis.
+
+### Fixed
+
+- Pivot-table authoring and preservation now normalize named-range sources correctly, keep
+  workbook-global pivot names and cache relations stable across save or reopen, and rebuild
+  workbook pivot wiring after create or delete flows instead of depending on stale POI relation
+  allocation state.
+- Replacing a pivot table in place on the same sheet now cleans up orphaned cache-record parts and
+  re-primes POI's pivot-part allocator from the workbook package, so repeated authoring no longer
+  collides on stale `/xl/pivotCache/pivotCacheRecords*.xml` numbering after delete or reopen flows.
+- Malformed or oversized pivot number-format identifiers now degrade into truthful readback instead
+  of throwing during factual snapshotting or parity-oracle reporting.
+- Jazzer request labeling, workflow invariants, workbook-shape checks, `.xlsx` round-trip
+  verification, replay expectations, and promoted workflow metadata now model the current
+  pivot-table and protocol-workflow contract directly instead of lagging behind the shipped
+  behavior.
+
 ## [0.39.0] - 2026-04-12
 
 ### Added
@@ -1450,7 +1484,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.39.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.40.0...HEAD
+[0.40.0]: https://github.com/resoltico/GridGrind/compare/v0.39.0...v0.40.0
 [0.39.0]: https://github.com/resoltico/GridGrind/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/resoltico/GridGrind/compare/v0.37.0...v0.38.0
 [0.37.0]: https://github.com/resoltico/GridGrind/compare/v0.36.0...v0.37.0

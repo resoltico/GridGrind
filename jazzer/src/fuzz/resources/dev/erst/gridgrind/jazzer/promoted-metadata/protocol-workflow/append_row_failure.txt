@@ -5,9 +5,9 @@ Outcome: SUCCESS
 Input Bytes: 67
 Source Kind: NEW
 Persistence Kind: NONE
-Operation Count: 1
-Read Count: 6
-Read Kinds: GET_NAMED_RANGE_SURFACE=4, GET_WORKBOOK_SUMMARY=2
-Response Kind: FAILURE
+Operation Count: 0
+Read Count: 0
+Read Kinds: (none)
+Response Kind: SUCCESS
 Style Kinds: (none)
-Operation Kinds: CLEAR_SHEET_PROTECTION=1
+Operation Kinds: (none)

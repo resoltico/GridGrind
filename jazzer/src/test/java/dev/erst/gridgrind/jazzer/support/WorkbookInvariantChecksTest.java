@@ -17,6 +17,8 @@ import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
@@ -61,6 +63,9 @@ import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
 import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
 import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
 import dev.erst.gridgrind.protocol.dto.PaneReport;
+import dev.erst.gridgrind.protocol.dto.PivotTableHealthReport;
+import dev.erst.gridgrind.protocol.dto.PivotTableReport;
+import dev.erst.gridgrind.protocol.dto.PivotTableSelection;
 import dev.erst.gridgrind.protocol.dto.PrintAreaReport;
 import dev.erst.gridgrind.protocol.dto.PrintLayoutReport;
 import dev.erst.gridgrind.protocol.dto.PrintMarginsReport;
@@ -510,6 +515,58 @@ class WorkbookInvariantChecksTest {
   }
 
   @Test
+  void acceptsSuccessResponsesWithPivotReads(@TempDir Path tempDirectory) throws IOException {
+    Path workbookPath = tempDirectory.resolve("pivot.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs("pivot.xlsx", workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadResult.PivotTablesResult("pivots", List.of(pivotReport())),
+                new WorkbookReadResult.PivotTableHealthResult(
+                    "pivot-health",
+                    new PivotTableHealthReport(
+                        1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
+
+    assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
+  }
+
+  @Test
+  void acceptsWorkflowOutcomeShapeForPivotReads(@TempDir Path tempDirectory) throws IOException {
+    Path workbookPath = tempDirectory.resolve("pivot.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadOperation.GetPivotTables(
+                    "pivots", new PivotTableSelection.ByNames(List.of("OpsPivot"))),
+                new WorkbookReadOperation.AnalyzePivotTableHealth(
+                    "pivot-health", new PivotTableSelection.All())));
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                workbookPath.toString(), workbookPath.toString()),
+            List.of(),
+            List.of(
+                new WorkbookReadResult.PivotTablesResult("pivots", List.of(pivotReport())),
+                new WorkbookReadResult.PivotTableHealthResult(
+                    "pivot-health",
+                    new PivotTableHealthReport(
+                        1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
+
+    assertDoesNotThrow(
+        () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
+  }
+
+  @Test
   void acceptsSuccessResponsesWithAdvancedPhaseTwoReadShapes(@TempDir Path tempDirectory)
       throws IOException {
     Path workbookPath = tempDirectory.resolve("advanced.xlsx");
@@ -898,6 +955,42 @@ class WorkbookInvariantChecksTest {
     }
   }
 
+  @Test
+  void acceptsWorkbookShapeWithPivots() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Month"));
+      workbook.getOrCreateSheet("Budget").setCell("B1", ExcelCellValue.text("Actual"));
+      workbook.getOrCreateSheet("Budget").setCell("A2", ExcelCellValue.text("Jan"));
+      workbook.getOrCreateSheet("Budget").setCell("B2", ExcelCellValue.number(12.0d));
+      workbook.getOrCreateSheet("Budget").setCell("A3", ExcelCellValue.text("Feb"));
+      workbook.getOrCreateSheet("Budget").setCell("B3", ExcelCellValue.number(18.0d));
+      workbook.getOrCreateSheet("Budget").setCell("A4", ExcelCellValue.text("Mar"));
+      workbook.getOrCreateSheet("Budget").setCell("B4", ExcelCellValue.number(15.0d));
+      workbook.getOrCreateSheet("Pivot");
+      new WorkbookCommandExecutor()
+          .apply(
+              workbook,
+              List.of(
+                  new WorkbookCommand.SetPivotTable(
+                      new ExcelPivotTableDefinition(
+                          "OpsPivot",
+                          "Pivot",
+                          new ExcelPivotTableDefinition.Source.Range("Budget", "A1:B4"),
+                          new ExcelPivotTableDefinition.Anchor("C5"),
+                          List.of("Month"),
+                          List.of(),
+                          List.of(),
+                          List.of(
+                              new ExcelPivotTableDefinition.DataField(
+                                  "Actual",
+                                  ExcelPivotDataConsolidateFunction.SUM,
+                                  "Total Actual",
+                                  null))))));
+
+      assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
+    }
+  }
+
   private static ChartReport.Bar chartReport() {
     return new ChartReport.Bar(
         "OpsChart",
@@ -926,6 +1019,21 @@ class WorkbookInvariantChecksTest {
                     "Ops!$A$2:$A$4", List.of("Jan", "Feb", "Mar")),
                 new ChartReport.DataSource.NumericReference(
                     "Ops!$B$2:$B$4", "General", List.of("12", "18", "15")))));
+  }
+
+  private static PivotTableReport.Supported pivotReport() {
+    return new PivotTableReport.Supported(
+        "OpsPivot",
+        "Budget",
+        new PivotTableReport.Anchor("F4", "F4:H8"),
+        new PivotTableReport.Source.Range("Budget", "A1:C4"),
+        List.of(new PivotTableReport.Field(0, "Month")),
+        List.of(),
+        List.of(),
+        List.of(
+            new PivotTableReport.DataField(
+                2, "Actual", ExcelPivotDataConsolidateFunction.SUM, "Total Actual", "General")),
+        false);
   }
 
   private static GridGrindResponse.CellStyleReport defaultStyle() {

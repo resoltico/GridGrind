@@ -318,6 +318,15 @@ public final class GridGrindProtocolCatalog {
                   + " Existing unsupported chart detail is preserved on unrelated edits and"
                   + " rejected for authoritative mutation."),
           descriptor(
+              WorkbookOperation.SetPivotTable.class,
+              "SET_PIVOT_TABLE",
+              "Create or replace one workbook-global pivot table to POI XSSF's supported"
+                  + " limited extent."
+                  + " rowLabels, columnLabels, reportFilters, and dataFields must use disjoint"
+                  + " source columns because POI persists only one role per pivot field."
+                  + " When reportFilters are present, anchor.topLeftAddress must be on row 3 or"
+                  + " lower so Excel's page-filter layout has room above the rendered body."),
+          descriptor(
               WorkbookOperation.SetShape.class,
               "SET_SHAPE",
               "Create or replace one named authored drawing shape on a sheet."
@@ -414,6 +423,12 @@ public final class GridGrindProtocolCatalog {
               WorkbookOperation.DeleteTable.class,
               "DELETE_TABLE",
               "Delete one existing workbook-global table by name and expected sheet name."),
+          descriptor(
+              WorkbookOperation.DeletePivotTable.class,
+              "DELETE_PIVOT_TABLE",
+              "Delete one existing workbook-global pivot table by name and expected sheet name."
+                  + " The expected sheet guards against accidentally deleting a same-named pivot"
+                  + " after unrelated workbook changes."),
           descriptor(
               WorkbookOperation.SetNamedRange.class,
               "SET_NAMED_RANGE",
@@ -539,6 +554,15 @@ public final class GridGrindProtocolCatalog {
                   + " unsupported plot families or multi-plot combinations are surfaced as"
                   + " explicit UNSUPPORTED entries with preserved plot-type tokens."),
           descriptor(
+              WorkbookReadOperation.GetPivotTables.class,
+              "GET_PIVOT_TABLES",
+              "Return factual pivot-table metadata selected by workbook-global pivot-table name"
+                  + " or ALL."
+                  + " Supported pivots surface source, anchor, row or column labels,"
+                  + " report filters, data fields, and values-axis placement."
+                  + " Unsupported or malformed pivots are returned explicitly with preserved"
+                  + " detail instead of causing read failure."),
+          descriptor(
               WorkbookReadOperation.GetDrawingObjectPayload.class,
               "GET_DRAWING_OBJECT_PAYLOAD",
               "Return the extracted binary payload for one existing named picture or embedded"
@@ -627,6 +651,11 @@ public final class GridGrindProtocolCatalog {
               "ANALYZE_TABLE_HEALTH",
               "Report table findings such as overlaps, broken references,"
                   + " blank or duplicate headers, and unresolved styles."),
+          descriptor(
+              WorkbookReadOperation.AnalyzePivotTableHealth.class,
+              "ANALYZE_PIVOT_TABLE_HEALTH",
+              "Report pivot-table findings such as missing cache parts, broken sources,"
+                  + " duplicate or synthetic names, and unsupported persisted detail."),
           descriptor(
               WorkbookReadOperation.AnalyzeHyperlinkHealth.class,
               "ANALYZE_HYPERLINK_HEALTH",
@@ -784,6 +813,18 @@ public final class GridGrindProtocolCatalog {
                       "BY_NAMES",
                       "Select only the supplied workbook-global table names."))),
           nestedTypeGroup(
+              "pivotTableSelectionTypes",
+              PivotTableSelection.class,
+              List.of(
+                  descriptor(
+                      PivotTableSelection.All.class,
+                      "ALL",
+                      "Select every pivot table in workbook order."),
+                  descriptor(
+                      PivotTableSelection.ByNames.class,
+                      "BY_NAMES",
+                      "Select only the supplied workbook-global pivot-table names."))),
+          nestedTypeGroup(
               "namedRangeSelectionTypes",
               NamedRangeSelection.class,
               List.of(
@@ -885,6 +926,24 @@ public final class GridGrindProtocolCatalog {
                       ChartInput.Legend.Visible.class,
                       "VISIBLE",
                       "Show the legend at one explicit position."))),
+          nestedTypeGroup(
+              "pivotTableSourceTypes",
+              PivotTableInput.Source.class,
+              List.of(
+                  descriptor(
+                      PivotTableInput.Source.Range.class,
+                      "RANGE",
+                      "Use one explicit contiguous sheet range with the header row in the first"
+                          + " row."),
+                  descriptor(
+                      PivotTableInput.Source.NamedRange.class,
+                      "NAMED_RANGE",
+                      "Use one existing workbook- or sheet-scoped named range as the pivot"
+                          + " source."),
+                  descriptor(
+                      PivotTableInput.Source.Table.class,
+                      "TABLE",
+                      "Use one existing workbook-global table as the pivot source."))),
           nestedTypeGroup(
               "fontHeightTypes",
               FontHeightInput.class,
@@ -1414,6 +1473,29 @@ public final class GridGrindProtocolCatalog {
                   "firstPageNumber",
                   "rowBreaks",
                   "columnBreaks")),
+          plainTypeDescriptor(
+              "pivotTableInputType",
+              PivotTableInput.class,
+              "PivotTableInput",
+              "Workbook-global pivot-table definition for one SET_PIVOT_TABLE request."
+                  + " Source-column assignments across rowLabels, columnLabels, reportFilters,"
+                  + " and dataFields must be disjoint."
+                  + " reportFilters require anchor.topLeftAddress on row 3 or lower.",
+              List.of("rowLabels", "columnLabels", "reportFilters")),
+          plainTypeDescriptor(
+              "pivotTableAnchorInputType",
+              PivotTableInput.Anchor.class,
+              "PivotTableAnchorInput",
+              "Top-left anchor for a pivot table rendered on its destination sheet."
+                  + " The address must be a single-cell A1 reference.",
+              List.of()),
+          plainTypeDescriptor(
+              "pivotTableDataFieldInputType",
+              PivotTableInput.DataField.class,
+              "PivotTableDataFieldInput",
+              "One authored pivot data field bound to a source column and aggregation function."
+                  + " displayName defaults to sourceColumnName when omitted.",
+              List.of("displayName", "valueFormat")),
           plainTypeDescriptor(
               "tableColumnInputType",
               TableColumnInput.class,

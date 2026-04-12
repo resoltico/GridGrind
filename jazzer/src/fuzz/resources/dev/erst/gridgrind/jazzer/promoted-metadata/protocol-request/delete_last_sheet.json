@@ -13,8 +13,8 @@
       "persistenceKind" : "NONE",
       "operationCount" : 3,
       "operationKinds" : {
-        "DELETE_SHEET" : 2,
-        "ENSURE_SHEET" : 1
+        "ENSURE_SHEET" : 1,
+        "DELETE_SHEET" : 2
       },
       "styleKinds" : { },
       "readCount" : 0,

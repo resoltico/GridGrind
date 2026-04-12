@@ -9,5 +9,5 @@ Operation Count: 5
 Read Count: 6
 Read Kinds: ANALYZE_WORKBOOK_FINDINGS=6
 Response Kind: SUCCESS
-Style Kinds: fill=2, hidden_formula=2, italic=2, alignment=2, indentation=2, underline=2, vertical_alignment=2, strikeout=2, fill_pattern=2, border_top=2, font_name=2, border_bottom=2, protection=2, locked=2, font_color=2, horizontal_alignment=2, border_top_color=2, border_bottom_color=2, font=2, text_rotation=2, fill_patterned=2, bold=2, wrap_text=2, border=2, font_height=1, font_height_twips=1
+Style Kinds: vertical_alignment=2, underline=2, strikeout=2, border_top=2, font_name=2, border_bottom=2, protection=2, locked=2, font_color=2, horizontal_alignment=2, border_top_color=2, border_bottom_color=2, font=2, text_rotation=2, fill_patterned=2, font_height=2, wrap_text=2, font_height_twips=2, border=2, fill=2, hidden_formula=2, alignment=2, indentation=2, fill_pattern=2, bold=1, italic=1
 Operation Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=3, APPLY_STYLE=2

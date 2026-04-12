@@ -7,4 +7,4 @@ Message: Sheet does not exist: D
 Input Bytes: 57
 Command Count: 4
 Style Kinds: (none)
-Command Kinds: CREATE_SHEET=2, APPEND_ROW=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1
+Command Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=2, CREATE_SHEET=1, APPEND_ROW=1

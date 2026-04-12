@@ -1,0 +1,13 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/pivot_request.json
+Harness: protocol-request
+Outcome: SUCCESS
+Input Bytes: 4070
+Decode Outcome: PARSED
+Source Kind: NEW
+Persistence Kind: SAVE_AS
+Operation Count: 10
+Read Count: 3
+Read Kinds: ANALYZE_PIVOT_TABLE_HEALTH=1, GET_PIVOT_TABLES=1, GET_TABLES=1
+Style Kinds: (none)
+Operation Kinds: ENSURE_SHEET=4, SET_PIVOT_TABLE=3, SET_NAMED_RANGE=1, SET_RANGE=1, SET_TABLE=1

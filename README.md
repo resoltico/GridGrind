@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.39.0
+docker pull ghcr.io/resoltico/gridgrind:0.40.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -154,12 +154,13 @@ local runs do not strand a live harness JVM.
 A request has three parts that always run in this order:
 
 **Operations** write to the workbook — create sheets, fill cells, apply styles, insert rows, build
-tables, set formulas, and author pictures, shapes, embedded objects, or supported simple charts.
+tables, set formulas, and author pictures, shapes, embedded objects, supported simple charts, or
+limited pivot tables.
 They run in sequence; the first failure stops everything.
 
 **Reads** observe the workbook after all operations succeed — cell windows, schemas, hyperlinks,
-table definitions, drawing inventories, chart metadata, formula health, validation health, and
-more. Non-mutating.
+table definitions, drawing inventories, chart metadata, pivot-table metadata, pivot health,
+formula health, validation health, and more. Non-mutating.
 
 **Persistence** writes the file after all reads succeed. Omit it or set `NONE` to keep the
 workbook in memory only — useful when you only need the read results, or when Bob is running his
@@ -182,6 +183,13 @@ Two contract details matter often in agent-generated requests:
 - `GET_CHARTS` returns supported simple `BAR`, `LINE`, and `PIE` charts authoritatively.
   Unsupported plot families or multi-plot combinations are returned as explicit `UNSUPPORTED`
   entries with preserved plot-type tokens.
+- `SET_PIVOT_TABLE` supports contiguous `RANGE`, existing `NAMED_RANGE`, and existing `TABLE`
+  sources. `rowLabels`, `columnLabels`, `reportFilters`, and `dataFields` must use disjoint source
+  columns because POI persists one role per pivot field, and authored report filters require
+  `anchor.topLeftAddress` on Excel row `3` or lower so the page-filter layout has room above the
+  rendered body.
+- `GET_PIVOT_TABLES` returns supported pivots authoritatively and surfaces malformed or unsupported
+  loaded pivot detail as explicit `UNSUPPORTED` entries instead of aborting the read.
 - Formula-backed chart titles and series titles must resolve to one cell, either directly or
   through a defined name. Category and value series sources may still target contiguous ranges or
   defined names.
@@ -221,6 +229,9 @@ replacement, drawing payload extraction, and comment coexistence on the same she
 surface: supported `BAR` chart authoring, named-range-backed series binding, explicit chart-anchor
 replacement, `GET_CHARTS` factual readback, and matching chart inventory in
 `GET_DRAWING_OBJECTS`. The committed
+[examples/pivot-request.json](examples/pivot-request.json) example shows the Phase 7 pivot
+surface: range-backed, named-range-backed, and table-backed pivot authoring, `GET_PIVOT_TABLES`
+factual readback, and `ANALYZE_PIVOT_TABLE_HEALTH`. The committed
 [examples/formula-environment-request.json](examples/formula-environment-request.json) example
 shows the Phase 4 formula surface: top-level `formulaEnvironment`, template-backed UDF
 registration, targeted formula evaluation, and explicit formula-cache clearing.

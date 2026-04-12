@@ -115,6 +115,7 @@ public final class XlsxParityScenarios {
   static final String CHART_AUTHORING = "gridgrind-chart-authoring";
   static final String CHART_UNSUPPORTED = "poi-chart-unsupported";
   static final String PIVOT = "poi-pivot";
+  static final String PIVOT_AUTHORING = "gridgrind-pivot-authoring";
   static final String EMBEDDED_OBJECT = "poi-embedded-object";
   static final String LARGE_SHEET = "poi-large-sheet";
   static final String SIGNED_WORKBOOK = "poi-signed-workbook";
@@ -147,6 +148,7 @@ public final class XlsxParityScenarios {
               case CHART_AUTHORING -> materializeChartAuthoringWorkbook(temporaryRoot);
               case CHART_UNSUPPORTED -> materializeUnsupportedChartWorkbook(temporaryRoot);
               case PIVOT -> materializePivotWorkbook(temporaryRoot);
+              case PIVOT_AUTHORING -> materializePivotAuthoringWorkbook(temporaryRoot);
               case EMBEDDED_OBJECT -> materializeEmbeddedObjectWorkbook(temporaryRoot);
               case LARGE_SHEET -> materializeLargeSheetWorkbook(temporaryRoot);
               case SIGNED_WORKBOOK -> materializeSignedWorkbook(temporaryRoot);
@@ -553,24 +555,55 @@ public final class XlsxParityScenarios {
           try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet dataSheet = workbook.createSheet("Data");
             dataSheet.createRow(0).createCell(0).setCellValue("Region");
-            dataSheet.getRow(0).createCell(1).setCellValue("Sales");
+            dataSheet.getRow(0).createCell(1).setCellValue("Stage");
+            dataSheet.getRow(0).createCell(2).setCellValue("Owner");
+            dataSheet.getRow(0).createCell(3).setCellValue("Amount");
             dataSheet.createRow(1).createCell(0).setCellValue("North");
-            dataSheet.getRow(1).createCell(1).setCellValue(10d);
+            dataSheet.getRow(1).createCell(1).setCellValue("Plan");
+            dataSheet.getRow(1).createCell(2).setCellValue("Ada");
+            dataSheet.getRow(1).createCell(3).setCellValue(10d);
             dataSheet.createRow(2).createCell(0).setCellValue("South");
-            dataSheet.getRow(2).createCell(1).setCellValue(14d);
+            dataSheet.getRow(2).createCell(1).setCellValue("Do");
+            dataSheet.getRow(2).createCell(2).setCellValue("Lin");
+            dataSheet.getRow(2).createCell(3).setCellValue(14d);
             dataSheet.createRow(3).createCell(0).setCellValue("North");
-            dataSheet.getRow(3).createCell(1).setCellValue(7d);
+            dataSheet.getRow(3).createCell(1).setCellValue("Do");
+            dataSheet.getRow(3).createCell(2).setCellValue("Ada");
+            dataSheet.getRow(3).createCell(3).setCellValue(7d);
+            dataSheet.createRow(4).createCell(0).setCellValue("South");
+            dataSheet.getRow(4).createCell(1).setCellValue("Plan");
+            dataSheet.getRow(4).createCell(2).setCellValue("Lin");
+            dataSheet.getRow(4).createCell(3).setCellValue(12d);
 
             XSSFSheet pivotSheet = workbook.createSheet("Pivot");
-            AreaReference source = new AreaReference("A1:B4", SpreadsheetVersion.EXCEL2007);
+            AreaReference source = new AreaReference("A1:D5", SpreadsheetVersion.EXCEL2007);
             XSSFPivotTable pivotTable =
-                pivotSheet.createPivotTable(source, new CellReference("A1"), dataSheet);
+                pivotSheet.createPivotTable(source, new CellReference("C5"), dataSheet);
+            pivotTable.getCTPivotTableDefinition().setName("POI Pivot");
             pivotTable.addRowLabel(0);
-            pivotTable.addColumnLabel(DataConsolidateFunction.SUM, 1, "Sales");
+            pivotTable.addColumnLabel(DataConsolidateFunction.SUM, 3, "Total Amount");
 
             try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
               workbook.write(outputStream);
             }
+          }
+
+          return new MaterializedScenario(workbookPath, Map.of());
+        });
+  }
+
+  private static MaterializedScenario materializePivotAuthoringWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize pivot authoring parity workbook",
+        () -> {
+          Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(PIVOT_AUTHORING));
+          Path workbookPath = scenarioDirectory.resolve("pivot-authoring.xlsx");
+
+          GridGrindResponse response =
+              new DefaultGridGrindRequestExecutor().execute(pivotAuthoringRequest(workbookPath));
+          if (!(response instanceof GridGrindResponse.Success)) {
+            throw new IllegalStateException(
+                "Pivot authoring parity workbook request must succeed: " + response);
           }
 
           return new MaterializedScenario(workbookPath, Map.of());
@@ -1244,6 +1277,85 @@ public final class XlsxParityScenarios {
                             new ChartInput.DataSource("ChartCategories"),
                             new ChartInput.DataSource("ChartActual")))))),
         List.of());
+  }
+
+  private static GridGrindRequest pivotAuthoringRequest(Path workbookPath) {
+    return roundTripRequest(
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            null,
+            List.of(
+                new WorkbookOperation.EnsureSheet("Data"),
+                new WorkbookOperation.EnsureSheet("RangeReport"),
+                new WorkbookOperation.EnsureSheet("NamedReport"),
+                new WorkbookOperation.EnsureSheet("TableReport"),
+                new WorkbookOperation.SetCell("Data", "A1", new CellInput.Text("Region")),
+                new WorkbookOperation.SetCell("Data", "B1", new CellInput.Text("Stage")),
+                new WorkbookOperation.SetCell("Data", "C1", new CellInput.Text("Owner")),
+                new WorkbookOperation.SetCell("Data", "D1", new CellInput.Text("Amount")),
+                new WorkbookOperation.SetCell("Data", "A2", new CellInput.Text("North")),
+                new WorkbookOperation.SetCell("Data", "B2", new CellInput.Text("Plan")),
+                new WorkbookOperation.SetCell("Data", "C2", new CellInput.Text("Ada")),
+                new WorkbookOperation.SetCell("Data", "D2", new CellInput.Numeric(10d)),
+                new WorkbookOperation.SetCell("Data", "A3", new CellInput.Text("North")),
+                new WorkbookOperation.SetCell("Data", "B3", new CellInput.Text("Do")),
+                new WorkbookOperation.SetCell("Data", "C3", new CellInput.Text("Ada")),
+                new WorkbookOperation.SetCell("Data", "D3", new CellInput.Numeric(15d)),
+                new WorkbookOperation.SetCell("Data", "A4", new CellInput.Text("South")),
+                new WorkbookOperation.SetCell("Data", "B4", new CellInput.Text("Plan")),
+                new WorkbookOperation.SetCell("Data", "C4", new CellInput.Text("Lin")),
+                new WorkbookOperation.SetCell("Data", "D4", new CellInput.Numeric(7d)),
+                new WorkbookOperation.SetCell("Data", "A5", new CellInput.Text("South")),
+                new WorkbookOperation.SetCell("Data", "B5", new CellInput.Text("Do")),
+                new WorkbookOperation.SetCell("Data", "C5", new CellInput.Text("Lin")),
+                new WorkbookOperation.SetCell("Data", "D5", new CellInput.Numeric(12d)),
+                new WorkbookOperation.SetNamedRange(
+                    "PivotSource",
+                    new NamedRangeScope.Workbook(),
+                    new NamedRangeTarget("Data", "A1:D5")),
+                new WorkbookOperation.SetTable(
+                    new TableInput(
+                        "SalesTable", "Data", "A1:D5", false, new TableStyleInput.None())),
+                new WorkbookOperation.SetPivotTable(
+                    new PivotTableInput(
+                        "Sales Pivot",
+                        "RangeReport",
+                        new PivotTableInput.Source.Range("Data", "A1:D5"),
+                        new PivotTableInput.Anchor("C5"),
+                        List.of("Region"),
+                        List.of("Stage"),
+                        List.of(),
+                        List.of(defaultPivotDataFieldInput()))),
+                new WorkbookOperation.SetPivotTable(
+                    new PivotTableInput(
+                        "Named Pivot",
+                        "NamedReport",
+                        new PivotTableInput.Source.NamedRange("PivotSource"),
+                        new PivotTableInput.Anchor("A3"),
+                        List.of("Region"),
+                        List.of(),
+                        List.of("Owner"),
+                        List.of(defaultPivotDataFieldInput()))),
+                new WorkbookOperation.SetPivotTable(
+                    new PivotTableInput(
+                        "Table Pivot",
+                        "TableReport",
+                        new PivotTableInput.Source.Table("SalesTable"),
+                        new PivotTableInput.Anchor("F4"),
+                        List.of("Stage"),
+                        List.of(),
+                        List.of(),
+                        List.of(defaultPivotDataFieldInput())))),
+            List.of()));
+  }
+
+  private static PivotTableInput.DataField defaultPivotDataFieldInput() {
+    return new PivotTableInput.DataField(
+        "Amount",
+        dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+        "Total Amount",
+        "#,##0.00");
   }
 
   private static PictureDataInput pictureDataInput() {

@@ -26,6 +26,8 @@ import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTargets;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.ExcelPivotTableSelection;
+import dev.erst.gridgrind.excel.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
 import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
@@ -307,6 +309,7 @@ public final class XlsxRoundTripVerifier {
         expectedAutofilters(workbook),
         expectedDrawingObjects(workbook),
         expectedCharts(workbook),
+        expectedPivots(workbook),
         expectedTables(workbook));
   }
 
@@ -533,6 +536,9 @@ public final class XlsxRoundTripVerifier {
         case WorkbookCommand.SetChart _ -> {
           // Charts are validated through workbook-level drawing and chart snapshots.
         }
+        case WorkbookCommand.SetPivotTable _ -> {
+          // Pivot tables are validated through workbook-level pivot snapshots.
+        }
         case WorkbookCommand.SetDrawingObjectAnchor _ -> {
           // Anchor mutation changes drawing geometry only.
         }
@@ -570,6 +576,9 @@ public final class XlsxRoundTripVerifier {
         }
         case WorkbookCommand.DeleteTable _ -> {
           // Tables are tracked independently from cell-style and metadata expectations.
+        }
+        case WorkbookCommand.DeletePivotTable _ -> {
+          // Pivot tables are tracked independently from cell-style and metadata expectations.
         }
         case WorkbookCommand.SetNamedRange _ -> {
           // Named ranges are derived directly from the applied workbook state.
@@ -802,6 +811,19 @@ public final class XlsxRoundTripVerifier {
     return Map.copyOf(expected);
   }
 
+  private static List<ExcelPivotTableSnapshot> expectedPivots(ExcelWorkbook workbook) {
+    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    var result =
+        (dev.erst.gridgrind.excel.WorkbookReadResult.PivotTablesResult)
+            readExecutor
+                .apply(
+                    workbook,
+                    new WorkbookReadCommand.GetPivotTables(
+                        "pivots", new ExcelPivotTableSelection.All()))
+                .getFirst();
+    return List.copyOf(result.pivotTables());
+  }
+
   private static List<ExcelTableSnapshot> expectedTables(ExcelWorkbook workbook) {
     WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
     var result =
@@ -923,6 +945,22 @@ public final class XlsxRoundTripVerifier {
                   + " but was "
                   + actualCharts);
         }
+      }
+      List<ExcelPivotTableSnapshot> actualPivots =
+          ((dev.erst.gridgrind.excel.WorkbookReadResult.PivotTablesResult)
+                  new WorkbookReadExecutor()
+                      .apply(
+                          workbook,
+                          new WorkbookReadCommand.GetPivotTables(
+                              "pivots", new ExcelPivotTableSelection.All()))
+                      .getFirst())
+              .pivotTables();
+      if (!expectedWorkbookState.expectedPivots().equals(actualPivots)) {
+        throw new IllegalStateException(
+            "pivot tables changed across round-trip: expected "
+                + expectedWorkbookState.expectedPivots()
+                + " but was "
+                + actualPivots);
       }
     }
   }
@@ -1488,6 +1526,7 @@ public final class XlsxRoundTripVerifier {
       Map<String, List<ExcelAutofilterSnapshot>> expectedAutofilters,
       Map<String, List<ExcelDrawingObjectSnapshot>> expectedDrawingObjects,
       Map<String, List<ExcelChartSnapshot>> expectedCharts,
+      List<ExcelPivotTableSnapshot> expectedPivots,
       List<ExcelTableSnapshot> expectedTables) {}
 
   private record ExpectedWorkbookFootprint(

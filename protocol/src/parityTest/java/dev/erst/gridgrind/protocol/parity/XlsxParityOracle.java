@@ -7,9 +7,11 @@ import dev.erst.gridgrind.excel.ExcelChartBarDirection;
 import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.protocol.dto.ChartReport;
 import dev.erst.gridgrind.protocol.dto.DrawingAnchorReport;
 import dev.erst.gridgrind.protocol.dto.DrawingMarkerReport;
+import dev.erst.gridgrind.protocol.dto.PivotTableReport;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -35,6 +37,7 @@ import org.apache.poi.poifs.filesystem.FileMagic;
 import org.apache.poi.poifs.filesystem.Ole10Native;
 import org.apache.poi.poifs.filesystem.Ole10NativeException;
 import org.apache.poi.poifs.filesystem.POIFSFileSystem;
+import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.formula.OperationEvaluationContext;
 import org.apache.poi.ss.formula.eval.EvaluationException;
 import org.apache.poi.ss.formula.eval.NumberEval;
@@ -42,10 +45,13 @@ import org.apache.poi.ss.formula.eval.OperandResolver;
 import org.apache.poi.ss.formula.eval.ValueEval;
 import org.apache.poi.ss.formula.functions.FreeRefFunction;
 import org.apache.poi.ss.formula.udf.DefaultUDFFinder;
+import org.apache.poi.ss.usermodel.DataConsolidateFunction;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.usermodel.SheetVisibility;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.ss.util.AreaReference;
+import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
 import org.apache.poi.xddf.usermodel.chart.AxisPosition;
 import org.apache.poi.xddf.usermodel.chart.BarDirection;
@@ -72,6 +78,7 @@ import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
 import org.apache.poi.xssf.usermodel.XSSFObjectData;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
+import org.apache.poi.xssf.usermodel.XSSFPivotCacheDefinition;
 import org.apache.poi.xssf.usermodel.XSSFPivotTable;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFShape;
@@ -84,9 +91,14 @@ import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx;
 import org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTConditionalFormatting;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataField;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidations;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTField;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPageField;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPivotTableDefinition;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbookProtection;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorksheetSource;
 
 /** Direct Apache POI oracle for parity tests. */
 final class XlsxParityOracle {
@@ -551,27 +563,368 @@ final class XlsxParityOracle {
         });
   }
 
-  static PivotSnapshot pivot(Path workbookPath) {
+  static List<PivotTableReport> pivotTables(Path workbookPath) {
     return withWorkbook(
         workbookPath,
         workbook -> {
-          XSSFSheet pivotSheet = workbook.getSheet("Pivot");
-          XSSFPivotTable pivotTable =
-              pivotSheet.getRelations().stream()
-                  .filter(XSSFPivotTable.class::isInstance)
-                  .map(XSSFPivotTable.class::cast)
-                  .findFirst()
-                  .orElseThrow(() -> new IllegalStateException("Expected pivot table relation"));
-          return new PivotSnapshot(
-              1,
-              pivotTable
-                  .getPivotCacheDefinition()
-                  .getCTPivotCacheDefinition()
-                  .getCacheSource()
-                  .getWorksheetSource()
-                  .getRef(),
-              pivotTable.getRowLabelColumns());
+          List<PivotTableReport> pivots = new ArrayList<>();
+          for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+            XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+            for (var relation : sheet.getRelations()) {
+              if (relation instanceof XSSFPivotTable pivotTable) {
+                pivots.add(pivotTableReport(workbook, sheet, pivotTable));
+              }
+            }
+          }
+          return List.copyOf(pivots);
         });
+  }
+
+  private static PivotTableReport pivotTableReport(
+      XSSFWorkbook workbook, XSSFSheet ownerSheet, XSSFPivotTable pivotTable) {
+    CTPivotTableDefinition definition = pivotTable.getCTPivotTableDefinition();
+    String name =
+        requireNonBlank(
+            definition.getName(),
+            "Expected parity pivot table to persist a nonblank name on sheet "
+                + ownerSheet.getSheetName());
+    PivotTableReport.Anchor anchor = pivotAnchor(definition);
+    PivotTableReport.Source source = pivotSource(workbook, pivotTable.getPivotCacheDefinition());
+    List<String> sourceColumnNames = pivotCacheFieldNames(pivotTable.getPivotCacheDefinition());
+    PivotAxisFields columnLabels = pivotColumnLabels(definition, sourceColumnNames);
+    List<PivotTableReport.Field> rowLabels = pivotRowLabels(definition, sourceColumnNames);
+    List<PivotTableReport.Field> reportFilters = pivotReportFilters(definition, sourceColumnNames);
+    List<PivotTableReport.DataField> dataFields =
+        pivotDataFields(workbook, definition, sourceColumnNames, name);
+
+    return new PivotTableReport.Supported(
+        name,
+        ownerSheet.getSheetName(),
+        anchor,
+        source,
+        rowLabels,
+        columnLabels.fields(),
+        reportFilters,
+        dataFields,
+        columnLabels.valuesAxisOnColumns());
+  }
+
+  private static PivotAxisFields pivotColumnLabels(
+      CTPivotTableDefinition definition, List<String> sourceColumnNames) {
+    if (definition.getColFields() == null) {
+      return new PivotAxisFields(List.of(), false);
+    }
+    return pivotColumnLabels(definition.getColFields().getFieldArray(), sourceColumnNames);
+  }
+
+  private static PivotAxisFields pivotColumnLabels(
+      CTField[] fields, List<String> sourceColumnNames) {
+    boolean valuesAxisOnColumns = false;
+    List<PivotTableReport.Field> labels = new ArrayList<>(fields.length);
+    for (CTField field : fields) {
+      if (field.getX() == -2) {
+        valuesAxisOnColumns = true;
+        continue;
+      }
+      labels.add(pivotField(sourceColumnNames, field.getX()));
+    }
+    return new PivotAxisFields(List.copyOf(labels), valuesAxisOnColumns);
+  }
+
+  private static List<PivotTableReport.Field> pivotRowLabels(
+      CTPivotTableDefinition definition, List<String> sourceColumnNames) {
+    if (definition.getRowFields() == null) {
+      return List.of();
+    }
+    return pivotFields(definition.getRowFields().getFieldArray(), sourceColumnNames);
+  }
+
+  private static List<PivotTableReport.Field> pivotFields(
+      CTField[] fields, List<String> sourceColumnNames) {
+    List<PivotTableReport.Field> labels = new ArrayList<>(fields.length);
+    for (CTField field : fields) {
+      labels.add(pivotField(sourceColumnNames, field.getX()));
+    }
+    return List.copyOf(labels);
+  }
+
+  private static List<PivotTableReport.Field> pivotReportFilters(
+      CTPivotTableDefinition definition, List<String> sourceColumnNames) {
+    if (definition.getPageFields() == null) {
+      return List.of();
+    }
+    return pivotReportFilters(definition.getPageFields().getPageFieldArray(), sourceColumnNames);
+  }
+
+  private static List<PivotTableReport.Field> pivotReportFilters(
+      CTPageField[] pageFields, List<String> sourceColumnNames) {
+    List<PivotTableReport.Field> filters = new ArrayList<>(pageFields.length);
+    for (CTPageField pageField : pageFields) {
+      filters.add(pivotField(sourceColumnNames, pageField.getFld()));
+    }
+    return List.copyOf(filters);
+  }
+
+  private static List<PivotTableReport.DataField> pivotDataFields(
+      XSSFWorkbook workbook,
+      CTPivotTableDefinition definition,
+      List<String> sourceColumnNames,
+      String pivotName) {
+    if (definition.getDataFields() == null) {
+      throw missingPivotDataFields(pivotName);
+    }
+    return pivotDataFields(
+        workbook, definition.getDataFields().getDataFieldArray(), sourceColumnNames, pivotName);
+  }
+
+  private static List<PivotTableReport.DataField> pivotDataFields(
+      XSSFWorkbook workbook,
+      CTDataField[] dataFields,
+      List<String> sourceColumnNames,
+      String pivotName) {
+    if (dataFields.length == 0) {
+      throw missingPivotDataFields(pivotName);
+    }
+    List<PivotTableReport.DataField> reports = new ArrayList<>(dataFields.length);
+    for (CTDataField dataField : dataFields) {
+      reports.add(pivotDataField(workbook, dataField, sourceColumnNames));
+    }
+    return List.copyOf(reports);
+  }
+
+  private static PivotTableReport.DataField pivotDataField(
+      XSSFWorkbook workbook, CTDataField dataField, List<String> sourceColumnNames) {
+    int sourceColumnIndex = Math.toIntExact(dataField.getFld());
+    String sourceColumnName = pivotSourceColumnName(sourceColumnNames, sourceColumnIndex);
+    return new PivotTableReport.DataField(
+        sourceColumnIndex,
+        sourceColumnName,
+        pivotFunction(
+            dataField.getSubtotal() == null
+                ? DataConsolidateFunction.SUM.getValue()
+                : dataField.getSubtotal().intValue()),
+        nonBlankOrDefault(dataField.getName(), sourceColumnName),
+        numberFormat(workbook, dataField.isSetNumFmtId() ? dataField.getNumFmtId() : null));
+  }
+
+  private static IllegalStateException missingPivotDataFields(String pivotName) {
+    return new IllegalStateException(
+        "Expected parity pivot table '" + pivotName + "' to contain data fields.");
+  }
+
+  private static PivotTableReport.Anchor pivotAnchor(CTPivotTableDefinition definition) {
+    if (definition.getLocation() == null || definition.getLocation().getRef() == null) {
+      throw new IllegalStateException("Expected parity pivot table to persist a location range.");
+    }
+    AreaReference area =
+        new AreaReference(definition.getLocation().getRef(), SpreadsheetVersion.EXCEL2007);
+    return new PivotTableReport.Anchor(
+        new CellReference(area.getFirstCell().getRow(), area.getFirstCell().getCol())
+            .formatAsString(),
+        normalizeArea(area));
+  }
+
+  private static PivotTableReport.Source pivotSource(
+      XSSFWorkbook workbook, XSSFPivotCacheDefinition cacheDefinition) {
+    if (cacheDefinition == null
+        || cacheDefinition.getCTPivotCacheDefinition().getCacheSource() == null
+        || !cacheDefinition.getCTPivotCacheDefinition().getCacheSource().isSetWorksheetSource()) {
+      throw new IllegalStateException("Expected parity pivot table to persist a worksheetSource.");
+    }
+    CTWorksheetSource worksheetSource =
+        cacheDefinition.getCTPivotCacheDefinition().getCacheSource().getWorksheetSource();
+    String sheetName =
+        requireNonBlank(worksheetSource.getSheet(), "Expected parity pivot source sheet name.");
+    if (worksheetSource.getRef() != null && !worksheetSource.getRef().isBlank()) {
+      return new PivotTableReport.Source.Range(
+          sheetName,
+          normalizeArea(new AreaReference(worksheetSource.getRef(), SpreadsheetVersion.EXCEL2007)));
+    }
+
+    String sourceName =
+        requireNonBlank(worksheetSource.getName(), "Expected parity pivot source name.");
+    List<Name> namedRanges = matchingNamedRanges(workbook, sourceName, sheetName);
+    if (namedRanges.size() == 1) {
+      AreaReference area = namedRangeArea(namedRanges.getFirst());
+      return new PivotTableReport.Source.NamedRange(
+          sourceName,
+          sourceSheetName(workbook, area, namedRanges.getFirst(), sheetName),
+          normalizeArea(area));
+    }
+    if (namedRanges.size() > 1) {
+      throw new IllegalStateException(
+          "Expected parity pivot source name '" + sourceName + "' to resolve unambiguously.");
+    }
+
+    XSSFTable table = tableByName(workbook, sourceName, sheetName);
+    if (table == null) {
+      throw new IllegalStateException(
+          "Expected parity pivot source name '"
+              + sourceName
+              + "' to resolve to a named range or table.");
+    }
+    return new PivotTableReport.Source.Table(
+        sourceName,
+        table.getSheetName(),
+        normalizeArea(
+            new AreaReference(
+                table.getStartCellReference(),
+                table.getEndCellReference(),
+                SpreadsheetVersion.EXCEL2007)));
+  }
+
+  private static List<String> pivotCacheFieldNames(XSSFPivotCacheDefinition cacheDefinition) {
+    if (cacheDefinition.getCTPivotCacheDefinition().getCacheFields() == null) {
+      throw new IllegalStateException("Expected parity pivot cache fields.");
+    }
+    List<String> fieldNames = new ArrayList<>();
+    for (var cacheField :
+        cacheDefinition.getCTPivotCacheDefinition().getCacheFields().getCacheFieldArray()) {
+      fieldNames.add(
+          requireNonBlank(cacheField.getName(), "Expected parity pivot cache field name."));
+    }
+    return List.copyOf(fieldNames);
+  }
+
+  private static PivotTableReport.Field pivotField(
+      List<String> sourceColumnNames, int columnIndex) {
+    return new PivotTableReport.Field(
+        columnIndex, pivotSourceColumnName(sourceColumnNames, columnIndex));
+  }
+
+  private static String pivotSourceColumnName(List<String> sourceColumnNames, int columnIndex) {
+    if (columnIndex < 0 || columnIndex >= sourceColumnNames.size()) {
+      throw new IllegalStateException(
+          "Parity pivot source column index "
+              + columnIndex
+              + " is outside the cache field list size "
+              + sourceColumnNames.size());
+    }
+    return sourceColumnNames.get(columnIndex);
+  }
+
+  private static ExcelPivotDataConsolidateFunction pivotFunction(int subtotalValue) {
+    for (DataConsolidateFunction function : DataConsolidateFunction.values()) {
+      if (function.getValue() == subtotalValue) {
+        return ExcelPivotDataConsolidateFunction.fromPoiFunction(function);
+      }
+    }
+    throw new IllegalStateException(
+        "Expected supported parity pivot consolidate function value but got " + subtotalValue);
+  }
+
+  private static String numberFormat(XSSFWorkbook workbook, Long numFmtId) {
+    if (numFmtId == null) {
+      return null;
+    }
+    short formatIndex = numFmtId > Short.MAX_VALUE ? Short.MAX_VALUE : (short) numFmtId.longValue();
+    String format = workbook.createDataFormat().getFormat(formatIndex);
+    return format == null || format.isBlank() ? null : format;
+  }
+
+  private record PivotAxisFields(
+      List<PivotTableReport.Field> fields, boolean valuesAxisOnColumns) {}
+
+  private static List<Name> matchingNamedRanges(
+      XSSFWorkbook workbook, String name, String sheetNameHint) {
+    List<Name> matches = new ArrayList<>();
+    for (Name candidate : workbook.getAllNames()) {
+      if (!Objects.requireNonNullElse(candidate.getNameName(), "").equalsIgnoreCase(name)) {
+        continue;
+      }
+      String candidateSheetName =
+          candidate.getSheetIndex() < 0 ? null : workbook.getSheetName(candidate.getSheetIndex());
+      if (sheetNameHint == null
+          || candidateSheetName == null
+          || candidateSheetName.equals(sheetNameHint)) {
+        matches.add(candidate);
+      }
+    }
+    return List.copyOf(matches);
+  }
+
+  private static AreaReference namedRangeArea(Name namedRange) {
+    String formula = Objects.requireNonNullElse(namedRange.getRefersToFormula(), "");
+    if (formula.isBlank()) {
+      throw new IllegalStateException(
+          "Expected parity named range '" + namedRange.getNameName() + "' to refer to a range.");
+    }
+    return new AreaReference(normalizeRepeatedSheetPrefix(formula), SpreadsheetVersion.EXCEL2007);
+  }
+
+  private static String sourceSheetName(
+      XSSFWorkbook workbook, AreaReference area, Name namedRange, String fallbackSheetName) {
+    String areaSheetName = area.getFirstCell().getSheetName();
+    if (areaSheetName != null && !areaSheetName.isBlank()) {
+      return areaSheetName;
+    }
+    if (namedRange.getSheetIndex() >= 0) {
+      return workbook.getSheetName(namedRange.getSheetIndex());
+    }
+    return requireNonBlank(
+        fallbackSheetName,
+        "Expected parity named-range-backed pivot source to resolve a concrete sheet.");
+  }
+
+  private static XSSFTable tableByName(
+      XSSFWorkbook workbook, String tableName, String preferredSheetName) {
+    XSSFTable preferred = null;
+    XSSFTable fallback = null;
+    for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
+      XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+      for (XSSFTable table : sheet.getTables()) {
+        if (!Objects.requireNonNullElse(table.getName(), "").equalsIgnoreCase(tableName)) {
+          continue;
+        }
+        if (preferredSheetName != null && preferredSheetName.equals(sheet.getSheetName())) {
+          if (preferred != null) {
+            throw new IllegalStateException(
+                "Expected parity table source '"
+                    + tableName
+                    + "' to be unique on sheet "
+                    + preferredSheetName);
+          }
+          preferred = table;
+          continue;
+        }
+        if (fallback != null) {
+          throw new IllegalStateException(
+              "Expected parity table source '" + tableName + "' to be workbook-unique.");
+        }
+        fallback = table;
+      }
+    }
+    return preferred != null ? preferred : fallback;
+  }
+
+  private static String normalizeRepeatedSheetPrefix(String formula) {
+    int separatorIndex = formula.indexOf(':');
+    if (separatorIndex < 0) {
+      return formula;
+    }
+    String firstReference = formula.substring(0, separatorIndex);
+    String secondReference = formula.substring(separatorIndex + 1);
+    int firstBangIndex = firstReference.lastIndexOf('!');
+    int secondBangIndex = secondReference.lastIndexOf('!');
+    if (firstBangIndex < 0 || secondBangIndex < 0) {
+      return formula;
+    }
+    String firstSheetPrefix = firstReference.substring(0, firstBangIndex + 1);
+    String secondSheetPrefix = secondReference.substring(0, secondBangIndex + 1);
+    if (!firstSheetPrefix.equals(secondSheetPrefix)) {
+      return formula;
+    }
+    return firstReference + ":" + secondReference.substring(secondBangIndex + 1);
+  }
+
+  private static String normalizeArea(AreaReference area) {
+    CellReference first =
+        new CellReference(area.getFirstCell().getRow(), area.getFirstCell().getCol(), false, false);
+    CellReference last =
+        new CellReference(area.getLastCell().getRow(), area.getLastCell().getCol(), false, false);
+    return first.getRow() == last.getRow() && first.getCol() == last.getCol()
+        ? first.formatAsString()
+        : first.formatAsString() + ":" + last.formatAsString();
   }
 
   static int eventModelRowCount(Path workbookPath) {
@@ -915,9 +1268,18 @@ final class XlsxParityOracle {
 
   record CellCommentSnapshot(String address, String text, String author, boolean visible) {}
 
-  record PivotSnapshot(int pivotCount, String sourceRef, List<Integer> rowLabelColumns) {}
-
   private record StylesFillSnapshot(boolean gradientFill) {}
+
+  private static String requireNonBlank(String value, String message) {
+    if (value == null || value.isBlank()) {
+      throw new IllegalStateException(message);
+    }
+    return value;
+  }
+
+  private static String nonBlankOrDefault(String value, String fallback) {
+    return value == null || value.isBlank() ? fallback : value;
+  }
 
   private static DirectDrawingObjectSnapshot drawingObjectSnapshot(
       XSSFDrawing drawing, XSSFShape shape) {

@@ -13,6 +13,7 @@ import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
@@ -239,6 +240,30 @@ class WorkbookOperationTest {
     assertEquals("Budget", setChart.sheetName());
     assertEquals("SET_CHART", setChart.operationType());
     assertThrows(NullPointerException.class, () -> new WorkbookOperation.SetChart("Budget", null));
+  }
+
+  @Test
+  void buildsPivotOperationsAndUsesPhase7OperationTypes() {
+    WorkbookOperation.SetPivotTable setPivotTable =
+        new WorkbookOperation.SetPivotTable(
+            new PivotTableInput(
+                "Sales Pivot 2026",
+                "Report",
+                new PivotTableInput.Source.Range("Data", "A1:D5"),
+                new PivotTableInput.Anchor("C5"),
+                List.of("Region"),
+                List.of("Stage"),
+                List.of("Owner"),
+                List.of(
+                    new PivotTableInput.DataField(
+                        "Amount", ExcelPivotDataConsolidateFunction.SUM, null, "#,##0.00"))));
+    WorkbookOperation.DeletePivotTable deletePivotTable =
+        new WorkbookOperation.DeletePivotTable("Sales Pivot 2026", "Report");
+
+    assertEquals("Sales Pivot 2026", setPivotTable.pivotTable().name());
+    assertEquals("Report", deletePivotTable.sheetName());
+    assertEquals("SET_PIVOT_TABLE", setPivotTable.operationType());
+    assertEquals("DELETE_PIVOT_TABLE", deletePivotTable.operationType());
   }
 
   @Test

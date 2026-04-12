@@ -72,7 +72,9 @@ public final class WorkbookCommandExecutor {
           WorkbookCommand.SetAutofilter.class,
           WorkbookCommand.ClearAutofilter.class,
           WorkbookCommand.SetTable.class,
+          WorkbookCommand.SetPivotTable.class,
           WorkbookCommand.DeleteTable.class,
+          WorkbookCommand.DeletePivotTable.class,
           WorkbookCommand.SetNamedRange.class,
           WorkbookCommand.DeleteNamedRange.class);
 
@@ -307,8 +309,12 @@ public final class WorkbookCommandExecutor {
       case WorkbookCommand.ClearAutofilter clearAutofilter ->
           workbook.sheet(clearAutofilter.sheetName()).clearAutofilter();
       case WorkbookCommand.SetTable setTable -> workbook.setTable(setTable.definition());
+      case WorkbookCommand.SetPivotTable setPivotTable ->
+          workbook.setPivotTable(setPivotTable.definition());
       case WorkbookCommand.DeleteTable deleteTable ->
           workbook.deleteTable(deleteTable.name(), deleteTable.sheetName());
+      case WorkbookCommand.DeletePivotTable deletePivotTable ->
+          workbook.deletePivotTable(deletePivotTable.name(), deletePivotTable.sheetName());
       case WorkbookCommand.SetNamedRange setNamedRange ->
           workbook.setNamedRange(setNamedRange.definition());
       case WorkbookCommand.DeleteNamedRange deleteNamedRange ->

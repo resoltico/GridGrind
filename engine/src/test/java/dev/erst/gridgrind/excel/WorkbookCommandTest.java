@@ -104,6 +104,18 @@ class WorkbookCommandTest {
         () -> new WorkbookCommand.SetSheetProtection("Budget", protectionSettings(), " "));
   }
 
+  @Test
+  void deletePivotTableCommandRejectsInvalidInputs() {
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.DeletePivotTable(null, "Budget"));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.DeletePivotTable("Budget Pivot", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.DeletePivotTable("Budget Pivot", " "));
+  }
+
   private CreatedCommands createSupportedCommands(
       List<ExcelCellValue> values, List<List<ExcelCellValue>> rows, ExcelCellStyle style) {
     return new CreatedCommands(
@@ -161,6 +173,19 @@ class WorkbookCommandTest {
                 true,
                 new ExcelTableStyle.Named("TableStyleMedium2", false, false, true, false))),
         new WorkbookCommand.DeleteTable("BudgetTable", "Budget"),
+        new WorkbookCommand.SetPivotTable(
+            new ExcelPivotTableDefinition(
+                "Budget Pivot",
+                "Budget",
+                new ExcelPivotTableDefinition.Source.Range("Budget", "A1:C4"),
+                new ExcelPivotTableDefinition.Anchor("E3"),
+                List.of("Item"),
+                List.of(),
+                List.of(),
+                List.of(
+                    new ExcelPivotTableDefinition.DataField(
+                        "Tax", ExcelPivotDataConsolidateFunction.SUM, "Total Tax", "#,##0.00")))),
+        new WorkbookCommand.DeletePivotTable("Budget Pivot", "Budget"),
         new WorkbookCommand.SetNamedRange(
             new ExcelNamedRangeDefinition(
                 "BudgetTotal",
@@ -219,6 +244,8 @@ class WorkbookCommandTest {
     assertEquals("Budget", commands.clearAutofilter().sheetName());
     assertEquals("BudgetTable", commands.setTable().definition().name());
     assertEquals("Budget", commands.deleteTable().sheetName());
+    assertEquals("Budget Pivot", commands.setPivotTable().definition().name());
+    assertEquals("Budget", commands.deletePivotTable().sheetName());
     assertEquals("BudgetTotal", commands.setNamedRange().definition().name());
     assertEquals(
         "Budget",
@@ -778,6 +805,8 @@ class WorkbookCommandTest {
       WorkbookCommand.ClearAutofilter clearAutofilter,
       WorkbookCommand.SetTable setTable,
       WorkbookCommand.DeleteTable deleteTable,
+      WorkbookCommand.SetPivotTable setPivotTable,
+      WorkbookCommand.DeletePivotTable deletePivotTable,
       WorkbookCommand.SetNamedRange setNamedRange,
       WorkbookCommand.DeleteNamedRange deleteNamedRange,
       WorkbookCommand.AppendRow appendRow,

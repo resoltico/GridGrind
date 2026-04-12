@@ -498,8 +498,8 @@ class GridGrindProtocolCatalogTest {
     assertEquals("GridGrindRequest", catalog.requestType().id());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
-    assertEquals(62, catalog.operationTypes().size());
-    assertEquals(29, catalog.readTypes().size());
+    assertEquals(64, catalog.operationTypes().size());
+    assertEquals(31, catalog.readTypes().size());
     assertEquals(
         List.of(
             "cellInputTypes",
@@ -512,6 +512,7 @@ class GridGrindProtocolCatalogTest {
             "rangeSelectionTypes",
             "sheetSelectionTypes",
             "tableSelectionTypes",
+            "pivotTableSelectionTypes",
             "namedRangeSelectionTypes",
             "namedRangeScopeTypes",
             "namedRangeSelectorTypes",
@@ -519,6 +520,7 @@ class GridGrindProtocolCatalogTest {
             "chartInputTypes",
             "chartTitleInputTypes",
             "chartLegendInputTypes",
+            "pivotTableSourceTypes",
             "fontHeightTypes",
             "dataValidationRuleTypes",
             "autofilterFilterCriterionTypes",
@@ -574,6 +576,9 @@ class GridGrindProtocolCatalogTest {
             "printLayoutInputType",
             "printMarginsInputType",
             "printSetupInputType",
+            "pivotTableInputType",
+            "pivotTableAnchorInputType",
+            "pivotTableDataFieldInputType",
             "tableColumnInputType",
             "tableInputType",
             "workbookProtectionInputType"),
@@ -838,6 +843,48 @@ class GridGrindProtocolCatalogTest {
     FieldEntry tableStyleName =
         fieldNamed(nestedTypeEntry(catalog, "tableStyleTypes", "NAMED"), "name");
     assertEquals(new FieldShape.Scalar(ScalarType.STRING), tableStyleName.shape());
+
+    PlainTypeGroup pivotGroup = plainGroup(catalog, "pivotTableInputType");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("pivotTableSourceTypes"),
+        fieldNamed(pivotGroup.type(), "source").shape());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("pivotTableAnchorInputType"),
+        fieldNamed(pivotGroup.type(), "anchor").shape());
+    assertEquals(
+        new FieldShape.ListShape(new FieldShape.Scalar(ScalarType.STRING)),
+        fieldNamed(pivotGroup.type(), "rowLabels").shape());
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(pivotGroup.type(), "rowLabels").requirement());
+    assertEquals(
+        new FieldShape.ListShape(new FieldShape.PlainTypeGroupRef("pivotTableDataFieldInputType")),
+        fieldNamed(pivotGroup.type(), "dataFields").shape());
+
+    PlainTypeGroup pivotAnchorGroup = plainGroup(catalog, "pivotTableAnchorInputType");
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.STRING),
+        fieldNamed(pivotAnchorGroup.type(), "topLeftAddress").shape());
+
+    PlainTypeGroup pivotDataFieldGroup = plainGroup(catalog, "pivotTableDataFieldInputType");
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        fieldNamed(pivotDataFieldGroup.type(), "displayName").requirement());
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        fieldNamed(pivotDataFieldGroup.type(), "valueFormat").requirement());
+    assertTrue(
+        fieldNamed(pivotDataFieldGroup.type(), "function").enumValues().contains("SUM"),
+        "pivotTableDataFieldInputType.function must expose pivot aggregation enum values");
+
+    FieldEntry pivotSelectionNames =
+        fieldNamed(nestedTypeEntry(catalog, "pivotTableSelectionTypes", "BY_NAMES"), "names");
+    assertEquals(
+        new FieldShape.ListShape(new FieldShape.Scalar(ScalarType.STRING)),
+        pivotSelectionNames.shape());
+
+    FieldEntry pivotNamedRangeName =
+        fieldNamed(nestedTypeEntry(catalog, "pivotTableSourceTypes", "NAMED_RANGE"), "name");
+    assertEquals(new FieldShape.Scalar(ScalarType.STRING), pivotNamedRangeName.shape());
   }
 
   private static void assertCatalogConditionalFormattingFieldShapes(Catalog catalog) {
@@ -1074,6 +1121,14 @@ class GridGrindProtocolCatalogTest {
         entryNamed(catalog.operationTypes(), "SET_TABLE").summary().contains("workbook-global"),
         "SET_TABLE summary must describe workbook-global table names");
     assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_PIVOT_TABLE").summary().contains("disjoint"),
+        "SET_PIVOT_TABLE summary must describe disjoint source-column assignments");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_PIVOT_TABLE")
+            .summary()
+            .contains("row 3 or lower"),
+        "SET_PIVOT_TABLE summary must describe the report-filter anchor constraint");
+    assertTrue(
         entryNamed(catalog.readTypes(), "GET_AUTOFILTERS")
             .summary()
             .contains("sheet- and table-owned"),
@@ -1082,6 +1137,11 @@ class GridGrindProtocolCatalogTest {
         entryNamed(catalog.readTypes(), "GET_TABLES").summary().contains("workbook-global"),
         "GET_TABLES summary must describe workbook-global selection");
     assertTrue(
+        entryNamed(catalog.readTypes(), "GET_PIVOT_TABLES")
+            .summary()
+            .contains("Unsupported or malformed pivots"),
+        "GET_PIVOT_TABLES summary must describe truthful unsupported pivot surfacing");
+    assertTrue(
         entryNamed(catalog.readTypes(), "ANALYZE_AUTOFILTER_HEALTH")
             .summary()
             .contains("ownership"),
@@ -1089,6 +1149,11 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         entryNamed(catalog.readTypes(), "ANALYZE_TABLE_HEALTH").summary().contains("overlaps"),
         "ANALYZE_TABLE_HEALTH summary must mention table overlaps");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_PIVOT_TABLE_HEALTH")
+            .summary()
+            .contains("missing cache parts"),
+        "ANALYZE_PIVOT_TABLE_HEALTH summary must mention missing cache parts");
     assertTrue(
         entryNamed(catalog.readTypes(), "ANALYZE_HYPERLINK_HEALTH")
             .summary()
@@ -1209,13 +1274,26 @@ class GridGrindProtocolCatalogTest {
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_TABLE"), "table").shape(),
         "SET_TABLE.table must point to tableInputType");
     assertEquals(
+        new FieldShape.PlainTypeGroupRef("pivotTableInputType"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_PIVOT_TABLE"), "pivotTable").shape(),
+        "SET_PIVOT_TABLE.pivotTable must point to pivotTableInputType");
+    assertEquals(
         new FieldShape.NestedTypeGroupRef("tableSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "GET_TABLES"), "selection").shape(),
         "GET_TABLES.selection must point to tableSelectionTypes");
     assertEquals(
+        new FieldShape.NestedTypeGroupRef("pivotTableSelectionTypes"),
+        fieldNamed(entryNamed(catalog.readTypes(), "GET_PIVOT_TABLES"), "selection").shape(),
+        "GET_PIVOT_TABLES.selection must point to pivotTableSelectionTypes");
+    assertEquals(
         new FieldShape.NestedTypeGroupRef("tableSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_TABLE_HEALTH"), "selection").shape(),
         "ANALYZE_TABLE_HEALTH.selection must point to tableSelectionTypes");
+    assertEquals(
+        new FieldShape.NestedTypeGroupRef("pivotTableSelectionTypes"),
+        fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_PIVOT_TABLE_HEALTH"), "selection")
+            .shape(),
+        "ANALYZE_PIVOT_TABLE_HEALTH.selection must point to pivotTableSelectionTypes");
     assertEquals(
         new FieldShape.NestedTypeGroupRef("sheetSelectionTypes"),
         fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_AUTOFILTER_HEALTH"), "selection")

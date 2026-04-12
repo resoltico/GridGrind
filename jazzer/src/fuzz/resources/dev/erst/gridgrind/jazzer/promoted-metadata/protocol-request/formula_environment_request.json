@@ -13,18 +13,18 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 8,
       "operationKinds" : {
-        "EVALUATE_FORMULAS" : 1,
         "SET_RANGE" : 1,
         "EVALUATE_FORMULA_CELLS" : 1,
         "CLEAR_FORMULA_CACHES" : 1,
         "SET_CELL" : 3,
-        "ENSURE_SHEET" : 1
+        "ENSURE_SHEET" : 1,
+        "EVALUATE_FORMULAS" : 1
       },
       "styleKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "GET_FORMULA_SURFACE" : 1,
-        "GET_CELLS" : 1
+        "GET_CELLS" : 1,
+        "GET_FORMULA_SURFACE" : 1
       }
     }
   },

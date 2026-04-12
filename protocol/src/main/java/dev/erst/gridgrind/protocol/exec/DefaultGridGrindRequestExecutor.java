@@ -77,7 +77,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           WorkbookOperation.SetAutofilter.class,
           WorkbookOperation.ClearAutofilter.class,
           WorkbookOperation.SetTable.class,
+          WorkbookOperation.SetPivotTable.class,
           WorkbookOperation.DeleteTable.class,
+          WorkbookOperation.DeletePivotTable.class,
           WorkbookOperation.SetNamedRange.class,
           WorkbookOperation.DeleteNamedRange.class,
           WorkbookOperation.AppendRow.class,
@@ -569,6 +571,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
       case WorkbookReadOperation.GetDrawingObjects _ -> "GET_DRAWING_OBJECTS";
       case WorkbookReadOperation.GetCharts _ -> "GET_CHARTS";
+      case WorkbookReadOperation.GetPivotTables _ -> "GET_PIVOT_TABLES";
       case WorkbookReadOperation.GetDrawingObjectPayload _ -> "GET_DRAWING_OBJECT_PAYLOAD";
       case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
       case WorkbookReadOperation.GetPrintLayout _ -> "GET_PRINT_LAYOUT";
@@ -585,6 +588,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
       case WorkbookReadOperation.AnalyzeAutofilterHealth _ -> "ANALYZE_AUTOFILTER_HEALTH";
       case WorkbookReadOperation.AnalyzeTableHealth _ -> "ANALYZE_TABLE_HEALTH";
+      case WorkbookReadOperation.AnalyzePivotTableHealth _ -> "ANALYZE_PIVOT_TABLE_HEALTH";
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> "ANALYZE_HYPERLINK_HEALTH";
       case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> "ANALYZE_NAMED_RANGE_HEALTH";
       case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> "ANALYZE_WORKBOOK_FINDINGS";
@@ -602,6 +606,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetComments op -> op.sheetName();
       case WorkbookReadOperation.GetDrawingObjects op -> op.sheetName();
       case WorkbookReadOperation.GetCharts op -> op.sheetName();
+      case WorkbookReadOperation.GetPivotTables _ -> null;
       case WorkbookReadOperation.GetDrawingObjectPayload op -> op.sheetName();
       case WorkbookReadOperation.GetSheetLayout op -> op.sheetName();
       case WorkbookReadOperation.GetPrintLayout op -> op.sheetName();
@@ -622,6 +627,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetTables _ -> null;
       case WorkbookReadOperation.GetNamedRangeSurface _ -> null;
       case WorkbookReadOperation.AnalyzeTableHealth _ -> null;
+      case WorkbookReadOperation.AnalyzePivotTableHealth _ -> null;
       case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> null;
       case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> null;
     };
@@ -646,6 +652,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetDrawingObjects _ -> null;
       case WorkbookReadOperation.GetCharts _ -> null;
+      case WorkbookReadOperation.GetPivotTables _ -> null;
       case WorkbookReadOperation.GetDrawingObjectPayload _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
       case WorkbookReadOperation.GetPrintLayout _ -> null;
@@ -660,6 +667,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.AnalyzeConditionalFormattingHealth _ -> null;
       case WorkbookReadOperation.AnalyzeAutofilterHealth _ -> null;
       case WorkbookReadOperation.AnalyzeTableHealth _ -> null;
+      case WorkbookReadOperation.AnalyzePivotTableHealth _ -> null;
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> null;
       case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> null;
       case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> null;
@@ -684,6 +692,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetComments _ -> null;
       case WorkbookReadOperation.GetDrawingObjects _ -> null;
       case WorkbookReadOperation.GetCharts _ -> null;
+      case WorkbookReadOperation.GetPivotTables _ -> null;
       case WorkbookReadOperation.GetDrawingObjectPayload _ -> null;
       case WorkbookReadOperation.GetSheetLayout _ -> null;
       case WorkbookReadOperation.GetPrintLayout _ -> null;
@@ -699,6 +708,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.AnalyzeConditionalFormattingHealth _ -> null;
       case WorkbookReadOperation.AnalyzeAutofilterHealth _ -> null;
       case WorkbookReadOperation.AnalyzeTableHealth _ -> null;
+      case WorkbookReadOperation.AnalyzePivotTableHealth _ -> null;
       case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> null;
       case WorkbookReadOperation.AnalyzeNamedRangeHealth op -> singleNamedRangeName(op.selection());
       case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> null;
@@ -788,6 +798,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.ClearComment _ -> null;
       case WorkbookOperation.SetPicture _ -> null;
       case WorkbookOperation.SetChart _ -> null;
+      case WorkbookOperation.SetPivotTable _ -> null;
       case WorkbookOperation.SetShape _ -> null;
       case WorkbookOperation.SetEmbeddedObject _ -> null;
       case WorkbookOperation.SetDrawingObjectAnchor _ -> null;
@@ -801,6 +812,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.ClearAutofilter _ -> null;
       case WorkbookOperation.SetTable _ -> null;
       case WorkbookOperation.DeleteTable _ -> null;
+      case WorkbookOperation.DeletePivotTable _ -> null;
       case WorkbookOperation.SetNamedRange _ -> null;
       case WorkbookOperation.DeleteNamedRange _ -> null;
       case WorkbookOperation.AppendRow _ -> null;
@@ -882,6 +894,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.ClearComment op -> op.sheetName();
       case WorkbookOperation.SetPicture op -> op.sheetName();
       case WorkbookOperation.SetChart op -> op.sheetName();
+      case WorkbookOperation.SetPivotTable op -> op.pivotTable().sheetName();
       case WorkbookOperation.SetShape op -> op.sheetName();
       case WorkbookOperation.SetEmbeddedObject op -> op.sheetName();
       case WorkbookOperation.SetDrawingObjectAnchor op -> op.sheetName();
@@ -895,6 +908,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.ClearAutofilter op -> op.sheetName();
       case WorkbookOperation.SetTable op -> op.table().sheetName();
       case WorkbookOperation.DeleteTable op -> op.sheetName();
+      case WorkbookOperation.DeletePivotTable op -> op.sheetName();
       case WorkbookOperation.SetNamedRange op -> op.target().sheetName();
       case WorkbookOperation.DeleteNamedRange op ->
           switch (op.scope()) {
@@ -932,6 +946,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.ClearHyperlink op -> op.address();
       case WorkbookOperation.SetComment op -> op.address();
       case WorkbookOperation.ClearComment op -> op.address();
+      case WorkbookOperation.SetPivotTable op -> op.pivotTable().anchor().topLeftAddress();
       default -> null;
     };
   }
@@ -948,6 +963,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               : null;
       case WorkbookOperation.SetAutofilter op -> op.range();
       case WorkbookOperation.SetTable op -> op.table().range();
+      case WorkbookOperation.SetPivotTable op ->
+          switch (op.pivotTable().source()) {
+            case PivotTableInput.Source.Range range -> range.range();
+            case PivotTableInput.Source.NamedRange _ -> null;
+            case PivotTableInput.Source.Table _ -> null;
+          };
       case WorkbookOperation.MergeCells op -> op.range();
       case WorkbookOperation.UnmergeCells op -> op.range();
       case WorkbookOperation.SetNamedRange op -> op.target().range();
@@ -959,6 +980,12 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     return switch (operation) {
       case WorkbookOperation.SetNamedRange op -> op.name();
       case WorkbookOperation.DeleteNamedRange op -> op.name();
+      case WorkbookOperation.SetPivotTable op ->
+          switch (op.pivotTable().source()) {
+            case PivotTableInput.Source.NamedRange namedRange -> namedRange.name();
+            case PivotTableInput.Source.Range _ -> null;
+            case PivotTableInput.Source.Table _ -> null;
+          };
       default -> null;
     };
   }

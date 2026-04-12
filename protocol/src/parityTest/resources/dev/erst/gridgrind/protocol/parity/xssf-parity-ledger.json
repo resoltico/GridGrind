@@ -1165,14 +1165,14 @@
     },
     {
       "sequence": 62,
-      "id": "phase-7-pivot-tables-preservation",
+      "id": "phase-7-pivot-tables-readback",
       "capability": "pivot-tables",
-      "subfamily": "preservation",
+      "subfamily": "readback",
       "phase": 7,
       "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
-      "gridGrindStatus": "ABSENT",
+      "gridGrindStatus": "COMPLETE",
       "expectedOutcome": "PASS",
-      "probeId": "probe-pivot-preservation",
+      "probeId": "probe-pivot-readback",
       "scenarioIds": [
         "poi-pivot"
       ],
@@ -1180,10 +1180,68 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "Pivot-table package parts are preserved across unrelated edits without first-class modeling."
+      "notes": "GridGrind now reads supported POI-authored pivot tables and clean pivot health with direct POI agreement."
     },
     {
       "sequence": 63,
+      "id": "phase-7-pivot-tables-authoring",
+      "capability": "pivot-tables",
+      "subfamily": "authoring",
+      "phase": 7,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-pivot-authoring",
+      "scenarioIds": [
+        "gridgrind-pivot-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "Limitations"
+      ],
+      "notes": "GridGrind now authors range-, named-range-, and table-backed supported pivot tables and rereads them losslessly."
+    },
+    {
+      "sequence": 64,
+      "id": "phase-7-pivot-tables-mutation",
+      "capability": "pivot-tables",
+      "subfamily": "mutation",
+      "phase": 7,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-pivot-mutation",
+      "scenarioIds": [
+        "gridgrind-pivot-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "Limitations"
+      ],
+      "notes": "GridGrind now replaces and deletes supported pivot tables while keeping direct POI agreement on the saved workbook."
+    },
+    {
+      "sequence": 65,
+      "id": "phase-7-pivot-tables-preservation",
+      "capability": "pivot-tables",
+      "subfamily": "preservation",
+      "phase": 7,
+      "poiSupport": "DOCUMENTED_LIMITED_SUPPORT",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-pivot-preservation",
+      "scenarioIds": [
+        "poi-pivot",
+        "gridgrind-pivot-authoring"
+      ],
+      "primarySources": [
+        "Quick Guide",
+        "Limitations"
+      ],
+      "notes": "All Phase 7 pivot corpus workbooks now preserve pivot package parts, sources, and locations across unrelated edits."
+    },
+    {
+      "sequence": 66,
       "id": "phase-8-event-model-read",
       "capability": "event-model-read",
       "subfamily": "read",
@@ -1202,7 +1260,7 @@
       "notes": "POI event-model reads are not yet available through GridGrind."
     },
     {
-      "sequence": 64,
+      "sequence": 67,
       "id": "phase-8-sxssf-streaming-write",
       "capability": "sxssf-streaming-write",
       "subfamily": "write",
@@ -1221,7 +1279,7 @@
       "notes": "Streaming write parity via SXSSF is not yet available."
     },
     {
-      "sequence": 65,
+      "sequence": 68,
       "id": "phase-9-ooxml-encryption",
       "capability": "ooxml-encryption",
       "subfamily": "read-write",
@@ -1239,7 +1297,7 @@
       "notes": "Encrypted OOXML workbook handling is absent from GridGrind."
     },
     {
-      "sequence": 66,
+      "sequence": 69,
       "id": "phase-9-ooxml-signing",
       "capability": "ooxml-signing",
       "subfamily": "read-write",

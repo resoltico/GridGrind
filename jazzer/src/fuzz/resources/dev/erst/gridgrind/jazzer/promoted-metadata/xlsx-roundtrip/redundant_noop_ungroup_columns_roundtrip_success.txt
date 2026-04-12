@@ -1,8 +1,10 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/redundant_noop_ungroup_columns_roundtrip_success.bin
 Harness: xlsx-roundtrip
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: SheetNotFoundException
+Message: Sheet does not exist: V
 Input Bytes: 154
-Command Count: 10
+Command Count: 7
 Style Kinds: (none)
-Command Kinds: GROUP_COLUMNS=8, SET_SHEET_PANE=1, CREATE_SHEET=1
+Command Kinds: GROUP_COLUMNS=5, SET_SHEET_PANE=1, MERGE_CELLS=1

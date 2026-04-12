@@ -32,6 +32,7 @@ import java.util.Set;
       value = WorkbookReadOperation.GetDrawingObjects.class,
       name = "GET_DRAWING_OBJECTS"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetCharts.class, name = "GET_CHARTS"),
+  @JsonSubTypes.Type(value = WorkbookReadOperation.GetPivotTables.class, name = "GET_PIVOT_TABLES"),
   @JsonSubTypes.Type(
       value = WorkbookReadOperation.GetDrawingObjectPayload.class,
       name = "GET_DRAWING_OBJECT_PAYLOAD"),
@@ -68,6 +69,9 @@ import java.util.Set;
       value = WorkbookReadOperation.AnalyzeTableHealth.class,
       name = "ANALYZE_TABLE_HEALTH"),
   @JsonSubTypes.Type(
+      value = WorkbookReadOperation.AnalyzePivotTableHealth.class,
+      name = "ANALYZE_PIVOT_TABLE_HEALTH"),
+  @JsonSubTypes.Type(
       value = WorkbookReadOperation.AnalyzeHyperlinkHealth.class,
       name = "ANALYZE_HYPERLINK_HEALTH"),
   @JsonSubTypes.Type(
@@ -96,6 +100,7 @@ public sealed interface WorkbookReadOperation
           GetComments,
           GetDrawingObjects,
           GetCharts,
+          GetPivotTables,
           GetDrawingObjectPayload,
           GetSheetLayout,
           GetPrintLayout,
@@ -114,6 +119,7 @@ public sealed interface WorkbookReadOperation
           AnalyzeConditionalFormattingHealth,
           AnalyzeAutofilterHealth,
           AnalyzeTableHealth,
+          AnalyzePivotTableHealth,
           AnalyzeHyperlinkHealth,
           AnalyzeNamedRangeHealth,
           AnalyzeWorkbookFindings {}
@@ -220,6 +226,14 @@ public sealed interface WorkbookReadOperation
     public GetCharts {
       requestId = requireNonBlank(requestId, "requestId");
       sheetName = requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
+  record GetPivotTables(String requestId, PivotTableSelection selection) implements Introspection {
+    public GetPivotTables {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
     }
   }
 
@@ -353,6 +367,15 @@ public sealed interface WorkbookReadOperation
   /** Reports table findings such as overlaps, broken ranges, or invalid headers. */
   record AnalyzeTableHealth(String requestId, TableSelection selection) implements Analysis {
     public AnalyzeTableHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports pivot-table findings such as broken caches, sources, or relation wiring. */
+  record AnalyzePivotTableHealth(String requestId, PivotTableSelection selection)
+      implements Analysis {
+    public AnalyzePivotTableHealth {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(selection, "selection must not be null");
     }

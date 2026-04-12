@@ -85,6 +85,8 @@ class WorkbookAnalysisTest {
         new WorkbookAnalysis.AutofilterHealth(2, summary, mutable);
     WorkbookAnalysis.TableHealth tableHealth =
         new WorkbookAnalysis.TableHealth(2, summary, mutable);
+    WorkbookAnalysis.PivotTableHealth pivotTableHealth =
+        new WorkbookAnalysis.PivotTableHealth(2, summary, mutable);
     WorkbookAnalysis.NamedRangeHealth namedRangeHealth =
         new WorkbookAnalysis.NamedRangeHealth(2, summary, mutable);
     WorkbookAnalysis.WorkbookFindings workbookFindings =
@@ -96,6 +98,7 @@ class WorkbookAnalysisTest {
     assertEquals(3, conditionalFormattingHealth.findings().size());
     assertEquals(3, autofilterHealth.findings().size());
     assertEquals(3, tableHealth.findings().size());
+    assertEquals(3, pivotTableHealth.findings().size());
     assertEquals(3, namedRangeHealth.findings().size());
     assertEquals(3, workbookFindings.findings().size());
 
@@ -116,6 +119,9 @@ class WorkbookAnalysisTest {
         () -> new WorkbookAnalysis.TableHealth(-1, summary, List.of(finding)));
     assertThrows(
         IllegalArgumentException.class,
+        () -> new WorkbookAnalysis.PivotTableHealth(-1, summary, List.of(finding)));
+    assertThrows(
+        IllegalArgumentException.class,
         () -> new WorkbookAnalysis.NamedRangeHealth(-1, summary, List.of(finding)));
     assertThrows(
         IllegalArgumentException.class,
@@ -130,6 +136,9 @@ class WorkbookAnalysisTest {
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookAnalysis.TableHealth(1, summary, List.of(finding, null)));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookAnalysis.PivotTableHealth(1, summary, List.of(finding, null)));
     assertThrows(
         NullPointerException.class,
         () -> new WorkbookAnalysis.NamedRangeHealth(1, summary, List.of(finding, null)));

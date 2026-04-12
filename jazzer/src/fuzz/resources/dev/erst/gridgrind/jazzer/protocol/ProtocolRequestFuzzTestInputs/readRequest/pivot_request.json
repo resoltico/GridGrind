@@ -1,0 +1,150 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "cli/build/generated-workbooks/gridgrind-pivot.xlsx"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Data" },
+    { "type": "ENSURE_SHEET", "sheetName": "RangeReport" },
+    { "type": "ENSURE_SHEET", "sheetName": "NamedReport" },
+    { "type": "ENSURE_SHEET", "sheetName": "TableReport" },
+    {
+      "type": "SET_RANGE",
+      "sheetName": "Data",
+      "range": "A1:D5",
+      "rows": [
+        [
+          { "type": "TEXT", "text": "Region" },
+          { "type": "TEXT", "text": "Stage" },
+          { "type": "TEXT", "text": "Owner" },
+          { "type": "TEXT", "text": "Amount" }
+        ],
+        [
+          { "type": "TEXT", "text": "North" },
+          { "type": "TEXT", "text": "Plan" },
+          { "type": "TEXT", "text": "Ada" },
+          { "type": "NUMBER", "number": 10 }
+        ],
+        [
+          { "type": "TEXT", "text": "North" },
+          { "type": "TEXT", "text": "Do" },
+          { "type": "TEXT", "text": "Ada" },
+          { "type": "NUMBER", "number": 15 }
+        ],
+        [
+          { "type": "TEXT", "text": "South" },
+          { "type": "TEXT", "text": "Plan" },
+          { "type": "TEXT", "text": "Lin" },
+          { "type": "NUMBER", "number": 7 }
+        ],
+        [
+          { "type": "TEXT", "text": "South" },
+          { "type": "TEXT", "text": "Do" },
+          { "type": "TEXT", "text": "Lin" },
+          { "type": "NUMBER", "number": 12 }
+        ]
+      ]
+    },
+    {
+      "type": "SET_NAMED_RANGE",
+      "name": "PivotSource",
+      "scope": { "type": "WORKBOOK" },
+      "target": { "sheetName": "Data", "range": "A1:D5" }
+    },
+    {
+      "type": "SET_TABLE",
+      "table": {
+        "name": "SalesTable",
+        "sheetName": "Data",
+        "range": "A1:D5",
+        "style": { "type": "NONE" }
+      }
+    },
+    {
+      "type": "SET_PIVOT_TABLE",
+      "pivotTable": {
+        "name": "Sales Pivot",
+        "sheetName": "RangeReport",
+        "source": {
+          "type": "RANGE",
+          "sheetName": "Data",
+          "range": "A1:D5"
+        },
+        "anchor": { "topLeftAddress": "C5" },
+        "rowLabels": ["Region"],
+        "columnLabels": ["Stage"],
+        "reportFilters": [],
+        "dataFields": [
+          {
+            "sourceColumnName": "Amount",
+            "function": "SUM",
+            "displayName": "Total Amount",
+            "valueFormat": "#,##0.00"
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_PIVOT_TABLE",
+      "pivotTable": {
+        "name": "Named Pivot",
+        "sheetName": "NamedReport",
+        "source": { "type": "NAMED_RANGE", "name": "PivotSource" },
+        "anchor": { "topLeftAddress": "A3" },
+        "rowLabels": ["Region"],
+        "columnLabels": [],
+        "reportFilters": ["Owner"],
+        "dataFields": [
+          {
+            "sourceColumnName": "Amount",
+            "function": "SUM",
+            "displayName": "Total Amount",
+            "valueFormat": "#,##0.00"
+          }
+        ]
+      }
+    },
+    {
+      "type": "SET_PIVOT_TABLE",
+      "pivotTable": {
+        "name": "Table Pivot",
+        "sheetName": "TableReport",
+        "source": { "type": "TABLE", "name": "SalesTable" },
+        "anchor": { "topLeftAddress": "F4" },
+        "rowLabels": ["Stage"],
+        "columnLabels": [],
+        "reportFilters": [],
+        "dataFields": [
+          {
+            "sourceColumnName": "Amount",
+            "function": "SUM",
+            "displayName": "Total Amount",
+            "valueFormat": "#,##0.00"
+          }
+        ]
+      }
+    }
+  ],
+  "reads": [
+    {
+      "type": "GET_TABLES",
+      "requestId": "tables",
+      "selection": {
+        "type": "BY_NAMES",
+        "names": ["SalesTable"]
+      }
+    },
+    {
+      "type": "GET_PIVOT_TABLES",
+      "requestId": "pivots",
+      "selection": { "type": "ALL" }
+    },
+    {
+      "type": "ANALYZE_PIVOT_TABLE_HEALTH",
+      "requestId": "pivot-health",
+      "selection": { "type": "ALL" }
+    }
+  ]
+}

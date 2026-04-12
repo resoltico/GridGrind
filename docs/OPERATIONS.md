@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.39.0"
+version: "0.40.0"
 domain: OPERATIONS
-updated: "2026-04-12"
+updated: "2026-04-13"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-workbook-findings, request, json, protocol, coordinates, rowindex, columnindex, warnings]
-  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I add a picture in gridgrind", "how do I author a chart in gridgrind", "how do I read charts in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-pivot-table, delete-pivot-table, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, request, json, protocol, coordinates, rowindex, columnindex, warnings]
+  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I create a pivot table in gridgrind", "how do I read pivot tables in gridgrind", "how do I add a picture in gridgrind", "how do I author a chart in gridgrind", "how do I read charts in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
 ---
 
 # Operations Reference
@@ -225,8 +225,8 @@ All mutation operations (`SET_CELL`, `SET_RANGE`, `CLEAR_RANGE`, `APPLY_STYLE`,
 `CLEAR_COMMENT`, `SET_PICTURE`, `SET_CHART`, `SET_SHAPE`, `SET_EMBEDDED_OBJECT`,
 `SET_DRAWING_OBJECT_ANCHOR`, `DELETE_DRAWING_OBJECT`, `SET_AUTOFILTER`,
 `CLEAR_AUTOFILTER`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the target sheet to already exist.
-`SET_TABLE` also requires the target `table.sheetName` to exist. Use `ENSURE_SHEET` before the
-first write to any sheet.
+`SET_TABLE` and `SET_PIVOT_TABLE` also require the target `table.sheetName` or
+`pivotTable.sheetName` to exist. Use `ENSURE_SHEET` before the first write to any sheet.
 
 ```json
 { "type": "ENSURE_SHEET", "sheetName": "Inventory" }
@@ -2168,6 +2168,141 @@ The request fails if the table does not exist on the expected sheet.
 
 ---
 
+### SET_PIVOT_TABLE
+
+Create or replace one workbook-global pivot-table definition to POI XSSF's supported limited
+extent. Sources may be an explicit contiguous sheet range, an existing named range, or an existing
+table. `rowLabels`, `columnLabels`, `reportFilters`, and `dataFields` must use disjoint source
+columns because POI persists only one role per pivot field. When `reportFilters` is non-empty,
+`anchor.topLeftAddress` must be on Excel row `3` or lower so Excel's page-filter layout has room
+above the rendered body.
+
+```json
+{
+  "type": "SET_PIVOT_TABLE",
+  "pivotTable": {
+    "name": "SalesPivot",
+    "sheetName": "Report",
+    "source": {
+      "type": "RANGE",
+      "sheetName": "Inventory",
+      "range": "A1:D200"
+    },
+    "anchor": { "topLeftAddress": "C5" },
+    "rowLabels": ["Region"],
+    "columnLabels": ["Stage"],
+    "reportFilters": [],
+    "dataFields": [
+      {
+        "sourceColumnName": "Amount",
+        "function": "SUM",
+        "displayName": "Total Amount",
+        "valueFormat": "#,##0.00"
+      }
+    ]
+  }
+}
+```
+
+```json
+{
+  "type": "SET_PIVOT_TABLE",
+  "pivotTable": {
+    "name": "NamedPivot",
+    "sheetName": "NamedReport",
+    "source": { "type": "NAMED_RANGE", "name": "PivotSource" },
+    "anchor": { "topLeftAddress": "A3" },
+    "rowLabels": ["Region"],
+    "columnLabels": [],
+    "reportFilters": ["Owner"],
+    "dataFields": [
+      {
+        "sourceColumnName": "Amount",
+        "function": "SUM"
+      }
+    ]
+  }
+}
+```
+
+```json
+{
+  "type": "SET_PIVOT_TABLE",
+  "pivotTable": {
+    "name": "TablePivot",
+    "sheetName": "TableReport",
+    "source": { "type": "TABLE", "name": "InventoryTable" },
+    "anchor": { "topLeftAddress": "F4" },
+    "rowLabels": ["Stage"],
+    "columnLabels": [],
+    "reportFilters": [],
+    "dataFields": [
+      {
+        "sourceColumnName": "Amount",
+        "function": "SUM",
+        "displayName": "Total Amount"
+      }
+    ]
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `pivotTable` | Yes | One workbook-global pivot-table definition payload. |
+
+`pivotTable` payload:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `name` | Yes | Workbook-global pivot-table identifier. Must be nonblank and valid for persisted pivot metadata. |
+| `sheetName` | Yes | Existing destination sheet that owns the pivot-table relation. |
+| `source` | Yes | One authored pivot-source payload: `RANGE`, `NAMED_RANGE`, or `TABLE`. |
+| `anchor` | Yes | Top-left destination address for the rendered pivot. When `reportFilters` is non-empty, this must be on Excel row `3` or lower. |
+| `rowLabels` | No | Ordered distinct source-column names for row fields. Defaults to `[]`. |
+| `columnLabels` | No | Ordered distinct source-column names for column fields. Defaults to `[]`. |
+| `reportFilters` | No | Ordered distinct source-column names for page filters. Defaults to `[]`. |
+| `dataFields` | Yes | Ordered non-empty data-field list. |
+
+Supported `source` variants:
+
+- `RANGE`: `sheetName` plus contiguous A1 `range`. The first row is the header row.
+- `NAMED_RANGE`: existing named-range `name`. The named range may be workbook-scoped or
+  sheet-scoped, but it must resolve to one contiguous area.
+- `TABLE`: existing workbook-global table `name`.
+
+`dataFields[*]` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sourceColumnName` | Yes | Source-column header text for the aggregated value field. |
+| `function` | Yes | Pivot aggregation function: `SUM`, `COUNT`, `COUNT_NUMS`, `AVERAGE`, `MAX`, `MIN`, `PRODUCT`, `STD_DEV`, `STD_DEVP`, `VAR`, or `VARP`. |
+| `displayName` | No | Visible data-field caption. Defaults to `sourceColumnName`. |
+| `valueFormat` | No | Optional persisted number-format string. |
+
+---
+
+### DELETE_PIVOT_TABLE
+
+Delete one existing workbook-global pivot table by name and expected sheet.
+
+```json
+{
+  "type": "DELETE_PIVOT_TABLE",
+  "name": "SalesPivot",
+  "sheetName": "Report"
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `name` | Yes | Existing workbook-global pivot-table name. |
+| `sheetName` | Yes | Existing sheet expected to own the pivot table. |
+
+The request fails if the pivot table does not exist on the expected sheet.
+
+---
+
 ### APPEND_ROW
 
 Append a single row of typed values after the last value-bearing row in a sheet.
@@ -2939,6 +3074,50 @@ Table-selection payloads use:
 }
 ```
 
+### GET_PIVOT_TABLES
+
+Returns factual pivot-table metadata selected by workbook-global pivot-table name or all pivots.
+Supported pivots surface source, stored anchor, row or column labels, report filters, data fields,
+and values-axis placement. Unsupported or malformed loaded pivots are returned explicitly with
+preserved detail instead of causing read failure.
+
+```json
+{
+  "type": "GET_PIVOT_TABLES",
+  "requestId": "pivots",
+  "selection": { "type": "ALL" }
+}
+```
+
+```json
+{
+  "type": "GET_PIVOT_TABLES",
+  "requestId": "selected-pivots",
+  "selection": {
+    "type": "BY_NAMES",
+    "names": ["SalesPivot", "NamedPivot"]
+  }
+}
+```
+
+Response shape: `{ "pivotTables": [ ... ] }`.
+
+Returned entries are one of:
+
+- `SUPPORTED` with persisted `source`, stored `anchor`, ordered `rowLabels`, `columnLabels`,
+  `reportFilters`, ordered `dataFields`, and `valuesAxisOnColumns`
+- `UNSUPPORTED` with stored `anchor` plus human-readable `detail`
+
+Returned `source` variants are:
+
+- `RANGE` with `sheetName` and `range`
+- `NAMED_RANGE` with original `name` plus the currently resolved `sheetName` and `range`
+- `TABLE` with original `name` plus the currently resolved `sheetName` and `range`
+
+Returned `anchor` includes authored `topLeftAddress` plus the current persisted `locationRange`.
+Each returned field entry carries `sourceColumnIndex` and `sourceColumnName`. Data-field entries
+also carry `function`, `displayName`, and optional `valueFormat`.
+
 ### GET_FORMULA_SURFACE
 
 Groups formula usage across one or more sheets.
@@ -3107,6 +3286,30 @@ mismatches.
 }
 ```
 
+### ANALYZE_PIVOT_TABLE_HEALTH
+
+Reports pivot-table findings such as missing cache parts, missing workbook-cache definitions,
+broken sources, duplicate names, synthetic fallback names, or unsupported persisted detail.
+
+```json
+{
+  "type": "ANALYZE_PIVOT_TABLE_HEALTH",
+  "requestId": "pivot-health",
+  "selection": { "type": "ALL" }
+}
+```
+
+```json
+{
+  "type": "ANALYZE_PIVOT_TABLE_HEALTH",
+  "requestId": "selected-pivot-health",
+  "selection": {
+    "type": "BY_NAMES",
+    "names": ["SalesPivot", "NamedPivot"]
+  }
+}
+```
+
 ### ANALYZE_HYPERLINK_HEALTH
 
 Reports hyperlink findings such as malformed external targets, missing local file targets,
@@ -3146,7 +3349,7 @@ flat finding list. This is the primary workbook-health check and works especiall
 `persistence.type=NONE` when you want a no-save lint pass.
 
 The aggregate currently includes formula, data validation, conditional formatting, autofilter,
-table, hyperlink, and named-range findings.
+table, pivot-table, hyperlink, and named-range findings.
 
 ```json
 {

@@ -8,11 +8,9 @@
     "details" : {
       "type" : "ENGINE_COMMAND_SEQUENCE",
       "inputBytes" : 63,
-      "commandCount" : 4,
+      "commandCount" : 1,
       "commandKinds" : {
-        "DELETE_TABLE" : 1,
-        "CREATE_SHEET" : 1,
-        "GROUP_COLUMNS" : 2
+        "APPEND_ROW" : 1
       },
       "styleKinds" : { }
     }

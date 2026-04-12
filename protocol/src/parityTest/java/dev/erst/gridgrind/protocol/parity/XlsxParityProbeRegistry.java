@@ -77,6 +77,9 @@ final class XlsxParityProbeRegistry {
       case "probe-chart-mutation" -> probeChartMutation(context);
       case "probe-chart-preservation" -> probeChartPreservation(context);
       case "probe-chart-unsupported" -> probeChartUnsupported(context);
+      case "probe-pivot-readback" -> probePivotReadback(context);
+      case "probe-pivot-authoring" -> probePivotAuthoring(context);
+      case "probe-pivot-mutation" -> probePivotMutation(context);
       case "probe-pivot-preservation" -> probePivotPreservation(context);
       case "probe-event-model-gap" -> probeEventModelGap(context);
       case "probe-sxssf-gap" -> probeSxssfGap(context);
@@ -2270,18 +2273,164 @@ final class XlsxParityProbeRegistry {
   }
 
   private static ProbeResult probePivotPreservation(ProbeContext context) {
+    List<String> mismatches = new ArrayList<>();
+    for (String scenarioId :
+        List.of(XlsxParityScenarios.PIVOT, XlsxParityScenarios.PIVOT_AUTHORING)) {
+      XlsxParityScenarios.MaterializedScenario pivot =
+          context.copiedScenario(scenarioId, "pivot-preservation-" + scenarioId);
+      List<PivotTableReport> before = XlsxParityOracle.pivotTables(pivot.workbookPath());
+      Path outputPath = context.derivedWorkbook("pivot-preserved-" + scenarioId.replace('-', '_'));
+      XlsxParityGridGrind.mutateWorkbook(
+          pivot.workbookPath(),
+          outputPath,
+          List.of(
+              new WorkbookOperation.EnsureSheet("Scratch"),
+              new WorkbookOperation.SetCell("Scratch", "A1", new CellInput.Text("Touch"))));
+      List<PivotTableReport> after = XlsxParityOracle.pivotTables(outputPath);
+      if (!before.equals(after)) {
+        mismatches.add(scenarioId);
+      }
+    }
+    return mismatches.isEmpty()
+        ? pass(
+            "Phase 7 pivot corpus workbooks preserve pivot parts and sources across unrelated edits.")
+        : fail("Unrelated GridGrind edits changed pivot state for scenarios: " + mismatches);
+  }
+
+  private static ProbeResult probePivotReadback(ProbeContext context) {
+    if (!XlsxParityGridGrind.hasReadType("GET_PIVOT_TABLES")
+        || !XlsxParityGridGrind.hasReadType("ANALYZE_PIVOT_TABLE_HEALTH")) {
+      return fail("GridGrind is missing the Phase 7 pivot read contract.");
+    }
+    XlsxParityScenarios.MaterializedScenario pivot = context.scenario(XlsxParityScenarios.PIVOT);
+    List<PivotTableReport> directPivots = XlsxParityOracle.pivotTables(pivot.workbookPath());
+    GridGrindResponse.Success success =
+        XlsxParityGridGrind.readWorkbook(
+            pivot.workbookPath(),
+            new WorkbookReadOperation.GetPivotTables("pivots", new PivotTableSelection.All()),
+            new WorkbookReadOperation.AnalyzePivotTableHealth(
+                "health", new PivotTableSelection.All()));
+    WorkbookReadResult.PivotTablesResult pivots =
+        XlsxParityGridGrind.read(success, "pivots", WorkbookReadResult.PivotTablesResult.class);
+    WorkbookReadResult.PivotTableHealthResult health =
+        XlsxParityGridGrind.read(
+            success, "health", WorkbookReadResult.PivotTableHealthResult.class);
+    if (directPivots.size() != 1
+        || !(directPivots.getFirst() instanceof PivotTableReport.Supported supported)
+        || !(supported.source() instanceof PivotTableReport.Source.Range)
+        || !supported.rowLabels().equals(List.of(new PivotTableReport.Field(0, "Region")))) {
+      return fail(
+          "Direct POI pivot corpus workbook is not in the expected supported single-pivot shape.");
+    }
+    boolean matches = pivots.pivotTables().equals(directPivots) && pivotHealthClean(health, 1);
+    return matches
+        ? pass("GridGrind reads supported POI-authored pivot tables with direct POI agreement.")
+        : fail("GridGrind pivot readback diverged from the direct POI oracle.");
+  }
+
+  private static ProbeResult probePivotAuthoring(ProbeContext context) {
+    if (!XlsxParityGridGrind.hasOperationType("SET_PIVOT_TABLE")
+        || !XlsxParityGridGrind.hasReadType("GET_PIVOT_TABLES")
+        || !XlsxParityGridGrind.hasReadType("ANALYZE_PIVOT_TABLE_HEALTH")) {
+      return fail("GridGrind is missing the Phase 7 pivot authoring contract.");
+    }
     XlsxParityScenarios.MaterializedScenario pivot =
-        context.copiedScenario(XlsxParityScenarios.PIVOT, "pivot-source");
-    XlsxParityOracle.PivotSnapshot before = XlsxParityOracle.pivot(pivot.workbookPath());
-    Path outputPath = context.derivedWorkbook("pivot-preserved");
-    XlsxParityGridGrind.mutateWorkbook(
-        pivot.workbookPath(),
-        outputPath,
-        List.of(new WorkbookOperation.SetCell("Data", "C1", new CellInput.Text("Touch"))));
-    XlsxParityOracle.PivotSnapshot after = XlsxParityOracle.pivot(outputPath);
-    return before.equals(after)
-        ? pass("Unrelated GridGrind edits preserve pivot-table parts.")
-        : fail("Unrelated GridGrind edits changed pivot-table package state.");
+        context.scenario(XlsxParityScenarios.PIVOT_AUTHORING);
+    List<PivotTableReport> directPivots = XlsxParityOracle.pivotTables(pivot.workbookPath());
+    GridGrindResponse.Success success =
+        XlsxParityGridGrind.readWorkbook(
+            pivot.workbookPath(),
+            new WorkbookReadOperation.GetPivotTables("pivots", new PivotTableSelection.All()),
+            new WorkbookReadOperation.AnalyzePivotTableHealth(
+                "health", new PivotTableSelection.All()));
+    WorkbookReadResult.PivotTablesResult pivots =
+        XlsxParityGridGrind.read(success, "pivots", WorkbookReadResult.PivotTablesResult.class);
+    WorkbookReadResult.PivotTableHealthResult health =
+        XlsxParityGridGrind.read(
+            success, "health", WorkbookReadResult.PivotTableHealthResult.class);
+    if (directPivots.size() != 3
+        || supportedPivotByName(directPivots, "Sales Pivot") == null
+        || !(supportedPivotByName(directPivots, "Named Pivot").source()
+            instanceof PivotTableReport.Source.NamedRange)
+        || !(supportedPivotByName(directPivots, "Table Pivot").source()
+            instanceof PivotTableReport.Source.Table)) {
+      return fail(
+          "GridGrind-authored pivot corpus workbook did not retain the expected range, named-range, and table-backed pivot shapes.");
+    }
+    boolean matches =
+        pivots.pivotTables().equals(directPivots) && pivotHealthClean(health, directPivots.size());
+    return matches
+        ? pass(
+            "GridGrind authors range-, named-range-, and table-backed pivot tables and rereads them with direct POI agreement.")
+        : fail("GridGrind-authored pivot workbook diverged from the direct POI oracle.");
+  }
+
+  private static ProbeResult probePivotMutation(ProbeContext context) {
+    XlsxParityScenarios.MaterializedScenario pivot =
+        context.copiedScenario(XlsxParityScenarios.PIVOT_AUTHORING, "pivot-mutation-source");
+    Path outputPath = context.derivedWorkbook("pivot-mutated");
+    GridGrindResponse.Success success =
+        XlsxParityGridGrind.mutateWorkbook(
+            pivot.workbookPath(),
+            outputPath,
+            List.of(
+                new WorkbookOperation.SetPivotTable(
+                    new PivotTableInput(
+                        "Sales Pivot",
+                        "RangeReport",
+                        new PivotTableInput.Source.Range("Data", "A1:D5"),
+                        new PivotTableInput.Anchor("D6"),
+                        List.of("Stage"),
+                        List.of("Region"),
+                        List.of(),
+                        List.of(
+                            new PivotTableInput.DataField(
+                                "Amount",
+                                dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                                "Total Amount",
+                                "#,##0.00")))),
+                new WorkbookOperation.DeletePivotTable("Table Pivot", "TableReport")),
+            new WorkbookReadOperation.GetPivotTables("pivots", new PivotTableSelection.All()),
+            new WorkbookReadOperation.AnalyzePivotTableHealth(
+                "health", new PivotTableSelection.All()));
+    List<PivotTableReport> directPivots = XlsxParityOracle.pivotTables(outputPath);
+    WorkbookReadResult.PivotTablesResult pivots =
+        XlsxParityGridGrind.read(success, "pivots", WorkbookReadResult.PivotTablesResult.class);
+    WorkbookReadResult.PivotTableHealthResult health =
+        XlsxParityGridGrind.read(
+            success, "health", WorkbookReadResult.PivotTableHealthResult.class);
+    PivotTableReport.Supported salesPivot = supportedPivotByName(directPivots, "Sales Pivot");
+    if (directPivots.size() != 2
+        || salesPivot == null
+        || !"D6".equals(salesPivot.anchor().topLeftAddress())
+        || !salesPivot.rowLabels().equals(List.of(new PivotTableReport.Field(1, "Stage")))
+        || !salesPivot.columnLabels().equals(List.of(new PivotTableReport.Field(0, "Region")))
+        || supportedPivotByName(directPivots, "Table Pivot") != null) {
+      return fail(
+          "Pivot mutation parity did not produce the expected updated supported pivot set.");
+    }
+    boolean matches =
+        pivots.pivotTables().equals(directPivots) && pivotHealthClean(health, directPivots.size());
+    return matches
+        ? pass("GridGrind mutates and deletes supported pivot tables with direct POI agreement.")
+        : fail("GridGrind pivot mutation diverged from the direct POI oracle.");
+  }
+
+  private static boolean pivotHealthClean(
+      WorkbookReadResult.PivotTableHealthResult health, int expectedPivotCount) {
+    return health.analysis().checkedPivotTableCount() == expectedPivotCount
+        && health.analysis().summary().totalCount() == 0
+        && health.analysis().findings().isEmpty();
+  }
+
+  private static PivotTableReport.Supported supportedPivotByName(
+      List<PivotTableReport> pivots, String name) {
+    return pivots.stream()
+        .filter(PivotTableReport.Supported.class::isInstance)
+        .map(PivotTableReport.Supported.class::cast)
+        .filter(pivot -> pivot.name().equals(name))
+        .findFirst()
+        .orElse(null);
   }
 
   private static ProbeResult probeEventModelGap(ProbeContext context) {

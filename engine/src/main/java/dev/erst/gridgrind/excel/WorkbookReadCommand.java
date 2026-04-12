@@ -25,6 +25,7 @@ public sealed interface WorkbookReadCommand
           GetComments,
           GetDrawingObjects,
           GetCharts,
+          GetPivotTables,
           GetDrawingObjectPayload,
           GetSheetLayout,
           GetPrintLayout,
@@ -43,6 +44,7 @@ public sealed interface WorkbookReadCommand
           AnalyzeConditionalFormattingHealth,
           AnalyzeAutofilterHealth,
           AnalyzeTableHealth,
+          AnalyzePivotTableHealth,
           AnalyzeHyperlinkHealth,
           AnalyzeNamedRangeHealth,
           AnalyzeWorkbookFindings {}
@@ -215,6 +217,15 @@ public sealed interface WorkbookReadCommand
     }
   }
 
+  /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
+  record GetPivotTables(String requestId, ExcelPivotTableSelection selection)
+      implements Introspection {
+    public GetPivotTables {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
   /** Groups formula usage patterns across one or more sheets. */
   record GetFormulaSurface(String requestId, ExcelSheetSelection selection)
       implements Introspection {
@@ -285,6 +296,15 @@ public sealed interface WorkbookReadCommand
   /** Reports table findings such as overlaps, broken ranges, or invalid headers. */
   record AnalyzeTableHealth(String requestId, ExcelTableSelection selection) implements Analysis {
     public AnalyzeTableHealth {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(selection, "selection must not be null");
+    }
+  }
+
+  /** Reports pivot-table findings such as broken caches, names, and sources. */
+  record AnalyzePivotTableHealth(String requestId, ExcelPivotTableSelection selection)
+      implements Analysis {
+    public AnalyzePivotTableHealth {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(selection, "selection must not be null");
     }

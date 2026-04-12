@@ -8,8 +8,12 @@
     "details" : {
       "type" : "ENGINE_COMMAND_SEQUENCE",
       "inputBytes" : 64,
-      "commandCount" : 0,
-      "commandKinds" : { },
+      "commandCount" : 3,
+      "commandKinds" : {
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
+        "AUTO_SIZE_COLUMNS" : 1,
+        "DELETE_PIVOT_TABLE" : 1
+      },
       "styleKinds" : { }
     }
   },

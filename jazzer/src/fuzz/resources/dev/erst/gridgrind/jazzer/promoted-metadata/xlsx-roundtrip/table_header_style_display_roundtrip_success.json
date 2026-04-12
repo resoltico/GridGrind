@@ -2,18 +2,16 @@
   "targetKey" : "xlsx-roundtrip",
   "sourcePath" : ".local/runs/xlsx-roundtrip/crash-2fd538704ab2f1e50c87b7954538ec4d4fd10e36",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/table_header_style_display_roundtrip_success.bin",
-  "replayOutcome" : "EXPECTED_INVALID",
+  "replayOutcome" : "SUCCESS",
   "expectation" : {
-    "outcomeKind" : "EXPECTED_INVALID",
+    "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "XLSX_ROUND_TRIP",
       "inputBytes" : 191,
       "commandCount" : 6,
       "commandKinds" : {
-        "CLEAR_CONDITIONAL_FORMATTING" : 1,
-        "SET_COLUMN_VISIBILITY" : 1,
-        "RENAME_SHEET" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 5,
+        "CREATE_SHEET" : 1
       },
       "styleKinds" : { }
     }

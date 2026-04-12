@@ -197,6 +197,51 @@ class WorkbookReadResultTest {
   }
 
   @Test
+  void pivotReadResultsCopyEntriesAndRejectInvalidState() {
+    ExcelPivotTableSnapshot.Supported pivot =
+        new ExcelPivotTableSnapshot.Supported(
+            "Budget Pivot",
+            "Report",
+            new ExcelPivotTableSnapshot.Anchor("A3", "A3:C8"),
+            new ExcelPivotTableSnapshot.Source.Range("Data", "A1:D5"),
+            List.of(new ExcelPivotTableSnapshot.Field(0, "Region")),
+            List.of(),
+            List.of(),
+            List.of(
+                new ExcelPivotTableSnapshot.DataField(
+                    3,
+                    "Amount",
+                    ExcelPivotDataConsolidateFunction.SUM,
+                    "Total Amount",
+                    "#,##0.00")),
+            false);
+    WorkbookAnalysis.AnalysisFinding finding =
+        new WorkbookAnalysis.AnalysisFinding(
+            WorkbookAnalysis.AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
+            WorkbookAnalysis.AnalysisSeverity.WARNING,
+            "Pivot table name is missing",
+            "GridGrind assigned a synthetic identifier for readback.",
+            new WorkbookAnalysis.AnalysisLocation.Sheet("Report"),
+            List.of("_GG_PIVOT_Report_A3"));
+    WorkbookAnalysis.PivotTableHealth health =
+        new WorkbookAnalysis.PivotTableHealth(
+            1, new WorkbookAnalysis.AnalysisSummary(1, 0, 1, 0), List.of(finding));
+
+    WorkbookReadResult.PivotTablesResult pivotTables =
+        new WorkbookReadResult.PivotTablesResult("pivots", List.of(pivot));
+    WorkbookReadResult.PivotTableHealthResult pivotTableHealth =
+        new WorkbookReadResult.PivotTableHealthResult("pivot-health", health);
+
+    assertEquals("Budget Pivot", pivotTables.pivotTables().getFirst().name());
+    assertEquals(1, pivotTableHealth.analysis().checkedPivotTableCount());
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookReadResult.PivotTablesResult("pivots", null));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.PivotTableHealthResult("pivot-health", null));
+  }
+
+  @Test
   void reportsExcelNativeIndexDiagnosticsForReadResults() {
     ExcelCellSnapshot.BlankSnapshot blank =
         new ExcelCellSnapshot.BlankSnapshot(

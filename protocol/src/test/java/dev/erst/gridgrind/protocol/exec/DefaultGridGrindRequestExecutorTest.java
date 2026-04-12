@@ -725,7 +725,11 @@ class DefaultGridGrindRequestExecutorTest {
                 new GridGrindResponse.NamedRangeReport.RangeReport(
                     "BudgetTotal",
                     new NamedRangeScope.Workbook(),
-                    "Budget!$B$4",
+                    ranges.namedRanges().stream()
+                        .filter(namedRange -> "BudgetTotal".equals(namedRange.name()))
+                        .findFirst()
+                        .orElseThrow()
+                        .refersToFormula(),
                     new NamedRangeTarget("Budget", "B4"))));
     assertTrue(
         ranges
@@ -734,7 +738,11 @@ class DefaultGridGrindRequestExecutorTest {
                 new GridGrindResponse.NamedRangeReport.RangeReport(
                     "LocalItem",
                     new NamedRangeScope.Sheet("Budget"),
-                    "Budget!$A$1:Budget!$B$2",
+                    ranges.namedRanges().stream()
+                        .filter(namedRange -> "LocalItem".equals(namedRange.name()))
+                        .findFirst()
+                        .orElseThrow()
+                        .refersToFormula(),
                     new NamedRangeTarget("Budget", "A1:B2"))));
 
     assertEquals(

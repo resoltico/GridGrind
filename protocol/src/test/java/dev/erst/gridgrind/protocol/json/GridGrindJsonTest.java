@@ -11,6 +11,7 @@ import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.protocol.catalog.Catalog;
@@ -222,6 +223,76 @@ class GridGrindJsonTest {
                                         "A2:A4", List.of("Jan", "Feb", "Mar")),
                                     new ChartReport.DataSource.NumericReference(
                                         "B2:B4", null, List.of("10.0", "18.0", "15.0")))))))));
+
+    assertEquals(request, GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(request)));
+    assertEquals(expected, GridGrindJson.readResponse(GridGrindJson.writeResponseBytes(expected)));
+  }
+
+  @Test
+  void roundTripsPivotRequestsAndResponses() throws IOException {
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.None(),
+            List.of(
+                new WorkbookOperation.SetPivotTable(
+                    new PivotTableInput(
+                        "Sales Pivot 2026",
+                        "Report",
+                        new PivotTableInput.Source.NamedRange("PivotSource"),
+                        new PivotTableInput.Anchor("C5"),
+                        List.of("Region"),
+                        List.of("Stage"),
+                        List.of("Owner"),
+                        List.of(
+                            new PivotTableInput.DataField(
+                                "Amount",
+                                ExcelPivotDataConsolidateFunction.SUM,
+                                null,
+                                "#,##0.00"))))),
+            List.of(
+                new WorkbookReadOperation.GetPivotTables(
+                    "pivots", new PivotTableSelection.ByNames(List.of("Sales Pivot 2026"))),
+                new WorkbookReadOperation.AnalyzePivotTableHealth(
+                    "pivot-health", new PivotTableSelection.All())));
+    GridGrindResponse expected =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            List.of(),
+            List.of(
+                new WorkbookReadResult.PivotTablesResult(
+                    "pivots",
+                    List.of(
+                        new PivotTableReport.Supported(
+                            "Sales Pivot 2026",
+                            "Report",
+                            new PivotTableReport.Anchor("C5", "C5:G9"),
+                            new PivotTableReport.Source.Table("SalesTable", "Data", "A1:D5"),
+                            List.of(new PivotTableReport.Field(0, "Region")),
+                            List.of(new PivotTableReport.Field(1, "Stage")),
+                            List.of(new PivotTableReport.Field(2, "Owner")),
+                            List.of(
+                                new PivotTableReport.DataField(
+                                    3,
+                                    "Amount",
+                                    ExcelPivotDataConsolidateFunction.SUM,
+                                    "Total Amount",
+                                    "#,##0.00")),
+                            true))),
+                new WorkbookReadResult.PivotTableHealthResult(
+                    "pivot-health",
+                    new PivotTableHealthReport(
+                        1,
+                        new GridGrindResponse.AnalysisSummaryReport(1, 0, 1, 0),
+                        List.of(
+                            new GridGrindResponse.AnalysisFindingReport(
+                                AnalysisFindingCode.PIVOT_TABLE_MISSING_NAME,
+                                AnalysisSeverity.WARNING,
+                                "Pivot table name is missing",
+                                "GridGrind assigned a synthetic identifier for readback.",
+                                new GridGrindResponse.AnalysisLocationReport.Sheet("Report"),
+                                List.of("_GG_PIVOT_Report_A3")))))));
 
     assertEquals(request, GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(request)));
     assertEquals(expected, GridGrindJson.readResponse(GridGrindJson.writeResponseBytes(expected)));

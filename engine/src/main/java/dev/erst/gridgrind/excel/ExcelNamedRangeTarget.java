@@ -42,12 +42,13 @@ public record ExcelNamedRangeTarget(String sheetName, String range, String formu
     ExcelRange excelRange = ExcelRange.parse(range);
     CellReference first =
         new CellReference(sheetName, excelRange.firstRow(), excelRange.firstColumn(), true, true);
-    CellReference last =
-        new CellReference(sheetName, excelRange.lastRow(), excelRange.lastColumn(), true, true);
     if (excelRange.rowCount() == 1 && excelRange.columnCount() == 1) {
       return first.formatAsString();
     }
-    return first.formatAsString() + ":" + last.formatAsString();
+    return first.formatAsString()
+        + ":"
+        + new CellReference(excelRange.lastRow(), excelRange.lastColumn(), true, true)
+            .formatAsString();
   }
 
   private static String normalizeRange(String range) {
