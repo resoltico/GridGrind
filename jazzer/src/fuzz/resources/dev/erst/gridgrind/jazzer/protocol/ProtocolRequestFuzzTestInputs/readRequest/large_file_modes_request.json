@@ -1,0 +1,47 @@
+{
+  "protocolVersion": "V1",
+  "source": { "type": "NEW" },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "cli/build/generated-workbooks/gridgrind-large-file-modes.xlsx"
+  },
+  "executionMode": {
+    "readMode": "EVENT_READ",
+    "writeMode": "STREAMING_WRITE"
+  },
+  "operations": [
+    { "type": "ENSURE_SHEET", "sheetName": "Ledger" },
+    {
+      "type": "APPEND_ROW",
+      "sheetName": "Ledger",
+      "values": [
+        { "type": "TEXT", "text": "Team" },
+        { "type": "TEXT", "text": "Task" },
+        { "type": "TEXT", "text": "Hours" }
+      ]
+    },
+    {
+      "type": "APPEND_ROW",
+      "sheetName": "Ledger",
+      "values": [
+        { "type": "TEXT", "text": "Ops" },
+        { "type": "TEXT", "text": "Badge prep" },
+        { "type": "NUMBER", "number": 6.5 }
+      ]
+    },
+    {
+      "type": "APPEND_ROW",
+      "sheetName": "Ledger",
+      "values": [
+        { "type": "TEXT", "text": "Facilities" },
+        { "type": "TEXT", "text": "Desk setup" },
+        { "type": "NUMBER", "number": 4.0 }
+      ]
+    },
+    { "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
+  ],
+  "reads": [
+    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
+    { "type": "GET_SHEET_SUMMARY", "requestId": "ledger-sheet", "sheetName": "Ledger" }
+  ]
+}

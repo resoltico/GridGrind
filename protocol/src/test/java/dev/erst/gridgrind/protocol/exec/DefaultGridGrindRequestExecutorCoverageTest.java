@@ -10,6 +10,8 @@ import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.DateTimeException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -487,6 +489,154 @@ class DefaultGridGrindRequestExecutorCoverageTest {
         "BudgetTotal",
         DefaultGridGrindRequestExecutor.namedRangeNameFor(deleteNamedRange, failure));
     assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(pivotFromTable, failure));
+  }
+
+  @Test
+  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
+  void coversExecutionModeHelperBranchesAndBestEffortCleanup() throws Exception {
+    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.None(),
+            List.of(),
+            List.of());
+
+    Method guardUnexpectedRuntime =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class,
+            "guardUnexpectedRuntime",
+            GridGrindProtocolVersion.class,
+            GridGrindRequest.class,
+            java.util.function.Supplier.class);
+    GridGrindResponse.Failure guardedFailure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class,
+            guardUnexpectedRuntime.invoke(
+                executor,
+                GridGrindProtocolVersion.current(),
+                request,
+                (java.util.function.Supplier<GridGrindResponse>)
+                    () -> {
+                      throw new IllegalStateException("boom");
+                    }));
+    assertEquals(GridGrindProblemCode.INTERNAL_ERROR, guardedFailure.problem().code());
+    assertEquals("EXECUTE_REQUEST", guardedFailure.problem().context().stage());
+
+    Method persistStreamingWorkbook =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class,
+            "persistStreamingWorkbook",
+            Path.class,
+            GridGrindRequest.WorkbookPersistence.class);
+    Path materializedWorkbook = Files.createTempFile("gridgrind-streaming-materialized-", ".xlsx");
+    try {
+      InvocationTargetException failure =
+          assertThrows(
+              InvocationTargetException.class,
+              () ->
+                  persistStreamingWorkbook.invoke(
+                      executor,
+                      materializedWorkbook,
+                      new GridGrindRequest.WorkbookPersistence.OverwriteSource()));
+      IllegalStateException cause =
+          assertInstanceOf(IllegalStateException.class, failure.getCause());
+      assertTrue(cause.getMessage().contains("must be NONE or SAVE_AS"));
+    } finally {
+      Files.deleteIfExists(materializedWorkbook);
+    }
+
+    Method deleteIfExists =
+        accessibleMethod(DefaultGridGrindRequestExecutor.class, "deleteIfExists", Path.class);
+    deleteIfExists.invoke(null, (Object) null);
+
+    Path nonEmptyDirectory = Files.createTempDirectory("gridgrind-non-empty-dir-");
+    Path childFile = Files.writeString(nonEmptyDirectory.resolve("payload.txt"), "payload");
+    try {
+      deleteIfExists.invoke(null, nonEmptyDirectory);
+      assertTrue(Files.exists(nonEmptyDirectory));
+      assertTrue(Files.exists(childFile));
+    } finally {
+      Files.deleteIfExists(childFile);
+      Files.deleteIfExists(nonEmptyDirectory);
+    }
+
+    Class<?> executionModeSelectionClass =
+        Class.forName(
+            "dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor$ExecutionModeSelection");
+    java.lang.reflect.Constructor<?> selectionConstructor =
+        executionModeSelectionClass.getDeclaredConstructor(
+            ExecutionModeInput.ReadMode.class, ExecutionModeInput.WriteMode.class);
+    selectionConstructor.setAccessible(true);
+    Object eventReadFullWrite =
+        selectionConstructor.newInstance(
+            ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF);
+    Method directEventReadEligible =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class,
+            "directEventReadEligible",
+            GridGrindRequest.class,
+            executionModeSelectionClass);
+
+    boolean saveAsIsNotDirectEligible =
+        (boolean)
+            directEventReadEligible.invoke(
+                null,
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.ExistingFile("/tmp/source.xlsx"),
+                    new GridGrindRequest.WorkbookPersistence.SaveAs("/tmp/copy.xlsx"),
+                    new ExecutionModeInput(
+                        ExecutionModeInput.ReadMode.EVENT_READ,
+                        ExecutionModeInput.WriteMode.FULL_XSSF),
+                    null,
+                    List.of(),
+                    List.of()),
+                eventReadFullWrite);
+    boolean newSourceIsNotDirectEligible =
+        (boolean)
+            directEventReadEligible.invoke(
+                null,
+                new GridGrindRequest(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    new ExecutionModeInput(
+                        ExecutionModeInput.ReadMode.EVENT_READ,
+                        ExecutionModeInput.WriteMode.FULL_XSSF),
+                    null,
+                    List.of(),
+                    List.of()),
+                eventReadFullWrite);
+
+    assertFalse(saveAsIsNotDirectEligible);
+    assertFalse(newSourceIsNotDirectEligible);
+
+    Method executeFullReadsAgainstMaterializedPath =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class,
+            "executeFullReadsAgainstMaterializedPath",
+            GridGrindRequest.class,
+            WorkbookLocation.class,
+            Path.class);
+    Path unreadableWorkbookPath = Files.createTempDirectory("gridgrind-workbook-dir-");
+    try {
+      InvocationTargetException fullReadFailure =
+          assertThrows(
+              InvocationTargetException.class,
+              () ->
+                  executeFullReadsAgainstMaterializedPath.invoke(
+                      executor,
+                      new GridGrindRequest(
+                          new GridGrindRequest.WorkbookSource.New(),
+                          new GridGrindRequest.WorkbookPersistence.None(),
+                          List.of(),
+                          List.of(new WorkbookReadOperation.GetWorkbookSummary("workbook"))),
+                      new WorkbookLocation.UnsavedWorkbook(),
+                      unreadableWorkbookPath));
+      assertEquals("ReadExecutionFailure", fullReadFailure.getCause().getClass().getSimpleName());
+      assertInstanceOf(IOException.class, fullReadFailure.getCause().getCause());
+    } finally {
+      Files.deleteIfExists(unreadableWorkbookPath);
+    }
   }
 
   private static void assertPrivateSheetNameHelperRejects(

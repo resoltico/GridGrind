@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.40.0"
+version: "0.41.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-04-11"
+updated: "2026-04-13"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 38 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 39 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 9 |
 | `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 18 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 76 total across harnesses |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 77 total across harnesses |
 
 ---
 
@@ -39,6 +39,7 @@ Surface:
 - request-model validation
 - top-level `formulaEnvironment` payloads for external workbooks, missing-workbook policy, and
   template-backed UDF toolpacks
+- top-level `executionMode` payloads for `EVENT_READ` and `STREAMING_WRITE`
 - ordered `reads` payloads, selectors, and request/result correlation IDs
 - style payloads including typed `fontHeight`, structured color, fill, gradient, and border input
   shapes
@@ -50,7 +51,8 @@ What it asserts:
 - invalid JSON and invalid request shapes are classified as expected-invalid outcomes
 - promoted public examples continue to parse with their real defaulted-field contract, such as
   `SET_TABLE` requests that omit `showTotalsRow`, the formula-environment request, richer factual
-  readback examples, and the advanced workbook-core mutation example
+  readback examples, the low-memory large-file example, and the advanced workbook-core mutation
+  example
 
 Telemetry signals:
 - iteration count

@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.40.0
+docker pull ghcr.io/resoltico/gridgrind:0.41.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -111,6 +111,28 @@ java -jar gridgrind.jar --print-protocol-catalog
 Relative paths in `--request`, `--response`, `source.path`, and `persistence.path` resolve from
 the current working directory. In Docker, set `-w` to the mount point so relative paths resolve
 inside the mounted directory.
+
+### Low-memory execution modes
+
+`executionMode` is an optional top-level request object for the large-file `.xlsx` paths:
+
+```json
+{
+  "executionMode": {
+    "readMode": "EVENT_READ",
+    "writeMode": "STREAMING_WRITE"
+  }
+}
+```
+
+- Omit `executionMode` for the default `FULL_XSSF` read and write path.
+- `readMode: EVENT_READ` is the low-memory summary reader. It supports only
+  `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY`.
+- `writeMode: STREAMING_WRITE` is the low-memory append-oriented writer. It requires
+  `source.type: NEW` and supports only `ENSURE_SHEET`, `APPEND_ROW`, and
+  `FORCE_FORMULA_RECALC_ON_OPEN`.
+- The two modes can be combined. `STREAMING_WRITE` can read back its materialized workbook either
+  through normal `FULL_XSSF` reads or summary-only `EVENT_READ`.
 
 ---
 
@@ -232,6 +254,10 @@ replacement, `GET_CHARTS` factual readback, and matching chart inventory in
 [examples/pivot-request.json](examples/pivot-request.json) example shows the Phase 7 pivot
 surface: range-backed, named-range-backed, and table-backed pivot authoring, `GET_PIVOT_TABLES`
 factual readback, and `ANALYZE_PIVOT_TABLE_HEALTH`. The committed
+[examples/large-file-modes-request.json](examples/large-file-modes-request.json) example shows the
+Phase 8 low-memory execution surface: top-level `executionMode`, append-oriented
+`STREAMING_WRITE`, and summary-only `EVENT_READ` readback over the materialized workbook. The
+committed
 [examples/formula-environment-request.json](examples/formula-environment-request.json) example
 shows the Phase 4 formula surface: top-level `formulaEnvironment`, template-backed UDF
 registration, targeted formula evaluation, and explicit formula-cache clearing.

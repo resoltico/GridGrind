@@ -80,7 +80,7 @@
     {
       "id": "poi-large-sheet",
       "kind": "POI_DIRECT",
-      "description": "Direct-POI large workbook used to exercise event-model reads and streaming-write parity seams."
+      "description": "Direct-POI large workbook used to verify event-model reads and low-memory streaming-write parity seams."
     },
     {
       "id": "poi-signed-workbook",

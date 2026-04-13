@@ -3,6 +3,7 @@ package dev.erst.gridgrind.protocol.parity;
 import dev.erst.gridgrind.protocol.catalog.Catalog;
 import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.protocol.catalog.TypeEntry;
+import dev.erst.gridgrind.protocol.dto.ExecutionModeInput;
 import dev.erst.gridgrind.protocol.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
@@ -38,17 +39,31 @@ final class XlsxParityGridGrind {
   }
 
   static GridGrindResponse executeReadWorkbook(Path workbookPath, WorkbookReadOperation... reads) {
-    return executeReadWorkbook(workbookPath, null, reads);
+    return executeReadWorkbook(workbookPath, (ExecutionModeInput) null, reads);
+  }
+
+  static GridGrindResponse executeReadWorkbook(
+      Path workbookPath, ExecutionModeInput executionMode, WorkbookReadOperation... reads) {
+    return executeReadWorkbook(workbookPath, executionMode, null, reads);
   }
 
   static GridGrindResponse executeReadWorkbook(
       Path workbookPath,
       FormulaEnvironmentInput formulaEnvironment,
       WorkbookReadOperation... reads) {
+    return executeReadWorkbook(workbookPath, (ExecutionModeInput) null, formulaEnvironment, reads);
+  }
+
+  static GridGrindResponse executeReadWorkbook(
+      Path workbookPath,
+      ExecutionModeInput executionMode,
+      FormulaEnvironmentInput formulaEnvironment,
+      WorkbookReadOperation... reads) {
     return execute(
         new GridGrindRequest(
             new GridGrindRequest.WorkbookSource.ExistingFile(workbookPath.toString()),
             new GridGrindRequest.WorkbookPersistence.None(),
+            executionMode,
             formulaEnvironment,
             List.of(),
             List.of(reads)));
@@ -63,10 +78,23 @@ final class XlsxParityGridGrind {
   }
 
   static GridGrindResponse.Success readWorkbook(
+      Path workbookPath, ExecutionModeInput executionMode, WorkbookReadOperation... reads) {
+    return success(executeReadWorkbook(workbookPath, executionMode, reads));
+  }
+
+  static GridGrindResponse.Success readWorkbook(
       Path workbookPath,
       FormulaEnvironmentInput formulaEnvironment,
       WorkbookReadOperation... reads) {
     return success(executeReadWorkbook(workbookPath, formulaEnvironment, reads));
+  }
+
+  static GridGrindResponse.Success readWorkbook(
+      Path workbookPath,
+      ExecutionModeInput executionMode,
+      FormulaEnvironmentInput formulaEnvironment,
+      WorkbookReadOperation... reads) {
+    return success(executeReadWorkbook(workbookPath, executionMode, formulaEnvironment, reads));
   }
 
   static GridGrindResponse.Success mutateWorkbook(
@@ -89,6 +117,22 @@ final class XlsxParityGridGrind {
                 new GridGrindRequest.WorkbookSource.ExistingFile(workbookPath.toString()),
                 new GridGrindRequest.WorkbookPersistence.SaveAs(saveAsPath.toString()),
                 formulaEnvironment,
+                List.copyOf(operations),
+                List.of(reads))));
+  }
+
+  static GridGrindResponse.Success writeNewWorkbook(
+      Path saveAsPath,
+      ExecutionModeInput executionMode,
+      List<WorkbookOperation> operations,
+      WorkbookReadOperation... reads) {
+    return success(
+        execute(
+            new GridGrindRequest(
+                new GridGrindRequest.WorkbookSource.New(),
+                new GridGrindRequest.WorkbookPersistence.SaveAs(saveAsPath.toString()),
+                executionMode,
+                null,
                 List.copyOf(operations),
                 List.of(reads))));
   }

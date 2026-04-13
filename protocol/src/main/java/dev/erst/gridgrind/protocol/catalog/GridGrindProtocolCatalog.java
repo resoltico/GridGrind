@@ -28,15 +28,22 @@ public final class GridGrindProtocolCatalog {
           new GridGrindRequest.WorkbookSource.New(),
           new GridGrindRequest.WorkbookPersistence.None(),
           null,
+          null,
           List.of(),
           List.of());
   private static final TypeEntry REQUEST_TYPE =
       typeEntry(
           GridGrindRequest.class,
           "GridGrindRequest",
-          "Complete GridGrind request for workbook source, formula environment, mutations,"
-              + " reads, and persistence.",
-          List.of("protocolVersion", "persistence", "formulaEnvironment", "operations", "reads"));
+          "Complete GridGrind request for workbook source, execution mode, formula environment,"
+              + " mutations, reads, and persistence.",
+          List.of(
+              "protocolVersion",
+              "persistence",
+              "executionMode",
+              "formulaEnvironment",
+              "operations",
+              "reads"));
   private static final List<TypeDescriptor> SOURCE_TYPES =
       List.of(
           descriptor(
@@ -1133,6 +1140,19 @@ public final class GridGrindProtocolCatalog {
                           + " flags."))));
   private static final List<PlainTypeDescriptor> PLAIN_TYPE_DESCRIPTORS =
       List.of(
+          plainTypeDescriptor(
+              "executionModeInputType",
+              ExecutionModeInput.class,
+              "ExecutionModeInput",
+              "Optional top-level request settings that select low-memory read and write"
+                  + " execution families."
+                  + " readMode defaults to FULL_XSSF when omitted."
+                  + " writeMode defaults to FULL_XSSF when omitted."
+                  + " EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only"
+                  + " (LIM-019)."
+                  + " STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW, and"
+                  + " FORCE_FORMULA_RECALC_ON_OPEN on NEW workbooks only (LIM-020).",
+              List.of("readMode", "writeMode")),
           plainTypeDescriptor(
               "formulaEnvironmentInputType",
               FormulaEnvironmentInput.class,

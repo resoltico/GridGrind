@@ -2434,14 +2434,38 @@ final class XlsxParityProbeRegistry {
   }
 
   private static ProbeResult probeEventModelGap(ProbeContext context) {
-    int poiRows =
-        XlsxParityOracle.eventModelRowCount(
-            context.scenario(XlsxParityScenarios.LARGE_SHEET).workbookPath());
-    boolean gridGrindHasEventSource = XlsxParityGridGrind.hasSourceType("EVENT_READ");
-    return poiRows >= 2000 && !gridGrindHasEventSource
-        ? fail(
-            "POI can read the workbook through the XSSF event model, but GridGrind has no such mode.")
-        : pass("Event-model parity is present.");
+    XlsxParityScenarios.MaterializedScenario largeSheet =
+        context.scenario(XlsxParityScenarios.LARGE_SHEET);
+    int poiRows = XlsxParityOracle.eventModelRowCount(largeSheet.workbookPath());
+    GridGrindResponse.Success full =
+        XlsxParityGridGrind.readWorkbook(
+            largeSheet.workbookPath(),
+            new WorkbookReadOperation.GetWorkbookSummary("workbook"),
+            new WorkbookReadOperation.GetSheetSummary("sheet", "Large"));
+    GridGrindResponse response =
+        XlsxParityGridGrind.executeReadWorkbook(
+            largeSheet.workbookPath(),
+            new ExecutionModeInput(
+                ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF),
+            new WorkbookReadOperation.GetWorkbookSummary("workbook"),
+            new WorkbookReadOperation.GetSheetSummary("sheet", "Large"));
+    if (response instanceof GridGrindResponse.Failure failure) {
+      return fail("GridGrind event-read request failed: " + failure.problem().message());
+    }
+    GridGrindResponse.Success event = (GridGrindResponse.Success) response;
+    WorkbookReadResult.SheetSummaryResult sheetSummary =
+        XlsxParityGridGrind.read(event, "sheet", WorkbookReadResult.SheetSummaryResult.class);
+    if (sheetSummary.sheet().physicalRowCount() != poiRows
+        || sheetSummary.sheet().lastColumnIndex() != 19) {
+      return fail(
+          "GridGrind event-read sheet summary diverged from the large-sheet oracle: rows="
+              + sheetSummary.sheet().physicalRowCount()
+              + ", lastColumnIndex="
+              + sheetSummary.sheet().lastColumnIndex());
+    }
+    return full.reads().equals(event.reads())
+        ? pass("Event-model parity is present and matches full-XSSF summary reads.")
+        : fail("GridGrind event-read summaries diverged from the full-XSSF summaries.");
   }
 
   private static ProbeResult probeSxssfGap(ProbeContext context) {
@@ -2450,12 +2474,39 @@ final class XlsxParityProbeRegistry {
         XlsxParitySupport.call(
             "inspect streamed parity workbook size",
             () -> Files.exists(streamedWorkbook) && Files.size(streamedWorkbook) > 0);
-    boolean gridGrindHasStreamingWrite =
-        XlsxParityGridGrind.hasPersistenceType("STREAMING_SAVE_AS")
-            || XlsxParityGridGrind.hasOperationType("WRITE_STREAMING");
-    return poiSucceeded && !gridGrindHasStreamingWrite
-        ? fail("POI exposes SXSSF streaming write, but GridGrind does not.")
-        : pass("SXSSF streaming-write parity is present.");
+    Path gridGrindWorkbook = context.derivedWorkbook("streaming-gridgrind");
+    List<WorkbookOperation> operations = new ArrayList<>();
+    operations.add(new WorkbookOperation.EnsureSheet("Streamed"));
+    for (int rowIndex = 0; rowIndex < 1_500; rowIndex++) {
+      operations.add(
+          new WorkbookOperation.AppendRow(
+              "Streamed",
+              List.of(
+                  new CellInput.Text("R" + rowIndex), new CellInput.Numeric((double) rowIndex))));
+    }
+    GridGrindResponse.Success streamed =
+        XlsxParityGridGrind.writeNewWorkbook(
+            gridGrindWorkbook,
+            new ExecutionModeInput(
+                ExecutionModeInput.ReadMode.FULL_XSSF,
+                ExecutionModeInput.WriteMode.STREAMING_WRITE),
+            operations,
+            new WorkbookReadOperation.GetWorkbookSummary("workbook"),
+            new WorkbookReadOperation.GetSheetSummary("sheet", "Streamed"));
+    GridGrindResponse.Success reopened =
+        XlsxParityGridGrind.readWorkbook(
+            gridGrindWorkbook,
+            new WorkbookReadOperation.GetWorkbookSummary("workbook"),
+            new WorkbookReadOperation.GetSheetSummary("sheet", "Streamed"));
+    WorkbookReadResult.SheetSummaryResult sheetSummary =
+        XlsxParityGridGrind.read(streamed, "sheet", WorkbookReadResult.SheetSummaryResult.class);
+    return poiSucceeded
+            && Files.exists(gridGrindWorkbook)
+            && sheetSummary.sheet().physicalRowCount() == 1_500
+            && sheetSummary.sheet().lastColumnIndex() == 1
+            && streamed.reads().equals(reopened.reads())
+        ? pass("SXSSF streaming-write parity is present.")
+        : fail("GridGrind streaming-write parity did not match the expected low-memory workbook.");
   }
 
   private static ProbeResult probeEncryptionGap(ProbeContext context) {

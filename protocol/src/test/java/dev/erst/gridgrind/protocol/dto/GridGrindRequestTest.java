@@ -18,6 +18,7 @@ class GridGrindRequestTest {
     assertEquals(GridGrindProtocolVersion.V1, request.protocolVersion());
     assertInstanceOf(GridGrindRequest.WorkbookSource.New.class, request.source());
     assertInstanceOf(GridGrindRequest.WorkbookPersistence.None.class, request.persistence());
+    assertNull(request.executionMode());
     assertEquals(List.of(), request.operations());
     assertEquals(List.of(), request.reads());
   }
@@ -154,6 +155,35 @@ class GridGrindRequestTest {
             null);
 
     assertNull(request.formulaEnvironment());
+  }
+
+  @Test
+  void normalizesDefaultExecutionModeToNull() {
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            null,
+            new ExecutionModeInput(null, null),
+            null,
+            null,
+            null);
+
+    assertNull(request.executionMode());
+  }
+
+  @Test
+  void preservesNonDefaultExecutionMode() {
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            null,
+            new ExecutionModeInput(ExecutionModeInput.ReadMode.EVENT_READ, null),
+            null,
+            null,
+            null);
+
+    assertEquals(ExecutionModeInput.ReadMode.EVENT_READ, request.executionMode().readMode());
+    assertEquals(ExecutionModeInput.WriteMode.FULL_XSSF, request.executionMode().writeMode());
   }
 
   @Test

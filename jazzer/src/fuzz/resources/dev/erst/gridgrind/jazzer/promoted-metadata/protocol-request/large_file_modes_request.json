@@ -1,0 +1,30 @@
+{
+  "targetKey" : "protocol-request",
+  "sourcePath" : "../examples/large-file-modes-request.json",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/large_file_modes_request.json",
+  "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_REQUEST",
+      "inputBytes" : 1279,
+      "decodeOutcome" : "PARSED",
+      "sourceKind" : "NEW",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 5,
+      "operationKinds" : {
+        "ENSURE_SHEET" : 1,
+        "APPEND_ROW" : 3,
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
+      },
+      "styleKinds" : { },
+      "readCount" : 2,
+      "readKinds" : {
+        "GET_SHEET_SUMMARY" : 1,
+        "GET_WORKBOOK_SUMMARY" : 1
+      }
+    }
+  },
+  "promotedAt" : "2026-04-13T00:24:15.685833Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-request/large_file_modes_request.txt"
+}

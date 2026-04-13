@@ -5,6 +5,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.41.0] - 2026-04-13
+
+### Added
+
+- Added top-level `executionMode` request support for low-memory `.xlsx` workflows:
+  `readMode: EVENT_READ` for summary-only event-model reads and `writeMode: STREAMING_WRITE` for
+  append-oriented SXSSF authoring on `NEW` workbooks.
+- Added [examples/large-file-modes-request.json](./examples/large-file-modes-request.json), a
+  runnable example covering `executionMode`, `STREAMING_WRITE`, and summary-only `EVENT_READ`
+  readback.
+
+### Changed
+
+- Public docs, CLI help, the limitations registry now describe the shipped low-memory execution
+  contract explicitly instead of treating event reads and streaming writes as absent.
+
+### Fixed
+
+- `ExecutionModeInput.isDefault()` is now JSON-ignored, so request round-trips no longer leak a
+  stray `executionMode.default` field.
+- The streaming writer now owns row advancement explicitly and disposes SXSSF temp files on close
+  instead of relying on incidental POI state.
+- Parity probes now verify actual low-memory request behavior against the large-sheet
+  corpus instead of only checking for missing catalog placeholders.
+- Jazzer replay support now resolves promoted large-file example inputs correctly from both the
+  `jazzer` module root and the repository root, so the committed low-memory example stays
+  replay-verified under the real Gradle execution layout.
+
 ## [0.40.0] - 2026-04-13
 
 ### Added
@@ -1484,7 +1512,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.40.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.41.0...HEAD
+[0.41.0]: https://github.com/resoltico/GridGrind/compare/v0.40.0...v0.41.0
 [0.40.0]: https://github.com/resoltico/GridGrind/compare/v0.39.0...v0.40.0
 [0.39.0]: https://github.com/resoltico/GridGrind/compare/v0.38.0...v0.39.0
 [0.38.0]: https://github.com/resoltico/GridGrind/compare/v0.37.0...v0.38.0

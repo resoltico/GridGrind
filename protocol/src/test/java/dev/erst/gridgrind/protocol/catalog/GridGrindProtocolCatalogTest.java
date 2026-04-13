@@ -32,6 +32,7 @@ class GridGrindProtocolCatalogTest {
     assertEquals(GridGrindProtocolVersion.V1, template.protocolVersion());
     assertInstanceOf(GridGrindRequest.WorkbookSource.New.class, template.source());
     assertInstanceOf(GridGrindRequest.WorkbookPersistence.None.class, template.persistence());
+    assertNull(template.executionMode());
     assertEquals(List.of(), template.operations());
     assertEquals(List.of(), template.reads());
     assertEquals(template, decoded);
@@ -533,6 +534,7 @@ class GridGrindProtocolCatalogTest {
         catalog.nestedTypes().stream().map(NestedTypeGroup::group).toList());
     assertEquals(
         List.of(
+            "executionModeInputType",
             "formulaEnvironmentInputType",
             "formulaExternalWorkbookInputType",
             "formulaUdfToolpackInputType",
@@ -603,6 +605,9 @@ class GridGrindProtocolCatalogTest {
         new FieldShape.TopLevelTypeSetRef("persistenceTypes"),
         fieldNamed(requestType, "persistence").shape());
     assertEquals(
+        new FieldShape.PlainTypeGroupRef("executionModeInputType"),
+        fieldNamed(requestType, "executionMode").shape());
+    assertEquals(
         new FieldShape.PlainTypeGroupRef("formulaEnvironmentInputType"),
         fieldNamed(requestType, "formulaEnvironment").shape());
     assertEquals(
@@ -614,6 +619,14 @@ class GridGrindProtocolCatalogTest {
   }
 
   private static void assertCatalogCoreFieldShapes(Catalog catalog) {
+    PlainTypeGroup executionModeGroup = plainGroup(catalog, "executionModeInputType");
+    assertEquals(
+        List.of("FULL_XSSF", "EVENT_READ"),
+        fieldNamed(executionModeGroup.type(), "readMode").enumValues());
+    assertEquals(
+        List.of("FULL_XSSF", "STREAMING_WRITE"),
+        fieldNamed(executionModeGroup.type(), "writeMode").enumValues());
+
     PlainTypeGroup commentGroup = plainGroup(catalog, "commentInputType");
     assertEquals(FieldRequirement.REQUIRED, fieldNamed(commentGroup.type(), "text").requirement());
     assertEquals(
