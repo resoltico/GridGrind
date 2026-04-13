@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.41.0"
+version: "0.42.0"
 domain: LIMITATIONS
 updated: "2026-04-13"
 route:
@@ -399,7 +399,7 @@ All other reads and mutations continue to use the normal full-XSSF in-memory exe
 | Pivot tables | Limited supported surface: factual reads, health analysis, and authored range-, named-range-, and table-backed pivots. |
 | `.xls`, `.xlsm`, `.xlsb` | Not supported. See LIM-002. |
 | Streaming read/write | Supported only through `executionMode`: `EVENT_READ` summary reads (`LIM-019`) and `STREAMING_WRITE` append-oriented `NEW` workbook authoring (`LIM-020`). |
-| OOXML encryption and signing | Not supported. |
+| OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.password` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, and persisting mutations to a signed workbook requires explicit `persistence.security.signature` re-signing. |
 
 Apache POI feature coverage: https://poi.apache.org/components/spreadsheet/
 

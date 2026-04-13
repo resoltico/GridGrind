@@ -187,6 +187,38 @@ class GridGrindRequestTest {
   }
 
   @Test
+  void preservesSecuritySettingsOnExistingSourcesAndPersistenceTargets() {
+    GridGrindRequest.WorkbookSource.ExistingFile source =
+        new GridGrindRequest.WorkbookSource.ExistingFile(
+            "budget.xlsx", new OoxmlOpenSecurityInput("source-pass"));
+    GridGrindRequest.WorkbookPersistence.SaveAs persistence =
+        new GridGrindRequest.WorkbookPersistence.SaveAs(
+            "secured.xlsx",
+            new OoxmlPersistenceSecurityInput(
+                new OoxmlEncryptionInput("persist-pass", null),
+                new OoxmlSignatureInput(
+                    "tmp/signing-material.p12", "keystore-pass", null, null, null, null)));
+
+    GridGrindRequest request = new GridGrindRequest(source, persistence, List.of(), List.of());
+
+    assertEquals(
+        "source-pass",
+        ((GridGrindRequest.WorkbookSource.ExistingFile) request.source()).security().password());
+    assertEquals(
+        "persist-pass",
+        ((GridGrindRequest.WorkbookPersistence.SaveAs) request.persistence())
+            .security()
+            .encryption()
+            .password());
+    assertEquals(
+        "keystore-pass",
+        ((GridGrindRequest.WorkbookPersistence.SaveAs) request.persistence())
+            .security()
+            .signature()
+            .keyPassword());
+  }
+
+  @Test
   void rejectsDuplicateRequestIds() {
     List<WorkbookReadOperation> duplicateReads =
         List.of(

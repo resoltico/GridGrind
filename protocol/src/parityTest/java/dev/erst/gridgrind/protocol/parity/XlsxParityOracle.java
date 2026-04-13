@@ -975,6 +975,23 @@ final class XlsxParityOracle {
         });
   }
 
+  static String encryptedStringCell(Path workbookPath, String sheetName, String address) {
+    return XlsxParitySupport.call(
+        "read encrypted parity workbook cell through POI",
+        () -> {
+          try (POIFSFileSystem fileSystem = new POIFSFileSystem(workbookPath.toFile());
+              InputStream decryptedStream = decryptedWorkbookStream(fileSystem);
+              Workbook workbook = WorkbookFactory.create(decryptedStream)) {
+            CellReference reference = new CellReference(address);
+            return workbook
+                .getSheet(sheetName)
+                .getRow(reference.getRow())
+                .getCell(reference.getCol())
+                .getStringCellValue();
+          }
+        });
+  }
+
   static boolean signatureValid(Path workbookPath) {
     return XlsxParitySupport.call(
         "verify parity workbook signature",

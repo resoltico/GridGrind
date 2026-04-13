@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.41.0"
+version: "0.42.0"
 domain: OPERATIONS
 updated: "2026-04-13"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-pivot-table, delete-pivot-table, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, request, json, protocol, coordinates, rowindex, columnindex, warnings]
-  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I create a pivot table in gridgrind", "how do I read pivot tables in gridgrind", "how do I add a picture in gridgrind", "how do I author a chart in gridgrind", "how do I read charts in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
+  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-pivot-table, delete-pivot-table, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, ooxml, package-security, encryption, signing, request, json, protocol, coordinates, rowindex, columnindex, warnings]
+  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I inspect package security in gridgrind", "how do I open an encrypted workbook in gridgrind", "how do I sign a workbook in gridgrind", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I create a pivot table in gridgrind", "how do I read pivot tables in gridgrind", "how do I add a picture in gridgrind", "how do I author a chart in gridgrind", "how do I read charts in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
 ---
 
 # Operations Reference
@@ -176,6 +176,16 @@ create the first sheet before writing any cells.
 ```
 Open an existing `.xlsx` file.
 
+```json
+{
+  "type": "EXISTING",
+  "path": "secured-workbook.xlsx",
+  "security": { "password": "GridGrind-2026" }
+}
+```
+
+Open an encrypted existing `.xlsx` package by supplying `source.security.password`.
+
 Relative `path` values resolve from the current working directory.
 
 GridGrind supports `.xlsx` only. Paths ending in `.xls`, `.xlsm`, `.xlsb`, or any other
@@ -195,6 +205,30 @@ response, an `OVERWRITE` request yields an `OVERWRITE` response, and a `NONE` re
 ```
 Write the workbook to the given path, creating parent directories as needed.
 
+```json
+{
+  "type": "SAVE_AS",
+  "path": "secured-output.xlsx",
+  "security": {
+    "encryption": { "password": "GridGrind-2026" },
+    "signature": {
+      "pkcs12Path": "signing-material.p12",
+      "keystorePassword": "changeit",
+      "keyPassword": "changeit",
+      "alias": "gridgrind-signing"
+    }
+  }
+}
+```
+
+`security.encryption` applies OOXML package encryption to the persisted workbook. Omit
+`encryption.mode` to use the default `AGILE` mode.
+
+`security.signature` applies OOXML package signing during persistence using a PKCS#12 keystore.
+`pkcs12Path` must point to a readable `.p12` or `.pfx` file, and `keystorePassword` plus
+`keyPassword` must unlock the selected key entry. Omit `alias` to use the sole keystore entry or
+the first key entry POI can resolve.
+
 Relative `path` values resolve from the current working directory.
 
 The save path must end in `.xlsx`.
@@ -212,6 +246,23 @@ relative path (e.g. `"report.xlsx"`) or a path containing `..` segments is used.
 Overwrite the source file (requires `source.type=EXISTING`). `OVERWRITE` does not accept its own
 `path` field; it always writes back to `source.path`. The response includes `sourcePath` (the
 original source path string) and `executionPath` (the absolute normalized path).
+
+```json
+{
+  "type": "OVERWRITE",
+  "security": {
+    "signature": {
+      "pkcs12Path": "signing-material.p12",
+      "keystorePassword": "changeit",
+      "alias": "gridgrind-signing"
+    }
+  }
+}
+```
+
+Use `OVERWRITE.security.signature` when persisting mutations to a signed source workbook. Unchanged
+signed sources can be copied or overwritten without re-signing, but once a signed workbook is
+mutated GridGrind requires explicit signature configuration before it will persist the result.
 
 Omit `persistence` entirely or use `{ "type": "NONE" }` to run mutations and reads without
 saving.
@@ -2555,6 +2606,49 @@ Response shapes:
 - `{"kind":"WITH_SHEETS","sheetCount":2,"sheetNames":["Budget","Budget Review"],"activeSheetName":"Budget Review","selectedSheetNames":["Budget","Budget Review"],"namedRangeCount":0,"forceFormulaRecalculationOnOpen":false}`
 
 `selectedSheetNames` are returned in workbook order, not request order.
+
+### GET_PACKAGE_SECURITY
+
+Returns factual OOXML package-security state for the currently open workbook: whether the package
+is encrypted, which package-encryption mode is present, and the validation state of each OOXML
+package signature.
+
+```json
+{ "type": "GET_PACKAGE_SECURITY", "requestId": "security" }
+```
+
+Response shape:
+
+```json
+{
+  "security": {
+    "encryption": {
+      "encrypted": true,
+      "mode": "AGILE",
+      "cipherAlgorithm": "aes",
+      "hashAlgorithm": "sha512",
+      "chainingMode": "ChainingModeCBC",
+      "keyBits": 256,
+      "blockSize": 16,
+      "spinCount": 100000
+    },
+    "signatures": [
+      {
+        "packagePartName": "/_xmlsignatures/sig1.xml",
+        "signerSubject": "CN=GridGrind Signing",
+        "signerIssuer": "CN=GridGrind Signing",
+        "serialNumberHex": "01",
+        "state": "VALID"
+      }
+    ]
+  }
+}
+```
+
+`GET_PACKAGE_SECURITY` runs only on the full-XSSF read path. `executionMode.readMode=EVENT_READ`
+rejects it up front because the event-model reader exposes only workbook and sheet summaries.
+Unencrypted workbooks return `"encryption": { "encrypted": false }` plus an empty `signatures`
+array.
 
 ### GET_WORKBOOK_PROTECTION
 

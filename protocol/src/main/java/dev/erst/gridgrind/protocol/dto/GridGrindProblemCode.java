@@ -72,6 +72,28 @@ public enum GridGrindProblemCode {
       GridGrindProblemRecovery.CHANGE_REQUEST,
       "Cell not found",
       "Write the cell first or adjust the analysis target."),
+  WORKBOOK_PASSWORD_REQUIRED(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Workbook password required",
+      "Provide source.security.password for the encrypted workbook and retry."),
+  INVALID_WORKBOOK_PASSWORD(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Invalid workbook password",
+      "Supply the correct source.security.password for the encrypted workbook and retry."),
+  INVALID_SIGNING_CONFIGURATION(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHANGE_REQUEST,
+      "Invalid signing configuration",
+      "Fix persistence.security.signature keystore, alias, password, or digest settings and"
+          + " retry."),
+  WORKBOOK_SECURITY_ERROR(
+      GridGrindProblemCategory.SECURITY,
+      GridGrindProblemRecovery.CHECK_ENVIRONMENT,
+      "Workbook security failure",
+      "Check the secure workbook package, cryptographic material, and runtime environment before"
+          + " retrying."),
   IO_ERROR(
       GridGrindProblemCategory.IO,
       GridGrindProblemRecovery.CHECK_ENVIRONMENT,

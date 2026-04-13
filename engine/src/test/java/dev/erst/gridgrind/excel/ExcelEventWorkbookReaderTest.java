@@ -373,6 +373,9 @@ class ExcelEventWorkbookReaderTest {
     assertEquals(
         "GET_SHEET_SUMMARY",
         invokeCommandType(new WorkbookReadCommand.GetSheetSummary("sheet", "Ops")));
+    assertEquals(
+        "GET_PACKAGE_SECURITY",
+        invokeCommandType(new WorkbookReadCommand.GetPackageSecurity("security")));
     assertEquals(7, invokeActiveSheetIndexWithExplicitActiveTab());
     assertEquals(0, invokeActiveSheetIndexWithoutActiveTab());
 
@@ -449,6 +452,7 @@ class ExcelEventWorkbookReaderTest {
       case WorkbookReadCommand.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
       case WorkbookReadCommand.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
       case WorkbookReadCommand.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
+      case WorkbookReadCommand.GetPackageSecurity _ -> "GET_PACKAGE_SECURITY";
     };
   }
 
@@ -459,7 +463,7 @@ class ExcelEventWorkbookReaderTest {
 
   private static Path rewriteEntries(Path sourceWorkbook, Map<String, TextTransformer> transformers)
       throws IOException {
-    Map<String, byte[]> entries = new java.util.concurrent.ConcurrentHashMap<>();
+    List<ZipEntryBytes> entries = new ArrayList<>();
     try (ZipFile zipFile = new ZipFile(sourceWorkbook.toFile())) {
       Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
       while (enumeration.hasMoreElements()) {
@@ -467,7 +471,8 @@ class ExcelEventWorkbookReaderTest {
         try (InputStream inputStream = zipFile.getInputStream(entry)) {
           byte[] bytes = inputStream.readAllBytes();
           TextTransformer transformer = transformers.get(entry.getName());
-          entries.put(entry.getName(), transformedEntryBytes(bytes, transformer));
+          entries.add(
+              new ZipEntryBytes(entry.getName(), transformedEntryBytes(bytes, transformer)));
         }
       }
     }
@@ -475,8 +480,8 @@ class ExcelEventWorkbookReaderTest {
     Path mutatedWorkbook = Files.createTempFile("gridgrind-event-mutated-", ".xlsx");
     try (ZipOutputStream outputStream =
         new ZipOutputStream(Files.newOutputStream(mutatedWorkbook))) {
-      for (Map.Entry<String, byte[]> entry : entries.entrySet()) {
-        writeZipEntry(outputStream, entry.getKey(), entry.getValue());
+      for (ZipEntryBytes entry : entries) {
+        writeZipEntry(outputStream, entry.name(), entry.bytes());
       }
     }
     return mutatedWorkbook;
@@ -547,5 +552,24 @@ class ExcelEventWorkbookReaderTest {
   @FunctionalInterface
   private interface TextTransformer {
     String transform(String xml);
+  }
+
+  /** Immutable zip-entry payload used to preserve original OOXML part order in test mutations. */
+  private static final class ZipEntryBytes {
+    private final String name;
+    private final byte[] bytes;
+
+    private ZipEntryBytes(String name, byte[] bytes) {
+      this.name = name;
+      this.bytes = bytes.clone();
+    }
+
+    private String name() {
+      return name;
+    }
+
+    private byte[] bytes() {
+      return bytes.clone();
+    }
   }
 }

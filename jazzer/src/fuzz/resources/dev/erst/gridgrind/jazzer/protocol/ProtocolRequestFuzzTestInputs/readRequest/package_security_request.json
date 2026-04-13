@@ -1,0 +1,44 @@
+{
+  "protocolVersion": "V1",
+  "source": {
+    "type": "EXISTING",
+    "path": "fixtures/secured-source.xlsx",
+    "security": {
+      "password": "GridGrind-2026"
+    }
+  },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "fixtures/secured-copy.xlsx",
+    "security": {
+      "encryption": {
+        "password": "GridGrind-2026",
+        "mode": "AGILE"
+      },
+      "signature": {
+        "pkcs12Path": "fixtures/signing-material.p12",
+        "keystorePassword": "keystore-pass",
+        "keyPassword": "key-pass",
+        "alias": "gridgrind-signing",
+        "description": "Phase 9 Jazzer replay seed"
+      }
+    }
+  },
+  "operations": [
+    {
+      "type": "SET_CELL",
+      "sheetName": "Secure",
+      "address": "B2",
+      "value": { "type": "TEXT", "text": "Rotated" }
+    }
+  ],
+  "reads": [
+    { "type": "GET_PACKAGE_SECURITY", "requestId": "security" },
+    {
+      "type": "GET_CELLS",
+      "requestId": "secure-cells",
+      "sheetName": "Secure",
+      "addresses": ["A1", "B2"]
+    }
+  ]
+}

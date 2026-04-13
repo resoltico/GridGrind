@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.41.0"
+version: "0.42.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-13"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-chart, set-pivot-table, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, delete-pivot-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, coordinates, rowindex, columnindex, warnings]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind chart example", "gridgrind pivot table example", "how do I read pivot tables in gridgrind", "how do I lint pivot tables in gridgrind", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-chart, set-pivot-table, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, delete-pivot-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, ooxml, package-security, encryption, signing, coordinates, rowindex, columnindex, warnings]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind package security example", "how do I open an encrypted workbook in gridgrind", "how do I inspect package signatures in gridgrind", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind chart example", "gridgrind pivot table example", "how do I read pivot tables in gridgrind", "how do I lint pivot tables in gridgrind", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
 ---
 
 # Quick Reference
@@ -52,6 +52,30 @@ Path model:
 
 `formulaEnvironment` is optional. Use it when evaluation needs external workbook bindings,
 cached-value fallback for unresolved external references, or template-backed UDFs.
+
+`source.security.password` is optional and applies only to encrypted `EXISTING` workbook sources.
+Use it when the `.xlsx` package is password-protected.
+
+`persistence.security` is optional on `SAVE_AS` and `OVERWRITE`. Use it to encrypt or sign the
+persisted `.xlsx` package:
+
+```json
+{
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "secured.xlsx",
+    "security": {
+      "encryption": { "password": "GridGrind-2026" },
+      "signature": {
+        "pkcs12Path": "signing-material.p12",
+        "keystorePassword": "changeit",
+        "keyPassword": "changeit",
+        "alias": "gridgrind-signing"
+      }
+    }
+  }
+}
+```
 
 `executionMode` is optional. Use it only when the request fits one of GridGrind's low-memory
 contracts:
@@ -133,6 +157,7 @@ same-request sheet names with spaces referenced in formulas without single quote
 ```json
 { "type": "NEW" }
 { "type": "EXISTING", "path": "path/to/file.xlsx" }
+{ "type": "EXISTING", "path": "secured.xlsx", "security": { "password": "GridGrind-2026" } }
 ```
 
 Relative `path` values resolve from the current working directory.
@@ -142,10 +167,19 @@ Relative `path` values resolve from the current working directory.
 ```json
 { "type": "SAVE_AS",   "path": "path/to/output.xlsx" }
 { "type": "OVERWRITE" }
+{
+  "type": "SAVE_AS",
+  "path": "secured.xlsx",
+  "security": {
+    "encryption": { "password": "GridGrind-2026" }
+  }
+}
 ```
 
 `SAVE_AS.path` writes a new file. `OVERWRITE` writes back to `source.path` and does not accept a
-separate `path` field. `SAVE_AS` creates missing parent directories automatically.
+separate `path` field. `SAVE_AS` creates missing parent directories automatically. Signed
+workbooks that are mutated require explicit `persistence.security.signature` re-signing before
+they can be persisted. `GET_PACKAGE_SECURITY` is available only on the full-XSSF read path.
 
 ---
 
@@ -1292,6 +1326,15 @@ a caller-defined `requestId`.
 ```json
 { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" }
 ```
+
+## GET_PACKAGE_SECURITY
+
+```json
+{ "type": "GET_PACKAGE_SECURITY", "requestId": "security" }
+```
+
+Returns factual OOXML package-encryption and OOXML package-signature state for the currently open
+workbook. This read requires the full-XSSF path; `EVENT_READ` rejects it.
 
 ## GET_WORKBOOK_PROTECTION
 

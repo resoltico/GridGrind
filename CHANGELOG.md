@@ -5,6 +5,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.42.0] - 2026-04-13
+
+### Added
+
+- Added OOXML package-security support to the public `.xlsx` contract:
+  `source.security.password` for encrypted existing sources, `persistence.security.encryption`,
+  `persistence.security.signature`, and factual `GET_PACKAGE_SECURITY` readback for package
+  encryption and package-signature state.
+- Added [examples/package-security-create-request.json](./examples/package-security-create-request.json)
+  and [examples/package-security-inspect-request.json](./examples/package-security-inspect-request.json),
+  a paired public example flow for encrypted workbook authoring followed by factual package-security
+  inspection.
+- Added a promoted Jazzer protocol-request seed for the package-security request surface so
+  `source.security`, `persistence.security`, and `GET_PACKAGE_SECURITY` stay replay-verified in the
+  committed regression floor.
+
+### Changed
+
+- Public docs, quick-reference snippets, README guidance now describe the shipped OOXML
+  package-security surface explicitly instead of treating encryption and signing as absent.
+
+### Fixed
+
+- Legacy OLE2 `.xls` files are no longer misclassified as encrypted OOXML packages on the
+  package-security open path; unsupported legacy workbooks now fail honestly as non-`.xlsx`
+  inputs instead of incorrectly demanding `source.security.password`.
+- The parity ledger now verifies actual encrypted-open, encrypted-save, signed-read,
+  signed-authoring, invalid-password, and invalid-signature behavior against the committed corpus
+  instead of keeping legacy "gap" probes after the runtime support landed.
+- The invalid-signature parity corpus now tampers signed workbooks through a separate output path
+  instead of rewriting the signed package in place, so the corpus materializes as genuinely
+  `INVALID` rather than as a broken ZIP stream.
+
 ## [0.41.0] - 2026-04-13
 
 ### Added
@@ -1512,7 +1545,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.41.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.42.0...HEAD
+[0.42.0]: https://github.com/resoltico/GridGrind/compare/v0.41.0...v0.42.0
 [0.41.0]: https://github.com/resoltico/GridGrind/compare/v0.40.0...v0.41.0
 [0.40.0]: https://github.com/resoltico/GridGrind/compare/v0.39.0...v0.40.0
 [0.39.0]: https://github.com/resoltico/GridGrind/compare/v0.38.0...v0.39.0

@@ -109,6 +109,7 @@ public final class WorkbookCommandExecutor {
     } else {
       applyFormulaCommand(workbook, command);
     }
+    workbook.markPackageMutated();
     if (requiresFormulaRuntimeInvalidation(command)) {
       workbook.invalidateFormulaRuntime();
     }

@@ -12,6 +12,37 @@ import org.junit.jupiter.api.Test;
 /** Tests for converting advanced engine read results into protocol response shapes. */
 class WorkbookReadResultConverterTest {
   @Test
+  void convertsPackageSecurityReadResultsIntoProtocolShapes() {
+    WorkbookReadResult.PackageSecurityResult packageSecurity =
+        assertInstanceOf(
+            WorkbookReadResult.PackageSecurityResult.class,
+            WorkbookReadResultConverter.toReadResult(
+                new dev.erst.gridgrind.excel.WorkbookReadResult.PackageSecurityResult(
+                    "security",
+                    new ExcelOoxmlPackageSecuritySnapshot(
+                        new ExcelOoxmlEncryptionSnapshot(
+                            true,
+                            ExcelOoxmlEncryptionMode.AGILE,
+                            "AES256",
+                            "SHA512",
+                            "CBC",
+                            256,
+                            16,
+                            100_000),
+                        List.of(
+                            new ExcelOoxmlSignatureSnapshot(
+                                "/_xmlsignatures/sig1.xml",
+                                "CN=GridGrind Signing Test",
+                                "CN=GridGrind Signing Test",
+                                "01AB",
+                                ExcelOoxmlSignatureState.VALID))))));
+
+    assertTrue(packageSecurity.security().encryption().encrypted());
+    assertEquals(
+        ExcelOoxmlSignatureState.VALID, packageSecurity.security().signatures().getFirst().state());
+  }
+
+  @Test
   void convertsPlainCommentAndWorkbookProtectionFactsDirectly() {
     assertNull(WorkbookReadResultConverter.toCommentReport((ExcelComment) null));
     GridGrindResponse.CommentReport plainComment =

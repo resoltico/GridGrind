@@ -13,6 +13,8 @@ final class WorkbookReadCommandConverter {
     return switch (read) {
       case WorkbookReadOperation.GetWorkbookSummary op ->
           new WorkbookReadCommand.GetWorkbookSummary(op.requestId());
+      case WorkbookReadOperation.GetPackageSecurity op ->
+          new WorkbookReadCommand.GetPackageSecurity(op.requestId());
       case WorkbookReadOperation.GetWorkbookProtection op ->
           new WorkbookReadCommand.GetWorkbookProtection(op.requestId());
       case WorkbookReadOperation.GetNamedRanges op ->

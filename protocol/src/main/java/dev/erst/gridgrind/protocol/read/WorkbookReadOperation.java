@@ -15,6 +15,9 @@ import java.util.Set;
       value = WorkbookReadOperation.GetWorkbookSummary.class,
       name = "GET_WORKBOOK_SUMMARY"),
   @JsonSubTypes.Type(
+      value = WorkbookReadOperation.GetPackageSecurity.class,
+      name = "GET_PACKAGE_SECURITY"),
+  @JsonSubTypes.Type(
       value = WorkbookReadOperation.GetWorkbookProtection.class,
       name = "GET_WORKBOOK_PROTECTION"),
   @JsonSubTypes.Type(value = WorkbookReadOperation.GetNamedRanges.class, name = "GET_NAMED_RANGES"),
@@ -90,6 +93,7 @@ public sealed interface WorkbookReadOperation
   /** Marker for raw workbook-fact reads with no higher-level interpretation. */
   sealed interface Introspection extends WorkbookReadOperation
       permits GetWorkbookSummary,
+          GetPackageSecurity,
           GetWorkbookProtection,
           GetNamedRanges,
           GetSheetSummary,
@@ -127,6 +131,13 @@ public sealed interface WorkbookReadOperation
   /** Returns workbook-level summary facts such as sheet order and recalculation flag. */
   record GetWorkbookSummary(String requestId) implements Introspection {
     public GetWorkbookSummary {
+      requestId = requireNonBlank(requestId, "requestId");
+    }
+  }
+
+  /** Returns OOXML package-encryption and package-signature facts. */
+  record GetPackageSecurity(String requestId) implements Introspection {
+    public GetPackageSecurity {
       requestId = requireNonBlank(requestId, "requestId");
     }
   }

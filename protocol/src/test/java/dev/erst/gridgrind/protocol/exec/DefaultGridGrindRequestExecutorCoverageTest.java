@@ -128,6 +128,22 @@ class DefaultGridGrindRequestExecutorCoverageTest {
             new MissingExternalWorkbookException(
                 "Budget", "B4", "[Rates.xlsx]Sheet1!A1", "Rates.xlsx", "missing", null)));
     assertEquals(
+        GridGrindProblemCode.WORKBOOK_PASSWORD_REQUIRED,
+        DefaultGridGrindRequestExecutor.problemCodeFor(
+            new WorkbookPasswordRequiredException(Path.of("/tmp/encrypted.xlsx"))));
+    assertEquals(
+        GridGrindProblemCode.INVALID_WORKBOOK_PASSWORD,
+        DefaultGridGrindRequestExecutor.problemCodeFor(
+            new InvalidWorkbookPasswordException(Path.of("/tmp/encrypted.xlsx"))));
+    assertEquals(
+        GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION,
+        DefaultGridGrindRequestExecutor.problemCodeFor(
+            new InvalidSigningConfigurationException("bad signing")));
+    assertEquals(
+        GridGrindProblemCode.WORKBOOK_SECURITY_ERROR,
+        DefaultGridGrindRequestExecutor.problemCodeFor(
+            new WorkbookSecurityException("crypto failed", null)));
+    assertEquals(
         GridGrindProblemCode.IO_ERROR,
         DefaultGridGrindRequestExecutor.problemCodeFor(new IOException("disk")));
     assertEquals(
@@ -528,7 +544,8 @@ class DefaultGridGrindRequestExecutorCoverageTest {
             DefaultGridGrindRequestExecutor.class,
             "persistStreamingWorkbook",
             Path.class,
-            GridGrindRequest.WorkbookPersistence.class);
+            GridGrindRequest.WorkbookPersistence.class,
+            GridGrindRequest.WorkbookSource.class);
     Path materializedWorkbook = Files.createTempFile("gridgrind-streaming-materialized-", ".xlsx");
     try {
       InvocationTargetException failure =
@@ -538,7 +555,8 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                   persistStreamingWorkbook.invoke(
                       executor,
                       materializedWorkbook,
-                      new GridGrindRequest.WorkbookPersistence.OverwriteSource()));
+                      new GridGrindRequest.WorkbookPersistence.OverwriteSource(),
+                      new GridGrindRequest.WorkbookSource.New()));
       IllegalStateException cause =
           assertInstanceOf(IllegalStateException.class, failure.getCause());
       assertTrue(cause.getMessage().contains("must be NONE or SAVE_AS"));
@@ -637,6 +655,155 @@ class DefaultGridGrindRequestExecutorCoverageTest {
     } finally {
       Files.deleteIfExists(unreadableWorkbookPath);
     }
+  }
+
+  @Test
+  void coversDirectEventReadFailureBranchesAndPackageSecurityReadCoordinates() throws Exception {
+    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    Method executeDirectEventReadWorkflow =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class,
+            "executeDirectEventReadWorkflow",
+            GridGrindProtocolVersion.class,
+            GridGrindRequest.class);
+    Method executeEventReads =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class,
+            "executeEventReads",
+            Path.class,
+            GridGrindRequest.class);
+    WorkbookReadOperation.GetPackageSecurity getPackageSecurity =
+        new WorkbookReadOperation.GetPackageSecurity("security");
+    WorkbookReadOperation.GetWorkbookProtection getWorkbookProtection =
+        new WorkbookReadOperation.GetWorkbookProtection("protection");
+    IOException failure = new IOException("ignored");
+    Path workbookPath = createWorkbookPath("Ops", "A1", "payload");
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.ExistingFile(workbookPath.toString()),
+            new GridGrindRequest.WorkbookPersistence.None(),
+            new ExecutionModeInput(
+                ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF),
+            null,
+            List.of(),
+            List.of(getPackageSecurity));
+
+    try {
+      InvocationTargetException executeEventReadsFailure =
+          assertThrows(
+              InvocationTargetException.class,
+              () -> executeEventReads.invoke(executor, workbookPath, request));
+      assertEquals(
+          "ReadExecutionFailure", executeEventReadsFailure.getCause().getClass().getSimpleName());
+
+      GridGrindResponse.Failure directFailure =
+          assertInstanceOf(
+              GridGrindResponse.Failure.class,
+              executeDirectEventReadWorkflow.invoke(
+                  executor, GridGrindProtocolVersion.current(), request));
+      assertEquals("EXECUTE_READ", directFailure.problem().context().stage());
+
+      assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(getPackageSecurity));
+      assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(getWorkbookProtection));
+      assertNull(DefaultGridGrindRequestExecutor.addressFor(getPackageSecurity, failure));
+      assertNull(DefaultGridGrindRequestExecutor.addressFor(getWorkbookProtection, failure));
+      assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(getPackageSecurity, failure));
+      assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(getWorkbookProtection, failure));
+    } finally {
+      Files.deleteIfExists(workbookPath);
+    }
+  }
+
+  @Test
+  void coversStreamingPersistenceSecurityHelpers() throws Exception {
+    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    Method persistenceOptions =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class,
+            "persistenceOptions",
+            GridGrindRequest.WorkbookPersistence.class);
+    Method sourcePackageSecurity =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class,
+            "sourcePackageSecurity",
+            GridGrindRequest.WorkbookSource.class);
+    Method sourceEncryptionPassword =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class,
+            "sourceEncryptionPassword",
+            GridGrindRequest.WorkbookSource.class);
+    Method persistStreamingWorkbook =
+        accessibleMethod(
+            DefaultGridGrindRequestExecutor.class,
+            "persistStreamingWorkbook",
+            Path.class,
+            GridGrindRequest.WorkbookPersistence.class,
+            GridGrindRequest.WorkbookSource.class);
+    OoxmlPersistenceSecurityInput security =
+        new OoxmlPersistenceSecurityInput(
+            new OoxmlEncryptionInput("persist-pass", ExcelOoxmlEncryptionMode.STANDARD), null);
+    GridGrindRequest.WorkbookSource.New newSource = new GridGrindRequest.WorkbookSource.New();
+    GridGrindRequest.WorkbookSource.ExistingFile existingSource =
+        new GridGrindRequest.WorkbookSource.ExistingFile(
+            "/tmp/source.xlsx", new OoxmlOpenSecurityInput("source-pass"));
+    GridGrindRequest.WorkbookSource.ExistingFile unsecuredExistingSource =
+        new GridGrindRequest.WorkbookSource.ExistingFile("/tmp/plain-source.xlsx");
+    GridGrindRequest.WorkbookPersistence.OverwriteSource overwrite =
+        new GridGrindRequest.WorkbookPersistence.OverwriteSource(security);
+
+    assertTrue(
+        ((ExcelOoxmlPersistenceOptions)
+                persistenceOptions.invoke(null, new GridGrindRequest.WorkbookPersistence.None()))
+            .isEmpty());
+    assertEquals(
+        "persist-pass",
+        ((ExcelOoxmlPersistenceOptions) persistenceOptions.invoke(null, overwrite))
+            .encryption()
+            .password());
+    assertFalse(
+        ((ExcelOoxmlPackageSecuritySnapshot) sourcePackageSecurity.invoke(null, newSource))
+            .isSecure());
+    assertFalse(
+        ((ExcelOoxmlPackageSecuritySnapshot) sourcePackageSecurity.invoke(null, existingSource))
+            .isSecure());
+    assertNull(sourceEncryptionPassword.invoke(null, newSource));
+    assertEquals("source-pass", sourceEncryptionPassword.invoke(null, existingSource));
+    assertNull(sourceEncryptionPassword.invoke(null, unsecuredExistingSource));
+
+    Path materializedWorkbook = createWorkbookPath("Stream", "A1", "Encrypted stream");
+    Path persistedWorkbook = Files.createTempFile("gridgrind-streaming-secured-", ".xlsx");
+    Files.deleteIfExists(persistedWorkbook);
+    try {
+      GridGrindResponse.PersistenceOutcome.SavedAs savedAs =
+          assertInstanceOf(
+              GridGrindResponse.PersistenceOutcome.SavedAs.class,
+              persistStreamingWorkbook.invoke(
+                  executor,
+                  materializedWorkbook,
+                  new GridGrindRequest.WorkbookPersistence.SaveAs(
+                      persistedWorkbook.toString(), security),
+                  newSource));
+
+      assertEquals(persistedWorkbook.toAbsolutePath().toString(), savedAs.executionPath());
+      assertFalse(Files.exists(materializedWorkbook));
+      assertEquals(
+          "Encrypted stream",
+          OoxmlSecurityTestSupport.decryptedStringCell(
+              persistedWorkbook, "persist-pass", "Stream", "A1"));
+    } finally {
+      Files.deleteIfExists(materializedWorkbook);
+      Files.deleteIfExists(persistedWorkbook);
+    }
+  }
+
+  private static Path createWorkbookPath(String sheetName, String address, String value)
+      throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-protocol-coverage-", ".xlsx");
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet(sheetName).setCell(address, new ExcelCellValue.TextValue(value));
+      workbook.save(workbookPath);
+    }
+    return workbookPath;
   }
 
   private static void assertPrivateSheetNameHelperRejects(

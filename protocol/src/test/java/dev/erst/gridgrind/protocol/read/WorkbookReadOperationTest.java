@@ -10,6 +10,16 @@ import org.junit.jupiter.api.Test;
 /** Tests for workbook-read operation invariants. */
 class WorkbookReadOperationTest {
   @Test
+  void getPackageSecurityRequiresNonBlankRequestId() {
+    WorkbookReadOperation.GetPackageSecurity operation =
+        new WorkbookReadOperation.GetPackageSecurity("security");
+
+    assertEquals("security", operation.requestId());
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookReadOperation.GetPackageSecurity(" "));
+  }
+
+  @Test
   void getWindowAcceptsWindowAtTheMaximumCellLimit() {
     // 500 * 500 = 250,000 == MAX_WINDOW_CELLS — must not throw
     assertDoesNotThrow(() -> new WorkbookReadOperation.GetWindow("w", "Sheet1", "A1", 500, 500));

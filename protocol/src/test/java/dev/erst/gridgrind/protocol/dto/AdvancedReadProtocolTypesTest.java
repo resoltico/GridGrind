@@ -12,6 +12,8 @@ import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
@@ -23,6 +25,92 @@ import org.junit.jupiter.api.Test;
 
 /** Tests for the richer factual readback protocol types added for advanced XSSF parity. */
 class AdvancedReadProtocolTypesTest {
+  @Test
+  void ooxmlSecurityReportsAndReadResultsValidateRichShapes() {
+    OoxmlEncryptionReport encryption =
+        new OoxmlEncryptionReport(
+            true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 256, 16, 100_000);
+    OoxmlSignatureReport signature =
+        new OoxmlSignatureReport(
+            "/_xmlsignatures/sig1.xml",
+            "CN=GridGrind Signing Test",
+            "CN=GridGrind Signing Test",
+            "01AB",
+            ExcelOoxmlSignatureState.VALID);
+    OoxmlPackageSecurityReport packageSecurity =
+        new OoxmlPackageSecurityReport(encryption, List.of(signature));
+    WorkbookReadOperation.GetPackageSecurity getPackageSecurity =
+        new WorkbookReadOperation.GetPackageSecurity("security");
+    WorkbookReadResult.PackageSecurityResult readResult =
+        new WorkbookReadResult.PackageSecurityResult("security", packageSecurity);
+
+    assertTrue(packageSecurity.encryption().encrypted());
+    assertEquals(ExcelOoxmlSignatureState.VALID, packageSecurity.signatures().getFirst().state());
+    assertEquals("security", getPackageSecurity.requestId());
+    assertEquals(packageSecurity, readResult.security());
+
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                false, ExcelOoxmlEncryptionMode.AGILE, null, null, null, null, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlSignatureReport(
+                " ", "CN=GridGrind Signing Test", null, null, ExcelOoxmlSignatureState.INVALID));
+    assertThrows(
+        NullPointerException.class,
+        () -> new OoxmlPackageSecurityReport(encryption, Arrays.asList(signature, null)));
+    assertThrows(
+        IllegalArgumentException.class, () -> new WorkbookReadOperation.GetPackageSecurity(" "));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.PackageSecurityResult("security", null));
+  }
+
+  @Test
+  void ooxmlEncryptionReportsRejectInvalidEncryptedDetailFields() {
+    assertThrows(
+        NullPointerException.class,
+        () -> new OoxmlEncryptionReport(true, null, "AES256", "SHA512", "CBC", 256, 16, 100_000));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                true, ExcelOoxmlEncryptionMode.AGILE, null, "SHA512", "CBC", 256, 16, 100_000));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                true, ExcelOoxmlEncryptionMode.AGILE, " ", "SHA512", "CBC", 256, 16, 100_000));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", null, "CBC", 256, 16, 100_000));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", " ", 256, 16, 100_000));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 0, 16, 100_000));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 256, 0, 100_000));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 256, 16, -1));
+  }
+
   @Test
   void pivotReportsHealthReportsAndReadOperationsValidateRichShapes() {
     PivotTableReport.Source.Range rangeSource = new PivotTableReport.Source.Range("Data", "A1:D5");

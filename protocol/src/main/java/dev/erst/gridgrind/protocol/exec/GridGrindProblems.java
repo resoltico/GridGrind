@@ -1,5 +1,9 @@
 package dev.erst.gridgrind.protocol.exec;
 
+import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
+import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
+import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
+import dev.erst.gridgrind.excel.WorkbookSecurityException;
 import dev.erst.gridgrind.protocol.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
 import dev.erst.gridgrind.protocol.json.InvalidJsonException;
@@ -105,6 +109,11 @@ public final class GridGrindProblems {
       case InvalidJsonException _ -> GridGrindProblemCode.INVALID_JSON;
       case InvalidRequestShapeException _ -> GridGrindProblemCode.INVALID_REQUEST_SHAPE;
       case InvalidRequestException _ -> GridGrindProblemCode.INVALID_REQUEST;
+      case WorkbookPasswordRequiredException _ -> GridGrindProblemCode.WORKBOOK_PASSWORD_REQUIRED;
+      case InvalidWorkbookPasswordException _ -> GridGrindProblemCode.INVALID_WORKBOOK_PASSWORD;
+      case InvalidSigningConfigurationException _ ->
+          GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION;
+      case WorkbookSecurityException _ -> GridGrindProblemCode.WORKBOOK_SECURITY_ERROR;
       case IOException _ -> GridGrindProblemCode.IO_ERROR;
       case IllegalArgumentException _ -> GridGrindProblemCode.INVALID_REQUEST;
       case DateTimeException _ -> GridGrindProblemCode.INVALID_REQUEST;

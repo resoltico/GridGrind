@@ -30,17 +30,40 @@ public final class ExcelWorkbook implements AutoCloseable {
   private final ExcelPivotTableController pivotTableController;
   private final ExcelSheetCopyController sheetCopyController;
   private final ExcelSheetStateController sheetStateController;
+  private final Path sourcePath;
+  private final ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity;
+  private final String sourceEncryptionPassword;
+  private boolean mutatedSinceOpen;
 
   private ExcelWorkbook(XSSFWorkbook workbook) {
-    this(workbook, ExcelFormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator()));
+    this(
+        workbook,
+        ExcelFormulaRuntime.poi(workbook.getCreationHelper().createFormulaEvaluator()),
+        null,
+        ExcelOoxmlPackageSecuritySnapshot.none(),
+        null);
   }
 
   private ExcelWorkbook(XSSFWorkbook workbook, ExcelFormulaEnvironment formulaEnvironment)
       throws IOException {
-    this(workbook, ExcelFormulaRuntime.poi(workbook, formulaEnvironment));
+    this(
+        workbook,
+        ExcelFormulaRuntime.poi(workbook, formulaEnvironment),
+        null,
+        ExcelOoxmlPackageSecuritySnapshot.none(),
+        null);
   }
 
   ExcelWorkbook(XSSFWorkbook workbook, ExcelFormulaRuntime formulaRuntime) {
+    this(workbook, formulaRuntime, null, ExcelOoxmlPackageSecuritySnapshot.none(), null);
+  }
+
+  ExcelWorkbook(
+      XSSFWorkbook workbook,
+      ExcelFormulaRuntime formulaRuntime,
+      Path sourcePath,
+      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      String sourceEncryptionPassword) {
     this.workbook = workbook;
     this.styleRegistry = new WorkbookStyleRegistry(workbook);
     this.formulaRuntime = Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
@@ -48,6 +71,10 @@ public final class ExcelWorkbook implements AutoCloseable {
     this.pivotTableController = new ExcelPivotTableController();
     this.sheetCopyController = new ExcelSheetCopyController();
     this.sheetStateController = new ExcelSheetStateController();
+    this.sourcePath = sourcePath;
+    this.loadedPackageSecurity =
+        Objects.requireNonNull(loadedPackageSecurity, "loadedPackageSecurity must not be null");
+    this.sourceEncryptionPassword = sourceEncryptionPassword;
   }
 
   /** Adapts a POI evaluator into the GridGrind-owned formula runtime seam. */
@@ -68,7 +95,37 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   /** Opens an existing workbook file from disk. */
   public static ExcelWorkbook open(Path workbookPath) throws IOException {
+    return open(workbookPath, (ExcelOoxmlOpenOptions) null);
+  }
+
+  /** Opens an existing workbook file from disk with optional OOXML package-open settings. */
+  public static ExcelWorkbook open(Path workbookPath, ExcelOoxmlOpenOptions openOptions)
+      throws IOException {
+    return ExcelOoxmlPackageSecuritySupport.openWorkbook(
+        workbookPath, openOptions, Files::createTempFile);
+  }
+
+  /**
+   * Opens an existing workbook with explicit package-open settings and a custom temp-file factory.
+   */
+  public static ExcelWorkbook open(
+      Path workbookPath,
+      ExcelOoxmlOpenOptions openOptions,
+      ExcelOoxmlPackageSecuritySupport.TempFileFactory tempFileFactory)
+      throws IOException {
+    return ExcelOoxmlPackageSecuritySupport.openWorkbook(
+        workbookPath, openOptions, tempFileFactory);
+  }
+
+  /** Opens one materialized plain OOXML package with explicit source-security metadata. */
+  static ExcelWorkbook openMaterializedWorkbook(
+      Path workbookPath,
+      Path sourcePath,
+      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      String sourceEncryptionPassword)
+      throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
+    Objects.requireNonNull(loadedPackageSecurity, "loadedPackageSecurity must not be null");
 
     Path absolutePath = workbookPath.toAbsolutePath();
     if (!Files.exists(absolutePath)) {
@@ -77,7 +134,11 @@ public final class ExcelWorkbook implements AutoCloseable {
 
     try (InputStream inputStream = Files.newInputStream(absolutePath)) {
       try {
-        return new ExcelWorkbook(new XSSFWorkbook(inputStream));
+        return openMaterializedWorkbook(
+            new XSSFWorkbook(inputStream),
+            sourcePath,
+            loadedPackageSecurity,
+            sourceEncryptionPassword);
       } catch (NotOfficeXmlFileException exception) {
         throw new IllegalArgumentException("Only .xlsx workbooks are supported", exception);
       }
@@ -87,7 +148,43 @@ public final class ExcelWorkbook implements AutoCloseable {
   /** Opens an existing workbook file from disk with the supplied formula environment. */
   public static ExcelWorkbook open(Path workbookPath, ExcelFormulaEnvironment formulaEnvironment)
       throws IOException {
+    return open(workbookPath, formulaEnvironment, null);
+  }
+
+  /** Opens an existing workbook file from disk with formula and OOXML package-open settings. */
+  public static ExcelWorkbook open(
+      Path workbookPath,
+      ExcelFormulaEnvironment formulaEnvironment,
+      ExcelOoxmlOpenOptions openOptions)
+      throws IOException {
+    return ExcelOoxmlPackageSecuritySupport.openWorkbook(
+        workbookPath, formulaEnvironment, openOptions, Files::createTempFile);
+  }
+
+  /**
+   * Opens an existing workbook with formula and package-open settings plus a custom temp-file
+   * factory.
+   */
+  public static ExcelWorkbook open(
+      Path workbookPath,
+      ExcelFormulaEnvironment formulaEnvironment,
+      ExcelOoxmlOpenOptions openOptions,
+      ExcelOoxmlPackageSecuritySupport.TempFileFactory tempFileFactory)
+      throws IOException {
+    return ExcelOoxmlPackageSecuritySupport.openWorkbook(
+        workbookPath, formulaEnvironment, openOptions, tempFileFactory);
+  }
+
+  /** Opens one materialized plain OOXML package with explicit source-security metadata. */
+  static ExcelWorkbook openMaterializedWorkbook(
+      Path workbookPath,
+      ExcelFormulaEnvironment formulaEnvironment,
+      Path sourcePath,
+      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      String sourceEncryptionPassword)
+      throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
+    Objects.requireNonNull(loadedPackageSecurity, "loadedPackageSecurity must not be null");
 
     Path absolutePath = workbookPath.toAbsolutePath();
     if (!Files.exists(absolutePath)) {
@@ -96,10 +193,63 @@ public final class ExcelWorkbook implements AutoCloseable {
 
     try (InputStream inputStream = Files.newInputStream(absolutePath)) {
       try {
-        return new ExcelWorkbook(new XSSFWorkbook(inputStream), formulaEnvironment);
+        return openMaterializedWorkbook(
+            new XSSFWorkbook(inputStream),
+            formulaEnvironment,
+            sourcePath,
+            loadedPackageSecurity,
+            sourceEncryptionPassword);
       } catch (NotOfficeXmlFileException exception) {
         throw new IllegalArgumentException("Only .xlsx workbooks are supported", exception);
       }
+    }
+  }
+
+  static ExcelWorkbook openMaterializedWorkbook(
+      XSSFWorkbook xssfWorkbook,
+      Path sourcePath,
+      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      String sourceEncryptionPassword)
+      throws IOException {
+    try {
+      return new ExcelWorkbook(
+          xssfWorkbook,
+          ExcelFormulaRuntime.poi(xssfWorkbook.getCreationHelper().createFormulaEvaluator()),
+          sourcePath,
+          loadedPackageSecurity,
+          sourceEncryptionPassword);
+    } catch (RuntimeException exception) {
+      closeWorkbookAfterOpenFailure(xssfWorkbook, exception);
+      throw exception;
+    }
+  }
+
+  static ExcelWorkbook openMaterializedWorkbook(
+      XSSFWorkbook xssfWorkbook,
+      ExcelFormulaEnvironment formulaEnvironment,
+      Path sourcePath,
+      ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity,
+      String sourceEncryptionPassword)
+      throws IOException {
+    try {
+      return new ExcelWorkbook(
+          xssfWorkbook,
+          ExcelFormulaRuntime.poi(xssfWorkbook, formulaEnvironment),
+          sourcePath,
+          loadedPackageSecurity,
+          sourceEncryptionPassword);
+    } catch (IOException | RuntimeException exception) {
+      closeWorkbookAfterOpenFailure(xssfWorkbook, exception);
+      throw exception;
+    }
+  }
+
+  static void closeWorkbookAfterOpenFailure(XSSFWorkbook workbook, Exception exception)
+      throws IOException {
+    try {
+      workbook.close();
+    } catch (IOException closeException) {
+      exception.addSuppressed(closeException);
     }
   }
 
@@ -364,10 +514,40 @@ public final class ExcelWorkbook implements AutoCloseable {
 
   /** Saves the workbook to disk, creating parent directories as needed. */
   public void save(Path workbookPath) throws IOException {
+    save(workbookPath, null);
+  }
+
+  /** Saves the workbook to disk with optional OOXML package-encryption and signing settings. */
+  public void save(Path workbookPath, ExcelOoxmlPersistenceOptions persistenceOptions)
+      throws IOException {
+    save(workbookPath, persistenceOptions, Files::createTempFile);
+  }
+
+  /** Saves the workbook to disk with explicit package-security temp-file ownership. */
+  public void save(
+      Path workbookPath,
+      ExcelOoxmlPersistenceOptions persistenceOptions,
+      ExcelOoxmlPackageSecuritySupport.TempFileFactory tempFileFactory)
+      throws IOException {
+    Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
+    if ((persistenceOptions == null || persistenceOptions.isEmpty())
+        && !loadedPackageSecurity.isSecure()) {
+      savePlainWorkbook(workbookPath);
+      return;
+    }
+    ExcelOoxmlPackageSecuritySupport.saveWorkbook(
+        this, workbookPath, persistenceOptions, tempFileFactory);
+  }
+
+  /** Saves the plain OOXML workbook package with no encryption or signing wrapper. */
+  public void savePlainWorkbook(Path workbookPath) throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
 
     Path absolutePath = workbookPath.toAbsolutePath();
-    Files.createDirectories(absolutePath.getParent());
+    Path parent = absolutePath.getParent();
+    if (parent != null) {
+      Files.createDirectories(parent);
+    }
     for (Sheet sheet : workbook) {
       ExcelRowColumnStructureController.canonicalizeColumnDefinitions(
           (org.apache.poi.xssf.usermodel.XSSFSheet) sheet);
@@ -377,6 +557,11 @@ public final class ExcelWorkbook implements AutoCloseable {
     try (OutputStream outputStream = Files.newOutputStream(absolutePath)) {
       workbook.write(outputStream);
     }
+  }
+
+  /** Returns factual OOXML package-security state for the current in-memory workbook. */
+  ExcelOoxmlPackageSecuritySnapshot packageSecurity() {
+    return mutatedSinceOpen ? loadedPackageSecurity.afterMutation() : loadedPackageSecurity;
   }
 
   @Override
@@ -404,6 +589,26 @@ public final class ExcelWorkbook implements AutoCloseable {
   /** Returns the mutable XSSF workbook delegate used by workbook-scoped controllers. */
   XSSFWorkbook xssfWorkbook() {
     return workbook;
+  }
+
+  Path sourcePath() {
+    return sourcePath;
+  }
+
+  ExcelOoxmlPackageSecuritySnapshot loadedPackageSecurity() {
+    return loadedPackageSecurity;
+  }
+
+  String sourceEncryptionPassword() {
+    return sourceEncryptionPassword;
+  }
+
+  boolean wasMutatedSinceOpen() {
+    return mutatedSinceOpen;
+  }
+
+  void markPackageMutated() {
+    mutatedSinceOpen = true;
   }
 
   private Cell requiredCell(String sheetName, String address) {

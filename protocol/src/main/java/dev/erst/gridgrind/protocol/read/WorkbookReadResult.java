@@ -14,6 +14,9 @@ import java.util.Objects;
       value = WorkbookReadResult.WorkbookSummaryResult.class,
       name = "GET_WORKBOOK_SUMMARY"),
   @JsonSubTypes.Type(
+      value = WorkbookReadResult.PackageSecurityResult.class,
+      name = "GET_PACKAGE_SECURITY"),
+  @JsonSubTypes.Type(
       value = WorkbookReadResult.WorkbookProtectionResult.class,
       name = "GET_WORKBOOK_PROTECTION"),
   @JsonSubTypes.Type(value = WorkbookReadResult.NamedRangesResult.class, name = "GET_NAMED_RANGES"),
@@ -89,6 +92,7 @@ public sealed interface WorkbookReadResult
   /** Marker for fact-only workbook reads. */
   sealed interface Introspection extends WorkbookReadResult
       permits WorkbookSummaryResult,
+          PackageSecurityResult,
           WorkbookProtectionResult,
           NamedRangesResult,
           SheetSummaryResult,
@@ -129,6 +133,15 @@ public sealed interface WorkbookReadResult
     public WorkbookSummaryResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(workbook, "workbook must not be null");
+    }
+  }
+
+  /** Returns OOXML package-encryption and package-signature facts. */
+  record PackageSecurityResult(String requestId, OoxmlPackageSecurityReport security)
+      implements Introspection {
+    public PackageSecurityResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(security, "security must not be null");
     }
   }
 

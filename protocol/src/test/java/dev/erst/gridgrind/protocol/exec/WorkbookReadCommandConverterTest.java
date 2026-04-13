@@ -13,6 +13,17 @@ import org.junit.jupiter.api.Test;
 /** Focused coverage for read-command converter chart branches. */
 class WorkbookReadCommandConverterTest {
   @Test
+  void convertsPackageSecurityReadOperation() {
+    WorkbookReadOperation operation = new WorkbookReadOperation.GetPackageSecurity("security");
+    WorkbookReadCommand.GetPackageSecurity command =
+        assertInstanceOf(
+            WorkbookReadCommand.GetPackageSecurity.class,
+            WorkbookReadCommandConverter.toReadCommand(operation));
+
+    assertEquals("security", command.requestId());
+  }
+
+  @Test
   void convertsChartReadOperations() {
     WorkbookReadOperation operation = new WorkbookReadOperation.GetCharts("charts", "Budget");
     WorkbookReadCommand.GetCharts command =

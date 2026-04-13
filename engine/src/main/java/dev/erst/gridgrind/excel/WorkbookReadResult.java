@@ -20,6 +20,7 @@ public sealed interface WorkbookReadResult
   /** Marker for fact-only workbook reads. */
   sealed interface Introspection extends WorkbookReadResult
       permits WorkbookSummaryResult,
+          PackageSecurityResult,
           WorkbookProtectionResult,
           NamedRangesResult,
           SheetSummaryResult,
@@ -60,6 +61,15 @@ public sealed interface WorkbookReadResult
     public WorkbookSummaryResult {
       requestId = requireNonBlank(requestId, "requestId");
       Objects.requireNonNull(workbook, "workbook must not be null");
+    }
+  }
+
+  /** Returns OOXML package-encryption and package-signature facts. */
+  record PackageSecurityResult(String requestId, ExcelOoxmlPackageSecuritySnapshot security)
+      implements Introspection {
+    public PackageSecurityResult {
+      requestId = requireNonBlank(requestId, "requestId");
+      Objects.requireNonNull(security, "security must not be null");
     }
   }
 

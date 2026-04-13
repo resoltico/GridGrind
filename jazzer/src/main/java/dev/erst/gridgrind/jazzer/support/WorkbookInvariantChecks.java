@@ -37,6 +37,7 @@ import dev.erst.gridgrind.protocol.dto.FontHeightReport;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
 import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
+import dev.erst.gridgrind.protocol.dto.OoxmlPackageSecurityReport;
 import dev.erst.gridgrind.protocol.dto.PaneReport;
 import dev.erst.gridgrind.protocol.dto.PivotTableHealthReport;
 import dev.erst.gridgrind.protocol.dto.PivotTableReport;
@@ -240,6 +241,9 @@ public final class WorkbookInvariantChecks {
             (WorkbookReadResult.WorkbookSummaryResult) readResult;
         requireWorkbookSummaryShape(result.workbook());
       }
+      case WorkbookReadOperation.GetPackageSecurity _ ->
+          requirePackageSecurityShape(
+              ((WorkbookReadResult.PackageSecurityResult) readResult).security());
       case WorkbookReadOperation.GetWorkbookProtection _ ->
           requireWorkbookProtectionShape(
               ((WorkbookReadResult.WorkbookProtectionResult) readResult).protection());
@@ -398,6 +402,7 @@ public final class WorkbookInvariantChecks {
   private static String readResultKind(WorkbookReadResult readResult) {
     return switch (readResult) {
       case WorkbookReadResult.WorkbookSummaryResult _ -> "GET_WORKBOOK_SUMMARY";
+      case WorkbookReadResult.PackageSecurityResult _ -> "GET_PACKAGE_SECURITY";
       case WorkbookReadResult.WorkbookProtectionResult _ -> "GET_WORKBOOK_PROTECTION";
       case WorkbookReadResult.NamedRangesResult _ -> "GET_NAMED_RANGES";
       case WorkbookReadResult.SheetSummaryResult _ -> "GET_SHEET_SUMMARY";
@@ -439,6 +444,8 @@ public final class WorkbookInvariantChecks {
     switch (readResult) {
       case WorkbookReadResult.WorkbookSummaryResult result ->
           requireWorkbookSummaryShape(result.workbook());
+      case WorkbookReadResult.PackageSecurityResult result ->
+          requirePackageSecurityShape(result.security());
       case WorkbookReadResult.WorkbookProtectionResult result ->
           requireWorkbookProtectionShape(result.protection());
       case WorkbookReadResult.NamedRangesResult result ->
@@ -1926,6 +1933,35 @@ public final class WorkbookInvariantChecks {
 
   private static void requireWorkbookProtectionShape(WorkbookProtectionReport protection) {
     require(protection != null, "workbook protection must not be null");
+  }
+
+  private static void requirePackageSecurityShape(OoxmlPackageSecurityReport security) {
+    require(security != null, "package security must not be null");
+    require(security.encryption() != null, "package encryption must not be null");
+    if (security.encryption().encrypted()) {
+      require(security.encryption().mode() != null, "encrypted package mode must not be null");
+      requireNonBlank(security.encryption().cipherAlgorithm(), "encrypted package cipherAlgorithm");
+      requireNonBlank(security.encryption().hashAlgorithm(), "encrypted package hashAlgorithm");
+      requireNonBlank(security.encryption().chainingMode(), "encrypted package chainingMode");
+      require(
+          security.encryption().keyBits() != null && security.encryption().keyBits() > 0,
+          "encrypted package keyBits must be positive");
+      require(
+          security.encryption().blockSize() != null && security.encryption().blockSize() > 0,
+          "encrypted package blockSize must be positive");
+      require(
+          security.encryption().spinCount() != null && security.encryption().spinCount() >= 0,
+          "encrypted package spinCount must be zero or positive");
+    }
+    require(security.signatures() != null, "package signatures must not be null");
+    security
+        .signatures()
+        .forEach(
+            signature -> {
+              require(signature != null, "package signature must not be null");
+              requireNonBlank(signature.packagePartName(), "package signature part");
+              require(signature.state() != null, "package signature state must not be null");
+            });
   }
 
   private static void requireCommentAnchorShape(CommentAnchorReport anchor) {
