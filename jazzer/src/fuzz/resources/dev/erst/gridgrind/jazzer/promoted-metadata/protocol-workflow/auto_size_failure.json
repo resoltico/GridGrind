@@ -12,8 +12,8 @@
       "persistenceKind" : "NONE",
       "operationCount" : 3,
       "operationKinds" : {
-        "ENSURE_SHEET" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2,
+        "ENSURE_SHEET" : 1
       },
       "styleKinds" : { },
       "readCount" : 0,

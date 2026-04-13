@@ -41,6 +41,7 @@ public final class WorkbookCommandExecutor {
           WorkbookCommand.UngroupColumns.class,
           WorkbookCommand.SetSheetPane.class,
           WorkbookCommand.SetSheetZoom.class,
+          WorkbookCommand.SetSheetPresentation.class,
           WorkbookCommand.SetPrintLayout.class,
           WorkbookCommand.ClearPrintLayout.class);
 
@@ -224,6 +225,10 @@ public final class WorkbookCommandExecutor {
           workbook.sheet(setSheetPane.sheetName()).setPane(setSheetPane.pane());
       case WorkbookCommand.SetSheetZoom setSheetZoom ->
           workbook.sheet(setSheetZoom.sheetName()).setZoom(setSheetZoom.zoomPercent());
+      case WorkbookCommand.SetSheetPresentation setSheetPresentation ->
+          workbook
+              .sheet(setSheetPresentation.sheetName())
+              .setPresentation(setSheetPresentation.presentation());
       case WorkbookCommand.SetPrintLayout setPrintLayout ->
           workbook.sheet(setPrintLayout.sheetName()).setPrintLayout(setPrintLayout.printLayout());
       case WorkbookCommand.ClearPrintLayout clearPrintLayout ->

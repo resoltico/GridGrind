@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.42.0"
+version: "0.43.0"
 domain: OPERATIONS
 updated: "2026-04-13"
 route:
@@ -1009,6 +1009,61 @@ Set one explicit zoom percentage for a sheet.
 | `sheetName` | Yes | Existing target sheet. |
 | `zoomPercent` | Yes | Integer zoom percentage. Must be between `10` and `400` inclusive. |
 
+### SET_SHEET_PRESENTATION
+
+Apply one authoritative supported sheet-presentation state to a sheet. Omitted nested fields
+normalize to defaults or clear state.
+
+```json
+{
+  "type": "SET_SHEET_PRESENTATION",
+  "sheetName": "Inventory",
+  "presentation": {
+    "display": {
+      "displayGridlines": false,
+      "displayZeros": false,
+      "displayRowColHeadings": true,
+      "displayFormulas": false,
+      "rightToLeft": false
+    },
+    "tabColor": { "rgb": "#0B6E4F" },
+    "outlineSummary": { "rowSumsBelow": false, "rowSumsRight": true },
+    "sheetDefaults": { "defaultColumnWidth": 14, "defaultRowHeightPoints": 19.0 },
+    "ignoredErrors": [
+      {
+        "range": "B4:B18",
+        "errorTypes": ["NUMBER_STORED_AS_TEXT"]
+      }
+    ]
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `sheetName` | Yes | Existing target sheet. |
+| `presentation` | Yes | Authoritative sheet-presentation payload. |
+
+`presentation` fields:
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `display` | No | Screen-view flags. Each nested field is optional and defaults to Excel's worksheet defaults. |
+| `tabColor` | No | Tab color using the normal `ColorInput` contract. Omit to clear the tab color. |
+| `outlineSummary` | No | `rowSumsBelow` and `rowSumsRight`. Defaults to `true` for both. |
+| `sheetDefaults` | No | Sheet-wide fallback sizing for rows and columns without explicit overrides. |
+| `ignoredErrors` | No | Authoritative list of ignored-error blocks. Omit or pass `[]` to clear all ignored-error suppression. |
+
+Nested constraints:
+
+- `display` supports `displayGridlines`, `displayZeros`, `displayRowColHeadings`,
+  `displayFormulas`, and `rightToLeft`.
+- `sheetDefaults.defaultColumnWidth` must be greater than `0`.
+- `sheetDefaults.defaultRowHeightPoints` must be finite and greater than `0`.
+- Each `ignoredErrors` entry requires one A1-style rectangular `range` plus one or more distinct
+  `errorTypes`.
+- `ignoredErrors` ranges must be unique within the request.
+
 ### SET_PRINT_LAYOUT
 
 Apply one authoritative supported print-layout state to a sheet. Omitted nested fields normalize
@@ -1037,6 +1092,7 @@ to default or cleared state.
       },
       "horizontallyCentered": true,
       "verticallyCentered": true,
+      "printGridlines": true,
       "paperSize": 8,
       "draft": true,
       "blackAndWhite": true,
@@ -1066,7 +1122,7 @@ to default or cleared state.
 | `repeatingColumns` | No | `NONE` or `BAND`. Defaults to `NONE`. |
 | `header` | No | Plain `left`, `center`, and `right` text segments. Defaults to blank text. |
 | `footer` | No | Plain `left`, `center`, and `right` text segments. Defaults to blank text. |
-| `setup` | No | Advanced page-setup payload. Defaults to the supported Excel baseline for margins, centering, copies, and page numbering. |
+| `setup` | No | Advanced page-setup payload. Defaults to the supported Excel baseline for margins, print-gridline output, centering, copies, and page numbering. |
 
 Nested constraints:
 
@@ -1352,7 +1408,7 @@ currently accept only `anchor.type = "TWO_CELL"` with zero-based `from` and `to`
 |:------|:---------|:------------|
 | `name` | Yes | Nonblank sheet-local drawing-object name. Replaces any existing drawing object of the same name. |
 | `image` | Yes | Binary picture payload with `format` plus base64 bytes. |
-| `anchor` | Yes | Authored drawing anchor. Phase 5 supports only `TWO_CELL`. |
+| `anchor` | Yes | Authored drawing anchor. The current public contract supports only `TWO_CELL`. |
 | `description` | No | Optional nonblank descriptive text stored on the picture. |
 
 `image.format` accepts `EMF`, `WMF`, `PICT`, `JPEG`, `PNG`, or `DIB`.
@@ -1424,7 +1480,7 @@ Create or replace one named simple shape or connector on one sheet.
 |:------|:---------|:------------|
 | `name` | Yes | Nonblank sheet-local drawing-object name. |
 | `kind` | Yes | `SIMPLE_SHAPE` or `CONNECTOR`. |
-| `anchor` | Yes | Authored drawing anchor. Phase 5 supports only `TWO_CELL`. |
+| `anchor` | Yes | Authored drawing anchor. The current public contract supports only `TWO_CELL`. |
 | `presetGeometryToken` | No | Optional preset geometry token for `SIMPLE_SHAPE`. Defaults to `rect` when omitted. Not allowed for `CONNECTOR`. |
 | `text` | No | Optional nonblank text for `SIMPLE_SHAPE`. Not allowed for `CONNECTOR`. |
 
@@ -1477,7 +1533,7 @@ image.
 | `command` | Yes | Nonblank command string stored on the object metadata. |
 | `base64Data` | Yes | Base64-encoded embedded payload bytes. |
 | `previewImage` | Yes | Preview picture payload shown by Excel for the object. |
-| `anchor` | Yes | Authored drawing anchor. Phase 5 supports only `TWO_CELL`. |
+| `anchor` | Yes | Authored drawing anchor. The current public contract supports only `TWO_CELL`. |
 
 ---
 
@@ -1586,7 +1642,7 @@ Move one existing named drawing object by replacing its anchor authoritatively.
 |:------|:---------|:------------|
 | `sheetName` | Yes | Target sheet. |
 | `objectName` | Yes | Existing sheet-local drawing-object name. |
-| `anchor` | Yes | Replacement authored drawing anchor. Phase 5 supports only `TWO_CELL`. |
+| `anchor` | Yes | Replacement authored drawing anchor. The current public contract supports only `TWO_CELL`. |
 
 ---
 
@@ -3004,9 +3060,9 @@ an extractable binary payload.
 
 ### GET_SHEET_LAYOUT
 
-Returns pane state, effective zoom, and per-row or per-column layout facts for one sheet. Row and
-column entries include explicit size plus `hidden`, `outlineLevel`, and `collapsed` where Excel
-exposes that state.
+Returns pane state, effective zoom, sheet-presentation state, and per-row or per-column layout
+facts for one sheet. Row and column entries include explicit size plus `hidden`, `outlineLevel`,
+and `collapsed` where Excel exposes that state.
 
 ```json
 {
@@ -3022,6 +3078,15 @@ The returned `layout.pane` is one of:
 - `FROZEN` with `splitColumn`, `splitRow`, `leftmostColumn`, and `topRow`
 - `SPLIT` with `xSplitPosition`, `ySplitPosition`, `leftmostColumn`, `topRow`, and `activePane`
 
+The returned `layout.presentation` object reports:
+
+- `display`: `displayGridlines`, `displayZeros`, `displayRowColHeadings`, `displayFormulas`, and
+  `rightToLeft`
+- `tabColor`: `null` or a structured color report
+- `outlineSummary`: `rowSumsBelow` and `rowSumsRight`
+- `sheetDefaults`: `defaultColumnWidth` and `defaultRowHeightPoints`
+- `ignoredErrors`: factual ignored-error blocks grouped by range
+
 ### GET_PRINT_LAYOUT
 
 Returns the supported print-layout state for one sheet.
@@ -3035,8 +3100,9 @@ Returns the supported print-layout state for one sheet.
 ```
 
 The returned `printLayout.setup` object carries advanced page-setup facts: `margins`,
-`horizontallyCentered`, `verticallyCentered`, `paperSize`, `draft`, `blackAndWhite`, `copies`,
-`useFirstPageNumber`, `firstPageNumber`, and explicit `rowBreaks` plus `columnBreaks`.
+`printGridlines`, `horizontallyCentered`, `verticallyCentered`, `paperSize`, `draft`,
+`blackAndWhite`, `copies`, `useFirstPageNumber`, `firstPageNumber`, and explicit `rowBreaks`
+plus `columnBreaks`.
 
 ### GET_DATA_VALIDATIONS
 

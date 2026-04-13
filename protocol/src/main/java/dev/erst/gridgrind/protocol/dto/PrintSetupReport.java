@@ -6,6 +6,7 @@ import java.util.Objects;
 /** Factual advanced page-setup state loaded from one worksheet. */
 public record PrintSetupReport(
     PrintMarginsReport margins,
+    boolean printGridlines,
     boolean horizontallyCentered,
     boolean verticallyCentered,
     int paperSize,
@@ -20,6 +21,7 @@ public record PrintSetupReport(
   public static PrintSetupReport defaults() {
     return new PrintSetupReport(
         PrintMarginsReport.defaults(),
+        false,
         false,
         false,
         1,
@@ -51,7 +53,6 @@ public record PrintSetupReport(
     List<Integer> copy =
         List.copyOf(Objects.requireNonNull(indexes, fieldName + " must not be null"));
     for (Integer index : copy) {
-      Objects.requireNonNull(index, fieldName + " must not contain null values");
       if (index < 0) {
         throw new IllegalArgumentException(fieldName + " must not contain negative indexes");
       }

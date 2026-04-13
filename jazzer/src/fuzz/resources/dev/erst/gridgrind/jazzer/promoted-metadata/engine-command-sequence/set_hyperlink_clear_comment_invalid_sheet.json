@@ -10,9 +10,9 @@
       "inputBytes" : 64,
       "commandCount" : 3,
       "commandKinds" : {
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
+        "DELETE_PIVOT_TABLE" : 1,
         "AUTO_SIZE_COLUMNS" : 1,
-        "DELETE_PIVOT_TABLE" : 1
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
       },
       "styleKinds" : { }
     }

@@ -10,6 +10,9 @@ sealed interface CliCommand {
   /** Requests that the version string be printed to stdout. */
   record Version() implements CliCommand {}
 
+  /** Requests that the license text be printed to stdout. */
+  record License() implements CliCommand {}
+
   /** Requests that a minimal valid request JSON document be printed to stdout. */
   record PrintRequestTemplate() implements CliCommand {}
 

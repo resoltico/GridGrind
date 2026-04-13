@@ -961,6 +961,12 @@ class DefaultGridGrindRequestExecutorCoverageTest {
                         "Budget",
                         new ExcelSheetPane.Split(120, 240, 0, 0, region),
                         100,
+                        new ExcelSheetPresentationSnapshot(
+                            ExcelSheetDisplay.defaults(),
+                            null,
+                            ExcelSheetOutlineSummary.defaults(),
+                            ExcelSheetDefaults.defaults(),
+                            List.of()),
                         List.of(
                             new dev.erst.gridgrind.excel.WorkbookReadResult.ColumnLayout(
                                 0, 12.0, false, 0, false)),

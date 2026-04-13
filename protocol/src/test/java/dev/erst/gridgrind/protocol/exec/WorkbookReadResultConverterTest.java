@@ -105,6 +105,20 @@ class WorkbookReadResultConverterTest {
             WorkbookReadResultConverter.toReadResult(
                 new dev.erst.gridgrind.excel.WorkbookReadResult.PrintLayoutResult(
                     "print-layout", "Budget", advancedPrintLayout())));
+    WorkbookReadResult.SheetLayoutResult sheetLayout =
+        assertInstanceOf(
+            WorkbookReadResult.SheetLayoutResult.class,
+            WorkbookReadResultConverter.toReadResult(
+                new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayoutResult(
+                    "sheet-layout", advancedSheetLayout())));
+    assertFalse(sheetLayout.layout().presentation().display().displayGridlines());
+    assertEquals("#112233", sheetLayout.layout().presentation().tabColor().rgb());
+    assertEquals(12, sheetLayout.layout().presentation().sheetDefaults().defaultColumnWidth());
+    assertEquals("B2:B12", sheetLayout.layout().presentation().ignoredErrors().getFirst().range());
+    assertEquals(
+        ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
+        sheetLayout.layout().presentation().ignoredErrors().getFirst().errorTypes().getFirst());
+    assertTrue(printLayout.layout().setup().printGridlines());
     assertEquals(List.of(10, 20), printLayout.layout().setup().rowBreaks());
     assertEquals(9, printLayout.layout().setup().paperSize());
 
@@ -701,6 +715,7 @@ class WorkbookReadResultConverterTest {
         new ExcelPrintSetupSnapshot(
             new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
             true,
+            true,
             false,
             9,
             false,
@@ -710,6 +725,29 @@ class WorkbookReadResultConverterTest {
             3,
             List.of(10, 20),
             List.of(2, 4)));
+  }
+
+  private static dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout advancedSheetLayout() {
+    return new dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout(
+        "Budget",
+        new ExcelSheetPane.Frozen(1, 1, 1, 1),
+        125,
+        new ExcelSheetPresentationSnapshot(
+            new ExcelSheetDisplay(false, false, true, true, true),
+            new ExcelColorSnapshot("#112233"),
+            new ExcelSheetOutlineSummary(false, false),
+            new ExcelSheetDefaults(12, 18.5d),
+            List.of(
+                new ExcelIgnoredError(
+                    "B2:B12",
+                    List.of(
+                        ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
+                        ExcelIgnoredErrorType.FORMULA)))),
+        List.of(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.ColumnLayout(
+                0, 16.0d, false, 0, false)),
+        List.of(
+            new dev.erst.gridgrind.excel.WorkbookReadResult.RowLayout(0, 20.0d, false, 0, false)));
   }
 
   private static List<ExcelAutofilterSnapshot> advancedAutofilters() {

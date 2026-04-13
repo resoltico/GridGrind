@@ -503,6 +503,21 @@ class WorkbookCommandTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookCommand.SetPrintLayout(" ", defaultPrintLayout()));
+    WorkbookCommand.SetSheetPresentation setSheetPresentation =
+        assertDoesNotThrow(
+            () ->
+                new WorkbookCommand.SetSheetPresentation(
+                    "Budget", ExcelSheetPresentation.defaults()));
+    assertEquals("Budget", setSheetPresentation.sheetName());
+    assertEquals(ExcelSheetPresentation.defaults(), setSheetPresentation.presentation());
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookCommand.SetSheetPresentation(null, ExcelSheetPresentation.defaults()));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new WorkbookCommand.SetSheetPresentation(" ", ExcelSheetPresentation.defaults()));
+    assertThrows(
+        NullPointerException.class, () -> new WorkbookCommand.SetSheetPresentation("Budget", null));
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.ClearPrintLayout(null));
     assertThrows(IllegalArgumentException.class, () -> new WorkbookCommand.ClearPrintLayout(" "));
   }

@@ -100,6 +100,7 @@ class ExcelSheetCopyControllerTest {
               ExcelHeaderFooterText.blank(),
               new ExcelPrintSetup(
                   new ExcelPrintMargins(0.35d, 0.55d, 0.6d, 0.45d, 0.3d, 0.3d),
+                  false,
                   true,
                   true,
                   8,

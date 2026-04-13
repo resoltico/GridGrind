@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.42.0"
+version: "0.43.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-04-13"
 route:
@@ -292,8 +292,9 @@ DOCKER_CONFIG="$ANON_DOCKER_CONFIG" docker run --rm ghcr.io/resoltico/gridgrind:
 rm -rf "$ANON_DOCKER_CONFIG"
 ```
 
-Both `docker run ... --version` commands must report the target release version exactly. A
-successful `docker pull` alone is not sufficient verification. In particular: a multi-arch
+Both `docker run ... --version` commands must report the two-line product header for the target
+release version exactly — `GridGrind X.Y.Z` on the first line and the product description on the
+second. A successful `docker pull` alone is not sufficient verification. In particular: a multi-arch
 `docker pull` can succeed even when the platform manifests have been deleted — the index
 manifest is still present but the image is not actually runnable. The `docker run --version`
 check is the definitive test.

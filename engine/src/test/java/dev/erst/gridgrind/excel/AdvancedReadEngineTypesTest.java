@@ -164,6 +164,7 @@ class AdvancedReadEngineTypesTest {
     ExcelPrintSetupSnapshot setup =
         new ExcelPrintSetupSnapshot(
             new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+            false,
             true,
             false,
             9,
@@ -184,6 +185,7 @@ class AdvancedReadEngineTypesTest {
         () ->
             new ExcelPrintSetupSnapshot(
                 new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 -1,
@@ -199,6 +201,7 @@ class AdvancedReadEngineTypesTest {
         () ->
             new ExcelPrintSetupSnapshot(
                 new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 9,
@@ -214,6 +217,7 @@ class AdvancedReadEngineTypesTest {
         () ->
             new ExcelPrintSetupSnapshot(
                 new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 9,
@@ -229,6 +233,7 @@ class AdvancedReadEngineTypesTest {
         () ->
             new ExcelPrintSetupSnapshot(
                 new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 9,
@@ -244,6 +249,7 @@ class AdvancedReadEngineTypesTest {
         () ->
             new ExcelPrintSetupSnapshot(
                 new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 9,
@@ -259,6 +265,7 @@ class AdvancedReadEngineTypesTest {
         () ->
             new ExcelPrintSetupSnapshot(
                 new ExcelPrintMarginsSnapshot(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 9,

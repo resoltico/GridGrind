@@ -248,6 +248,7 @@ class GridGrindResponseTest {
             "Budget",
             new PaneReport.Frozen(1, 1, 1, 1),
             125,
+            SheetPresentationReport.defaults(),
             List.of(new GridGrindResponse.ColumnLayoutReport(0, 12.5d, false, 0, false)),
             List.of(new GridGrindResponse.RowLayoutReport(0, 18.0d, false, 0, false)));
     PrintLayoutReport printLayout =
@@ -553,7 +554,12 @@ class GridGrindResponseTest {
         IllegalArgumentException.class,
         () ->
             new GridGrindResponse.SheetLayoutReport(
-                " ", new PaneReport.None(), 100, List.of(), List.of()));
+                " ",
+                new PaneReport.None(),
+                100,
+                SheetPresentationReport.defaults(),
+                List.of(),
+                List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () -> new GridGrindResponse.ColumnLayoutReport(-1, 12.0, false, 0, false));

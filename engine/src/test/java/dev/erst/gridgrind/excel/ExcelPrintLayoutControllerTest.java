@@ -65,6 +65,46 @@ class ExcelPrintLayoutControllerTest {
   }
 
   @Test
+  void setAndClearPrintGridlinesRoundTripsThroughPrintSetup() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      ExcelPrintLayoutController controller = new ExcelPrintLayoutController();
+      ExcelPrintLayout layout =
+          new ExcelPrintLayout(
+              new ExcelPrintLayout.Area.None(),
+              ExcelPrintOrientation.PORTRAIT,
+              new ExcelPrintLayout.Scaling.Automatic(),
+              new ExcelPrintLayout.TitleRows.None(),
+              new ExcelPrintLayout.TitleColumns.None(),
+              ExcelHeaderFooterText.blank(),
+              ExcelHeaderFooterText.blank(),
+              new ExcelPrintSetup(
+                  new ExcelPrintMargins(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d),
+                  true,
+                  false,
+                  false,
+                  1,
+                  false,
+                  false,
+                  1,
+                  false,
+                  1,
+                  java.util.List.of(),
+                  java.util.List.of()));
+
+      controller.setPrintLayout(sheet, layout);
+
+      assertTrue(sheet.isPrintGridlines());
+      assertTrue(controller.printLayout(sheet).setup().printGridlines());
+
+      controller.clearPrintLayout(sheet);
+
+      assertFalse(sheet.isPrintGridlines());
+      assertFalse(controller.printLayout(sheet).setup().printGridlines());
+    }
+  }
+
+  @Test
   void preservesSupportedPageSetupAttributesWhenOrientationAndScalingAreDefault() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");
@@ -80,6 +120,7 @@ class ExcelPrintLayoutControllerTest {
               ExcelHeaderFooterText.blank(),
               new ExcelPrintSetup(
                   new ExcelPrintMargins(0.35d, 0.55d, 0.6d, 0.45d, 0.3d, 0.3d),
+                  false,
                   true,
                   true,
                   8,
@@ -230,6 +271,7 @@ class ExcelPrintLayoutControllerTest {
                   ExcelPrintSetup.defaults().margins(),
                   false,
                   false,
+                  false,
                   1,
                   false,
                   false,
@@ -370,6 +412,7 @@ class ExcelPrintLayoutControllerTest {
         ExcelHeaderFooterText.blank(),
         new ExcelPrintSetup(
             new ExcelPrintMargins(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d),
+            false,
             false,
             false,
             1,

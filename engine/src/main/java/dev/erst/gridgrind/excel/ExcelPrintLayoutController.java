@@ -51,6 +51,7 @@ final class ExcelPrintLayoutController {
         java.util.List.of(),
         sheet::removeColumnBreak,
         sheet::setColumnBreak);
+    sheet.setPrintGridlines(false);
     sheet.setHorizontallyCenter(false);
     sheet.setVerticallyCenter(false);
     sheet.setFitToPage(false);
@@ -91,6 +92,7 @@ final class ExcelPrintLayoutController {
                 setup.margins().bottom(),
                 setup.margins().header(),
                 setup.margins().footer()),
+            setup.printGridlines(),
             setup.horizontallyCentered(),
             setup.verticallyCentered(),
             setup.paperSize(),
@@ -183,6 +185,7 @@ final class ExcelPrintLayoutController {
   private static void applySetup(XSSFSheet sheet, ExcelPrintSetup setup) {
     XSSFPrintSetup printSetup = sheet.getPrintSetup();
     applyMargins(sheet, setup.margins());
+    sheet.setPrintGridlines(setup.printGridlines());
     sheet.setHorizontallyCenter(setup.horizontallyCentered());
     sheet.setVerticallyCenter(setup.verticallyCentered());
     printSetup.setPaperSize((short) setup.paperSize());
@@ -322,6 +325,7 @@ final class ExcelPrintLayoutController {
             : defaultMargins;
     return new ExcelPrintSetup(
         margins,
+        sheet.isPrintGridlines(),
         sheet.getHorizontallyCenter(),
         sheet.getVerticallyCenter(),
         pageSetup != null ? Math.toIntExact(pageSetup.getPaperSize()) : defaults.paperSize(),

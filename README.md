@@ -2,7 +2,7 @@
 RETRIEVAL_HINTS:
   keywords: [gridgrind, excel, xlsx, workbook, agent, automation, json, protocol, java, apache-poi, spreadsheet, ai]
   answers: [what is gridgrind, how to use gridgrind, excel automation for ai agents, json workbook api, gridgrind quick start, gridgrind operations, gridgrind install]
-  related: [docs/QUICK_REFERENCE.md, docs/OPERATIONS.md, docs/ERRORS.md]
+  related: [docs/QUICK_REFERENCE.md, docs/OPERATIONS.md, docs/POI_EXCEL_CAPABILITY_INVENTORY.md, docs/ERRORS.md]
 -->
 
 [![GridGrind Art](https://raw.githubusercontent.com/resoltico/GridGrind/main/images/GridGrind.jpg)](https://github.com/resoltico/GridGrind)
@@ -31,6 +31,16 @@ report. Neither of them touches a cell. GridGrind handles the grind.
 
 ---
 
+## Docs
+
+- [docs/QUICK_REFERENCE.md](./docs/QUICK_REFERENCE.md) for copy-paste JSON snippets
+- [docs/OPERATIONS.md](./docs/OPERATIONS.md) for the full request and read reference
+- [docs/POI_EXCEL_CAPABILITY_INVENTORY.md](./docs/POI_EXCEL_CAPABILITY_INVENTORY.md) for the
+  current public `.xlsx` capability map against Apache POI XSSF
+- [docs/LIMITATIONS.md](./docs/LIMITATIONS.md) for hard ceilings and operating limits
+
+---
+
 ## Running GridGrind
 
 ### Container (recommended)
@@ -44,7 +54,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.42.0
+docker pull ghcr.io/resoltico/gridgrind:0.43.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -70,6 +80,7 @@ The artifact describes itself:
 ```bash
 docker run --rm ghcr.io/resoltico/gridgrind:latest --help
 docker run --rm ghcr.io/resoltico/gridgrind:latest --version
+docker run --rm ghcr.io/resoltico/gridgrind:latest --license
 docker run --rm ghcr.io/resoltico/gridgrind:latest --print-request-template
 docker run --rm ghcr.io/resoltico/gridgrind:latest --print-protocol-catalog
 ```
@@ -89,6 +100,7 @@ echo '{"source":{"type":"NEW"},"operations":[],"reads":[]}' \
 
 java -jar gridgrind.jar --request request.json --response response.json
 java -jar gridgrind.jar --help
+java -jar gridgrind.jar --license
 java -jar gridgrind.jar --print-request-template
 java -jar gridgrind.jar --print-protocol-catalog
 ```
@@ -242,6 +254,9 @@ Write any `.xlsx` workbook structure from a single JSON request. Read back exact
 need. Run health analysis in the same pass or on its own. See [docs/OPERATIONS.md](docs/OPERATIONS.md)
 for the full field reference and [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md) for
 copy-paste snippets for every type. The committed
+[examples/structural-layout-request.json](examples/structural-layout-request.json) example shows
+panes, zoom, sheet presentation, ignored-error suppression, and advanced print layout together
+with factual `GET_SHEET_LAYOUT` and `GET_PRINT_LAYOUT` readback. The committed
 [examples/table-autofilter-request.json](examples/table-autofilter-request.json) example shows the
 defaulted `SET_TABLE` shape with `showTotalsRow` omitted. The committed
 [examples/advanced-readback-request.json](examples/advanced-readback-request.json) example shows
@@ -252,27 +267,27 @@ table metadata, and workbook-health analysis. The committed
 the full workbook-core mutation surface for password-bearing protection, formula-defined named
 ranges, advanced table and autofilter mutation, advanced conditional formatting, rich comments,
 and advanced page setup. The committed
-[examples/drawing-media-request.json](examples/drawing-media-request.json) example shows the Phase
-5 drawing and media surface: picture, shape, and embedded-object authoring, explicit anchor
+[examples/drawing-media-request.json](examples/drawing-media-request.json) example shows the
+drawing and media surface: picture, shape, and embedded-object authoring, explicit anchor
 replacement, drawing payload extraction, and comment coexistence on the same sheet. The committed
-[examples/chart-request.json](examples/chart-request.json) example shows the Phase 6 chart
-surface: supported `BAR` chart authoring, named-range-backed series binding, explicit chart-anchor
-replacement, `GET_CHARTS` factual readback, and matching chart inventory in
+[examples/chart-request.json](examples/chart-request.json) example shows the chart surface:
+supported `BAR` chart authoring, named-range-backed series binding, explicit chart-anchor
+replacement, factual `GET_CHARTS` readback, and matching chart inventory in
 `GET_DRAWING_OBJECTS`. The committed
-[examples/pivot-request.json](examples/pivot-request.json) example shows the Phase 7 pivot
-surface: range-backed, named-range-backed, and table-backed pivot authoring, `GET_PIVOT_TABLES`
-factual readback, and `ANALYZE_PIVOT_TABLE_HEALTH`. The committed
+[examples/pivot-request.json](examples/pivot-request.json) example shows the pivot surface:
+range-backed, named-range-backed, and table-backed pivot authoring, factual
+`GET_PIVOT_TABLES` readback, and `ANALYZE_PIVOT_TABLE_HEALTH`. The committed
 [examples/package-security-create-request.json](examples/package-security-create-request.json) and
 [examples/package-security-inspect-request.json](examples/package-security-inspect-request.json)
-examples show the Phase 9 package-security surface: encrypted workbook authoring, encrypted source
-open with `source.security.password`, and factual `GET_PACKAGE_SECURITY` inspection. The committed
+examples show the package-security surface: encrypted workbook authoring, encrypted source open
+with `source.security.password`, and factual `GET_PACKAGE_SECURITY` inspection. The committed
 [examples/large-file-modes-request.json](examples/large-file-modes-request.json) example shows the
-Phase 8 low-memory execution surface: top-level `executionMode`, append-oriented
-`STREAMING_WRITE`, and summary-only `EVENT_READ` readback over the materialized workbook. The
+low-memory execution surface: top-level `executionMode`, append-oriented `STREAMING_WRITE`, and
+summary-only `EVENT_READ` readback over the materialized workbook. The
 committed
 [examples/formula-environment-request.json](examples/formula-environment-request.json) example
-shows the Phase 4 formula surface: top-level `formulaEnvironment`, template-backed UDF
-registration, targeted formula evaluation, and explicit formula-cache clearing.
+shows the formula surface: top-level `formulaEnvironment`, template-backed UDF registration,
+targeted formula evaluation, and explicit formula-cache clearing.
 
 ### Alice — building an inventory sheet
 

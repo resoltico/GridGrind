@@ -12,6 +12,28 @@
     { "type": "SET_COLUMN_WIDTH", "sheetName": "Summary", "firstColumnIndex": 0, "lastColumnIndex": 2, "widthCharacters": 16.0 },
     { "type": "SET_ROW_HEIGHT", "sheetName": "Summary", "firstRowIndex": 0, "lastRowIndex": 0, "heightPoints": 28.5 },
     {
+      "type": "SET_SHEET_PRESENTATION",
+      "sheetName": "Summary",
+      "presentation": {
+        "display": {
+          "displayGridlines": false,
+          "displayZeros": false,
+          "displayRowColHeadings": true,
+          "displayFormulas": false,
+          "rightToLeft": false
+        },
+        "tabColor": { "rgb": "#0B6E4F" },
+        "outlineSummary": { "rowSumsBelow": false, "rowSumsRight": true },
+        "sheetDefaults": { "defaultColumnWidth": 14, "defaultRowHeightPoints": 19.0 },
+        "ignoredErrors": [
+          {
+            "range": "B4:B18",
+            "errorTypes": ["NUMBER_STORED_AS_TEXT"]
+          }
+        ]
+      }
+    },
+    {
       "type": "SET_SHEET_PANE",
       "sheetName": "Summary",
       "pane": { "type": "FROZEN", "splitColumn": 0, "splitRow": 1, "leftmostColumn": 0, "topRow": 1 }
@@ -27,7 +49,28 @@
         "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 0 },
         "repeatingColumns": { "type": "NONE" },
         "header": { "left": "Quarterly Summary", "center": "", "right": "Board Pack" },
-        "footer": { "left": "", "center": "Internal Use", "right": "Page 1" }
+        "footer": { "left": "", "center": "Internal Use", "right": "Page 1" },
+        "setup": {
+          "printGridlines": true,
+          "margins": {
+            "left": 0.35,
+            "right": 0.55,
+            "top": 0.6,
+            "bottom": 0.45,
+            "header": 0.3,
+            "footer": 0.3
+          },
+          "horizontallyCentered": true,
+          "verticallyCentered": false,
+          "paperSize": 8,
+          "draft": false,
+          "blackAndWhite": false,
+          "copies": 1,
+          "useFirstPageNumber": false,
+          "firstPageNumber": 1,
+          "rowBreaks": [6],
+          "columnBreaks": [2]
+        }
       }
     }
   ],

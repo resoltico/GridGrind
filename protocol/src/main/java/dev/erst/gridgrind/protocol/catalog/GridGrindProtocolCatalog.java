@@ -265,13 +265,22 @@ public final class GridGrindProtocolCatalog {
               "Set the sheet zoom percentage."
                   + " zoomPercent must be between 10 and 400 inclusive."),
           descriptor(
+              WorkbookOperation.SetSheetPresentation.class,
+              "SET_SHEET_PRESENTATION",
+              "Apply one authoritative supported sheet-presentation state to a sheet."
+                  + " Omitted nested fields normalize to defaults or clear state."
+                  + " The supported surface covers screen display flags, right-to-left mode,"
+                  + " tab color, outline summary placement, default row and column sizing,"
+                  + " and ignored-errors ranges."),
+          descriptor(
               WorkbookOperation.SetPrintLayout.class,
               "SET_PRINT_LAYOUT",
               "Apply one authoritative supported print-layout state to a sheet."
                   + " Omitted nested fields normalize to default or clear state."
                   + " The supported surface covers print area, orientation, fit scaling,"
                   + " repeating rows, repeating columns, plain header or footer text,"
-                  + " margins, centering, paper size, draft, black-and-white, copies,"
+                  + " margins, printGridlines, centering, paper size, draft,"
+                  + " black-and-white, copies,"
                   + " first-page numbering, and explicit row or column breaks."),
           descriptor(
               WorkbookOperation.ClearPrintLayout.class,
@@ -1522,6 +1531,13 @@ public final class GridGrindProtocolCatalog {
                   + " color.",
               List.of()),
           plainTypeDescriptor(
+              "ignoredErrorInputType",
+              IgnoredErrorInput.class,
+              "IgnoredErrorInput",
+              "One ignored-error block anchored to one A1-style range plus one or more"
+                  + " ignored-error families.",
+              List.of()),
+          plainTypeDescriptor(
               "printLayoutInputType",
               PrintLayoutInput.class,
               "PrintLayoutInput",
@@ -1550,6 +1566,7 @@ public final class GridGrindProtocolCatalog {
                   + " All fields are optional and normalize to defaults when omitted.",
               List.of(
                   "margins",
+                  "printGridlines",
                   "horizontallyCentered",
                   "verticallyCentered",
                   "paperSize",
@@ -1560,6 +1577,40 @@ public final class GridGrindProtocolCatalog {
                   "firstPageNumber",
                   "rowBreaks",
                   "columnBreaks")),
+          plainTypeDescriptor(
+              "sheetDefaultsInputType",
+              SheetDefaultsInput.class,
+              "SheetDefaultsInput",
+              "Default row and column sizing authored as part of sheet-presentation state."
+                  + " All fields are optional and normalize to defaults when omitted.",
+              List.of("defaultColumnWidth", "defaultRowHeightPoints")),
+          plainTypeDescriptor(
+              "sheetDisplayInputType",
+              SheetDisplayInput.class,
+              "SheetDisplayInput",
+              "Screen-facing sheet display flags authored as part of sheet-presentation state."
+                  + " All fields are optional and normalize to defaults when omitted.",
+              List.of(
+                  "displayGridlines",
+                  "displayZeros",
+                  "displayRowColHeadings",
+                  "displayFormulas",
+                  "rightToLeft")),
+          plainTypeDescriptor(
+              "sheetOutlineSummaryInputType",
+              SheetOutlineSummaryInput.class,
+              "SheetOutlineSummaryInput",
+              "Outline-summary placement authored as part of sheet-presentation state."
+                  + " All fields are optional and normalize to defaults when omitted.",
+              List.of("rowSumsBelow", "rowSumsRight")),
+          plainTypeDescriptor(
+              "sheetPresentationInputType",
+              SheetPresentationInput.class,
+              "SheetPresentationInput",
+              "Authoritative sheet-presentation payload for one SET_SHEET_PRESENTATION request."
+                  + " All fields are optional and normalize to defaults or clear state when"
+                  + " omitted.",
+              List.of("display", "tabColor", "outlineSummary", "sheetDefaults", "ignoredErrors")),
           plainTypeDescriptor(
               "pivotTableInputType",
               PivotTableInput.class,

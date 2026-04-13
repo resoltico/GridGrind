@@ -52,6 +52,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           WorkbookOperation.UngroupColumns.class,
           WorkbookOperation.SetSheetPane.class,
           WorkbookOperation.SetSheetZoom.class,
+          WorkbookOperation.SetSheetPresentation.class,
           WorkbookOperation.SetPrintLayout.class,
           WorkbookOperation.ClearPrintLayout.class);
 
@@ -1245,6 +1246,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.UngroupColumns _ -> null;
       case WorkbookOperation.SetSheetPane _ -> null;
       case WorkbookOperation.SetSheetZoom _ -> null;
+      case WorkbookOperation.SetSheetPresentation _ -> null;
       case WorkbookOperation.SetPrintLayout _ -> null;
       case WorkbookOperation.ClearPrintLayout _ -> null;
       case WorkbookOperation.SetRange _ -> null;
@@ -1333,6 +1335,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookOperation.UngroupColumns op -> op.sheetName();
       case WorkbookOperation.SetSheetPane op -> op.sheetName();
       case WorkbookOperation.SetSheetZoom op -> op.sheetName();
+      case WorkbookOperation.SetSheetPresentation op -> op.sheetName();
       case WorkbookOperation.SetPrintLayout op -> op.sheetName();
       case WorkbookOperation.ClearPrintLayout op -> op.sheetName();
       default ->

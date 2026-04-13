@@ -228,6 +228,7 @@ public final class XlsxParityScenarios {
             sheet.setHorizontallyCenter(true);
             sheet.setVerticallyCenter(true);
             sheet.setDisplayGridlines(false);
+            sheet.setPrintGridlines(true);
             sheet.setRowBreak(6);
             sheet.setColumnBreak(3);
             sheet.getPrintSetup().setPaperSize((short) 8);

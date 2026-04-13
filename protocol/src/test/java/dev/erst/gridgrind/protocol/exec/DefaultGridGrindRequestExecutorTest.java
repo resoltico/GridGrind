@@ -15,6 +15,7 @@ import dev.erst.gridgrind.excel.ExcelCellProtectionSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
@@ -29,6 +30,8 @@ import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
+import dev.erst.gridgrind.excel.ExcelIgnoredError;
+import dev.erst.gridgrind.excel.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
@@ -39,7 +42,11 @@ import dev.erst.gridgrind.excel.ExcelPrintMarginsSnapshot;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelPrintSetupSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
+import dev.erst.gridgrind.excel.ExcelSheetDefaults;
+import dev.erst.gridgrind.excel.ExcelSheetDisplay;
+import dev.erst.gridgrind.excel.ExcelSheetOutlineSummary;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
+import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
@@ -383,6 +390,17 @@ class DefaultGridGrindRequestExecutorTest {
                         new WorkbookOperation.SetSheetPane(
                             "Budget", new PaneInput.Frozen(1, 1, 1, 1)),
                         new WorkbookOperation.SetSheetZoom("Budget", 125),
+                        new WorkbookOperation.SetSheetPresentation(
+                            "Budget",
+                            new SheetPresentationInput(
+                                new SheetDisplayInput(false, false, false, true, true),
+                                new ColorInput("#112233"),
+                                new SheetOutlineSummaryInput(false, false),
+                                new SheetDefaultsInput(11, 18.5d),
+                                List.of(
+                                    new IgnoredErrorInput(
+                                        "A1:B2",
+                                        List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))))),
                         new WorkbookOperation.SetPrintLayout(
                             "Budget",
                             new PrintLayoutInput(
@@ -392,7 +410,10 @@ class DefaultGridGrindRequestExecutorTest {
                                 new PrintTitleRowsInput.Band(0, 0),
                                 new PrintTitleColumnsInput.Band(0, 0),
                                 new HeaderFooterTextInput("Budget", "", ""),
-                                new HeaderFooterTextInput("", "Page &P", "")))),
+                                new HeaderFooterTextInput("", "Page &P", ""),
+                                new PrintSetupInput(
+                                    null, true, null, null, null, null, null, null, null, null,
+                                    null, null)))),
                     new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
                     new WorkbookReadOperation.GetMergedRegions("merged", "Budget"),
                     new WorkbookReadOperation.GetSheetLayout("layout", "Budget"),
@@ -424,9 +445,20 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(1, frozen.splitColumn());
     assertEquals(1, frozen.splitRow());
     assertEquals(125, layout.zoomPercent());
+    assertEquals(
+        new SheetDisplayReport(false, false, false, true, true), layout.presentation().display());
+    assertEquals(rgb("#112233"), layout.presentation().tabColor());
+    assertEquals(
+        new SheetOutlineSummaryReport(false, false), layout.presentation().outlineSummary());
+    assertEquals(new SheetDefaultsReport(11, 18.5d), layout.presentation().sheetDefaults());
+    assertEquals(
+        List.of(
+            new IgnoredErrorReport("A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
+        layout.presentation().ignoredErrors());
     assertEquals(16.0, layout.columns().getFirst().widthCharacters());
     assertEquals(28.5, layout.rows().getFirst().heightPoints());
     assertEquals(ExcelPrintOrientation.LANDSCAPE, printLayout.orientation());
+    assertTrue(printLayout.setup().printGridlines());
     assertEquals(List.of("Budget"), workbook.sheetNames());
 
     assertEquals(List.of("A1:B1"), XlsxRoundTrip.mergedRegions(workbookPath, "Budget"));
@@ -434,6 +466,20 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals((short) 570, XlsxRoundTrip.rowHeightTwips(workbookPath, "Budget", 0));
     assertEquals(new ExcelSheetPane.Frozen(1, 1, 1, 1), XlsxRoundTrip.pane(workbookPath, "Budget"));
     assertEquals(125, XlsxRoundTrip.zoomPercent(workbookPath, "Budget"));
+    dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout reopenedLayout =
+        XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
+    assertEquals(
+        new ExcelSheetDisplay(false, false, false, true, true),
+        reopenedLayout.presentation().display());
+    assertEquals(new ExcelColorSnapshot("#112233"), reopenedLayout.presentation().tabColor());
+    assertEquals(
+        new ExcelSheetOutlineSummary(false, false), reopenedLayout.presentation().outlineSummary());
+    assertEquals(new ExcelSheetDefaults(11, 18.5d), reopenedLayout.presentation().sheetDefaults());
+    assertEquals(
+        List.of(
+            new ExcelIgnoredError("A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
+        reopenedLayout.presentation().ignoredErrors());
+    assertTrue(XlsxRoundTrip.printLayout(workbookPath, "Budget").setup().printGridlines());
   }
 
   @Test
@@ -2531,6 +2577,17 @@ class DefaultGridGrindRequestExecutorTest {
     WorkbookOperation setSheetPane =
         new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 1, 1, 1));
     WorkbookOperation setSheetZoom = new WorkbookOperation.SetSheetZoom("Budget", 125);
+    WorkbookOperation setSheetPresentation =
+        new WorkbookOperation.SetSheetPresentation(
+            "Budget",
+            new SheetPresentationInput(
+                new SheetDisplayInput(false, false, false, true, true),
+                new ColorInput("#112233"),
+                new SheetOutlineSummaryInput(false, false),
+                new SheetDefaultsInput(11, 18.5d),
+                List.of(
+                    new IgnoredErrorInput(
+                        "A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))));
     WorkbookOperation setPrintLayout =
         new WorkbookOperation.SetPrintLayout(
             "Budget",
@@ -2635,6 +2692,12 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setSheetZoom, exception));
     assertNull(DefaultGridGrindRequestExecutor.addressFor(setSheetZoom, exception));
     assertNull(DefaultGridGrindRequestExecutor.rangeFor(setSheetZoom, exception));
+
+    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setSheetPresentation, exception));
+    assertEquals(
+        "Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setSheetPresentation, exception));
+    assertNull(DefaultGridGrindRequestExecutor.addressFor(setSheetPresentation, exception));
+    assertNull(DefaultGridGrindRequestExecutor.rangeFor(setSheetPresentation, exception));
 
     assertNull(DefaultGridGrindRequestExecutor.formulaFor(setPrintLayout, exception));
     assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(setPrintLayout, exception));
@@ -2779,6 +2842,19 @@ class DefaultGridGrindRequestExecutorTest {
         WorkbookCommand.SetSheetZoom.class,
         WorkbookCommandConverter.toCommand(new WorkbookOperation.SetSheetZoom("Budget", 125)));
     assertInstanceOf(
+        WorkbookCommand.SetSheetPresentation.class,
+        WorkbookCommandConverter.toCommand(
+            new WorkbookOperation.SetSheetPresentation(
+                "Budget",
+                new SheetPresentationInput(
+                    new SheetDisplayInput(false, false, false, true, true),
+                    new ColorInput("#112233"),
+                    new SheetOutlineSummaryInput(false, false),
+                    new SheetDefaultsInput(11, 18.5d),
+                    List.of(
+                        new IgnoredErrorInput(
+                            "A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))))));
+    assertInstanceOf(
         WorkbookCommand.SetPrintLayout.class,
         WorkbookCommandConverter.toCommand(
             new WorkbookOperation.SetPrintLayout(
@@ -2871,11 +2947,18 @@ class DefaultGridGrindRequestExecutorTest {
             WorkbookCommandConverter.toCommand(
                 new WorkbookOperation.SetPrintLayout(
                     "Budget", new PrintLayoutInput(null, null, null, null, null, null, null))));
+    WorkbookCommand.SetSheetPresentation defaultSheetPresentation =
+        cast(
+            WorkbookCommand.SetSheetPresentation.class,
+            WorkbookCommandConverter.toCommand(
+                new WorkbookOperation.SetSheetPresentation(
+                    "Budget", new SheetPresentationInput(null, null, null, null, null))));
 
     assertEquals(new ExcelSheetPane.None(), setSheetPaneNone.pane());
     assertEquals(
         new ExcelSheetPane.Split(1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
         setSheetPaneSplit.pane());
+    assertEquals(ExcelSheetPresentation.defaults(), defaultSheetPresentation.presentation());
     assertEquals(
         new dev.erst.gridgrind.excel.ExcelPrintLayout(
             new dev.erst.gridgrind.excel.ExcelPrintLayout.Area.None(),
@@ -3180,6 +3263,7 @@ class DefaultGridGrindRequestExecutorTest {
                     "Budget",
                     new dev.erst.gridgrind.excel.ExcelSheetPane.Frozen(1, 1, 1, 1),
                     125,
+                    defaultSheetPresentationSnapshot(),
                     List.of(
                         new dev.erst.gridgrind.excel.WorkbookReadResult.ColumnLayout(
                             0, 12.5, false, 0, false)),
@@ -3564,6 +3648,7 @@ class DefaultGridGrindRequestExecutorTest {
                         "Budget",
                         new dev.erst.gridgrind.excel.ExcelSheetPane.None(),
                         100,
+                        defaultSheetPresentationSnapshot(),
                         List.of(),
                         List.of()))));
 
@@ -3583,6 +3668,7 @@ class DefaultGridGrindRequestExecutorTest {
                         new dev.erst.gridgrind.excel.ExcelSheetPane.Split(
                             1200, 2400, 3, 4, ExcelPaneRegion.LOWER_RIGHT),
                         100,
+                        defaultSheetPresentationSnapshot(),
                         List.of(),
                         List.of()))));
     WorkbookReadResult.PrintLayoutResult printLayout =
@@ -4380,6 +4466,7 @@ class DefaultGridGrindRequestExecutorTest {
         new ExcelPrintMarginsSnapshot(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d),
         false,
         false,
+        false,
         0,
         false,
         false,
@@ -4387,6 +4474,16 @@ class DefaultGridGrindRequestExecutorTest {
         false,
         0,
         List.of(),
+        List.of());
+  }
+
+  private static dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot
+      defaultSheetPresentationSnapshot() {
+    return new dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot(
+        ExcelSheetDisplay.defaults(),
+        null,
+        ExcelSheetOutlineSummary.defaults(),
+        ExcelSheetDefaults.defaults(),
         List.of());
   }
 

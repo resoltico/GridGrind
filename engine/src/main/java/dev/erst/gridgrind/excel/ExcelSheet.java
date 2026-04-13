@@ -37,6 +37,7 @@ public final class ExcelSheet {
   private final ExcelConditionalFormattingController conditionalFormattingController;
   private final ExcelAutofilterController autofilterController;
   private final ExcelPrintLayoutController printLayoutController;
+  private final ExcelSheetPresentationController sheetPresentationController;
   private final ExcelRowColumnStructureController rowColumnStructureController;
   private final ExcelDrawingController drawingController;
 
@@ -49,6 +50,7 @@ public final class ExcelSheet {
     this.conditionalFormattingController = new ExcelConditionalFormattingController();
     this.autofilterController = new ExcelAutofilterController();
     this.printLayoutController = new ExcelPrintLayoutController();
+    this.sheetPresentationController = new ExcelSheetPresentationController();
     this.rowColumnStructureController = new ExcelRowColumnStructureController();
     this.drawingController = new ExcelDrawingController();
   }
@@ -472,6 +474,13 @@ public final class ExcelSheet {
     return this;
   }
 
+  /** Applies authoritative sheet-presentation state such as display flags and defaults. */
+  public ExcelSheet setPresentation(ExcelSheetPresentation presentation) {
+    Objects.requireNonNull(presentation, "presentation must not be null");
+    sheetPresentationController.setPresentation(xssfSheet(), presentation);
+    return this;
+  }
+
   /** Applies the provided print layout as the authoritative supported print state. */
   public ExcelSheet setPrintLayout(ExcelPrintLayout printLayout) {
     Objects.requireNonNull(printLayout, "printLayout must not be null");
@@ -675,6 +684,7 @@ public final class ExcelSheet {
         name(),
         ExcelSheetViewSupport.pane(xssfSheet()),
         ExcelSheetViewSupport.zoomPercent(xssfSheet()),
+        sheetPresentationController.presentation(xssfSheet()),
         rowColumnStructureController.columnLayouts(xssfSheet()),
         rowColumnStructureController.rowLayouts(xssfSheet()));
   }

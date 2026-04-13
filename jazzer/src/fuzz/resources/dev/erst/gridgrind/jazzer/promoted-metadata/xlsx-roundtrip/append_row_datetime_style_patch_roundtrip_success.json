@@ -10,20 +10,20 @@
       "inputBytes" : 228,
       "commandCount" : 7,
       "commandKinds" : {
-        "APPLY_STYLE" : 2,
+        "UNGROUP_ROWS" : 4,
         "CREATE_SHEET" : 1,
-        "UNGROUP_ROWS" : 4
+        "APPLY_STYLE" : 2
       },
       "styleKinds" : {
-        "locked" : 1,
+        "fill_background_color" : 2,
+        "fill_foreground_color" : 2,
         "hidden_formula" : 2,
-        "fill" : 2,
-        "fill_pattern" : 2,
-        "protection" : 2,
         "fill_patterned" : 2,
         "fill_color" : 2,
-        "fill_foreground_color" : 2,
-        "fill_background_color" : 2
+        "fill_pattern" : 2,
+        "fill" : 2,
+        "protection" : 2,
+        "locked" : 1
       }
     }
   },

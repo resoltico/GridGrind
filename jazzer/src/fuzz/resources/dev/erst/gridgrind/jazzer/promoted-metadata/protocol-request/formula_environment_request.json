@@ -13,12 +13,12 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 8,
       "operationKinds" : {
-        "SET_RANGE" : 1,
-        "EVALUATE_FORMULA_CELLS" : 1,
-        "CLEAR_FORMULA_CACHES" : 1,
-        "SET_CELL" : 3,
+        "EVALUATE_FORMULAS" : 1,
         "ENSURE_SHEET" : 1,
-        "EVALUATE_FORMULAS" : 1
+        "SET_CELL" : 3,
+        "CLEAR_FORMULA_CACHES" : 1,
+        "EVALUATE_FORMULA_CELLS" : 1,
+        "SET_RANGE" : 1
       },
       "styleKinds" : { },
       "readCount" : 2,

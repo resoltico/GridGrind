@@ -42,6 +42,8 @@ class WorkbookOperationTest {
     WorkbookOperation.SetSheetPane setSheetPane =
         new WorkbookOperation.SetSheetPane("Budget", new PaneInput.Frozen(1, 2, 1, 2));
     WorkbookOperation.SetSheetZoom setSheetZoom = new WorkbookOperation.SetSheetZoom("Budget", 135);
+    WorkbookOperation.SetSheetPresentation setSheetPresentation =
+        new WorkbookOperation.SetSheetPresentation("Budget", SheetPresentationInput.defaults());
     WorkbookOperation.SetPrintLayout setPrintLayout =
         new WorkbookOperation.SetPrintLayout("Budget", defaultPrintLayout());
     WorkbookOperation.ClearPrintLayout clearPrintLayout =
@@ -57,6 +59,8 @@ class WorkbookOperationTest {
     assertEquals(28.5, setRowHeight.heightPoints());
     assertEquals(new PaneInput.Frozen(1, 2, 1, 2), setSheetPane.pane());
     assertEquals(135, setSheetZoom.zoomPercent());
+    assertEquals(SheetPresentationInput.defaults(), setSheetPresentation.presentation());
+    assertEquals("SET_SHEET_PRESENTATION", setSheetPresentation.operationType());
     assertEquals(defaultPrintLayout(), setPrintLayout.printLayout());
     assertEquals("Budget", clearPrintLayout.sheetName());
   }

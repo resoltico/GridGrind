@@ -5,6 +5,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.43.0] - 2026-04-13
+
+### Added
+
+- `--license` flag: prints the GridGrind MIT license followed by third-party dependency license
+  notices (Apache 2.0, BSD-3-Clause). License texts are bundled in the JAR under
+  `licenses/` and read at runtime.
+- Added `SET_SHEET_PRESENTATION` plus `GET_SHEET_LAYOUT.presentation` for sheet display flags,
+  right-to-left layout, tab color, outline-summary placement, default row or column sizing, and
+  ignored-error suppression.
+- Added `printGridlines` to print-setup authoring and factual `GET_PRINT_LAYOUT` readback.
+
+### Changed
+
+- `--version` now prints the same two-line product header as the opening of `--help`
+  (`GridGrind <version>` on the first line, the product description on the second), providing
+  a single source of truth for product identity output via `productHeader()`.
+- `--help` banner changed from `GridGrind CLI <version>` to `GridGrind <version>` to match
+  the product name.
+- Promoted the Apache POI XSSF capability inventory into a public reference at
+  [docs/POI_EXCEL_CAPABILITY_INVENTORY.md](./docs/POI_EXCEL_CAPABILITY_INVENTORY.md) and rewrote
+  it around the shipped `.xlsx` contract instead of internal parity-phase language.
+- README now links directly to the public capability inventory alongside the operations,
+  quick-reference, and limitations docs.
+- Public docs, quick-reference snippets, and runnable structural-layout examples now describe the
+  shipped sheet-presentation surface and print-gridline output explicitly, and the README example
+  guide no longer uses internal phase labels.
+
+### Fixed
+
+- The parity-doc regression test now verifies the public capability inventory path, release
+  version, public-facing wording, and the absence of the retired internal parity-planning files.
+- The POI capability inventory no longer underreports the shipped sheet-view and print-layout
+  surface; it now reflects the public contract accurately.
+- Sheet-presentation and print-setup model validation no longer carry dead compatibility overloads
+  or unreachable null-element branches, so the Java contract stays smaller and the regression floor
+  asserts only live behavior.
+
 ## [0.42.0] - 2026-04-13
 
 ### Added
@@ -1545,7 +1583,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.42.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.43.0...HEAD
+[0.43.0]: https://github.com/resoltico/GridGrind/compare/v0.42.0...v0.43.0
 [0.42.0]: https://github.com/resoltico/GridGrind/compare/v0.41.0...v0.42.0
 [0.41.0]: https://github.com/resoltico/GridGrind/compare/v0.40.0...v0.41.0
 [0.40.0]: https://github.com/resoltico/GridGrind/compare/v0.39.0...v0.40.0

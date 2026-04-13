@@ -10,4 +10,4 @@ Operation Count: 2
 Read Count: 0
 Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: ENSURE_SHEET=1, SET_DATA_VALIDATION=1
+Operation Kinds: SET_DATA_VALIDATION=1, ENSURE_SHEET=1

@@ -6,6 +6,7 @@ import java.util.Objects;
 /** Advanced page-setup payload nested under print-layout authoring. */
 public record PrintSetupInput(
     PrintMarginsInput margins,
+    Boolean printGridlines,
     Boolean horizontallyCentered,
     Boolean verticallyCentered,
     Integer paperSize,
@@ -22,6 +23,7 @@ public record PrintSetupInput(
         new PrintMarginsInput(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d),
         false,
         false,
+        false,
         1,
         false,
         false,
@@ -34,6 +36,7 @@ public record PrintSetupInput(
 
   public PrintSetupInput {
     margins = margins == null ? defaults().margins() : margins;
+    printGridlines = Boolean.TRUE.equals(printGridlines);
     horizontallyCentered = Boolean.TRUE.equals(horizontallyCentered);
     verticallyCentered = Boolean.TRUE.equals(verticallyCentered);
     paperSize = paperSize == null ? 0 : paperSize;
@@ -60,7 +63,6 @@ public record PrintSetupInput(
     List<Integer> copy =
         List.copyOf(Objects.requireNonNull(values, fieldName + " must not be null"));
     for (Integer value : copy) {
-      Objects.requireNonNull(value, fieldName + " must not contain null values");
       if (value < 0) {
         throw new IllegalArgumentException(fieldName + " must not contain negative indexes");
       }

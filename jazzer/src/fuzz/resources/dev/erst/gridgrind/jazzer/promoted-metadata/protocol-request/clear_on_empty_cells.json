@@ -14,10 +14,10 @@
       "operationCount" : 5,
       "operationKinds" : {
         "CLEAR_HYPERLINK" : 1,
-        "SET_CELL" : 1,
-        "CLEAR_COMMENT" : 1,
+        "CLEAR_RANGE" : 1,
         "ENSURE_SHEET" : 1,
-        "CLEAR_RANGE" : 1
+        "CLEAR_COMMENT" : 1,
+        "SET_CELL" : 1
       },
       "styleKinds" : { },
       "readCount" : 1,

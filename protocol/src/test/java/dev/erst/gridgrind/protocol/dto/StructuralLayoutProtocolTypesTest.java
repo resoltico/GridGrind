@@ -1,9 +1,11 @@
 package dev.erst.gridgrind.protocol.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
@@ -169,16 +171,180 @@ class StructuralLayoutProtocolTypesTest {
         NullPointerException.class,
         () ->
             new GridGrindResponse.SheetLayoutReport(
-                "Budget", null, 100, java.util.List.of(), java.util.List.of()));
+                "Budget",
+                null,
+                100,
+                SheetPresentationReport.defaults(),
+                java.util.List.of(),
+                java.util.List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new GridGrindResponse.SheetLayoutReport(
-                "Budget", new PaneReport.None(), 9, java.util.List.of(), java.util.List.of()));
+                "Budget",
+                new PaneReport.None(),
+                9,
+                SheetPresentationReport.defaults(),
+                java.util.List.of(),
+                java.util.List.of()));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new GridGrindResponse.SheetLayoutReport(
-                "Budget", new PaneReport.None(), 401, java.util.List.of(), java.util.List.of()));
+                "Budget",
+                new PaneReport.None(),
+                401,
+                SheetPresentationReport.defaults(),
+                java.util.List.of(),
+                java.util.List.of()));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new GridGrindResponse.SheetLayoutReport(
+                "Budget",
+                new PaneReport.None(),
+                100,
+                null,
+                java.util.List.of(),
+                java.util.List.of()));
+  }
+
+  @Test
+  void sheetPresentationInputsAndReportsNormalizeAndValidate() {
+    SheetPresentationInput defaultPresentation =
+        new SheetPresentationInput(null, null, null, null, null);
+    SheetPresentationInput explicitPresentation =
+        new SheetPresentationInput(
+            new SheetDisplayInput(false, false, false, true, true),
+            new ColorInput("#112233"),
+            new SheetOutlineSummaryInput(false, false),
+            new SheetDefaultsInput(11, 18.5d),
+            java.util.List.of(
+                new IgnoredErrorInput(
+                    "A1:B2",
+                    java.util.List.of(dev.erst.gridgrind.excel.ExcelIgnoredErrorType.FORMULA))));
+
+    assertEquals(SheetDisplayInput.defaults(), defaultPresentation.display());
+    assertNull(defaultPresentation.tabColor());
+    assertEquals(SheetOutlineSummaryInput.defaults(), defaultPresentation.outlineSummary());
+    assertEquals(SheetDefaultsInput.defaults(), defaultPresentation.sheetDefaults());
+    assertEquals(java.util.List.of(), defaultPresentation.ignoredErrors());
+    assertEquals(
+        new SheetDisplayInput(false, false, false, true, true), explicitPresentation.display());
+    assertEquals(new ColorInput("#112233"), explicitPresentation.tabColor());
+    assertEquals(new SheetOutlineSummaryInput(false, false), explicitPresentation.outlineSummary());
+    assertEquals(new SheetDefaultsInput(11, 18.5d), explicitPresentation.sheetDefaults());
+    assertEquals(
+        java.util.List.of(
+            new IgnoredErrorInput("A1:B2", java.util.List.of(ExcelIgnoredErrorType.FORMULA))),
+        explicitPresentation.ignoredErrors());
+    assertEquals(
+        new SheetPresentationReport(
+            SheetDisplayReport.defaults(),
+            null,
+            SheetOutlineSummaryReport.defaults(),
+            SheetDefaultsReport.defaults(),
+            java.util.List.of()),
+        SheetPresentationReport.defaults());
+    assertEquals(
+        new SheetPresentationReport(
+            new SheetDisplayReport(false, false, false, true, true),
+            new CellColorReport("#112233"),
+            new SheetOutlineSummaryReport(false, false),
+            new SheetDefaultsReport(11, 18.5d),
+            java.util.List.of(
+                new IgnoredErrorReport("A1:B2", java.util.List.of(ExcelIgnoredErrorType.FORMULA)))),
+        new SheetPresentationReport(
+            new SheetDisplayReport(false, false, false, true, true),
+            new CellColorReport("#112233"),
+            new SheetOutlineSummaryReport(false, false),
+            new SheetDefaultsReport(11, 18.5d),
+            java.util.List.of(
+                new IgnoredErrorReport(
+                    "A1:B2", java.util.List.of(ExcelIgnoredErrorType.FORMULA)))));
+    assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsInput(0, 15.0d));
+    assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsReport(8, 0.0d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SheetPresentationInput(
+                null,
+                null,
+                null,
+                null,
+                java.util.List.of(
+                    new IgnoredErrorInput("A1", java.util.List.of(ExcelIgnoredErrorType.FORMULA)),
+                    new IgnoredErrorInput(
+                        "A1", java.util.List.of(ExcelIgnoredErrorType.EVALUATION_ERROR)))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new IgnoredErrorInput(
+                "A1",
+                java.util.List.of(ExcelIgnoredErrorType.FORMULA, ExcelIgnoredErrorType.FORMULA)));
+    assertThrows(
+        NullPointerException.class,
+        () ->
+            new SheetPresentationReport(
+                SheetDisplayReport.defaults(),
+                null,
+                SheetOutlineSummaryReport.defaults(),
+                SheetDefaultsReport.defaults(),
+                null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SheetPresentationReport(
+                SheetDisplayReport.defaults(),
+                null,
+                SheetOutlineSummaryReport.defaults(),
+                SheetDefaultsReport.defaults(),
+                java.util.List.of(
+                    new IgnoredErrorReport("A1", java.util.List.of(ExcelIgnoredErrorType.FORMULA)),
+                    new IgnoredErrorReport(
+                        "A1", java.util.List.of(ExcelIgnoredErrorType.EVALUATION_ERROR)))));
+  }
+
+  @Test
+  void sheetDisplayDefaultsAndIgnoredErrorDtosCoverConstructorBranches() {
+    assertEquals(SheetDisplayInput.defaults(), new SheetDisplayInput(null, null, null, null, null));
+    assertEquals(
+        new SheetDisplayInput(false, false, true, true, false),
+        new SheetDisplayInput(false, false, null, true, null));
+    assertEquals(SheetOutlineSummaryInput.defaults(), new SheetOutlineSummaryInput(null, null));
+    assertEquals(
+        new SheetOutlineSummaryInput(true, false), new SheetOutlineSummaryInput(null, false));
+    assertEquals(SheetDefaultsInput.defaults(), new SheetDefaultsInput(null, null));
+    assertEquals(new SheetDefaultsInput(8, 18.5d), new SheetDefaultsInput(null, 18.5d));
+    assertEquals(SheetDefaultsReport.defaults(), new SheetDefaultsReport(8, 15.0d));
+
+    java.util.List<ExcelIgnoredErrorType> errorTypesWithNull =
+        new java.util.ArrayList<>(java.util.Arrays.asList(ExcelIgnoredErrorType.FORMULA, null));
+    assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsInput(8, 0.0d));
+    assertThrows(
+        IllegalArgumentException.class, () -> new SheetDefaultsInput(8, Double.POSITIVE_INFINITY));
+    assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsReport(0, 15.0d));
+    assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsReport(8, Double.NaN));
+    assertThrows(
+        NullPointerException.class,
+        () -> new IgnoredErrorInput(null, java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new IgnoredErrorInput(" ", java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
+    assertThrows(NullPointerException.class, () -> new IgnoredErrorInput("A1", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new IgnoredErrorInput("A1", java.util.List.of()));
+    assertThrows(NullPointerException.class, () -> new IgnoredErrorInput("A1", errorTypesWithNull));
+    assertThrows(
+        NullPointerException.class,
+        () -> new IgnoredErrorReport(null, java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new IgnoredErrorReport(" ", java.util.List.of(ExcelIgnoredErrorType.FORMULA)));
+    assertThrows(NullPointerException.class, () -> new IgnoredErrorReport("A1", null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new IgnoredErrorReport("A1", java.util.List.of()));
+    assertThrows(
+        NullPointerException.class, () -> new IgnoredErrorReport("A1", errorTypesWithNull));
   }
 }

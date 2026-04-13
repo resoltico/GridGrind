@@ -152,6 +152,7 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
       case WorkbookCommand.UngroupColumns _ -> "UNGROUP_COLUMNS";
       case WorkbookCommand.SetSheetPane _ -> "SET_SHEET_PANE";
       case WorkbookCommand.SetSheetZoom _ -> "SET_SHEET_ZOOM";
+      case WorkbookCommand.SetSheetPresentation _ -> "SET_SHEET_PRESENTATION";
       case WorkbookCommand.SetPrintLayout _ -> "SET_PRINT_LAYOUT";
       case WorkbookCommand.ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
       case WorkbookCommand.SetCell _ -> "SET_CELL";

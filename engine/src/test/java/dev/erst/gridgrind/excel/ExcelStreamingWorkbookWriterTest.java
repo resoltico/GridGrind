@@ -106,6 +106,10 @@ class ExcelStreamingWorkbookWriterTest {
         invokeCommandType(
             new WorkbookCommand.AppendRow("Ops", List.of(ExcelCellValue.text("value")))));
     assertEquals(
+        "SET_SHEET_PRESENTATION",
+        invokeCommandType(
+            new WorkbookCommand.SetSheetPresentation("Ops", ExcelSheetPresentation.defaults())));
+    assertEquals(
         "FORCE_FORMULA_RECALC_ON_OPEN",
         invokeCommandType(new WorkbookCommand.ForceFormulaRecalculationOnOpen()));
   }
@@ -144,6 +148,7 @@ class ExcelStreamingWorkbookWriterTest {
       case WorkbookCommand.UngroupColumns _ -> "UNGROUP_COLUMNS";
       case WorkbookCommand.SetSheetPane _ -> "SET_SHEET_PANE";
       case WorkbookCommand.SetSheetZoom _ -> "SET_SHEET_ZOOM";
+      case WorkbookCommand.SetSheetPresentation _ -> "SET_SHEET_PRESENTATION";
       case WorkbookCommand.SetPrintLayout _ -> "SET_PRINT_LAYOUT";
       case WorkbookCommand.ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
       case WorkbookCommand.SetCell _ -> "SET_CELL";

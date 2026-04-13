@@ -266,7 +266,110 @@ class GridGrindCliTest {
     assertEquals(0, exitCode);
     // Version reads from the JAR manifest Implementation-Version attribute.
     // When running from the test classpath (no JAR), the attribute is absent and "unknown" is used.
-    assertEquals("gridgrind unknown\n", stdout.toString(StandardCharsets.UTF_8));
+    // The description comes from the processed gridgrind.properties resource on the test classpath.
+    String output = stdout.toString(StandardCharsets.UTF_8);
+    assertTrue(output.startsWith("GridGrind unknown\n"), "must start with GridGrind unknown");
+    assertTrue(output.endsWith("\n"), "must end with newline");
+    assertTrue(output.lines().count() >= 2, "must have at least two lines");
+  }
+
+  @Test
+  void licenseFlagPrintsLicenseTextToStdoutAndReturnsExitCodeZero() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(new String[] {"--license"}, new ByteArrayInputStream(new byte[0]), stdout);
+
+    assertEquals(0, exitCode);
+    String license = stdout.toString(StandardCharsets.UTF_8);
+    // The license text is absent from the test classpath; expect the fallback notice.
+    assertFalse(license.isBlank());
+  }
+
+  @Test
+  void licenseText_containsMitLicense_whenResourcePresent() {
+    String mit = "MIT License\n\nCopyright (c) 2026 Ervins Strauhmanis\n";
+    InputStream own = new ByteArrayInputStream(mit.getBytes(StandardCharsets.UTF_8));
+
+    String result = GridGrindCli.licenseText(own, null, null);
+
+    assertTrue(result.contains("MIT License"));
+    assertTrue(result.contains("Ervins Strauhmanis"));
+    assertFalse(result.contains("Third-party licenses:"), "no third-party section when absent");
+  }
+
+  @Test
+  void licenseText_containsThirdPartySection_whenDependencyLicensesPresent() {
+    InputStream own = new ByteArrayInputStream("MIT License\n".getBytes(StandardCharsets.UTF_8));
+    InputStream apache =
+        new ByteArrayInputStream("Apache License\n".getBytes(StandardCharsets.UTF_8));
+    InputStream bsd = new ByteArrayInputStream("BSD License\n".getBytes(StandardCharsets.UTF_8));
+
+    String result = GridGrindCli.licenseText(own, apache, bsd);
+
+    assertTrue(result.contains("MIT License"));
+    assertTrue(result.contains("Third-party licenses:"));
+    assertTrue(result.contains("Apache License"));
+    assertTrue(result.contains("BSD License"));
+  }
+
+  @Test
+  void licenseText_returnsFallback_whenAllResourcesAbsent() {
+    String result = GridGrindCli.licenseText(null, null, null);
+
+    assertFalse(result.isBlank());
+    assertTrue(result.contains("not available"));
+  }
+
+  @Test
+  void licenseText_thirdPartyOnly_whenOwnAbsent() {
+    InputStream apache =
+        new ByteArrayInputStream("Apache License\n".getBytes(StandardCharsets.UTF_8));
+
+    String result = GridGrindCli.licenseText(null, apache, null);
+
+    assertTrue(result.contains("Apache License"));
+    assertFalse(result.contains("---"), "no separator when own license is absent");
+  }
+
+  @Test
+  void licenseText_ensuresTrailingNewline_whenContentLacksIt() {
+    InputStream own = new ByteArrayInputStream("MIT License".getBytes(StandardCharsets.UTF_8));
+
+    String result = GridGrindCli.licenseText(own, null, null);
+
+    assertTrue(result.endsWith("\n"), "must end with newline even when source text does not");
+  }
+
+  @Test
+  void licenseText_skipsUnreadableStream() {
+    // Pass the broken stream directly to avoid a PMD CloseResource warning;
+    // append() closes it via try-with-resources even on IOException.
+    String result =
+        GridGrindCli.licenseText(
+            new InputStream() {
+              @Override
+              public int read() throws IOException {
+                throw new IOException("simulated read failure");
+              }
+
+              @Override
+              public int read(byte[] buf, int off, int len) throws IOException {
+                throw new IOException("simulated read failure");
+              }
+            },
+            null,
+            null);
+
+    // The broken stream is skipped; all streams absent triggers the fallback.
+    assertTrue(result.contains("not available"));
+  }
+
+  @Test
+  void productHeader_formatsVersionAndDescription() {
+    assertEquals(
+        "GridGrind 1.0.0\nA description", GridGrindCli.productHeader("1.0.0", "A description"));
   }
 
   @Test
@@ -279,7 +382,7 @@ class GridGrindCliTest {
 
     assertEquals(0, longExitCode);
     String help = stdout.toString(StandardCharsets.UTF_8);
-    assertTrue(help.contains("GridGrind CLI"));
+    assertTrue(help.contains("GridGrind"));
     assertTrue(help.contains("Usage:"));
     assertTrue(help.contains("Minimal Valid Request:"));
     assertTrue(help.contains("--request <path>"));
@@ -308,7 +411,7 @@ class GridGrindCliTest {
   void helpTextUsesVersionedDocumentationRoutesWhenVersionKnown() {
     String help = GridGrindCli.helpText("0.9.0");
 
-    assertTrue(help.contains("GridGrind CLI 0.9.0"));
+    assertTrue(help.contains("GridGrind 0.9.0"));
     assertTrue(help.contains("ghcr.io/resoltico/gridgrind:0.9.0"));
     assertTrue(help.contains("blob/v0.9.0/docs/QUICK_REFERENCE.md"));
     assertTrue(help.contains("blob/v0.9.0/docs/OPERATIONS.md"));
@@ -321,9 +424,9 @@ class GridGrindCliTest {
 
     // The description is either the default fallback or the value from the properties resource.
     // Either way the version line and description line must both be present.
-    assertTrue(help.contains("GridGrind CLI 1.0.0"), "help must contain the version line");
+    assertTrue(help.contains("GridGrind 1.0.0"), "help must contain the version line");
     // The description line appears immediately after the version line.
-    int versionLineEnd = help.indexOf("GridGrind CLI 1.0.0") + "GridGrind CLI 1.0.0".length();
+    int versionLineEnd = help.indexOf("GridGrind 1.0.0") + "GridGrind 1.0.0".length();
     String afterVersion = help.substring(versionLineEnd).stripLeading();
     assertFalse(
         afterVersion.startsWith("Usage:"),
@@ -508,7 +611,9 @@ class GridGrindCliTest {
                 stdout);
 
     assertEquals(0, exitCode);
-    assertEquals("gridgrind unknown\n", stdout.toString(StandardCharsets.UTF_8));
+    String output = stdout.toString(StandardCharsets.UTF_8);
+    assertTrue(output.startsWith("GridGrind unknown\n"), "must start with GridGrind unknown");
+    assertTrue(output.endsWith("\n"), "must end with newline");
   }
 
   @Test
@@ -523,7 +628,7 @@ class GridGrindCliTest {
                 stdout);
 
     assertEquals(0, exitCode);
-    assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("GridGrind CLI"));
+    assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("GridGrind"));
   }
 
   @Test

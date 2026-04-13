@@ -16,17 +16,17 @@
       },
       "styleKinds" : {
         "bold" : 1,
-        "font_name" : 2,
-        "border_right" : 1,
-        "fill_foreground_color" : 1,
-        "border_all_color" : 1,
-        "italic" : 1,
-        "font" : 3,
-        "border" : 1,
-        "fill" : 1,
         "border_right_none" : 1,
         "fill_color" : 1,
-        "border_all" : 1
+        "border_all" : 1,
+        "fill" : 1,
+        "border" : 1,
+        "font" : 3,
+        "italic" : 1,
+        "border_all_color" : 1,
+        "fill_foreground_color" : 1,
+        "border_right" : 1,
+        "font_name" : 2
       },
       "readCount" : 3,
       "readKinds" : {

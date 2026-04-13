@@ -499,7 +499,7 @@ class GridGrindProtocolCatalogTest {
     assertEquals("GridGrindRequest", catalog.requestType().id());
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
-    assertEquals(64, catalog.operationTypes().size());
+    assertEquals(65, catalog.operationTypes().size());
     assertEquals(32, catalog.readTypes().size());
     assertEquals(
         List.of(
@@ -582,9 +582,14 @@ class GridGrindProtocolCatalogTest {
             "differentialStyleInputType",
             "differentialBorderInputType",
             "differentialBorderSideInputType",
+            "ignoredErrorInputType",
             "printLayoutInputType",
             "printMarginsInputType",
             "printSetupInputType",
+            "sheetDefaultsInputType",
+            "sheetDisplayInputType",
+            "sheetOutlineSummaryInputType",
+            "sheetPresentationInputType",
             "pivotTableInputType",
             "pivotTableAnchorInputType",
             "pivotTableDataFieldInputType",
@@ -995,10 +1000,15 @@ class GridGrindProtocolCatalogTest {
 
   private static void assertCatalogPrintAndPaneFieldShapes(Catalog catalog) {
     TypeEntry setSheetPane = entryNamed(catalog.operationTypes(), "SET_SHEET_PANE");
+    TypeEntry setSheetPresentation = entryNamed(catalog.operationTypes(), "SET_SHEET_PRESENTATION");
     assertEquals(
         new FieldShape.NestedTypeGroupRef("paneTypes"),
         fieldNamed(setSheetPane, "pane").shape(),
         "SET_SHEET_PANE.pane must point to paneTypes");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("sheetPresentationInputType"),
+        fieldNamed(setSheetPresentation, "presentation").shape(),
+        "SET_SHEET_PRESENTATION.presentation must point to sheetPresentationInputType");
     assertEquals(
         0,
         nestedTypeEntry(catalog, "paneTypes", "NONE").fields().size(),
@@ -1051,6 +1061,69 @@ class GridGrindProtocolCatalogTest {
         FieldRequirement.OPTIONAL,
         fieldNamed(headerFooterGroup.type(), "left").requirement(),
         "headerFooterTextInputType.left must be optional");
+
+    PlainTypeGroup printSetupGroup = plainGroup(catalog, "printSetupInputType");
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        fieldNamed(printSetupGroup.type(), "printGridlines").requirement(),
+        "printSetupInputType.printGridlines must be optional");
+
+    PlainTypeGroup sheetPresentationGroup = plainGroup(catalog, "sheetPresentationInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("sheetDisplayInputType"),
+        fieldNamed(sheetPresentationGroup.type(), "display").shape(),
+        "sheetPresentationInputType.display must point to sheetDisplayInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("colorInputType"),
+        fieldNamed(sheetPresentationGroup.type(), "tabColor").shape(),
+        "sheetPresentationInputType.tabColor must point to colorInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("sheetOutlineSummaryInputType"),
+        fieldNamed(sheetPresentationGroup.type(), "outlineSummary").shape(),
+        "sheetPresentationInputType.outlineSummary must point to sheetOutlineSummaryInputType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("sheetDefaultsInputType"),
+        fieldNamed(sheetPresentationGroup.type(), "sheetDefaults").shape(),
+        "sheetPresentationInputType.sheetDefaults must point to sheetDefaultsInputType");
+    assertEquals(
+        new FieldShape.ListShape(new FieldShape.PlainTypeGroupRef("ignoredErrorInputType")),
+        fieldNamed(sheetPresentationGroup.type(), "ignoredErrors").shape(),
+        "sheetPresentationInputType.ignoredErrors must point to ignoredErrorInputType");
+
+    PlainTypeGroup sheetDisplayGroup = plainGroup(catalog, "sheetDisplayInputType");
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.BOOLEAN),
+        fieldNamed(sheetDisplayGroup.type(), "displayGridlines").shape());
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        fieldNamed(sheetDisplayGroup.type(), "displayGridlines").requirement());
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.BOOLEAN),
+        fieldNamed(sheetDisplayGroup.type(), "rightToLeft").shape());
+
+    PlainTypeGroup sheetOutlineSummaryGroup = plainGroup(catalog, "sheetOutlineSummaryInputType");
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.BOOLEAN),
+        fieldNamed(sheetOutlineSummaryGroup.type(), "rowSumsBelow").shape());
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.BOOLEAN),
+        fieldNamed(sheetOutlineSummaryGroup.type(), "rowSumsRight").shape());
+
+    PlainTypeGroup sheetDefaultsGroup = plainGroup(catalog, "sheetDefaultsInputType");
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.NUMBER),
+        fieldNamed(sheetDefaultsGroup.type(), "defaultColumnWidth").shape());
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.NUMBER),
+        fieldNamed(sheetDefaultsGroup.type(), "defaultRowHeightPoints").shape());
+
+    PlainTypeGroup ignoredErrorGroup = plainGroup(catalog, "ignoredErrorInputType");
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.STRING),
+        fieldNamed(ignoredErrorGroup.type(), "range").shape());
+    assertEquals(
+        new FieldShape.ListShape(new FieldShape.Scalar(ScalarType.STRING)),
+        fieldNamed(ignoredErrorGroup.type(), "errorTypes").shape());
   }
 
   private static void assertCatalogSummaries(Catalog catalog) {
@@ -1278,8 +1351,23 @@ class GridGrindProtocolCatalogTest {
             .contains("NONE, FROZEN, or SPLIT"),
         "SET_SHEET_PANE summary must document the three pane types");
     assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_SHEET_PRESENTATION")
+            .summary()
+            .contains("screen display flags"),
+        "SET_SHEET_PRESENTATION summary must mention screen display flags");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_SHEET_PRESENTATION")
+            .summary()
+            .contains("tab color"),
+        "SET_SHEET_PRESENTATION summary must mention tab color");
+    assertTrue(
         entryNamed(catalog.operationTypes(), "SET_PRINT_LAYOUT").summary().contains("print area"),
         "SET_PRINT_LAYOUT summary must mention print area");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "SET_PRINT_LAYOUT")
+            .summary()
+            .contains("printGridlines"),
+        "SET_PRINT_LAYOUT summary must mention printGridlines");
     assertTrue(
         nestedTypeEntry(catalog, "printScalingTypes", "FIT").summary().contains("unconstrained"),
         "FIT scaling summary must explain zero-axis constraint semantics");
@@ -1382,6 +1470,11 @@ class GridGrindProtocolCatalogTest {
         fieldNamed(entryNamed(catalog.readTypes(), "ANALYZE_AUTOFILTER_HEALTH"), "selection")
             .shape(),
         "ANALYZE_AUTOFILTER_HEALTH.selection must point to sheetSelectionTypes");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("sheetPresentationInputType"),
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_SHEET_PRESENTATION"), "presentation")
+            .shape(),
+        "SET_SHEET_PRESENTATION.presentation must point to sheetPresentationInputType");
     assertEquals(
         new FieldShape.PlainTypeGroupRef("printLayoutInputType"),
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_PRINT_LAYOUT"), "printLayout").shape(),
