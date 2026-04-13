@@ -5,6 +5,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/verify-container-publication.sh` now verifies the exact two-line `--version` product
+  header that the shipped container exposes (`GridGrind <version>` plus the product
+  description), and `./check.sh` now includes a dedicated shell regression for that verifier so
+  future release workflows cannot fail on a stale output assumption.
+
 ## [0.43.0] - 2026-04-13
 
 ### Added

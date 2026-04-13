@@ -19,8 +19,9 @@
 # Stage 3 mirrors the GitHub release packaging workflow:
 #   :cli:shadowJar -> build the distributable fat JAR
 #
-# Stage 4 syntax-checks the release-surface shell scripts:
+# Stage 4 syntax-checks the release-surface shell scripts and runs targeted shell regressions:
 #   bash -n check.sh scripts/*.sh jazzer/bin/*
+#   scripts/test-verify-container-publication.sh
 #
 # Stage 5 exercises the Docker release surface from a non-default working directory:
 #   scripts/docker-smoke.sh -> build the image and verify help/request/response/save behavior
@@ -123,7 +124,7 @@ print_usage() {
         '  1. check coverage' \
         '  2. jazzer check' \
         '  3. :cli:shadowJar' \
-        '  4. bash -n check.sh scripts/*.sh jazzer/bin/*' \
+        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/test-verify-container-publication.sh' \
         '  5. scripts/docker-smoke.sh' \
         '' \
         'Supported options:' \
@@ -785,6 +786,10 @@ if [[ -d "${repo_root}/jazzer/bin" ]]; then
     done < <(find "${repo_root}/jazzer/bin" -maxdepth 1 -type f | sort)
 fi
 
-run_shell_stage 'shell-syntax' 'Stage 4/5: syntax-checking release-surface shell scripts' \
-    bash -n "${shell_syntax_targets[@]}"
+run_shell_stage 'shell-syntax' 'Stage 4/5: checking release-surface shell scripts' \
+    bash -c '
+        set -euo pipefail
+        bash -n "$@"
+        "'"${repo_root}"'/scripts/test-verify-container-publication.sh"
+    ' bash "${shell_syntax_targets[@]}"
 run_shell_stage 'docker-smoke' 'Stage 5/5: running Docker smoke test' "${repo_root}/scripts/docker-smoke.sh"
