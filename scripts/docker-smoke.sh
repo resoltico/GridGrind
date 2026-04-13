@@ -86,8 +86,8 @@ help_output="$(docker run --rm \
     -v "${smoke_root}:/workdir" \
     "${image_tag}" \
     --help | tr -d '\r')"
-require_match "${help_output}" '^GridGrind CLI ' \
-    "docker smoke help output did not include the CLI banner"
+require_match "${help_output}" '^GridGrind ' \
+    "docker smoke help output did not include the banner"
 require_match "${help_output}" '^Usage:' \
     "docker smoke help output did not include the usage section"
 
@@ -96,7 +96,7 @@ version_output="$(docker run --rm \
     -v "${smoke_root}:/workdir" \
     "${image_tag}" \
     --version | tr -d '\r')"
-require_match "${version_output}" '^gridgrind ' \
+require_match "${version_output}" '^GridGrind ' \
     "docker smoke version output did not include the application name"
 
 docker run --rm \

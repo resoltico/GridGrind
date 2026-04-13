@@ -520,12 +520,14 @@ public sealed interface WorkbookReadResult
       String sheetName,
       ExcelSheetPane pane,
       int zoomPercent,
+      ExcelSheetPresentationSnapshot presentation,
       List<ColumnLayout> columns,
       List<RowLayout> rows) {
     public SheetLayout {
       sheetName = requireNonBlank(sheetName, "sheetName");
       Objects.requireNonNull(pane, "pane must not be null");
       ExcelSheetViewSupport.requireZoomPercent(zoomPercent);
+      Objects.requireNonNull(presentation, "presentation must not be null");
       columns = copyValues(columns, "columns");
       rows = copyValues(rows, "rows");
     }

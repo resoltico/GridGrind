@@ -10,9 +10,9 @@
       "inputBytes" : 83,
       "commandCount" : 4,
       "commandKinds" : {
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2,
+        "SET_NAMED_RANGE" : 1,
         "CREATE_SHEET" : 1,
-        "SET_NAMED_RANGE" : 1
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2
       },
       "styleKinds" : { }
     }

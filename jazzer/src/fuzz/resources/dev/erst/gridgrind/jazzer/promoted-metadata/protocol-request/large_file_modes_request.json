@@ -13,8 +13,8 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 5,
       "operationKinds" : {
-        "ENSURE_SHEET" : 1,
         "APPEND_ROW" : 3,
+        "ENSURE_SHEET" : 1,
         "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
       },
       "styleKinds" : { },

@@ -38,6 +38,7 @@ public sealed interface WorkbookCommand
         WorkbookCommand.UngroupColumns,
         WorkbookCommand.SetSheetPane,
         WorkbookCommand.SetSheetZoom,
+        WorkbookCommand.SetSheetPresentation,
         WorkbookCommand.SetPrintLayout,
         WorkbookCommand.ClearPrintLayout,
         WorkbookCommand.SetCell,
@@ -482,6 +483,18 @@ public sealed interface WorkbookCommand
         throw new IllegalArgumentException("sheetName must not be blank");
       }
       ExcelSheetViewSupport.requireZoomPercent(zoomPercent);
+    }
+  }
+
+  /** Applies authoritative sheet-presentation state such as display flags and defaults. */
+  record SetSheetPresentation(String sheetName, ExcelSheetPresentation presentation)
+      implements WorkbookCommand {
+    public SetSheetPresentation {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(presentation, "presentation must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
     }
   }
 

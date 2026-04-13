@@ -6,6 +6,7 @@ import java.util.Objects;
 /** Mutable-workbook advanced page-setup payload. */
 public record ExcelPrintSetup(
     ExcelPrintMargins margins,
+    boolean printGridlines,
     boolean horizontallyCentered,
     boolean verticallyCentered,
     int paperSize,
@@ -20,6 +21,7 @@ public record ExcelPrintSetup(
   public static ExcelPrintSetup defaults() {
     return new ExcelPrintSetup(
         new ExcelPrintMargins(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d),
+        false,
         false,
         false,
         1,
@@ -51,7 +53,6 @@ public record ExcelPrintSetup(
     List<Integer> copy =
         List.copyOf(Objects.requireNonNull(indexes, fieldName + " must not be null"));
     for (Integer index : copy) {
-      Objects.requireNonNull(index, fieldName + " must not contain null values");
       if (index < 0) {
         throw new IllegalArgumentException(fieldName + " must not contain negative indexes");
       }

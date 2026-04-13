@@ -13,15 +13,15 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 5,
       "operationKinds" : {
-        "SET_HYPERLINK" : 3,
+        "ENSURE_SHEET" : 1,
         "SET_RANGE" : 1,
-        "ENSURE_SHEET" : 1
+        "SET_HYPERLINK" : 3
       },
       "styleKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "GET_HYPERLINKS" : 1,
-        "ANALYZE_HYPERLINK_HEALTH" : 1
+        "ANALYZE_HYPERLINK_HEALTH" : 1,
+        "GET_HYPERLINKS" : 1
       }
     }
   },

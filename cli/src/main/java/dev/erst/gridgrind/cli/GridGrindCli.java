@@ -80,7 +80,14 @@ public final class GridGrindCli {
         yield 0;
       }
       case CliCommand.Version _ -> {
-        stdout.write(("gridgrind " + version() + "\n").getBytes(StandardCharsets.UTF_8));
+        String ver = version();
+        String desc = descriptionFrom(GridGrindCli.class);
+        stdout.write((productHeader(ver, desc) + "\n").getBytes(StandardCharsets.UTF_8));
+        stdout.flush();
+        yield 0;
+      }
+      case CliCommand.License _ -> {
+        stdout.write(licenseText(GridGrindCli.class).getBytes(StandardCharsets.UTF_8));
         stdout.flush();
         yield 0;
       }
@@ -178,7 +185,6 @@ public final class GridGrindCli {
     String requestTemplate = requestTemplateText();
     String documentRef = documentRef(version);
     return """
-        GridGrind CLI %s
         %s
 
         Usage:
@@ -282,16 +288,30 @@ public final class GridGrindCli {
           --print-protocol-catalog          Print the machine-readable protocol catalog.
           --operation <id>                  With --print-protocol-catalog, print one entry.
           --help, -h                        Print this help text.
-          --version                         Print the GridGrind version.
+          --version                         Print the GridGrind version and description.
+          --license                         Print the GridGrind license and third-party notices.
         """
         .formatted(
-            version,
-            description,
+            productHeader(version, description),
             indentBlock(requestTemplate),
             containerTag(version),
             documentRef,
             documentRef,
             documentRef);
+  }
+
+  /**
+   * Returns the two-line product header shared by {@code --help} and {@code --version}:
+   *
+   * <pre>
+   * GridGrind {version}
+   * {description}
+   * </pre>
+   *
+   * <p>This is the single source of truth for the product identity line printed to the user.
+   */
+  static String productHeader(String version, String description) {
+    return "GridGrind " + version + "\n" + description;
   }
 
   /**
@@ -329,6 +349,75 @@ public final class GridGrindCli {
       return description.isBlank() ? "GridGrind" : description;
     } catch (IOException exception) {
       return "GridGrind";
+    }
+  }
+
+  /**
+   * Reads the bundled license texts from classpath resources and returns them as a single string.
+   *
+   * <p>Falls back to a brief notice when the resource is absent (e.g. test classpath without a
+   * packaged JAR).
+   */
+  static String licenseText(Class<?> anchor) {
+    return licenseText(
+        anchor.getResourceAsStream("/licenses/LICENSE"),
+        anchor.getResourceAsStream("/licenses/LICENSE-APACHE-2.0"),
+        anchor.getResourceAsStream("/licenses/LICENSE-BSD-3-CLAUSE"));
+  }
+
+  /**
+   * Assembles the license output from the supplied streams. Exposed for testing.
+   *
+   * <p>Any null or unreadable stream is silently skipped. Returns a fallback notice when all
+   * streams are absent.
+   */
+  static String licenseText(InputStream own, InputStream apache, InputStream bsd) {
+    StringBuilder out = new StringBuilder(4096);
+    append(out, own);
+    boolean hasOwn = !out.isEmpty();
+    int beforeApache = out.length();
+    append(out, apache);
+    boolean hasApache = out.length() > beforeApache;
+    int beforeBsd = out.length();
+    append(out, bsd);
+    boolean hasBsd = out.length() > beforeBsd;
+    if (out.isEmpty()) {
+      return "License information not available in this distribution.\n";
+    }
+    // Rebuild with separators in the correct positions now that we know what was present.
+    StringBuilder result = new StringBuilder(out.length() + 64);
+    if (hasOwn) {
+      result.append(out, 0, beforeApache);
+    }
+    if (hasApache || hasBsd) {
+      if (hasOwn) {
+        result.append("\n---\n\nThird-party licenses:\n\n");
+      }
+      if (hasApache) {
+        result.append(out, beforeApache, beforeBsd);
+      }
+      if (hasApache && hasBsd) {
+        result.append('\n');
+      }
+      if (hasBsd) {
+        result.append(out, beforeBsd, out.length());
+      }
+    }
+    String text = result.toString();
+    if (!text.endsWith("\n")) {
+      text += '\n';
+    }
+    return text;
+  }
+
+  private static void append(StringBuilder out, InputStream stream) {
+    if (stream == null) {
+      return;
+    }
+    try (stream) {
+      out.append(new String(stream.readAllBytes(), StandardCharsets.UTF_8));
+    } catch (IOException ignored) {
+      // Skip unreadable resource.
     }
   }
 

@@ -13,17 +13,17 @@
       "persistenceKind" : "OVERWRITE",
       "operationCount" : 5,
       "operationKinds" : {
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1,
+        "EVALUATE_FORMULAS" : 1,
         "SET_CELL" : 3,
-        "EVALUATE_FORMULAS" : 1
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
       },
       "styleKinds" : { },
       "readCount" : 6,
       "readKinds" : {
-        "GET_FORMULA_SURFACE" : 1,
-        "GET_WORKBOOK_SUMMARY" : 1,
+        "GET_CELLS" : 2,
         "GET_WINDOW" : 2,
-        "GET_CELLS" : 2
+        "GET_WORKBOOK_SUMMARY" : 1,
+        "GET_FORMULA_SURFACE" : 1
       }
     }
   },

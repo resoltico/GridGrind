@@ -159,6 +159,7 @@ final class ExcelSheetCopyController {
     }
     targetSheet.setPane(layout.pane());
     targetSheet.setZoom(layout.zoomPercent());
+    targetSheet.setPresentation(layout.presentation().toAuthoringPresentation());
   }
 
   private static void copyDataValidations(

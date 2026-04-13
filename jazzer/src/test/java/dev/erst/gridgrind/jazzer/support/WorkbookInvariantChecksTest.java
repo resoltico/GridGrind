@@ -181,6 +181,7 @@ class WorkbookInvariantChecksTest {
                         "Budget",
                         new PaneReport.Frozen(1, 1, 1, 1),
                         125,
+                        dev.erst.gridgrind.protocol.dto.SheetPresentationReport.defaults(),
                         List.of(new GridGrindResponse.ColumnLayoutReport(0, 12.5, false, 0, false)),
                         List.of(new GridGrindResponse.RowLayoutReport(0, 18.0, false, 0, false)))),
                 new WorkbookReadResult.PrintLayoutResult(
@@ -673,6 +674,7 @@ class WorkbookInvariantChecksTest {
                         new HeaderFooterTextReport("", "Confidential", "Page &P"),
                         new PrintSetupReport(
                             new PrintMarginsReport(0.5d, 0.5d, 0.75d, 0.75d, 0.3d, 0.3d),
+                            false,
                             true,
                             false,
                             9,

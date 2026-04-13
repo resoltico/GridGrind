@@ -134,6 +134,7 @@ public final class SequenceIntrospection {
       case WorkbookOperation.UngroupColumns _ -> "UNGROUP_COLUMNS";
       case WorkbookOperation.SetSheetPane _ -> "SET_SHEET_PANE";
       case WorkbookOperation.SetSheetZoom _ -> "SET_SHEET_ZOOM";
+      case WorkbookOperation.SetSheetPresentation _ -> "SET_SHEET_PRESENTATION";
       case WorkbookOperation.SetPrintLayout _ -> "SET_PRINT_LAYOUT";
       case WorkbookOperation.ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
       case WorkbookOperation.SetCell _ -> "SET_CELL";
@@ -206,6 +207,7 @@ public final class SequenceIntrospection {
       case WorkbookCommand.UngroupColumns _ -> "UNGROUP_COLUMNS";
       case WorkbookCommand.SetSheetPane _ -> "SET_SHEET_PANE";
       case WorkbookCommand.SetSheetZoom _ -> "SET_SHEET_ZOOM";
+      case WorkbookCommand.SetSheetPresentation _ -> "SET_SHEET_PRESENTATION";
       case WorkbookCommand.SetPrintLayout _ -> "SET_PRINT_LAYOUT";
       case WorkbookCommand.ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
       case WorkbookCommand.SetCell _ -> "SET_CELL";

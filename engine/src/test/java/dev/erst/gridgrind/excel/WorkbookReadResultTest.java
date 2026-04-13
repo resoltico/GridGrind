@@ -84,7 +84,12 @@ class WorkbookReadResultTest {
         IllegalArgumentException.class,
         () ->
             new WorkbookReadResult.SheetLayout(
-                "Budget", new ExcelSheetPane.None(), 9, List.of(), List.of()));
+                "Budget",
+                new ExcelSheetPane.None(),
+                9,
+                defaultSheetPresentationSnapshot(),
+                List.of(),
+                List.of()));
     assertInstanceOf(ExcelSheetPane.None.class, new ExcelSheetPane.None());
     assertThrows(
         NullPointerException.class,
@@ -511,7 +516,12 @@ class WorkbookReadResultTest {
         new WorkbookReadResult.SheetLayoutResult(
             "layout",
             new WorkbookReadResult.SheetLayout(
-                "Budget", new ExcelSheetPane.Frozen(1, 1, 1, 1), 125, columns, resultRows)),
+                "Budget",
+                new ExcelSheetPane.Frozen(1, 1, 1, 1),
+                125,
+                defaultSheetPresentationSnapshot(),
+                columns,
+                resultRows)),
         new WorkbookReadResult.PrintLayoutResult("print", "Budget", defaultPrintLayoutSnapshot()),
         new WorkbookReadResult.DataValidationsResult("validations", "Budget", validations),
         new WorkbookReadResult.ConditionalFormattingHealthResult(
@@ -629,6 +639,7 @@ class WorkbookReadResultTest {
             new ExcelPrintMarginsSnapshot(0.0d, 0.0d, 0.0d, 0.0d, 0.0d, 0.0d),
             false,
             false,
+            false,
             0,
             false,
             false,
@@ -637,5 +648,14 @@ class WorkbookReadResultTest {
             0,
             List.of(),
             List.of()));
+  }
+
+  private static ExcelSheetPresentationSnapshot defaultSheetPresentationSnapshot() {
+    return new ExcelSheetPresentationSnapshot(
+        ExcelSheetDisplay.defaults(),
+        null,
+        ExcelSheetOutlineSummary.defaults(),
+        ExcelSheetDefaults.defaults(),
+        List.of());
   }
 }

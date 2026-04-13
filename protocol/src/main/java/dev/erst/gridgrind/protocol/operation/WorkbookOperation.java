@@ -61,6 +61,9 @@ import java.util.Set;
   @JsonSubTypes.Type(value = WorkbookOperation.UngroupColumns.class, name = "UNGROUP_COLUMNS"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetSheetPane.class, name = "SET_SHEET_PANE"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetSheetZoom.class, name = "SET_SHEET_ZOOM"),
+  @JsonSubTypes.Type(
+      value = WorkbookOperation.SetSheetPresentation.class,
+      name = "SET_SHEET_PRESENTATION"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetPrintLayout.class, name = "SET_PRINT_LAYOUT"),
   @JsonSubTypes.Type(value = WorkbookOperation.ClearPrintLayout.class, name = "CLEAR_PRINT_LAYOUT"),
   @JsonSubTypes.Type(value = WorkbookOperation.SetCell.class, name = "SET_CELL"),
@@ -404,6 +407,15 @@ public sealed interface WorkbookOperation {
     }
   }
 
+  /** Applies authoritative sheet-presentation state such as display flags and defaults. */
+  record SetSheetPresentation(String sheetName, SheetPresentationInput presentation)
+      implements WorkbookOperation {
+    public SetSheetPresentation {
+      Validation.requireSheetName(sheetName, "sheetName");
+      Objects.requireNonNull(presentation, "presentation must not be null");
+    }
+  }
+
   /** Applies one authoritative supported print-layout state to a sheet. */
   record SetPrintLayout(String sheetName, PrintLayoutInput printLayout)
       implements WorkbookOperation {
@@ -735,6 +747,7 @@ public sealed interface WorkbookOperation {
       case UngroupColumns _ -> "UNGROUP_COLUMNS";
       case SetSheetPane _ -> "SET_SHEET_PANE";
       case SetSheetZoom _ -> "SET_SHEET_ZOOM";
+      case SetSheetPresentation _ -> "SET_SHEET_PRESENTATION";
       case SetPrintLayout _ -> "SET_PRINT_LAYOUT";
       case ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
       case SetCell _ -> "SET_CELL";

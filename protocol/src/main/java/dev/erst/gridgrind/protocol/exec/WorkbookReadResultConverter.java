@@ -730,6 +730,7 @@ final class WorkbookReadResultConverter {
         layout.sheetName(),
         toPaneReport(layout.pane()),
         layout.zoomPercent(),
+        toSheetPresentationReport(layout.presentation()),
         layout.columns().stream()
             .map(
                 column ->
@@ -771,6 +772,7 @@ final class WorkbookReadResultConverter {
                 printLayout.printLayout().setup().margins().bottom(),
                 printLayout.printLayout().setup().margins().header(),
                 printLayout.printLayout().setup().margins().footer()),
+            printLayout.printLayout().setup().printGridlines(),
             printLayout.printLayout().setup().horizontallyCentered(),
             printLayout.printLayout().setup().verticallyCentered(),
             printLayout.printLayout().setup().paperSize(),
@@ -781,6 +783,29 @@ final class WorkbookReadResultConverter {
             printLayout.printLayout().setup().firstPageNumber(),
             printLayout.printLayout().setup().rowBreaks(),
             printLayout.printLayout().setup().columnBreaks()));
+  }
+
+  private static SheetPresentationReport toSheetPresentationReport(
+      ExcelSheetPresentationSnapshot presentation) {
+    return new SheetPresentationReport(
+        new SheetDisplayReport(
+            presentation.display().displayGridlines(),
+            presentation.display().displayZeros(),
+            presentation.display().displayRowColHeadings(),
+            presentation.display().displayFormulas(),
+            presentation.display().rightToLeft()),
+        toCellColorReport(presentation.tabColor()),
+        new SheetOutlineSummaryReport(
+            presentation.outlineSummary().rowSumsBelow(),
+            presentation.outlineSummary().rowSumsRight()),
+        new SheetDefaultsReport(
+            presentation.sheetDefaults().defaultColumnWidth(),
+            presentation.sheetDefaults().defaultRowHeightPoints()),
+        presentation.ignoredErrors().stream()
+            .map(
+                ignoredError ->
+                    new IgnoredErrorReport(ignoredError.range(), ignoredError.errorTypes()))
+            .toList());
   }
 
   private static PaneReport toPaneReport(ExcelSheetPane pane) {

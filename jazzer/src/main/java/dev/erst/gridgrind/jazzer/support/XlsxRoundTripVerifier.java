@@ -463,6 +463,9 @@ public final class XlsxRoundTripVerifier {
         case WorkbookCommand.SetSheetZoom _ -> {
           // Zoom state does not affect cell-level round-trip expectations.
         }
+        case WorkbookCommand.SetSheetPresentation _ -> {
+          // Sheet presentation does not affect cell-level round-trip expectations.
+        }
         case WorkbookCommand.SetPrintLayout _ -> {
           // Print layout does not affect cell-level round-trip expectations.
         }

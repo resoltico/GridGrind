@@ -15,6 +15,7 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
@@ -734,11 +735,13 @@ class AdvancedMutationProtocolTypesTest {
   void printAndTableInputsNormalizeAndValidate() {
     PrintMarginsInput margins = new PrintMarginsInput(0.5d, 0.6d, 0.7d, 0.8d, 0.3d, 0.2d);
     PrintSetupInput explicitSetup =
-        new PrintSetupInput(margins, true, null, 9, true, null, 2, true, 4, List.of(6), List.of(3));
+        new PrintSetupInput(
+            margins, true, true, null, 9, true, null, 2, true, 4, List.of(6), List.of(3));
     PrintSetupInput defaultLikeSetup =
-        new PrintSetupInput(null, null, null, null, null, null, null, null, null, null, null);
+        new PrintSetupInput(null, null, null, null, null, null, null, null, null, null, null, null);
 
     assertEquals(margins, explicitSetup.margins());
+    assertTrue(explicitSetup.printGridlines());
     assertTrue(explicitSetup.horizontallyCentered());
     assertFalse(explicitSetup.verticallyCentered());
     assertEquals(9, explicitSetup.paperSize());
@@ -749,6 +752,7 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(4, explicitSetup.firstPageNumber());
     assertEquals(List.of(6), explicitSetup.rowBreaks());
     assertEquals(List.of(3), explicitSetup.columnBreaks());
+    assertFalse(defaultLikeSetup.printGridlines());
     assertEquals(
         new PrintMarginsInput(0.7d, 0.7d, 0.75d, 0.75d, 0.3d, 0.3d), defaultLikeSetup.margins());
     assertEquals(0, defaultLikeSetup.paperSize());
@@ -770,20 +774,24 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PrintSetupInput(margins, null, null, -1, null, null, null, null, null, null, null));
+            new PrintSetupInput(
+                margins, null, null, null, -1, null, null, null, null, null, null, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PrintSetupInput(margins, null, null, null, null, null, -1, null, null, null, null));
+            new PrintSetupInput(
+                margins, null, null, null, null, null, null, -1, null, null, null, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new PrintSetupInput(margins, null, null, null, null, null, null, null, -1, null, null));
+            new PrintSetupInput(
+                margins, null, null, null, null, null, null, null, null, -1, null, null));
     assertThrows(
         NullPointerException.class,
         () ->
             new PrintSetupInput(
                 margins,
+                null,
                 null,
                 null,
                 null,
@@ -798,7 +806,7 @@ class AdvancedMutationProtocolTypesTest {
         IllegalArgumentException.class,
         () ->
             new PrintSetupInput(
-                margins, null, null, null, null, null, null, null, null, List.of(-1), null));
+                margins, null, null, null, null, null, null, null, null, null, List.of(-1), null));
 
     TableColumnInput tableColumn = new TableColumnInput(0, null, null, " SUM ", null);
     TableColumnInput blankTotalsFunction = new TableColumnInput(0, null, null, " ", null);
@@ -870,6 +878,53 @@ class AdvancedMutationProtocolTypesTest {
                 null,
                 null,
                 List.of((TableColumnInput) null)));
+  }
+
+  @Test
+  void sheetPresentationInputsNormalizeAndValidate() {
+    SheetPresentationInput explicitPresentation =
+        new SheetPresentationInput(
+            new SheetDisplayInput(false, false, true, true, true),
+            new ColorInput("#112233"),
+            new SheetOutlineSummaryInput(false, false),
+            new SheetDefaultsInput(12, 18.5d),
+            List.of(
+                new IgnoredErrorInput(
+                    "B2:B12",
+                    List.of(
+                        ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
+                        ExcelIgnoredErrorType.FORMULA))));
+    SheetPresentationInput defaultedPresentation =
+        new SheetPresentationInput(null, null, null, null, null);
+
+    assertEquals(
+        new SheetDisplayInput(false, false, true, true, true), explicitPresentation.display());
+    assertEquals(new ColorInput("#112233"), explicitPresentation.tabColor());
+    assertEquals(new SheetOutlineSummaryInput(false, false), explicitPresentation.outlineSummary());
+    assertEquals(new SheetDefaultsInput(12, 18.5d), explicitPresentation.sheetDefaults());
+    assertEquals(SheetDisplayInput.defaults(), defaultedPresentation.display());
+    assertEquals(SheetOutlineSummaryInput.defaults(), defaultedPresentation.outlineSummary());
+    assertEquals(SheetDefaultsInput.defaults(), defaultedPresentation.sheetDefaults());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new IgnoredErrorInput(
+                "B2:B12",
+                List.of(
+                    ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
+                    ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SheetPresentationInput(
+                null,
+                null,
+                null,
+                null,
+                List.of(
+                    new IgnoredErrorInput(
+                        "B2:B12", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)),
+                    new IgnoredErrorInput("B2:B12", List.of(ExcelIgnoredErrorType.FORMULA)))));
   }
 
   @Test

@@ -302,6 +302,38 @@ class WorkbookCommandExecutorTest {
   }
 
   @Test
+  void appliesSheetPresentationThroughSheetStructureDispatch() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
+      workbook.getOrCreateSheet("Budget");
+      ExcelSheetPresentation presentation =
+          new ExcelSheetPresentation(
+              new ExcelSheetDisplay(false, false, false, true, true),
+              new ExcelColor("#225577"),
+              new ExcelSheetOutlineSummary(false, false),
+              new ExcelSheetDefaults(12, 19.5d),
+              List.of(
+                  new ExcelIgnoredError(
+                      "B2:A1", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))));
+
+      assertSame(
+          workbook,
+          executor.apply(
+              workbook, new WorkbookCommand.SetSheetPresentation("Budget", presentation)));
+
+      WorkbookReadResult.SheetLayout layout = workbook.sheet("Budget").layout();
+      assertEquals(presentation.display(), layout.presentation().display());
+      assertEquals(new ExcelColorSnapshot("#225577"), layout.presentation().tabColor());
+      assertEquals(presentation.outlineSummary(), layout.presentation().outlineSummary());
+      assertEquals(presentation.sheetDefaults(), layout.presentation().sheetDefaults());
+      assertEquals(
+          List.of(
+              new ExcelIgnoredError("A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
+          layout.presentation().ignoredErrors());
+    }
+  }
+
+  @Test
   void appliesPivotTableCommandsAndSurfacesReadback() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       WorkbookCommandExecutor executor = new WorkbookCommandExecutor();

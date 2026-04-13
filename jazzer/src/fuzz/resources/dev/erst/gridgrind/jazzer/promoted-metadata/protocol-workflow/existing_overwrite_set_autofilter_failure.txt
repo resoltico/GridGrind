@@ -9,5 +9,5 @@ Operation Count: 3
 Read Count: 3
 Read Kinds: GET_AUTOFILTERS=2, GET_SHEET_SCHEMA=1
 Response Kind: FAILURE
-Style Kinds: font=3, font_name=2, bold=1, border_right=1, fill_foreground_color=1, border_all_color=1, italic=1, border=1, fill=1, border_right_none=1, fill_color=1, border_all=1
+Style Kinds: font=3, font_name=2, bold=1, border_right_none=1, fill_color=1, border_all=1, fill=1, border=1, italic=1, border_all_color=1, fill_foreground_color=1, border_right=1
 Operation Kinds: APPLY_STYLE=3

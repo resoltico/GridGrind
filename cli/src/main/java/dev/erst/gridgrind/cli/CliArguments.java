@@ -23,6 +23,9 @@ final class CliArguments {
         case "--version" -> {
           return new CliCommand.Version();
         }
+        case "--license" -> {
+          return new CliCommand.License();
+        }
         case "--print-request-template" -> {
           return new CliCommand.PrintRequestTemplate();
         }

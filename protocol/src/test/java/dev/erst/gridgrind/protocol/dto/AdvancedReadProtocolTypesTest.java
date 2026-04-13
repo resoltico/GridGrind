@@ -12,6 +12,7 @@ import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.ExcelOoxmlSignatureState;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
@@ -315,6 +316,7 @@ class AdvancedReadProtocolTypesTest {
         new PrintSetupReport(
             new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
             true,
+            true,
             false,
             9,
             false,
@@ -324,8 +326,25 @@ class AdvancedReadProtocolTypesTest {
             3,
             List.of(10, 20),
             List.of(2, 4));
+    SheetPresentationReport presentation =
+        new SheetPresentationReport(
+            new SheetDisplayReport(false, false, true, true, true),
+            new CellColorReport("#112233"),
+            new SheetOutlineSummaryReport(false, false),
+            new SheetDefaultsReport(11, 18.5d),
+            List.of(
+                new IgnoredErrorReport(
+                    "B2:B12",
+                    List.of(
+                        ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
+                        ExcelIgnoredErrorType.FORMULA))));
 
+    assertTrue(setup.printGridlines());
     assertEquals(List.of(10, 20), setup.rowBreaks());
+    assertEquals(new SheetDisplayReport(false, false, true, true, true), presentation.display());
+    assertEquals(new CellColorReport("#112233"), presentation.tabColor());
+    assertEquals(new SheetOutlineSummaryReport(false, false), presentation.outlineSummary());
+    assertEquals(new SheetDefaultsReport(11, 18.5d), presentation.sheetDefaults());
     assertThrows(
         IllegalArgumentException.class,
         () -> new PrintMarginsReport(-0.1d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d));
@@ -334,6 +353,7 @@ class AdvancedReadProtocolTypesTest {
         () ->
             new PrintSetupReport(
                 new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 -1,
@@ -349,6 +369,7 @@ class AdvancedReadProtocolTypesTest {
         () ->
             new PrintSetupReport(
                 new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 9,
@@ -364,6 +385,7 @@ class AdvancedReadProtocolTypesTest {
         () ->
             new PrintSetupReport(
                 new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 9,
@@ -379,6 +401,7 @@ class AdvancedReadProtocolTypesTest {
         () ->
             new PrintSetupReport(
                 new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 9,
@@ -394,6 +417,7 @@ class AdvancedReadProtocolTypesTest {
         () ->
             new PrintSetupReport(
                 new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 9,
@@ -409,6 +433,7 @@ class AdvancedReadProtocolTypesTest {
         () ->
             new PrintSetupReport(
                 new PrintMarginsReport(0.5d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d),
+                false,
                 true,
                 false,
                 9,
@@ -419,6 +444,26 @@ class AdvancedReadProtocolTypesTest {
                 -1,
                 List.of(10),
                 List.of(2)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new IgnoredErrorReport(
+                "B2:B12",
+                List.of(
+                    ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT,
+                    ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SheetPresentationReport(
+                SheetDisplayReport.defaults(),
+                null,
+                SheetOutlineSummaryReport.defaults(),
+                SheetDefaultsReport.defaults(),
+                List.of(
+                    new IgnoredErrorReport(
+                        "B2:B12", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)),
+                    new IgnoredErrorReport("B2:B12", List.of(ExcelIgnoredErrorType.FORMULA)))));
 
     WorkbookProtectionReport protection =
         new WorkbookProtectionReport(true, false, true, true, false);

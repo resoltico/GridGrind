@@ -107,6 +107,7 @@ class ExcelAdvancedValueObjectTest {
     var printSetup =
         new ExcelPrintSetup(
             new ExcelPrintMargins(0.5d, 0.6d, 0.7d, 0.8d, 0.2d, 0.3d),
+            false,
             true,
             true,
             8,
@@ -254,6 +255,7 @@ class ExcelAdvancedValueObjectTest {
                 printSetup.margins(),
                 false,
                 false,
+                false,
                 -1,
                 false,
                 false,
@@ -269,6 +271,7 @@ class ExcelAdvancedValueObjectTest {
                 printSetup.margins(),
                 false,
                 false,
+                false,
                 1,
                 false,
                 false,
@@ -284,6 +287,7 @@ class ExcelAdvancedValueObjectTest {
                 printSetup.margins(),
                 false,
                 false,
+                false,
                 1,
                 false,
                 false,
@@ -297,6 +301,7 @@ class ExcelAdvancedValueObjectTest {
         () ->
             new ExcelPrintSetup(
                 printSetup.margins(),
+                false,
                 false,
                 false,
                 1,

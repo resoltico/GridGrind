@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.42.0"
+version: "0.43.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-13"
 route:
@@ -508,6 +508,33 @@ band (`LIM-018`) and also rejects formula-bearing workbooks (`LIM-017`).
 { "type": "SET_SHEET_ZOOM", "sheetName": "Sheet1", "zoomPercent": 125 }
 ```
 
+## SET_SHEET_PRESENTATION
+
+```json
+{
+  "type": "SET_SHEET_PRESENTATION",
+  "sheetName": "Sheet1",
+  "presentation": {
+    "display": {
+      "displayGridlines": false,
+      "displayZeros": false,
+      "displayRowColHeadings": true,
+      "displayFormulas": false,
+      "rightToLeft": false
+    },
+    "tabColor": { "rgb": "#0B6E4F" },
+    "outlineSummary": { "rowSumsBelow": false, "rowSumsRight": true },
+    "sheetDefaults": { "defaultColumnWidth": 14, "defaultRowHeightPoints": 19.0 },
+    "ignoredErrors": [
+      {
+        "range": "B4:B18",
+        "errorTypes": ["NUMBER_STORED_AS_TEXT"]
+      }
+    ]
+  }
+}
+```
+
 ## SET_PRINT_LAYOUT
 
 ```json
@@ -533,6 +560,7 @@ band (`LIM-018`) and also rejects formula-bearing workbooks (`LIM-017`).
       },
       "horizontallyCentered": true,
       "verticallyCentered": true,
+      "printGridlines": true,
       "paperSize": 8,
       "draft": true,
       "blackAndWhite": true,
@@ -1507,14 +1535,17 @@ as connectors and simple shapes are rejected.
 Row and column entries report explicit size plus `hidden`, `outlineLevel`, and `collapsed`
 where Excel exposes that state.
 
+`layout.presentation` reports screen display flags, right-to-left layout, tab color,
+outline-summary placement, sheet-default sizing, and ignored-error suppression.
+
 ## GET_PRINT_LAYOUT
 
 ```json
 { "type": "GET_PRINT_LAYOUT", "requestId": "print-layout", "sheetName": "Sheet1" }
 ```
 
-`printLayout.setup` carries advanced page-setup facts such as margins, copies, first-page
-numbering, and explicit row or column breaks.
+`printLayout.setup` carries advanced page-setup facts such as margins, print-gridline output,
+copies, first-page numbering, and explicit row or column breaks.
 
 ## GET_DATA_VALIDATIONS
 

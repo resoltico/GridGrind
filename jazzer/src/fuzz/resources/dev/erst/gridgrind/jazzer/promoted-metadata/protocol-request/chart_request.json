@@ -13,11 +13,11 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 6,
       "operationKinds" : {
-        "SET_NAMED_RANGE" : 2,
-        "SET_DRAWING_OBJECT_ANCHOR" : 1,
-        "SET_RANGE" : 1,
+        "SET_CHART" : 1,
         "ENSURE_SHEET" : 1,
-        "SET_CHART" : 1
+        "SET_RANGE" : 1,
+        "SET_DRAWING_OBJECT_ANCHOR" : 1,
+        "SET_NAMED_RANGE" : 2
       },
       "styleKinds" : { },
       "readCount" : 2,

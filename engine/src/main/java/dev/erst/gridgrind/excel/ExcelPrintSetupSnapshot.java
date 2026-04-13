@@ -6,6 +6,7 @@ import java.util.Objects;
 /** Immutable advanced page-setup facts loaded from one worksheet. */
 public record ExcelPrintSetupSnapshot(
     ExcelPrintMarginsSnapshot margins,
+    boolean printGridlines,
     boolean horizontallyCentered,
     boolean verticallyCentered,
     int paperSize,
@@ -35,7 +36,6 @@ public record ExcelPrintSetupSnapshot(
     List<Integer> copy =
         List.copyOf(Objects.requireNonNull(indexes, fieldName + " must not be null"));
     for (Integer index : copy) {
-      Objects.requireNonNull(index, fieldName + " must not contain null values");
       if (index < 0) {
         throw new IllegalArgumentException(fieldName + " must not contain negative indexes");
       }

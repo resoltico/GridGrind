@@ -19,8 +19,8 @@
       "styleKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "GET_CELLS" : 1,
-        "ANALYZE_WORKBOOK_FINDINGS" : 1
+        "ANALYZE_WORKBOOK_FINDINGS" : 1,
+        "GET_CELLS" : 1
       }
     }
   },

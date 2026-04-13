@@ -519,6 +519,7 @@ final class XlsxParityProbeRegistry {
             && approximatelyEquals(direct.rightMargin(), print.layout().setup().margins().right())
             && approximatelyEquals(direct.topMargin(), print.layout().setup().margins().top())
             && approximatelyEquals(direct.bottomMargin(), print.layout().setup().margins().bottom())
+            && direct.printGridlines() == print.layout().setup().printGridlines()
             && direct.horizontallyCentered() == print.layout().setup().horizontallyCentered()
             && direct.verticallyCentered() == print.layout().setup().verticallyCentered()
             && direct.paperSize() == print.layout().setup().paperSize()
@@ -2960,6 +2961,7 @@ final class XlsxParityProbeRegistry {
         HeaderFooterTextInput.blank(),
         new PrintSetupInput(
             new PrintMarginsInput(0.35d, 0.55d, 0.60d, 0.45d, 0.3d, 0.3d),
+            true,
             true,
             true,
             8,

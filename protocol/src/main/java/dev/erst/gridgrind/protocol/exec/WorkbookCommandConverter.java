@@ -79,6 +79,9 @@ final class WorkbookCommandConverter {
           new WorkbookCommand.SetSheetPane(op.sheetName(), toExcelSheetPane(op.pane()));
       case WorkbookOperation.SetSheetZoom op ->
           new WorkbookCommand.SetSheetZoom(op.sheetName(), op.zoomPercent());
+      case WorkbookOperation.SetSheetPresentation op ->
+          new WorkbookCommand.SetSheetPresentation(
+              op.sheetName(), toExcelSheetPresentation(op.presentation()));
       case WorkbookOperation.SetPrintLayout op ->
           new WorkbookCommand.SetPrintLayout(op.sheetName(), toExcelPrintLayout(op.printLayout()));
       case WorkbookOperation.ClearPrintLayout op ->
@@ -787,6 +790,7 @@ final class WorkbookCommandConverter {
             setup.margins().bottom(),
             setup.margins().header(),
             setup.margins().footer()),
+        setup.printGridlines(),
         setup.horizontallyCentered(),
         setup.verticallyCentered(),
         setup.paperSize(),
@@ -797,6 +801,29 @@ final class WorkbookCommandConverter {
         setup.firstPageNumber(),
         setup.rowBreaks(),
         setup.columnBreaks());
+  }
+
+  private static ExcelSheetPresentation toExcelSheetPresentation(
+      SheetPresentationInput presentation) {
+    return new ExcelSheetPresentation(
+        new ExcelSheetDisplay(
+            presentation.display().displayGridlines(),
+            presentation.display().displayZeros(),
+            presentation.display().displayRowColHeadings(),
+            presentation.display().displayFormulas(),
+            presentation.display().rightToLeft()),
+        toExcelColor(presentation.tabColor()),
+        new ExcelSheetOutlineSummary(
+            presentation.outlineSummary().rowSumsBelow(),
+            presentation.outlineSummary().rowSumsRight()),
+        new ExcelSheetDefaults(
+            presentation.sheetDefaults().defaultColumnWidth(),
+            presentation.sheetDefaults().defaultRowHeightPoints()),
+        presentation.ignoredErrors().stream()
+            .map(
+                ignoredError ->
+                    new ExcelIgnoredError(ignoredError.range(), ignoredError.errorTypes()))
+            .toList());
   }
 
   private static ExcelAutofilterFilterColumn toExcelAutofilterFilterColumn(

@@ -598,6 +598,10 @@ class ExcelSheetTest {
       WorkbookReadResult.SheetLayout emptyLayout = sheet.layout();
       assertEquals(new ExcelSheetPane.None(), emptyLayout.pane());
       assertEquals(100, emptyLayout.zoomPercent());
+      assertEquals(ExcelSheetDisplay.defaults(), emptyLayout.presentation().display());
+      assertEquals(
+          ExcelSheetOutlineSummary.defaults(), emptyLayout.presentation().outlineSummary());
+      assertEquals(ExcelSheetDefaults.defaults(), emptyLayout.presentation().sheetDefaults());
       assertEquals(List.of(), emptyLayout.columns());
       assertEquals(List.of(), emptyLayout.rows());
 
@@ -606,6 +610,15 @@ class ExcelSheetTest {
       sheet.setComment("C3", new ExcelComment("Review", "GridGrind", false));
       sheet.setColumnWidth(0, 0, 12.5);
       sheet.setRowHeight(0, 0, 19.5);
+      sheet.setPresentation(
+          new ExcelSheetPresentation(
+              new ExcelSheetDisplay(false, false, false, true, true),
+              new ExcelColor("#112233"),
+              new ExcelSheetOutlineSummary(false, false),
+              new ExcelSheetDefaults(11, 18.5d),
+              List.of(
+                  new ExcelIgnoredError(
+                      "A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT)))));
 
       WorkbookReadResult.Window window = sheet.window("A1", 3, 3);
       assertEquals("A1", window.rows().getFirst().cells().getFirst().address());
@@ -635,6 +648,19 @@ class ExcelSheetTest {
       WorkbookReadResult.SheetLayout unfrozenLayout = sheet.layout();
       assertEquals(new ExcelSheetPane.None(), unfrozenLayout.pane());
       assertEquals(100, unfrozenLayout.zoomPercent());
+      assertEquals(
+          new ExcelSheetDisplay(false, false, false, true, true),
+          unfrozenLayout.presentation().display());
+      assertEquals(new ExcelColorSnapshot("#112233"), unfrozenLayout.presentation().tabColor());
+      assertEquals(
+          new ExcelSheetOutlineSummary(false, false),
+          unfrozenLayout.presentation().outlineSummary());
+      assertEquals(
+          new ExcelSheetDefaults(11, 18.5d), unfrozenLayout.presentation().sheetDefaults());
+      assertEquals(
+          List.of(
+              new ExcelIgnoredError("A1:B2", List.of(ExcelIgnoredErrorType.NUMBER_STORED_AS_TEXT))),
+          unfrozenLayout.presentation().ignoredErrors());
       assertEquals(3, unfrozenLayout.columns().size());
       assertEquals(3, unfrozenLayout.rows().size());
 

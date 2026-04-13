@@ -12,28 +12,28 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 5,
       "operationKinds" : {
-        "APPLY_STYLE" : 2,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3
+        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 3,
+        "APPLY_STYLE" : 2
       },
       "styleKinds" : {
-        "font" : 1,
         "font_height_twips" : 1,
-        "number_format" : 1,
-        "border" : 1,
-        "fill" : 1,
-        "border_all" : 1,
-        "italic" : 1,
+        "font" : 1,
+        "underline" : 1,
+        "fill_pattern" : 1,
         "font_height" : 1,
         "fill_patterned" : 1,
-        "fill_pattern" : 1,
-        "underline" : 1
+        "italic" : 1,
+        "border_all" : 1,
+        "fill" : 1,
+        "border" : 1,
+        "number_format" : 1
       },
       "readCount" : 4,
       "readKinds" : {
-        "GET_NAMED_RANGE_SURFACE" : 1,
-        "ANALYZE_WORKBOOK_FINDINGS" : 1,
+        "ANALYZE_HYPERLINK_HEALTH" : 1,
         "GET_AUTOFILTERS" : 1,
-        "ANALYZE_HYPERLINK_HEALTH" : 1
+        "ANALYZE_WORKBOOK_FINDINGS" : 1,
+        "GET_NAMED_RANGE_SURFACE" : 1
       },
       "responseKind" : "FAILURE"
     }

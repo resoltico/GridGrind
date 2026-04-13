@@ -633,11 +633,13 @@ public sealed interface GridGrindResponse {
       String sheetName,
       PaneReport pane,
       int zoomPercent,
+      SheetPresentationReport presentation,
       List<ColumnLayoutReport> columns,
       List<RowLayoutReport> rows) {
     public SheetLayoutReport {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(pane, "pane must not be null");
+      Objects.requireNonNull(presentation, "presentation must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }
