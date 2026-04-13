@@ -1,0 +1,21 @@
+{
+  "protocolVersion": "V1",
+  "source": {
+    "type": "EXISTING",
+    "path": "cli/build/generated-workbooks/gridgrind-package-security.xlsx",
+    "security": {
+      "password": "GridGrind-2026"
+    }
+  },
+  "persistence": { "type": "NONE" },
+  "operations": [],
+  "reads": [
+    { "type": "GET_PACKAGE_SECURITY", "requestId": "security" },
+    {
+      "type": "GET_CELLS",
+      "requestId": "secure-cells",
+      "sheetName": "Secure",
+      "addresses": ["A1", "A2", "B2", "A3", "B3"]
+    }
+  ]
+}

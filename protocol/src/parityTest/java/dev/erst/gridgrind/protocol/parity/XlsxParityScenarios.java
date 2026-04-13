@@ -21,14 +21,17 @@ import dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.protocol.json.GridGrindJson;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.cert.X509Certificate;
@@ -119,11 +122,16 @@ public final class XlsxParityScenarios {
   static final String EMBEDDED_OBJECT = "poi-embedded-object";
   static final String LARGE_SHEET = "poi-large-sheet";
   static final String SIGNED_WORKBOOK = "poi-signed-workbook";
+  static final String INVALID_SIGNATURE_WORKBOOK = "poi-invalid-signature-workbook";
   static final String ENCRYPTED_WORKBOOK = "poi-encrypted-workbook";
+  static final String SIGNING_PKCS12_ATTACHMENT = "signingPkcs12";
   static final String WORKBOOK_PROTECTION_PASSWORD = "gridgrind-phase1-workbook";
   static final String SHEET_PROTECTION_PASSWORD = "gridgrind-phase1-sheet";
-  static final String ENCRYPTION_PASSWORD = "gridgrind-phase1-encrypted";
-  static final String SIGNING_SUBJECT = "CN=GridGrind Phase 1 Parity";
+  static final String ENCRYPTION_PASSWORD = "gridgrind-phase9-encrypted";
+  static final String SIGNING_KEYSTORE_PASSWORD = "gridgrind-phase9-keystore";
+  static final String SIGNING_KEY_PASSWORD = "gridgrind-phase9-key";
+  static final String SIGNING_KEY_ALIAS = "gridgrind-phase9-signing";
+  static final String SIGNING_SUBJECT = "CN=GridGrind Phase 9 Parity";
 
   private XlsxParityScenarios() {}
 
@@ -152,6 +160,7 @@ public final class XlsxParityScenarios {
               case EMBEDDED_OBJECT -> materializeEmbeddedObjectWorkbook(temporaryRoot);
               case LARGE_SHEET -> materializeLargeSheetWorkbook(temporaryRoot);
               case SIGNED_WORKBOOK -> materializeSignedWorkbook(temporaryRoot);
+              case INVALID_SIGNATURE_WORKBOOK -> materializeInvalidSignatureWorkbook(temporaryRoot);
               case ENCRYPTED_WORKBOOK -> materializeEncryptedWorkbook(temporaryRoot);
               default ->
                   throw new IllegalArgumentException("Unknown parity scenario id: " + scenarioId);
@@ -691,6 +700,7 @@ public final class XlsxParityScenarios {
         () -> {
           Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(SIGNED_WORKBOOK));
           Path workbookPath = scenarioDirectory.resolve("signed.xlsx");
+          Path pkcs12Path = scenarioDirectory.resolve("signing-material.p12");
 
           try (XSSFWorkbook workbook = new XSSFWorkbook()) {
             XSSFSheet sheet = workbook.createSheet("Signed");
@@ -702,6 +712,7 @@ public final class XlsxParityScenarios {
           }
 
           SelfSignedMaterial keyMaterial = createSelfSignedCertificate();
+          writePkcs12(pkcs12Path, keyMaterial);
           try (OPCPackage pkg = OPCPackage.open(workbookPath.toFile(), PackageAccess.READ_WRITE)) {
             SignatureConfig signatureConfig = new SignatureConfig();
             signatureConfig.setExecutionTime(
@@ -718,7 +729,55 @@ public final class XlsxParityScenarios {
             }
           }
 
-          return new MaterializedScenario(workbookPath, Map.of());
+          return new MaterializedScenario(
+              workbookPath, Map.of(SIGNING_PKCS12_ATTACHMENT, pkcs12Path));
+        });
+  }
+
+  private static MaterializedScenario materializeInvalidSignatureWorkbook(Path temporaryRoot) {
+    return XlsxParitySupport.call(
+        "materialize invalid-signature parity workbook",
+        () -> {
+          Path scenarioDirectory =
+              Files.createDirectories(temporaryRoot.resolve(INVALID_SIGNATURE_WORKBOOK));
+          Path signedSourcePath = scenarioDirectory.resolve("signed-source.xlsx");
+          Path workbookPath = scenarioDirectory.resolve("signed-invalid.xlsx");
+          Path pkcs12Path = scenarioDirectory.resolve("signing-material.p12");
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+            XSSFSheet sheet = workbook.createSheet("Signed");
+            sheet.createRow(0).createCell(0).setCellValue("Signed workbook");
+            sheet.getRow(0).createCell(1).setCellValue(2026d);
+            try (OutputStream outputStream = Files.newOutputStream(signedSourcePath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          SelfSignedMaterial keyMaterial = createSelfSignedCertificate();
+          writePkcs12(pkcs12Path, keyMaterial);
+          try (OPCPackage pkg =
+              OPCPackage.open(signedSourcePath.toFile(), PackageAccess.READ_WRITE)) {
+            SignatureConfig signatureConfig = new SignatureConfig();
+            signatureConfig.setExecutionTime(
+                java.util.Date.from(Instant.parse("2026-04-10T00:00:00Z")));
+            signatureConfig.setKey(keyMaterial.keyPair().getPrivate());
+            signatureConfig.setSigningCertificateChain(List.of(keyMaterial.certificate()));
+
+            SignatureInfo signatureInfo = new SignatureInfo();
+            signatureInfo.setSignatureConfig(signatureConfig);
+            signatureInfo.setOpcPackage(pkg);
+            signatureInfo.confirmSignature();
+          }
+
+          try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(signedSourcePath))) {
+            workbook.getSheet("Signed").getRow(0).getCell(1).setCellValue(2027d);
+            try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+              workbook.write(outputStream);
+            }
+          }
+
+          return new MaterializedScenario(
+              workbookPath, Map.of(SIGNING_PKCS12_ATTACHMENT, pkcs12Path));
         });
   }
 
@@ -1012,6 +1071,20 @@ public final class XlsxParityScenarios {
           certificate.verify(keyPair.getPublic());
           return new SelfSignedMaterial(keyPair, certificate);
         });
+  }
+
+  private static void writePkcs12(Path pkcs12Path, SelfSignedMaterial keyMaterial)
+      throws IOException, GeneralSecurityException {
+    KeyStore keyStore = KeyStore.getInstance("PKCS12");
+    keyStore.load(null, null);
+    keyStore.setKeyEntry(
+        SIGNING_KEY_ALIAS,
+        keyMaterial.keyPair().getPrivate(),
+        SIGNING_KEY_PASSWORD.toCharArray(),
+        new java.security.cert.Certificate[] {keyMaterial.certificate()});
+    try (OutputStream outputStream = Files.newOutputStream(pkcs12Path)) {
+      keyStore.store(outputStream, SIGNING_KEYSTORE_PASSWORD.toCharArray());
+    }
   }
 
   private static void ensureBouncyCastleProvider() {

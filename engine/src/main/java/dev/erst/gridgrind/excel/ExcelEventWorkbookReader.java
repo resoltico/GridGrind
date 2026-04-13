@@ -251,6 +251,7 @@ public final class ExcelEventWorkbookReader {
       case WorkbookReadCommand.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
       case WorkbookReadCommand.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
       case WorkbookReadCommand.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
+      case WorkbookReadCommand.GetPackageSecurity _ -> "GET_PACKAGE_SECURITY";
     };
   }
 

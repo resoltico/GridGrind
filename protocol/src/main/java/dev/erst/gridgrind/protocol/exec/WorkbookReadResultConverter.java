@@ -16,6 +16,10 @@ final class WorkbookReadResultConverter {
       case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookSummaryResult workbookSummary ->
           new WorkbookReadResult.WorkbookSummaryResult(
               workbookSummary.requestId(), toWorkbookSummary(workbookSummary.workbook()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.PackageSecurityResult packageSecurity ->
+          new WorkbookReadResult.PackageSecurityResult(
+              packageSecurity.requestId(),
+              toOoxmlPackageSecurityReport(packageSecurity.security()));
       case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookProtectionResult protection ->
           new WorkbookReadResult.WorkbookProtectionResult(
               protection.requestId(), toWorkbookProtectionReport(protection.protection()));
@@ -183,6 +187,38 @@ final class WorkbookReadResultConverter {
               withSheets.namedRangeCount(),
               withSheets.forceFormulaRecalculationOnOpen());
     };
+  }
+
+  static OoxmlPackageSecurityReport toOoxmlPackageSecurityReport(
+      dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySnapshot snapshot) {
+    return new OoxmlPackageSecurityReport(
+        toOoxmlEncryptionReport(snapshot.encryption()),
+        snapshot.signatures().stream()
+            .map(WorkbookReadResultConverter::toOoxmlSignatureReport)
+            .toList());
+  }
+
+  static OoxmlEncryptionReport toOoxmlEncryptionReport(
+      dev.erst.gridgrind.excel.ExcelOoxmlEncryptionSnapshot snapshot) {
+    return new OoxmlEncryptionReport(
+        snapshot.encrypted(),
+        snapshot.mode(),
+        snapshot.cipherAlgorithm(),
+        snapshot.hashAlgorithm(),
+        snapshot.chainingMode(),
+        snapshot.keyBits(),
+        snapshot.blockSize(),
+        snapshot.spinCount());
+  }
+
+  static OoxmlSignatureReport toOoxmlSignatureReport(
+      dev.erst.gridgrind.excel.ExcelOoxmlSignatureSnapshot snapshot) {
+    return new OoxmlSignatureReport(
+        snapshot.packagePartName(),
+        snapshot.signerSubject(),
+        snapshot.signerIssuer(),
+        snapshot.serialNumberHex(),
+        snapshot.state());
   }
 
   /** Converts one workbook-core named-range snapshot into the protocol response shape. */

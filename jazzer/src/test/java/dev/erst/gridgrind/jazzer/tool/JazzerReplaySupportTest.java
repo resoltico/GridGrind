@@ -165,6 +165,30 @@ class JazzerReplaySupportTest {
   }
 
   @Test
+  void replayParsesPackageSecuritySeed() {
+    byte[] input =
+        fileBytes(
+            "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/package_security_request.json");
+
+    ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.protocolRequest(), input);
+
+    assertInstanceOf(ReplayOutcome.Success.class, outcome);
+    ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;
+    assertEquals(
+        new ProtocolRequestDetails(
+            input.length,
+            "PARSED",
+            "EXISTING",
+            "SAVE_AS",
+            1,
+            Map.of("SET_CELL", 1L),
+            Map.of(),
+            2,
+            Map.of("GET_CELLS", 1L, "GET_PACKAGE_SECURITY", 1L)),
+        success.details());
+  }
+
+  @Test
   void replayClassifiesNamedRangeShiftArtifactAsSuccess() {
     byte[] input = artifactBytes("named-range-shift-overwrite-invalid.b64");
 

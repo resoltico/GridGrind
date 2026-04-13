@@ -44,7 +44,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.41.0
+docker pull ghcr.io/resoltico/gridgrind:0.42.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -195,6 +195,14 @@ Two contract details matter often in agent-generated requests:
 - `formulaEnvironment` is optional. Use it when server-side evaluation needs external workbook
   bindings, cached-value fallback for missing external references, or template-backed UDF
   registration.
+- `source.type: EXISTING` accepts optional `source.security.password` for encrypted OOXML
+  workbooks.
+- `SAVE_AS` and `OVERWRITE` accept optional `persistence.security.encryption` and
+  `persistence.security.signature`. Signed workbooks that are copied without mutations keep their
+  existing signatures automatically; signed workbooks that are mutated require explicit
+  `persistence.security.signature` re-signing before they can be persisted.
+- `GET_PACKAGE_SECURITY` returns factual OOXML package-encryption and package-signature state on
+  the full-XSSF read path. `EVENT_READ` does not support it.
 - `SET_TABLE.table.showTotalsRow` is optional. Omit it unless the table really includes a totals
   row; the default is `false`.
 - Authored drawing mutations use explicit zero-based anchors. `SET_PICTURE`, `SET_SHAPE`,
@@ -254,6 +262,10 @@ replacement, `GET_CHARTS` factual readback, and matching chart inventory in
 [examples/pivot-request.json](examples/pivot-request.json) example shows the Phase 7 pivot
 surface: range-backed, named-range-backed, and table-backed pivot authoring, `GET_PIVOT_TABLES`
 factual readback, and `ANALYZE_PIVOT_TABLE_HEALTH`. The committed
+[examples/package-security-create-request.json](examples/package-security-create-request.json) and
+[examples/package-security-inspect-request.json](examples/package-security-inspect-request.json)
+examples show the Phase 9 package-security surface: encrypted workbook authoring, encrypted source
+open with `source.security.password`, and factual `GET_PACKAGE_SECURITY` inspection. The committed
 [examples/large-file-modes-request.json](examples/large-file-modes-request.json) example shows the
 Phase 8 low-memory execution surface: top-level `executionMode`, append-oriented
 `STREAMING_WRITE`, and summary-only `EVENT_READ` readback over the materialized workbook. The

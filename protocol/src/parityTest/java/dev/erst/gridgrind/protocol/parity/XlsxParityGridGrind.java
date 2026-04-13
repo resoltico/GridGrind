@@ -7,6 +7,8 @@ import dev.erst.gridgrind.protocol.dto.ExecutionModeInput;
 import dev.erst.gridgrind.protocol.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
 import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
+import dev.erst.gridgrind.protocol.dto.OoxmlOpenSecurityInput;
+import dev.erst.gridgrind.protocol.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
@@ -39,19 +41,32 @@ final class XlsxParityGridGrind {
   }
 
   static GridGrindResponse executeReadWorkbook(Path workbookPath, WorkbookReadOperation... reads) {
-    return executeReadWorkbook(workbookPath, (ExecutionModeInput) null, reads);
+    return executeReadWorkbook(workbookPath, (OoxmlOpenSecurityInput) null, reads);
+  }
+
+  static GridGrindResponse executeReadWorkbook(
+      Path workbookPath, OoxmlOpenSecurityInput sourceSecurity, WorkbookReadOperation... reads) {
+    return executeReadWorkbook(workbookPath, sourceSecurity, null, reads);
   }
 
   static GridGrindResponse executeReadWorkbook(
       Path workbookPath, ExecutionModeInput executionMode, WorkbookReadOperation... reads) {
-    return executeReadWorkbook(workbookPath, executionMode, null, reads);
+    return executeReadWorkbook(workbookPath, null, executionMode, reads);
+  }
+
+  static GridGrindResponse executeReadWorkbook(
+      Path workbookPath,
+      OoxmlOpenSecurityInput sourceSecurity,
+      ExecutionModeInput executionMode,
+      WorkbookReadOperation... reads) {
+    return executeReadWorkbook(workbookPath, sourceSecurity, executionMode, null, reads);
   }
 
   static GridGrindResponse executeReadWorkbook(
       Path workbookPath,
       FormulaEnvironmentInput formulaEnvironment,
       WorkbookReadOperation... reads) {
-    return executeReadWorkbook(workbookPath, (ExecutionModeInput) null, formulaEnvironment, reads);
+    return executeReadWorkbook(workbookPath, null, null, formulaEnvironment, reads);
   }
 
   static GridGrindResponse executeReadWorkbook(
@@ -59,9 +74,19 @@ final class XlsxParityGridGrind {
       ExecutionModeInput executionMode,
       FormulaEnvironmentInput formulaEnvironment,
       WorkbookReadOperation... reads) {
+    return executeReadWorkbook(workbookPath, null, executionMode, formulaEnvironment, reads);
+  }
+
+  static GridGrindResponse executeReadWorkbook(
+      Path workbookPath,
+      OoxmlOpenSecurityInput sourceSecurity,
+      ExecutionModeInput executionMode,
+      FormulaEnvironmentInput formulaEnvironment,
+      WorkbookReadOperation... reads) {
     return execute(
         new GridGrindRequest(
-            new GridGrindRequest.WorkbookSource.ExistingFile(workbookPath.toString()),
+            new GridGrindRequest.WorkbookSource.ExistingFile(
+                workbookPath.toString(), sourceSecurity),
             new GridGrindRequest.WorkbookPersistence.None(),
             executionMode,
             formulaEnvironment,
@@ -74,7 +99,39 @@ final class XlsxParityGridGrind {
   }
 
   static GridGrindResponse.Success readWorkbook(Path workbookPath, WorkbookReadOperation... reads) {
-    return success(executeReadWorkbook(workbookPath, reads));
+    return success(executeReadWorkbook(workbookPath, (OoxmlOpenSecurityInput) null, reads));
+  }
+
+  static GridGrindResponse executeMutateWorkbook(
+      Path workbookPath,
+      Path saveAsPath,
+      List<WorkbookOperation> operations,
+      WorkbookReadOperation... reads) {
+    return executeMutateWorkbook(workbookPath, null, saveAsPath, null, null, operations, reads);
+  }
+
+  static GridGrindResponse executeMutateWorkbook(
+      Path workbookPath,
+      OoxmlOpenSecurityInput sourceSecurity,
+      Path saveAsPath,
+      OoxmlPersistenceSecurityInput persistenceSecurity,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<WorkbookOperation> operations,
+      WorkbookReadOperation... reads) {
+    return execute(
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.ExistingFile(
+                workbookPath.toString(), sourceSecurity),
+            new GridGrindRequest.WorkbookPersistence.SaveAs(
+                saveAsPath.toString(), persistenceSecurity),
+            formulaEnvironment,
+            List.copyOf(operations),
+            List.of(reads)));
+  }
+
+  static GridGrindResponse.Success readWorkbook(
+      Path workbookPath, OoxmlOpenSecurityInput sourceSecurity, WorkbookReadOperation... reads) {
+    return success(executeReadWorkbook(workbookPath, sourceSecurity, reads));
   }
 
   static GridGrindResponse.Success readWorkbook(
@@ -102,7 +159,7 @@ final class XlsxParityGridGrind {
       Path saveAsPath,
       List<WorkbookOperation> operations,
       WorkbookReadOperation... reads) {
-    return mutateWorkbook(workbookPath, saveAsPath, null, operations, reads);
+    return mutateWorkbook(workbookPath, null, saveAsPath, null, null, operations, reads);
   }
 
   static GridGrindResponse.Success mutateWorkbook(
@@ -111,14 +168,27 @@ final class XlsxParityGridGrind {
       FormulaEnvironmentInput formulaEnvironment,
       List<WorkbookOperation> operations,
       WorkbookReadOperation... reads) {
+    return mutateWorkbook(
+        workbookPath, null, saveAsPath, null, formulaEnvironment, operations, reads);
+  }
+
+  static GridGrindResponse.Success mutateWorkbook(
+      Path workbookPath,
+      OoxmlOpenSecurityInput sourceSecurity,
+      Path saveAsPath,
+      OoxmlPersistenceSecurityInput persistenceSecurity,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<WorkbookOperation> operations,
+      WorkbookReadOperation... reads) {
     return success(
-        execute(
-            new GridGrindRequest(
-                new GridGrindRequest.WorkbookSource.ExistingFile(workbookPath.toString()),
-                new GridGrindRequest.WorkbookPersistence.SaveAs(saveAsPath.toString()),
-                formulaEnvironment,
-                List.copyOf(operations),
-                List.of(reads))));
+        executeMutateWorkbook(
+            workbookPath,
+            sourceSecurity,
+            saveAsPath,
+            persistenceSecurity,
+            formulaEnvironment,
+            operations,
+            reads));
   }
 
   static GridGrindResponse.Success writeNewWorkbook(
@@ -126,11 +196,21 @@ final class XlsxParityGridGrind {
       ExecutionModeInput executionMode,
       List<WorkbookOperation> operations,
       WorkbookReadOperation... reads) {
+    return writeNewWorkbook(saveAsPath, null, executionMode, operations, reads);
+  }
+
+  static GridGrindResponse.Success writeNewWorkbook(
+      Path saveAsPath,
+      OoxmlPersistenceSecurityInput persistenceSecurity,
+      ExecutionModeInput executionMode,
+      List<WorkbookOperation> operations,
+      WorkbookReadOperation... reads) {
     return success(
         execute(
             new GridGrindRequest(
                 new GridGrindRequest.WorkbookSource.New(),
-                new GridGrindRequest.WorkbookPersistence.SaveAs(saveAsPath.toString()),
+                new GridGrindRequest.WorkbookPersistence.SaveAs(
+                    saveAsPath.toString(), persistenceSecurity),
                 executionMode,
                 null,
                 List.copyOf(operations),
@@ -167,10 +247,21 @@ final class XlsxParityGridGrind {
       FormulaEnvironmentInput formulaEnvironment,
       List<WorkbookOperation> operations,
       WorkbookReadOperation... reads) {
+    return mutateWorkbookExpectingFailure(
+        workbookPath, null, formulaEnvironment, operations, reads);
+  }
+
+  static GridGrindResponse.Failure mutateWorkbookExpectingFailure(
+      Path workbookPath,
+      OoxmlOpenSecurityInput sourceSecurity,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<WorkbookOperation> operations,
+      WorkbookReadOperation... reads) {
     GridGrindResponse response =
         execute(
             new GridGrindRequest(
-                new GridGrindRequest.WorkbookSource.ExistingFile(workbookPath.toString()),
+                new GridGrindRequest.WorkbookSource.ExistingFile(
+                    workbookPath.toString(), sourceSecurity),
                 new GridGrindRequest.WorkbookPersistence.None(),
                 formulaEnvironment,
                 List.copyOf(operations),

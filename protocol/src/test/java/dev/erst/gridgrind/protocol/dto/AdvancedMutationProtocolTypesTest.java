@@ -15,6 +15,8 @@ import dev.erst.gridgrind.excel.ExcelConditionalFormattingIconSet;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.ExcelOoxmlSignatureDigestAlgorithm;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
 import java.util.List;
@@ -22,6 +24,70 @@ import org.junit.jupiter.api.Test;
 
 /** Direct tests for advanced mutation-oriented protocol DTO families. */
 class AdvancedMutationProtocolTypesTest {
+  @Test
+  void ooxmlSecurityInputsNormalizeAndValidate() {
+    OoxmlOpenSecurityInput openSecurity = new OoxmlOpenSecurityInput("source-pass");
+    OoxmlEncryptionInput encryption = new OoxmlEncryptionInput("persist-pass", null);
+    OoxmlSignatureInput signature =
+        new OoxmlSignatureInput(
+            "tmp/signing-material.p12", "keystore-pass", null, null, null, null);
+    OoxmlPersistenceSecurityInput persistence =
+        new OoxmlPersistenceSecurityInput(encryption, signature);
+
+    assertEquals("source-pass", openSecurity.password());
+    assertEquals(ExcelOoxmlEncryptionMode.AGILE, encryption.mode());
+    assertEquals("keystore-pass", signature.keyPassword());
+    assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signature.digestAlgorithm());
+    assertNull(signature.alias());
+    assertNull(signature.description());
+    assertEquals(encryption, persistence.encryption());
+    assertEquals(signature, persistence.signature());
+
+    assertThrows(IllegalArgumentException.class, () -> new OoxmlOpenSecurityInput(" "));
+    assertThrows(IllegalArgumentException.class, () -> new OoxmlEncryptionInput(" ", null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlSignatureInput(
+                "tmp/signing-material.p12", "keystore-pass", " ", null, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlSignatureInput(
+                "tmp/signing-material.p12", "keystore-pass", null, " ", null, null));
+    assertThrows(
+        IllegalArgumentException.class, () -> new OoxmlPersistenceSecurityInput(null, null));
+  }
+
+  @Test
+  void ooxmlSecurityHelpersCollapseEmptyRequestState() {
+    OoxmlOpenSecurityInput openSecurity = new OoxmlOpenSecurityInput(null);
+    OoxmlPersistenceSecurityInput encryptionOnly =
+        new OoxmlPersistenceSecurityInput(
+            new OoxmlEncryptionInput("persist-pass", ExcelOoxmlEncryptionMode.STANDARD), null);
+    OoxmlPersistenceSecurityInput signatureOnly =
+        new OoxmlPersistenceSecurityInput(
+            null,
+            new OoxmlSignatureInput(
+                "tmp/signing-material.p12", "keystore-pass", "key-pass", null, null, null));
+    GridGrindRequest.WorkbookSource.ExistingFile source =
+        new GridGrindRequest.WorkbookSource.ExistingFile("budget.xlsx", openSecurity);
+    GridGrindRequest.WorkbookPersistence.OverwriteSource unsecuredOverwrite =
+        new GridGrindRequest.WorkbookPersistence.OverwriteSource(
+            (OoxmlPersistenceSecurityInput) null);
+    GridGrindRequest.WorkbookPersistence.OverwriteSource securedOverwrite =
+        new GridGrindRequest.WorkbookPersistence.OverwriteSource(encryptionOnly);
+
+    assertNull(openSecurity.password());
+    assertTrue(openSecurity.isEmpty());
+    assertNull(source.security());
+    assertNull(unsecuredOverwrite.security());
+    assertEquals(encryptionOnly, securedOverwrite.security());
+    assertEquals(
+        signatureOnly,
+        new GridGrindRequest.WorkbookPersistence.SaveAs("secured.xlsx", signatureOnly).security());
+  }
+
   @Test
   void workbookProtectionNamedRangeAndCommentInputsNormalizeAndValidate() {
     WorkbookProtectionInput protection =

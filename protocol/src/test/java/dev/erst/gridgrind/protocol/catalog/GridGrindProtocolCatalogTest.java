@@ -500,7 +500,7 @@ class GridGrindProtocolCatalogTest {
     assertEquals(List.of("NEW", "EXISTING"), ids(catalog.sourceTypes()));
     assertEquals(List.of("NONE", "OVERWRITE", "SAVE_AS"), ids(catalog.persistenceTypes()));
     assertEquals(64, catalog.operationTypes().size());
-    assertEquals(31, catalog.readTypes().size());
+    assertEquals(32, catalog.readTypes().size());
     assertEquals(
         List.of(
             "cellInputTypes",
@@ -536,6 +536,13 @@ class GridGrindProtocolCatalogTest {
         List.of(
             "executionModeInputType",
             "formulaEnvironmentInputType",
+            "ooxmlOpenSecurityInputType",
+            "ooxmlPersistenceSecurityInputType",
+            "ooxmlEncryptionInputType",
+            "ooxmlSignatureInputType",
+            "ooxmlPackageSecurityReportType",
+            "ooxmlEncryptionReportType",
+            "ooxmlSignatureReportType",
             "formulaExternalWorkbookInputType",
             "formulaUdfToolpackInputType",
             "formulaUdfFunctionInputType",
@@ -616,9 +623,35 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         new FieldShape.ListShape(new FieldShape.TopLevelTypeSetRef("readTypes")),
         fieldNamed(requestType, "reads").shape());
+
+    TypeEntry existingSource = entryNamed(catalog.sourceTypes(), "EXISTING");
+    assertEquals(FieldRequirement.OPTIONAL, fieldNamed(existingSource, "security").requirement());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("ooxmlOpenSecurityInputType"),
+        fieldNamed(existingSource, "security").shape());
+
+    TypeEntry overwritePersistence = entryNamed(catalog.persistenceTypes(), "OVERWRITE");
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(overwritePersistence, "security").requirement());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("ooxmlPersistenceSecurityInputType"),
+        fieldNamed(overwritePersistence, "security").shape());
+
+    TypeEntry saveAsPersistence = entryNamed(catalog.persistenceTypes(), "SAVE_AS");
+    assertEquals(
+        FieldRequirement.OPTIONAL, fieldNamed(saveAsPersistence, "security").requirement());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("ooxmlPersistenceSecurityInputType"),
+        fieldNamed(saveAsPersistence, "security").shape());
   }
 
   private static void assertCatalogCoreFieldShapes(Catalog catalog) {
+    assertCatalogExecutionAndSecurityFieldShapes(catalog);
+    assertCatalogDrawingFieldShapes(catalog);
+    assertCatalogChartAndSheetFieldShapes(catalog);
+  }
+
+  private static void assertCatalogExecutionAndSecurityFieldShapes(Catalog catalog) {
     PlainTypeGroup executionModeGroup = plainGroup(catalog, "executionModeInputType");
     assertEquals(
         List.of("FULL_XSSF", "EVENT_READ"),
@@ -639,6 +672,36 @@ class GridGrindProtocolCatalogTest {
         new FieldShape.Scalar(ScalarType.BOOLEAN),
         fieldNamed(commentGroup.type(), "visible").shape());
 
+    PlainTypeGroup openSecurityGroup = plainGroup(catalog, "ooxmlOpenSecurityInputType");
+    assertEquals(
+        new FieldShape.Scalar(ScalarType.STRING),
+        fieldNamed(openSecurityGroup.type(), "password").shape());
+
+    PlainTypeGroup persistenceSecurityGroup =
+        plainGroup(catalog, "ooxmlPersistenceSecurityInputType");
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        fieldNamed(persistenceSecurityGroup.type(), "encryption").requirement());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("ooxmlEncryptionInputType"),
+        fieldNamed(persistenceSecurityGroup.type(), "encryption").shape());
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        fieldNamed(persistenceSecurityGroup.type(), "signature").requirement());
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("ooxmlSignatureInputType"),
+        fieldNamed(persistenceSecurityGroup.type(), "signature").shape());
+
+    PlainTypeGroup packageSecurityGroup = plainGroup(catalog, "ooxmlPackageSecurityReportType");
+    assertEquals(
+        new FieldShape.PlainTypeGroupRef("ooxmlEncryptionReportType"),
+        fieldNamed(packageSecurityGroup.type(), "encryption").shape());
+    assertEquals(
+        new FieldShape.ListShape(new FieldShape.PlainTypeGroupRef("ooxmlSignatureReportType")),
+        fieldNamed(packageSecurityGroup.type(), "signatures").shape());
+  }
+
+  private static void assertCatalogDrawingFieldShapes(Catalog catalog) {
     PlainTypeGroup pictureDataGroup = plainGroup(catalog, "pictureDataInputType");
     assertTrue(
         fieldNamed(pictureDataGroup.type(), "format").enumValues().contains("PNG"),
@@ -687,7 +750,9 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         new FieldShape.PlainTypeGroupRef("drawingMarkerInputType"),
         fieldNamed(drawingAnchorEntry, "to").shape());
+  }
 
+  private static void assertCatalogChartAndSheetFieldShapes(Catalog catalog) {
     TypeEntry barChartEntry = nestedTypeEntry(catalog, "chartInputTypes", "BAR");
     assertEquals(
         new FieldShape.NestedTypeGroupRef("drawingAnchorInputTypes"),
@@ -1053,6 +1118,11 @@ class GridGrindProtocolCatalogTest {
             .summary()
             .contains("workbook.kind=EMPTY"),
         "GET_WORKBOOK_SUMMARY summary must describe the empty-workbook variant");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_PACKAGE_SECURITY")
+            .summary()
+            .contains("INVALIDATED_BY_MUTATION"),
+        "GET_PACKAGE_SECURITY summary must describe mutation invalidation");
     assertTrue(
         entryNamed(catalog.readTypes(), "GET_WORKBOOK_PROTECTION")
             .summary()

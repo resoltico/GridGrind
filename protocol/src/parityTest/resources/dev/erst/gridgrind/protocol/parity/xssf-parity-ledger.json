@@ -1285,8 +1285,8 @@
       "subfamily": "read-write",
       "phase": 9,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-encryption-gap",
       "scenarioIds": [
         "poi-encrypted-workbook"
@@ -1294,17 +1294,35 @@
       "primarySources": [
         "Encryption Support"
       ],
-      "notes": "Encrypted OOXML workbook handling is absent from GridGrind."
+      "notes": "GridGrind now opens encrypted OOXML workbooks with source passwords, preserves package encryption across save-as from encrypted sources, and authors new encrypted `.xlsx` outputs through the public security contract."
     },
     {
       "sequence": 69,
+      "id": "phase-9-ooxml-encryption-password-errors",
+      "capability": "ooxml-encryption-password-errors",
+      "subfamily": "error-translation",
+      "phase": 9,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-encryption-password-errors",
+      "scenarioIds": [
+        "poi-encrypted-workbook"
+      ],
+      "primarySources": [
+        "Encryption Support"
+      ],
+      "notes": "Encrypted workbook password failures now map to stable security problem codes for missing and invalid passwords."
+    },
+    {
+      "sequence": 70,
       "id": "phase-9-ooxml-signing",
       "capability": "ooxml-signing",
       "subfamily": "read-write",
       "phase": 9,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-signing-gap",
       "scenarioIds": [
         "poi-signed-workbook"
@@ -1313,7 +1331,26 @@
         "Encryption Support",
         "Quick Guide"
       ],
-      "notes": "Signed OOXML package preservation and validation are absent from GridGrind."
+      "notes": "GridGrind now validates package signatures, preserves unchanged signatures across copy-style save-as, requires explicit re-signing before persisting signed mutations, re-signs mutated signed sources, and authors new signed `.xlsx` outputs."
+    },
+    {
+      "sequence": 71,
+      "id": "phase-9-ooxml-invalid-signature-read",
+      "capability": "ooxml-invalid-signature-read",
+      "subfamily": "error-translation",
+      "phase": 9,
+      "poiSupport": "DOCUMENTED_SUPPORTED",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
+      "probeId": "probe-signing-invalid-signature",
+      "scenarioIds": [
+        "poi-invalid-signature-workbook"
+      ],
+      "primarySources": [
+        "Encryption Support",
+        "Quick Guide"
+      ],
+      "notes": "Invalid OOXML package signatures now surface as truthful factual readback instead of aborting package inspection."
     }
   ]
 }

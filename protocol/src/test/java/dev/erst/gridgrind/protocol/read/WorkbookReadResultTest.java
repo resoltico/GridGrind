@@ -23,6 +23,29 @@ import org.junit.jupiter.api.Test;
 /** Tests for workbook-read result invariants. */
 class WorkbookReadResultTest {
   @Test
+  void packageSecurityResultRejectsBlankRequestIdAndNullSecurity() {
+    WorkbookReadResult.PackageSecurityResult result =
+        new WorkbookReadResult.PackageSecurityResult(
+            "security",
+            new OoxmlPackageSecurityReport(
+                new OoxmlEncryptionReport(false, null, null, null, null, null, null, null),
+                List.of()));
+
+    assertFalse(result.security().encryption().encrypted());
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new WorkbookReadResult.PackageSecurityResult(
+                " ",
+                new OoxmlPackageSecurityReport(
+                    new OoxmlEncryptionReport(false, null, null, null, null, null, null, null),
+                    List.of())));
+    assertThrows(
+        NullPointerException.class,
+        () -> new WorkbookReadResult.PackageSecurityResult("security", null));
+  }
+
+  @Test
   void workbookSummaryResultRejectsBlankRequestId() {
     IllegalArgumentException exception =
         assertThrows(

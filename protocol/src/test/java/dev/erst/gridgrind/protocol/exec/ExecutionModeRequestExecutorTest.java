@@ -287,8 +287,8 @@ class ExecutionModeRequestExecutorTest {
                         List.of(),
                         List.of(new WorkbookReadOperation.GetWorkbookSummary("workbook")))));
 
-    assertEquals(GridGrindProblemCode.IO_ERROR, failure.problem().code());
-    assertEquals("EXECUTE_READ", failure.problem().context().stage());
+    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, failure.problem().code());
+    assertEquals("OPEN_WORKBOOK", failure.problem().context().stage());
   }
 
   @Test

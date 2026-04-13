@@ -55,7 +55,9 @@ public final class GridGrindProtocolCatalog {
               GridGrindRequest.WorkbookSource.ExistingFile.class,
               "EXISTING",
               "Open an existing .xlsx workbook from disk."
-                  + " Relative paths resolve in the current execution environment."));
+                  + " Relative paths resolve in the current execution environment."
+                  + " source.security.password unlocks encrypted OOXML packages.",
+              "security"));
   private static final List<TypeDescriptor> PERSISTENCE_TYPES =
       List.of(
           descriptor(
@@ -69,18 +71,22 @@ public final class GridGrindProtocolCatalog {
                   + " No path field is accepted on OVERWRITE;"
                   + " the write target is the same path opened by the EXISTING source."
                   + " Relative source.path values resolve in the current execution environment."
+                  + " persistence.security can encrypt and/or sign the saved OOXML package."
                   + " The response persistence.type echoes OVERWRITE and includes sourcePath"
-                  + " (the original source path string) and executionPath (absolute normalized)."),
+                  + " (the original source path string) and executionPath (absolute normalized).",
+              "security"),
           descriptor(
               GridGrindRequest.WorkbookPersistence.SaveAs.class,
               "SAVE_AS",
               "Save the workbook to a new .xlsx path."
                   + " Relative paths resolve in the current execution environment."
+                  + " persistence.security can encrypt and/or sign the saved OOXML package."
                   + " The response persistence.type echoes SAVE_AS and includes requestedPath"
                   + " (the literal path from the request) and executionPath (the absolute"
                   + " normalized path where the file was written); they differ when a relative"
                   + " path or a path with .. segments is supplied."
-                  + " Missing parent directories are created automatically."));
+                  + " Missing parent directories are created automatically.",
+              "security"));
   private static final List<TypeDescriptor> OPERATION_TYPES =
       List.of(
           descriptor(
@@ -486,6 +492,13 @@ public final class GridGrindProtocolCatalog {
                   + " Empty workbooks return workbook.kind=EMPTY;"
                   + " non-empty workbooks return workbook.kind=WITH_SHEETS with activeSheetName"
                   + " and selectedSheetNames."),
+          descriptor(
+              WorkbookReadOperation.GetPackageSecurity.class,
+              "GET_PACKAGE_SECURITY",
+              "Return OOXML package-encryption facts and package-signature validation results."
+                  + " This reports the currently loaded workbook package state;"
+                  + " after in-memory mutations, previously valid source signatures read back as"
+                  + " INVALIDATED_BY_MUTATION until the saved output is re-signed."),
           descriptor(
               WorkbookReadOperation.GetWorkbookProtection.class,
               "GET_WORKBOOK_PROTECTION",
@@ -1160,6 +1173,60 @@ public final class GridGrindProtocolCatalog {
               "Request-scoped formula-evaluation environment covering external workbook bindings,"
                   + " missing-workbook policy, and template-backed UDF toolpacks.",
               List.of("externalWorkbooks", "missingWorkbookPolicy", "udfToolpacks")),
+          plainTypeDescriptor(
+              "ooxmlOpenSecurityInputType",
+              OoxmlOpenSecurityInput.class,
+              "OoxmlOpenSecurityInput",
+              "Optional OOXML package-open settings for encrypted existing workbook sources."
+                  + " password unlocks the encrypted OOXML package before GridGrind opens the"
+                  + " inner .xlsx workbook.",
+              List.of("password")),
+          plainTypeDescriptor(
+              "ooxmlPersistenceSecurityInputType",
+              OoxmlPersistenceSecurityInput.class,
+              "OoxmlPersistenceSecurityInput",
+              "Optional OOXML package-security settings applied during persistence."
+                  + " Supply encryption, signature, or both.",
+              List.of("encryption", "signature")),
+          plainTypeDescriptor(
+              "ooxmlEncryptionInputType",
+              OoxmlEncryptionInput.class,
+              "OoxmlEncryptionInput",
+              "OOXML package-encryption settings for workbook persistence."
+                  + " mode defaults to AGILE when omitted.",
+              List.of("mode")),
+          plainTypeDescriptor(
+              "ooxmlSignatureInputType",
+              OoxmlSignatureInput.class,
+              "OoxmlSignatureInput",
+              "OOXML package-signing settings for workbook persistence."
+                  + " pkcs12Path resolves in the current execution environment."
+                  + " keyPassword defaults to keystorePassword and digestAlgorithm defaults to"
+                  + " SHA256 when omitted."
+                  + " alias may be omitted only when the keystore contains exactly one"
+                  + " signable private-key entry.",
+              List.of("keyPassword", "alias", "digestAlgorithm", "description")),
+          plainTypeDescriptor(
+              "ooxmlPackageSecurityReportType",
+              OoxmlPackageSecurityReport.class,
+              "OoxmlPackageSecurityReport",
+              "Factual OOXML package-security report covering encryption and package signatures.",
+              List.of()),
+          plainTypeDescriptor(
+              "ooxmlEncryptionReportType",
+              OoxmlEncryptionReport.class,
+              "OoxmlEncryptionReport",
+              "Factual OOXML package-encryption report for one workbook package."
+                  + " Detail fields are present only when encrypted=true.",
+              List.of()),
+          plainTypeDescriptor(
+              "ooxmlSignatureReportType",
+              OoxmlSignatureReport.class,
+              "OoxmlSignatureReport",
+              "Factual OOXML package-signature report for one signature part."
+                  + " state reflects the currently loaded workbook package, including"
+                  + " INVALIDATED_BY_MUTATION for source signatures after in-memory edits.",
+              List.of()),
           plainTypeDescriptor(
               "formulaExternalWorkbookInputType",
               FormulaExternalWorkbookInput.class,

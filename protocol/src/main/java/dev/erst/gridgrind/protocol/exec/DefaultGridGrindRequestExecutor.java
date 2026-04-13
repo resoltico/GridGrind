@@ -155,12 +155,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
     ExecutionModeSelection executionModes = executionModes(request);
     if (directEventReadEligible(request, executionModes)) {
-      GridGrindRequest.WorkbookSource.ExistingFile source =
-          (GridGrindRequest.WorkbookSource.ExistingFile) request.source();
       return guardUnexpectedRuntime(
-          protocolVersion,
-          request,
-          () -> executeDirectEventReadWorkflow(protocolVersion, request, Path.of(source.path())));
+          protocolVersion, request, () -> executeDirectEventReadWorkflow(protocolVersion, request));
     }
     if (executionModes.writeMode() == ExecutionModeInput.WriteMode.STREAMING_WRITE) {
       return guardUnexpectedRuntime(
@@ -284,10 +280,16 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   }
 
   private GridGrindResponse executeDirectEventReadWorkflow(
-      GridGrindProtocolVersion protocolVersion, GridGrindRequest request, Path sourcePath) {
+      GridGrindProtocolVersion protocolVersion, GridGrindRequest request) {
+    GridGrindRequest.WorkbookSource.ExistingFile source =
+        (GridGrindRequest.WorkbookSource.ExistingFile) request.source();
     List<WorkbookReadResult> reads;
-    try {
-      reads = executeEventReads(sourcePath, request);
+    try (ExcelOoxmlPackageSecuritySupport.ReadableWorkbook materialized =
+        ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
+            Path.of(source.path()),
+            OoxmlPackageSecurityConverter.toExcelOpenOptions(source.security()),
+            tempFileFactory::createTempFile)) {
+      reads = executeEventReads(materialized.workbookPath(), request);
     } catch (ReadExecutionFailure failure) {
       return readFailure(
           protocolVersion,
@@ -295,6 +297,13 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           failure.readIndex(),
           request.reads().get(failure.readIndex()),
           failure.exception());
+    } catch (Exception exception) {
+      return new GridGrindResponse.Failure(
+          protocolVersion,
+          problemFor(
+              exception,
+              new GridGrindResponse.ProblemContext.OpenWorkbook(
+                  reqSourceType(request), reqPersistenceType(request), reqSourcePath(request))));
     }
     return new GridGrindResponse.Success(
         protocolVersion,
@@ -351,7 +360,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
     GridGrindResponse.PersistenceOutcome persistence;
     try {
-      persistence = persistStreamingWorkbook(materializedPath, request.persistence());
+      persistence =
+          persistStreamingWorkbook(materializedPath, request.persistence(), request.source());
       movedToPersistenceTarget =
           !(persistence instanceof GridGrindResponse.PersistenceOutcome.NotSaved);
     } catch (Exception exception) {
@@ -383,7 +393,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     return switch (source) {
       case GridGrindRequest.WorkbookSource.New _ -> ExcelWorkbook.create(configuredEnvironment);
       case GridGrindRequest.WorkbookSource.ExistingFile existingFile ->
-          ExcelWorkbook.open(Path.of(existingFile.path()), configuredEnvironment);
+          ExcelWorkbook.open(
+              Path.of(existingFile.path()),
+              configuredEnvironment,
+              OoxmlPackageSecurityConverter.toExcelOpenOptions(existingFile.security()),
+              tempFileFactory::createTempFile);
     };
   }
 
@@ -405,13 +419,15 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
                       "OVERWRITE persistence requires an EXISTING source");
             };
         Path normalizedPath = rawPath.toAbsolutePath().normalize();
-        workbook.save(normalizedPath);
+        workbook.save(
+            normalizedPath, persistenceOptions(persistence), tempFileFactory::createTempFile);
         yield new GridGrindResponse.PersistenceOutcome.Overwritten(
             rawPath.toString(), normalizedPath.toString());
       }
       case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> {
         Path normalizedPath = Path.of(saveAs.path()).toAbsolutePath().normalize();
-        workbook.save(normalizedPath);
+        workbook.save(
+            normalizedPath, persistenceOptions(persistence), tempFileFactory::createTempFile);
         yield new GridGrindResponse.PersistenceOutcome.SavedAs(
             saveAs.path(), normalizedPath.toString());
       }
@@ -419,7 +435,10 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   }
 
   private GridGrindResponse.PersistenceOutcome persistStreamingWorkbook(
-      Path materializedPath, GridGrindRequest.WorkbookPersistence persistence) throws IOException {
+      Path materializedPath,
+      GridGrindRequest.WorkbookPersistence persistence,
+      GridGrindRequest.WorkbookSource source)
+      throws IOException {
     Objects.requireNonNull(materializedPath, "materializedPath must not be null");
     return switch (persistence) {
       case GridGrindRequest.WorkbookPersistence.None _ ->
@@ -429,9 +448,24 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               "STREAMING_WRITE persistence must be NONE or SAVE_AS after request validation");
       case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> {
         Path normalizedPath = Path.of(saveAs.path()).toAbsolutePath().normalize();
-        Files.createDirectories(normalizedPath.getParent());
-        Files.move(
-            materializedPath, normalizedPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        Path parent = normalizedPath.getParent();
+        if (parent != null) {
+          Files.createDirectories(parent);
+        }
+        ExcelOoxmlPersistenceOptions persistenceOptions = persistenceOptions(persistence);
+        if (persistenceOptions.isEmpty()) {
+          Files.move(
+              materializedPath, normalizedPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+        } else {
+          ExcelOoxmlPackageSecuritySupport.persistMaterializedWorkbook(
+              materializedPath,
+              normalizedPath,
+              sourcePackageSecurity(source),
+              sourceEncryptionPassword(source),
+              true,
+              persistenceOptions);
+          deleteIfExists(materializedPath);
+        }
         yield new GridGrindResponse.PersistenceOutcome.SavedAs(
             saveAs.path(), normalizedPath.toString());
       }
@@ -453,6 +487,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case InvalidCellAddressException _ -> GridGrindProblemCode.INVALID_CELL_ADDRESS;
       case InvalidRangeAddressException _ -> GridGrindProblemCode.INVALID_RANGE_ADDRESS;
       case MissingExternalWorkbookException _ -> GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK;
+      case WorkbookPasswordRequiredException _ -> GridGrindProblemCode.WORKBOOK_PASSWORD_REQUIRED;
+      case InvalidWorkbookPasswordException _ -> GridGrindProblemCode.INVALID_WORKBOOK_PASSWORD;
+      case InvalidSigningConfigurationException _ ->
+          GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION;
+      case WorkbookSecurityException _ -> GridGrindProblemCode.WORKBOOK_SECURITY_ERROR;
       case UnregisteredUserDefinedFunctionException _ ->
           GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION;
       case UnsupportedFormulaException _ -> GridGrindProblemCode.UNSUPPORTED_FORMULA;
@@ -739,7 +778,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     Path tempPath = null;
     try {
       tempPath = tempFileFactory.createTempFile("gridgrind-event-read-", ".xlsx");
-      workbook.save(tempPath);
+      workbook.savePlainWorkbook(tempPath);
       return executeEventReads(tempPath, request);
     } catch (IOException exception) {
       throw new ReadExecutionFailure(0, exception);
@@ -867,6 +906,35 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   private record ExecutionModeSelection(
       ExecutionModeInput.ReadMode readMode, ExecutionModeInput.WriteMode writeMode) {}
 
+  private static ExcelOoxmlPersistenceOptions persistenceOptions(
+      GridGrindRequest.WorkbookPersistence persistence) {
+    return switch (persistence) {
+      case GridGrindRequest.WorkbookPersistence.None _ ->
+          new ExcelOoxmlPersistenceOptions(null, null);
+      case GridGrindRequest.WorkbookPersistence.OverwriteSource overwrite ->
+          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(overwrite.security());
+      case GridGrindRequest.WorkbookPersistence.SaveAs saveAs ->
+          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(saveAs.security());
+    };
+  }
+
+  private static ExcelOoxmlPackageSecuritySnapshot sourcePackageSecurity(
+      GridGrindRequest.WorkbookSource source) {
+    return switch (source) {
+      case GridGrindRequest.WorkbookSource.New _ -> ExcelOoxmlPackageSecuritySnapshot.none();
+      case GridGrindRequest.WorkbookSource.ExistingFile _ ->
+          ExcelOoxmlPackageSecuritySnapshot.none();
+    };
+  }
+
+  private static String sourceEncryptionPassword(GridGrindRequest.WorkbookSource source) {
+    return switch (source) {
+      case GridGrindRequest.WorkbookSource.New _ -> null;
+      case GridGrindRequest.WorkbookSource.ExistingFile existingFile ->
+          existingFile.security() == null ? null : existingFile.security().password();
+    };
+  }
+
   /** Functional interface for creating executor-owned temporary workbook files. */
   @FunctionalInterface
   interface TempFileFactory {
@@ -967,6 +1035,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
       case WorkbookReadOperation.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
       case WorkbookReadOperation.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
+      case WorkbookReadOperation.GetPackageSecurity _ -> "GET_PACKAGE_SECURITY";
       case WorkbookReadOperation.AnalyzeFormulaHealth _ -> "ANALYZE_FORMULA_HEALTH";
       case WorkbookReadOperation.AnalyzeDataValidationHealth _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
       case WorkbookReadOperation.AnalyzeConditionalFormattingHealth _ ->
@@ -1007,6 +1076,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.AnalyzeAutofilterHealth op -> singleSheetName(op.selection());
       case WorkbookReadOperation.AnalyzeHyperlinkHealth op -> singleSheetName(op.selection());
       case WorkbookReadOperation.GetWorkbookSummary _ -> null;
+      case WorkbookReadOperation.GetPackageSecurity _ -> null;
       case WorkbookReadOperation.GetWorkbookProtection _ -> null;
       case WorkbookReadOperation.GetNamedRanges _ -> null;
       case WorkbookReadOperation.GetTables _ -> null;
@@ -1028,6 +1098,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case WorkbookReadOperation.GetWindow op -> op.topLeftAddress();
       case WorkbookReadOperation.GetSheetSchema op -> op.topLeftAddress();
       case WorkbookReadOperation.GetWorkbookSummary _ -> null;
+      case WorkbookReadOperation.GetPackageSecurity _ -> null;
       case WorkbookReadOperation.GetWorkbookProtection _ -> null;
       case WorkbookReadOperation.GetNamedRanges _ -> null;
       case WorkbookReadOperation.GetSheetSummary _ -> null;
@@ -1067,6 +1138,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     }
     return switch (read) {
       case WorkbookReadOperation.GetWorkbookSummary _ -> null;
+      case WorkbookReadOperation.GetPackageSecurity _ -> null;
       case WorkbookReadOperation.GetWorkbookProtection _ -> null;
       case WorkbookReadOperation.GetNamedRanges _ -> null;
       case WorkbookReadOperation.GetSheetSummary _ -> null;

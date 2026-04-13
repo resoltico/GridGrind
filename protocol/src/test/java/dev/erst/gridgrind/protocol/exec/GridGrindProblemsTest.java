@@ -2,6 +2,10 @@ package dev.erst.gridgrind.protocol.exec;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.InvalidSigningConfigurationException;
+import dev.erst.gridgrind.excel.InvalidWorkbookPasswordException;
+import dev.erst.gridgrind.excel.WorkbookPasswordRequiredException;
+import dev.erst.gridgrind.excel.WorkbookSecurityException;
 import dev.erst.gridgrind.protocol.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.protocol.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
@@ -36,6 +40,20 @@ class GridGrindProblemsTest {
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
         GridGrindProblems.codeFor(new IllegalArgumentException("bad")));
+    assertEquals(
+        GridGrindProblemCode.WORKBOOK_PASSWORD_REQUIRED,
+        GridGrindProblems.codeFor(
+            new WorkbookPasswordRequiredException(java.nio.file.Path.of("/tmp/encrypted.xlsx"))));
+    assertEquals(
+        GridGrindProblemCode.INVALID_WORKBOOK_PASSWORD,
+        GridGrindProblems.codeFor(
+            new InvalidWorkbookPasswordException(java.nio.file.Path.of("/tmp/encrypted.xlsx"))));
+    assertEquals(
+        GridGrindProblemCode.INVALID_SIGNING_CONFIGURATION,
+        GridGrindProblems.codeFor(new InvalidSigningConfigurationException("bad signing")));
+    assertEquals(
+        GridGrindProblemCode.WORKBOOK_SECURITY_ERROR,
+        GridGrindProblems.codeFor(new WorkbookSecurityException("crypto failed", null)));
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
         GridGrindProblems.codeFor(new DateTimeException("bad date")));

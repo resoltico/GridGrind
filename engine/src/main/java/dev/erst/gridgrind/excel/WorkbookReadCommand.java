@@ -15,6 +15,7 @@ public sealed interface WorkbookReadCommand
   /** Marker for fact-only workbook reads. */
   sealed interface Introspection extends WorkbookReadCommand
       permits GetWorkbookSummary,
+          GetPackageSecurity,
           GetWorkbookProtection,
           GetNamedRanges,
           GetSheetSummary,
@@ -52,6 +53,13 @@ public sealed interface WorkbookReadCommand
   /** Returns workbook-level summary facts. */
   record GetWorkbookSummary(String requestId) implements Introspection {
     public GetWorkbookSummary {
+      requestId = requireNonBlank(requestId, "requestId");
+    }
+  }
+
+  /** Returns OOXML package-encryption and package-signature facts for the current workbook. */
+  record GetPackageSecurity(String requestId) implements Introspection {
+    public GetPackageSecurity {
       requestId = requireNonBlank(requestId, "requestId");
     }
   }

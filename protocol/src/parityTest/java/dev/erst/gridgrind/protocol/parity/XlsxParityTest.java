@@ -56,6 +56,7 @@ final class XlsxParityTest {
             XlsxParityScenarios.EMBEDDED_OBJECT,
             XlsxParityScenarios.LARGE_SHEET,
             XlsxParityScenarios.SIGNED_WORKBOOK,
+            XlsxParityScenarios.INVALID_SIGNATURE_WORKBOOK,
             XlsxParityScenarios.ENCRYPTED_WORKBOOK),
         corpus.scenarios().stream().map(XlsxParityLedger.Scenario::id).toList());
     assertTrue(

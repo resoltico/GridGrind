@@ -459,6 +459,19 @@ class SequenceIntrospectionTest {
         1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_WORKBOOK_FINDINGS"));
   }
 
+  @Test
+  void readKindsCountPackageSecurityReads() {
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.New(),
+            new GridGrindRequest.WorkbookPersistence.None(),
+            List.of(),
+            List.of(new WorkbookReadOperation.GetPackageSecurity("security")));
+
+    assertEquals(1, SequenceIntrospection.readCount(request));
+    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_PACKAGE_SECURITY"));
+  }
+
   private static SheetProtectionSettings protocolProtectionSettings() {
     return new SheetProtectionSettings(
         false, true, false, true, false, true, false, true, false, true, false, true, false, true,

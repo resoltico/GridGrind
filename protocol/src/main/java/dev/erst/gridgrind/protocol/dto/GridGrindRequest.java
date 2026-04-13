@@ -91,9 +91,19 @@ public record GridGrindRequest(
     record New() implements WorkbookSource {}
 
     /** Opens an existing workbook file from disk. */
-    record ExistingFile(String path) implements WorkbookSource {
+    record ExistingFile(
+        String path, @JsonInclude(JsonInclude.Include.NON_NULL) OoxmlOpenSecurityInput security)
+        implements WorkbookSource {
       public ExistingFile {
         requireXlsxWorkbookPath(path);
+        security = security == null || security.isEmpty() ? null : security;
+      }
+
+      /**
+       * Opens the existing workbook at the supplied path with no explicit package-open settings.
+       */
+      public ExistingFile(String path) {
+        this(path, null);
       }
     }
   }
@@ -110,12 +120,32 @@ public record GridGrindRequest(
     record None() implements WorkbookPersistence {}
 
     /** Saves the workbook back to the exact path it was opened from. */
-    record OverwriteSource() implements WorkbookPersistence {}
+    record OverwriteSource(
+        @JsonInclude(JsonInclude.Include.NON_NULL) OoxmlPersistenceSecurityInput security)
+        implements WorkbookPersistence {
+      public OverwriteSource {
+        security = security == null ? null : security;
+      }
+
+      /** Overwrites the source workbook with no explicit package-security persistence settings. */
+      public OverwriteSource() {
+        this(null);
+      }
+    }
 
     /** Saves the workbook to a new `.xlsx` path. */
-    record SaveAs(String path) implements WorkbookPersistence {
+    record SaveAs(
+        String path,
+        @JsonInclude(JsonInclude.Include.NON_NULL) OoxmlPersistenceSecurityInput security)
+        implements WorkbookPersistence {
       public SaveAs {
         requireXlsxWorkbookPath(path);
+        security = security == null ? null : security;
+      }
+
+      /** Saves the workbook to the supplied path with no explicit package-security settings. */
+      public SaveAs(String path) {
+        this(path, null);
       }
     }
   }

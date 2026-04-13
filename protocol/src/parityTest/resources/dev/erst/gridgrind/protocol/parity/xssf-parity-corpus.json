@@ -88,6 +88,11 @@
       "description": "Direct-POI workbook signed at the OOXML package layer for signature validation and preservation probes."
     },
     {
+      "id": "poi-invalid-signature-workbook",
+      "kind": "POI_SIGNED",
+      "description": "Direct-POI workbook whose OOXML package signature was intentionally invalidated after signing."
+    },
+    {
       "id": "poi-encrypted-workbook",
       "kind": "POI_ENCRYPTED",
       "description": "Direct-POI workbook encrypted with OOXML agile encryption."

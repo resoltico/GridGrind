@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.41.0"
+version: "0.42.0"
 domain: ERRORS
-updated: "2026-04-11"
+updated: "2026-04-13"
 route:
-  keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
-  questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors"]
+  keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
+  questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures"]
 ---
 
 # Error Reference
@@ -62,7 +62,7 @@ route:
 |:-----|:--------|
 | `INVALID_JSON` | Request payload is not syntactically valid JSON. |
 | `INVALID_REQUEST_SHAPE` | JSON is syntactically valid, but fields, discriminator IDs, or token shapes do not match the GridGrind protocol schema. Messages are product-owned and describe unknown fields, unknown type values, missing required fields, or wrong token shapes without leaking Jackson or Java class names. |
-| `INVALID_REQUEST` | JSON is valid and binds successfully, but the parsed request violates GridGrind business or cross-field validation, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. |
+| `INVALID_REQUEST` | JSON is valid and binds successfully, but the parsed request violates GridGrind business or cross-field validation, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, signed-workbook persistence requests that mutate the workbook without explicit `persistence.security.signature`, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. |
 | `INVALID_CELL_ADDRESS` | A1-notation cell address is malformed. |
 | `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or its dimensions do not match `rows`, including invalid `MERGE_CELLS` or `UNMERGE_CELLS` ranges. |
 
@@ -83,6 +83,15 @@ route:
 | `SHEET_NOT_FOUND` | An operation or read references a sheet that does not exist. All mutation operations (`SET_CELL`, `SET_RANGE`, `APPLY_STYLE`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the sheet to exist; use `ENSURE_SHEET` first. |
 | `NAMED_RANGE_NOT_FOUND` | A named-range read selector or delete request references a workbook- or sheet-scoped name that does not exist. |
 | `CELL_NOT_FOUND` | Reserved. No current operation raises this code; `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are no-ops when the cell does not physically exist, and `GET_CELLS` returns blank snapshots for unwritten cells. |
+
+### Security (`SECURITY` category)
+
+| Code | Trigger |
+|:-----|:--------|
+| `WORKBOOK_PASSWORD_REQUIRED` | `source.type=EXISTING` points to an encrypted OOXML workbook and `source.security.password` was omitted. |
+| `INVALID_WORKBOOK_PASSWORD` | `source.security.password` was supplied for an encrypted OOXML workbook, but it did not decrypt the package. |
+| `INVALID_SIGNING_CONFIGURATION` | `persistence.security.signature` did not point to a readable PKCS#12 keystore or the configured alias/password/digest settings could not be resolved. |
+| `WORKBOOK_SECURITY_ERROR` | OOXML cryptographic inspection, encryption, or signing failed after request validation due to package or runtime security state. |
 
 ### I/O (`IO` category)
 
@@ -106,6 +115,7 @@ route:
 | `REQUEST` | Request JSON is malformed, does not match the protocol shape, or violates semantic validation. Fix the request. |
 | `FORMULA` | Formula syntax is invalid, evaluation is missing required external/UDF configuration, or the construct is unsupported by Apache POI. Fix the formula or evaluator setup. |
 | `RESOURCE` | Referenced workbook, sheet, or cell does not exist. Fix the path or name. |
+| `SECURITY` | Workbook encryption, password, or OOXML signing failed. Fix the password or signing configuration, or inspect the workbook package and runtime crypto environment. |
 | `IO` | Filesystem failure reading or writing a file. Check paths, permissions, and disk state. |
 | `INTERNAL` | Unexpected engine error. Capture details and escalate. |
 

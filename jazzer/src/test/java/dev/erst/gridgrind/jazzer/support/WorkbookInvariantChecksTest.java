@@ -991,6 +991,50 @@ class WorkbookInvariantChecksTest {
     }
   }
 
+  @Test
+  void acceptsWorkflowOutcomeShapeWithPackageSecurityRead(@TempDir Path tempDirectory)
+      throws IOException {
+    Path workbookPath = tempDirectory.resolve("secured.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.ExistingFile(
+                workbookPath.toString(),
+                new dev.erst.gridgrind.protocol.dto.OoxmlOpenSecurityInput("GridGrind-2026")),
+            new GridGrindRequest.WorkbookPersistence.None(),
+            List.of(),
+            List.of(new WorkbookReadOperation.GetPackageSecurity("security")));
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            List.of(),
+            List.of(
+                new WorkbookReadResult.PackageSecurityResult(
+                    "security",
+                    new dev.erst.gridgrind.protocol.dto.OoxmlPackageSecurityReport(
+                        new dev.erst.gridgrind.protocol.dto.OoxmlEncryptionReport(
+                            true,
+                            dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode.AGILE,
+                            "aes",
+                            "sha512",
+                            "ChainingModeCBC",
+                            256,
+                            16,
+                            100000),
+                        List.of(
+                            new dev.erst.gridgrind.protocol.dto.OoxmlSignatureReport(
+                                "/_xmlsignatures/sig1.xml",
+                                "CN=GridGrind Signing",
+                                "CN=GridGrind Signing",
+                                "01",
+                                dev.erst.gridgrind.excel.ExcelOoxmlSignatureState.VALID))))));
+
+    assertDoesNotThrow(
+        () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
+  }
+
   private static ChartReport.Bar chartReport() {
     return new ChartReport.Bar(
         "OpsChart",

@@ -6,6 +6,7 @@ public enum GridGrindProblemCategory {
   REQUEST,
   FORMULA,
   RESOURCE,
+  SECURITY,
   IO,
   INTERNAL
 }
