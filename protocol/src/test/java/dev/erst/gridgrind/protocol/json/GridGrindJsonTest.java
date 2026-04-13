@@ -153,6 +153,25 @@ class GridGrindJsonTest {
 
     assertEquals(request, decoded);
     assertFalse(templateJson.contains("formulaEnvironment"));
+    assertFalse(templateJson.contains("executionMode"));
+  }
+
+  @Test
+  void roundTripsExecutionModeRequests() throws IOException {
+    GridGrindRequest request =
+        new GridGrindRequest(
+            new GridGrindRequest.WorkbookSource.ExistingFile("budget.xlsx"),
+            new GridGrindRequest.WorkbookPersistence.None(),
+            new ExecutionModeInput(
+                ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF),
+            null,
+            List.of(),
+            List.of(new WorkbookReadOperation.GetWorkbookSummary("workbook")));
+
+    GridGrindRequest decoded = GridGrindJson.readRequest(GridGrindJson.writeRequestBytes(request));
+
+    assertEquals(request, decoded);
+    assertEquals(ExecutionModeInput.ReadMode.EVENT_READ, decoded.executionMode().readMode());
   }
 
   @Test

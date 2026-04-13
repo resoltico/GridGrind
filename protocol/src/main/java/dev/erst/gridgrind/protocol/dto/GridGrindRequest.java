@@ -16,6 +16,7 @@ public record GridGrindRequest(
     GridGrindProtocolVersion protocolVersion,
     WorkbookSource source,
     WorkbookPersistence persistence,
+    @JsonInclude(JsonInclude.Include.NON_NULL) ExecutionModeInput executionMode,
     @JsonInclude(JsonInclude.Include.NON_NULL) FormulaEnvironmentInput formulaEnvironment,
     List<WorkbookOperation> operations,
     List<WorkbookReadOperation> reads) {
@@ -24,10 +25,40 @@ public record GridGrindRequest(
         protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
     Objects.requireNonNull(source, "source must not be null");
     persistence = persistence == null ? new WorkbookPersistence.None() : persistence;
+    executionMode = executionMode == null || executionMode.isDefault() ? null : executionMode;
     formulaEnvironment =
         formulaEnvironment == null || formulaEnvironment.isEmpty() ? null : formulaEnvironment;
     operations = copyOperations(operations);
     reads = copyReads(reads);
+  }
+
+  /** Creates a request with the current protocol version and the given parameters. */
+  public GridGrindRequest(
+      GridGrindProtocolVersion protocolVersion,
+      WorkbookSource source,
+      WorkbookPersistence persistence,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<WorkbookOperation> operations,
+      List<WorkbookReadOperation> reads) {
+    this(protocolVersion, source, persistence, null, formulaEnvironment, operations, reads);
+  }
+
+  /** Creates a request with the current protocol version and the given parameters. */
+  public GridGrindRequest(
+      WorkbookSource source,
+      WorkbookPersistence persistence,
+      ExecutionModeInput executionMode,
+      FormulaEnvironmentInput formulaEnvironment,
+      List<WorkbookOperation> operations,
+      List<WorkbookReadOperation> reads) {
+    this(
+        GridGrindProtocolVersion.current(),
+        source,
+        persistence,
+        executionMode,
+        formulaEnvironment,
+        operations,
+        reads);
   }
 
   /** Creates a request with the current protocol version and the given parameters. */
@@ -37,13 +68,7 @@ public record GridGrindRequest(
       FormulaEnvironmentInput formulaEnvironment,
       List<WorkbookOperation> operations,
       List<WorkbookReadOperation> reads) {
-    this(
-        GridGrindProtocolVersion.current(),
-        source,
-        persistence,
-        formulaEnvironment,
-        operations,
-        reads);
+    this(source, persistence, null, formulaEnvironment, operations, reads);
   }
 
   /** Creates a request with the current protocol version and no explicit formula environment. */

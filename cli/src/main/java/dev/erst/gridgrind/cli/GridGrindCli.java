@@ -191,12 +191,15 @@ public final class GridGrindCli {
         Execution:
           GridGrind runs operations first, then reads, then saves the workbook (unless persistence is NONE); if any step fails, no workbook is written.
           A NEW workbook starts with zero sheets; use ENSURE_SHEET to create the first sheet.
+          executionMode is optional; omit it for the default FULL_XSSF read and write path.
 
         Limits:
           File format:              .xlsx only; .xls, .xlsm, and .xlsb are rejected.
           Sheet names:              1 to 31 characters; reject : \\ / ? * [ ] and leading/trailing apostrophes.
           GET_WINDOW cell count:    rowCount * columnCount must not exceed 250,000.
           GET_SHEET_SCHEMA cells:   rowCount * columnCount must not exceed 250,000.
+          EVENT_READ mode:          GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only.
+          STREAMING_WRITE mode:     source.type must be NEW; operations limited to ENSURE_SHEET, APPEND_ROW, and FORCE_FORMULA_RECALC_ON_OPEN.
           Column widthCharacters:   > 0 and <= 255 (Excel limit).
           Row heightPoints:         > 0 and <= 1638.35 (Excel limit: 32767 twips).
           Row structural edits:     rejected when they would move tables, sheet autofilters, or data validations; deletes/shifts also reject destructive range-backed named ranges.
@@ -209,6 +212,7 @@ public final class GridGrindCli {
         Request:
           protocolVersion is optional; omit it and the current version is assumed.
           persistence is optional; omit it and the workbook stays in memory only (NONE).
+          executionMode is optional; omit it for FULL_XSSF reads and writes, or supply it to choose EVENT_READ or STREAMING_WRITE when their limits fit the request.
           formulaEnvironment is optional; omit it for the default evaluator, or supply it to bind external workbooks, choose missing-workbook policy, and register template-backed UDFs.
           operations is optional; omit or send [] to skip mutations.
           reads is optional; omit or send [] to skip introspection.

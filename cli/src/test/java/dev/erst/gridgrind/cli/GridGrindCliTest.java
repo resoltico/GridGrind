@@ -1209,11 +1209,17 @@ class GridGrindCliTest {
     assertTrue(
         help.contains("persistence is optional"), "help must mention that persistence is optional");
     assertTrue(
+        help.contains("executionMode is optional"),
+        "help must mention that executionMode is optional");
+    assertTrue(
         help.contains("formulaEnvironment is optional"),
         "help must mention that formulaEnvironment is optional");
     assertTrue(
         help.contains("operations is optional"), "help must mention that operations is optional");
     assertTrue(help.contains("reads is optional"), "help must mention that reads is optional");
+    assertTrue(help.contains("EVENT_READ mode"), "help must describe EVENT_READ mode limits");
+    assertTrue(
+        help.contains("STREAMING_WRITE mode"), "help must describe STREAMING_WRITE mode limits");
   }
 
   /** ByteArrayInputStream that records whether {@code close()} was called. */

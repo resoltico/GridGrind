@@ -140,6 +140,31 @@ class JazzerReplaySupportTest {
   }
 
   @Test
+  void replayParsesLargeFileModesExample() {
+    byte[] input = fileBytes("examples/large-file-modes-request.json");
+
+    ReplayOutcome outcome = JazzerReplaySupport.replay(JazzerHarness.protocolRequest(), input);
+
+    assertInstanceOf(ReplayOutcome.Success.class, outcome);
+    ReplayOutcome.Success success = (ReplayOutcome.Success) outcome;
+    assertEquals(
+        new ProtocolRequestDetails(
+            input.length,
+            "PARSED",
+            "NEW",
+            "SAVE_AS",
+            5,
+            Map.of(
+                "APPEND_ROW", 3L,
+                "ENSURE_SHEET", 1L,
+                "FORCE_FORMULA_RECALCULATION_ON_OPEN", 1L),
+            Map.of(),
+            2,
+            Map.of("GET_SHEET_SUMMARY", 1L, "GET_WORKBOOK_SUMMARY", 1L)),
+        success.details());
+  }
+
+  @Test
   void replayClassifiesNamedRangeShiftArtifactAsSuccess() {
     byte[] input = artifactBytes("named-range-shift-overwrite-invalid.b64");
 
@@ -219,10 +244,22 @@ class JazzerReplaySupportTest {
 
   private static byte[] fileBytes(String relativePath) {
     try {
-      return Files.readAllBytes(Path.of(relativePath));
+      return Files.readAllBytes(resolveProjectPath(relativePath));
     } catch (IOException exception) {
       throw new UncheckedIOException(
           "failed to load replay artifact file: " + relativePath, exception);
     }
+  }
+
+  private static Path resolveProjectPath(String relativePath) {
+    Path moduleRelativePath = Path.of(relativePath);
+    if (Files.exists(moduleRelativePath)) {
+      return moduleRelativePath;
+    }
+    Path repoRelativePath = Path.of("..").resolve(relativePath).normalize();
+    if (Files.exists(repoRelativePath)) {
+      return repoRelativePath;
+    }
+    throw new IllegalStateException("missing replay artifact file: " + relativePath);
   }
 }

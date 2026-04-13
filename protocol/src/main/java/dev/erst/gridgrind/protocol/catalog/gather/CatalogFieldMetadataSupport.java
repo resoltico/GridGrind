@@ -74,6 +74,7 @@ public final class CatalogFieldMetadataSupport {
   private static final Map<Class<?>, String> PLAIN_FIELD_SHAPE_GROUPS =
       Map.ofEntries(
           Map.entry(CommentInput.class, "commentInputType"),
+          Map.entry(ExecutionModeInput.class, "executionModeInputType"),
           Map.entry(FormulaEnvironmentInput.class, "formulaEnvironmentInputType"),
           Map.entry(FormulaExternalWorkbookInput.class, "formulaExternalWorkbookInputType"),
           Map.entry(FormulaUdfToolpackInput.class, "formulaUdfToolpackInputType"),

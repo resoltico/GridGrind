@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.40.0"
+version: "0.41.0"
 domain: LIMITATIONS
-updated: "2026-04-11"
+updated: "2026-04-13"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit"]
@@ -328,6 +328,44 @@ Example messages:
 
 ---
 
+### LIM-019 — Event-Read Execution Mode Scope
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | `executionMode.readMode=EVENT_READ` supports only `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `executionMode.readMode=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}` |
+| **Applies to** | top-level `executionMode.readMode`, `reads` |
+| **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelEventWorkbookReader.apply` |
+| **UX** | `--help` Limits section; request-shape docs; `executionModeInputType` catalog summary |
+
+`EVENT_READ` is the low-memory summary reader backed by POI's XSSF event model. It does not
+materialize the full workbook object graph, so GridGrind restricts it to workbook and sheet
+summary reads only. Unsupported factual reads and analysis reads are rejected at request-validation
+time instead of silently falling back to the normal in-memory executor.
+
+---
+
+### LIM-020 — Streaming-Write Execution Mode Scope
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | `executionMode.writeMode=STREAMING_WRITE` requires `source.type=NEW`, allows only `ENSURE_SHEET`, `APPEND_ROW`, and `FORCE_FORMULA_RECALC_ON_OPEN`, and requires at least one `ENSURE_SHEET` or `APPEND_ROW` |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `executionMode.writeMode=STREAMING_WRITE requires source.type=NEW ...`, `executionMode.writeMode=STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW, and FORCE_FORMULA_RECALC_ON_OPEN only; unsupported operation type: {type}`, or `executionMode.writeMode=STREAMING_WRITE requires at least one ENSURE_SHEET or APPEND_ROW ...` |
+| **Applies to** | top-level `executionMode.writeMode`, `source`, `operations` |
+| **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelStreamingWorkbookWriter.apply` |
+| **UX** | `--help` Limits section; request-shape docs; `executionModeInputType` catalog summary |
+
+`STREAMING_WRITE` is the low-memory append-oriented writer backed by POI `SXSSF`. It authors only
+new workbooks and does not expose the full XSSF mutation surface. GridGrind validates the reduced
+operation contract up front so callers get deterministic structured errors instead of half-written
+streaming workbooks or hidden mode fallback.
+
+---
+
 ## Memory and Performance
 
 Apache POI uses the "usermodel" API, which loads the entire workbook into JVM heap memory.
@@ -341,8 +379,14 @@ memory. A 512 MB container provides roughly 128 MB of heap. Large workbooks or l
 windows consume proportionally more and can exhaust it — which is why LIM-001 exists.
 
 **Streaming.** POI provides SXSSF for streaming writes and event-model APIs for streaming
-reads. GridGrind does not currently use these; all reads load the full workbook. This may
-change in a future release for large-file support.
+reads. GridGrind now exposes both as explicit opt-in execution modes:
+- `executionMode.readMode=EVENT_READ` for low-memory `GET_WORKBOOK_SUMMARY` and
+  `GET_SHEET_SUMMARY` requests only (`LIM-019`)
+- `executionMode.writeMode=STREAMING_WRITE` for low-memory append-oriented authoring on `NEW`
+  workbooks using `ENSURE_SHEET`, `APPEND_ROW`, and `FORCE_FORMULA_RECALC_ON_OPEN` only
+  (`LIM-020`)
+
+All other reads and mutations continue to use the normal full-XSSF in-memory executor.
 
 ---
 
@@ -351,10 +395,11 @@ change in a future release for large-file support.
 | Feature | Status |
 |:--------|:-------|
 | Macros (VBA/XLM) | Read: preserved. Write: not creatable. |
-| Charts | Not supported (read or write). |
-| Pivot tables | Limited (XSSF partial support in POI). |
+| Charts | Supported for factual reads and authored `BAR`, `LINE`, and `PIE`; unsupported loaded chart detail is preserved and rejected for authoritative mutation. |
+| Pivot tables | Limited supported surface: factual reads, health analysis, and authored range-, named-range-, and table-backed pivots. |
 | `.xls`, `.xlsm`, `.xlsb` | Not supported. See LIM-002. |
-| Streaming read/write (SXSSF) | Not used. Full workbook loaded into memory. |
+| Streaming read/write | Supported only through `executionMode`: `EVENT_READ` summary reads (`LIM-019`) and `STREAMING_WRITE` append-oriented `NEW` workbook authoring (`LIM-020`). |
+| OOXML encryption and signing | Not supported. |
 
 Apache POI feature coverage: https://poi.apache.org/components/spreadsheet/
 

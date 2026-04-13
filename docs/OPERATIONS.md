@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.40.0"
+version: "0.41.0"
 domain: OPERATIONS
 updated: "2026-04-13"
 route:
@@ -35,6 +35,7 @@ group that defines their accepted JSON structure.
   "protocolVersion": "V1",
   "source":      { ... },
   "persistence": { ... },
+  "executionMode": { ... },
   "formulaEnvironment": { ... },
   "operations":  [ ... ],
   "reads":       [ ... ]
@@ -46,6 +47,7 @@ group that defines their accepted JSON structure.
 | `protocolVersion` | No | Wire-contract version. Defaults to `V1`. Include it — future breaking revisions will be explicit. |
 | `source` | Yes | Where the workbook comes from. |
 | `persistence` | No | Where and whether to save. Omit to run operations without saving. |
+| `executionMode` | No | Optional low-memory read and write mode selection. Omit for the default full-XSSF path. |
 | `formulaEnvironment` | No | Request-scoped evaluator configuration for external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. |
 | `operations` | No | Ordered list of workbook mutations. |
 | `reads` | No | Ordered post-mutation introspection and analysis operations. |
@@ -93,6 +95,36 @@ references, or template-backed UDFs.
 
 For `udfToolpacks.functions`, `maximumArgumentCount` is optional and defaults to
 `minimumArgumentCount`. `formulaTemplate` may reference `ARG1`, `ARG2`, and higher placeholders.
+
+### Execution Mode
+
+`executionMode` is optional. Omit it for the default `FULL_XSSF` request path.
+
+```json
+{
+  "executionMode": {
+    "readMode": "EVENT_READ",
+    "writeMode": "STREAMING_WRITE"
+  }
+}
+```
+
+| Field | Required | Description |
+|:------|:---------|:------------|
+| `readMode` | No | `FULL_XSSF` or `EVENT_READ`. Defaults to `FULL_XSSF`. |
+| `writeMode` | No | `FULL_XSSF` or `STREAMING_WRITE`. Defaults to `FULL_XSSF`. |
+
+- `readMode: EVENT_READ` selects the low-memory XSSF event-model reader. It supports only
+  `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` (`LIM-019`).
+- `writeMode: STREAMING_WRITE` selects the low-memory SXSSF writer. It requires `source.type:
+  NEW`, supports only `ENSURE_SHEET`, `APPEND_ROW`, and `FORCE_FORMULA_RECALC_ON_OPEN`, and
+  requires at least one `ENSURE_SHEET` or `APPEND_ROW` (`LIM-020`).
+- `EVENT_READ` can run directly against an existing workbook when the request is read-only and
+  unsaved. If the request also performs full-XSSF mutations, GridGrind materializes the mutated
+  workbook state and then performs the summary reads through the event model.
+- `STREAMING_WRITE` can pair with either `readMode: FULL_XSSF` for broader readback or
+  `readMode: EVENT_READ` for summary-only low-memory readback from the materialized streaming
+  result.
 
 ## Coordinate Systems
 

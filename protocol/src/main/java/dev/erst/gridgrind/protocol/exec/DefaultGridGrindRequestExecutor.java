@@ -6,6 +6,7 @@ import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.DateTimeException;
 import java.util.ArrayList;
@@ -85,13 +86,29 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           WorkbookOperation.AppendRow.class,
           WorkbookOperation.AutoSizeColumns.class);
 
+  private static final Set<Class<? extends WorkbookOperation>> STREAMING_WRITE_OPERATION_TYPES =
+      Set.of(
+          WorkbookOperation.EnsureSheet.class,
+          WorkbookOperation.AppendRow.class,
+          WorkbookOperation.ForceFormulaRecalculationOnOpen.class);
+
+  private static final Set<Class<? extends WorkbookReadOperation>> EVENT_READ_OPERATION_TYPES =
+      Set.of(
+          WorkbookReadOperation.GetWorkbookSummary.class,
+          WorkbookReadOperation.GetSheetSummary.class);
+
   private final WorkbookCommandExecutor commandExecutor;
   private final WorkbookReadExecutor readExecutor;
   private final WorkbookCloser workbookCloser;
+  private final TempFileFactory tempFileFactory;
 
   /** Creates the production request executor with the default workbook executors and closer. */
   public DefaultGridGrindRequestExecutor() {
-    this(new WorkbookCommandExecutor(), new WorkbookReadExecutor(), ExcelWorkbook::close);
+    this(
+        new WorkbookCommandExecutor(),
+        new WorkbookReadExecutor(),
+        ExcelWorkbook::close,
+        Files::createTempFile);
   }
 
   /** Constructor for testing, allowing injection of custom executors and closer. */
@@ -99,10 +116,21 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       WorkbookCommandExecutor commandExecutor,
       WorkbookReadExecutor readExecutor,
       WorkbookCloser workbookCloser) {
+    this(commandExecutor, readExecutor, workbookCloser, Files::createTempFile);
+  }
+
+  /** Constructor for testing, allowing injection of custom executors, closer, and temp files. */
+  DefaultGridGrindRequestExecutor(
+      WorkbookCommandExecutor commandExecutor,
+      WorkbookReadExecutor readExecutor,
+      WorkbookCloser workbookCloser,
+      TempFileFactory tempFileFactory) {
     this.commandExecutor =
         Objects.requireNonNull(commandExecutor, "commandExecutor must not be null");
     this.readExecutor = Objects.requireNonNull(readExecutor, "readExecutor must not be null");
     this.workbookCloser = Objects.requireNonNull(workbookCloser, "workbookCloser must not be null");
+    this.tempFileFactory =
+        Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
   }
 
   /** Executes one complete GridGrind request. */
@@ -125,6 +153,22 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       return validationError.get();
     }
 
+    ExecutionModeSelection executionModes = executionModes(request);
+    if (directEventReadEligible(request, executionModes)) {
+      GridGrindRequest.WorkbookSource.ExistingFile source =
+          (GridGrindRequest.WorkbookSource.ExistingFile) request.source();
+      return guardUnexpectedRuntime(
+          protocolVersion,
+          request,
+          () -> executeDirectEventReadWorkflow(protocolVersion, request, Path.of(source.path())));
+    }
+    if (executionModes.writeMode() == ExecutionModeInput.WriteMode.STREAMING_WRITE) {
+      return guardUnexpectedRuntime(
+          protocolVersion,
+          request,
+          () -> executeStreamingWorkflow(protocolVersion, request, executionModes));
+    }
+
     ExcelWorkbook workbook;
     try {
       workbook = openWorkbook(request.source(), request.formulaEnvironment());
@@ -141,11 +185,14 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
         protocolVersion,
         request,
         workbook,
-        () -> executeWorkbookWorkflow(protocolVersion, request, workbook));
+        () -> executeWorkbookWorkflow(protocolVersion, request, workbook, executionModes));
   }
 
   private GridGrindResponse executeWorkbookWorkflow(
-      GridGrindProtocolVersion protocolVersion, GridGrindRequest request, ExcelWorkbook workbook) {
+      GridGrindProtocolVersion protocolVersion,
+      GridGrindRequest request,
+      ExcelWorkbook workbook,
+      ExecutionModeSelection executionModes) {
     WorkbookLocation workbookLocation =
         workbookLocationFor(request.source(), request.persistence());
     List<RequestWarning> warnings = GridGrindRequestWarnings.collect(request);
@@ -162,17 +209,18 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
     }
 
     List<WorkbookReadResult> reads = new ArrayList<>(request.reads().size());
-    for (int readIndex = 0; readIndex < request.reads().size(); readIndex++) {
-      WorkbookReadOperation read = request.reads().get(readIndex);
-      try {
-        WorkbookReadCommand command = WorkbookReadCommandConverter.toReadCommand(read);
-        dev.erst.gridgrind.excel.WorkbookReadResult result =
-            readExecutor.apply(workbook, workbookLocation, command).getFirst();
-        reads.add(WorkbookReadResultConverter.toReadResult(result));
-      } catch (Exception exception) {
-        return closeWorkbook(
-            workbook, readFailure(protocolVersion, request, readIndex, read, exception), request);
-      }
+    try {
+      reads.addAll(executeReads(request, workbook, workbookLocation, executionModes.readMode()));
+    } catch (ReadExecutionFailure failure) {
+      return closeWorkbook(
+          workbook,
+          readFailure(
+              protocolVersion,
+              request,
+              failure.readIndex(),
+              request.reads().get(failure.readIndex()),
+              failure.exception()),
+          request);
     }
 
     GridGrindResponse.PersistenceOutcome persistence;
@@ -202,6 +250,18 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   /** Validates cross-field constraints that cannot be enforced at the record level. */
   private Optional<GridGrindResponse> validateRequest(
       GridGrindProtocolVersion protocolVersion, GridGrindRequest request) {
+    Optional<String> executionModeFailure = executionModeFailure(request);
+    if (executionModeFailure.isPresent()) {
+      return Optional.of(
+          new GridGrindResponse.Failure(
+              protocolVersion,
+              GridGrindProblems.problem(
+                  GridGrindProblemCode.INVALID_REQUEST,
+                  executionModeFailure.get(),
+                  new GridGrindResponse.ProblemContext.ValidateRequest(
+                      reqSourceType(request), reqPersistenceType(request)),
+                  (Throwable) null)));
+    }
     return switch (request.persistence()) {
       case GridGrindRequest.WorkbookPersistence.OverwriteSource _ ->
           switch (request.source()) {
@@ -221,6 +281,98 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case GridGrindRequest.WorkbookPersistence.None _ -> Optional.empty();
       case GridGrindRequest.WorkbookPersistence.SaveAs _ -> Optional.empty();
     };
+  }
+
+  private GridGrindResponse executeDirectEventReadWorkflow(
+      GridGrindProtocolVersion protocolVersion, GridGrindRequest request, Path sourcePath) {
+    List<WorkbookReadResult> reads;
+    try {
+      reads = executeEventReads(sourcePath, request);
+    } catch (ReadExecutionFailure failure) {
+      return readFailure(
+          protocolVersion,
+          request,
+          failure.readIndex(),
+          request.reads().get(failure.readIndex()),
+          failure.exception());
+    }
+    return new GridGrindResponse.Success(
+        protocolVersion,
+        new GridGrindResponse.PersistenceOutcome.NotSaved(),
+        GridGrindRequestWarnings.collect(request),
+        reads);
+  }
+
+  private GridGrindResponse executeStreamingWorkflow(
+      GridGrindProtocolVersion protocolVersion,
+      GridGrindRequest request,
+      ExecutionModeSelection executionModes) {
+    Path materializedPath = null;
+    boolean movedToPersistenceTarget = false;
+    try (ExcelStreamingWorkbookWriter writer = new ExcelStreamingWorkbookWriter()) {
+      for (int operationIndex = 0; operationIndex < request.operations().size(); operationIndex++) {
+        WorkbookOperation operation = request.operations().get(operationIndex);
+        try {
+          writer.apply(WorkbookCommandConverter.toCommand(operation));
+        } catch (Exception exception) {
+          return operationFailure(protocolVersion, request, operationIndex, operation, exception);
+        }
+      }
+
+      materializedPath = tempFileFactory.createTempFile("gridgrind-streaming-write-", ".xlsx");
+      writer.save(materializedPath);
+    } catch (IOException exception) {
+      deleteIfExists(materializedPath);
+      return new GridGrindResponse.Failure(
+          protocolVersion,
+          problemFor(
+              exception,
+              new GridGrindResponse.ProblemContext.ExecuteRequest(
+                  reqSourceType(request), reqPersistenceType(request))));
+    }
+
+    List<WorkbookReadResult> reads;
+    try {
+      reads =
+          executeReadsAgainstMaterializedPath(
+              request,
+              workbookLocationFor(request.source(), request.persistence()),
+              executionModes.readMode(),
+              materializedPath);
+    } catch (ReadExecutionFailure failure) {
+      deleteIfExists(materializedPath);
+      return readFailure(
+          protocolVersion,
+          request,
+          failure.readIndex(),
+          request.reads().get(failure.readIndex()),
+          failure.exception());
+    }
+
+    GridGrindResponse.PersistenceOutcome persistence;
+    try {
+      persistence = persistStreamingWorkbook(materializedPath, request.persistence());
+      movedToPersistenceTarget =
+          !(persistence instanceof GridGrindResponse.PersistenceOutcome.NotSaved);
+    } catch (Exception exception) {
+      deleteIfExists(materializedPath);
+      return new GridGrindResponse.Failure(
+          protocolVersion,
+          problemFor(
+              exception,
+              new GridGrindResponse.ProblemContext.PersistWorkbook(
+                  reqSourceType(request),
+                  reqPersistenceType(request),
+                  reqSourcePath(request),
+                  persistencePath(request.source(), request.persistence()))));
+    } finally {
+      if (!movedToPersistenceTarget) {
+        deleteIfExists(materializedPath);
+      }
+    }
+
+    return new GridGrindResponse.Success(
+        protocolVersion, persistence, GridGrindRequestWarnings.collect(request), reads);
   }
 
   private ExcelWorkbook openWorkbook(
@@ -260,6 +412,26 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> {
         Path normalizedPath = Path.of(saveAs.path()).toAbsolutePath().normalize();
         workbook.save(normalizedPath);
+        yield new GridGrindResponse.PersistenceOutcome.SavedAs(
+            saveAs.path(), normalizedPath.toString());
+      }
+    };
+  }
+
+  private GridGrindResponse.PersistenceOutcome persistStreamingWorkbook(
+      Path materializedPath, GridGrindRequest.WorkbookPersistence persistence) throws IOException {
+    Objects.requireNonNull(materializedPath, "materializedPath must not be null");
+    return switch (persistence) {
+      case GridGrindRequest.WorkbookPersistence.None _ ->
+          new GridGrindResponse.PersistenceOutcome.NotSaved();
+      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ ->
+          throw new IllegalStateException(
+              "STREAMING_WRITE persistence must be NONE or SAVE_AS after request validation");
+      case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> {
+        Path normalizedPath = Path.of(saveAs.path()).toAbsolutePath().normalize();
+        Files.createDirectories(normalizedPath.getParent());
+        Files.move(
+            materializedPath, normalizedPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
         yield new GridGrindResponse.PersistenceOutcome.SavedAs(
             saveAs.path(), normalizedPath.toString());
       }
@@ -459,6 +631,22 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
   private GridGrindResponse guardUnexpectedRuntime(
       GridGrindProtocolVersion protocolVersion,
       GridGrindRequest request,
+      java.util.function.Supplier<GridGrindResponse> execution) {
+    try {
+      return execution.get();
+    } catch (RuntimeException exception) {
+      return new GridGrindResponse.Failure(
+          protocolVersion,
+          problemFor(
+              exception,
+              new GridGrindResponse.ProblemContext.ExecuteRequest(
+                  reqSourceType(request), reqPersistenceType(request))));
+    }
+  }
+
+  private GridGrindResponse guardUnexpectedRuntime(
+      GridGrindProtocolVersion protocolVersion,
+      GridGrindRequest request,
       ExcelWorkbook workbook,
       java.util.function.Supplier<GridGrindResponse> execution) {
     try {
@@ -511,6 +699,203 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           };
       case GridGrindRequest.WorkbookPersistence.None _ -> null;
     };
+  }
+
+  private List<WorkbookReadResult> executeReads(
+      GridGrindRequest request,
+      ExcelWorkbook workbook,
+      WorkbookLocation workbookLocation,
+      ExecutionModeInput.ReadMode readMode) {
+    return switch (readMode) {
+      case ExecutionModeInput.ReadMode.FULL_XSSF ->
+          executeFullReads(request, workbook, workbookLocation);
+      case ExecutionModeInput.ReadMode.EVENT_READ ->
+          executeEventReadsAgainstWorkbook(request, workbook);
+    };
+  }
+
+  private List<WorkbookReadResult> executeFullReads(
+      GridGrindRequest request, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
+    List<WorkbookReadResult> reads = new ArrayList<>(request.reads().size());
+    for (int readIndex = 0; readIndex < request.reads().size(); readIndex++) {
+      WorkbookReadOperation read = request.reads().get(readIndex);
+      try {
+        WorkbookReadCommand command = WorkbookReadCommandConverter.toReadCommand(read);
+        dev.erst.gridgrind.excel.WorkbookReadResult result =
+            readExecutor.apply(workbook, workbookLocation, command).getFirst();
+        reads.add(WorkbookReadResultConverter.toReadResult(result));
+      } catch (Exception exception) {
+        throw new ReadExecutionFailure(readIndex, exception);
+      }
+    }
+    return List.copyOf(reads);
+  }
+
+  private List<WorkbookReadResult> executeEventReadsAgainstWorkbook(
+      GridGrindRequest request, ExcelWorkbook workbook) {
+    if (request.reads().isEmpty()) {
+      return List.of();
+    }
+    Path tempPath = null;
+    try {
+      tempPath = tempFileFactory.createTempFile("gridgrind-event-read-", ".xlsx");
+      workbook.save(tempPath);
+      return executeEventReads(tempPath, request);
+    } catch (IOException exception) {
+      throw new ReadExecutionFailure(0, exception);
+    } finally {
+      deleteIfExists(tempPath);
+    }
+  }
+
+  private List<WorkbookReadResult> executeReadsAgainstMaterializedPath(
+      GridGrindRequest request,
+      WorkbookLocation workbookLocation,
+      ExecutionModeInput.ReadMode readMode,
+      Path materializedPath) {
+    return switch (readMode) {
+      case ExecutionModeInput.ReadMode.FULL_XSSF ->
+          executeFullReadsAgainstMaterializedPath(request, workbookLocation, materializedPath);
+      case ExecutionModeInput.ReadMode.EVENT_READ -> executeEventReads(materializedPath, request);
+    };
+  }
+
+  private List<WorkbookReadResult> executeFullReadsAgainstMaterializedPath(
+      GridGrindRequest request, WorkbookLocation workbookLocation, Path materializedPath) {
+    if (request.reads().isEmpty()) {
+      return List.of();
+    }
+    try (ExcelWorkbook workbook =
+        ExcelWorkbook.open(
+            materializedPath,
+            FormulaEnvironmentConverter.toExcelFormulaEnvironment(request.formulaEnvironment()))) {
+      return executeFullReads(request, workbook, workbookLocation);
+    } catch (IOException exception) {
+      throw new ReadExecutionFailure(0, exception);
+    }
+  }
+
+  private List<WorkbookReadResult> executeEventReads(Path workbookPath, GridGrindRequest request) {
+    ExcelEventWorkbookReader eventWorkbookReader = new ExcelEventWorkbookReader();
+    List<WorkbookReadResult> reads = new ArrayList<>(request.reads().size());
+    for (int readIndex = 0; readIndex < request.reads().size(); readIndex++) {
+      WorkbookReadOperation read = request.reads().get(readIndex);
+      try {
+        WorkbookReadCommand command = WorkbookReadCommandConverter.toReadCommand(read);
+        dev.erst.gridgrind.excel.WorkbookReadResult result =
+            eventWorkbookReader
+                .apply(workbookPath, List.of((WorkbookReadCommand.Introspection) command))
+                .getFirst();
+        reads.add(WorkbookReadResultConverter.toReadResult(result));
+      } catch (Exception exception) {
+        throw new ReadExecutionFailure(readIndex, exception);
+      }
+    }
+    return List.copyOf(reads);
+  }
+
+  private Optional<String> executionModeFailure(GridGrindRequest request) { // LIM-019, LIM-020
+    ExecutionModeSelection executionModes = executionModes(request);
+    if (executionModes.readMode() == ExecutionModeInput.ReadMode.EVENT_READ) {
+      for (WorkbookReadOperation read : request.reads()) {
+        if (!EVENT_READ_OPERATION_TYPES.contains(read.getClass())) {
+          return Optional.of(
+              "executionMode.readMode=EVENT_READ supports GET_WORKBOOK_SUMMARY and"
+                  + " GET_SHEET_SUMMARY only; unsupported read type: "
+                  + readType(read));
+        }
+      }
+    }
+    if (executionModes.writeMode() == ExecutionModeInput.WriteMode.STREAMING_WRITE) {
+      if (!(request.source() instanceof GridGrindRequest.WorkbookSource.New)) {
+        return Optional.of(
+            "executionMode.writeMode=STREAMING_WRITE requires source.type=NEW because"
+                + " low-memory streaming writes do not author in-place edits on EXISTING"
+                + " workbooks");
+      }
+      boolean hasSheetProducingOperation = false;
+      for (WorkbookOperation operation : request.operations()) {
+        if (!STREAMING_WRITE_OPERATION_TYPES.contains(operation.getClass())) {
+          return Optional.of(
+              "executionMode.writeMode=STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW,"
+                  + " and FORCE_FORMULA_RECALC_ON_OPEN only; unsupported operation type: "
+                  + operation.operationType());
+        }
+        hasSheetProducingOperation =
+            hasSheetProducingOperation
+                || operation instanceof WorkbookOperation.EnsureSheet
+                || operation instanceof WorkbookOperation.AppendRow;
+      }
+      if (!hasSheetProducingOperation) {
+        return Optional.of(
+            "executionMode.writeMode=STREAMING_WRITE requires at least one ENSURE_SHEET or"
+                + " APPEND_ROW operation so the streaming workbook can materialize a sheet");
+      }
+    }
+    return Optional.empty();
+  }
+
+  private static boolean directEventReadEligible(
+      GridGrindRequest request, ExecutionModeSelection executionModes) {
+    return executionModes.readMode() == ExecutionModeInput.ReadMode.EVENT_READ
+        && executionModes.writeMode() == ExecutionModeInput.WriteMode.FULL_XSSF
+        && request.operations().isEmpty()
+        && request.persistence() instanceof GridGrindRequest.WorkbookPersistence.None
+        && request.source() instanceof GridGrindRequest.WorkbookSource.ExistingFile;
+  }
+
+  private static ExecutionModeSelection executionModes(GridGrindRequest request) {
+    ExecutionModeInput executionMode = request.executionMode();
+    if (executionMode == null) {
+      return new ExecutionModeSelection(
+          ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF);
+    }
+    return new ExecutionModeSelection(executionMode.readMode(), executionMode.writeMode());
+  }
+
+  private static void deleteIfExists(Path path) {
+    if (path == null) {
+      return;
+    }
+    try {
+      Files.deleteIfExists(path);
+    } catch (IOException ignored) {
+      // Best-effort cleanup for internal temporary files only.
+    }
+  }
+
+  private record ExecutionModeSelection(
+      ExecutionModeInput.ReadMode readMode, ExecutionModeInput.WriteMode writeMode) {}
+
+  /** Functional interface for creating executor-owned temporary workbook files. */
+  @FunctionalInterface
+  interface TempFileFactory {
+    /** Creates one temporary workbook file path for internal execution workflows. */
+    Path createTempFile(String prefix, String suffix) throws IOException;
+  }
+
+  /**
+   * Internal unchecked wrapper that preserves the failing read index while bubbling a read error.
+   */
+  private static final class ReadExecutionFailure extends RuntimeException {
+    private static final long serialVersionUID = 1L;
+
+    private final int readIndex;
+    private final Exception exception;
+
+    private ReadExecutionFailure(int readIndex, Exception exception) {
+      super(exception);
+      this.readIndex = readIndex;
+      this.exception = exception;
+    }
+
+    private int readIndex() {
+      return readIndex;
+    }
+
+    private Exception exception() {
+      return exception;
+    }
   }
 
   private GridGrindResponse operationFailure(

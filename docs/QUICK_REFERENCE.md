@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.40.0"
+version: "0.41.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-13"
 route:
@@ -36,6 +36,7 @@ group supplies the accepted JSON shape.
   "protocolVersion": "V1",
   "source": { "type": "NEW" },
   "persistence": { "type": "SAVE_AS", "path": "output.xlsx" },
+  "executionMode": { ... },
   "formulaEnvironment": { ... },
   "operations": [],
   "reads": []
@@ -51,6 +52,22 @@ Path model:
 
 `formulaEnvironment` is optional. Use it when evaluation needs external workbook bindings,
 cached-value fallback for unresolved external references, or template-backed UDFs.
+
+`executionMode` is optional. Use it only when the request fits one of GridGrind's low-memory
+contracts:
+
+```json
+{
+  "executionMode": {
+    "readMode": "EVENT_READ",
+    "writeMode": "STREAMING_WRITE"
+  }
+}
+```
+
+- `EVENT_READ` supports only `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` (`LIM-019`).
+- `STREAMING_WRITE` requires `source.type: NEW` and supports only `ENSURE_SHEET`, `APPEND_ROW`,
+  and `FORCE_FORMULA_RECALC_ON_OPEN` (`LIM-020`).
 
 ## Formula Environment
 

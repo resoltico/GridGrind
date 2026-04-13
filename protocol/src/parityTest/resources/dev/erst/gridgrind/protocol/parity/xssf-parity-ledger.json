@@ -1247,8 +1247,8 @@
       "subfamily": "read",
       "phase": 8,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-event-model-gap",
       "scenarioIds": [
         "poi-large-sheet"
@@ -1257,7 +1257,7 @@
         "Spreadsheet Overview",
         "Quick Guide"
       ],
-      "notes": "POI event-model reads are not yet available through GridGrind."
+      "notes": "GridGrind now exposes EVENT_READ for workbook and sheet summaries and parity-checks it against the large-sheet corpus."
     },
     {
       "sequence": 67,
@@ -1266,8 +1266,8 @@
       "subfamily": "write",
       "phase": 8,
       "poiSupport": "DOCUMENTED_SUPPORTED",
-      "gridGrindStatus": "ABSENT",
-      "expectedOutcome": "FAIL",
+      "gridGrindStatus": "COMPLETE",
+      "expectedOutcome": "PASS",
       "probeId": "probe-sxssf-gap",
       "scenarioIds": [
         "poi-large-sheet"
@@ -1276,7 +1276,7 @@
         "Spreadsheet Overview",
         "Quick Guide"
       ],
-      "notes": "Streaming write parity via SXSSF is not yet available."
+      "notes": "GridGrind now exposes STREAMING_WRITE for append-oriented NEW workbook authoring and verifies the materialized result against the low-memory parity oracle."
     },
     {
       "sequence": 68,
