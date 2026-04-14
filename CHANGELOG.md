@@ -5,6 +5,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The release protocol now requires an explicit post-merge `main` CI handoff before tagging, and
+  `scripts/verify-release-merge-handoff.sh` plus its shell regression test now enforce that the
+  checked-out release commit matches `origin/main` and already has green `Check` and `Docker smoke`
+  runs before any public tag is created.
+
 ## [0.45.0] - 2026-04-14
 
 ### Changed

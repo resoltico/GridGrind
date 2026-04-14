@@ -21,6 +21,7 @@
 #
 # Stage 4 syntax-checks the release-surface shell scripts and runs targeted shell regressions:
 #   bash -n check.sh scripts/*.sh jazzer/bin/*
+#   scripts/test-verify-release-merge-handoff.sh
 #   scripts/test-verify-release-candidate-tag.sh
 #   scripts/test-verify-container-publication.sh
 #   scripts/test-publication-contract.sh
@@ -127,7 +128,7 @@ print_usage() {
         '  1. check coverage' \
         '  2. jazzer check' \
         '  3. :cli:shadowJar' \
-        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
+        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
         '  5. scripts/docker-smoke.sh' \
         '' \
         'Supported options:' \
@@ -793,6 +794,7 @@ run_shell_stage 'shell-syntax' 'Stage 4/5: checking release-surface shell script
     bash -c '
         set -euo pipefail
         bash -n "$@"
+        "'"${repo_root}"'/scripts/test-verify-release-merge-handoff.sh"
         "'"${repo_root}"'/scripts/test-verify-release-candidate-tag.sh"
         "'"${repo_root}"'/scripts/test-verify-container-publication.sh"
         "'"${repo_root}"'/scripts/test-publication-contract.sh"

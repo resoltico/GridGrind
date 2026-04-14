@@ -122,12 +122,13 @@ Do not proceed until **every** required job in workflow `CI` has `"conclusion": 
 At the time of writing that means both `Check` and `Docker smoke`. If any required job fails,
 fix the failure, push to the release branch, and wait again — do not merge a red PR.
 
-### Step 4 — Merge PR and verify the merge handoff
+### Step 4 — Merge PR, wait for main CI, and verify the merge handoff
 
 ```bash
 gh pr merge <N> --merge --admin --delete-branch --subject "release: bump version to X.Y.Z (#N)"
 git checkout main
 git pull
+./scripts/verify-release-merge-handoff.sh
 gh pr view <N> --json number,state,mergedAt,headRefName,baseRefName,url
 ```
 
@@ -142,11 +143,18 @@ Requirements before continuing:
 - PR state is `MERGED`.
 - `mergedAt` is populated.
 - Local `main` contains the merge commit you expect.
+- Local `main` exactly matches `origin/main`.
+- The merged `main` commit already has successful `Check` and `Docker smoke` runs from workflow
+  `CI`. `./scripts/verify-release-merge-handoff.sh` is the authoritative gate for this handoff.
 - The remote release branch is deleted by the merge step.
 
 GitHub auto-delete on merge should also be enabled at the repository level. `--delete-branch`
 remains mandatory here so the release handoff stays self-contained even if the repo setting is
 misconfigured or temporarily changed.
+
+Do not create the tag until this merge-handoff verifier passes. Tagging before the merged
+`main` commit's own `CI` run finishes will cause the Release and Container workflows to fail
+their publication-safety gate on the first attempt.
 
 The release branch must not be left behind. If the local `release/X.Y.Z` branch still exists
 after the merge, delete it manually with:
@@ -170,6 +178,9 @@ absence of a local git error alone — verify the remote ref through GitHub.
 
 The tag push is what triggers the Release and Container workflows. The PR merge alone does
 not. These are two separate actions — both are required.
+
+Step 4's merge-handoff verifier is a hard prerequisite here. Only tag the commit that is both
+checked out locally and already green on `origin/main`.
 
 If either publication workflow later needs a targeted rerun against the existing tag, use:
 
