@@ -3,6 +3,8 @@ package dev.erst.gridgrind.buildlogic
 import com.diffplug.gradle.spotless.SpotlessExtension
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.kotlin.dsl.configure
@@ -53,31 +55,35 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 dependsOn("spotlessCheck")
             }
 
-            tasks.register<JacocoReport>("jacocoAggregatedReport") {
+            val jacocoAggregatedReport =
+                tasks.register<JacocoReport>("jacocoAggregatedReport") {
                 group = "verification"
                 description = "Aggregates JaCoCo coverage reports from all modules into a single report."
 
-                dependsOn(":engine:test", ":protocol:test", ":cli:test")
-                mustRunAfter(
-                    "spotlessProjectFiles",
-                    ":engine:spotlessJava",
-                    ":protocol:spotlessJava",
-                    ":cli:spotlessJava",
-                    ":engine:jacocoTestReport",
-                    ":protocol:jacocoTestReport",
-                    ":cli:jacocoTestReport",
-                )
-
                 executionData.from(
-                    subprojects.map { subproject -> file("${subproject.projectDir}/build/jacoco/test.exec") },
+                    provider {
+                        coverageSubprojects().map { subproject ->
+                            subproject.fileTree(subproject.layout.buildDirectory.dir("jacoco").get().asFile) {
+                                include("*.exec")
+                            }
+                        }
+                    },
                 )
                 sourceDirectories.from(
-                    subprojects.map { subproject -> file("${subproject.projectDir}/src/main/java") },
+                    provider {
+                        coverageSubprojects().map { subproject ->
+                            subproject.layout.projectDirectory.dir("src/main/java").asFile
+                        }
+                    },
                 )
                 classDirectories.from(
-                    subprojects.map { subproject ->
-                        fileTree("${subproject.projectDir}/build/classes/java/main") {
-                            exclude("**/module-info.class")
+                    provider {
+                        coverageSubprojects().map { subproject ->
+                            subproject.fileTree(
+                                subproject.layout.buildDirectory.dir("classes/java/main").get().asFile,
+                            ) {
+                                exclude("**/module-info.class")
+                            }
                         }
                     },
                 )
@@ -90,19 +96,12 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 }
             }
 
-            tasks.register("coverage") {
+            val coverage =
+                tasks.register("coverage") {
                 group = "verification"
                 description =
                     "Runs tests, enforces coverage thresholds, and generates per-module and aggregated coverage reports."
-                dependsOn(
-                    ":engine:jacocoTestCoverageVerification",
-                    ":protocol:jacocoTestCoverageVerification",
-                    ":cli:jacocoTestCoverageVerification",
-                    ":engine:jacocoTestReport",
-                    ":protocol:jacocoTestReport",
-                    ":cli:jacocoTestReport",
-                    "jacocoAggregatedReport",
-                )
+                dependsOn(jacocoAggregatedReport)
             }
 
             tasks.register("parity") {
@@ -110,6 +109,40 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 description = "Runs the dedicated Apache POI XSSF parity verification suite."
                 dependsOn(":protocol:parityTest")
             }
+
+            gradle.projectsEvaluated {
+                val coverageSubprojects = coverageSubprojects()
+                val subprojectTestTasks = taskPathsByType(coverageSubprojects, Test::class.java)
+                val subprojectCoverageReports = taskPathsByName(coverageSubprojects, "jacocoTestReport")
+                val subprojectCoverageVerification =
+                    taskPathsByName(coverageSubprojects, "jacocoTestCoverageVerification")
+                val subprojectSpotlessTasks = taskPathsByName(coverageSubprojects, "spotlessJava")
+
+                jacocoAggregatedReport.configure {
+                    dependsOn(subprojectTestTasks)
+                    mustRunAfter(listOf("spotlessProjectFiles") + subprojectSpotlessTasks + subprojectCoverageReports)
+                }
+
+                coverage.configure {
+                    dependsOn(subprojectCoverageVerification + subprojectCoverageReports)
+                }
+            }
         }
     }
+
+    private fun Project.coverageSubprojects(): List<Project> =
+        subprojects.filter { subproject ->
+            subproject.plugins.hasPlugin("jacoco") &&
+                subproject.layout.projectDirectory.dir("src/main/java").asFile.isDirectory
+        }
+
+    private fun taskPathsByName(subprojects: List<Project>, taskName: String): List<String> =
+        subprojects.mapNotNull { subproject ->
+            subproject.tasks.findByName(taskName)?.path
+        }
+
+    private fun taskPathsByType(subprojects: List<Project>, taskType: Class<out Task>): List<String> =
+        subprojects.flatMap { subproject ->
+            subproject.tasks.withType(taskType).map(Task::getPath)
+        }
 }

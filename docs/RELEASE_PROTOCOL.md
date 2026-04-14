@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.44.0"
+version: "0.45.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-04-14"
 route:
@@ -180,6 +180,14 @@ gh workflow run container.yml -f release_tag=vX.Y.Z
 
 Never create a second tag or move an existing release tag just to retry CI.
 
+Both publication workflows re-run the release-candidate gate before any build or publish step.
+An existing-tag rerun is expected to fail unless all of the following are still true:
+
+- `gradle.properties` in the checked-out tag still reports `version=X.Y.Z`
+- the workflow checkout matches the exact remote `vX.Y.Z` tag commit
+- that tag commit remains reachable from the default branch (`main`)
+- that exact commit already has successful `Check` and `Docker smoke` runs from workflow `CI`
+
 ### Step 6 — Branch hygiene
 
 After the merge and tag push, clean up stale remote-tracking refs and verify that no historical
@@ -300,6 +308,10 @@ same verification command. Do not switch to the operator's normal Docker config 
 
 These checks are a second handoff checkpoint. Workflow success is not enough; public pull and run
 behavior is the authoritative state.
+
+The container workflow now also publishes OCI provenance and SBOM attestations for the multi-arch
+image. Treat those attestations as part of the release artifact set, but do not let them replace
+the required anonymous pull-and-run verification above.
 
 The container registry retains the last 5 releases. Only `X.Y.Z` and `latest` tags are
 published per release; there is no `X.Y` floating tag.

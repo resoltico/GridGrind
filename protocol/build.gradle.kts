@@ -31,7 +31,8 @@ configurations.named(parityTestSourceSet.runtimeOnlyConfigurationName) {
 
 dependencies {
     implementation(project(":engine"))
-    api(libs.jackson.databind)
+    api(libs.jackson.annotations)
+    implementation(libs.jackson.databind)
     testImplementation(testFixtures(project(":engine")))
     testImplementation(libs.junit.jupiter)
     testImplementation(libs.poi.ooxml)

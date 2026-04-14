@@ -22,6 +22,7 @@ jobs:
     timeout-minutes: 20
 
     permissions:
+      checks: read
       contents: write
 
     steps:
@@ -55,14 +56,10 @@ jobs:
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Validate tag matches project version
-        run: |
-          TAG_VERSION="${{ steps.target-tag.outputs.version }}"
-          GRADLE_VERSION=$(grep '^version=' gradle.properties | cut -d= -f2)
-          if [ "$TAG_VERSION" != "$GRADLE_VERSION" ]; then
-            echo "Tag version ($TAG_VERSION) does not match gradle.properties version ($GRADLE_VERSION)"
-            exit 1
-          fi
+      - name: Verify tag provenance and CI handoff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/verify-release-candidate-tag.sh "${{ steps.target-tag.outputs.tag }}"
 
       - name: Build fat JAR
         run: ./gradlew :cli:shadowJar --no-daemon

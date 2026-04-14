@@ -25,6 +25,7 @@ jobs:
     timeout-minutes: 20
 
     permissions:
+      checks: read
       contents: read
       packages: write
 
@@ -61,14 +62,10 @@ jobs:
           echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
           echo "version=${TAG#v}" >> "$GITHUB_OUTPUT"
 
-      - name: Validate tag matches project version
-        run: |
-          TAG_VERSION="${{ steps.target-tag.outputs.version }}"
-          GRADLE_VERSION=$(grep '^version=' gradle.properties | cut -d= -f2)
-          if [ "$TAG_VERSION" != "$GRADLE_VERSION" ]; then
-            echo "Tag version ($TAG_VERSION) does not match gradle.properties version ($GRADLE_VERSION)"
-            exit 1
-          fi
+      - name: Verify tag provenance and CI handoff
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: ./scripts/verify-release-candidate-tag.sh "${{ steps.target-tag.outputs.tag }}"
 
       - name: Build fat JAR
         run: ./gradlew :cli:shadowJar --no-daemon
@@ -92,7 +89,7 @@ jobs:
             type=raw,value=${{ steps.target-tag.outputs.version }}
             type=raw,value=latest
           labels: |
-            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.licenses=MIT AND Apache-2.0 AND BSD-3-Clause
             org.opencontainers.image.vendor=Ervins Strauhmanis
 
       - uses: docker/build-push-action@d08e5c354a6adb9ed34480a06d141179aa583294 # v7.0.0
@@ -102,6 +99,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          provenance: mode=max
+          sbom: true
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

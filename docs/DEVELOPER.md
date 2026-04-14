@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.44.0"
+version: "0.45.0"
 domain: DEVELOPER
 updated: "2026-04-14"
 route:
@@ -155,6 +155,12 @@ Release automation is split across three workflows:
 - `Gradle wrapper validation` runs when wrapper files change and validates the checked-in wrapper
   surface.
 
+Targeted `workflow_dispatch` reruns for `Release` and `Container` are guarded deliberately: before
+either workflow builds or publishes anything, the checked-out tag must still match
+`gradle.properties`, resolve to the exact remote tag commit, remain reachable from `main`, and
+already have successful `Check` plus `Docker smoke` runs on that exact commit. The container
+workflow also publishes explicit OCI provenance and SBOM attestations for the released image.
+
 The container cleanup step intentionally uses `gh api` against GitHub Packages instead of
 `actions/delete-package-versions`. That action still runs on Node20, while GitHub is moving
 JavaScript actions to Node24, and raw count-based cleanup is incorrect for GHCR multi-arch
@@ -234,6 +240,9 @@ protocol.
 `./gradlew coverage` to enforce thresholds and generate HTML/XML reports at
 `build/reports/jacoco/` in each module plus an aggregated cross-module report at
 `build/reports/jacoco/aggregated/`.
+The root coverage tasks discover participating JaCoCo-enabled Java subprojects dynamically and
+collect every module `build/jacoco/*.exec` file, so adding a fourth product module must not
+require hand-editing a root hardcoded task list.
 
 The table above applies only to the root product modules. The nested Jazzer build has a separate
 coverage contract because its local-only generator, telemetry, and operator classes are exercised
