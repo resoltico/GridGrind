@@ -313,6 +313,7 @@ class ExcelPrintLayoutControllerTest {
       assertPageSetupOrientationNormalization(workbook);
       assertEmptyAndNonEmptyPageSetupStates(workbook);
       assertPageSetupPropertiesNormalization(workbook);
+      assertPageMarginsNormalization(workbook);
     }
   }
 
@@ -347,12 +348,34 @@ class ExcelPrintLayoutControllerTest {
 
     var noOrientationSheet = workbook.createSheet("NoOrientation");
     var noOrientationPageSetup = noOrientationSheet.getCTWorksheet().addNewPageSetup();
+    assertEquals(
+        ExcelPrintOrientation.PORTRAIT,
+        new ExcelPrintLayoutController().printLayout(noOrientationSheet).orientation());
     assertFalse(
         ExcelPrintLayoutController.shouldUnsetPageSetupOrientation(
             noOrientationSheet, noOrientationPageSetup));
+
+    var portraitSheet = workbook.createSheet("Portrait");
+    portraitSheet.getCTWorksheet().addNewPageSetup().setOrientation(STOrientation.PORTRAIT);
+    assertEquals(
+        ExcelPrintOrientation.PORTRAIT,
+        new ExcelPrintLayoutController().printLayout(portraitSheet).orientation());
+
+    var landscapeSheet = workbook.createSheet("Landscape");
+    var landscapePageSetup = landscapeSheet.getCTWorksheet().addNewPageSetup();
+    landscapePageSetup.setOrientation(STOrientation.LANDSCAPE);
+    assertFalse(
+        ExcelPrintLayoutController.shouldUnsetPageSetupOrientation(
+            landscapeSheet, landscapePageSetup));
   }
 
   private static void assertEmptyAndNonEmptyPageSetupStates(XSSFWorkbook workbook) {
+    assertFitAndPrinterDefaultPageSetupStates(workbook);
+    assertPaperAndBooleanPageSetupStates(workbook);
+    assertCopiesAndFirstPageNumberPageSetupStates(workbook);
+  }
+
+  private static void assertFitAndPrinterDefaultPageSetupStates(XSSFWorkbook workbook) {
     var fitWidthOnlySheet = workbook.createSheet("FitWidthOnly");
     var fitWidthOnlyPageSetup = fitWidthOnlySheet.getCTWorksheet().addNewPageSetup();
     fitWidthOnlyPageSetup.setFitToWidth((short) 1);
@@ -379,6 +402,65 @@ class ExcelPrintLayoutControllerTest {
     assertFalse(ExcelPrintLayoutController.isEmptyPageSetup(advancedSetup));
   }
 
+  private static void assertPaperAndBooleanPageSetupStates(XSSFWorkbook workbook) {
+    var paperSizeDefaultSheet = workbook.createSheet("PaperSizeDefault");
+    var paperSizeDefault = paperSizeDefaultSheet.getCTWorksheet().addNewPageSetup();
+    paperSizeDefault.setPaperSize((short) 1);
+    assertTrue(ExcelPrintLayoutController.isEmptyPageSetup(paperSizeDefault));
+
+    var draftTrueSheet = workbook.createSheet("DraftTrue");
+    var draftTrue = draftTrueSheet.getCTWorksheet().addNewPageSetup();
+    draftTrue.setDraft(true);
+    assertFalse(ExcelPrintLayoutController.isEmptyPageSetup(draftTrue));
+
+    var draftDefaultSheet = workbook.createSheet("DraftDefault");
+    var draftDefault = draftDefaultSheet.getCTWorksheet().addNewPageSetup();
+    draftDefault.setDraft(false);
+    assertTrue(ExcelPrintLayoutController.isEmptyPageSetup(draftDefault));
+
+    var bwTrueSheet = workbook.createSheet("BwTrue");
+    var bwTrue = bwTrueSheet.getCTWorksheet().addNewPageSetup();
+    bwTrue.setBlackAndWhite(true);
+    assertFalse(ExcelPrintLayoutController.isEmptyPageSetup(bwTrue));
+
+    var bwDefaultSheet = workbook.createSheet("BwDefault");
+    var bwDefault = bwDefaultSheet.getCTWorksheet().addNewPageSetup();
+    bwDefault.setBlackAndWhite(false);
+    assertTrue(ExcelPrintLayoutController.isEmptyPageSetup(bwDefault));
+  }
+
+  private static void assertCopiesAndFirstPageNumberPageSetupStates(XSSFWorkbook workbook) {
+    var copiesTwoSheet = workbook.createSheet("CopiesTwo");
+    var copiesTwo = copiesTwoSheet.getCTWorksheet().addNewPageSetup();
+    copiesTwo.setCopies((short) 2);
+    assertFalse(ExcelPrintLayoutController.isEmptyPageSetup(copiesTwo));
+
+    var copiesDefaultSheet = workbook.createSheet("CopiesDefault");
+    var copiesDefault = copiesDefaultSheet.getCTWorksheet().addNewPageSetup();
+    copiesDefault.setCopies((short) 1);
+    assertTrue(ExcelPrintLayoutController.isEmptyPageSetup(copiesDefault));
+
+    var useFirstPageTrueSheet = workbook.createSheet("UseFirstPageTrue");
+    var useFirstPageTrue = useFirstPageTrueSheet.getCTWorksheet().addNewPageSetup();
+    useFirstPageTrue.setUseFirstPageNumber(true);
+    assertFalse(ExcelPrintLayoutController.isEmptyPageSetup(useFirstPageTrue));
+
+    var useFirstPageDefaultSheet = workbook.createSheet("UseFirstPageDefault");
+    var useFirstPageDefault = useFirstPageDefaultSheet.getCTWorksheet().addNewPageSetup();
+    useFirstPageDefault.setUseFirstPageNumber(false);
+    assertTrue(ExcelPrintLayoutController.isEmptyPageSetup(useFirstPageDefault));
+
+    var firstPageNumTwoSheet = workbook.createSheet("FirstPageNumTwo");
+    var firstPageNumTwo = firstPageNumTwoSheet.getCTWorksheet().addNewPageSetup();
+    firstPageNumTwo.setFirstPageNumber((short) 2);
+    assertFalse(ExcelPrintLayoutController.isEmptyPageSetup(firstPageNumTwo));
+
+    var firstPageNumDefaultSheet = workbook.createSheet("FirstPageNumDefault");
+    var firstPageNumDefault = firstPageNumDefaultSheet.getCTWorksheet().addNewPageSetup();
+    firstPageNumDefault.setFirstPageNumber((short) 1);
+    assertTrue(ExcelPrintLayoutController.isEmptyPageSetup(firstPageNumDefault));
+  }
+
   private static void assertPageSetupPropertiesNormalization(XSSFWorkbook workbook) {
     var missingSheetPr = workbook.createSheet("MissingSheetPr");
     ExcelPrintLayoutController.normalizePageSetupProperties(missingSheetPr);
@@ -399,6 +481,44 @@ class ExcelPrintLayoutControllerTest {
     falseFitSheet.getCTWorksheet().addNewSheetPr().addNewPageSetUpPr().setFitToPage(false);
     ExcelPrintLayoutController.normalizePageSetupProperties(falseFitSheet);
     assertFalse(falseFitSheet.getCTWorksheet().isSetSheetPr());
+  }
+
+  private static void assertPageMarginsNormalization(XSSFWorkbook workbook) {
+    ExcelPrintMargins defaults = ExcelPrintSetup.defaults().margins();
+
+    var defaultMarginsSheet = workbook.createSheet("DefaultMargins");
+    ExcelPrintLayoutController.normalizePageMarginsNode(defaultMarginsSheet);
+    assertFalse(defaultMarginsSheet.getCTWorksheet().isSetPageMargins());
+
+    var leftChangedSheet = workbook.createSheet("LeftMarginChanged");
+    leftChangedSheet.setMargin(XSSFSheet.LeftMargin, defaults.left() + 0.1d);
+    ExcelPrintLayoutController.normalizePageMarginsNode(leftChangedSheet);
+    assertTrue(leftChangedSheet.getCTWorksheet().isSetPageMargins());
+
+    var rightChangedSheet = workbook.createSheet("RightMarginChanged");
+    rightChangedSheet.setMargin(XSSFSheet.RightMargin, defaults.right() + 0.1d);
+    ExcelPrintLayoutController.normalizePageMarginsNode(rightChangedSheet);
+    assertTrue(rightChangedSheet.getCTWorksheet().isSetPageMargins());
+
+    var topChangedSheet = workbook.createSheet("TopMarginChanged");
+    topChangedSheet.setMargin(XSSFSheet.TopMargin, defaults.top() + 0.1d);
+    ExcelPrintLayoutController.normalizePageMarginsNode(topChangedSheet);
+    assertTrue(topChangedSheet.getCTWorksheet().isSetPageMargins());
+
+    var bottomChangedSheet = workbook.createSheet("BottomMarginChanged");
+    bottomChangedSheet.setMargin(XSSFSheet.BottomMargin, defaults.bottom() + 0.1d);
+    ExcelPrintLayoutController.normalizePageMarginsNode(bottomChangedSheet);
+    assertTrue(bottomChangedSheet.getCTWorksheet().isSetPageMargins());
+
+    var headerChangedSheet = workbook.createSheet("HeaderMarginChanged");
+    headerChangedSheet.setMargin(XSSFSheet.HeaderMargin, defaults.header() + 0.1d);
+    ExcelPrintLayoutController.normalizePageMarginsNode(headerChangedSheet);
+    assertTrue(headerChangedSheet.getCTWorksheet().isSetPageMargins());
+
+    var footerChangedSheet = workbook.createSheet("FooterMarginChanged");
+    footerChangedSheet.setMargin(XSSFSheet.FooterMargin, defaults.footer() + 0.1d);
+    ExcelPrintLayoutController.normalizePageMarginsNode(footerChangedSheet);
+    assertTrue(footerChangedSheet.getCTWorksheet().isSetPageMargins());
   }
 
   private static ExcelPrintLayout factualDefaultPrintLayout() {

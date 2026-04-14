@@ -823,6 +823,10 @@ class GridGrindProtocolCatalogTest {
         new FieldShape.PlainTypeGroupRef("sheetProtectionSettingsType"),
         fieldNamed(entryNamed(catalog.operationTypes(), "SET_SHEET_PROTECTION"), "protection")
             .shape());
+    assertEquals(
+        FieldRequirement.OPTIONAL,
+        fieldNamed(entryNamed(catalog.operationTypes(), "SET_SHEET_PROTECTION"), "password")
+            .requirement());
 
     FieldEntry borderStyleField =
         fieldNamed(plainGroup(catalog, "cellBorderSideInputType").type(), "style");
@@ -968,6 +972,10 @@ class GridGrindProtocolCatalogTest {
     FieldEntry pivotNamedRangeName =
         fieldNamed(nestedTypeEntry(catalog, "pivotTableSourceTypes", "NAMED_RANGE"), "name");
     assertEquals(new FieldShape.Scalar(ScalarType.STRING), pivotNamedRangeName.shape());
+
+    TypeEntry setAutofilter = entryNamed(catalog.operationTypes(), "SET_AUTOFILTER");
+    assertEquals(FieldRequirement.OPTIONAL, fieldNamed(setAutofilter, "criteria").requirement());
+    assertEquals(FieldRequirement.OPTIONAL, fieldNamed(setAutofilter, "sortState").requirement());
   }
 
   private static void assertCatalogConditionalFormattingFieldShapes(Catalog catalog) {
@@ -1168,6 +1176,7 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         entryNamed(catalog.operationTypes(), "SET_ROW_HEIGHT").summary().contains("1638"),
         "SET_ROW_HEIGHT summary must state the row height limit");
+    assertCatalogStructuralEditSummaries(catalog);
     assertTrue(
         entryNamed(catalog.operationTypes(), "APPEND_ROW").summary().contains("value-bearing"),
         "APPEND_ROW summary must explain value-bearing row semantics");
@@ -1371,6 +1380,17 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         nestedTypeEntry(catalog, "printScalingTypes", "FIT").summary().contains("unconstrained"),
         "FIT scaling summary must explain zero-axis constraint semantics");
+  }
+
+  private static void assertCatalogStructuralEditSummaries(Catalog catalog) {
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "INSERT_ROWS").summary().contains("physical tail row"),
+        "INSERT_ROWS summary must describe sparse append-edge materialization");
+    assertTrue(
+        entryNamed(catalog.operationTypes(), "INSERT_COLUMNS")
+            .summary()
+            .contains("physical tail column"),
+        "INSERT_COLUMNS summary must describe sparse append-edge materialization");
   }
 
   private static void assertCatalogPolymorphicReferences(Catalog catalog) {

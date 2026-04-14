@@ -32,6 +32,9 @@ class ExcelNamedRangeTargetTest {
     assertThrows(NullPointerException.class, () -> new ExcelNamedRangeTarget("Budget", null));
     assertThrows(IllegalArgumentException.class, () -> new ExcelNamedRangeTarget("Budget", " "));
     assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelNamedRangeTarget(null, "A1", "SUM(Budget!A1)"));
+    assertThrows(
         InvalidRangeAddressException.class, () -> new ExcelNamedRangeTarget("Budget", "A1:"));
     assertDoesNotThrow(() -> new ExcelNamedRangeTarget("A".repeat(31), "A1"));
     assertThrows(

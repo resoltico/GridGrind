@@ -90,4 +90,21 @@ class ExcelSheetPresentationControllerTest {
           snapshot.sheetDefaults().defaultRowHeightPoints());
     }
   }
+
+  @Test
+  void clearPresentationSkipsTabColorUnsetWhenSheetPrHasNoTabColor() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      // Add sheetPr element without a tabColor child so isSetSheetPr() is true but
+      // isSetTabColor() is false — exercises the no-op path in clearTabColor.
+      if (!sheet.getCTWorksheet().isSetSheetPr()) {
+        sheet.getCTWorksheet().addNewSheetPr();
+      }
+
+      ExcelSheetPresentationController controller = new ExcelSheetPresentationController();
+      controller.clearPresentation(sheet);
+
+      assertNull(sheet.getTabColor());
+    }
+  }
 }

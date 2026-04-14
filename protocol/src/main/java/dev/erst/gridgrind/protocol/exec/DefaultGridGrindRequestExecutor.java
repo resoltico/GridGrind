@@ -449,10 +449,7 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               "STREAMING_WRITE persistence must be NONE or SAVE_AS after request validation");
       case GridGrindRequest.WorkbookPersistence.SaveAs saveAs -> {
         Path normalizedPath = Path.of(saveAs.path()).toAbsolutePath().normalize();
-        Path parent = normalizedPath.getParent();
-        if (parent != null) {
-          Files.createDirectories(parent);
-        }
+        Files.createDirectories(normalizedPath.getParent());
         ExcelOoxmlPersistenceOptions persistenceOptions = persistenceOptions(persistence);
         if (persistenceOptions.isEmpty()) {
           Files.move(

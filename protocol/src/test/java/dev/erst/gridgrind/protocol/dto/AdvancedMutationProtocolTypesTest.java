@@ -118,6 +118,8 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new NamedRangeTarget("Budget", "A1", "SUM(Budget!A1)"));
+    assertThrows(
+        IllegalArgumentException.class, () -> new NamedRangeTarget(null, "A1", "SUM(Budget!A1)"));
 
     CommentAnchorInput anchor = new CommentAnchorInput(1, 2, 4, 6);
     assertEquals(1, anchor.firstColumn());
@@ -184,13 +186,26 @@ class AdvancedMutationProtocolTypesTest {
             pictureData,
             anchor);
 
+    DrawingAnchorInput.TwoCell sameRowAnchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 2, 0, 3), new DrawingMarkerInput(2, 2, 0, 4), null);
+    DrawingAnchorInput.TwoCell sameColAnchor =
+        new DrawingAnchorInput.TwoCell(
+            new DrawingMarkerInput(1, 2, 3, 0), new DrawingMarkerInput(1, 3, 4, 0), null);
+
     assertEquals(4, to.columnIndex());
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, anchor.behavior());
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE, defaultAnchor.behavior());
+    assertEquals(ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE, sameRowAnchor.behavior());
+    assertEquals(ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE, sameColAnchor.behavior());
     assertEquals(ExcelPictureFormat.PNG, picture.image().format());
     assertEquals("Queue preview", picture.description());
+    ShapeInput nullPresetShape =
+        new ShapeInput(
+            "NullPreset", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, anchor, null, null);
     assertEquals("rect", shape.presetGeometryToken());
     assertEquals("rect", defaultShape.presetGeometryToken());
+    assertEquals("rect", nullPresetShape.presetGeometryToken());
     assertEquals(ExcelAuthoredDrawingShapeKind.CONNECTOR, connector.kind());
     assertEquals("payload.txt", embeddedObject.fileName());
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(-1, 0, 0, 0));
@@ -361,6 +376,11 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new ChartInput.Pie(
                 "OpsChart", anchor, null, null, null, null, null, 361, List.of(firstSeries)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ChartInput.Pie(
+                "OpsChart", anchor, null, null, null, null, null, -1, List.of(firstSeries)));
     assertThrows(IllegalArgumentException.class, () -> new ChartInput.Title.Text(" "));
     assertThrows(IllegalArgumentException.class, () -> new ChartInput.Title.Formula(" "));
     assertThrows(NullPointerException.class, () -> new ChartInput.Legend.Visible(null));
@@ -612,6 +632,14 @@ class AdvancedMutationProtocolTypesTest {
         new CellGradientStopInput(1.0d, new ColorInput(null, 5, null, 0.2d));
     CellGradientFillInput gradient =
         new CellGradientFillInput(" path ", 45.0d, 0.1d, 0.2d, 0.3d, 0.4d, List.of(start, finish));
+    assertGradientInputsNormalizeAndValidate(start, finish, gradient);
+    assertFontInputsNormalizeAndValidate();
+    assertFillInputsNormalizeAndValidate(gradient);
+    assertBorderSideInputsNormalizeAndValidate();
+  }
+
+  private void assertGradientInputsNormalizeAndValidate(
+      CellGradientStopInput start, CellGradientStopInput finish, CellGradientFillInput gradient) {
     assertEquals("PATH", gradient.type());
     assertEquals(List.of(start, finish), gradient.stops());
     assertEquals(
@@ -624,6 +652,9 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellGradientStopInput(Double.NaN, new ColorInput("#112233")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellGradientStopInput(1.5d, new ColorInput("#112233")));
     assertThrows(NullPointerException.class, () -> new CellGradientStopInput(0.5d, null));
     assertThrows(
         IllegalArgumentException.class,
@@ -652,12 +683,23 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new CellGradientFillInput(
                 "LINEAR", null, null, null, null, null, List.of(start, null)));
+  }
 
+  private void assertFontInputsNormalizeAndValidate() {
     CellFontInput themedFont =
         new CellFontInput(null, null, null, null, null, 2, null, 0.4d, true, null);
+    CellFontInput namedFont =
+        new CellFontInput(null, null, "Calibri", null, null, null, null, null, null, null);
+    CellFontInput indexedFont =
+        new CellFontInput(null, null, null, null, null, null, 64, null, null, null);
     assertEquals(2, themedFont.fontColorTheme());
     assertEquals(0.4d, themedFont.fontColorTint());
     assertTrue(themedFont.underline());
+    assertEquals("Calibri", namedFont.fontName());
+    assertEquals(64, indexedFont.fontColorIndexed());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellFontInput(null, null, " ", null, null, null, null, null, null, null));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellFontInput(null, null, null, null, null, null, null, 0.4d, null, null));
@@ -672,14 +714,26 @@ class AdvancedMutationProtocolTypesTest {
         () ->
             new CellFontInput(
                 null, null, null, null, null, null, null, Double.POSITIVE_INFINITY, null, null));
+  }
 
+  private void assertFillInputsNormalizeAndValidate(CellGradientFillInput gradient) {
     CellFillInput gradientFill =
         new CellFillInput(null, null, null, null, null, null, null, null, null, gradient);
     CellFillInput themedFill =
         new CellFillInput(null, null, 2, null, 0.3d, null, null, null, null, null);
+    CellFillInput fgIndexedFill =
+        new CellFillInput(null, null, null, 64, null, null, null, null, null, null);
+    CellFillInput fgIndexedTintedFill =
+        new CellFillInput(null, null, null, 64, 0.3d, null, null, null, null, null);
+    CellFillInput bgIndexedFill =
+        new CellFillInput(
+            ExcelFillPattern.FINE_DOTS, null, null, null, null, null, null, 64, null, null);
     assertEquals(gradient, gradientFill.gradient());
     assertEquals(2, themedFill.foregroundColorTheme());
     assertEquals(0.3d, themedFill.foregroundColorTint());
+    assertEquals(64, fgIndexedFill.foregroundColorIndexed());
+    assertEquals(0.3d, fgIndexedTintedFill.foregroundColorTint());
+    assertEquals(64, bgIndexedFill.backgroundColorIndexed());
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellFillInput(null, null, null, null, 0.3d, null, null, null, null, null));
@@ -702,20 +756,72 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () ->
+            new CellFillInput(null, "#112233", null, null, null, null, null, null, null, gradient));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellFillInput(null, null, 2, null, null, null, null, null, null, gradient));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellFillInput(null, null, null, 64, null, null, null, null, null, gradient));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellFillInput(null, null, null, null, null, "#AABBCC", null, null, null, gradient));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellFillInput(null, null, null, null, null, null, 2, null, null, gradient));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellFillInput(null, null, null, null, null, null, null, 64, null, gradient));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
             new CellFillInput(
                 ExcelFillPattern.NONE, null, 2, null, null, null, null, null, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellFillInput(
+                ExcelFillPattern.NONE, null, null, 64, null, null, null, null, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellFillInput(
+                ExcelFillPattern.NONE, null, null, null, null, null, 2, null, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellFillInput(
+                ExcelFillPattern.NONE, null, null, null, null, null, null, 64, null, null));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellFillInput(null, null, null, null, null, null, 2, null, null, null));
     assertThrows(
         IllegalArgumentException.class,
+        () -> new CellFillInput(null, null, null, null, null, null, null, 64, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
         () ->
             new CellFillInput(
                 ExcelFillPattern.SOLID, "#112233", null, null, null, null, 2, null, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellFillInput(
+                ExcelFillPattern.SOLID, "#112233", null, null, null, null, null, 64, null, null));
+  }
 
+  private void assertBorderSideInputsNormalizeAndValidate() {
+    CellBorderSideInput noneStyleOnly = new CellBorderSideInput(ExcelBorderStyle.NONE);
     CellBorderSideInput borderSide = new CellBorderSideInput(null, null, 1, null, 0.15d);
+    CellBorderSideInput indexedBorderSide = new CellBorderSideInput(null, null, null, 64, null);
+    assertEquals(ExcelBorderStyle.NONE, noneStyleOnly.style());
     assertEquals(1, borderSide.colorTheme());
     assertEquals(0.15d, borderSide.colorTint());
+    assertEquals(64, indexedBorderSide.colorIndexed());
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellBorderSideInput(null, null, null, null, null));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellBorderSideInput(null, null, null, null, 0.15d));
@@ -729,6 +835,9 @@ class AdvancedMutationProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellBorderSideInput(ExcelBorderStyle.NONE, null, 1, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellBorderSideInput(ExcelBorderStyle.NONE, null, null, 64, null));
   }
 
   @Test
@@ -965,6 +1074,9 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals(
         "SalesTable2026", ((PivotTableInput.Source.Table) tableSourceInput.source()).name());
     assertEquals("B12", ProtocolCellAddressValidation.validateAddress("B12"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ProtocolCellAddressValidation.validateAddress("A1048577"));
     assertEquals("PivotSource", new PivotTableInput.Source.NamedRange("PivotSource").name());
     assertThrows(
         IllegalArgumentException.class,
@@ -1068,6 +1180,9 @@ class AdvancedMutationProtocolTypesTest {
                 List.of(),
                 List.of(),
                 List.of()));
+    PivotTableInput.DataField blankDisplayField =
+        new PivotTableInput.DataField("Amount", ExcelPivotDataConsolidateFunction.SUM, " ", null);
+    assertEquals("Amount", blankDisplayField.displayName());
     assertThrows(
         NullPointerException.class,
         () -> new PivotTableInput.DataField("Amount", null, "Total", null));

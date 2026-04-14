@@ -72,6 +72,71 @@ class AdvancedReadProtocolTypesTest {
 
   @Test
   void ooxmlEncryptionReportsRejectInvalidEncryptedDetailFields() {
+    // Unencrypted with each individual non-null field (covers each OR branch)
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                false, null, "AES256", null, null, null, null, null)); // cipherAlgorithm
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                false, null, null, "SHA512", null, null, null, null)); // hashAlgorithm
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                false, null, null, null, "CBC", null, null, null)); // chainingMode
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new OoxmlEncryptionReport(false, null, null, null, null, 256, null, null)); // keyBits
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(false, null, null, null, null, null, 16, null)); // blockSize
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                false, null, null, null, null, null, null, 100_000)); // spinCount
+    // Encrypted with each required Integer being null
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                true,
+                ExcelOoxmlEncryptionMode.AGILE,
+                "AES256",
+                "SHA512",
+                "CBC",
+                null,
+                16,
+                100_000)); // keyBits null
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                true,
+                ExcelOoxmlEncryptionMode.AGILE,
+                "AES256",
+                "SHA512",
+                "CBC",
+                256,
+                null,
+                100_000)); // blockSize null
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new OoxmlEncryptionReport(
+                true,
+                ExcelOoxmlEncryptionMode.AGILE,
+                "AES256",
+                "SHA512",
+                "CBC",
+                256,
+                16,
+                null)); // spinCount null
     assertThrows(
         NullPointerException.class,
         () -> new OoxmlEncryptionReport(true, null, "AES256", "SHA512", "CBC", 256, 16, 100_000));
@@ -254,6 +319,11 @@ class AdvancedReadProtocolTypesTest {
         IllegalArgumentException.class, () -> new CellGradientStopReport(1.5d, rgb("#112233")));
     assertThrows(
         IllegalArgumentException.class,
+        () -> new CellGradientStopReport(Double.NaN, rgb("#112233")));
+    assertThrows(
+        IllegalArgumentException.class, () -> new CellGradientStopReport(-0.1d, rgb("#112233")));
+    assertThrows(
+        IllegalArgumentException.class,
         () ->
             new CellGradientFillReport(
                 " ", 45.0d, null, null, null, null, List.of(firstStop, secondStop)));
@@ -282,6 +352,9 @@ class AdvancedReadProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellFillReport(ExcelFillPattern.SOLID, rgb("#112233"), null, gradient));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new CellFillReport(ExcelFillPattern.NONE, null, rgb("#AABBCC"), gradient));
   }
 
   @Test
@@ -348,6 +421,9 @@ class AdvancedReadProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new PrintMarginsReport(-0.1d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new PrintMarginsReport(Double.POSITIVE_INFINITY, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -550,9 +626,14 @@ class AdvancedReadProtocolTypesTest {
         () -> new AutofilterFilterCriterionReport.Top10(true, false, -1.0d, null));
     assertThrows(
         IllegalArgumentException.class,
+        () -> new AutofilterFilterCriterionReport.Top10(true, false, Double.NaN, null));
+    assertThrows(
+        IllegalArgumentException.class,
         () ->
             new AutofilterFilterCriterionReport.Top10(
                 true, false, 10.0d, Double.NEGATIVE_INFINITY));
+    assertEquals(
+        10.0d, new AutofilterFilterCriterionReport.Top10(true, false, 10.0d, null).value());
     assertThrows(
         IllegalArgumentException.class, () -> new AutofilterFilterCriterionReport.Icon(" ", 0));
     assertThrows(
@@ -650,14 +731,111 @@ class AdvancedReadProtocolTypesTest {
             "Payload",
             "payload.txt");
 
+    DrawingObjectReport.Picture pictureWithPixels =
+        new DrawingObjectReport.Picture(
+            "PixelPicture",
+            twoCell,
+            ExcelPictureFormat.PNG,
+            "image/png",
+            68L,
+            "abc123",
+            100,
+            200,
+            null);
+    DrawingObjectReport.EmbeddedObject embeddedAllNullOptionals =
+        new DrawingObjectReport.EmbeddedObject(
+            "NullOptEmbed",
+            absolute,
+            ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+            null,
+            null,
+            null,
+            "application/octet-stream",
+            7L,
+            "def456",
+            null,
+            null,
+            null);
+    DrawingObjectReport.Shape shapeNullPreset =
+        new DrawingObjectReport.Shape(
+            "NullPreset", oneCell, ExcelDrawingShapeKind.SIMPLE_SHAPE, null, null, 0);
+    DrawingObjectPayloadReport.Picture picturePayloadNullDesc =
+        new DrawingObjectPayloadReport.Picture(
+            "NullDescPic",
+            ExcelPictureFormat.PNG,
+            "image/png",
+            "NullDescPic.png",
+            "abc123",
+            "cGljdHVyZQ==",
+            null);
+    DrawingObjectPayloadReport.EmbeddedObject embeddedPayloadNullOptionals =
+        new DrawingObjectPayloadReport.EmbeddedObject(
+            "NullOptEmbedPayload",
+            ExcelEmbeddedObjectPackagingKind.RAW_PACKAGE,
+            "application/octet-stream",
+            null,
+            "def456",
+            "cGF5bG9hZA==",
+            null,
+            null);
+    assertDrawingAnchorDefaults(defaultTwoCell, oneCell, absolute);
+    assertDrawingPictureAndPayloadReadShapes(
+        picture, pictureWithPixels, picturePayload, picturePayloadNullDesc);
+    assertDrawingShapeAndEmbeddedReadShapes(
+        shape,
+        embeddedObject,
+        embeddedPayload,
+        embeddedAllNullOptionals,
+        shapeNullPreset,
+        embeddedPayloadNullOptionals);
+    assertDrawingMarkerAndAnchorValidation(from);
+    assertDrawingPictureValidation(twoCell);
+    assertDrawingShapeValidation(twoCell);
+    assertDrawingEmbeddedObjectValidation(absolute);
+    assertDrawingPayloadValidation();
+  }
+
+  private void assertDrawingAnchorDefaults(
+      DrawingAnchorReport.TwoCell defaultTwoCell,
+      DrawingAnchorReport.OneCell oneCell,
+      DrawingAnchorReport.Absolute absolute) {
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE, defaultTwoCell.behavior());
     assertEquals(ExcelDrawingAnchorBehavior.MOVE_DONT_RESIZE, oneCell.behavior());
     assertEquals(ExcelDrawingAnchorBehavior.DONT_MOVE_AND_RESIZE, absolute.behavior());
+  }
+
+  private void assertDrawingPictureAndPayloadReadShapes(
+      DrawingObjectReport.Picture picture,
+      DrawingObjectReport.Picture pictureWithPixels,
+      DrawingObjectPayloadReport.Picture picturePayload,
+      DrawingObjectPayloadReport.Picture picturePayloadNullDesc) {
     assertEquals("Queue preview", picture.description());
+    assertEquals(100, pictureWithPixels.widthPixels());
+    assertEquals(200, pictureWithPixels.heightPixels());
+    assertNull(pictureWithPixels.description());
+    assertNull(picturePayloadNullDesc.description());
+    assertEquals("OpsPicture.png", picturePayload.fileName());
+  }
+
+  private void assertDrawingShapeAndEmbeddedReadShapes(
+      DrawingObjectReport.Shape shape,
+      DrawingObjectReport.EmbeddedObject embeddedObject,
+      DrawingObjectPayloadReport.EmbeddedObject embeddedPayload,
+      DrawingObjectReport.EmbeddedObject embeddedAllNullOptionals,
+      DrawingObjectReport.Shape shapeNullPreset,
+      DrawingObjectPayloadReport.EmbeddedObject embeddedPayloadNullOptionals) {
+    assertNull(embeddedAllNullOptionals.label());
+    assertNull(embeddedAllNullOptionals.fileName());
+    assertNull(embeddedAllNullOptionals.command());
+    assertNull(shapeNullPreset.presetGeometryToken());
+    assertNull(embeddedPayloadNullOptionals.fileName());
+    assertNull(embeddedPayloadNullOptionals.command());
     assertEquals(ExcelDrawingShapeKind.SIMPLE_SHAPE, shape.kind());
     assertEquals("payload.txt", embeddedObject.fileName());
-    assertEquals("OpsPicture.png", picturePayload.fileName());
     assertEquals("Payload", embeddedPayload.label());
+  }
+
+  private void assertDrawingMarkerAndAnchorValidation(DrawingMarkerReport from) {
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(-1, 0, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, -1, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerReport(0, 0, -1, 0));
@@ -678,6 +856,9 @@ class AdvancedReadProtocolTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new DrawingAnchorReport.Absolute(1L, 2L, 10L, 0L, null));
+  }
+
+  private void assertDrawingPictureValidation(DrawingAnchorReport.TwoCell twoCell) {
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -743,6 +924,9 @@ class AdvancedReadProtocolTypesTest {
                 null,
                 null,
                 " "));
+  }
+
+  private void assertDrawingShapeValidation(DrawingAnchorReport.TwoCell twoCell) {
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -758,6 +942,9 @@ class AdvancedReadProtocolTypesTest {
         () ->
             new DrawingObjectReport.Shape(
                 "OpsShape", twoCell, ExcelDrawingShapeKind.SIMPLE_SHAPE, "rect", null, -1));
+  }
+
+  private void assertDrawingEmbeddedObjectValidation(DrawingAnchorReport.Absolute absolute) {
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -886,6 +1073,9 @@ class AdvancedReadProtocolTypesTest {
                 ExcelPictureFormat.PNG,
                 0L,
                 null));
+  }
+
+  private void assertDrawingPayloadValidation() {
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -1076,6 +1266,19 @@ class AdvancedReadProtocolTypesTest {
                 true,
                 false,
                 361,
+                List.of(series)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ChartReport.Pie(
+                "Pie",
+                anchor,
+                new ChartReport.Title.None(),
+                new ChartReport.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.GAP,
+                true,
+                false,
+                -1,
                 List.of(series)));
     assertThrows(
         IllegalArgumentException.class,

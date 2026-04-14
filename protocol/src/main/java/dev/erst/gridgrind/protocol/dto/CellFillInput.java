@@ -38,11 +38,9 @@ public record CellFillInput(
         && foregroundColor == null
         && foregroundColorTheme == null
         && foregroundColorIndexed == null
-        && foregroundColorTint == null
         && backgroundColor == null
         && backgroundColorTheme == null
         && backgroundColorIndexed == null
-        && backgroundColorTint == null
         && gradient == null) {
       throw new IllegalArgumentException("fill must set at least one attribute");
     }
@@ -51,11 +49,9 @@ public record CellFillInput(
             || foregroundColor != null
             || foregroundColorTheme != null
             || foregroundColorIndexed != null
-            || foregroundColorTint != null
             || backgroundColor != null
             || backgroundColorTheme != null
-            || backgroundColorIndexed != null
-            || backgroundColorTint != null)) {
+            || backgroundColorIndexed != null)) {
       throw new IllegalArgumentException(
           "gradient fills must not also set pattern, foregroundColor, or backgroundColor");
     }
@@ -65,23 +61,17 @@ public record CellFillInput(
     if (pattern == ExcelFillPattern.NONE
         && (foregroundColorTheme != null
             || foregroundColorIndexed != null
-            || foregroundColorTint != null
             || backgroundColorTheme != null
-            || backgroundColorIndexed != null
-            || backgroundColorTint != null)) {
+            || backgroundColorIndexed != null)) {
       throw new IllegalArgumentException("fill pattern NONE does not accept colors");
     }
     if (pattern == ExcelFillPattern.SOLID
         && (backgroundColor != null
             || backgroundColorTheme != null
-            || backgroundColorIndexed != null
-            || backgroundColorTint != null)) {
+            || backgroundColorIndexed != null)) {
       throw new IllegalArgumentException("fill backgroundColor is not supported for SOLID fills");
     }
-    if ((backgroundColor != null
-            || backgroundColorTheme != null
-            || backgroundColorIndexed != null
-            || backgroundColorTint != null)
+    if ((backgroundColor != null || backgroundColorTheme != null || backgroundColorIndexed != null)
         && pattern == null) {
       throw new IllegalArgumentException("fill backgroundColor requires an explicit pattern");
     }

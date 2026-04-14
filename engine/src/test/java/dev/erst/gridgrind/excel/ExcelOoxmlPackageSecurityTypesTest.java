@@ -139,6 +139,45 @@ class ExcelOoxmlPackageSecurityTypesTest {
         () ->
             new ExcelOoxmlEncryptionSnapshot(
                 true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 256, 16, -1));
+    // !encrypted compound-OR: each condition needs to be the "first true" to cover its branch.
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelOoxmlEncryptionSnapshot(false, null, "AES256", null, null, null, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelOoxmlEncryptionSnapshot(false, null, null, "SHA512", null, null, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelOoxmlEncryptionSnapshot(
+                false, null, null, null, "ChainingModeCBC", null, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelOoxmlEncryptionSnapshot(false, null, null, null, null, 256, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelOoxmlEncryptionSnapshot(false, null, null, null, null, null, 16, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelOoxmlEncryptionSnapshot(false, null, null, null, null, null, null, 100_000));
+    // encrypted path: null keyBits, null blockSize, null spinCount.
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelOoxmlEncryptionSnapshot(
+                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", null, 16, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelOoxmlEncryptionSnapshot(
+                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 256, null, 1));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelOoxmlEncryptionSnapshot(
+                true, ExcelOoxmlEncryptionMode.AGILE, "AES256", "SHA512", "CBC", 256, 16, null));
 
     ExcelOoxmlPackageSecuritySnapshot plainSecurity = ExcelOoxmlPackageSecuritySnapshot.none();
     assertSame(plainSecurity, plainSecurity.afterMutation());

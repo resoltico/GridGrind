@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.43.0"
+version: "0.44.0"
 domain: DEVELOPER
-updated: "2026-04-11"
+updated: "2026-04-14"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -11,10 +11,11 @@ route:
 # Developer Reference
 
 **Purpose**: Build, test, architecture, and quality gate reference for GridGrind contributors.
-**Prerequisites**: Java 26 active in the current shell, Gradle wrapper.
-**Java setup**: [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
+**Prerequisites**: Java 26 active in the current shell from the OpenJDK 26 bundle installed via [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md). Docker active in the current shell when running `./check.sh`, as codified in [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md). No global Gradle install is required for repo work; use `./gradlew`.
+**Java and workstation setup**: [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
 
 Companion references:
+- [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md)
 - [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
 - [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md)
 - [DEVELOPER_JAZZER.md](./DEVELOPER_JAZZER.md)
@@ -63,6 +64,7 @@ three modules participate in normal local builds, CI, and release verification.
 | Component | Version |
 |:----------|:--------|
 | Java | 26 |
+| Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
 | Apache POI | 5.5.1 |
 | Jackson Databind | 3.0.3 |
 | JUnit Jupiter | 6.0.3 |
@@ -93,8 +95,14 @@ so the local watchdog tracks semantic execution rather than mistaking quiet test
 hang.
 
 Use `./gradlew`, not Brew `gradle`. GridGrind's CLI, fat JAR, release flow, and `./check.sh` all
-depend on the ambient shell `java`, so `command -v java` must resolve to Java 26 and not to the
-macOS `/usr/bin/java` stub. `./check.sh` now fails fast if the shell runtime is wrong.
+depend on the ambient shell `java`, so the local shell must resolve Java 26 from the installed
+OpenJDK bundle. Keep the repository on the local filesystem; mounted external volumes are outside
+the supported setup because Gradle project-cache and JaCoCo file locking can fail there on macOS.
+`./check.sh` now fails fast if the shell runtime is wrong.
+Docker smoke and release verification should likewise stay independent from personal Docker login
+state by using an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine,
+and local Docker verification now requires `docker buildx` because Stage 5 builds through
+`docker buildx build --load` instead of Docker's legacy builder path.
 
 ```bash
 # Run the local full-stack gate
@@ -144,6 +152,8 @@ Release automation is split across three workflows:
   builds and publishes the multi-arch GHCR image, verifies with an isolated anonymous Docker
   config that both the exact version tag and `latest` are publicly pullable and runnable, and
   prunes older container package versions.
+- `Gradle wrapper validation` runs when wrapper files change and validates the checked-in wrapper
+  surface.
 
 The container cleanup step intentionally uses `gh api` against GitHub Packages instead of
 `actions/delete-package-versions`. That action still runs on Node20, while GitHub is moving
@@ -163,6 +173,9 @@ release groups instead of splitting a release across the retention boundary.
 `./check.sh` runs these same root-project gates, then runs nested Jazzer verification, builds the
 CLI fat JAR, syntax-checks the release-surface shell scripts, and finally runs the Docker smoke
 script.
+If Docker or shell-script stages materialize temporary secret-bearing fixtures, those fixtures must
+obey the same filesystem-security contract as production instead of weakening the runtime policy
+just to make smoke tests pass.
 
 ### Error Prone
 
@@ -199,6 +212,18 @@ so personal workspace state cannot destabilize the canonical quality gates.
 
 100% line and branch coverage required across all modules.
 
+Coverage-gate protocol:
+- never rely on JaCoCo defaults for verification semantics
+- per-module verification must set both `LINE` and `BRANCH` counters explicitly
+- per-module reports and verification must read all local `build/jacoco/*.exec` files, not only
+  `test.exec`
+- aggregated root coverage must read all subproject `build/jacoco/*.exec` files as well
+
+This rule is especially important in GridGrind because `protocol` already has more than one local
+`Test` task. A hardcoded `test.exec` assumption would silently exclude `parityTest` coverage from
+the gate. See [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md) for the canonical build-logic
+protocol.
+
 | Module | Line Coverage | Branch Coverage |
 |:-------|:-------------|:----------------|
 | `engine` | 100% | 100% |
@@ -215,6 +240,10 @@ coverage contract because its local-only generator, telemetry, and operator clas
 primarily through regression replay and live fuzzing rather than ordinary unit tests. Run
 `./gradlew --project-dir jazzer check` to enforce Jazzer's dedicated coverage scope together with
 its shared Spotless and PMD gates.
+
+Supported `jazzer/bin/*` wrappers are part of that operator contract too. They must remain
+compatible with stock macOS `/bin/bash` 3.2 under `set -u`; do not assume Bash 4+ empty-array
+expansion semantics in shell wrappers that contributors run directly.
 
 ---
 

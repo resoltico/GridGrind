@@ -55,6 +55,17 @@ class ExcelFormulaEnvironmentTest {
     assertThrows(NullPointerException.class, () -> runtimeContext.hasExternalWorkbookBinding(null));
     assertThrows(NullPointerException.class, () -> runtimeContext.hasUserDefinedFunction(null));
     assertTrue(new ExcelFormulaEnvironment(null, null, null).isDefault());
+    assertFalse(
+        new ExcelFormulaEnvironment(null, ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE, null)
+            .isDefault());
+    assertFalse(
+        new ExcelFormulaEnvironment(
+                null,
+                null,
+                List.of(
+                    new ExcelFormulaUdfToolpack(
+                        "math", List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1")))))
+            .isDefault());
     assertEquals(
         Set.of(),
         new ExcelFormulaEnvironment(null, null, null).runtimeContext().externalWorkbookNames());

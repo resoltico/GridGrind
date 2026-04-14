@@ -47,9 +47,11 @@ readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly expected_description="$(load_expected_description "${repo_root}")"
 docker_config_dir=''
+docker_endpoint=''
 
 [[ -n "${image_name}" ]] || die "image name is required"
 [[ -n "${expected_version}" ]] || die "expected version is required"
+command -v docker >/dev/null 2>&1 || die "docker is required for publication verification"
 
 expected_output="$(printf 'GridGrind %s\n%s' "${expected_version}" "${expected_description}")"
 
@@ -60,9 +62,20 @@ cleanup() {
 
 trap cleanup EXIT
 
-docker_config_dir="$(mktemp -d)"
+docker_endpoint="${DOCKER_HOST:-}"
+if [[ -z "${docker_endpoint}" ]]; then
+    docker_endpoint="$(
+        docker context inspect "$(docker context show 2>/dev/null || true)" \
+            --format '{{.Endpoints.docker.Host}}' 2>/dev/null || true
+    )"
+fi
+docker_config_dir="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind-publication-docker.XXXXXX")"
 
 anonymous_docker() {
+    if [[ -n "${docker_endpoint}" ]]; then
+        DOCKER_HOST="${docker_endpoint}" docker --config "${docker_config_dir}" "$@"
+        return
+    fi
     docker --config "${docker_config_dir}" "$@"
 }
 

@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.43.0"
+version: "0.44.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-04-13"
 route:
@@ -306,6 +306,10 @@ The current Jazzer layer is strongest at:
   verified binary workflow seeds
 - validation-aware request and round-trip coverage for the data-validation authoring family
 - validation-aware request and round-trip coverage for the table and autofilter authoring family
+- promoted request-seed coverage for conditional formatting, drawing media, charts, pivots,
+  low-memory modes, and OOXML package security
+- deterministic `.xlsx` round-trip preservation checks for drawings, charts, pivots, and
+  conditional formatting alongside the existing table, autofilter, validation, and style cases
 - readable public example coverage for the advanced readback contract, including workbook
   protection, rich comments, advanced print setup, autofilter criteria or sort state, and table
   metadata
@@ -336,7 +340,6 @@ The most important architectural strength is not just the harnesses. It is the f
 Still outside the current Jazzer surface:
 - CLI transport fuzzing
 - file-path and filesystem persistence boundary fuzzing
-- conditional-formatting, chart, picture, and pivot coverage
 - extremely large-workbook or streaming-strategy fuzzing
 - cross-run corpus-health scoring beyond counts and newest-entry inspection
 - automatic conversion of promoted inputs into deterministic main-suite tests

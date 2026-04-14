@@ -40,6 +40,11 @@ class ExcelPivotTableTypesTest {
     assertEquals("Sales Pivot 2026", definition.name());
     assertEquals("Amount", definition.dataFields().getFirst().displayName());
     assertEquals("#,##0.00", definition.dataFields().getFirst().valueFormat());
+    assertEquals(
+        "Amount",
+        new ExcelPivotTableDefinition.DataField(
+                "Amount", ExcelPivotDataConsolidateFunction.SUM, " ", null)
+            .displayName());
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelPivotTableDefinition.Source.NamedRange("Sales Pivot 2026"));

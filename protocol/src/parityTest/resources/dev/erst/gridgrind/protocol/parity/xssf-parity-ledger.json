@@ -988,7 +988,7 @@
         "Quick Guide",
         "XSSFDrawing API"
       ],
-      "notes": "GridGrind now reads named picture-backed drawing objects, their anchors, and extracted payload digests directly from loaded workbooks."
+      "notes": "GridGrind now reads named picture-backed drawing objects, their anchors, extracted payload digests, and adjacent embedded-preview facts directly from loaded workbooks."
     },
     {
       "sequence": 53,
@@ -1083,7 +1083,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "GridGrind now reads supported simple charts and chart drawing inventory with direct POI agreement."
+      "notes": "GridGrind now reads supported simple charts and chart drawing inventory with direct POI agreement, including truthful blank-title and cached-title rereads."
     },
     {
       "sequence": 58,
@@ -1180,7 +1180,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "GridGrind now reads supported POI-authored pivot tables and clean pivot health with direct POI agreement."
+      "notes": "GridGrind now reads supported POI-authored pivot tables and clean pivot health with direct POI agreement, including duplicate-name, cache-wiring, and malformed-source edge reporting."
     },
     {
       "sequence": 63,
@@ -1218,7 +1218,7 @@
         "Quick Guide",
         "Limitations"
       ],
-      "notes": "GridGrind now replaces and deletes supported pivot tables while keeping direct POI agreement on the saved workbook."
+      "notes": "GridGrind now replaces and deletes supported pivot tables while keeping direct POI agreement on the saved workbook and rebuilding workbook cache registration during cleanup."
     },
     {
       "sequence": 65,
@@ -1257,7 +1257,7 @@
         "Spreadsheet Overview",
         "Quick Guide"
       ],
-      "notes": "GridGrind now exposes EVENT_READ for workbook and sheet summaries and parity-checks it against the large-sheet corpus."
+      "notes": "GridGrind now exposes EVENT_READ for workbook and sheet summaries and parity-checks it against the large-sheet corpus, including sparse workbook-view, dimension, row-ref, and column-metadata cases."
     },
     {
       "sequence": 67,
@@ -1294,7 +1294,7 @@
       "primarySources": [
         "Encryption Support"
       ],
-      "notes": "GridGrind now opens encrypted OOXML workbooks with source passwords, preserves package encryption across save-as from encrypted sources, and authors new encrypted `.xlsx` outputs through the public security contract."
+      "notes": "GridGrind now opens encrypted OOXML workbooks with source passwords, preserves package encryption across save-as from encrypted sources, and authors new encrypted `.xlsx` outputs through the public security contract while keeping pass-through eligibility and error translation regression-covered."
     },
     {
       "sequence": 69,
@@ -1331,7 +1331,7 @@
         "Encryption Support",
         "Quick Guide"
       ],
-      "notes": "GridGrind now validates package signatures, preserves unchanged signatures across copy-style save-as, requires explicit re-signing before persisting signed mutations, re-signs mutated signed sources, and authors new signed `.xlsx` outputs."
+      "notes": "GridGrind now validates package signatures, preserves unchanged signatures across copy-style save-as, requires explicit re-signing before persisting signed mutations, re-signs mutated signed sources, and authors new signed `.xlsx` outputs with signing-failure translation kept under regression coverage."
     },
     {
       "sequence": 71,

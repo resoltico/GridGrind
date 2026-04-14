@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.43.0"
+version: "0.44.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-04-11"
+updated: "2026-04-13"
 route:
   keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
   questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
@@ -10,10 +10,37 @@ route:
 
 # Gradle Setup Reference
 
-**Purpose**: Explain how GridGrind's Gradle system is arranged, why it is arranged that way, and
-what contributors should review before changing it.
+**Purpose**: Explain how GridGrind's Gradle system is arranged after the workstation-level Java and wrapper setup from [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md) is already in place.
 **Companion references**: [DEVELOPER.md](./DEVELOPER.md),
 [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md), [DEVELOPER_JAZZER.md](./DEVELOPER_JAZZER.md)
+
+---
+
+## Canonical Execution
+
+GridGrind's machine-level setup rule is simple:
+- use `./gradlew` for every repo build command
+- treat `gradle` on `PATH` as outside the supported GridGrind workflow
+- let the wrapper download the official Gradle distribution pinned by the repository
+- keep the repository checkout on the local Mac filesystem as part of the normal supported setup
+
+The wrapper version is currently `9.4.1`, as declared in
+[gradle/wrapper/gradle-wrapper.properties](../gradle/wrapper/gradle-wrapper.properties).
+
+This file therefore documents build architecture and ownership boundaries, not how to install a
+global Gradle command on a machine.
+
+Wrapper integrity is part of the standard setup:
+- `gradle/wrapper/gradle-wrapper.properties` pins the distribution URL and its
+  `distributionSha256Sum`
+- `.github/workflows/gradle-wrapper-validation.yml` validates wrapper changes in GitHub
+- contributors should treat wrapper-file edits as supply-chain-sensitive changes, not as routine noise
+
+Full verification is part of that local-filesystem rule:
+- Gradle project cache and JaCoCo execution data both rely on file locking
+- mounted external volumes on macOS can reject those locks with `Operation not supported`
+- if that happens, move the repository to local disk instead of standardizing a cache or build-dir
+  relocation workaround as the normal workflow
 
 ---
 
@@ -98,6 +125,43 @@ configuration-plus-implementation blobs. GridGrind therefore keeps reusable type
 `gradle/build-logic` and keeps consumer scripts thin. `jazzer/build.gradle.kts` is intentionally a
 single plugin application for exactly that reason.
 
+### Coverage gate protocol
+
+GridGrind's JaCoCo wiring must be stricter than JaCoCo's defaults because this repository already
+contains more than one local `Test` task in at least one module.
+
+Rules:
+- never rely on an unnamed JaCoCo `limit {}` block for coverage meaning
+- always set `counter = "LINE"` and `counter = "BRANCH"` explicitly for verification rules
+- always set `value = "COVEREDRATIO"` explicitly for those rules
+- treat omitted `counter` as invalid build logic because JaCoCo defaults that case to
+  instruction coverage, and 100% instruction coverage does not prove 100% branch coverage
+- wire both `jacocoTestReport` and `jacocoTestCoverageVerification` to the same execution-data
+  scope so reporting and verification cannot disagree
+- collect every local `build/jacoco/*.exec` file for a module instead of hardcoding only
+  `build/jacoco/test.exec`
+- make coverage verification depend on `tasks.withType<Test>()` so any added `Test` task must run
+  before the gate evaluates
+- at the root aggregated-report layer, collect every subproject `build/jacoco/*.exec` file instead
+  of assuming one `test.exec` per module
+
+Why this rule exists:
+- GridGrind's `protocol` module defines a dedicated `parityTest` task in addition to the normal
+  `test` task
+- if JaCoCo only reads `test.exec`, parity-only execution becomes invisible to the gate
+- if JaCoCo omits `limit.counter`, the gate can appear green on instruction coverage while real
+  branch gaps remain hidden
+- when previously unseen uncovered code appears after fixing JaCoCo wiring, treat that as the gate
+  becoming truthful rather than as the code suddenly regressing
+
+Repository-specific note:
+- GridGrind must keep collecting all local `build/jacoco/*.exec` files precisely because
+  multi-`Test` execution already exists here
+- `protocol:parityTest` is not a special exception to remember manually; the build logic must make
+  it impossible to forget
+- the nested Jazzer build remains intentionally separate from root product-module coverage; its own
+  `./gradlew --project-dir jazzer check` is the authoritative Jazzer coverage gate
+
 ---
 
 ## Ownership Boundaries
@@ -122,6 +186,8 @@ Rules:
 - do not hardcode overlapping dependency versions inside `jazzer/`
 - do not make the root build depend on active fuzzing tasks
 - do not wire active Jazzer fuzz tasks into GitHub Actions; GitHub must remain deterministic-only
+- do not assume Bash 4+ array semantics in `jazzer/bin/*`; the supported macOS operator surface is
+  stock `/bin/bash` 3.2 under `set -u`
 - do not run root and nested Jazzer Gradle builds in parallel against the same workspace
 
 ---
@@ -163,6 +229,8 @@ Review this setup periodically, especially after Gradle, Kotlin, or Jazzer upgra
 - Is build-logic compilation still deterministic after repeated local edits, or can Kotlin
   incremental compilation safely return?
 - Does the nested Jazzer build still need to stay independent from the root project graph?
+- Do the `jazzer/bin/*` wrappers still work on stock macOS `/bin/bash` 3.2 when no optional
+  Gradle arguments are passed?
 - Are configuration-cache or composite-build constraints forcing awkward workarounds that deserve a
   redesign instead?
 
@@ -188,5 +256,6 @@ For structural Gradle changes, the normal bar is:
 ./check.sh
 ```
 
-If Jazzer topology changed, also run at least one live `jazzer/bin/*` command so the operator path
-is exercised in the same shape contributors will actually use.
+If Jazzer topology or `jazzer/bin/*` wrapper shell logic changed, also run at least one live
+`jazzer/bin/*` command plus the zero-argument cleanup scripts so the operator path is exercised in
+the same shape contributors will actually use.

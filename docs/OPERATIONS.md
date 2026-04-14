@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.43.0"
+version: "0.44.0"
 domain: OPERATIONS
 updated: "2026-04-13"
 route:
@@ -647,7 +647,9 @@ Set the height of one or more contiguous rows. Row indexes are zero-based and in
 ### INSERT_ROWS
 
 Insert one or more blank rows before `rowIndex`. `rowIndex` is zero-based and may point at the
-current append position (`last existing row + 1`) but not beyond it.
+current append position (`last existing row + 1`) but not beyond it. On sparse sheets, inserting
+at the append edge does not materialize a new physical tail row until content or row metadata
+exists there.
 
 ```json
 {
@@ -721,7 +723,9 @@ range-backed named range outside the moved band (`LIM-018`).
 ### INSERT_COLUMNS
 
 Insert one or more blank columns before `columnIndex`. `columnIndex` is zero-based and may point
-at the current append position (`last existing column + 1`) but not beyond it.
+at the current append position (`last existing column + 1`) but not beyond it. On sparse sheets,
+inserting at the append edge does not materialize a new physical tail column until cells or
+explicit column metadata exist there.
 
 ```json
 {

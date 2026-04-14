@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.43.0"
+version: "0.44.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-04-11"
+updated: "2026-04-14"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -51,6 +51,8 @@ command runs at a time.
 - `jazzer/bin/*`: the one supported Jazzer operator surface for active fuzzing, regression, replay,
   promotion, reporting, and cleanup. Active fuzz through this surface forces `--no-daemon` and
   owns interrupt and timeout teardown.
+- that same wrapper surface must remain compatible with stock macOS `/bin/bash` 3.2 under
+  `set -u`, including zero-argument cleanup scripts such as `jazzer/bin/clean-local-findings`
 
 Do not run active fuzzing through raw `./gradlew --project-dir jazzer ...` tasks. Those tasks are
 an implementation detail under the wrapper, not a supported fuzz operator interface.
@@ -109,6 +111,8 @@ What this produces:
 For active fuzz, the wrapper also forces `--no-daemon` and tears down the launched Gradle client
 tree on interrupt or timeout. That keeps the supported local operator surface from leaving a live
 `JazzerHarnessRunner` behind after a canceled run.
+Wrapper changes are not complete until the zero-argument maintenance scripts still run on the real
+macOS shell that contributors use by default.
 
 ### Run All Active Harnesses
 
@@ -392,6 +396,8 @@ Raw Gradle remains available only for deterministic nested-build verification:
 For active fuzzing, use `jazzer/bin/*` and nothing else. That is the only documented operator path
 that owns run locking, per-target history, latest-summary artifacts, duration control, and
 interrupt cleanup.
+If wrapper shell logic or topology changes, rerun at least one live `jazzer/bin/fuzz-*` command
+and the zero-argument cleanup scripts before declaring the operator path verified.
 
 ---
 

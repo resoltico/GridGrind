@@ -389,6 +389,9 @@ final class ExcelPivotTableController {
 
   private boolean cacheDefinitionShared(
       ExcelWorkbook workbook, PivotHandle current, XSSFPivotCacheDefinition cacheDefinition) {
+    if (cacheDefinition.getPackagePart() == null) {
+      return false;
+    }
     String expectedPartName = cacheDefinition.getPackagePart().getPartName().getName();
     String currentPivotPartName = current.table().getPackagePart().getPartName().getName();
     for (PivotHandle handle : allPivotTables(workbook)) {
@@ -867,7 +870,7 @@ final class ExcelPivotTableController {
 
   private String sourceSheetName(AreaReference area, Name namedRange, String fallbackSheetName) {
     String areaSheetName = area.getFirstCell().getSheetName();
-    if (areaSheetName != null && !areaSheetName.isBlank()) {
+    if (areaSheetName != null) {
       return areaSheetName;
     }
     if (namedRange.getSheetIndex() >= 0) {

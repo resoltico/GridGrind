@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.43.0"
+version: "0.44.0"
 domain: DEVELOPER_JAZZER
 updated: "2026-04-11"
 route:
@@ -341,6 +341,8 @@ Nested-build verification model:
   and `jazzer.max_executions` are honored consistently
 - active fuzz wrappers force `--no-daemon` and tear down the launched Gradle client tree on
   interrupt or timeout so the supported local surface does not leave a harness JVM behind
+- those wrapper scripts must also remain compatible with stock macOS `/bin/bash` 3.2 under
+  `set -u`, even when no optional Gradle arguments are supplied
 - active fuzz harness execution hard-fails when `GITHUB_ACTIONS=true`, so GitHub remains a
   deterministic-only verification surface even if someone wires an active fuzz task into a
   workflow by mistake

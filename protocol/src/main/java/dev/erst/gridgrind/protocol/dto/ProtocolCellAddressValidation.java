@@ -22,7 +22,7 @@ public final class ProtocolCellAddressValidation {
 
     String normalized = address.replace("$", "").toUpperCase(Locale.ROOT);
     int splitIndex = 0;
-    while (splitIndex < normalized.length() && Character.isLetter(normalized.charAt(splitIndex))) {
+    while (Character.isLetter(normalized.charAt(splitIndex))) {
       splitIndex++;
     }
 

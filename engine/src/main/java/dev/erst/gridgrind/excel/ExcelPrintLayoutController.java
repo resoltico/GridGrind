@@ -375,8 +375,7 @@ final class ExcelPrintLayoutController {
 
   static boolean shouldUnsetPageSetupOrientation(XSSFSheet sheet, CTPageSetup pageSetup) {
     return pageSetup.isSetOrientation()
-        && (pageSetup.getOrientation() == null
-            || pageSetup.getOrientation() == STOrientation.PORTRAIT)
+        && pageSetup.getOrientation() == STOrientation.PORTRAIT
         && !pageSetup.isSetFitToWidth()
         && !pageSetup.isSetFitToHeight();
   }

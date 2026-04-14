@@ -143,28 +143,23 @@ final class ExcelDrawingController {
     Objects.requireNonNull(definition, "definition must not be null");
 
     Integer preparedShapeType =
-        switch (definition.kind()) {
-          case SIMPLE_SHAPE -> shapeType(definition.presetGeometryToken());
-          case CONNECTOR -> null;
-        };
-
+        definition.kind() == ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE
+            ? shapeType(definition.presetGeometryToken())
+            : null;
     deleteNamedShapeIfPresent(sheet, definition.name());
     XSSFDrawing drawing = sheet.createDrawingPatriarch();
     XSSFClientAnchor anchor = toPoiAnchor(drawing, definition.anchor());
-    switch (definition.kind()) {
-      case SIMPLE_SHAPE -> {
-        XSSFSimpleShape shape = drawing.createSimpleShape(anchor);
-        shape.getCTShape().getNvSpPr().getCNvPr().setName(definition.name());
-        shape.setShapeType(Objects.requireNonNull(preparedShapeType));
-        if (definition.text() != null) {
-          shape.setText(definition.text());
-        }
+    if (definition.kind() == ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE) {
+      XSSFSimpleShape shape = drawing.createSimpleShape(anchor);
+      shape.getCTShape().getNvSpPr().getCNvPr().setName(definition.name());
+      shape.setShapeType(Objects.requireNonNull(preparedShapeType));
+      if (definition.text() != null) {
+        shape.setText(definition.text());
       }
-      case CONNECTOR -> {
-        XSSFConnector connector = drawing.createConnector(anchor);
-        connector.getCTConnector().getNvCxnSpPr().getCNvPr().setName(definition.name());
-      }
+      return;
     }
+    XSSFConnector connector = drawing.createConnector(anchor);
+    connector.getCTConnector().getNvCxnSpPr().getCNvPr().setName(definition.name());
   }
 
   void setEmbeddedObject(XSSFSheet sheet, ExcelEmbeddedObjectDefinition definition) {
@@ -210,7 +205,7 @@ final class ExcelDrawingController {
             && chartForGraphicFrame(located.drawing(), graphicFrame) != null)
         || shape instanceof XSSFObjectData
         || shape instanceof XSSFConnector
-        || (shape instanceof XSSFSimpleShape && !(shape instanceof XSSFObjectData))) {
+        || shape instanceof XSSFSimpleShape) {
       updateAnchorInPlace(sheet, objectName, located.parentAnchor(), anchor);
       return;
     }
@@ -322,7 +317,7 @@ final class ExcelDrawingController {
 
   private ExcelDrawingObjectSnapshot.Shape snapshotShape(XSSFSimpleShape shape) {
     STShapeType.Enum preset =
-        shape.getCTShape().getSpPr() == null || !shape.getCTShape().getSpPr().isSetPrstGeom()
+        !shape.getCTShape().getSpPr().isSetPrstGeom()
             ? null
             : shape.getCTShape().getSpPr().getPrstGeom().getPrst();
     return new ExcelDrawingObjectSnapshot.Shape(
@@ -512,7 +507,7 @@ final class ExcelDrawingController {
       return;
     }
     if (shape instanceof XSSFConnector
-        || (shape instanceof XSSFSimpleShape && !(shape instanceof XSSFObjectData))
+        || shape instanceof XSSFSimpleShape
         || shape instanceof XSSFShapeGroup) {
       removeParentAnchor(located.drawing(), located.parentAnchor());
       cleanupEmptyDrawingPatriarch(sheet);
@@ -1175,10 +1170,7 @@ final class ExcelDrawingController {
 
   private XSSFSheet requireDefinedNameSheet(XSSFSheet contextSheet, Name definedName) {
     if (definedName.getSheetIndex() >= 0) {
-      XSSFSheet scopedSheet = contextSheet.getWorkbook().getSheetAt(definedName.getSheetIndex());
-      if (scopedSheet != null) {
-        return scopedSheet;
-      }
+      return contextSheet.getWorkbook().getSheetAt(definedName.getSheetIndex());
     }
     return contextSheet;
   }
@@ -1298,11 +1290,7 @@ final class ExcelDrawingController {
 
   private void applySeriesTitle(XDDFBarChartData.Series series, PreparedSeriesTitle title) {
     switch (title) {
-      case PreparedSeriesTitleNone _ -> {
-        if (series.getCTBarSer().isSetTx()) {
-          series.getCTBarSer().unsetTx();
-        }
-      }
+      case PreparedSeriesTitleNone _ -> series.getCTBarSer().unsetTx();
       case PreparedSeriesTitleText text -> series.setTitle(text.text());
       case PreparedSeriesTitleFormula formula ->
           series.setTitle(formula.cachedText(), formula.reference());
@@ -1324,11 +1312,7 @@ final class ExcelDrawingController {
 
   private void applySeriesTitle(XDDFPieChartData.Series series, PreparedSeriesTitle title) {
     switch (title) {
-      case PreparedSeriesTitleNone _ -> {
-        if (series.getCTPieSer().isSetTx()) {
-          series.getCTPieSer().unsetTx();
-        }
-      }
+      case PreparedSeriesTitleNone _ -> series.getCTPieSer().unsetTx();
       case PreparedSeriesTitleText text -> series.setTitle(text.text());
       case PreparedSeriesTitleFormula formula ->
           series.setTitle(formula.cachedText(), formula.reference());
@@ -1364,8 +1348,7 @@ final class ExcelDrawingController {
 
   private XSSFChart chartForGraphicFrame(XSSFDrawing drawing, XSSFGraphicFrame graphicFrame) {
     for (XSSFChart chart : drawing.getCharts()) {
-      XSSFGraphicFrame chartFrame = chart.getGraphicFrame();
-      if (chartFrame != null && chartFrame.getId() == graphicFrame.getId()) {
+      if (chart.getGraphicFrame().getId() == graphicFrame.getId()) {
         return chart;
       }
     }
@@ -1385,10 +1368,10 @@ final class ExcelDrawingController {
     if (formula != null) {
       return new ExcelChartSnapshot.Title.Formula(formula, cachedTitleText(chart));
     }
-    XSSFRichTextString titleText = chart.getTitleText();
-    return titleText == null || titleText.getString().isBlank()
+    String text = chart.getTitleText().getString();
+    return text.isBlank()
         ? new ExcelChartSnapshot.Title.None()
-        : new ExcelChartSnapshot.Title.Text(titleText.getString());
+        : new ExcelChartSnapshot.Title.Text(text);
   }
 
   private String cachedTitleText(XSSFChart chart) {
@@ -1816,18 +1799,20 @@ final class ExcelDrawingController {
         Math.toIntExact(((Number) marker.getRowOff()).longValue()));
   }
 
+  @SuppressWarnings("PMD.UseTryWithResources")
   private String previewSheetRelationId(CTOleObject oleObject) {
-    try (org.apache.xmlbeans.XmlCursor cursor = oleObject.newCursor()) {
-      if (cursor.toChild(XSSFRelation.NS_SPREADSHEETML, "objectPr")) {
-        return cursor.getAttributeText(OLE_PREVIEW_ID);
-      }
+    org.apache.xmlbeans.XmlCursor cursor = oleObject.newCursor();
+    try {
+      return cursor.toChild(XSSFRelation.NS_SPREADSHEETML, "objectPr")
+          ? cursor.getAttributeText(OLE_PREVIEW_ID)
+          : null;
+    } finally {
+      cursor.close();
     }
-    return null;
   }
 
   private String previewDrawingRelationId(XSSFObjectData objectData) {
-    if (objectData.getCTShape().getSpPr() == null
-        || objectData.getCTShape().getSpPr().getBlipFill() == null
+    if (objectData.getCTShape().getSpPr().getBlipFill() == null
         || objectData.getCTShape().getSpPr().getBlipFill().getBlip() == null) {
       return null;
     }
@@ -1857,13 +1842,14 @@ final class ExcelDrawingController {
         "Unsupported drawing shape type: " + shape.getClass().getName());
   }
 
+  @SuppressWarnings("PMD.UseTryWithResources")
   private XmlObject parentAnchor(XmlObject shapeXml) {
-    try (org.apache.xmlbeans.XmlCursor cursor = shapeXml.newCursor()) {
-      if (cursor.toParent()) {
-        return cursor.getObject();
-      }
+    org.apache.xmlbeans.XmlCursor cursor = shapeXml.newCursor();
+    try {
+      return cursor.toParent() ? cursor.getObject() : null;
+    } finally {
+      cursor.close();
     }
-    return null;
   }
 
   private String resolvedName(XSSFShape shape) {

@@ -59,6 +59,9 @@ class FormulaEnvironmentInputTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new FormulaExternalWorkbookInput("[Rates.xlsx]", "tmp/rates.xlsx"));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new FormulaExternalWorkbookInput("Rates].xlsx", "tmp/rates.xlsx"));
 
     assertThrows(NullPointerException.class, () -> new FormulaUdfFunctionInput(null, 1, 1, "ARG1"));
     assertThrows(

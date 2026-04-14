@@ -480,6 +480,20 @@ class ExcelAutofilterControllerTest {
       assertNull(ExcelAutofilterController.dxfColor(workbook, 99L, true));
       assertNull(ExcelAutofilterController.dxfAt(workbook.getStylesSource(), -1L));
       assertNotNull(ExcelAutofilterController.dxfAt(workbook.getStylesSource(), fillDxfId));
+      // Gradient fill (no patternFill) — covers isSetPatternFill()=false in both cellColor and
+      // fallback-fill branches.
+      long gradientFillDxfId = putGradientFillDxf(workbook);
+      assertNull(ExcelAutofilterController.dxfColor(workbook, gradientFillDxfId, true));
+      assertNull(ExcelAutofilterController.dxfColor(workbook, gradientFillDxfId, false));
+      // PatternFill with no fgColor — covers isSetFgColor()=false in both cellColor and
+      // fallback-fill branches.
+      long noFgColorDxfId = putPatternFillNoFgColorDxf(workbook);
+      assertNull(ExcelAutofilterController.dxfColor(workbook, noFgColorDxfId, true));
+      assertNull(ExcelAutofilterController.dxfColor(workbook, noFgColorDxfId, false));
+      // Font with no color array — covers sizeOfColorArray()=0 in both font branches.
+      long fontNoColorDxfId = putFontNoColorDxf(workbook);
+      assertNull(ExcelAutofilterController.dxfColor(workbook, fontNoColorDxfId, false));
+      assertNull(ExcelAutofilterController.dxfColor(workbook, fontNoColorDxfId, true));
 
       var autoFilter =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter.Factory.newInstance();
@@ -604,6 +618,130 @@ class ExcelAutofilterControllerTest {
           new ExcelAutofilterSortConditionSnapshot(
               "F2:F5", false, STSortBy.ICON.toString(), null, 2),
           ExcelAutofilterController.sortConditionSnapshot(workbook, reflectedIconSort));
+    }
+  }
+
+  @Test
+  void rawCriteriaHelpersCoverExplicitFalseFlags() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var autoFilter =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter.Factory.newInstance();
+      var sortState = autoFilter.addNewSortState();
+      sortState.setRef("A1:B3");
+      sortState.setCaseSensitive(false);
+      sortState.setColumnSort(false);
+      var explicitFalseSort = sortState.addNewSortCondition();
+      explicitFalseSort.setRef("A2:A3");
+      explicitFalseSort.setDescending(false);
+
+      assertEquals(
+          new ExcelAutofilterSortStateSnapshot(
+              "A1:B3",
+              false,
+              false,
+              "",
+              List.of(new ExcelAutofilterSortConditionSnapshot("A2:A3", false, "", null, null))),
+          controller.sortState(workbook, autoFilter));
+
+      var values =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilters.Factory.newInstance();
+      values.addNewFilter().setVal("Ada");
+      values.setBlank(false);
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Values(List.of("Ada"), false),
+          ExcelAutofilterController.valuesCriterion(values));
+
+      var customFilters =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilters.Factory.newInstance();
+      customFilters.setAnd(false);
+      customFilters.addNewCustomFilter().setVal("Queue");
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Custom(
+              false,
+              List.of(
+                  new ExcelAutofilterFilterCriterionSnapshot.CustomCondition("equal", "Queue"))),
+          ExcelAutofilterController.customCriterion(customFilters));
+
+      var top10 = org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
+      top10.setTop(false);
+      top10.setPercent(false);
+      top10.setVal(10d);
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Top10(false, false, 10d, null),
+          ExcelAutofilterController.top10Criterion(top10));
+
+      var defaultTop =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
+      defaultTop.setVal(5d);
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 5d, null),
+          ExcelAutofilterController.top10Criterion(defaultTop));
+
+      var explicitTop =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
+      explicitTop.setTop(true);
+      explicitTop.setVal(7d);
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, 7d, null),
+          ExcelAutofilterController.top10Criterion(explicitTop));
+
+      var percentTop =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10.Factory.newInstance();
+      percentTop.setPercent(true);
+      percentTop.setVal(3d);
+      percentTop.setFilterVal(2d);
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Top10(true, true, 3d, 2d),
+          ExcelAutofilterController.top10Criterion(percentTop));
+    }
+  }
+
+  @Test
+  void setSheetAutofilter_acceptsBlankSortBy() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = populatedSheet(workbook);
+
+      controller.setSheetAutofilter(
+          sheet,
+          "A1:B3",
+          List.of(),
+          new ExcelAutofilterSortState(
+              "A1:B3",
+              false,
+              false,
+              "",
+              List.of(new ExcelAutofilterSortCondition("A2:A3", false, "", null, null))));
+
+      var snapshot = controller.sheetOwnedAutofilters(sheet).getFirst();
+      assertEquals(
+          new ExcelAutofilterSortConditionSnapshot("A2:A3", false, "", null, null),
+          assertInstanceOf(ExcelAutofilterSnapshot.SheetOwned.class, snapshot)
+              .sortState()
+              .conditions()
+              .getFirst());
+    }
+  }
+
+  @Test
+  void setSheetAutofilter_omitsUnsetDynamicBounds() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = populatedAutofilterWriteSheet(workbook);
+
+      controller.setSheetAutofilter(
+          sheet,
+          "A1:C3",
+          List.of(
+              new ExcelAutofilterFilterColumn(
+                  0L, true, new ExcelAutofilterFilterCriterion.Dynamic("today", null, null))),
+          null);
+
+      ExcelAutofilterSnapshot.SheetOwned snapshot =
+          assertInstanceOf(
+              ExcelAutofilterSnapshot.SheetOwned.class,
+              controller.sheetOwnedAutofilters(sheet).getFirst());
+      assertEquals(
+          new ExcelAutofilterFilterCriterionSnapshot.Dynamic("today", null, null),
+          snapshot.filterColumns().getFirst().criterion());
     }
   }
 
@@ -811,6 +949,24 @@ class ExcelAutofilterControllerTest {
     CTDxf dxf = CTDxf.Factory.newInstance();
     dxf.addNewFill().addNewPatternFill().addNewFgColor().setRgb(fillRgb);
     dxf.addNewFont().addNewColor().setRgb(fontRgb);
+    return workbook.getStylesSource().putDxf(dxf) - 1L;
+  }
+
+  private static long putGradientFillDxf(XSSFWorkbook workbook) {
+    CTDxf dxf = CTDxf.Factory.newInstance();
+    dxf.addNewFill().addNewGradientFill();
+    return workbook.getStylesSource().putDxf(dxf) - 1L;
+  }
+
+  private static long putPatternFillNoFgColorDxf(XSSFWorkbook workbook) {
+    CTDxf dxf = CTDxf.Factory.newInstance();
+    dxf.addNewFill().addNewPatternFill();
+    return workbook.getStylesSource().putDxf(dxf) - 1L;
+  }
+
+  private static long putFontNoColorDxf(XSSFWorkbook workbook) {
+    CTDxf dxf = CTDxf.Factory.newInstance();
+    dxf.addNewFont();
     return workbook.getStylesSource().putDxf(dxf) - 1L;
   }
 

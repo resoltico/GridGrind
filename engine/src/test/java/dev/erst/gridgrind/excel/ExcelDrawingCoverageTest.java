@@ -362,6 +362,16 @@ class ExcelDrawingCoverageTest {
             data,
             "preview");
     assertEquals("picture.png", picturePayload.fileName());
+    assertNull(
+        new ExcelDrawingObjectPayload.Picture(
+                "NullDescPicture",
+                ExcelPictureFormat.PNG,
+                "image/png",
+                "picture.png",
+                "abc123",
+                data,
+                null)
+            .description());
     assertThrows(
         NullPointerException.class,
         () ->
@@ -405,6 +415,17 @@ class ExcelDrawingCoverageTest {
             "Payload",
             "payload.txt");
     assertEquals("Payload", embeddedPayload.label());
+    assertNull(
+        new ExcelDrawingObjectPayload.EmbeddedObject(
+                "NullOptEmbed",
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                "application/octet-stream",
+                null,
+                "abc123",
+                data,
+                null,
+                null)
+            .label());
     assertThrows(
         NullPointerException.class,
         () ->
@@ -466,6 +487,18 @@ class ExcelDrawingCoverageTest {
             1,
             "preview");
     assertEquals(10L, pictureSnapshot.byteSize());
+    assertNull(
+        new ExcelDrawingObjectSnapshot.Picture(
+                "NullDescPicSnap",
+                twoCell,
+                ExcelPictureFormat.PNG,
+                "image/png",
+                10L,
+                "abc123",
+                null,
+                null,
+                null)
+            .description());
     assertThrows(
         NullPointerException.class,
         () ->
@@ -611,6 +644,21 @@ class ExcelDrawingCoverageTest {
             1L,
             "def456");
     assertEquals(1L, embeddedSnapshot.previewByteSize());
+    assertNull(
+        new ExcelDrawingObjectSnapshot.EmbeddedObject(
+                "NullOptEmbedSnap",
+                twoCell,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                null,
+                null,
+                null,
+                "application/octet-stream",
+                5L,
+                "abc123",
+                null,
+                null,
+                null)
+            .label());
     assertThrows(
         NullPointerException.class,
         () ->
@@ -1469,6 +1517,457 @@ class ExcelDrawingCoverageTest {
     }
   }
 
+  @Test
+  void drawingControllerExercisesResidualAuthoringAndOrphanChartReplacementBranches()
+      throws Exception {
+    ExcelDrawingController controller = new ExcelDrawingController();
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      sheet.createRow(0).createCell(0).setCellValue("Month");
+      sheet.getRow(0).createCell(1).setCellValue("Amount");
+      sheet.createRow(1).createCell(0).setCellValue("Jan");
+      sheet.getRow(1).createCell(1).setCellValue(10d);
+      sheet.createRow(2).createCell(0).setCellValue("Feb");
+      sheet.getRow(2).createCell(1).setCellValue(20d);
+
+      controller.setPicture(
+          sheet,
+          new ExcelPictureDefinition(
+              "PlainPicture",
+              new ExcelBinaryData(PNG_PIXEL_BYTES),
+              ExcelPictureFormat.PNG,
+              anchor(0, 0, 2, 2),
+              null));
+      controller.setShape(
+          sheet,
+          new ExcelShapeDefinition(
+              "TextlessShape",
+              ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+              anchor(3, 0, 5, 2),
+              "rect",
+              null));
+      controller.setShape(
+          sheet,
+          new ExcelShapeDefinition(
+              "ConnectorOnly",
+              ExcelAuthoredDrawingShapeKind.CONNECTOR,
+              anchor(6, 0, 8, 2),
+              null,
+              null));
+      controller.setEmbeddedObject(
+          sheet,
+          new ExcelEmbeddedObjectDefinition(
+              "AnchoredEmbed",
+              "Payload",
+              "payload.txt",
+              "payload.txt",
+              new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+              ExcelPictureFormat.PNG,
+              new ExcelBinaryData(PNG_PIXEL_BYTES),
+              anchor(9, 0, 12, 4)));
+
+      XSSFDrawing drawing = sheet.getDrawingPatriarch();
+      XSSFPicture plainPicture =
+          assertInstanceOf(
+              XSSFPicture.class,
+              drawing.getShapes().stream()
+                  .filter(shape -> "PlainPicture".equals(shape.getShapeName()))
+                  .findFirst()
+                  .orElseThrow());
+      assertNotNull(plainPicture);
+
+      XSSFSimpleShape textlessShape =
+          assertInstanceOf(
+              XSSFSimpleShape.class,
+              drawing.getShapes().stream()
+                  .filter(shape -> "TextlessShape".equals(shape.getShapeName()))
+                  .findFirst()
+                  .orElseThrow());
+      assertNotNull(textlessShape);
+
+      controller.setDrawingObjectAnchor(sheet, "PlainPicture", anchor(0, 3, 2, 5));
+      controller.setDrawingObjectAnchor(sheet, "TextlessShape", anchor(3, 3, 5, 5));
+      controller.setDrawingObjectAnchor(sheet, "ConnectorOnly", anchor(6, 3, 8, 5));
+      controller.setDrawingObjectAnchor(sheet, "AnchoredEmbed", anchor(9, 5, 12, 9));
+      assertNotNull(
+          invoke(
+              controller,
+              "parentAnchor",
+              Object.class,
+              invoke(controller, "shapeXml", Object.class, plainPicture)));
+    }
+  }
+
+  @Test
+  void drawingControllerReflectiveTitleNameAndVaryColorHelpersCoverResidualBranches()
+      throws Exception {
+    ExcelDrawingController controller = new ExcelDrawingController();
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      workbook.createSheet("Other");
+
+      assertInvocationFailure(
+          IllegalArgumentException.class,
+          () ->
+              invoke(
+                  controller,
+                  "requiredDefinedNameFormula",
+                  String.class,
+                  new DefinedNameStub("BlankStringSource", " ", -1)));
+
+      org.apache.poi.ss.usermodel.Name workbookScoped = workbook.createName();
+      workbookScoped.setNameName("ScopedSource");
+      workbookScoped.setRefersToFormula("Ops!$A$1");
+      assertSame(
+          workbookScoped,
+          invoke(controller, "resolveDefinedNameReference", Object.class, sheet, "ScopedSource"));
+      org.apache.poi.ss.usermodel.Name otherSheetScoped = workbook.createName();
+      otherSheetScoped.setNameName("OtherOnly");
+      otherSheetScoped.setSheetIndex(workbook.getSheetIndex("Other"));
+      otherSheetScoped.setRefersToFormula("Other!$A$1");
+      assertNull(
+          invoke(controller, "resolveDefinedNameReference", Object.class, sheet, "OtherOnly"));
+      assertNull(invoke(controller, "resolveDefinedNameReference", Object.class, sheet, "Bad-1"));
+
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+      org.apache.poi.xssf.usermodel.XSSFChart firstChart =
+          drawing.createChart(poiAnchor(drawing, 0, 0, 4, 6));
+      firstChart.getGraphicFrame().setName("First");
+      org.apache.poi.xssf.usermodel.XSSFChart secondChart =
+          drawing.createChart(poiAnchor(drawing, 5, 0, 9, 6));
+      secondChart.getGraphicFrame().setName("Second");
+      assertSame(
+          secondChart,
+          invoke(
+              controller,
+              "chartForGraphicFrame",
+              org.apache.poi.xssf.usermodel.XSSFChart.class,
+              drawing,
+              secondChart.getGraphicFrame()));
+
+      org.apache.poi.xssf.usermodel.XSSFChart blankTitleChart =
+          drawing.createChart(poiAnchor(drawing, 10, 0, 14, 6));
+      blankTitleChart.setTitleText(" ");
+      assertNotNull(blankTitleChart.getTitleText());
+      assertTrue(blankTitleChart.getTitleText().getString().isBlank());
+      assertInstanceOf(
+          ExcelChartSnapshot.Title.None.class,
+          invoke(controller, "snapshotTitle", ExcelChartSnapshot.Title.class, blankTitleChart));
+      org.apache.poi.xssf.usermodel.XSSFChart missingTextChart =
+          drawing.createChart(poiAnchor(drawing, 15, 0, 19, 6));
+      missingTextChart.getCTChart().addNewTitle().addNewTx();
+      assertInstanceOf(
+          ExcelChartSnapshot.Title.None.class,
+          invoke(controller, "snapshotTitle", ExcelChartSnapshot.Title.class, missingTextChart));
+      org.apache.poi.xssf.usermodel.XSSFChart textTitleChart =
+          drawing.createChart(poiAnchor(drawing, 15, 7, 19, 13));
+      textTitleChart.setTitleText("Solid");
+      assertEquals(
+          new ExcelChartSnapshot.Title.Text("Solid"),
+          invoke(controller, "snapshotTitle", ExcelChartSnapshot.Title.class, textTitleChart));
+
+      org.apache.poi.xssf.usermodel.XSSFChart cachedTitleChart =
+          drawing.createChart(poiAnchor(drawing, 20, 0, 24, 6));
+      assertEquals("", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+      cachedTitleChart.getCTChart().addNewTitle();
+      assertEquals("", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+      cachedTitleChart.getCTChart().getTitle().addNewTx();
+      assertEquals("", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+      cachedTitleChart.getCTChart().getTitle().getTx().addNewStrRef();
+      assertEquals("", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+      cachedTitleChart.getCTChart().getTitle().getTx().getStrRef().addNewStrCache();
+      assertEquals("", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+      cachedTitleChart
+          .getCTChart()
+          .getTitle()
+          .getTx()
+          .getStrRef()
+          .getStrCache()
+          .addNewPt()
+          .setV("Cached title");
+      assertEquals(
+          "Cached title", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+
+      var formulaSeriesTitle =
+          org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx.Factory.newInstance();
+      formulaSeriesTitle.addNewStrRef().setF("Ops!$A$1");
+      assertEquals(
+          new ExcelChartSnapshot.Title.Formula("Ops!$A$1", ""),
+          invoke(
+              controller,
+              "snapshotSeriesTitle",
+              ExcelChartSnapshot.Title.class,
+              formulaSeriesTitle));
+      formulaSeriesTitle.getStrRef().addNewStrCache();
+      assertEquals(
+          new ExcelChartSnapshot.Title.Formula("Ops!$A$1", ""),
+          invoke(
+              controller,
+              "snapshotSeriesTitle",
+              ExcelChartSnapshot.Title.class,
+              formulaSeriesTitle));
+
+      org.apache.poi.xssf.usermodel.XSSFChart applyTitleChart =
+          drawing.createChart(poiAnchor(drawing, 16, 7, 20, 13));
+      var categoryAxis =
+          applyTitleChart.createCategoryAxis(
+              org.apache.poi.xddf.usermodel.chart.AxisPosition.BOTTOM);
+      var valueAxis =
+          applyTitleChart.createValueAxis(org.apache.poi.xddf.usermodel.chart.AxisPosition.LEFT);
+      var barData =
+          (org.apache.poi.xddf.usermodel.chart.XDDFBarChartData)
+              applyTitleChart.createData(
+                  org.apache.poi.xddf.usermodel.chart.ChartTypes.BAR, categoryAxis, valueAxis);
+      var barSeries =
+          (org.apache.poi.xddf.usermodel.chart.XDDFBarChartData.Series)
+              barData.addSeries(
+                  org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+                      new String[] {"Only"}),
+                  org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+                      new Double[] {1d}));
+      Object noTitle =
+          invoke(
+              controller,
+              "prepareSeriesTitle",
+              Object.class,
+              sheet,
+              new ExcelChartDefinition.Title.None());
+      invokeVoid(controller, "applySeriesTitle", barSeries, noTitle);
+      assertFalse(barSeries.getCTBarSer().isSetTx());
+
+      org.apache.poi.xssf.usermodel.XSSFChart applyLineTitleChart =
+          drawing.createChart(poiAnchor(drawing, 21, 7, 25, 13));
+      var lineCategoryAxis =
+          applyLineTitleChart.createCategoryAxis(
+              org.apache.poi.xddf.usermodel.chart.AxisPosition.BOTTOM);
+      var lineValueAxis =
+          applyLineTitleChart.createValueAxis(
+              org.apache.poi.xddf.usermodel.chart.AxisPosition.LEFT);
+      var lineData =
+          (org.apache.poi.xddf.usermodel.chart.XDDFLineChartData)
+              applyLineTitleChart.createData(
+                  org.apache.poi.xddf.usermodel.chart.ChartTypes.LINE,
+                  lineCategoryAxis,
+                  lineValueAxis);
+      var lineSeries =
+          (org.apache.poi.xddf.usermodel.chart.XDDFLineChartData.Series)
+              lineData.addSeries(
+                  org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+                      new String[] {"Only"}),
+                  org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+                      new Double[] {1d}));
+      invokeVoid(controller, "applySeriesTitle", lineSeries, noTitle);
+      assertFalse(lineSeries.getCTLineSer().isSetTx());
+
+      org.apache.poi.xssf.usermodel.XSSFChart applyPieTitleChart =
+          drawing.createChart(poiAnchor(drawing, 26, 7, 30, 13));
+      var pieData =
+          (org.apache.poi.xddf.usermodel.chart.XDDFPieChartData)
+              applyPieTitleChart.createData(
+                  org.apache.poi.xddf.usermodel.chart.ChartTypes.PIE, null, null);
+      var pieSeries =
+          (org.apache.poi.xddf.usermodel.chart.XDDFPieChartData.Series)
+              pieData.addSeries(
+                  org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+                      new String[] {"Only"}),
+                  org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+                      new Double[] {1d}));
+      pieSeries.setTitle("Pie", null);
+      invokeVoid(controller, "applySeriesTitle", pieSeries, noTitle);
+      assertFalse(pieSeries.getCTPieSer().isSetTx());
+
+      org.apache.poi.xssf.usermodel.XSSFChart bareBarChart =
+          drawing.createChart(poiAnchor(drawing, 20, 0, 24, 6));
+      assertFalse(invoke(controller, "barVaryColors", Boolean.class, bareBarChart));
+      bareBarChart.getCTChart().getPlotArea().addNewBarChart();
+      assertFalse(invoke(controller, "barVaryColors", Boolean.class, bareBarChart));
+
+      org.apache.poi.xssf.usermodel.XSSFChart bareLineChart =
+          drawing.createChart(poiAnchor(drawing, 25, 0, 29, 6));
+      assertFalse(invoke(controller, "lineVaryColors", Boolean.class, bareLineChart));
+      bareLineChart.getCTChart().getPlotArea().addNewLineChart();
+      assertFalse(invoke(controller, "lineVaryColors", Boolean.class, bareLineChart));
+
+      org.apache.poi.xssf.usermodel.XSSFChart barePieChart =
+          drawing.createChart(poiAnchor(drawing, 30, 0, 34, 6));
+      assertFalse(controller.pieVaryColors(barePieChart));
+      barePieChart.getCTChart().getPlotArea().addNewPieChart();
+      assertFalse(controller.pieVaryColors(barePieChart));
+    }
+  }
+
+  @Test
+  void drawingControllerChartFrameLookupDistinguishesOrphanedFramesFromLiveCharts()
+      throws Exception {
+    ExcelDrawingController controller = new ExcelDrawingController();
+    java.nio.file.Path workbookPath =
+        XlsxRoundTrip.newWorkbookPath("gridgrind-drawing-orphan-frame-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Charts");
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+      org.apache.poi.xssf.usermodel.XSSFChart orphanChart =
+          drawing.createChart(poiAnchor(drawing, 0, 0, 4, 6));
+      orphanChart.getGraphicFrame().setName("OrphanFrame");
+      org.apache.poi.xssf.usermodel.XSSFChart liveChart =
+          drawing.createChart(poiAnchor(drawing, 5, 0, 9, 6));
+      liveChart.getGraphicFrame().setName("LiveFrame");
+      try (var output = java.nio.file.Files.newOutputStream(workbookPath)) {
+        workbook.write(output);
+      }
+    }
+
+    try (var fileSystem = java.nio.file.FileSystems.newFileSystem(workbookPath)) {
+      java.nio.file.Path relationshipsPath =
+          fileSystem.getPath("/xl/drawings/_rels/drawing1.xml.rels");
+      String relationships = java.nio.file.Files.readString(relationshipsPath);
+      String updatedRelationships =
+          relationships.replaceFirst("<Relationship[^>]+Type=\"[^\"]+/chart\"[^>]*/>", "");
+      java.nio.file.Files.writeString(relationshipsPath, updatedRelationships);
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      XSSFDrawing drawing = workbook.xssfWorkbook().getSheet("Charts").getDrawingPatriarch();
+      XSSFGraphicFrame orphanFrame =
+          assertInstanceOf(
+              XSSFGraphicFrame.class,
+              drawing.getShapes().stream()
+                  .filter(shape -> "OrphanFrame".equals(shape.getShapeName()))
+                  .findFirst()
+                  .orElseThrow());
+      assertNull(
+          invoke(
+              controller,
+              "chartForGraphicFrame",
+              org.apache.poi.xssf.usermodel.XSSFChart.class,
+              drawing,
+              orphanFrame));
+    }
+  }
+
+  @Test
+  void drawingControllerReflectiveEmbeddedPreviewHelpersCoverRemainingBranches() throws Exception {
+    ExcelDrawingController controller = new ExcelDrawingController();
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+      XSSFPicture picture = createPicture(workbook, drawing, "OpsPicture", 0, 0, 2, 2);
+      XSSFObjectData firstObject =
+          createEmbeddedObject(workbook, drawing, "FirstEmbed", 3, 0, 6, 4);
+      XSSFObjectData secondObject =
+          createEmbeddedObject(workbook, drawing, "SecondEmbed", 7, 0, 10, 4);
+
+      assertFalse(
+          invoke(
+              controller,
+              "imagePartUsed",
+              Boolean.class,
+              workbook,
+              PackagingURIHelper.createPartName("/xl/media/missing-gridgrind.png")));
+
+      invokeVoid(controller, "cleanupWorkbookImagePartIfUnused", workbook, null);
+      invokeVoid(
+          controller,
+          "cleanupWorkbookImagePartIfUnused",
+          workbook,
+          picture.getPictureData().getPackagePart().getPartName());
+      assertTrue(
+          workbook
+              .getPackage()
+              .containPart(picture.getPictureData().getPackagePart().getPartName()));
+
+      assertNotNull(
+          invoke(controller, "previewSheetRelationId", String.class, secondObject.getOleObject()));
+      assertNull(
+          invoke(
+              controller,
+              "previewSheetRelationId",
+              String.class,
+              org.openxmlformats.schemas.spreadsheetml.x2006.main.CTOleObject.Factory
+                  .newInstance()));
+      assertNotNull(invoke(controller, "previewDrawingRelationId", String.class, secondObject));
+      String previewSheetRelationId =
+          invoke(controller, "previewSheetRelationId", String.class, secondObject.getOleObject());
+      sheet.getPackagePart().removeRelationship(previewSheetRelationId);
+      assertNotNull(invoke(controller, "previewImagePart", PackagePart.class, secondObject));
+
+      XSSFObjectData noObjectPr =
+          createEmbeddedObject(workbook, drawing, "NoObjectPr", 11, 0, 14, 4);
+      try (var cursor = noObjectPr.getOleObject().newCursor()) {
+        assertTrue(
+            cursor.toChild(
+                org.apache.poi.xssf.usermodel.XSSFRelation.NS_SPREADSHEETML, "objectPr"));
+        cursor.removeXml();
+      }
+      assertNull(
+          invoke(controller, "previewSheetRelationId", String.class, noObjectPr.getOleObject()));
+
+      XSSFObjectData noPreviewAttribute =
+          createEmbeddedObject(workbook, drawing, "NoPreviewAttribute", 11, 5, 14, 9);
+      try (var cursor = noPreviewAttribute.getOleObject().newCursor()) {
+        assertTrue(
+            cursor.toChild(
+                org.apache.poi.xssf.usermodel.XSSFRelation.NS_SPREADSHEETML, "objectPr"));
+        cursor.removeAttribute(
+            new javax.xml.namespace.QName(
+                "http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id", "r"));
+      }
+      assertNull(
+          invoke(
+              controller,
+              "previewSheetRelationId",
+              String.class,
+              noPreviewAttribute.getOleObject()));
+
+      noObjectPr.getCTShape().getSpPr().unsetBlipFill();
+      assertFalse(
+          invoke(
+              controller,
+              "imagePartUsed",
+              Boolean.class,
+              workbook,
+              PackagingURIHelper.createPartName("/xl/media/still-missing-gridgrind.png")));
+
+      int oleObjectsBeforeRemoval = sheet.getCTWorksheet().getOleObjects().sizeOfOleObjectArray();
+      invokeVoid(controller, "removeOleObject", sheet, firstObject.getOleObject());
+      assertTrue(sheet.getCTWorksheet().isSetOleObjects());
+      assertEquals(
+          oleObjectsBeforeRemoval - 1,
+          sheet.getCTWorksheet().getOleObjects().sizeOfOleObjectArray());
+
+      XSSFObjectData noBlipFill =
+          createEmbeddedObject(workbook, drawing, "NoBlipFill", 15, 0, 18, 4);
+      noBlipFill.getCTShape().getSpPr().unsetBlipFill();
+      assertNull(invoke(controller, "previewDrawingRelationId", String.class, noBlipFill));
+
+      XSSFObjectData noBlip = createEmbeddedObject(workbook, drawing, "NoBlip", 19, 0, 22, 4);
+      noBlip.getCTShape().getSpPr().unsetBlipFill();
+      noBlip.getCTShape().getSpPr().addNewBlipFill();
+      assertNull(invoke(controller, "previewDrawingRelationId", String.class, noBlip));
+
+      assertNull(
+          invoke(
+              controller,
+              "parentAnchor",
+              Object.class,
+              org.apache.xmlbeans.XmlObject.Factory.newInstance()));
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      XSSFObjectData noOleId =
+          createEmbeddedObject(workbook, sheet.createDrawingPatriarch(), "NoOleId", 27, 0, 30, 4);
+      noOleId.getOleObject().unsetId();
+      controller.deleteDrawingObject(sheet, noOleId.getShapeName());
+      assertTrue(
+          controller.drawingObjects(sheet).stream()
+              .noneMatch(snapshot -> "NoOleId".equals(snapshot.name())));
+    }
+  }
+
   private static XSSFPicture createPicture(
       XSSFWorkbook workbook,
       XSSFDrawing drawing,
@@ -1669,6 +2168,83 @@ class ExcelDrawingCoverageTest {
   @FunctionalInterface
   private interface ThrowingRunnable {
     void run() throws Exception;
+  }
+
+  private static final class DefinedNameStub implements org.apache.poi.ss.usermodel.Name {
+    private final String name;
+    private final String refersToFormula;
+    private final int sheetIndex;
+
+    private DefinedNameStub(String name, String refersToFormula, int sheetIndex) {
+      this.name = name;
+      this.refersToFormula = refersToFormula;
+      this.sheetIndex = sheetIndex;
+    }
+
+    @Override
+    public String getSheetName() {
+      return sheetIndex < 0 ? null : "Ops";
+    }
+
+    @Override
+    public String getNameName() {
+      return name;
+    }
+
+    @Override
+    public void setNameName(String name) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public String getRefersToFormula() {
+      return refersToFormula;
+    }
+
+    @Override
+    public void setRefersToFormula(String formulaText) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isFunctionName() {
+      return false;
+    }
+
+    @Override
+    public boolean isDeleted() {
+      return false;
+    }
+
+    @Override
+    public boolean isHidden() {
+      return false;
+    }
+
+    @Override
+    public void setSheetIndex(int index) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int getSheetIndex() {
+      return sheetIndex;
+    }
+
+    @Override
+    public String getComment() {
+      return "";
+    }
+
+    @Override
+    public void setComment(String comment) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void setFunction(boolean value) {
+      throw new UnsupportedOperationException();
+    }
   }
 
   private static final class UnsupportedShape extends XSSFShape {

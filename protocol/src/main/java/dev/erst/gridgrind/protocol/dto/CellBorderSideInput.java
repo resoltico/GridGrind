@@ -33,15 +33,11 @@ public record CellBorderSideInput(
     if (color == null && colorTheme == null && colorIndexed == null && colorTint != null) {
       throw new IllegalArgumentException("colorTint requires color, colorTheme, or colorIndexed");
     }
-    if (style == null
-        && color == null
-        && colorTheme == null
-        && colorIndexed == null
-        && colorTint == null) {
+    if (style == null && color == null && colorTheme == null && colorIndexed == null) {
       throw new IllegalArgumentException("border side must set style and/or color");
     }
     if (style == ExcelBorderStyle.NONE
-        && (color != null || colorTheme != null || colorIndexed != null || colorTint != null)) {
+        && (color != null || colorTheme != null || colorIndexed != null)) {
       throw new IllegalArgumentException("border side color is not supported when style is NONE");
     }
   }

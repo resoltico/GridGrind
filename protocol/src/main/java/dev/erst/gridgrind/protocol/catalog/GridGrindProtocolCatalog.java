@@ -149,7 +149,8 @@ public final class GridGrindProtocolCatalog {
               "SET_SHEET_PROTECTION",
               "Enable sheet protection with the exact supported lock flags."
                   + " password is optional; when provided it is hashed into the sheet-protection"
-                  + " metadata."),
+                  + " metadata.",
+              "password"),
           descriptor(
               WorkbookOperation.ClearSheetProtection.class,
               "CLEAR_SHEET_PROTECTION",
@@ -186,6 +187,8 @@ public final class GridGrindProtocolCatalog {
               "INSERT_ROWS",
               "Insert one or more blank rows before rowIndex."
                   + " rowIndex must be <= last existing row + 1."
+                  + " Append-edge inserts on sparse sheets do not materialize a new physical tail"
+                  + " row until content or row metadata exists there."
                   + " GridGrind rejects row inserts that would move tables, sheet autofilters,"
                   + " or data validations."),
           descriptor(
@@ -208,6 +211,8 @@ public final class GridGrindProtocolCatalog {
               "INSERT_COLUMNS",
               "Insert one or more blank columns before columnIndex."
                   + " columnIndex must be <= last existing column + 1."
+                  + " Append-edge inserts on sparse sheets do not materialize a new physical"
+                  + " tail column until cells or explicit column metadata exist there."
                   + " GridGrind rejects column inserts when the workbook contains formula cells"
                   + " or formula-defined names, or when the edit would move tables,"
                   + " sheet autofilters, or data validations."),
@@ -423,7 +428,9 @@ public final class GridGrindProtocolCatalog {
                   + " The range must include a nonblank header row and must not overlap"
                   + " an existing table range."
                   + " criteria and sortState are optional and, when supplied, are authored"
-                  + " authoritatively alongside the range."),
+                  + " authoritatively alongside the range.",
+              "criteria",
+              "sortState"),
           descriptor(
               WorkbookOperation.ClearAutofilter.class,
               "CLEAR_AUTOFILTER",
