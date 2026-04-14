@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.44.0"
+version: "0.45.0"
 domain: DEVELOPER_DOCKER
 updated: "2026-04-14"
 route:
@@ -36,6 +36,12 @@ For GridGrind's local container work, the documented standard is:
 
 The repository now enforces these Docker-runtime rules in `scripts/docker-smoke.sh` and
 `scripts/verify-container-publication.sh`.
+
+Release-build reproducibility is part of that contract too:
+- `Dockerfile` pins the Azul Java 26 base image to a manifest-list digest instead of a floating
+  tag; update that digest deliberately when the runtime base moves forward
+- the GHCR publication workflow emits OCI provenance and SBOM attestations for the published
+  multi-arch image in addition to the runnable image tags
 
 ## Why Anonymous Docker Config Matters
 

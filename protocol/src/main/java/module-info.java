@@ -1,4 +1,5 @@
 module dev.erst.gridgrind.protocol {
+  requires transitive com.fasterxml.jackson.annotation;
   requires dev.erst.gridgrind.engine;
   requires tools.jackson.databind;
 

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.44.0"
+version: "0.45.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-04-13"
+updated: "2026-04-14"
 route:
   keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
   questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
@@ -144,6 +144,8 @@ Rules:
   before the gate evaluates
 - at the root aggregated-report layer, collect every subproject `build/jacoco/*.exec` file instead
   of assuming one `test.exec` per module
+- make the root `coverage` and `jacocoAggregatedReport` tasks derive their participating
+  subprojects and task dependencies dynamically instead of hardcoding today's module names
 
 Why this rule exists:
 - GridGrind's `protocol` module defines a dedicated `parityTest` task in addition to the normal
@@ -210,6 +212,8 @@ These are the Gradle-level invariants worth preserving:
 - active Jazzer fuzzing stays local-only; GitHub Actions must not become a live-fuzz surface
 - root `./check.sh` remains the supported whole-repo gate that sequences root verification, Jazzer
   verification, packaging, and Docker smoke checks
+- root coverage aggregation derives its participants from JaCoCo-enabled Java subprojects and all
+  of their `build/jacoco/*.exec` files rather than from a fixed module list
 
 If a proposed change breaks one of those invariants, document the reason in code comments and in
 the changelog instead of letting the system drift silently.

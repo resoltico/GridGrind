@@ -54,8 +54,11 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.44.0
+docker pull ghcr.io/resoltico/gridgrind:0.45.0
 ```
+
+Published GHCR release images are rebuilt from a digest-pinned Java base image and ship explicit
+OCI provenance plus SBOM attestations alongside the runnable multi-arch image.
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
 

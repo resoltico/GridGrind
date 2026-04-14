@@ -5,6 +5,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.45.0] - 2026-04-14
+
+### Changed
+
+- Release and container workflow-dispatch reruns now refuse to publish unless the checked-out tag
+  still matches `gradle.properties`, resolves to the exact remote tag commit, remains reachable
+  from `main`, and already has successful `Check` plus `Docker smoke` CI runs on that commit.
+- Published GHCR release images now rebuild from a digest-pinned Azul Java 26 base image and emit
+  explicit OCI provenance plus SBOM attestations.
+- The root `coverage` and `jacocoAggregatedReport` tasks now discover JaCoCo-enabled Java
+  subprojects dynamically and aggregate every module `build/jacoco/*.exec` file instead of
+  hardcoding today's module list.
+- The `protocol` module no longer leaks `jackson-databind` onto consumer compile classpaths; the
+  runtime dependency remains available where needed without widening the published Gradle API.
+
+### Fixed
+
+- The container publication workflow no longer overrides the image's SPDX license label with a
+  stale MIT-only value; published OCI metadata now matches the shipped notices and licenses.
+- `./check.sh` Stage 4 now regression-tests the release-candidate tag gate and publication
+  workflow contract, so pinned-base-image, attestation, and publication-policy drift fails
+  locally before a public release run.
+
 ## [0.44.0] - 2026-04-14
 
 ### Changed
@@ -1673,7 +1696,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.44.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.45.0...HEAD
+[0.45.0]: https://github.com/resoltico/GridGrind/compare/v0.44.0...v0.45.0
 [0.44.0]: https://github.com/resoltico/GridGrind/compare/v0.43.0...v0.44.0
 [0.43.0]: https://github.com/resoltico/GridGrind/compare/v0.42.0...v0.43.0
 [0.42.0]: https://github.com/resoltico/GridGrind/compare/v0.41.0...v0.42.0
