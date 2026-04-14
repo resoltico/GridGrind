@@ -84,6 +84,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 add("implementation", "dev.erst.gridgrind:protocol")
                 add("implementation", "dev.erst.gridgrind:engine")
                 add("runtimeOnly", libs.library("log4j-core"))
+                add("runtimeOnly", libs.library("log4j-slf4j2-impl"))
 
                 add("testImplementation", platform(libs.library("junit-bom")))
                 add("testImplementation", libs.library("junit-jupiter"))
@@ -97,6 +98,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 add("testImplementation", "dev.erst.gridgrind:protocol")
                 add("testImplementation", "dev.erst.gridgrind:engine")
                 add("testRuntimeOnly", libs.library("junit-platform-launcher"))
+                add("testRuntimeOnly", libs.library("log4j-slf4j2-impl"))
 
                 add(fuzzSourceSet.implementationConfigurationName, platform(libs.library("junit-bom")))
                 add(fuzzSourceSet.implementationConfigurationName, libs.library("junit-jupiter"))

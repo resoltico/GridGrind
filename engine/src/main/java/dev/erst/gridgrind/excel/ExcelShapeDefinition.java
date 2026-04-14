@@ -23,7 +23,7 @@ public record ExcelShapeDefinition(
       if (presetGeometryToken == null || presetGeometryToken.isBlank()) {
         presetGeometryToken = "rect";
       }
-    } else if (kind == ExcelAuthoredDrawingShapeKind.CONNECTOR) {
+    } else {
       if (presetGeometryToken != null) {
         throw new IllegalArgumentException(
             "presetGeometryToken is only supported for SIMPLE_SHAPE");

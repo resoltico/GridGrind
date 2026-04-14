@@ -817,6 +817,33 @@ class ExcelConditionalFormattingControllerTest {
   }
 
   @Test
+  void healthFindingsDoNotFlagHealthyCellValueRulesWithTwoValidFormulas() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      controller.setConditionalFormatting(
+          sheet,
+          new ExcelConditionalFormattingBlockDefinition(
+              List.of("A1:A3"),
+              List.of(
+                  new ExcelConditionalFormattingRule.CellValueRule(
+                      ExcelComparisonOperator.BETWEEN,
+                      "1",
+                      "10",
+                      false,
+                      new ExcelDifferentialStyle(
+                          "0.00", null, null, null, null, null, null, null, null)))));
+
+      assertTrue(
+          controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
+              .noneMatch(
+                  finding ->
+                      finding.code()
+                          == WorkbookAnalysis.AnalysisFindingCode
+                              .CONDITIONAL_FORMATTING_BROKEN_FORMULA));
+    }
+  }
+
+  @Test
   void healthFindingsFlagMalformedRangesAndNonPositivePriorities() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
@@ -841,6 +868,49 @@ class ExcelConditionalFormattingControllerTest {
                       WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE,
                       WorkbookAnalysis.AnalysisFindingCode
                           .CONDITIONAL_FORMATTING_PRIORITY_COLLISION)));
+    }
+  }
+
+  @Test
+  void healthFindingsFlagBlocksThatMixValidAndInvalidRanges() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      seedConditionalFormattingValues(sheet);
+      controller.setConditionalFormatting(sheet, primaryBlock("A1:A3"));
+      ctBlock(sheet, "A1:A3").setSqref(List.of("A1:A3", "not-a-range"));
+
+      assertTrue(
+          controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
+              .map(WorkbookAnalysis.AnalysisFinding::code)
+              .toList()
+              .contains(WorkbookAnalysis.AnalysisFindingCode.CONDITIONAL_FORMATTING_EMPTY_RANGE));
+    }
+  }
+
+  @Test
+  void healthFindingsTraverseTop10RulesWithoutReportingBrokenFormulaNoise() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      controller.setConditionalFormatting(
+          sheet,
+          new ExcelConditionalFormattingBlockDefinition(
+              List.of("A1:A3"),
+              List.of(
+                  new ExcelConditionalFormattingRule.Top10Rule(
+                      5,
+                      false,
+                      false,
+                      false,
+                      new ExcelDifferentialStyle(
+                          "0.00", null, null, null, null, null, null, null, null)))));
+
+      assertTrue(
+          controller.conditionalFormattingHealthFindings("Ops", sheet).stream()
+              .noneMatch(
+                  finding ->
+                      finding.code()
+                          == WorkbookAnalysis.AnalysisFindingCode
+                              .CONDITIONAL_FORMATTING_BROKEN_FORMULA));
     }
   }
 

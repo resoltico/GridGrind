@@ -45,6 +45,18 @@ class ExcelChartCoverageTest {
             45,
             List.of(definitionSeries));
     assertEquals(45, pieDefinition.firstSliceAngle());
+    assertNull(
+        new ExcelChartDefinition.Pie(
+                "OpsPie",
+                anchor,
+                new ExcelChartDefinition.Title.Text("Share"),
+                new ExcelChartDefinition.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.ZERO,
+                false,
+                true,
+                null,
+                List.of(definitionSeries))
+            .firstSliceAngle());
     assertInstanceOf(ExcelChartDefinition.Title.None.class, new ExcelChartDefinition.Title.None());
     assertTrue(
         new ExcelChartDefinition.Series(
@@ -65,6 +77,19 @@ class ExcelChartCoverageTest {
                 false,
                 true,
                 -1,
+                List.of(definitionSeries)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelChartDefinition.Pie(
+                "OpsPie",
+                anchor,
+                new ExcelChartDefinition.Title.Text("Share"),
+                new ExcelChartDefinition.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.ZERO,
+                false,
+                true,
+                361,
                 List.of(definitionSeries)));
     assertThrows(IllegalArgumentException.class, () -> new ExcelChartDefinition.Title.Text(" "));
     assertThrows(IllegalArgumentException.class, () -> new ExcelChartDefinition.DataSource(" "));
@@ -139,6 +164,22 @@ class ExcelChartCoverageTest {
                     new ExcelChartSnapshot.Title.Text("Actual"),
                     new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan", "Feb")),
                     new ExcelChartSnapshot.DataSource.NumericLiteral("0.0", List.of("12", "16")))));
+    ExcelChartSnapshot.Pie pieSnapshotNullAngle =
+        new ExcelChartSnapshot.Pie(
+            "NullAnglePie",
+            anchor,
+            new ExcelChartSnapshot.Title.None(),
+            new ExcelChartSnapshot.Legend.Hidden(),
+            ExcelChartDisplayBlanksAs.ZERO,
+            false,
+            false,
+            null,
+            List.of(
+                new ExcelChartSnapshot.Series(
+                    new ExcelChartSnapshot.Title.None(),
+                    new ExcelChartSnapshot.DataSource.StringLiteral(List.of("A")),
+                    new ExcelChartSnapshot.DataSource.NumericLiteral("0.0", List.of("1")))));
+    assertNull(pieSnapshotNullAngle.firstSliceAngle());
     ExcelChartSnapshot.Unsupported unsupportedSnapshot =
         new ExcelChartSnapshot.Unsupported("OpsArea", anchor, List.of("AREA"), "unsupported");
     assertEquals(2, lineSnapshot.axes().size());
@@ -181,6 +222,23 @@ class ExcelChartCoverageTest {
                 false,
                 true,
                 361,
+                List.of(
+                    new ExcelChartSnapshot.Series(
+                        new ExcelChartSnapshot.Title.Text("Actual"),
+                        new ExcelChartSnapshot.DataSource.StringLiteral(List.of("Jan")),
+                        new ExcelChartSnapshot.DataSource.NumericLiteral("0.0", List.of("12"))))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelChartSnapshot.Pie(
+                "OpsPie",
+                anchor,
+                new ExcelChartSnapshot.Title.Text("Share"),
+                new ExcelChartSnapshot.Legend.Hidden(),
+                ExcelChartDisplayBlanksAs.ZERO,
+                false,
+                true,
+                -1,
                 List.of(
                     new ExcelChartSnapshot.Series(
                         new ExcelChartSnapshot.Title.Text("Actual"),
@@ -851,6 +909,61 @@ class ExcelChartCoverageTest {
           findChart(sheet.charts(), "BrokenChart", ExcelChartSnapshot.Unsupported.class);
       assertEquals(List.of("LINE"), brokenChart.plotTypeTokens());
       assertTrue(brokenChart.detail().contains("missing its data source"));
+    }
+  }
+
+  @Test
+  void orphanGraphicFramesRejectAuthoritativeReauthoringWithTruthfulErrors() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-orphan-rewrite-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Charts");
+      seedChartData(sheet);
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+
+      XSSFChart orphanChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 1, 1, 6, 10));
+      orphanChart.getGraphicFrame().setName("OrphanFrame");
+      var orphanCategories =
+          XDDFDataSourcesFactory.fromStringCellRange(sheet, CellRangeAddress.valueOf("A2:A4"));
+      var orphanValues =
+          XDDFDataSourcesFactory.fromNumericCellRange(sheet, CellRangeAddress.valueOf("B2:B4"));
+      var orphanData =
+          orphanChart.createData(
+              ChartTypes.LINE,
+              orphanChart.createCategoryAxis(AxisPosition.BOTTOM),
+              orphanChart.createValueAxis(AxisPosition.LEFT));
+      orphanData.addSeries(orphanCategories, orphanValues).setTitle("Plan", null);
+      orphanChart.plot(orphanData);
+
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    removeFirstChartRelationship(workbookPath);
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      ExcelSheet sheet = workbook.sheet("Charts");
+
+      IllegalArgumentException failure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  sheet.setChart(
+                      new ExcelChartDefinition.Line(
+                          "OrphanFrame",
+                          anchor(2, 2, 8, 12),
+                          new ExcelChartDefinition.Title.Text("Reauthored"),
+                          new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT),
+                          ExcelChartDisplayBlanksAs.SPAN,
+                          false,
+                          true,
+                          List.of(
+                              new ExcelChartDefinition.Series(
+                                  new ExcelChartDefinition.Title.Text("Actual"),
+                                  new ExcelChartDefinition.DataSource("'Charts'!$A$2:$A$4"),
+                                  new ExcelChartDefinition.DataSource("'Charts'!$B$2:$B$4"))))));
+      assertTrue(failure.getMessage().contains("read-only until a later parity phase"));
     }
   }
 

@@ -24,7 +24,8 @@
 #   scripts/test-verify-container-publication.sh
 #
 # Stage 5 exercises the Docker release surface from a non-default working directory:
-#   scripts/docker-smoke.sh -> build the image and verify help/request/response/save behavior
+#   scripts/docker-smoke.sh -> build the image through docker buildx with an anonymous
+#                              DOCKER_CONFIG and verify help/request/response/save behavior
 #
 # The script is location-independent: it always targets the repository that contains this file,
 # even when invoked from another working directory or through a symlink.
@@ -752,11 +753,11 @@ run_stage() {
         "${stage_id}" \
         "${stage_label}" \
         "${project_dir}" \
-        "${command_prefix[@]}" \
+        ${command_prefix[@]+"${command_prefix[@]}"} \
         "${gradlew}" \
         --project-dir "${project_dir}" \
         "$@" \
-        "${gradle_args[@]}"
+        ${gradle_args[@]+"${gradle_args[@]}"}
 }
 
 run_shell_stage() {

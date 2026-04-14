@@ -108,10 +108,8 @@ public final class ExcelOoxmlPackageSecuritySupport {
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
 
     Path normalizedTarget = targetPath.toAbsolutePath().normalize();
-    Path parent = normalizedTarget.getParent();
-    if (parent != null) {
-      Files.createDirectories(parent);
-    }
+    Files.createDirectories(
+        Objects.requireNonNullElse(normalizedTarget.getParent(), normalizedTarget.getRoot()));
 
     ExcelOoxmlPersistenceOptions explicitOptions =
         persistenceOptions == null
@@ -200,7 +198,6 @@ public final class ExcelOoxmlPackageSecuritySupport {
       ExcelWorkbook workbook, ExcelOoxmlPersistenceOptions persistenceOptions) {
     return workbook.sourcePath() != null
         && !workbook.loadedPackageSecurity().signatures().isEmpty()
-        && !passThroughEligible(workbook, persistenceOptions)
         && persistenceOptions.signature() == null;
   }
 

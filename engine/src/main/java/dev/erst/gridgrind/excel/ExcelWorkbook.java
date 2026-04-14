@@ -544,10 +544,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
 
     Path absolutePath = workbookPath.toAbsolutePath();
-    Path parent = absolutePath.getParent();
-    if (parent != null) {
-      Files.createDirectories(parent);
-    }
+    Files.createDirectories(absolutePath.getParent());
     for (Sheet sheet : workbook) {
       ExcelRowColumnStructureController.canonicalizeColumnDefinitions(
           (org.apache.poi.xssf.usermodel.XSSFSheet) sheet);

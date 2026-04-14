@@ -11,6 +11,7 @@ dependencies {
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
     runtimeOnly(libs.log4j.core)
+    runtimeOnly(libs.log4j.slf4j2.impl)
 }
 
 application {
@@ -41,6 +42,7 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
     // LICENSE is the MIT license for GridGrind's own code.
     // LICENSE-APACHE-2.0 satisfies Apache License 2.0 Section 4(a) for bundled components.
     from(rootProject.file("NOTICE")) { into("META-INF") }
+    from(rootProject.file("PATENTS.md")) { into("META-INF") }
     from(rootProject.file("LICENSE")) { into("META-INF") }
     from(rootProject.file("LICENSE-APACHE-2.0")) { into("META-INF") }
     from(rootProject.file("LICENSE-BSD-3-CLAUSE")) { into("META-INF") }

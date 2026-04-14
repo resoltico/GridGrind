@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import org.apache.poi.ss.formula.atp.AnalysisToolPak;
 import org.apache.poi.ss.formula.eval.FunctionEval;
+import org.apache.poi.ss.formula.function.FunctionMetadataRegistry;
 import org.junit.jupiter.api.Test;
 
 /** Tests for FormulaExceptions POI exception translation. */
@@ -187,6 +188,9 @@ class FormulaExceptionsTest {
         accessibleMethod(FormulaExceptions.class, "isKnownBuiltinFunction", String.class);
     assertEquals(true, isKnownBuiltinFunction.invoke(null, "SUM"));
 
+    ExcelFormulaRuntimeContext emptyContext =
+        new ExcelFormulaRuntimeContext(Set.of(), ExcelFormulaMissingWorkbookPolicy.ERROR, Set.of());
+
     String unsupportedPoiFunction =
         FunctionEval.getNotSupportedFunctionNames().stream().findFirst().orElseThrow();
     assertEquals(true, isKnownBuiltinFunction.invoke(null, unsupportedPoiFunction));
@@ -199,6 +203,38 @@ class FormulaExceptionsTest {
         AnalysisToolPak.getNotSupportedFunctionNames().stream().findFirst().orElseThrow();
     assertEquals(true, isKnownBuiltinFunction.invoke(null, unsupportedAtpFunction));
     assertEquals(false, isKnownBuiltinFunction.invoke(null, "GRIDGRIND_UNKNOWN_FN"));
+
+    // Cover AnalysisToolPak.getSupportedFunctionNames() as the "first true" OR branch:
+    // find an ATP-supported function that is absent from FunctionMetadataRegistry and FunctionEval.
+    String atpOnlySupported =
+        AnalysisToolPak.getSupportedFunctionNames().stream()
+            .filter(n -> FunctionMetadataRegistry.getFunctionByName(n) == null)
+            .filter(n -> !FunctionEval.getSupportedFunctionNames().contains(n))
+            .filter(n -> !FunctionEval.getNotSupportedFunctionNames().contains(n))
+            .findFirst()
+            .orElseThrow();
+    assertFalse(
+        FormulaExceptions.isUnregisteredUserDefinedFunctionFailure(
+            emptyContext,
+            new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException(
+                atpOnlySupported),
+            atpOnlySupported + "(A1)"));
+
+    // Cover AnalysisToolPak.getNotSupportedFunctionNames() as the "first true" OR branch.
+    String atpOnlyNotSupported =
+        AnalysisToolPak.getNotSupportedFunctionNames().stream()
+            .filter(n -> FunctionMetadataRegistry.getFunctionByName(n) == null)
+            .filter(n -> !FunctionEval.getSupportedFunctionNames().contains(n))
+            .filter(n -> !FunctionEval.getNotSupportedFunctionNames().contains(n))
+            .filter(n -> !AnalysisToolPak.getSupportedFunctionNames().contains(n))
+            .findFirst()
+            .orElseThrow();
+    assertFalse(
+        FormulaExceptions.isUnregisteredUserDefinedFunctionFailure(
+            emptyContext,
+            new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException(
+                atpOnlyNotSupported),
+            atpOnlyNotSupported + "(A1)"));
   }
 
   /** Test-only stand-in used to exercise workbook-missing classification. */

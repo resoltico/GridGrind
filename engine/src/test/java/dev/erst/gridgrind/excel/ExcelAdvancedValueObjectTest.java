@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -216,6 +217,12 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelGradientStop(-0.1d, new ExcelColor("#112233")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelGradientStop(1.5d, new ExcelColor("#112233")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelGradientStop(Double.NaN, new ExcelColor("#112233")));
     assertThrows(IllegalArgumentException.class, () -> new ExcelCellFill(null, null, null, null));
     assertThrows(
         IllegalArgumentException.class,
@@ -237,6 +244,12 @@ class ExcelAdvancedValueObjectTest {
                     List.of(
                         new ExcelGradientStop(0.0d, new ExcelColor("#112233")),
                         new ExcelGradientStop(1.0d, new ExcelColor("#445566"))))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelCellFill(null, new ExcelColor("#112233"), null, gradient));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelCellFill(null, null, new ExcelColor("#112233"), gradient));
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelCellFill(ExcelFillPattern.NONE, new ExcelColor("#112233"), null, null));
@@ -372,11 +385,23 @@ class ExcelAdvancedValueObjectTest {
         () ->
             new ExcelDrawingAnchor.TwoCell(
                 new ExcelDrawingMarker(2, 2, 0, 0), new ExcelDrawingMarker(1, 2, 0, 0), null));
+    assertDoesNotThrow(
+        () ->
+            new ExcelDrawingAnchor.TwoCell(
+                new ExcelDrawingMarker(2, 1, 0, 3), new ExcelDrawingMarker(2, 3, 0, 4), null));
+    assertDoesNotThrow(
+        () ->
+            new ExcelDrawingAnchor.TwoCell(
+                new ExcelDrawingMarker(1, 2, 3, 0), new ExcelDrawingMarker(3, 2, 4, 0), null));
     assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelShapeDefinition(
                 "OpsShape", ExcelAuthoredDrawingShapeKind.CONNECTOR, twoCell, "rect", null));
+    ExcelShapeDefinition nullPresetShape =
+        new ExcelShapeDefinition(
+            "OpsNullPreset", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, twoCell, null, null);
+    assertEquals("rect", nullPresetShape.presetGeometryToken());
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -547,6 +572,12 @@ class ExcelAdvancedValueObjectTest {
 
   @Test
   void conditionalFormattingAndSupportValueObjectsNormalizeAndValidate() throws Exception {
+    assertConditionalFormattingSupportValueObjects();
+    assertRgbColorSupportValueObjects();
+    assertFormulaSheetRenameSupportValueObjects();
+  }
+
+  private static void assertConditionalFormattingSupportValueObjects() {
     for (ExcelConditionalFormattingIconSet iconSet : ExcelConditionalFormattingIconSet.values()) {
       assertEquals(iconSet, ExcelConditionalFormattingIconSet.fromPoi(iconSet.toPoi()));
       assertEquals(iconSet.toPoi().num, iconSet.thresholdCount());
@@ -663,7 +694,9 @@ class ExcelAdvancedValueObjectTest {
     assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchor(1, 0, 0, 1));
     assertThrows(IllegalArgumentException.class, () -> new ExcelCommentAnchor(1, 2, 1, 1));
     assertThrows(IllegalArgumentException.class, () -> new ExcelPrintMargins(-0.1d, 0, 0, 0, 0, 0));
+  }
 
+  private static void assertRgbColorSupportValueObjects() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       assertEquals("#AABBCC", ExcelRgbColorSupport.normalizeRgbHex("#aabbcc", "color"));
       assertThrows(
@@ -688,7 +721,11 @@ class ExcelAdvancedValueObjectTest {
       assertThrows(
           IllegalArgumentException.class,
           () -> ExcelRgbColorSupport.toXssfColor(workbook, "#ABCDE"));
+    }
+  }
 
+  private static void assertFormulaSheetRenameSupportValueObjects() throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Source");
       workbook.createSheet("Replica");
       workbook.createSheet("Ledger");
@@ -715,6 +752,15 @@ class ExcelAdvancedValueObjectTest {
               "Source",
               "Replica"));
       assertEquals(
+          "SUM(Replica!A1)",
+          ExcelFormulaSheetRenameSupport.renameSheet(
+              workbook,
+              "SUM(Source!A1)",
+              org.apache.poi.ss.formula.FormulaType.CELL,
+              0,
+              "Source",
+              "Replica"));
+      assertEquals(
           "SUM(Ledger:Replica!B2)",
           ExcelFormulaSheetRenameSupport.renameSheet(
               workbook,
@@ -732,6 +778,42 @@ class ExcelAdvancedValueObjectTest {
               0,
               "Source",
               "Replica"));
+
+      var localName = workbook.createName();
+      localName.setNameName("LocalTotal");
+      localName.setSheetIndex(workbook.getSheetIndex("Source"));
+      localName.setRefersToFormula("Source!$A$1");
+      assertEquals(
+          "Replica!LocalTotal+1",
+          ExcelFormulaSheetRenameSupport.renameSheet(
+              workbook,
+              "Source!LocalTotal+1",
+              org.apache.poi.ss.formula.FormulaType.CELL,
+              0,
+              "Source",
+              "Replica"));
+    }
+  }
+
+  @Test
+  void formulaSheetRenameSupportPreservesExternalWorkbookReferences() throws Exception {
+    try (XSSFWorkbook referencedWorkbook = new XSSFWorkbook();
+        XSSFWorkbook workbook = new XSSFWorkbook()) {
+      referencedWorkbook.createSheet("Source");
+      workbook.linkExternalWorkbook("ext.xlsx", referencedWorkbook);
+      workbook.createSheet("Source");
+      workbook.createSheet("Replica");
+      // External workbook refs produce Pxg with getExternalWorkbookNumber() >= 1;
+      // renameSheet must leave them untouched.
+      String result =
+          ExcelFormulaSheetRenameSupport.renameSheet(
+              workbook,
+              "[ext.xlsx]Source!$A$1",
+              org.apache.poi.ss.formula.FormulaType.CELL,
+              0,
+              "Source",
+              "Replica");
+      assertFalse(result.contains("Replica"));
     }
   }
 }

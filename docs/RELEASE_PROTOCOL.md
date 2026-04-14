@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.43.0"
+version: "0.44.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-04-13"
+updated: "2026-04-14"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -278,30 +278,25 @@ the authoritative state.
 ### Step 9 — Verify public availability
 
 Do not declare the release done until the GitHub Release exists and the following anonymous
-Docker verification succeeds. Use a temporary Docker config directory so you are testing the
-public surface, not cached owner credentials, and so you do not mutate the operator's normal
-Docker login state:
+Docker verification succeeds. Use the repository verifier so you are testing the public surface,
+not cached owner credentials, while still targeting the active local Docker engine selected in
+the current shell:
 
 ```bash
-ANON_DOCKER_CONFIG="$(mktemp -d)"
 gh release view vX.Y.Z                                                # GitHub Release with fat JAR
-DOCKER_CONFIG="$ANON_DOCKER_CONFIG" docker pull ghcr.io/resoltico/gridgrind:X.Y.Z
-DOCKER_CONFIG="$ANON_DOCKER_CONFIG" docker pull ghcr.io/resoltico/gridgrind:latest
-DOCKER_CONFIG="$ANON_DOCKER_CONFIG" docker run --rm ghcr.io/resoltico/gridgrind:X.Y.Z --version
-DOCKER_CONFIG="$ANON_DOCKER_CONFIG" docker run --rm ghcr.io/resoltico/gridgrind:latest --version
-rm -rf "$ANON_DOCKER_CONFIG"
+./scripts/verify-container-publication.sh ghcr.io/resoltico/gridgrind X.Y.Z
 ```
 
-Both `docker run ... --version` commands must report the two-line product header for the target
+The verifier script must confirm both the exact `X.Y.Z` tag and `latest` are anonymously pullable
+and that both `docker run ... --version` results match the two-line product header for the target
 release version exactly — `GridGrind X.Y.Z` on the first line and the product description on the
-second. A successful `docker pull` alone is not sufficient verification. In particular: a multi-arch
-`docker pull` can succeed even when the platform manifests have been deleted — the index
-manifest is still present but the image is not actually runnable. The `docker run --version`
-check is the definitive test.
+second. A successful `docker pull` alone is not sufficient verification. In particular: a
+multi-arch `docker pull` can succeed even when the platform manifests have been deleted — the
+index manifest is still present but the image is not actually runnable. The `docker run --version`
+check remains the definitive test.
 
-If any anonymous Docker command fails, remove the temporary config directory, inspect the
-published state, and rerun the full anonymous verification sequence after the fix. Do not switch
-to the operator's normal Docker config as a fallback.
+If the verifier script fails, inspect the published state, fix the release surface, and rerun the
+same verification command. Do not switch to the operator's normal Docker config as a fallback.
 
 These checks are a second handoff checkpoint. Workflow success is not enough; public pull and run
 behavior is the authoritative state.
@@ -309,7 +304,8 @@ behavior is the authoritative state.
 The container registry retains the last 5 releases. Only `X.Y.Z` and `latest` tags are
 published per release; there is no `X.Y` floating tag.
 
-Only after all five succeed report to the user: the release is publicly available.
+Only after the release view check and the verifier script both succeed report to the user: the
+release is publicly available.
 
 The container workflow is expected to perform the exact-tag and `latest` pull-and-run verification
 internally after publication. The operator-side verification remains mandatory because public

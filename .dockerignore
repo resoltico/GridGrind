@@ -9,5 +9,6 @@
 # Allow the legal files that the image now publishes into /usr/share/doc/gridgrind.
 !LICENSE
 !NOTICE
+!PATENTS.md
 !LICENSE-APACHE-2.0
 !LICENSE-BSD-3-CLAUSE

@@ -72,6 +72,7 @@ class ExcelSheetPresentationValueObjectTest {
                 "A1", List.of(ExcelIgnoredErrorType.FORMULA, ExcelIgnoredErrorType.FORMULA)));
     assertThrows(IllegalArgumentException.class, () -> new ExcelSheetDefaults(0, 15.0d));
     assertThrows(IllegalArgumentException.class, () -> new ExcelSheetDefaults(8, 0.0d));
+    assertThrows(IllegalArgumentException.class, () -> new ExcelSheetDefaults(8, Double.NaN));
     assertThrows(
         NullPointerException.class,
         () ->

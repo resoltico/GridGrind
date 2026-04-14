@@ -510,6 +510,15 @@ class ExcelDataValidationControllerTest {
         new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false),
         ExcelDataValidationController.prompt(promptDefaults));
 
+    CTDataValidation promptExplicitFalse =
+        rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    promptExplicitFalse.setPromptTitle("Status");
+    promptExplicitFalse.setPrompt("Choose one workflow state.");
+    promptExplicitFalse.setShowInputMessage(false);
+    assertEquals(
+        new ExcelDataValidationPrompt("Status", "Choose one workflow state.", false),
+        ExcelDataValidationController.prompt(promptExplicitFalse));
+
     CTDataValidation promptBlankTitle =
         rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     promptBlankTitle.setPromptTitle(" ");
@@ -520,6 +529,11 @@ class ExcelDataValidationControllerTest {
         rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     promptMissingText.setPromptTitle("Status");
     assertNull(ExcelDataValidationController.prompt(promptMissingText));
+
+    CTDataValidation promptBlankText = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    promptBlankText.setPromptTitle("Status");
+    promptBlankText.setPrompt(" ");
+    assertNull(ExcelDataValidationController.prompt(promptBlankText));
 
     CTDataValidation errorDefaults = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     errorDefaults.setErrorTitle("Invalid status");
@@ -553,6 +567,16 @@ class ExcelDataValidationControllerTest {
             ExcelDataValidationErrorStyle.INFORMATION, "Info", "Read the list.", false),
         ExcelDataValidationController.errorAlert(infoError));
 
+    CTDataValidation explicitFalseError =
+        rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    explicitFalseError.setErrorTitle("Explicit false");
+    explicitFalseError.setError("Stay false.");
+    explicitFalseError.setShowErrorMessage(false);
+    assertEquals(
+        new ExcelDataValidationErrorAlert(
+            ExcelDataValidationErrorStyle.STOP, "Explicit false", "Stay false.", false),
+        ExcelDataValidationController.errorAlert(explicitFalseError));
+
     CTDataValidation blankErrorTitle = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     blankErrorTitle.setErrorTitle(" ");
     blankErrorTitle.setError("Use one of the allowed values.");
@@ -562,6 +586,11 @@ class ExcelDataValidationControllerTest {
         rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
     missingErrorText.setErrorTitle("Invalid status");
     assertNull(ExcelDataValidationController.errorAlert(missingErrorText));
+
+    CTDataValidation blankErrorText = rawValidation(STDataValidationType.LIST, "A1", "\"Queued\"");
+    blankErrorText.setErrorTitle("Invalid status");
+    blankErrorText.setError(" ");
+    assertNull(ExcelDataValidationController.errorAlert(blankErrorText));
   }
 
   @Test
@@ -775,9 +804,42 @@ class ExcelDataValidationControllerTest {
             List.of("F1")));
     assertEquals(
         new ExcelDataValidationSnapshot.Unsupported(
+            List.of("F2"),
+            "MISSING_FORMULA",
+            "whole-number validation is missing formula2 for between operator."),
+        invokeToSnapshot(
+            new StubConstraint(
+                DataValidationConstraint.ValidationType.INTEGER,
+                ComparisonOperator.BETWEEN,
+                null,
+                "1",
+                " "),
+            List.of("F2")));
+    assertEquals(
+        new ExcelDataValidationSnapshot.Unsupported(
             List.of("G1"), "MISSING_FORMULA", "Custom formula validation is missing formula1."),
         ExcelDataValidationController.toSnapshot(
             rawValidation(STDataValidationType.CUSTOM, "G1", null), List.of("G1")));
+    // Blank formula1 (non-null, whitespace-only) for XSSF list and comparison paths.
+    assertEquals(
+        new ExcelDataValidationSnapshot.Unsupported(
+            List.of("G2"),
+            "MISSING_FORMULA",
+            "List validation is missing both explicit values and formula1."),
+        invokeToSnapshot(
+            new StubConstraint(DataValidationConstraint.ValidationType.LIST, 0, null, " ", null),
+            List.of("G2")));
+    assertEquals(
+        new ExcelDataValidationSnapshot.Unsupported(
+            List.of("G3"), "MISSING_FORMULA", "whole-number validation is missing formula1."),
+        invokeToSnapshot(
+            new StubConstraint(
+                DataValidationConstraint.ValidationType.INTEGER,
+                ComparisonOperator.GT,
+                null,
+                " ",
+                null),
+            List.of("G3")));
 
     CTDataValidation allowBlankComparison = rawValidation(STDataValidationType.WHOLE, "H1", "1");
     allowBlankComparison.setOperator(
@@ -823,6 +885,13 @@ class ExcelDataValidationControllerTest {
                 new ExcelDataValidationRule.FormulaList("\"Queued"), false, true, null, null)),
         ExcelDataValidationController.toSnapshot(
             rawValidation(STDataValidationType.LIST, "L1", "\"Queued"), List.of("L1")));
+    assertEquals(
+        new ExcelDataValidationSnapshot.Supported(
+            List.of("L2"),
+            new ExcelDataValidationDefinition(
+                new ExcelDataValidationRule.FormulaList("\""), false, true, null, null)),
+        ExcelDataValidationController.toSnapshot(
+            rawValidation(STDataValidationType.LIST, "L2", "\""), List.of("L2")));
 
     CTDataValidation unknownType = CTDataValidation.Factory.newInstance();
     unknownType.setSqref(List.of("M1"));

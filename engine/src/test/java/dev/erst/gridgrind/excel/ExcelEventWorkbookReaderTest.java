@@ -202,6 +202,47 @@ class ExcelEventWorkbookReaderTest {
   }
 
   @Test
+  void fallsBackToFirstSheetWhenWorkbookXmlUsesNegativeActiveTabAndBareCalcPr() throws IOException {
+    Path sourceWorkbook = Files.createTempFile("gridgrind-event-negative-active-tab-", ".xlsx");
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      workbook.createSheet("Visible");
+      workbook.createSheet("Other");
+      workbook.setActiveSheet(1);
+      try (OutputStream outputStream = Files.newOutputStream(sourceWorkbook)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    Path mutatedWorkbook =
+        rewriteEntry(
+            sourceWorkbook,
+            "xl/workbook.xml",
+            xml -> {
+              String withNegativeActiveTab =
+                  xml.contains("activeTab=")
+                      ? xml.replaceAll("activeTab=\"[^\"]*\"", "activeTab=\"-1\"")
+                      : xml.replace("<workbookView ", "<workbookView activeTab=\"-1\" ");
+              return withNegativeActiveTab.contains("<calcPr")
+                  ? withNegativeActiveTab.replaceAll("<calcPr[^>]*/>", "<calcPr/>")
+                  : withNegativeActiveTab.replace("</workbook>", "<calcPr/></workbook>");
+            });
+
+    WorkbookReadResult.WorkbookSummary.WithSheets summary =
+        assertInstanceOf(
+            WorkbookReadResult.WorkbookSummary.WithSheets.class,
+            ((WorkbookReadResult.WorkbookSummaryResult)
+                    new ExcelEventWorkbookReader()
+                        .apply(
+                            mutatedWorkbook,
+                            List.of(new WorkbookReadCommand.GetWorkbookSummary("workbook")))
+                        .getFirst())
+                .workbook());
+
+    assertEquals("Visible", summary.activeSheetName());
+    assertFalse(summary.forceFormulaRecalculationOnOpen());
+  }
+
+  @Test
   void reportsSparseRowAndColumnFactsFromCustomizedSheetXml() throws IOException {
     Path sourceWorkbook = Files.createTempFile("gridgrind-event-sparse-source-", ".xlsx");
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -378,6 +419,7 @@ class ExcelEventWorkbookReaderTest {
         invokeCommandType(new WorkbookReadCommand.GetPackageSecurity("security")));
     assertEquals(7, invokeActiveSheetIndexWithExplicitActiveTab());
     assertEquals(0, invokeActiveSheetIndexWithoutActiveTab());
+    assertEquals(0, invokeActiveSheetIndexWithEmptyBookViews());
 
     Constructor<?> constructor =
         Class.forName("dev.erst.gridgrind.excel.ExcelEventWorkbookReader$EventWorkbookMetadata")
@@ -426,6 +468,49 @@ class ExcelEventWorkbookReaderTest {
     lastRowIndex.setAccessible(true);
 
     assertEquals(1, lastRowIndex.invoke(eventSheetSummary));
+  }
+
+  @Test
+  void sheetSummaryHandlerAcceptsNullLocalNamesAndTrueAttributesCaseInsensitively()
+      throws Exception {
+    Constructor<?> constructor =
+        Class.forName("dev.erst.gridgrind.excel.ExcelEventWorkbookReader$SheetSummaryHandler")
+            .getDeclaredConstructor();
+    constructor.setAccessible(true);
+    Object handler = constructor.newInstance();
+
+    Method startElement =
+        handler
+            .getClass()
+            .getDeclaredMethod(
+                "startElement",
+                String.class,
+                String.class,
+                String.class,
+                org.xml.sax.Attributes.class);
+    startElement.setAccessible(true);
+
+    AttributesImpl selectedAttributes = new AttributesImpl();
+    selectedAttributes.addAttribute("", "tabSelected", "tabSelected", "CDATA", "TRUE");
+    startElement.invoke(handler, "", null, "sheetView", selectedAttributes);
+
+    startElement.invoke(handler, "", null, "sheetView", new AttributesImpl());
+
+    AttributesImpl protectionAttributes = new AttributesImpl();
+    protectionAttributes.addAttribute("", "sheet", "sheet", "CDATA", "1");
+    startElement.invoke(handler, "", null, "sheetProtection", protectionAttributes);
+
+    Method summary = handler.getClass().getDeclaredMethod("summary");
+    summary.setAccessible(true);
+    Object eventSheetSummary = summary.invoke(handler);
+    Method selected = eventSheetSummary.getClass().getDeclaredMethod("selected");
+    selected.setAccessible(true);
+    Method protection = eventSheetSummary.getClass().getDeclaredMethod("protection");
+    protection.setAccessible(true);
+
+    assertEquals(true, selected.invoke(eventSheetSummary));
+    assertInstanceOf(
+        WorkbookReadResult.SheetProtection.Protected.class, protection.invoke(eventSheetSummary));
   }
 
   private static String expectedReadType(WorkbookReadCommand.Introspection command) {
@@ -485,6 +570,91 @@ class ExcelEventWorkbookReaderTest {
       }
     }
     return mutatedWorkbook;
+  }
+
+  @Test
+  void readsEdgeCasesInWorkbookXmlAndSheetXml() throws IOException {
+    Path sourceWorkbook = Files.createTempFile("gridgrind-event-edge-source-", ".xlsx");
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      workbook.createSheet("Visible");
+      workbook.createSheet("Other");
+      workbook.createName().setNameName("CounterFn");
+      workbook.getName("CounterFn").setRefersToFormula("Visible!$A$1");
+      workbook.createName().setNameName("CounterRange");
+      workbook.getName("CounterRange").setRefersToFormula("Visible!$A$2");
+      try (OutputStream outputStream = Files.newOutputStream(sourceWorkbook)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    // Mutate workbook.xml to cover edge-case branches in workbookMetadata and namedRangeCount,
+    // then mutate the sheet XML to cover edge-case branches in SheetSummaryHandler.
+    Path edgeCaseWorkbook =
+        rewriteEntries(
+            sourceWorkbook,
+            Map.of(
+                "xl/workbook.xml",
+                xml -> {
+                  // state="visible" explicitly set — covers visibility() VISIBLE true branch.
+                  String withExplicitVisible =
+                      xml.replaceFirst("(<sheet[^/]+ name=\"Visible\")", "$1 state=\"visible\"");
+                  // calcPr with fullCalcOnLoad="0" — covers isSetFullCalcOnLoad()=true,
+                  // getFullCalcOnLoad()=false branch.
+                  String withCalcPr =
+                      withExplicitVisible.contains("calcPr")
+                          ? withExplicitVisible.replaceAll(
+                              "<calcPr[^/]*/?>", "<calcPr fullCalcOnLoad=\"0\"/>")
+                          : withExplicitVisible.replace(
+                              "</workbook>", "<calcPr fullCalcOnLoad=\"0\"/></workbook>");
+                  // Named ranges with function="0" and hidden="0" — covers isSetFunction=true,
+                  // getFunction=false and isSetHidden=true, getHidden=false branches.
+                  return withCalcPr.replace(
+                      "name=\"CounterFn\"", "name=\"CounterFn\" function=\"0\" hidden=\"0\"");
+                },
+                "xl/worksheets/sheet1.xml",
+                _ ->
+                    """
+                    <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+                      <cols>
+                        <col min="1"/>
+                      </cols>
+                      <sheetData>
+                        <row r="1">
+                          <c r=""><v>1</v></c>
+                        </row>
+                      </sheetData>
+                    </worksheet>
+                    """));
+
+    List<WorkbookReadResult.Introspection> reads =
+        new ExcelEventWorkbookReader()
+            .apply(
+                edgeCaseWorkbook,
+                List.of(
+                    new WorkbookReadCommand.GetWorkbookSummary("workbook"),
+                    new WorkbookReadCommand.GetSheetSummary("sheet", "Visible")));
+
+    WorkbookReadResult.WorkbookSummary.WithSheets summary =
+        assertInstanceOf(
+            WorkbookReadResult.WorkbookSummary.WithSheets.class,
+            ((WorkbookReadResult.WorkbookSummaryResult) reads.get(0)).workbook());
+    assertFalse(summary.forceFormulaRecalculationOnOpen());
+    WorkbookReadResult.SheetSummary sheetSummary =
+        ((WorkbookReadResult.SheetSummaryResult) reads.get(1)).sheet();
+    assertEquals(ExcelSheetVisibility.VISIBLE, sheetSummary.visibility());
+    assertEquals(1, sheetSummary.physicalRowCount());
+    assertEquals(-1, sheetSummary.lastColumnIndex());
+  }
+
+  private static int invokeActiveSheetIndexWithEmptyBookViews()
+      throws ReflectiveOperationException {
+    CTWorkbook workbook = CTWorkbook.Factory.newInstance();
+    workbook.addNewBookViews(); // bookViews present but contains no workbookView entries
+
+    Method activeSheetIndex =
+        ExcelEventWorkbookReader.class.getDeclaredMethod("activeSheetIndex", CTWorkbook.class);
+    activeSheetIndex.setAccessible(true);
+    return (int) activeSheetIndex.invoke(null, workbook);
   }
 
   private static String clearTabSelectedAttributes(String xml) {

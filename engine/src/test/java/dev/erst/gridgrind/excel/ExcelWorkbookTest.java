@@ -696,6 +696,22 @@ class ExcelWorkbookTest {
   }
 
   @Test
+  void saveWithEmptyPersistenceOptionsActsLikePlainSave() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-empty-persist-", ".xlsx");
+    try {
+      try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+        workbook.getOrCreateSheet("Alpha").setCell("A1", ExcelCellValue.text("Hello"));
+        workbook.save(workbookPath, new ExcelOoxmlPersistenceOptions(null, null));
+      }
+      try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+        assertEquals("Hello", reopened.sheet("Alpha").text("A1"));
+      }
+    } finally {
+      Files.deleteIfExists(workbookPath);
+    }
+  }
+
+  @Test
   void savesToPathsWithoutParentDirectories() throws IOException {
     Path relativePath = Path.of("gridgrind-relative-" + UUID.randomUUID() + ".xlsx");
 

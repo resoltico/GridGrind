@@ -7,7 +7,6 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.apache.poi.ss.formula.atp.AnalysisToolPak;
-import org.apache.poi.ss.formula.eval.FunctionEval;
 import org.apache.poi.ss.formula.function.FunctionMetadataRegistry;
 
 /**
@@ -210,8 +209,6 @@ final class FormulaExceptions {
 
   private static boolean isKnownBuiltinFunction(String normalizedFunctionName) {
     return FunctionMetadataRegistry.getFunctionByName(normalizedFunctionName) != null
-        || FunctionEval.getSupportedFunctionNames().contains(normalizedFunctionName)
-        || FunctionEval.getNotSupportedFunctionNames().contains(normalizedFunctionName)
         || AnalysisToolPak.getSupportedFunctionNames().contains(normalizedFunctionName)
         || AnalysisToolPak.getNotSupportedFunctionNames().contains(normalizedFunctionName);
   }

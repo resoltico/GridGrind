@@ -538,6 +538,56 @@ class ExcelSheetCopyControllerTest {
   }
 
   @Test
+  void copySheetHandlesEdgeCasesInValidationFormulaRetargeting() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Source");
+      var sheet = workbook.xssfWorkbook().getSheet("Source");
+      // List validation: formula1.length() < 2 — covers isQuotedListLiteral length < 2 branch.
+      addRawValidation(sheet, "A1", STDataValidationType.LIST, "1");
+      // List validation: starts with '"' but does not end with '"' — covers startsWith=true,
+      // endsWith=false branch in isQuotedListLiteral (valid formula, not a quoted literal).
+      addRawValidation(sheet, "B1", STDataValidationType.LIST, "\"prefix\"&Source!A1");
+      // Non-list validation: no formula1 set — covers isSetFormula1()=false branch.
+      addRawValidation(sheet, "C1", STDataValidationType.WHOLE, null);
+      // Non-list validation: formula1 is blank — covers isSetFormula1()=true, isBlank()=true
+      // branch.
+      addRawValidation(sheet, "D1", STDataValidationType.WHOLE, " ");
+      // Non-list validation: formula1 non-blank, formula2 not set — covers isSetFormula2()=false.
+      addRawValidation(sheet, "E1", STDataValidationType.WHOLE, "1");
+      // Non-list validation: formula1 non-blank, formula2 blank — covers isSetFormula2()=true,
+      // isBlank()=true branch.
+      addRawValidationWithFormulas(sheet, "F1", STDataValidationType.WHOLE, "1", " ");
+      // Raw validation without a declared type still needs formula retargeting.
+      var validations = sheet.getCTWorksheet().getDataValidations();
+      CTDataValidation missingType = validations.addNewDataValidation();
+      missingType.setSqref(List.of("G1"));
+      missingType.setFormula1("Source!$A$1");
+      validations.setCount(validations.sizeOfDataValidationArray());
+
+      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+
+      List<CTDataValidation> rawReplica =
+          List.of(
+              workbook
+                  .xssfWorkbook()
+                  .getSheet("Replica")
+                  .getCTWorksheet()
+                  .getDataValidations()
+                  .getDataValidationArray());
+      assertEquals(7, rawReplica.size());
+      assertEquals("1", rawReplica.get(0).getFormula1());
+      assertTrue(rawReplica.get(1).getFormula1().contains("Replica"));
+      assertFalse(rawReplica.get(2).isSetFormula1());
+      assertEquals(" ", rawReplica.get(3).getFormula1());
+      assertEquals("1", rawReplica.get(4).getFormula1());
+      assertFalse(rawReplica.get(4).isSetFormula2());
+      assertEquals("1", rawReplica.get(5).getFormula1());
+      assertEquals(" ", rawReplica.get(5).getFormula2());
+      assertEquals("Replica!$A$1", rawReplica.get(6).getFormula1());
+    }
+  }
+
+  @Test
   void supportedConditionalFormattingCopiesEverySupportedRuleFamily() {
     ExcelConditionalFormattingBlockSnapshot supportedBlock =
         new ExcelConditionalFormattingBlockSnapshot(
@@ -678,6 +728,15 @@ class ExcelSheetCopyControllerTest {
       String range,
       STDataValidationType.Enum type,
       String formula1) {
+    addRawValidationWithFormulas(sheet, range, type, formula1, null);
+  }
+
+  private static void addRawValidationWithFormulas(
+      org.apache.poi.xssf.usermodel.XSSFSheet sheet,
+      String range,
+      STDataValidationType.Enum type,
+      String formula1,
+      String formula2) {
     var validations =
         sheet.getCTWorksheet().isSetDataValidations()
             ? sheet.getCTWorksheet().getDataValidations()
@@ -687,6 +746,9 @@ class ExcelSheetCopyControllerTest {
     validation.setType(type);
     if (formula1 != null) {
       validation.setFormula1(formula1);
+    }
+    if (formula2 != null) {
+      validation.setFormula2(formula2);
     }
     validations.setCount(validations.sizeOfDataValidationArray());
   }

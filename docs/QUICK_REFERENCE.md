@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.43.0"
+version: "0.44.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-13"
 route:
@@ -343,6 +343,9 @@ Drawing-family content such as pictures and charts remains outside the current c
 }
 ```
 
+Append-edge inserts on sparse sheets do not create a physical tail row until content or row
+metadata exists there.
+
 ## DELETE_ROWS
 
 ```json
@@ -379,6 +382,9 @@ band (`LIM-018`).
   "columnCount": 2
 }
 ```
+
+Append-edge inserts on sparse sheets do not create a physical tail column until cells or explicit
+column metadata exist there.
 
 ## DELETE_COLUMNS
 

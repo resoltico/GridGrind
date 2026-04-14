@@ -97,6 +97,8 @@ class ExcelChartPoiBridgeTest {
 
     assertEquals("AREA", ExcelChartPoiBridge.canonicalPlotTypeToken("XDDFAreaChartData"));
     assertEquals("CUSTOMPLOT", ExcelChartPoiBridge.canonicalPlotTypeToken("CustomPlot"));
+    // startsWith("XDDF") true but endsWith("ChartData") false — falls through to toUpperCase.
+    assertEquals("XDDFUNKNOWN", ExcelChartPoiBridge.canonicalPlotTypeToken("XDDFUnknown"));
   }
 
   @Test

@@ -48,6 +48,11 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class, () -> new ExcelGradientStopSnapshot(1.5d, rgb("#112233")));
     assertThrows(
+        IllegalArgumentException.class, () -> new ExcelGradientStopSnapshot(-0.1d, rgb("#112233")));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelGradientStopSnapshot(Double.NaN, rgb("#112233")));
+    assertThrows(
         IllegalArgumentException.class,
         () ->
             new ExcelGradientFillSnapshot(
@@ -78,6 +83,9 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelCellFillSnapshot(ExcelFillPattern.SOLID, rgb("#112233"), null, gradient));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelCellFillSnapshot(ExcelFillPattern.NONE, null, rgb("#445566"), gradient));
   }
 
   @Test
@@ -111,6 +119,7 @@ class AdvancedReadEngineTypesTest {
           ExcelColorSnapshotSupport.snapshot(tintedTheme));
       assertEquals("#112233", ExcelRgbColorSupport.toRgbHex(rgbColor));
       assertNull(ExcelRgbColorSupport.toRgbHex(null));
+      assertNull(ExcelRgbColorSupport.toRgbHex(tintedTheme));
       assertNull(ExcelRgbColorSupport.toRgbHex(malformedRgb));
       assertNull(ExcelColorSnapshotSupport.snapshot(workbook, null));
       assertEquals(
@@ -180,6 +189,10 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelPrintMarginsSnapshot(-0.1d, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelPrintMarginsSnapshot(Double.POSITIVE_INFINITY, 0.5d, 1.0d, 1.0d, 0.3d, 0.3d));
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -383,6 +396,9 @@ class AdvancedReadEngineTypesTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, -1.0d, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new ExcelAutofilterFilterCriterionSnapshot.Top10(true, false, Double.NaN, null));
     assertThrows(
         IllegalArgumentException.class,
         () ->

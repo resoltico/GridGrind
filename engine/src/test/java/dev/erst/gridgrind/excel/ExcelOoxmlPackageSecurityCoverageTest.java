@@ -105,6 +105,32 @@ class ExcelOoxmlPackageSecurityCoverageTest {
   }
 
   @Test
+  void encryptedMaterializationRequiresOpenOptionsPassword() throws IOException {
+    OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
+        OoxmlSecurityTestSupport.createEncryptedWorkbook(
+            Files.createTempDirectory("gridgrind-ooxml-password-required-"));
+
+    WorkbookPasswordRequiredException failure =
+        assertThrows(
+            WorkbookPasswordRequiredException.class,
+            () ->
+                ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
+                    encryptedWorkbook.workbookPath(), null, Files::createTempFile));
+
+    assertEquals(encryptedWorkbook.workbookPath(), failure.workbookPath());
+
+    WorkbookPasswordRequiredException nullPasswordFailure =
+        assertThrows(
+            WorkbookPasswordRequiredException.class,
+            () ->
+                ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
+                    encryptedWorkbook.workbookPath(),
+                    new ExcelOoxmlOpenOptions(null),
+                    Files::createTempFile));
+    assertEquals(encryptedWorkbook.workbookPath(), nullPasswordFailure.workbookPath());
+  }
+
+  @Test
   void unsupportedMagicAndMaterializedWorkbookEdgeCasesStayExplicit() throws IOException {
     Path unsupportedPath = Files.createTempFile("gridgrind-unsupported-magic-", ".bin");
     Files.writeString(unsupportedPath, "plain text is not an OOXML workbook");
@@ -513,6 +539,70 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     true,
                     new ExcelOoxmlPersistenceOptions(null, null)));
     assertTrue(unsignedMutationFailure.getMessage().contains("rewritten"));
+
+    Path passThroughTarget = plainWorkbookPath.resolveSibling("signed-guard-unmutated-output.xlsx");
+    ExcelOoxmlPackageSecuritySupport.persistMaterializedWorkbook(
+        plainWorkbookPath,
+        passThroughTarget,
+        signedSecurity,
+        null,
+        false,
+        new ExcelOoxmlPersistenceOptions(null, null));
+    assertTrue(Files.exists(passThroughTarget));
+  }
+
+  @Test
+  void saveWorkbookCoversInMemoryAndSignedPassthroughBranches() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Memory").setCell("A1", ExcelCellValue.text("Memory save"));
+      Path memoryTarget = Files.createTempFile("gridgrind-save-memory-", ".xlsx");
+
+      ExcelOoxmlPackageSecuritySupport.saveWorkbook(
+          workbook, memoryTarget, null, Files::createTempFile);
+
+      try (ExcelWorkbook reopened = ExcelWorkbook.open(memoryTarget)) {
+        assertEquals("Memory save", reopened.sheet("Memory").text("A1"));
+      }
+    }
+
+    OoxmlSecurityTestSupport.SignedWorkbook signedWorkbook =
+        OoxmlSecurityTestSupport.createSignedWorkbook(
+            Files.createTempDirectory("gridgrind-save-signed-passthrough-"));
+    Path copiedWorkbookPath =
+        signedWorkbook.workbookPath().getParent().resolve("copied-signed.xlsx");
+    AtomicInteger tempFilesCreated = new AtomicInteger();
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(signedWorkbook.workbookPath())) {
+      ExcelOoxmlPackageSecuritySupport.saveWorkbook(
+          workbook,
+          copiedWorkbookPath,
+          new ExcelOoxmlPersistenceOptions(null, null),
+          (prefix, suffix) -> {
+            tempFilesCreated.incrementAndGet();
+            return Files.createTempFile(prefix, suffix);
+          });
+    }
+    assertEquals(0, tempFilesCreated.get());
+    assertArrayEquals(
+        Files.readAllBytes(signedWorkbook.workbookPath()), Files.readAllBytes(copiedWorkbookPath));
+    assertTrue(OoxmlSecurityTestSupport.signatureValid(copiedWorkbookPath));
+
+    Path resignedWorkbookPath = signedWorkbook.workbookPath().getParent().resolve("resigned.xlsx");
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(signedWorkbook.workbookPath())) {
+      ExcelOoxmlPackageSecuritySupport.saveWorkbook(
+          workbook,
+          resignedWorkbookPath,
+          new ExcelOoxmlPersistenceOptions(
+              null,
+              new ExcelOoxmlSignatureOptions(
+                  signedWorkbook.pkcs12Path(),
+                  signedWorkbook.keystorePassword(),
+                  signedWorkbook.keyPassword(),
+                  signedWorkbook.alias(),
+                  ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                  null)),
+          Files::createTempFile);
+    }
+    assertTrue(OoxmlSecurityTestSupport.signatureValid(resignedWorkbookPath));
   }
 
   private static void assertCopyDeleteAndEffectiveOptionsBranches(Path sourceWorkbookPath)
@@ -708,7 +798,27 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     multiAliasKeyStore, null, signatureOptions));
     assertTrue(multipleAliasesFailure.getMessage().contains("multiple private-key aliases"));
 
+    KeyStore certificateOnlyAliasKeyStore = KeyStore.getInstance("PKCS12");
+    certificateOnlyAliasKeyStore.load(null, null);
+    certificateOnlyAliasKeyStore.setCertificateEntry("certificate-only", certificate);
+    InvalidSigningConfigurationException certificateOnlyAliasFailure =
+        assertThrows(
+            InvalidSigningConfigurationException.class,
+            () ->
+                ExcelOoxmlPackageSecuritySupport.resolveAlias(
+                    certificateOnlyAliasKeyStore, null, signatureOptions));
+    assertTrue(
+        certificateOnlyAliasFailure.getMessage().contains("does not contain a private-key entry"));
+
     KeyStore nonPrivateKeyStore = fakeKeyStore(certificate.getPublicKey(), null);
+    InvalidSigningConfigurationException nonPrivateAliasFailure =
+        assertThrows(
+            InvalidSigningConfigurationException.class,
+            () ->
+                ExcelOoxmlPackageSecuritySupport.resolveAlias(
+                    nonPrivateKeyStore, null, signatureOptions));
+    assertTrue(
+        nonPrivateAliasFailure.getMessage().contains("does not contain a private-key entry"));
     InvalidSigningConfigurationException reflectedNonPrivateKeyFailure =
         assertThrows(
             InvalidSigningConfigurationException.class,
@@ -729,6 +839,35 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                 ExcelOoxmlPackageSecuritySupport.signingCertificateChain(
                     nonX509ChainKeyStore, signedWorkbook.pkcs12Path(), "alias"));
     assertTrue(nonX509Failure.getMessage().contains("non-X.509 certificate"));
+
+    KeyStore emptyChainKeyStore =
+        fakeKeyStore(
+            signingKeyStore.getKey(
+                signedWorkbook.alias(), signedWorkbook.keyPassword().toCharArray()),
+            new Certificate[0]);
+    InvalidSigningConfigurationException emptyChainFailure =
+        assertThrows(
+            InvalidSigningConfigurationException.class,
+            () ->
+                ExcelOoxmlPackageSecuritySupport.signingCertificateChain(
+                    emptyChainKeyStore, signedWorkbook.pkcs12Path(), "alias"));
+    assertTrue(emptyChainFailure.getMessage().contains("X.509 certificate chain"));
+
+    Path signableWorkbookPath = Files.createTempFile("gridgrind-sign-description-", ".xlsx");
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Signed").setCell("A1", ExcelCellValue.text("Signed workbook"));
+      workbook.save(signableWorkbookPath);
+    }
+    ExcelOoxmlPackageSecuritySupport.signWorkbook(
+        signableWorkbookPath,
+        new ExcelOoxmlSignatureOptions(
+            signedWorkbook.pkcs12Path(),
+            signedWorkbook.keystorePassword(),
+            signedWorkbook.keyPassword(),
+            signedWorkbook.alias(),
+            ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+            "GridGrind test signature"));
+    assertTrue(OoxmlSecurityTestSupport.signatureValid(signableWorkbookPath));
   }
 
   private static KeyStore loadPkcs12(Path path, String password)

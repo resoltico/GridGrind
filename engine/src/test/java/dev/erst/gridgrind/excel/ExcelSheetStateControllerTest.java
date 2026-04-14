@@ -241,4 +241,115 @@ class ExcelSheetStateControllerTest {
       assertFalse(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
     }
   }
+
+  @Test
+  void workbookProtectionHashSubconditionsCoverEachIndividualField() throws IOException {
+    ExcelSheetStateController controller = new ExcelSheetStateController();
+
+    // normalizeWorkbookProtectionNode: hasLocks — windowsLocked is the first true.
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      controller.setWorkbookProtection(
+          workbook, new ExcelWorkbookProtectionSettings(false, true, false, null, null));
+      assertTrue(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
+    }
+
+    // normalizeWorkbookProtectionNode: hasLocks — revisionsLocked is the first true.
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      controller.setWorkbookProtection(
+          workbook, new ExcelWorkbookProtectionSettings(false, false, true, null, null));
+      assertTrue(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
+    }
+
+    // workbookPasswordHashPresent: each sub-condition as the first true.
+    // Also covers: hasPasswords — workbookPasswordHashPresent=false,
+    // revisionsPasswordHashPresent=true.
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      var protection = workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
+
+      protection.setWorkbookHashValue(new byte[] {0x01});
+      assertTrue(controller.workbookProtection(workbook).workbookPasswordHashPresent());
+      protection.unsetWorkbookHashValue();
+
+      protection.setWorkbookSaltValue(new byte[] {0x02});
+      assertTrue(controller.workbookProtection(workbook).workbookPasswordHashPresent());
+      protection.unsetWorkbookSaltValue();
+
+      protection.setWorkbookSpinCount(100_000L);
+      assertTrue(controller.workbookProtection(workbook).workbookPasswordHashPresent());
+      protection.unsetWorkbookSpinCount();
+
+      protection.setWorkbookAlgorithmName("SHA-512");
+      assertTrue(controller.workbookProtection(workbook).workbookPasswordHashPresent());
+      protection.unsetWorkbookAlgorithmName();
+
+      // revisionsPasswordHashPresent sub-conditions.
+      protection.setRevisionsHashValue(new byte[] {0x03});
+      assertTrue(controller.workbookProtection(workbook).revisionsPasswordHashPresent());
+      protection.unsetRevisionsHashValue();
+
+      protection.setRevisionsSaltValue(new byte[] {0x04});
+      assertTrue(controller.workbookProtection(workbook).revisionsPasswordHashPresent());
+      protection.unsetRevisionsSaltValue();
+
+      protection.setRevisionsSpinCount(100_000L);
+      assertTrue(controller.workbookProtection(workbook).revisionsPasswordHashPresent());
+      protection.unsetRevisionsSpinCount();
+
+      protection.setRevisionsAlgorithmName("SHA-512");
+      assertTrue(controller.workbookProtection(workbook).revisionsPasswordHashPresent());
+      protection.unsetRevisionsAlgorithmName();
+
+      // hasPasswords: workbookPasswordHashPresent=false, revisionsPasswordHashPresent=true.
+      protection.setRevisionsPassword(new byte[] {0x05});
+      assertFalse(controller.workbookProtection(workbook).workbookPasswordHashPresent());
+      assertTrue(controller.workbookProtection(workbook).revisionsPasswordHashPresent());
+    }
+  }
+
+  @Test
+  void setWorkbookProtectionReusesExistingNodeAndRemovesItWhenNothingRemains() throws IOException {
+    ExcelSheetStateController controller = new ExcelSheetStateController();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+      workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
+
+      controller.setWorkbookProtection(
+          workbook, new ExcelWorkbookProtectionSettings(false, false, false, null, null));
+
+      assertFalse(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
+    }
+  }
+
+  @Test
+  void setWorkbookProtectionRetainsNodeWhenOnlyPasswordHashesRemain() throws IOException {
+    ExcelSheetStateController controller = new ExcelSheetStateController();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+
+      controller.setWorkbookProtection(
+          workbook, new ExcelWorkbookProtectionSettings(false, false, false, "secret", null));
+
+      assertEquals(
+          new ExcelWorkbookProtectionSnapshot(false, false, false, true, false),
+          controller.workbookProtection(workbook));
+      assertTrue(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Alpha");
+
+      controller.setWorkbookProtection(
+          workbook, new ExcelWorkbookProtectionSettings(false, false, false, null, "review"));
+
+      assertEquals(
+          new ExcelWorkbookProtectionSnapshot(false, false, false, false, true),
+          controller.workbookProtection(workbook));
+      assertTrue(workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection());
+    }
+  }
 }

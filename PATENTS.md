@@ -20,16 +20,19 @@ retaliation clause.
 | Apache POI | Apache 2.0 | Yes |
 | Apache XMLBeans | Apache 2.0 | Yes |
 | Apache Log4j Core / API | Apache 2.0 | Yes |
+| Apache Santuario xmlsec | Apache 2.0 | Yes |
 | Apache Commons (Codec, Collections, Compress, IO, Lang, Math) | Apache 2.0 | Yes |
 | Jackson Databind / Core / Annotations | Apache 2.0 | Yes |
 | SparseBitSet | Apache 2.0 | Yes |
+| Bouncy Castle (bcpkix, bcprov, bcutil) | MIT variant | No |
+| SLF4J API | MIT | No |
 | CurvesAPI | BSD 3-Clause | No |
 
 ## Bundled Dependencies
 
-GridGrind's executable JAR bundles Apache POI, Apache XMLBeans, Apache Log4j, Apache Commons
-libraries, Jackson, SparseBitSet, and CurvesAPI. See NOTICE for the complete list and
-attributions.
+GridGrind's executable JAR bundles Apache POI, Apache XMLBeans, Apache Log4j, Apache Santuario
+xmlsec, Apache Commons libraries, Jackson, SparseBitSet, Bouncy Castle, SLF4J API, and
+CurvesAPI. See NOTICE for the complete list and attributions.
 
 The Apache 2.0 components include an explicit patent grant in Section 3:
 

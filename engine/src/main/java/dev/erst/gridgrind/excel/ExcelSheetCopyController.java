@@ -625,7 +625,7 @@ final class ExcelSheetCopyController {
   }
 
   private static String validationType(CTDataValidation validation) {
-    return validation.isSetType() && validation.getType() != null
+    return validation.isSetType()
         ? validation.getType().toString().toLowerCase(java.util.Locale.ROOT)
         : "";
   }

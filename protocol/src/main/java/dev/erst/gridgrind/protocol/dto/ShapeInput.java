@@ -17,21 +17,32 @@ public record ShapeInput(
     if (presetGeometryToken != null) {
       presetGeometryToken = presetGeometryToken.trim();
     }
-    if (kind == ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE) {
-      if (presetGeometryToken == null || presetGeometryToken.isBlank()) {
-        presetGeometryToken = "rect";
-      }
-    } else if (kind == ExcelAuthoredDrawingShapeKind.CONNECTOR) {
-      if (presetGeometryToken != null) {
-        throw new IllegalArgumentException(
-            "presetGeometryToken is only supported for SIMPLE_SHAPE");
-      }
-      if (text != null) {
-        throw new IllegalArgumentException("text is only supported for SIMPLE_SHAPE");
-      }
-    }
+    presetGeometryToken = normalizePresetGeometryToken(kind, presetGeometryToken);
+    validateConnectorConfiguration(kind, presetGeometryToken, text);
     if (text != null && text.isBlank()) {
       throw new IllegalArgumentException("text must not be blank");
+    }
+  }
+
+  private static String normalizePresetGeometryToken(
+      ExcelAuthoredDrawingShapeKind kind, String presetGeometryToken) {
+    if (kind == ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE
+        && (presetGeometryToken == null || presetGeometryToken.isBlank())) {
+      return "rect";
+    }
+    return presetGeometryToken;
+  }
+
+  private static void validateConnectorConfiguration(
+      ExcelAuthoredDrawingShapeKind kind, String presetGeometryToken, String text) {
+    if (kind != ExcelAuthoredDrawingShapeKind.CONNECTOR) {
+      return;
+    }
+    if (presetGeometryToken != null) {
+      throw new IllegalArgumentException("presetGeometryToken is only supported for SIMPLE_SHAPE");
+    }
+    if (text != null) {
+      throw new IllegalArgumentException("text is only supported for SIMPLE_SHAPE");
     }
   }
 

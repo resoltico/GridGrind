@@ -176,6 +176,12 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 object : Action<JacocoCoverageVerification> {
                     override fun execute(verification: JacocoCoverageVerification) {
                         verification.dependsOn(tasks.withType(Test::class.java))
+                        // Include execution data from all local test tasks (e.g. parityTest as well as test).
+                        verification.executionData.from(
+                            layout.buildDirectory.dir("jacoco").map { dir ->
+                                fileTree(dir) { include("*.exec") }
+                            },
+                        )
                         verification.violationRules(
                             object : Action<JacocoViolationRulesContainer> {
                                 override fun execute(rules: JacocoViolationRulesContainer) {
@@ -185,6 +191,17 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                                                 rule.limit(
                                                     object : Action<JacocoLimit> {
                                                         override fun execute(limit: JacocoLimit) {
+                                                            limit.counter = "LINE"
+                                                            limit.value = "COVEREDRATIO"
+                                                            limit.minimum = BigDecimal("1.0")
+                                                        }
+                                                    },
+                                                )
+                                                rule.limit(
+                                                    object : Action<JacocoLimit> {
+                                                        override fun execute(limit: JacocoLimit) {
+                                                            limit.counter = "BRANCH"
+                                                            limit.value = "COVEREDRATIO"
                                                             limit.minimum = BigDecimal("1.0")
                                                         }
                                                     },

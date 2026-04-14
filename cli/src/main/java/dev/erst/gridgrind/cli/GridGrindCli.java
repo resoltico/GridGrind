@@ -361,6 +361,7 @@ public final class GridGrindCli {
   static String licenseText(Class<?> anchor) {
     return licenseText(
         anchor.getResourceAsStream("/licenses/LICENSE"),
+        anchor.getResourceAsStream("/licenses/NOTICE"),
         anchor.getResourceAsStream("/licenses/LICENSE-APACHE-2.0"),
         anchor.getResourceAsStream("/licenses/LICENSE-BSD-3-CLAUSE"));
   }
@@ -371,53 +372,54 @@ public final class GridGrindCli {
    * <p>Any null or unreadable stream is silently skipped. Returns a fallback notice when all
    * streams are absent.
    */
-  static String licenseText(InputStream own, InputStream apache, InputStream bsd) {
-    StringBuilder out = new StringBuilder(4096);
-    append(out, own);
-    boolean hasOwn = !out.isEmpty();
-    int beforeApache = out.length();
-    append(out, apache);
-    boolean hasApache = out.length() > beforeApache;
-    int beforeBsd = out.length();
-    append(out, bsd);
-    boolean hasBsd = out.length() > beforeBsd;
-    if (out.isEmpty()) {
+  static String licenseText(
+      InputStream own, InputStream notice, InputStream apache, InputStream bsd) {
+    String ownText = readLicenseStream(own);
+    String thirdParty = buildThirdParty(notice, apache, bsd);
+    if (ownText.isEmpty() && thirdParty.isEmpty()) {
       return "License information not available in this distribution.\n";
     }
-    // Rebuild with separators in the correct positions now that we know what was present.
-    StringBuilder result = new StringBuilder(out.length() + 64);
-    if (hasOwn) {
-      result.append(out, 0, beforeApache);
-    }
-    if (hasApache || hasBsd) {
-      if (hasOwn) {
-        result.append("\n---\n\nThird-party licenses:\n\n");
+    StringBuilder result = new StringBuilder(ownText.length() + thirdParty.length() + 64);
+    result.append(ownText);
+    if (!thirdParty.isEmpty()) {
+      if (!ownText.isEmpty()) {
+        result.append("\n---\n\nThird-party notices and licenses:\n\n");
       }
-      if (hasApache) {
-        result.append(out, beforeApache, beforeBsd);
-      }
-      if (hasApache && hasBsd) {
-        result.append('\n');
-      }
-      if (hasBsd) {
-        result.append(out, beforeBsd, out.length());
-      }
+      result.append(thirdParty);
     }
     String text = result.toString();
-    if (!text.endsWith("\n")) {
-      text += '\n';
-    }
-    return text;
+    return text.endsWith("\n") ? text : text + '\n';
   }
 
-  private static void append(StringBuilder out, InputStream stream) {
+  private static String buildThirdParty(InputStream notice, InputStream apache, InputStream bsd) {
+    String noticeText = readLicenseStream(notice);
+    String apacheText = readLicenseStream(apache);
+    String bsdText = readLicenseStream(bsd);
+    int capacity = noticeText.length() + apacheText.length() + bsdText.length() + 2;
+    StringBuilder result = new StringBuilder(capacity);
+    String sep = "";
+    if (!noticeText.isEmpty()) {
+      result.append(noticeText);
+      sep = "\n";
+    }
+    if (!apacheText.isEmpty()) {
+      result.append(sep).append(apacheText);
+      sep = "\n";
+    }
+    if (!bsdText.isEmpty()) {
+      result.append(sep).append(bsdText);
+    }
+    return result.toString();
+  }
+
+  private static String readLicenseStream(InputStream stream) {
     if (stream == null) {
-      return;
+      return "";
     }
     try (stream) {
-      out.append(new String(stream.readAllBytes(), StandardCharsets.UTF_8));
+      return new String(stream.readAllBytes(), StandardCharsets.UTF_8);
     } catch (IOException ignored) {
-      // Skip unreadable resource.
+      return "";
     }
   }
 

@@ -54,7 +54,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.43.0
+docker pull ghcr.io/resoltico/gridgrind:0.44.0
 ```
 
 Pipe a JSON request to stdin, receive a JSON response on stdout:
@@ -160,6 +160,11 @@ gate:
 That local whole-repo gate runs the root quality checks, nested Jazzer verification, packaging
 smoke checks, and Docker smoke coverage in one supported sequence. Jazzer-specific operator flows
 also remain available through the scripts under [`jazzer/bin`](./jazzer/bin/).
+The committed example requests under [`examples/`](./examples/) also double as promoted
+protocol-request regression inputs for drawing media, charts, pivots, conditional formatting,
+low-memory modes, and OOXML package security, while the deterministic `.xlsx` round-trip verifier
+asserts save-and-reopen preservation for drawings, charts, pivots, validations, tables,
+autofilters, and conditional formatting.
 
 For direct Apache POI `.xlsx` parity measurement, run:
 

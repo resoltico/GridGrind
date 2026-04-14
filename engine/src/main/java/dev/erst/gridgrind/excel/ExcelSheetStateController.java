@@ -230,9 +230,7 @@ final class ExcelSheetStateController {
     Objects.requireNonNull(protection, "protection must not be null");
 
     workbook.xssfWorkbook().unLock();
-    if (!workbook.xssfWorkbook().getCTWorkbook().isSetWorkbookProtection()) {
-      workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
-    }
+    workbook.xssfWorkbook().getCTWorkbook().addNewWorkbookProtection();
     if (protection.structureLocked()) {
       workbook.xssfWorkbook().lockStructure();
     }

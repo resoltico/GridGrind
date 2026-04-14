@@ -5,12 +5,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.44.0] - 2026-04-14
+
+### Changed
+
+- JaCoCo branch-coverage enforcement raised toward 100 % for the `engine` module: branch paths
+  previously unreachable by the test suite are now exercised across seven controller and support
+  classes (details below). Coverage targets are asserted by the Gradle `coverage` task and must
+  remain green before any release.
+- The remaining advanced-XSSF branch gaps are now closed across drawing, pivot-table,
+  package-security, autofilter, print-layout, data-validation, sheet-state, event-read,
+  sheet-copy, conditional-formatting, formula-rename, and formula-exception flows. Helpers that
+  were only guarding unmaterializable POI or XmlBeans null states were simplified to match the
+  real runtime contract, while new tests now exercise pivot-cache registration cleanup, embedded
+  preview lookup, sparse event-reader workbook metadata, and package-signing or encryption edge
+  handling.
+- `ExcelPrintLayoutController` branch coverage extended: `shouldUnsetPageSetupOrientation` now
+  covers the `LANDSCAPE` false-return path in addition to `PORTRAIT`; `isEmptyPageSetup` now
+  covers all eleven individual attribute-present/default combinations (paperSize, draft,
+  blackAndWhite, copies, useFirstPageNumber, firstPageNumber) for both the true and false returns.
+- `ExcelConditionalFormattingController` health-check branch coverage extended: the
+  `CellValueRule`-with-two-valid-formulas path (both `isBrokenFormula` calls return false, no
+  health finding emitted) is now exercised by a dedicated test so the short-circuit `&&` chain
+  cannot regress silently.
+- `ExcelWorkbook` persistence-options branch coverage extended: the
+  `persistenceOptions != null && persistenceOptions.isEmpty()` fast-path (treat as plain save)
+  is now covered by a test that passes `new ExcelOoxmlPersistenceOptions(null, null)` to
+  `save(Path, ExcelOoxmlPersistenceOptions)`.
+- `ExcelFormulaSheetRenameSupport` external-workbook branch coverage extended: the
+  `getExternalWorkbookNumber() >= 1` guard (skip rename for cross-workbook references) is now
+  covered via a test that links an external workbook, references it from a formula, and asserts
+  the returned formula still names the external book rather than the renamed local sheet.
+- `FormulaExceptions.isKnownBuiltinFunction` branch coverage extended: the
+  `AnalysisToolPak.getSupportedFunctionNames()` and `AnalysisToolPak.getNotSupportedFunctionNames()`
+  OR-chain branches (conditions 4 and 5) are now covered by tests that locate functions present
+  exclusively in each ATP set — absent from `FunctionMetadataRegistry` and both
+  `FunctionEval` catalogs — so each OR branch can be the first-true entry.
+- `ExcelSheetCopyController` validation-formula retargeting branch coverage extended: edge cases
+  now tested include formulas shorter than two characters, quoted-list literals that start but do
+  not end with `"`, absent `formula1`, blank `formula1`, absent `formula2`, and blank `formula2`,
+  exercising all guard branches in `isQuotedListLiteral` and the `isSetFormula`/blank checks.
+- `ExcelEventWorkbookReader` branch coverage extended: the `sizeOfWorkbookViewArray() == 0` path
+  in `activeSheetIndex` is now covered; additionally an integration test exercises blank cell-ref
+  (`r=""`) handling and a `<col>` element with no `max` attribute in the sheet XML parse path.
+- README, the public capability inventory, the internal XSSF parity ledger, and the Jazzer
+  coverage guide now agree on the shipped verification surface for drawings, charts, pivots,
+  conditional formatting, low-memory event reads, and OOXML package security. The Jazzer guide no
+  longer lists already covered chart, picture, pivot, or conditional-format families as missing
+  fuzz surface.
+
 ### Fixed
 
+- Docker smoke now builds through `docker buildx build --load` under an anonymous `DOCKER_CONFIG`
+  while preserving the active local Docker engine endpoint, so local and CI verification no longer
+  depend on personal Docker login state or Docker's deprecated legacy builder path.
+- Docker smoke now runs mounted-path container commands as the caller's UID:GID, so generated
+  response files and saved workbooks stay operator-owned instead of leaving root-owned artifacts
+  behind on Linux CI or other Unix-like hosts.
+- `scripts/verify-container-publication.sh`, the Docker developer docs, and the release protocol
+  now codify anonymous public-container verification while preserving the active Docker engine
+  endpoint, keeping release verification aligned with the real workstation contract.
+- `NOTICE` now covers all bundled runtime dependencies: Apache Santuario xmlsec (Apache 2.0),
+  Bouncy Castle bcpkix/bcprov/bcutil (MIT variant), and SLF4J API (MIT). These were added as
+  runtime dependencies in 0.43.0 but omitted from the attribution file.
+- `--license` output now includes the `NOTICE` attribution file between the GridGrind MIT license
+  and the third-party license texts, satisfying Apache License 2.0 §4(d) for runtime distributions.
+- `PATENTS.md` dependency table now lists Apache Santuario xmlsec, Bouncy Castle, and SLF4J API.
+- Fat JAR (`META-INF/`) now includes `PATENTS.md` alongside `NOTICE` and the license files.
+- Docker image now ships `PATENTS.md` in `/usr/share/doc/gridgrind/` for completeness.
+- `org.opencontainers.image.licenses` OCI label updated from `MIT` to the full SPDX expression
+  `MIT AND Apache-2.0 AND BSD-3-Clause` to accurately reflect the bundled dependency licenses.
 - `scripts/verify-container-publication.sh` now verifies the exact two-line `--version` product
   header that the shipped container exposes (`GridGrind <version>` plus the product
   description), and `./check.sh` now includes a dedicated shell regression for that verifier so
   future release workflows cannot fail on a stale output assumption.
+- The packaged CLI and Docker image now include the Bouncy Castle runtime dependencies required by
+  OOXML package-security inspection, so `source.type=EXISTING` opens and low-memory
+  `STREAMING_WRITE` readback no longer fail at runtime with `NoClassDefFoundError` on the
+  existing-workbook path.
+- The packaged CLI now also bundles an explicit SLF4J provider for package-security dependencies,
+  and the Docker smoke gate rejects unexpected stderr on request execution, so successful
+  existing-workbook and low-memory request flows stay clean for agent consumers.
+- The Jazzer runtime now binds the same SLF4J provider explicitly and asserts it in support
+  tests, so regression replay and round-trip harnesses no longer emit fallback logger warnings
+  on stderr while they pass.
+- The machine-readable protocol catalog now correctly marks `SET_SHEET_PROTECTION.password` and
+  `SET_AUTOFILTER.criteria` or `sortState` as optional to match the shipped runtime contract.
+- Public request-shape docs and catalog summaries now clarify sparse append-edge row or column
+  inserts: valid append-position inserts do not materialize a new physical tail row or column
+  until content or explicit metadata exists there.
 
 ## [0.43.0] - 2026-04-13
 
@@ -1590,7 +1673,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.43.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.44.0...HEAD
+[0.44.0]: https://github.com/resoltico/GridGrind/compare/v0.43.0...v0.44.0
 [0.43.0]: https://github.com/resoltico/GridGrind/compare/v0.42.0...v0.43.0
 [0.42.0]: https://github.com/resoltico/GridGrind/compare/v0.41.0...v0.42.0
 [0.41.0]: https://github.com/resoltico/GridGrind/compare/v0.40.0...v0.41.0

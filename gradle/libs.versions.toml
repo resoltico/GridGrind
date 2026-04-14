@@ -1,6 +1,6 @@
 [versions]
 junit-jupiter = "6.0.3"
-junit-platform-launcher = "2.0.3"
+junit-platform-launcher = "6.0.3"
 junit-bom = "6.0.3"
 jackson-databind = "3.0.3"
 log4j = "2.25.3"
@@ -30,6 +30,7 @@ junit-bom = { module = "org.junit:junit-bom", version.ref = "junit-bom" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
 junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junit-platform-launcher" }
 log4j-core = { module = "org.apache.logging.log4j:log4j-core", version.ref = "log4j" }
+log4j-slf4j2-impl = { module = "org.apache.logging.log4j:log4j-slf4j2-impl", version.ref = "log4j" }
 poi-ooxml = { module = "org.apache.poi:poi-ooxml", version.ref = "poi-ooxml" }
 poi-ooxml-full = { module = "org.apache.poi:poi-ooxml-full", version.ref = "poi-ooxml" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }

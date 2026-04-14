@@ -52,7 +52,6 @@ public record CellFontInput(
         && fontColor == null
         && fontColorTheme == null
         && fontColorIndexed == null
-        && fontColorTint == null
         && underline == null
         && strikeout == null) {
       throw new IllegalArgumentException("font must set at least one attribute");

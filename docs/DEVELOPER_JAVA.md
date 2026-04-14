@@ -1,63 +1,126 @@
 ---
 afad: "3.5"
-version: "0.43.0"
+version: "0.44.0"
 domain: DEVELOPER_JAVA
-updated: "2026-04-11"
+updated: "2026-04-13"
 route:
-  keywords: [gridgrind, java26, jdk, jdk.java.net, shell, zsh, java-home, javac, brew, gradlew, macos]
-  questions: ["how is java 26 set up for gridgrind", "why does gridgrind require shell-level java 26", "how do i configure local java 26 for gridgrind", "why is /usr/bin/java wrong for gridgrind", "why should i use ./gradlew instead of brew gradle"]
+  keywords: [gridgrind, java26, gradle-wrapper, global-gradle, brew, openjdk.org, workstation, shell, java-home, macos]
+  questions: ["what is the best-practice java and gradle setup for gridgrind", "why should gridgrind use ./gradlew instead of brew gradle", "how do i configure a fresh macos machine for java 26 and the gradle wrapper", "when is a global gradle install acceptable", "why is shell-level java still required for gridgrind"]
 ---
 
-# Java 26 Developer Setup
+# Java 26 And Gradle Workstation Setup
 
-**Purpose**: Document the local Java 26 setup used for GridGrind development, why it is configured this way, and how to maintain it safely.
+**Purpose**: Document the best-practice macOS workstation setup for GridGrind contributors, including how Java and Gradle should be sourced and why.
 **Prerequisites**: macOS with zsh.
 
-## Current Stance
+Supported workstation shape:
+- the repository lives on the Mac's local filesystem
+- external, removable, or network-mounted volumes are outside the documented GridGrind setup standard
+  because full Gradle and JaCoCo verification require file-locking semantics that mounted volumes
+  can fail on macOS
 
-GridGrind targets Java 26.
+## Overview
 
-That target is enforced in project configuration, GitHub Actions, Docker, and the packaged CLI, so
-local developer shells should also resolve to Java 26 by default.
+GridGrind targets Java 26 and uses the repository Gradle wrapper pinned in
+[gradle/wrapper/gradle-wrapper.properties](../gradle/wrapper/gradle-wrapper.properties).
 
-The current local setup intentionally uses:
-- the official Java 26 release from [jdk.java.net/26](https://jdk.java.net/26/)
-- a user-local installation under `~/Library/Java/JavaVirtualMachines/openjdk-26.jdk`
-- explicit `JAVA_HOME` and `PATH` wiring in zsh startup files
-- no Homebrew-managed JDK on the machine
-- the Gradle wrapper (`./gradlew`) as the only supported Gradle entrypoint
+The supported setup is intentionally simple:
+- the machine provides Java 26
+- the repository checkout lives on the local Mac filesystem
+- the repository provides Gradle through `./gradlew`
+- no global `gradle` install is required for GridGrind
+- no Homebrew-managed JDK is part of the supported GridGrind setup
 
-## Why This Setup
+For wrapped Gradle projects, this is the best-practice stance:
+- Java is machine-level state
+- Gradle versioning is project-level state
+- the wrapper is the authoritative Gradle entrypoint
+
+## Canonical Stance
+
+| Component | Best-practice source | Why |
+|:----------|:---------------------|:----|
+| JDK | official OpenJDK 26 build from [openjdk.org](https://openjdk.org) | upstream project source of truth for Java 26 status and the published macOS AArch64 binary |
+| Gradle | repository `./gradlew` | pinned per project, downloads the official Gradle distribution declared by the repo |
+| Global `gradle` | absent by default | avoids a second moving part and avoids Homebrew `openjdk` dependency churn |
+| Brand-new Gradle repo bootstrap | temporary Gradle install only to generate and commit wrapper files | the wrapper becomes canonical immediately afterward |
+
+GridGrind contributors should therefore treat:
+- `./gradlew` as the only supported Gradle entrypoint in this repo
+- a missing global `gradle` command as healthy
+- Brew `gradle` as outside the supported setup
+- building Gradle from source as unrelated to normal workstation setup
+
+## Why This Is The Best Practice
 
 Reasons:
-- `java -jar gridgrind.jar` uses the ambient shell `java`, not Gradle toolchains.
-- `./check.sh` and release work need the launcher runtime to match the project baseline.
-- macOS still ships the `/usr/bin/java` launcher stub, which is the wrong runtime for GridGrind.
-- GitHub Actions and the Docker release surface already target Java 26 explicitly, so local shells
-  should match that contract.
-- `jdk.java.net` gives a clear, upstream, version-specific source instead of waiting on a package
-  manager mirror cadence.
-- the Gradle wrapper pins the repository's actual Gradle version, while Brew `gradle` introduces an
-  unnecessary second moving part and can pull `openjdk` back in as a dependency.
+- the wrapper pins GridGrind's actual Gradle version and downloads the official Gradle distribution
+  declared by the repository
+- `java -jar gridgrind.jar` uses the ambient shell `java`, not Gradle toolchains
+- `./check.sh`, Docker verification, and release work all depend on the shell launcher runtime
+- CI and release surfaces already target Java 26, so local shells should match that contract
+- `https://openjdk.org` is the upstream project source of truth for Java 26 release status
+- the Java 26 macOS AArch64 binary must be selected from the OpenJDK links published from
+  `https://openjdk.org`, not from a third-party redistribution
+- avoiding Brew `gradle` avoids Homebrew's `openjdk` dependency from silently becoming part of the
+  repo's Java story again
+- building Gradle from source adds bootstrap cost, maintenance burden, and version ambiguity without
+  improving reproducibility for a wrapped application repo
+
+## Current Baseline
+
+Java 26 is GA. The OpenJDK JDK 26 project page lists `General Availability` on `2026-03-17`.
+
+For GridGrind, the source of truth for Java 26 information and the place from which the binary
+download must be chosen is explicitly `https://openjdk.org`.
+
+Authoritative route:
+- start at [`https://openjdk.org/projects/jdk/26/`](https://openjdk.org/projects/jdk/26/)
+- use the JDK 26 page there as the authoritative release-status page
+- follow the OpenJDK-published GA builds link from that page to choose the macOS AArch64 archive
+- do not replace that route in repo docs with Adoptium, Azul, SDKMAN, Homebrew, or other third-party distributions
+
+Current macOS AArch64 artifact and checksum used for this setup:
+- archive: `openjdk-26_macos-aarch64_bin.tar.gz`
+- published SHA-256:
+  `254586bcd1bf6dcd125ad667ac32562cb1e2ab1abf3a61fb117b6fabb571e765`
+
+Use `https://openjdk.org` as both:
+- the release-status reference
+- the authoritative place from which the Java 26 macOS AArch64 binary is obtained
+
+In other words:
+- OpenJDK owns the information source
+- OpenJDK owns the binary-selection path
+- third-party redistributions are outside the documented GridGrind workstation standard
 
 ## Installed Layout
 
-Current local bundle:
-- `~/Library/Java/JavaVirtualMachines/openjdk-26.jdk`
+The supported local layout is:
+- JDK bundle: `~/Library/Java/JavaVirtualMachines/jdk-26.jdk`
+- `JAVA_HOME`: `~/Library/Java/JavaVirtualMachines/jdk-26.jdk/Contents/Home`
+- expected `java`: `${JAVA_HOME}/bin/java`
+- expected `javac`: `${JAVA_HOME}/bin/javac`
 
-Current upstream artifact used for this setup:
-- archive: `openjdk-26_macos-aarch64_bin.tar.gz`
-- source page: [jdk.java.net/26](https://jdk.java.net/26/)
-- published SHA-256 at time of install:
-  `254586bcd1bf6dcd125ad667ac32562cb1e2ab1abf3a61fb117b6fabb571e765`
+Best-practice shell resolution is explicit JDK precedence. If `java --version` still reports 26
+through the macOS `/usr/bin/java` launcher stub, the runtime is compatible, but the shell is not in
+the preferred explicit state yet.
 
-Current shell resolution:
-- `JAVA_HOME=/Users/erst/Library/Java/JavaVirtualMachines/openjdk-26.jdk/Contents/Home`
-- `java` resolves to `${JAVA_HOME}/bin/java`
-- `javac` resolves to `${JAVA_HOME}/bin/javac`
+## Shell Hygiene
 
-The old Homebrew-linked symlink was intentionally removed:
-- `~/Library/Java/JavaVirtualMachines/openjdk.jdk`
+Optional toolchain setup files should never be sourced unconditionally. A missing optional file can
+break every shell invocation before GridGrind commands even start.
+
+In [~/.zshenv](/Users/erst/.zshenv), prefer:
+
+```zsh
+if [[ -f "$HOME/.cargo/env" ]]; then
+  . "$HOME/.cargo/env"
+fi
+```
+
+That keeps shell startup resilient on fresh machines where Rust or other optional tools have not
+been installed yet.
 
 ## Shell Configuration
 
@@ -66,14 +129,13 @@ The current shell setup is intentionally duplicated across login and interactive
 In [~/.zprofile](/Users/erst/.zprofile):
 
 ```zsh
-eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+if [[ -x /opt/homebrew/bin/brew ]]; then
+  eval "$(/opt/homebrew/bin/brew shellenv zsh)"
+fi
 
 if /usr/libexec/java_home -v 26 >/dev/null 2>&1; then
-    export JAVA_HOME="$("/usr/libexec/java_home" -v 26)"
-    case ":${PATH}:" in
-        *":${JAVA_HOME}/bin:"*) ;;
-        *) export PATH="${JAVA_HOME}/bin:${PATH}" ;;
-    esac
+  export JAVA_HOME="$("/usr/libexec/java_home" -v 26)"
+  path=("${JAVA_HOME}/bin" ${path:#${JAVA_HOME}/bin})
 fi
 ```
 
@@ -84,77 +146,82 @@ if [[ -z "${JAVA_HOME:-}" ]] && /usr/libexec/java_home -v 26 >/dev/null 2>&1; th
   export JAVA_HOME="$("/usr/libexec/java_home" -v 26)"
 fi
 if [[ -n "${JAVA_HOME:-}" ]]; then
-  case ":${PATH}:" in
-    *":${JAVA_HOME}/bin:"*) ;;
-    *) export PATH="${JAVA_HOME}/bin:${PATH}" ;;
-  esac
+  path=("${JAVA_HOME}/bin" ${path:#${JAVA_HOME}/bin})
 fi
 ```
 
 Why both files:
 - `~/.zprofile` covers login shells
 - `~/.zshrc` covers interactive non-login shells
-- this avoids one terminal path seeing Java 26 while another silently falls back to a different JDK
+- Java path normalization happens after `brew shellenv`, so Homebrew cannot regain precedence later
+  in shell startup
+- the `path=(...)` form removes any inherited later copy of `${JAVA_HOME}/bin` before re-prepending
+  it, which is what keeps Java truly first even when parent processes already injected it elsewhere
 
 ## Installation Procedure
 
-This is the exact local procedure used for GridGrind.
+This is the supported fresh-machine procedure for GridGrind.
 
-1. Download the official macOS AArch64 Java 26 archive from [jdk.java.net/26](https://jdk.java.net/26/).
-2. Verify the archive checksum against the value published by the OpenJDK site.
-3. Extract the bundle into `~/Library/Java/JavaVirtualMachines/openjdk-26.jdk`.
-4. Add the zsh configuration shown above so `JAVA_HOME` and `PATH` prefer Java 26.
-5. Remove stale JDK symlinks that still point to Homebrew-managed Java, especially `~/Library/Java/JavaVirtualMachines/openjdk.jdk`.
-6. Verify both shell modes:
-   `zsh -ic 'echo $JAVA_HOME; command -v java; command -v javac'`
-   and
-   `zsh -lic 'echo $JAVA_HOME; command -v java; command -v javac'`
+1. Start at [openjdk.org](https://openjdk.org) and use the Java 26 page published there.
+2. Download the macOS AArch64 Java 26 archive linked from OpenJDK.
+3. Verify the archive checksum against the SHA-256 published through the OpenJDK download page.
+4. Extract the bundle into `~/Library/Java/JavaVirtualMachines/jdk-26.jdk`.
+5. Add the zsh configuration shown above so `JAVA_HOME` and `PATH` prefer Java 26.
+6. Remove stale JDK symlinks that still point to Homebrew-managed Java, especially
+   `~/Library/Java/JavaVirtualMachines/openjdk.jdk`.
+7. Verify both shell modes and then run the repo checks.
+
+Useful local commands after the manual download step:
+
+```bash
+archive="$HOME/Downloads/openjdk-26_macos-aarch64_bin.tar.gz"
+root_dir="$(tar -tzf "$archive" | head -1 | cut -d/ -f1)"
+
+shasum -a 256 "$archive"
+mkdir -p "$HOME/Library/Java/JavaVirtualMachines"
+rm -rf "$HOME/Library/Java/JavaVirtualMachines/jdk-26.jdk"
+tar -xzf "$archive" -C "$HOME/Library/Java/JavaVirtualMachines"
+mv "$HOME/Library/Java/JavaVirtualMachines/$root_dir" \
+  "$HOME/Library/Java/JavaVirtualMachines/jdk-26.jdk"
+rm -f "$HOME/Library/Java/JavaVirtualMachines/openjdk.jdk"
+```
+
+## Gradle Rule
+
+For GridGrind, best practice is:
+- use `./gradlew` for every build, test, packaging, and release command
+- do not install Brew `gradle` as part of the GridGrind setup
+- do not build Gradle from source as part of the GridGrind setup
+
+The only narrow exception is bootstrapping a brand-new Gradle repository that does not yet contain
+wrapper files. In that case, a temporary Gradle installation may be used once to generate and
+commit the wrapper. After the wrapper exists, return immediately to the wrapper-only model.
+
+GridGrind itself already has wrapper files committed, so that bootstrap exception does not apply to
+normal repo work here.
 
 ## Build Logic Caveat
 
 GridGrind's product modules and runtime baseline are Java 26.
 
-There is one deliberate exception: the shared included build logic under `gradle/build-logic`
-still emits JVM 25 bytecode because Kotlin `2.3.0` does not yet target JVM 26 directly. That
-build now compiles with the Java 26 toolchain and only lowers the emitted bytecode level, so no
-separate Java 25 installation is required. That does **not** change the project baseline:
-- the Gradle launcher JVM is Java 26
-- the product modules target Java 26
-- the CLI fat JAR requires Java 26
-- `./check.sh` now fails fast if the active shell does not already resolve to Java 26
-
-Treat shared build-logic JVM 25 as a temporary toolchain boundary, not as permission to run
-GridGrind on a Java 25 shell.
-
-## Homebrew Cleanup
-
-The old Homebrew JDK was intentionally removed.
-
-Important detail:
-- Homebrew can refuse the uninstall because the `gradle` formula depends on `openjdk`
-- if that happens and the repo is already green through `./gradlew`, the acceptable cleanup is:
-  `brew uninstall --ignore-dependencies openjdk`
-
-Why that is acceptable:
-- GridGrind uses the project Gradle wrapper as the canonical entrypoint
-- the shell resolves Java 26 directly through `JAVA_HOME`
-- the Homebrew JDK is redundant and is the main source of local version ambiguity
+There is one deliberate toolchain exception: the shared included build logic under
+`gradle/build-logic` still emits JVM 25 bytecode because Kotlin `2.3.0` does not yet target JVM 26
+directly. That build still compiles with the Java 26 toolchain, so a separate Java 25 install is
+not part of the supported setup.
 
 ## Pitfalls
 
 Known pitfalls:
-- macOS `/usr/bin/java` is a launcher stub, not the project runtime. If `command -v java` returns
-  `/usr/bin/java`, stop and fix the shell before running GridGrind.
-- `java -jar` does not use Gradle toolchains. That is why shell-level Java 26 matters even though
-  Gradle can provision toolchains for compilation.
-- `~/.zprofile` alone is not enough. Some terminal launches use interactive non-login shells and
-  would otherwise miss the Java 26 override.
+- `java -jar` does not use Gradle toolchains
+- Homebrew `gradle` declares a dependency on `openjdk`, which can reintroduce Java drift during
+  unrelated Brew upgrades
+- `~/.zprofile` alone is not enough for terminals that start interactive non-login shells
 - stale symlinks under `~/Library/Java/JavaVirtualMachines/` can silently point back to removed or
-  outdated JDKs.
-- if `brew shellenv` is evaluated after Java path setup, Homebrew paths can regain precedence.
-- some automation environments start non-interactive shells and do not load zsh startup files. In
-  those cases, inspect `command -v java` before trusting the runtime.
-- Brew `gradle` can reintroduce `openjdk` dependency churn. Use `./gradlew` instead.
+  outdated JDKs
+- optional shell setup files sourced unconditionally can break every shell command on a fresh
+  machine
+- non-interactive automation environments may skip zsh startup files, so `java --version` matters
+  more than assumptions about `PATH`
 
 ## Verification Commands
 
@@ -162,19 +229,23 @@ Useful checks:
 
 ```bash
 /usr/libexec/java_home -V
+echo "$JAVA_HOME"
 command -v java
 command -v javac
 java --version
-zsh -ic 'echo $JAVA_HOME; command -v java; command -v javac'
-zsh -lic 'echo $JAVA_HOME; command -v java; command -v javac'
+javac --version
+zsh -ic 'echo "$JAVA_HOME"; command -v java; command -v javac'
+zsh -lic 'echo "$JAVA_HOME"; command -v java; command -v javac'
 sed -n '1,20p' "$(/usr/libexec/java_home -v 26)/release"
+./gradlew --version --console=plain
 ```
 
 Expected outcomes:
 - Java 26 appears in `/usr/libexec/java_home -V`
-- `command -v java` does not point at `/usr/bin/java`
-- both zsh modes resolve `java` and `javac` inside `openjdk-26.jdk`
-- the `release` file reports `JAVA_VERSION="26"`
+- `JAVA_HOME` resolves inside `jdk-26.jdk`
+- both zsh modes resolve `java` and `javac`
+- `java --version` and `javac --version` report version 26
+- `./gradlew --version` reports Gradle `9.4.1`
 
 ## Full Toolchain Verification
 
@@ -192,14 +263,13 @@ Run those commands from a real terminal session.
 
 Why:
 - local shell startup files are what make Java 26 the default `java`
-- non-interactive wrappers may skip `~/.zprofile` and `~/.zshrc`
-- GridGrind release work, `java -jar`, and the CLI all depend on the ambient runtime, not just on
-  Gradle toolchains
+- the packaged CLI depends on the ambient launcher runtime
+- Gradle toolchains complement the shell JDK; they do not replace it
 
 ## Maintenance Guidance
 
 When Java 27 or later becomes the project target:
 - install the new upstream JDK beside the old one first
-- update the zsh config to use the new major version
+- update the shell config to use the new major version
 - verify both shell modes before removing the previous JDK
-- update GridGrind's shell docs, build scripts, CI, Docker, and release surfaces together
+- update GridGrind's shell docs, build scripts, CI, and release surfaces together
