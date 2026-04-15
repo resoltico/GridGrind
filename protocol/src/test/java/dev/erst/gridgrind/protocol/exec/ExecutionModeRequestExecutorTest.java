@@ -7,6 +7,7 @@ import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
+import dev.erst.gridgrind.protocol.catalog.GridGrindContractText;
 import dev.erst.gridgrind.protocol.dto.ExecutionModeInput;
 import dev.erst.gridgrind.protocol.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
@@ -505,6 +506,13 @@ class ExecutionModeRequestExecutorTest {
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST, unsupportedStreamingOperation.problem().code());
     assertTrue(unsupportedStreamingOperation.problem().message().contains("SET_CELL"));
+    assertTrue(
+        unsupportedStreamingOperation
+            .problem()
+            .message()
+            .contains(GridGrindContractText.streamingWriteOperationTypePhrase()));
+    assertFalse(
+        unsupportedStreamingOperation.problem().message().contains("FORCE_FORMULA_RECALC_ON_OPEN"));
 
     GridGrindResponse.Failure missingStreamingSheetMaterialization =
         failure(

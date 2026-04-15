@@ -664,6 +664,19 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         List.of("FULL_XSSF", "STREAMING_WRITE"),
         fieldNamed(executionModeGroup.type(), "writeMode").enumValues());
+    assertEquals(
+        GridGrindContractText.executionModeInputSummary(),
+        executionModeGroup.type().summary(),
+        "executionModeInputType summary must be sourced from the shared core contract text");
+    assertTrue(
+        executionModeGroup
+            .type()
+            .summary()
+            .contains(GridGrindContractText.streamingWriteOperationTypePhrase()),
+        "executionModeInputType summary must use the canonical recalc-on-open operation name");
+    assertFalse(
+        executionModeGroup.type().summary().contains("FORCE_FORMULA_RECALC_ON_OPEN"),
+        "executionModeInputType summary must not use the rejected legacy shorthand");
 
     PlainTypeGroup commentGroup = plainGroup(catalog, "commentInputType");
     assertEquals(FieldRequirement.REQUIRED, fieldNamed(commentGroup.type(), "text").requirement());
@@ -1311,28 +1324,106 @@ class GridGrindProtocolCatalogTest {
             .contains("Unsupported or malformed pivots"),
         "GET_PIVOT_TABLES summary must describe truthful unsupported pivot surfacing");
     assertTrue(
+        entryNamed(catalog.readTypes(), "GET_SHEET_LAYOUT").summary().contains("presentation"),
+        "GET_SHEET_LAYOUT summary must mention layout.presentation");
+    assertEquals(
+        GridGrindContractText.sheetLayoutReadSummary(),
+        entryNamed(catalog.readTypes(), "GET_SHEET_LAYOUT").summary(),
+        "GET_SHEET_LAYOUT summary must be sourced from the shared core contract text");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_FORMULA_SURFACE")
+            .summary()
+            .contains("totalFormulaCellCount"),
+        "GET_FORMULA_SURFACE summary must expose totalFormulaCellCount");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_FORMULA_SURFACE")
+            .summary()
+            .contains("distinctFormulaCount"),
+        "GET_FORMULA_SURFACE summary must expose per-sheet distinctFormulaCount");
+    assertEquals(
+        GridGrindContractText.formulaSurfaceReadSummary(),
+        entryNamed(catalog.readTypes(), "GET_FORMULA_SURFACE").summary(),
+        "GET_FORMULA_SURFACE summary must be sourced from the shared core contract text");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_NAMED_RANGE_SURFACE")
+            .summary()
+            .contains("workbookScopedCount"),
+        "GET_NAMED_RANGE_SURFACE summary must expose workbookScopedCount");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "GET_NAMED_RANGE_SURFACE")
+            .summary()
+            .contains("namedRanges"),
+        "GET_NAMED_RANGE_SURFACE summary must expose namedRanges entries");
+    assertEquals(
+        GridGrindContractText.namedRangeSurfaceReadSummary(),
+        entryNamed(catalog.readTypes(), "GET_NAMED_RANGE_SURFACE").summary(),
+        "GET_NAMED_RANGE_SURFACE summary must be sourced from the shared core contract text");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_FORMULA_HEALTH")
+            .summary()
+            .contains("checkedFormulaCellCount"),
+        "ANALYZE_FORMULA_HEALTH summary must expose checkedFormulaCellCount");
+    assertEquals(
+        GridGrindContractText.formulaHealthReadSummary(),
+        entryNamed(catalog.readTypes(), "ANALYZE_FORMULA_HEALTH").summary(),
+        "ANALYZE_FORMULA_HEALTH summary must be sourced from the shared core contract text");
+    assertTrue(
         entryNamed(catalog.readTypes(), "ANALYZE_AUTOFILTER_HEALTH")
             .summary()
             .contains("ownership"),
         "ANALYZE_AUTOFILTER_HEALTH summary must mention ownership mismatches");
     assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_DATA_VALIDATION_HEALTH")
+            .summary()
+            .contains("checkedValidationCount"),
+        "ANALYZE_DATA_VALIDATION_HEALTH summary must expose checkedValidationCount");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_CONDITIONAL_FORMATTING_HEALTH")
+            .summary()
+            .contains("checkedConditionalFormattingBlockCount"),
+        "ANALYZE_CONDITIONAL_FORMATTING_HEALTH summary must expose checkedConditionalFormattingBlockCount");
+    assertTrue(
         entryNamed(catalog.readTypes(), "ANALYZE_TABLE_HEALTH").summary().contains("overlaps"),
         "ANALYZE_TABLE_HEALTH summary must mention table overlaps");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_TABLE_HEALTH")
+            .summary()
+            .contains("checkedTableCount"),
+        "ANALYZE_TABLE_HEALTH summary must expose checkedTableCount");
     assertTrue(
         entryNamed(catalog.readTypes(), "ANALYZE_PIVOT_TABLE_HEALTH")
             .summary()
             .contains("missing cache parts"),
         "ANALYZE_PIVOT_TABLE_HEALTH summary must mention missing cache parts");
     assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_PIVOT_TABLE_HEALTH")
+            .summary()
+            .contains("checkedPivotTableCount"),
+        "ANALYZE_PIVOT_TABLE_HEALTH summary must expose checkedPivotTableCount");
+    assertTrue(
         entryNamed(catalog.readTypes(), "ANALYZE_HYPERLINK_HEALTH")
             .summary()
             .contains("persisted path"),
         "ANALYZE_HYPERLINK_HEALTH summary must explain relative FILE resolution");
     assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_HYPERLINK_HEALTH")
+            .summary()
+            .contains("checkedHyperlinkCount"),
+        "ANALYZE_HYPERLINK_HEALTH summary must expose checkedHyperlinkCount");
+    assertTrue(
         entryNamed(catalog.operationTypes(), "SET_HYPERLINK")
             .summary()
             .contains("persisted workbook path"),
         "SET_HYPERLINK summary must explain relative FILE analysis resolution");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_NAMED_RANGE_HEALTH")
+            .summary()
+            .contains("checkedNamedRangeCount"),
+        "ANALYZE_NAMED_RANGE_HEALTH summary must expose checkedNamedRangeCount");
+    assertEquals(
+        GridGrindContractText.namedRangeHealthReadSummary(),
+        entryNamed(catalog.readTypes(), "ANALYZE_NAMED_RANGE_HEALTH").summary(),
+        "ANALYZE_NAMED_RANGE_HEALTH summary must be sourced from the shared core contract text");
     assertTrue(
         entryNamed(catalog.readTypes(), "ANALYZE_WORKBOOK_FINDINGS")
             .summary()
@@ -1348,6 +1439,15 @@ class GridGrindProtocolCatalogTest {
             .summary()
             .contains("pivot-table health"),
         "ANALYZE_WORKBOOK_FINDINGS summary must mention pivot-table health so the aggregate scope is explicit");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_WORKBOOK_FINDINGS")
+            .summary()
+            .contains("analysis.findings"),
+        "ANALYZE_WORKBOOK_FINDINGS summary must expose the flat findings list");
+    assertEquals(
+        GridGrindContractText.workbookFindingsReadSummary(),
+        entryNamed(catalog.readTypes(), "ANALYZE_WORKBOOK_FINDINGS").summary(),
+        "ANALYZE_WORKBOOK_FINDINGS summary must be sourced from the shared core contract text");
     assertEquals(
         FieldRequirement.REQUIRED,
         fieldNamed(nestedTypeEntry(catalog, "hyperlinkTargetTypes", "FILE"), "path").requirement(),

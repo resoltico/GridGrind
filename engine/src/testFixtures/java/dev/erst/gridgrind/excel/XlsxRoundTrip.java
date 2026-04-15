@@ -443,17 +443,22 @@ public final class XlsxRoundTrip {
 
   private static ExcelGradientFillSnapshot gradientFillSnapshot(
       XSSFWorkbook workbook, CTGradientFill fill) {
+    Double left = fill.isSetLeft() ? fill.getLeft() : null;
+    Double right = fill.isSetRight() ? fill.getRight() : null;
+    Double top = fill.isSetTop() ? fill.getTop() : null;
+    Double bottom = fill.isSetBottom() ? fill.getBottom() : null;
     List<ExcelGradientStopSnapshot> stops =
         java.util.Arrays.stream(fill.getStopArray())
             .map(stop -> gradientStopSnapshot(workbook, stop))
             .toList();
     return new ExcelGradientFillSnapshot(
-        fill.isSetType() ? fill.getType().toString() : "LINEAR",
+        ExcelGradientFillGeometry.effectiveType(
+            fill.isSetType() ? fill.getType().toString() : null, left, right, top, bottom),
         fill.isSetDegree() ? fill.getDegree() : null,
-        fill.isSetLeft() ? fill.getLeft() : null,
-        fill.isSetRight() ? fill.getRight() : null,
-        fill.isSetTop() ? fill.getTop() : null,
-        fill.isSetBottom() ? fill.getBottom() : null,
+        left,
+        right,
+        top,
+        bottom,
         stops);
   }
 

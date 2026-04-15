@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.protocol.dto;
 
+import dev.erst.gridgrind.excel.ExcelGradientFillGeometry;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 /** Gradient fill payload for cell-style authoring. */
@@ -14,18 +14,13 @@ public record CellGradientFillInput(
     Double bottom,
     List<CellGradientStopInput> stops) {
   public CellGradientFillInput {
-    type = type == null ? "LINEAR" : type.strip().toUpperCase(Locale.ROOT);
-    if (type.isBlank()) {
-      throw new IllegalArgumentException("type must not be blank");
-    }
-    if (!"LINEAR".equals(type) && !"PATH".equals(type)) {
-      throw new IllegalArgumentException("type must be LINEAR or PATH");
-    }
+    type = ExcelGradientFillGeometry.normalizeType(type);
     degree = finiteOrNull(degree, "degree");
     left = finiteOrNull(left, "left");
     right = finiteOrNull(right, "right");
     top = finiteOrNull(top, "top");
     bottom = finiteOrNull(bottom, "bottom");
+    ExcelGradientFillGeometry.requireCompatibleGeometry(type, degree, left, right, top, bottom);
     stops = List.copyOf(Objects.requireNonNull(stops, "stops must not be null"));
     if (stops.size() < 2) {
       throw new IllegalArgumentException("stops must contain at least two entries");

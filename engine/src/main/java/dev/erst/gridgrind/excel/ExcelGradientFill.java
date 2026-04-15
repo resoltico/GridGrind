@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 /** Authored gradient fill applied through mutable workbook cell styling. */
@@ -14,18 +13,13 @@ public record ExcelGradientFill(
     Double bottom,
     List<ExcelGradientStop> stops) {
   public ExcelGradientFill {
-    type = type == null ? "LINEAR" : type.strip().toUpperCase(Locale.ROOT);
-    if (type.isBlank()) {
-      throw new IllegalArgumentException("type must not be blank");
-    }
-    if (!"LINEAR".equals(type) && !"PATH".equals(type)) {
-      throw new IllegalArgumentException("type must be LINEAR or PATH");
-    }
+    type = ExcelGradientFillGeometry.normalizeType(type);
     degree = finiteOrNull(degree, "degree");
     left = finiteOrNull(left, "left");
     right = finiteOrNull(right, "right");
     top = finiteOrNull(top, "top");
     bottom = finiteOrNull(bottom, "bottom");
+    ExcelGradientFillGeometry.requireCompatibleGeometry(type, degree, left, right, top, bottom);
     stops = List.copyOf(Objects.requireNonNull(stops, "stops must not be null"));
     if (stops.size() < 2) {
       throw new IllegalArgumentException("stops must contain at least two entries");

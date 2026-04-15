@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.46.0"
+version: "0.47.0"
 domain: ERRORS
-updated: "2026-04-15"
+updated: "2026-04-16"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures"]
@@ -70,7 +70,7 @@ route:
 
 | Code | Trigger |
 |:-----|:--------|
-| `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax, including request-authored array-formula braces such as `{=...}` and newer constructs such as `LAMBDA`/`LET` when Apache POI cannot parse them. |
+| `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax, including request-authored array-formula braces such as `{=...}`. `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA` because Apache POI cannot parse them, and other newer constructs may fail the same way. |
 | `MISSING_EXTERNAL_WORKBOOK` | Formula evaluation needs an external workbook binding that was not supplied and cached-value fallback is not enabled. |
 | `UNREGISTERED_USER_DEFINED_FUNCTION` | Formula evaluation encountered a UDF that is not registered in `formulaEnvironment`. |
 | `UNSUPPORTED_FORMULA` | Formula syntax is valid and Apache POI can load it, but the function or construct is not supported by Apache POI's evaluator. |

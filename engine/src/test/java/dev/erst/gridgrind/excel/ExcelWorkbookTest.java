@@ -805,6 +805,55 @@ class ExcelWorkbookTest {
   }
 
   @Test
+  void savesAndReopensCompatibleGradientGeometryWithProtection() throws Exception {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-gradient-style-roundtrip-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet budget = workbook.getOrCreateSheet("Budget");
+      budget.setCell("A1", ExcelCellValue.text("Linear"));
+      budget.applyStyle(
+          "A1",
+          new ExcelCellStyle(
+              null,
+              null,
+              null,
+              new ExcelCellFill(
+                  null,
+                  null,
+                  null,
+                  new ExcelGradientFill(
+                      "LINEAR",
+                      42.5d,
+                      null,
+                      null,
+                      null,
+                      null,
+                      List.of(
+                          new ExcelGradientStop(0.0d, new ExcelColor("#736C00")),
+                          new ExcelGradientStop(1.0d, new ExcelColor(null, 3, null, null))))),
+              null,
+              new ExcelCellProtection(true, true)));
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook reopenedWorkbook = ExcelWorkbook.open(workbookPath)) {
+      ExcelCellStyleSnapshot linearStyle =
+          reopenedWorkbook.sheet("Budget").snapshotCell("A1").style();
+
+      assertEquals("LINEAR", linearStyle.fill().gradient().type());
+      assertEquals(42.5d, linearStyle.fill().gradient().degree());
+      assertNull(linearStyle.fill().gradient().left());
+      assertEquals(
+          new ExcelColorSnapshot("#736C00"), linearStyle.fill().gradient().stops().get(0).color());
+      assertEquals(
+          new ExcelColorSnapshot(null, 3, null, null),
+          linearStyle.fill().gradient().stops().get(1).color());
+      assertTrue(linearStyle.protection().locked());
+      assertTrue(linearStyle.protection().hiddenFormula());
+    }
+  }
+
+  @Test
   void persistsHyperlinksCommentsAndNamedRangesAcrossSaves() throws Exception {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-authoring-");
 

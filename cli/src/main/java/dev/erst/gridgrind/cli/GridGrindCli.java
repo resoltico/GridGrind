@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.cli;
 
+import dev.erst.gridgrind.protocol.catalog.GridGrindContractText;
 import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.protocol.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.protocol.dto.GridGrindProtocolVersion;
@@ -184,6 +185,11 @@ public final class GridGrindCli {
     String description = descriptionFrom(GridGrindCli.class);
     String requestTemplate = requestTemplateText();
     String documentRef = documentRef(version);
+    String eventReadTypes = GridGrindContractText.eventReadReadTypePhrase();
+    String streamingWriteTypes = GridGrindContractText.streamingWriteOperationTypePhrase();
+    String formulaAuthoringLimit = GridGrindContractText.formulaAuthoringLimitSummary();
+    String loadedFormulaSupport = GridGrindContractText.loadedFormulaSupportSummary();
+    String workbookFindingsDiscovery = GridGrindContractText.workbookFindingsDiscoverySummary();
     return """
         %s
 
@@ -204,8 +210,8 @@ public final class GridGrindCli {
           Sheet names:              1 to 31 characters; reject : \\ / ? * [ ] and leading/trailing apostrophes.
           GET_WINDOW cell count:    rowCount * columnCount must not exceed 250,000.
           GET_SHEET_SCHEMA cells:   rowCount * columnCount must not exceed 250,000.
-          EVENT_READ mode:          GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only.
-          STREAMING_WRITE mode:     source.type must be NEW; operations limited to ENSURE_SHEET, APPEND_ROW, and FORCE_FORMULA_RECALC_ON_OPEN.
+          EVENT_READ mode:          %s only.
+          STREAMING_WRITE mode:     source.type must be NEW; operations limited to %s.
           Column widthCharacters:   > 0 and <= 255 (Excel limit).
           Row heightPoints:         > 0 and <= 1638.35 (Excel limit: 32767 twips).
           Row structural edits:     rejected when they would move tables, sheet autofilters, or data validations; deletes/shifts also reject destructive range-backed named ranges.
@@ -214,8 +220,8 @@ public final class GridGrindCli {
           Chart title formulas:     SET_CHART title FORMULA and series.title FORMULA must resolve to one cell, directly or through one defined name.
           Drawing validation:       failed SET_SHAPE / SET_CHART validation leaves existing drawing state unchanged and creates no partial artifacts.
           DATE / DATE_TIME inputs:  stored as numeric serial; GET_CELLS returns declaredType=NUMBER.
-          Formula authoring:        request-authored formulas are scalar only; array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and some newer Excel constructs (for example LAMBDA/LET) may fail earlier as INVALID_FORMULA when Apache POI cannot parse them.
-          Loaded formula support:   formulas that Apache POI parses but cannot evaluate surface as UNSUPPORTED_FORMULA.
+          Formula authoring:        %s
+          Loaded formula support:   %s
 
         Request:
           protocolVersion is optional; omit it and the current version is assumed.
@@ -274,8 +280,7 @@ public final class GridGrindCli {
                 { "type": "ANALYZE_WORKBOOK_FINDINGS", "requestId": "lint" }
               ]
             }
-          ANALYZE_WORKBOOK_FINDINGS aggregates formula, data-validation, conditional-formatting,
-          autofilter, table, pivot-table, hyperlink, and named-range findings.
+          %s
           The protocol catalog lists each field, whether it is required, and the nested/plain
           type group accepted by polymorphic fields such as value, target, selection, style,
           and scope.
@@ -297,8 +302,13 @@ public final class GridGrindCli {
         """
         .formatted(
             productHeader(version, description),
+            eventReadTypes,
+            streamingWriteTypes,
+            formulaAuthoringLimit,
+            loadedFormulaSupport,
             indentBlock(requestTemplate),
             containerTag(version),
+            workbookFindingsDiscovery,
             documentRef,
             documentRef,
             documentRef);

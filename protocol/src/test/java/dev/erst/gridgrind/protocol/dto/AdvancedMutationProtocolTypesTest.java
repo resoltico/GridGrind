@@ -631,7 +631,7 @@ class AdvancedMutationProtocolTypesTest {
     CellGradientStopInput finish =
         new CellGradientStopInput(1.0d, new ColorInput(null, 5, null, 0.2d));
     CellGradientFillInput gradient =
-        new CellGradientFillInput(" path ", 45.0d, 0.1d, 0.2d, 0.3d, 0.4d, List.of(start, finish));
+        new CellGradientFillInput(" path ", null, 0.1d, 0.2d, 0.3d, 0.4d, List.of(start, finish));
     assertGradientInputsNormalizeAndValidate(start, finish, gradient);
     assertFontInputsNormalizeAndValidate();
     assertFillInputsNormalizeAndValidate(gradient);
@@ -675,6 +675,16 @@ class AdvancedMutationProtocolTypesTest {
                 null,
                 null,
                 List.of(start, finish)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellGradientFillInput(
+                "LINEAR", 45.0d, 0.1d, null, null, null, List.of(start, finish)));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new CellGradientFillInput(
+                "PATH", 45.0d, 0.1d, 0.2d, 0.3d, 0.4d, List.of(start, finish)));
     assertThrows(
         IllegalArgumentException.class,
         () -> new CellGradientFillInput("LINEAR", null, null, null, null, null, List.of(start)));

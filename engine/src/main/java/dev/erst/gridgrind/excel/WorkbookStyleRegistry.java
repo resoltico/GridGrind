@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -37,12 +38,21 @@ final class WorkbookStyleRegistry {
   private final DataFormat dataFormat;
   private final Map<MergedCellStyleKey, XSSFCellStyle> cellStyles;
   private final Map<MergedFontKey, XSSFFont> fonts;
+  private final Map<String, Integer> gradientFillIds;
+  private final StylesTableFillRegistryAccess fillRegistryAccess;
 
   WorkbookStyleRegistry(XSSFWorkbook workbook) {
+    this(workbook, StylesTableFillRegistryAccess.reflective());
+  }
+
+  WorkbookStyleRegistry(XSSFWorkbook workbook, StylesTableFillRegistryAccess fillRegistryAccess) {
     this.workbook = workbook;
     this.dataFormat = workbook.createDataFormat();
     this.cellStyles = new HashMap<>();
     this.fonts = new HashMap<>();
+    this.gradientFillIds = new HashMap<>();
+    this.fillRegistryAccess = fillRegistryAccess;
+    indexExistingGradientFills();
   }
 
   /**
@@ -215,39 +225,74 @@ final class WorkbookStyleRegistry {
   }
 
   private void applyGradientFillPatch(XSSFCellStyle cellStyle, ExcelGradientFill gradientPatch) {
+    ExcelGradientFillGeometry.requireCompatibleGeometry(
+        gradientPatch.type(),
+        gradientPatch.degree(),
+        gradientPatch.left(),
+        gradientPatch.right(),
+        gradientPatch.top(),
+        gradientPatch.bottom());
     CTFill gradientFill = CTFill.Factory.newInstance();
     CTGradientFill gradient = gradientFill.addNewGradientFill();
-    if (!"LINEAR".equalsIgnoreCase(gradientPatch.type())) {
+    if ("PATH".equals(gradientPatch.type())) {
       gradient.setType(
           org.openxmlformats.schemas.spreadsheetml.x2006.main.STGradientType.Enum.forString(
               gradientPatch.type().toLowerCase(Locale.ROOT)));
-    }
-    if (gradientPatch.degree() != null) {
+      if (gradientPatch.left() != null) {
+        gradient.setLeft(gradientPatch.left());
+      }
+      if (gradientPatch.right() != null) {
+        gradient.setRight(gradientPatch.right());
+      }
+      if (gradientPatch.top() != null) {
+        gradient.setTop(gradientPatch.top());
+      }
+      if (gradientPatch.bottom() != null) {
+        gradient.setBottom(gradientPatch.bottom());
+      }
+    } else if (gradientPatch.degree() != null) {
       gradient.setDegree(gradientPatch.degree());
-    }
-    if (gradientPatch.left() != null) {
-      gradient.setLeft(gradientPatch.left());
-    }
-    if (gradientPatch.right() != null) {
-      gradient.setRight(gradientPatch.right());
-    }
-    if (gradientPatch.top() != null) {
-      gradient.setTop(gradientPatch.top());
-    }
-    if (gradientPatch.bottom() != null) {
-      gradient.setBottom(gradientPatch.bottom());
     }
     for (ExcelGradientStop stop : gradientPatch.stops()) {
       CTGradientStop ctStop = gradient.addNewStop();
       ctStop.setPosition(stop.position());
       ctStop.addNewColor().set(ExcelColorSupport.toXssfColor(workbook, stop.color()).getCTColor());
     }
-    int gradientFillId =
-        workbook
-            .getStylesSource()
-            .putFill(new XSSFCellFill(gradientFill, workbook.getStylesSource().getIndexedColors()));
+    int gradientFillId = gradientFillId(gradientFill);
     cellStyle.getCoreXf().setApplyFill(true);
     cellStyle.getCoreXf().setFillId(gradientFillId);
+  }
+
+  private int gradientFillId(CTFill gradientFill) {
+    String key = gradientFill.xmlText();
+    Integer existingId = gradientFillIds.get(key);
+    if (existingId != null) {
+      return existingId;
+    }
+    int fillId =
+        appendFill(new XSSFCellFill(gradientFill, workbook.getStylesSource().getIndexedColors()));
+    gradientFillIds.put(key, fillId);
+    return fillId;
+  }
+
+  private void indexExistingGradientFills() {
+    List<XSSFCellFill> fills = fillsList();
+    for (int fillId = 0; fillId < fills.size(); fillId++) {
+      XSSFCellFill fill = fills.get(fillId);
+      if (fill.getCTFill().isSetGradientFill()) {
+        gradientFillIds.putIfAbsent(fill.getCTFill().xmlText(), fillId);
+      }
+    }
+  }
+
+  private int appendFill(XSSFCellFill fill) {
+    List<XSSFCellFill> fills = fillsList();
+    fills.add(fill);
+    return fills.size() - 1;
+  }
+
+  private List<XSSFCellFill> fillsList() {
+    return fillRegistryAccess.fills(workbook.getStylesSource());
   }
 
   private void clearFillColors(XSSFCellStyle cellStyle) {
@@ -414,17 +459,17 @@ final class WorkbookStyleRegistry {
   }
 
   ExcelGradientFillSnapshot gradientFillSnapshot(CTGradientFill fill) {
-    String type = fill.isSetType() ? fill.getType().toString() : "LINEAR";
+    Double left = fill.isSetLeft() ? fill.getLeft() : null;
+    Double right = fill.isSetRight() ? fill.getRight() : null;
+    Double top = fill.isSetTop() ? fill.getTop() : null;
+    Double bottom = fill.isSetBottom() ? fill.getBottom() : null;
+    String type =
+        ExcelGradientFillGeometry.effectiveType(
+            fill.isSetType() ? fill.getType().toString() : null, left, right, top, bottom);
     java.util.List<ExcelGradientStopSnapshot> stops =
         java.util.Arrays.stream(fill.getStopArray()).map(this::gradientStopSnapshot).toList();
     return new ExcelGradientFillSnapshot(
-        type,
-        fill.isSetDegree() ? fill.getDegree() : null,
-        fill.isSetLeft() ? fill.getLeft() : null,
-        fill.isSetRight() ? fill.getRight() : null,
-        fill.isSetTop() ? fill.getTop() : null,
-        fill.isSetBottom() ? fill.getBottom() : null,
-        stops);
+        type, fill.isSetDegree() ? fill.getDegree() : null, left, right, top, bottom, stops);
   }
 
   private ExcelGradientStopSnapshot gradientStopSnapshot(CTGradientStop stop) {

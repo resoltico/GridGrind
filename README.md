@@ -54,7 +54,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.46.0
+docker pull ghcr.io/resoltico/gridgrind:0.47.0
 ```
 
 Published GHCR release images are rebuilt from a digest-pinned Java base image and ship explicit
@@ -90,7 +90,9 @@ docker run --rm ghcr.io/resoltico/gridgrind:latest --print-protocol-catalog
 
 `--print-request-template` emits the minimal valid request. `--print-protocol-catalog` emits
 machine-readable JSON describing every operation and read: required and optional fields, and the
-accepted shapes for polymorphic inputs.
+accepted shapes for polymorphic inputs. Both `--help` and `--print-protocol-catalog` are treated
+as public contract surfaces and are black-box regression-tested from the packaged JAR and Docker
+image, not only from source builds.
 
 ### Fat JAR (requires Java 26)
 
@@ -145,7 +147,7 @@ inside the mounted directory.
   `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY`.
 - `writeMode: STREAMING_WRITE` is the low-memory append-oriented writer. It requires
   `source.type: NEW` and supports only `ENSURE_SHEET`, `APPEND_ROW`, and
-  `FORCE_FORMULA_RECALC_ON_OPEN`.
+  `FORCE_FORMULA_RECALCULATION_ON_OPEN`.
 - The two modes can be combined. `STREAMING_WRITE` can read back its materialized workbook either
   through normal `FULL_XSSF` reads or summary-only `EVENT_READ`.
 
@@ -163,6 +165,9 @@ gate:
 That local whole-repo gate runs the root quality checks, nested Jazzer verification, packaging
 smoke checks, and Docker smoke coverage in one supported sequence. Jazzer-specific operator flows
 also remain available through the scripts under [`jazzer/bin`](./jazzer/bin/).
+The release surface also includes [`scripts/verify-cli-contract.sh`](./scripts/verify-cli-contract.sh),
+which black-boxes `--help` and `--print-protocol-catalog` from the built artifact so thin
+transport adapters cannot drift from the core protocol contract silently.
 The committed example requests under [`examples/`](./examples/) also double as promoted
 protocol-request regression inputs for drawing media, charts, pivots, conditional formatting,
 low-memory modes, and OOXML package security, while the deterministic `.xlsx` round-trip verifier
@@ -216,9 +221,10 @@ Two contract details matter often in agent-generated requests:
   bindings, cached-value fallback for missing external references, or template-backed UDF
   registration.
 - Formula payloads are scalar only. Array-formula braces such as `{=SUM(A1:A10*B1:B10)}` are
-  rejected as `INVALID_FORMULA`, and some newer Excel constructs such as `LAMBDA` or `LET` may
-  also fail earlier as `INVALID_FORMULA` when Apache POI cannot parse them. Loaded formulas that
-  POI parses but cannot evaluate surface as `UNSUPPORTED_FORMULA`.
+  rejected as `INVALID_FORMULA`. `LAMBDA` and `LET` are currently rejected as
+  `INVALID_FORMULA` because Apache POI cannot parse them, and other newer Excel constructs may
+  fail the same way. Loaded formulas that POI parses but cannot evaluate surface as
+  `UNSUPPORTED_FORMULA`.
 - `source.type: EXISTING` accepts optional `source.security.password` for encrypted OOXML
   workbooks.
 - `SAVE_AS` and `OVERWRITE` accept optional `persistence.security.encryption` and

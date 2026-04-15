@@ -796,6 +796,7 @@ run_shell_stage 'shell-syntax' 'Stage 4/5: checking release-surface shell script
         bash -n "$@"
         "'"${repo_root}"'/scripts/test-verify-release-merge-handoff.sh"
         "'"${repo_root}"'/scripts/test-verify-release-candidate-tag.sh"
+        "'"${repo_root}"'/scripts/test-verify-cli-contract.sh"
         "'"${repo_root}"'/scripts/test-verify-container-publication.sh"
         "'"${repo_root}"'/scripts/test-publication-contract.sh"
     ' bash "${shell_syntax_targets[@]}"

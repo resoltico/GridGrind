@@ -996,6 +996,46 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void rejectsMixedGradientGeometryAsInvalidRequest() {
+    InvalidRequestException failure =
+        assertThrows(
+            InvalidRequestException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "operations": [
+                        {
+                          "type": "APPLY_STYLE",
+                          "sheetName": "Budget",
+                          "range": "A1",
+                          "style": {
+                            "fill": {
+                              "gradient": {
+                                "type": "LINEAR",
+                                "degree": 45.0,
+                                "left": 0.1,
+                                "stops": [
+                                  { "position": 0.0, "color": { "rgb": "#112233" } },
+                                  { "position": 1.0, "color": { "rgb": "#445566" } }
+                                ]
+                              }
+                            }
+                          }
+                        }
+                      ],
+                      "reads": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals(
+        "LINEAR gradients do not accept left, right, top, or bottom offsets", failure.getMessage());
+    assertEquals("operations[0].style.fill.gradient", failure.jsonPath());
+  }
+
+  @Test
   void wrapsInvalidSheetCharactersAsInvalidRequestErrors() {
     InvalidRequestException failure =
         assertThrows(

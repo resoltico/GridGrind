@@ -109,7 +109,69 @@ final class XlsxParityDocsTest {
     assertFalse(
         inventory.contains(
             "| Formula surface, sheet schema, named-range surface, and aggregate workbook findings |"));
+    assertFalse(inventory.contains("ExcelCommentSupport.java"));
+    assertTrue(inventory.contains("engine/excel/ExcelComment.java"));
+    assertTrue(inventory.contains("engine/excel/ExcelCommentAnchor.java"));
+    assertTrue(inventory.contains("FORCE_FORMULA_RECALCULATION_ON_OPEN"));
+    assertFalse(inventory.contains("FORCE_FORMULA_RECALC_ON_OPEN"));
+    assertTrue(inventory.contains("`LAMBDA` and `LET` are currently rejected"));
+    assertTrue(inventory.contains("analysis.totalFormulaCellCount"));
+    assertTrue(inventory.contains("analysis.checkedNamedRangeCount"));
     assertTrue(inventory.contains("- drawing-family sheet copy"));
+  }
+
+  @Test
+  void publicStreamingWriteDocsUseCanonicalRecalcOnOpenOperationName() {
+    Path repositoryRoot = repositoryRoot();
+    for (String relativePath :
+        List.of(
+            "README.md",
+            "docs/OPERATIONS.md",
+            "docs/QUICK_REFERENCE.md",
+            "docs/LIMITATIONS.md",
+            "docs/POI_EXCEL_CAPABILITY_INVENTORY.md")) {
+      String document =
+          XlsxParitySupport.call(
+              "read " + relativePath, () -> Files.readString(repositoryRoot.resolve(relativePath)));
+
+      assertTrue(
+          document.contains("FORCE_FORMULA_RECALCULATION_ON_OPEN"),
+          relativePath + " must use the canonical streaming-write operation name");
+      assertFalse(
+          document.contains("FORCE_FORMULA_RECALC_ON_OPEN"),
+          relativePath + " must not use the rejected legacy shorthand");
+    }
+  }
+
+  @Test
+  void publicDocsDescribeCurrentFormulaAndAnalysisReadContracts() {
+    Path repositoryRoot = repositoryRoot();
+    for (String relativePath :
+        List.of("README.md", "docs/OPERATIONS.md", "docs/QUICK_REFERENCE.md", "docs/ERRORS.md")) {
+      String document =
+          XlsxParitySupport.call(
+              "read " + relativePath, () -> Files.readString(repositoryRoot.resolve(relativePath)));
+
+      assertTrue(
+          document.contains("LAMBDA") && document.contains("LET"),
+          relativePath + " must mention the current LAMBDA/LET limitation");
+      assertTrue(
+          document.contains("INVALID_FORMULA"),
+          relativePath + " must describe the INVALID_FORMULA boundary");
+    }
+
+    String operations =
+        XlsxParitySupport.call(
+            "read docs/OPERATIONS.md",
+            () -> Files.readString(repositoryRoot.resolve("docs/OPERATIONS.md")));
+    assertTrue(operations.contains("totalFormulaCellCount"));
+    assertTrue(operations.contains("checkedNamedRangeCount"));
+
+    String quickReference =
+        XlsxParitySupport.call(
+            "read docs/QUICK_REFERENCE.md",
+            () -> Files.readString(repositoryRoot.resolve("docs/QUICK_REFERENCE.md")));
+    assertTrue(quickReference.contains("analysis.summary"));
   }
 
   private static Path repositoryRoot() {

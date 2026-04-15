@@ -3,6 +3,7 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.protocol.catalog.Catalog;
+import dev.erst.gridgrind.protocol.catalog.GridGrindContractText;
 import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
 import dev.erst.gridgrind.protocol.dto.GridGrindProblemCategory;
 import dev.erst.gridgrind.protocol.dto.GridGrindProblemCode;
@@ -500,11 +501,7 @@ class GridGrindCliTest {
     assertTrue(help.contains("Workbook health workflow (no save):"));
     assertTrue(help.contains("\"persistence\": { \"type\": \"NONE\" }"));
     assertTrue(help.contains("\"type\": \"ANALYZE_WORKBOOK_FINDINGS\", \"requestId\": \"lint\""));
-    assertTrue(
-        help.contains(
-            "ANALYZE_WORKBOOK_FINDINGS aggregates formula, data-validation, conditional-formatting,"));
-    assertTrue(
-        help.contains("autofilter, table, pivot-table, hyperlink, and named-range findings."));
+    assertTrue(help.contains(GridGrindContractText.workbookFindingsDiscoverySummary()));
   }
 
   @Test
@@ -513,10 +510,10 @@ class GridGrindCliTest {
 
     assertTrue(
         help.contains(
-            "Formula authoring:        request-authored formulas are scalar only; array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and some newer Excel constructs (for example LAMBDA/LET) may fail earlier as INVALID_FORMULA when Apache POI cannot parse them."));
+            "Formula authoring:        " + GridGrindContractText.formulaAuthoringLimitSummary()));
     assertTrue(
         help.contains(
-            "Loaded formula support:   formulas that Apache POI parses but cannot evaluate surface as UNSUPPORTED_FORMULA."));
+            "Loaded formula support:   " + GridGrindContractText.loadedFormulaSupportSummary()));
   }
 
   @Test
@@ -1321,6 +1318,23 @@ class GridGrindCliTest {
   }
 
   @Test
+  void printProtocolCatalogWithSheetLayoutFilterMentionsPresentation() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--operation", "GET_SHEET_LAYOUT"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(0, exitCode);
+    String output = stdout.toString(StandardCharsets.UTF_8).trim();
+    assertTrue(output.contains("\"GET_SHEET_LAYOUT\""), "output must contain the entry id");
+    assertTrue(output.contains("presentation"), "summary must mention layout.presentation");
+    assertTrue(output.contains("outlineLevel"), "summary must mention row/column outline state");
+  }
+
+  @Test
   void printProtocolCatalogWithUnknownOperationReturnsError() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
@@ -1358,6 +1372,15 @@ class GridGrindCliTest {
     assertTrue(help.contains("EVENT_READ mode"), "help must describe EVENT_READ mode limits");
     assertTrue(
         help.contains("STREAMING_WRITE mode"), "help must describe STREAMING_WRITE mode limits");
+    assertTrue(
+        help.contains(GridGrindContractText.eventReadReadTypePhrase()),
+        "help must describe the canonical EVENT_READ read surface");
+    assertTrue(
+        help.contains(GridGrindContractText.streamingWriteOperationTypePhrase()),
+        "help must expose the canonical streaming-write operation name");
+    assertFalse(
+        help.contains("FORCE_FORMULA_RECALC_ON_OPEN"),
+        "help must not expose the rejected legacy shorthand");
   }
 
   /** ByteArrayInputStream that records whether {@code close()} was called. */

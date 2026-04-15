@@ -205,7 +205,8 @@ public final class GridGrindJson {
    */
   static String message(Throwable throwable) {
     if (throwable instanceof InvalidTypeIdException invalidTypeIdException) {
-      return "Unknown type value '" + invalidTypeIdException.getTypeId() + "'";
+      String typeId = invalidTypeIdException.getTypeId();
+      return "Unknown type value '" + typeId + "'";
     }
     if (throwable instanceof UnrecognizedPropertyException unrecognizedPropertyException) {
       return "Unknown field '" + unrecognizedPropertyException.getPropertyName() + "'";

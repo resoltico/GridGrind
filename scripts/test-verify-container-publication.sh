@@ -56,26 +56,46 @@ log_path=${FAKE_DOCKER_LOG:?}
 printf '%s\n' "$*" >> "${log_path}"
 
 args=("$@")
-if [[ ${#args[@]} -lt 3 || "${args[0]}" != "--config" ]]; then
+offset=0
+if [[ ${#args[@]} -ge 2 && "${args[0]}" == "--config" ]]; then
+    offset=2
+fi
+
+if [[ ${#args[@]} -le ${offset} ]]; then
     printf 'unexpected docker invocation: %s\n' "$*" >&2
     exit 1
 fi
 
-command=${args[2]}
+command=${args[${offset}]}
 case "${command}" in
     pull)
-        image_ref=${args[3]:-}
+        image_ref=${args[$((offset + 1))]:-}
         [[ -n "${image_ref}" ]] || exit 1
         exit 0
         ;;
     run)
-        image_ref=${args[4]:-}
-        case "${image_ref}" in
-            *:latest)
-                printf '%s' "${FAKE_DOCKER_LATEST_OUTPUT:?}"
+        image_ref=${args[$((offset + 2))]:-}
+        cli_flag=${args[$((offset + 3))]:-}
+        case "${cli_flag}" in
+            --version)
+                case "${image_ref}" in
+                    *:latest)
+                        printf '%s' "${FAKE_DOCKER_LATEST_VERSION_OUTPUT:?}"
+                        ;;
+                    *)
+                        printf '%s' "${FAKE_DOCKER_VERSION_OUTPUT:?}"
+                        ;;
+                esac
+                ;;
+            --help)
+                printf '%s' "${FAKE_DOCKER_HELP_OUTPUT:?}"
+                ;;
+            --print-protocol-catalog)
+                printf '%s' "${FAKE_DOCKER_CATALOG_OUTPUT:?}"
                 ;;
             *)
-                printf '%s' "${FAKE_DOCKER_VERSION_OUTPUT:?}"
+                printf 'unexpected docker run invocation: %s\n' "$*" >&2
+                exit 1
                 ;;
         esac
         ;;
@@ -91,7 +111,9 @@ run_verify_expect_success() {
     PATH="${fake_bin}:${PATH}" \
         FAKE_DOCKER_LOG="${fake_log}" \
         FAKE_DOCKER_VERSION_OUTPUT="$1" \
-        FAKE_DOCKER_LATEST_OUTPUT="$2" \
+        FAKE_DOCKER_LATEST_VERSION_OUTPUT="$2" \
+        FAKE_DOCKER_HELP_OUTPUT="$3" \
+        FAKE_DOCKER_CATALOG_OUTPUT="$4" \
         GRIDGRIND_PUBLICATION_VERIFY_RETRIES=1 \
         GRIDGRIND_PUBLICATION_VERIFY_DELAY_SECONDS=0 \
         "${verify_script}" "ghcr.io/example/gridgrind" "9.9.9" >/dev/null
@@ -101,7 +123,9 @@ run_verify_expect_failure() {
     if PATH="${fake_bin}:${PATH}" \
         FAKE_DOCKER_LOG="${fake_log}" \
         FAKE_DOCKER_VERSION_OUTPUT="$1" \
-        FAKE_DOCKER_LATEST_OUTPUT="$2" \
+        FAKE_DOCKER_LATEST_VERSION_OUTPUT="$2" \
+        FAKE_DOCKER_HELP_OUTPUT="$3" \
+        FAKE_DOCKER_CATALOG_OUTPUT="$4" \
         GRIDGRIND_PUBLICATION_VERIFY_RETRIES=1 \
         GRIDGRIND_PUBLICATION_VERIFY_DELAY_SECONDS=0 \
         "${verify_script}" "ghcr.io/example/gridgrind" "9.9.9" >/dev/null 2>&1; then
@@ -110,14 +134,75 @@ run_verify_expect_failure() {
 }
 
 expected_header="$(printf 'GridGrind 9.9.9\n%s' "${expected_description}")"
+success_help='GridGrind 9.9.9
+Structured .xlsx workbook automation engine with an agent-friendly JSON protocol
+
+Limits:
+  STREAMING_WRITE mode:     source.type must be NEW; operations limited to ENSURE_SHEET, APPEND_ROW, and FORCE_FORMULA_RECALCULATION_ON_OPEN.
+  Formula authoring:        request-authored formulas are scalar only; array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and LAMBDA/LET are currently rejected as INVALID_FORMULA because Apache POI cannot parse them. Other newer constructs may fail the same way.
+
+Discovery:
+  ANALYZE_WORKBOOK_FINDINGS aggregates formula health, data-validation health, conditional-formatting health, autofilter health, table health, pivot-table health, hyperlink health, and named-range health.
+'
+success_catalog='{
+  "plainTypes": [
+    {
+      "group": "executionModeInputType",
+      "type": {
+        "summary": "Optional top-level request settings that select low-memory read and write execution families. readMode defaults to FULL_XSSF when omitted. writeMode defaults to FULL_XSSF when omitted. EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only (LIM-019). STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW, and FORCE_FORMULA_RECALCULATION_ON_OPEN on NEW workbooks only (LIM-020)."
+      }
+    }
+  ],
+  "readTypes": [
+    {
+      "id": "GET_SHEET_LAYOUT",
+      "summary": "Return one sheet'\''s layout object with pane, zoomPercent, presentation, and per-row or per-column metadata."
+    },
+    {
+      "id": "GET_FORMULA_SURFACE",
+      "summary": "Return analysis.totalFormulaCellCount plus per-sheet formula usage groups."
+    },
+    {
+      "id": "ANALYZE_FORMULA_HEALTH",
+      "summary": "Return analysis.checkedFormulaCellCount, a severity summary, and findings."
+    },
+    {
+      "id": "GET_NAMED_RANGE_SURFACE",
+      "summary": "Return analysis.workbookScopedCount, sheetScopedCount, rangeBackedCount, formulaBackedCount, and namedRanges."
+    },
+    {
+      "id": "ANALYZE_NAMED_RANGE_HEALTH",
+      "summary": "Return analysis.checkedNamedRangeCount, a severity summary, and findings."
+    },
+    {
+      "id": "ANALYZE_WORKBOOK_FINDINGS",
+      "summary": "Return analysis.summary plus one flat analysis.findings list after running all analysis families (formula health, data-validation health, conditional-formatting health, autofilter health, table health, pivot-table health, hyperlink health, and named-range health) across the entire workbook."
+    }
+  ]
+}'
 
 : > "${fake_log}"
-run_verify_expect_success "${expected_header}" "${expected_header}"
+run_verify_expect_success "${expected_header}" "${expected_header}" "${success_help}" "${success_catalog}"
 grep -Fq 'pull ghcr.io/example/gridgrind:9.9.9' "${fake_log}" || die "verifier did not pull the version tag"
 grep -Fq 'pull ghcr.io/example/gridgrind:latest' "${fake_log}" || die "verifier did not pull the latest tag"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:9.9.9 --help' "${fake_log}" || die \
+    "verifier did not inspect the version tag help surface"
+grep -Fq 'run --rm ghcr.io/example/gridgrind:latest --print-protocol-catalog' "${fake_log}" || die \
+    "verifier did not inspect the latest tag catalog surface"
 
-run_verify_expect_failure "$(printf 'gridgrind 9.9.9')" "$(printf 'gridgrind 9.9.9')"
+run_verify_expect_failure \
+    "$(printf 'gridgrind 9.9.9')" \
+    "$(printf 'gridgrind 9.9.9')" \
+    "${success_help}" \
+    "${success_catalog}"
 run_verify_expect_failure "$(printf 'GridGrind 9.9.9\nWrong description')" \
-    "$(printf 'GridGrind 9.9.9\nWrong description')"
+    "$(printf 'GridGrind 9.9.9\nWrong description')" \
+    "${success_help}" \
+    "${success_catalog}"
+run_verify_expect_failure \
+    "${expected_header}" \
+    "${expected_header}" \
+    "${success_help/FORCE_FORMULA_RECALCULATION_ON_OPEN/FORCE_FORMULA_RECALC_ON_OPEN}" \
+    "${success_catalog}"
 
 printf 'verify-container-publication regression: success\n'
