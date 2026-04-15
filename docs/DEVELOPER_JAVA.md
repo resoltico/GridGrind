@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.45.0"
+version: "0.46.0"
 domain: DEVELOPER_JAVA
-updated: "2026-04-13"
+updated: "2026-04-15"
 route:
   keywords: [gridgrind, java26, gradle-wrapper, global-gradle, brew, openjdk.org, workstation, shell, java-home, macos]
   questions: ["what is the best-practice java and gradle setup for gridgrind", "why should gridgrind use ./gradlew instead of brew gradle", "how do i configure a fresh macos machine for java 26 and the gradle wrapper", "when is a global gradle install acceptable", "why is shell-level java still required for gridgrind"]

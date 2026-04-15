@@ -5,12 +5,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.46.0] - 2026-04-15
+
 ### Changed
 
 - The release protocol now requires an explicit post-merge `main` CI handoff before tagging, and
   `scripts/verify-release-merge-handoff.sh` plus its shell regression test now enforce that the
   checked-out release commit matches `origin/main` and already has green `Check` and `Docker smoke`
   runs before any public tag is created.
+- The machine-readable protocol catalog and CLI help now describe the full
+  `ANALYZE_WORKBOOK_FINDINGS` aggregate correctly, including pivot-table health, and the public
+  workbook-health docs now point directly at the shipped batch-analysis request examples.
+
+### Fixed
+
+- The public Apache POI XSSF capability inventory no longer collapses distinct read and analysis
+  operations into shared rows. It now names the individual formula, hyperlink, named-range, sheet
+  schema, and aggregate workbook-finding surfaces explicitly, and it declares array formulas and
+  sparklines as `NOT_EXPOSED` instead of leaving them implicit.
+- Public formula docs now spell out the real request-contract boundary: authored formulas are
+  scalar only, array-formula braces are rejected as `INVALID_FORMULA`, newer constructs such as
+  `LAMBDA`/`LET` may fail during parse when Apache POI cannot read them, and loaded formulas that
+  POI parses but cannot evaluate surface as `UNSUPPORTED_FORMULA`.
+- The committed `examples/*.json` request fixtures are now regression-tested for JSON/schema
+  validity so public examples cannot drift silently from the shipped protocol.
 
 ## [0.45.0] - 2026-04-14
 
@@ -1703,7 +1721,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.45.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.46.0...HEAD
+[0.46.0]: https://github.com/resoltico/GridGrind/compare/v0.45.0...v0.46.0
 [0.45.0]: https://github.com/resoltico/GridGrind/compare/v0.44.0...v0.45.0
 [0.44.0]: https://github.com/resoltico/GridGrind/compare/v0.43.0...v0.44.0
 [0.43.0]: https://github.com/resoltico/GridGrind/compare/v0.42.0...v0.43.0

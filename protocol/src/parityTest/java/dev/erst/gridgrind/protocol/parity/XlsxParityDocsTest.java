@@ -73,12 +73,42 @@ final class XlsxParityDocsTest {
             "| Threaded comments | Specialized XSSF support beyond classic comments | `NOT_EXPOSED` |"));
     assertTrue(
         inventory.contains(
+            "| Array-formula authoring and array-group metadata | XSSF array-formula APIs | `NOT_EXPOSED` |"));
+    assertTrue(
+        inventory.contains(
+            "| Formula surface summaries | GridGrind-derived read over POI formula facts | `COMPLETE` |"));
+    assertTrue(
+        inventory.contains(
+            "| Formula health analysis | GridGrind-derived analysis over POI formula facts | `COMPLETE` |"));
+    assertTrue(
+        inventory.contains(
+            "| Hyperlink health analysis | GridGrind-derived analysis over POI hyperlink facts | `COMPLETE` |"));
+    assertTrue(
+        inventory.contains(
+            "| Named-range surface summaries | GridGrind-derived read over POI named-range facts | `COMPLETE` |"));
+    assertTrue(
+        inventory.contains(
+            "| Named-range health analysis | GridGrind-derived analysis over POI named-range facts | `COMPLETE` |"));
+    assertTrue(
+        inventory.contains(
+            "| Sparkline discovery and authoring | XSSF sheet sparkline APIs | `NOT_EXPOSED` |"));
+    assertTrue(
+        inventory.contains(
             "| OOXML encryption, password-protected package open or save, and XML signing |"));
     assertTrue(
         inventory.contains(
             "| XML-mapped tables and slicers | Broader XSSF table ecosystem | `NOT_EXPOSED` |"));
+    assertTrue(
+        inventory.contains(
+            "| Sheet schema inference | GridGrind-derived read over cell snapshots | `COMPLETE` |"));
+    assertTrue(
+        inventory.contains(
+            "| Aggregate workbook findings | GridGrind-derived aggregate over all shipped health families | `COMPLETE` |"));
     assertTrue(inventory.contains("print-gridline output"));
     assertTrue(inventory.contains("Currently not exposed:"));
+    assertFalse(
+        inventory.contains(
+            "| Formula surface, sheet schema, named-range surface, and aggregate workbook findings |"));
     assertTrue(inventory.contains("- drawing-family sheet copy"));
   }
 

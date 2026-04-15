@@ -54,7 +54,7 @@ docker pull ghcr.io/resoltico/gridgrind:latest
 To pin to a specific release (the container registry retains the last 5 releases):
 
 ```bash
-docker pull ghcr.io/resoltico/gridgrind:0.45.0
+docker pull ghcr.io/resoltico/gridgrind:0.46.0
 ```
 
 Published GHCR release images are rebuilt from a digest-pinned Java base image and ship explicit
@@ -196,13 +196,13 @@ local runs do not strand a live harness JVM.
 A request has three parts that always run in this order:
 
 **Operations** write to the workbook — create sheets, fill cells, apply styles, insert rows, build
-tables, set formulas, and author pictures, shapes, embedded objects, supported simple charts, or
+tables, set scalar formulas, and author pictures, shapes, embedded objects, supported simple charts, or
 limited pivot tables.
 They run in sequence; the first failure stops everything.
 
 **Reads** observe the workbook after all operations succeed — cell windows, schemas, hyperlinks,
 table definitions, drawing inventories, chart metadata, pivot-table metadata, pivot health,
-formula health, validation health, and more. Non-mutating.
+formula health, aggregate workbook findings, validation health, and more. Non-mutating.
 
 **Persistence** writes the file after all reads succeed. Omit it or set `NONE` to keep the
 workbook in memory only — useful when you only need the read results, or when Bob is running his
@@ -215,6 +215,10 @@ Two contract details matter often in agent-generated requests:
 - `formulaEnvironment` is optional. Use it when server-side evaluation needs external workbook
   bindings, cached-value fallback for missing external references, or template-backed UDF
   registration.
+- Formula payloads are scalar only. Array-formula braces such as `{=SUM(A1:A10*B1:B10)}` are
+  rejected as `INVALID_FORMULA`, and some newer Excel constructs such as `LAMBDA` or `LET` may
+  also fail earlier as `INVALID_FORMULA` when Apache POI cannot parse them. Loaded formulas that
+  POI parses but cannot evaluate surface as `UNSUPPORTED_FORMULA`.
 - `source.type: EXISTING` accepts optional `source.security.password` for encrypted OOXML
   workbooks.
 - `SAVE_AS` and `OVERWRITE` accept optional `persistence.security.encryption` and
@@ -295,7 +299,14 @@ summary-only `EVENT_READ` readback over the materialized workbook. The
 committed
 [examples/formula-environment-request.json](examples/formula-environment-request.json) example
 shows the formula surface: top-level `formulaEnvironment`, template-backed UDF registration,
-targeted formula evaluation, and explicit formula-cache clearing.
+targeted formula evaluation, and explicit formula-cache clearing. The committed
+[examples/introspection-analysis-request.json](examples/introspection-analysis-request.json)
+example shows the batch-analysis pattern for factual reads plus `ANALYZE_FORMULA_HEALTH`,
+`ANALYZE_HYPERLINK_HEALTH`, `ANALYZE_NAMED_RANGE_HEALTH`, and
+`ANALYZE_WORKBOOK_FINDINGS` in one request. The committed
+[examples/workbook-health-request.json](examples/workbook-health-request.json) example shows a
+smaller no-save health pass that combines `GET_SHEET_SUMMARY`,
+`ANALYZE_FORMULA_HEALTH`, `ANALYZE_WORKBOOK_FINDINGS`, and `GET_CELLS`.
 
 ### Alice — building an inventory sheet
 
