@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.protocol.exec;
 
 import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.protocol.catalog.GridGrindContractText;
 import dev.erst.gridgrind.protocol.dto.*;
 import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
 import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
@@ -88,15 +89,10 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           WorkbookOperation.AutoSizeColumns.class);
 
   private static final Set<Class<? extends WorkbookOperation>> STREAMING_WRITE_OPERATION_TYPES =
-      Set.of(
-          WorkbookOperation.EnsureSheet.class,
-          WorkbookOperation.AppendRow.class,
-          WorkbookOperation.ForceFormulaRecalculationOnOpen.class);
+      GridGrindContractText.streamingWriteOperationClasses();
 
   private static final Set<Class<? extends WorkbookReadOperation>> EVENT_READ_OPERATION_TYPES =
-      Set.of(
-          WorkbookReadOperation.GetWorkbookSummary.class,
-          WorkbookReadOperation.GetSheetSummary.class);
+      GridGrindContractText.eventReadOperationClasses();
 
   private final WorkbookCommandExecutor commandExecutor;
   private final WorkbookReadExecutor readExecutor;
@@ -837,8 +833,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       for (WorkbookReadOperation read : request.reads()) {
         if (!EVENT_READ_OPERATION_TYPES.contains(read.getClass())) {
           return Optional.of(
-              "executionMode.readMode=EVENT_READ supports GET_WORKBOOK_SUMMARY and"
-                  + " GET_SHEET_SUMMARY only; unsupported read type: "
+              "executionMode.readMode=EVENT_READ supports "
+                  + GridGrindContractText.eventReadReadTypePhrase()
+                  + " only; unsupported read type: "
                   + readType(read));
         }
       }
@@ -854,8 +851,9 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       for (WorkbookOperation operation : request.operations()) {
         if (!STREAMING_WRITE_OPERATION_TYPES.contains(operation.getClass())) {
           return Optional.of(
-              "executionMode.writeMode=STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW,"
-                  + " and FORCE_FORMULA_RECALC_ON_OPEN only; unsupported operation type: "
+              "executionMode.writeMode=STREAMING_WRITE supports "
+                  + GridGrindContractText.streamingWriteOperationTypePhrase()
+                  + " only; unsupported operation type: "
                   + operation.operationType());
         }
         hasSheetProducingOperation =

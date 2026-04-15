@@ -5,6 +5,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.47.0] - 2026-04-16
+
+### Changed
+
+- Public streaming-write docs, CLI help, the protocol catalog, and runtime validation messages now
+  use the single canonical operation name `FORCE_FORMULA_RECALCULATION_ON_OPEN` consistently.
+- Agent-facing catalog summaries now describe the actual response shape for `GET_SHEET_LAYOUT`,
+  `GET_FORMULA_SURFACE`, `GET_NAMED_RANGE_SURFACE`, and the workbook-health analysis reads,
+  including checked-count fields, `layout.presentation`, grouped formula summaries, and flat
+  aggregated findings.
+- Core-owned contract text now drives the thin downstream CLI help, protocol catalog discovery
+  summaries, and execution-mode validation messages for the public low-memory and workbook-health
+  surfaces, so operation-name and limitation wording no longer lives in multiple hand-maintained
+  string copies.
+- Release verification now treats `--help` and `--print-protocol-catalog` as first-class public
+  artifacts. The build JAR, local Docker smoke image, and published GHCR tags are black-box
+  checked for canonical streaming-write wording, the hard `LAMBDA`/`LET` boundary, and the richer
+  analysis/layout catalog summaries before a release is considered healthy.
+
+### Fixed
+
+- Gradient-fill authoring now rejects mixed geometry models up front instead of serializing
+  impossible `.xlsx` styles. `LINEAR` gradients accept `degree`, `PATH` gradients accept
+  `left/right/top/bottom`, and valid gradient-plus-protection styles now survive `.xlsx`
+  round-trips cleanly.
+- Formula docs and CLI help now state the current hard limitation truthfully: authored
+  array-formula braces are rejected as `INVALID_FORMULA`, `LAMBDA` and `LET` are currently
+  rejected as `INVALID_FORMULA` because Apache POI cannot parse them, and loaded formulas that POI
+  parses but cannot evaluate surface as `UNSUPPORTED_FORMULA`.
+- Protocol JSON parsing no longer carries a special-case alias hint path for retired operation
+  discriminator spellings; invalid discriminators now fail uniformly as unknown type values.
+- The Apache POI XSSF capability inventory now cites the real comment implementation files instead
+  of a stale nonexistent comment-support evidence path.
+
 ## [0.46.0] - 2026-04-15
 
 ### Changed
@@ -1721,7 +1755,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.46.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.47.0...HEAD
+[0.47.0]: https://github.com/resoltico/GridGrind/compare/v0.46.0...v0.47.0
 [0.46.0]: https://github.com/resoltico/GridGrind/compare/v0.45.0...v0.46.0
 [0.45.0]: https://github.com/resoltico/GridGrind/compare/v0.44.0...v0.45.0
 [0.44.0]: https://github.com/resoltico/GridGrind/compare/v0.43.0...v0.44.0

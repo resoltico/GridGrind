@@ -608,9 +608,7 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.GetSheetLayout.class,
               "GET_SHEET_LAYOUT",
-              "Return pane, zoom, row-height, and column-width metadata."
-                  + " Row and column entries now include hidden, outlineLevel, and collapsed"
-                  + " state where Excel persists it."),
+              GridGrindContractText.sheetLayoutReadSummary()),
           descriptor(
               WorkbookReadOperation.GetPrintLayout.class,
               "GET_PRINT_LAYOUT",
@@ -645,7 +643,7 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.GetFormulaSurface.class,
               "GET_FORMULA_SURFACE",
-              "Summarize formula usage patterns across the selected sheets."),
+              GridGrindContractText.formulaSurfaceReadSummary()),
           descriptor(
               WorkbookReadOperation.GetSheetSchema.class,
               "GET_SHEET_SCHEMA",
@@ -662,56 +660,57 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               WorkbookReadOperation.GetNamedRangeSurface.class,
               "GET_NAMED_RANGE_SURFACE",
-              "Summarize the scope and backing kind of named ranges."),
+              GridGrindContractText.namedRangeSurfaceReadSummary()),
           descriptor(
               WorkbookReadOperation.AnalyzeFormulaHealth.class,
               "ANALYZE_FORMULA_HEALTH",
-              "Report formula findings such as errors and volatile usage."),
+              GridGrindContractText.formulaHealthReadSummary()),
           descriptor(
               WorkbookReadOperation.AnalyzeDataValidationHealth.class,
               "ANALYZE_DATA_VALIDATION_HEALTH",
-              "Report data-validation findings such as unsupported, overlapping, or"
+              "Return analysis.checkedValidationCount, a severity summary,"
+                  + " and findings such as unsupported, overlapping, or"
                   + " broken-formula rules."),
           descriptor(
               WorkbookReadOperation.AnalyzeConditionalFormattingHealth.class,
               "ANALYZE_CONDITIONAL_FORMATTING_HEALTH",
-              "Report conditional-formatting findings such as broken formulas,"
+              "Return analysis.checkedConditionalFormattingBlockCount,"
+                  + " a severity summary, and conditional-formatting findings such as broken formulas,"
                   + " unsupported loaded rules, invalid target ranges, or priority collisions."),
           descriptor(
               WorkbookReadOperation.AnalyzeAutofilterHealth.class,
               "ANALYZE_AUTOFILTER_HEALTH",
-              "Report autofilter findings such as invalid ranges, blank header rows,"
+              "Return analysis.checkedAutofilterCount, a severity summary,"
+                  + " and autofilter findings such as invalid ranges, blank header rows,"
                   + " or ownership mismatches between sheet-level filters and tables."),
           descriptor(
               WorkbookReadOperation.AnalyzeTableHealth.class,
               "ANALYZE_TABLE_HEALTH",
-              "Report table findings such as overlaps, broken references,"
+              "Return analysis.checkedTableCount, a severity summary,"
+                  + " and table findings such as overlaps, broken references,"
                   + " blank or duplicate headers, and unresolved styles."),
           descriptor(
               WorkbookReadOperation.AnalyzePivotTableHealth.class,
               "ANALYZE_PIVOT_TABLE_HEALTH",
-              "Report pivot-table findings such as missing cache parts, broken sources,"
+              "Return analysis.checkedPivotTableCount, a severity summary,"
+                  + " and pivot-table findings such as missing cache parts, broken sources,"
                   + " duplicate or synthetic names, and unsupported persisted detail."),
           descriptor(
               WorkbookReadOperation.AnalyzeHyperlinkHealth.class,
               "ANALYZE_HYPERLINK_HEALTH",
-              "Report hyperlink findings such as malformed, missing, unresolved, or broken"
+              "Return analysis.checkedHyperlinkCount, a severity summary,"
+                  + " and hyperlink findings such as malformed, missing, unresolved, or broken"
                   + " targets."
                   + " Relative FILE targets are resolved against the workbook's persisted path"
                   + " when one exists."),
           descriptor(
               WorkbookReadOperation.AnalyzeNamedRangeHealth.class,
               "ANALYZE_NAMED_RANGE_HEALTH",
-              "Report named-range findings such as broken references."),
+              GridGrindContractText.namedRangeHealthReadSummary()),
           descriptor(
               WorkbookReadOperation.AnalyzeWorkbookFindings.class,
               "ANALYZE_WORKBOOK_FINDINGS",
-              "Run all analysis families (formula health, data-validation health,"
-                  + " conditional-formatting health, autofilter health, table health,"
-                  + " pivot-table health, hyperlink health, and named-range health)"
-                  + " across the entire workbook and aggregate findings in a single response."
-                  + " This is the primary workbook-health check and pairs naturally with"
-                  + " persistence.type=NONE when no save is required."));
+              GridGrindContractText.workbookFindingsReadSummary()));
   private static final List<NestedTypeDescriptor> NESTED_TYPE_GROUPS =
       List.of(
           nestedTypeGroup(
@@ -1173,14 +1172,7 @@ public final class GridGrindProtocolCatalog {
               "executionModeInputType",
               ExecutionModeInput.class,
               "ExecutionModeInput",
-              "Optional top-level request settings that select low-memory read and write"
-                  + " execution families."
-                  + " readMode defaults to FULL_XSSF when omitted."
-                  + " writeMode defaults to FULL_XSSF when omitted."
-                  + " EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only"
-                  + " (LIM-019)."
-                  + " STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW, and"
-                  + " FORCE_FORMULA_RECALC_ON_OPEN on NEW workbooks only (LIM-020).",
+              GridGrindContractText.executionModeInputSummary(),
               List.of("readMode", "writeMode")),
           plainTypeDescriptor(
               "formulaEnvironmentInputType",
@@ -1417,6 +1409,8 @@ public final class GridGrindProtocolCatalog {
               CellGradientFillInput.class,
               "CellGradientFillInput",
               "Gradient fill payload for cell-style authoring."
+                  + " LINEAR gradients use degree, PATH gradients use left/right/top/bottom,"
+                  + " and the two geometry modes must not be mixed."
                   + " stops must contain at least two entries.",
               List.of("type", "degree", "left", "right", "top", "bottom")),
           plainTypeDescriptor(

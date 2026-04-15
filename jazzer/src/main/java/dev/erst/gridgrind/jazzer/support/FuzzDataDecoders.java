@@ -399,13 +399,14 @@ public final class FuzzDataDecoders {
   }
 
   private static ExcelGradientFill nextGradientFill(GridGrindFuzzData data) {
+    boolean linear = data.consumeBoolean();
     return new ExcelGradientFill(
-        data.consumeBoolean() ? "LINEAR" : "PATH",
-        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 180.0d) : null,
-        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
-        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
-        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
-        data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 1.0d) : null,
+        linear ? "LINEAR" : "PATH",
+        linear && data.consumeBoolean() ? data.consumeRegularDouble(0.0d, 180.0d) : null,
+        linear || !data.consumeBoolean() ? null : data.consumeRegularDouble(0.0d, 1.0d),
+        linear || !data.consumeBoolean() ? null : data.consumeRegularDouble(0.0d, 1.0d),
+        linear || !data.consumeBoolean() ? null : data.consumeRegularDouble(0.0d, 1.0d),
+        linear || !data.consumeBoolean() ? null : data.consumeRegularDouble(0.0d, 1.0d),
         List.of(
             new ExcelGradientStop(0.0d, nextExcelColor(data)),
             new ExcelGradientStop(1.0d, nextExcelColor(data))));

@@ -1751,6 +1751,42 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   @Test
+  void returnsInvalidFormulaForLambdaAndLetFormulaOperations() {
+    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+
+    GridGrindResponse.Failure lambdaFailure =
+        failure(
+            executor.execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Data"),
+                        new WorkbookOperation.SetCell(
+                            "Data", "A1", new CellInput.Formula("LAMBDA(x,x*2)(5)"))))));
+    GridGrindResponse.Failure letFailure =
+        failure(
+            executor.execute(
+                request(
+                    new GridGrindRequest.WorkbookSource.New(),
+                    new GridGrindRequest.WorkbookPersistence.None(),
+                    List.of(
+                        new WorkbookOperation.EnsureSheet("Data"),
+                        new WorkbookOperation.SetCell(
+                            "Data", "A1", new CellInput.Formula("LET(x,5,x*2)"))))));
+
+    assertEquals(GridGrindProblemCode.INVALID_FORMULA, lambdaFailure.problem().code());
+    assertEquals("Invalid formula at Data!A1: LAMBDA(x,x*2)(5)", lambdaFailure.problem().message());
+    assertEquals("A1", lambdaFailure.problem().context().address());
+    assertEquals("LAMBDA(x,x*2)(5)", lambdaFailure.problem().context().formula());
+
+    assertEquals(GridGrindProblemCode.INVALID_FORMULA, letFailure.problem().code());
+    assertEquals("Invalid formula at Data!A1: LET(x,5,x*2)", letFailure.problem().message());
+    assertEquals("A1", letFailure.problem().context().address());
+    assertEquals("LET(x,5,x*2)", letFailure.problem().context().formula());
+  }
+
+  @Test
   void surfacesWorkbookFormulaLocationWhenEvaluationFails() {
     GridGrindResponse.Failure failure =
         failure(
@@ -2135,7 +2171,7 @@ class DefaultGridGrindRequestExecutorTest {
                                                 new CellGradientStopInput(
                                                     1.0d, new ColorInput(null, 4, null, 0.45d))))),
                                     null,
-                                    null))),
+                                    new CellProtectionInput(true, true)))),
                         new WorkbookReadOperation.GetCells(
                             "cells", "Budget", List.of("A1", "A2")))));
 
@@ -2152,6 +2188,7 @@ class DefaultGridGrindRequestExecutorTest {
             null, null, Short.toUnsignedInt(IndexedColors.DARK_RED.getIndex()), null),
         themedStyle.border().bottom().color());
     assertNotNull(gradientStyle.fill().gradient());
+    assertEquals("LINEAR", gradientStyle.fill().gradient().type());
     assertEquals(45.0d, gradientStyle.fill().gradient().degree());
     assertEquals(
         new CellColorReport("#1F497D", null, null, null),
@@ -2159,6 +2196,115 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(
         new CellColorReport(null, 4, null, 0.45d),
         gradientStyle.fill().gradient().stops().get(1).color());
+    assertTrue(gradientStyle.protection().locked());
+    assertTrue(gradientStyle.protection().hiddenFormula());
+  }
+
+  @Test
+  void preservesDistinctLinearAndPathGradientStylesInSameRequest() throws IOException {
+    Path workbookPath = Files.createTempFile("gridgrind-distinct-gradients-", ".xlsx");
+    assertDoesNotThrow(() -> Files.deleteIfExists(workbookPath));
+    GridGrindResponse.Success success =
+        success(
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request(
+                        new GridGrindRequest.WorkbookSource.New(),
+                        new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
+                        List.of(
+                            new WorkbookOperation.EnsureSheet("Budget"),
+                            new WorkbookOperation.SetCell(
+                                "Budget", "A2", new CellInput.Text("Linear gradient")),
+                            new WorkbookOperation.ApplyStyle(
+                                "Budget",
+                                "A2",
+                                new CellStyleInput(
+                                    null,
+                                    null,
+                                    null,
+                                    new CellFillInput(
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        new CellGradientFillInput(
+                                            "LINEAR",
+                                            45.0d,
+                                            null,
+                                            null,
+                                            null,
+                                            null,
+                                            List.of(
+                                                new CellGradientStopInput(
+                                                    0.0d, new ColorInput("#1F497D")),
+                                                new CellGradientStopInput(
+                                                    1.0d, new ColorInput(null, 4, null, 0.45d))))),
+                                    null,
+                                    new CellProtectionInput(true, true))),
+                            new WorkbookOperation.SetCell(
+                                "Budget", "A3", new CellInput.Text("Path gradient")),
+                            new WorkbookOperation.ApplyStyle(
+                                "Budget",
+                                "A3",
+                                new CellStyleInput(
+                                    null,
+                                    null,
+                                    null,
+                                    new CellFillInput(
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        null,
+                                        new CellGradientFillInput(
+                                            "PATH",
+                                            null,
+                                            0.1d,
+                                            0.2d,
+                                            0.3d,
+                                            0.4d,
+                                            List.of(
+                                                new CellGradientStopInput(
+                                                    0.0d, new ColorInput("#112233")),
+                                                new CellGradientStopInput(
+                                                    1.0d,
+                                                    new ColorInput(
+                                                        null,
+                                                        null,
+                                                        Short.toUnsignedInt(
+                                                            IndexedColors.DARK_RED.getIndex()),
+                                                        null))))),
+                                    null,
+                                    new CellProtectionInput(false, true)))),
+                        new WorkbookReadOperation.GetCells(
+                            "cells", "Budget", List.of("A2", "A3")))));
+
+    WorkbookReadResult.CellsResult cells =
+        read(success, "cells", WorkbookReadResult.CellsResult.class);
+    GridGrindResponse.CellStyleReport linearGradientStyle = cells.cells().get(0).style();
+    GridGrindResponse.CellStyleReport pathGradientStyle = cells.cells().get(1).style();
+
+    assertEquals("LINEAR", linearGradientStyle.fill().gradient().type());
+    assertEquals(45.0d, linearGradientStyle.fill().gradient().degree());
+    assertTrue(linearGradientStyle.protection().locked());
+    assertTrue(linearGradientStyle.protection().hiddenFormula());
+    assertEquals("PATH", pathGradientStyle.fill().gradient().type());
+    assertNull(pathGradientStyle.fill().gradient().degree());
+    assertEquals(0.1d, pathGradientStyle.fill().gradient().left());
+    assertEquals(0.2d, pathGradientStyle.fill().gradient().right());
+    assertEquals(0.3d, pathGradientStyle.fill().gradient().top());
+    assertEquals(0.4d, pathGradientStyle.fill().gradient().bottom());
+    assertFalse(pathGradientStyle.protection().locked());
+    assertTrue(pathGradientStyle.protection().hiddenFormula());
   }
 
   @Test

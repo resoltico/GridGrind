@@ -216,6 +216,15 @@ JSON
 printf 'Docker smoke: building local image\n'
 docker_with_repo_config buildx build --load -t "${image_tag}" "${repo_root}" >/dev/null
 
+printf 'Docker smoke: verifying packaged help and catalog contract\n'
+if [[ -n "${docker_endpoint}" ]]; then
+    DOCKER_CONFIG="${anonymous_docker_config}" DOCKER_HOST="${docker_endpoint}" \
+        "${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}" >/dev/null
+else
+    DOCKER_CONFIG="${anonymous_docker_config}" \
+        "${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}" >/dev/null
+fi
+
 printf 'Docker smoke: verifying custom workdir and weird paths\n'
 help_output="$(docker_with_repo_config run --rm \
     --user "${docker_run_user}" \

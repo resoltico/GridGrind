@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.46.0"
+version: "0.47.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-04-15"
+updated: "2026-04-16"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -291,8 +291,11 @@ If these conditions are satisfied, the GitHub Release handoff is complete even i
 duplicate release workflow run failed after the release was already created.
 
 The release workflow is expected to perform this same verification internally after publication.
-The operator-side `gh release view` check remains mandatory because workflow success is still not
-the authoritative state.
+Before publication, that workflow also black-box verifies the packaged fat JAR with
+`./scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar` so the shipped `--help`
+and `--print-protocol-catalog` surfaces cannot drift from the core contract silently. The
+operator-side `gh release view` check remains mandatory because workflow success is still not the
+authoritative state.
 
 ### Step 9 — Verify public availability
 
@@ -306,13 +309,14 @@ gh release view vX.Y.Z                                                # GitHub R
 ./scripts/verify-container-publication.sh ghcr.io/resoltico/gridgrind X.Y.Z
 ```
 
-The verifier script must confirm both the exact `X.Y.Z` tag and `latest` are anonymously pullable
-and that both `docker run ... --version` results match the two-line product header for the target
+The verifier script must confirm both the exact `X.Y.Z` tag and `latest` are anonymously pullable,
+that both `docker run ... --version` results match the two-line product header for the target
 release version exactly — `GridGrind X.Y.Z` on the first line and the product description on the
-second. A successful `docker pull` alone is not sufficient verification. In particular: a
-multi-arch `docker pull` can succeed even when the platform manifests have been deleted — the
-index manifest is still present but the image is not actually runnable. The `docker run --version`
-check remains the definitive test.
+second — and that both published tags still expose the expected `--help` and
+`--print-protocol-catalog` contract. A successful `docker pull` alone is not sufficient
+verification. In particular: a multi-arch `docker pull` can succeed even when the platform
+manifests have been deleted — the index manifest is still present but the image is not actually
+runnable. The `docker run --version` plus CLI-contract checks remain the definitive test.
 
 If the verifier script fails, inspect the published state, fix the release surface, and rerun the
 same verification command. Do not switch to the operator's normal Docker config as a fallback.

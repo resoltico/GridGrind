@@ -19,6 +19,9 @@ import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
 import dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
+import dev.erst.gridgrind.excel.ExcelGradientFillGeometry;
+import dev.erst.gridgrind.excel.ExcelGradientFillSnapshot;
+import dev.erst.gridgrind.excel.ExcelGradientStopSnapshot;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -61,13 +64,17 @@ import org.apache.poi.ss.usermodel.VerticalAlignment;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.PaneInformation;
+import org.apache.poi.xssf.model.ThemesTable;
 import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFHyperlink;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.extensions.XSSFCellFill;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCols;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientFill;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientStop;
 
 /** Reopens saved workbooks and validates basic `.xlsx` structural invariants. */
 public final class XlsxRoundTripVerifier {
@@ -142,12 +149,13 @@ public final class XlsxRoundTripVerifier {
         if (cell == null) {
           throw new IllegalStateException("cell iterator must not yield null");
         }
-        requireCellStyleShape((XSSFCellStyle) cell.getCellStyle());
+        requireCellStyleShape(
+            (XSSFWorkbook) sheet.getWorkbook(), (XSSFCellStyle) cell.getCellStyle());
       }
     }
   }
 
-  private static void requireCellStyleShape(XSSFCellStyle style) {
+  private static void requireCellStyleShape(XSSFWorkbook workbook, XSSFCellStyle style) {
     if (style == null) {
       throw new IllegalStateException("cell style must not be null");
     }
@@ -168,7 +176,7 @@ public final class XlsxRoundTripVerifier {
     requireColorShape(style.getRightBorderXSSFColor(), "right border color");
     requireColorShape(style.getBottomBorderXSSFColor(), "bottom border color");
     requireColorShape(style.getLeftBorderXSSFColor(), "left border color");
-    styleSnapshot(style);
+    styleSnapshot(workbook, style);
   }
 
   private static void requireExpectedStyles(
@@ -212,7 +220,9 @@ public final class XlsxRoundTripVerifier {
       CellCoordinate coordinate,
       ExcelCellStyleSnapshot expectedStyle,
       Cell cell) {
-    ExcelCellStyleSnapshot actualStyle = styleSnapshot((XSSFCellStyle) cell.getCellStyle());
+    ExcelCellStyleSnapshot actualStyle =
+        styleSnapshot(
+            (XSSFWorkbook) cell.getSheet().getWorkbook(), (XSSFCellStyle) cell.getCellStyle());
     if (!expectedStyle.equals(actualStyle)) {
       throw new IllegalStateException(
           "style must survive .xlsx round-trip for %s!%s: expected %s but was %s"
@@ -1317,7 +1327,7 @@ public final class XlsxRoundTripVerifier {
     return numberFormat == null || numberFormat.isBlank() ? "General" : numberFormat;
   }
 
-  private static ExcelCellStyleSnapshot styleSnapshot(XSSFCellStyle style) {
+  private static ExcelCellStyleSnapshot styleSnapshot(XSSFWorkbook workbook, XSSFCellStyle style) {
     XSSFFont font = style.getFont();
     return new ExcelCellStyleSnapshot(
         resolveNumberFormat(style.getDataFormatString()),
@@ -1335,7 +1345,7 @@ public final class XlsxRoundTripVerifier {
             toColorSnapshot(font.getXSSFColor()),
             font.getUnderline() != org.apache.poi.ss.usermodel.Font.U_NONE,
             font.getStrikeout()),
-        fillSnapshot(style),
+        fillSnapshot(workbook, style),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(
                 fromPoi(style.getBorderTop()), toColorSnapshot(style.getTopBorderXSSFColor())),
@@ -1349,7 +1359,15 @@ public final class XlsxRoundTripVerifier {
         new ExcelCellProtectionSnapshot(style.getLocked(), style.getHidden()));
   }
 
-  private static ExcelCellFillSnapshot fillSnapshot(XSSFCellStyle style) {
+  private static ExcelCellFillSnapshot fillSnapshot(XSSFWorkbook workbook, XSSFCellStyle style) {
+    XSSFCellFill fill = workbook.getStylesSource().getFillAt((int) style.getCoreXf().getFillId());
+    if (fill.getCTFill().isSetGradientFill()) {
+      return new ExcelCellFillSnapshot(
+          ExcelFillPattern.NONE,
+          null,
+          null,
+          gradientFillSnapshot(workbook, fill.getCTFill().getGradientFill()));
+    }
     ExcelFillPattern pattern = fromPoi(style.getFillPattern());
     if (pattern == ExcelFillPattern.NONE) {
       return new ExcelCellFillSnapshot(pattern, null, null);
@@ -1360,6 +1378,38 @@ public final class XlsxRoundTripVerifier {
         pattern == ExcelFillPattern.SOLID
             ? null
             : toColorSnapshot(style.getFillBackgroundColorColor()));
+  }
+
+  private static ExcelGradientFillSnapshot gradientFillSnapshot(
+      XSSFWorkbook workbook, CTGradientFill fill) {
+    Double left = fill.isSetLeft() ? fill.getLeft() : null;
+    Double right = fill.isSetRight() ? fill.getRight() : null;
+    Double top = fill.isSetTop() ? fill.getTop() : null;
+    Double bottom = fill.isSetBottom() ? fill.getBottom() : null;
+    List<ExcelGradientStopSnapshot> stops =
+        java.util.Arrays.stream(fill.getStopArray())
+            .map(stop -> gradientStopSnapshot(workbook, stop))
+            .toList();
+    return new ExcelGradientFillSnapshot(
+        ExcelGradientFillGeometry.effectiveType(
+            fill.isSetType() ? fill.getType().toString() : null, left, right, top, bottom),
+        fill.isSetDegree() ? fill.getDegree() : null,
+        left,
+        right,
+        top,
+        bottom,
+        stops);
+  }
+
+  private static ExcelGradientStopSnapshot gradientStopSnapshot(
+      XSSFWorkbook workbook, CTGradientStop stop) {
+    XSSFColor color =
+        XSSFColor.from(stop.getColor(), workbook.getStylesSource().getIndexedColors());
+    ThemesTable themes = workbook.getStylesSource().getTheme();
+    if (themes != null) {
+      themes.inheritFromThemeAsRequired(color);
+    }
+    return new ExcelGradientStopSnapshot(stop.getPosition(), toColorSnapshot(color));
   }
 
   private static void requireColorShape(XSSFColor color, String label) {

@@ -722,9 +722,7 @@ class WorkbookStyleRegistryTest {
 
       ExcelGradientFillSnapshot snapshot = styleRegistry.gradientFillSnapshot(gradient);
 
-      assertEquals(
-          org.openxmlformats.schemas.spreadsheetml.x2006.main.STGradientType.PATH.toString(),
-          snapshot.type());
+      assertEquals("PATH", snapshot.type());
       assertNull(snapshot.degree());
       assertEquals(0.1d, snapshot.left());
       assertEquals(0.2d, snapshot.right());
@@ -732,6 +730,328 @@ class WorkbookStyleRegistryTest {
       assertEquals(0.4d, snapshot.bottom());
       assertEquals(new ExcelColorSnapshot(null, 2, null, null), snapshot.stops().get(0).color());
       assertEquals(new ExcelColorSnapshot(null, null, 5, null), snapshot.stops().get(1).color());
+    }
+  }
+
+  @Test
+  void gradientFillSnapshotInfersPathTypeWhenOffsetsExistWithoutExplicitType() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      var gradient =
+          org.openxmlformats.schemas.spreadsheetml.x2006.main.CTGradientFill.Factory.newInstance();
+      gradient.setLeft(0.1d);
+      gradient.setRight(0.2d);
+      gradient.setTop(0.3d);
+      gradient.setBottom(0.4d);
+      var firstStop = gradient.addNewStop();
+      firstStop.setPosition(0.0d);
+      firstStop.addNewColor().setTheme(2L);
+      var secondStop = gradient.addNewStop();
+      secondStop.setPosition(1.0d);
+      secondStop.addNewColor().setIndexed(5L);
+
+      ExcelGradientFillSnapshot snapshot = styleRegistry.gradientFillSnapshot(gradient);
+
+      assertEquals("PATH", snapshot.type());
+      assertNull(snapshot.degree());
+      assertEquals(0.1d, snapshot.left());
+      assertEquals(0.2d, snapshot.right());
+      assertEquals(0.3d, snapshot.top());
+      assertEquals(0.4d, snapshot.bottom());
+    }
+  }
+
+  @Test
+  void snapshotReportsPathGradientGeometryForStyledCells() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
+      cell.setCellValue("Path");
+
+      cell.setCellStyle(
+          styleRegistry.mergedStyle(
+              cell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  null,
+                  new ExcelCellFill(
+                      null,
+                      null,
+                      null,
+                      new ExcelGradientFill(
+                          "PATH",
+                          null,
+                          0.1d,
+                          0.2d,
+                          0.3d,
+                          0.4d,
+                          List.of(
+                              new ExcelGradientStop(0.0d, new ExcelColor("#112233")),
+                              new ExcelGradientStop(1.0d, new ExcelColor(null, null, 10, null))))),
+                  null,
+                  new ExcelCellProtection(false, true))));
+
+      ExcelCellStyleSnapshot snapshot = styleRegistry.snapshot(cell);
+
+      assertEquals("PATH", snapshot.fill().gradient().type());
+      assertNull(snapshot.fill().gradient().degree());
+      assertEquals(0.1d, snapshot.fill().gradient().left());
+      assertEquals(0.2d, snapshot.fill().gradient().right());
+      assertEquals(0.3d, snapshot.fill().gradient().top());
+      assertEquals(0.4d, snapshot.fill().gradient().bottom());
+      assertFalse(snapshot.protection().locked());
+      assertTrue(snapshot.protection().hiddenFormula());
+    }
+  }
+
+  @Test
+  void distinctGradientFillsDoNotAliasWhenWorkbookUsesMultipleGradientStyles() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      var sheet = workbook.createSheet("Budget");
+      Cell linearCell = sheet.createRow(0).createCell(0);
+      Cell pathCell = sheet.getRow(0).createCell(1);
+      linearCell.setCellValue("Linear");
+      pathCell.setCellValue("Path");
+
+      linearCell.setCellStyle(
+          styleRegistry.mergedStyle(
+              linearCell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  null,
+                  new ExcelCellFill(
+                      null,
+                      null,
+                      null,
+                      new ExcelGradientFill(
+                          "LINEAR",
+                          45.0d,
+                          null,
+                          null,
+                          null,
+                          null,
+                          List.of(
+                              new ExcelGradientStop(0.0d, new ExcelColor("#1F497D")),
+                              new ExcelGradientStop(1.0d, new ExcelColor(null, 4, null, 0.45d))))),
+                  null,
+                  new ExcelCellProtection(true, true))));
+      pathCell.setCellStyle(
+          styleRegistry.mergedStyle(
+              pathCell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  null,
+                  new ExcelCellFill(
+                      null,
+                      null,
+                      null,
+                      new ExcelGradientFill(
+                          "PATH",
+                          null,
+                          0.1d,
+                          0.2d,
+                          0.3d,
+                          0.4d,
+                          List.of(
+                              new ExcelGradientStop(0.0d, new ExcelColor("#112233")),
+                              new ExcelGradientStop(1.0d, new ExcelColor(null, null, 10, null))))),
+                  null,
+                  new ExcelCellProtection(false, true))));
+
+      ExcelCellStyleSnapshot linearSnapshot = styleRegistry.snapshot(linearCell);
+      ExcelCellStyleSnapshot pathSnapshot = styleRegistry.snapshot(pathCell);
+
+      assertEquals("LINEAR", linearSnapshot.fill().gradient().type());
+      assertEquals(45.0d, linearSnapshot.fill().gradient().degree());
+      assertEquals("PATH", pathSnapshot.fill().gradient().type());
+      assertEquals(0.1d, pathSnapshot.fill().gradient().left());
+      assertEquals(0.2d, pathSnapshot.fill().gradient().right());
+      assertEquals(0.3d, pathSnapshot.fill().gradient().top());
+      assertEquals(0.4d, pathSnapshot.fill().gradient().bottom());
+      assertFalse(pathSnapshot.protection().locked());
+      assertTrue(pathSnapshot.protection().hiddenFormula());
+    }
+  }
+
+  @Test
+  void identicalGradientFillsReuseOneStylesTableFillId() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      var sheet = workbook.createSheet("Budget");
+      Cell firstCell = sheet.createRow(0).createCell(0);
+      Cell secondCell = sheet.getRow(0).createCell(1);
+      firstCell.setCellValue("Locked");
+      secondCell.setCellValue("Unlocked");
+      ExcelGradientFill sharedGradient =
+          new ExcelGradientFill(
+              "LINEAR",
+              45.0d,
+              null,
+              null,
+              null,
+              null,
+              List.of(
+                  new ExcelGradientStop(0.0d, new ExcelColor("#1F497D")),
+                  new ExcelGradientStop(1.0d, new ExcelColor(null, 4, null, 0.45d))));
+
+      firstCell.setCellStyle(
+          styleRegistry.mergedStyle(
+              firstCell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  null,
+                  new ExcelCellFill(null, null, null, sharedGradient),
+                  null,
+                  new ExcelCellProtection(true, true))));
+      secondCell.setCellStyle(
+          styleRegistry.mergedStyle(
+              secondCell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  null,
+                  new ExcelCellFill(null, null, null, sharedGradient),
+                  null,
+                  new ExcelCellProtection(false, true))));
+
+      long firstFillId = ((XSSFCellStyle) firstCell.getCellStyle()).getCoreXf().getFillId();
+      long secondFillId = ((XSSFCellStyle) secondCell.getCellStyle()).getCoreXf().getFillId();
+
+      assertEquals(firstFillId, secondFillId);
+    }
+  }
+
+  @Test
+  void pathGradientsWriteOnlyProvidedOffsets() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      var sheet = workbook.createSheet("Budget");
+      Cell leftBottomCell = sheet.createRow(0).createCell(0);
+      Cell rightTopCell = sheet.getRow(0).createCell(1);
+      leftBottomCell.setCellValue("LeftBottom");
+      rightTopCell.setCellValue("RightTop");
+
+      leftBottomCell.setCellStyle(
+          styleRegistry.mergedStyle(
+              leftBottomCell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  null,
+                  new ExcelCellFill(
+                      null,
+                      null,
+                      null,
+                      new ExcelGradientFill(
+                          "PATH",
+                          null,
+                          0.1d,
+                          null,
+                          null,
+                          0.4d,
+                          List.of(
+                              new ExcelGradientStop(0.0d, new ExcelColor("#112233")),
+                              new ExcelGradientStop(1.0d, new ExcelColor(null, null, 10, null))))),
+                  null,
+                  null)));
+      rightTopCell.setCellStyle(
+          styleRegistry.mergedStyle(
+              rightTopCell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  null,
+                  new ExcelCellFill(
+                      null,
+                      null,
+                      null,
+                      new ExcelGradientFill(
+                          "PATH",
+                          null,
+                          null,
+                          0.2d,
+                          0.3d,
+                          null,
+                          List.of(
+                              new ExcelGradientStop(0.0d, new ExcelColor("#223344")),
+                              new ExcelGradientStop(1.0d, new ExcelColor(null, 3, null, null))))),
+                  null,
+                  null)));
+
+      var leftBottomGradient =
+          workbook
+              .getStylesSource()
+              .getFillAt(
+                  (int) ((XSSFCellStyle) leftBottomCell.getCellStyle()).getCoreXf().getFillId())
+              .getCTFill()
+              .getGradientFill();
+      var rightTopGradient =
+          workbook
+              .getStylesSource()
+              .getFillAt(
+                  (int) ((XSSFCellStyle) rightTopCell.getCellStyle()).getCoreXf().getFillId())
+              .getCTFill()
+              .getGradientFill();
+
+      assertTrue(leftBottomGradient.isSetLeft());
+      assertFalse(leftBottomGradient.isSetRight());
+      assertFalse(leftBottomGradient.isSetTop());
+      assertTrue(leftBottomGradient.isSetBottom());
+      assertFalse(rightTopGradient.isSetLeft());
+      assertTrue(rightTopGradient.isSetRight());
+      assertTrue(rightTopGradient.isSetTop());
+      assertFalse(rightTopGradient.isSetBottom());
+    }
+  }
+
+  @Test
+  void linearGradientsWithoutDegreeWriteNoGeometryAttributes() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      WorkbookStyleRegistry styleRegistry = new WorkbookStyleRegistry(workbook);
+      Cell cell = workbook.createSheet("Budget").createRow(0).createCell(0);
+
+      cell.setCellStyle(
+          styleRegistry.mergedStyle(
+              cell,
+              new ExcelCellStyle(
+                  null,
+                  null,
+                  null,
+                  new ExcelCellFill(
+                      null,
+                      null,
+                      null,
+                      new ExcelGradientFill(
+                          null,
+                          null,
+                          null,
+                          null,
+                          null,
+                          null,
+                          List.of(
+                              new ExcelGradientStop(0.0d, new ExcelColor("#112233")),
+                              new ExcelGradientStop(1.0d, new ExcelColor("#445566"))))),
+                  null,
+                  null)));
+
+      var gradient =
+          workbook
+              .getStylesSource()
+              .getFillAt((int) ((XSSFCellStyle) cell.getCellStyle()).getCoreXf().getFillId())
+              .getCTFill()
+              .getGradientFill();
+
+      assertFalse(gradient.isSetType());
+      assertFalse(gradient.isSetDegree());
+      assertFalse(gradient.isSetLeft());
+      assertFalse(gradient.isSetRight());
+      assertFalse(gradient.isSetTop());
+      assertFalse(gradient.isSetBottom());
     }
   }
 

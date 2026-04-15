@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.46.0"
+version: "0.47.0"
 domain: LIMITATIONS
-updated: "2026-04-15"
+updated: "2026-04-16"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit"]
@@ -352,9 +352,9 @@ time instead of silently falling back to the normal in-memory executor.
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | `executionMode.writeMode=STREAMING_WRITE` requires `source.type=NEW`, allows only `ENSURE_SHEET`, `APPEND_ROW`, and `FORCE_FORMULA_RECALC_ON_OPEN`, and requires at least one `ENSURE_SHEET` or `APPEND_ROW` |
+| **Limit** | `executionMode.writeMode=STREAMING_WRITE` requires `source.type=NEW`, allows only `ENSURE_SHEET`, `APPEND_ROW`, and `FORCE_FORMULA_RECALCULATION_ON_OPEN`, and requires at least one `ENSURE_SHEET` or `APPEND_ROW` |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | `executionMode.writeMode=STREAMING_WRITE requires source.type=NEW ...`, `executionMode.writeMode=STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW, and FORCE_FORMULA_RECALC_ON_OPEN only; unsupported operation type: {type}`, or `executionMode.writeMode=STREAMING_WRITE requires at least one ENSURE_SHEET or APPEND_ROW ...` |
+| **Message** | `executionMode.writeMode=STREAMING_WRITE requires source.type=NEW ...`, `executionMode.writeMode=STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW, and FORCE_FORMULA_RECALCULATION_ON_OPEN only; unsupported operation type: {type}`, or `executionMode.writeMode=STREAMING_WRITE requires at least one ENSURE_SHEET or APPEND_ROW ...` |
 | **Applies to** | top-level `executionMode.writeMode`, `source`, `operations` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelStreamingWorkbookWriter.apply` |
 | **UX** | `--help` Limits section; request-shape docs; `executionModeInputType` catalog summary |
@@ -383,7 +383,8 @@ reads. GridGrind now exposes both as explicit opt-in execution modes:
 - `executionMode.readMode=EVENT_READ` for low-memory `GET_WORKBOOK_SUMMARY` and
   `GET_SHEET_SUMMARY` requests only (`LIM-019`)
 - `executionMode.writeMode=STREAMING_WRITE` for low-memory append-oriented authoring on `NEW`
-  workbooks using `ENSURE_SHEET`, `APPEND_ROW`, and `FORCE_FORMULA_RECALC_ON_OPEN` only
+  workbooks using `ENSURE_SHEET`, `APPEND_ROW`, and
+  `FORCE_FORMULA_RECALCULATION_ON_OPEN` only
   (`LIM-020`)
 
 All other reads and mutations continue to use the normal full-XSSF in-memory executor.

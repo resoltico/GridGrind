@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.46.0"
+version: "0.47.0"
 domain: DEVELOPER
-updated: "2026-04-15"
+updated: "2026-04-16"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -128,15 +128,19 @@ and local Docker verification now requires `docker buildx` because Stage 5 build
 ```
 
 The protocol catalog is generated from the protocol record signatures. If you change request
-records, nested tagged unions, or plain input records, update the catalog summaries and keep the
-field-shape output authoritative: every field should still publish required/optional status and
-the exact nested/plain group accepted by polymorphic inputs. The catalog build path now uses a
-small internal `protocol.catalog.gather` seam for the two cases that genuinely benefit from
-Stream Gatherers: ordered uniqueness and reflected field-metadata expansion. The built-in request
-template remains an ordinary constant because no domain gatherer semantics are needed there. Keep
-`--print-request-template` as the smallest valid machine-readable request; workflow snippets such
-as the no-save `ANALYZE_WORKBOOK_FINDINGS` lint pass belong in help text, public docs, and the
-example request set instead of the emitted template itself.
+records, nested tagged unions, or plain input records, keep the field-shape output authoritative:
+every field should still publish required/optional status and the exact nested/plain group
+accepted by polymorphic inputs. Contract-bearing discovery prose such as low-memory mode limits,
+formula parse boundaries, and workbook-health summaries now lives in the core shared
+`GridGrindContractText` helper inside `protocol`, not in thin downstream string copies. `cli`
+renders that core-owned text into `--help`, the catalog uses it for agent-facing summaries, and
+request validation reuses the same phrases for execution-mode failures. The catalog build path now
+uses a small internal `protocol.catalog.gather` seam for the two cases that genuinely benefit
+from Stream Gatherers: ordered uniqueness and reflected field-metadata expansion. The built-in
+request template remains an ordinary constant because no domain gatherer semantics are needed
+there. Keep `--print-request-template` as the smallest valid machine-readable request; workflow
+snippets such as the no-save `ANALYZE_WORKBOOK_FINDINGS` lint pass belong in help text, public
+docs, and the example request set instead of the emitted template itself.
 
 ---
 
@@ -146,12 +150,14 @@ Release automation is split across three workflows:
 
 - `CI` runs the root-project `./gradlew check` gate and a separate Docker smoke job that builds
   the fat JAR and verifies the Docker image from a non-default working directory.
-- `Release` builds the fat JAR, publishes the GitHub Release idempotently when a `v*` tag is
-  pushed, and verifies that the published release object and `gridgrind.jar` asset exist.
+- `Release` builds the fat JAR, black-box verifies the packaged CLI discovery surface, publishes
+  the GitHub Release idempotently when a `v*` tag is pushed, and verifies that the published
+  release object and `gridgrind.jar` asset exist.
 - `Container` first runs the same Docker smoke script against the local Dockerfile build, then
   builds and publishes the multi-arch GHCR image, verifies with an isolated anonymous Docker
-  config that both the exact version tag and `latest` are publicly pullable and runnable, and
-  prunes older container package versions.
+  config that both the exact version tag and `latest` are publicly pullable and runnable, then
+  black-box verifies the published CLI help and protocol catalog from both tags before pruning
+  older container package versions.
 - `Gradle wrapper validation` runs when wrapper files change and validates the checked-in wrapper
   surface.
 

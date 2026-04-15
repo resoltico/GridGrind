@@ -180,6 +180,32 @@ class ExcelAdvancedValueObjectTest {
         IllegalArgumentException.class,
         () ->
             new ExcelGradientFill(
+                "LINEAR",
+                45.0d,
+                0.1d,
+                null,
+                null,
+                null,
+                List.of(
+                    new ExcelGradientStop(0.0d, new ExcelColor("#112233")),
+                    new ExcelGradientStop(1.0d, new ExcelColor("#445566")))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelGradientFill(
+                "PATH",
+                45.0d,
+                0.1d,
+                0.2d,
+                0.3d,
+                0.4d,
+                List.of(
+                    new ExcelGradientStop(0.0d, new ExcelColor("#112233")),
+                    new ExcelGradientStop(1.0d, new ExcelColor("#445566")))));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new ExcelGradientFill(
                 "radial",
                 null,
                 null,

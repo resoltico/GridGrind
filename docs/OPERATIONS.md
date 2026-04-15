@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.46.0"
+version: "0.47.0"
 domain: OPERATIONS
-updated: "2026-04-15"
+updated: "2026-04-16"
 route:
   keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-pivot-table, delete-pivot-table, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, ooxml, package-security, encryption, signing, request, json, protocol, coordinates, rowindex, columnindex, warnings]
   questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I inspect package security in gridgrind", "how do I open an encrypted workbook in gridgrind", "how do I sign a workbook in gridgrind", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I create a pivot table in gridgrind", "how do I read pivot tables in gridgrind", "how do I add a picture in gridgrind", "how do I author a chart in gridgrind", "how do I read charts in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
@@ -117,7 +117,8 @@ For `udfToolpacks.functions`, `maximumArgumentCount` is optional and defaults to
 - `readMode: EVENT_READ` selects the low-memory XSSF event-model reader. It supports only
   `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` (`LIM-019`).
 - `writeMode: STREAMING_WRITE` selects the low-memory SXSSF writer. It requires `source.type:
-  NEW`, supports only `ENSURE_SHEET`, `APPEND_ROW`, and `FORCE_FORMULA_RECALC_ON_OPEN`, and
+  NEW`, supports only `ENSURE_SHEET`, `APPEND_ROW`, and
+  `FORCE_FORMULA_RECALCULATION_ON_OPEN`, and
   requires at least one `ENSURE_SHEET` or `APPEND_ROW` (`LIM-020`).
 - `EVENT_READ` can run directly against an existing workbook when the request is read-only and
   unsaved. If the request also performs full-XSSF mutations, GridGrind materializes the mutated
@@ -300,9 +301,9 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 the optional `font` object reuses the same font-field vocabulary as the nested style contract:
 `bold`, `italic`, `fontName`, `fontHeight`, `fontColor`, `underline`, and `strikeout`.
 `FORMULA` payloads are scalar only. Array-formula braces such as `{=SUM(A1:A2*B1:B2)}` are
-rejected as `INVALID_FORMULA`, and some newer Excel constructs such as `LAMBDA` or `LET` may also
-fail early when Apache POI cannot parse them. Loaded formulas that POI parses but cannot evaluate
-surface as `UNSUPPORTED_FORMULA`.
+rejected as `INVALID_FORMULA`. `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA`
+because Apache POI cannot parse them. Other newer Excel constructs may fail the same way. Loaded
+formulas that POI parses but cannot evaluate surface as `UNSUPPORTED_FORMULA`.
 
 ---
 
@@ -1828,6 +1829,9 @@ Fill notes:
 - Patterned fills beyond solid are part of the public contract.
 - Gradient fills are authored through `fill.gradient` and are mutually exclusive with patterned
   fill fields.
+- `fill.gradient.type="LINEAR"` accepts `degree` only. `fill.gradient.type="PATH"` accepts
+  `left`, `right`, `top`, and `bottom` only. Mixing the two geometry models is rejected as an
+  invalid request.
 
 `fill.gradient` fields:
 
@@ -3347,6 +3351,10 @@ Groups formula usage across one or more sheets.
 }
 ```
 
+Response shape: `{ "analysis": { "totalFormulaCellCount": ..., "sheets": [ { "sheetName": ...,`
+`"formulaCellCount": ..., "distinctFormulaCount": ..., "formulas": [ { "formula": ...,`
+`"occurrenceCount": ..., "addresses": [...] } ] } ] } }`.
+
 Sheet-selection payloads use:
 
 ```json
@@ -3407,6 +3415,10 @@ Summarizes the scope and backing kind of selected named ranges.
 }
 ```
 
+Response shape: `{ "analysis": { "workbookScopedCount": ..., "sheetScopedCount": ...,`
+`"rangeBackedCount": ..., "formulaBackedCount": ..., "namedRanges": [ { "name": ..., "scope":`
+`..., "refersToFormula": ..., "kind": ... } ] } }`.
+
 ### ANALYZE_FORMULA_HEALTH
 
 Reports finding-bearing formula health across one or more sheets. This is where volatile
@@ -3419,6 +3431,9 @@ functions, formula-error results, and evaluation failures surface.
   "selection": { "type": "ALL" }
 }
 ```
+
+Response shape: `{ "analysis": { "checkedFormulaCellCount": ..., "summary": ..., "findings":`
+`[...] } }`.
 
 ### ANALYZE_DATA_VALIDATION_HEALTH
 
@@ -3548,11 +3563,16 @@ Reports named-range findings such as broken references, unresolved targets, and 
 }
 ```
 
+Response shape: `{ "analysis": { "checkedNamedRangeCount": ..., "summary": ..., "findings":`
+`[...] } }`.
+
 ### ANALYZE_WORKBOOK_FINDINGS
 
 Runs every shipped finding-bearing analysis family across the workbook and returns one aggregated
 flat finding list. This is the primary workbook-health check and works especially well with
 `persistence.type=NONE` when you want a no-save lint pass.
+
+Response shape: `{ "analysis": { "summary": ..., "findings": [...] } }`.
 
 The aggregate currently includes formula, data validation, conditional formatting, autofilter,
 table, pivot-table, hyperlink, and named-range findings.

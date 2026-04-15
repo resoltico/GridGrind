@@ -1005,7 +1005,7 @@ public sealed interface GridGrindResponse {
     }
   }
 
-  /** Aggregated workbook findings composed from the first analysis family. */
+  /** Aggregated workbook findings composed from all shipped analysis families. */
   record WorkbookFindingsReport(
       AnalysisSummaryReport summary, List<AnalysisFindingReport> findings) {
     public WorkbookFindingsReport {

@@ -46,12 +46,15 @@ readonly retry_delay_seconds="${GRIDGRIND_PUBLICATION_VERIFY_DELAY_SECONDS:-10}"
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly expected_description="$(load_expected_description "${repo_root}")"
+readonly verify_cli_contract_script="${repo_root}/scripts/verify-cli-contract.sh"
 docker_config_dir=''
 docker_endpoint=''
 
 [[ -n "${image_name}" ]] || die "image name is required"
 [[ -n "${expected_version}" ]] || die "expected version is required"
 command -v docker >/dev/null 2>&1 || die "docker is required for publication verification"
+[[ -x "${verify_cli_contract_script}" ]] || die \
+    "missing executable CLI contract verifier at ${verify_cli_contract_script}"
 
 expected_output="$(printf 'GridGrind %s\n%s' "${expected_version}" "${expected_description}")"
 
@@ -103,3 +106,15 @@ verify_ref() {
 
 verify_ref "${expected_version}"
 verify_ref latest
+
+if [[ -n "${docker_endpoint}" ]]; then
+    DOCKER_CONFIG="${docker_config_dir}" DOCKER_HOST="${docker_endpoint}" \
+        "${verify_cli_contract_script}" docker-image "${image_name}:${expected_version}" >/dev/null
+    DOCKER_CONFIG="${docker_config_dir}" DOCKER_HOST="${docker_endpoint}" \
+        "${verify_cli_contract_script}" docker-image "${image_name}:latest" >/dev/null
+else
+    DOCKER_CONFIG="${docker_config_dir}" \
+        "${verify_cli_contract_script}" docker-image "${image_name}:${expected_version}" >/dev/null
+    DOCKER_CONFIG="${docker_config_dir}" \
+        "${verify_cli_contract_script}" docker-image "${image_name}:latest" >/dev/null
+fi

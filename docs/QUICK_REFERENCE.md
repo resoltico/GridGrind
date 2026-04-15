@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.46.0"
+version: "0.47.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-15"
+updated: "2026-04-16"
 route:
   keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-chart, set-pivot-table, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, delete-pivot-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, ooxml, package-security, encryption, signing, coordinates, rowindex, columnindex, warnings]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind package security example", "how do I open an encrypted workbook in gridgrind", "how do I inspect package signatures in gridgrind", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind chart example", "gridgrind pivot table example", "how do I read pivot tables in gridgrind", "how do I lint pivot tables in gridgrind", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
@@ -91,7 +91,7 @@ contracts:
 
 - `EVENT_READ` supports only `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` (`LIM-019`).
 - `STREAMING_WRITE` requires `source.type: NEW` and supports only `ENSURE_SHEET`, `APPEND_ROW`,
-  and `FORCE_FORMULA_RECALC_ON_OPEN` (`LIM-020`).
+  and `FORCE_FORMULA_RECALCULATION_ON_OPEN` (`LIM-020`).
 
 ## Formula Environment
 
@@ -609,8 +609,9 @@ Existing style, hyperlink, and comment state on the targeted cell is preserved. 
 `DATE_TIME` writes keep existing presentation state and only layer the required number format on
 top.
 `FORMULA` payloads are scalar only. Array-formula braces such as `{=SUM(A1:A2*B1:B2)}` are
-rejected as `INVALID_FORMULA`, and some newer Excel constructs such as `LAMBDA` or `LET` may also
-fail early when Apache POI cannot parse them.
+rejected as `INVALID_FORMULA`. `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA`
+because Apache POI cannot parse them. Other newer Excel constructs may fail the same way. Loaded
+formulas that POI parses but cannot evaluate surface as `UNSUPPORTED_FORMULA`.
 
 ## SET_RANGE
 
@@ -938,6 +939,7 @@ only `TWO_CELL`, and series formulas can point at contiguous ranges or defined n
 Color-bearing write fields accept RGB (`fontColor`, `fill.foregroundColor`, `fill.backgroundColor`, `border.*.color`), theme (`fontColorTheme`, `fill.foregroundColorTheme`, `fill.backgroundColorTheme`, `border.*.colorTheme`), or indexed (`fontColorIndexed`, `fill.foregroundColorIndexed`, `fill.backgroundColorIndexed`, `border.*.colorIndexed`) bases plus optional tint companions.
 `fill.backgroundColor` and its theme/indexed variants are for patterned fills only; `SOLID` fills use foreground fields only.
 `fill.gradient` authors gradient fills and is mutually exclusive with patterned fill fields.
+`fill.gradient.type="LINEAR"` accepts `degree` only. `fill.gradient.type="PATH"` accepts `left`, `right`, `top`, and `bottom` only. Mixing the two geometry models is rejected.
 `border.all` sets the default side style or color; explicit sides override it.
 `border.*.color` requires a visible style on that side, either directly or via `border.all`.
 
@@ -1683,6 +1685,10 @@ stored `anchor`, `rowLabels`, `columnLabels`, `reportFilters`, `dataFields`, and
 }
 ```
 
+Response shape: `analysis.totalFormulaCellCount` plus `analysis.sheets[*]` entries with
+`sheetName`, `formulaCellCount`, `distinctFormulaCount`, and grouped `formulas[*]`
+(`formula`, `occurrenceCount`, `addresses`).
+
 ## GET_SHEET_SCHEMA
 
 ```json
@@ -1720,6 +1726,10 @@ stored `anchor`, `rowLabels`, `columnLabels`, `reportFilters`, `dataFields`, and
 }
 ```
 
+Response shape: `analysis.workbookScopedCount`, `sheetScopedCount`, `rangeBackedCount`,
+`formulaBackedCount`, and `namedRanges[*]` entries with `name`, `scope`, `refersToFormula`,
+and `kind`.
+
 ## ANALYZE_FORMULA_HEALTH
 
 ```json
@@ -1729,6 +1739,8 @@ stored `anchor`, `rowLabels`, `columnLabels`, `reportFilters`, `dataFields`, and
   "selection": { "type": "ALL" }
 }
 ```
+
+Response shape: `analysis.checkedFormulaCellCount`, severity `summary`, and `findings`.
 
 ## ANALYZE_DATA_VALIDATION_HEALTH
 
@@ -1834,6 +1846,8 @@ Unsaved workbooks report unresolved relative file targets instead of treating th
 }
 ```
 
+Response shape: `analysis.checkedNamedRangeCount`, severity `summary`, and `findings`.
+
 ## ANALYZE_WORKBOOK_FINDINGS
 
 ```json
@@ -1842,6 +1856,8 @@ Unsaved workbooks report unresolved relative file targets instead of treating th
   "requestId": "workbook-findings"
 }
 ```
+
+Response shape: `analysis.summary` plus one flat `analysis.findings` list.
 
 `ANALYZE_WORKBOOK_FINDINGS` aggregates every shipped health family: formula, data validation,
 conditional formatting, autofilter, table, pivot table, hyperlink, and named range. It is the
