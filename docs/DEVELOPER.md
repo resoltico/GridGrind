@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.45.0"
+version: "0.46.0"
 domain: DEVELOPER
-updated: "2026-04-14"
+updated: "2026-04-15"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -278,11 +278,12 @@ These runnable examples cover the core operation surface:
 | `examples/excel-authoring-essentials-request.json` | Hyperlink, comment, named-range authoring plus explicit metadata and named-range reads |
 | `examples/file-hyperlink-health-request.json` | File-hyperlink authoring plus explicit hyperlink metadata and hyperlink-health analysis |
 | `examples/formatting-depth-request.json` | Font, fill, and border styling with explicit post-mutation cell and window reads |
-| `examples/introspection-analysis-request.json` | Read-heavy workbook showcasing factual reads plus finding-bearing analysis operations together |
+| `examples/introspection-analysis-request.json` | Read-heavy workbook showcasing factual reads plus targeted formula, hyperlink, named-range, and aggregate workbook analysis together |
 | `examples/live-workflow-create.json` | Multi-sheet workbook with cross-sheet formulas and aggregations |
 | `examples/live-workflow-revise.json` | Reopen, revise, recalculate, and reread |
 | `examples/sheet-management-request.json` | Sheet copy, active/selected state, visibility, protection, and workbook-summary reads |
 | `examples/structural-layout-request.json` | Merge, size, pane, zoom, print-layout, and repeating-title shaping with layout reads |
+| `examples/workbook-health-request.json` | Compact no-save health workflow combining sheet summary, formula health, aggregate workbook findings, and cell readback |
 
 Run any fixture with:
 

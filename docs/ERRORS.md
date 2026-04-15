@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.45.0"
+version: "0.46.0"
 domain: ERRORS
-updated: "2026-04-13"
+updated: "2026-04-15"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures"]
@@ -70,10 +70,10 @@ route:
 
 | Code | Trigger |
 |:-----|:--------|
-| `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax. |
+| `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax, including request-authored array-formula braces such as `{=...}` and newer constructs such as `LAMBDA`/`LET` when Apache POI cannot parse them. |
 | `MISSING_EXTERNAL_WORKBOOK` | Formula evaluation needs an external workbook binding that was not supplied and cached-value fallback is not enabled. |
 | `UNREGISTERED_USER_DEFINED_FUNCTION` | Formula evaluation encountered a UDF that is not registered in `formulaEnvironment`. |
-| `UNSUPPORTED_FORMULA` | Formula syntax is valid but the function or construct is not supported by Apache POI. |
+| `UNSUPPORTED_FORMULA` | Formula syntax is valid and Apache POI can load it, but the function or construct is not supported by Apache POI's evaluator. |
 
 ### Resource (`RESOURCE` category)
 
@@ -113,7 +113,7 @@ route:
 |:---------|:--------|
 | `ARGUMENTS` | CLI argument was unrecognized or malformed. Fix the command invocation. |
 | `REQUEST` | Request JSON is malformed, does not match the protocol shape, or violates semantic validation. Fix the request. |
-| `FORMULA` | Formula syntax is invalid, evaluation is missing required external/UDF configuration, or the construct is unsupported by Apache POI. Fix the formula or evaluator setup. |
+| `FORMULA` | Formula syntax is invalid, evaluation is missing required external/UDF configuration, or the construct is outside Apache POI's parser/evaluator support. Fix the formula or evaluator setup. |
 | `RESOURCE` | Referenced workbook, sheet, or cell does not exist. Fix the path or name. |
 | `SECURITY` | Workbook encryption, password, or OOXML signing failed. Fix the password or signing configuration, or inspect the workbook package and runtime crypto environment. |
 | `IO` | Filesystem failure reading or writing a file. Check paths, permissions, and disk state. |

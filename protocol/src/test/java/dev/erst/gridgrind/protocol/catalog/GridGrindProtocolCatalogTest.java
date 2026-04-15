@@ -1242,6 +1242,10 @@ class GridGrindProtocolCatalogTest {
             .summary()
             .contains("Non-binary drawing shapes"),
         "GET_DRAWING_OBJECT_PAYLOAD summary must explain non-binary rejection");
+    assertCatalogWorkbookAnalysisSummaries(catalog);
+  }
+
+  private static void assertCatalogWorkbookAnalysisSummaries(Catalog catalog) {
     assertTrue(
         entryNamed(catalog.operationTypes(), "AUTO_SIZE_COLUMNS")
             .summary()
@@ -1339,6 +1343,11 @@ class GridGrindProtocolCatalogTest {
             .summary()
             .contains("persistence.type=NONE"),
         "ANALYZE_WORKBOOK_FINDINGS summary must mention the no-save health-check workflow");
+    assertTrue(
+        entryNamed(catalog.readTypes(), "ANALYZE_WORKBOOK_FINDINGS")
+            .summary()
+            .contains("pivot-table health"),
+        "ANALYZE_WORKBOOK_FINDINGS summary must mention pivot-table health so the aggregate scope is explicit");
     assertEquals(
         FieldRequirement.REQUIRED,
         fieldNamed(nestedTypeEntry(catalog, "hyperlinkTargetTypes", "FILE"), "path").requirement(),

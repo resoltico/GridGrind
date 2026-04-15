@@ -214,6 +214,8 @@ public final class GridGrindCli {
           Chart title formulas:     SET_CHART title FORMULA and series.title FORMULA must resolve to one cell, directly or through one defined name.
           Drawing validation:       failed SET_SHAPE / SET_CHART validation leaves existing drawing state unchanged and creates no partial artifacts.
           DATE / DATE_TIME inputs:  stored as numeric serial; GET_CELLS returns declaredType=NUMBER.
+          Formula authoring:        request-authored formulas are scalar only; array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and some newer Excel constructs (for example LAMBDA/LET) may fail earlier as INVALID_FORMULA when Apache POI cannot parse them.
+          Loaded formula support:   formulas that Apache POI parses but cannot evaluate surface as UNSUPPORTED_FORMULA.
 
         Request:
           protocolVersion is optional; omit it and the current version is assumed.
@@ -272,6 +274,8 @@ public final class GridGrindCli {
                 { "type": "ANALYZE_WORKBOOK_FINDINGS", "requestId": "lint" }
               ]
             }
+          ANALYZE_WORKBOOK_FINDINGS aggregates formula, data-validation, conditional-formatting,
+          autofilter, table, pivot-table, hyperlink, and named-range findings.
           The protocol catalog lists each field, whether it is required, and the nested/plain
           type group accepted by polymorphic fields such as value, target, selection, style,
           and scope.

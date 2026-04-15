@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.45.0"
+version: "0.46.0"
 domain: OPERATIONS
-updated: "2026-04-13"
+updated: "2026-04-15"
 route:
   keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-pivot-table, delete-pivot-table, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, ooxml, package-security, encryption, signing, request, json, protocol, coordinates, rowindex, columnindex, warnings]
   questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I inspect package security in gridgrind", "how do I open an encrypted workbook in gridgrind", "how do I sign a workbook in gridgrind", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I create a pivot table in gridgrind", "how do I read pivot tables in gridgrind", "how do I add a picture in gridgrind", "how do I author a chart in gridgrind", "how do I read charts in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
@@ -161,6 +161,12 @@ Successful responses may include a `warnings` array. The current request-phase w
 same-request sheet names with spaces referenced in formulas without single quotes. Use
 `'Sheet Name'!A1` syntax for those references.
 
+For batch health-plus-read workflows, see
+[`examples/workbook-health-request.json`](../examples/workbook-health-request.json) for a compact
+no-save pass and
+[`examples/introspection-analysis-request.json`](../examples/introspection-analysis-request.json)
+for a broader mixed introspection and analysis run.
+
 ---
 
 ## Source
@@ -293,6 +299,10 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 `RICH_TEXT` writes an ordered, non-empty `runs` list. Every run must have non-empty `text`, and
 the optional `font` object reuses the same font-field vocabulary as the nested style contract:
 `bold`, `italic`, `fontName`, `fontHeight`, `fontColor`, `underline`, and `strikeout`.
+`FORMULA` payloads are scalar only. Array-formula braces such as `{=SUM(A1:A2*B1:B2)}` are
+rejected as `INVALID_FORMULA`, and some newer Excel constructs such as `LAMBDA` or `LET` may also
+fail early when Apache POI cannot parse them. Loaded formulas that POI parses but cannot evaluate
+surface as `UNSUPPORTED_FORMULA`.
 
 ---
 

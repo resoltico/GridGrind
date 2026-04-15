@@ -409,7 +409,7 @@ public sealed interface WorkbookReadOperation
     }
   }
 
-  /** Runs the first analysis family across the workbook and aggregates their findings. */
+  /** Runs all shipped analysis families across the workbook and aggregates their findings. */
   record AnalyzeWorkbookFindings(String requestId) implements Analysis {
     public AnalyzeWorkbookFindings {
       requestId = requireNonBlank(requestId, "requestId");

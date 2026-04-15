@@ -500,6 +500,23 @@ class GridGrindCliTest {
     assertTrue(help.contains("Workbook health workflow (no save):"));
     assertTrue(help.contains("\"persistence\": { \"type\": \"NONE\" }"));
     assertTrue(help.contains("\"type\": \"ANALYZE_WORKBOOK_FINDINGS\", \"requestId\": \"lint\""));
+    assertTrue(
+        help.contains(
+            "ANALYZE_WORKBOOK_FINDINGS aggregates formula, data-validation, conditional-formatting,"));
+    assertTrue(
+        help.contains("autofilter, table, pivot-table, hyperlink, and named-range findings."));
+  }
+
+  @Test
+  void helpTextDocumentsFormulaAuthoringBoundaries() {
+    String help = GridGrindCli.helpText("1.0.0");
+
+    assertTrue(
+        help.contains(
+            "Formula authoring:        request-authored formulas are scalar only; array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and some newer Excel constructs (for example LAMBDA/LET) may fail earlier as INVALID_FORMULA when Apache POI cannot parse them."));
+    assertTrue(
+        help.contains(
+            "Loaded formula support:   formulas that Apache POI parses but cannot evaluate surface as UNSUPPORTED_FORMULA."));
   }
 
   @Test

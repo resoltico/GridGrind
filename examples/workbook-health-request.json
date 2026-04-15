@@ -26,6 +26,19 @@
   ],
   "reads": [
     {
+      "type": "GET_SHEET_SUMMARY",
+      "requestId": "summary-sheet",
+      "sheetName": "Summary"
+    },
+    {
+      "type": "ANALYZE_FORMULA_HEALTH",
+      "requestId": "formula-health",
+      "selection": {
+        "type": "SELECTED",
+        "sheetNames": ["Summary"]
+      }
+    },
+    {
       "type": "ANALYZE_WORKBOOK_FINDINGS",
       "requestId": "lint"
     },

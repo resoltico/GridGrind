@@ -708,8 +708,8 @@ public final class GridGrindProtocolCatalog {
               "ANALYZE_WORKBOOK_FINDINGS",
               "Run all analysis families (formula health, data-validation health,"
                   + " conditional-formatting health, autofilter health, table health,"
-                  + " hyperlink health, and named-range health) across the entire workbook"
-                  + " and aggregate findings in a single response."
+                  + " pivot-table health, hyperlink health, and named-range health)"
+                  + " across the entire workbook and aggregate findings in a single response."
                   + " This is the primary workbook-health check and pairs naturally with"
                   + " persistence.type=NONE when no save is required."));
   private static final List<NestedTypeDescriptor> NESTED_TYPE_GROUPS =

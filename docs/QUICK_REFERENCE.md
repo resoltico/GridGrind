@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.45.0"
+version: "0.46.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-13"
+updated: "2026-04-15"
 route:
   keywords: [gridgrind, quick-reference, snippets, json, operations, reads, introspection, analysis, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-chart, set-pivot-table, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, delete-pivot-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, evaluate-formulas, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, ooxml, package-security, encryption, signing, coordinates, rowindex, columnindex, warnings]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind package security example", "how do I open an encrypted workbook in gridgrind", "how do I inspect package signatures in gridgrind", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind chart example", "gridgrind pivot table example", "how do I read pivot tables in gridgrind", "how do I lint pivot tables in gridgrind", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving"]
@@ -149,6 +149,11 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
 Successful responses may include a `warnings` array. The current request-phase warning flags
 same-request sheet names with spaces referenced in formulas without single quotes. Use
 `'Sheet Name'!A1` syntax.
+
+For a compact no-save health batch, see
+[`examples/workbook-health-request.json`](../examples/workbook-health-request.json). For a larger
+mixed introspection-plus-analysis request, see
+[`examples/introspection-analysis-request.json`](../examples/introspection-analysis-request.json).
 
 ---
 
@@ -603,6 +608,9 @@ A leading `=` in `FORMULA` values is accepted and stripped automatically. `"=SUM
 Existing style, hyperlink, and comment state on the targeted cell is preserved. `DATE` and
 `DATE_TIME` writes keep existing presentation state and only layer the required number format on
 top.
+`FORMULA` payloads are scalar only. Array-formula braces such as `{=SUM(A1:A2*B1:B2)}` are
+rejected as `INVALID_FORMULA`, and some newer Excel constructs such as `LAMBDA` or `LET` may also
+fail early when Apache POI cannot parse them.
 
 ## SET_RANGE
 
