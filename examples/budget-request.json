@@ -1,107 +1,227 @@
 {
-  "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": {
-    "type": "SAVE_AS",
-    "path": "cli/build/generated-workbooks/gridgrind-budget.xlsx"
+  "protocolVersion" : "V1",
+  "planId" : "budget-workflow",
+  "source" : {
+    "type" : "NEW"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Budget" },
-    {
-      "type": "SET_RANGE",
-      "sheetName": "Budget",
-      "range": "A1:C3",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Item" },
-          { "type": "TEXT", "text": "Amount" },
-          { "type": "TEXT", "text": "Billable" }
-        ],
-        [
-          { "type": "TEXT", "text": "Hosting" },
-          { "type": "NUMBER", "number": 49.0 },
-          { "type": "BOOLEAN", "bool": true }
-        ],
-        [
-          { "type": "TEXT", "text": "Domain" },
-          { "type": "NUMBER", "number": 12.0 },
-          { "type": "BOOLEAN", "bool": false }
-        ]
-      ]
+  "persistence" : {
+    "type" : "SAVE_AS",
+    "path" : "cli/build/generated-workbooks/gridgrind-budget.xlsx"
+  },
+  "steps" : [ {
+    "stepId" : "step-01-ensure-sheet",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Budget"
     },
-    {
-      "type": "APPLY_STYLE",
-      "sheetName": "Budget",
-      "range": "A1:C1",
-      "style": {
-        "alignment": {
-          "wrapText": true,
-          "horizontalAlignment": "CENTER",
-          "verticalAlignment": "CENTER"
-        },
-        "font": {
-          "bold": true
-        }
-      }
-    },
-    {
-      "type": "APPLY_STYLE",
-      "sheetName": "Budget",
-      "range": "B2:B4",
-      "style": {
-        "numberFormat": "#,##0.00",
-        "alignment": {
-          "horizontalAlignment": "RIGHT"
-        }
-      }
-    },
-    {
-      "type": "SET_CELL",
-      "sheetName": "Budget",
-      "address": "A4",
-      "value": { "type": "TEXT", "text": "Total" }
-    },
-    {
-      "type": "SET_CELL",
-      "sheetName": "Budget",
-      "address": "B4",
-      "value": { "type": "FORMULA", "formula": "SUM(B2:B3)" }
-    },
-    { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Budget" },
-    { "type": "EVALUATE_FORMULAS" },
-    { "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
-  ],
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
-    {
-      "type": "GET_CELLS",
-      "requestId": "cells",
-      "sheetName": "Budget",
-      "addresses": ["A1", "B4", "C2"]
-    },
-    {
-      "type": "GET_WINDOW",
-      "requestId": "window",
-      "sheetName": "Budget",
-      "topLeftAddress": "A1",
-      "rowCount": 4,
-      "columnCount": 3
-    },
-    {
-      "type": "GET_FORMULA_SURFACE",
-      "requestId": "formula-surface",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Budget"]
-      }
-    },
-    {
-      "type": "GET_SHEET_SCHEMA",
-      "requestId": "schema",
-      "sheetName": "Budget",
-      "topLeftAddress": "A1",
-      "rowCount": 4,
-      "columnCount": 3
+    "action" : {
+      "type" : "ENSURE_SHEET"
     }
-  ]
+  }, {
+    "stepId" : "step-02-set-range",
+    "target" : {
+      "type" : "BY_RANGE",
+      "sheetName" : "Budget",
+      "range" : "A1:C3"
+    },
+    "action" : {
+      "type" : "SET_RANGE",
+      "rows" : [ [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Item"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Amount"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Billable"
+        }
+      } ], [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Hosting"
+        }
+      }, {
+        "type" : "NUMBER",
+        "number" : 49.0
+      }, {
+        "type" : "BOOLEAN",
+        "bool" : true
+      } ], [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Domain"
+        }
+      }, {
+        "type" : "NUMBER",
+        "number" : 12.0
+      }, {
+        "type" : "BOOLEAN",
+        "bool" : false
+      } ] ]
+    }
+  }, {
+    "stepId" : "step-03-apply-header-style",
+    "target" : {
+      "type" : "BY_RANGE",
+      "sheetName" : "Budget",
+      "range" : "A1:C1"
+    },
+    "action" : {
+      "type" : "APPLY_STYLE",
+      "style" : {
+        "numberFormat" : null,
+        "alignment" : {
+          "wrapText" : true,
+          "horizontalAlignment" : "CENTER",
+          "verticalAlignment" : "CENTER",
+          "textRotation" : null,
+          "indentation" : null
+        },
+        "font" : {
+          "bold" : true,
+          "italic" : null,
+          "fontName" : null,
+          "fontHeight" : null,
+          "fontColor" : null,
+          "fontColorTheme" : null,
+          "fontColorIndexed" : null,
+          "fontColorTint" : null,
+          "underline" : null,
+          "strikeout" : null
+        },
+        "fill" : null,
+        "border" : null,
+        "protection" : null
+      }
+    }
+  }, {
+    "stepId" : "step-04-apply-number-style",
+    "target" : {
+      "type" : "BY_RANGE",
+      "sheetName" : "Budget",
+      "range" : "B2:B4"
+    },
+    "action" : {
+      "type" : "APPLY_STYLE",
+      "style" : {
+        "numberFormat" : "#,##0.00",
+        "alignment" : {
+          "wrapText" : null,
+          "horizontalAlignment" : "RIGHT",
+          "verticalAlignment" : null,
+          "textRotation" : null,
+          "indentation" : null
+        },
+        "font" : null,
+        "fill" : null,
+        "border" : null,
+        "protection" : null
+      }
+    }
+  }, {
+    "stepId" : "step-05-set-total-label",
+    "target" : {
+      "type" : "BY_ADDRESS",
+      "sheetName" : "Budget",
+      "address" : "A4"
+    },
+    "action" : {
+      "type" : "SET_CELL",
+      "value" : {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Total"
+        }
+      }
+    }
+  }, {
+    "stepId" : "step-06-set-total-formula",
+    "target" : {
+      "type" : "BY_ADDRESS",
+      "sheetName" : "Budget",
+      "address" : "B4"
+    },
+    "action" : {
+      "type" : "SET_CELL",
+      "value" : {
+        "type" : "FORMULA",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "SUM(B2:B3)"
+        }
+      }
+    }
+  }, {
+    "stepId" : "step-07-auto-size",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Budget"
+    },
+    "action" : {
+      "type" : "AUTO_SIZE_COLUMNS"
+    }
+  }, {
+    "stepId" : "workbook",
+    "target" : {
+      "type" : "CURRENT"
+    },
+    "query" : {
+      "type" : "GET_WORKBOOK_SUMMARY"
+    }
+  }, {
+    "stepId" : "cells",
+    "target" : {
+      "type" : "BY_ADDRESSES",
+      "sheetName" : "Budget",
+      "addresses" : [ "A1", "B4", "C2" ]
+    },
+    "query" : {
+      "type" : "GET_CELLS"
+    }
+  }, {
+    "stepId" : "window",
+    "target" : {
+      "type" : "RECTANGULAR_WINDOW",
+      "sheetName" : "Budget",
+      "topLeftAddress" : "A1",
+      "rowCount" : 4,
+      "columnCount" : 3
+    },
+    "query" : {
+      "type" : "GET_WINDOW"
+    }
+  }, {
+    "stepId" : "schema",
+    "target" : {
+      "type" : "RECTANGULAR_WINDOW",
+      "sheetName" : "Budget",
+      "topLeftAddress" : "A1",
+      "rowCount" : 4,
+      "columnCount" : 3
+    },
+    "query" : {
+      "type" : "GET_SHEET_SCHEMA"
+    }
+  }, {
+    "stepId" : "formula-surface",
+    "target" : {
+      "type" : "BY_NAMES",
+      "names" : [ "Budget" ]
+    },
+    "query" : {
+      "type" : "GET_FORMULA_SURFACE"
+    }
+  } ]
 }

@@ -2,7 +2,18 @@ package dev.erst.gridgrind.excel;
 
 import java.util.Locale;
 import java.util.Objects;
-import org.apache.poi.xddf.usermodel.chart.*;
+import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
+import org.apache.poi.xddf.usermodel.chart.AxisPosition;
+import org.apache.poi.xddf.usermodel.chart.BarDirection;
+import org.apache.poi.xddf.usermodel.chart.DisplayBlanks;
+import org.apache.poi.xddf.usermodel.chart.LegendPosition;
+import org.apache.poi.xddf.usermodel.chart.XDDFBarChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
+import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFPieChartData;
+import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
 import org.openxmlformats.schemas.drawingml.x2006.chart.STDispBlanksAs;
 
 /** Package-owned translation seam between POI chart enums/classes and GridGrind chart types. */

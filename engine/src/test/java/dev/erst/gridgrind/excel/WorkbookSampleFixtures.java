@@ -191,12 +191,7 @@ final class WorkbookSampleFixtures {
         new WorkbookCommand.DeleteNamedRange(
             "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
         new WorkbookCommand.AppendRow("Budget", List.of(ExcelCellValue.text("Item"))),
-        new WorkbookCommand.AutoSizeColumns("Budget"),
-        new WorkbookCommand.EvaluateAllFormulas(),
-        new WorkbookCommand.EvaluateFormulaCells(
-            List.of(new ExcelFormulaCellTarget("Budget", "B4"))),
-        new WorkbookCommand.ClearFormulaCaches(),
-        new WorkbookCommand.ForceFormulaRecalculationOnOpen());
+        new WorkbookCommand.AutoSizeColumns("Budget"));
   }
 
   static ExcelDrawingAnchor.TwoCell anchor(int fromRow, int fromColumn, int toRow, int toColumn) {

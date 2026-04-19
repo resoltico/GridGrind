@@ -1,0 +1,82 @@
+{
+  "protocolVersion": "V1",
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
+    {
+      "stepId": "ensure-inputs",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Inputs"
+      },
+      "action": {
+        "type": "ENSURE_SHEET"
+      }
+    },
+    {
+      "stepId": "set-title-from-file",
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Inputs",
+        "address": "A1"
+      },
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "UTF8_FILE",
+            "path": "examples/source-backed-input-assets/title.txt"
+          }
+        }
+      }
+    },
+    {
+      "stepId": "set-payload-from-file",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Inputs"
+      },
+      "action": {
+        "type": "SET_EMBEDDED_OBJECT",
+        "embeddedObject": {
+          "name": "InputsPayload",
+          "label": "Inputs payload",
+          "fileName": "inputs-payload.txt",
+          "command": "open",
+          "payload": {
+            "type": "FILE",
+            "path": "examples/source-backed-input-assets/payload.bin"
+          },
+          "previewImage": {
+            "format": "PNG",
+            "source": {
+              "type": "INLINE_BASE64",
+              "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+            }
+          },
+          "anchor": {
+            "type": "TWO_CELL",
+            "from": {
+              "columnIndex": 3,
+              "rowIndex": 0,
+              "dx": 0,
+              "dy": 0
+            },
+            "to": {
+              "columnIndex": 5,
+              "rowIndex": 4,
+              "dx": 0,
+              "dy": 0
+            },
+            "behavior": "MOVE_AND_RESIZE"
+          }
+        }
+      }
+    }
+  ]
+}

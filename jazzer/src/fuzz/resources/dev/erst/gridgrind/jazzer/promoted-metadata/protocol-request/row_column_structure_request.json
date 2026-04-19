@@ -1,20 +1,18 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "../examples/row-column-structure-request.json",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/row_column_structure_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/row_column_structure_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 4927,
+      "inputBytes" : 12556,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 16,
       "operationKinds" : {
-        "INSERT_ROWS" : 1,
-        "DELETE_ROWS" : 1,
         "GROUP_ROWS" : 1,
         "SET_ROW_VISIBILITY" : 1,
         "GROUP_COLUMNS" : 1,
@@ -25,13 +23,17 @@
         "ENSURE_SHEET" : 2,
         "SHIFT_COLUMNS" : 1,
         "SET_COLUMN_VISIBILITY" : 1,
-        "SHIFT_ROWS" : 1
+        "SHIFT_ROWS" : 1,
+        "INSERT_ROWS" : 1,
+        "DELETE_ROWS" : 1
       },
       "styleKinds" : { },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "GET_CELLS" : 1,
-        "GET_SHEET_LAYOUT" : 1
+        "GET_SHEET_LAYOUT" : 1,
+        "GET_CELLS" : 1
       }
     }
   },

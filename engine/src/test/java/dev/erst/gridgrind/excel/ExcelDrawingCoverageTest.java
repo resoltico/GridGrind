@@ -1607,6 +1607,7 @@ class ExcelDrawingCoverageTest {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Ops");
       workbook.createSheet("Other");
+      sheet.createRow(0).createCell(0).setCellValue("Fallback title");
 
       assertInvocationFailure(
           IllegalArgumentException.class,
@@ -1670,15 +1671,23 @@ class ExcelDrawingCoverageTest {
 
       org.apache.poi.xssf.usermodel.XSSFChart cachedTitleChart =
           drawing.createChart(poiAnchor(drawing, 20, 0, 24, 6));
-      assertEquals("", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+      assertEquals(
+          "", invoke(controller, "cachedTitleText", String.class, cachedTitleChart, "Ops!$A$99"));
       cachedTitleChart.getCTChart().addNewTitle();
-      assertEquals("", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+      assertEquals(
+          "", invoke(controller, "cachedTitleText", String.class, cachedTitleChart, "Ops!$A$99"));
       cachedTitleChart.getCTChart().getTitle().addNewTx();
-      assertEquals("", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+      assertEquals(
+          "", invoke(controller, "cachedTitleText", String.class, cachedTitleChart, "Ops!$A$99"));
       cachedTitleChart.getCTChart().getTitle().getTx().addNewStrRef();
-      assertEquals("", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+      cachedTitleChart.getCTChart().getTitle().getTx().getStrRef().setF("Ops!$A$1");
+      assertEquals(
+          "Fallback title",
+          invoke(controller, "cachedTitleText", String.class, cachedTitleChart, "Ops!$A$1"));
       cachedTitleChart.getCTChart().getTitle().getTx().getStrRef().addNewStrCache();
-      assertEquals("", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+      assertEquals(
+          "Fallback title",
+          invoke(controller, "cachedTitleText", String.class, cachedTitleChart, "Ops!$A$1"));
       cachedTitleChart
           .getCTChart()
           .getTitle()
@@ -1686,9 +1695,56 @@ class ExcelDrawingCoverageTest {
           .getStrRef()
           .getStrCache()
           .addNewPt()
+          .setV(" ");
+      assertEquals(
+          "Fallback title",
+          invoke(controller, "cachedTitleText", String.class, cachedTitleChart, "Ops!$A$1"));
+      cachedTitleChart
+          .getCTChart()
+          .getTitle()
+          .getTx()
+          .getStrRef()
+          .getStrCache()
+          .getPtArray(0)
           .setV("Cached title");
       assertEquals(
-          "Cached title", invoke(controller, "cachedTitleText", String.class, cachedTitleChart));
+          "Cached title",
+          invoke(controller, "cachedTitleText", String.class, cachedTitleChart, "Ops!$A$1"));
+      assertEquals(
+          "",
+          invoke(controller, "resolvedTitleFormulaText", String.class, cachedTitleChart, "Bad["));
+
+      Object noImageDimensions =
+          invoke(
+              controller,
+              "rasterDimensions",
+              Object.class,
+              "not-an-image".getBytes(StandardCharsets.UTF_8));
+      assertNull(invoke(noImageDimensions, "widthPixels", Integer.class));
+      assertNull(invoke(noImageDimensions, "heightPixels", Integer.class));
+      Object invalidPngDimensions =
+          invoke(
+              controller,
+              "rasterDimensions",
+              Object.class,
+              Base64.getDecoder()
+                  .decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVQ="));
+      assertNull(invoke(invalidPngDimensions, "widthPixels", Integer.class));
+      assertNull(invoke(invalidPngDimensions, "heightPixels", Integer.class));
+      assertEquals(
+          "Ops!$A$1",
+          invoke(
+              controller,
+              "titleSummary",
+              String.class,
+              new ExcelChartSnapshot.Title.Formula("Ops!$A$1", "")));
+      assertEquals(
+          "Fallback title",
+          invoke(
+              controller,
+              "titleSummary",
+              String.class,
+              new ExcelChartSnapshot.Title.Formula("Ops!$A$1", "Fallback title")));
 
       var formulaSeriesTitle =
           org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx.Factory.newInstance();

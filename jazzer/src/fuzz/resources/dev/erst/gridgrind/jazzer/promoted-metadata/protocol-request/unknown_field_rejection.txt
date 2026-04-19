@@ -4,12 +4,14 @@ Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
 Message: Unknown field 'dataFormat'
-Input Bytes: 160
+Input Bytes: 152
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED
 Operation Count: 0
+Assertion Count: 0
 Read Count: 0
+Assertion Kinds: (none)
 Read Kinds: (none)
 Style Kinds: (none)
 Operation Kinds: (none)

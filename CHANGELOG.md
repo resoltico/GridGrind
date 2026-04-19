@@ -3,7 +3,143 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.48.0] - 2026-04-19
+
+### Changed
+
+- GridGrind no longer ships a monolithic `protocol` module. The public contract, metadata
+  registry, and JSON codecs now live in `contract`, while `executor` is the only execution bridge
+  into the workbook engine. This also puts the Java-first contract replacement program into formal
+  hard-break mode.
+- The nested Jazzer build now consumes the `executor` plus `contract` split instead of the deleted
+  monolithic `protocol` module, and the `contract` module's 100 % coverage gate now includes the
+  downstream `executor` and `cli` consumer tests that exercise the canonical public contract after
+  the split.
+- The public contract is now selector-first end to end. Top-level coordinate and sheet-name
+  fields have been removed from request operations and reads in favor of canonical selector
+  payloads, and the public README, operations reference, quick reference, shipped examples, and
+  release gates now reject the deleted pre-selector vocabulary.
+- The public request model is now step-only end to end. The deleted `operations[]` plus `reads[]`
+  split has been replaced by ordered `steps[]`, step envelopes no longer carry a redundant outer
+  discriminator, and public request/response docs, Docker smoke, replay fixtures, and contract
+  surface checks now reject the deleted `selector` and `requestId` vocabulary alongside the old
+  arrays.
+- GridGrind now ships first-class assertion steps in the public contract. Ordered plans can verify
+  workbook state with canonical `ASSERTION` steps, success responses return ordered
+  `assertions[]`, and public docs, examples, CLI help, and artifact-surface verification now
+  describe the mutate-then-verify model instead of the older mutation-plus-read-only framing.
+- GridGrind responses now always carry a structured execution `journal`, and the top-level request
+  execution policy is now the canonical `execution` envelope with nested `mode` and `journal`
+  configuration instead of the older top-level `executionMode` sidecar. `VERBOSE` journal mode is
+  now a public contract feature that streams fine-grained live execution events to CLI stderr
+  while preserving the same events in the response payload.
+- GridGrind no longer exposes formula evaluation, cache clearing, or recalc-on-open as mutation
+  step types. Those deleted actions are replaced with the canonical top-level
+  `execution.calculation` policy, whose shipped strategies are `EVALUATE_ALL`,
+  `EVALUATE_TARGETS`, `CLEAR_CACHES_ONLY`, and `DO_NOT_CALCULATE` plus optional
+  `markRecalculateOnOpen=true`.
+- GridGrind mutation payloads are now source-backed end to end. Text-bearing authored fields use
+  canonical `INLINE`, `UTF8_FILE`, or `STANDARD_INPUT` sources, binary-bearing authored fields use
+  canonical `INLINE_BASE64`, `FILE`, or `STANDARD_INPUT` sources, and the structured execution
+  journal now records authored input loading under `journal.inputResolution` before workbook open.
+- GridGrind now ships the `authoring-java` module as a first-class fluent Java surface over the
+  canonical contract. Java callers can build selector-first mutation, inspection, assertion, and
+  execution-policy plans without hand-writing JSON. The authored target records now reject null
+  selectors immediately instead of carrying invalid state until later execution, and the shipped
+  `examples/java-authoring-workflow.java` example is compile-verified against that published API.
+- CLI help, built-in examples, and the machine-readable catalog are now contract-owned surfaces.
+  The thin CLI transport renders help from the `contract` module, `--print-example <id>` emits one
+  generated built-in example request, `--print-protocol-catalog` publishes `cliSurface` plus
+  `shippedExamples`, and the committed `examples/*.json` fixtures are regenerated from that same
+  registry instead of being hand-maintained JSON.
+- The root `check` gate now includes explicit-import verification for handwritten production Java
+  and Kotlin sources, so wildcard imports fail the canonical build instead of relying on reviewer
+  cleanup.
+- Release and fuzz hardening now treat packaged artifacts as the authoritative contract surface.
+  CLI contract verification reads structured help plus shipped-example lines from the built JAR or
+  Docker image, Docker smoke rebuilds the CLI fat JAR before packaging so it cannot validate stale
+  output, and promoted Jazzer metadata refresh rewrites dead source pointers to the live promoted
+  inputs when regenerated examples retire old fixture paths.
+- Named-range deletion now accepts only exact scoped selectors in the canonical Java contract.
+  Workbook-scoped and sheet-scoped named ranges remain the same JSON wire types, but the hard-
+  break Java surface no longer allows broad named-range selector families where authoritative
+  deletion semantics require an exact scope.
+- The committed `protocol-workflow` Jazzer corpus now uses neutral `workflow_case_##` seed names
+  instead of semantic blob names. Those inputs are opaque generator bytes, so the authoritative
+  decoded behavior now lives only in refreshed replay metadata and replay text.
+- Jazzer replay metadata and replay text for protocol request/workflow harnesses now record
+  assertion counts and assertion kinds explicitly, so assertion-bearing opaque workflow seeds no
+  longer look like unexplained response-kind flips during regression replay.
+- The release protocol now treats open Dependabot PRs as first-class release hygiene. Release-time
+  pre-flight now requires explicitly identifying open Dependabot work, and after the public
+  release is verified each Dependabot PR must be merged, closed, or consciously kept open with a
+  stated reason; stale automation branches are no longer acceptable release leftovers.
+- Workbook-protection readbacks, docs, and parity checks now use the same canonical field name
+  `revisionsLocked` end to end instead of mixing singular and plural variants across write and
+  read surfaces.
+- Formula-backed chart titles are now authored with an explicit OOXML string cache, so numeric
+  title cells survive `.xlsx` save/reopen exactly instead of drifting to stale cached values
+  during chart round-trips.
+
+### Fixed
+
+- Chart reads now resolve formula-backed title `cachedText` from the referenced cell when OOXML
+  omits a cached string, so authored chart titles no longer come back blank while the same chart's
+  formula still points at a real text cell.
+- Existing bar, line, and pie charts now treat `Title.None` series updates idempotently, so
+  removing a series title no longer falls into Apache POI `unsetTx()` crashes when the underlying
+  chart XML never carried a `<c:tx>` node.
+- The committed Jazzer regression floor now includes the `fractional_integer_field.json` invalid-
+  request seed with matching promotion metadata and replay text, so the nested fuzz build no
+  longer drifts when integer-field shape validation expands.
+- The nested Jazzer replay floor now refreshes both selector-first protocol-request fixtures and
+  neutralized protocol-workflow binary metadata against the current replay engine, so contract
+  topology changes no longer leave stale replay expectations behind.
+- The Docker smoke gate now verifies low-memory streaming in the same two-step shape the product
+  actually supports: `STREAMING_WRITE` authoring first, then summary-only `EVENT_READ` readback
+  against the materialized workbook.
+- Table-aware exact-cell selectors now execute truthfully end to end. Selector-first table-key
+  targeting resolves through the canonical executor for mutations, inspections, and assertions,
+  source-backed row-key values now load before execution just like source-backed mutation payloads,
+  duplicate-key matches fail instead of guessing, and zero-match inspections no longer collapse
+  into lower-level table lookup failures.
+- The Docker smoke and publication-surface regression gates now author `APPEND_ROW` text values
+  with canonical source-backed payloads.
+- Streaming-write calculation failures now surface as structured `CALCULATION_EXECUTION` contract
+  failures before persistence instead of collapsing into generic request-level runtime handling.
+- Drawing-object picture reads now report factual raster dimensions when the image format exposes
+  them, and expanded row grouping no longer destroys pre-existing manual hidden-row state during
+  group or ungroup operations.
+- Protocol JSON parsing now rejects floating-point JSON numbers for integer contract fields instead
+  of silently truncating them during deserialization.
+- Selector and operation validation now preserve indexed null and invalid-entry diagnostics instead
+  of letting early collection copying collapse those failures into opaque bare `NullPointerException`
+  paths.
+- The workbook-core inspection pipeline now uses `stepId` internally as well as on the public
+  contract, so command/result plumbing, executor conversion, parity helpers, and inspection tests
+  no longer translate back through the deleted `requestId` terminology.
+- The nested Jazzer workflow generator, invariants, telemetry, and replay-safe support layer now
+  exercise assertion steps as first-class workflow elements instead of fuzzing only mutations plus
+  inspections, and the shipped `examples/assertion-request.json` fixture is regression-tested as a
+  public mutate-then-verify request.
+- Presence-style assertions now own selector-count semantics authoritatively: exact named-range
+  and chart misses are evaluated as zero observed entities for `EXPECT_PRESENT` and
+  `EXPECT_ABSENT` instead of leaking lower-level not-found failures, and the executor regression
+  suite now locks that behavior in.
+- Every response surface now exposes execution journaling consistently: success and failure payloads
+  include structured phase and step telemetry, the shipped assertion example demonstrates
+  `execution.journal.level=VERBOSE`, and Docker smoke now black-boxes both response-journal
+  emission and live stderr event streaming from the packaged artifact.
+- Source-backed authored input failures now surface as explicit `INPUT_SOURCE_NOT_FOUND`,
+  `INPUT_SOURCE_UNAVAILABLE`, or `INPUT_SOURCE_IO_ERROR` contract failures instead of collapsing
+  into generic request or filesystem errors, and the shipped
+  `examples/source-backed-input-request.json` fixture plus promoted Jazzer replay floor now lock
+  file-backed text, file-backed formulas, and file-backed binary payloads into regression coverage.
+- Engine selection and read payload helpers no longer perform wasteful double-freeze list copies
+  when validating already-immutable `List.copyOf(...)` inputs.
+- The build and developer docs now spell out the upstream Jackson 3 rule correctly: Jackson 3
+  databind intentionally still uses the `com.fasterxml.jackson.annotation` namespace, so GridGrind
+  now guards that fact explicitly instead of making it look like accidental dependency drift.
 
 ## [0.47.0] - 2026-04-16
 
@@ -223,7 +359,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `source.security.password` for encrypted existing sources, `persistence.security.encryption`,
   `persistence.security.signature`, and factual `GET_PACKAGE_SECURITY` readback for package
   encryption and package-signature state.
-- Added [examples/package-security-create-request.json](./examples/package-security-create-request.json)
+- Added `examples/package-security-create-request.json`
   and [examples/package-security-inspect-request.json](./examples/package-security-inspect-request.json),
   a paired public example flow for encrypted workbook authoring followed by factual package-security
   inspection.
@@ -350,7 +486,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added [examples/drawing-media-request.json](./examples/drawing-media-request.json), a runnable
+- Added `examples/drawing-media-request.json`, a runnable
   example covering picture, shape, and embedded-object authoring, explicit drawing-anchor
   replacement, drawing payload extraction, and comment coexistence on the same sheet.
 - Added the matching promoted Jazzer protocol-request seed plus deterministic Jazzer support
@@ -377,7 +513,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added [examples/formula-environment-request.json](./examples/formula-environment-request.json),
+- Added `examples/formula-environment-request.json`,
   a runnable example covering top-level `formulaEnvironment`, template-backed UDF
   registration, targeted formula evaluation, and explicit formula-cache clearing.
 - Added the matching promoted Jazzer protocol-request seed for the formula-environment example, so
@@ -409,7 +545,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Added [examples/advanced-mutation-request.json](./examples/advanced-mutation-request.json), a
+- Added `examples/advanced-mutation-request.json`, a
   runnable workbook-core mutation example covering password-bearing protection, formula-defined
   named ranges, advanced table and autofilter mutation, advanced conditional formatting, rich
   comments, advanced page setup, and structured style colors.
@@ -419,7 +555,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Public docs, quick-reference snippets, README guidance, the internal XSSF capability inventory,
   and the internal parity execution spec now describe the completed non-drawing workbook-core
   mutation contract explicitly instead of the earlier partial summaries.
-- [examples/advanced-readback-request.json](./examples/advanced-readback-request.json) now
+- `examples/advanced-readback-request.json` now
   materializes the richer factual readback surface it advertises, including workbook protection,
   rich comment runs and anchors, advanced page setup, structured style colors and gradients,
   autofilter criteria and sort state, and advanced table metadata.
@@ -445,7 +581,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and anchors, advanced print setup, structured theme or indexed or tinted color facts,
   gradient fills, autofilter criteria and sort state, advanced table metadata, and the
   remaining POI-readable XSSF conditional-formatting families modeled by GridGrind.
-- Added [examples/advanced-readback-request.json](./examples/advanced-readback-request.json) plus
+- Added `examples/advanced-readback-request.json` plus
   the matching promoted Jazzer seed so the richer factual readback contract is both publicly
   demonstrated and replay-verified.
 
@@ -475,8 +611,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   including blank raw ranges, so malformed workbook metadata is surfaced to callers instead of
   being rejected during factual readback.
 - The advanced XSSF parity corpus now correctly materializes workbook autofilters, theme or tinted
-  font colors, and gradient fills, so the parity oracle measures the intended Phase 2 read
-  surface instead of an underspecified fixture subset.
+  font colors, and gradient fills, so the parity oracle measures the intended read surface instead
+  of an underspecified fixture subset.
 
 ## [0.34.0] - 2026-04-11
 
@@ -1290,7 +1426,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   imprecision (e.g., 1,638.35 points stored as 32,767 twips read back as 1,638.3499755859375).
   Heights are now read as integer twips divided by 20.0, eliminating the imprecision.
 - Error messages from Jackson for unknown `type` discriminators no longer include internal
-  fully-qualified class names (e.g., `dev.erst.gridgrind.protocol.WorkbookReadOperation`) or
+  fully-qualified class names (e.g., `dev.erst.gridgrind.contract.read.WorkbookReadOperation`) or
   Jackson-internal POJO property annotations. The message now contains only the unknown
   discriminator value and the list of known type IDs.
 - `MOVE_SHEET` error message for an out-of-range `targetIndex` now clearly states the workbook's
@@ -1755,7 +1891,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.47.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.48.0...HEAD
+[0.48.0]: https://github.com/resoltico/GridGrind/compare/v0.47.0...v0.48.0
 [0.47.0]: https://github.com/resoltico/GridGrind/compare/v0.46.0...v0.47.0
 [0.46.0]: https://github.com/resoltico/GridGrind/compare/v0.45.0...v0.46.0
 [0.45.0]: https://github.com/resoltico/GridGrind/compare/v0.44.0...v0.45.0

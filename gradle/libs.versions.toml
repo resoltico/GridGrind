@@ -3,6 +3,7 @@ junit-jupiter = "6.0.3"
 junit-platform-launcher = "6.0.3"
 junit-bom = "6.0.3"
 jackson-databind = "3.0.3"
+# Jackson 3.x keeps annotations on the Jackson 2.x coordinates and package namespace by design.
 jackson-annotations = "2.20"
 log4j = "2.25.3"
 poi-ooxml = "5.5.1"

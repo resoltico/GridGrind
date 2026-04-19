@@ -16,6 +16,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.testing.jacoco.tasks.rules.JacocoLimit
@@ -161,6 +162,11 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 object : Action<JacocoReport> {
                     override fun execute(report: JacocoReport) {
                         report.dependsOn(tasks.withType(Test::class.java))
+                        report.executionData.from(
+                            tasks.withType(Test::class.java).map { testTask ->
+                                testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
+                            },
+                        )
                         report.reports.xml.required.set(true)
                         report.reports.html.required.set(true)
                     }
@@ -176,10 +182,9 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 object : Action<JacocoCoverageVerification> {
                     override fun execute(verification: JacocoCoverageVerification) {
                         verification.dependsOn(tasks.withType(Test::class.java))
-                        // Include execution data from all local test tasks (e.g. parityTest as well as test).
                         verification.executionData.from(
-                            layout.buildDirectory.dir("jacoco").map { dir ->
-                                fileTree(dir) { include("*.exec") }
+                            tasks.withType(Test::class.java).map { testTask ->
+                                testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
                             },
                         )
                         verification.violationRules(

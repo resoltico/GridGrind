@@ -1,17 +1,30 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Intake" },
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
     {
-      "type": "SET_DATA_VALIDATION",
-      "sheetName": "Intake",
-      "range": "A2:A20",
-      "validation": {
-        "rule": {
-          "type": "EXPLICIT_LIST",
-          "values": []
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Intake"
+      }
+    },
+    {
+      "stepId": "step-02-set-data-validation",
+      "action": {
+        "type": "SET_DATA_VALIDATION",
+        "sheetName": "Intake",
+        "range": "A2:A20",
+        "validation": {
+          "rule": {
+            "type": "EXPLICIT_LIST",
+            "values": []
+          }
         }
       }
     }

@@ -7,4 +7,4 @@ plugins {
 }
 
 rootProject.name = "GridGrind"
-include("engine", "protocol", "cli")
+include("engine", "contract", "executor", "authoring-java", "cli")

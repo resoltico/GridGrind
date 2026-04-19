@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.jazzer.support;
 
-import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Objects;
 
 /** Carries one generated protocol workflow plus any local scratch paths it created. */
-public record GeneratedProtocolWorkflow(GridGrindRequest request, List<Path> cleanupRoots) {
+public record GeneratedProtocolWorkflow(WorkbookPlan request, List<Path> cleanupRoots) {
   public GeneratedProtocolWorkflow {
     Objects.requireNonNull(request, "request must not be null");
     cleanupRoots = cleanupRoots == null ? List.of() : List.copyOf(cleanupRoots);

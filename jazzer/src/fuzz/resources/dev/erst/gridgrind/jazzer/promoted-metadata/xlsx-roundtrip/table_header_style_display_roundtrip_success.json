@@ -10,8 +10,8 @@
       "inputBytes" : 191,
       "commandCount" : 6,
       "commandKinds" : {
-        "CREATE_SHEET" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 5
+        "AUTO_SIZE_COLUMNS" : 5,
+        "CREATE_SHEET" : 1
       },
       "styleKinds" : { }
     }

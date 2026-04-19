@@ -26,7 +26,7 @@ class ExcelWorkbookTest {
       WorkbookCommandExecutor commandExecutor = new WorkbookCommandExecutor();
       commandExecutor.apply(
           workbook,
-          List.of(
+          List.<WorkbookCommand>of(
               new WorkbookCommand.CreateSheet("Budget"),
               new WorkbookCommand.AppendRow(
                   "Budget", List.of(ExcelCellValue.text("Item"), ExcelCellValue.text("Amount"))),
@@ -35,8 +35,8 @@ class ExcelWorkbookTest {
               new WorkbookCommand.AppendRow(
                   "Budget", List.of(ExcelCellValue.text("Domain"), ExcelCellValue.number(12.0))),
               new WorkbookCommand.SetCell("Budget", "A4", ExcelCellValue.text("Total")),
-              new WorkbookCommand.SetCell("Budget", "B4", ExcelCellValue.formula("SUM(B2:B3)")),
-              new WorkbookCommand.EvaluateAllFormulas()));
+              new WorkbookCommand.SetCell("Budget", "B4", ExcelCellValue.formula("SUM(B2:B3)"))));
+      workbook.evaluateAllFormulas();
       workbook.save(workbookPath);
     }
 

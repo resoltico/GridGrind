@@ -1,6 +1,6 @@
 {
   "targetKey" : "xlsx-roundtrip",
-  "sourcePath" : ".local/runs/xlsx-roundtrip/crash-18f533680ff39227fa5f9e35ae8a807a9f4a6342",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/apply_style_formatting_depth_roundtrip_success.bin",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/apply_style_formatting_depth_roundtrip_success.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {

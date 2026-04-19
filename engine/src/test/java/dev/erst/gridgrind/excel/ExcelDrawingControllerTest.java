@@ -81,6 +81,10 @@ class ExcelDrawingControllerTest {
       assertEquals(
           List.of("OpsPicture", "OpsShape", "OpsConnector", "OpsEmbed"),
           snapshots.stream().map(ExcelDrawingObjectSnapshot::name).toList());
+      ExcelDrawingObjectSnapshot.Picture pictureSnapshot =
+          assertInstanceOf(ExcelDrawingObjectSnapshot.Picture.class, snapshots.getFirst());
+      assertEquals(1, pictureSnapshot.widthPixels());
+      assertEquals(1, pictureSnapshot.heightPixels());
       assertEquals(
           ExcelDrawingShapeKind.SIMPLE_SHAPE,
           assertInstanceOf(ExcelDrawingObjectSnapshot.Shape.class, snapshots.get(1)).kind());
@@ -122,6 +126,164 @@ class ExcelDrawingControllerTest {
       assertEquals(
           List.of("OpsPicture", "OpsShape", "OpsEmbed"),
           drawing.getShapes().stream().map(XSSFShape::getShapeName).toList());
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      ExcelDrawingObjectSnapshot.Picture pictureSnapshot =
+          assertInstanceOf(
+              ExcelDrawingObjectSnapshot.Picture.class,
+              reopened.sheet("Ops").drawingObjects().stream()
+                  .filter(snapshot -> "OpsPicture".equals(snapshot.name()))
+                  .findFirst()
+                  .orElseThrow());
+      assertEquals(1, pictureSnapshot.widthPixels());
+      assertEquals(1, pictureSnapshot.heightPixels());
+    }
+  }
+
+  @Test
+  void formulaBackedNumericChartTitlePersistsExplicitCacheAcrossSaveAndLoad() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-title-cache-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.setCell("B1", ExcelCellValue.number(1d));
+      sheet.setCell("A2", ExcelCellValue.text("Jan"));
+      sheet.setCell("A3", ExcelCellValue.text("Feb"));
+      sheet.setCell("A4", ExcelCellValue.text("Mar"));
+      sheet.setCell("B2", ExcelCellValue.number(10d));
+      sheet.setCell("B3", ExcelCellValue.number(12d));
+      sheet.setCell("B4", ExcelCellValue.number(14d));
+      sheet.setChart(
+          new ExcelChartDefinition.Bar(
+              "OpsChart",
+              anchor(0, 0, 3, 4),
+              new ExcelChartDefinition.Title.Formula("B1"),
+              new ExcelChartDefinition.Legend.Hidden(),
+              ExcelChartDisplayBlanksAs.GAP,
+              true,
+              false,
+              ExcelChartBarDirection.COLUMN,
+              List.of(
+                  new ExcelChartDefinition.Series(
+                      new ExcelChartDefinition.Title.None(),
+                      new ExcelChartDefinition.DataSource("A2:A4"),
+                      new ExcelChartDefinition.DataSource("B2:B4")))));
+      workbook.save(workbookPath);
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFDrawing drawing = reopened.getSheet("Ops").getDrawingPatriarch();
+      assertNotNull(drawing);
+      XSSFChart chart = drawing.getCharts().getFirst();
+      assertEquals("Ops!$B$1", chart.getTitleFormula());
+      assertTrue(chart.getCTChart().getTitle().getTx().getStrRef().isSetStrCache());
+      assertEquals(
+          "1.0",
+          chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV());
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      ExcelChartSnapshot.Bar chart =
+          assertInstanceOf(ExcelChartSnapshot.Bar.class, reopened.sheet("Ops").charts().getFirst());
+      ExcelChartSnapshot.Title.Formula title =
+          assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, chart.title());
+      assertEquals("Ops!$B$1", title.formula());
+      assertEquals("1.0", title.cachedText());
+
+      ExcelDrawingObjectSnapshot.Chart drawingChart =
+          assertInstanceOf(
+              ExcelDrawingObjectSnapshot.Chart.class,
+              reopened.sheet("Ops").drawingObjects().getFirst());
+      assertEquals("1.0", drawingChart.title());
+    }
+  }
+
+  @Test
+  void formulaChartTitleUpdateReplacesExistingRichTextAndExistingStringCache() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-title-rewrite-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Chart");
+      seedChartData(sheet);
+      sheet.setCell("D1", ExcelCellValue.number(1d));
+      sheet.setCell("E1", ExcelCellValue.number(2d));
+      sheet.setChart(
+          new ExcelChartDefinition.Bar(
+              "OpsChart",
+              anchor(4, 1, 11, 16),
+              new ExcelChartDefinition.Title.Text("Roadmap"),
+              new ExcelChartDefinition.Legend.Hidden(),
+              ExcelChartDisplayBlanksAs.GAP,
+              true,
+              false,
+              ExcelChartBarDirection.COLUMN,
+              List.of(
+                  new ExcelChartDefinition.Series(
+                      new ExcelChartDefinition.Title.None(),
+                      new ExcelChartDefinition.DataSource("A2:A4"),
+                      new ExcelChartDefinition.DataSource("B2:B4")))));
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      ExcelSheet sheet = workbook.sheet("Chart");
+      sheet.setChart(
+          new ExcelChartDefinition.Bar(
+              "OpsChart",
+              anchor(4, 1, 11, 16),
+              new ExcelChartDefinition.Title.Formula("D1"),
+              new ExcelChartDefinition.Legend.Hidden(),
+              ExcelChartDisplayBlanksAs.GAP,
+              true,
+              false,
+              ExcelChartBarDirection.COLUMN,
+              List.of(
+                  new ExcelChartDefinition.Series(
+                      new ExcelChartDefinition.Title.None(),
+                      new ExcelChartDefinition.DataSource("A2:A4"),
+                      new ExcelChartDefinition.DataSource("B2:B4")))));
+      sheet.setChart(
+          new ExcelChartDefinition.Bar(
+              "OpsChart",
+              anchor(4, 1, 11, 16),
+              new ExcelChartDefinition.Title.Formula("E1"),
+              new ExcelChartDefinition.Legend.Hidden(),
+              ExcelChartDisplayBlanksAs.GAP,
+              true,
+              false,
+              ExcelChartBarDirection.COLUMN,
+              List.of(
+                  new ExcelChartDefinition.Series(
+                      new ExcelChartDefinition.Title.None(),
+                      new ExcelChartDefinition.DataSource("A2:A4"),
+                      new ExcelChartDefinition.DataSource("B2:B4")))));
+      workbook.save(workbookPath);
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFDrawing drawing = reopened.getSheet("Chart").getDrawingPatriarch();
+      assertNotNull(drawing);
+      XSSFChart chart = drawing.getCharts().getFirst();
+      assertEquals("Chart!$E$1", chart.getTitleFormula());
+      assertFalse(chart.getCTChart().getTitle().getTx().isSetRich());
+      assertTrue(chart.getCTChart().getTitle().getTx().isSetStrRef());
+      assertTrue(chart.getCTChart().getTitle().getTx().getStrRef().isSetStrCache());
+      assertEquals(
+          1, chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().sizeOfPtArray());
+      assertEquals(
+          "2.0",
+          chart.getCTChart().getTitle().getTx().getStrRef().getStrCache().getPtArray(0).getV());
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      ExcelChartSnapshot.Bar chart =
+          assertInstanceOf(
+              ExcelChartSnapshot.Bar.class, reopened.sheet("Chart").charts().getFirst());
+      ExcelChartSnapshot.Title.Formula title =
+          assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, chart.title());
+      assertEquals("Chart!$E$1", title.formula());
+      assertEquals("2.0", title.cachedText());
     }
   }
 

@@ -1,12 +1,43 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Data" },
-    { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "TEXT", "text": "hello" } }
-  ],
-  "reads": [
-    { "type": "GET_CELLS", "requestId": "cells", "sheetName": "Data", "addresses": ["BADADDR"] }
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
+    {
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Data"
+      }
+    },
+    {
+      "stepId": "step-02-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "sheetName": "Data",
+        "address": "A1",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "hello"
+          }
+        }
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS",
+        "sheetName": "Data",
+        "addresses": [
+          "BADADDR"
+        ]
+      },
+      "stepId": "cells"
+    }
   ]
 }

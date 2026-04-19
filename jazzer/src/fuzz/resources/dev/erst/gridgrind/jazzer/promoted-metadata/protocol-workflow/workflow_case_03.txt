@@ -1,0 +1,15 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/workflow_case_03.bin
+Harness: protocol-workflow
+Outcome: SUCCESS
+Input Bytes: 38
+Source Kind: NEW
+Persistence Kind: NONE
+Operation Count: 3
+Assertion Count: 0
+Read Count: 0
+Assertion Kinds: (none)
+Read Kinds: (none)
+Response Kind: FAILURE
+Style Kinds: (none)
+Operation Kinds: AUTO_SIZE_COLUMNS=2, ENSURE_SHEET=1

@@ -1,6 +1,6 @@
 {
   "targetKey" : "xlsx-roundtrip",
-  "sourcePath" : ".local/runs/xlsx-roundtrip/crash-0196775dc07e92df7ec0ac3c19d56dd8e26c7c1c",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_preserves_styled_blank_row_roundtrip_success.bin",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/append_row_preserves_styled_blank_row_roundtrip_success.bin",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
@@ -10,7 +10,7 @@
       "inputBytes" : 107,
       "commandCount" : 1,
       "commandKinds" : {
-        "EVALUATE_ALL_FORMULAS" : 1
+        "SET_WORKBOOK_PROTECTION" : 1
       },
       "styleKinds" : { }
     }

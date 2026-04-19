@@ -1,0 +1,25 @@
+{
+  "targetKey" : "protocol-workflow",
+  "sourcePath" : ".local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/2863fd39fcb02afb9ec25cdf1d93b614e2600736",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/workflow_case_07.bin",
+  "replayOutcome" : "EXPECTED_INVALID",
+  "expectation" : {
+    "outcomeKind" : "EXPECTED_INVALID",
+    "details" : {
+      "type" : "PROTOCOL_WORKFLOW",
+      "inputBytes" : 215,
+      "sourceKind" : "NOT_GENERATED",
+      "persistenceKind" : "NOT_GENERATED",
+      "operationCount" : 0,
+      "operationKinds" : { },
+      "styleKinds" : { },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
+      "readCount" : 0,
+      "readKinds" : { },
+      "responseKind" : "NOT_EXECUTED"
+    }
+  },
+  "promotedAt" : "2026-04-01T04:57:28.175253Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/workflow_case_07.txt"
+}

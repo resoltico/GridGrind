@@ -1,9 +1,17 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [],
-  "reads": [
-    { "type": "GET_NOT_A_REAL_READ", "requestId": "workbook" }
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
+    {
+      "query": {
+        "type": "GET_NOT_A_REAL_READ"
+      },
+      "stepId": "workbook"
+    }
   ]
 }

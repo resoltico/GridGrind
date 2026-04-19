@@ -1,6 +1,5 @@
 package dev.erst.gridgrind.jazzer.tool;
 
-import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import dev.erst.gridgrind.jazzer.support.JazzerRunTarget;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -218,43 +217,8 @@ public final class JazzerCli {
   private static void refreshPromotedMetadata(List<String> args) throws IOException {
     Path projectDirectory = projectDirectory(args);
     String targetKey = optionalValue(args, "--target");
-    List<Path> metadataPaths;
-    try (var stream = Files.walk(JazzerHarness.promotedMetadataRoot(projectDirectory))) {
-      metadataPaths =
-          stream
-              .filter(path -> path.getFileName().toString().endsWith(".json"))
-              .filter(
-                  path ->
-                      targetKey == null
-                          || path.getParent().getFileName().toString().equals(targetKey))
-              .sorted()
-              .toList();
-    }
-
-    for (Path metadataPath : metadataPaths) {
-      PromotionMetadata metadata = JazzerJson.read(metadataPath, PromotionMetadata.class);
-      JazzerRunTarget target = JazzerRunTarget.fromKey(metadata.targetKey());
-      Path promotedInputPath = metadata.promotedInputPath(projectDirectory);
-      Path replayTextPath = metadata.replayTextPath(projectDirectory);
-      ReplayOutcome outcome =
-          JazzerReplaySupport.replay(target.replayHarness(), Files.readAllBytes(promotedInputPath));
-      Files.writeString(
-          replayTextPath,
-          JazzerTextRenderer.renderReplay(Path.of(metadata.promotedInputPath()), outcome)
-              + System.lineSeparator());
-      JazzerJson.write(
-          metadataPath,
-          new PromotionMetadata(
-              metadata.targetKey(),
-              metadata.sourcePath(),
-              metadata.promotedInputPath(),
-              JazzerReplaySupport.outcomeKind(outcome),
-              JazzerReplaySupport.expectationFor(outcome),
-              metadata.promotedAt(),
-              metadata.replayTextPath()));
-    }
-
-    System.out.println("Refreshed " + metadataPaths.size() + " promoted metadata entries.");
+    int refreshed = PromotionMetadataRefresher.refresh(projectDirectory, targetKey);
+    System.out.println("Refreshed " + refreshed + " promoted metadata entries.");
   }
 
   private static List<LocalRunSummary> availableSummaries(Path projectDirectory)

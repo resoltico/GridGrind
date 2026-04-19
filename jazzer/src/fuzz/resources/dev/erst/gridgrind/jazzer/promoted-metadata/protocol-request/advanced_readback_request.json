@@ -1,41 +1,41 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "../examples/advanced-readback-request.json",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/advanced_readback_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/advanced_readback_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 10044,
+      "inputBytes" : 19699,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 10,
       "operationKinds" : {
+        "SET_AUTOFILTER" : 1,
+        "SET_TABLE" : 1,
+        "ENSURE_SHEET" : 1,
         "SET_WORKBOOK_PROTECTION" : 1,
         "SET_COMMENT" : 1,
         "SET_PRINT_LAYOUT" : 1,
         "APPLY_STYLE" : 2,
         "SET_DATA_VALIDATION" : 1,
-        "SET_RANGE" : 1,
-        "SET_AUTOFILTER" : 1,
-        "SET_TABLE" : 1,
-        "ENSURE_SHEET" : 1
+        "SET_RANGE" : 1
       },
       "styleKinds" : {
+        "border_bottom" : 1,
+        "italic" : 1,
+        "fill_pattern" : 1,
         "fill_pattern_solid" : 1,
         "font" : 1,
         "border" : 1,
-        "fill" : 2,
-        "border_bottom" : 1,
-        "italic" : 1,
-        "fill_pattern" : 1
+        "fill" : 2
       },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
       "readCount" : 11,
       "readKinds" : {
-        "ANALYZE_DATA_VALIDATION_HEALTH" : 1,
-        "GET_WORKBOOK_PROTECTION" : 1,
         "ANALYZE_TABLE_HEALTH" : 1,
         "ANALYZE_AUTOFILTER_HEALTH" : 1,
         "GET_COMMENTS" : 1,
@@ -44,7 +44,9 @@
         "GET_DATA_VALIDATIONS" : 1,
         "GET_TABLES" : 1,
         "GET_WORKBOOK_SUMMARY" : 1,
-        "GET_CELLS" : 1
+        "GET_CELLS" : 1,
+        "ANALYZE_DATA_VALIDATION_HEALTH" : 1,
+        "GET_WORKBOOK_PROTECTION" : 1
       }
     }
   },

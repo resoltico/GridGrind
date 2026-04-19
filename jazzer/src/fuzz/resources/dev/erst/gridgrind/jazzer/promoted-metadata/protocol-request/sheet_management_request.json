@@ -1,34 +1,23 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "../examples/sheet-management-request.json",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/sheet_management_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/sheet_management_request.json",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 2666,
-      "decodeOutcome" : "PARSED",
-      "sourceKind" : "NEW",
-      "persistenceKind" : "SAVE_AS",
-      "operationCount" : 10,
-      "operationKinds" : {
-        "ENSURE_SHEET" : 2,
-        "SET_CELL" : 2,
-        "SET_RANGE" : 1,
-        "SET_SHEET_VISIBILITY" : 1,
-        "SET_ACTIVE_SHEET" : 1,
-        "COPY_SHEET" : 1,
-        "SET_SHEET_PROTECTION" : 1,
-        "SET_SELECTED_SHEETS" : 1
-      },
+      "inputBytes" : 5058,
+      "decodeOutcome" : "INVALID_REQUEST_SHAPE",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
       "styleKinds" : { },
-      "readCount" : 4,
-      "readKinds" : {
-        "GET_SHEET_SUMMARY" : 2,
-        "GET_WORKBOOK_SUMMARY" : 1,
-        "GET_WINDOW" : 1
-      }
+      "assertionCount" : 0,
+      "assertionKinds" : { },
+      "readCount" : 0,
+      "readKinds" : { }
     }
   },
   "promotedAt" : "2026-03-26T03:22:08.997103Z",

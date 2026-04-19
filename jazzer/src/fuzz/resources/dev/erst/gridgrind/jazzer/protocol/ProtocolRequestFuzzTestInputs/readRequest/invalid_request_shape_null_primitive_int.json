@@ -1,18 +1,27 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
     {
-      "type": "APPLY_STYLE",
-      "sheetName": "Sheet1",
-      "range": "A1",
-      "style": {
-        "font": {
-          "fontHeight": { "type": "TWIPS", "twips": null }
+      "stepId": "step-01-apply-style",
+      "action": {
+        "type": "APPLY_STYLE",
+        "sheetName": "Sheet1",
+        "range": "A1",
+        "style": {
+          "font": {
+            "fontHeight": {
+              "type": "TWIPS",
+              "twips": null
+            }
+          }
         }
       }
     }
-  ],
-  "reads": []
+  ]
 }

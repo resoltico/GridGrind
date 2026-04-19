@@ -320,8 +320,14 @@ public final class JazzerTextRenderer {
               + "Operation Count: "
               + request.operationCount()
               + System.lineSeparator()
+              + "Assertion Count: "
+              + request.assertionCount()
+              + System.lineSeparator()
               + "Read Count: "
               + request.readCount()
+              + System.lineSeparator()
+              + "Assertion Kinds: "
+              + renderMapInline(request.assertionKinds())
               + System.lineSeparator()
               + "Read Kinds: "
               + renderMapInline(request.readKinds())
@@ -344,8 +350,14 @@ public final class JazzerTextRenderer {
               + "Operation Count: "
               + workflow.operationCount()
               + System.lineSeparator()
+              + "Assertion Count: "
+              + workflow.assertionCount()
+              + System.lineSeparator()
               + "Read Count: "
               + workflow.readCount()
+              + System.lineSeparator()
+              + "Assertion Kinds: "
+              + renderMapInline(workflow.assertionKinds())
               + System.lineSeparator()
               + "Read Kinds: "
               + renderMapInline(workflow.readKinds())

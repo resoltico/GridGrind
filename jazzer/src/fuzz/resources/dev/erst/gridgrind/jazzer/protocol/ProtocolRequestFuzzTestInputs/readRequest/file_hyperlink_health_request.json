@@ -1,82 +1,170 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "cli/build/generated-workbooks/gridgrind-file-hyperlink-health.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Links" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Links",
-      "range": "A1:B4",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Label" },
-          { "type": "TEXT", "text": "Destination" }
-        ],
-        [
-          { "type": "TEXT", "text": "Relative policy PDF" },
-          { "type": "TEXT", "text": "support/expense policy 2026.pdf" }
-        ],
-        [
-          { "type": "TEXT", "text": "Absolute checklist URI" },
-          {
-            "type": "TEXT",
-            "text": "file:///tmp/quarterly%20close/checklist.xlsx"
-          }
-        ],
-        [
-          { "type": "TEXT", "text": "Workbook section" },
-          { "type": "TEXT", "text": "Links!B2" }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Links"
+      }
+    },
+    {
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Label"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Destination"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Relative policy PDF"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "support/expense policy 2026.pdf"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Absolute checklist URI"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "file:///tmp/quarterly%20close/checklist.xlsx"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Workbook section"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Links!B2"
+              }
+            }
+          ]
         ]
-      ]
-    },
-    {
-      "type": "SET_HYPERLINK",
-      "sheetName": "Links",
-      "address": "A2",
+      },
       "target": {
-        "type": "FILE",
-        "path": "support/expense policy 2026.pdf"
+        "type": "BY_RANGE",
+        "sheetName": "Links",
+        "range": "A1:B4"
       }
     },
     {
-      "type": "SET_HYPERLINK",
-      "sheetName": "Links",
-      "address": "A3",
+      "stepId": "step-03-set-hyperlink",
+      "action": {
+        "type": "SET_HYPERLINK",
+        "target": {
+          "type": "FILE",
+          "path": "support/expense policy 2026.pdf"
+        }
+      },
       "target": {
-        "type": "FILE",
-        "path": "file:///tmp/quarterly%20close/checklist.xlsx"
+        "type": "BY_ADDRESS",
+        "sheetName": "Links",
+        "address": "A2"
       }
     },
     {
-      "type": "SET_HYPERLINK",
-      "sheetName": "Links",
-      "address": "A4",
+      "stepId": "step-04-set-hyperlink",
+      "action": {
+        "type": "SET_HYPERLINK",
+        "target": {
+          "type": "FILE",
+          "path": "file:///tmp/quarterly%20close/checklist.xlsx"
+        }
+      },
       "target": {
-        "type": "DOCUMENT",
-        "target": "Links!B2"
-      }
-    }
-  ],
-  "reads": [
-    {
-      "type": "GET_HYPERLINKS",
-      "requestId": "hyperlinks",
-      "sheetName": "Links",
-      "selection": {
-        "type": "SELECTED",
-        "addresses": ["A2", "A3", "A4"]
+        "type": "BY_ADDRESS",
+        "sheetName": "Links",
+        "address": "A3"
       }
     },
     {
-      "type": "ANALYZE_HYPERLINK_HEALTH",
-      "requestId": "hyperlink-health",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Links"]
+      "stepId": "step-05-set-hyperlink",
+      "action": {
+        "type": "SET_HYPERLINK",
+        "target": {
+          "type": "DOCUMENT",
+          "target": "Links!B2"
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Links",
+        "address": "A4"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_HYPERLINKS"
+      },
+      "stepId": "hyperlinks",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Links",
+        "addresses": [
+          "A2",
+          "A3",
+          "A4"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_HYPERLINK_HEALTH"
+      },
+      "stepId": "hyperlink-health",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Links"
+        ]
       }
     }
   ]

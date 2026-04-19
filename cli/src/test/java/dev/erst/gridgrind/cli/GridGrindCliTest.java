@@ -2,19 +2,24 @@ package dev.erst.gridgrind.cli;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import dev.erst.gridgrind.protocol.catalog.Catalog;
-import dev.erst.gridgrind.protocol.catalog.GridGrindContractText;
-import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.protocol.dto.GridGrindProblemCategory;
-import dev.erst.gridgrind.protocol.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
-import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
-import dev.erst.gridgrind.protocol.json.GridGrindJson;
-import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
+import dev.erst.gridgrind.contract.catalog.Catalog;
+import dev.erst.gridgrind.contract.catalog.CliSurface;
+import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.contract.catalog.ShippedExampleEntry;
+import dev.erst.gridgrind.contract.dto.ExecutionJournal;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCategory;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.executor.ExecutionJournalSink;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,28 +30,101 @@ import org.junit.jupiter.api.Test;
 /** Integration tests for GridGrindCli command-line invocation. */
 class GridGrindCliTest {
   @Test
+  void threeArgumentConstructorStillRunsWithDefaultJournalWriter() throws IOException {
+    String request =
+        """
+        {
+          "source": { "type": "NEW" },
+          "persistence": { "type": "NONE" },
+          "steps": []
+        }
+        """;
+
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli(
+                (ignoredRequest, ignoredBindings, ignoredSink) ->
+                    new GridGrindResponse.Success(
+                        null,
+                        new GridGrindResponse.PersistenceOutcome.NotSaved(),
+                        List.of(),
+                        List.of(),
+                        List.of()),
+                new CliRequestReader(),
+                new CliResponseWriter())
+            .run(
+                new String[0],
+                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    assertEquals(0, exitCode);
+    assertInstanceOf(
+        GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+  }
+
+  @Test
+  void cliJournalWriterReturnsNoopWhenRequestIsMissing() {
+    CliJournalWriter writer = new CliJournalWriter();
+
+    assertSame(ExecutionJournalSink.NOOP, writer.sinkFor(null, OutputStream.nullOutputStream()));
+  }
+
+  @Test
+  void cliJournalWriterSwallowsBestEffortIoFailures() throws IOException {
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+            {
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "journal": { "level": "VERBOSE" }
+              },
+              "steps": []
+            }
+            """
+                .getBytes(StandardCharsets.UTF_8));
+    CliJournalWriter writer = new CliJournalWriter();
+    try (OutputStream broken =
+        new OutputStream() {
+          @Override
+          public void write(int b) throws IOException {
+            throw new IOException("boom");
+          }
+        }) {
+      assertDoesNotThrow(
+          () ->
+              writer
+                  .sinkFor(request, broken)
+                  .emit(
+                      new ExecutionJournal.Event(
+                          "2026-04-18T11:45:00Z", "OPEN", "opened", null, null)));
+    }
+  }
+
+  @Test
   void readsJsonRequestFromStdinAndWritesJsonResponse() throws IOException {
     String request =
         """
             {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
-              "operations": [
-                { "type": "ENSURE_SHEET", "sheetName": "Budget" },
-                { "type": "APPEND_ROW", "sheetName": "Budget", "values": [
-                  { "type": "TEXT", "text": "Item" },
-                  { "type": "TEXT", "text": "Amount" }
-                ] },
-                { "type": "APPEND_ROW", "sheetName": "Budget", "values": [
-                  { "type": "TEXT", "text": "Hosting" },
+              "execution": {
+                "calculation": { "strategy": { "type": "EVALUATE_ALL" } }
+              },
+              "steps": [
+                { "stepId": "ensure-budget", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+                { "stepId": "append-header", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
+                  { "type": "TEXT", "source": { "type": "INLINE", "text": "Item" } },
+                  { "type": "TEXT", "source": { "type": "INLINE", "text": "Amount" } }
+                ] } },
+                { "stepId": "append-hosting", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
+                  { "type": "TEXT", "source": { "type": "INLINE", "text": "Hosting" } },
                   { "type": "NUMBER", "number": 49.0 }
-                ] },
-                { "type": "SET_CELL", "sheetName": "Budget", "address": "B3", "value": { "type": "FORMULA", "formula": "SUM(B2:B2)" } },
-                { "type": "EVALUATE_FORMULAS" }
-              ],
-              "reads": [
-                { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
-                { "type": "GET_CELLS", "requestId": "cells", "sheetName": "Budget", "addresses": ["A1", "B3"] }
+                ] } },
+                { "stepId": "set-total", "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "B3" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(B2:B2)" } } } },
+                { "stepId": "workbook", "target": { "type": "CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } },
+                { "stepId": "cells", "target": { "type": "BY_ADDRESSES", "sheetName": "Budget", "addresses": ["A1", "B3"] }, "query": { "type": "GET_CELLS" } }
               ]
             }
             """;
@@ -66,14 +144,151 @@ class GridGrindCliTest {
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
     assertEquals(List.of(), success.warnings());
     GridGrindResponse.WorkbookSummary workbook =
-        ((WorkbookReadResult.WorkbookSummaryResult) success.reads().get(0)).workbook();
+        ((InspectionResult.WorkbookSummaryResult) success.inspections().get(0)).workbook();
     assertEquals("Budget", workbook.sheetNames().get(0));
-    WorkbookReadResult.CellsResult cells = (WorkbookReadResult.CellsResult) success.reads().get(1);
+    InspectionResult.CellsResult cells =
+        (InspectionResult.CellsResult) success.inspections().get(1);
     GridGrindResponse.CellReport.FormulaReport b3Cell =
         (GridGrindResponse.CellReport.FormulaReport) cells.cells().get(1);
     assertEquals("SUM(B2:B2)", b3Cell.formula());
     assertEquals(
         49.0, ((GridGrindResponse.CellReport.NumberReport) b3Cell.evaluation()).numberValue());
+  }
+
+  @Test
+  void rejectsStandardInputAuthoredValuesWhenRequestAlsoUsesStdin() throws IOException {
+    String request =
+        """
+            {
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "steps": [
+                { "stepId": "ensure-budget", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+                {
+                  "stepId": "set-title",
+                  "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "action": {
+                    "type": "SET_CELL",
+                    "value": {
+                      "type": "TEXT",
+                      "source": { "type": "STANDARD_INPUT" }
+                    }
+                  }
+                }
+              ]
+            }
+            """;
+
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[0],
+                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    assertEquals(1, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("PARSE_ARGUMENTS", failure.problem().context().stage());
+    assertEquals("--request", failure.problem().context().argument());
+    assertTrue(
+        failure.problem().message().contains("STANDARD_INPUT-authored values require --request"));
+  }
+
+  @Test
+  void bindsStandardInputToSourceBackedValuesWhenRequestComesFromFile() throws IOException {
+    Path requestPath = Files.createTempFile("gridgrind-stdin-request-", ".json");
+    Files.writeString(
+        requestPath,
+        """
+        {
+          "source": { "type": "NEW" },
+          "persistence": { "type": "NONE" },
+          "steps": [
+            { "stepId": "ensure-budget", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+            {
+              "stepId": "set-title",
+              "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+              "action": {
+                "type": "SET_CELL",
+                "value": {
+                  "type": "TEXT",
+                  "source": { "type": "STANDARD_INPUT" }
+                }
+              }
+            },
+            {
+              "stepId": "cells",
+              "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+              "query": { "type": "GET_CELLS" }
+            }
+          ]
+        }
+        """,
+        StandardCharsets.UTF_8);
+
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--request", requestPath.toString()},
+                new ByteArrayInputStream("Quarterly Budget".getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    GridGrindResponse.Success success =
+        assertInstanceOf(
+            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    InspectionResult.CellsResult cells =
+        assertInstanceOf(InspectionResult.CellsResult.class, success.inspections().getFirst());
+    GridGrindResponse.CellReport.TextReport a1 =
+        assertInstanceOf(GridGrindResponse.CellReport.TextReport.class, cells.cells().getFirst());
+    assertEquals(0, exitCode);
+    assertEquals("Quarterly Budget", a1.stringValue());
+  }
+
+  @Test
+  void verboseExecutionJournalStreamsLiveEventsToStderr() throws IOException {
+    String request =
+        """
+            {
+              "planId": "ledger-audit",
+              "source": { "type": "NEW" },
+              "persistence": { "type": "NONE" },
+              "execution": {
+                "journal": { "level": "VERBOSE" }
+              },
+              "steps": [
+                { "stepId": "ensure-ledger", "target": { "type": "BY_NAME", "name": "Ledger" }, "action": { "type": "ENSURE_SHEET" } },
+                { "stepId": "summary", "target": { "type": "CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } }
+              ]
+            }
+            """;
+
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[0],
+                new ByteArrayInputStream(request.getBytes(StandardCharsets.UTF_8)),
+                stdout,
+                stderr);
+
+    GridGrindResponse.Success success =
+        assertInstanceOf(
+            GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+
+    assertEquals(0, exitCode);
+    assertEquals("ledger-audit", success.journal().planId());
+    assertTrue(
+        stderr.toString(StandardCharsets.UTF_8).contains("[gridgrind]"),
+        "verbose journal must emit live stderr lines");
+    assertTrue(
+        stderr.toString(StandardCharsets.UTF_8).contains("ensure-ledger"),
+        "stderr must include the step id");
   }
 
   @Test
@@ -83,8 +298,7 @@ class GridGrindCliTest {
             {
               "source": { "type": "EXISTING", "path": "/tmp/does-not-exist.xlsx" },
               "persistence": { "type": "NONE" },
-              "operations": [],
-              "reads": []
+              "steps": []
             }
             """;
 
@@ -113,10 +327,9 @@ class GridGrindCliTest {
             {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
-              "operations": [
-                { "type": "ENSURE_SHEET", "sheetName": "Bad:Name" }
-              ],
-              "reads": []
+              "steps": [
+                { "stepId": "ensure-bad-sheet", "target": { "type": "BY_NAME", "name": "Bad:Name" }, "action": { "type": "ENSURE_SHEET" } }
+              ]
             }
             """;
 
@@ -135,7 +348,7 @@ class GridGrindCliTest {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals("operations[0]", failure.problem().context().jsonPath());
+    assertEquals("steps[0].target", failure.problem().context().jsonPath());
     assertTrue(failure.problem().message().contains("invalid Excel character ':'"));
   }
 
@@ -146,39 +359,43 @@ class GridGrindCliTest {
             {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
-              "operations": [
-                { "type": "ENSURE_SHEET", "sheetName": "Dispatch" },
+              "steps": [
+                { "stepId": "ensure-dispatch", "target": { "type": "BY_NAME", "name": "Dispatch" }, "action": { "type": "ENSURE_SHEET" } },
                 {
-                  "type": "SET_RANGE",
-                  "sheetName": "Dispatch",
-                  "range": "A1:B3",
-                  "rows": [
+                  "stepId": "seed-dispatch",
+                  "target": { "type": "BY_RANGE", "sheetName": "Dispatch", "range": "A1:B3" },
+                  "action": {
+                    "type": "SET_RANGE",
+                    "rows": [
                     [
-                      { "type": "TEXT", "text": "Owner" },
-                      { "type": "TEXT", "text": "Task" }
+                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Owner" } },
+                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Task" } }
                     ],
                     [
-                      { "type": "TEXT", "text": "Ada" },
-                      { "type": "TEXT", "text": "Onboarding" }
+                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Ada" } },
+                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Onboarding" } }
                     ],
                     [
-                      { "type": "TEXT", "text": "Lin" },
-                      { "type": "TEXT", "text": "Badge run" }
+                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Lin" } },
+                      { "type": "TEXT", "source": { "type": "INLINE", "text": "Badge run" } }
                     ]
-                  ]
+                    ]
+                  }
                 },
                 {
-                  "type": "SET_TABLE",
-                  "table": {
-                    "name": "DispatchQueue",
-                    "sheetName": "Dispatch",
-                    "range": "A1:B3",
-                    "style": { "type": "NONE" }
+                  "stepId": "set-dispatch-table",
+                  "target": { "type": "BY_NAME_ON_SHEET", "name": "DispatchQueue", "sheetName": "Dispatch" },
+                  "action": {
+                    "type": "SET_TABLE",
+                    "table": {
+                      "name": "DispatchQueue",
+                      "sheetName": "Dispatch",
+                      "range": "A1:B3",
+                      "style": { "type": "NONE" }
+                    }
                   }
-                }
-              ],
-              "reads": [
-                { "type": "GET_TABLES", "requestId": "tables", "selection": { "type": "ALL" } }
+                },
+                { "stepId": "tables", "target": { "type": "ALL" }, "query": { "type": "GET_TABLES" } }
               ]
             }
             """;
@@ -196,8 +413,8 @@ class GridGrindCliTest {
     assertEquals(0, exitCode);
     assertInstanceOf(GridGrindResponse.Success.class, response);
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
-    WorkbookReadResult.TablesResult tables =
-        (WorkbookReadResult.TablesResult) success.reads().getFirst();
+    InspectionResult.TablesResult tables =
+        (InspectionResult.TablesResult) success.inspections().getFirst();
     assertEquals(1, tables.tables().size());
     assertEquals(0, tables.tables().getFirst().totalsRowCount());
   }
@@ -214,11 +431,9 @@ class GridGrindCliTest {
             {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
-              "operations": [
-                { "type": "ENSURE_SHEET", "sheetName": "Budget" }
-              ],
-              "reads": [
-                { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" }
+              "steps": [
+                { "stepId": "ensure-budget", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+                { "stepId": "workbook", "target": { "type": "CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } }
               ]
             }
             """);
@@ -241,7 +456,7 @@ class GridGrindCliTest {
     GridGrindResponse.Success success = (GridGrindResponse.Success) response;
     assertEquals(
         List.of("Budget"),
-        ((WorkbookReadResult.WorkbookSummaryResult) success.reads().getFirst())
+        ((InspectionResult.WorkbookSummaryResult) success.inspections().getFirst())
             .workbook()
             .sheetNames());
   }
@@ -405,13 +620,13 @@ class GridGrindCliTest {
     assertTrue(help.contains("--request <path>"));
     assertTrue(help.contains("--print-request-template"));
     assertTrue(help.contains("--print-protocol-catalog"));
+    assertTrue(help.contains("--print-example <id>"));
     assertTrue(help.contains("--help, -h"));
     assertTrue(help.contains("blob/main/docs/QUICK_REFERENCE.md"));
     assertTrue(help.contains("Coordinate Systems:"));
-    assertTrue(help.contains("reject : \\ / ? * [ ]"));
     assertTrue(
         help.contains(
-            "Relative FILE hyperlink targets are analyzed against the persisted workbook path"));
+            GridGrindProtocolCatalog.catalog().cliSurface().fileWorkflowLines().getLast()));
     assertTrue(
         help.contains("type group accepted by polymorphic fields"),
         "help must explain what the protocol catalog publishes");
@@ -466,42 +681,44 @@ class GridGrindCliTest {
   @Test
   void helpTextExplainsFileWorkflow() {
     String help = GridGrindCli.helpText("1.0.0");
+    CliSurface cliSurface = GridGrindProtocolCatalog.catalog().cliSurface();
 
     assertTrue(help.contains("File Workflow:"));
-    assertTrue(help.contains("No --request flag:           read the JSON request from stdin."));
-    assertTrue(
-        help.contains(
-            "--response <path>:           write the JSON response to that file; parent directories are created."));
-    assertTrue(
-        help.contains(
-            "persistence OVERWRITE:       write back to source.path; no path field is supplied."));
-    assertTrue(
-        help.contains(
-            "Relative paths in --request, --response, source.path, and persistence.path resolve from the current working directory."));
-    assertTrue(
-        help.contains(
-            "Relative FILE hyperlink targets are analyzed against the persisted workbook path when one exists; use absolute paths for cwd-independent results."));
+    for (String line : cliSurface.fileWorkflowLines()) {
+      assertTrue(help.contains(line), () -> "help must include file workflow line: " + line);
+    }
   }
 
   @Test
   void helpTextIncludesCoordinateSystemsTable() {
     String help = GridGrindCli.helpText("1.0.0");
+    CliSurface cliSurface = GridGrindProtocolCatalog.catalog().cliSurface();
 
     assertTrue(help.contains("Coordinate Systems:"));
-    assertTrue(help.contains("address                A1 cell address, e.g. B3"));
-    assertTrue(help.contains("range                  A1 rectangular range, e.g. A1:C4"));
-    assertTrue(help.contains("*RowIndex              zero-based, e.g. 0 = Excel row 1"));
-    assertTrue(help.contains("*ColumnIndex           zero-based, e.g. 0 = Excel column A"));
+    for (CliSurface.CoordinateSystemEntry entry : cliSurface.coordinateSystems()) {
+      assertTrue(
+          help.contains(entry.pattern()),
+          () -> "help must include coordinate pattern " + entry.pattern());
+      assertTrue(
+          help.contains(entry.convention()),
+          () -> "help must include coordinate convention " + entry.convention());
+    }
   }
 
   @Test
-  void helpTextIncludesWorkbookHealthWorkflowSnippet() {
+  void helpTextListsBuiltInGeneratedExamples() {
     String help = GridGrindCli.helpText("1.0.0");
 
-    assertTrue(help.contains("Workbook health workflow (no save):"));
-    assertTrue(help.contains("\"persistence\": { \"type\": \"NONE\" }"));
-    assertTrue(help.contains("\"type\": \"ANALYZE_WORKBOOK_FINDINGS\", \"requestId\": \"lint\""));
+    assertTrue(help.contains("Built-in generated examples:"));
+    assertTrue(help.contains("gridgrind --print-example WORKBOOK_HEALTH"));
     assertTrue(help.contains(GridGrindContractText.workbookFindingsDiscoverySummary()));
+    assertTrue(help.contains(GridGrindContractText.stepKindSummary()));
+    for (ShippedExampleEntry example : GridGrindProtocolCatalog.catalog().shippedExamples()) {
+      assertTrue(help.contains(example.id()), () -> "help must include example id " + example.id());
+      assertTrue(
+          help.contains("examples/" + example.fileName()),
+          () -> "help must include example file " + example.fileName());
+    }
   }
 
   @Test
@@ -519,22 +736,15 @@ class GridGrindCliTest {
   @Test
   void helpTextIncludesStructuralEditLimitNotes() {
     String help = GridGrindCli.helpText("1.0.0");
-
-    assertTrue(
-        help.contains(
-            "Row structural edits:     rejected when they would move tables, sheet autofilters, or data validations; deletes/shifts also reject destructive range-backed named ranges."));
-    assertTrue(
-        help.contains(
-            "Column structural edits:  same ownership rule; deletes/shifts also reject destructive range-backed named ranges; all column edits reject any workbook formulas or formula-defined names."));
-    assertTrue(
-        help.contains(
-            "Chart mutations:          SET_CHART authors BAR, LINE, and PIE only; unsupported loaded chart detail is preserved on unrelated edits and rejected for authoritative mutation."));
-    assertTrue(
-        help.contains(
-            "Chart title formulas:     SET_CHART title FORMULA and series.title FORMULA must resolve to one cell, directly or through one defined name."));
-    assertTrue(
-        help.contains(
-            "Drawing validation:       failed SET_SHAPE / SET_CHART validation leaves existing drawing state unchanged and creates no partial artifacts."));
+    for (String line : GridGrindProtocolCatalog.catalog().cliSurface().limitLines()) {
+      if (line.startsWith("Row structural edits:")
+          || line.startsWith("Column structural edits:")
+          || line.startsWith("Chart mutations:")
+          || line.startsWith("Chart title formulas:")
+          || line.startsWith("Drawing validation:")) {
+        assertTrue(help.contains(line), () -> "help must include limit line: " + line);
+      }
+    }
   }
 
   @Test
@@ -581,6 +791,14 @@ class GridGrindCliTest {
   }
 
   @Test
+  void requestTemplateTextRendersUtf8TemplateBytes() {
+    assertEquals(
+        "{\"protocolVersion\":\"V1\"}",
+        GridGrindCli.requestTemplateText(
+            () -> "{\"protocolVersion\":\"V1\"}".getBytes(StandardCharsets.UTF_8)));
+  }
+
+  @Test
   void requestTemplateTextWrapsTemplateSerializationFailures() {
     IllegalStateException failure =
         assertThrows(
@@ -606,10 +824,48 @@ class GridGrindCliTest {
                 new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
                 stdout);
 
-    GridGrindRequest request = GridGrindJson.readRequest(stdout.toByteArray());
+    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
 
     assertEquals(0, exitCode);
     assertEquals(GridGrindProtocolCatalog.requestTemplate(), request);
+  }
+
+  @Test
+  void printExampleFlagPrintsKnownGeneratedExampleAndReturnsExitCodeZero() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-example", "WORKBOOK_HEALTH"},
+                new ByteArrayInputStream("ignored".getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertEquals(
+        GridGrindProtocolCatalog.exampleFor("WORKBOOK_HEALTH").orElseThrow().plan(), request);
+  }
+
+  @Test
+  void printExampleFlagRejectsUnknownExampleId() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-example", "BOGUS_EXAMPLE"},
+                new ByteArrayInputStream(new byte[0]),
+                stdout);
+
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("--print-example", failure.problem().context().argument());
+    assertTrue(failure.problem().message().contains("BOGUS_EXAMPLE"));
   }
 
   @Test
@@ -672,10 +928,27 @@ class GridGrindCliTest {
                 new ByteArrayInputStream(new byte[0]),
                 stdout);
 
-    GridGrindRequest request = GridGrindJson.readRequest(stdout.toByteArray());
+    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
 
     assertEquals(0, exitCode);
     assertEquals(GridGrindProtocolCatalog.requestTemplate(), request);
+  }
+
+  @Test
+  void printExampleFlagTakesPrecedenceOverExecutionFlags() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-example", "ASSERTION", "--request", "ignored.json"},
+                new ByteArrayInputStream(new byte[0]),
+                stdout);
+
+    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
+
+    assertEquals(0, exitCode);
+    assertEquals(GridGrindProtocolCatalog.exampleFor("ASSERTION").orElseThrow().plan(), request);
   }
 
   @Test
@@ -801,7 +1074,7 @@ class GridGrindCliTest {
             .resolve("response.json");
     GridGrindCli cli =
         new GridGrindCli(
-            request -> {
+            (request, bindings, sink) -> {
               throw new UnsupportedOperationException("boom");
             });
 
@@ -812,8 +1085,7 @@ class GridGrindCliTest {
                 """
                 {
                   "source": { "type": "NEW" },
-                  "operations": [],
-                  "reads": []
+                  "steps": []
                 }
                 """
                     .getBytes(StandardCharsets.UTF_8)),
@@ -837,7 +1109,7 @@ class GridGrindCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     GridGrindCli cli =
         new GridGrindCli(
-            request -> {
+            (request, bindings, sink) -> {
               throw new UnsupportedOperationException("boom");
             });
 
@@ -849,8 +1121,7 @@ class GridGrindCliTest {
                 {
                   "source": { "type": "EXISTING", "path": "/tmp/source.xlsx" },
                   "persistence": { "type": "OVERWRITE" },
-                  "operations": [],
-                  "reads": []
+                  "steps": []
                 }
                 """
                     .getBytes(StandardCharsets.UTF_8)),
@@ -872,7 +1143,7 @@ class GridGrindCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     GridGrindCli cli =
         new GridGrindCli(
-            request -> {
+            (request, bindings, sink) -> {
               throw new UnsupportedOperationException("boom");
             });
 
@@ -884,8 +1155,7 @@ class GridGrindCliTest {
                 {
                   "source": { "type": "EXISTING", "path": "/tmp/source.xlsx" },
                   "persistence": { "type": "SAVE_AS", "path": "/tmp/output.xlsx" },
-                  "operations": [],
-                  "reads": []
+                  "steps": []
                 }
                 """
                     .getBytes(StandardCharsets.UTF_8)),
@@ -907,7 +1177,7 @@ class GridGrindCliTest {
     Path responsePath = Path.of("gridgrind-cli-response-" + UUID.randomUUID() + ".json");
     GridGrindCli cli =
         new GridGrindCli(
-            request -> {
+            (request, bindings, sink) -> {
               throw new UnsupportedOperationException();
             });
 
@@ -919,8 +1189,7 @@ class GridGrindCliTest {
                   """
                     {
                       "source": { "type": "NEW" },
-                      "operations": [],
-                      "reads": []
+                      "steps": []
                     }
                     """
                       .getBytes(StandardCharsets.UTF_8)),
@@ -974,9 +1243,8 @@ class GridGrindCliTest {
                     """
                 {
                   "source": { "type": "NEW" },
-                  "operations": [],
-                  "reads": [
-                    { "type": "GET_WORKBOOK_SUMMARY" }
+                  "steps": [
+                    { "stepId": "summary", "target": { "type": "CURRENT" } }
                   ]
                 }
                 """
@@ -990,7 +1258,7 @@ class GridGrindCliTest {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals("reads[0]", failure.problem().context().jsonPath());
+    assertEquals("steps[0]", failure.problem().context().jsonPath());
     assertEquals(1, failure.problem().causes().size());
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST_SHAPE, failure.problem().causes().getFirst().code());
@@ -1010,15 +1278,17 @@ class GridGrindCliTest {
                     """
                 {
                   "source": { "type": "NEW" },
-                  "operations": [],
-                  "reads": [
+                  "steps": [
                     {
-                      "type": "GET_WINDOW",
-                      "requestId": "window",
-                      "sheetName": "Budget",
-                      "topLeftAddress": "A1",
-                      "rowCount": 0,
-                      "columnCount": 1
+                      "stepId": "window",
+                      "target": {
+                        "type": "RECTANGULAR_WINDOW",
+                        "sheetName": "Budget",
+                        "topLeftAddress": "A1",
+                        "rowCount": 0,
+                        "columnCount": 1
+                      },
+                      "query": { "type": "GET_WINDOW" }
                     }
                   ]
                 }
@@ -1033,8 +1303,8 @@ class GridGrindCliTest {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, failure.problem().code());
     assertEquals("READ_REQUEST", failure.problem().context().stage());
-    assertEquals("reads[0]", failure.problem().context().jsonPath());
-    assertEquals(12, failure.problem().context().jsonLine());
+    assertEquals("steps[0].target", failure.problem().context().jsonPath());
+    assertEquals(14, failure.problem().context().jsonLine());
     assertNotNull(failure.problem().context().jsonColumn());
   }
 
@@ -1051,8 +1321,7 @@ class GridGrindCliTest {
                       """
                     {
                       "source": { "type": "NEW" },
-                      "operations": [],
-                      "reads": []
+                      "steps": []
                     }
                     """
                           .getBytes(StandardCharsets.UTF_8)),
@@ -1080,8 +1349,7 @@ class GridGrindCliTest {
                     """
                 {
                   "source": { "type": "NEW" },
-                  "operations": [],
-                  "reads": []
+                  "steps": []
                 }
                 """
                         .getBytes(StandardCharsets.UTF_8)),
@@ -1104,7 +1372,7 @@ class GridGrindCliTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     GridGrindCli cli =
         new GridGrindCli(
-            request -> {
+            (request, bindings, sink) -> {
               throw new UnsupportedOperationException("boom");
             });
 
@@ -1115,8 +1383,7 @@ class GridGrindCliTest {
                 """
                 {
                   "source": { "type": "NEW" },
-                  "operations": [],
-                  "reads": []
+                  "steps": []
                 }
                 """
                     .getBytes(StandardCharsets.UTF_8)),
@@ -1147,12 +1414,13 @@ class GridGrindCliTest {
                   "protocolVersion": "V1",
                   "source": { "type": "NEW" },
                   "persistence": { "type": "NONE" },
-                  "operations": [
-                    { "type": "ENSURE_SHEET", "sheetName": "Data" },
-                    { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "FORMULA", "formula": "SUM(" } },
-                    { "type": "EVALUATE_FORMULAS" }
-                  ],
-                  "reads": []
+                  "execution": {
+                    "calculation": { "strategy": { "type": "EVALUATE_ALL" } }
+                  },
+                  "steps": [
+                    { "stepId": "ensure-data", "target": { "type": "BY_NAME", "name": "Data" }, "action": { "type": "ENSURE_SHEET" } },
+                    { "stepId": "set-formula", "target": { "type": "BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(" } } } }
+                  ]
                 }
                 """
                         .getBytes(StandardCharsets.UTF_8)),
@@ -1164,7 +1432,7 @@ class GridGrindCliTest {
     assertInstanceOf(GridGrindResponse.Failure.class, response);
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, failure.problem().code());
-    assertEquals("APPLY_OPERATION", failure.problem().context().stage());
+    assertEquals("EXECUTE_STEP", failure.problem().context().stage());
     assertEquals("A1", failure.problem().context().address());
     assertEquals("SUM(", failure.problem().context().formula());
   }
@@ -1178,8 +1446,7 @@ class GridGrindCliTest {
             """
             {
               "source": { "type": "NEW" },
-              "operations": [],
-              "reads": []
+              "steps": []
             }
             """
                 .getBytes(StandardCharsets.UTF_8))) {
@@ -1230,15 +1497,18 @@ class GridGrindCliTest {
                     """
                     {
                       "source": { "type": "NEW" },
-                      "operations": [ { "type": "ENSURE_SHEET", "sheetName": "S" } ],
-                      "reads": [
+                      "steps": [
+                        { "stepId": "ensure-sheet", "target": { "type": "BY_NAME", "name": "S" }, "action": { "type": "ENSURE_SHEET" } },
                         {
-                          "type": "GET_WINDOW",
-                          "requestId": "w",
-                          "sheetName": "S",
-                          "topLeftAddress": "A1",
-                          "rowCount": 1000,
-                          "columnCount": 1000
+                          "stepId": "w",
+                          "target": {
+                            "type": "RECTANGULAR_WINDOW",
+                            "sheetName": "S",
+                            "topLeftAddress": "A1",
+                            "rowCount": 1000,
+                            "columnCount": 1000
+                          },
+                          "query": { "type": "GET_WINDOW" }
                         }
                       ]
                     }
@@ -1297,7 +1567,12 @@ class GridGrindCliTest {
     // full catalog is returned (--version is silently ignored as a trailing arg)
     assertEquals(0, exitCode);
     String output = stdout.toString(StandardCharsets.UTF_8).trim();
-    assertTrue(output.contains("operationTypes"), "full catalog must contain operationTypes key");
+    assertTrue(
+        output.contains("mutationActionTypes"),
+        "full catalog must contain mutationActionTypes key");
+    assertTrue(
+        output.contains("inspectionQueryTypes"),
+        "full catalog must contain inspectionQueryTypes key");
   }
 
   @Test
@@ -1361,22 +1636,25 @@ class GridGrindCliTest {
     assertTrue(
         help.contains("persistence is optional"), "help must mention that persistence is optional");
     assertTrue(
-        help.contains("executionMode is optional"),
-        "help must mention that executionMode is optional");
+        help.contains("execution is optional"), "help must mention that execution is optional");
     assertTrue(
         help.contains("formulaEnvironment is optional"),
         "help must mention that formulaEnvironment is optional");
+    assertTrue(help.contains("steps is optional"), "help must mention that steps is optional");
     assertTrue(
-        help.contains("operations is optional"), "help must mention that operations is optional");
-    assertTrue(help.contains("reads is optional"), "help must mention that reads is optional");
+        help.contains("ASSERTION steps for first-class verification"),
+        "help must mention assertion steps");
+    assertTrue(
+        help.contains("mutations, assertions, and inspections may be interleaved"),
+        "help must describe the ordered step model");
     assertTrue(help.contains("EVENT_READ mode"), "help must describe EVENT_READ mode limits");
     assertTrue(
         help.contains("STREAMING_WRITE mode"), "help must describe STREAMING_WRITE mode limits");
     assertTrue(
-        help.contains(GridGrindContractText.eventReadReadTypePhrase()),
+        help.contains(GridGrindContractText.eventReadInspectionQueryTypePhrase()),
         "help must describe the canonical EVENT_READ read surface");
     assertTrue(
-        help.contains(GridGrindContractText.streamingWriteOperationTypePhrase()),
+        help.contains(GridGrindContractText.streamingWriteMutationActionTypePhrase()),
         "help must expose the canonical streaming-write operation name");
     assertFalse(
         help.contains("FORCE_FORMULA_RECALC_ON_OPEN"),

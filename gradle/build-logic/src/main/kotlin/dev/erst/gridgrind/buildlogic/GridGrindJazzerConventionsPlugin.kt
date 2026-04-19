@@ -82,7 +82,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 add("implementation", libs.library("bcpkix"))
                 add("implementation", libs.library("bcprov"))
                 add("implementation", libs.library("bcutil"))
-                add("implementation", "dev.erst.gridgrind:protocol")
+                add("implementation", "dev.erst.gridgrind:executor")
                 add("implementation", "dev.erst.gridgrind:engine")
                 add("runtimeOnly", libs.library("log4j-core"))
                 add("runtimeOnly", libs.library("log4j-slf4j2-impl"))
@@ -97,7 +97,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 add("testImplementation", libs.library("bcpkix"))
                 add("testImplementation", libs.library("bcprov"))
                 add("testImplementation", libs.library("bcutil"))
-                add("testImplementation", "dev.erst.gridgrind:protocol")
+                add("testImplementation", "dev.erst.gridgrind:executor")
                 add("testImplementation", "dev.erst.gridgrind:engine")
                 add("testRuntimeOnly", libs.library("junit-platform-launcher"))
                 add("testRuntimeOnly", libs.library("log4j-slf4j2-impl"))
@@ -113,7 +113,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 add(fuzzSourceSet.implementationConfigurationName, libs.library("bcpkix"))
                 add(fuzzSourceSet.implementationConfigurationName, libs.library("bcprov"))
                 add(fuzzSourceSet.implementationConfigurationName, libs.library("bcutil"))
-                add(fuzzSourceSet.implementationConfigurationName, "dev.erst.gridgrind:protocol")
+                add(fuzzSourceSet.implementationConfigurationName, "dev.erst.gridgrind:executor")
                 add(fuzzSourceSet.implementationConfigurationName, "dev.erst.gridgrind:engine")
             }
 

@@ -117,9 +117,13 @@ Replay and promote:
 
 ```bash
 jazzer/bin/replay protocol-workflow <input-path> --console=plain
-jazzer/bin/promote protocol-workflow <input-path> set_cell_failure_case --console=plain
+jazzer/bin/promote protocol-workflow <input-path> workflow_case_12 --console=plain
 jazzer/bin/refresh-promoted-metadata --console=plain
 ```
+
+For opaque binary harnesses such as `protocol-workflow`, promote with neutral `workflow_case_##`
+identifiers. The replay metadata, not the file name, is the authoritative statement of decoded
+behavior, including operation counts, assertion counts, read counts, and response kind.
 
 Replay the committed seed floor:
 

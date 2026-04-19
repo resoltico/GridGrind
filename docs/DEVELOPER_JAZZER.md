@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.47.0"
+version: "0.48.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-04-16"
+updated: "2026-04-17"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]
@@ -48,7 +48,7 @@ Implemented now:
 - committed custom seed floor made of promoted regression inputs and readable example requests
 - style-aware `.xlsx` round-trip verification for formatting depth, hyperlink/comment metadata,
   named-range persistence, named-range normalization, data-validation persistence, table and
-  autofilter persistence boundaries, and the explicit `reads` pipeline
+  autofilter persistence boundaries, and the explicit inspection-step pipeline
 - local-only corpora, logs, finding artifacts, and cleanup commands
 - semantic progress pulses and stall-aware outer-gate monitoring for long-running Jazzer stages
 - in-flight support-test heartbeats during long deterministic support tests, so Stage 2 keeps
@@ -114,7 +114,7 @@ Seed policy:
 Target-specific strategy:
 - `protocol-request` favors human-readable `.json` seeds promoted from public example requests
 - readable request seeds should follow the current public example contract exactly, including the
-  current `reads` shape
+  current `steps` shape
 - readable request seeds should omit fields that intentionally default when omission is the public
   contract, so replay guards the real defaulting behavior instead of only an explicit equivalent
   payload
@@ -278,6 +278,10 @@ Tree rules:
   the project-owned pure-Java implementation rather than calling Jazzer native replay APIs
   directly.
 - `jazzer/src/test/java` contains deterministic tests for the Jazzer support and reporting layer.
+- `protocol-request` and `protocol-workflow` remain harness names for the canonical JSON request
+  surface; they are not references to a live top-level `protocol` Gradle module. The product
+  module split is `contract` plus `executor`, while the Jazzer harness names intentionally stay
+  stable so historical findings, corpora, and promoted metadata paths remain coherent.
 - `jazzer/src/fuzz/java` contains only fuzz harness classes.
 - `jazzer/src/fuzz/resources` contains only committed regression inputs and promotion metadata.
 - `jazzer/.local/` is the only approved location for generated local fuzz state.

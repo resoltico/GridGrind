@@ -16,6 +16,7 @@ public record HarnessTelemetrySnapshot(
     long successfulOutcomes,
     long unexpectedFailures,
     Map<String, Long> sequenceKinds,
+    Map<String, Long> assertionKinds,
     Map<String, Long> readKinds,
     Map<String, Long> styleKinds,
     Map<String, Long> sourceKinds,
@@ -29,6 +30,7 @@ public record HarnessTelemetrySnapshot(
    */
   public HarnessTelemetrySnapshot {
     sequenceKinds = Map.copyOf(sequenceKinds == null ? Map.of() : sequenceKinds);
+    assertionKinds = Map.copyOf(assertionKinds == null ? Map.of() : assertionKinds);
     readKinds = Map.copyOf(readKinds == null ? Map.of() : readKinds);
     styleKinds = Map.copyOf(styleKinds == null ? Map.of() : styleKinds);
     sourceKinds = Map.copyOf(sourceKinds == null ? Map.of() : sourceKinds);

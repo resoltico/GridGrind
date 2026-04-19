@@ -1,15 +1,64 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Data" },
-    { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "TEXT", "text": "anchor" } },
-    { "type": "CLEAR_RANGE", "sheetName": "Data", "range": "B2:E5" },
-    { "type": "CLEAR_HYPERLINK", "sheetName": "Data", "address": "Z100" },
-    { "type": "CLEAR_COMMENT", "sheetName": "Data", "address": "Z100" }
-  ],
-  "reads": [
-    { "type": "GET_SHEET_SUMMARY", "requestId": "summary", "sheetName": "Data" }
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
+    {
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Data"
+      }
+    },
+    {
+      "stepId": "step-02-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "sheetName": "Data",
+        "address": "A1",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "anchor"
+          }
+        }
+      }
+    },
+    {
+      "stepId": "step-03-clear-range",
+      "action": {
+        "type": "CLEAR_RANGE",
+        "sheetName": "Data",
+        "range": "B2:E5"
+      }
+    },
+    {
+      "stepId": "step-04-clear-hyperlink",
+      "action": {
+        "type": "CLEAR_HYPERLINK",
+        "sheetName": "Data",
+        "address": "Z100"
+      }
+    },
+    {
+      "stepId": "step-05-clear-comment",
+      "action": {
+        "type": "CLEAR_COMMENT",
+        "sheetName": "Data",
+        "address": "Z100"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_SUMMARY",
+        "sheetName": "Data"
+      },
+      "stepId": "summary"
+    }
   ]
 }

@@ -29,6 +29,10 @@ final class CliArguments {
         case "--print-request-template" -> {
           return new CliCommand.PrintRequestTemplate();
         }
+        case "--print-example" -> {
+          int valueIndex = nextValueIndex(args, index, "--print-example");
+          return new CliCommand.PrintExample(args[valueIndex]);
+        }
         case "--print-protocol-catalog" -> {
           String operationFilter = null;
           if (index + 1 < args.length && "--operation".equals(args[index + 1])) {

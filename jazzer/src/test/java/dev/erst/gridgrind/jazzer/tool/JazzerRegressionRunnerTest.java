@@ -233,7 +233,7 @@ class JazzerRegressionRunnerTest {
     private PromotionMetadata validProtocolRequestMetadata() throws IOException {
       Path inputPath = protocolRequestInputPath();
       Files.createDirectories(inputPath.getParent());
-      Files.writeString(inputPath, "{\"source\":{\"type\":\"NEW\"},\"operations\":[]}");
+      Files.writeString(inputPath, "{\"source\":{\"type\":\"NEW\"},\"steps\":[]}");
       ReplayOutcome outcome =
           JazzerReplaySupport.replay(
               JazzerHarness.protocolRequest(), Files.readAllBytes(inputPath));

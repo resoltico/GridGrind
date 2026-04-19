@@ -113,7 +113,7 @@ class ExcelChartCoverageTest {
     assertThrows(NullPointerException.class, () -> new WorkbookCommand.SetChart("Charts", null));
 
     WorkbookReadCommand.GetCharts getCharts = new WorkbookReadCommand.GetCharts("charts", "Charts");
-    assertEquals("charts", getCharts.requestId());
+    assertEquals("charts", getCharts.stepId());
     assertThrows(
         IllegalArgumentException.class, () -> new WorkbookReadCommand.GetCharts(" ", "Charts"));
     assertThrows(
@@ -586,7 +586,7 @@ class ExcelChartCoverageTest {
       ExcelChartSnapshot.Title.Formula uncachedLineTitle =
           assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, uncachedFormulaLine.title());
       assertEquals("Charts!$C$1", uncachedLineTitle.formula());
-      assertEquals("", uncachedLineTitle.cachedText());
+      assertEquals("Actual", uncachedLineTitle.cachedText());
 
       ExcelChartSnapshot.Pie literalPie =
           findChart(sheet.charts(), "LiteralPie", ExcelChartSnapshot.Pie.class);
@@ -623,7 +623,7 @@ class ExcelChartCoverageTest {
                   .filter(snapshot -> "FormulaNoCache".equals(snapshot.name()))
                   .findFirst()
                   .orElseThrow());
-      assertEquals("Charts!$C$1", uncachedFormulaDrawingObject.title());
+      assertEquals("Actual", uncachedFormulaDrawingObject.title());
       ExcelDrawingObjectSnapshot.Chart pieDrawingObject =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.Chart.class,
@@ -1083,7 +1083,7 @@ class ExcelChartCoverageTest {
         findChart(sheet.charts(), "FormulaTitle", ExcelChartSnapshot.Line.class);
     ExcelChartSnapshot.Title.Formula chartTitle =
         assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, formulaTitleChart.title());
-    assertEquals("", chartTitle.cachedText());
+    assertEquals("Plan", chartTitle.cachedText());
     assertTrue(
         formulaTitleChart.series().getFirst().title() instanceof ExcelChartSnapshot.Title.None);
     assertInstanceOf(

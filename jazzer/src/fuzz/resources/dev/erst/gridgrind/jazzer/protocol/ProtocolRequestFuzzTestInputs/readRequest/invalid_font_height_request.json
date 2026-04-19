@@ -1,16 +1,32 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Styled Report" },
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
     {
-      "type": "APPLY_STYLE",
-      "sheetName": "Styled Report",
-      "range": "A1",
-      "style": {
-        "font": {
-          "fontHeight": { "type": "POINTS", "points": 11.333 }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Styled Report"
+      }
+    },
+    {
+      "stepId": "step-02-apply-style",
+      "action": {
+        "type": "APPLY_STYLE",
+        "sheetName": "Styled Report",
+        "range": "A1",
+        "style": {
+          "font": {
+            "fontHeight": {
+              "type": "POINTS",
+              "points": 11.333
+            }
+          }
         }
       }
     }

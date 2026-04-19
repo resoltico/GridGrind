@@ -117,9 +117,8 @@ class WorkbookCommandExecutorTest {
                       new ExcelPrintLayout.TitleColumns.Band(0, 0),
                       new ExcelHeaderFooterText("Budget", "", ""),
                       new ExcelHeaderFooterText("", "Confidential", ""))),
-              new WorkbookCommand.UnmergeCells("Budget", "A1:B1"),
-              new WorkbookCommand.EvaluateAllFormulas(),
-              new WorkbookCommand.ForceFormulaRecalculationOnOpen()));
+              new WorkbookCommand.UnmergeCells("Budget", "A1:B1")));
+      workbook.forceFormulaRecalculationOnOpen();
       assertEquals(List.of("History", "Budget", "Ops"), workbook.sheetNames());
       assertEquals("Item", workbook.sheet("Budget").text("A1"));
       assertEquals(54.0, workbook.sheet("Budget").number("B3"));
@@ -786,53 +785,24 @@ class WorkbookCommandExecutorTest {
   }
 
   @Test
-  void appliesFormulaLifecycleCommandsThroughExecutor() throws IOException {
-    WorkbookCommandExecutor executor = new WorkbookCommandExecutor();
-
-    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      workbook.getOrCreateSheet("Budget");
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
-      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
-      workbook.sheet("Budget").setCell("C1", ExcelCellValue.formula("A1*3"));
-
-      executor.apply(workbook, new WorkbookCommand.EvaluateAllFormulas());
-      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(4.0d));
-
-      executor.apply(
-          workbook,
-          new WorkbookCommand.EvaluateFormulaCells(
-              List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
-
-      assertEquals(
-          8.0d,
-          ((ExcelCellSnapshot.NumberSnapshot)
-                  ((ExcelCellSnapshot.FormulaSnapshot) workbook.sheet("Budget").snapshotCell("B1"))
-                      .evaluation())
-              .numberValue());
-      assertEquals("6.0", cachedFormulaValue(workbook, "Budget", 0, 2));
-
-      executor.apply(workbook, new WorkbookCommand.ClearFormulaCaches());
-      assertNull(cachedFormulaValue(workbook, "Budget", 0, 1));
-      assertNull(cachedFormulaValue(workbook, "Budget", 0, 2));
-
-      executor.apply(workbook, new WorkbookCommand.ForceFormulaRecalculationOnOpen());
-      assertTrue(workbook.forceFormulaRecalculationOnOpenEnabled());
-    }
-  }
-
-  @Test
   void rejectsUnexpectedCommandsInPrivateCommandFamilies() throws Exception {
-    WorkbookCommand unexpected = new WorkbookCommand.EvaluateAllFormulas();
-
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Budget");
 
-      assertPrivateHelperRejects("applyWorkbookScopeCommand", workbook, unexpected);
-      assertPrivateHelperRejects("applySheetStructureCommand", workbook, unexpected);
-      assertPrivateHelperRejects("applyCellValueCommand", workbook, unexpected);
-      assertPrivateHelperRejects("applyWorkbookMetadataCommand", workbook, unexpected);
       assertPrivateHelperRejects(
-          "applyFormulaCommand", workbook, new WorkbookCommand.CreateSheet("Ops"));
+          "applyWorkbookScopeCommand",
+          workbook,
+          new WorkbookCommand.SetHyperlink(
+              "Budget", "A1", new ExcelHyperlink.Url("https://example.com")));
+      assertPrivateHelperRejects(
+          "applySheetStructureCommand", workbook, new WorkbookCommand.CreateSheet("Ops"));
+      assertPrivateHelperRejects(
+          "applyCellValueCommand",
+          workbook,
+          new WorkbookCommand.SetWorkbookProtection(
+              new ExcelWorkbookProtectionSettings(true, false, false, null, null)));
+      assertPrivateHelperRejects(
+          "applyWorkbookMetadataCommand", workbook, new WorkbookCommand.CreateSheet("Ops"));
     }
   }
 
@@ -890,12 +860,5 @@ class WorkbookCommandExecutorTest {
     Method method = type.getDeclaredMethod(name, parameterTypes);
     method.setAccessible(true);
     return method;
-  }
-
-  private static String cachedFormulaValue(
-      ExcelWorkbook workbook, String sheetName, int rowIndex, int columnIndex) {
-    org.apache.poi.xssf.usermodel.XSSFCell cell =
-        workbook.xssfWorkbook().getSheet(sheetName).getRow(rowIndex).getCell(columnIndex);
-    return cell.getCTCell().isSetV() ? cell.getCTCell().getV() : null;
   }
 }

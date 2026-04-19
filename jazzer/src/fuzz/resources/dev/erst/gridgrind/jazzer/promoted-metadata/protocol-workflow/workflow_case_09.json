@@ -1,0 +1,59 @@
+{
+  "targetKey" : "protocol-workflow",
+  "sourcePath" : ".local/runs/protocol-workflow/.cifuzz-corpus/dev.erst.gridgrind.jazzer.protocol.OperationWorkflowFuzzTest/executeWorkflow/61e0a48fe9c7b87a7fb1cdaaa275fa5ae1e9cdd4",
+  "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/workflow_case_09.bin",
+  "replayOutcome" : "SUCCESS",
+  "expectation" : {
+    "outcomeKind" : "SUCCESS",
+    "details" : {
+      "type" : "PROTOCOL_WORKFLOW",
+      "inputBytes" : 314,
+      "sourceKind" : "EXISTING",
+      "persistenceKind" : "SAVE_AS",
+      "operationCount" : 5,
+      "operationKinds" : {
+        "AUTO_SIZE_COLUMNS" : 3,
+        "APPLY_STYLE" : 2
+      },
+      "styleKinds" : {
+        "border" : 2,
+        "bold" : 1,
+        "wrap_text" : 2,
+        "font_height" : 2,
+        "font_height_twips" : 2,
+        "font" : 2,
+        "text_rotation" : 2,
+        "fill_patterned" : 2,
+        "border_top_color" : 2,
+        "border_bottom_color" : 2,
+        "horizontal_alignment" : 2,
+        "font_color" : 2,
+        "locked" : 2,
+        "protection" : 2,
+        "border_bottom" : 2,
+        "font_name" : 2,
+        "border_top" : 2,
+        "underline" : 2,
+        "strikeout" : 2,
+        "vertical_alignment" : 2,
+        "fill_pattern" : 2,
+        "indentation" : 2,
+        "alignment" : 2,
+        "italic" : 1,
+        "hidden_formula" : 2,
+        "fill" : 2
+      },
+      "assertionCount" : 3,
+      "assertionKinds" : {
+        "EXPECT_PRESENT" : 3
+      },
+      "readCount" : 6,
+      "readKinds" : {
+        "ANALYZE_WORKBOOK_FINDINGS" : 6
+      },
+      "responseKind" : "FAILURE"
+    }
+  },
+  "promotedAt" : "2026-03-26T16:46:35.402673Z",
+  "replayTextPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/promoted-metadata/protocol-workflow/workflow_case_09.txt"
+}

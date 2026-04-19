@@ -558,7 +558,7 @@ class WorkbookReadResultTest {
     assertEquals(
         "A2:A5", fixture.dataValidationsResult().validations().getFirst().ranges().getFirst());
     assertEquals(
-        "conditionalFormattingHealth", fixture.conditionalFormattingHealthResult().requestId());
+        "conditionalFormattingHealth", fixture.conditionalFormattingHealthResult().stepId());
     assertEquals("E1:F4", fixture.autofiltersResult().autofilters().getFirst().range());
     assertEquals("BudgetTable", fixture.tablesResult().tables().getFirst().name());
     assertEquals(1, fixture.formulaSurfaceResult().analysis().totalFormulaCellCount());

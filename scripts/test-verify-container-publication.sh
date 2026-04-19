@@ -138,22 +138,79 @@ success_help='GridGrind 9.9.9
 Structured .xlsx workbook automation engine with an agent-friendly JSON protocol
 
 Limits:
-  STREAMING_WRITE mode:     source.type must be NEW; operations limited to ENSURE_SHEET, APPEND_ROW, and FORCE_FORMULA_RECALCULATION_ON_OPEN.
+  STREAMING_WRITE mode:     source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true.
   Formula authoring:        request-authored formulas are scalar only; array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and LAMBDA/LET are currently rejected as INVALID_FORMULA because Apache POI cannot parse them. Other newer constructs may fail the same way.
 
-Discovery:
+Request:
   ANALYZE_WORKBOOK_FINDINGS aggregates formula health, data-validation health, conditional-formatting health, autofilter health, table health, pivot-table health, hyperlink health, and named-range health.
+  Use MUTATION steps for workbook changes, ASSERTION steps for first-class verification, and INSPECTION steps for factual or analytical reads.
+
+Discovery:
+  Built-in generated examples:
+    WORKBOOK_HEALTH  examples/workbook-health-request.json  Compact no-save workbook-health pass with targeted formula and aggregate findings.
+    ASSERTION        examples/assertion-request.json  Mutate then verify with first-class assertions, verbose journaling, and factual readback.
+
+Flags:
+  --print-example <id>             Print one built-in generated example request.
 '
 success_catalog='{
+  "cliSurface": {
+    "executionLines": [],
+    "limitLines": [
+      "STREAMING_WRITE mode:     source.type must be NEW; mutation actions limited to ENSURE_SHEET and APPEND_ROW; execution.calculation must keep strategy=DO_NOT_CALCULATE and may set markRecalculateOnOpen=true.",
+      "Formula authoring:        request-authored formulas are scalar only; array-formula braces such as {=SUM(A1:A2*B1:B2)} are rejected as INVALID_FORMULA, and LAMBDA/LET are currently rejected as INVALID_FORMULA because Apache POI cannot parse them. Other newer constructs may fail the same way."
+    ],
+    "requestLines": [
+      "Use MUTATION steps for workbook changes, ASSERTION steps for first-class verification, and INSPECTION steps for factual or analytical reads."
+    ],
+    "fileWorkflowLines": [],
+    "coordinateSystems": [],
+    "discoveryLines": [
+      "ANALYZE_WORKBOOK_FINDINGS aggregates formula health, data-validation health, conditional-formatting health, autofilter health, table health, pivot-table health, hyperlink health, and named-range health."
+    ],
+    "standardInputRequiresRequestMessage": "STANDARD_INPUT-authored values require --request so stdin is available for input content instead of the request JSON"
+  },
+  "shippedExamples": [
+    {
+      "id": "WORKBOOK_HEALTH",
+      "fileName": "workbook-health-request.json",
+      "summary": "Compact no-save workbook-health pass with targeted formula and aggregate findings."
+    },
+    {
+      "id": "ASSERTION",
+      "fileName": "assertion-request.json",
+      "summary": "Mutate then verify with first-class assertions, verbose journaling, and factual readback."
+    }
+  ],
   "plainTypes": [
+    {
+      "group": "executionPolicyInputType",
+      "type": {
+        "summary": "Optional request execution policy covering execution.mode, execution.journal, and execution.calculation. Omit it to accept the default FULL_XSSF read/write path, NORMAL journal detail, and DO_NOT_CALCULATE calculation policy."
+      }
+    },
     {
       "group": "executionModeInputType",
       "type": {
-        "summary": "Optional top-level request settings that select low-memory read and write execution families. readMode defaults to FULL_XSSF when omitted. writeMode defaults to FULL_XSSF when omitted. EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only (LIM-019). STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW, and FORCE_FORMULA_RECALCULATION_ON_OPEN on NEW workbooks only (LIM-020)."
+        "summary": "Execution-mode settings that select low-memory read and write execution families. readMode defaults to FULL_XSSF when omitted. writeMode defaults to FULL_XSSF when omitted. EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only and requires execution.calculation.strategy=DO_NOT_CALCULATE with markRecalculateOnOpen=false (LIM-019). STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW on NEW workbooks only; execution.calculation may only keep strategy=DO_NOT_CALCULATE and optionally set markRecalculateOnOpen=true (LIM-020)."
       }
     }
   ],
-  "readTypes": [
+  "assertionTypes": [
+    {
+      "id": "EXPECT_CELL_VALUE",
+      "summary": "Require every selected cell to match one exact effective value."
+    },
+    {
+      "id": "ALL_OF",
+      "summary": "Require every nested assertion to pass against the same target."
+    },
+    {
+      "id": "NOT",
+      "summary": "Invert one nested assertion against the same target."
+    }
+  ],
+  "inspectionQueryTypes": [
     {
       "id": "GET_SHEET_LAYOUT",
       "summary": "Return one sheet'\''s layout object with pane, zoomPercent, presentation, and per-row or per-column metadata."
@@ -202,7 +259,7 @@ run_verify_expect_failure "$(printf 'GridGrind 9.9.9\nWrong description')" \
 run_verify_expect_failure \
     "${expected_header}" \
     "${expected_header}" \
-    "${success_help/FORCE_FORMULA_RECALCULATION_ON_OPEN/FORCE_FORMULA_RECALC_ON_OPEN}" \
+    "${success_help/markRecalculateOnOpen=true/FORCE_FORMULA_RECALC_ON_OPEN}" \
     "${success_catalog}"
 
 printf 'verify-container-publication regression: success\n'

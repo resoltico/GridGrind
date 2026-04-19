@@ -33,6 +33,6 @@ public sealed interface ExcelNamedRangeSelection
         throw new IllegalArgumentException("selectors must not contain duplicates");
       }
     }
-    return List.copyOf(copy);
+    return copy;
   }
 }

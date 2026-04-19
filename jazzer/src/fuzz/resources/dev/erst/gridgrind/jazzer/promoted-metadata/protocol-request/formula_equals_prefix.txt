@@ -1,13 +1,17 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/formula_equals_prefix.json
 Harness: protocol-request
-Outcome: SUCCESS
-Input Bytes: 674
-Decode Outcome: PARSED
-Source Kind: NEW
-Persistence Kind: NONE
-Operation Count: 4
-Read Count: 1
-Read Kinds: GET_CELLS=1
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestShapeException
+Message: Missing required field 'target'
+Input Bytes: 1259
+Decode Outcome: INVALID_REQUEST_SHAPE
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
+Assertion Count: 0
+Read Count: 0
+Assertion Kinds: (none)
+Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: SET_CELL=3, ENSURE_SHEET=1
+Operation Kinds: (none)

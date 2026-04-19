@@ -6,8 +6,8 @@
 # scripts that workflows and this root gate invoke.
 #
 # Stage 1 runs all root-project quality gates and generates coverage reports for local inspection:
-#   check    -> Spotless (format), Error Prone (compile-time checks), PMD (static analysis),
-#               JaCoCo coverage thresholds, and all unit tests
+#   check    -> Spotless (format), explicit-import verification, Error Prone (compile-time
+#               checks), PMD (static analysis), JaCoCo coverage thresholds, and all unit tests
 #   coverage -> per-module and aggregated JaCoCo HTML/XML reports
 #
 # Stage 2 runs the nested Jazzer verification build:
@@ -19,8 +19,14 @@
 # Stage 3 mirrors the GitHub release packaging workflow:
 #   :cli:shadowJar -> build the distributable fat JAR
 #
-# Stage 4 syntax-checks the release-surface shell scripts and runs targeted shell regressions:
+# Stage 4 syntax-checks the release-surface shell scripts, verifies the packaged CLI contract,
+# and runs targeted shell regressions:
 #   bash -n check.sh scripts/*.sh jazzer/bin/*
+#   scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar
+#   scripts/test-contract-module-split.sh
+#   scripts/test-explicit-import-gate.sh
+#   scripts/test-jazzer-run-lock.sh
+#   scripts/test-selector-contract-surface.sh
 #   scripts/test-verify-release-merge-handoff.sh
 #   scripts/test-verify-release-candidate-tag.sh
 #   scripts/test-verify-container-publication.sh
@@ -128,7 +134,7 @@ print_usage() {
         '  1. check coverage' \
         '  2. jazzer check' \
         '  3. :cli:shadowJar' \
-        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
+        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar && scripts/test-contract-module-split.sh && scripts/test-explicit-import-gate.sh && scripts/test-jazzer-run-lock.sh && scripts/test-selector-contract-surface.sh && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
         '  5. scripts/docker-smoke.sh' \
         '' \
         'Supported options:' \
@@ -794,6 +800,11 @@ run_shell_stage 'shell-syntax' 'Stage 4/5: checking release-surface shell script
     bash -c '
         set -euo pipefail
         bash -n "$@"
+        "'"${repo_root}"'/scripts/verify-cli-contract.sh" jar "'"${repo_root}"'/cli/build/libs/gridgrind.jar" >/dev/null
+        "'"${repo_root}"'/scripts/test-contract-module-split.sh"
+        "'"${repo_root}"'/scripts/test-explicit-import-gate.sh"
+        "'"${repo_root}"'/scripts/test-jazzer-run-lock.sh"
+        "'"${repo_root}"'/scripts/test-selector-contract-surface.sh"
         "'"${repo_root}"'/scripts/test-verify-release-merge-handoff.sh"
         "'"${repo_root}"'/scripts/test-verify-release-candidate-tag.sh"
         "'"${repo_root}"'/scripts/test-verify-cli-contract.sh"

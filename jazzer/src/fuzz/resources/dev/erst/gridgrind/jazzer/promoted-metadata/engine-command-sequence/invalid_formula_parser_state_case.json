@@ -1,6 +1,6 @@
 {
   "targetKey" : "engine-command-sequence",
-  "sourcePath" : ".local/runs/engine-command-sequence/crash-2f13d11ff7f3014d6023755bd957eccfbbc39d86",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/invalid_formula_parser_state_case.bin",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/WorkbookCommandSequenceFuzzTestInputs/applyCommands/invalid_formula_parser_state_case.bin",
   "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
@@ -10,9 +10,9 @@
       "inputBytes" : 57,
       "commandCount" : 4,
       "commandKinds" : {
-        "APPEND_ROW" : 1,
         "CREATE_SHEET" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 2
+        "AUTO_SIZE_COLUMNS" : 2,
+        "APPEND_ROW" : 1
       },
       "styleKinds" : { }
     }

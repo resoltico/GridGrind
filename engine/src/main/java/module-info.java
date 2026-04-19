@@ -1,4 +1,5 @@
 module dev.erst.gridgrind.engine {
+  requires java.desktop;
   requires java.xml;
   requires java.xml.crypto;
   requires org.apache.poi.poi;

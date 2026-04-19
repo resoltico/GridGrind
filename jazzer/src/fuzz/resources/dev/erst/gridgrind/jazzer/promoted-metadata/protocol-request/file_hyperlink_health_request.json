@@ -1,13 +1,13 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "../examples/file-hyperlink-health-request.json",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/file_hyperlink_health_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/file_hyperlink_health_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 1970,
+      "inputBytes" : 3671,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
@@ -18,10 +18,12 @@
         "SET_HYPERLINK" : 3
       },
       "styleKinds" : { },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "ANALYZE_HYPERLINK_HEALTH" : 1,
-        "GET_HYPERLINKS" : 1
+        "GET_HYPERLINKS" : 1,
+        "ANALYZE_HYPERLINK_HEALTH" : 1
       }
     }
   },

@@ -192,10 +192,10 @@ class ExcelWorkbookIntrospectorTest {
                       workbook,
                       new WorkbookReadCommand.GetWorkbookProtection("workbook-protection")));
 
-      assertEquals("workbook-protection", result.requestId());
+      assertEquals("workbook-protection", result.stepId());
       assertTrue(result.protection().structureLocked());
       assertFalse(result.protection().windowsLocked());
-      assertTrue(result.protection().revisionLocked());
+      assertTrue(result.protection().revisionsLocked());
       assertTrue(result.protection().workbookPasswordHashPresent());
       assertFalse(result.protection().revisionsPasswordHashPresent());
     }

@@ -7,4 +7,4 @@ Message: Sheet does not exist: C
 Input Bytes: 64
 Command Count: 3
 Style Kinds: (none)
-Command Kinds: DELETE_PIVOT_TABLE=1, AUTO_SIZE_COLUMNS=1, FORCE_FORMULA_RECALCULATION_ON_OPEN=1
+Command Kinds: AUTO_SIZE_COLUMNS=2, DELETE_PIVOT_TABLE=1

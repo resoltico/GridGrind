@@ -1,7 +1,74 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.assertThat;
+import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.inspect;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
+import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.assertion.AssertionResult;
+import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
+import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
+import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
+import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.contract.dto.AutofilterHealthReport;
+import dev.erst.gridgrind.contract.dto.AutofilterSortConditionReport;
+import dev.erst.gridgrind.contract.dto.AutofilterSortStateReport;
+import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
+import dev.erst.gridgrind.contract.dto.CellBorderReport;
+import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
+import dev.erst.gridgrind.contract.dto.CellColorReport;
+import dev.erst.gridgrind.contract.dto.CellFillReport;
+import dev.erst.gridgrind.contract.dto.CellFontReport;
+import dev.erst.gridgrind.contract.dto.CellGradientFillReport;
+import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
+import dev.erst.gridgrind.contract.dto.CellProtectionReport;
+import dev.erst.gridgrind.contract.dto.ChartReport;
+import dev.erst.gridgrind.contract.dto.CommentAnchorReport;
+import dev.erst.gridgrind.contract.dto.DataValidationEntryReport;
+import dev.erst.gridgrind.contract.dto.DataValidationHealthReport;
+import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
+import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
+import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
+import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
+import dev.erst.gridgrind.contract.dto.DrawingObjectReport;
+import dev.erst.gridgrind.contract.dto.FontHeightReport;
+import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.HeaderFooterTextReport;
+import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
+import dev.erst.gridgrind.contract.dto.NamedRangeScope;
+import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
+import dev.erst.gridgrind.contract.dto.PaneReport;
+import dev.erst.gridgrind.contract.dto.PivotTableHealthReport;
+import dev.erst.gridgrind.contract.dto.PivotTableReport;
+import dev.erst.gridgrind.contract.dto.PrintAreaReport;
+import dev.erst.gridgrind.contract.dto.PrintLayoutReport;
+import dev.erst.gridgrind.contract.dto.PrintMarginsReport;
+import dev.erst.gridgrind.contract.dto.PrintScalingReport;
+import dev.erst.gridgrind.contract.dto.PrintSetupReport;
+import dev.erst.gridgrind.contract.dto.PrintTitleColumnsReport;
+import dev.erst.gridgrind.contract.dto.PrintTitleRowsReport;
+import dev.erst.gridgrind.contract.dto.RequestWarning;
+import dev.erst.gridgrind.contract.dto.RichTextRunReport;
+import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
+import dev.erst.gridgrind.contract.dto.TableColumnReport;
+import dev.erst.gridgrind.contract.dto.TableEntryReport;
+import dev.erst.gridgrind.contract.dto.TableHealthReport;
+import dev.erst.gridgrind.contract.dto.TableStyleReport;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
+import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.contract.selector.CellSelector;
+import dev.erst.gridgrind.contract.selector.ChartSelector;
+import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
+import dev.erst.gridgrind.contract.selector.PivotTableSelector;
+import dev.erst.gridgrind.contract.selector.RangeSelector;
+import dev.erst.gridgrind.contract.selector.SheetSelector;
+import dev.erst.gridgrind.contract.selector.TableSelector;
+import dev.erst.gridgrind.contract.selector.WorkbookSelector;
+import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelChartBarDirection;
@@ -26,66 +93,6 @@ import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
-import dev.erst.gridgrind.protocol.dto.AnalysisFindingCode;
-import dev.erst.gridgrind.protocol.dto.AnalysisSeverity;
-import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterFilterColumnReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterFilterCriterionReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterHealthReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterSortConditionReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterSortStateReport;
-import dev.erst.gridgrind.protocol.dto.CellAlignmentReport;
-import dev.erst.gridgrind.protocol.dto.CellBorderReport;
-import dev.erst.gridgrind.protocol.dto.CellBorderSideReport;
-import dev.erst.gridgrind.protocol.dto.CellColorReport;
-import dev.erst.gridgrind.protocol.dto.CellFillReport;
-import dev.erst.gridgrind.protocol.dto.CellFontReport;
-import dev.erst.gridgrind.protocol.dto.CellGradientFillReport;
-import dev.erst.gridgrind.protocol.dto.CellGradientStopReport;
-import dev.erst.gridgrind.protocol.dto.CellProtectionReport;
-import dev.erst.gridgrind.protocol.dto.CellSelection;
-import dev.erst.gridgrind.protocol.dto.ChartReport;
-import dev.erst.gridgrind.protocol.dto.CommentAnchorReport;
-import dev.erst.gridgrind.protocol.dto.DataValidationEntryReport;
-import dev.erst.gridgrind.protocol.dto.DataValidationHealthReport;
-import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.protocol.dto.DrawingAnchorReport;
-import dev.erst.gridgrind.protocol.dto.DrawingMarkerReport;
-import dev.erst.gridgrind.protocol.dto.DrawingObjectPayloadReport;
-import dev.erst.gridgrind.protocol.dto.DrawingObjectReport;
-import dev.erst.gridgrind.protocol.dto.FontHeightReport;
-import dev.erst.gridgrind.protocol.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
-import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
-import dev.erst.gridgrind.protocol.dto.HeaderFooterTextReport;
-import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
-import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
-import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
-import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
-import dev.erst.gridgrind.protocol.dto.PaneReport;
-import dev.erst.gridgrind.protocol.dto.PivotTableHealthReport;
-import dev.erst.gridgrind.protocol.dto.PivotTableReport;
-import dev.erst.gridgrind.protocol.dto.PivotTableSelection;
-import dev.erst.gridgrind.protocol.dto.PrintAreaReport;
-import dev.erst.gridgrind.protocol.dto.PrintLayoutReport;
-import dev.erst.gridgrind.protocol.dto.PrintMarginsReport;
-import dev.erst.gridgrind.protocol.dto.PrintScalingReport;
-import dev.erst.gridgrind.protocol.dto.PrintSetupReport;
-import dev.erst.gridgrind.protocol.dto.PrintTitleColumnsReport;
-import dev.erst.gridgrind.protocol.dto.PrintTitleRowsReport;
-import dev.erst.gridgrind.protocol.dto.RangeSelection;
-import dev.erst.gridgrind.protocol.dto.RequestWarning;
-import dev.erst.gridgrind.protocol.dto.RichTextRunReport;
-import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.protocol.dto.SheetSelection;
-import dev.erst.gridgrind.protocol.dto.TableColumnReport;
-import dev.erst.gridgrind.protocol.dto.TableEntryReport;
-import dev.erst.gridgrind.protocol.dto.TableHealthReport;
-import dev.erst.gridgrind.protocol.dto.TableSelection;
-import dev.erst.gridgrind.protocol.dto.TableStyleReport;
-import dev.erst.gridgrind.protocol.dto.WorkbookProtectionReport;
-import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
-import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -109,13 +116,17 @@ class WorkbookInvariantChecksTest {
                 "result.xlsx", workbookPath.toString()),
             List.of(
                 new RequestWarning(
-                    1, "SET_CELL", "Formula references same-request sheet names with spaces.")),
+                    1,
+                    "step-01-set-cell",
+                    "SET_CELL",
+                    "Formula references same-request sheet names with spaces.")),
+            List.of(new AssertionResult("assert-total", "EXPECT_PRESENT")),
             List.of(
-                new WorkbookReadResult.WorkbookSummaryResult(
+                new InspectionResult.WorkbookSummaryResult(
                     "summary",
                     new GridGrindResponse.WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Budget"), 1, false)),
-                new WorkbookReadResult.NamedRangesResult(
+                new InspectionResult.NamedRangesResult(
                     "ranges",
                     List.of(
                         new GridGrindResponse.NamedRangeReport.RangeReport(
@@ -123,7 +134,7 @@ class WorkbookInvariantChecksTest {
                             new NamedRangeScope.Workbook(),
                             "Budget!$B$4",
                             new NamedRangeTarget("Budget", "B4")))),
-                new WorkbookReadResult.CellsResult(
+                new InspectionResult.CellsResult(
                     "cells",
                     "Budget",
                     List.of(
@@ -146,7 +157,7 @@ class WorkbookInvariantChecksTest {
                                         null,
                                         false,
                                         false)))))),
-                new WorkbookReadResult.WindowResult(
+                new InspectionResult.WindowResult(
                     "window",
                     new GridGrindResponse.WindowReport(
                         "Budget",
@@ -160,31 +171,31 @@ class WorkbookInvariantChecksTest {
                                     new GridGrindResponse.CellReport.TextReport(
                                         "A1", "STRING", "Report", style, null, null, "Report",
                                         null)))))),
-                new WorkbookReadResult.MergedRegionsResult(
+                new InspectionResult.MergedRegionsResult(
                     "merged", "Budget", List.of(new GridGrindResponse.MergedRegionReport("A1:B1"))),
-                new WorkbookReadResult.HyperlinksResult(
+                new InspectionResult.HyperlinksResult(
                     "hyperlinks",
                     "Budget",
                     List.of(
                         new GridGrindResponse.CellHyperlinkReport(
                             "A1", new HyperlinkTarget.Url("https://example.com/report")))),
-                new WorkbookReadResult.CommentsResult(
+                new InspectionResult.CommentsResult(
                     "comments",
                     "Budget",
                     List.of(
                         new GridGrindResponse.CellCommentReport(
                             "A1",
                             new GridGrindResponse.CommentReport("Review", "GridGrind", true)))),
-                new WorkbookReadResult.SheetLayoutResult(
+                new InspectionResult.SheetLayoutResult(
                     "layout",
                     new GridGrindResponse.SheetLayoutReport(
                         "Budget",
                         new PaneReport.Frozen(1, 1, 1, 1),
                         125,
-                        dev.erst.gridgrind.protocol.dto.SheetPresentationReport.defaults(),
+                        dev.erst.gridgrind.contract.dto.SheetPresentationReport.defaults(),
                         List.of(new GridGrindResponse.ColumnLayoutReport(0, 12.5, false, 0, false)),
                         List.of(new GridGrindResponse.RowLayoutReport(0, 18.0, false, 0, false)))),
-                new WorkbookReadResult.PrintLayoutResult(
+                new InspectionResult.PrintLayoutResult(
                     "print-layout",
                     new PrintLayoutReport(
                         "Budget",
@@ -195,7 +206,7 @@ class WorkbookInvariantChecksTest {
                         new PrintTitleColumnsReport.Band(0, 0),
                         new HeaderFooterTextReport("Budget", "", ""),
                         new HeaderFooterTextReport("", "Page &P", ""))),
-                new WorkbookReadResult.DataValidationsResult(
+                new InspectionResult.DataValidationsResult(
                     "data-validations",
                     "Budget",
                     List.of(
@@ -208,7 +219,7 @@ class WorkbookInvariantChecksTest {
                                 false,
                                 null,
                                 null)))),
-                new WorkbookReadResult.FormulaSurfaceResult(
+                new InspectionResult.FormulaSurfaceResult(
                     "formula-surface",
                     new GridGrindResponse.FormulaSurfaceReport(
                         1,
@@ -220,7 +231,7 @@ class WorkbookInvariantChecksTest {
                                 List.of(
                                     new GridGrindResponse.FormulaPatternReport(
                                         "SUM(B2:B3)", 1, List.of("B4"))))))),
-                new WorkbookReadResult.SheetSchemaResult(
+                new InspectionResult.SheetSchemaResult(
                     "schema",
                     new GridGrindResponse.SheetSchemaReport(
                         "Budget",
@@ -237,7 +248,7 @@ class WorkbookInvariantChecksTest {
                                 0,
                                 List.of(new GridGrindResponse.TypeCountReport("STRING", 1)),
                                 "STRING")))),
-                new WorkbookReadResult.NamedRangeSurfaceResult(
+                new InspectionResult.NamedRangeSurfaceResult(
                     "named-range-surface",
                     new GridGrindResponse.NamedRangeSurfaceReport(
                         1,
@@ -250,7 +261,7 @@ class WorkbookInvariantChecksTest {
                                 new NamedRangeScope.Workbook(),
                                 "Budget!$B$4",
                                 GridGrindResponse.NamedRangeBackingKind.RANGE)))),
-                new WorkbookReadResult.FormulaHealthResult(
+                new InspectionResult.FormulaHealthResult(
                     "formula-health",
                     new GridGrindResponse.FormulaHealthReport(
                         1,
@@ -263,7 +274,7 @@ class WorkbookInvariantChecksTest {
                                 "Formula uses NOW().",
                                 new GridGrindResponse.AnalysisLocationReport.Cell("Budget", "B4"),
                                 List.of("NOW()"))))),
-                new WorkbookReadResult.DataValidationHealthResult(
+                new InspectionResult.DataValidationHealthResult(
                     "data-validation-health",
                     new DataValidationHealthReport(
                         1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
@@ -276,48 +287,60 @@ class WorkbookInvariantChecksTest {
     Path workbookPath = tempDirectory.resolve("result.xlsx");
     Files.writeString(workbookPath, "seed");
 
-    GridGrindRequest request =
-        new GridGrindRequest(
-            new GridGrindRequest.WorkbookSource.New(),
-            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
-            List.of(),
-            List.of(
-                new WorkbookReadOperation.GetWorkbookSummary("summary"),
-                new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
-                new WorkbookReadOperation.GetDataValidations(
-                    "data-validations", "Budget", new RangeSelection.All()),
-                new WorkbookReadOperation.GetHyperlinks(
-                    "hyperlinks", "Budget", new CellSelection.AllUsedCells()),
-                new WorkbookReadOperation.AnalyzeDataValidationHealth(
-                    "data-validation-health", new SheetSelection.All()),
-                new WorkbookReadOperation.AnalyzeNamedRangeHealth(
-                    "named-range-health", new NamedRangeSelection.All())));
+    WorkbookPlan request =
+        saveAsRequest(
+            workbookPath,
+            inspect(
+                "summary",
+                new WorkbookSelector.Current(),
+                new InspectionQuery.GetWorkbookSummary()),
+            inspect(
+                "cells",
+                new CellSelector.ByAddresses("Budget", List.of("A1")),
+                new InspectionQuery.GetCells()),
+            inspect(
+                "data-validations",
+                new RangeSelector.AllOnSheet("Budget"),
+                new InspectionQuery.GetDataValidations()),
+            inspect(
+                "hyperlinks",
+                new CellSelector.AllUsedInSheet("Budget"),
+                new InspectionQuery.GetHyperlinks()),
+            inspect(
+                "data-validation-health",
+                new SheetSelector.All(),
+                new InspectionQuery.AnalyzeDataValidationHealth()),
+            inspect(
+                "named-range-health",
+                new dev.erst.gridgrind.contract.selector.NamedRangeSelector.All(),
+                new InspectionQuery.AnalyzeNamedRangeHealth()));
     GridGrindResponse.Success response =
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 workbookPath.toString(), workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.WorkbookSummaryResult(
+                new InspectionResult.WorkbookSummaryResult(
                     "summary",
                     new GridGrindResponse.WorkbookSummary.WithSheets(
                         1, List.of("Budget"), "Budget", List.of("Budget"), 1, false)),
-                new WorkbookReadResult.CellsResult(
+                new InspectionResult.CellsResult(
                     "cells", "Budget", List.of(textCell("A1", "Report"))),
-                new WorkbookReadResult.DataValidationsResult(
+                new InspectionResult.DataValidationsResult(
                     "data-validations",
                     "Budget",
                     List.of(
                         new DataValidationEntryReport.Unsupported(
                             List.of("A2:A5"), "MISSING_FORMULA", "Formula is missing"))),
-                new WorkbookReadResult.HyperlinksResult(
+                new InspectionResult.HyperlinksResult(
                     "hyperlinks",
                     "Budget",
                     List.of(
                         new GridGrindResponse.CellHyperlinkReport(
                             "A1", new HyperlinkTarget.Url("https://example.com/report")))),
-                new WorkbookReadResult.DataValidationHealthResult(
+                new InspectionResult.DataValidationHealthResult(
                     "data-validation-health",
                     new DataValidationHealthReport(
                         1,
@@ -331,7 +354,7 @@ class WorkbookInvariantChecksTest {
                                 new GridGrindResponse.AnalysisLocationReport.Range(
                                     "Budget", "A2:A5"),
                                 List.of("A2:A5"))))),
-                new WorkbookReadResult.NamedRangeHealthResult(
+                new InspectionResult.NamedRangeHealthResult(
                     "named-range-health",
                     new GridGrindResponse.NamedRangeHealthReport(
                         1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
@@ -351,8 +374,9 @@ class WorkbookInvariantChecksTest {
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 workbookPath.toString(), workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.HyperlinksResult(
+                new InspectionResult.HyperlinksResult(
                     "hyperlinks",
                     "Budget",
                     List.of(
@@ -402,8 +426,9 @@ class WorkbookInvariantChecksTest {
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 "result.xlsx", workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.SheetSummaryResult(
+                new InspectionResult.SheetSummaryResult(
                     "sheet",
                     new GridGrindResponse.SheetSummaryReport(
                         "Budget",
@@ -429,14 +454,15 @@ class WorkbookInvariantChecksTest {
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 "result.xlsx", workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.AutofiltersResult(
+                new InspectionResult.AutofiltersResult(
                     "autofilters",
                     "Budget",
                     List.of(
                         new AutofilterEntryReport.SheetOwned("E1:F3"),
                         new AutofilterEntryReport.TableOwned("A1:C4", "BudgetTable"))),
-                new WorkbookReadResult.TablesResult(
+                new InspectionResult.TablesResult(
                     "tables",
                     List.of(
                         new TableEntryReport(
@@ -449,11 +475,11 @@ class WorkbookInvariantChecksTest {
                             new TableStyleReport.Named(
                                 "TableStyleMedium2", false, false, true, false),
                             true))),
-                new WorkbookReadResult.AutofilterHealthResult(
+                new InspectionResult.AutofilterHealthResult(
                     "autofilter-health",
                     new AutofilterHealthReport(
                         2, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of())),
-                new WorkbookReadResult.TableHealthResult(
+                new InspectionResult.TableHealthResult(
                     "table-health",
                     new TableHealthReport(
                         1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
@@ -467,30 +493,33 @@ class WorkbookInvariantChecksTest {
     Path workbookPath = tempDirectory.resolve("result.xlsx");
     Files.writeString(workbookPath, "seed");
 
-    GridGrindRequest request =
-        new GridGrindRequest(
-            new GridGrindRequest.WorkbookSource.New(),
-            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
-            List.of(),
-            List.of(
-                new WorkbookReadOperation.GetAutofilters("autofilters", "Budget"),
-                new WorkbookReadOperation.GetTables("tables", new TableSelection.All()),
-                new WorkbookReadOperation.AnalyzeAutofilterHealth(
-                    "autofilter-health", new SheetSelection.All()),
-                new WorkbookReadOperation.AnalyzeTableHealth(
-                    "table-health", new TableSelection.All())));
+    WorkbookPlan request =
+        saveAsRequest(
+            workbookPath,
+            inspect(
+                "autofilters",
+                new SheetSelector.ByName("Budget"),
+                new InspectionQuery.GetAutofilters()),
+            inspect("tables", new TableSelector.All(), new InspectionQuery.GetTables()),
+            inspect(
+                "autofilter-health",
+                new SheetSelector.All(),
+                new InspectionQuery.AnalyzeAutofilterHealth()),
+            inspect(
+                "table-health", new TableSelector.All(), new InspectionQuery.AnalyzeTableHealth()));
     GridGrindResponse.Success response =
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 workbookPath.toString(), workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.AutofiltersResult(
+                new InspectionResult.AutofiltersResult(
                     "autofilters",
                     "Budget",
                     List.of(new AutofilterEntryReport.SheetOwned("E1:F3"))),
-                new WorkbookReadResult.TablesResult(
+                new InspectionResult.TablesResult(
                     "tables",
                     List.of(
                         new TableEntryReport(
@@ -502,11 +531,11 @@ class WorkbookInvariantChecksTest {
                             List.of("Item", "Amount", "Billable"),
                             new TableStyleReport.None(),
                             true))),
-                new WorkbookReadResult.AutofilterHealthResult(
+                new InspectionResult.AutofilterHealthResult(
                     "autofilter-health",
                     new AutofilterHealthReport(
                         1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of())),
-                new WorkbookReadResult.TableHealthResult(
+                new InspectionResult.TableHealthResult(
                     "table-health",
                     new TableHealthReport(
                         1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
@@ -525,9 +554,10 @@ class WorkbookInvariantChecksTest {
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs("pivot.xlsx", workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.PivotTablesResult("pivots", List.of(pivotReport())),
-                new WorkbookReadResult.PivotTableHealthResult(
+                new InspectionResult.PivotTablesResult("pivots", List.of(pivotReport())),
+                new InspectionResult.PivotTableHealthResult(
                     "pivot-health",
                     new PivotTableHealthReport(
                         1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
@@ -540,28 +570,73 @@ class WorkbookInvariantChecksTest {
     Path workbookPath = tempDirectory.resolve("pivot.xlsx");
     Files.writeString(workbookPath, "seed");
 
-    GridGrindRequest request =
-        new GridGrindRequest(
-            new GridGrindRequest.WorkbookSource.New(),
-            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
-            List.of(),
-            List.of(
-                new WorkbookReadOperation.GetPivotTables(
-                    "pivots", new PivotTableSelection.ByNames(List.of("OpsPivot"))),
-                new WorkbookReadOperation.AnalyzePivotTableHealth(
-                    "pivot-health", new PivotTableSelection.All())));
+    WorkbookPlan request =
+        saveAsRequest(
+            workbookPath,
+            inspect(
+                "pivots",
+                new PivotTableSelector.ByNames(List.of("OpsPivot")),
+                new InspectionQuery.GetPivotTables()),
+            inspect(
+                "pivot-health",
+                new PivotTableSelector.All(),
+                new InspectionQuery.AnalyzePivotTableHealth()));
     GridGrindResponse.Success response =
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 workbookPath.toString(), workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.PivotTablesResult("pivots", List.of(pivotReport())),
-                new WorkbookReadResult.PivotTableHealthResult(
+                new InspectionResult.PivotTablesResult("pivots", List.of(pivotReport())),
+                new InspectionResult.PivotTableHealthResult(
                     "pivot-health",
                     new PivotTableHealthReport(
                         1, new GridGrindResponse.AnalysisSummaryReport(0, 0, 0, 0), List.of()))));
+
+    assertDoesNotThrow(
+        () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
+  }
+
+  @Test
+  void acceptsWorkflowOutcomeShapeForAssertions(@TempDir Path tempDirectory) throws IOException {
+    Path workbookPath = tempDirectory.resolve("assertions.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    WorkbookPlan request =
+        ProtocolStepSupport.request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+            List.of(),
+            List.of(
+                assertThat(
+                    "assert-total",
+                    new SheetSelector.ByName("Budget"),
+                    new Assertion.AnalysisMaxSeverity(
+                        new InspectionQuery.AnalyzeFormulaHealth(), AnalysisSeverity.ERROR))),
+            List.of(
+                inspect(
+                    "sheet",
+                    new SheetSelector.ByName("Budget"),
+                    new InspectionQuery.GetSheetSummary())));
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.SavedAs(
+                workbookPath.toString(), workbookPath.toString()),
+            List.of(),
+            List.of(new AssertionResult("assert-total", "EXPECT_ANALYSIS_MAX_SEVERITY")),
+            List.of(
+                new InspectionResult.SheetSummaryResult(
+                    "sheet",
+                    new GridGrindResponse.SheetSummaryReport(
+                        "Budget",
+                        ExcelSheetVisibility.VISIBLE,
+                        new GridGrindResponse.SheetProtectionReport.Unprotected(),
+                        0,
+                        -1,
+                        -1))));
 
     assertDoesNotThrow(
         () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
@@ -630,11 +705,12 @@ class WorkbookInvariantChecksTest {
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 "advanced.xlsx", workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.WorkbookProtectionResult(
+                new InspectionResult.WorkbookProtectionResult(
                     "workbook-protection",
                     new WorkbookProtectionReport(true, false, true, true, false)),
-                new WorkbookReadResult.CellsResult(
+                new InspectionResult.CellsResult(
                     "cells",
                     "Budget",
                     List.of(
@@ -657,11 +733,11 @@ class WorkbookInvariantChecksTest {
                                         rgb("#C00000"),
                                         false,
                                         false)))))),
-                new WorkbookReadResult.CommentsResult(
+                new InspectionResult.CommentsResult(
                     "comments",
                     "Budget",
                     List.of(new GridGrindResponse.CellCommentReport("A1", anchoredComment))),
-                new WorkbookReadResult.PrintLayoutResult(
+                new InspectionResult.PrintLayoutResult(
                     "print-layout",
                     new PrintLayoutReport(
                         "Budget",
@@ -685,7 +761,7 @@ class WorkbookInvariantChecksTest {
                             3,
                             List.of(4, 9),
                             List.of(1)))),
-                new WorkbookReadResult.AutofiltersResult(
+                new InspectionResult.AutofiltersResult(
                     "autofilters",
                     "Budget",
                     List.of(
@@ -706,7 +782,7 @@ class WorkbookInvariantChecksTest {
                                 List.of(
                                     new AutofilterSortConditionReport(
                                         "B2:B5", true, "", null, null)))))),
-                new WorkbookReadResult.TablesResult(
+                new InspectionResult.TablesResult(
                     "tables",
                     List.of(
                         new TableEntryReport(
@@ -752,8 +828,9 @@ class WorkbookInvariantChecksTest {
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 "drawing.xlsx", workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.DrawingObjectsResult(
+                new InspectionResult.DrawingObjectsResult(
                     "drawing-objects",
                     "Ops",
                     List.of(
@@ -796,7 +873,7 @@ class WorkbookInvariantChecksTest {
                             ExcelPictureFormat.PNG,
                             68L,
                             "preview789"))),
-                new WorkbookReadResult.DrawingObjectPayloadResult(
+                new InspectionResult.DrawingObjectPayloadResult(
                     "drawing-payload",
                     "Ops",
                     new DrawingObjectPayloadReport.EmbeddedObject(
@@ -817,23 +894,26 @@ class WorkbookInvariantChecksTest {
     Path workbookPath = tempDirectory.resolve("drawing.xlsx");
     Files.writeString(workbookPath, "seed");
 
-    GridGrindRequest request =
-        new GridGrindRequest(
-            new GridGrindRequest.WorkbookSource.New(),
-            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
-            List.of(),
-            List.of(
-                new WorkbookReadOperation.GetDrawingObjects("drawing-objects", "Ops"),
-                new WorkbookReadOperation.GetDrawingObjectPayload(
-                    "drawing-payload", "Ops", "OpsPicture")));
+    WorkbookPlan request =
+        saveAsRequest(
+            workbookPath,
+            inspect(
+                "drawing-objects",
+                new DrawingObjectSelector.AllOnSheet("Ops"),
+                new InspectionQuery.GetDrawingObjects()),
+            inspect(
+                "drawing-payload",
+                new DrawingObjectSelector.ByName("Ops", "OpsPicture"),
+                new InspectionQuery.GetDrawingObjectPayload()));
     GridGrindResponse.Success response =
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 workbookPath.toString(), workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.DrawingObjectsResult(
+                new InspectionResult.DrawingObjectsResult(
                     "drawing-objects",
                     "Ops",
                     List.of(
@@ -847,7 +927,7 @@ class WorkbookInvariantChecksTest {
                             1,
                             1,
                             null))),
-                new WorkbookReadResult.DrawingObjectPayloadResult(
+                new InspectionResult.DrawingObjectPayloadResult(
                     "drawing-payload",
                     "Ops",
                     new DrawingObjectPayloadReport.Picture(
@@ -873,14 +953,15 @@ class WorkbookInvariantChecksTest {
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs("chart.xlsx", workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.DrawingObjectsResult(
+                new InspectionResult.DrawingObjectsResult(
                     "drawing-objects",
                     "Ops",
                     List.of(
                         new DrawingObjectReport.Chart(
                             "OpsChart", twoCellAnchor(), true, List.of("BAR"), "Roadmap"))),
-                new WorkbookReadResult.ChartsResult("charts", "Ops", List.of(chartReport()))));
+                new InspectionResult.ChartsResult("charts", "Ops", List.of(chartReport()))));
 
     assertDoesNotThrow(() -> WorkbookInvariantChecks.requireResponseShape(response));
   }
@@ -890,28 +971,30 @@ class WorkbookInvariantChecksTest {
     Path workbookPath = tempDirectory.resolve("chart.xlsx");
     Files.writeString(workbookPath, "seed");
 
-    GridGrindRequest request =
-        new GridGrindRequest(
-            new GridGrindRequest.WorkbookSource.New(),
-            new GridGrindRequest.WorkbookPersistence.SaveAs(workbookPath.toString()),
-            List.of(),
-            List.of(
-                new WorkbookReadOperation.GetDrawingObjects("drawing-objects", "Ops"),
-                new WorkbookReadOperation.GetCharts("charts", "Ops")));
+    WorkbookPlan request =
+        saveAsRequest(
+            workbookPath,
+            inspect(
+                "drawing-objects",
+                new DrawingObjectSelector.AllOnSheet("Ops"),
+                new InspectionQuery.GetDrawingObjects()),
+            inspect(
+                "charts", new ChartSelector.AllOnSheet("Ops"), new InspectionQuery.GetCharts()));
     GridGrindResponse.Success response =
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.SavedAs(
                 workbookPath.toString(), workbookPath.toString()),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.DrawingObjectsResult(
+                new InspectionResult.DrawingObjectsResult(
                     "drawing-objects",
                     "Ops",
                     List.of(
                         new DrawingObjectReport.Chart(
                             "OpsChart", twoCellAnchor(), true, List.of("BAR"), "Roadmap"))),
-                new WorkbookReadResult.ChartsResult("charts", "Ops", List.of(chartReport()))));
+                new InspectionResult.ChartsResult("charts", "Ops", List.of(chartReport()))));
 
     assertDoesNotThrow(
         () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
@@ -999,24 +1082,26 @@ class WorkbookInvariantChecksTest {
     Path workbookPath = tempDirectory.resolve("secured.xlsx");
     Files.writeString(workbookPath, "seed");
 
-    GridGrindRequest request =
-        new GridGrindRequest(
-            new GridGrindRequest.WorkbookSource.ExistingFile(
+    WorkbookPlan request =
+        existingRequest(
+            new WorkbookPlan.WorkbookSource.ExistingFile(
                 workbookPath.toString(),
-                new dev.erst.gridgrind.protocol.dto.OoxmlOpenSecurityInput("GridGrind-2026")),
-            new GridGrindRequest.WorkbookPersistence.None(),
-            List.of(),
-            List.of(new WorkbookReadOperation.GetPackageSecurity("security")));
+                new dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput("GridGrind-2026")),
+            inspect(
+                "security",
+                new WorkbookSelector.Current(),
+                new InspectionQuery.GetPackageSecurity()));
     GridGrindResponse.Success response =
         new GridGrindResponse.Success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.NotSaved(),
             List.of(),
+            List.of(),
             List.of(
-                new WorkbookReadResult.PackageSecurityResult(
+                new InspectionResult.PackageSecurityResult(
                     "security",
-                    new dev.erst.gridgrind.protocol.dto.OoxmlPackageSecurityReport(
-                        new dev.erst.gridgrind.protocol.dto.OoxmlEncryptionReport(
+                    new dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport(
+                        new dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport(
                             true,
                             dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode.AGILE,
                             "aes",
@@ -1026,7 +1111,7 @@ class WorkbookInvariantChecksTest {
                             16,
                             100000),
                         List.of(
-                            new dev.erst.gridgrind.protocol.dto.OoxmlSignatureReport(
+                            new dev.erst.gridgrind.contract.dto.OoxmlSignatureReport(
                                 "/_xmlsignatures/sig1.xml",
                                 "CN=GridGrind Signing",
                                 "CN=GridGrind Signing",
@@ -1065,6 +1150,22 @@ class WorkbookInvariantChecksTest {
                     "Ops!$A$2:$A$4", List.of("Jan", "Feb", "Mar")),
                 new ChartReport.DataSource.NumericReference(
                     "Ops!$B$2:$B$4", "General", List.of("12", "18", "15")))));
+  }
+
+  @SafeVarargs
+  private static WorkbookPlan saveAsRequest(Path workbookPath, InspectionStep... inspections) {
+    return ProtocolStepSupport.request(
+        new WorkbookPlan.WorkbookSource.New(),
+        new WorkbookPlan.WorkbookPersistence.SaveAs(workbookPath.toString()),
+        List.of(),
+        List.of(inspections));
+  }
+
+  @SafeVarargs
+  private static WorkbookPlan existingRequest(
+      WorkbookPlan.WorkbookSource.ExistingFile source, InspectionStep... inspections) {
+    return ProtocolStepSupport.request(
+        source, new WorkbookPlan.WorkbookPersistence.None(), List.of(), List.of(inspections));
   }
 
   private static PivotTableReport.Supported pivotReport() {

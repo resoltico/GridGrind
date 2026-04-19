@@ -1,16 +1,17 @@
 ---
 afad: "3.5"
-version: "0.47.0"
+version: "0.48.0"
 domain: OPERATIONS
-updated: "2026-04-16"
+updated: "2026-04-18"
 route:
-  keywords: [gridgrind, operations, reads, introspection, analysis, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-pivot-table, delete-pivot-table, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, evaluate-formulas, auto-size-columns, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, ooxml, package-security, encryption, signing, request, json, protocol, coordinates, rowindex, columnindex, warnings]
-  questions: ["what operations does gridgrind support", "what reads does gridgrind support", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I inspect package security in gridgrind", "how do I open an encrypted workbook in gridgrind", "how do I sign a workbook in gridgrind", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I create a pivot table in gridgrind", "how do I read pivot tables in gridgrind", "how do I add a picture in gridgrind", "how do I author a chart in gridgrind", "how do I read charts in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving"]
+  keywords: [gridgrind, operations, assertions, reads, introspection, analysis, assert, expect-cell-value, expect-analysis-max-severity, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-pivot-table, delete-pivot-table, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, execution-calculation, evaluate-all, evaluate-targets, clear-caches-only, markrecalculateonopen, auto-size-columns, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, source-backed, inline, utf8_file, standard_input, inline_base64, file, ooxml, package-security, encryption, signing, request, json, protocol, coordinates, rowindex, columnindex, warnings]
+  questions: ["what operations does gridgrind support", "what assertions does gridgrind support", "what reads does gridgrind support", "how do I assert a cell value in gridgrind", "how do I assert workbook health in gridgrind", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I inspect package security in gridgrind", "how do I open an encrypted workbook in gridgrind", "how do I sign a workbook in gridgrind", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I create a pivot table in gridgrind", "how do I read pivot tables in gridgrind", "how do I add a picture in gridgrind", "how do I author a chart in gridgrind", "how do I read charts in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving", "how do I load long text from a file in gridgrind", "how do I send binary payloads to gridgrind"]
 ---
 
-# Operations Reference
+# Operations, Assertions, and Inspection Reference
 
-**Purpose**: Complete reference for all GridGrind request fields and operation types.
+**Purpose**: Complete reference for all GridGrind request fields, mutation actions, assertion
+types, and inspection queries.
 **Prerequisites**: Familiarity with the [README](../README.md) quick start.
 **Limits**: See [LIMITATIONS.md](LIMITATIONS.md) for all hard ceilings — window cell count, Excel maximums, and memory constraints.
 
@@ -19,12 +20,48 @@ The CLI can emit the current minimal request and the full machine-readable proto
 ```bash
 gridgrind --print-request-template
 gridgrind --print-protocol-catalog
+gridgrind --print-example ASSERTION
 ```
 
 The protocol catalog is designed for black-box consumers. Each published type entry includes field
-descriptors with required/optional status and recursive shape metadata, so fields like
-`selection`, `target`, `value`, `style`, and `scope` point directly at the nested/plain type
-group that defines their accepted JSON structure.
+descriptors with required/optional status and recursive shape metadata, so fields like `target`,
+`action`, `query`, `value`, `style`, and `scope` point directly at the nested/plain type group
+that defines their accepted JSON structure. `--print-example <id>` emits one built-in generated
+request from the same contract-owned registry that backs the committed `examples/*.json` files.
+
+---
+
+## Source-Backed Authored Inputs
+
+GridGrind's mutation contract is source-backed for large text and binary payloads. The request
+body stays canonical JSON, while the authored value can come from inline literals, files in the
+execution environment, or bound stdin bytes.
+
+Text-bearing mutation fields use `TextSourceInput`:
+
+```json
+{ "type": "INLINE", "text": "Quarterly note" }
+{ "type": "UTF8_FILE", "path": "authored-inputs/note.txt" }
+{ "type": "STANDARD_INPUT" }
+```
+
+Binary-bearing mutation fields use `BinarySourceInput`:
+
+```json
+{ "type": "INLINE_BASE64", "base64Data": "SGVsbG8=" }
+{ "type": "FILE", "path": "authored-inputs/payload.bin" }
+{ "type": "STANDARD_INPUT" }
+```
+
+- Relative `UTF8_FILE` and `FILE` paths resolve from the current working directory.
+- `STANDARD_INPUT` authored values require `--request <path>` on the CLI because stdin cannot
+  carry both the request JSON and authored input content in the same invocation.
+- Source-backed input loading happens before workbook open and is journaled under
+  `journal.inputResolution`.
+- Source-backed failures classify as `INPUT_SOURCE_NOT_FOUND`, `INPUT_SOURCE_UNAVAILABLE`, or
+  `INPUT_SOURCE_IO_ERROR`.
+- See [`examples/source-backed-input-request.json`](../examples/source-backed-input-request.json)
+  for a complete file-backed text, formula, and binary request.
 
 ---
 
@@ -35,10 +72,9 @@ group that defines their accepted JSON structure.
   "protocolVersion": "V1",
   "source":      { ... },
   "persistence": { ... },
-  "executionMode": { ... },
+  "execution": { ... },
   "formulaEnvironment": { ... },
-  "operations":  [ ... ],
-  "reads":       [ ... ]
+  "steps": [ ... ]
 }
 ```
 
@@ -46,14 +82,14 @@ group that defines their accepted JSON structure.
 |:------|:---------|:------------|
 | `protocolVersion` | No | Wire-contract version. Defaults to `V1`. Include it — future breaking revisions will be explicit. |
 | `source` | Yes | Where the workbook comes from. |
-| `persistence` | No | Where and whether to save. Omit to run operations without saving. |
-| `executionMode` | No | Optional low-memory read and write mode selection. Omit for the default full-XSSF path. |
+| `persistence` | No | Where and whether to save. Omit to run steps without saving. |
+| `execution` | No | Optional execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Omit for the default full-XSSF path with `NORMAL` journaling and `DO_NOT_CALCULATE`. |
 | `formulaEnvironment` | No | Request-scoped evaluator configuration for external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. |
-| `operations` | No | Ordered list of workbook mutations. |
-| `reads` | No | Ordered post-mutation introspection and analysis operations. |
+| `steps` | No | Ordered list of workbook mutations, assertions, and inspections. |
 
 Every tagged request union uses `type` as its discriminator field: `source`, `persistence`,
-`operations`, `reads`, cell values, hyperlink targets, selections, and named-range scopes.
+`action`, `query`, cell values, hyperlink targets, selectors, and named-range scopes.
+Every step object carries exactly one of `action`, `assertion`, or `query`.
 
 ### Formula Environment
 
@@ -96,36 +132,155 @@ references, or template-backed UDFs.
 For `udfToolpacks.functions`, `maximumArgumentCount` is optional and defaults to
 `minimumArgumentCount`. `formulaTemplate` may reference `ARG1`, `ARG2`, and higher placeholders.
 
-### Execution Mode
+### Execution Policy
 
-`executionMode` is optional. Omit it for the default `FULL_XSSF` request path.
+`execution` is optional. Omit it for the default `FULL_XSSF` request path with `NORMAL`
+journaling.
 
 ```json
 {
-  "executionMode": {
-    "readMode": "EVENT_READ",
-    "writeMode": "STREAMING_WRITE"
+  "execution": {
+    "mode": {
+      "readMode": "EVENT_READ",
+      "writeMode": "STREAMING_WRITE"
+    },
+    "journal": {
+      "level": "VERBOSE"
+    },
+    "calculation": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen": true
+    }
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `readMode` | No | `FULL_XSSF` or `EVENT_READ`. Defaults to `FULL_XSSF`. |
-| `writeMode` | No | `FULL_XSSF` or `STREAMING_WRITE`. Defaults to `FULL_XSSF`. |
+| `mode` | No | Optional low-memory read and write mode selection. Omit it for the default full-XSSF path. |
+| `journal` | No | Optional structured-journal policy. Omit it for `NORMAL` detail. |
+| `calculation` | No | Optional formula-calculation policy covering immediate evaluation, cache clearing, and workbook-open recalc flags. |
 
-- `readMode: EVENT_READ` selects the low-memory XSSF event-model reader. It supports only
+- `execution.mode.readMode: EVENT_READ` selects the low-memory XSSF event-model reader. It supports only
   `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` (`LIM-019`).
-- `writeMode: STREAMING_WRITE` selects the low-memory SXSSF writer. It requires `source.type:
-  NEW`, supports only `ENSURE_SHEET`, `APPEND_ROW`, and
-  `FORCE_FORMULA_RECALCULATION_ON_OPEN`, and
+- `execution.mode.writeMode: STREAMING_WRITE` selects the low-memory SXSSF writer. It requires `source.type:
+  NEW`, supports only `ENSURE_SHEET` and `APPEND_ROW`,
+  requires `execution.calculation.strategy=DO_NOT_CALCULATE`,
+  allows `markRecalculateOnOpen=true`, and
   requires at least one `ENSURE_SHEET` or `APPEND_ROW` (`LIM-020`).
+- `execution.journal.level` accepts `SUMMARY`, `NORMAL`, and `VERBOSE`.
+- `execution.calculation.strategy` accepts `DO_NOT_CALCULATE`, `EVALUATE_ALL`,
+  `EVALUATE_TARGETS`, and `CLEAR_CACHES_ONLY`.
+- `execution.calculation.markRecalculateOnOpen` persists Excel's workbook-level recalc-on-open
+  flag without requiring an extra mutation step.
+- `VERBOSE` keeps the structured response journal and also streams fine-grained execution events to
+  CLI stderr while the request is running.
 - `EVENT_READ` can run directly against an existing workbook when the request is read-only and
   unsaved. If the request also performs full-XSSF mutations, GridGrind materializes the mutated
   workbook state and then performs the summary reads through the event model.
 - `STREAMING_WRITE` can pair with either `readMode: FULL_XSSF` for broader readback or
   `readMode: EVENT_READ` for summary-only low-memory readback from the materialized streaming
   result.
+
+### Response Journal
+
+Every success and failure response includes a structured `journal` object:
+
+```json
+{
+  "journal": {
+    "planId": "budget-pass",
+    "level": "NORMAL",
+    "source": {
+      "type": "EXISTING",
+      "path": "budget.xlsx"
+    },
+    "persistence": {
+      "type": "SAVE_AS",
+      "path": "out/budget-reviewed.xlsx"
+    },
+    "validation": {
+      "status": "SUCCEEDED",
+      "durationMillis": 1,
+      "detail": "succeeded"
+    },
+    "inputResolution": {
+      "status": "NOT_STARTED",
+      "durationMillis": 0,
+      "detail": "not started"
+    },
+    "open": {
+      "status": "SUCCEEDED",
+      "durationMillis": 9,
+      "detail": "succeeded"
+    },
+    "calculation": {
+      "preflight": {
+        "status": "SUCCEEDED",
+        "durationMillis": 1,
+        "detail": "succeeded"
+      },
+      "execution": {
+        "status": "SUCCEEDED",
+        "durationMillis": 2,
+        "detail": "succeeded"
+      }
+    },
+    "persistencePhase": {
+      "status": "SUCCEEDED",
+      "durationMillis": 14,
+      "detail": "succeeded"
+    },
+    "close": {
+      "status": "SUCCEEDED",
+      "durationMillis": 1,
+      "detail": "succeeded"
+    },
+    "steps": [
+      {
+        "stepIndex": 0,
+        "stepId": "set-total",
+        "stepKind": "MUTATION",
+        "stepType": "SET_CELL",
+        "targets": [
+          {
+            "kind": "CELL",
+            "label": "Cell Budget!B2"
+          }
+        ],
+        "phase": {
+          "status": "SUCCEEDED",
+          "durationMillis": 2,
+          "detail": "succeeded"
+        },
+        "outcome": "SUCCEEDED"
+      }
+    ],
+    "events": [],
+    "outcome": {
+      "status": "SUCCEEDED",
+      "plannedStepCount": 1,
+      "completedStepCount": 1,
+      "failedStepCount": 0
+    }
+  }
+}
+```
+
+| Field | Description |
+|:------|:------------|
+| `planId` | Caller-supplied plan correlation ID when present, otherwise a synthesized internal ID. |
+| `level` | `SUMMARY`, `NORMAL`, or `VERBOSE`, matching the effective `execution.journal.level`. |
+| `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries with status, duration, and detail. `inputResolution` records source-backed file/stdin loading before workbook open. |
+| `calculation` | Top-level calculation telemetry. `preflight` classifies authored formulas and `execution` records the requested evaluation or cache-clearing work. |
+| `steps[]` | Ordered per-step telemetry including target summaries, phase timing, outcome, and optional failure classification. |
+| `events[]` | Fine-grained live events. Present only when `level=VERBOSE`. |
+| `outcome` | Whole-run status plus planned/completed/failed step counts and the first failed step identity when applicable. |
+
+`VERBOSE` keeps the full response journal and also streams `events[]` entries live to CLI stderr
+while the request is running.
 
 ## Coordinate Systems
 
@@ -149,11 +304,22 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
 
 ```json
 {
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [],
-  "reads": [
-    { "type": "ANALYZE_WORKBOOK_FINDINGS", "requestId": "lint" }
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
+    {
+      "stepId": "lint",
+      "target": {
+        "type": "CURRENT"
+      },
+      "query": {
+        "type": "ANALYZE_WORKBOOK_FINDINGS"
+      }
+    }
   ]
 }
 ```
@@ -173,13 +339,18 @@ for a broader mixed introspection and analysis run.
 ## Source
 
 ```json
-{ "type": "NEW" }
+{
+  "type": "NEW"
+}
 ```
 Create a new blank `.xlsx` workbook. The workbook starts with zero sheets; use `ENSURE_SHEET` to
 create the first sheet before writing any cells.
 
 ```json
-{ "type": "EXISTING", "path": "path/to/workbook.xlsx" }
+{
+  "type": "EXISTING",
+  "path": "path/to/workbook.xlsx"
+}
 ```
 Open an existing `.xlsx` file.
 
@@ -187,7 +358,9 @@ Open an existing `.xlsx` file.
 {
   "type": "EXISTING",
   "path": "secured-workbook.xlsx",
-  "security": { "password": "GridGrind-2026" }
+  "security": {
+    "password": "GridGrind-2026"
+  }
 }
 ```
 
@@ -208,7 +381,10 @@ response, an `OVERWRITE` request yields an `OVERWRITE` response, and a `NONE` re
 `NONE` response.
 
 ```json
-{ "type": "SAVE_AS", "path": "path/to/output.xlsx" }
+{
+  "type": "SAVE_AS",
+  "path": "path/to/output.xlsx"
+}
 ```
 Write the workbook to the given path, creating parent directories as needed.
 
@@ -217,7 +393,9 @@ Write the workbook to the given path, creating parent directories as needed.
   "type": "SAVE_AS",
   "path": "secured-output.xlsx",
   "security": {
-    "encryption": { "password": "GridGrind-2026" },
+    "encryption": {
+      "password": "GridGrind-2026"
+    },
     "signature": {
       "pkcs12Path": "signing-material.p12",
       "keystorePassword": "changeit",
@@ -248,7 +426,9 @@ They are identical when an absolute path with no `..` segments is supplied. They
 relative path (e.g. `"report.xlsx"`) or a path containing `..` segments is used.
 
 ```json
-{ "type": "OVERWRITE" }
+{
+  "type": "OVERWRITE"
+}
 ```
 Overwrite the source file (requires `source.type=EXISTING`). `OVERWRITE` does not accept its own
 `path` field; it always writes back to `source.path`. The response includes `sourcePath` (the
@@ -271,8 +451,8 @@ Use `OVERWRITE.security.signature` when persisting mutations to a signed source 
 signed sources can be copied or overwritten without re-signing, but once a signed workbook is
 mutated GridGrind requires explicit signature configuration before it will persist the result.
 
-Omit `persistence` entirely or use `{ "type": "NONE" }` to run mutations and reads without
-saving.
+Omit `persistence` entirely or use `{ "type": "NONE" }` to run mutations, assertions, and
+inspections without saving.
 
 ---
 
@@ -281,24 +461,33 @@ saving.
 Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 
 ```json
-{ "type": "TEXT",      "text": "Origin"              }
+{ "type": "TEXT",      "source": { "type": "INLINE", "text": "Origin" } }
 {
   "type": "RICH_TEXT",
   "runs": [
-    { "text": "Q2 ", "font": { "fontName": "Aptos", "fontColor": "#44546A" } },
-    { "text": "Budget", "font": { "bold": true, "fontColor": "#C00000" } }
+    {
+      "source": { "type": "INLINE", "text": "Q2 " },
+      "font": { "fontName": "Aptos", "fontColor": "#44546A" }
+    },
+    {
+      "source": { "type": "INLINE", "text": "Budget" },
+      "font": { "bold": true, "fontColor": "#C00000" }
+    }
   ]
 }
 { "type": "NUMBER",    "number": 8.40                }
 { "type": "BOOLEAN",   "bool": true                  }
-{ "type": "FORMULA",   "formula": "SUM(B2:B3)"       }  // leading = is accepted and stripped
+{ "type": "FORMULA",   "source": { "type": "INLINE", "text": "SUM(B2:B3)" } }  // leading = is accepted and stripped
 { "type": "DATE",      "date": "2026-03-25"           }
 { "type": "DATE_TIME", "dateTime": "2026-03-25T10:15:30" }
 { "type": "BLANK"                                     }
 ```
 
-`RICH_TEXT` writes an ordered, non-empty `runs` list. Every run must have non-empty `text`, and
-the optional `font` object reuses the same font-field vocabulary as the nested style contract:
+`TEXT`, `FORMULA`, and rich-text run payloads are source-backed: author inline text with
+`{ "type": "INLINE", "text": "..." }`, or use `UTF8_FILE` / `STANDARD_INPUT` when the value
+should come from the execution environment instead of the request body.
+`RICH_TEXT` writes an ordered, non-empty `runs` list. Every run must have non-empty resolved text,
+and the optional `font` object reuses the same font-field vocabulary as the nested style contract:
 `bold`, `italic`, `fontName`, `fontHeight`, `fontColor`, `underline`, and `strikeout`.
 `FORMULA` payloads are scalar only. Array-formula braces such as `{=SUM(A1:A2*B1:B2)}` are
 rejected as `INVALID_FORMULA`. `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA`
@@ -323,12 +512,21 @@ All mutation operations (`SET_CELL`, `SET_RANGE`, `CLEAR_RANGE`, `APPLY_STYLE`,
 `pivotTable.sheetName` to exist. Use `ENSURE_SHEET` before the first write to any sheet.
 
 ```json
-{ "type": "ENSURE_SHEET", "sheetName": "Inventory" }
+{
+  "stepId": "ensure-sheet",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "ENSURE_SHEET"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Name of the sheet to create. Must be 1 to 31 characters and must not contain `:` `\` `/` `?` `*` `[` `]`, or begin or end with a single quote. |
+| `target` | Yes | Selector payload for the target workbook location. |
 
 ---
 
@@ -339,15 +537,21 @@ Excel sheet name and must not conflict with another sheet name.
 
 ```json
 {
-  "type": "RENAME_SHEET",
-  "sheetName": "Archive",
-  "newSheetName": "History"
+  "stepId": "rename-sheet",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Archive"
+  },
+  "action": {
+    "type": "RENAME_SHEET",
+    "newSheetName": "History"
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing sheet to rename. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `newSheetName` | Yes | New sheet name. Must be valid and unique. |
 
 ---
@@ -359,12 +563,21 @@ sheet, so attempting to delete the last remaining sheet or the last visible shee
 `INVALID_REQUEST`.
 
 ```json
-{ "type": "DELETE_SHEET", "sheetName": "Scratch" }
+{
+  "stepId": "delete-sheet",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Scratch"
+  },
+  "action": {
+    "type": "DELETE_SHEET"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing sheet to delete. Must not be the only remaining sheet or the last visible sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 
 ---
 
@@ -375,15 +588,21 @@ the operation runs, after all earlier operations in the same request.
 
 ```json
 {
-  "type": "MOVE_SHEET",
-  "sheetName": "History",
-  "targetIndex": 0
+  "stepId": "move-sheet",
+  "target": {
+    "type": "BY_NAME",
+    "name": "History"
+  },
+  "action": {
+    "type": "MOVE_SHEET",
+    "targetIndex": 0
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing sheet to move. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `targetIndex` | Yes | Zero-based destination index. Must be between `0` and `sheetCount - 1`. |
 
 ---
@@ -400,23 +619,32 @@ complete for non-drawing workbook-core structures and intentionally partial for 
 ```json
 {
   "type": "COPY_SHEET",
-  "sourceSheetName": "Budget",
   "newSheetName": "Budget Review",
-  "position": { "type": "AT_INDEX", "targetIndex": 1 }
+  "position": {
+    "type": "AT_INDEX",
+    "targetIndex": 1
+  },
+  "source": {
+    "type": "BY_NAME",
+    "name": "Budget"
+  }
 }
 ```
 
 ```json
 {
   "type": "COPY_SHEET",
-  "sourceSheetName": "Budget",
-  "newSheetName": "Budget Snapshot"
+  "newSheetName": "Budget Snapshot",
+  "source": {
+    "type": "BY_NAME",
+    "name": "Budget"
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sourceSheetName` | Yes | Existing sheet to copy. |
+| `source` | Yes | `BY_NAME` selector for the existing sheet to copy. |
 | `newSheetName` | Yes | New unique destination sheet name. |
 | `position` | No | Copy position. Omit to append at end. |
 
@@ -432,12 +660,21 @@ complete for non-drawing workbook-core structures and intentionally partial for 
 Set the active sheet. Hidden sheets cannot be activated. The active sheet is always selected.
 
 ```json
-{ "type": "SET_ACTIVE_SHEET", "sheetName": "Budget Review" }
+{
+  "stepId": "set-active-sheet",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Budget Review"
+  },
+  "action": {
+    "type": "SET_ACTIVE_SHEET"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing visible sheet to activate. |
+| `target` | Yes | Selector payload for the target workbook location. |
 
 ---
 
@@ -448,12 +685,24 @@ summary reads return `selectedSheetNames` in workbook order while preserving the
 sheet as the primary selected tab.
 
 ```json
-{ "type": "SET_SELECTED_SHEETS", "sheetNames": ["Budget", "Budget Review"] }
+{
+  "stepId": "set-selected-sheets",
+  "target": {
+    "type": "BY_NAMES",
+    "names": [
+      "Budget",
+      "Budget Review"
+    ]
+  },
+  "action": {
+    "type": "SET_SELECTED_SHEETS"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetNames` | Yes | Non-empty distinct list of existing visible sheets. |
+| `target` | Yes | `BY_NAMES` selector for one or more existing visible sheets. |
 
 ---
 
@@ -463,12 +712,22 @@ Set one sheet visibility state. A workbook must retain at least one visible shee
 last visible sheet is rejected.
 
 ```json
-{ "type": "SET_SHEET_VISIBILITY", "sheetName": "Archive", "visibility": "VERY_HIDDEN" }
+{
+  "stepId": "set-sheet-visibility",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Archive"
+  },
+  "action": {
+    "type": "SET_SHEET_VISIBILITY",
+    "visibility": "VERY_HIDDEN"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `visibility` | Yes | `VISIBLE`, `HIDDEN`, or `VERY_HIDDEN`. |
 
 ---
@@ -481,32 +740,38 @@ preserving the explicit authored lock flags.
 
 ```json
 {
-  "type": "SET_SHEET_PROTECTION",
-  "sheetName": "Budget Review",
-  "protection": {
-    "autoFilterLocked": true,
-    "deleteColumnsLocked": true,
-    "deleteRowsLocked": true,
-    "formatCellsLocked": true,
-    "formatColumnsLocked": false,
-    "formatRowsLocked": false,
-    "insertColumnsLocked": true,
-    "insertHyperlinksLocked": true,
-    "insertRowsLocked": true,
-    "objectsLocked": true,
-    "pivotTablesLocked": true,
-    "scenariosLocked": true,
-    "selectLockedCellsLocked": true,
-    "selectUnlockedCellsLocked": false,
-    "sortLocked": true
+  "stepId": "set-sheet-protection",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Budget Review"
   },
-  "password": "Sheet-2026"
+  "action": {
+    "type": "SET_SHEET_PROTECTION",
+    "protection": {
+      "autoFilterLocked": true,
+      "deleteColumnsLocked": true,
+      "deleteRowsLocked": true,
+      "formatCellsLocked": true,
+      "formatColumnsLocked": false,
+      "formatRowsLocked": false,
+      "insertColumnsLocked": true,
+      "insertHyperlinksLocked": true,
+      "insertRowsLocked": true,
+      "objectsLocked": true,
+      "pivotTablesLocked": true,
+      "scenariosLocked": true,
+      "selectLockedCellsLocked": true,
+      "selectUnlockedCellsLocked": false,
+      "sortLocked": true
+    },
+    "password": "Sheet-2026"
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `protection` | Yes | Supported lock-flag payload. |
 | `password` | No | Optional nonblank sheet-protection password. Omit it to protect the sheet without a stored password hash. |
 
@@ -517,12 +782,21 @@ preserving the explicit authored lock flags.
 Disable sheet protection entirely and clear any stored password hash.
 
 ```json
-{ "type": "CLEAR_SHEET_PROTECTION", "sheetName": "Budget Review" }
+{
+  "stepId": "clear-sheet-protection",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Budget Review"
+  },
+  "action": {
+    "type": "CLEAR_SHEET_PROTECTION"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 
 ---
 
@@ -567,7 +841,9 @@ Disable workbook-level protection entirely and remove any stored workbook or rev
 hashes.
 
 ```json
-{ "type": "CLEAR_WORKBOOK_PROTECTION" }
+{
+  "type": "CLEAR_WORKBOOK_PROTECTION"
+}
 ```
 
 No additional fields.
@@ -580,12 +856,22 @@ Merge a rectangular A1-style range into one displayed region. The range must spa
 cells. Repeating the same merge is a no-op, but overlapping a different merged region fails.
 
 ```json
-{ "type": "MERGE_CELLS", "sheetName": "Inventory", "range": "A1:C1" }
+{
+  "stepId": "merge-cells",
+  "target": {
+    "type": "BY_RANGE",
+    "sheetName": "Inventory",
+    "range": "A1:C1"
+  },
+  "action": {
+    "type": "MERGE_CELLS"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `range` | Yes | A1-notation rectangular range to merge. Must span at least two cells. |
 
 ---
@@ -596,12 +882,22 @@ Remove the merged region whose coordinates exactly match `range`. GridGrind does
 unmerge intersecting regions; the range must identify the merged region exactly.
 
 ```json
-{ "type": "UNMERGE_CELLS", "sheetName": "Inventory", "range": "A1:C1" }
+{
+  "stepId": "unmerge-cells",
+  "target": {
+    "type": "BY_RANGE",
+    "sheetName": "Inventory",
+    "range": "A1:C1"
+  },
+  "action": {
+    "type": "UNMERGE_CELLS"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `range` | Yes | Exact A1-notation merged range to remove. |
 
 ---
@@ -624,7 +920,7 @@ units with `round(widthCharacters * 256)`.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `firstColumnIndex` | Yes | Zero-based first column index. |
 | `lastColumnIndex` | Yes | Zero-based last column index. Must be greater than or equal to `firstColumnIndex`. |
 | `widthCharacters` | Yes | Positive Excel character width. Must be finite and > 0 and ≤ 255.0 (Excel column width limit). |
@@ -648,7 +944,7 @@ Set the height of one or more contiguous rows. Row indexes are zero-based and in
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `firstRowIndex` | Yes | Zero-based first row index. |
 | `lastRowIndex` | Yes | Zero-based last row index. Must be greater than or equal to `firstRowIndex`. |
 | `heightPoints` | Yes | Positive Excel row height in points. Must be finite and > 0 and ≤ 1,638.35 (Excel storage limit: 32,767 twips). |
@@ -673,7 +969,7 @@ exists there.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `rowIndex` | Yes | Zero-based insertion point. Must be within the current row bounds or exactly one past the last existing row. |
 | `rowCount` | Yes | Positive number of blank rows to insert. |
 
@@ -690,13 +986,17 @@ Delete one inclusive zero-based row band. Rows beneath the deleted band shift up
 {
   "type": "DELETE_ROWS",
   "sheetName": "Inventory",
-  "rows": { "type": "BAND", "firstRowIndex": 4, "lastRowIndex": 6 }
+  "rows": {
+    "type": "BAND",
+    "firstRowIndex": 4,
+    "lastRowIndex": 6
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `rows` | Yes | One inclusive row-band payload. |
 
 GridGrind rejects the edit when it would move or truncate a table, sheet-owned autofilter, or
@@ -714,14 +1014,18 @@ down; negative values move rows up.
 {
   "type": "SHIFT_ROWS",
   "sheetName": "Inventory",
-  "rows": { "type": "BAND", "firstRowIndex": 1, "lastRowIndex": 3 },
+  "rows": {
+    "type": "BAND",
+    "firstRowIndex": 1,
+    "lastRowIndex": 3
+  },
   "delta": 2
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `rows` | Yes | One inclusive row-band payload. |
 | `delta` | Yes | Signed non-zero row offset. |
 
@@ -749,7 +1053,7 @@ explicit column metadata exist there.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `columnIndex` | Yes | Zero-based insertion point. Must be within the current column bounds or exactly one past the last existing column. |
 | `columnCount` | Yes | Positive number of blank columns to insert. |
 
@@ -768,13 +1072,17 @@ Delete one inclusive zero-based column band. Columns to the right of the deleted
 {
   "type": "DELETE_COLUMNS",
   "sheetName": "Inventory",
-  "columns": { "type": "BAND", "firstColumnIndex": 3, "lastColumnIndex": 4 }
+  "columns": {
+    "type": "BAND",
+    "firstColumnIndex": 3,
+    "lastColumnIndex": 4
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `columns` | Yes | One inclusive column-band payload. |
 
 GridGrind enforces ownership rejection (`LIM-016`), the formula-bearing workbook guard for column
@@ -792,14 +1100,18 @@ columns right; negative values move columns left.
 {
   "type": "SHIFT_COLUMNS",
   "sheetName": "Inventory",
-  "columns": { "type": "BAND", "firstColumnIndex": 0, "lastColumnIndex": 1 },
+  "columns": {
+    "type": "BAND",
+    "firstColumnIndex": 0,
+    "lastColumnIndex": 1
+  },
   "delta": -1
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `columns` | Yes | One inclusive column-band payload. |
 | `delta` | Yes | Signed non-zero column offset. |
 
@@ -817,14 +1129,18 @@ Hide or unhide one inclusive zero-based row band.
 {
   "type": "SET_ROW_VISIBILITY",
   "sheetName": "Inventory",
-  "rows": { "type": "BAND", "firstRowIndex": 5, "lastRowIndex": 7 },
+  "rows": {
+    "type": "BAND",
+    "firstRowIndex": 5,
+    "lastRowIndex": 7
+  },
   "hidden": true
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `rows` | Yes | One inclusive row-band payload. |
 | `hidden` | Yes | `true` hides the rows; `false` unhides them. |
 
@@ -838,14 +1154,18 @@ Hide or unhide one inclusive zero-based column band.
 {
   "type": "SET_COLUMN_VISIBILITY",
   "sheetName": "Inventory",
-  "columns": { "type": "BAND", "firstColumnIndex": 2, "lastColumnIndex": 3 },
+  "columns": {
+    "type": "BAND",
+    "firstColumnIndex": 2,
+    "lastColumnIndex": 3
+  },
   "hidden": false
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `columns` | Yes | One inclusive column-band payload. |
 | `hidden` | Yes | `true` hides the columns; `false` unhides them. |
 
@@ -860,14 +1180,18 @@ defaults to `false`.
 {
   "type": "GROUP_ROWS",
   "sheetName": "Inventory",
-  "rows": { "type": "BAND", "firstRowIndex": 8, "lastRowIndex": 10 },
+  "rows": {
+    "type": "BAND",
+    "firstRowIndex": 8,
+    "lastRowIndex": 10
+  },
   "collapsed": true
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `rows` | Yes | One inclusive row-band payload. |
 | `collapsed` | No | When `true`, the newly grouped rows are collapsed immediately. Defaults to `false`. |
 
@@ -882,13 +1206,17 @@ so hidden rows are not left stranded in a collapsed state.
 {
   "type": "UNGROUP_ROWS",
   "sheetName": "Inventory",
-  "rows": { "type": "BAND", "firstRowIndex": 8, "lastRowIndex": 10 }
+  "rows": {
+    "type": "BAND",
+    "firstRowIndex": 8,
+    "lastRowIndex": 10
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `rows` | Yes | One inclusive row-band payload. |
 
 ---
@@ -902,14 +1230,18 @@ defaults to `false`.
 {
   "type": "GROUP_COLUMNS",
   "sheetName": "Inventory",
-  "columns": { "type": "BAND", "firstColumnIndex": 4, "lastColumnIndex": 6 },
+  "columns": {
+    "type": "BAND",
+    "firstColumnIndex": 4,
+    "lastColumnIndex": 6
+  },
   "collapsed": true
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `columns` | Yes | One inclusive column-band payload. |
 | `collapsed` | No | When `true`, the newly grouped columns are collapsed immediately. Defaults to `false`. |
 
@@ -924,13 +1256,17 @@ first so hidden columns are not left stranded in a collapsed state.
 {
   "type": "UNGROUP_COLUMNS",
   "sheetName": "Inventory",
-  "columns": { "type": "BAND", "firstColumnIndex": 4, "lastColumnIndex": 6 }
+  "columns": {
+    "type": "BAND",
+    "firstColumnIndex": 4,
+    "lastColumnIndex": 6
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `columns` | Yes | One inclusive column-band payload. |
 
 ---
@@ -942,36 +1278,48 @@ behavior, or `SPLIT` for Excel split panes.
 
 ```json
 {
-  "type": "SET_SHEET_PANE",
-  "sheetName": "Inventory",
-  "pane": {
-    "type": "FROZEN",
-    "splitColumn": 1,
-    "splitRow": 1,
-    "leftmostColumn": 1,
-    "topRow": 1
+  "stepId": "set-sheet-pane",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "SET_SHEET_PANE",
+    "pane": {
+      "type": "FROZEN",
+      "splitColumn": 1,
+      "splitRow": 1,
+      "leftmostColumn": 1,
+      "topRow": 1
+    }
   }
 }
 ```
 
 ```json
 {
-  "type": "SET_SHEET_PANE",
-  "sheetName": "Inventory",
-  "pane": {
-    "type": "SPLIT",
-    "xSplitPosition": 2400,
-    "ySplitPosition": 1800,
-    "leftmostColumn": 2,
-    "topRow": 3,
-    "activePane": "LOWER_RIGHT"
+  "stepId": "set-sheet-pane",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "SET_SHEET_PANE",
+    "pane": {
+      "type": "SPLIT",
+      "xSplitPosition": 2400,
+      "ySplitPosition": 1800,
+      "leftmostColumn": 2,
+      "topRow": 3,
+      "activePane": "LOWER_RIGHT"
+    }
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `pane` | Yes | Pane payload with `type` `NONE`, `FROZEN`, or `SPLIT`. |
 
 `pane.type = "NONE"` has no nested fields.
@@ -1013,15 +1361,21 @@ Set one explicit zoom percentage for a sheet.
 
 ```json
 {
-  "type": "SET_SHEET_ZOOM",
-  "sheetName": "Inventory",
-  "zoomPercent": 125
+  "stepId": "set-sheet-zoom",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "SET_SHEET_ZOOM",
+    "zoomPercent": 125
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `zoomPercent` | Yes | Integer zoom percentage. Must be between `10` and `400` inclusive. |
 
 ### SET_SHEET_PRESENTATION
@@ -1031,32 +1385,48 @@ normalize to defaults or clear state.
 
 ```json
 {
-  "type": "SET_SHEET_PRESENTATION",
-  "sheetName": "Inventory",
-  "presentation": {
-    "display": {
-      "displayGridlines": false,
-      "displayZeros": false,
-      "displayRowColHeadings": true,
-      "displayFormulas": false,
-      "rightToLeft": false
-    },
-    "tabColor": { "rgb": "#0B6E4F" },
-    "outlineSummary": { "rowSumsBelow": false, "rowSumsRight": true },
-    "sheetDefaults": { "defaultColumnWidth": 14, "defaultRowHeightPoints": 19.0 },
-    "ignoredErrors": [
-      {
-        "range": "B4:B18",
-        "errorTypes": ["NUMBER_STORED_AS_TEXT"]
-      }
-    ]
+  "stepId": "set-sheet-presentation",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "SET_SHEET_PRESENTATION",
+    "presentation": {
+      "display": {
+        "displayGridlines": false,
+        "displayZeros": false,
+        "displayRowColHeadings": true,
+        "displayFormulas": false,
+        "rightToLeft": false
+      },
+      "tabColor": {
+        "rgb": "#0B6E4F"
+      },
+      "outlineSummary": {
+        "rowSumsBelow": false,
+        "rowSumsRight": true
+      },
+      "sheetDefaults": {
+        "defaultColumnWidth": 14,
+        "defaultRowHeightPoints": 19.0
+      },
+      "ignoredErrors": [
+        {
+          "range": "B4:B18",
+          "errorTypes": [
+            "NUMBER_STORED_AS_TEXT"
+          ]
+        }
+      ]
+    }
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `presentation` | Yes | Authoritative sheet-presentation payload. |
 
 `presentation` fields:
@@ -1073,7 +1443,7 @@ Nested constraints:
 
 - `display` supports `displayGridlines`, `displayZeros`, `displayRowColHeadings`,
   `displayFormulas`, and `rightToLeft`.
-- `sheetDefaults.defaultColumnWidth` must be greater than `0`.
+- `sheetDefaults.defaultColumnWidth` must be a whole number greater than `0`.
 - `sheetDefaults.defaultRowHeightPoints` must be finite and greater than `0`.
 - Each `ignoredErrors` entry requires one A1-style rectangular `range` plus one or more distinct
   `errorTypes`.
@@ -1086,36 +1456,87 @@ to default or cleared state.
 
 ```json
 {
-  "type": "SET_PRINT_LAYOUT",
-  "sheetName": "Inventory",
-  "printLayout": {
-    "printArea": { "type": "RANGE", "range": "A1:F40" },
-    "orientation": "LANDSCAPE",
-    "scaling": { "type": "FIT", "widthPages": 1, "heightPages": 0 },
-    "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 1 },
-    "repeatingColumns": { "type": "BAND", "firstColumnIndex": 0, "lastColumnIndex": 0 },
-    "header": { "left": "Inventory", "center": "Q2", "right": "Internal" },
-    "footer": { "left": "", "center": "Prepared by GridGrind", "right": "Page 1" },
-    "setup": {
-      "margins": {
-        "left": 0.35,
-        "right": 0.55,
-        "top": 0.6,
-        "bottom": 0.45,
-        "header": 0.3,
-        "footer": 0.3
+  "stepId": "set-print-layout",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "SET_PRINT_LAYOUT",
+    "printLayout": {
+      "printArea": {
+        "type": "RANGE",
+        "range": "A1:F40"
       },
-      "horizontallyCentered": true,
-      "verticallyCentered": true,
-      "printGridlines": true,
-      "paperSize": 8,
-      "draft": true,
-      "blackAndWhite": true,
-      "copies": 2,
-      "useFirstPageNumber": true,
-      "firstPageNumber": 4,
-      "rowBreaks": [6],
-      "columnBreaks": [3]
+      "orientation": "LANDSCAPE",
+      "scaling": {
+        "type": "FIT",
+        "widthPages": 1,
+        "heightPages": 0
+      },
+      "repeatingRows": {
+        "type": "BAND",
+        "firstRowIndex": 0,
+        "lastRowIndex": 1
+      },
+      "repeatingColumns": {
+        "type": "BAND",
+        "firstColumnIndex": 0,
+        "lastColumnIndex": 0
+      },
+      "header": {
+        "left": {
+          "type": "INLINE",
+          "text": "Inventory"
+        },
+        "center": {
+          "type": "INLINE",
+          "text": "Q2"
+        },
+        "right": {
+          "type": "INLINE",
+          "text": "Internal"
+        }
+      },
+      "footer": {
+        "left": {
+          "type": "INLINE",
+          "text": ""
+        },
+        "center": {
+          "type": "INLINE",
+          "text": "Prepared by GridGrind"
+        },
+        "right": {
+          "type": "INLINE",
+          "text": "Page 1"
+        }
+      },
+      "setup": {
+        "margins": {
+          "left": 0.35,
+          "right": 0.55,
+          "top": 0.6,
+          "bottom": 0.45,
+          "header": 0.3,
+          "footer": 0.3
+        },
+        "horizontallyCentered": true,
+        "verticallyCentered": true,
+        "printGridlines": true,
+        "paperSize": 8,
+        "draft": true,
+        "blackAndWhite": true,
+        "copies": 2,
+        "useFirstPageNumber": true,
+        "firstPageNumber": 4,
+        "rowBreaks": [
+          6
+        ],
+        "columnBreaks": [
+          3
+        ]
+      }
     }
   }
 }
@@ -1123,7 +1544,7 @@ to default or cleared state.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `printLayout` | Yes | Print-layout payload. |
 
 `printLayout` fields:
@@ -1171,14 +1592,20 @@ Clear the supported print-layout state from a sheet and restore the default supp
 
 ```json
 {
-  "type": "CLEAR_PRINT_LAYOUT",
-  "sheetName": "Inventory"
+  "stepId": "clear-print-layout",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "CLEAR_PRINT_LAYOUT"
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 
 ---
 
@@ -1189,10 +1616,22 @@ state on the targeted cell is preserved.
 
 ```json
 {
-  "type": "SET_CELL",
-  "sheetName": "Inventory",
-  "address": "B4",
-  "value": { "type": "FORMULA", "formula": "SUM(B2:B3)" }
+  "stepId": "set-cell",
+  "target": {
+    "type": "BY_ADDRESS",
+    "sheetName": "Inventory",
+    "address": "B4"
+  },
+  "action": {
+    "type": "SET_CELL",
+    "value": {
+      "type": "FORMULA",
+      "source": {
+        "type": "INLINE",
+        "text": "SUM(B2:B3)"
+      }
+    }
+  }
 }
 ```
 
@@ -1204,7 +1643,7 @@ fill, border, font, alignment, or wrap state already present on the cell.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `address` | Yes | A1-notation cell address. |
 | `value` | Yes | Typed cell value. |
 
@@ -1219,20 +1658,80 @@ Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid 
 
 ```json
 {
-  "type": "SET_RANGE",
-  "sheetName": "Inventory",
-  "range": "A1:C3",
-  "rows": [
-    [{ "type": "TEXT", "text": "Origin" }, { "type": "TEXT", "text": "Kilos" }, { "type": "TEXT", "text": "Cost/kg" }],
-    [{ "type": "TEXT", "text": "Ethiopia Yirgacheffe" }, { "type": "NUMBER", "number": 150 }, { "type": "NUMBER", "number": 8.40 }],
-    [{ "type": "TEXT", "text": "Colombia Huila" }, { "type": "NUMBER", "number": 200 }, { "type": "NUMBER", "number": 7.80 }]
-  ]
+  "stepId": "set-range",
+  "target": {
+    "type": "BY_RANGE",
+    "sheetName": "Inventory",
+    "range": "A1:C3"
+  },
+  "action": {
+    "type": "SET_RANGE",
+    "rows": [
+      [
+        {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Origin"
+          }
+        },
+        {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Kilos"
+          }
+        },
+        {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Cost/kg"
+          }
+        }
+      ],
+      [
+        {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Ethiopia Yirgacheffe"
+          }
+        },
+        {
+          "type": "NUMBER",
+          "number": 150
+        },
+        {
+          "type": "NUMBER",
+          "number": 8.4
+        }
+      ],
+      [
+        {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Colombia Huila"
+          }
+        },
+        {
+          "type": "NUMBER",
+          "number": 200
+        },
+        {
+          "type": "NUMBER",
+          "number": 7.8
+        }
+      ]
+    ]
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `range` | Yes | A1-notation rectangular range (e.g. `A1:C3`). |
 | `rows` | Yes | 2-D array of typed cell values. Dimensions must match `range`. |
 
@@ -1245,12 +1744,22 @@ never been written are silently skipped; this operation never fails because a ce
 physically exist.
 
 ```json
-{ "type": "CLEAR_RANGE", "sheetName": "Inventory", "range": "A2:C10" }
+{
+  "stepId": "clear-range",
+  "target": {
+    "type": "BY_RANGE",
+    "sheetName": "Inventory",
+    "range": "A2:C10"
+  },
+  "action": {
+    "type": "CLEAR_RANGE"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `range` | Yes | Range to clear. |
 
 ---
@@ -1261,19 +1770,25 @@ Attach or replace a hyperlink on one cell. The cell is created if needed.
 
 ```json
 {
-  "type": "SET_HYPERLINK",
-  "sheetName": "Inventory",
-  "address": "A1",
+  "stepId": "set-hyperlink",
   "target": {
-    "type": "URL",
-    "target": "https://example.com/catalog"
+    "type": "BY_ADDRESS",
+    "sheetName": "Inventory",
+    "address": "A1"
+  },
+  "action": {
+    "type": "SET_HYPERLINK",
+    "target": {
+      "type": "URL",
+      "target": "https://example.com/catalog"
+    }
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `address` | Yes | A1-notation cell address. |
 | `target` | Yes | Typed hyperlink target payload. |
 
@@ -1297,12 +1812,22 @@ Remove any hyperlink attached to one cell. The cell value, style, and comment ar
 No-op when the cell does not physically exist.
 
 ```json
-{ "type": "CLEAR_HYPERLINK", "sheetName": "Inventory", "address": "A1" }
+{
+  "stepId": "clear-hyperlink",
+  "target": {
+    "type": "BY_ADDRESS",
+    "sheetName": "Inventory",
+    "address": "A1"
+  },
+  "action": {
+    "type": "CLEAR_HYPERLINK"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `address` | Yes | A1-notation cell address. |
 
 ---
@@ -1315,36 +1840,56 @@ requires the authoritative plain `text` plus `author`, and can also author order
 
 ```json
 {
-  "type": "SET_COMMENT",
-  "sheetName": "Inventory",
-  "address": "B4",
-  "comment": {
-    "text": "Lead review scheduled.",
-    "author": "GridGrind",
-    "visible": false,
-    "runs": [
-      {
-        "text": "Lead",
-        "font": {
-          "bold": true,
-          "fontColorTheme": 4,
-          "fontColorTint": -0.2
-        }
+  "stepId": "set-comment",
+  "target": {
+    "type": "BY_ADDRESS",
+    "sheetName": "Inventory",
+    "address": "B4"
+  },
+  "action": {
+    "type": "SET_COMMENT",
+    "comment": {
+      "text": {
+        "type": "INLINE",
+        "text": "Lead review scheduled."
       },
-      { "text": " " },
-      {
-        "text": "review scheduled.",
-        "font": {
-          "italic": true,
-          "fontColorIndexed": 17
+      "author": "GridGrind",
+      "visible": false,
+      "runs": [
+        {
+          "font": {
+            "bold": true,
+            "fontColorTheme": 4,
+            "fontColorTint": -0.2
+          },
+          "source": {
+            "type": "INLINE",
+            "text": "Lead"
+          }
+        },
+        {
+          "source": {
+            "type": "INLINE",
+            "text": " "
+          }
+        },
+        {
+          "font": {
+            "italic": true,
+            "fontColorIndexed": 17
+          },
+          "source": {
+            "type": "INLINE",
+            "text": "review scheduled."
+          }
         }
+      ],
+      "anchor": {
+        "firstColumn": 4,
+        "firstRow": 1,
+        "lastColumn": 8,
+        "lastRow": 7
       }
-    ],
-    "anchor": {
-      "firstColumn": 4,
-      "firstRow": 1,
-      "lastColumn": 8,
-      "lastRow": 7
     }
   }
 }
@@ -1352,7 +1897,7 @@ requires the authoritative plain `text` plus `author`, and can also author order
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `address` | Yes | A1-notation cell address. |
 | `comment` | Yes | Comment payload. |
 
@@ -1362,7 +1907,7 @@ requires the authoritative plain `text` plus `author`, and can also author order
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `text` | Yes | Authoritative plain text of the comment. Must be nonblank. |
+| `text` | Yes | Source-backed plain-text payload. Inline text uses `{ "type": "INLINE", "text": "..." }`; file-backed and standard-input variants are also supported. The resolved text must be nonblank. |
 | `author` | Yes | Nonblank comment author. |
 | `visible` | No | Whether the comment box is shown by default. Defaults to `false`. |
 | `runs` | No | Ordered rich-text run list. When present, the concatenated run text must equal `comment.text` exactly. |
@@ -1376,12 +1921,22 @@ Remove any comment attached to one cell. The cell value, style, and hyperlink ar
 No-op when the cell does not physically exist.
 
 ```json
-{ "type": "CLEAR_COMMENT", "sheetName": "Inventory", "address": "B4" }
+{
+  "stepId": "clear-comment",
+  "target": {
+    "type": "BY_ADDRESS",
+    "sheetName": "Inventory",
+    "address": "B4"
+  },
+  "action": {
+    "type": "CLEAR_COMMENT"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `address` | Yes | A1-notation cell address. |
 
 ---
@@ -1399,22 +1954,38 @@ currently accept only `anchor.type = "TWO_CELL"` with zero-based `from` and `to`
     "name": "OpsPicture",
     "image": {
       "format": "PNG",
-      "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+      "source": {
+        "type": "INLINE_BASE64",
+        "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+      }
     },
     "anchor": {
       "type": "TWO_CELL",
-      "from": { "columnIndex": 0, "rowIndex": 4, "dx": 0, "dy": 0 },
-      "to": { "columnIndex": 2, "rowIndex": 8, "dx": 0, "dy": 0 },
+      "from": {
+        "columnIndex": 0,
+        "rowIndex": 4,
+        "dx": 0,
+        "dy": 0
+      },
+      "to": {
+        "columnIndex": 2,
+        "rowIndex": 8,
+        "dx": 0,
+        "dy": 0
+      },
       "behavior": "MOVE_AND_RESIZE"
     },
-    "description": "Queue preview"
+    "description": {
+      "type": "INLINE",
+      "text": "Queue preview"
+    }
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `picture` | Yes | Authoritative picture payload. |
 
 `picture` fields:
@@ -1433,8 +2004,18 @@ currently accept only `anchor.type = "TWO_CELL"` with zero-based `from` and `to`
 ```json
 {
   "type": "TWO_CELL",
-  "from": { "columnIndex": 0, "rowIndex": 4, "dx": 0, "dy": 0 },
-  "to": { "columnIndex": 2, "rowIndex": 8, "dx": 0, "dy": 0 },
+  "from": {
+    "columnIndex": 0,
+    "rowIndex": 4,
+    "dx": 0,
+    "dy": 0
+  },
+  "to": {
+    "columnIndex": 2,
+    "rowIndex": 8,
+    "dx": 0,
+    "dy": 0
+  },
   "behavior": "MOVE_AND_RESIZE"
 }
 ```
@@ -1458,12 +2039,25 @@ Create or replace one named simple shape or connector on one sheet.
     "kind": "SIMPLE_SHAPE",
     "anchor": {
       "type": "TWO_CELL",
-      "from": { "columnIndex": 3, "rowIndex": 4, "dx": 0, "dy": 0 },
-      "to": { "columnIndex": 5, "rowIndex": 7, "dx": 0, "dy": 0 },
+      "from": {
+        "columnIndex": 3,
+        "rowIndex": 4,
+        "dx": 0,
+        "dy": 0
+      },
+      "to": {
+        "columnIndex": 5,
+        "rowIndex": 7,
+        "dx": 0,
+        "dy": 0
+      },
       "behavior": "MOVE_DONT_RESIZE"
     },
     "presetGeometryToken": "roundRect",
-    "text": "Queue"
+    "text": {
+      "type": "INLINE",
+      "text": "Queue"
+    }
   }
 }
 ```
@@ -1477,8 +2071,18 @@ Create or replace one named simple shape or connector on one sheet.
     "kind": "CONNECTOR",
     "anchor": {
       "type": "TWO_CELL",
-      "from": { "columnIndex": 3, "rowIndex": 8, "dx": 0, "dy": 0 },
-      "to": { "columnIndex": 6, "rowIndex": 9, "dx": 0, "dy": 0 }
+      "from": {
+        "columnIndex": 3,
+        "rowIndex": 8,
+        "dx": 0,
+        "dy": 0
+      },
+      "to": {
+        "columnIndex": 6,
+        "rowIndex": 9,
+        "dx": 0,
+        "dy": 0
+      }
     }
   }
 }
@@ -1486,7 +2090,7 @@ Create or replace one named simple shape or connector on one sheet.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `shape` | Yes | Authoritative shape payload. |
 
 `shape` fields:
@@ -1519,15 +2123,31 @@ image.
     "label": "Ops payload",
     "fileName": "ops-payload.txt",
     "command": "open",
-    "base64Data": "R3JpZEdyaW5kIGVtYmVkZGVkIHBheWxvYWQ=",
     "previewImage": {
       "format": "PNG",
-      "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+      "source": {
+        "type": "INLINE_BASE64",
+        "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+      }
     },
     "anchor": {
       "type": "TWO_CELL",
-      "from": { "columnIndex": 6, "rowIndex": 4, "dx": 0, "dy": 0 },
-      "to": { "columnIndex": 8, "rowIndex": 9, "dx": 0, "dy": 0 }
+      "from": {
+        "columnIndex": 6,
+        "rowIndex": 4,
+        "dx": 0,
+        "dy": 0
+      },
+      "to": {
+        "columnIndex": 8,
+        "rowIndex": 9,
+        "dx": 0,
+        "dy": 0
+      }
+    },
+    "payload": {
+      "type": "INLINE_BASE64",
+      "base64Data": "R3JpZEdyaW5kIGVtYmVkZGVkIHBheWxvYWQ="
     }
   }
 }
@@ -1535,7 +2155,7 @@ image.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `embeddedObject` | Yes | Authoritative embedded-object payload. |
 
 `embeddedObject` fields:
@@ -1567,26 +2187,65 @@ chart detail is preserved on unrelated edits and rejected for authoritative muta
     "name": "OpsChart",
     "anchor": {
       "type": "TWO_CELL",
-      "from": { "columnIndex": 4, "rowIndex": 0, "dx": 0, "dy": 0 },
-      "to": { "columnIndex": 8, "rowIndex": 12, "dx": 0, "dy": 0 },
+      "from": {
+        "columnIndex": 4,
+        "rowIndex": 0,
+        "dx": 0,
+        "dy": 0
+      },
+      "to": {
+        "columnIndex": 8,
+        "rowIndex": 12,
+        "dx": 0,
+        "dy": 0
+      },
       "behavior": "MOVE_AND_RESIZE"
     },
-    "title": { "type": "TEXT", "text": "Roadmap" },
-    "legend": { "type": "VISIBLE", "position": "TOP_RIGHT" },
+    "title": {
+      "type": "TEXT",
+      "source": {
+        "type": "INLINE",
+        "text": "Roadmap"
+      }
+    },
+    "legend": {
+      "type": "VISIBLE",
+      "position": "TOP_RIGHT"
+    },
     "displayBlanksAs": "SPAN",
     "plotOnlyVisibleCells": false,
     "varyColors": true,
     "barDirection": "COLUMN",
     "series": [
       {
-        "title": { "type": "TEXT", "text": "Plan" },
-        "categories": { "formula": "ChartCategories" },
-        "values": { "formula": "Ops!$B$2:$B$4" }
+        "title": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Plan"
+          }
+        },
+        "categories": {
+          "formula": "ChartCategories"
+        },
+        "values": {
+          "formula": "Ops!$B$2:$B$4"
+        }
       },
       {
-        "title": { "type": "TEXT", "text": "Actual" },
-        "categories": { "formula": "ChartCategories" },
-        "values": { "formula": "ChartActual" }
+        "title": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Actual"
+          }
+        },
+        "categories": {
+          "formula": "ChartCategories"
+        },
+        "values": {
+          "formula": "ChartActual"
+        }
       }
     ]
   }
@@ -1595,7 +2254,7 @@ chart detail is preserved on unrelated edits and rejected for authoritative muta
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `chart` | Yes | Authoritative supported-chart payload. |
 
 `chart` common fields:
@@ -1642,21 +2301,36 @@ Move one existing named drawing object by replacing its anchor authoritatively.
 
 ```json
 {
-  "type": "SET_DRAWING_OBJECT_ANCHOR",
-  "sheetName": "Ops",
-  "objectName": "OpsPicture",
-  "anchor": {
-    "type": "TWO_CELL",
-    "from": { "columnIndex": 1, "rowIndex": 5, "dx": 0, "dy": 0 },
-    "to": { "columnIndex": 3, "rowIndex": 9, "dx": 0, "dy": 0 }
+  "stepId": "set-drawing-object-anchor",
+  "target": {
+    "type": "BY_NAME",
+    "sheetName": "Ops",
+    "objectName": "OpsPicture"
+  },
+  "action": {
+    "type": "SET_DRAWING_OBJECT_ANCHOR",
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": {
+        "columnIndex": 1,
+        "rowIndex": 5,
+        "dx": 0,
+        "dy": 0
+      },
+      "to": {
+        "columnIndex": 3,
+        "rowIndex": 9,
+        "dx": 0,
+        "dy": 0
+      }
+    }
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
-| `objectName` | Yes | Existing sheet-local drawing-object name. |
+| `target` | Yes | `BY_NAME` drawing-object selector for the existing sheet-local object. |
 | `anchor` | Yes | Replacement authored drawing anchor. The current public contract supports only `TWO_CELL`. |
 
 ---
@@ -1666,13 +2340,22 @@ Move one existing named drawing object by replacing its anchor authoritatively.
 Delete one existing named drawing object from one sheet.
 
 ```json
-{ "type": "DELETE_DRAWING_OBJECT", "sheetName": "Ops", "objectName": "OpsConnector" }
+{
+  "stepId": "delete-drawing-object",
+  "target": {
+    "type": "BY_NAME",
+    "sheetName": "Ops",
+    "objectName": "OpsConnector"
+  },
+  "action": {
+    "type": "DELETE_DRAWING_OBJECT"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
-| `objectName` | Yes | Existing sheet-local drawing-object name to delete. |
+| `target` | Yes | `BY_NAME` drawing-object selector for the existing sheet-local object to delete. |
 
 ---
 
@@ -1683,33 +2366,48 @@ unspecified style properties are left untouched.
 
 ```json
 {
-  "type": "APPLY_STYLE",
-  "sheetName": "Inventory",
-  "range": "A1:C1",
-  "style": {
-    "alignment": {
-      "wrapText": true,
-      "horizontalAlignment": "CENTER",
-      "verticalAlignment": "CENTER",
-      "textRotation": 15
-    },
-    "font": {
-      "bold": true,
-      "fontName": "Aptos",
-      "fontHeight": { "type": "POINTS", "points": 13 },
-      "fontColor": "#FFFFFF"
-    },
-    "fill": {
-      "pattern": "THIN_HORIZONTAL_BANDS",
-      "foregroundColor": "#1F4E78",
-      "backgroundColor": "#D9E2F3"
-    },
-    "border": {
-      "all": { "style": "THIN", "color": "#FFFFFF" },
-      "bottom": { "style": "DOUBLE", "color": "#D9E2F3" }
-    },
-    "protection": {
-      "locked": true
+  "stepId": "apply-style",
+  "target": {
+    "type": "BY_RANGE",
+    "sheetName": "Inventory",
+    "range": "A1:C1"
+  },
+  "action": {
+    "type": "APPLY_STYLE",
+    "style": {
+      "alignment": {
+        "wrapText": true,
+        "horizontalAlignment": "CENTER",
+        "verticalAlignment": "CENTER",
+        "textRotation": 15
+      },
+      "font": {
+        "bold": true,
+        "fontName": "Aptos",
+        "fontHeight": {
+          "type": "POINTS",
+          "points": 13
+        },
+        "fontColor": "#FFFFFF"
+      },
+      "fill": {
+        "pattern": "THIN_HORIZONTAL_BANDS",
+        "foregroundColor": "#1F4E78",
+        "backgroundColor": "#D9E2F3"
+      },
+      "border": {
+        "all": {
+          "style": "THIN",
+          "color": "#FFFFFF"
+        },
+        "bottom": {
+          "style": "DOUBLE",
+          "color": "#D9E2F3"
+        }
+      },
+      "protection": {
+        "locked": true
+      }
     }
   }
 }
@@ -1717,28 +2415,45 @@ unspecified style properties are left untouched.
 
 ```json
 {
-  "type": "APPLY_STYLE",
-  "sheetName": "Inventory",
-  "range": "J2:J3",
-  "style": {
-    "font": {
-      "fontColorTheme": 6,
-      "fontColorTint": -0.35
-    },
-    "fill": {
-      "gradient": {
-        "type": "LINEAR",
-        "degree": 45.0,
-        "stops": [
-          { "position": 0.0, "color": { "rgb": "#1F497D" } },
-          { "position": 1.0, "color": { "theme": 4, "tint": 0.45 } }
-        ]
-      }
-    },
-    "border": {
-      "bottom": {
-        "style": "THIN",
-        "colorIndexed": 8
+  "stepId": "apply-style",
+  "target": {
+    "type": "BY_RANGE",
+    "sheetName": "Inventory",
+    "range": "J2:J3"
+  },
+  "action": {
+    "type": "APPLY_STYLE",
+    "style": {
+      "font": {
+        "fontColorTheme": 6,
+        "fontColorTint": -0.35
+      },
+      "fill": {
+        "gradient": {
+          "type": "LINEAR",
+          "degree": 45.0,
+          "stops": [
+            {
+              "position": 0.0,
+              "color": {
+                "rgb": "#1F497D"
+              }
+            },
+            {
+              "position": 1.0,
+              "color": {
+                "theme": 4,
+                "tint": 0.45
+              }
+            }
+          ]
+        }
+      },
+      "border": {
+        "bottom": {
+          "style": "THIN",
+          "colorIndexed": 8
+        }
       }
     }
   }
@@ -1747,7 +2462,7 @@ unspecified style properties are left untouched.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `range` | Yes | Range to style. |
 | `style` | Yes | Partial style patch. `numberFormat` plus nested `alignment`, `font`, `fill`, `border`, and `protection` groups are all optional. |
 
@@ -1900,23 +2615,45 @@ authoritative on its target cells and any remaining fragments are retained aroun
 
 ```json
 {
-  "type": "SET_DATA_VALIDATION",
-  "sheetName": "Inventory",
-  "range": "B2:B200",
-  "validation": {
-    "rule": {
-      "type": "EXPLICIT_LIST",
-      "values": ["Queued", "Done", "Blocked"]
-    },
-    "allowBlank": true,
-    "prompt": {
-      "title": "Status",
-      "text": "Pick one workflow state."
-    },
-    "errorAlert": {
-      "style": "STOP",
-      "title": "Invalid status",
-      "text": "Use one of the allowed values."
+  "stepId": "set-data-validation",
+  "target": {
+    "type": "BY_RANGE",
+    "sheetName": "Inventory",
+    "range": "B2:B200"
+  },
+  "action": {
+    "type": "SET_DATA_VALIDATION",
+    "validation": {
+      "rule": {
+        "type": "EXPLICIT_LIST",
+        "values": [
+          "Queued",
+          "Done",
+          "Blocked"
+        ]
+      },
+      "allowBlank": true,
+      "prompt": {
+        "title": {
+          "type": "INLINE",
+          "text": "Status"
+        },
+        "text": {
+          "type": "INLINE",
+          "text": "Pick one workflow state."
+        }
+      },
+      "errorAlert": {
+        "style": "STOP",
+        "title": {
+          "type": "INLINE",
+          "text": "Invalid status"
+        },
+        "text": {
+          "type": "INLINE",
+          "text": "Use one of the allowed values."
+        }
+      }
     }
   }
 }
@@ -1924,15 +2661,21 @@ authoritative on its target cells and any remaining fragments are retained aroun
 
 ```json
 {
-  "type": "SET_DATA_VALIDATION",
-  "sheetName": "Inventory",
-  "range": "C2:C200",
-  "validation": {
-    "rule": {
-      "type": "WHOLE_NUMBER",
-      "operator": "BETWEEN",
-      "formula1": "1",
-      "formula2": "5"
+  "stepId": "set-data-validation",
+  "target": {
+    "type": "BY_RANGE",
+    "sheetName": "Inventory",
+    "range": "C2:C200"
+  },
+  "action": {
+    "type": "SET_DATA_VALIDATION",
+    "validation": {
+      "rule": {
+        "type": "WHOLE_NUMBER",
+        "operator": "BETWEEN",
+        "formula1": "1",
+        "formula2": "5"
+      }
     }
   }
 }
@@ -1940,7 +2683,7 @@ authoritative on its target cells and any remaining fragments are retained aroun
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `range` | Yes | Rectangular A1-style target range. |
 | `validation` | Yes | Supported data-validation definition. |
 
@@ -1963,8 +2706,8 @@ Optional validation fields:
 |:------|:------------|
 | `allowBlank` | Allow empty cells to bypass validation. Defaults to `false`. |
 | `suppressDropDownArrow` | Hide Excel's list dropdown arrow when the rule supports it. Defaults to `false`. |
-| `prompt` | Optional prompt box with `title`, `text`, and optional `showPromptBox` (defaults to `true`). |
-| `errorAlert` | Optional error box with `style`, `title`, `text`, and optional `showErrorBox` (defaults to `true`). |
+| `prompt` | Optional prompt box with source-backed `title` and `text` values plus optional `showPromptBox` (defaults to `true`). |
+| `errorAlert` | Optional error box with `style`, source-backed `title` / `text`, and optional `showErrorBox` (defaults to `true`). |
 
 Comparison operators use the typed string values:
 `BETWEEN`, `NOT_BETWEEN`, `EQUAL`, `NOT_EQUAL`, `GREATER_THAN`, `LESS_THAN`,
@@ -1980,27 +2723,38 @@ ranges, preserving any remaining coverage fragments around the cleared area.
 
 ```json
 {
-  "type": "CLEAR_DATA_VALIDATIONS",
-  "sheetName": "Inventory",
-  "selection": { "type": "ALL" }
+  "stepId": "clear-data-validations",
+  "target": {
+    "type": "ALL_ON_SHEET",
+    "sheetName": "Inventory"
+  },
+  "action": {
+    "type": "CLEAR_DATA_VALIDATIONS"
+  }
 }
 ```
 
 ```json
 {
-  "type": "CLEAR_DATA_VALIDATIONS",
-  "sheetName": "Inventory",
-  "selection": {
-    "type": "SELECTED",
-    "ranges": ["B4", "C8:D10"]
+  "stepId": "clear-data-validations",
+  "target": {
+    "type": "BY_RANGES",
+    "sheetName": "Inventory",
+    "ranges": [
+      "B4",
+      "C8:D10"
+    ]
+  },
+  "action": {
+    "type": "CLEAR_DATA_VALIDATIONS"
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
-| `selection` | Yes | `ALL` or an ordered `SELECTED` range list. |
+| `target` | Yes | Selector payload for the target workbook location. |
+| `target` | Yes | `ALL_ON_SHEET` or `BY_RANGES` selector for the target ranges. |
 
 ---
 
@@ -2023,50 +2777,79 @@ differential, not a whole-cell style patch. Supported differential-style attribu
 
 ```json
 {
-  "type": "SET_CONDITIONAL_FORMATTING",
-  "sheetName": "Inventory",
-  "conditionalFormatting": {
-    "ranges": ["D2:D200"],
-    "rules": [
-      {
-        "type": "CELL_VALUE_RULE",
-        "operator": "GREATER_THAN",
-        "formula1": "8",
-        "stopIfTrue": false,
-        "style": {
-          "numberFormat": "0.0",
-          "fillColor": "#FDE9D9",
-          "fontColor": "#9C0006",
-          "bold": true
+  "stepId": "set-conditional-formatting",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "SET_CONDITIONAL_FORMATTING",
+    "conditionalFormatting": {
+      "ranges": [
+        "D2:D200"
+      ],
+      "rules": [
+        {
+          "type": "CELL_VALUE_RULE",
+          "operator": "GREATER_THAN",
+          "formula1": "8",
+          "stopIfTrue": false,
+          "style": {
+            "numberFormat": "0.0",
+            "fillColor": "#FDE9D9",
+            "fontColor": "#9C0006",
+            "bold": true
+          }
         }
-      }
-    ]
+      ]
+    }
   }
 }
 ```
 
 ```json
 {
-  "type": "SET_CONDITIONAL_FORMATTING",
-  "sheetName": "Inventory",
-  "conditionalFormatting": {
-    "ranges": ["K2:K200"],
-    "rules": [
-      {
-        "type": "COLOR_SCALE_RULE",
-        "stopIfTrue": false,
-        "thresholds": [
-          { "type": "MIN" },
-          { "type": "PERCENTILE", "value": 50.0 },
-          { "type": "MAX" }
-        ],
-        "colors": [
-          { "rgb": "#AA2211" },
-          { "rgb": "#FFDD55" },
-          { "rgb": "#11CC66" }
-        ]
-      }
-    ]
+  "stepId": "set-conditional-formatting",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "SET_CONDITIONAL_FORMATTING",
+    "conditionalFormatting": {
+      "ranges": [
+        "K2:K200"
+      ],
+      "rules": [
+        {
+          "type": "COLOR_SCALE_RULE",
+          "stopIfTrue": false,
+          "thresholds": [
+            {
+              "type": "MIN"
+            },
+            {
+              "type": "PERCENTILE",
+              "value": 50.0
+            },
+            {
+              "type": "MAX"
+            }
+          ],
+          "colors": [
+            {
+              "rgb": "#AA2211"
+            },
+            {
+              "rgb": "#FFDD55"
+            },
+            {
+              "rgb": "#11CC66"
+            }
+          ]
+        }
+      ]
+    }
   }
 }
 ```
@@ -2084,25 +2867,36 @@ Rule family summary:
 
 ### CLEAR_CONDITIONAL_FORMATTING
 
-Removes conditional-formatting blocks on the sheet that intersect the provided range selection.
-`ALL` clears the sheet. `SELECTED` removes every stored block whose target ranges intersect any of
-the selected A1 ranges.
+Removes conditional-formatting blocks on the sheet that intersect the provided range selector.
+`ALL_ON_SHEET` clears the sheet. `BY_RANGES` removes every stored block whose target ranges
+intersect any of the selected A1 ranges.
 
 ```json
 {
-  "type": "CLEAR_CONDITIONAL_FORMATTING",
-  "sheetName": "Inventory",
-  "selection": { "type": "ALL" }
+  "stepId": "clear-conditional-formatting",
+  "target": {
+    "type": "ALL_ON_SHEET",
+    "sheetName": "Inventory"
+  },
+  "action": {
+    "type": "CLEAR_CONDITIONAL_FORMATTING"
+  }
 }
 ```
 
 ```json
 {
-  "type": "CLEAR_CONDITIONAL_FORMATTING",
-  "sheetName": "Inventory",
-  "selection": {
-    "type": "SELECTED",
-    "ranges": ["D2:D200", "F2:F20"]
+  "stepId": "clear-conditional-formatting",
+  "target": {
+    "type": "BY_RANGES",
+    "sheetName": "Inventory",
+    "ranges": [
+      "D2:D200",
+      "F2:F20"
+    ]
+  },
+  "action": {
+    "type": "CLEAR_CONDITIONAL_FORMATTING"
   }
 }
 ```
@@ -2118,39 +2912,48 @@ metadata on the same autofilter.
 
 ```json
 {
-  "type": "SET_AUTOFILTER",
-  "sheetName": "Inventory",
-  "range": "A1:C200",
-  "criteria": [
-    {
-      "columnId": 2,
-      "showButton": true,
-      "criterion": {
-        "type": "VALUES",
-        "values": ["Queued", "Done"],
-        "includeBlank": false
-      }
-    }
-  ],
-  "sortState": {
-    "range": "A2:C200",
-    "caseSensitive": false,
-    "columnSort": false,
-    "sortMethod": "",
-    "conditions": [
+  "stepId": "set-autofilter",
+  "target": {
+    "type": "BY_RANGE",
+    "sheetName": "Inventory",
+    "range": "A1:C200"
+  },
+  "action": {
+    "type": "SET_AUTOFILTER",
+    "criteria": [
       {
-        "range": "C2:C200",
-        "descending": true,
-        "sortBy": ""
+        "columnId": 2,
+        "showButton": true,
+        "criterion": {
+          "type": "VALUES",
+          "values": [
+            "Queued",
+            "Done"
+          ],
+          "includeBlank": false
+        }
       }
-    ]
+    ],
+    "sortState": {
+      "range": "A2:C200",
+      "caseSensitive": false,
+      "columnSort": false,
+      "sortMethod": "",
+      "conditions": [
+        {
+          "range": "C2:C200",
+          "descending": true,
+          "sortBy": ""
+        }
+      ]
+    }
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | Selector payload for the target workbook location. |
 | `range` | Yes | Rectangular A1-style range. The first row is treated as the filter header row. |
 | `criteria` | No | Ordered authored filter-column list. Defaults to `[]`. |
 | `sortState` | No | Authored sort-state payload. Omit it to leave the autofilter without persisted sort metadata. |
@@ -2195,12 +2998,21 @@ Remove the sheet-level autofilter range from one sheet. Table-owned autofilters 
 their tables.
 
 ```json
-{ "type": "CLEAR_AUTOFILTER", "sheetName": "Inventory" }
+{
+  "stepId": "clear-autofilter",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "CLEAR_AUTOFILTER"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Existing target sheet. |
+| `target` | Yes | `BY_NAME` selector for the existing target sheet. |
 
 ---
 
@@ -2221,7 +3033,9 @@ table-column metadata converged with the visible header cells.
     "name": "InventoryTable",
     "sheetName": "Inventory",
     "range": "A1:C200",
-    "style": { "type": "NONE" }
+    "style": {
+      "type": "NONE"
+    }
   }
 }
 ```
@@ -2235,7 +3049,10 @@ table-column metadata converged with the visible header cells.
     "range": "A1:C200",
     "showTotalsRow": true,
     "hasAutofilter": false,
-    "comment": "Inventory tracker",
+    "comment": {
+      "type": "INLINE",
+      "text": "Inventory tracker"
+    },
     "published": true,
     "insertRow": true,
     "insertRowShift": true,
@@ -2251,9 +3068,18 @@ table-column metadata converged with the visible header cells.
       "showColumnStripes": false
     },
     "columns": [
-      { "columnIndex": 0, "totalsRowLabel": "Total" },
-      { "columnIndex": 1, "totalsRowFunction": "SUM" },
-      { "columnIndex": 2, "uniqueName": "status-unique" }
+      {
+        "columnIndex": 0,
+        "totalsRowLabel": "Total"
+      },
+      {
+        "columnIndex": 1,
+        "totalsRowFunction": "SUM"
+      },
+      {
+        "columnIndex": 2,
+        "uniqueName": "status-unique"
+      }
     ]
   }
 }
@@ -2345,9 +3171,15 @@ above the rendered body.
       "sheetName": "Inventory",
       "range": "A1:D200"
     },
-    "anchor": { "topLeftAddress": "C5" },
-    "rowLabels": ["Region"],
-    "columnLabels": ["Stage"],
+    "anchor": {
+      "topLeftAddress": "C5"
+    },
+    "rowLabels": [
+      "Region"
+    ],
+    "columnLabels": [
+      "Stage"
+    ],
     "reportFilters": [],
     "dataFields": [
       {
@@ -2367,11 +3199,20 @@ above the rendered body.
   "pivotTable": {
     "name": "NamedPivot",
     "sheetName": "NamedReport",
-    "source": { "type": "NAMED_RANGE", "name": "PivotSource" },
-    "anchor": { "topLeftAddress": "A3" },
-    "rowLabels": ["Region"],
+    "source": {
+      "type": "NAMED_RANGE",
+      "name": "PivotSource"
+    },
+    "anchor": {
+      "topLeftAddress": "A3"
+    },
+    "rowLabels": [
+      "Region"
+    ],
     "columnLabels": [],
-    "reportFilters": ["Owner"],
+    "reportFilters": [
+      "Owner"
+    ],
     "dataFields": [
       {
         "sourceColumnName": "Amount",
@@ -2388,9 +3229,16 @@ above the rendered body.
   "pivotTable": {
     "name": "TablePivot",
     "sheetName": "TableReport",
-    "source": { "type": "TABLE", "name": "InventoryTable" },
-    "anchor": { "topLeftAddress": "F4" },
-    "rowLabels": ["Stage"],
+    "source": {
+      "type": "TABLE",
+      "name": "InventoryTable"
+    },
+    "anchor": {
+      "topLeftAddress": "F4"
+    },
+    "rowLabels": [
+      "Stage"
+    ],
     "columnLabels": [],
     "reportFilters": [],
     "dataFields": [
@@ -2469,19 +3317,37 @@ Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid 
 
 ```json
 {
-  "type": "APPEND_ROW",
-  "sheetName": "Inventory",
-  "values": [
-    { "type": "TEXT",   "text": "Guatemala Antigua" },
-    { "type": "NUMBER", "number": 100 },
-    { "type": "NUMBER", "number": 9.20 }
-  ]
+  "stepId": "append-row",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "APPEND_ROW",
+    "values": [
+      {
+        "type": "TEXT",
+        "source": {
+          "type": "INLINE",
+          "text": "Guatemala Antigua"
+        }
+      },
+      {
+        "type": "NUMBER",
+        "number": 100
+      },
+      {
+        "type": "NUMBER",
+        "number": 9.2
+      }
+    ]
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | `BY_NAME` selector for the target sheet. |
 | `values` | Yes | Row of typed cell values. |
 
 Rows that contain only style, comment, or hyperlink metadata are ignored when locating the append
@@ -2494,12 +3360,21 @@ position.
 Resize columns to fit their content. Applies to all columns with data on the sheet.
 
 ```json
-{ "type": "AUTO_SIZE_COLUMNS", "sheetName": "Inventory" }
+{
+  "stepId": "auto-size-columns",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "action": {
+    "type": "AUTO_SIZE_COLUMNS"
+  }
+}
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `sheetName` | Yes | Target sheet. |
+| `target` | Yes | `BY_NAME` selector for the target sheet. |
 
 Note: `AUTO_SIZE_COLUMNS` and `SET_COLUMN_WIDTH` can be combined in the same request. Since
 operations run in order, whichever appears later wins.
@@ -2509,66 +3384,89 @@ headless, and local runs produce the same widths.
 
 ---
 
-### EVALUATE_FORMULAS
+### execution.calculation
 
-Force recalculation of all formulas in the workbook before save. Use this when formulas depend on
-data written earlier in the same request.
-
-```json
-{ "type": "EVALUATE_FORMULAS" }
-```
-
-No additional fields.
-
----
-
-### EVALUATE_FORMULA_CELLS
-
-Recalculate one or more explicit formula cells and persist only those refreshed cached results.
-Use this when a request needs targeted recalculation after a narrow workbook edit.
+Formula evaluation, cache clearing, and workbook-open recalc are now request-level execution
+policy, not mutation actions. One calculation policy applies to the whole request and runs after
+mutations, before any downstream assertion or inspection observes formula state.
 
 ```json
 {
-  "type": "EVALUATE_FORMULA_CELLS",
-  "cells": [
-    { "sheetName": "Budget", "address": "D2" },
-    { "sheetName": "Budget", "address": "E2" }
-  ]
+  "execution": {
+    "calculation": {
+      "strategy": {
+        "type": "EVALUATE_ALL"
+      },
+      "markRecalculateOnOpen": true
+    }
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `cells` | Yes | Ordered non-empty list of explicit formula-cell targets. |
+| `strategy` | No | `DO_NOT_CALCULATE`, `EVALUATE_ALL`, `EVALUATE_TARGETS`, or `CLEAR_CACHES_ONLY`. Defaults to `DO_NOT_CALCULATE`. |
+| `markRecalculateOnOpen` | No | Persist Excel's workbook-level recalc-on-open flag. Defaults to `false`. |
 
-Each target must point at an existing formula cell.
-
----
-
-### CLEAR_FORMULA_CACHES
-
-Clear all persisted cached formula results from the workbook and reset the in-process evaluator
-state. Later formula reads in the same request still evaluate live, but saved workbooks no longer
-carry stale cached values.
+`EVALUATE_ALL` refreshes every formula cell reachable in the workbook:
 
 ```json
-{ "type": "CLEAR_FORMULA_CACHES" }
+{
+  "execution": {
+    "calculation": {
+      "strategy": {
+        "type": "EVALUATE_ALL"
+      }
+    }
+  }
+}
 ```
 
-No additional fields.
-
----
-
-### FORCE_FORMULA_RECALCULATION_ON_OPEN
-
-Mark the workbook so Excel recalculates all formulas when the file is opened. Use this as an
-alternative to `EVALUATE_FORMULAS` when server-side recalculation is not required.
+`EVALUATE_TARGETS` refreshes one explicit formula-cell set only:
 
 ```json
-{ "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
+{
+  "execution": {
+    "calculation": {
+      "strategy": {
+        "type": "EVALUATE_TARGETS",
+        "cells": [
+          {
+            "sheetName": "Budget",
+            "address": "D2"
+          },
+          {
+            "sheetName": "Budget",
+            "address": "E2"
+          }
+        ]
+      }
+    }
+  }
+}
 ```
 
-No additional fields.
+`CLEAR_CACHES_ONLY` strips persisted formula caches without attempting server-side evaluation:
+
+```json
+{
+  "execution": {
+    "calculation": {
+      "strategy": {
+        "type": "CLEAR_CACHES_ONLY"
+      }
+    }
+  }
+}
+```
+
+`markRecalculateOnOpen=true` can be paired with any strategy, including the default
+`DO_NOT_CALCULATE`, when Excel-compatible clients should refresh formulas later instead of the
+server evaluating them immediately.
+
+`EVENT_READ` requires `strategy=DO_NOT_CALCULATE` with `markRecalculateOnOpen=false`.
+`STREAMING_WRITE` requires `strategy=DO_NOT_CALCULATE` and allows only `markRecalculateOnOpen=true`
+as its calculation-side change.
 
 ---
 
@@ -2581,8 +3479,13 @@ sheet-qualified cells or rectangular ranges, or formula-defined name targets.
 {
   "type": "SET_NAMED_RANGE",
   "name": "BudgetTotal",
-  "scope": { "type": "WORKBOOK" },
-  "target": { "sheetName": "Budget", "range": "B4" }
+  "scope": {
+    "type": "WORKBOOK"
+  },
+  "target": {
+    "sheetName": "Budget",
+    "range": "B4"
+  }
 }
 ```
 
@@ -2590,8 +3493,14 @@ sheet-qualified cells or rectangular ranges, or formula-defined name targets.
 {
   "type": "SET_NAMED_RANGE",
   "name": "BudgetTable",
-  "scope": { "type": "SHEET", "sheetName": "Budget" },
-  "target": { "sheetName": "Budget", "range": "A1:B4" }
+  "scope": {
+    "type": "SHEET",
+    "sheetName": "Budget"
+  },
+  "target": {
+    "sheetName": "Budget",
+    "range": "A1:B4"
+  }
 }
 ```
 
@@ -2599,8 +3508,12 @@ sheet-qualified cells or rectangular ranges, or formula-defined name targets.
 {
   "type": "SET_NAMED_RANGE",
   "name": "BudgetRollup",
-  "scope": { "type": "WORKBOOK" },
-  "target": { "formula": "SUM(Budget!$B$2:$B$5)" }
+  "scope": {
+    "type": "WORKBOOK"
+  },
+  "target": {
+    "formula": "SUM(Budget!$B$2:$B$5)"
+  }
 }
 ```
 
@@ -2620,7 +3533,9 @@ Delete one existing named range from workbook scope or sheet scope.
 {
   "type": "DELETE_NAMED_RANGE",
   "name": "BudgetTotal",
-  "scope": { "type": "WORKBOOK" }
+  "scope": {
+    "type": "WORKBOOK"
+  }
 }
 ```
 
@@ -2631,35 +3546,204 @@ Delete one existing named range from workbook scope or sheet scope.
 
 ---
 
-## Reads
+## Assertions
 
-Reads are ordered, explicit post-mutation requests. Every read must include a caller-defined
-`requestId`, and every result echoes that `requestId` back in the successful response.
+Assertions are ordered, explicit verification steps. They run in the same `steps[]` list as
+mutations and inspections, and they can appear anywhere the plan needs them. Every assertion must
+include a caller-defined `stepId`.
 
-Read categories:
+Successful responses echo passed assertion steps back through the ordered `assertions[]` array:
+
+```json
+{
+  "status": "SUCCESS",
+  "protocolVersion": "V1",
+  "journal": {
+    "planId": "assert-budget",
+    "level": "NORMAL"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "warnings": [],
+  "assertions": [
+    {
+      "stepId": "assert-title",
+      "assertionType": "EXPECT_CELL_VALUE"
+    }
+  ],
+  "inspections": []
+}
+```
+
+Failed assertions stop the workflow with `ASSERTION_FAILED` and attach a structured
+`problem.assertionFailure` payload describing the failed assertion plus the observed factual read
+results that caused the mismatch.
+
+`EXPECT_PRESENT` and `EXPECT_ABSENT` are selector-count assertions, not strict read lookups. If an
+exact named range, chart, table, or pivot-table selector matches nothing, the assertion observes
+zero entities and then passes or fails from that count; GridGrind does not surface
+selector-specific `*_NOT_FOUND` problems for these assertion families.
+
+Assertion families:
+
+| Assertion `type` | Valid target families | Purpose |
+|:-----------------|:----------------------|:--------|
+| `EXPECT_PRESENT` | `NamedRangeSelector`, `TableSelector`, `PivotTableSelector`, `ChartSelector` | Require at least one matching workbook entity; selector misses count as zero observed entities. |
+| `EXPECT_ABSENT` | `NamedRangeSelector`, `TableSelector`, `PivotTableSelector`, `ChartSelector` | Require zero matching workbook entities; selector misses count as zero observed entities. |
+| `EXPECT_CELL_VALUE` | `CellSelector` | Require exact effective cell values. |
+| `EXPECT_DISPLAY_VALUE` | `CellSelector` | Require exact formatted display strings. |
+| `EXPECT_FORMULA_TEXT` | `CellSelector` | Require exact stored formula text. |
+| `EXPECT_CELL_STYLE` | `CellSelector` | Require exact cell-style reports. |
+| `EXPECT_WORKBOOK_PROTECTION` | `WorkbookSelector` | Require exact workbook-protection facts. |
+| `EXPECT_SHEET_STRUCTURE` | `SheetSelector.ByName` | Require exact one-sheet structural summary facts. |
+| `EXPECT_NAMED_RANGE_FACTS` | `NamedRangeSelector` | Require exact named-range reports. |
+| `EXPECT_TABLE_FACTS` | `TableSelector` | Require exact table reports. |
+| `EXPECT_PIVOT_TABLE_FACTS` | `PivotTableSelector` | Require exact pivot-table reports. |
+| `EXPECT_CHART_FACTS` | `ChartSelector` | Require exact chart reports. |
+| `EXPECT_ANALYSIS_MAX_SEVERITY` | Matches the supplied analysis `query` target family | Require a maximum severity ceiling for one analysis query. |
+| `EXPECT_ANALYSIS_FINDING_PRESENT` | Matches the supplied analysis `query` target family | Require at least one matching finding from one analysis query. |
+| `EXPECT_ANALYSIS_FINDING_ABSENT` | Matches the supplied analysis `query` target family | Require no matching findings from one analysis query. |
+| `ALL_OF` | Any selector family shared by all nested assertions | Require every nested assertion to pass against the same target. |
+| `ANY_OF` | Any selector family shared by all nested assertions | Require at least one nested assertion to pass against the same target. |
+| `NOT` | Same selector family as the nested assertion | Invert one nested assertion. |
+
+Common assertion step shapes:
+
+```json
+{
+  "stepId": "assert-title",
+  "target": {
+    "type": "BY_ADDRESS",
+    "sheetName": "Budget",
+    "address": "A1"
+  },
+  "assertion": {
+    "type": "EXPECT_CELL_VALUE",
+    "expectedValue": {
+      "type": "TEXT",
+      "text": "Quarterly Budget"
+    }
+  }
+}
+```
+
+```json
+{
+  "stepId": "assert-formula-health",
+  "target": {
+    "type": "BY_NAME",
+    "sheetName": "Budget"
+  },
+  "assertion": {
+    "type": "EXPECT_ANALYSIS_MAX_SEVERITY",
+    "query": {
+      "type": "ANALYZE_FORMULA_HEALTH"
+    },
+    "maximumSeverity": "INFO"
+  }
+}
+```
+
+```json
+{
+  "stepId": "assert-workbook-links",
+  "target": {
+    "type": "CURRENT"
+  },
+  "assertion": {
+    "type": "EXPECT_ANALYSIS_FINDING_ABSENT",
+    "query": {
+      "type": "ANALYZE_WORKBOOK_FINDINGS"
+    },
+    "code": "HYPERLINK_MALFORMED_TARGET"
+  }
+}
+```
+
+```json
+{
+  "stepId": "assert-total-state",
+  "target": {
+    "type": "BY_ADDRESS",
+    "sheetName": "Budget",
+    "address": "B2"
+  },
+  "assertion": {
+    "type": "ALL_OF",
+    "assertions": [
+      {
+        "type": "EXPECT_CELL_VALUE",
+        "expectedValue": {
+          "type": "NUMBER",
+          "number": 1200
+        }
+      },
+      {
+        "type": "NOT",
+        "assertion": {
+          "type": "EXPECT_DISPLAY_VALUE",
+          "displayValue": "0"
+        }
+      }
+    ]
+  }
+}
+```
+
+For a runnable mutate-then-verify plan, see
+[`examples/assertion-request.json`](../examples/assertion-request.json).
+
+---
+
+## Inspection Queries
+
+Inspection queries are ordered, explicit post-mutation or post-assertion requests. Every
+inspection must include a caller-defined `stepId`, and every result echoes that `stepId` back in
+the successful response.
+
+Inspection categories:
 
 - Introspection: exact workbook facts with no higher-level interpretation.
 - Analysis: finding-bearing workbook conclusions built on top of introspection.
 
 ```json
 {
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
+  "steps": [
     {
-      "type": "GET_WINDOW",
-      "requestId": "inventory-window",
-      "sheetName": "Inventory",
-      "topLeftAddress": "A1",
-      "rowCount": 5,
-      "columnCount": 3
+      "stepId": "workbook",
+      "target": {
+        "type": "CURRENT"
+      },
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      }
     },
     {
-      "type": "GET_SHEET_SCHEMA",
-      "requestId": "inventory-schema",
-      "sheetName": "Inventory",
-      "topLeftAddress": "A1",
-      "rowCount": 5,
-      "columnCount": 3
+      "stepId": "inventory-window",
+      "target": {
+        "type": "RECTANGULAR_WINDOW",
+        "sheetName": "Inventory",
+        "topLeftAddress": "A1",
+        "rowCount": 5,
+        "columnCount": 3
+      },
+      "query": {
+        "type": "GET_WINDOW"
+      }
+    },
+    {
+      "stepId": "inventory-schema",
+      "target": {
+        "type": "RECTANGULAR_WINDOW",
+        "sheetName": "Inventory",
+        "topLeftAddress": "A1",
+        "rowCount": 5,
+        "columnCount": 3
+      },
+      "query": {
+        "type": "GET_SHEET_SCHEMA"
+      }
     }
   ]
 }
@@ -2671,7 +3755,15 @@ Returns workbook-level summary facts such as sheet order, named-range count, and
 force-recalculation flag.
 
 ```json
-{ "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" }
+{
+  "stepId": "workbook",
+  "target": {
+    "type": "CURRENT"
+  },
+  "query": {
+    "type": "GET_WORKBOOK_SUMMARY"
+  }
+}
 ```
 
 Response shapes:
@@ -2688,7 +3780,15 @@ is encrypted, which package-encryption mode is present, and the validation state
 package signature.
 
 ```json
-{ "type": "GET_PACKAGE_SECURITY", "requestId": "security" }
+{
+  "stepId": "security",
+  "target": {
+    "type": "CURRENT"
+  },
+  "query": {
+    "type": "GET_PACKAGE_SECURITY"
+  }
+}
 ```
 
 Response shape:
@@ -2719,7 +3819,7 @@ Response shape:
 }
 ```
 
-`GET_PACKAGE_SECURITY` runs only on the full-XSSF read path. `executionMode.readMode=EVENT_READ`
+`GET_PACKAGE_SECURITY` runs only on the full-XSSF read path. `execution.mode.readMode=EVENT_READ`
 rejects it up front because the event-model reader exposes only workbook and sheet summaries.
 Unencrypted workbooks return `"encryption": { "encrypted": false }` plus an empty `signatures`
 array.
@@ -2730,7 +3830,15 @@ Returns workbook-level protection facts such as structure, windows, and revision
 whether the workbook stores password hashes for the workbook or revisions protection domains.
 
 ```json
-{ "type": "GET_WORKBOOK_PROTECTION", "requestId": "workbook-protection" }
+{
+  "stepId": "workbook-protection",
+  "target": {
+    "type": "CURRENT"
+  },
+  "query": {
+    "type": "GET_WORKBOOK_PROTECTION"
+  }
+}
 ```
 
 Response shape:
@@ -2740,7 +3848,7 @@ Response shape:
   "protection": {
     "structureLocked": false,
     "windowsLocked": false,
-    "revisionLocked": false,
+    "revisionsLocked": false,
     "workbookPasswordHashPresent": false,
     "revisionsPasswordHashPresent": false
   }
@@ -2753,30 +3861,43 @@ Returns exact named-range reports selected by workbook-wide or exact-selector in
 
 ```json
 {
-  "type": "GET_NAMED_RANGES",
-  "requestId": "named-ranges",
-  "selection": { "type": "ALL" }
+  "stepId": "named-ranges",
+  "target": {
+    "type": "ALL"
+  },
+  "query": {
+    "type": "GET_NAMED_RANGES"
+  }
 }
 ```
 
 ```json
 {
-  "type": "GET_NAMED_RANGES",
-  "requestId": "selected-named-ranges",
-  "selection": {
-    "type": "SELECTED",
+  "stepId": "selected-named-ranges",
+  "target": {
+    "type": "ANY_OF",
     "selectors": [
-      { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
-      { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
+      {
+        "type": "WORKBOOK_SCOPE",
+        "name": "BudgetTotal"
+      },
+      {
+        "type": "SHEET_SCOPE",
+        "sheetName": "Budget",
+        "name": "BudgetTable"
+      }
     ]
+  },
+  "query": {
+    "type": "GET_NAMED_RANGES"
   }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `requestId` | Yes | Stable caller-defined correlation identifier. |
-| `selection` | Yes | `ALL` or exact named-range selectors. |
+| `stepId` | Yes | Stable caller-defined correlation identifier. |
+| `target` | Yes | `ALL`, `BY_NAME`, `BY_NAMES`, `WORKBOOK_SCOPE`, `SHEET_SCOPE`, or `ANY_OF` named-range selector. |
 
 Selected named-range reads fail with `NAMED_RANGE_NOT_FOUND` when any selector does not match an
 existing named range.
@@ -2787,9 +3908,14 @@ Returns structural summary facts for one sheet.
 
 ```json
 {
-  "type": "GET_SHEET_SUMMARY",
-  "requestId": "sheet-summary",
-  "sheetName": "Inventory"
+  "stepId": "sheet-summary",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "query": {
+    "type": "GET_SHEET_SUMMARY"
+  }
 }
 ```
 
@@ -2810,18 +3936,26 @@ Returns exact cell snapshots for one sheet and an ordered list of A1 addresses.
 
 ```json
 {
-  "type": "GET_CELLS",
-  "requestId": "cells",
-  "sheetName": "Inventory",
-  "addresses": ["A1", "B4", "C10"]
+  "stepId": "cells",
+  "target": {
+    "type": "BY_ADDRESSES",
+    "sheetName": "Inventory",
+    "addresses": [
+      "A1",
+      "B4",
+      "C10"
+    ]
+  },
+  "query": {
+    "type": "GET_CELLS"
+  }
 }
 ```
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `requestId` | Yes | Stable caller-defined correlation identifier. |
-| `sheetName` | Yes | Sheet that owns the requested cells. |
-| `addresses` | Yes | Ordered non-empty list of unique A1 cell addresses. |
+| `stepId` | Yes | Stable caller-defined correlation identifier. |
+| `target` | Yes | `BY_ADDRESSES` cell selector carrying the owning sheet plus ordered A1 addresses. |
 
 `GET_CELLS` returns a blank-typed snapshot for any valid address that has never been written.
 An address that is not valid A1 notation (e.g. `BADADDR`, `A0`) or that exceeds the Excel 2007
@@ -2885,12 +4019,17 @@ with `INVALID_REQUEST`.
 
 ```json
 {
-  "type": "GET_WINDOW",
-  "requestId": "window",
-  "sheetName": "Inventory",
-  "topLeftAddress": "A1",
-  "rowCount": 5,
-  "columnCount": 3
+  "stepId": "window",
+  "target": {
+    "type": "RECTANGULAR_WINDOW",
+    "sheetName": "Inventory",
+    "topLeftAddress": "A1",
+    "rowCount": 5,
+    "columnCount": 3
+  },
+  "query": {
+    "type": "GET_WINDOW"
+  }
 }
 ```
 
@@ -2904,9 +4043,14 @@ Returns the exact merged regions defined on one sheet.
 
 ```json
 {
-  "type": "GET_MERGED_REGIONS",
-  "requestId": "merged",
-  "sheetName": "Inventory"
+  "stepId": "merged",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "query": {
+    "type": "GET_MERGED_REGIONS"
+  }
 }
 ```
 
@@ -2918,21 +4062,30 @@ normalized plain path strings, not `file:` URIs.
 
 ```json
 {
-  "type": "GET_HYPERLINKS",
-  "requestId": "hyperlinks",
-  "sheetName": "Inventory",
-  "selection": { "type": "ALL_USED_CELLS" }
+  "stepId": "hyperlinks",
+  "target": {
+    "type": "ALL_USED_IN_SHEET",
+    "sheetName": "Inventory"
+  },
+  "query": {
+    "type": "GET_HYPERLINKS"
+  }
 }
 ```
 
 ```json
 {
-  "type": "GET_HYPERLINKS",
-  "requestId": "selected-hyperlinks",
-  "sheetName": "Inventory",
-  "selection": {
-    "type": "SELECTED",
-    "addresses": ["A1", "B4"]
+  "stepId": "selected-hyperlinks",
+  "target": {
+    "type": "BY_ADDRESSES",
+    "sheetName": "Inventory",
+    "addresses": [
+      "A1",
+      "B4"
+    ]
+  },
+  "query": {
+    "type": "GET_HYPERLINKS"
   }
 }
 ```
@@ -2943,32 +4096,48 @@ Returns comment metadata for selected cells on one sheet.
 
 ```json
 {
-  "type": "GET_COMMENTS",
-  "requestId": "comments",
-  "sheetName": "Inventory",
-  "selection": { "type": "ALL_USED_CELLS" }
-}
-```
-
-```json
-{
-  "type": "GET_COMMENTS",
-  "requestId": "selected-comments",
-  "sheetName": "Inventory",
-  "selection": {
-    "type": "SELECTED",
-    "addresses": ["A1", "B4"]
+  "stepId": "comments",
+  "target": {
+    "type": "ALL_USED_IN_SHEET",
+    "sheetName": "Inventory"
+  },
+  "query": {
+    "type": "GET_COMMENTS"
   }
 }
 ```
 
-Cell-selection payloads use:
+```json
+{
+  "stepId": "selected-comments",
+  "target": {
+    "type": "BY_ADDRESSES",
+    "sheetName": "Inventory",
+    "addresses": [
+      "A1",
+      "B4"
+    ]
+  },
+  "query": {
+    "type": "GET_COMMENTS"
+  }
+}
+```
+
+Cell-selector payloads use:
 
 ```json
-{ "type": "ALL_USED_CELLS" }
 {
-  "type": "SELECTED",
-  "addresses": ["A1", "B4"]
+  "type": "ALL_USED_IN_SHEET",
+  "sheetName": "Inventory"
+}
+{
+  "type": "BY_ADDRESSES",
+  "sheetName": "Inventory",
+  "addresses": [
+    "A1",
+    "B4"
+  ]
 }
 ```
 
@@ -2983,9 +4152,14 @@ Returns factual drawing-object metadata for one sheet.
 
 ```json
 {
-  "type": "GET_DRAWING_OBJECTS",
-  "requestId": "drawing-objects",
-  "sheetName": "Ops"
+  "stepId": "drawing-objects",
+  "target": {
+    "type": "ALL_ON_SHEET",
+    "sheetName": "Ops"
+  },
+  "query": {
+    "type": "GET_DRAWING_OBJECTS"
+  }
 }
 ```
 
@@ -3013,9 +4187,14 @@ explicit `UNSUPPORTED` entries with preserved plot-type tokens.
 
 ```json
 {
-  "type": "GET_CHARTS",
-  "requestId": "charts",
-  "sheetName": "Ops"
+  "stepId": "charts",
+  "target": {
+    "type": "ALL_ON_SHEET",
+    "sheetName": "Ops"
+  },
+  "query": {
+    "type": "GET_CHARTS"
+  }
 }
 ```
 
@@ -3048,19 +4227,29 @@ sheet.
 
 ```json
 {
-  "type": "GET_DRAWING_OBJECT_PAYLOAD",
-  "requestId": "picture-payload",
-  "sheetName": "Ops",
-  "objectName": "OpsPicture"
+  "stepId": "picture-payload",
+  "target": {
+    "type": "BY_NAME",
+    "sheetName": "Ops",
+    "objectName": "OpsPicture"
+  },
+  "query": {
+    "type": "GET_DRAWING_OBJECT_PAYLOAD"
+  }
 }
 ```
 
 ```json
 {
-  "type": "GET_DRAWING_OBJECT_PAYLOAD",
-  "requestId": "embedded-payload",
-  "sheetName": "Ops",
-  "objectName": "OpsEmbed"
+  "stepId": "embedded-payload",
+  "target": {
+    "type": "BY_NAME",
+    "sheetName": "Ops",
+    "objectName": "OpsEmbed"
+  },
+  "query": {
+    "type": "GET_DRAWING_OBJECT_PAYLOAD"
+  }
 }
 ```
 
@@ -3084,9 +4273,14 @@ and `collapsed` where Excel exposes that state.
 
 ```json
 {
-  "type": "GET_SHEET_LAYOUT",
-  "requestId": "layout",
-  "sheetName": "Inventory"
+  "stepId": "layout",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "query": {
+    "type": "GET_SHEET_LAYOUT"
+  }
 }
 ```
 
@@ -3111,9 +4305,14 @@ Returns the supported print-layout state for one sheet.
 
 ```json
 {
-  "type": "GET_PRINT_LAYOUT",
-  "requestId": "print-layout",
-  "sheetName": "Inventory"
+  "stepId": "print-layout",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "query": {
+    "type": "GET_PRINT_LAYOUT"
+  }
 }
 ```
 
@@ -3133,32 +4332,48 @@ Returns factual data-validation structures for one sheet. Each returned entry is
 
 ```json
 {
-  "type": "GET_DATA_VALIDATIONS",
-  "requestId": "data-validations",
-  "sheetName": "Inventory",
-  "selection": { "type": "ALL" }
-}
-```
-
-```json
-{
-  "type": "GET_DATA_VALIDATIONS",
-  "requestId": "selected-data-validations",
-  "sheetName": "Inventory",
-  "selection": {
-    "type": "SELECTED",
-    "ranges": ["B2:B200", "C2:C200"]
+  "stepId": "data-validations",
+  "target": {
+    "type": "ALL_ON_SHEET",
+    "sheetName": "Inventory"
+  },
+  "query": {
+    "type": "GET_DATA_VALIDATIONS"
   }
 }
 ```
 
-Range-selection payloads use:
+```json
+{
+  "stepId": "selected-data-validations",
+  "target": {
+    "type": "BY_RANGES",
+    "sheetName": "Inventory",
+    "ranges": [
+      "B2:B200",
+      "C2:C200"
+    ]
+  },
+  "query": {
+    "type": "GET_DATA_VALIDATIONS"
+  }
+}
+```
+
+Range-selector payloads use:
 
 ```json
-{ "type": "ALL" }
 {
-  "type": "SELECTED",
-  "ranges": ["B2:B200", "C2:C200"]
+  "type": "ALL_ON_SHEET",
+  "sheetName": "Inventory"
+}
+{
+  "type": "BY_RANGES",
+  "sheetName": "Inventory",
+  "ranges": [
+    "B2:B200",
+    "C2:C200"
+  ]
 }
 ```
 
@@ -3179,21 +4394,30 @@ workbooks can still be inspected instead of aborting the read.
 
 ```json
 {
-  "type": "GET_CONDITIONAL_FORMATTING",
-  "requestId": "conditional-formatting",
-  "sheetName": "Inventory",
-  "selection": { "type": "ALL" }
+  "stepId": "conditional-formatting",
+  "target": {
+    "type": "ALL_ON_SHEET",
+    "sheetName": "Inventory"
+  },
+  "query": {
+    "type": "GET_CONDITIONAL_FORMATTING"
+  }
 }
 ```
 
 ```json
 {
-  "type": "GET_CONDITIONAL_FORMATTING",
-  "requestId": "selected-conditional-formatting",
-  "sheetName": "Inventory",
-  "selection": {
-    "type": "SELECTED",
-    "ranges": ["A2:D200", "F2:F20"]
+  "stepId": "selected-conditional-formatting",
+  "target": {
+    "type": "BY_RANGES",
+    "sheetName": "Inventory",
+    "ranges": [
+      "A2:D200",
+      "F2:F20"
+    ]
+  },
+  "query": {
+    "type": "GET_CONDITIONAL_FORMATTING"
   }
 }
 ```
@@ -3207,9 +4431,14 @@ Returns factual autofilter metadata for one sheet. The result may include:
 
 ```json
 {
-  "type": "GET_AUTOFILTERS",
-  "requestId": "autofilters",
-  "sheetName": "Inventory"
+  "stepId": "autofilters",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Inventory"
+  },
+  "query": {
+    "type": "GET_AUTOFILTERS"
+  }
 }
 ```
 
@@ -3235,19 +4464,28 @@ Returns factual table metadata selected by workbook-global table name or all tab
 
 ```json
 {
-  "type": "GET_TABLES",
-  "requestId": "tables",
-  "selection": { "type": "ALL" }
+  "stepId": "tables",
+  "target": {
+    "type": "ALL"
+  },
+  "query": {
+    "type": "GET_TABLES"
+  }
 }
 ```
 
 ```json
 {
-  "type": "GET_TABLES",
-  "requestId": "selected-tables",
-  "selection": {
+  "stepId": "selected-tables",
+  "target": {
     "type": "BY_NAMES",
-    "names": ["InventoryTable", "Trips"]
+    "names": [
+      "InventoryTable",
+      "Trips"
+    ]
+  },
+  "query": {
+    "type": "GET_TABLES"
   }
 }
 ```
@@ -3274,13 +4512,18 @@ Each returned table includes:
 Each `columns[*]` entry includes the persisted table-column `id`, visible `name`, `uniqueName`,
 `totalsRowLabel`, `totalsRowFunction`, and `calculatedColumnFormula`.
 
-Table-selection payloads use:
+Table-selector payloads use:
 
 ```json
-{ "type": "ALL" }
+{
+  "type": "ALL"
+}
 {
   "type": "BY_NAMES",
-  "names": ["InventoryTable", "Trips"]
+  "names": [
+    "InventoryTable",
+    "Trips"
+  ]
 }
 ```
 
@@ -3293,19 +4536,28 @@ preserved detail instead of causing read failure.
 
 ```json
 {
-  "type": "GET_PIVOT_TABLES",
-  "requestId": "pivots",
-  "selection": { "type": "ALL" }
+  "stepId": "pivots",
+  "target": {
+    "type": "ALL"
+  },
+  "query": {
+    "type": "GET_PIVOT_TABLES"
+  }
 }
 ```
 
 ```json
 {
-  "type": "GET_PIVOT_TABLES",
-  "requestId": "selected-pivots",
-  "selection": {
+  "stepId": "selected-pivots",
+  "target": {
     "type": "BY_NAMES",
-    "names": ["SalesPivot", "NamedPivot"]
+    "names": [
+      "SalesPivot",
+      "NamedPivot"
+    ]
+  },
+  "query": {
+    "type": "GET_PIVOT_TABLES"
   }
 }
 ```
@@ -3334,19 +4586,28 @@ Groups formula usage across one or more sheets.
 
 ```json
 {
-  "type": "GET_FORMULA_SURFACE",
-  "requestId": "formula-surface",
-  "selection": { "type": "ALL" }
+  "stepId": "formula-surface",
+  "target": {
+    "type": "ALL"
+  },
+  "query": {
+    "type": "GET_FORMULA_SURFACE"
+  }
 }
 ```
 
 ```json
 {
-  "type": "GET_FORMULA_SURFACE",
-  "requestId": "selected-formula-surface",
-  "selection": {
-    "type": "SELECTED",
-    "sheetNames": ["Inventory", "Summary"]
+  "stepId": "selected-formula-surface",
+  "target": {
+    "type": "BY_NAMES",
+    "names": [
+      "Inventory",
+      "Summary"
+    ]
+  },
+  "query": {
+    "type": "GET_FORMULA_SURFACE"
   }
 }
 ```
@@ -3355,13 +4616,18 @@ Response shape: `{ "analysis": { "totalFormulaCellCount": ..., "sheets": [ { "sh
 `"formulaCellCount": ..., "distinctFormulaCount": ..., "formulas": [ { "formula": ...,`
 `"occurrenceCount": ..., "addresses": [...] } ] } ] } }`.
 
-Sheet-selection payloads use:
+Sheet-selector payloads use:
 
 ```json
-{ "type": "ALL" }
 {
-  "type": "SELECTED",
-  "sheetNames": ["Inventory", "Summary"]
+  "type": "ALL"
+}
+{
+  "type": "BY_NAMES",
+  "names": [
+    "Inventory",
+    "Summary"
+  ]
 }
 ```
 
@@ -3380,12 +4646,17 @@ for the highest count. Formula cells contribute their evaluated result type (e.g
 
 ```json
 {
-  "type": "GET_SHEET_SCHEMA",
-  "requestId": "schema",
-  "sheetName": "Inventory",
-  "topLeftAddress": "A1",
-  "rowCount": 5,
-  "columnCount": 3
+  "stepId": "schema",
+  "target": {
+    "type": "RECTANGULAR_WINDOW",
+    "sheetName": "Inventory",
+    "topLeftAddress": "A1",
+    "rowCount": 5,
+    "columnCount": 3
+  },
+  "query": {
+    "type": "GET_SHEET_SCHEMA"
+  }
 }
 ```
 
@@ -3395,22 +4666,35 @@ Summarizes the scope and backing kind of selected named ranges.
 
 ```json
 {
-  "type": "GET_NAMED_RANGE_SURFACE",
-  "requestId": "named-range-surface",
-  "selection": { "type": "ALL" }
+  "stepId": "named-range-surface",
+  "target": {
+    "type": "ALL"
+  },
+  "query": {
+    "type": "GET_NAMED_RANGE_SURFACE"
+  }
 }
 ```
 
 ```json
 {
-  "type": "GET_NAMED_RANGE_SURFACE",
-  "requestId": "selected-named-range-surface",
-  "selection": {
-    "type": "SELECTED",
+  "stepId": "selected-named-range-surface",
+  "target": {
+    "type": "ANY_OF",
     "selectors": [
-      { "type": "WORKBOOK_SCOPE", "name": "BudgetTotal" },
-      { "type": "SHEET_SCOPE", "sheetName": "Budget", "name": "BudgetTable" }
+      {
+        "type": "WORKBOOK_SCOPE",
+        "name": "BudgetTotal"
+      },
+      {
+        "type": "SHEET_SCOPE",
+        "sheetName": "Budget",
+        "name": "BudgetTable"
+      }
     ]
+  },
+  "query": {
+    "type": "GET_NAMED_RANGE_SURFACE"
   }
 }
 ```
@@ -3426,9 +4710,13 @@ functions, formula-error results, and evaluation failures surface.
 
 ```json
 {
-  "type": "ANALYZE_FORMULA_HEALTH",
-  "requestId": "formula-health",
-  "selection": { "type": "ALL" }
+  "stepId": "formula-health",
+  "target": {
+    "type": "ALL"
+  },
+  "query": {
+    "type": "ANALYZE_FORMULA_HEALTH"
+  }
 }
 ```
 
@@ -3442,11 +4730,16 @@ unsupported rules, broken formulas, and overlapping validation coverage.
 
 ```json
 {
-  "type": "ANALYZE_DATA_VALIDATION_HEALTH",
-  "requestId": "data-validation-health",
-  "selection": {
-    "type": "SELECTED",
-    "sheetNames": ["Inventory", "Summary"]
+  "stepId": "data-validation-health",
+  "target": {
+    "type": "BY_NAMES",
+    "names": [
+      "Inventory",
+      "Summary"
+    ]
+  },
+  "query": {
+    "type": "ANALYZE_DATA_VALIDATION_HEALTH"
   }
 }
 ```
@@ -3458,11 +4751,16 @@ families, empty target ranges, or priority collisions.
 
 ```json
 {
-  "type": "ANALYZE_CONDITIONAL_FORMATTING_HEALTH",
-  "requestId": "conditional-formatting-health",
-  "selection": {
-    "type": "SELECTED",
-    "sheetNames": ["Inventory", "Summary"]
+  "stepId": "conditional-formatting-health",
+  "target": {
+    "type": "BY_NAMES",
+    "names": [
+      "Inventory",
+      "Summary"
+    ]
+  },
+  "query": {
+    "type": "ANALYZE_CONDITIONAL_FORMATTING_HEALTH"
   }
 }
 ```
@@ -3474,11 +4772,16 @@ between sheet-level filters and tables.
 
 ```json
 {
-  "type": "ANALYZE_AUTOFILTER_HEALTH",
-  "requestId": "autofilter-health",
-  "selection": {
-    "type": "SELECTED",
-    "sheetNames": ["Inventory", "Summary"]
+  "stepId": "autofilter-health",
+  "target": {
+    "type": "BY_NAMES",
+    "names": [
+      "Inventory",
+      "Summary"
+    ]
+  },
+  "query": {
+    "type": "ANALYZE_AUTOFILTER_HEALTH"
   }
 }
 ```
@@ -3490,19 +4793,28 @@ mismatches.
 
 ```json
 {
-  "type": "ANALYZE_TABLE_HEALTH",
-  "requestId": "table-health",
-  "selection": { "type": "ALL" }
+  "stepId": "table-health",
+  "target": {
+    "type": "ALL"
+  },
+  "query": {
+    "type": "ANALYZE_TABLE_HEALTH"
+  }
 }
 ```
 
 ```json
 {
-  "type": "ANALYZE_TABLE_HEALTH",
-  "requestId": "selected-table-health",
-  "selection": {
+  "stepId": "selected-table-health",
+  "target": {
     "type": "BY_NAMES",
-    "names": ["InventoryTable", "Trips"]
+    "names": [
+      "InventoryTable",
+      "Trips"
+    ]
+  },
+  "query": {
+    "type": "ANALYZE_TABLE_HEALTH"
   }
 }
 ```
@@ -3514,19 +4826,28 @@ broken sources, duplicate names, synthetic fallback names, or unsupported persis
 
 ```json
 {
-  "type": "ANALYZE_PIVOT_TABLE_HEALTH",
-  "requestId": "pivot-health",
-  "selection": { "type": "ALL" }
+  "stepId": "pivot-health",
+  "target": {
+    "type": "ALL"
+  },
+  "query": {
+    "type": "ANALYZE_PIVOT_TABLE_HEALTH"
+  }
 }
 ```
 
 ```json
 {
-  "type": "ANALYZE_PIVOT_TABLE_HEALTH",
-  "requestId": "selected-pivot-health",
-  "selection": {
+  "stepId": "selected-pivot-health",
+  "target": {
     "type": "BY_NAMES",
-    "names": ["SalesPivot", "NamedPivot"]
+    "names": [
+      "SalesPivot",
+      "NamedPivot"
+    ]
+  },
+  "query": {
+    "type": "ANALYZE_PIVOT_TABLE_HEALTH"
   }
 }
 ```
@@ -3542,11 +4863,16 @@ relative `FILE` targets are reported as `HYPERLINK_UNRESOLVED_FILE_TARGET`.
 
 ```json
 {
-  "type": "ANALYZE_HYPERLINK_HEALTH",
-  "requestId": "hyperlink-health",
-  "selection": {
-    "type": "SELECTED",
-    "sheetNames": ["Inventory", "Summary"]
+  "stepId": "hyperlink-health",
+  "target": {
+    "type": "BY_NAMES",
+    "names": [
+      "Inventory",
+      "Summary"
+    ]
+  },
+  "query": {
+    "type": "ANALYZE_HYPERLINK_HEALTH"
   }
 }
 ```
@@ -3557,9 +4883,13 @@ Reports named-range findings such as broken references, unresolved targets, and 
 
 ```json
 {
-  "type": "ANALYZE_NAMED_RANGE_HEALTH",
-  "requestId": "named-range-health",
-  "selection": { "type": "ALL" }
+  "stepId": "named-range-health",
+  "target": {
+    "type": "ALL"
+  },
+  "query": {
+    "type": "ANALYZE_NAMED_RANGE_HEALTH"
+  }
 }
 ```
 
@@ -3579,8 +4909,13 @@ table, pivot-table, hyperlink, and named-range findings.
 
 ```json
 {
-  "type": "ANALYZE_WORKBOOK_FINDINGS",
-  "requestId": "workbook-findings"
+  "stepId": "workbook-findings",
+  "target": {
+    "type": "CURRENT"
+  },
+  "query": {
+    "type": "ANALYZE_WORKBOOK_FINDINGS"
+  }
 }
 ```
 

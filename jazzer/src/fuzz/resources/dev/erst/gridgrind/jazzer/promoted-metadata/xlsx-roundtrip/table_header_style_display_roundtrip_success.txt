@@ -5,4 +5,4 @@ Outcome: SUCCESS
 Input Bytes: 191
 Command Count: 6
 Style Kinds: (none)
-Command Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=5, CREATE_SHEET=1
+Command Kinds: AUTO_SIZE_COLUMNS=5, CREATE_SHEET=1

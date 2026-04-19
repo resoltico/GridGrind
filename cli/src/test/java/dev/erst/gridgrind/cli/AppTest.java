@@ -20,7 +20,7 @@ class AppTest {
     App app =
         new App(
             () ->
-                (args, stdin, stdout) -> {
+                (args, stdin, stdout, stderr) -> {
                   observedArgs.set(String.join(",", args));
                   return 0;
                 },
@@ -35,7 +35,7 @@ class AppTest {
   @Test
   void runCallsExitHandlerForNonZeroExitCodes() throws IOException {
     AtomicInteger observedExitCode = new AtomicInteger(-1);
-    App app = new App(() -> (args, stdin, stdout) -> 3, observedExitCode::set);
+    App app = new App(() -> (args, stdin, stdout, stderr) -> 3, observedExitCode::set);
 
     app.run(new String[0]);
 
@@ -51,7 +51,7 @@ class AppTest {
   @SuppressWarnings("PMD.CloseResource")
   void mainMethodRunsEndToEndWithValidRequestOnStdin() throws IOException {
     byte[] jsonRequest =
-        "{\"protocolVersion\":\"V1\",\"source\":{\"type\":\"NEW\"},\"persistence\":{\"type\":\"NONE\"},\"operations\":[],\"reads\":[]}"
+        "{\"protocolVersion\":\"V1\",\"source\":{\"type\":\"NEW\"},\"persistence\":{\"type\":\"NONE\"},\"steps\":[]}"
             .getBytes(StandardCharsets.UTF_8);
     java.io.ByteArrayOutputStream capturedOut = new java.io.ByteArrayOutputStream();
     InputStream originalIn = System.in;

@@ -1,21 +1,73 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Data" },
-    { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "TEXT", "text": "Total" } },
-    { "type": "SET_CELL", "sheetName": "Data", "address": "A2", "value": { "type": "FORMULA", "formula": "1+1" } },
-    { "type": "SET_CELL", "sheetName": "Data", "address": "A3", "value": { "type": "FORMULA", "formula": "2+2" } }
-  ],
-  "reads": [
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
     {
-      "type": "GET_SHEET_SCHEMA",
-      "requestId": "schema",
-      "sheetName": "Data",
-      "topLeftAddress": "A1",
-      "rowCount": 3,
-      "columnCount": 1
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Data"
+      }
+    },
+    {
+      "stepId": "step-02-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "sheetName": "Data",
+        "address": "A1",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Total"
+          }
+        }
+      }
+    },
+    {
+      "stepId": "step-03-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "sheetName": "Data",
+        "address": "A2",
+        "value": {
+          "type": "FORMULA",
+          "source": {
+            "type": "INLINE",
+            "text": "1+1"
+          }
+        }
+      }
+    },
+    {
+      "stepId": "step-04-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "sheetName": "Data",
+        "address": "A3",
+        "value": {
+          "type": "FORMULA",
+          "source": {
+            "type": "INLINE",
+            "text": "2+2"
+          }
+        }
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_SCHEMA",
+        "sheetName": "Data",
+        "topLeftAddress": "A1",
+        "rowCount": 3,
+        "columnCount": 1
+      },
+      "stepId": "schema"
     }
   ]
 }

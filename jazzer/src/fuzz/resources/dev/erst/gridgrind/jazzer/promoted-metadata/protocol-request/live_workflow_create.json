@@ -1,33 +1,33 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "../examples/live-workflow-create.json",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/live_workflow_create.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/live_workflow_create.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 7551,
+      "inputBytes" : 18880,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
-      "operationCount" : 42,
+      "operationCount" : 40,
       "operationKinds" : {
-        "EVALUATE_FORMULAS" : 1,
+        "APPEND_ROW" : 10,
         "ENSURE_SHEET" : 2,
         "SET_CELL" : 26,
-        "AUTO_SIZE_COLUMNS" : 2,
-        "APPEND_ROW" : 10,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
+        "AUTO_SIZE_COLUMNS" : 2
       },
       "styleKinds" : { },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
       "readCount" : 7,
       "readKinds" : {
-        "GET_SHEET_SCHEMA" : 1,
         "GET_WINDOW" : 2,
         "GET_WORKBOOK_SUMMARY" : 1,
         "GET_FORMULA_SURFACE" : 1,
-        "GET_CELLS" : 2
+        "GET_CELLS" : 2,
+        "GET_SHEET_SCHEMA" : 1
       }
     }
   },

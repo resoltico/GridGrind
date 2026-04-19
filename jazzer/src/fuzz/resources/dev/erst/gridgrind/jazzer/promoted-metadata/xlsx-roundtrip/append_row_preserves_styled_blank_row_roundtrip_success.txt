@@ -5,4 +5,4 @@ Outcome: SUCCESS
 Input Bytes: 107
 Command Count: 1
 Style Kinds: (none)
-Command Kinds: EVALUATE_ALL_FORMULAS=1
+Command Kinds: SET_WORKBOOK_PROTECTION=1

@@ -1,6 +1,8 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "cli/build/generated-workbooks/gridgrind-formula-environment.xlsx"
@@ -19,69 +21,156 @@
       }
     ]
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Budget" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Budget",
-      "range": "A1:C3",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Item" },
-          { "type": "TEXT", "text": "Hours" },
-          { "type": "TEXT", "text": "Rate" }
-        ],
-        [
-          { "type": "TEXT", "text": "Onboarding" },
-          { "type": "NUMBER", "number": 4 },
-          { "type": "NUMBER", "number": 120 }
-        ],
-        [
-          { "type": "TEXT", "text": "Support" },
-          { "type": "NUMBER", "number": 3 },
-          { "type": "NUMBER", "number": 90 }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Budget"
+      }
+    },
+    {
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Item"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Hours"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Rate"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Onboarding"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 4
+            },
+            {
+              "type": "NUMBER",
+              "number": 120
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Support"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 3
+            },
+            {
+              "type": "NUMBER",
+              "number": 90
+            }
+          ]
         ]
-      ]
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Budget",
+        "range": "A1:C3"
+      }
     },
     {
-      "type": "SET_CELL",
-      "sheetName": "Budget",
-      "address": "D2",
-      "value": { "type": "FORMULA", "formula": "DOUBLE(B2)" }
+      "stepId": "step-03-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "FORMULA",
+          "source": {
+            "type": "INLINE",
+            "text": "DOUBLE(B2)"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Budget",
+        "address": "D2"
+      }
     },
     {
-      "type": "SET_CELL",
-      "sheetName": "Budget",
-      "address": "E2",
-      "value": { "type": "FORMULA", "formula": "B2*C2" }
-    },
-    { "type": "EVALUATE_FORMULAS" },
-    {
-      "type": "SET_CELL",
-      "sheetName": "Budget",
-      "address": "B2",
-      "value": { "type": "NUMBER", "number": 6 }
-    },
-    {
-      "type": "EVALUATE_FORMULA_CELLS",
-      "cells": [{ "sheetName": "Budget", "address": "D2" }]
-    },
-    { "type": "CLEAR_FORMULA_CACHES" }
-  ],
-  "reads": [
-    {
-      "type": "GET_CELLS",
-      "requestId": "formula-cells",
-      "sheetName": "Budget",
-      "addresses": ["B2", "D2", "E2"]
+      "stepId": "step-04-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "FORMULA",
+          "source": {
+            "type": "INLINE",
+            "text": "B2*C2"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Budget",
+        "address": "E2"
+      }
     },
     {
-      "type": "GET_FORMULA_SURFACE",
-      "requestId": "formula-surface",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Budget"]
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "formula-cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Budget",
+        "addresses": [
+          "B2",
+          "D2",
+          "E2"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_FORMULA_SURFACE"
+      },
+      "stepId": "formula-surface",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Budget"
+        ]
       }
     }
-  ]
+  ],
+  "execution": {
+    "calculation": {
+      "strategy": {
+        "type": "EVALUATE_ALL"
+      }
+    }
+  }
 }

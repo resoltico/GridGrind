@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.47.0"
+version: "0.48.0"
 domain: LIMITATIONS
 updated: "2026-04-16"
 route:
@@ -136,11 +136,11 @@ zero twips are also rejected.
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | `requestId` values in the `reads` array must be unique |
+| **Limit** | `stepId` values in the `steps` array must be unique |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | `reads must not contain duplicate requestId values: {id}` |
-| **Applies to** | All `reads` entries |
-| **Code** | `GridGrindRequest.copyReads` |
+| **Message** | `steps must not contain duplicate stepId values: {id}` |
+| **Applies to** | All `steps` entries |
+| **Code** | `WorkbookPlan.copySteps` |
 | **UX** | Not surfaced in help or catalog (structural protocol rule) |
 
 ---
@@ -333,12 +333,12 @@ Example messages:
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | `executionMode.readMode=EVENT_READ` supports only `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` |
+| **Limit** | `execution.mode.readMode=EVENT_READ` supports only inspection steps, and only `GET_WORKBOOK_SUMMARY` plus `GET_SHEET_SUMMARY` queries |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | `executionMode.readMode=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}` |
-| **Applies to** | top-level `executionMode.readMode`, `reads` |
+| **Message** | `execution.mode.readMode=EVENT_READ supports inspection steps only; unsupported step kind: {kind}`, `execution.mode.readMode=EVENT_READ does not support assertion steps`, or `execution.mode.readMode=EVENT_READ supports GET_WORKBOOK_SUMMARY and GET_SHEET_SUMMARY only; unsupported read type: {type}` |
+| **Applies to** | top-level `execution.mode.readMode`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelEventWorkbookReader.apply` |
-| **UX** | `--help` Limits section; request-shape docs; `executionModeInputType` catalog summary |
+| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeInputType` catalog summary |
 
 `EVENT_READ` is the low-memory summary reader backed by POI's XSSF event model. It does not
 materialize the full workbook object graph, so GridGrind restricts it to workbook and sheet
@@ -352,12 +352,12 @@ time instead of silently falling back to the normal in-memory executor.
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | `executionMode.writeMode=STREAMING_WRITE` requires `source.type=NEW`, allows only `ENSURE_SHEET`, `APPEND_ROW`, and `FORCE_FORMULA_RECALCULATION_ON_OPEN`, and requires at least one `ENSURE_SHEET` or `APPEND_ROW` |
+| **Limit** | `execution.mode.writeMode=STREAMING_WRITE` requires `source.type=NEW`, limits mutation actions to `ENSURE_SHEET` and `APPEND_ROW`, requires `execution.calculation.strategy=DO_NOT_CALCULATE`, allows `markRecalculateOnOpen=true`, requires `ENSURE_SHEET` before any append/assertion/inspection work, and requires at least one `ENSURE_SHEET` mutation |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | `executionMode.writeMode=STREAMING_WRITE requires source.type=NEW ...`, `executionMode.writeMode=STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW, and FORCE_FORMULA_RECALCULATION_ON_OPEN only; unsupported operation type: {type}`, or `executionMode.writeMode=STREAMING_WRITE requires at least one ENSURE_SHEET or APPEND_ROW ...` |
-| **Applies to** | top-level `executionMode.writeMode`, `source`, `operations` |
+| **Message** | `execution.mode.writeMode=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.writeMode=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported operation type: {type}`, `execution.mode.writeMode=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.writeMode=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.writeMode=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.writeMode=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.writeMode=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...` |
+| **Applies to** | top-level `execution.mode.writeMode`, `source`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelStreamingWorkbookWriter.apply` |
-| **UX** | `--help` Limits section; request-shape docs; `executionModeInputType` catalog summary |
+| **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeInputType` catalog summary |
 
 `STREAMING_WRITE` is the low-memory append-oriented writer backed by POI `SXSSF`. It authors only
 new workbooks and does not expose the full XSSF mutation surface. GridGrind validates the reduced
@@ -380,11 +380,11 @@ windows consume proportionally more and can exhaust it — which is why LIM-001 
 
 **Streaming.** POI provides SXSSF for streaming writes and event-model APIs for streaming
 reads. GridGrind now exposes both as explicit opt-in execution modes:
-- `executionMode.readMode=EVENT_READ` for low-memory `GET_WORKBOOK_SUMMARY` and
+- `execution.mode.readMode=EVENT_READ` for low-memory `GET_WORKBOOK_SUMMARY` and
   `GET_SHEET_SUMMARY` requests only (`LIM-019`)
-- `executionMode.writeMode=STREAMING_WRITE` for low-memory append-oriented authoring on `NEW`
-  workbooks using `ENSURE_SHEET`, `APPEND_ROW`, and
-  `FORCE_FORMULA_RECALCULATION_ON_OPEN` only
+- `execution.mode.writeMode=STREAMING_WRITE` for low-memory append-oriented authoring on `NEW`
+  workbooks using `ENSURE_SHEET` and `APPEND_ROW` only, with optional
+  `execution.calculation.markRecalculateOnOpen=true`
   (`LIM-020`)
 
 All other reads and mutations continue to use the normal full-XSSF in-memory executor.
@@ -399,7 +399,7 @@ All other reads and mutations continue to use the normal full-XSSF in-memory exe
 | Charts | Supported for factual reads and authored `BAR`, `LINE`, and `PIE`; unsupported loaded chart detail is preserved and rejected for authoritative mutation. |
 | Pivot tables | Limited supported surface: factual reads, health analysis, and authored range-, named-range-, and table-backed pivots. |
 | `.xls`, `.xlsm`, `.xlsb` | Not supported. See LIM-002. |
-| Streaming read/write | Supported only through `executionMode`: `EVENT_READ` summary reads (`LIM-019`) and `STREAMING_WRITE` append-oriented `NEW` workbook authoring (`LIM-020`). |
+| Streaming read/write | Supported only through `execution.mode`: `EVENT_READ` summary reads (`LIM-019`) and `STREAMING_WRITE` append-oriented `NEW` workbook authoring (`LIM-020`). |
 | OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.password` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, and persisting mutations to a signed workbook requires explicit `persistence.security.signature` re-signing. |
 
 Apache POI feature coverage: https://poi.apache.org/components/spreadsheet/

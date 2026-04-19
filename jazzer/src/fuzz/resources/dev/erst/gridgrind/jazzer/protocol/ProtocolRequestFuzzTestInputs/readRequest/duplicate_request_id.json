@@ -1,12 +1,36 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Data" }
-  ],
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "summary" },
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "summary" }
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
+    {
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Data"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      },
+      "stepId": "summary",
+      "target": {
+        "type": "CURRENT"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      },
+      "stepId": "summary",
+      "target": {
+        "type": "CURRENT"
+      }
+    }
   ]
 }

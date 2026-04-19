@@ -1,104 +1,284 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "ops/table-autofilter-demo.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Dispatch" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Dispatch",
-      "range": "A1:C4",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Owner" },
-          { "type": "TEXT", "text": "Task" },
-          { "type": "TEXT", "text": "Status" }
-        ],
-        [
-          { "type": "TEXT", "text": "Ada" },
-          { "type": "TEXT", "text": "Onboarding" },
-          { "type": "TEXT", "text": "Queued" }
-        ],
-        [
-          { "type": "TEXT", "text": "Lin" },
-          { "type": "TEXT", "text": "Badge run" },
-          { "type": "TEXT", "text": "Done" }
-        ],
-        [
-          { "type": "TEXT", "text": "Sam" },
-          { "type": "TEXT", "text": "Desk labels" },
-          { "type": "TEXT", "text": "Blocked" }
-        ]
-      ]
-    },
-    {
-      "type": "SET_AUTOFILTER",
-      "sheetName": "Dispatch",
-      "range": "A1:C4"
-    },
-    {
-      "type": "SET_TABLE",
-      "table": {
-        "name": "DispatchQueue",
-        "sheetName": "Dispatch",
-        "range": "A1:C4",
-        "style": { "type": "NONE" }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dispatch"
       }
     },
     {
-      "type": "SET_RANGE",
-      "sheetName": "Dispatch",
-      "range": "H1:I4",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Trip" },
-          { "type": "TEXT", "text": "State" }
-        ],
-        [
-          { "type": "TEXT", "text": "Late badge run" },
-          { "type": "TEXT", "text": "Queued" }
-        ],
-        [
-          { "type": "TEXT", "text": "Lobby signs" },
-          { "type": "TEXT", "text": "Done" }
-        ],
-        [
-          { "type": "TEXT", "text": "Desk labels" },
-          { "type": "TEXT", "text": "Queued" }
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Owner"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Task"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Status"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Ada"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Onboarding"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queued"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Lin"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Badge run"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Done"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Sam"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Desk labels"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Blocked"
+              }
+            }
+          ]
         ]
-      ]
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Dispatch",
+        "range": "A1:C4"
+      }
     },
     {
-      "type": "SET_AUTOFILTER",
-      "sheetName": "Dispatch",
-      "range": "H1:I4"
-    }
-  ],
-  "reads": [
-    {
-      "type": "GET_TABLES",
-      "requestId": "tables",
-      "selection": { "type": "ALL" }
+      "stepId": "step-03-set-autofilter",
+      "action": {
+        "type": "SET_AUTOFILTER"
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Dispatch",
+        "range": "A1:C4"
+      }
     },
     {
-      "type": "GET_AUTOFILTERS",
-      "requestId": "autofilters",
-      "sheetName": "Dispatch"
+      "stepId": "step-04-set-table",
+      "action": {
+        "type": "SET_TABLE",
+        "table": {
+          "name": "DispatchQueue",
+          "sheetName": "Dispatch",
+          "range": "A1:C4",
+          "style": {
+            "type": "NONE"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_NAME_ON_SHEET",
+        "name": "DispatchQueue",
+        "sheetName": "Dispatch"
+      }
     },
     {
-      "type": "ANALYZE_TABLE_HEALTH",
-      "requestId": "table-health",
-      "selection": { "type": "ALL" }
+      "stepId": "step-05-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Trip"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "State"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Late badge run"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queued"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Lobby signs"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Done"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Desk labels"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queued"
+              }
+            }
+          ]
+        ]
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Dispatch",
+        "range": "H1:I4"
+      }
     },
     {
-      "type": "ANALYZE_AUTOFILTER_HEALTH",
-      "requestId": "autofilter-health",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Dispatch"]
+      "stepId": "step-06-set-autofilter",
+      "action": {
+        "type": "SET_AUTOFILTER"
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Dispatch",
+        "range": "H1:I4"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_TABLES"
+      },
+      "stepId": "tables",
+      "target": {
+        "type": "ALL"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_AUTOFILTERS"
+      },
+      "stepId": "autofilters",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dispatch"
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_TABLE_HEALTH"
+      },
+      "stepId": "table-health",
+      "target": {
+        "type": "ALL"
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_AUTOFILTER_HEALTH"
+      },
+      "stepId": "autofilter-health",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Dispatch"
+        ]
       }
     }
   ]

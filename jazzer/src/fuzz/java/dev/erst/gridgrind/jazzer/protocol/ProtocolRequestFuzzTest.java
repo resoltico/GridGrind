@@ -2,14 +2,14 @@ package dev.erst.gridgrind.jazzer.protocol;
 
 import com.code_intelligence.jazzer.api.FuzzedDataProvider;
 import com.code_intelligence.jazzer.junit.FuzzTest;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.InvalidJsonException;
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import dev.erst.gridgrind.jazzer.support.HarnessTelemetry;
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
 import dev.erst.gridgrind.jazzer.support.SequenceIntrospection;
-import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
-import dev.erst.gridgrind.protocol.json.GridGrindJson;
-import dev.erst.gridgrind.protocol.json.InvalidJsonException;
-import dev.erst.gridgrind.protocol.json.InvalidRequestException;
-import dev.erst.gridgrind.protocol.json.InvalidRequestShapeException;
 import java.io.IOException;
 
 /** Fuzzes protocol request decoding and validation from raw JSON payloads. */
@@ -23,15 +23,17 @@ class ProtocolRequestFuzzTest {
     TELEMETRY.beginIteration(bytes.length);
 
     try {
-      GridGrindRequest request = GridGrindJson.readRequest(bytes);
+      WorkbookPlan request = GridGrindJson.readRequest(bytes);
       if (request == null) {
         throw new IllegalStateException("readRequest returned null");
       }
       TELEMETRY.recordSourceKind(SequenceIntrospection.sourceKind(request));
       TELEMETRY.recordPersistenceKind(SequenceIntrospection.persistenceKind(request));
-      TELEMETRY.recordSequenceKinds(SequenceIntrospection.operationKinds(request.operations()));
-      TELEMETRY.recordReadKinds(SequenceIntrospection.readKinds(request.reads()));
-      TELEMETRY.recordStyleKinds(SequenceIntrospection.styleKinds(request.operations()));
+      TELEMETRY.recordSequenceKinds(SequenceIntrospection.mutationKinds(request.mutationSteps()));
+      TELEMETRY.recordAssertionKinds(
+          SequenceIntrospection.assertionKinds(request.assertionSteps()));
+      TELEMETRY.recordReadKinds(SequenceIntrospection.inspectionKinds(request.inspectionSteps()));
+      TELEMETRY.recordStyleKinds(SequenceIntrospection.styleKinds(request.mutationSteps()));
       TELEMETRY.recordSuccess();
     } catch (InvalidJsonException
         | InvalidRequestShapeException

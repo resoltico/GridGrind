@@ -1,0 +1,17 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/fractional_integer_field.json
+Harness: protocol-request
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestShapeException
+Message: Missing required field 'target'
+Input Bytes: 336
+Decode Outcome: INVALID_REQUEST_SHAPE
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
+Assertion Count: 0
+Read Count: 0
+Assertion Kinds: (none)
+Read Kinds: (none)
+Style Kinds: (none)
+Operation Kinds: (none)

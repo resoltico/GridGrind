@@ -24,21 +24,47 @@
       }
     }
   },
-  "operations": [
+  "steps": [
     {
-      "type": "SET_CELL",
-      "sheetName": "Secure",
-      "address": "B2",
-      "value": { "type": "TEXT", "text": "Rotated" }
-    }
-  ],
-  "reads": [
-    { "type": "GET_PACKAGE_SECURITY", "requestId": "security" },
+      "stepId": "step-01-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Rotated"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Secure",
+        "address": "B2"
+      }
+    },
     {
-      "type": "GET_CELLS",
-      "requestId": "secure-cells",
-      "sheetName": "Secure",
-      "addresses": ["A1", "B2"]
+      "query": {
+        "type": "GET_PACKAGE_SECURITY"
+      },
+      "stepId": "security",
+      "target": {
+        "type": "CURRENT"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "secure-cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Secure",
+        "addresses": [
+          "A1",
+          "B2"
+        ]
+      }
     }
   ]
 }

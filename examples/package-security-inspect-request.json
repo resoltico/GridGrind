@@ -1,21 +1,33 @@
 {
-  "protocolVersion": "V1",
-  "source": {
-    "type": "EXISTING",
-    "path": "cli/build/generated-workbooks/gridgrind-package-security.xlsx",
-    "security": {
-      "password": "GridGrind-2026"
+  "protocolVersion" : "V1",
+  "planId" : "package-security-inspection-workflow",
+  "source" : {
+    "type" : "EXISTING",
+    "path" : "cli/build/generated-workbooks/gridgrind-package-security.xlsx",
+    "security" : {
+      "password" : "GridGrind-2026"
     }
   },
-  "persistence": { "type": "NONE" },
-  "operations": [],
-  "reads": [
-    { "type": "GET_PACKAGE_SECURITY", "requestId": "security" },
-    {
-      "type": "GET_CELLS",
-      "requestId": "secure-cells",
-      "sheetName": "Secure",
-      "addresses": ["A1", "A2", "B2", "A3", "B3"]
+  "persistence" : {
+    "type" : "NONE"
+  },
+  "steps" : [ {
+    "stepId" : "security",
+    "target" : {
+      "type" : "CURRENT"
+    },
+    "query" : {
+      "type" : "GET_PACKAGE_SECURITY"
     }
-  ]
+  }, {
+    "stepId" : "secure-cells",
+    "target" : {
+      "type" : "BY_ADDRESSES",
+      "sheetName" : "Secure",
+      "addresses" : [ "A1", "A2", "B2", "A3", "B3" ]
+    },
+    "query" : {
+      "type" : "GET_CELLS"
+    }
+  } ]
 }

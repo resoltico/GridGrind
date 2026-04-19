@@ -394,7 +394,25 @@ public final class ExcelWorkbook implements AutoCloseable {
         }
       }
     }
+    markPackageMutated();
     return this;
+  }
+
+  /** Classifies every formula cell currently present in the workbook under the current runtime. */
+  public List<ExcelFormulaCapabilityAssessment> assessAllFormulaCapabilities() {
+    formulaRuntime.clearCachedResults();
+    List<ExcelFormulaCapabilityAssessment> assessments = new ArrayList<>();
+    for (Sheet sheet : workbook) {
+      for (Row row : sheet) {
+        for (Cell cell : row) {
+          if (cell.getCellType() == CellType.FORMULA) {
+            assessments.add(assessFormulaCell(sheet.getSheetName(), cell));
+          }
+        }
+      }
+    }
+    formulaRuntime.clearCachedResults();
+    return List.copyOf(assessments);
   }
 
   /** Evaluates one or more explicit formula-cell targets and stores their cached results. */
@@ -410,13 +428,34 @@ public final class ExcelWorkbook implements AutoCloseable {
       }
       evaluateFormulaCell(target.sheetName(), cell);
     }
+    markPackageMutated();
     return this;
+  }
+
+  /** Classifies one explicit set of formula-cell targets under the current runtime. */
+  public List<ExcelFormulaCapabilityAssessment> assessFormulaCellCapabilities(
+      List<ExcelFormulaCellTarget> cells) {
+    Objects.requireNonNull(cells, "cells must not be null");
+    formulaRuntime.clearCachedResults();
+    List<ExcelFormulaCapabilityAssessment> assessments = new ArrayList<>(cells.size());
+    for (ExcelFormulaCellTarget target : cells) {
+      Objects.requireNonNull(target, "cells must not contain nulls");
+      Cell cell = requiredCell(target.sheetName(), target.address());
+      if (cell.getCellType() != CellType.FORMULA) {
+        throw new IllegalArgumentException(
+            "Cell " + target.sheetName() + "!" + target.address() + " is not a formula cell");
+      }
+      assessments.add(assessFormulaCell(target.sheetName(), cell));
+    }
+    formulaRuntime.clearCachedResults();
+    return List.copyOf(assessments);
   }
 
   /** Clears persisted formula cached results and resets the in-process evaluator state. */
   public ExcelWorkbook clearFormulaCaches() {
     clearPersistedFormulaCaches();
     invalidateFormulaRuntime();
+    markPackageMutated();
     return this;
   }
 
@@ -439,9 +478,58 @@ public final class ExcelWorkbook implements AutoCloseable {
     }
   }
 
+  private ExcelFormulaCapabilityAssessment assessFormulaCell(String sheetName, Cell cell) {
+    String address = new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString();
+    String formula = cell.getCellFormula();
+    try {
+      formulaRuntime.evaluate(cell);
+      return new ExcelFormulaCapabilityAssessment(
+          sheetName, address, formula, ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null);
+    } catch (RuntimeException exception) {
+      RuntimeException wrapped =
+          FormulaExceptions.wrap(formulaRuntime, sheetName, address, formula, exception);
+      return switch (wrapped) {
+        case InvalidFormulaException invalid ->
+            new ExcelFormulaCapabilityAssessment(
+                invalid.sheetName(),
+                invalid.address(),
+                invalid.formula(),
+                ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI,
+                ExcelFormulaCapabilityIssue.INVALID_FORMULA,
+                invalid.getMessage());
+        case MissingExternalWorkbookException missing ->
+            new ExcelFormulaCapabilityAssessment(
+                missing.sheetName(),
+                missing.address(),
+                missing.formula(),
+                ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
+                ExcelFormulaCapabilityIssue.MISSING_EXTERNAL_WORKBOOK,
+                missing.getMessage());
+        case UnregisteredUserDefinedFunctionException unregistered ->
+            new ExcelFormulaCapabilityAssessment(
+                unregistered.sheetName(),
+                unregistered.address(),
+                unregistered.formula(),
+                ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
+                ExcelFormulaCapabilityIssue.UNREGISTERED_USER_DEFINED_FUNCTION,
+                unregistered.getMessage());
+        case UnsupportedFormulaException unsupported ->
+            new ExcelFormulaCapabilityAssessment(
+                unsupported.sheetName(),
+                unsupported.address(),
+                unsupported.formula(),
+                ExcelFormulaCapabilityKind.UNEVALUABLE_NOW,
+                ExcelFormulaCapabilityIssue.UNSUPPORTED_FORMULA,
+                unsupported.getMessage());
+        default -> throw wrapped;
+      };
+    }
+  }
+
   /** Marks the workbook to recalculate formulas when opened in Excel-compatible clients. */
   public ExcelWorkbook forceFormulaRecalculationOnOpen() {
     workbook.setForceFormulaRecalculation(true);
+    markPackageMutated();
     return this;
   }
 

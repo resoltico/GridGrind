@@ -8,7 +8,27 @@ import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.xssf.model.StylesTable;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.*;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTColorFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCustomFilters;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDxf;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDynamicFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilterColumn;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFilters;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTFont;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTIconFilter;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPatternFill;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSortCondition;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSortState;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTop10;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STDynamicFilterType;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STFilterOperator;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STIconSetType;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STPatternType;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STSortBy;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.STSortMethod;
 
 /** Reads, writes, and analyzes sheet-owned autofilter structures on one XSSF sheet. */
 final class ExcelAutofilterController {

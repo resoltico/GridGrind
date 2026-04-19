@@ -1,0 +1,17 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/workflow_case_02.bin
+Harness: protocol-workflow
+Outcome: EXPECTED_INVALID
+Kind: IllegalArgumentException
+Message: name must not be blank
+Input Bytes: 53
+Source Kind: NOT_GENERATED
+Persistence Kind: NOT_GENERATED
+Operation Count: 0
+Assertion Count: 0
+Read Count: 0
+Assertion Kinds: (none)
+Read Kinds: (none)
+Response Kind: NOT_EXECUTED
+Style Kinds: (none)
+Operation Kinds: (none)

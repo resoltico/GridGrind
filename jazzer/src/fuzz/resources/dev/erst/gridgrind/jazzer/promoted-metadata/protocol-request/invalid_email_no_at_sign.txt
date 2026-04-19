@@ -2,14 +2,16 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_email_no_at_sign.json
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
-Kind: InvalidRequestException
-Message: target must be an email address
-Input Bytes: 341
-Decode Outcome: INVALID_REQUEST
+Kind: InvalidRequestShapeException
+Message: Missing required field 'target'
+Input Bytes: 522
+Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED
 Operation Count: 0
+Assertion Count: 0
 Read Count: 0
+Assertion Kinds: (none)
 Read Kinds: (none)
 Style Kinds: (none)
 Operation Kinds: (none)

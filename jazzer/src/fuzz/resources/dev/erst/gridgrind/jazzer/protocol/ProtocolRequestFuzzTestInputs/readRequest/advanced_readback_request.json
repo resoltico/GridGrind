@@ -1,360 +1,865 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "cli/build/generated-workbooks/gridgrind-advanced-readback.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Operations" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Operations",
-      "range": "A1:J6",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Owner" },
-          { "type": "TEXT", "text": "Task" },
-          { "type": "TEXT", "text": "Hours" },
-          { "type": "TEXT", "text": "Status" },
-          { "type": "TEXT", "text": "Trip" },
-          { "type": "TEXT", "text": "State" },
-          { "type": "TEXT", "text": "Priority" },
-          { "type": "TEXT", "text": "Style" },
-          { "type": "TEXT", "text": "Snapshot" },
-          { "type": "TEXT", "text": "Accent" }
-        ],
-        [
-          { "type": "TEXT", "text": "Ada" },
-          { "type": "TEXT", "text": "Badge setup" },
-          { "type": "NUMBER", "number": 6 },
-          { "type": "TEXT", "text": "Queued" },
-          { "type": "TEXT", "text": "Badge runner" },
-          { "type": "TEXT", "text": "Queued" },
-          { "type": "NUMBER", "number": 2 },
-          { "type": "TEXT", "text": "Theme fill" },
-          { "type": "TEXT", "text": "Review" },
-          { "type": "TEXT", "text": "Theme" }
-        ],
-        [
-          { "type": "TEXT", "text": "Lin" },
-          { "type": "TEXT", "text": "Laptop handoff" },
-          { "type": "NUMBER", "number": 9 },
-          { "type": "TEXT", "text": "Done" },
-          { "type": "TEXT", "text": "Floor signs" },
-          { "type": "TEXT", "text": "Done" },
-          { "type": "NUMBER", "number": 1 },
-          { "type": "TEXT", "text": "Gradient fill" },
-          { "type": "TEXT", "text": "Escalate" },
-          { "type": "TEXT", "text": "Gradient" }
-        ],
-        [
-          { "type": "TEXT", "text": "Sam" },
-          { "type": "TEXT", "text": "Desk labels" },
-          { "type": "NUMBER", "number": 4 },
-          { "type": "TEXT", "text": "Blocked" },
-          { "type": "TEXT", "text": "Desk map" },
-          { "type": "TEXT", "text": "Queued" },
-          { "type": "NUMBER", "number": 3 },
-          { "type": "TEXT", "text": "Notes" },
-          { "type": "TEXT", "text": "Pending" },
-          { "type": "TEXT", "text": "Info" }
-        ],
-        [
-          { "type": "TEXT", "text": "Noa" },
-          { "type": "TEXT", "text": "Welcome kit" },
-          { "type": "NUMBER", "number": 8 },
-          { "type": "TEXT", "text": "Queued" },
-          { "type": "TEXT", "text": "Printer setup" },
-          { "type": "TEXT", "text": "Blocked" },
-          { "type": "NUMBER", "number": 2 },
-          { "type": "TEXT", "text": "Archive" },
-          { "type": "TEXT", "text": "Watch" },
-          { "type": "TEXT", "text": "Info" }
-        ],
-        [
-          { "type": "TEXT", "text": "Total" },
-          { "type": "BLANK" },
-          { "type": "NUMBER", "number": 0 },
-          { "type": "BLANK" },
-          { "type": "BLANK" },
-          { "type": "BLANK" },
-          { "type": "BLANK" },
-          { "type": "BLANK" },
-          { "type": "BLANK" },
-          { "type": "BLANK" }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Operations"
+      }
+    },
+    {
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Owner"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Task"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Hours"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Status"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Trip"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "State"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Priority"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Style"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Snapshot"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Accent"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Ada"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Badge setup"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 6
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queued"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Badge runner"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queued"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 2
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Theme fill"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Review"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Theme"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Lin"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Laptop handoff"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 9
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Done"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Floor signs"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Done"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 1
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Gradient fill"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Escalate"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Gradient"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Sam"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Desk labels"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 4
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Blocked"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Desk map"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queued"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 3
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Notes"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Pending"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Info"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Noa"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Welcome kit"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 8
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queued"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Printer setup"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Blocked"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 2
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Archive"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Watch"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Info"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Total"
+              }
+            },
+            {
+              "type": "BLANK"
+            },
+            {
+              "type": "NUMBER",
+              "number": 0
+            },
+            {
+              "type": "BLANK"
+            },
+            {
+              "type": "BLANK"
+            },
+            {
+              "type": "BLANK"
+            },
+            {
+              "type": "BLANK"
+            },
+            {
+              "type": "BLANK"
+            },
+            {
+              "type": "BLANK"
+            },
+            {
+              "type": "BLANK"
+            }
+          ]
         ]
-      ]
-    },
-    {
-      "type": "SET_WORKBOOK_PROTECTION",
-      "protection": {
-        "structureLocked": true,
-        "windowsLocked": false,
-        "revisionsLocked": true,
-        "workbookPassword": "Vault-2026",
-        "revisionsPassword": "Revisions-2026"
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Operations",
+        "range": "A1:J6"
       }
     },
     {
-      "type": "SET_COMMENT",
-      "sheetName": "Operations",
-      "address": "B4",
-      "comment": {
-        "text": "Lead review scheduled.",
-        "author": "GridGrind",
-        "visible": false,
-        "runs": [
-          {
-            "text": "Lead",
-            "font": {
-              "bold": true,
-              "fontColorTheme": 4,
-              "fontColorTint": -0.2
-            }
-          },
-          { "text": " " },
-          {
-            "text": "review scheduled.",
-            "font": {
-              "italic": true,
-              "fontColorIndexed": 17
-            }
-          }
-        ],
-        "anchor": {
-          "firstColumn": 4,
-          "firstRow": 1,
-          "lastColumn": 8,
-          "lastRow": 7
+      "stepId": "step-03-set-workbook-protection",
+      "action": {
+        "type": "SET_WORKBOOK_PROTECTION",
+        "protection": {
+          "structureLocked": true,
+          "windowsLocked": false,
+          "revisionsLocked": true,
+          "workbookPassword": "Vault-2026",
+          "revisionsPassword": "Revisions-2026"
         }
+      },
+      "target": {
+        "type": "CURRENT"
       }
     },
     {
-      "type": "SET_PRINT_LAYOUT",
-      "sheetName": "Operations",
-      "printLayout": {
-        "printArea": { "type": "RANGE", "range": "A1:J18" },
-        "orientation": "LANDSCAPE",
-        "scaling": { "type": "FIT", "widthPages": 1, "heightPages": 0 },
-        "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 0 },
-        "repeatingColumns": { "type": "NONE" },
-        "header": { "left": "Operations", "center": "Queue Snapshot", "right": "" },
-        "footer": { "left": "", "center": "Internal", "right": "Page &P" },
-        "setup": {
-          "margins": {
-            "left": 0.35,
-            "right": 0.55,
-            "top": 0.6,
-            "bottom": 0.45,
-            "header": 0.3,
-            "footer": 0.3
+      "stepId": "step-04-set-comment",
+      "action": {
+        "type": "SET_COMMENT",
+        "comment": {
+          "text": {
+            "type": "INLINE",
+            "text": "Lead review scheduled."
           },
-          "horizontallyCentered": true,
-          "verticallyCentered": true,
-          "paperSize": 8,
-          "draft": true,
-          "blackAndWhite": true,
-          "copies": 2,
-          "useFirstPageNumber": true,
-          "firstPageNumber": 4,
-          "rowBreaks": [6],
-          "columnBreaks": [3]
-        }
-      }
-    },
-    {
-      "type": "APPLY_STYLE",
-      "sheetName": "Operations",
-      "range": "J2:J2",
-      "style": {
-        "font": {
-          "italic": true,
-          "fontColorTheme": 6,
-          "fontColorTint": -0.35
-        },
-        "fill": {
-          "pattern": "SOLID",
-          "foregroundColorTheme": 3,
-          "foregroundColorTint": 0.3
-        },
-        "border": {
-          "bottom": {
-            "style": "THIN",
-            "colorIndexed": 8
+          "author": "GridGrind",
+          "visible": false,
+          "runs": [
+            {
+              "font": {
+                "bold": true,
+                "fontColorTheme": 4,
+                "fontColorTint": -0.2
+              },
+              "source": {
+                "type": "INLINE",
+                "text": "Lead"
+              }
+            },
+            {
+              "source": {
+                "type": "INLINE",
+                "text": " "
+              }
+            },
+            {
+              "font": {
+                "italic": true,
+                "fontColorIndexed": 17
+              },
+              "source": {
+                "type": "INLINE",
+                "text": "review scheduled."
+              }
+            }
+          ],
+          "anchor": {
+            "firstColumn": 4,
+            "firstRow": 1,
+            "lastColumn": 8,
+            "lastRow": 7
           }
         }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Operations",
+        "address": "B4"
       }
     },
     {
-      "type": "APPLY_STYLE",
-      "sheetName": "Operations",
-      "range": "J3:J3",
-      "style": {
-        "fill": {
-          "gradient": {
-            "type": "LINEAR",
-            "degree": 45.0,
-            "stops": [
-              { "position": 0.0, "color": { "rgb": "#1F497D" } },
-              { "position": 1.0, "color": { "theme": 4, "tint": 0.45 } }
+      "stepId": "step-05-set-print-layout",
+      "action": {
+        "type": "SET_PRINT_LAYOUT",
+        "printLayout": {
+          "printArea": {
+            "type": "RANGE",
+            "range": "A1:J18"
+          },
+          "orientation": "LANDSCAPE",
+          "scaling": {
+            "type": "FIT",
+            "widthPages": 1,
+            "heightPages": 0
+          },
+          "repeatingRows": {
+            "type": "BAND",
+            "firstRowIndex": 0,
+            "lastRowIndex": 0
+          },
+          "repeatingColumns": {
+            "type": "NONE"
+          },
+          "header": {
+            "left": {
+              "type": "INLINE",
+              "text": "Operations"
+            },
+            "center": {
+              "type": "INLINE",
+              "text": "Queue Snapshot"
+            },
+            "right": {
+              "type": "INLINE",
+              "text": ""
+            }
+          },
+          "footer": {
+            "left": {
+              "type": "INLINE",
+              "text": ""
+            },
+            "center": {
+              "type": "INLINE",
+              "text": "Internal"
+            },
+            "right": {
+              "type": "INLINE",
+              "text": "Page &P"
+            }
+          },
+          "setup": {
+            "margins": {
+              "left": 0.35,
+              "right": 0.55,
+              "top": 0.6,
+              "bottom": 0.45,
+              "header": 0.3,
+              "footer": 0.3
+            },
+            "horizontallyCentered": true,
+            "verticallyCentered": true,
+            "paperSize": 8,
+            "draft": true,
+            "blackAndWhite": true,
+            "copies": 2,
+            "useFirstPageNumber": true,
+            "firstPageNumber": 4,
+            "rowBreaks": [
+              6
+            ],
+            "columnBreaks": [
+              3
             ]
           }
         }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Operations"
       }
     },
     {
-      "type": "SET_DATA_VALIDATION",
-      "sheetName": "Operations",
-      "range": "D2:D5",
-      "validation": {
-        "rule": {
-          "type": "EXPLICIT_LIST",
-          "values": ["Queued", "Done", "Blocked"]
-        },
-        "allowBlank": false,
-        "prompt": {
-          "title": "Status",
-          "text": "Use one of the queue states."
-        }
-      }
-    },
-    {
-      "type": "SET_TABLE",
-      "table": {
-        "name": "OperationsQueue",
-        "sheetName": "Operations",
-        "range": "A1:D6",
-        "showTotalsRow": true,
-        "hasAutofilter": false,
-        "comment": "Primary onboarding tracker",
-        "published": true,
-        "insertRow": true,
-        "insertRowShift": true,
-        "headerRowCellStyle": "OpsHeader",
-        "dataCellStyle": "OpsBody",
-        "totalsRowCellStyle": "OpsTotals",
+      "stepId": "step-06-apply-style",
+      "action": {
+        "type": "APPLY_STYLE",
         "style": {
-          "type": "NAMED",
-          "name": "TableStyleMedium2",
-          "showFirstColumn": false,
-          "showLastColumn": false,
-          "showRowStripes": true,
-          "showColumnStripes": false
-        },
-        "columns": [
-          {
-            "columnIndex": 0,
-            "totalsRowLabel": "Total"
+          "font": {
+            "italic": true,
+            "fontColorTheme": 6,
+            "fontColorTint": -0.35
           },
-          {
-            "columnIndex": 2,
-            "totalsRowFunction": "SUM"
+          "fill": {
+            "pattern": "SOLID",
+            "foregroundColorTheme": 3,
+            "foregroundColorTint": 0.3
           },
-          {
-            "columnIndex": 3,
-            "uniqueName": "status-unique"
-          }
-        ]
-      }
-    },
-    {
-      "type": "SET_AUTOFILTER",
-      "sheetName": "Operations",
-      "range": "E1:G5",
-      "criteria": [
-        {
-          "columnId": 1,
-          "showButton": true,
-          "criterion": {
-            "type": "VALUES",
-            "values": ["Queued", "Done"],
-            "includeBlank": false
+          "border": {
+            "bottom": {
+              "style": "THIN",
+              "colorIndexed": 8
+            }
           }
         }
-      ],
-      "sortState": {
-        "range": "E2:G5",
-        "caseSensitive": false,
-        "columnSort": false,
-        "sortMethod": "",
-        "conditions": [
-          {
-            "range": "G2:G5",
-            "descending": true,
-            "sortBy": ""
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Operations",
+        "range": "J2:J2"
+      }
+    },
+    {
+      "stepId": "step-07-apply-style",
+      "action": {
+        "type": "APPLY_STYLE",
+        "style": {
+          "fill": {
+            "gradient": {
+              "type": "LINEAR",
+              "degree": 45.0,
+              "stops": [
+                {
+                  "position": 0.0,
+                  "color": {
+                    "rgb": "#1F497D"
+                  }
+                },
+                {
+                  "position": 1.0,
+                  "color": {
+                    "theme": 4,
+                    "tint": 0.45
+                  }
+                }
+              ]
+            }
           }
+        }
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Operations",
+        "range": "J3:J3"
+      }
+    },
+    {
+      "stepId": "step-08-set-data-validation",
+      "action": {
+        "type": "SET_DATA_VALIDATION",
+        "validation": {
+          "rule": {
+            "type": "EXPLICIT_LIST",
+            "values": [
+              "Queued",
+              "Done",
+              "Blocked"
+            ]
+          },
+          "allowBlank": false,
+          "prompt": {
+            "title": {
+              "type": "INLINE",
+              "text": "Status"
+            },
+            "text": {
+              "type": "INLINE",
+              "text": "Use one of the queue states."
+            }
+          }
+        }
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Operations",
+        "range": "D2:D5"
+      }
+    },
+    {
+      "stepId": "step-09-set-table",
+      "action": {
+        "type": "SET_TABLE",
+        "table": {
+          "name": "OperationsQueue",
+          "sheetName": "Operations",
+          "range": "A1:D6",
+          "showTotalsRow": true,
+          "hasAutofilter": false,
+          "comment": {
+            "type": "INLINE",
+            "text": "Primary onboarding tracker"
+          },
+          "published": true,
+          "insertRow": true,
+          "insertRowShift": true,
+          "headerRowCellStyle": "OpsHeader",
+          "dataCellStyle": "OpsBody",
+          "totalsRowCellStyle": "OpsTotals",
+          "style": {
+            "type": "NAMED",
+            "name": "TableStyleMedium2",
+            "showFirstColumn": false,
+            "showLastColumn": false,
+            "showRowStripes": true,
+            "showColumnStripes": false
+          },
+          "columns": [
+            {
+              "columnIndex": 0,
+              "totalsRowLabel": "Total"
+            },
+            {
+              "columnIndex": 2,
+              "totalsRowFunction": "SUM"
+            },
+            {
+              "columnIndex": 3,
+              "uniqueName": "status-unique"
+            }
+          ]
+        }
+      },
+      "target": {
+        "type": "BY_NAME_ON_SHEET",
+        "name": "OperationsQueue",
+        "sheetName": "Operations"
+      }
+    },
+    {
+      "stepId": "step-10-set-autofilter",
+      "action": {
+        "type": "SET_AUTOFILTER",
+        "criteria": [
+          {
+            "columnId": 1,
+            "showButton": true,
+            "criterion": {
+              "type": "VALUES",
+              "values": [
+                "Queued",
+                "Done"
+              ],
+              "includeBlank": false
+            }
+          }
+        ],
+        "sortState": {
+          "range": "E2:G5",
+          "caseSensitive": false,
+          "columnSort": false,
+          "sortMethod": "",
+          "conditions": [
+            {
+              "range": "G2:G5",
+              "descending": true,
+              "sortBy": ""
+            }
+          ]
+        }
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Operations",
+        "range": "E1:G5"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      },
+      "stepId": "workbook",
+      "target": {
+        "type": "CURRENT"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WORKBOOK_PROTECTION"
+      },
+      "stepId": "workbook-protection",
+      "target": {
+        "type": "CURRENT"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Operations",
+        "addresses": [
+          "B4",
+          "J2",
+          "J3"
         ]
       }
-    }
-  ],
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
-    { "type": "GET_WORKBOOK_PROTECTION", "requestId": "workbook-protection" },
-    {
-      "type": "GET_CELLS",
-      "requestId": "cells",
-      "sheetName": "Operations",
-      "addresses": ["B4", "J2", "J3"]
     },
     {
-      "type": "GET_COMMENTS",
-      "requestId": "comments",
-      "sheetName": "Operations",
-      "selection": {
-        "type": "SELECTED",
-        "addresses": ["B4"]
+      "query": {
+        "type": "GET_COMMENTS"
+      },
+      "stepId": "comments",
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Operations",
+        "address": "B4"
       }
     },
     {
-      "type": "GET_PRINT_LAYOUT",
-      "requestId": "print-layout",
-      "sheetName": "Operations"
-    },
-    {
-      "type": "GET_DATA_VALIDATIONS",
-      "requestId": "data-validations",
-      "sheetName": "Operations",
-      "selection": {
-        "type": "SELECTED",
-        "ranges": ["D2:D5"]
+      "query": {
+        "type": "GET_PRINT_LAYOUT"
+      },
+      "stepId": "print-layout",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Operations"
       }
     },
     {
-      "type": "GET_AUTOFILTERS",
-      "requestId": "autofilters",
-      "sheetName": "Operations"
+      "query": {
+        "type": "GET_DATA_VALIDATIONS"
+      },
+      "stepId": "data-validations",
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Operations",
+        "range": "D2:D5"
+      }
     },
     {
-      "type": "GET_TABLES",
-      "requestId": "tables",
-      "selection": {
+      "query": {
+        "type": "GET_AUTOFILTERS"
+      },
+      "stepId": "autofilters",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Operations"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_TABLES"
+      },
+      "stepId": "tables",
+      "target": {
         "type": "BY_NAMES",
-        "names": ["OperationsQueue"]
+        "names": [
+          "OperationsQueue"
+        ]
       }
     },
     {
-      "type": "ANALYZE_DATA_VALIDATION_HEALTH",
-      "requestId": "data-validation-health",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Operations"]
-      }
-    },
-    {
-      "type": "ANALYZE_AUTOFILTER_HEALTH",
-      "requestId": "autofilter-health",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Operations"]
-      }
-    },
-    {
-      "type": "ANALYZE_TABLE_HEALTH",
-      "requestId": "table-health",
-      "selection": {
+      "query": {
+        "type": "ANALYZE_DATA_VALIDATION_HEALTH"
+      },
+      "stepId": "data-validation-health",
+      "target": {
         "type": "BY_NAMES",
-        "names": ["OperationsQueue"]
+        "names": [
+          "Operations"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_AUTOFILTER_HEALTH"
+      },
+      "stepId": "autofilter-health",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Operations"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_TABLE_HEALTH"
+      },
+      "stepId": "table-health",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "OperationsQueue"
+        ]
       }
     }
   ]

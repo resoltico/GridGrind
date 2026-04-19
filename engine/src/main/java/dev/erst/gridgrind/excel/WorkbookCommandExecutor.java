@@ -53,32 +53,6 @@ public final class WorkbookCommandExecutor {
           WorkbookCommand.AppendRow.class,
           WorkbookCommand.AutoSizeColumns.class);
 
-  private static final Set<Class<? extends WorkbookCommand>> WORKBOOK_METADATA_COMMAND_TYPES =
-      Set.of(
-          WorkbookCommand.SetHyperlink.class,
-          WorkbookCommand.ClearHyperlink.class,
-          WorkbookCommand.SetComment.class,
-          WorkbookCommand.ClearComment.class,
-          WorkbookCommand.SetPicture.class,
-          WorkbookCommand.SetChart.class,
-          WorkbookCommand.SetShape.class,
-          WorkbookCommand.SetEmbeddedObject.class,
-          WorkbookCommand.SetDrawingObjectAnchor.class,
-          WorkbookCommand.DeleteDrawingObject.class,
-          WorkbookCommand.ApplyStyle.class,
-          WorkbookCommand.SetDataValidation.class,
-          WorkbookCommand.ClearDataValidations.class,
-          WorkbookCommand.SetConditionalFormatting.class,
-          WorkbookCommand.ClearConditionalFormatting.class,
-          WorkbookCommand.SetAutofilter.class,
-          WorkbookCommand.ClearAutofilter.class,
-          WorkbookCommand.SetTable.class,
-          WorkbookCommand.SetPivotTable.class,
-          WorkbookCommand.DeleteTable.class,
-          WorkbookCommand.DeletePivotTable.class,
-          WorkbookCommand.SetNamedRange.class,
-          WorkbookCommand.DeleteNamedRange.class);
-
   /** Applies one or more commands in order. */
   public ExcelWorkbook apply(ExcelWorkbook workbook, WorkbookCommand... commands) {
     Objects.requireNonNull(commands, "commands must not be null");
@@ -105,15 +79,11 @@ public final class WorkbookCommandExecutor {
       applySheetStructureCommand(workbook, command);
     } else if (isCellValueCommand(command)) {
       applyCellValueCommand(workbook, command);
-    } else if (isWorkbookMetadataCommand(command)) {
-      applyWorkbookMetadataCommand(workbook, command);
     } else {
-      applyFormulaCommand(workbook, command);
+      applyWorkbookMetadataCommand(workbook, command);
     }
     workbook.markPackageMutated();
-    if (requiresFormulaRuntimeInvalidation(command)) {
-      workbook.invalidateFormulaRuntime();
-    }
+    workbook.invalidateFormulaRuntime();
   }
 
   private static boolean isWorkbookScopeCommand(WorkbookCommand command) {
@@ -126,10 +96,6 @@ public final class WorkbookCommandExecutor {
 
   private static boolean isCellValueCommand(WorkbookCommand command) {
     return CELL_VALUE_COMMAND_TYPES.contains(command.getClass());
-  }
-
-  private static boolean isWorkbookMetadataCommand(WorkbookCommand command) {
-    return WORKBOOK_METADATA_COMMAND_TYPES.contains(command.getClass());
   }
 
   private static void applyWorkbookScopeCommand(ExcelWorkbook workbook, WorkbookCommand command) {
@@ -327,27 +293,5 @@ public final class WorkbookCommandExecutor {
           workbook.deleteNamedRange(deleteNamedRange.name(), deleteNamedRange.scope());
       default -> throw new IllegalStateException("Unhandled workbook-metadata command: " + command);
     }
-  }
-
-  private static void applyFormulaCommand(ExcelWorkbook workbook, WorkbookCommand command) {
-    switch (command) {
-      case WorkbookCommand.EvaluateAllFormulas _ -> workbook.evaluateAllFormulas();
-      case WorkbookCommand.EvaluateFormulaCells evaluateFormulaCells ->
-          workbook.evaluateFormulaCells(evaluateFormulaCells.cells());
-      case WorkbookCommand.ClearFormulaCaches _ -> workbook.clearFormulaCaches();
-      case WorkbookCommand.ForceFormulaRecalculationOnOpen _ ->
-          workbook.forceFormulaRecalculationOnOpen();
-      default -> throw new IllegalStateException("Unhandled formula command: " + command);
-    }
-  }
-
-  private static boolean requiresFormulaRuntimeInvalidation(WorkbookCommand command) {
-    return switch (command) {
-      case WorkbookCommand.EvaluateAllFormulas _ -> false;
-      case WorkbookCommand.EvaluateFormulaCells _ -> false;
-      case WorkbookCommand.ClearFormulaCaches _ -> false;
-      case WorkbookCommand.ForceFormulaRecalculationOnOpen _ -> false;
-      default -> true;
-    };
   }
 }

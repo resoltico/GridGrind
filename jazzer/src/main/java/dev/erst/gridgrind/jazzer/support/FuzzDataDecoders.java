@@ -1,5 +1,10 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.dto.CellFontInput;
+import dev.erst.gridgrind.contract.dto.CellInput;
+import dev.erst.gridgrind.contract.dto.FontHeightInput;
+import dev.erst.gridgrind.contract.dto.RichTextRunInput;
+import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
@@ -18,10 +23,6 @@ import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
-import dev.erst.gridgrind.protocol.dto.CellFontInput;
-import dev.erst.gridgrind.protocol.dto.CellInput;
-import dev.erst.gridgrind.protocol.dto.FontHeightInput;
-import dev.erst.gridgrind.protocol.dto.RichTextRunInput;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -146,7 +147,7 @@ public final class FuzzDataDecoders {
 
     return switch (data.consumeInt(0, 7)) {
       case 0 -> new CellInput.Blank();
-      case 1 -> new CellInput.Text(nextText(data));
+      case 1 -> new CellInput.Text(TextSourceInput.inline(nextText(data)));
       case 2 -> nextRichTextInput(data);
       case 3 -> new CellInput.Numeric(data.consumeRegularDouble(-1000.0d, 1000.0d));
       case 4 -> new CellInput.BooleanValue(data.consumeBoolean());
@@ -161,7 +162,7 @@ public final class FuzzDataDecoders {
                   data.consumeInt(0, 23),
                   data.consumeInt(0, 59),
                   data.consumeInt(0, 59)));
-      default -> new CellInput.Formula(nextFormula(data));
+      default -> new CellInput.Formula(TextSourceInput.inline(nextFormula(data)));
     };
   }
 
@@ -195,7 +196,8 @@ public final class FuzzDataDecoders {
     List<RichTextRunInput> runs = new ArrayList<>(runCount);
     for (int runIndex = 0; runIndex < runCount; runIndex++) {
       ExcelCellFont fontPatch = data.consumeBoolean() ? nextRichTextFontPatch(data) : null;
-      runs.add(new RichTextRunInput(nextText(data), toCellFontInput(fontPatch)));
+      runs.add(
+          new RichTextRunInput(TextSourceInput.inline(nextText(data)), toCellFontInput(fontPatch)));
     }
     return new CellInput.RichText(List.copyOf(runs));
   }
