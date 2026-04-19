@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.47.0"
+version: "0.48.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-04-16"
 route:
@@ -66,6 +66,19 @@ Then verify every item in this checklist. All must be true before any commit or 
   - `delete_branch_on_merge` is enabled
   - `main` is protected with admin enforcement
   - required status checks are exactly `Check` and `Docker smoke`
+
+Before cutting the release branch, enumerate open PRs so dependency-automation work is never
+surprise-discovered after publication:
+
+```bash
+gh pr list --state open \
+  --json number,title,url,headRefName,mergeStateStatus,isDraft,author,statusCheckRollup
+```
+
+If any open PR is authored by `dependabot[bot]`, decide up front whether it changes release
+machinery or release-critical dependencies. If it does, land or reject it before cutting the
+release branch. If it does not, carry that decision forward and complete Step 10 before ending
+the release session.
 
 ### Step 2 — Commit on a release branch
 
@@ -228,6 +241,10 @@ git branch -d release/A.B.C
 Do not leave release-branch leftovers behind locally or remotely. Branch hygiene is part of the
 release procedure, not optional cleanup.
 
+Open maintenance branches such as Dependabot are handled separately in Step 10. Do not treat a
+non-`release/` branch as automatically acceptable just because Step 6 only hard-fails
+`release/*` leftovers.
+
 ### Step 7 — Monitor workflows with duplicate-run awareness
 
 ```bash
@@ -337,3 +354,72 @@ release is publicly available.
 The container workflow is expected to perform the exact-tag and `latest` pull-and-run verification
 internally after publication. The operator-side verification remains mandatory because public
 availability, not workflow success, is the authoritative state.
+
+### Step 10 — Triage Dependabot PRs and clear dependency-automation leftovers
+
+After the public release is verified, do not end the release session while open Dependabot PRs are
+still sitting untriaged. Release hygiene includes dependency-automation hygiene.
+
+Re-enumerate all open PRs and identify Dependabot-owned entries directly from GitHub metadata:
+
+```bash
+gh pr list --state open \
+  --json number,title,url,headRefName,mergeStateStatus,isDraft,author,statusCheckRollup
+```
+
+Treat any PR whose `author.login` is `dependabot[bot]` as in scope for this step, even if it was
+already reviewed during Step 1. Step 1 creates the release-time decision; Step 10 closes the loop
+before the release session is allowed to end.
+
+For each open Dependabot PR, inspect the exact payload and its current gate status:
+
+```bash
+gh pr diff <N> --name-only
+gh pr view <N> --json number,title,state,mergeStateStatus,statusCheckRollup,url
+```
+
+Rules:
+
+- If the PR is wanted, mergeable, and already green on the required `CI` checks, merge it
+  immediately and delete its branch:
+
+```bash
+gh pr merge <N> --merge --admin --delete-branch --subject "<title> (#<N>)"
+```
+
+- If the PR is stale, superseded by `main`, intentionally rejected, or replaced by a different
+  change path, close it explicitly and delete its branch:
+
+```bash
+gh pr close <N> --comment "Superseded or intentionally rejected during release hygiene." --delete-branch
+```
+
+- If the PR needs follow-up work before it is acceptable, do that work as a normal post-release
+  change on `main` and then land or replace the Dependabot PR. Do not leave a green but
+  unattended Dependabot PR parked indefinitely just because the release itself already shipped.
+
+- Never retag, amend, or move the just-published release tag to absorb a Dependabot change. The
+  published release remains immutable. Dependabot resolution is post-release `main` hygiene.
+
+- There is no "ignore it and leave the branch there" option. Every open Dependabot PR must end
+  this step in exactly one of these states:
+  - merged and branch deleted
+  - closed and branch deleted
+  - consciously kept open with an explicit still-valid reason
+
+After each merge or close, resync and re-check GitHub branch state:
+
+```bash
+git checkout main
+git pull
+git remote prune origin
+REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+gh api "repos/$REPO/branches" --paginate --jq '.[].name'
+```
+
+Requirements before declaring the release session complete:
+
+- No stale Dependabot PR may remain open without an explicit keep-open decision.
+- No merged or closed Dependabot branch may remain on GitHub.
+- Any remaining non-`main` branch on GitHub must correspond to an intentional still-open PR that
+  was reviewed during this step and deliberately kept alive.

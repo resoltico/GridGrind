@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.47.0"
+version: "0.48.0"
 domain: ERRORS
 updated: "2026-04-16"
 route:
-  keywords: [gridgrind, errors, problem, code, category, recovery, failure, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
-  questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures"]
+  keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
+  questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report assertion failures", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures", "how does gridgrind report source-backed input failures", "what happens if a gridgrind input file is missing"]
 ---
 
 # Error Reference
@@ -21,6 +21,91 @@ route:
 {
   "status": "ERROR",
   "protocolVersion": "V1",
+  "journal": {
+    "planId": "set-total-pass",
+    "level": "NORMAL",
+    "source": {
+      "type": "EXISTING",
+      "path": "budget.xlsx"
+    },
+    "persistence": {
+      "type": "SAVE_AS",
+      "path": "out/budget-reviewed.xlsx"
+    },
+    "validation": {
+      "status": "SUCCEEDED",
+      "durationMillis": 1,
+      "detail": "succeeded"
+    },
+    "inputResolution": {
+      "status": "NOT_STARTED",
+      "durationMillis": 0,
+      "detail": "not started"
+    },
+    "open": {
+      "status": "SUCCEEDED",
+      "durationMillis": 8,
+      "detail": "succeeded"
+    },
+    "calculation": {
+      "preflight": {
+        "status": "NOT_STARTED",
+        "durationMillis": 0,
+        "detail": "not started"
+      },
+      "execution": {
+        "status": "NOT_STARTED",
+        "durationMillis": 0,
+        "detail": "not started"
+      }
+    },
+    "persistencePhase": {
+      "status": "NOT_STARTED",
+      "durationMillis": 0,
+      "detail": "not started"
+    },
+    "close": {
+      "status": "SUCCEEDED",
+      "durationMillis": 1,
+      "detail": "succeeded"
+    },
+    "steps": [
+      {
+        "stepIndex": 2,
+        "stepId": "set-total",
+        "stepKind": "MUTATION",
+        "stepType": "SET_CELL",
+        "targets": [
+          {
+            "kind": "CELL",
+            "label": "Cell Inventory!ZZZ999999"
+          }
+        ],
+        "phase": {
+          "status": "FAILED",
+          "durationMillis": 1,
+          "detail": "failed (INVALID_CELL_ADDRESS)"
+        },
+        "outcome": "FAILED",
+        "failure": {
+          "code": "INVALID_CELL_ADDRESS",
+          "category": "REQUEST",
+          "stage": "EXECUTE_STEP",
+          "message": "Cell address 'ZZZ999999' is not a valid A1-notation address."
+        }
+      }
+    ],
+    "events": [],
+    "outcome": {
+      "status": "FAILED",
+      "plannedStepCount": 4,
+      "completedStepCount": 2,
+      "failedStepCount": 1,
+      "firstFailedStepIndex": 2,
+      "firstFailedStepId": "set-total",
+      "firstFailedStepType": "SET_CELL"
+    }
+  },
   "problem": {
     "code": "INVALID_CELL_ADDRESS",
     "category": "REQUEST",
@@ -29,9 +114,10 @@ route:
     "message": "Cell address 'ZZZ999999' is not a valid A1-notation address.",
     "resolution": "Use a valid A1-style address such as A1 or BC12.",
     "context": {
-      "stage": "APPLY_OPERATION",
-      "operationIndex": 2,
-      "operationType": "SET_CELL",
+      "stage": "EXECUTE_STEP",
+      "stepIndex": 2,
+      "stepId": "set-total",
+      "stepType": "SET_CELL",
       "sheetName": "Inventory",
       "address": "ZZZ999999"
     },
@@ -39,9 +125,71 @@ route:
       {
         "code": "INVALID_CELL_ADDRESS",
         "message": "...",
-        "stage": "APPLY_OPERATION"
+        "stage": "EXECUTE_STEP"
       }
     ]
+  }
+}
+```
+
+The `journal` block is always present. It records top-level phase timing plus ordered per-step
+outcomes even when the request fails before persistence. Source-backed text and binary loading runs
+first under `journal.inputResolution`, before the workbook is opened.
+
+Assertion mismatches attach an additional `problem.assertionFailure` payload:
+
+```json
+{
+  "status": "ERROR",
+  "protocolVersion": "V1",
+  "problem": {
+    "code": "ASSERTION_FAILED",
+    "category": "ASSERTION",
+    "recovery": "CHANGE_REQUEST",
+    "title": "Assertion failed",
+    "message": "EXPECT_CELL_VALUE mismatched effective values at B2",
+    "resolution": "Inspect the observed workbook facts, then adjust the plan expectations or authored mutations and retry.",
+    "context": {
+      "stage": "EXECUTE_STEP",
+      "stepIndex": 3,
+      "stepId": "assert-total",
+      "stepType": "EXPECT_CELL_VALUE",
+      "sheetName": "Budget",
+      "address": "B2"
+    },
+    "assertionFailure": {
+      "stepId": "assert-total",
+      "assertionType": "EXPECT_CELL_VALUE",
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Budget",
+        "address": "B2"
+      },
+      "assertion": {
+        "type": "EXPECT_CELL_VALUE",
+        "expectedValue": {
+          "type": "NUMBER",
+          "number": 1200
+        }
+      },
+      "observations": [
+        {
+          "type": "GET_CELLS",
+          "stepId": "assert-total",
+          "sheetName": "Budget",
+          "cells": [
+            {
+              "type": "NUMBER",
+              "address": "B2",
+              "declaredType": "NUMBER",
+              "value": 900,
+              "displayValue": "900"
+            }
+          ]
+        }
+      ]
+    },
+    "causes": []
   }
 }
 ```
@@ -62,9 +210,16 @@ route:
 |:-----|:--------|
 | `INVALID_JSON` | Request payload is not syntactically valid JSON. |
 | `INVALID_REQUEST_SHAPE` | JSON is syntactically valid, but fields, discriminator IDs, or token shapes do not match the GridGrind protocol schema. Messages are product-owned and describe unknown fields, unknown type values, missing required fields, or wrong token shapes without leaking Jackson or Java class names. |
+| `INPUT_SOURCE_UNAVAILABLE` | A source-backed authored field requested `STANDARD_INPUT`, but no stdin bytes were bound for authored input content. On the CLI this usually means the request itself was also read from stdin instead of `--request <path>`. |
 | `INVALID_REQUEST` | JSON is valid and binds successfully, but the parsed request violates GridGrind business or cross-field validation, including non-`.xlsx` workbook paths, invalid `MOVE_SHEET` indexes, invalid/conflicting `RENAME_SHEET` targets, invalid hyperlink/comment/named-range payloads, invalid structural layout values, signed-workbook persistence requests that mutate the workbook without explicit `persistence.security.signature`, or `UNMERGE_CELLS` requests that do not match an existing merged region exactly. |
 | `INVALID_CELL_ADDRESS` | A1-notation cell address is malformed. |
 | `INVALID_RANGE_ADDRESS` | A1-notation range is malformed or its dimensions do not match `rows`, including invalid `MERGE_CELLS` or `UNMERGE_CELLS` ranges. |
+
+### Assertion (`ASSERTION` category)
+
+| Code | Trigger |
+|:-----|:--------|
+| `ASSERTION_FAILED` | One authored assertion step did not match the observed workbook state. The failure includes `problem.assertionFailure` with the failed assertion contract and the observed factual read payloads that caused the mismatch. Presence-style assertions (`EXPECT_PRESENT`, `EXPECT_ABSENT`) treat selector misses as zero observed entities instead of surfacing selector-specific `*_NOT_FOUND` errors. |
 
 ### Formula (`FORMULA` category)
 
@@ -80,6 +235,7 @@ route:
 | Code | Trigger |
 |:-----|:--------|
 | `WORKBOOK_NOT_FOUND` | `source.type=EXISTING` path does not exist. |
+| `INPUT_SOURCE_NOT_FOUND` | A source-backed authored field referenced a `UTF8_FILE` or `FILE` path that does not exist. |
 | `SHEET_NOT_FOUND` | An operation or read references a sheet that does not exist. All mutation operations (`SET_CELL`, `SET_RANGE`, `APPLY_STYLE`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the sheet to exist; use `ENSURE_SHEET` first. |
 | `NAMED_RANGE_NOT_FOUND` | A named-range read selector or delete request references a workbook- or sheet-scoped name that does not exist. |
 | `CELL_NOT_FOUND` | Reserved. No current operation raises this code; `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are no-ops when the cell does not physically exist, and `GET_CELLS` returns blank snapshots for unwritten cells. |
@@ -97,6 +253,7 @@ route:
 
 | Code | Trigger |
 |:-----|:--------|
+| `INPUT_SOURCE_IO_ERROR` | A source-backed authored field pointed at a file that exists but could not be read, or stdin-backed source bytes could not be consumed cleanly. |
 | `IO_ERROR` | File could not be read or written — wrong path, missing permissions, disk full, or file locked. |
 
 ### Internal (`INTERNAL` category)
@@ -113,6 +270,7 @@ route:
 |:---------|:--------|
 | `ARGUMENTS` | CLI argument was unrecognized or malformed. Fix the command invocation. |
 | `REQUEST` | Request JSON is malformed, does not match the protocol shape, or violates semantic validation. Fix the request. |
+| `ASSERTION` | An authored verification step did not match the observed workbook state. Inspect `problem.assertionFailure.observations`, then fix the expectation or the authored mutations. |
 | `FORMULA` | Formula syntax is invalid, evaluation is missing required external/UDF configuration, or the construct is outside Apache POI's parser/evaluator support. Fix the formula or evaluator setup. |
 | `RESOURCE` | Referenced workbook, sheet, or cell does not exist. Fix the path or name. |
 | `SECURITY` | Workbook encryption, password, or OOXML signing failed. Fix the password or signing configuration, or inspect the workbook package and runtime crypto environment. |
@@ -137,15 +295,15 @@ The `context` block provides structured metadata about where the failure occurre
 
 | Field | Description |
 |:------|:------------|
-| `stage` | `PARSE_ARGUMENTS`, `READ_REQUEST`, `VALIDATE_REQUEST`, `OPEN_WORKBOOK`, `APPLY_OPERATION`, `EXECUTE_READ`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
+| `stage` | `PARSE_ARGUMENTS`, `READ_REQUEST`, `VALIDATE_REQUEST`, `RESOLVE_INPUTS`, `OPEN_WORKBOOK`, `EXECUTE_STEP`, `CALCULATION_PREFLIGHT`, `CALCULATION_EXECUTION`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
 | `sourceType` | Request `source.type` when the failure occurred after request parsing, including `EXECUTE_REQUEST` failures. |
 | `persistenceType` | Request `persistence.type` when the failure occurred after request parsing, including `EXECUTE_REQUEST` failures. |
-| `operationIndex` | Zero-based index of the failing operation in `operations`. |
-| `operationType` | The `type` field of the failing operation (e.g. `SET_CELL`). |
-| `readIndex` | Zero-based index of the failing read in `reads`. |
-| `readType` | The `type` field of the failing read (e.g. `GET_CELLS`). |
-| `requestId` | Caller-defined read correlation ID when the failure occurred during `EXECUTE_READ`. |
-| `sheetName` | Sheet referenced by the failing operation, if applicable. |
+| `inputKind` | Authored source-backed field family when the failure occurred during `RESOLVE_INPUTS`, for example `cell text`, `picture payload`, or `embedded object preview image`. |
+| `inputPath` | Authored `UTF8_FILE` or `FILE` path when the failure occurred during `RESOLVE_INPUTS`, if the failing source referenced a path. |
+| `stepIndex` | Zero-based index of the failing step in `steps`. |
+| `stepId` | Caller-defined step correlation ID for the failing step. |
+| `stepType` | The action, assertion, or query `type` field of the failing step (for example `SET_CELL`, `EXPECT_CELL_VALUE`, or `GET_CELLS`). |
+| `sheetName` | Sheet referenced by the failing step, if applicable. |
 | `address` | Cell address, if applicable. |
 | `range` | Range, if applicable. |
 | `formula` | Formula text, if applicable. |
@@ -184,3 +342,15 @@ Each entry carries:
 Agents should inspect `code` to distinguish between, for example, `INVALID_FORMULA`,
 `MISSING_EXTERNAL_WORKBOOK`, `UNREGISTERED_USER_DEFINED_FUNCTION`, and `UNSUPPORTED_FORMULA`
 without depending on Java exception class names or parser-library details.
+
+## Assertion Failure Payload
+
+When `problem.code=ASSERTION_FAILED`, `problem.assertionFailure` is always present. It carries:
+
+| Field | Description |
+|:------|:------------|
+| `stepId` | The authored assertion step ID that failed. |
+| `assertionType` | The stable assertion discriminator such as `EXPECT_CELL_VALUE` or `ALL_OF`. |
+| `target` | The selector payload the assertion executed against. |
+| `assertion` | The authored assertion contract itself. |
+| `observations` | Ordered factual inspection results gathered by GridGrind while evaluating the assertion. These are the authoritative mismatch facts to inspect before retrying. |

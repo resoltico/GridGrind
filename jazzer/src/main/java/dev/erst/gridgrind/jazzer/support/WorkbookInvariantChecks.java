@@ -1,58 +1,67 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.assertion.AssertionFailure;
+import dev.erst.gridgrind.contract.assertion.AssertionResult;
+import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
+import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
+import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
+import dev.erst.gridgrind.contract.dto.AutofilterHealthReport;
+import dev.erst.gridgrind.contract.dto.AutofilterSortConditionReport;
+import dev.erst.gridgrind.contract.dto.AutofilterSortStateReport;
+import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
+import dev.erst.gridgrind.contract.dto.CellBorderReport;
+import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
+import dev.erst.gridgrind.contract.dto.CellColorReport;
+import dev.erst.gridgrind.contract.dto.CellFillReport;
+import dev.erst.gridgrind.contract.dto.CellFontReport;
+import dev.erst.gridgrind.contract.dto.CellGradientFillReport;
+import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
+import dev.erst.gridgrind.contract.dto.CellProtectionReport;
+import dev.erst.gridgrind.contract.dto.ChartReport;
+import dev.erst.gridgrind.contract.dto.CommentAnchorReport;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingEntryReport;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingHealthReport;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleReport;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdReport;
+import dev.erst.gridgrind.contract.dto.DifferentialBorderReport;
+import dev.erst.gridgrind.contract.dto.DifferentialBorderSideReport;
+import dev.erst.gridgrind.contract.dto.DifferentialStyleReport;
+import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
+import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
+import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
+import dev.erst.gridgrind.contract.dto.DrawingObjectReport;
+import dev.erst.gridgrind.contract.dto.FontHeightReport;
+import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
+import dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport;
+import dev.erst.gridgrind.contract.dto.PaneReport;
+import dev.erst.gridgrind.contract.dto.PivotTableHealthReport;
+import dev.erst.gridgrind.contract.dto.PivotTableReport;
+import dev.erst.gridgrind.contract.dto.PrintLayoutReport;
+import dev.erst.gridgrind.contract.dto.PrintMarginsReport;
+import dev.erst.gridgrind.contract.dto.PrintSetupReport;
+import dev.erst.gridgrind.contract.dto.RequestWarning;
+import dev.erst.gridgrind.contract.dto.RichTextRunReport;
+import dev.erst.gridgrind.contract.dto.TableColumnReport;
+import dev.erst.gridgrind.contract.dto.TableEntryReport;
+import dev.erst.gridgrind.contract.dto.TableHealthReport;
+import dev.erst.gridgrind.contract.dto.TableStyleReport;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
+import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.query.InspectionResult;
+import dev.erst.gridgrind.contract.selector.CellSelector;
+import dev.erst.gridgrind.contract.selector.ChartSelector;
+import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
+import dev.erst.gridgrind.contract.selector.RangeSelector;
+import dev.erst.gridgrind.contract.selector.SheetSelector;
+import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
-import dev.erst.gridgrind.protocol.dto.AutofilterEntryReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterFilterColumnReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterFilterCriterionReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterHealthReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterSortConditionReport;
-import dev.erst.gridgrind.protocol.dto.AutofilterSortStateReport;
-import dev.erst.gridgrind.protocol.dto.CellAlignmentReport;
-import dev.erst.gridgrind.protocol.dto.CellBorderReport;
-import dev.erst.gridgrind.protocol.dto.CellBorderSideReport;
-import dev.erst.gridgrind.protocol.dto.CellColorReport;
-import dev.erst.gridgrind.protocol.dto.CellFillReport;
-import dev.erst.gridgrind.protocol.dto.CellFontReport;
-import dev.erst.gridgrind.protocol.dto.CellGradientFillReport;
-import dev.erst.gridgrind.protocol.dto.CellGradientStopReport;
-import dev.erst.gridgrind.protocol.dto.CellProtectionReport;
-import dev.erst.gridgrind.protocol.dto.ChartReport;
-import dev.erst.gridgrind.protocol.dto.CommentAnchorReport;
-import dev.erst.gridgrind.protocol.dto.ConditionalFormattingEntryReport;
-import dev.erst.gridgrind.protocol.dto.ConditionalFormattingHealthReport;
-import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleReport;
-import dev.erst.gridgrind.protocol.dto.ConditionalFormattingThresholdReport;
-import dev.erst.gridgrind.protocol.dto.DifferentialBorderReport;
-import dev.erst.gridgrind.protocol.dto.DifferentialBorderSideReport;
-import dev.erst.gridgrind.protocol.dto.DifferentialStyleReport;
-import dev.erst.gridgrind.protocol.dto.DrawingAnchorReport;
-import dev.erst.gridgrind.protocol.dto.DrawingMarkerReport;
-import dev.erst.gridgrind.protocol.dto.DrawingObjectPayloadReport;
-import dev.erst.gridgrind.protocol.dto.DrawingObjectReport;
-import dev.erst.gridgrind.protocol.dto.FontHeightReport;
-import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
-import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
-import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
-import dev.erst.gridgrind.protocol.dto.OoxmlPackageSecurityReport;
-import dev.erst.gridgrind.protocol.dto.PaneReport;
-import dev.erst.gridgrind.protocol.dto.PivotTableHealthReport;
-import dev.erst.gridgrind.protocol.dto.PivotTableReport;
-import dev.erst.gridgrind.protocol.dto.PrintLayoutReport;
-import dev.erst.gridgrind.protocol.dto.PrintMarginsReport;
-import dev.erst.gridgrind.protocol.dto.PrintSetupReport;
-import dev.erst.gridgrind.protocol.dto.RequestWarning;
-import dev.erst.gridgrind.protocol.dto.RichTextRunReport;
-import dev.erst.gridgrind.protocol.dto.TableColumnReport;
-import dev.erst.gridgrind.protocol.dto.TableEntryReport;
-import dev.erst.gridgrind.protocol.dto.TableHealthReport;
-import dev.erst.gridgrind.protocol.dto.TableStyleReport;
-import dev.erst.gridgrind.protocol.dto.WorkbookProtectionReport;
-import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
-import dev.erst.gridgrind.protocol.read.WorkbookReadResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
@@ -69,24 +78,8 @@ public final class WorkbookInvariantChecks {
     require(response.protocolVersion() != null, "protocolVersion must not be null");
 
     switch (response) {
-      case GridGrindResponse.Success success -> {
-        require(success.persistence() != null, "persistence must not be null");
-        requirePersistenceOutcomeShape(success.persistence());
-        require(success.warnings() != null, "warnings must not be null");
-        success.warnings().forEach(WorkbookInvariantChecks::requireRequestWarningShape);
-        require(success.reads() != null, "reads must not be null");
-        success.reads().forEach(WorkbookInvariantChecks::requireReadResultShape);
-      }
-      case GridGrindResponse.Failure failure -> {
-        require(failure.problem() != null, "problem must not be null");
-        require(failure.problem().code() != null, "problem code must not be null");
-        require(failure.problem().category() != null, "problem category must not be null");
-        require(failure.problem().recovery() != null, "problem recovery must not be null");
-        require(failure.problem().title() != null, "problem title must not be null");
-        require(failure.problem().message() != null, "problem message must not be null");
-        require(failure.problem().resolution() != null, "problem resolution must not be null");
-        require(failure.problem().context() != null, "problem context must not be null");
-      }
+      case GridGrindResponse.Success success -> requireSuccessResponseShape(success);
+      case GridGrindResponse.Failure failure -> requireFailureResponseShape(failure);
     }
   }
 
@@ -94,8 +87,7 @@ public final class WorkbookInvariantChecks {
    * Requires the response shape to agree with the request's source, reads, and persistence
    * contract.
    */
-  public static void requireWorkflowOutcomeShape(
-      GridGrindRequest request, GridGrindResponse response) {
+  public static void requireWorkflowOutcomeShape(WorkbookPlan request, GridGrindResponse response) {
     Objects.requireNonNull(request, "request must not be null");
     Objects.requireNonNull(response, "response must not be null");
 
@@ -106,10 +98,18 @@ public final class WorkbookInvariantChecks {
       case GridGrindResponse.Success success -> {
         requirePersistenceMatchesRequest(request.persistence(), success.persistence());
         require(
-            success.reads().size() == request.reads().size(),
-            "reads size must match the requested read count");
-        for (int index = 0; index < request.reads().size(); index++) {
-          requireReadMatchesRequest(request.reads().get(index), success.reads().get(index));
+            success.assertions().size() == request.assertionSteps().size(),
+            "assertions size must match the requested assertion count");
+        for (int index = 0; index < request.assertionSteps().size(); index++) {
+          requireAssertionMatchesRequest(
+              request.assertionSteps().get(index), success.assertions().get(index));
+        }
+        require(
+            success.inspections().size() == request.inspectionSteps().size(),
+            "inspections size must match the requested inspection count");
+        for (int index = 0; index < request.inspectionSteps().size(); index++) {
+          requireReadMatchesRequest(
+              request.inspectionSteps().get(index), success.inspections().get(index));
         }
       }
     }
@@ -170,11 +170,46 @@ public final class WorkbookInvariantChecks {
         .forEach(WorkbookInvariantChecks::requireEnginePivotTableShape);
   }
 
+  private static void requireSuccessResponseShape(GridGrindResponse.Success success) {
+    require(success.persistence() != null, "persistence must not be null");
+    requirePersistenceOutcomeShape(success.persistence());
+    require(success.warnings() != null, "warnings must not be null");
+    success.warnings().forEach(WorkbookInvariantChecks::requireRequestWarningShape);
+    require(success.assertions() != null, "assertions must not be null");
+    success.assertions().forEach(WorkbookInvariantChecks::requireAssertionResultShape);
+    require(success.inspections() != null, "inspections must not be null");
+    success.inspections().forEach(WorkbookInvariantChecks::requireReadResultShape);
+  }
+
+  private static void requireFailureResponseShape(GridGrindResponse.Failure failure) {
+    require(failure.problem() != null, "problem must not be null");
+    require(failure.problem().code() != null, "problem code must not be null");
+    require(failure.problem().category() != null, "problem category must not be null");
+    require(failure.problem().recovery() != null, "problem recovery must not be null");
+    require(failure.problem().title() != null, "problem title must not be null");
+    require(failure.problem().message() != null, "problem message must not be null");
+    require(failure.problem().resolution() != null, "problem resolution must not be null");
+    require(failure.problem().context() != null, "problem context must not be null");
+    require(failure.problem().causes() != null, "problem causes must not be null");
+    if (failure.problem().assertionFailure() != null) {
+      requireAssertionFailureShape(failure.problem().assertionFailure());
+      require(
+          failure.problem().code()
+              == dev.erst.gridgrind.contract.dto.GridGrindProblemCode.ASSERTION_FAILED,
+          "only ASSERTION_FAILED problems may carry assertionFailure details");
+      return;
+    }
+    require(
+        failure.problem().code()
+            != dev.erst.gridgrind.contract.dto.GridGrindProblemCode.ASSERTION_FAILED,
+        "ASSERTION_FAILED problems must carry assertionFailure details");
+  }
+
   private static void requirePersistenceMatchesRequest(
-      GridGrindRequest.WorkbookPersistence requestPersistence,
+      WorkbookPlan.WorkbookPersistence requestPersistence,
       GridGrindResponse.PersistenceOutcome persistenceOutcome) {
     switch (requestPersistence) {
-      case GridGrindRequest.WorkbookPersistence.None _ -> {
+      case WorkbookPlan.WorkbookPersistence.None _ -> {
         switch (persistenceOutcome) {
           case GridGrindResponse.PersistenceOutcome.NotSaved _ -> {}
           case GridGrindResponse.PersistenceOutcome.SavedAs _ ->
@@ -183,13 +218,13 @@ public final class WorkbookInvariantChecks {
               throw new IllegalStateException("NONE persistence must return NONE outcome");
         }
       }
-      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> {
+      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> {
         requirePersistenceOutcomeShape(persistenceOutcome);
         require(
             persistenceOutcome instanceof GridGrindResponse.PersistenceOutcome.Overwritten,
             "OVERWRITE persistence must return OVERWRITE outcome");
       }
-      case GridGrindRequest.WorkbookPersistence.SaveAs _ -> {
+      case WorkbookPlan.WorkbookPersistence.SaveAs _ -> {
         requirePersistenceOutcomeShape(persistenceOutcome);
         require(
             persistenceOutcome instanceof GridGrindResponse.PersistenceOutcome.SavedAs,
@@ -221,243 +256,319 @@ public final class WorkbookInvariantChecks {
 
   private static void requireRequestWarningShape(RequestWarning warning) {
     require(warning != null, "warning must not be null");
-    require(warning.operationIndex() >= 0, "warning operationIndex must not be negative");
-    requireNonBlank(warning.operationType(), "warning operationType");
+    require(warning.stepIndex() >= 0, "warning stepIndex must not be negative");
+    requireNonBlank(warning.stepType(), "warning stepType");
     requireNonBlank(warning.message(), "warning message");
   }
 
   private static void requireReadMatchesRequest(
-      WorkbookReadOperation readOperation, WorkbookReadResult readResult) {
+      InspectionStep readOperation, InspectionResult readResult) {
     require(
-        readOperation.requestId().equals(readResult.requestId()),
-        "read result requestId must match the request");
+        readOperation.stepId().equals(readResult.stepId()),
+        "read result stepId must match the request");
     require(
-        SequenceIntrospection.readKind(readOperation).equals(readResultKind(readResult)),
+        SequenceIntrospection.inspectionKind(readOperation).equals(readResultKind(readResult)),
         "read result kind must match the requested read kind");
 
-    switch (readOperation) {
-      case WorkbookReadOperation.GetWorkbookSummary _ -> {
-        WorkbookReadResult.WorkbookSummaryResult result =
-            (WorkbookReadResult.WorkbookSummaryResult) readResult;
+    switch (readOperation.query()) {
+      case InspectionQuery.GetWorkbookSummary _ -> {
+        InspectionResult.WorkbookSummaryResult result =
+            (InspectionResult.WorkbookSummaryResult) readResult;
         requireWorkbookSummaryShape(result.workbook());
       }
-      case WorkbookReadOperation.GetPackageSecurity _ ->
+      case InspectionQuery.GetPackageSecurity _ ->
           requirePackageSecurityShape(
-              ((WorkbookReadResult.PackageSecurityResult) readResult).security());
-      case WorkbookReadOperation.GetWorkbookProtection _ ->
+              ((InspectionResult.PackageSecurityResult) readResult).security());
+      case InspectionQuery.GetWorkbookProtection _ ->
           requireWorkbookProtectionShape(
-              ((WorkbookReadResult.WorkbookProtectionResult) readResult).protection());
-      case WorkbookReadOperation.GetNamedRanges _ -> {
-        WorkbookReadResult.NamedRangesResult result =
-            (WorkbookReadResult.NamedRangesResult) readResult;
+              ((InspectionResult.WorkbookProtectionResult) readResult).protection());
+      case InspectionQuery.GetNamedRanges _ -> {
+        InspectionResult.NamedRangesResult result = (InspectionResult.NamedRangesResult) readResult;
         result.namedRanges().forEach(WorkbookInvariantChecks::requireNamedRangeShape);
       }
-      case WorkbookReadOperation.GetSheetSummary expected -> {
-        WorkbookReadResult.SheetSummaryResult result =
-            (WorkbookReadResult.SheetSummaryResult) readResult;
+      case InspectionQuery.GetSheetSummary _ -> {
+        InspectionResult.SheetSummaryResult result =
+            (InspectionResult.SheetSummaryResult) readResult;
         requireSheetSummaryShape(result.sheet());
         require(
-            expected.sheetName().equals(result.sheet().sheetName()),
+            ((SheetSelector.ByName) readOperation.target())
+                .name()
+                .equals(result.sheet().sheetName()),
             "sheet summary sheet mismatch");
       }
-      case WorkbookReadOperation.GetCells expected -> {
-        WorkbookReadResult.CellsResult result = (WorkbookReadResult.CellsResult) readResult;
-        require(expected.sheetName().equals(result.sheetName()), "cells sheet mismatch");
+      case InspectionQuery.GetCells _ -> {
+        InspectionResult.CellsResult result = (InspectionResult.CellsResult) readResult;
         require(
-            result.cells().size() == expected.addresses().size(),
-            "cells result size must match requested addresses");
+            sheetName((CellSelector) readOperation.target()).equals(result.sheetName()),
+            "cells sheet mismatch");
+        if (readOperation.target() instanceof CellSelector.ByAddresses byAddresses) {
+          require(
+              result.cells().size() == byAddresses.addresses().size(),
+              "cells result size must match requested addresses");
+        } else if (readOperation.target() instanceof CellSelector.ByAddress) {
+          require(result.cells().size() == 1, "single-cell result size must be 1");
+        }
       }
-      case WorkbookReadOperation.GetWindow expected -> {
-        WorkbookReadResult.WindowResult result = (WorkbookReadResult.WindowResult) readResult;
-        require(expected.sheetName().equals(result.window().sheetName()), "window sheet mismatch");
+      case InspectionQuery.GetWindow _ -> {
+        InspectionResult.WindowResult result = (InspectionResult.WindowResult) readResult;
+        RangeSelector.RectangularWindow selector =
+            (RangeSelector.RectangularWindow) readOperation.target();
+        require(selector.sheetName().equals(result.window().sheetName()), "window sheet mismatch");
         require(
-            expected.topLeftAddress().equals(result.window().topLeftAddress()),
+            selector.topLeftAddress().equals(result.window().topLeftAddress()),
             "window topLeftAddress mismatch");
-        require(expected.rowCount() == result.window().rowCount(), "window rowCount mismatch");
+        require(selector.rowCount() == result.window().rowCount(), "window rowCount mismatch");
         require(
-            expected.columnCount() == result.window().columnCount(), "window columnCount mismatch");
+            selector.columnCount() == result.window().columnCount(), "window columnCount mismatch");
       }
-      case WorkbookReadOperation.GetMergedRegions expected -> {
-        WorkbookReadResult.MergedRegionsResult result =
-            (WorkbookReadResult.MergedRegionsResult) readResult;
-        require(expected.sheetName().equals(result.sheetName()), "merged regions sheet mismatch");
+      case InspectionQuery.GetMergedRegions _ -> {
+        InspectionResult.MergedRegionsResult result =
+            (InspectionResult.MergedRegionsResult) readResult;
+        require(
+            ((SheetSelector.ByName) readOperation.target()).name().equals(result.sheetName()),
+            "merged regions sheet mismatch");
       }
-      case WorkbookReadOperation.GetHyperlinks expected -> {
-        WorkbookReadResult.HyperlinksResult result =
-            (WorkbookReadResult.HyperlinksResult) readResult;
-        require(expected.sheetName().equals(result.sheetName()), "hyperlinks sheet mismatch");
+      case InspectionQuery.GetHyperlinks _ -> {
+        InspectionResult.HyperlinksResult result = (InspectionResult.HyperlinksResult) readResult;
+        require(
+            sheetName((CellSelector) readOperation.target()).equals(result.sheetName()),
+            "hyperlinks sheet mismatch");
       }
-      case WorkbookReadOperation.GetComments expected -> {
-        WorkbookReadResult.CommentsResult result = (WorkbookReadResult.CommentsResult) readResult;
-        require(expected.sheetName().equals(result.sheetName()), "comments sheet mismatch");
+      case InspectionQuery.GetComments _ -> {
+        InspectionResult.CommentsResult result = (InspectionResult.CommentsResult) readResult;
+        require(
+            sheetName((CellSelector) readOperation.target()).equals(result.sheetName()),
+            "comments sheet mismatch");
       }
-      case WorkbookReadOperation.GetDrawingObjects expected -> {
-        WorkbookReadResult.DrawingObjectsResult result =
-            (WorkbookReadResult.DrawingObjectsResult) readResult;
-        require(expected.sheetName().equals(result.sheetName()), "drawing objects sheet mismatch");
+      case InspectionQuery.GetDrawingObjects _ -> {
+        InspectionResult.DrawingObjectsResult result =
+            (InspectionResult.DrawingObjectsResult) readResult;
+        require(
+            ((DrawingObjectSelector.AllOnSheet) readOperation.target())
+                .sheetName()
+                .equals(result.sheetName()),
+            "drawing objects sheet mismatch");
         result.drawingObjects().forEach(WorkbookInvariantChecks::requireDrawingObjectShape);
       }
-      case WorkbookReadOperation.GetCharts expected -> {
-        WorkbookReadResult.ChartsResult result = (WorkbookReadResult.ChartsResult) readResult;
-        require(expected.sheetName().equals(result.sheetName()), "charts sheet mismatch");
+      case InspectionQuery.GetCharts _ -> {
+        InspectionResult.ChartsResult result = (InspectionResult.ChartsResult) readResult;
+        require(
+            ((ChartSelector.AllOnSheet) readOperation.target())
+                .sheetName()
+                .equals(result.sheetName()),
+            "charts sheet mismatch");
         result.charts().forEach(WorkbookInvariantChecks::requireChartReportShape);
       }
-      case WorkbookReadOperation.GetPivotTables _ -> {
-        WorkbookReadResult.PivotTablesResult result =
-            (WorkbookReadResult.PivotTablesResult) readResult;
+      case InspectionQuery.GetPivotTables _ -> {
+        InspectionResult.PivotTablesResult result = (InspectionResult.PivotTablesResult) readResult;
         result.pivotTables().forEach(WorkbookInvariantChecks::requirePivotTableShape);
       }
-      case WorkbookReadOperation.GetDrawingObjectPayload expected -> {
-        WorkbookReadResult.DrawingObjectPayloadResult result =
-            (WorkbookReadResult.DrawingObjectPayloadResult) readResult;
-        require(expected.sheetName().equals(result.sheetName()), "drawing payload sheet mismatch");
+      case InspectionQuery.GetDrawingObjectPayload _ -> {
+        InspectionResult.DrawingObjectPayloadResult result =
+            (InspectionResult.DrawingObjectPayloadResult) readResult;
+        DrawingObjectSelector.ByName selector =
+            (DrawingObjectSelector.ByName) readOperation.target();
+        require(selector.sheetName().equals(result.sheetName()), "drawing payload sheet mismatch");
         requireDrawingObjectPayloadShape(result.payload());
         require(
-            expected.objectName().equals(result.payload().name()),
+            selector.objectName().equals(result.payload().name()),
             "drawing payload objectName mismatch");
       }
-      case WorkbookReadOperation.GetSheetLayout expected -> {
-        WorkbookReadResult.SheetLayoutResult result =
-            (WorkbookReadResult.SheetLayoutResult) readResult;
-        require(expected.sheetName().equals(result.layout().sheetName()), "layout sheet mismatch");
-      }
-      case WorkbookReadOperation.GetPrintLayout expected -> {
-        WorkbookReadResult.PrintLayoutResult result =
-            (WorkbookReadResult.PrintLayoutResult) readResult;
+      case InspectionQuery.GetSheetLayout _ -> {
+        InspectionResult.SheetLayoutResult result = (InspectionResult.SheetLayoutResult) readResult;
         require(
-            expected.sheetName().equals(result.layout().sheetName()),
+            ((SheetSelector.ByName) readOperation.target())
+                .name()
+                .equals(result.layout().sheetName()),
+            "layout sheet mismatch");
+      }
+      case InspectionQuery.GetPrintLayout _ -> {
+        InspectionResult.PrintLayoutResult result = (InspectionResult.PrintLayoutResult) readResult;
+        require(
+            ((SheetSelector.ByName) readOperation.target())
+                .name()
+                .equals(result.layout().sheetName()),
             "print layout sheet mismatch");
       }
-      case WorkbookReadOperation.GetDataValidations expected -> {
-        WorkbookReadResult.DataValidationsResult result =
-            (WorkbookReadResult.DataValidationsResult) readResult;
-        require(expected.sheetName().equals(result.sheetName()), "data validations sheet mismatch");
-      }
-      case WorkbookReadOperation.GetConditionalFormatting expected -> {
-        WorkbookReadResult.ConditionalFormattingResult result =
-            (WorkbookReadResult.ConditionalFormattingResult) readResult;
+      case InspectionQuery.GetDataValidations _ -> {
+        InspectionResult.DataValidationsResult result =
+            (InspectionResult.DataValidationsResult) readResult;
         require(
-            expected.sheetName().equals(result.sheetName()),
+            sheetName((RangeSelector) readOperation.target()).equals(result.sheetName()),
+            "data validations sheet mismatch");
+      }
+      case InspectionQuery.GetConditionalFormatting _ -> {
+        InspectionResult.ConditionalFormattingResult result =
+            (InspectionResult.ConditionalFormattingResult) readResult;
+        require(
+            sheetName((RangeSelector) readOperation.target()).equals(result.sheetName()),
             "conditional formatting sheet mismatch");
       }
-      case WorkbookReadOperation.GetAutofilters expected -> {
-        WorkbookReadResult.AutofiltersResult result =
-            (WorkbookReadResult.AutofiltersResult) readResult;
-        require(expected.sheetName().equals(result.sheetName()), "autofilters sheet mismatch");
+      case InspectionQuery.GetAutofilters _ -> {
+        InspectionResult.AutofiltersResult result = (InspectionResult.AutofiltersResult) readResult;
+        require(
+            ((SheetSelector.ByName) readOperation.target()).name().equals(result.sheetName()),
+            "autofilters sheet mismatch");
       }
-      case WorkbookReadOperation.GetTables _ -> {
-        WorkbookReadResult.TablesResult result = (WorkbookReadResult.TablesResult) readResult;
+      case InspectionQuery.GetTables _ -> {
+        InspectionResult.TablesResult result = (InspectionResult.TablesResult) readResult;
         result.tables().forEach(WorkbookInvariantChecks::requireTableEntryShape);
       }
-      case WorkbookReadOperation.GetFormulaSurface _ -> {
-        WorkbookReadResult.FormulaSurfaceResult result =
-            (WorkbookReadResult.FormulaSurfaceResult) readResult;
+      case InspectionQuery.GetFormulaSurface _ -> {
+        InspectionResult.FormulaSurfaceResult result =
+            (InspectionResult.FormulaSurfaceResult) readResult;
         require(result.analysis().sheets() != null, "formula surface sheets must not be null");
       }
-      case WorkbookReadOperation.GetSheetSchema expected -> {
-        WorkbookReadResult.SheetSchemaResult result =
-            (WorkbookReadResult.SheetSchemaResult) readResult;
+      case InspectionQuery.GetSheetSchema _ -> {
+        InspectionResult.SheetSchemaResult result = (InspectionResult.SheetSchemaResult) readResult;
+        RangeSelector.RectangularWindow selector =
+            (RangeSelector.RectangularWindow) readOperation.target();
         require(
-            expected.sheetName().equals(result.analysis().sheetName()), "schema sheet mismatch");
+            selector.sheetName().equals(result.analysis().sheetName()), "schema sheet mismatch");
         require(
-            expected.topLeftAddress().equals(result.analysis().topLeftAddress()),
+            selector.topLeftAddress().equals(result.analysis().topLeftAddress()),
             "schema topLeftAddress mismatch");
       }
-      case WorkbookReadOperation.GetNamedRangeSurface _ -> {
-        WorkbookReadResult.NamedRangeSurfaceResult result =
-            (WorkbookReadResult.NamedRangeSurfaceResult) readResult;
+      case InspectionQuery.GetNamedRangeSurface _ -> {
+        InspectionResult.NamedRangeSurfaceResult result =
+            (InspectionResult.NamedRangeSurfaceResult) readResult;
         require(
             result.analysis().namedRanges() != null,
             "named range surface entries must not be null");
       }
-      case WorkbookReadOperation.AnalyzeFormulaHealth _ ->
-          requireFormulaHealthShape(
-              ((WorkbookReadResult.FormulaHealthResult) readResult).analysis());
-      case WorkbookReadOperation.AnalyzeDataValidationHealth _ ->
+      case InspectionQuery.AnalyzeFormulaHealth _ ->
+          requireFormulaHealthShape(((InspectionResult.FormulaHealthResult) readResult).analysis());
+      case InspectionQuery.AnalyzeDataValidationHealth _ ->
           requireDataValidationHealthShape(
-              ((WorkbookReadResult.DataValidationHealthResult) readResult).analysis());
-      case WorkbookReadOperation.AnalyzeConditionalFormattingHealth _ ->
+              ((InspectionResult.DataValidationHealthResult) readResult).analysis());
+      case InspectionQuery.AnalyzeConditionalFormattingHealth _ ->
           requireConditionalFormattingHealthShape(
-              ((WorkbookReadResult.ConditionalFormattingHealthResult) readResult).analysis());
-      case WorkbookReadOperation.AnalyzeAutofilterHealth _ ->
+              ((InspectionResult.ConditionalFormattingHealthResult) readResult).analysis());
+      case InspectionQuery.AnalyzeAutofilterHealth _ ->
           requireAutofilterHealthShape(
-              ((WorkbookReadResult.AutofilterHealthResult) readResult).analysis());
-      case WorkbookReadOperation.AnalyzeTableHealth _ ->
-          requireTableHealthShape(((WorkbookReadResult.TableHealthResult) readResult).analysis());
-      case WorkbookReadOperation.AnalyzePivotTableHealth _ ->
+              ((InspectionResult.AutofilterHealthResult) readResult).analysis());
+      case InspectionQuery.AnalyzeTableHealth _ ->
+          requireTableHealthShape(((InspectionResult.TableHealthResult) readResult).analysis());
+      case InspectionQuery.AnalyzePivotTableHealth _ ->
           requirePivotTableHealthShape(
-              ((WorkbookReadResult.PivotTableHealthResult) readResult).analysis());
-      case WorkbookReadOperation.AnalyzeHyperlinkHealth _ ->
+              ((InspectionResult.PivotTableHealthResult) readResult).analysis());
+      case InspectionQuery.AnalyzeHyperlinkHealth _ ->
           requireHyperlinkHealthShape(
-              ((WorkbookReadResult.HyperlinkHealthResult) readResult).analysis());
-      case WorkbookReadOperation.AnalyzeNamedRangeHealth _ ->
+              ((InspectionResult.HyperlinkHealthResult) readResult).analysis());
+      case InspectionQuery.AnalyzeNamedRangeHealth _ ->
           requireNamedRangeHealthShape(
-              ((WorkbookReadResult.NamedRangeHealthResult) readResult).analysis());
-      case WorkbookReadOperation.AnalyzeWorkbookFindings _ ->
+              ((InspectionResult.NamedRangeHealthResult) readResult).analysis());
+      case InspectionQuery.AnalyzeWorkbookFindings _ ->
           requireWorkbookFindingsShape(
-              ((WorkbookReadResult.WorkbookFindingsResult) readResult).analysis());
+              ((InspectionResult.WorkbookFindingsResult) readResult).analysis());
     }
   }
 
-  private static String readResultKind(WorkbookReadResult readResult) {
-    return switch (readResult) {
-      case WorkbookReadResult.WorkbookSummaryResult _ -> "GET_WORKBOOK_SUMMARY";
-      case WorkbookReadResult.PackageSecurityResult _ -> "GET_PACKAGE_SECURITY";
-      case WorkbookReadResult.WorkbookProtectionResult _ -> "GET_WORKBOOK_PROTECTION";
-      case WorkbookReadResult.NamedRangesResult _ -> "GET_NAMED_RANGES";
-      case WorkbookReadResult.SheetSummaryResult _ -> "GET_SHEET_SUMMARY";
-      case WorkbookReadResult.CellsResult _ -> "GET_CELLS";
-      case WorkbookReadResult.WindowResult _ -> "GET_WINDOW";
-      case WorkbookReadResult.MergedRegionsResult _ -> "GET_MERGED_REGIONS";
-      case WorkbookReadResult.HyperlinksResult _ -> "GET_HYPERLINKS";
-      case WorkbookReadResult.CommentsResult _ -> "GET_COMMENTS";
-      case WorkbookReadResult.DrawingObjectsResult _ -> "GET_DRAWING_OBJECTS";
-      case WorkbookReadResult.ChartsResult _ -> "GET_CHARTS";
-      case WorkbookReadResult.PivotTablesResult _ -> "GET_PIVOT_TABLES";
-      case WorkbookReadResult.DrawingObjectPayloadResult _ -> "GET_DRAWING_OBJECT_PAYLOAD";
-      case WorkbookReadResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
-      case WorkbookReadResult.PrintLayoutResult _ -> "GET_PRINT_LAYOUT";
-      case WorkbookReadResult.DataValidationsResult _ -> "GET_DATA_VALIDATIONS";
-      case WorkbookReadResult.ConditionalFormattingResult _ -> "GET_CONDITIONAL_FORMATTING";
-      case WorkbookReadResult.AutofiltersResult _ -> "GET_AUTOFILTERS";
-      case WorkbookReadResult.TablesResult _ -> "GET_TABLES";
-      case WorkbookReadResult.FormulaSurfaceResult _ -> "GET_FORMULA_SURFACE";
-      case WorkbookReadResult.SheetSchemaResult _ -> "GET_SHEET_SCHEMA";
-      case WorkbookReadResult.NamedRangeSurfaceResult _ -> "GET_NAMED_RANGE_SURFACE";
-      case WorkbookReadResult.FormulaHealthResult _ -> "ANALYZE_FORMULA_HEALTH";
-      case WorkbookReadResult.DataValidationHealthResult _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
-      case WorkbookReadResult.ConditionalFormattingHealthResult _ ->
-          "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
-      case WorkbookReadResult.AutofilterHealthResult _ -> "ANALYZE_AUTOFILTER_HEALTH";
-      case WorkbookReadResult.TableHealthResult _ -> "ANALYZE_TABLE_HEALTH";
-      case WorkbookReadResult.PivotTableHealthResult _ -> "ANALYZE_PIVOT_TABLE_HEALTH";
-      case WorkbookReadResult.HyperlinkHealthResult _ -> "ANALYZE_HYPERLINK_HEALTH";
-      case WorkbookReadResult.NamedRangeHealthResult _ -> "ANALYZE_NAMED_RANGE_HEALTH";
-      case WorkbookReadResult.WorkbookFindingsResult _ -> "ANALYZE_WORKBOOK_FINDINGS";
+  private static String sheetName(CellSelector selector) {
+    return switch (selector) {
+      case CellSelector.AllUsedInSheet all -> all.sheetName();
+      case CellSelector.ByAddress byAddress -> byAddress.sheetName();
+      case CellSelector.ByAddresses byAddresses -> byAddresses.sheetName();
+      case CellSelector.ByQualifiedAddresses _ -> null;
     };
   }
 
-  private static void requireReadResultShape(WorkbookReadResult readResult) {
-    require(readResult.requestId() != null, "read requestId must not be null");
-    require(!readResult.requestId().isBlank(), "read requestId must not be blank");
+  private static String sheetName(RangeSelector selector) {
+    return switch (selector) {
+      case RangeSelector.AllOnSheet allOnSheet -> allOnSheet.sheetName();
+      case RangeSelector.ByRange byRange -> byRange.sheetName();
+      case RangeSelector.ByRanges byRanges -> byRanges.sheetName();
+      case RangeSelector.RectangularWindow window -> window.sheetName();
+    };
+  }
+
+  private static String readResultKind(InspectionResult readResult) {
+    return switch (readResult) {
+      case InspectionResult.WorkbookSummaryResult _ -> "GET_WORKBOOK_SUMMARY";
+      case InspectionResult.PackageSecurityResult _ -> "GET_PACKAGE_SECURITY";
+      case InspectionResult.WorkbookProtectionResult _ -> "GET_WORKBOOK_PROTECTION";
+      case InspectionResult.NamedRangesResult _ -> "GET_NAMED_RANGES";
+      case InspectionResult.SheetSummaryResult _ -> "GET_SHEET_SUMMARY";
+      case InspectionResult.CellsResult _ -> "GET_CELLS";
+      case InspectionResult.WindowResult _ -> "GET_WINDOW";
+      case InspectionResult.MergedRegionsResult _ -> "GET_MERGED_REGIONS";
+      case InspectionResult.HyperlinksResult _ -> "GET_HYPERLINKS";
+      case InspectionResult.CommentsResult _ -> "GET_COMMENTS";
+      case InspectionResult.DrawingObjectsResult _ -> "GET_DRAWING_OBJECTS";
+      case InspectionResult.ChartsResult _ -> "GET_CHARTS";
+      case InspectionResult.PivotTablesResult _ -> "GET_PIVOT_TABLES";
+      case InspectionResult.DrawingObjectPayloadResult _ -> "GET_DRAWING_OBJECT_PAYLOAD";
+      case InspectionResult.SheetLayoutResult _ -> "GET_SHEET_LAYOUT";
+      case InspectionResult.PrintLayoutResult _ -> "GET_PRINT_LAYOUT";
+      case InspectionResult.DataValidationsResult _ -> "GET_DATA_VALIDATIONS";
+      case InspectionResult.ConditionalFormattingResult _ -> "GET_CONDITIONAL_FORMATTING";
+      case InspectionResult.AutofiltersResult _ -> "GET_AUTOFILTERS";
+      case InspectionResult.TablesResult _ -> "GET_TABLES";
+      case InspectionResult.FormulaSurfaceResult _ -> "GET_FORMULA_SURFACE";
+      case InspectionResult.SheetSchemaResult _ -> "GET_SHEET_SCHEMA";
+      case InspectionResult.NamedRangeSurfaceResult _ -> "GET_NAMED_RANGE_SURFACE";
+      case InspectionResult.FormulaHealthResult _ -> "ANALYZE_FORMULA_HEALTH";
+      case InspectionResult.DataValidationHealthResult _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
+      case InspectionResult.ConditionalFormattingHealthResult _ ->
+          "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
+      case InspectionResult.AutofilterHealthResult _ -> "ANALYZE_AUTOFILTER_HEALTH";
+      case InspectionResult.TableHealthResult _ -> "ANALYZE_TABLE_HEALTH";
+      case InspectionResult.PivotTableHealthResult _ -> "ANALYZE_PIVOT_TABLE_HEALTH";
+      case InspectionResult.HyperlinkHealthResult _ -> "ANALYZE_HYPERLINK_HEALTH";
+      case InspectionResult.NamedRangeHealthResult _ -> "ANALYZE_NAMED_RANGE_HEALTH";
+      case InspectionResult.WorkbookFindingsResult _ -> "ANALYZE_WORKBOOK_FINDINGS";
+    };
+  }
+
+  private static void requireAssertionMatchesRequest(
+      dev.erst.gridgrind.contract.step.AssertionStep assertionStep,
+      AssertionResult assertionResult) {
+    require(
+        assertionStep.stepId().equals(assertionResult.stepId()),
+        "assertion result stepId must match the request");
+    require(
+        SequenceIntrospection.assertionKind(assertionStep).equals(assertionResult.assertionType()),
+        "assertion result type must match the requested assertion kind");
+  }
+
+  private static void requireAssertionResultShape(AssertionResult assertionResult) {
+    require(assertionResult != null, "assertion result must not be null");
+    requireNonBlank(assertionResult.stepId(), "assertion stepId");
+    requireNonBlank(assertionResult.assertionType(), "assertionType");
+  }
+
+  private static void requireAssertionFailureShape(AssertionFailure assertionFailure) {
+    require(assertionFailure != null, "assertionFailure must not be null");
+    requireNonBlank(assertionFailure.stepId(), "assertionFailure stepId");
+    requireNonBlank(assertionFailure.assertionType(), "assertionFailure assertionType");
+    require(assertionFailure.target() != null, "assertionFailure target must not be null");
+    require(assertionFailure.assertion() != null, "assertionFailure assertion must not be null");
+    require(
+        assertionFailure.observations() != null, "assertionFailure observations must not be null");
+    assertionFailure.observations().forEach(WorkbookInvariantChecks::requireReadResultShape);
+  }
+
+  private static void requireReadResultShape(InspectionResult readResult) {
+    require(readResult.stepId() != null, "read stepId must not be null");
+    require(!readResult.stepId().isBlank(), "read stepId must not be blank");
 
     switch (readResult) {
-      case WorkbookReadResult.WorkbookSummaryResult result ->
+      case InspectionResult.WorkbookSummaryResult result ->
           requireWorkbookSummaryShape(result.workbook());
-      case WorkbookReadResult.PackageSecurityResult result ->
+      case InspectionResult.PackageSecurityResult result ->
           requirePackageSecurityShape(result.security());
-      case WorkbookReadResult.WorkbookProtectionResult result ->
+      case InspectionResult.WorkbookProtectionResult result ->
           requireWorkbookProtectionShape(result.protection());
-      case WorkbookReadResult.NamedRangesResult result ->
+      case InspectionResult.NamedRangesResult result ->
           result.namedRanges().forEach(WorkbookInvariantChecks::requireNamedRangeShape);
-      case WorkbookReadResult.SheetSummaryResult result -> requireSheetSummaryShape(result.sheet());
-      case WorkbookReadResult.CellsResult result -> {
+      case InspectionResult.SheetSummaryResult result -> requireSheetSummaryShape(result.sheet());
+      case InspectionResult.CellsResult result -> {
         require(result.sheetName() != null, "cells sheetName must not be null");
         require(!result.sheetName().isBlank(), "cells sheetName must not be blank");
         result.cells().forEach(WorkbookInvariantChecks::requireCellReportShape);
       }
-      case WorkbookReadResult.WindowResult result -> requireWindowShape(result.window());
-      case WorkbookReadResult.MergedRegionsResult result -> {
+      case InspectionResult.WindowResult result -> requireWindowShape(result.window());
+      case InspectionResult.MergedRegionsResult result -> {
         require(result.sheetName() != null, "merged regions sheetName must not be null");
         require(!result.sheetName().isBlank(), "merged regions sheetName must not be blank");
         result
@@ -466,41 +577,41 @@ public final class WorkbookInvariantChecks {
                 region ->
                     require(!region.range().isBlank(), "merged region range must not be blank"));
       }
-      case WorkbookReadResult.HyperlinksResult result -> {
+      case InspectionResult.HyperlinksResult result -> {
         require(result.sheetName() != null, "hyperlinks sheetName must not be null");
         require(!result.sheetName().isBlank(), "hyperlinks sheetName must not be blank");
         result.hyperlinks().forEach(WorkbookInvariantChecks::requireHyperlinkEntryShape);
       }
-      case WorkbookReadResult.CommentsResult result -> {
+      case InspectionResult.CommentsResult result -> {
         require(result.sheetName() != null, "comments sheetName must not be null");
         require(!result.sheetName().isBlank(), "comments sheetName must not be blank");
         result.comments().forEach(WorkbookInvariantChecks::requireCommentEntryShape);
       }
-      case WorkbookReadResult.DrawingObjectsResult result -> {
+      case InspectionResult.DrawingObjectsResult result -> {
         require(result.sheetName() != null, "drawing objects sheetName must not be null");
         require(!result.sheetName().isBlank(), "drawing objects sheetName must not be blank");
         result.drawingObjects().forEach(WorkbookInvariantChecks::requireDrawingObjectShape);
       }
-      case WorkbookReadResult.ChartsResult result -> {
+      case InspectionResult.ChartsResult result -> {
         require(result.sheetName() != null, "charts sheetName must not be null");
         require(!result.sheetName().isBlank(), "charts sheetName must not be blank");
         result.charts().forEach(WorkbookInvariantChecks::requireChartReportShape);
       }
-      case WorkbookReadResult.PivotTablesResult result ->
+      case InspectionResult.PivotTablesResult result ->
           result.pivotTables().forEach(WorkbookInvariantChecks::requirePivotTableShape);
-      case WorkbookReadResult.DrawingObjectPayloadResult result -> {
+      case InspectionResult.DrawingObjectPayloadResult result -> {
         require(result.sheetName() != null, "drawing payload sheetName must not be null");
         require(!result.sheetName().isBlank(), "drawing payload sheetName must not be blank");
         requireDrawingObjectPayloadShape(result.payload());
       }
-      case WorkbookReadResult.SheetLayoutResult result -> requireSheetLayoutShape(result.layout());
-      case WorkbookReadResult.PrintLayoutResult result -> requirePrintLayoutShape(result.layout());
-      case WorkbookReadResult.DataValidationsResult result -> {
+      case InspectionResult.SheetLayoutResult result -> requireSheetLayoutShape(result.layout());
+      case InspectionResult.PrintLayoutResult result -> requirePrintLayoutShape(result.layout());
+      case InspectionResult.DataValidationsResult result -> {
         require(result.sheetName() != null, "data validations sheetName must not be null");
         require(!result.sheetName().isBlank(), "data validations sheetName must not be blank");
         result.validations().forEach(WorkbookInvariantChecks::requireDataValidationEntryShape);
       }
-      case WorkbookReadResult.ConditionalFormattingResult result -> {
+      case InspectionResult.ConditionalFormattingResult result -> {
         require(result.sheetName() != null, "conditional formatting sheetName must not be null");
         require(
             !result.sheetName().isBlank(), "conditional formatting sheetName must not be blank");
@@ -508,36 +619,34 @@ public final class WorkbookInvariantChecks {
             .conditionalFormattingBlocks()
             .forEach(WorkbookInvariantChecks::requireConditionalFormattingEntryShape);
       }
-      case WorkbookReadResult.AutofiltersResult result -> {
+      case InspectionResult.AutofiltersResult result -> {
         require(result.sheetName() != null, "autofilters sheetName must not be null");
         require(!result.sheetName().isBlank(), "autofilters sheetName must not be blank");
         result.autofilters().forEach(WorkbookInvariantChecks::requireAutofilterEntryShape);
       }
-      case WorkbookReadResult.TablesResult result ->
+      case InspectionResult.TablesResult result ->
           result.tables().forEach(WorkbookInvariantChecks::requireTableEntryShape);
-      case WorkbookReadResult.FormulaSurfaceResult result ->
+      case InspectionResult.FormulaSurfaceResult result ->
           requireFormulaSurfaceShape(result.analysis());
-      case WorkbookReadResult.SheetSchemaResult result ->
-          requireSheetSchemaShape(result.analysis());
-      case WorkbookReadResult.NamedRangeSurfaceResult result ->
+      case InspectionResult.SheetSchemaResult result -> requireSheetSchemaShape(result.analysis());
+      case InspectionResult.NamedRangeSurfaceResult result ->
           requireNamedRangeSurfaceShape(result.analysis());
-      case WorkbookReadResult.FormulaHealthResult result ->
+      case InspectionResult.FormulaHealthResult result ->
           requireFormulaHealthShape(result.analysis());
-      case WorkbookReadResult.DataValidationHealthResult result ->
+      case InspectionResult.DataValidationHealthResult result ->
           requireDataValidationHealthShape(result.analysis());
-      case WorkbookReadResult.ConditionalFormattingHealthResult result ->
+      case InspectionResult.ConditionalFormattingHealthResult result ->
           requireConditionalFormattingHealthShape(result.analysis());
-      case WorkbookReadResult.AutofilterHealthResult result ->
+      case InspectionResult.AutofilterHealthResult result ->
           requireAutofilterHealthShape(result.analysis());
-      case WorkbookReadResult.TableHealthResult result ->
-          requireTableHealthShape(result.analysis());
-      case WorkbookReadResult.PivotTableHealthResult result ->
+      case InspectionResult.TableHealthResult result -> requireTableHealthShape(result.analysis());
+      case InspectionResult.PivotTableHealthResult result ->
           requirePivotTableHealthShape(result.analysis());
-      case WorkbookReadResult.HyperlinkHealthResult result ->
+      case InspectionResult.HyperlinkHealthResult result ->
           requireHyperlinkHealthShape(result.analysis());
-      case WorkbookReadResult.NamedRangeHealthResult result ->
+      case InspectionResult.NamedRangeHealthResult result ->
           requireNamedRangeHealthShape(result.analysis());
-      case WorkbookReadResult.WorkbookFindingsResult result ->
+      case InspectionResult.WorkbookFindingsResult result ->
           requireWorkbookFindingsShape(result.analysis());
     }
   }
@@ -1249,15 +1358,15 @@ public final class WorkbookInvariantChecks {
   }
 
   private static void requireDataValidationEntryShape(
-      dev.erst.gridgrind.protocol.dto.DataValidationEntryReport validation) {
+      dev.erst.gridgrind.contract.dto.DataValidationEntryReport validation) {
     require(validation.ranges() != null, "data validation ranges must not be null");
     require(!validation.ranges().isEmpty(), "data validation ranges must not be empty");
     validation.ranges().forEach(range -> requireNonBlank(range, "data validation range"));
 
     switch (validation) {
-      case dev.erst.gridgrind.protocol.dto.DataValidationEntryReport.Supported supported ->
+      case dev.erst.gridgrind.contract.dto.DataValidationEntryReport.Supported supported ->
           requireSupportedDataValidationShape(supported.validation());
-      case dev.erst.gridgrind.protocol.dto.DataValidationEntryReport.Unsupported unsupported -> {
+      case dev.erst.gridgrind.contract.dto.DataValidationEntryReport.Unsupported unsupported -> {
         requireNonBlank(unsupported.kind(), "data validation kind");
         requireNonBlank(unsupported.detail(), "data validation detail");
       }
@@ -1523,28 +1632,28 @@ public final class WorkbookInvariantChecks {
   }
 
   private static void requireSupportedDataValidationShape(
-      dev.erst.gridgrind.protocol.dto.DataValidationEntryReport.DataValidationDefinitionReport
+      dev.erst.gridgrind.contract.dto.DataValidationEntryReport.DataValidationDefinitionReport
           validation) {
     require(validation != null, "data validation definition must not be null");
     require(validation.rule() != null, "data validation rule must not be null");
     switch (validation.rule()) {
-      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.ExplicitList explicitList -> {
+      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.ExplicitList explicitList -> {
         require(explicitList.values() != null, "explicit list values must not be null");
         explicitList.values().forEach(value -> requireNonBlank(value, "explicit list value"));
       }
-      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.FormulaList formulaList ->
+      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.FormulaList formulaList ->
           requireNonBlank(formulaList.formula(), "formula list formula");
-      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.WholeNumber wholeNumber ->
+      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.WholeNumber wholeNumber ->
           requireComparisonRuleShape(wholeNumber.operator(), wholeNumber.formula1());
-      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.DecimalNumber decimalNumber ->
+      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.DecimalNumber decimalNumber ->
           requireComparisonRuleShape(decimalNumber.operator(), decimalNumber.formula1());
-      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.DateRule dateRule ->
+      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.DateRule dateRule ->
           requireComparisonRuleShape(dateRule.operator(), dateRule.formula1());
-      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.TimeRule timeRule ->
+      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.TimeRule timeRule ->
           requireComparisonRuleShape(timeRule.operator(), timeRule.formula1());
-      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.TextLength textLength ->
+      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.TextLength textLength ->
           requireComparisonRuleShape(textLength.operator(), textLength.formula1());
-      case dev.erst.gridgrind.protocol.dto.DataValidationRuleInput.CustomFormula customFormula ->
+      case dev.erst.gridgrind.contract.dto.DataValidationRuleInput.CustomFormula customFormula ->
           requireNonBlank(customFormula.formula(), "custom validation formula");
     }
     if (validation.prompt() != null) {
@@ -1649,7 +1758,7 @@ public final class WorkbookInvariantChecks {
   }
 
   private static void requireDataValidationHealthShape(
-      dev.erst.gridgrind.protocol.dto.DataValidationHealthReport analysis) {
+      dev.erst.gridgrind.contract.dto.DataValidationHealthReport analysis) {
     require(analysis.checkedValidationCount() >= 0, "checkedValidationCount must not be negative");
     requireAnalysisSummaryShape(analysis.summary(), analysis.findings());
   }
@@ -2129,5 +2238,12 @@ public final class WorkbookInvariantChecks {
   private static void requireNonBlank(String value, String fieldName) {
     require(value != null, fieldName + " must not be null");
     require(!value.isBlank(), fieldName + " must not be blank");
+  }
+
+  private static void requireNonBlank(TextSourceInput value, String fieldName) {
+    require(value != null, fieldName + " must not be null");
+    if (value instanceof TextSourceInput.Inline inline) {
+      require(!inline.text().isBlank(), fieldName + " must not be blank");
+    }
   }
 }

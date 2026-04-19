@@ -51,7 +51,7 @@ public record PromotionMetadata(
     return resolveStoredPath(projectDirectory, replayTextPath);
   }
 
-  private static String requireNonBlank(String value, String fieldName) {
+  static String requireNonBlank(String value, String fieldName) {
     Objects.requireNonNull(value, fieldName + " must not be null");
     String normalized = value.strip();
     if (normalized.isBlank()) {
@@ -60,7 +60,7 @@ public record PromotionMetadata(
     return normalized;
   }
 
-  private static String normalizeStoredPath(String value, String fieldName) {
+  static String normalizeStoredPath(String value, String fieldName) {
     String normalized = requireNonBlank(value, fieldName);
     Path storedPath = Path.of(normalized).normalize();
     if (storedPath.isAbsolute()) {
@@ -73,7 +73,7 @@ public record PromotionMetadata(
     return storedPathText;
   }
 
-  private static Path resolveStoredPath(Path projectDirectory, String storedPath) {
+  static Path resolveStoredPath(Path projectDirectory, String storedPath) {
     Objects.requireNonNull(projectDirectory, "projectDirectory must not be null");
     return projectDirectory.toAbsolutePath().normalize().resolve(storedPath).normalize();
   }

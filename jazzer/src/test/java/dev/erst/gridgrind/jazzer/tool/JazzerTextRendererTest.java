@@ -50,6 +50,7 @@ class JazzerTextRendererTest {
                     null,
                     null,
                     null,
+                    null,
                     null)),
             List.of(
                 new FindingArtifact(
@@ -87,7 +88,17 @@ class JazzerTextRendererTest {
         new ReplayOutcome.Success(
             "protocol-request",
             new ProtocolRequestDetails(
-                2, "PARSED", "NEW", "NONE", 0, Map.of(), Map.of(), 0, Map.of()));
+                2,
+                "PARSED",
+                "NEW",
+                "NONE",
+                0,
+                Map.of(),
+                Map.of(),
+                1,
+                Map.of("EXPECT_PRESENT", 1L),
+                0,
+                Map.of()));
 
     String replayText =
         JazzerTextRenderer.renderReplay(
@@ -98,5 +109,7 @@ class JazzerTextRendererTest {
         replayText.contains(
             "Input: jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/seed.json"));
     assertFalse(replayText.contains("/Users/erst/Tools/GridGrind"));
+    assertTrue(replayText.contains("Assertion Count: 1"));
+    assertTrue(replayText.contains("Assertion Kinds: EXPECT_PRESENT=1"));
   }
 }

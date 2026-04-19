@@ -61,7 +61,7 @@ class JazzerReportSupportTest {
             new ReplayExpectation(
                 "SUCCESS",
                 new ProtocolRequestDetails(
-                    2, "PARSED", "NEW", "NONE", 0, Map.of(), Map.of(), 0, Map.of())),
+                    2, "PARSED", "NEW", "NONE", 0, Map.of(), Map.of(), 0, Map.of(), 0, Map.of())),
             "2026-04-06T00:00:00Z",
             PromotionMetadata.relativizePath(projectDirectory, replayTextPath)));
 

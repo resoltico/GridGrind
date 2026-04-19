@@ -157,7 +157,11 @@ final class ExcelRowColumnStructureController {
       collapseRows(sheet, rows);
       return;
     }
-    expandRows(sheet, rows);
+    if (isRowGroupCollapsed(sheet, rows)) {
+      expandRows(sheet, rows);
+      return;
+    }
+    clearExpandedGroupControlRow(sheet, rows);
   }
 
   /** Removes outline grouping from the requested inclusive zero-based row band. */
@@ -165,7 +169,11 @@ final class ExcelRowColumnStructureController {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(rows, "rows must not be null");
     ensureRowsExist(sheet, rows);
-    expandRows(sheet, rows);
+    if (isRowGroupCollapsed(sheet, rows)) {
+      expandRows(sheet, rows);
+    } else {
+      clearExpandedGroupControlRow(sheet, rows);
+    }
     sheet.ungroupRow(rows.firstRowIndex(), rows.lastRowIndex());
   }
 
@@ -818,6 +826,18 @@ final class ExcelRowColumnStructureController {
       Row row = sheet.getRow(rowIndex);
       row.setZeroHeight(false);
     }
+    clearExpandedGroupControlRow(sheet, rows);
+  }
+
+  private static boolean isRowGroupCollapsed(XSSFSheet sheet, ExcelRowSpan rows) {
+    if (rows.lastRowIndex() >= ExcelRowSpan.MAX_ROW_INDEX) {
+      return false;
+    }
+    Row controlRow = sheet.getRow(rows.lastRowIndex() + 1);
+    return controlRow instanceof XSSFRow xssfRow && xssfRow.getCTRow().getCollapsed();
+  }
+
+  private static void clearExpandedGroupControlRow(XSSFSheet sheet, ExcelRowSpan rows) {
     if (rows.lastRowIndex() < ExcelRowSpan.MAX_ROW_INDEX) {
       Row controlRow = sheet.getRow(rows.lastRowIndex() + 1);
       if (controlRow instanceof XSSFRow xssfRow) {

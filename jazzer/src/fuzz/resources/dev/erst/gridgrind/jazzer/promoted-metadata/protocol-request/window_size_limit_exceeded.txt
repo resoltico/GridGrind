@@ -2,14 +2,16 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/window_size_limit_exceeded.json
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
-Kind: InvalidRequestException
-Message: rowCount * columnCount must not exceed 250000 but was 1000000
-Input Bytes: 368
-Decode Outcome: INVALID_REQUEST
+Kind: InvalidRequestShapeException
+Message: Missing required field 'target'
+Input Bytes: 476
+Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED
 Operation Count: 0
+Assertion Count: 0
 Read Count: 0
+Assertion Kinds: (none)
 Read Kinds: (none)
 Style Kinds: (none)
 Operation Kinds: (none)

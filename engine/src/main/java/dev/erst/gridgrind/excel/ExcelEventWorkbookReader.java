@@ -63,10 +63,10 @@ public final class ExcelEventWorkbookReader {
     return switch (command) {
       case WorkbookReadCommand.GetWorkbookSummary getWorkbookSummary ->
           new WorkbookReadResult.WorkbookSummaryResult(
-              getWorkbookSummary.requestId(), workbookSummary(reader, metadata, sheetSummaries));
+              getWorkbookSummary.stepId(), workbookSummary(reader, metadata, sheetSummaries));
       case WorkbookReadCommand.GetSheetSummary getSheetSummary ->
           new WorkbookReadResult.SheetSummaryResult(
-              getSheetSummary.requestId(),
+              getSheetSummary.stepId(),
               sheetSummary(reader, metadata, sheetSummaries, getSheetSummary.sheetName()));
       default ->
           throw new IllegalArgumentException(

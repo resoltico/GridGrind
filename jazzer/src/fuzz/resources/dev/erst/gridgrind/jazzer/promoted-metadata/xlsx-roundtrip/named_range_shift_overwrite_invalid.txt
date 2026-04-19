@@ -1,8 +1,10 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/named_range_shift_overwrite_invalid.bin
 Harness: xlsx-roundtrip
-Outcome: SUCCESS
+Outcome: EXPECTED_INVALID
+Kind: SheetNotFoundException
+Message: Sheet does not exist: W
 Input Bytes: 83
 Command Count: 4
 Style Kinds: (none)
-Command Kinds: FORCE_FORMULA_RECALCULATION_ON_OPEN=2, SET_NAMED_RANGE=1, CREATE_SHEET=1
+Command Kinds: AUTO_SIZE_COLUMNS=2, CREATE_SHEET=1, SET_NAMED_RANGE=1

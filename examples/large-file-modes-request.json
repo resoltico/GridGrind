@@ -1,47 +1,128 @@
 {
-  "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": {
-    "type": "SAVE_AS",
-    "path": "cli/build/generated-workbooks/gridgrind-large-file-modes.xlsx"
+  "protocolVersion" : "V1",
+  "planId" : "large-file-modes-workflow",
+  "source" : {
+    "type" : "NEW"
   },
-  "executionMode": {
-    "readMode": "EVENT_READ",
-    "writeMode": "STREAMING_WRITE"
+  "persistence" : {
+    "type" : "SAVE_AS",
+    "path" : "cli/build/generated-workbooks/gridgrind-large-file-modes.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Ledger" },
-    {
-      "type": "APPEND_ROW",
-      "sheetName": "Ledger",
-      "values": [
-        { "type": "TEXT", "text": "Team" },
-        { "type": "TEXT", "text": "Task" },
-        { "type": "TEXT", "text": "Hours" }
-      ]
+  "execution" : {
+    "mode" : {
+      "readMode" : "FULL_XSSF",
+      "writeMode" : "STREAMING_WRITE"
     },
-    {
-      "type": "APPEND_ROW",
-      "sheetName": "Ledger",
-      "values": [
-        { "type": "TEXT", "text": "Ops" },
-        { "type": "TEXT", "text": "Badge prep" },
-        { "type": "NUMBER", "number": 6.5 }
-      ]
+    "calculation" : {
+      "strategy" : {
+        "type" : "DO_NOT_CALCULATE"
+      },
+      "markRecalculateOnOpen" : true
+    }
+  },
+  "steps" : [ {
+    "stepId" : "step-01-ensure-sheet",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Ledger"
     },
-    {
-      "type": "APPEND_ROW",
-      "sheetName": "Ledger",
-      "values": [
-        { "type": "TEXT", "text": "Facilities" },
-        { "type": "TEXT", "text": "Desk setup" },
-        { "type": "NUMBER", "number": 4.0 }
-      ]
+    "action" : {
+      "type" : "ENSURE_SHEET"
+    }
+  }, {
+    "stepId" : "step-02-append-header",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Ledger"
     },
-    { "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
-  ],
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
-    { "type": "GET_SHEET_SUMMARY", "requestId": "ledger-sheet", "sheetName": "Ledger" }
-  ]
+    "action" : {
+      "type" : "APPEND_ROW",
+      "values" : [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Team"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Task"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Hours"
+        }
+      } ]
+    }
+  }, {
+    "stepId" : "step-03-append-ops",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Ledger"
+    },
+    "action" : {
+      "type" : "APPEND_ROW",
+      "values" : [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Ops"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Badge prep"
+        }
+      }, {
+        "type" : "NUMBER",
+        "number" : 6.5
+      } ]
+    }
+  }, {
+    "stepId" : "step-04-append-facilities",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Ledger"
+    },
+    "action" : {
+      "type" : "APPEND_ROW",
+      "values" : [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Facilities"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Desk setup"
+        }
+      }, {
+        "type" : "NUMBER",
+        "number" : 4.0
+      } ]
+    }
+  }, {
+    "stepId" : "workbook",
+    "target" : {
+      "type" : "CURRENT"
+    },
+    "query" : {
+      "type" : "GET_WORKBOOK_SUMMARY"
+    }
+  }, {
+    "stepId" : "ledger-sheet",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Ledger"
+    },
+    "query" : {
+      "type" : "GET_SHEET_SUMMARY"
+    }
+  } ]
 }

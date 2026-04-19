@@ -43,14 +43,17 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
               });
       case WorkbookCommand.AppendRow appendRow ->
           appendRow(requiredSheet(appendRow.sheetName()), appendRow);
-      case WorkbookCommand.ForceFormulaRecalculationOnOpen _ ->
-          workbook.setForceFormulaRecalculation(true);
       default ->
           throw new IllegalArgumentException(
-              "executionMode.writeMode=STREAMING_WRITE supports ENSURE_SHEET, APPEND_ROW, and"
-                  + " FORCE_FORMULA_RECALCULATION_ON_OPEN only; unsupported operation type: "
+              "execution.mode.writeMode=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW"
+                  + " only; unsupported mutation action type: "
                   + command.commandType());
     }
+  }
+
+  /** Marks the streamed workbook to recalculate formulas on the next Excel-compatible open. */
+  public void markRecalculateOnOpen() {
+    workbook.setForceFormulaRecalculation(true);
   }
 
   /** Materializes the current streaming workbook session to one `.xlsx` path. */

@@ -146,4 +146,59 @@ class PromotionMetadataTest {
             + "Run 'jazzer/bin/promote <target> <input-path> <name>' for each listed file "
             + "or move it there via that command.");
   }
+
+  @Test
+  void protocolWorkflowPromotedArtifactsUseNeutralCaseNames() throws IOException {
+    Path projectDirectory = Path.of("").toAbsolutePath().normalize();
+    Path inputDirectory = JazzerHarness.protocolWorkflow().inputDirectory(projectDirectory);
+    Path metadataDirectory =
+        JazzerHarness.protocolWorkflow().promotedMetadataDirectory(projectDirectory);
+
+    try (Stream<Path> stream = Files.list(inputDirectory)) {
+      assertEquals(
+          List.of(
+              "workflow_case_01.bin",
+              "workflow_case_02.bin",
+              "workflow_case_03.bin",
+              "workflow_case_04.bin",
+              "workflow_case_05.bin",
+              "workflow_case_06.bin",
+              "workflow_case_07.bin",
+              "workflow_case_08.bin",
+              "workflow_case_09.bin",
+              "workflow_case_10.bin",
+              "workflow_case_11.bin"),
+          stream.map(path -> path.getFileName().toString()).sorted().toList(),
+          "Opaque protocol-workflow seeds must use neutral case identifiers.");
+    }
+
+    try (Stream<Path> stream = Files.list(metadataDirectory)) {
+      assertEquals(
+          List.of(
+              "workflow_case_01.json",
+              "workflow_case_01.txt",
+              "workflow_case_02.json",
+              "workflow_case_02.txt",
+              "workflow_case_03.json",
+              "workflow_case_03.txt",
+              "workflow_case_04.json",
+              "workflow_case_04.txt",
+              "workflow_case_05.json",
+              "workflow_case_05.txt",
+              "workflow_case_06.json",
+              "workflow_case_06.txt",
+              "workflow_case_07.json",
+              "workflow_case_07.txt",
+              "workflow_case_08.json",
+              "workflow_case_08.txt",
+              "workflow_case_09.json",
+              "workflow_case_09.txt",
+              "workflow_case_10.json",
+              "workflow_case_10.txt",
+              "workflow_case_11.json",
+              "workflow_case_11.txt"),
+          stream.map(path -> path.getFileName().toString()).sorted().toList(),
+          "Opaque protocol-workflow replay artifacts must use the same neutral case identifiers.");
+    }
+  }
 }

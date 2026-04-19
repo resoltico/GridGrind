@@ -1,155 +1,580 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "reports/row-column-structure.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Layout" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Layout",
-      "range": "A1:F6",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Item" },
-          { "type": "TEXT", "text": "Qty" },
-          { "type": "TEXT", "text": "Status" },
-          { "type": "TEXT", "text": "Note" },
-          { "type": "TEXT", "text": "Owner" },
-          { "type": "TEXT", "text": "Flag" }
-        ],
-        [
-          { "type": "TEXT", "text": "Hosting" },
-          { "type": "NUMBER", "number": 42.0 },
-          { "type": "TEXT", "text": "Open" },
-          { "type": "TEXT", "text": "Alpha" },
-          { "type": "TEXT", "text": "Ada" },
-          { "type": "TEXT", "text": "Y" }
-        ],
-        [
-          { "type": "TEXT", "text": "Support" },
-          { "type": "NUMBER", "number": 84.0 },
-          { "type": "TEXT", "text": "Closed" },
-          { "type": "TEXT", "text": "Beta" },
-          { "type": "TEXT", "text": "Lin" },
-          { "type": "TEXT", "text": "N" }
-        ],
-        [
-          { "type": "TEXT", "text": "Ops" },
-          { "type": "NUMBER", "number": 168.0 },
-          { "type": "TEXT", "text": "Open" },
-          { "type": "TEXT", "text": "Gamma" },
-          { "type": "TEXT", "text": "Bea" },
-          { "type": "TEXT", "text": "Y" }
-        ],
-        [
-          { "type": "TEXT", "text": "QA" },
-          { "type": "NUMBER", "number": 21.0 },
-          { "type": "TEXT", "text": "Queued" },
-          { "type": "TEXT", "text": "Delta" },
-          { "type": "TEXT", "text": "Kai" },
-          { "type": "TEXT", "text": "N" }
-        ],
-        [
-          { "type": "TEXT", "text": "Infra" },
-          { "type": "NUMBER", "number": 7.0 },
-          { "type": "TEXT", "text": "Done" },
-          { "type": "TEXT", "text": "Epsilon" },
-          { "type": "TEXT", "text": "Mia" },
-          { "type": "TEXT", "text": "Y" }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Layout"
+      }
+    },
+    {
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Item"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Qty"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Status"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Note"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Owner"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Flag"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Hosting"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 42.0
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Open"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Alpha"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Ada"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Y"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Support"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 84.0
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Closed"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Beta"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Lin"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "N"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Ops"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 168.0
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Open"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Gamma"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Bea"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Y"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "QA"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 21.0
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queued"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Delta"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Kai"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "N"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Infra"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 7.0
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Done"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Epsilon"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Mia"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Y"
+              }
+            }
+          ]
         ]
-      ]
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Layout",
+        "range": "A1:F6"
+      }
     },
     {
-      "type": "GROUP_ROWS",
-      "sheetName": "Layout",
-      "rows": { "type": "BAND", "firstRowIndex": 1, "lastRowIndex": 3 },
-      "collapsed": true
+      "stepId": "step-03-group-rows",
+      "action": {
+        "type": "GROUP_ROWS",
+        "collapsed": true
+      },
+      "target": {
+        "type": "SPAN",
+        "sheetName": "Layout",
+        "firstRowIndex": 1,
+        "lastRowIndex": 3
+      }
     },
     {
-      "type": "SET_ROW_VISIBILITY",
-      "sheetName": "Layout",
-      "rows": { "type": "BAND", "firstRowIndex": 5, "lastRowIndex": 5 },
-      "hidden": true
+      "stepId": "step-04-set-row-visibility",
+      "action": {
+        "type": "SET_ROW_VISIBILITY",
+        "hidden": true
+      },
+      "target": {
+        "type": "SPAN",
+        "sheetName": "Layout",
+        "firstRowIndex": 5,
+        "lastRowIndex": 5
+      }
     },
     {
-      "type": "GROUP_COLUMNS",
-      "sheetName": "Layout",
-      "columns": { "type": "BAND", "firstColumnIndex": 1, "lastColumnIndex": 3 },
-      "collapsed": true
+      "stepId": "step-05-group-columns",
+      "action": {
+        "type": "GROUP_COLUMNS",
+        "collapsed": true
+      },
+      "target": {
+        "type": "SPAN",
+        "sheetName": "Layout",
+        "firstColumnIndex": 1,
+        "lastColumnIndex": 3
+      }
     },
     {
-      "type": "SET_COLUMN_VISIBILITY",
-      "sheetName": "Layout",
-      "columns": { "type": "BAND", "firstColumnIndex": 5, "lastColumnIndex": 5 },
-      "hidden": true
+      "stepId": "step-06-set-column-visibility",
+      "action": {
+        "type": "SET_COLUMN_VISIBILITY",
+        "hidden": true
+      },
+      "target": {
+        "type": "SPAN",
+        "sheetName": "Layout",
+        "firstColumnIndex": 5,
+        "lastColumnIndex": 5
+      }
     },
-    { "type": "ENSURE_SHEET", "sheetName": "Moves" },
     {
-      "type": "SET_RANGE",
-      "sheetName": "Moves",
-      "range": "A1:D3",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Item" },
-          { "type": "TEXT", "text": "Qty" },
-          { "type": "TEXT", "text": "Status" },
-          { "type": "TEXT", "text": "Note" }
-        ],
-        [
-          { "type": "TEXT", "text": "Hosting" },
-          { "type": "NUMBER", "number": 42.0 },
-          { "type": "TEXT", "text": "Open" },
-          { "type": "TEXT", "text": "Alpha" }
-        ],
-        [
-          { "type": "TEXT", "text": "Support" },
-          { "type": "NUMBER", "number": 84.0 },
-          { "type": "TEXT", "text": "Closed" },
-          { "type": "TEXT", "text": "Beta" }
+      "stepId": "step-07-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Moves"
+      }
+    },
+    {
+      "stepId": "step-08-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Item"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Qty"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Status"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Note"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Hosting"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 42.0
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Open"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Alpha"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Support"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 84.0
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Closed"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Beta"
+              }
+            }
+          ]
         ]
-      ]
-    },
-    { "type": "INSERT_ROWS", "sheetName": "Moves", "rowIndex": 1, "rowCount": 1 },
-    { "type": "SET_CELL", "sheetName": "Moves", "address": "A2", "value": { "type": "TEXT", "text": "Spacer" } },
-    {
-      "type": "SHIFT_ROWS",
-      "sheetName": "Moves",
-      "rows": { "type": "BAND", "firstRowIndex": 2, "lastRowIndex": 3 },
-      "delta": 1
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Moves",
+        "range": "A1:D3"
+      }
     },
     {
-      "type": "DELETE_ROWS",
-      "sheetName": "Moves",
-      "rows": { "type": "BAND", "firstRowIndex": 2, "lastRowIndex": 2 }
-    },
-    { "type": "INSERT_COLUMNS", "sheetName": "Moves", "columnIndex": 1, "columnCount": 1 },
-    { "type": "SET_CELL", "sheetName": "Moves", "address": "B1", "value": { "type": "TEXT", "text": "Pad" } },
-    {
-      "type": "SHIFT_COLUMNS",
-      "sheetName": "Moves",
-      "columns": { "type": "BAND", "firstColumnIndex": 2, "lastColumnIndex": 4 },
-      "delta": 1
-    },
-    {
-      "type": "DELETE_COLUMNS",
-      "sheetName": "Moves",
-      "columns": { "type": "BAND", "firstColumnIndex": 2, "lastColumnIndex": 2 }
-    }
-  ],
-  "reads": [
-    {
-      "type": "GET_SHEET_LAYOUT",
-      "requestId": "layout",
-      "sheetName": "Layout"
+      "stepId": "step-09-insert-rows",
+      "action": {
+        "type": "INSERT_ROWS"
+      },
+      "target": {
+        "type": "INSERTION",
+        "sheetName": "Moves",
+        "beforeRowIndex": 1,
+        "rowCount": 1
+      }
     },
     {
-      "type": "GET_CELLS",
-      "requestId": "moved-cells",
-      "sheetName": "Moves",
-      "addresses": ["A2", "B1", "A3", "C3", "E4"]
+      "stepId": "step-10-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Spacer"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Moves",
+        "address": "A2"
+      }
+    },
+    {
+      "stepId": "step-11-shift-rows",
+      "action": {
+        "type": "SHIFT_ROWS",
+        "delta": 1
+      },
+      "target": {
+        "type": "SPAN",
+        "sheetName": "Moves",
+        "firstRowIndex": 2,
+        "lastRowIndex": 3
+      }
+    },
+    {
+      "stepId": "step-12-delete-rows",
+      "action": {
+        "type": "DELETE_ROWS"
+      },
+      "target": {
+        "type": "SPAN",
+        "sheetName": "Moves",
+        "firstRowIndex": 2,
+        "lastRowIndex": 2
+      }
+    },
+    {
+      "stepId": "step-13-insert-columns",
+      "action": {
+        "type": "INSERT_COLUMNS"
+      },
+      "target": {
+        "type": "INSERTION",
+        "sheetName": "Moves",
+        "beforeColumnIndex": 1,
+        "columnCount": 1
+      }
+    },
+    {
+      "stepId": "step-14-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Pad"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Moves",
+        "address": "B1"
+      }
+    },
+    {
+      "stepId": "step-15-shift-columns",
+      "action": {
+        "type": "SHIFT_COLUMNS",
+        "delta": 1
+      },
+      "target": {
+        "type": "SPAN",
+        "sheetName": "Moves",
+        "firstColumnIndex": 2,
+        "lastColumnIndex": 4
+      }
+    },
+    {
+      "stepId": "step-16-delete-columns",
+      "action": {
+        "type": "DELETE_COLUMNS"
+      },
+      "target": {
+        "type": "SPAN",
+        "sheetName": "Moves",
+        "firstColumnIndex": 2,
+        "lastColumnIndex": 2
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_LAYOUT"
+      },
+      "stepId": "layout",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Layout"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "moved-cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Moves",
+        "addresses": [
+          "A2",
+          "B1",
+          "A3",
+          "C3",
+          "E4"
+        ]
+      }
     }
   ]
 }

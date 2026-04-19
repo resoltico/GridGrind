@@ -1,0 +1,167 @@
+package dev.erst.gridgrind.contract.step;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import java.nio.charset.StandardCharsets;
+import org.junit.jupiter.api.Test;
+
+/** Direct parser coverage for the canonical step envelope deserializer. */
+class WorkbookStepJsonDeserializerTest {
+  @Test
+  void rejectsUnknownAndMissingStepFieldsWithProductOwnedMessages() {
+    assertEquals(
+        "steps entries must be JSON objects",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readRequest(
+                        """
+                        {
+                          "source": { "type": "NEW" },
+                          "steps": [3]
+                        }
+                        """
+                            .getBytes(StandardCharsets.UTF_8)))
+            .getMessage());
+    assertEquals(
+        "Unknown field 'legacy'",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readRequest(
+                        requestWithStepBody(
+                            """
+                    "stepId": "bad",
+                    "target": { "type": "CURRENT" },
+                    "query": { "type": "GET_WORKBOOK_SUMMARY" },
+                    "legacy": true
+                    """)))
+            .getMessage());
+    assertEquals(
+        "Missing required field 'stepId'",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readRequest(
+                        requestWithStepBody(
+                            """
+                    "target": { "type": "CURRENT" },
+                    "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                    """)))
+            .getMessage());
+    assertEquals(
+        "Missing required field 'target'",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readRequest(
+                        requestWithStepBody(
+                            """
+                    "stepId": "bad",
+                    "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                    """)))
+            .getMessage());
+    assertEquals(
+        "Each step must contain exactly one of 'action', 'assertion', or 'query'",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readRequest(
+                        requestWithStepBody(
+                            """
+                    "stepId": "bad",
+                    "target": { "type": "CURRENT" }
+                    """)))
+            .getMessage());
+    assertEquals(
+        "Field 'stepId' must be a string",
+        assertThrows(
+                InvalidRequestShapeException.class,
+                () ->
+                    GridGrindJson.readRequest(
+                        requestWithStepBody(
+                            """
+                    "stepId": 3,
+                    "target": { "type": "CURRENT" },
+                    "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                    """)))
+            .getMessage());
+  }
+
+  @Test
+  void readsAssertionStepsThroughTheCanonicalEnvelope() {
+    var request =
+        assertDoesNotThrow(
+            () ->
+                GridGrindJson.readRequest(
+                    requestWithStepBody(
+                        """
+                    "stepId": "assert-owner",
+                    "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                    "assertion": {
+                      "type": "EXPECT_CELL_VALUE",
+                      "expectedValue": { "type": "TEXT", "text": "Owner" }
+                    }
+                    """)));
+
+    assertEquals(1, request.assertionSteps().size());
+    assertEquals("assert-owner", request.assertionSteps().getFirst().stepId());
+  }
+
+  @Test
+  void wrapsTargetDeserializationFailuresAgainstTheTargetField() {
+    InvalidRequestShapeException wrongMutationTarget =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    requestWithStepBody(
+                        """
+                        "stepId": "set-cell",
+                        "target": { "type": "CURRENT" },
+                        "action": {
+                          "type": "SET_CELL",
+                          "value": {
+                            "type": "TEXT",
+                            "source": { "type": "INLINE", "text": "Owner" }
+                          }
+                        }
+                        """)));
+    InvalidRequestShapeException wrongInspectionTarget =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    requestWithStepBody(
+                        """
+                        "stepId": "window",
+                        "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                        "query": { "type": "GET_WINDOW" }
+                        """)));
+
+    assertEquals("Unknown type value 'CURRENT'", wrongMutationTarget.getMessage());
+    assertEquals("steps[0].target", wrongMutationTarget.jsonPath());
+    assertEquals("Unknown type value 'BY_ADDRESS'", wrongInspectionTarget.getMessage());
+    assertEquals("steps[0].target", wrongInspectionTarget.jsonPath());
+  }
+
+  private static byte[] requestWithStepBody(String stepBody) {
+    return ("""
+        {
+          "source": { "type": "NEW" },
+          "steps": [
+            {
+        """
+            + stepBody
+            + """
+            }
+          ]
+        }
+        """)
+        .getBytes(StandardCharsets.UTF_8);
+  }
+}

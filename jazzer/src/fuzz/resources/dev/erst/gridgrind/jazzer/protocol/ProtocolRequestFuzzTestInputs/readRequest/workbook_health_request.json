@@ -1,39 +1,126 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Budget Review" },
-    { "type": "ENSURE_SHEET", "sheetName": "Summary" },
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
     {
-      "type": "SET_CELL",
-      "sheetName": "Budget Review",
-      "address": "A1",
-      "value": { "type": "TEXT", "text": "Amount" }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Budget Review"
+      }
     },
     {
-      "type": "SET_CELL",
-      "sheetName": "Budget Review",
-      "address": "B1",
-      "value": { "type": "NUMBER", "number": 1200.0 }
+      "stepId": "step-02-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Summary"
+      }
     },
     {
-      "type": "SET_CELL",
-      "sheetName": "Summary",
-      "address": "A1",
-      "value": { "type": "FORMULA", "formula": "'Budget Review'!B1" }
-    }
-  ],
-  "reads": [
-    {
-      "type": "ANALYZE_WORKBOOK_FINDINGS",
-      "requestId": "lint"
+      "stepId": "step-03-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Amount"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Budget Review",
+        "address": "A1"
+      }
     },
     {
-      "type": "GET_CELLS",
-      "requestId": "summary-cells",
-      "sheetName": "Summary",
-      "addresses": ["A1"]
+      "stepId": "step-04-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "NUMBER",
+          "number": 1200.0
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Budget Review",
+        "address": "B1"
+      }
+    },
+    {
+      "stepId": "step-05-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "FORMULA",
+          "source": {
+            "type": "INLINE",
+            "text": "'Budget Review'!B1"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Summary",
+        "address": "A1"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_SUMMARY"
+      },
+      "stepId": "summary-sheet",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Summary"
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_FORMULA_HEALTH"
+      },
+      "stepId": "formula-health",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Summary"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_WORKBOOK_FINDINGS"
+      },
+      "stepId": "lint",
+      "target": {
+        "type": "CURRENT"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "summary-cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Summary",
+        "addresses": [
+          "A1"
+        ]
+      }
     }
   ]
 }

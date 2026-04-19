@@ -1,19 +1,69 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Data" },
-    { "type": "SET_CELL", "sheetName": "Data", "address": "A1", "value": { "type": "NUMBER", "number": 10.0 } },
-    { "type": "SET_CELL", "sheetName": "Data", "address": "A2", "value": { "type": "NUMBER", "number": 20.0 } },
-    { "type": "SET_CELL", "sheetName": "Data", "address": "A3", "value": { "type": "FORMULA", "formula": "=SUM(A1:A2)" } }
-  ],
-  "reads": [
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
     {
-      "type": "GET_CELLS",
-      "requestId": "result",
-      "sheetName": "Data",
-      "addresses": ["A1", "A2", "A3"]
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Data"
+      }
+    },
+    {
+      "stepId": "step-02-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "sheetName": "Data",
+        "address": "A1",
+        "value": {
+          "type": "NUMBER",
+          "number": 10.0
+        }
+      }
+    },
+    {
+      "stepId": "step-03-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "sheetName": "Data",
+        "address": "A2",
+        "value": {
+          "type": "NUMBER",
+          "number": 20.0
+        }
+      }
+    },
+    {
+      "stepId": "step-04-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "sheetName": "Data",
+        "address": "A3",
+        "value": {
+          "type": "FORMULA",
+          "source": {
+            "type": "INLINE",
+            "text": "=SUM(A1:A2)"
+          }
+        }
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS",
+        "sheetName": "Data",
+        "addresses": [
+          "A1",
+          "A2",
+          "A3"
+        ]
+      },
+      "stepId": "result"
     }
   ]
 }

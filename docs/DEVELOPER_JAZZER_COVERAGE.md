@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.47.0"
+version: "0.48.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-04-16"
+updated: "2026-04-17"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -21,11 +21,11 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 
 | Target | Entry Point | Concern | Replay Support | Telemetry | Promoted Inputs |
 |:-------|:------------|:--------|:---------------|:----------|:----------------|
-| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 43 |
-| `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production protocol/service layer | Yes | Yes | 11 |
+| `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 45 |
+| `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production contract-plus-executor layer | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 9 |
-| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 18 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 81 total across harnesses |
+| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 19 |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 84 total across harnesses |
 
 ---
 
@@ -39,8 +39,9 @@ Surface:
 - request-model validation
 - top-level `formulaEnvironment` payloads for external workbooks, missing-workbook policy, and
   template-backed UDF toolpacks
-- top-level `executionMode` payloads for `EVENT_READ` and `STREAMING_WRITE`
-- ordered `reads` payloads, selectors, and request/result correlation IDs
+- top-level `execution.mode` payloads for `EVENT_READ` and `STREAMING_WRITE`, plus
+  `execution.journal.level`
+- ordered `steps` payloads, selectors, and inspection-step/result correlation IDs
 - style payloads including typed `fontHeight`, structured color, fill, gradient, and border input
   shapes
 - hyperlink, comment, named-range, data-validation, table, and autofilter payload shapes
@@ -58,6 +59,7 @@ Telemetry signals:
 - iteration count
 - success vs expected-invalid counts
 - error families
+- assertion-kind coverage for successfully parsed assertion-bearing request payloads
 - read-kind coverage for successfully parsed request payloads
 - style-kind coverage for style-bearing requests that parse successfully
 
@@ -69,12 +71,12 @@ What it does not cover:
 ### `protocol-workflow`
 
 Surface:
-- ordered operation sequences generated from raw bytes
+- ordered step sequences generated from raw bytes
 - `DefaultGridGrindRequestExecutor.execute(...)`
 - formula-environment-aware execution setup for external workbook bindings, missing-workbook
   policy, and template-backed UDF toolpacks
 - response-shape invariants
-- explicit read execution and ordered read-result shaping
+- explicit inspection-step execution and ordered inspection-result shaping
 - source-type and persistence-type combinations for `.xlsx` workflows
 - hyperlink, comment, named-range, data-validation, and formula-lifecycle operations in protocol
   execution paths
@@ -88,6 +90,7 @@ What it asserts:
 
 Telemetry signals:
 - operation-kind counts
+- assertion-kind counts
 - style-kind counts
 - source-kind counts
 - persistence-kind counts
@@ -193,7 +196,7 @@ These tests are not fuzz harnesses. They protect the Jazzer infrastructure itsel
 Committed custom seeds currently in source control. This list is exhaustive and should match the
 checked-in `*Inputs` directories exactly.
 
-### `protocol-request` (43)
+### `protocol-request` (44)
 
 - `advanced_mutation_request.json`
 - `advanced_readback_request.json`
@@ -208,6 +211,7 @@ checked-in `*Inputs` directories exactly.
 - `formatting_depth_request.json`
 - `formula_environment_request.json`
 - `formula_equals_prefix.json`
+- `fractional_integer_field.json`
 - `get_cells_invalid_address.json`
 - `get_cells_out_of_bounds_address.json`
 - `get_window_overflow.json`
@@ -236,17 +240,20 @@ checked-in `*Inputs` directories exactly.
 
 ### `protocol-workflow` (11)
 
-- `append_row_failure.bin`
-- `apply_style_success.bin`
-- `auto_size_failure.bin`
-- `ensure_sheet_set_range_success.bin`
-- `existing_overwrite_apply_style_success.bin`
-- `existing_overwrite_hyperlink_failure.bin`
-- `existing_overwrite_set_autofilter_failure.bin`
-- `save_as_apply_style_failure.bin`
-- `save_as_named_range_failure.bin`
-- `set_cell_failure_case.bin`
-- `set_comment_clear_range_failure.bin`
+These are opaque generator-byte cases, so they use neutral case identifiers and rely on replay
+metadata for their authoritative decoded semantics.
+
+- `workflow_case_01.bin`
+- `workflow_case_02.bin`
+- `workflow_case_03.bin`
+- `workflow_case_04.bin`
+- `workflow_case_05.bin`
+- `workflow_case_06.bin`
+- `workflow_case_07.bin`
+- `workflow_case_08.bin`
+- `workflow_case_09.bin`
+- `workflow_case_10.bin`
+- `workflow_case_11.bin`
 
 ### `engine-command-sequence` (9)
 
@@ -260,13 +267,14 @@ checked-in `*Inputs` directories exactly.
 - `overlapping_collapsed_then_expanded_group_columns_expected_invalid.bin`
 - `set_hyperlink_clear_comment_invalid_sheet.bin`
 
-### `xlsx-roundtrip` (18)
+### `xlsx-roundtrip` (19)
 
 - `append_row_datetime_style_patch_roundtrip_success.bin`
 - `append_row_preserves_styled_blank_row_roundtrip_success.bin`
 - `apply_style_alignment_roundtrip_success.bin`
 - `apply_style_formatting_depth_roundtrip_success.bin`
 - `border_all_none_missing_color_roundtrip_success.bin`
+- `chart_title_numeric_cache_roundtrip_success.bin`
 - `clear_sheet_protection_unprotected_roundtrip_success.bin`
 - `create_sheet_roundtrip_case.bin`
 - `create_sheet_set_range_roundtrip_case.bin`

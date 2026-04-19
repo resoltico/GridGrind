@@ -7,65 +7,138 @@
   "persistence": {
     "type": "OVERWRITE"
   },
-  "operations": [
+  "steps": [
     {
-      "type": "SET_CELL",
-      "sheetName": "Sales",
-      "address": "B3",
-      "value": { "type": "NUMBER", "number": 18.0 }
+      "stepId": "step-01-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "NUMBER",
+          "number": 18.0
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Sales",
+        "address": "B3"
+      }
     },
     {
-      "type": "SET_CELL",
-      "sheetName": "Sales",
-      "address": "B5",
-      "value": { "type": "NUMBER", "number": 20.0 }
+      "stepId": "step-02-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "NUMBER",
+          "number": 20.0
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Sales",
+        "address": "B5"
+      }
     },
     {
-      "type": "SET_CELL",
-      "sheetName": "Rates",
-      "address": "B5",
-      "value": { "type": "NUMBER", "number": 55.25 }
-    },
-    { "type": "EVALUATE_FORMULAS" },
-    { "type": "FORCE_FORMULA_RECALCULATION_ON_OPEN" }
-  ],
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
-    {
-      "type": "GET_CELLS",
-      "requestId": "rates-cells",
-      "sheetName": "Rates",
-      "addresses": ["B5"]
+      "stepId": "step-03-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "NUMBER",
+          "number": 55.25
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Rates",
+        "address": "B5"
+      }
     },
     {
-      "type": "GET_WINDOW",
-      "requestId": "rates-window",
-      "sheetName": "Rates",
-      "topLeftAddress": "A1",
-      "rowCount": 5,
-      "columnCount": 3
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      },
+      "stepId": "workbook",
+      "target": {
+        "type": "CURRENT"
+      }
     },
     {
-      "type": "GET_CELLS",
-      "requestId": "sales-cells",
-      "sheetName": "Sales",
-      "addresses": ["E3", "F3", "E5", "F5", "F7", "G7", "H7"]
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "rates-cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Rates",
+        "addresses": [
+          "B5"
+        ]
+      }
     },
     {
-      "type": "GET_WINDOW",
-      "requestId": "sales-window",
-      "sheetName": "Sales",
-      "topLeftAddress": "A1",
-      "rowCount": 7,
-      "columnCount": 8
+      "query": {
+        "type": "GET_WINDOW"
+      },
+      "stepId": "rates-window",
+      "target": {
+        "type": "RECTANGULAR_WINDOW",
+        "sheetName": "Rates",
+        "topLeftAddress": "A1",
+        "rowCount": 5,
+        "columnCount": 3
+      }
     },
     {
-      "type": "GET_FORMULA_SURFACE",
-      "requestId": "sales-formula-surface",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Sales"]
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "sales-cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Sales",
+        "addresses": [
+          "E3",
+          "F3",
+          "E5",
+          "F5",
+          "F7",
+          "G7",
+          "H7"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WINDOW"
+      },
+      "stepId": "sales-window",
+      "target": {
+        "type": "RECTANGULAR_WINDOW",
+        "sheetName": "Sales",
+        "topLeftAddress": "A1",
+        "rowCount": 7,
+        "columnCount": 8
+      }
+    },
+    {
+      "query": {
+        "type": "GET_FORMULA_SURFACE"
+      },
+      "stepId": "sales-formula-surface",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Sales"
+        ]
       }
     }
-  ]
+  ],
+  "execution": {
+    "calculation": {
+      "strategy": {
+        "type": "EVALUATE_ALL"
+      },
+      "markRecalculateOnOpen": true
+    }
+  }
 }

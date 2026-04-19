@@ -146,7 +146,7 @@ final class ExcelWorkbookSheetSupport {
         throw new IllegalArgumentException("sheetNames must not contain duplicates");
       }
     }
-    return List.copyOf(copy);
+    return copy;
   }
 
   /** Returns the existing sheet with the requested name. */

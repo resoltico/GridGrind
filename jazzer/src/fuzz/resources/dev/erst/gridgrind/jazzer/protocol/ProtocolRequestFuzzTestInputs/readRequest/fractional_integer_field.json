@@ -1,0 +1,19 @@
+{
+  "source": {
+    "type": "NEW"
+  },
+  "steps": [
+    {
+      "stepId": "step-01-set-sheet-presentation",
+      "action": {
+        "type": "SET_SHEET_PRESENTATION",
+        "sheetName": "Budget",
+        "presentation": {
+          "sheetDefaults": {
+            "defaultColumnWidth": 12.25
+          }
+        }
+      }
+    }
+  ]
+}

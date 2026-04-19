@@ -1,15 +1,30 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Data" },
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
     {
-      "type": "SET_HYPERLINK",
-      "sheetName": "Data",
-      "address": "A1",
-      "target": { "type": "EMAIL", "email": "notanemail" }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Data"
+      }
+    },
+    {
+      "stepId": "step-02-set-hyperlink",
+      "action": {
+        "type": "SET_HYPERLINK",
+        "sheetName": "Data",
+        "address": "A1",
+        "target": {
+          "type": "EMAIL",
+          "email": "notanemail"
+        }
+      }
     }
-  ],
-  "reads": []
+  ]
 }

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.47.0"
+version: "0.48.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
-updated: "2026-04-16"
+updated: "2026-04-17"
 route:
   keywords: [gridgrind, jazzer, fuzz, operations, replay, promote, corpus, findings, summaries, telemetry]
   questions: ["how do I use the jazzer scripts", "how do I replay a jazzer input", "how do I promote a jazzer input", "where do jazzer run logs and summaries go", "how do I inspect the corpus", "how do I clean jazzer state"]
@@ -145,6 +145,12 @@ summary. This avoids relying on Gradle's `Test` result store for the entire comm
 Structured binary-harness replay uses GridGrind's pure-Java scalar replay cursor rather than
 Jazzer's native replay bootstrap path, so replay remains stable in a fresh JVM.
 
+`protocol-request` and `protocol-workflow` are stable Jazzer harness names for the canonical JSON
+request surface. They are not module names; the live product split is `contract` plus `executor`.
+Committed `protocol-workflow` binary seeds are opaque generator inputs, not human-authored semantic
+scenarios. They therefore use neutral case identifiers such as `workflow_case_01.bin`, while the
+authoritative decoded behavior lives in the refreshed replay metadata and replay text.
+
 ### Inspect the Current State
 
 ```bash
@@ -166,8 +172,9 @@ This does not fuzz. It replays the exact raw bytes and prints a structured summa
 - input path
 - harness
 - success vs expected-invalid vs unexpected-failure
-- decoded operation, command, or read counts
+- decoded operation, assertion, command, or read counts
 - style kinds, source type, and persistence type where applicable
+- assertion kinds where applicable
 - read kinds where applicable
 - response classification where applicable
 
@@ -181,7 +188,7 @@ finding is still current.
 ```bash
 jazzer/bin/promote protocol-workflow \
   jazzer/.local/runs/protocol-workflow/.cifuzz-corpus/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTest/executeWorkflow/<sha1> \
-  set_cell_failure_case \
+  workflow_case_12 \
   --console=plain
 ```
 
@@ -196,6 +203,9 @@ Promotion metadata includes:
 - the replay text artifact path
 
 Promote after replay, not blindly.
+For opaque binary harnesses such as `protocol-workflow`, promote with a neutral case identifier
+instead of embedding assumed semantics in the file name. The replay metadata is the authoritative
+description of what the current topology decodes.
 
 ### Refresh Promoted Metadata
 
@@ -203,7 +213,8 @@ Promote after replay, not blindly.
 jazzer/bin/refresh-promoted-metadata --console=plain
 ```
 
-Use this after an intentional replay-shape change, such as a new command family or an expanded
+Use this after an intentional replay-shape change, such as a new command family, a new assertion
+family, or an expanded
 sequence-introspection model. The command replays every promoted input, rewrites the replay text,
 and refreshes the stored replay outcome plus replay expectation metadata.
 
@@ -324,19 +335,20 @@ Use this exact order:
    the main suite after the fix lands.
 
 Naming rules:
-- use lowercase snake case
-- describe the behavior, not the hash
-- prefer domain meaning over source mechanics
+- use lowercase snake case for human-authored JSON and command seeds
+- use neutral `workflow_case_##` identifiers for opaque binary `protocol-workflow` seeds
+- let replay metadata, not opaque binary file names, carry the authoritative decoded behavior
 
 Good:
 - `sheet_management_request`
-- `set_cell_failure_case`
+- `workflow_case_12`
 - `invalid_cell_address_case`
 - `create_sheet_roundtrip_case`
 
 Bad:
 - `seed1`
 - `corpus_copy`
+- `set_cell_failure_case` for an opaque `protocol-workflow` binary
 - `325d16aa`
 
 Seed-quality rules:

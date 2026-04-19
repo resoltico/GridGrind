@@ -7,7 +7,7 @@ plugins {
 description = "CLI transport adapter for the GridGrind protocol"
 
 dependencies {
-    implementation(project(":protocol"))
+    implementation(project(":executor"))
     testImplementation(libs.junit.jupiter)
     testRuntimeOnly(libs.junit.platform.launcher)
     runtimeOnly(libs.log4j.core)

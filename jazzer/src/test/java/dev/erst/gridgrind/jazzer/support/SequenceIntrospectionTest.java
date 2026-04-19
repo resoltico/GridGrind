@@ -1,7 +1,46 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.inspect;
+import static dev.erst.gridgrind.jazzer.support.ProtocolStepSupport.mutate;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.dto.ChartInput;
+import dev.erst.gridgrind.contract.dto.CommentInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
+import dev.erst.gridgrind.contract.dto.DataValidationInput;
+import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
+import dev.erst.gridgrind.contract.dto.DifferentialStyleInput;
+import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
+import dev.erst.gridgrind.contract.dto.DrawingMarkerInput;
+import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
+import dev.erst.gridgrind.contract.dto.HyperlinkTarget;
+import dev.erst.gridgrind.contract.dto.NamedRangeScope;
+import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
+import dev.erst.gridgrind.contract.dto.PictureDataInput;
+import dev.erst.gridgrind.contract.dto.PictureInput;
+import dev.erst.gridgrind.contract.dto.PivotTableInput;
+import dev.erst.gridgrind.contract.dto.ShapeInput;
+import dev.erst.gridgrind.contract.dto.SheetCopyPosition;
+import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
+import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
+import dev.erst.gridgrind.contract.dto.TableInput;
+import dev.erst.gridgrind.contract.dto.TableStyleInput;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
+import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.selector.CellSelector;
+import dev.erst.gridgrind.contract.selector.ChartSelector;
+import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
+import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
+import dev.erst.gridgrind.contract.selector.PivotTableSelector;
+import dev.erst.gridgrind.contract.selector.RangeSelector;
+import dev.erst.gridgrind.contract.selector.SheetSelector;
+import dev.erst.gridgrind.contract.selector.TableSelector;
+import dev.erst.gridgrind.contract.selector.WorkbookSelector;
+import dev.erst.gridgrind.contract.source.BinarySourceInput;
+import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
 import dev.erst.gridgrind.excel.ExcelChartBarDirection;
@@ -15,7 +54,6 @@ import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.ExcelEmbeddedObjectDefinition;
-import dev.erst.gridgrind.excel.ExcelFormulaCellTarget;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
@@ -26,42 +64,15 @@ import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.ExcelPivotTableDefinition;
 import dev.erst.gridgrind.excel.ExcelShapeDefinition;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
+import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
+import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
 import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.protocol.dto.ChartInput;
-import dev.erst.gridgrind.protocol.dto.CommentInput;
-import dev.erst.gridgrind.protocol.dto.ConditionalFormattingBlockInput;
-import dev.erst.gridgrind.protocol.dto.ConditionalFormattingRuleInput;
-import dev.erst.gridgrind.protocol.dto.DataValidationInput;
-import dev.erst.gridgrind.protocol.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.protocol.dto.DifferentialStyleInput;
-import dev.erst.gridgrind.protocol.dto.DrawingAnchorInput;
-import dev.erst.gridgrind.protocol.dto.DrawingMarkerInput;
-import dev.erst.gridgrind.protocol.dto.EmbeddedObjectInput;
-import dev.erst.gridgrind.protocol.dto.FormulaCellTargetInput;
-import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
-import dev.erst.gridgrind.protocol.dto.HyperlinkTarget;
-import dev.erst.gridgrind.protocol.dto.NamedRangeScope;
-import dev.erst.gridgrind.protocol.dto.NamedRangeSelection;
-import dev.erst.gridgrind.protocol.dto.NamedRangeTarget;
-import dev.erst.gridgrind.protocol.dto.PictureDataInput;
-import dev.erst.gridgrind.protocol.dto.PictureInput;
-import dev.erst.gridgrind.protocol.dto.PivotTableInput;
-import dev.erst.gridgrind.protocol.dto.PivotTableSelection;
-import dev.erst.gridgrind.protocol.dto.RangeSelection;
-import dev.erst.gridgrind.protocol.dto.ShapeInput;
-import dev.erst.gridgrind.protocol.dto.SheetCopyPosition;
-import dev.erst.gridgrind.protocol.dto.SheetProtectionSettings;
-import dev.erst.gridgrind.protocol.dto.SheetSelection;
-import dev.erst.gridgrind.protocol.dto.TableInput;
-import dev.erst.gridgrind.protocol.dto.TableSelection;
-import dev.erst.gridgrind.protocol.dto.TableStyleInput;
-import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
-import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Tests for SequenceIntrospection operation and command labeling. */
@@ -70,162 +81,212 @@ class SequenceIntrospectionTest {
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
 
   @Test
-  void reportsWaveThreeOperationKinds() {
+  void reportsWaveThreeMutationKinds() {
     assertEquals(
         "COPY_SHEET",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.CopySheet(
-                "Budget", "Budget Copy", new SheetCopyPosition.AppendAtEnd())));
+        mutationKind(
+            mutate(
+                new SheetSelector.ByName("Budget"),
+                new MutationAction.CopySheet("Budget Copy", new SheetCopyPosition.AppendAtEnd()))));
     assertEquals(
         "SET_ACTIVE_SHEET",
-        SequenceIntrospection.operationKind(new WorkbookOperation.SetActiveSheet("Budget")));
+        mutationKind(
+            mutate(new SheetSelector.ByName("Budget"), new MutationAction.SetActiveSheet())));
     assertEquals(
         "SET_SELECTED_SHEETS",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetSelectedSheets(List.of("Budget", "Archive"))));
+        mutationKind(
+            mutate(
+                new SheetSelector.ByNames(List.of("Budget", "Archive")),
+                new MutationAction.SetSelectedSheets())));
     assertEquals(
         "SET_SHEET_VISIBILITY",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetSheetVisibility("Budget", ExcelSheetVisibility.HIDDEN)));
+        mutationKind(
+            mutate(
+                new SheetSelector.ByName("Budget"),
+                new MutationAction.SetSheetVisibility(ExcelSheetVisibility.HIDDEN))));
     assertEquals(
         "SET_SHEET_PROTECTION",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetSheetProtection("Budget", protocolProtectionSettings())));
+        mutationKind(
+            mutate(
+                new SheetSelector.ByName("Budget"),
+                new MutationAction.SetSheetProtection(protocolProtectionSettings()))));
     assertEquals(
         "CLEAR_SHEET_PROTECTION",
-        SequenceIntrospection.operationKind(new WorkbookOperation.ClearSheetProtection("Budget")));
+        mutationKind(
+            mutate(new SheetSelector.ByName("Budget"), new MutationAction.ClearSheetProtection())));
     assertEquals(
         "SET_HYPERLINK",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetHyperlink(
-                "Budget", "A1", new HyperlinkTarget.Url("https://example.com"))));
+        mutationKind(
+            mutate(
+                new CellSelector.ByAddress("Budget", "A1"),
+                new MutationAction.SetHyperlink(new HyperlinkTarget.Url("https://example.com")))));
     assertEquals(
         "CLEAR_HYPERLINK",
-        SequenceIntrospection.operationKind(new WorkbookOperation.ClearHyperlink("Budget", "A1")));
+        mutationKind(
+            mutate(
+                new CellSelector.ByAddress("Budget", "A1"), new MutationAction.ClearHyperlink())));
     assertEquals(
         "SET_COMMENT",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetComment(
-                "Budget", "A1", new CommentInput("Review", "GridGrind", false))));
+        mutationKind(
+            mutate(
+                new CellSelector.ByAddress("Budget", "A1"),
+                new MutationAction.SetComment(
+                    new CommentInput(TextSourceInput.inline("Review"), "GridGrind", false)))));
     assertEquals(
         "CLEAR_COMMENT",
-        SequenceIntrospection.operationKind(new WorkbookOperation.ClearComment("Budget", "A1")));
+        mutationKind(
+            mutate(new CellSelector.ByAddress("Budget", "A1"), new MutationAction.ClearComment())));
     assertEquals(
         "SET_PICTURE",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetPicture("Budget", protocolPictureInput())));
+        mutationKind(
+            mutate(
+                new SheetSelector.ByName("Budget"),
+                new MutationAction.SetPicture(protocolPictureInput()))));
     assertEquals(
         "SET_SHAPE",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetShape("Budget", protocolShapeInput())));
+        mutationKind(
+            mutate(
+                new SheetSelector.ByName("Budget"),
+                new MutationAction.SetShape(protocolShapeInput()))));
     assertEquals(
         "SET_EMBEDDED_OBJECT",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetEmbeddedObject("Budget", protocolEmbeddedObjectInput())));
+        mutationKind(
+            mutate(
+                new SheetSelector.ByName("Budget"),
+                new MutationAction.SetEmbeddedObject(protocolEmbeddedObjectInput()))));
     assertEquals(
         "SET_CHART",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetChart("Budget", protocolChartInput())));
+        mutationKind(
+            mutate(
+                new SheetSelector.ByName("Budget"),
+                new MutationAction.SetChart(protocolChartInput()))));
     assertEquals(
         "SET_PIVOT_TABLE",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetPivotTable(protocolPivotTableInput())));
+        mutationKind(mutate(new MutationAction.SetPivotTable(protocolPivotTableInput()))));
     assertEquals(
         "SET_DRAWING_OBJECT_ANCHOR",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetDrawingObjectAnchor(
-                "Budget", "OpsPicture", protocolAnchor())));
+        mutationKind(
+            mutate(
+                new DrawingObjectSelector.ByName("Budget", "OpsPicture"),
+                new MutationAction.SetDrawingObjectAnchor(protocolAnchor()))));
     assertEquals(
         "DELETE_DRAWING_OBJECT",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.DeleteDrawingObject("Budget", "OpsPicture")));
+        mutationKind(
+            mutate(
+                new DrawingObjectSelector.ByName("Budget", "OpsPicture"),
+                new MutationAction.DeleteDrawingObject())));
     assertEquals(
         "SET_NAMED_RANGE",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetNamedRange(
-                "BudgetTotal",
-                new NamedRangeScope.Workbook(),
-                new NamedRangeTarget("Budget", "B4"))));
+        mutationKind(
+            mutate(
+                new MutationAction.SetNamedRange(
+                    "BudgetTotal",
+                    new NamedRangeScope.Workbook(),
+                    new NamedRangeTarget("Budget", "B4")))));
     assertEquals(
         "DELETE_NAMED_RANGE",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.DeleteNamedRange("BudgetTotal", new NamedRangeScope.Workbook())));
+        mutationKind(
+            mutate(
+                new NamedRangeSelector.WorkbookScope("BudgetTotal"),
+                new MutationAction.DeleteNamedRange())));
     assertEquals(
         "SET_DATA_VALIDATION",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetDataValidation(
-                "Budget",
-                "A2:A5",
-                new DataValidationInput(
-                    new DataValidationRuleInput.WholeNumber(
-                        ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
-                    false,
-                    false,
-                    null,
-                    null))));
+        mutationKind(
+            mutate(
+                new RangeSelector.ByRange("Budget", "A2:A5"),
+                new MutationAction.SetDataValidation(
+                    new DataValidationInput(
+                        new DataValidationRuleInput.WholeNumber(
+                            ExcelComparisonOperator.GREATER_OR_EQUAL, "1", null),
+                        false,
+                        false,
+                        null,
+                        null)))));
     assertEquals(
         "CLEAR_DATA_VALIDATIONS",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.ClearDataValidations(
-                "Budget", new RangeSelection.Selected(List.of("A2:A5")))));
+        mutationKind(
+            mutate(
+                new RangeSelector.ByRanges("Budget", List.of("A2:A5")),
+                new MutationAction.ClearDataValidations())));
     assertEquals(
         "SET_CONDITIONAL_FORMATTING",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetConditionalFormatting(
-                "Budget",
-                new ConditionalFormattingBlockInput(
-                    List.of("A2:A5"),
-                    List.of(
-                        new ConditionalFormattingRuleInput.FormulaRule(
-                            "A2>0",
-                            true,
-                            new DifferentialStyleInput(
-                                "0.00", true, null, null, null, null, null, null, null)))))));
+        mutationKind(
+            mutate(
+                new SheetSelector.ByName("Budget"),
+                new MutationAction.SetConditionalFormatting(
+                    new ConditionalFormattingBlockInput(
+                        List.of("A2:A5"),
+                        List.of(
+                            new ConditionalFormattingRuleInput.FormulaRule(
+                                "A2>0",
+                                true,
+                                new DifferentialStyleInput(
+                                    "0.00", true, null, null, null, null, null, null, null))))))));
     assertEquals(
         "CLEAR_CONDITIONAL_FORMATTING",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.ClearConditionalFormatting(
-                "Budget", new RangeSelection.Selected(List.of("A2:A5")))));
+        mutationKind(
+            mutate(
+                new RangeSelector.ByRanges("Budget", List.of("A2:A5")),
+                new MutationAction.ClearConditionalFormatting())));
     assertEquals(
         "SET_AUTOFILTER",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetAutofilter("Budget", "E1:F4")));
+        mutationKind(
+            mutate(
+                new RangeSelector.ByRange("Budget", "E1:F4"), new MutationAction.SetAutofilter())));
     assertEquals(
         "CLEAR_AUTOFILTER",
-        SequenceIntrospection.operationKind(new WorkbookOperation.ClearAutofilter("Budget")));
+        mutationKind(
+            mutate(new SheetSelector.ByName("Budget"), new MutationAction.ClearAutofilter())));
     assertEquals(
         "SET_TABLE",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.SetTable(
-                new TableInput(
-                    "BudgetTable",
-                    "Budget",
-                    "A1:C4",
-                    false,
-                    new TableStyleInput.Named("TableStyleMedium2", false, false, true, false)))));
+        mutationKind(
+            mutate(
+                new MutationAction.SetTable(
+                    new TableInput(
+                        "BudgetTable",
+                        "Budget",
+                        "A1:C4",
+                        false,
+                        new TableStyleInput.Named(
+                            "TableStyleMedium2", false, false, true, false))))));
     assertEquals(
         "DELETE_TABLE",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.DeleteTable("BudgetTable", "Budget")));
+        mutationKind(
+            mutate(
+                new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
+                new MutationAction.DeleteTable())));
     assertEquals(
         "DELETE_PIVOT_TABLE",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.DeletePivotTable("OpsPivot", "Budget")));
+        mutationKind(
+            mutate(
+                new PivotTableSelector.ByNameOnSheet("OpsPivot", "Budget"),
+                new MutationAction.DeletePivotTable())));
     assertEquals(
-        "EVALUATE_FORMULA_CELLS",
-        SequenceIntrospection.operationKind(
-            new WorkbookOperation.EvaluateFormulaCells(
-                List.of(new FormulaCellTargetInput("Budget", "C2")))));
+        "SET_WORKBOOK_PROTECTION",
+        mutationKind(
+            mutate(
+                new WorkbookSelector.Current(),
+                new MutationAction.SetWorkbookProtection(
+                    new WorkbookProtectionInput(true, false, false, null, null)))));
     assertEquals(
-        "CLEAR_FORMULA_CACHES",
-        SequenceIntrospection.operationKind(new WorkbookOperation.ClearFormulaCaches()));
+        "CLEAR_WORKBOOK_PROTECTION",
+        mutationKind(
+            mutate(new WorkbookSelector.Current(), new MutationAction.ClearWorkbookProtection())));
+    assertEquals(
+        "SET_SHEET_PRESENTATION",
+        mutationKind(
+            mutate(
+                new SheetSelector.ByName("Budget"),
+                new MutationAction.SetSheetPresentation(SheetPresentationInput.defaults()))));
 
     assertEquals(
         1L,
-        SequenceIntrospection.operationKinds(
+        mutationKinds(
                 List.of(
-                    new WorkbookOperation.SetHyperlink(
-                        "Budget", "A1", new HyperlinkTarget.Url("https://example.com"))))
+                    mutate(
+                        new CellSelector.ByAddress("Budget", "A1"),
+                        new MutationAction.SetHyperlink(
+                            new HyperlinkTarget.Url("https://example.com")))))
             .get("SET_HYPERLINK"));
   }
 
@@ -372,13 +433,17 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.commandKind(
             new WorkbookCommand.DeletePivotTable("OpsPivot", "Budget")));
     assertEquals(
-        "EVALUATE_FORMULA_CELLS",
+        "SET_WORKBOOK_PROTECTION",
         SequenceIntrospection.commandKind(
-            new WorkbookCommand.EvaluateFormulaCells(
-                List.of(new ExcelFormulaCellTarget("Budget", "C2")))));
+            new WorkbookCommand.SetWorkbookProtection(
+                new ExcelWorkbookProtectionSettings(true, false, false, null, null))));
     assertEquals(
-        "CLEAR_FORMULA_CACHES",
-        SequenceIntrospection.commandKind(new WorkbookCommand.ClearFormulaCaches()));
+        "CLEAR_WORKBOOK_PROTECTION",
+        SequenceIntrospection.commandKind(new WorkbookCommand.ClearWorkbookProtection()));
+    assertEquals(
+        "SET_SHEET_PRESENTATION",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetSheetPresentation("Budget", ExcelSheetPresentation.defaults())));
 
     assertEquals(
         1L,
@@ -390,86 +455,145 @@ class SequenceIntrospectionTest {
   }
 
   @Test
-  void reportsReadKindsAndReadCount() {
-    GridGrindRequest request =
-        new GridGrindRequest(
-            new GridGrindRequest.WorkbookSource.New(),
-            new GridGrindRequest.WorkbookPersistence.None(),
+  void reportsInspectionKindsAndInspectionCount() {
+    WorkbookPlan request =
+        ProtocolStepSupport.request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
             List.of(),
             List.of(
-                new WorkbookReadOperation.GetWorkbookSummary("summary"),
-                new WorkbookReadOperation.GetWorkbookProtection("workbook-protection"),
-                new WorkbookReadOperation.GetCells("cells", "Budget", List.of("A1")),
-                new WorkbookReadOperation.GetDrawingObjects("drawing-objects", "Budget"),
-                new WorkbookReadOperation.GetDrawingObjectPayload(
-                    "drawing-payload", "Budget", "OpsPicture"),
-                new WorkbookReadOperation.GetCharts("charts", "Budget"),
-                new WorkbookReadOperation.GetPivotTables(
-                    "pivots", new PivotTableSelection.ByNames(List.of("OpsPivot"))),
-                new WorkbookReadOperation.GetDataValidations(
-                    "validations", "Budget", new RangeSelection.All()),
-                new WorkbookReadOperation.GetConditionalFormatting(
-                    "conditional-formatting", "Budget", new RangeSelection.All()),
-                new WorkbookReadOperation.GetAutofilters("autofilters", "Budget"),
-                new WorkbookReadOperation.GetTables("tables", new TableSelection.All()),
-                new WorkbookReadOperation.GetFormulaSurface("formulas", new SheetSelection.All()),
-                new WorkbookReadOperation.AnalyzeDataValidationHealth(
-                    "data-validation-health", new SheetSelection.All()),
-                new WorkbookReadOperation.AnalyzeConditionalFormattingHealth(
-                    "conditional-formatting-health", new SheetSelection.All()),
-                new WorkbookReadOperation.AnalyzeAutofilterHealth(
-                    "autofilter-health", new SheetSelection.All()),
-                new WorkbookReadOperation.AnalyzeTableHealth(
-                    "table-health", new TableSelection.All()),
-                new WorkbookReadOperation.AnalyzePivotTableHealth(
-                    "pivot-table-health", new PivotTableSelection.All()),
-                new WorkbookReadOperation.AnalyzeNamedRangeHealth(
-                    "named-range-health", new NamedRangeSelection.All()),
-                new WorkbookReadOperation.AnalyzeWorkbookFindings("workbook-findings")));
+                inspect(
+                    "summary",
+                    new WorkbookSelector.Current(),
+                    new InspectionQuery.GetWorkbookSummary()),
+                inspect(
+                    "workbook-protection",
+                    new WorkbookSelector.Current(),
+                    new InspectionQuery.GetWorkbookProtection()),
+                inspect(
+                    "cells",
+                    new CellSelector.ByAddresses("Budget", List.of("A1")),
+                    new InspectionQuery.GetCells()),
+                inspect(
+                    "drawing-objects",
+                    new DrawingObjectSelector.AllOnSheet("Budget"),
+                    new InspectionQuery.GetDrawingObjects()),
+                inspect(
+                    "drawing-payload",
+                    new DrawingObjectSelector.ByName("Budget", "OpsPicture"),
+                    new InspectionQuery.GetDrawingObjectPayload()),
+                inspect(
+                    "charts",
+                    new ChartSelector.AllOnSheet("Budget"),
+                    new InspectionQuery.GetCharts()),
+                inspect(
+                    "pivots",
+                    new PivotTableSelector.ByNames(List.of("OpsPivot")),
+                    new InspectionQuery.GetPivotTables()),
+                inspect(
+                    "validations",
+                    new RangeSelector.AllOnSheet("Budget"),
+                    new InspectionQuery.GetDataValidations()),
+                inspect(
+                    "conditional-formatting",
+                    new RangeSelector.AllOnSheet("Budget"),
+                    new InspectionQuery.GetConditionalFormatting()),
+                inspect(
+                    "autofilters",
+                    new SheetSelector.ByName("Budget"),
+                    new InspectionQuery.GetAutofilters()),
+                inspect("tables", new TableSelector.All(), new InspectionQuery.GetTables()),
+                inspect(
+                    "formulas", new SheetSelector.All(), new InspectionQuery.GetFormulaSurface()),
+                inspect(
+                    "data-validation-health",
+                    new SheetSelector.All(),
+                    new InspectionQuery.AnalyzeDataValidationHealth()),
+                inspect(
+                    "conditional-formatting-health",
+                    new SheetSelector.All(),
+                    new InspectionQuery.AnalyzeConditionalFormattingHealth()),
+                inspect(
+                    "autofilter-health",
+                    new SheetSelector.All(),
+                    new InspectionQuery.AnalyzeAutofilterHealth()),
+                inspect(
+                    "table-health",
+                    new TableSelector.All(),
+                    new InspectionQuery.AnalyzeTableHealth()),
+                inspect(
+                    "pivot-table-health",
+                    new PivotTableSelector.All(),
+                    new InspectionQuery.AnalyzePivotTableHealth()),
+                inspect(
+                    "named-range-health",
+                    new NamedRangeSelector.All(),
+                    new InspectionQuery.AnalyzeNamedRangeHealth()),
+                inspect(
+                    "workbook-findings",
+                    new WorkbookSelector.Current(),
+                    new InspectionQuery.AnalyzeWorkbookFindings())));
 
-    assertEquals(19, SequenceIntrospection.readCount(request));
-    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_SUMMARY"));
-    assertEquals(
-        1L, SequenceIntrospection.readKinds(request.reads()).get("GET_WORKBOOK_PROTECTION"));
-    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DRAWING_OBJECTS"));
-    assertEquals(
-        1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DRAWING_OBJECT_PAYLOAD"));
-    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_CHARTS"));
-    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_PIVOT_TABLES"));
-    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_DATA_VALIDATIONS"));
-    assertEquals(
-        1L, SequenceIntrospection.readKinds(request.reads()).get("GET_CONDITIONAL_FORMATTING"));
-    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_AUTOFILTERS"));
-    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_TABLES"));
-    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_FORMULA_SURFACE"));
-    assertEquals(
-        1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_DATA_VALIDATION_HEALTH"));
-    assertEquals(
-        1L,
-        SequenceIntrospection.readKinds(request.reads())
-            .get("ANALYZE_CONDITIONAL_FORMATTING_HEALTH"));
-    assertEquals(
-        1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_AUTOFILTER_HEALTH"));
-    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_TABLE_HEALTH"));
-    assertEquals(
-        1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_PIVOT_TABLE_HEALTH"));
-    assertEquals(
-        1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_NAMED_RANGE_HEALTH"));
-    assertEquals(
-        1L, SequenceIntrospection.readKinds(request.reads()).get("ANALYZE_WORKBOOK_FINDINGS"));
+    assertEquals(19, inspectionCount(request));
+    assertEquals(1L, inspectionKinds(request).get("GET_WORKBOOK_SUMMARY"));
+    assertEquals(1L, inspectionKinds(request).get("GET_WORKBOOK_PROTECTION"));
+    assertEquals(1L, inspectionKinds(request).get("GET_DRAWING_OBJECTS"));
+    assertEquals(1L, inspectionKinds(request).get("GET_DRAWING_OBJECT_PAYLOAD"));
+    assertEquals(1L, inspectionKinds(request).get("GET_CHARTS"));
+    assertEquals(1L, inspectionKinds(request).get("GET_PIVOT_TABLES"));
+    assertEquals(1L, inspectionKinds(request).get("GET_DATA_VALIDATIONS"));
+    assertEquals(1L, inspectionKinds(request).get("GET_CONDITIONAL_FORMATTING"));
+    assertEquals(1L, inspectionKinds(request).get("GET_AUTOFILTERS"));
+    assertEquals(1L, inspectionKinds(request).get("GET_TABLES"));
+    assertEquals(1L, inspectionKinds(request).get("GET_FORMULA_SURFACE"));
+    assertEquals(1L, inspectionKinds(request).get("ANALYZE_DATA_VALIDATION_HEALTH"));
+    assertEquals(1L, inspectionKinds(request).get("ANALYZE_CONDITIONAL_FORMATTING_HEALTH"));
+    assertEquals(1L, inspectionKinds(request).get("ANALYZE_AUTOFILTER_HEALTH"));
+    assertEquals(1L, inspectionKinds(request).get("ANALYZE_TABLE_HEALTH"));
+    assertEquals(1L, inspectionKinds(request).get("ANALYZE_PIVOT_TABLE_HEALTH"));
+    assertEquals(1L, inspectionKinds(request).get("ANALYZE_NAMED_RANGE_HEALTH"));
+    assertEquals(1L, inspectionKinds(request).get("ANALYZE_WORKBOOK_FINDINGS"));
   }
 
   @Test
-  void readKindsCountPackageSecurityReads() {
-    GridGrindRequest request =
-        new GridGrindRequest(
-            new GridGrindRequest.WorkbookSource.New(),
-            new GridGrindRequest.WorkbookPersistence.None(),
+  void inspectionKindsCountPackageSecurityReads() {
+    WorkbookPlan request =
+        ProtocolStepSupport.request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
             List.of(),
-            List.of(new WorkbookReadOperation.GetPackageSecurity("security")));
+            List.of(
+                inspect(
+                    "security",
+                    new WorkbookSelector.Current(),
+                    new InspectionQuery.GetPackageSecurity())));
 
-    assertEquals(1, SequenceIntrospection.readCount(request));
-    assertEquals(1L, SequenceIntrospection.readKinds(request.reads()).get("GET_PACKAGE_SECURITY"));
+    assertEquals(1, inspectionCount(request));
+    assertEquals(1L, inspectionKinds(request).get("GET_PACKAGE_SECURITY"));
+  }
+
+  private static String mutationKind(ProtocolStepSupport.PendingMutation mutation) {
+    return SequenceIntrospection.mutationKind(ProtocolStepSupport.materializeMutation(mutation, 0));
+  }
+
+  private static Map<String, Long> mutationKinds(
+      List<ProtocolStepSupport.PendingMutation> mutations) {
+    return SequenceIntrospection.mutationKinds(materializeMutations(mutations));
+  }
+
+  private static int inspectionCount(WorkbookPlan request) {
+    return SequenceIntrospection.inspectionCount(request);
+  }
+
+  private static Map<String, Long> inspectionKinds(WorkbookPlan request) {
+    return SequenceIntrospection.inspectionKinds(request.inspectionSteps());
+  }
+
+  private static List<dev.erst.gridgrind.contract.step.MutationStep> materializeMutations(
+      List<ProtocolStepSupport.PendingMutation> mutations) {
+    return ProtocolStepSupport.steps(mutations, List.of()).stream()
+        .map(dev.erst.gridgrind.contract.step.MutationStep.class::cast)
+        .toList();
   }
 
   private static SheetProtectionSettings protocolProtectionSettings() {
@@ -492,14 +616,19 @@ class SequenceIntrospectionTest {
   private static PictureInput protocolPictureInput() {
     return new PictureInput(
         "OpsPicture",
-        new PictureDataInput(ExcelPictureFormat.PNG, PNG_PIXEL_BASE64),
+        new PictureDataInput(
+            ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64(PNG_PIXEL_BASE64)),
         protocolAnchor(),
-        "Queue preview");
+        TextSourceInput.inline("Queue preview"));
   }
 
   private static ShapeInput protocolShapeInput() {
     return new ShapeInput(
-        "OpsShape", ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE, protocolAnchor(), "rect", "Queue");
+        "OpsShape",
+        ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+        protocolAnchor(),
+        "rect",
+        TextSourceInput.inline("Queue"));
   }
 
   private static EmbeddedObjectInput protocolEmbeddedObjectInput() {
@@ -508,8 +637,9 @@ class SequenceIntrospectionTest {
         "Ops payload",
         "ops-payload.txt",
         "open",
-        "R3JpZEdyaW5kIHBheWxvYWQ=",
-        new PictureDataInput(ExcelPictureFormat.PNG, PNG_PIXEL_BASE64),
+        BinarySourceInput.inlineBase64("R3JpZEdyaW5kIHBheWxvYWQ="),
+        new PictureDataInput(
+            ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64(PNG_PIXEL_BASE64)),
         protocolAnchor());
   }
 
@@ -517,7 +647,7 @@ class SequenceIntrospectionTest {
     return new ChartInput.Bar(
         "OpsChart",
         protocolAnchor(),
-        new ChartInput.Title.Text("Roadmap"),
+        new ChartInput.Title.Text(TextSourceInput.inline("Roadmap")),
         new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
         ExcelChartDisplayBlanksAs.SPAN,
         false,
@@ -525,7 +655,7 @@ class SequenceIntrospectionTest {
         ExcelChartBarDirection.COLUMN,
         List.of(
             new ChartInput.Series(
-                new ChartInput.Title.Text("Actual"),
+                new ChartInput.Title.Text(TextSourceInput.inline("Actual")),
                 new ChartInput.DataSource("Budget!$A$2:$A$4"),
                 new ChartInput.DataSource("Budget!$B$2:$B$4"))));
   }

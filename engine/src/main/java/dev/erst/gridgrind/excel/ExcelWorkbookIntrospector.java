@@ -35,27 +35,27 @@ final class ExcelWorkbookIntrospector {
     return switch (command) {
       case WorkbookReadCommand.GetWorkbookSummary getWorkbookSummary ->
           new WorkbookReadResult.WorkbookSummaryResult(
-              getWorkbookSummary.requestId(), workbook.workbookSummary());
+              getWorkbookSummary.stepId(), workbook.workbookSummary());
       case WorkbookReadCommand.GetPackageSecurity getPackageSecurity ->
           new WorkbookReadResult.PackageSecurityResult(
-              getPackageSecurity.requestId(), workbook.packageSecurity());
+              getPackageSecurity.stepId(), workbook.packageSecurity());
       case WorkbookReadCommand.GetWorkbookProtection getWorkbookProtection ->
           new WorkbookReadResult.WorkbookProtectionResult(
-              getWorkbookProtection.requestId(), workbook.workbookProtection());
+              getWorkbookProtection.stepId(), workbook.workbookProtection());
       case WorkbookReadCommand.GetNamedRanges getNamedRanges ->
           new WorkbookReadResult.NamedRangesResult(
-              getNamedRanges.requestId(), selectNamedRanges(workbook, getNamedRanges.selection()));
+              getNamedRanges.stepId(), selectNamedRanges(workbook, getNamedRanges.selection()));
       case WorkbookReadCommand.GetSheetSummary getSheetSummary ->
           new WorkbookReadResult.SheetSummaryResult(
-              getSheetSummary.requestId(), workbook.sheetSummary(getSheetSummary.sheetName()));
+              getSheetSummary.stepId(), workbook.sheetSummary(getSheetSummary.sheetName()));
       case WorkbookReadCommand.GetCells getCells ->
           new WorkbookReadResult.CellsResult(
-              getCells.requestId(),
+              getCells.stepId(),
               getCells.sheetName(),
               sheetIntrospector.cells(workbook.sheet(getCells.sheetName()), getCells.addresses()));
       case WorkbookReadCommand.GetWindow getWindow ->
           new WorkbookReadResult.WindowResult(
-              getWindow.requestId(),
+              getWindow.stepId(),
               sheetIntrospector.window(
                   workbook.sheet(getWindow.sheetName()),
                   getWindow.topLeftAddress(),
@@ -63,38 +63,38 @@ final class ExcelWorkbookIntrospector {
                   getWindow.columnCount()));
       case WorkbookReadCommand.GetMergedRegions getMergedRegions ->
           new WorkbookReadResult.MergedRegionsResult(
-              getMergedRegions.requestId(),
+              getMergedRegions.stepId(),
               getMergedRegions.sheetName(),
               sheetIntrospector.mergedRegions(workbook.sheet(getMergedRegions.sheetName())));
       case WorkbookReadCommand.GetHyperlinks getHyperlinks ->
           new WorkbookReadResult.HyperlinksResult(
-              getHyperlinks.requestId(),
+              getHyperlinks.stepId(),
               getHyperlinks.sheetName(),
               sheetIntrospector.hyperlinks(
                   workbook.sheet(getHyperlinks.sheetName()), getHyperlinks.selection()));
       case WorkbookReadCommand.GetComments getComments ->
           new WorkbookReadResult.CommentsResult(
-              getComments.requestId(),
+              getComments.stepId(),
               getComments.sheetName(),
               sheetIntrospector.comments(
                   workbook.sheet(getComments.sheetName()), getComments.selection()));
       case WorkbookReadCommand.GetDrawingObjects getDrawingObjects ->
           new WorkbookReadResult.DrawingObjectsResult(
-              getDrawingObjects.requestId(),
+              getDrawingObjects.stepId(),
               getDrawingObjects.sheetName(),
               documentIntrospector.drawingObjects(workbook, getDrawingObjects.sheetName()));
       case WorkbookReadCommand.GetCharts getCharts ->
           new WorkbookReadResult.ChartsResult(
-              getCharts.requestId(),
+              getCharts.stepId(),
               getCharts.sheetName(),
               documentIntrospector.charts(workbook, getCharts.sheetName()));
       case WorkbookReadCommand.GetPivotTables getPivotTables ->
           new WorkbookReadResult.PivotTablesResult(
-              getPivotTables.requestId(),
+              getPivotTables.stepId(),
               documentIntrospector.pivotTables(workbook, getPivotTables.selection()));
       case WorkbookReadCommand.GetDrawingObjectPayload getDrawingObjectPayload ->
           new WorkbookReadResult.DrawingObjectPayloadResult(
-              getDrawingObjectPayload.requestId(),
+              getDrawingObjectPayload.stepId(),
               getDrawingObjectPayload.sheetName(),
               documentIntrospector.drawingObjectPayload(
                   workbook,
@@ -102,41 +102,40 @@ final class ExcelWorkbookIntrospector {
                   getDrawingObjectPayload.objectName()));
       case WorkbookReadCommand.GetSheetLayout getSheetLayout ->
           new WorkbookReadResult.SheetLayoutResult(
-              getSheetLayout.requestId(),
+              getSheetLayout.stepId(),
               sheetIntrospector.layout(workbook.sheet(getSheetLayout.sheetName())));
       case WorkbookReadCommand.GetPrintLayout getPrintLayout ->
           new WorkbookReadResult.PrintLayoutResult(
-              getPrintLayout.requestId(),
+              getPrintLayout.stepId(),
               getPrintLayout.sheetName(),
               sheetIntrospector.printLayout(workbook.sheet(getPrintLayout.sheetName())));
       case WorkbookReadCommand.GetDataValidations getDataValidations ->
           new WorkbookReadResult.DataValidationsResult(
-              getDataValidations.requestId(),
+              getDataValidations.stepId(),
               getDataValidations.sheetName(),
               documentIntrospector.dataValidations(
                   workbook.sheet(getDataValidations.sheetName()), getDataValidations.selection()));
       case WorkbookReadCommand.GetConditionalFormatting getConditionalFormatting ->
           new WorkbookReadResult.ConditionalFormattingResult(
-              getConditionalFormatting.requestId(),
+              getConditionalFormatting.stepId(),
               getConditionalFormatting.sheetName(),
               documentIntrospector.conditionalFormatting(
                   workbook.sheet(getConditionalFormatting.sheetName()),
                   getConditionalFormatting.selection()));
       case WorkbookReadCommand.GetAutofilters getAutofilters ->
           new WorkbookReadResult.AutofiltersResult(
-              getAutofilters.requestId(),
+              getAutofilters.stepId(),
               getAutofilters.sheetName(),
               documentIntrospector.autofilters(workbook, getAutofilters.sheetName()));
       case WorkbookReadCommand.GetTables getTables ->
           new WorkbookReadResult.TablesResult(
-              getTables.requestId(), documentIntrospector.tables(workbook, getTables.selection()));
+              getTables.stepId(), documentIntrospector.tables(workbook, getTables.selection()));
       case WorkbookReadCommand.GetFormulaSurface getFormulaSurface ->
           new WorkbookReadResult.FormulaSurfaceResult(
-              getFormulaSurface.requestId(),
-              formulaSurface(workbook, getFormulaSurface.selection()));
+              getFormulaSurface.stepId(), formulaSurface(workbook, getFormulaSurface.selection()));
       case WorkbookReadCommand.GetSheetSchema getSheetSchema ->
           new WorkbookReadResult.SheetSchemaResult(
-              getSheetSchema.requestId(),
+              getSheetSchema.stepId(),
               sheetSchema(
                   workbook,
                   getSheetSchema.sheetName(),
@@ -145,7 +144,7 @@ final class ExcelWorkbookIntrospector {
                   getSheetSchema.columnCount()));
       case WorkbookReadCommand.GetNamedRangeSurface getNamedRangeSurface ->
           new WorkbookReadResult.NamedRangeSurfaceResult(
-              getNamedRangeSurface.requestId(),
+              getNamedRangeSurface.stepId(),
               namedRangeSurface(workbook, getNamedRangeSurface.selection()));
     };
   }

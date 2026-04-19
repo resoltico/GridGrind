@@ -1,11 +1,14 @@
 package dev.erst.gridgrind.buildlogic
 
 import com.diffplug.gradle.spotless.SpotlessExtension
+import java.io.File
+import org.gradle.api.GradleException
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.tasks.testing.Test
 import org.gradle.testing.jacoco.plugins.JacocoPluginExtension
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoReport
 import org.gradle.kotlin.dsl.configure
 import org.gradle.kotlin.dsl.register
@@ -51,8 +54,55 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 }
             }
 
+            val verifyExplicitImports =
+                tasks.register("verifyExplicitImports") {
+                    group = "verification"
+                    description =
+                        "Fails when handwritten production Java/Kotlin sources use wildcard imports."
+
+                    val rootDirectory = layout.projectDirectory.asFile
+                    val sourceRoots = explicitImportSourceRoots()
+                    inputs.files(sourceRoots)
+
+                    doLast {
+                        val violations =
+                            buildList {
+                                sourceRoots.forEach { sourceRoot ->
+                                    sourceRoot.walkTopDown()
+                                        .filter { file ->
+                                            file.isFile &&
+                                                (file.extension == "java" || file.extension == "kt")
+                                        }
+                                        .forEach { file ->
+                                            file.readLines().forEachIndexed { index, line ->
+                                                val trimmed = line.trim()
+                                                if (WILDCARD_IMPORT_PATTERN.matches(trimmed)) {
+                                                    add(
+                                                        "${file.relativeTo(rootDirectory).invariantSeparatorsPath}:${index + 1}: $trimmed",
+                                                    )
+                                                }
+                                            }
+                                        }
+                                }
+                            }
+
+                        if (violations.isNotEmpty()) {
+                            throw GradleException(
+                                buildString {
+                                    appendLine(
+                                        "Wildcard imports are forbidden in handwritten production sources.",
+                                    )
+                                    appendLine("Replace these imports with explicit symbols:")
+                                    violations.forEach { violation -> appendLine(" - $violation") }
+                                },
+                            )
+                        }
+                    }
+                }
+
             tasks.named("check") {
                 dependsOn("spotlessCheck")
+                dependsOn(verifyExplicitImports)
             }
 
             val jacocoAggregatedReport =
@@ -62,9 +112,9 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
 
                 executionData.from(
                     provider {
-                        coverageSubprojects().map { subproject ->
-                            subproject.fileTree(subproject.layout.buildDirectory.dir("jacoco").get().asFile) {
-                                include("*.exec")
+                        coverageSubprojects().flatMap { subproject ->
+                            subproject.tasks.withType(Test::class.java).map { testTask ->
+                                testTask.extensions.getByType(JacocoTaskExtension::class.java).destinationFile
                             }
                         }
                     },
@@ -107,7 +157,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             tasks.register("parity") {
                 group = "verification"
                 description = "Runs the dedicated Apache POI XSSF parity verification suite."
-                dependsOn(":protocol:parityTest")
+                dependsOn(":executor:parityTest")
             }
 
             gradle.projectsEvaluated {
@@ -136,6 +186,18 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 subproject.layout.projectDirectory.dir("src/main/java").asFile.isDirectory
         }
 
+    private fun Project.explicitImportSourceRoots(): List<File> =
+        buildList {
+            add(layout.projectDirectory.dir("src/main/java").asFile)
+            add(layout.projectDirectory.dir("src/main/kotlin").asFile)
+            subprojects.forEach { subproject ->
+                add(subproject.layout.projectDirectory.dir("src/main/java").asFile)
+                add(subproject.layout.projectDirectory.dir("src/main/kotlin").asFile)
+            }
+            add(layout.projectDirectory.dir("gradle/build-logic/src/main/java").asFile)
+            add(layout.projectDirectory.dir("gradle/build-logic/src/main/kotlin").asFile)
+        }.distinct().filter(File::isDirectory)
+
     private fun taskPathsByName(subprojects: List<Project>, taskName: String): List<String> =
         subprojects.mapNotNull { subproject ->
             subproject.tasks.findByName(taskName)?.path
@@ -145,4 +207,8 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
         subprojects.flatMap { subproject ->
             subproject.tasks.withType(taskType).map(Task::getPath)
         }
+
+    companion object {
+        private val WILDCARD_IMPORT_PATTERN = Regex("""^import(?:\s+static)?\s+[\w.]+\.\*;$""")
+    }
 }

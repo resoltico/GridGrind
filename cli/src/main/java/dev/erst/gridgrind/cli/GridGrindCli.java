@@ -1,18 +1,21 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.protocol.catalog.GridGrindContractText;
-import dev.erst.gridgrind.protocol.catalog.GridGrindProtocolCatalog;
-import dev.erst.gridgrind.protocol.dto.GridGrindProblemCode;
-import dev.erst.gridgrind.protocol.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
-import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
-import dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.protocol.exec.GridGrindProblems;
-import dev.erst.gridgrind.protocol.exec.GridGrindRequestExecutor;
-import dev.erst.gridgrind.protocol.json.GridGrindJson;
-import dev.erst.gridgrind.protocol.json.InvalidJsonException;
-import dev.erst.gridgrind.protocol.json.InvalidRequestException;
-import dev.erst.gridgrind.protocol.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.contract.catalog.GridGrindCliHelp;
+import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
+import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
+import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.InvalidJsonException;
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
+import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.executor.ExecutionInputBindings;
+import dev.erst.gridgrind.executor.GridGrindProblems;
+import dev.erst.gridgrind.executor.GridGrindRequestExecutor;
+import dev.erst.gridgrind.executor.SourceBackedPlanResolver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -26,30 +29,53 @@ public final class GridGrindCli {
   private final GridGrindRequestExecutor requestExecutor;
   private final CliRequestReader requestReader;
   private final CliResponseWriter responseWriter;
+  private final CliJournalWriter journalWriter;
 
   /** Creates the production CLI backed by the default request executor and transport helpers. */
   public GridGrindCli() {
-    this(new DefaultGridGrindRequestExecutor(), new CliRequestReader(), new CliResponseWriter());
+    this(
+        new DefaultGridGrindRequestExecutor(),
+        new CliRequestReader(),
+        new CliResponseWriter(),
+        new CliJournalWriter());
   }
 
   GridGrindCli(GridGrindRequestExecutor requestExecutor) {
-    this(requestExecutor, new CliRequestReader(), new CliResponseWriter());
+    this(requestExecutor, new CliRequestReader(), new CliResponseWriter(), new CliJournalWriter());
   }
 
   GridGrindCli(
       GridGrindRequestExecutor requestExecutor,
       CliRequestReader requestReader,
       CliResponseWriter responseWriter) {
+    this(requestExecutor, requestReader, responseWriter, new CliJournalWriter());
+  }
+
+  GridGrindCli(
+      GridGrindRequestExecutor requestExecutor,
+      CliRequestReader requestReader,
+      CliResponseWriter responseWriter,
+      CliJournalWriter journalWriter) {
     this.requestExecutor = GridGrindRequestExecutor.requireNonNull(requestExecutor);
     this.requestReader = Objects.requireNonNull(requestReader, "requestReader must not be null");
     this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter must not be null");
+    this.journalWriter = Objects.requireNonNull(journalWriter, "journalWriter must not be null");
   }
 
   /** Runs one CLI invocation against stdin/stdout or explicit request/response file paths. */
   public int run(String[] args, InputStream stdin, OutputStream stdout) throws IOException {
+    return run(args, stdin, stdout, OutputStream.nullOutputStream());
+  }
+
+  /**
+   * Runs one CLI invocation against stdin/stdout/stderr or explicit request/response file paths.
+   */
+  public int run(String[] args, InputStream stdin, OutputStream stdout, OutputStream stderr)
+      throws IOException {
     Objects.requireNonNull(args, "args must not be null");
     Objects.requireNonNull(stdin, "stdin must not be null");
     Objects.requireNonNull(stdout, "stdout must not be null");
+    Objects.requireNonNull(stderr, "stderr must not be null");
 
     CliCommand command;
     try {
@@ -98,6 +124,23 @@ public final class GridGrindCli {
         stdout.flush();
         yield 0;
       }
+      case CliCommand.PrintExample cmd -> {
+        var example = GridGrindProtocolCatalog.exampleFor(cmd.exampleId());
+        if (example.isEmpty()) {
+          responseWriter.write(
+              stdout,
+              failure(
+                  GridGrindProblemCode.INVALID_ARGUMENTS,
+                  "Unknown example: " + cmd.exampleId(),
+                  new GridGrindResponse.ProblemContext.ParseArguments("--print-example"),
+                  new IllegalArgumentException("Unknown example: " + cmd.exampleId())));
+          yield 2;
+        }
+        GridGrindJson.writeRequest(stdout, example.get().plan());
+        stdout.write('\n');
+        stdout.flush();
+        yield 0;
+      }
       case CliCommand.PrintProtocolCatalog cmd -> {
         if (cmd.operationFilter() == null) {
           GridGrindJson.writeProtocolCatalog(stdout, GridGrindProtocolCatalog.catalog());
@@ -121,13 +164,14 @@ public final class GridGrindCli {
         stdout.flush();
         yield 0;
       }
-      case CliCommand.Execute execute -> executeCommand(execute, stdin, stdout);
+      case CliCommand.Execute execute -> executeCommand(execute, stdin, stdout, stderr);
     };
   }
 
-  private int executeCommand(CliCommand.Execute command, InputStream stdin, OutputStream stdout)
+  private int executeCommand(
+      CliCommand.Execute command, InputStream stdin, OutputStream stdout, OutputStream stderr)
       throws IOException {
-    GridGrindRequest request;
+    WorkbookPlan request;
     try {
       request = requestReader.read(command.requestPath(), stdin);
     } catch (InvalidJsonException
@@ -155,8 +199,23 @@ public final class GridGrindCli {
     }
 
     GridGrindResponse response;
+    if (command.requestPath() == null && SourceBackedPlanResolver.requiresStandardInput(request)) {
+      String message = GridGrindContractText.standardInputRequiresRequestMessage();
+      response =
+          failure(
+              GridGrindProblemCode.INVALID_ARGUMENTS,
+              message,
+              new GridGrindResponse.ProblemContext.ParseArguments("--request"),
+              new IllegalArgumentException(message));
+      return responseWriter.write(command.responsePath(), stdout, response);
+    }
+
+    ExecutionInputBindings bindings =
+        new ExecutionInputBindings(
+            Path.of(""),
+            SourceBackedPlanResolver.requiresStandardInput(request) ? stdin.readAllBytes() : null);
     try {
-      response = requestExecutor.execute(request);
+      response = requestExecutor.execute(request, bindings, journalWriter.sinkFor(request, stderr));
     } catch (Exception exception) {
       response =
           new GridGrindResponse.Failure(
@@ -182,136 +241,8 @@ public final class GridGrindCli {
    */
   static String helpText(String implementationVersion) {
     String version = versionFrom(implementationVersion);
-    String description = descriptionFrom(GridGrindCli.class);
-    String requestTemplate = requestTemplateText();
-    String documentRef = documentRef(version);
-    String eventReadTypes = GridGrindContractText.eventReadReadTypePhrase();
-    String streamingWriteTypes = GridGrindContractText.streamingWriteOperationTypePhrase();
-    String formulaAuthoringLimit = GridGrindContractText.formulaAuthoringLimitSummary();
-    String loadedFormulaSupport = GridGrindContractText.loadedFormulaSupportSummary();
-    String workbookFindingsDiscovery = GridGrindContractText.workbookFindingsDiscoverySummary();
-    return """
-        %s
-
-        Usage:
-          gridgrind [--request <path>] [--response <path>]
-          gridgrind --print-request-template
-          gridgrind --print-protocol-catalog [--operation <id>]
-          gridgrind --help | -h
-          gridgrind --version
-
-        Execution:
-          GridGrind runs operations first, then reads, then saves the workbook (unless persistence is NONE); if any step fails, no workbook is written.
-          A NEW workbook starts with zero sheets; use ENSURE_SHEET to create the first sheet.
-          executionMode is optional; omit it for the default FULL_XSSF read and write path.
-
-        Limits:
-          File format:              .xlsx only; .xls, .xlsm, and .xlsb are rejected.
-          Sheet names:              1 to 31 characters; reject : \\ / ? * [ ] and leading/trailing apostrophes.
-          GET_WINDOW cell count:    rowCount * columnCount must not exceed 250,000.
-          GET_SHEET_SCHEMA cells:   rowCount * columnCount must not exceed 250,000.
-          EVENT_READ mode:          %s only.
-          STREAMING_WRITE mode:     source.type must be NEW; operations limited to %s.
-          Column widthCharacters:   > 0 and <= 255 (Excel limit).
-          Row heightPoints:         > 0 and <= 1638.35 (Excel limit: 32767 twips).
-          Row structural edits:     rejected when they would move tables, sheet autofilters, or data validations; deletes/shifts also reject destructive range-backed named ranges.
-          Column structural edits:  same ownership rule; deletes/shifts also reject destructive range-backed named ranges; all column edits reject any workbook formulas or formula-defined names.
-          Chart mutations:          SET_CHART authors BAR, LINE, and PIE only; unsupported loaded chart detail is preserved on unrelated edits and rejected for authoritative mutation.
-          Chart title formulas:     SET_CHART title FORMULA and series.title FORMULA must resolve to one cell, directly or through one defined name.
-          Drawing validation:       failed SET_SHAPE / SET_CHART validation leaves existing drawing state unchanged and creates no partial artifacts.
-          DATE / DATE_TIME inputs:  stored as numeric serial; GET_CELLS returns declaredType=NUMBER.
-          Formula authoring:        %s
-          Loaded formula support:   %s
-
-        Request:
-          protocolVersion is optional; omit it and the current version is assumed.
-          persistence is optional; omit it and the workbook stays in memory only (NONE).
-          executionMode is optional; omit it for FULL_XSSF reads and writes, or supply it to choose EVENT_READ or STREAMING_WRITE when their limits fit the request.
-          formulaEnvironment is optional; omit it for the default evaluator, or supply it to bind external workbooks, choose missing-workbook policy, and register template-backed UDFs.
-          operations is optional; omit or send [] to skip mutations.
-          reads is optional; omit or send [] to skip introspection.
-          operations run before reads; reads are non-mutating and run last.
-
-        File Workflow:
-          No --request flag:           read the JSON request from stdin.
-          --request <path>:            read the JSON request from that file.
-          No --response flag:          write the JSON response to stdout.
-          --response <path>:           write the JSON response to that file; parent directories are created.
-          source.path:                 open an existing workbook from that path.
-          persistence SAVE_AS.path:    write a new workbook to that path; parent directories are created.
-          persistence OVERWRITE:       write back to source.path; no path field is supplied.
-          Relative paths in --request, --response, source.path, and persistence.path resolve from the current working directory.
-          Relative FILE hyperlink targets are analyzed against the persisted workbook path when one exists; use absolute paths for cwd-independent results.
-
-        Coordinate Systems:
-          Pattern                Convention / Example
-          address                A1 cell address, e.g. B3
-          range                  A1 rectangular range, e.g. A1:C4
-          *RowIndex              zero-based, e.g. 0 = Excel row 1
-          *ColumnIndex           zero-based, e.g. 0 = Excel column A
-          first/last pairs are inclusive zero-based bands.
-
-        Minimal Valid Request:
-        %s
-
-        stdin Example:
-          gridgrind --print-request-template | gridgrind
-
-        Docker File Example:
-          docker run --rm -i \\
-            -v "$(pwd)":/workdir \\
-            -w /workdir \\
-            ghcr.io/resoltico/gridgrind:%s \\
-            --request request.json \\
-            --response response.json
-
-          In Docker, mount the host directory that contains your request and workbook files, then
-          set -w to that mount point so every relative path resolves inside the mounted directory.
-
-        Discovery:
-          gridgrind --print-request-template
-          gridgrind --print-protocol-catalog
-          Workbook health workflow (no save):
-            {
-              "source": { "type": "NEW" },
-              "persistence": { "type": "NONE" },
-              "operations": [],
-              "reads": [
-                { "type": "ANALYZE_WORKBOOK_FINDINGS", "requestId": "lint" }
-              ]
-            }
-          %s
-          The protocol catalog lists each field, whether it is required, and the nested/plain
-          type group accepted by polymorphic fields such as value, target, selection, style,
-          and scope.
-
-        Docs:
-          Quick reference: %s/docs/QUICK_REFERENCE.md
-          Operations reference: %s/docs/OPERATIONS.md
-          Error reference: %s/docs/ERRORS.md
-
-        Flags:
-          --request <path>           Read the JSON request from a file instead of stdin.
-          --response <path>          Write the JSON response to a file instead of stdout.
-          --print-request-template          Print a minimal valid request JSON document.
-          --print-protocol-catalog          Print the machine-readable protocol catalog.
-          --operation <id>                  With --print-protocol-catalog, print one entry.
-          --help, -h                        Print this help text.
-          --version                         Print the GridGrind version and description.
-          --license                         Print the GridGrind license and third-party notices.
-        """
-        .formatted(
-            productHeader(version, description),
-            eventReadTypes,
-            streamingWriteTypes,
-            formulaAuthoringLimit,
-            loadedFormulaSupport,
-            indentBlock(requestTemplate),
-            containerTag(version),
-            workbookFindingsDiscovery,
-            documentRef,
-            documentRef,
-            documentRef);
+    return GridGrindCliHelp.helpText(
+        version, descriptionFrom(GridGrindCli.class), documentRef(version), containerTag(version));
   }
 
   /**
@@ -437,11 +368,6 @@ public final class GridGrindCli {
     }
   }
 
-  private static String requestTemplateText() {
-    return requestTemplateText(
-        () -> GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()));
-  }
-
   /**
    * Returns the built-in request template rendered as UTF-8 text via the supplied byte producer.
    *
@@ -454,10 +380,6 @@ public final class GridGrindCli {
     } catch (IOException exception) {
       throw new IllegalStateException("Failed to render the built-in request template", exception);
     }
-  }
-
-  private static String indentBlock(String value) {
-    return value.indent(2).stripTrailing();
   }
 
   private static String containerTag(String version) {
@@ -487,18 +409,18 @@ public final class GridGrindCli {
     return path == null ? null : path.toAbsolutePath().toString();
   }
 
-  private String requestSourceType(GridGrindRequest request) {
+  private String requestSourceType(WorkbookPlan request) {
     return switch (request.source()) {
-      case GridGrindRequest.WorkbookSource.New _ -> "NEW";
-      case GridGrindRequest.WorkbookSource.ExistingFile _ -> "EXISTING";
+      case WorkbookPlan.WorkbookSource.New _ -> "NEW";
+      case WorkbookPlan.WorkbookSource.ExistingFile _ -> "EXISTING";
     };
   }
 
-  private String requestPersistenceType(GridGrindRequest request) {
+  private String requestPersistenceType(WorkbookPlan request) {
     return switch (request.persistence()) {
-      case GridGrindRequest.WorkbookPersistence.None _ -> "NONE";
-      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
-      case GridGrindRequest.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
+      case WorkbookPlan.WorkbookPersistence.None _ -> "NONE";
+      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
+      case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
     };
   }
 

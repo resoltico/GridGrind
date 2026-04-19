@@ -1,79 +1,137 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "cli/build/generated-workbooks/gridgrind-rich-text.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Narrative" },
+  "steps": [
     {
-      "type": "APPLY_STYLE",
-      "sheetName": "Narrative",
-      "range": "A1:A2",
-      "style": {
-        "alignment": {
-          "wrapText": true,
-          "verticalAlignment": "CENTER"
-        },
-        "font": {
-          "fontName": "Aptos",
-          "fontHeight": { "type": "POINTS", "points": 12 },
-          "fontColor": "#1F1F1F"
-        }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Narrative"
       }
     },
     {
-      "type": "SET_CELL",
-      "sheetName": "Narrative",
-      "address": "A1",
-      "value": {
-        "type": "RICH_TEXT",
-        "runs": [
-          {
-            "text": "Q2 ",
-            "font": {
-              "fontColor": "#44546A"
-            }
+      "stepId": "step-02-apply-style",
+      "action": {
+        "type": "APPLY_STYLE",
+        "style": {
+          "alignment": {
+            "wrapText": true,
+            "verticalAlignment": "CENTER"
           },
-          {
-            "text": "Budget",
-            "font": {
-              "bold": true,
-              "fontColor": "#C00000"
-            }
-          },
-          {
-            "text": " Review",
-            "font": {
-              "italic": true,
-              "underline": true
-            }
+          "font": {
+            "fontName": "Aptos",
+            "fontHeight": {
+              "type": "POINTS",
+              "points": 12
+            },
+            "fontColor": "#1F1F1F"
           }
+        }
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Narrative",
+        "range": "A1:A2"
+      }
+    },
+    {
+      "stepId": "step-03-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "RICH_TEXT",
+          "runs": [
+            {
+              "font": {
+                "fontColor": "#44546A"
+              },
+              "source": {
+                "type": "INLINE",
+                "text": "Q2 "
+              }
+            },
+            {
+              "font": {
+                "bold": true,
+                "fontColor": "#C00000"
+              },
+              "source": {
+                "type": "INLINE",
+                "text": "Budget"
+              }
+            },
+            {
+              "font": {
+                "italic": true,
+                "underline": true
+              },
+              "source": {
+                "type": "INLINE",
+                "text": " Review"
+              }
+            }
+          ]
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Narrative",
+        "address": "A1"
+      }
+    },
+    {
+      "stepId": "step-04-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Plain text stays plain."
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Narrative",
+        "address": "A2"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Narrative",
+        "addresses": [
+          "A1",
+          "A2"
         ]
       }
     },
     {
-      "type": "SET_CELL",
-      "sheetName": "Narrative",
-      "address": "A2",
-      "value": { "type": "TEXT", "text": "Plain text stays plain." }
-    }
-  ],
-  "reads": [
-    {
-      "type": "GET_CELLS",
-      "requestId": "cells",
-      "sheetName": "Narrative",
-      "addresses": ["A1", "A2"]
-    },
-    {
-      "type": "GET_WINDOW",
-      "requestId": "window",
-      "sheetName": "Narrative",
-      "topLeftAddress": "A1",
-      "rowCount": 2,
-      "columnCount": 1
+      "query": {
+        "type": "GET_WINDOW"
+      },
+      "stepId": "window",
+      "target": {
+        "type": "RECTANGULAR_WINDOW",
+        "sheetName": "Narrative",
+        "topLeftAddress": "A1",
+        "rowCount": 2,
+        "columnCount": 1
+      }
     }
   ]
 }

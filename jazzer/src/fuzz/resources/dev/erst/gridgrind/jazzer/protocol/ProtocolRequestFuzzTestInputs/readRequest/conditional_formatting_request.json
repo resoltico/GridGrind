@@ -1,109 +1,271 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
-    "path": "generated/conditional-formatting.xlsx"
+    "path": "cli/build/generated-workbooks/gridgrind-conditional-formatting-request.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Metrics" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Metrics",
-      "range": "A1:B5",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Label" },
-          { "type": "TEXT", "text": "Value" }
-        ],
-        [
-          { "type": "TEXT", "text": "Alpha" },
-          { "type": "NUMBER", "number": 120.0 }
-        ],
-        [
-          { "type": "TEXT", "text": "Beta" },
-          { "type": "NUMBER", "number": -5.0 }
-        ],
-        [
-          { "type": "TEXT", "text": "Gamma" },
-          { "type": "NUMBER", "number": 50.0 }
-        ],
-        [
-          { "type": "TEXT", "text": "Delta" },
-          { "type": "NUMBER", "number": 200.0 }
-        ]
-      ]
-    },
-    {
-      "type": "SET_CONDITIONAL_FORMATTING",
-      "sheetName": "Metrics",
-      "conditionalFormatting": {
-        "ranges": ["B2:B5"],
-        "rules": [
-          {
-            "type": "FORMULA_RULE",
-            "formula": "B2>100",
-            "stopIfTrue": false,
-            "style": {
-              "bold": true,
-              "fillColor": "#C6EFCE",
-              "fontColor": "#006100"
-            }
-          },
-          {
-            "type": "CELL_VALUE_RULE",
-            "operator": "LESS_THAN",
-            "formula1": "0",
-            "stopIfTrue": false,
-            "style": {
-              "fillColor": "#FFC7CE",
-              "fontColor": "#9C0006"
-            }
-          }
-        ]
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dispatch"
       }
     },
     {
-      "type": "SET_CONDITIONAL_FORMATTING",
-      "sheetName": "Metrics",
-      "conditionalFormatting": {
-        "ranges": ["B2:B5"],
-        "rules": [
-          {
-            "type": "CELL_VALUE_RULE",
-            "operator": "BETWEEN",
-            "formula1": "0",
-            "formula2": "100",
-            "stopIfTrue": true,
-            "style": {
-              "italic": true,
-              "fillColor": "#FFEB9C",
-              "fontColor": "#9C5700",
-              "border": {
-                "bottom": { "style": "THIN", "color": "#9C5700" }
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Task"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Owner"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "AgeHours"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Status"
               }
             }
-          }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Badge run"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Ada"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 3
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queued"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Laptop prep"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Lin"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 11
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Blocked"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Desk labels"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Sam"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 7
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Done"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Access card"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Mia"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 15
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Blocked"
+              }
+            }
+          ]
+        ]
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Dispatch",
+        "range": "A1:D5"
+      }
+    },
+    {
+      "stepId": "step-03-set-conditional-formatting",
+      "action": {
+        "type": "SET_CONDITIONAL_FORMATTING",
+        "conditionalFormatting": {
+          "ranges": [
+            "C2:C200"
+          ],
+          "rules": [
+            {
+              "type": "CELL_VALUE_RULE",
+              "operator": "GREATER_THAN",
+              "formula1": "8",
+              "stopIfTrue": false,
+              "style": {
+                "numberFormat": "0.0",
+                "fillColor": "#FDE9D9",
+                "fontColor": "#9C0006",
+                "bold": true
+              }
+            }
+          ]
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dispatch"
+      }
+    },
+    {
+      "stepId": "step-04-set-conditional-formatting",
+      "action": {
+        "type": "SET_CONDITIONAL_FORMATTING",
+        "conditionalFormatting": {
+          "ranges": [
+            "A2:D200"
+          ],
+          "rules": [
+            {
+              "type": "FORMULA_RULE",
+              "formula": "$D2=\"Blocked\"",
+              "stopIfTrue": true,
+              "style": {
+                "fillColor": "#FFF2CC",
+                "fontColor": "#7F6000",
+                "italic": true
+              }
+            }
+          ]
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dispatch"
+      }
+    },
+    {
+      "stepId": "step-05-clear-conditional-formatting",
+      "action": {
+        "type": "CLEAR_CONDITIONAL_FORMATTING"
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Dispatch",
+        "range": "C2:C3"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CONDITIONAL_FORMATTING"
+      },
+      "stepId": "conditional-formatting",
+      "target": {
+        "type": "ALL_ON_SHEET",
+        "sheetName": "Dispatch"
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_CONDITIONAL_FORMATTING_HEALTH"
+      },
+      "stepId": "conditional-formatting-health",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Dispatch"
         ]
       }
     },
     {
-      "type": "CLEAR_CONDITIONAL_FORMATTING",
-      "sheetName": "Metrics",
-      "selection": { "type": "SELECTED", "ranges": ["B4:B5"] }
-    }
-  ],
-  "reads": [
-    {
-      "type": "GET_CONDITIONAL_FORMATTING",
-      "requestId": "cf-metrics",
-      "sheetName": "Metrics",
-      "selection": { "type": "ALL" }
-    },
-    {
-      "type": "ANALYZE_CONDITIONAL_FORMATTING_HEALTH",
-      "requestId": "cf-health",
-      "selection": { "type": "ALL" }
+      "query": {
+        "type": "ANALYZE_WORKBOOK_FINDINGS"
+      },
+      "stepId": "workbook-findings",
+      "target": {
+        "type": "CURRENT"
+      }
     }
   ]
 }

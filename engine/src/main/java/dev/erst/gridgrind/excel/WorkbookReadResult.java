@@ -15,7 +15,7 @@ public sealed interface WorkbookReadResult
     permits WorkbookReadResult.Introspection, WorkbookReadResult.Analysis {
 
   /** Stable caller-provided identifier copied from the originating read command. */
-  String requestId();
+  String stepId();
 
   /** Marker for fact-only workbook reads. */
   sealed interface Introspection extends WorkbookReadResult
@@ -56,92 +56,91 @@ public sealed interface WorkbookReadResult
           WorkbookFindingsResult {}
 
   /** Returns workbook-level summary facts. */
-  record WorkbookSummaryResult(String requestId, WorkbookSummary workbook)
-      implements Introspection {
+  record WorkbookSummaryResult(String stepId, WorkbookSummary workbook) implements Introspection {
     public WorkbookSummaryResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(workbook, "workbook must not be null");
     }
   }
 
   /** Returns OOXML package-encryption and package-signature facts. */
-  record PackageSecurityResult(String requestId, ExcelOoxmlPackageSecuritySnapshot security)
+  record PackageSecurityResult(String stepId, ExcelOoxmlPackageSecuritySnapshot security)
       implements Introspection {
     public PackageSecurityResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(security, "security must not be null");
     }
   }
 
   /** Returns workbook-level protection facts. */
-  record WorkbookProtectionResult(String requestId, ExcelWorkbookProtectionSnapshot protection)
+  record WorkbookProtectionResult(String stepId, ExcelWorkbookProtectionSnapshot protection)
       implements Introspection {
     public WorkbookProtectionResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(protection, "protection must not be null");
     }
   }
 
   /** Returns selected named ranges. */
-  record NamedRangesResult(String requestId, List<ExcelNamedRangeSnapshot> namedRanges)
+  record NamedRangesResult(String stepId, List<ExcelNamedRangeSnapshot> namedRanges)
       implements Introspection {
     public NamedRangesResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       namedRanges = copyValues(namedRanges, "namedRanges");
     }
   }
 
   /** Returns summary facts for one sheet. */
-  record SheetSummaryResult(String requestId, SheetSummary sheet) implements Introspection {
+  record SheetSummaryResult(String stepId, SheetSummary sheet) implements Introspection {
     public SheetSummaryResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(sheet, "sheet must not be null");
     }
   }
 
   /** Returns exact cell snapshots for one sheet. */
-  record CellsResult(String requestId, String sheetName, List<ExcelCellSnapshot> cells)
+  record CellsResult(String stepId, String sheetName, List<ExcelCellSnapshot> cells)
       implements Introspection {
     public CellsResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       cells = copyValues(cells, "cells");
     }
   }
 
   /** Returns a rectangular window of cell snapshots anchored at one top-left address. */
-  record WindowResult(String requestId, Window window) implements Introspection {
+  record WindowResult(String stepId, Window window) implements Introspection {
     public WindowResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(window, "window must not be null");
     }
   }
 
   /** Returns every merged region defined on one sheet. */
-  record MergedRegionsResult(String requestId, String sheetName, List<MergedRegion> mergedRegions)
+  record MergedRegionsResult(String stepId, String sheetName, List<MergedRegion> mergedRegions)
       implements Introspection {
     public MergedRegionsResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       mergedRegions = copyValues(mergedRegions, "mergedRegions");
     }
   }
 
   /** Returns hyperlink metadata for selected cells on one sheet. */
-  record HyperlinksResult(String requestId, String sheetName, List<CellHyperlink> hyperlinks)
+  record HyperlinksResult(String stepId, String sheetName, List<CellHyperlink> hyperlinks)
       implements Introspection {
     public HyperlinksResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       hyperlinks = copyValues(hyperlinks, "hyperlinks");
     }
   }
 
   /** Returns comment metadata for selected cells on one sheet. */
-  record CommentsResult(String requestId, String sheetName, List<CellComment> comments)
+  record CommentsResult(String stepId, String sheetName, List<CellComment> comments)
       implements Introspection {
     public CommentsResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       comments = copyValues(comments, "comments");
     }
@@ -149,20 +148,20 @@ public sealed interface WorkbookReadResult
 
   /** Returns factual drawing-object metadata for one sheet. */
   record DrawingObjectsResult(
-      String requestId, String sheetName, List<ExcelDrawingObjectSnapshot> drawingObjects)
+      String stepId, String sheetName, List<ExcelDrawingObjectSnapshot> drawingObjects)
       implements Introspection {
     public DrawingObjectsResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       drawingObjects = copyValues(drawingObjects, "drawingObjects");
     }
   }
 
   /** Returns factual chart metadata for one sheet. */
-  record ChartsResult(String requestId, String sheetName, List<ExcelChartSnapshot> charts)
+  record ChartsResult(String stepId, String sheetName, List<ExcelChartSnapshot> charts)
       implements Introspection {
     public ChartsResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       charts = copyValues(charts, "charts");
     }
@@ -170,28 +169,27 @@ public sealed interface WorkbookReadResult
 
   /** Returns the extracted binary payload for one existing drawing object. */
   record DrawingObjectPayloadResult(
-      String requestId, String sheetName, ExcelDrawingObjectPayload payload)
-      implements Introspection {
+      String stepId, String sheetName, ExcelDrawingObjectPayload payload) implements Introspection {
     public DrawingObjectPayloadResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       Objects.requireNonNull(payload, "payload must not be null");
     }
   }
 
   /** Returns layout metadata such as panes, zoom, and visible sizing. */
-  record SheetLayoutResult(String requestId, SheetLayout layout) implements Introspection {
+  record SheetLayoutResult(String stepId, SheetLayout layout) implements Introspection {
     public SheetLayoutResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(layout, "layout must not be null");
     }
   }
 
   /** Returns supported print-layout metadata for one sheet. */
-  record PrintLayoutResult(String requestId, String sheetName, ExcelPrintLayoutSnapshot printLayout)
+  record PrintLayoutResult(String stepId, String sheetName, ExcelPrintLayoutSnapshot printLayout)
       implements Introspection {
     public PrintLayoutResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       Objects.requireNonNull(printLayout, "printLayout must not be null");
     }
@@ -199,10 +197,10 @@ public sealed interface WorkbookReadResult
 
   /** Returns data-validation metadata for the selected ranges on one sheet. */
   record DataValidationsResult(
-      String requestId, String sheetName, List<ExcelDataValidationSnapshot> validations)
+      String stepId, String sheetName, List<ExcelDataValidationSnapshot> validations)
       implements Introspection {
     public DataValidationsResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       validations = copyValues(validations, "validations");
     }
@@ -210,12 +208,12 @@ public sealed interface WorkbookReadResult
 
   /** Returns conditional-formatting metadata for the selected ranges on one sheet. */
   record ConditionalFormattingResult(
-      String requestId,
+      String stepId,
       String sheetName,
       List<ExcelConditionalFormattingBlockSnapshot> conditionalFormattingBlocks)
       implements Introspection {
     public ConditionalFormattingResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       conditionalFormattingBlocks =
           copyValues(conditionalFormattingBlocks, "conditionalFormattingBlocks");
@@ -224,134 +222,134 @@ public sealed interface WorkbookReadResult
 
   /** Returns sheet- and table-owned autofilter metadata for one sheet. */
   record AutofiltersResult(
-      String requestId, String sheetName, List<ExcelAutofilterSnapshot> autofilters)
+      String stepId, String sheetName, List<ExcelAutofilterSnapshot> autofilters)
       implements Introspection {
     public AutofiltersResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
       autofilters = copyValues(autofilters, "autofilters");
     }
   }
 
   /** Returns factual table metadata selected by workbook-global table name or all tables. */
-  record TablesResult(String requestId, List<ExcelTableSnapshot> tables) implements Introspection {
+  record TablesResult(String stepId, List<ExcelTableSnapshot> tables) implements Introspection {
     public TablesResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       tables = copyValues(tables, "tables");
     }
   }
 
   /** Returns factual pivot-table metadata selected by workbook-global pivot name or all pivots. */
-  record PivotTablesResult(String requestId, List<ExcelPivotTableSnapshot> pivotTables)
+  record PivotTablesResult(String stepId, List<ExcelPivotTableSnapshot> pivotTables)
       implements Introspection {
     public PivotTablesResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       pivotTables = copyValues(pivotTables, "pivotTables");
     }
   }
 
   /** Returns grouped formula usage facts across one or more sheets. */
-  record FormulaSurfaceResult(String requestId, FormulaSurface analysis) implements Introspection {
+  record FormulaSurfaceResult(String stepId, FormulaSurface analysis) implements Introspection {
     public FormulaSurfaceResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns inferred schema facts for one rectangular sheet window. */
-  record SheetSchemaResult(String requestId, SheetSchema analysis) implements Introspection {
+  record SheetSchemaResult(String stepId, SheetSchema analysis) implements Introspection {
     public SheetSchemaResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns high-level characterization of selected named ranges. */
-  record NamedRangeSurfaceResult(String requestId, NamedRangeSurface analysis)
+  record NamedRangeSurfaceResult(String stepId, NamedRangeSurface analysis)
       implements Introspection {
     public NamedRangeSurfaceResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns formula-health findings for one analysis read. */
-  record FormulaHealthResult(String requestId, WorkbookAnalysis.FormulaHealth analysis)
+  record FormulaHealthResult(String stepId, WorkbookAnalysis.FormulaHealth analysis)
       implements Analysis {
     public FormulaHealthResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns data-validation-health findings for one analysis read. */
-  record DataValidationHealthResult(
-      String requestId, WorkbookAnalysis.DataValidationHealth analysis) implements Analysis {
+  record DataValidationHealthResult(String stepId, WorkbookAnalysis.DataValidationHealth analysis)
+      implements Analysis {
     public DataValidationHealthResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns conditional-formatting-health findings for one analysis read. */
   record ConditionalFormattingHealthResult(
-      String requestId, WorkbookAnalysis.ConditionalFormattingHealth analysis) implements Analysis {
+      String stepId, WorkbookAnalysis.ConditionalFormattingHealth analysis) implements Analysis {
     public ConditionalFormattingHealthResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns autofilter-health findings for one analysis read. */
-  record AutofilterHealthResult(String requestId, WorkbookAnalysis.AutofilterHealth analysis)
+  record AutofilterHealthResult(String stepId, WorkbookAnalysis.AutofilterHealth analysis)
       implements Analysis {
     public AutofilterHealthResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns table-health findings for one analysis read. */
-  record TableHealthResult(String requestId, WorkbookAnalysis.TableHealth analysis)
+  record TableHealthResult(String stepId, WorkbookAnalysis.TableHealth analysis)
       implements Analysis {
     public TableHealthResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns pivot-table-health findings for one analysis read. */
-  record PivotTableHealthResult(String requestId, WorkbookAnalysis.PivotTableHealth analysis)
+  record PivotTableHealthResult(String stepId, WorkbookAnalysis.PivotTableHealth analysis)
       implements Analysis {
     public PivotTableHealthResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns hyperlink-health findings for one analysis read. */
-  record HyperlinkHealthResult(String requestId, WorkbookAnalysis.HyperlinkHealth analysis)
+  record HyperlinkHealthResult(String stepId, WorkbookAnalysis.HyperlinkHealth analysis)
       implements Analysis {
     public HyperlinkHealthResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns named-range-health findings for one analysis read. */
-  record NamedRangeHealthResult(String requestId, WorkbookAnalysis.NamedRangeHealth analysis)
+  record NamedRangeHealthResult(String stepId, WorkbookAnalysis.NamedRangeHealth analysis)
       implements Analysis {
     public NamedRangeHealthResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }
 
   /** Returns the aggregated workbook findings from the first analysis family. */
-  record WorkbookFindingsResult(String requestId, WorkbookAnalysis.WorkbookFindings analysis)
+  record WorkbookFindingsResult(String stepId, WorkbookAnalysis.WorkbookFindings analysis)
       implements Analysis {
     public WorkbookFindingsResult {
-      requestId = requireNonBlank(requestId, "requestId");
+      stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(analysis, "analysis must not be null");
     }
   }

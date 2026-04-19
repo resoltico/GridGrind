@@ -2,21 +2,20 @@
   "targetKey" : "protocol-request",
   "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/delete_last_sheet.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/delete_last_sheet.json",
-  "replayOutcome" : "SUCCESS",
+  "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
-    "outcomeKind" : "SUCCESS",
+    "outcomeKind" : "EXPECTED_INVALID",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 291,
-      "decodeOutcome" : "PARSED",
-      "sourceKind" : "NEW",
-      "persistenceKind" : "NONE",
-      "operationCount" : 3,
-      "operationKinds" : {
-        "ENSURE_SHEET" : 1,
-        "DELETE_SHEET" : 2
-      },
+      "inputBytes" : 556,
+      "decodeOutcome" : "INVALID_REQUEST_SHAPE",
+      "sourceKind" : "NOT_PARSED",
+      "persistenceKind" : "NOT_PARSED",
+      "operationCount" : 0,
+      "operationKinds" : { },
       "styleKinds" : { },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
       "readCount" : 0,
       "readKinds" : { }
     }

@@ -185,6 +185,88 @@ class ExcelRowColumnStructureControllerTest {
   }
 
   @Test
+  void regroupingCollapsedRowsWithExpandedIntentReopensTheExistingBand() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      setString(sheet, "A1", "Header");
+      setString(sheet, "A2", "North");
+      setString(sheet, "A3", "South");
+      setString(sheet, "A4", "West");
+
+      controller.groupRows(sheet, new ExcelRowSpan(1, 3), true);
+      assertTrue(controller.rowLayouts(sheet).get(1).hidden());
+
+      controller.groupRows(sheet, new ExcelRowSpan(1, 3), false);
+
+      List<WorkbookReadResult.RowLayout> rows = controller.rowLayouts(sheet);
+
+      assertEquals(5, rows.size());
+      assertFalse(rows.get(1).hidden());
+      assertFalse(rows.get(4).collapsed());
+    }
+  }
+
+  @Test
+  void groupingExpandedRowsIgnoresAnExistingUncollapsedControlRow() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      setString(sheet, "A1", "Header");
+      setString(sheet, "A2", "North");
+      setString(sheet, "A3", "South");
+      setString(sheet, "A4", "West");
+      setString(sheet, "A5", "Tail");
+
+      controller.groupRows(sheet, new ExcelRowSpan(1, 3), false);
+
+      List<WorkbookReadResult.RowLayout> rows = controller.rowLayouts(sheet);
+
+      assertEquals(5, rows.size());
+      assertFalse(rows.get(1).hidden());
+      assertFalse(rows.get(4).collapsed());
+    }
+  }
+
+  @Test
+  void expandedRowGroupsPreserveManualHiddenRowsWhenGroupingAndUngrouping() throws Exception {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-row-group-hidden-");
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      setString(sheet, "A1", "Header");
+      setString(sheet, "A2", "Visible");
+      setString(sheet, "A3", "Hidden");
+      setString(sheet, "A4", "Visible");
+
+      controller.setRowVisibility(sheet, new ExcelRowSpan(2, 2), true);
+      controller.groupRows(sheet, new ExcelRowSpan(1, 3), false);
+
+      List<WorkbookReadResult.RowLayout> groupedRows = controller.rowLayouts(sheet);
+      assertEquals(4, groupedRows.size());
+      assertFalse(groupedRows.get(1).hidden());
+      assertTrue(groupedRows.get(2).hidden());
+      assertEquals(1, groupedRows.get(2).outlineLevel());
+      assertFalse(groupedRows.get(3).collapsed());
+
+      controller.ungroupRows(sheet, new ExcelRowSpan(1, 3));
+
+      List<WorkbookReadResult.RowLayout> ungroupedRows = controller.rowLayouts(sheet);
+      assertTrue(ungroupedRows.get(2).hidden());
+      assertEquals(0, ungroupedRows.get(2).outlineLevel());
+
+      try (var output = Files.newOutputStream(workbookPath)) {
+        workbook.write(output);
+      }
+    }
+
+    WorkbookReadResult.SheetLayout layout = XlsxRoundTrip.sheetLayout(workbookPath, "Budget");
+
+    assertEquals(4, layout.rows().size());
+    assertFalse(layout.rows().get(1).hidden());
+    assertTrue(layout.rows().get(2).hidden());
+    assertEquals(0, layout.rows().get(2).outlineLevel());
+    assertFalse(layout.rows().get(2).collapsed());
+  }
+
+  @Test
   void shiftRowsPreservesSupportedStructures() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Budget");

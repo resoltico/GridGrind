@@ -1,97 +1,269 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "cli/build/generated-workbooks/gridgrind-chart.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Ops" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Ops",
-      "range": "A1:C4",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Month" },
-          { "type": "TEXT", "text": "Plan" },
-          { "type": "TEXT", "text": "Actual" }
-        ],
-        [
-          { "type": "TEXT", "text": "Jan" },
-          { "type": "NUMBER", "number": 10 },
-          { "type": "NUMBER", "number": 12 }
-        ],
-        [
-          { "type": "TEXT", "text": "Feb" },
-          { "type": "NUMBER", "number": 18 },
-          { "type": "NUMBER", "number": 17 }
-        ],
-        [
-          { "type": "TEXT", "text": "Mar" },
-          { "type": "NUMBER", "number": 15 },
-          { "type": "NUMBER", "number": 16 }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ops"
+      }
+    },
+    {
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Month"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Plan"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Actual"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Jan"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 10
+            },
+            {
+              "type": "NUMBER",
+              "number": 12
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Feb"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 18
+            },
+            {
+              "type": "NUMBER",
+              "number": 17
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Mar"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 15
+            },
+            {
+              "type": "NUMBER",
+              "number": 16
+            }
+          ]
         ]
-      ]
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Ops",
+        "range": "A1:C4"
+      }
     },
     {
-      "type": "SET_NAMED_RANGE",
-      "name": "ChartCategories",
-      "scope": { "type": "WORKBOOK" },
-      "target": { "sheetName": "Ops", "range": "A2:A4" }
+      "stepId": "step-03-set-named-range",
+      "action": {
+        "type": "SET_NAMED_RANGE",
+        "name": "ChartCategories",
+        "scope": {
+          "type": "WORKBOOK"
+        },
+        "target": {
+          "sheetName": "Ops",
+          "range": "A2:A4"
+        }
+      },
+      "target": {
+        "type": "WORKBOOK_SCOPE",
+        "name": "ChartCategories"
+      }
     },
     {
-      "type": "SET_NAMED_RANGE",
-      "name": "ChartActual",
-      "scope": { "type": "WORKBOOK" },
-      "target": { "sheetName": "Ops", "range": "C2:C4" }
+      "stepId": "step-04-set-named-range",
+      "action": {
+        "type": "SET_NAMED_RANGE",
+        "name": "ChartActual",
+        "scope": {
+          "type": "WORKBOOK"
+        },
+        "target": {
+          "sheetName": "Ops",
+          "range": "C2:C4"
+        }
+      },
+      "target": {
+        "type": "WORKBOOK_SCOPE",
+        "name": "ChartActual"
+      }
     },
     {
-      "type": "SET_CHART",
-      "sheetName": "Ops",
-      "chart": {
-        "type": "BAR",
-        "name": "OpsChart",
+      "stepId": "step-05-set-chart",
+      "action": {
+        "type": "SET_CHART",
+        "chart": {
+          "type": "BAR",
+          "name": "OpsChart",
+          "anchor": {
+            "type": "TWO_CELL",
+            "from": {
+              "columnIndex": 4,
+              "rowIndex": 0,
+              "dx": 0,
+              "dy": 0
+            },
+            "to": {
+              "columnIndex": 8,
+              "rowIndex": 12,
+              "dx": 0,
+              "dy": 0
+            },
+            "behavior": "MOVE_AND_RESIZE"
+          },
+          "title": {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Roadmap"
+            }
+          },
+          "legend": {
+            "type": "VISIBLE",
+            "position": "TOP_RIGHT"
+          },
+          "displayBlanksAs": "SPAN",
+          "plotOnlyVisibleCells": false,
+          "varyColors": true,
+          "barDirection": "COLUMN",
+          "series": [
+            {
+              "title": {
+                "type": "TEXT",
+                "source": {
+                  "type": "INLINE",
+                  "text": "Plan"
+                }
+              },
+              "categories": {
+                "formula": "ChartCategories"
+              },
+              "values": {
+                "formula": "Ops!$B$2:$B$4"
+              }
+            },
+            {
+              "title": {
+                "type": "TEXT",
+                "source": {
+                  "type": "INLINE",
+                  "text": "Actual"
+                }
+              },
+              "categories": {
+                "formula": "ChartCategories"
+              },
+              "values": {
+                "formula": "ChartActual"
+              }
+            }
+          ]
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ops"
+      }
+    },
+    {
+      "stepId": "step-06-set-drawing-object-anchor",
+      "action": {
+        "type": "SET_DRAWING_OBJECT_ANCHOR",
         "anchor": {
           "type": "TWO_CELL",
-          "from": { "columnIndex": 4, "rowIndex": 0, "dx": 0, "dy": 0 },
-          "to": { "columnIndex": 8, "rowIndex": 12, "dx": 0, "dy": 0 },
-          "behavior": "MOVE_AND_RESIZE"
-        },
-        "title": { "type": "TEXT", "text": "Roadmap" },
-        "legend": { "type": "VISIBLE", "position": "TOP_RIGHT" },
-        "displayBlanksAs": "SPAN",
-        "plotOnlyVisibleCells": false,
-        "varyColors": true,
-        "barDirection": "COLUMN",
-        "series": [
-          {
-            "title": { "type": "TEXT", "text": "Plan" },
-            "categories": { "formula": "ChartCategories" },
-            "values": { "formula": "Ops!$B$2:$B$4" }
+          "from": {
+            "columnIndex": 5,
+            "rowIndex": 0,
+            "dx": 0,
+            "dy": 0
           },
-          {
-            "title": { "type": "TEXT", "text": "Actual" },
-            "categories": { "formula": "ChartCategories" },
-            "values": { "formula": "ChartActual" }
-          }
-        ]
+          "to": {
+            "columnIndex": 9,
+            "rowIndex": 12,
+            "dx": 0,
+            "dy": 0
+          },
+          "behavior": "MOVE_AND_RESIZE"
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "sheetName": "Ops",
+        "objectName": "OpsChart"
       }
     },
     {
-      "type": "SET_DRAWING_OBJECT_ANCHOR",
-      "sheetName": "Ops",
-      "objectName": "OpsChart",
-      "anchor": {
-        "type": "TWO_CELL",
-        "from": { "columnIndex": 5, "rowIndex": 0, "dx": 0, "dy": 0 },
-        "to": { "columnIndex": 9, "rowIndex": 12, "dx": 0, "dy": 0 },
-        "behavior": "MOVE_AND_RESIZE"
+      "query": {
+        "type": "GET_CHARTS"
+      },
+      "stepId": "charts",
+      "target": {
+        "type": "ALL_ON_SHEET",
+        "sheetName": "Ops"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_DRAWING_OBJECTS"
+      },
+      "stepId": "drawing-objects",
+      "target": {
+        "type": "ALL_ON_SHEET",
+        "sheetName": "Ops"
       }
     }
-  ],
-  "reads": [
-    { "type": "GET_CHARTS", "requestId": "charts", "sheetName": "Ops" },
-    { "type": "GET_DRAWING_OBJECTS", "requestId": "drawing-objects", "sheetName": "Ops" }
   ]
 }

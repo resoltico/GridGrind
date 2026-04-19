@@ -298,7 +298,7 @@ class AdvancedReadEngineTypesTest {
         new WorkbookReadResult.WorkbookProtectionResult("workbook-protection", protection);
 
     assertTrue(protection.structureLocked());
-    assertEquals("workbook-protection", read.requestId());
+    assertEquals("workbook-protection", read.stepId());
     assertTrue(result.protection().workbookPasswordHashPresent());
     assertThrows(
         NullPointerException.class, () -> new WorkbookReadCommand.GetWorkbookProtection(null));

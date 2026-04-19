@@ -1,18 +1,18 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.dto.CellAlignmentInput;
+import dev.erst.gridgrind.contract.dto.CellBorderInput;
+import dev.erst.gridgrind.contract.dto.CellBorderSideInput;
+import dev.erst.gridgrind.contract.dto.CellFillInput;
+import dev.erst.gridgrind.contract.dto.CellFontInput;
+import dev.erst.gridgrind.contract.dto.CellProtectionInput;
+import dev.erst.gridgrind.contract.dto.CellStyleInput;
+import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
-import dev.erst.gridgrind.protocol.dto.CellAlignmentInput;
-import dev.erst.gridgrind.protocol.dto.CellBorderInput;
-import dev.erst.gridgrind.protocol.dto.CellBorderSideInput;
-import dev.erst.gridgrind.protocol.dto.CellFillInput;
-import dev.erst.gridgrind.protocol.dto.CellFontInput;
-import dev.erst.gridgrind.protocol.dto.CellProtectionInput;
-import dev.erst.gridgrind.protocol.dto.CellStyleInput;
-import dev.erst.gridgrind.protocol.dto.FontHeightInput;
 import java.math.BigDecimal;
 import java.util.Objects;
 

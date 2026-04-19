@@ -41,14 +41,14 @@ class WorkbookReadExecutorTest {
               new WorkbookLocation.UnsavedWorkbook(),
               new WorkbookReadCommand.GetWindow("window", "Budget", "A1", 1, 1));
 
-      assertEquals(List.of("workbook", "cells", "ranges"), requestIds(varargsResults));
+      assertEquals(List.of("workbook", "cells", "ranges"), stepIds(varargsResults));
       assertInstanceOf(WorkbookReadResult.WorkbookSummaryResult.class, varargsResults.get(0));
       assertInstanceOf(WorkbookReadResult.CellsResult.class, varargsResults.get(1));
       assertInstanceOf(WorkbookReadResult.NamedRangeSurfaceResult.class, varargsResults.get(2));
-      assertEquals(List.of("sheet", "merged"), requestIds(iterableResults));
+      assertEquals(List.of("sheet", "merged"), stepIds(iterableResults));
       assertInstanceOf(WorkbookReadResult.SheetSummaryResult.class, iterableResults.get(0));
       assertInstanceOf(WorkbookReadResult.MergedRegionsResult.class, iterableResults.get(1));
-      assertEquals(List.of("window"), requestIds(explicitLocationResults));
+      assertEquals(List.of("window"), stepIds(explicitLocationResults));
       assertInstanceOf(WorkbookReadResult.WindowResult.class, explicitLocationResults.getFirst());
     }
   }
@@ -91,7 +91,7 @@ class WorkbookReadExecutorTest {
     }
   }
 
-  private static List<String> requestIds(List<WorkbookReadResult> results) {
-    return results.stream().map(WorkbookReadResult::requestId).toList();
+  private static List<String> stepIds(List<WorkbookReadResult> results) {
+    return results.stream().map(WorkbookReadResult::stepId).toList();
   }
 }

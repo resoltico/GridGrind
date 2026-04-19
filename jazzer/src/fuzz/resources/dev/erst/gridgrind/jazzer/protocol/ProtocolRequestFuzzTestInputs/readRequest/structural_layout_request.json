@@ -1,65 +1,282 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "reports/structural-layout.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Summary" },
-    { "type": "SET_CELL", "sheetName": "Summary", "address": "A1", "value": { "type": "TEXT", "text": "Quarterly Summary" } },
-    { "type": "MERGE_CELLS", "sheetName": "Summary", "range": "A1:C1" },
-    { "type": "SET_COLUMN_WIDTH", "sheetName": "Summary", "firstColumnIndex": 0, "lastColumnIndex": 2, "widthCharacters": 16.0 },
-    { "type": "SET_ROW_HEIGHT", "sheetName": "Summary", "firstRowIndex": 0, "lastRowIndex": 0, "heightPoints": 28.5 },
+  "steps": [
     {
-      "type": "SET_SHEET_PANE",
-      "sheetName": "Summary",
-      "pane": { "type": "FROZEN", "splitColumn": 0, "splitRow": 1, "leftmostColumn": 0, "topRow": 1 }
-    },
-    { "type": "SET_SHEET_ZOOM", "sheetName": "Summary", "zoomPercent": 125 },
-    {
-      "type": "SET_PRINT_LAYOUT",
-      "sheetName": "Summary",
-      "printLayout": {
-        "printArea": { "type": "RANGE", "range": "A1:C18" },
-        "orientation": "LANDSCAPE",
-        "scaling": { "type": "FIT", "widthPages": 1, "heightPages": 0 },
-        "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 0 },
-        "repeatingColumns": { "type": "NONE" },
-        "header": { "left": "Quarterly Summary", "center": "", "right": "Board Pack" },
-        "footer": { "left": "", "center": "Internal Use", "right": "Page 1" }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Summary"
       }
-    }
-  ],
-  "reads": [
-    {
-      "type": "GET_CELLS",
-      "requestId": "cells",
-      "sheetName": "Summary",
-      "addresses": ["A1"]
     },
     {
-      "type": "GET_WINDOW",
-      "requestId": "window",
-      "sheetName": "Summary",
-      "topLeftAddress": "A1",
-      "rowCount": 3,
-      "columnCount": 3
+      "stepId": "step-02-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Quarterly Summary"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Summary",
+        "address": "A1"
+      }
     },
     {
-      "type": "GET_MERGED_REGIONS",
-      "requestId": "merged",
-      "sheetName": "Summary"
+      "stepId": "step-03-merge-cells",
+      "action": {
+        "type": "MERGE_CELLS"
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Summary",
+        "range": "A1:C1"
+      }
     },
     {
-      "type": "GET_SHEET_LAYOUT",
-      "requestId": "layout",
-      "sheetName": "Summary"
+      "stepId": "step-04-set-column-width",
+      "action": {
+        "type": "SET_COLUMN_WIDTH",
+        "widthCharacters": 16.0
+      },
+      "target": {
+        "type": "SPAN",
+        "sheetName": "Summary",
+        "firstColumnIndex": 0,
+        "lastColumnIndex": 2
+      }
     },
     {
-      "type": "GET_PRINT_LAYOUT",
-      "requestId": "print-layout",
-      "sheetName": "Summary"
+      "stepId": "step-05-set-row-height",
+      "action": {
+        "type": "SET_ROW_HEIGHT",
+        "heightPoints": 28.5
+      },
+      "target": {
+        "type": "SPAN",
+        "sheetName": "Summary",
+        "firstRowIndex": 0,
+        "lastRowIndex": 0
+      }
+    },
+    {
+      "stepId": "step-06-set-sheet-presentation",
+      "action": {
+        "type": "SET_SHEET_PRESENTATION",
+        "presentation": {
+          "display": {
+            "displayGridlines": false,
+            "displayZeros": false,
+            "displayRowColHeadings": true,
+            "displayFormulas": false,
+            "rightToLeft": false
+          },
+          "tabColor": {
+            "rgb": "#0B6E4F"
+          },
+          "outlineSummary": {
+            "rowSumsBelow": false,
+            "rowSumsRight": true
+          },
+          "sheetDefaults": {
+            "defaultColumnWidth": 14,
+            "defaultRowHeightPoints": 19.0
+          },
+          "ignoredErrors": [
+            {
+              "range": "B4:B18",
+              "errorTypes": [
+                "NUMBER_STORED_AS_TEXT"
+              ]
+            }
+          ]
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Summary"
+      }
+    },
+    {
+      "stepId": "step-07-set-sheet-pane",
+      "action": {
+        "type": "SET_SHEET_PANE",
+        "pane": {
+          "type": "FROZEN",
+          "splitColumn": 0,
+          "splitRow": 1,
+          "leftmostColumn": 0,
+          "topRow": 1
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Summary"
+      }
+    },
+    {
+      "stepId": "step-08-set-sheet-zoom",
+      "action": {
+        "type": "SET_SHEET_ZOOM",
+        "zoomPercent": 125
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Summary"
+      }
+    },
+    {
+      "stepId": "step-09-set-print-layout",
+      "action": {
+        "type": "SET_PRINT_LAYOUT",
+        "printLayout": {
+          "printArea": {
+            "type": "RANGE",
+            "range": "A1:C18"
+          },
+          "orientation": "LANDSCAPE",
+          "scaling": {
+            "type": "FIT",
+            "widthPages": 1,
+            "heightPages": 0
+          },
+          "repeatingRows": {
+            "type": "BAND",
+            "firstRowIndex": 0,
+            "lastRowIndex": 0
+          },
+          "repeatingColumns": {
+            "type": "NONE"
+          },
+          "header": {
+            "left": {
+              "type": "INLINE",
+              "text": "Quarterly Summary"
+            },
+            "center": {
+              "type": "INLINE",
+              "text": ""
+            },
+            "right": {
+              "type": "INLINE",
+              "text": "Board Pack"
+            }
+          },
+          "footer": {
+            "left": {
+              "type": "INLINE",
+              "text": ""
+            },
+            "center": {
+              "type": "INLINE",
+              "text": "Internal Use"
+            },
+            "right": {
+              "type": "INLINE",
+              "text": "Page 1"
+            }
+          },
+          "setup": {
+            "printGridlines": true,
+            "margins": {
+              "left": 0.35,
+              "right": 0.55,
+              "top": 0.6,
+              "bottom": 0.45,
+              "header": 0.3,
+              "footer": 0.3
+            },
+            "horizontallyCentered": true,
+            "verticallyCentered": false,
+            "paperSize": 8,
+            "draft": false,
+            "blackAndWhite": false,
+            "copies": 1,
+            "useFirstPageNumber": false,
+            "firstPageNumber": 1,
+            "rowBreaks": [
+              6
+            ],
+            "columnBreaks": [
+              2
+            ]
+          }
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Summary"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Summary",
+        "addresses": [
+          "A1"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WINDOW"
+      },
+      "stepId": "window",
+      "target": {
+        "type": "RECTANGULAR_WINDOW",
+        "sheetName": "Summary",
+        "topLeftAddress": "A1",
+        "rowCount": 3,
+        "columnCount": 3
+      }
+    },
+    {
+      "query": {
+        "type": "GET_MERGED_REGIONS"
+      },
+      "stepId": "merged",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Summary"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_LAYOUT"
+      },
+      "stepId": "layout",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Summary"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_PRINT_LAYOUT"
+      },
+      "stepId": "print-layout",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Summary"
+      }
     }
   ]
 }

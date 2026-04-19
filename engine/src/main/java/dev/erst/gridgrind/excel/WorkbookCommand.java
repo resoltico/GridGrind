@@ -68,11 +68,7 @@ public sealed interface WorkbookCommand
         WorkbookCommand.SetNamedRange,
         WorkbookCommand.DeleteNamedRange,
         WorkbookCommand.AppendRow,
-        WorkbookCommand.AutoSizeColumns,
-        WorkbookCommand.EvaluateAllFormulas,
-        WorkbookCommand.EvaluateFormulaCells,
-        WorkbookCommand.ClearFormulaCaches,
-        WorkbookCommand.ForceFormulaRecalculationOnOpen {
+        WorkbookCommand.AutoSizeColumns {
 
   record CreateSheet(String sheetName) implements WorkbookCommand {
     public CreateSheet {
@@ -901,27 +897,6 @@ public sealed interface WorkbookCommand
     }
   }
 
-  record EvaluateAllFormulas() implements WorkbookCommand {}
-
-  /** Evaluates one or more explicit formula-cell targets and stores their cached results. */
-  record EvaluateFormulaCells(List<ExcelFormulaCellTarget> cells) implements WorkbookCommand {
-    public EvaluateFormulaCells {
-      Objects.requireNonNull(cells, "cells must not be null");
-      cells = List.copyOf(cells);
-      if (cells.isEmpty()) {
-        throw new IllegalArgumentException("cells must not be empty");
-      }
-      for (ExcelFormulaCellTarget cell : cells) {
-        Objects.requireNonNull(cell, "cells must not contain nulls");
-      }
-    }
-  }
-
-  /** Clears all cached evaluator results. */
-  record ClearFormulaCaches() implements WorkbookCommand {}
-
-  record ForceFormulaRecalculationOnOpen() implements WorkbookCommand {}
-
   /** Returns the canonical operation-style discriminator for diagnostics and telemetry. */
   default String commandType() {
     return switch (this) {
@@ -986,10 +961,6 @@ public sealed interface WorkbookCommand
       case DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case AppendRow _ -> "APPEND_ROW";
       case AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
-      case EvaluateAllFormulas _ -> "EVALUATE_FORMULAS";
-      case EvaluateFormulaCells _ -> "EVALUATE_FORMULA_CELLS";
-      case ClearFormulaCaches _ -> "CLEAR_FORMULA_CACHES";
-      case ForceFormulaRecalculationOnOpen _ -> "FORCE_FORMULA_RECALCULATION_ON_OPEN";
     };
   }
 

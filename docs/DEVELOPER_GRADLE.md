@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.47.0"
+version: "0.48.0"
 domain: DEVELOPER_GRADLE
-updated: "2026-04-16"
+updated: "2026-04-18"
 route:
   keywords: [gridgrind, gradle, build-logic, composite-build, version-catalog, jazzer, buildsrc, toolchain, configuration-cache, verification]
   questions: ["how is the gridgrind gradle build structured", "why does gridgrind use gradle/build-logic instead of buildSrc", "how does the nested jazzer build consume the root project", "where are shared gradle conventions defined", "what should we review in the gradle setup"]
@@ -66,7 +66,9 @@ gradle/
         ├── ScheduledPulseTestListener.kt
         └── ...
 engine/
-protocol/
+contract/
+executor/
+authoring-java/
 cli/
 jazzer/
 ├── settings.gradle.kts
@@ -75,7 +77,8 @@ jazzer/
 
 Each layer owns a different concern:
 
-- root product build: builds and verifies `engine`, `protocol`, and `cli`
+- root product build: builds and verifies `engine`, `contract`, `executor`, `authoring-java`,
+  and `cli`
 - shared included build logic: houses reusable Gradle plugins and typed build logic
 - nested Jazzer build: runs Jazzer support tests, regression replay, and local fuzzing flows
 
@@ -109,14 +112,22 @@ plugin compile time.
 ### Composite build for Jazzer
 
 `jazzer/settings.gradle.kts` uses `includeBuild("..")` so the nested build can consume the live
-local `engine` and `protocol` modules without publishing snapshots. This keeps Jazzer iteration
-fast and ensures fuzzing runs against the exact working tree under review.
+local `engine`, `contract`, and `executor` modules without publishing snapshots. This keeps Jazzer
+iteration fast and ensures fuzzing runs against the exact working tree under review.
 
 ### One dependency authority
 
 The root version catalog in `gradle/libs.versions.toml` is the shared dependency authority. The
 nested Jazzer build imports that catalog instead of repeating overlapping coordinates locally. That
 avoids silent version skew between the main product modules and Jazzer support code.
+
+Jackson note:
+- `tools.jackson.core:jackson-databind` 3.x intentionally still depends on
+  `com.fasterxml.jackson.core:jackson-annotations`
+- do not attempt to migrate GridGrind model annotations to a nonexistent
+  `tools.jackson.annotation` namespace
+- keep the comment beside the version-catalog entry and the JSON round-trip regressions in place
+  so this upstream Jackson rule does not get "fixed" incorrectly later
 
 ### Thin module build scripts
 
@@ -142,14 +153,20 @@ Rules:
   `build/jacoco/test.exec`
 - make coverage verification depend on `tasks.withType<Test>()` so any added `Test` task must run
   before the gate evaluates
+- when a canonical module is intentionally exercised by downstream consumers, include those
+  downstream `build/jacoco/*.exec` files in that module's verification scope instead of pretending
+  module-local tests are the whole truth
 - at the root aggregated-report layer, collect every subproject `build/jacoco/*.exec` file instead
   of assuming one `test.exec` per module
 - make the root `coverage` and `jacocoAggregatedReport` tasks derive their participating
   subprojects and task dependencies dynamically instead of hardcoding today's module names
 
 Why this rule exists:
-- GridGrind's `protocol` module defines a dedicated `parityTest` task in addition to the normal
+- GridGrind's `executor` module defines a dedicated `parityTest` task in addition to the normal
   `test` task
+- GridGrind's `contract` module is now validated both by local contract tests and by downstream
+  `executor` plus `cli` tests after the module split, so contract coverage must include that
+  consumer execution data explicitly
 - if JaCoCo only reads `test.exec`, parity-only execution becomes invisible to the gate
 - if JaCoCo omits `limit.counter`, the gate can appear green on instruction coverage while real
   branch gaps remain hidden
@@ -159,7 +176,7 @@ Why this rule exists:
 Repository-specific note:
 - GridGrind must keep collecting all local `build/jacoco/*.exec` files precisely because
   multi-`Test` execution already exists here
-- `protocol:parityTest` is not a special exception to remember manually; the build logic must make
+- `executor:parityTest` is not a special exception to remember manually; the build logic must make
   it impossible to forget
 - the nested Jazzer build remains intentionally separate from root product-module coverage; its own
   `./gradlew --project-dir jazzer check` is the authoritative Jazzer coverage gate
@@ -198,7 +215,7 @@ Rules:
 
 These are the Gradle-level invariants worth preserving:
 
-- `engine`, `protocol`, and `cli` remain ordinary root subprojects
+- `engine`, `contract`, `executor`, `authoring-java`, and `cli` remain ordinary root subprojects
 - `jazzer/` remains a nested build, not a root subproject
 - `gradle/build-logic` remains the only home for shared typed Gradle logic
 - the nested Jazzer build imports `../gradle/libs.versions.toml`
@@ -206,6 +223,8 @@ These are the Gradle-level invariants worth preserving:
   top
 - root product-module quality policy lives in convention plugins, not in a root `subprojects {}`
   block
+- handwritten production Java and Kotlin sources use explicit imports only; wildcard imports fail
+  the root `verifyExplicitImports` gate that `check` depends on
 - Jazzer-specific PMD and JaCoCo scopes live beside Jazzer task registration in the shared build
   logic
 - root `./gradlew check` stays focused on the product modules

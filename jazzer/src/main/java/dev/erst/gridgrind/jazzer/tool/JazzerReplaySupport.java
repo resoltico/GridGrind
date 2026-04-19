@@ -1,8 +1,15 @@
 package dev.erst.gridgrind.jazzer.tool;
 
+import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.contract.json.InvalidJsonException;
+import dev.erst.gridgrind.contract.json.InvalidRequestException;
+import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
+import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.jazzer.support.GeneratedProtocolWorkflow;
 import dev.erst.gridgrind.jazzer.support.GridGrindFuzzData;
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
@@ -10,13 +17,6 @@ import dev.erst.gridgrind.jazzer.support.OperationSequenceModel;
 import dev.erst.gridgrind.jazzer.support.SequenceIntrospection;
 import dev.erst.gridgrind.jazzer.support.WorkbookInvariantChecks;
 import dev.erst.gridgrind.jazzer.support.XlsxRoundTripVerifier;
-import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
-import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
-import dev.erst.gridgrind.protocol.exec.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.protocol.json.GridGrindJson;
-import dev.erst.gridgrind.protocol.json.InvalidJsonException;
-import dev.erst.gridgrind.protocol.json.InvalidRequestException;
-import dev.erst.gridgrind.protocol.json.InvalidRequestShapeException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -57,18 +57,20 @@ public final class JazzerReplaySupport {
 
   private static ReplayOutcome replayProtocolRequest(byte[] input) {
     try {
-      GridGrindRequest request = GridGrindJson.readRequest(input);
+      WorkbookPlan request = GridGrindJson.readRequest(input);
       ProtocolRequestDetails details =
           new ProtocolRequestDetails(
               input.length,
               "PARSED",
               SequenceIntrospection.sourceKind(request),
               SequenceIntrospection.persistenceKind(request),
-              request.operations().size(),
-              SequenceIntrospection.operationKinds(request.operations()),
-              SequenceIntrospection.styleKinds(request.operations()),
-              SequenceIntrospection.readCount(request),
-              SequenceIntrospection.readKinds(request.reads()));
+              request.mutationSteps().size(),
+              SequenceIntrospection.mutationKinds(request.mutationSteps()),
+              SequenceIntrospection.styleKinds(request.mutationSteps()),
+              SequenceIntrospection.assertionCount(request),
+              SequenceIntrospection.assertionKinds(request.assertionSteps()),
+              SequenceIntrospection.inspectionCount(request),
+              SequenceIntrospection.inspectionKinds(request.inspectionSteps()));
       return new ReplayOutcome.Success(JazzerHarness.protocolRequest().key(), details);
     } catch (InvalidJsonException expected) {
       ProtocolRequestDetails details =
@@ -79,6 +81,8 @@ public final class JazzerReplaySupport {
               "NOT_PARSED",
               0,
               Map.of(),
+              Map.of(),
+              0,
               Map.of(),
               0,
               Map.of());
@@ -98,6 +102,8 @@ public final class JazzerReplaySupport {
               Map.of(),
               Map.of(),
               0,
+              Map.of(),
+              0,
               Map.of());
       return new ReplayOutcome.ExpectedInvalid(
           JazzerHarness.protocolRequest().key(),
@@ -113,6 +119,8 @@ public final class JazzerReplaySupport {
               "NOT_PARSED",
               0,
               Map.of(),
+              Map.of(),
+              0,
               Map.of(),
               0,
               Map.of());
@@ -132,6 +140,8 @@ public final class JazzerReplaySupport {
               Map.of(),
               Map.of(),
               0,
+              Map.of(),
+              0,
               Map.of());
       return unexpectedFailure(JazzerHarness.protocolRequest(), unexpected, details);
     } catch (RuntimeException unexpected) {
@@ -145,6 +155,8 @@ public final class JazzerReplaySupport {
               Map.of(),
               Map.of(),
               0,
+              Map.of(),
+              0,
               Map.of());
       return unexpectedFailure(JazzerHarness.protocolRequest(), unexpected, details);
     }
@@ -153,7 +165,7 @@ public final class JazzerReplaySupport {
   private static ReplayOutcome replayProtocolWorkflow(byte[] input) {
     GridGrindFuzzData data = GridGrindFuzzData.replay(input);
     GeneratedProtocolWorkflow workflow = null;
-    GridGrindRequest request = null;
+    WorkbookPlan request = null;
     GridGrindResponse response = null;
     try {
       workflow = OperationSequenceModel.nextProtocolWorkflow(data);
@@ -267,7 +279,7 @@ public final class JazzerReplaySupport {
   }
 
   private static ProtocolWorkflowDetails workflowDetails(
-      int inputLength, GridGrindRequest request, GridGrindResponse response) {
+      int inputLength, WorkbookPlan request, GridGrindResponse response) {
     if (request == null) {
       return new ProtocolWorkflowDetails(
           inputLength,
@@ -278,17 +290,21 @@ public final class JazzerReplaySupport {
           Map.of(),
           0,
           Map.of(),
+          0,
+          Map.of(),
           response == null ? "NOT_EXECUTED" : SequenceIntrospection.responseKind(response));
     }
     return new ProtocolWorkflowDetails(
         inputLength,
         SequenceIntrospection.sourceKind(request),
         SequenceIntrospection.persistenceKind(request),
-        request.operations().size(),
-        SequenceIntrospection.operationKinds(request.operations()),
-        SequenceIntrospection.styleKinds(request.operations()),
-        SequenceIntrospection.readCount(request),
-        SequenceIntrospection.readKinds(request.reads()),
+        request.mutationSteps().size(),
+        SequenceIntrospection.mutationKinds(request.mutationSteps()),
+        SequenceIntrospection.styleKinds(request.mutationSteps()),
+        SequenceIntrospection.assertionCount(request),
+        SequenceIntrospection.assertionKinds(request.assertionSteps()),
+        SequenceIntrospection.inspectionCount(request),
+        SequenceIntrospection.inspectionKinds(request.inspectionSteps()),
         response == null ? "NOT_EXECUTED" : SequenceIntrospection.responseKind(response));
   }
 

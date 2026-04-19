@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -265,6 +268,121 @@ class ExcelFormulaEnvironmentTest {
     assertNull(cachedFormulaRawValue(workbookPath, "Budget", "C1"));
   }
 
+  @Test
+  void assessAllFormulaCapabilitiesClassifiesRuntimeOutcomes() throws Exception {
+    ExternalFormulaScenario externalScenario = createExternalFormulaScenario(false);
+    Path udfWorkbookPath = createUdfFormulaWorkbook();
+    Path unsupportedWorkbookPath = createUnsupportedFormulaWorkbook();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget");
+      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+
+      assertEquals(
+          List.of(
+              new ExcelFormulaCapabilityAssessment(
+                  "Budget", "B1", "A1*2", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
+          workbook.assessAllFormulaCapabilities());
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(externalScenario.workbookPath())) {
+      ExcelFormulaCapabilityAssessment assessment =
+          workbook.assessAllFormulaCapabilities().getFirst();
+
+      assertEquals(ExcelFormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
+      assertEquals(ExcelFormulaCapabilityIssue.MISSING_EXTERNAL_WORKBOOK, assessment.issue());
+      assertTrue(assessment.message().contains("Missing external workbook"));
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(udfWorkbookPath)) {
+      ExcelFormulaCapabilityAssessment assessment =
+          workbook.assessAllFormulaCapabilities().getFirst();
+
+      assertEquals(ExcelFormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
+      assertEquals(
+          ExcelFormulaCapabilityIssue.UNREGISTERED_USER_DEFINED_FUNCTION, assessment.issue());
+      assertTrue(assessment.message().contains("DOUBLE"));
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(unsupportedWorkbookPath)) {
+      ExcelFormulaCapabilityAssessment assessment =
+          workbook.assessAllFormulaCapabilities().getFirst();
+
+      assertEquals(ExcelFormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
+      assertEquals(ExcelFormulaCapabilityIssue.UNSUPPORTED_FORMULA, assessment.issue());
+      assertTrue(assessment.message().contains("APP.TITLE"));
+    }
+  }
+
+  @Test
+  void assessFormulaCellCapabilitiesSupportsExplicitTargetsAndRejectsInvalidTargets()
+      throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget");
+      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
+      workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
+
+      assertEquals(
+          List.of(
+              new ExcelFormulaCapabilityAssessment(
+                  "Budget", "B1", "A1*2", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
+          workbook.assessFormulaCellCapabilities(
+              List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
+      assertThrows(NullPointerException.class, () -> workbook.assessFormulaCellCapabilities(null));
+      assertThrows(
+          NullPointerException.class,
+          () -> workbook.assessFormulaCellCapabilities(List.of((ExcelFormulaCellTarget) null)));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              workbook.assessFormulaCellCapabilities(
+                  List.of(new ExcelFormulaCellTarget("Budget", "A1"))));
+      assertThrows(
+          InvalidCellAddressException.class,
+          () ->
+              workbook.assessFormulaCellCapabilities(
+                  List.of(new ExcelFormulaCellTarget("Budget", ":"))));
+      assertThrows(
+          CellNotFoundException.class,
+          () ->
+              workbook.assessFormulaCellCapabilities(
+                  List.of(new ExcelFormulaCellTarget("Budget", "Z99"))));
+    }
+
+    Path invalidWorkbookPath = createInvalidFormulaWorkbook();
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(invalidWorkbookPath)) {
+      ExcelFormulaCapabilityAssessment assessment =
+          workbook
+              .assessFormulaCellCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "B1")))
+              .getFirst();
+
+      assertEquals(ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI, assessment.capability());
+      assertEquals(ExcelFormulaCapabilityIssue.INVALID_FORMULA, assessment.issue());
+      assertEquals("Budget", assessment.sheetName());
+      assertEquals("B1", assessment.address());
+      assertEquals("SUM(", assessment.formula());
+      assertTrue(assessment.message().contains("Invalid formula at Budget!B1"));
+    }
+  }
+
+  @Test
+  void assessAllFormulaCapabilitiesRethrowsUnexpectedRuntimeFailures() throws Exception {
+    try (XSSFWorkbook poiWorkbook = new XSSFWorkbook();
+        ExcelWorkbook workbook =
+            new ExcelWorkbook(
+                poiWorkbook,
+                FormulaRuntimeTestDouble.alwaysFail(new IllegalStateException("boom")))) {
+      workbook.getOrCreateSheet("Budget");
+      workbook.sheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
+
+      IllegalStateException failure =
+          assertThrows(IllegalStateException.class, workbook::assessAllFormulaCapabilities);
+
+      assertEquals("boom", failure.getMessage());
+    }
+  }
+
   private static ExternalFormulaScenario createExternalFormulaScenario(boolean seedCachedValue)
       throws IOException {
     Path directory = Files.createTempDirectory("gridgrind-external-formula-scenario-");
@@ -312,6 +430,43 @@ class ExcelFormulaEnvironmentTest {
       try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
         workbook.write(outputStream);
       }
+    }
+
+    return workbookPath;
+  }
+
+  private static Path createUnsupportedFormulaWorkbook() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-unsupported-formula-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      workbook.setCellFormulaValidation(false);
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      sheet.createRow(0).createCell(0).setCellFormula("APP.TITLE()");
+      try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    return workbookPath;
+  }
+
+  private static Path createInvalidFormulaWorkbook() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-invalid-formula-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Budget");
+      sheet.createRow(0).createCell(0).setCellValue(2.0d);
+      sheet.getRow(0).createCell(1).setCellFormula("A1*2");
+      try (OutputStream outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (FileSystem archive = FileSystems.newFileSystem(workbookPath, (ClassLoader) null)) {
+      Path sheetXml = archive.getPath("/xl/worksheets/sheet1.xml");
+      String xml = Files.readString(sheetXml, StandardCharsets.UTF_8);
+      Files.writeString(
+          sheetXml, xml.replace("<f>A1*2</f>", "<f>SUM(</f>"), StandardCharsets.UTF_8);
     }
 
     return workbookPath;

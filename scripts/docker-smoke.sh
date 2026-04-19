@@ -38,6 +38,7 @@ readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly image_tag="gridgrind-docker-smoke:$$"
 readonly smoke_root="${repo_root}/tmp/docker smoke.$$"
 readonly docker_run_user="$(id -u):$(id -g)"
+readonly cli_jar_path="${repo_root}/cli/build/libs/gridgrind.jar"
 anonymous_docker_config=''
 docker_endpoint=''
 
@@ -101,8 +102,11 @@ trap cleanup EXIT
 command -v docker >/dev/null 2>&1 || die "docker is required for the Docker smoke gate"
 docker buildx version >/dev/null 2>&1 || die "docker buildx is required for the Docker smoke gate"
 [[ -f "${repo_root}/Dockerfile" ]] || die "missing Dockerfile at ${repo_root}/Dockerfile"
-[[ -f "${repo_root}/cli/build/libs/gridgrind.jar" ]] || die \
-    "missing CLI fat JAR at ${repo_root}/cli/build/libs/gridgrind.jar; run ./gradlew :cli:shadowJar first"
+[[ -x "${repo_root}/gradlew" ]] || die "missing Gradle wrapper at ${repo_root}/gradlew"
+
+printf 'Docker smoke: rebuilding CLI fat JAR\n'
+"${repo_root}/gradlew" --console=plain :cli:shadowJar >/dev/null
+[[ -f "${cli_jar_path}" ]] || die "missing CLI fat JAR at ${cli_jar_path} after :cli:shadowJar"
 
 docker_endpoint="${DOCKER_HOST:-}"
 if [[ -z "${docker_endpoint}" ]]; then
@@ -132,6 +136,8 @@ readonly existing_request_rel='requests odd/request reopen [docker #smoke].json'
 readonly existing_response_rel='responses odd/nested/reopen [docker #smoke].json'
 readonly streaming_request_rel='requests odd/request streaming [docker #smoke].json'
 readonly streaming_response_rel='responses odd/nested/streaming [docker #smoke].json'
+readonly streaming_read_request_rel='requests odd/request streaming readback [docker #smoke].json'
+readonly streaming_read_response_rel='responses odd/nested/streaming readback [docker #smoke].json'
 readonly streaming_workbook_rel='books odd/nested/office streaming [docker #smoke].xlsx'
 readonly request_path="${smoke_root}/${request_rel}"
 readonly response_path="${smoke_root}/${response_rel}"
@@ -140,10 +146,13 @@ readonly existing_request_path="${smoke_root}/${existing_request_rel}"
 readonly existing_response_path="${smoke_root}/${existing_response_rel}"
 readonly streaming_request_path="${smoke_root}/${streaming_request_rel}"
 readonly streaming_response_path="${smoke_root}/${streaming_response_rel}"
+readonly streaming_read_request_path="${smoke_root}/${streaming_read_request_rel}"
+readonly streaming_read_response_path="${smoke_root}/${streaming_read_response_rel}"
 readonly streaming_workbook_path="${smoke_root}/${streaming_workbook_rel}"
 readonly create_stderr_path="${smoke_root}/stderr create [docker #smoke].log"
 readonly existing_stderr_path="${smoke_root}/stderr reopen [docker #smoke].log"
 readonly streaming_stderr_path="${smoke_root}/stderr streaming [docker #smoke].log"
+readonly streaming_read_stderr_path="${smoke_root}/stderr streaming readback [docker #smoke].log"
 
 cat > "${request_path}" <<JSON
 {
@@ -152,11 +161,31 @@ cat > "${request_path}" <<JSON
     "type": "SAVE_AS",
     "path": "${workbook_rel}"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Smoke" }
-  ],
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" }
+  "execution": {
+    "journal": {
+      "level": "VERBOSE"
+    }
+  },
+  "steps": [
+    {
+      "stepId": "ensure-smoke",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Smoke"
+      },
+      "action": {
+        "type": "ENSURE_SHEET"
+      }
+    },
+    {
+      "stepId": "workbook",
+      "target": {
+        "type": "CURRENT"
+      },
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      }
+    }
   ]
 }
 JSON
@@ -168,8 +197,16 @@ cat > "${existing_request_path}" <<JSON
     "path": "${workbook_rel}"
   },
   "persistence": { "type": "NONE" },
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "existing-workbook" }
+  "steps": [
+    {
+      "stepId": "existing-workbook",
+      "target": {
+        "type": "CURRENT"
+      },
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      }
+    }
   ]
 }
 JSON
@@ -181,34 +218,118 @@ cat > "${streaming_request_path}" <<JSON
     "type": "SAVE_AS",
     "path": "${streaming_workbook_rel}"
   },
-  "executionMode": {
-    "readMode": "EVENT_READ",
-    "writeMode": "STREAMING_WRITE"
+  "execution": {
+    "mode": {
+      "writeMode": "STREAMING_WRITE"
+    }
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Ledger" },
+  "steps": [
     {
-      "type": "APPEND_ROW",
-      "sheetName": "Ledger",
-      "values": [
-        { "type": "TEXT", "text": "Team" },
-        { "type": "TEXT", "text": "Task" },
-        { "type": "TEXT", "text": "Hours" }
-      ]
+      "stepId": "ensure-ledger",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ledger"
+      },
+      "action": {
+        "type": "ENSURE_SHEET"
+      }
     },
     {
-      "type": "APPEND_ROW",
-      "sheetName": "Ledger",
-      "values": [
-        { "type": "TEXT", "text": "Ops" },
-        { "type": "TEXT", "text": "Badge prep" },
-        { "type": "NUMBER", "number": 6.5 }
-      ]
+      "stepId": "append-header",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ledger"
+      },
+      "action": {
+        "type": "APPEND_ROW",
+        "values": [
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Team"
+            }
+          },
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Task"
+            }
+          },
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Hours"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "stepId": "append-ops",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ledger"
+      },
+      "action": {
+        "type": "APPEND_ROW",
+        "values": [
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Ops"
+            }
+          },
+          {
+            "type": "TEXT",
+            "source": {
+              "type": "INLINE",
+              "text": "Badge prep"
+            }
+          },
+          { "type": "NUMBER", "number": 6.5 }
+        ]
+      }
     }
-  ],
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "streaming-workbook" },
-    { "type": "GET_SHEET_SUMMARY", "requestId": "streaming-sheet", "sheetName": "Ledger" }
+  ]
+}
+JSON
+
+cat > "${streaming_read_request_path}" <<JSON
+{
+  "source": {
+    "type": "EXISTING",
+    "path": "${streaming_workbook_rel}"
+  },
+  "persistence": { "type": "NONE" },
+  "execution": {
+    "mode": {
+      "readMode": "EVENT_READ"
+    }
+  },
+  "steps": [
+    {
+      "stepId": "streaming-workbook",
+      "target": {
+        "type": "CURRENT"
+      },
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      }
+    },
+    {
+      "stepId": "streaming-sheet",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ledger"
+      },
+      "query": {
+        "type": "GET_SHEET_SUMMARY"
+      }
+    }
   ]
 }
 JSON
@@ -258,8 +379,14 @@ docker_with_repo_config run --rm \
 [[ -f "${workbook_path}" ]] || die "docker smoke workbook file was not written: ${workbook_path}"
 grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${response_path}" || die \
     "docker smoke response did not report SUCCESS"
-[[ ! -s "${create_stderr_path}" ]] || die \
-    "docker smoke create request wrote unexpected stderr: $(tr '\n' ' ' < "${create_stderr_path}")"
+grep -Eq '"journal"[[:space:]]*:' "${response_path}" || die \
+    "docker smoke response did not include the structured execution journal"
+grep -Eq '"level"[[:space:]]*:[[:space:]]*"VERBOSE"' "${response_path}" || die \
+    "docker smoke response did not preserve the requested VERBOSE journal level"
+[[ -s "${create_stderr_path}" ]] || die \
+    "docker smoke create request did not stream live verbose journal events to stderr"
+grep -Fq '[gridgrind]' "${create_stderr_path}" || die \
+    "docker smoke create request stderr did not contain the CLI journal prefix"
 
 printf 'Docker smoke: reopening saved workbook through EXISTING source\n'
 docker_with_repo_config run --rm \
@@ -291,8 +418,23 @@ docker_with_repo_config run --rm \
 [[ -f "${streaming_workbook_path}" ]] || die \
     "docker smoke streaming workbook file was not written: ${streaming_workbook_path}"
 grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${streaming_response_path}" || die \
-    "docker smoke STREAMING_WRITE readback did not report SUCCESS"
+    "docker smoke STREAMING_WRITE authoring did not report SUCCESS"
 [[ ! -s "${streaming_stderr_path}" ]] || die \
-    "docker smoke STREAMING_WRITE readback wrote unexpected stderr: $(tr '\n' ' ' < "${streaming_stderr_path}")"
+    "docker smoke STREAMING_WRITE authoring wrote unexpected stderr: $(tr '\n' ' ' < "${streaming_stderr_path}")"
+
+docker_with_repo_config run --rm \
+    --user "${docker_run_user}" \
+    -w /workdir \
+    -v "${smoke_root}:/workdir" \
+    "${image_tag}" \
+    --request "${streaming_read_request_rel}" \
+    --response "${streaming_read_response_rel}" >/dev/null 2>"${streaming_read_stderr_path}"
+
+[[ -f "${streaming_read_response_path}" ]] || die \
+    "docker smoke streaming readback response file was not written: ${streaming_read_response_path}"
+grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${streaming_read_response_path}" || die \
+    "docker smoke STREAMING_WRITE readback did not report SUCCESS"
+[[ ! -s "${streaming_read_stderr_path}" ]] || die \
+    "docker smoke STREAMING_WRITE readback wrote unexpected stderr: $(tr '\n' ' ' < "${streaming_read_stderr_path}")"
 
 printf 'Docker smoke: success\n'

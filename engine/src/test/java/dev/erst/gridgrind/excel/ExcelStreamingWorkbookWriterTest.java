@@ -40,7 +40,7 @@ class ExcelStreamingWorkbookWriterTest {
       writer.apply(
           new WorkbookCommand.AppendRow(
               "Ops", List.of(ExcelCellValue.text("Hosting"), ExcelCellValue.number(9.0d))));
-      writer.apply(new WorkbookCommand.ForceFormulaRecalculationOnOpen());
+      writer.markRecalculateOnOpen();
       writer.save(workbookPath);
     }
 
@@ -76,8 +76,7 @@ class ExcelStreamingWorkbookWriterTest {
 
       for (WorkbookCommand command : WorkbookSampleFixtures.workbookCommands()) {
         if (command instanceof WorkbookCommand.CreateSheet
-            || command instanceof WorkbookCommand.AppendRow
-            || command instanceof WorkbookCommand.ForceFormulaRecalculationOnOpen) {
+            || command instanceof WorkbookCommand.AppendRow) {
           continue;
         }
 
@@ -88,7 +87,7 @@ class ExcelStreamingWorkbookWriterTest {
                 () ->
                     "expected STREAMING_WRITE rejection for " + command.getClass().getSimpleName());
 
-        assertTrue(unsupported.getMessage().contains("executionMode.writeMode=STREAMING_WRITE"));
+        assertTrue(unsupported.getMessage().contains("execution.mode.writeMode=STREAMING_WRITE"));
         assertTrue(unsupported.getMessage().contains(command.commandType()));
       }
     } catch (IOException exception) {
@@ -107,7 +106,9 @@ class ExcelStreamingWorkbookWriterTest {
         new WorkbookCommand.SetSheetPresentation("Ops", ExcelSheetPresentation.defaults())
             .commandType());
     assertEquals(
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN",
-        new WorkbookCommand.ForceFormulaRecalculationOnOpen().commandType());
+        "SET_WORKBOOK_PROTECTION",
+        new WorkbookCommand.SetWorkbookProtection(
+                new ExcelWorkbookProtectionSettings(true, false, false, null, null))
+            .commandType());
   }
 }

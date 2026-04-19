@@ -1,18 +1,28 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
-  "persistence": { "type": "NONE" },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Empty" }
-  ],
-  "reads": [
+  "source": {
+    "type": "NEW"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
+  "steps": [
     {
-      "type": "GET_SHEET_SCHEMA",
-      "requestId": "schema",
-      "sheetName": "Empty",
-      "topLeftAddress": "A1",
-      "rowCount": 5,
-      "columnCount": 3
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET",
+        "sheetName": "Empty"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_SCHEMA",
+        "sheetName": "Empty",
+        "topLeftAddress": "A1",
+        "rowCount": 5,
+        "columnCount": 3
+      },
+      "stepId": "schema"
     }
   ]
 }

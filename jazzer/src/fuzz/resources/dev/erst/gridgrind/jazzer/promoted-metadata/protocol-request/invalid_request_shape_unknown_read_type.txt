@@ -3,13 +3,15 @@ Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzz
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
-Message: Unknown type value 'GET_NOT_A_REAL_READ'
-Input Bytes: 199
+Message: Missing required field 'target'
+Input Bytes: 231
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED
 Operation Count: 0
+Assertion Count: 0
 Read Count: 0
+Assertion Kinds: (none)
 Read Kinds: (none)
 Style Kinds: (none)
 Operation Kinds: (none)

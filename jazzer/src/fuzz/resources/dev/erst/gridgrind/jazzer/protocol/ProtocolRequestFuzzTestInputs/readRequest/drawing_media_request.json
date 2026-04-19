@@ -1,152 +1,330 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "cli/build/generated-workbooks/gridgrind-drawing-media.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Ops" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Ops",
-      "range": "A1:B3",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Queue" },
-          { "type": "TEXT", "text": "Owner" }
-        ],
-        [
-          { "type": "TEXT", "text": "Dispatch" },
-          { "type": "TEXT", "text": "GridGrind" }
-        ],
-        [
-          { "type": "TEXT", "text": "Review" },
-          { "type": "TEXT", "text": "Pending" }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ops"
+      }
+    },
+    {
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queue"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Owner"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Dispatch"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "GridGrind"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Review"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Pending"
+              }
+            }
+          ]
         ]
-      ]
-    },
-    {
-      "type": "SET_COMMENT",
-      "sheetName": "Ops",
-      "address": "B2",
-      "comment": {
-        "text": "Review anchored drawings after placement.",
-        "author": "GridGrind",
-        "visible": false
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Ops",
+        "range": "A1:B3"
       }
     },
     {
-      "type": "SET_PICTURE",
-      "sheetName": "Ops",
-      "picture": {
-        "name": "OpsPicture",
-        "image": {
-          "format": "PNG",
-          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
-        },
-        "anchor": {
-          "type": "TWO_CELL",
-          "from": { "columnIndex": 0, "rowIndex": 4, "dx": 0, "dy": 0 },
-          "to": { "columnIndex": 2, "rowIndex": 8, "dx": 0, "dy": 0 },
-          "behavior": "MOVE_AND_RESIZE"
-        },
-        "description": "Queue preview"
+      "stepId": "step-03-set-comment",
+      "action": {
+        "type": "SET_COMMENT",
+        "comment": {
+          "text": {
+            "type": "INLINE",
+            "text": "Review anchored drawings after placement."
+          },
+          "author": "GridGrind",
+          "visible": false
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Ops",
+        "address": "B2"
       }
     },
     {
-      "type": "SET_SHAPE",
-      "sheetName": "Ops",
-      "shape": {
-        "name": "OpsShape",
-        "kind": "SIMPLE_SHAPE",
-        "anchor": {
-          "type": "TWO_CELL",
-          "from": { "columnIndex": 3, "rowIndex": 4, "dx": 0, "dy": 0 },
-          "to": { "columnIndex": 5, "rowIndex": 7, "dx": 0, "dy": 0 },
-          "behavior": "MOVE_DONT_RESIZE"
-        },
-        "presetGeometryToken": "roundRect",
-        "text": "Queue"
+      "stepId": "step-04-set-picture",
+      "action": {
+        "type": "SET_PICTURE",
+        "picture": {
+          "name": "OpsPicture",
+          "image": {
+            "format": "PNG",
+            "source": {
+              "type": "INLINE_BASE64",
+              "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+            }
+          },
+          "anchor": {
+            "type": "TWO_CELL",
+            "from": {
+              "columnIndex": 0,
+              "rowIndex": 4,
+              "dx": 0,
+              "dy": 0
+            },
+            "to": {
+              "columnIndex": 2,
+              "rowIndex": 8,
+              "dx": 0,
+              "dy": 0
+            },
+            "behavior": "MOVE_AND_RESIZE"
+          },
+          "description": {
+            "type": "INLINE",
+            "text": "Queue preview"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ops"
       }
     },
     {
-      "type": "SET_SHAPE",
-      "sheetName": "Ops",
-      "shape": {
-        "name": "OpsConnector",
-        "kind": "CONNECTOR",
+      "stepId": "step-05-set-shape",
+      "action": {
+        "type": "SET_SHAPE",
+        "shape": {
+          "name": "OpsShape",
+          "kind": "SIMPLE_SHAPE",
+          "anchor": {
+            "type": "TWO_CELL",
+            "from": {
+              "columnIndex": 3,
+              "rowIndex": 4,
+              "dx": 0,
+              "dy": 0
+            },
+            "to": {
+              "columnIndex": 5,
+              "rowIndex": 7,
+              "dx": 0,
+              "dy": 0
+            },
+            "behavior": "MOVE_DONT_RESIZE"
+          },
+          "presetGeometryToken": "roundRect",
+          "text": {
+            "type": "INLINE",
+            "text": "Queue"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ops"
+      }
+    },
+    {
+      "stepId": "step-06-set-shape",
+      "action": {
+        "type": "SET_SHAPE",
+        "shape": {
+          "name": "OpsConnector",
+          "kind": "CONNECTOR",
+          "anchor": {
+            "type": "TWO_CELL",
+            "from": {
+              "columnIndex": 3,
+              "rowIndex": 8,
+              "dx": 0,
+              "dy": 0
+            },
+            "to": {
+              "columnIndex": 6,
+              "rowIndex": 9,
+              "dx": 0,
+              "dy": 0
+            },
+            "behavior": "MOVE_AND_RESIZE"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ops"
+      }
+    },
+    {
+      "stepId": "step-07-set-embedded-object",
+      "action": {
+        "type": "SET_EMBEDDED_OBJECT",
+        "embeddedObject": {
+          "name": "OpsEmbed",
+          "label": "Ops payload",
+          "fileName": "ops-payload.txt",
+          "command": "open",
+          "previewImage": {
+            "format": "PNG",
+            "source": {
+              "type": "INLINE_BASE64",
+              "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+            }
+          },
+          "anchor": {
+            "type": "TWO_CELL",
+            "from": {
+              "columnIndex": 6,
+              "rowIndex": 4,
+              "dx": 0,
+              "dy": 0
+            },
+            "to": {
+              "columnIndex": 8,
+              "rowIndex": 9,
+              "dx": 0,
+              "dy": 0
+            },
+            "behavior": "MOVE_AND_RESIZE"
+          },
+          "payload": {
+            "type": "INLINE_BASE64",
+            "base64Data": "R3JpZEdyaW5kIGVtYmVkZGVkIHBheWxvYWQ="
+          }
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Ops"
+      }
+    },
+    {
+      "stepId": "step-08-set-drawing-object-anchor",
+      "action": {
+        "type": "SET_DRAWING_OBJECT_ANCHOR",
         "anchor": {
           "type": "TWO_CELL",
-          "from": { "columnIndex": 3, "rowIndex": 8, "dx": 0, "dy": 0 },
-          "to": { "columnIndex": 6, "rowIndex": 9, "dx": 0, "dy": 0 },
+          "from": {
+            "columnIndex": 1,
+            "rowIndex": 5,
+            "dx": 0,
+            "dy": 0
+          },
+          "to": {
+            "columnIndex": 3,
+            "rowIndex": 9,
+            "dx": 0,
+            "dy": 0
+          },
           "behavior": "MOVE_AND_RESIZE"
         }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "sheetName": "Ops",
+        "objectName": "OpsPicture"
       }
     },
     {
-      "type": "SET_EMBEDDED_OBJECT",
-      "sheetName": "Ops",
-      "embeddedObject": {
-        "name": "OpsEmbed",
-        "label": "Ops payload",
-        "fileName": "ops-payload.txt",
-        "command": "open",
-        "base64Data": "R3JpZEdyaW5kIGVtYmVkZGVkIHBheWxvYWQ=",
-        "previewImage": {
-          "format": "PNG",
-          "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
-        },
-        "anchor": {
-          "type": "TWO_CELL",
-          "from": { "columnIndex": 6, "rowIndex": 4, "dx": 0, "dy": 0 },
-          "to": { "columnIndex": 8, "rowIndex": 9, "dx": 0, "dy": 0 },
-          "behavior": "MOVE_AND_RESIZE"
-        }
+      "stepId": "step-09-delete-drawing-object",
+      "action": {
+        "type": "DELETE_DRAWING_OBJECT"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "sheetName": "Ops",
+        "objectName": "OpsConnector"
       }
     },
     {
-      "type": "SET_DRAWING_OBJECT_ANCHOR",
-      "sheetName": "Ops",
-      "objectName": "OpsPicture",
-      "anchor": {
-        "type": "TWO_CELL",
-        "from": { "columnIndex": 1, "rowIndex": 5, "dx": 0, "dy": 0 },
-        "to": { "columnIndex": 3, "rowIndex": 9, "dx": 0, "dy": 0 },
-        "behavior": "MOVE_AND_RESIZE"
+      "query": {
+        "type": "GET_DRAWING_OBJECTS"
+      },
+      "stepId": "drawing-objects",
+      "target": {
+        "type": "ALL_ON_SHEET",
+        "sheetName": "Ops"
       }
     },
     {
-      "type": "DELETE_DRAWING_OBJECT",
-      "sheetName": "Ops",
-      "objectName": "OpsConnector"
-    }
-  ],
-  "reads": [
-    {
-      "type": "GET_DRAWING_OBJECTS",
-      "requestId": "drawing-objects",
-      "sheetName": "Ops"
+      "query": {
+        "type": "GET_DRAWING_OBJECT_PAYLOAD"
+      },
+      "stepId": "picture-payload",
+      "target": {
+        "type": "BY_NAME",
+        "sheetName": "Ops",
+        "objectName": "OpsPicture"
+      }
     },
     {
-      "type": "GET_DRAWING_OBJECT_PAYLOAD",
-      "requestId": "picture-payload",
-      "sheetName": "Ops",
-      "objectName": "OpsPicture"
+      "query": {
+        "type": "GET_DRAWING_OBJECT_PAYLOAD"
+      },
+      "stepId": "embedded-payload",
+      "target": {
+        "type": "BY_NAME",
+        "sheetName": "Ops",
+        "objectName": "OpsEmbed"
+      }
     },
     {
-      "type": "GET_DRAWING_OBJECT_PAYLOAD",
-      "requestId": "embedded-payload",
-      "sheetName": "Ops",
-      "objectName": "OpsEmbed"
-    },
-    {
-      "type": "GET_COMMENTS",
-      "requestId": "comments",
-      "sheetName": "Ops",
-      "selection": {
-        "type": "SELECTED",
-        "addresses": ["B2"]
+      "query": {
+        "type": "GET_COMMENTS"
+      },
+      "stepId": "comments",
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Ops",
+        "address": "B2"
       }
     }
   ]

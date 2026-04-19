@@ -32,7 +32,7 @@ public sealed interface ExcelRangeSelection
         throw new IllegalArgumentException("ranges must not contain duplicates");
       }
     }
-    return List.copyOf(copy);
+    return copy;
   }
 
   private static void requireNonBlank(String value, String fieldName) {

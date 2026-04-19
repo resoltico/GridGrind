@@ -16,6 +16,9 @@ sealed interface CliCommand {
   /** Requests that a minimal valid request JSON document be printed to stdout. */
   record PrintRequestTemplate() implements CliCommand {}
 
+  /** Requests that one built-in generated example request be printed to stdout. */
+  record PrintExample(String exampleId) implements CliCommand {}
+
   /**
    * Requests that the machine-readable protocol catalog be printed to stdout.
    *

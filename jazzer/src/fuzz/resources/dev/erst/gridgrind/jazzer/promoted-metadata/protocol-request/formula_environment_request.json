@@ -1,30 +1,29 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "../examples/formula-environment-request.json",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/formula_environment_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/formula_environment_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 2097,
+      "inputBytes" : 3496,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
-      "operationCount" : 8,
+      "operationCount" : 4,
       "operationKinds" : {
-        "EVALUATE_FORMULAS" : 1,
         "ENSURE_SHEET" : 1,
-        "SET_CELL" : 3,
-        "CLEAR_FORMULA_CACHES" : 1,
-        "EVALUATE_FORMULA_CELLS" : 1,
-        "SET_RANGE" : 1
+        "SET_RANGE" : 1,
+        "SET_CELL" : 2
       },
       "styleKinds" : { },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "GET_CELLS" : 1,
-        "GET_FORMULA_SURFACE" : 1
+        "GET_FORMULA_SURFACE" : 1,
+        "GET_CELLS" : 1
       }
     }
   },

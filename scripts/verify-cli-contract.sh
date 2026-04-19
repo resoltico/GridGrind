@@ -14,7 +14,7 @@ require_contains() {
     local needle=$2
     local description=$3
 
-    if ! grep -Fq "${needle}" <<<"${text}"; then
+    if ! grep -Fq -- "${needle}" <<<"${text}"; then
         die "${description}"
     fi
 }
@@ -24,7 +24,7 @@ require_absent() {
     local needle=$2
     local description=$3
 
-    if grep -Fq "${needle}" <<<"${text}"; then
+    if grep -Fq -- "${needle}" <<<"${text}"; then
         die "${description}"
     fi
 }
@@ -47,8 +47,10 @@ readonly target="${2:-}"
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 catalog_path=''
+help_path=''
 
 cleanup() {
+    [[ -n "${help_path}" ]] && rm -f "${help_path}" || true
     [[ -n "${catalog_path}" ]] || return
     rm -f "${catalog_path}" || true
 }
@@ -83,67 +85,107 @@ esac
 command -v python3 >/dev/null 2>&1 || die "python3 is required for CLI contract verification"
 
 help_output="$("${launcher[@]}" --help | tr -d '\r')"
-require_contains \
+require_absent \
     "${help_output}" \
     'FORCE_FORMULA_RECALCULATION_ON_OPEN' \
-    "${label} help output is missing the canonical streaming-write recalc operation name"
+    "${label} help output still exposes the deleted recalc mutation action"
 require_absent \
     "${help_output}" \
     'FORCE_FORMULA_RECALC_ON_OPEN' \
     "${label} help output still exposes the rejected legacy recalc shorthand"
 require_contains \
     "${help_output}" \
-    'LAMBDA/LET are currently rejected as INVALID_FORMULA' \
-    "${label} help output no longer states the current hard LAMBDA/LET parser boundary"
-require_contains \
-    "${help_output}" \
-    'ANALYZE_WORKBOOK_FINDINGS aggregates formula health, data-validation health, conditional-formatting health, autofilter health, table health, pivot-table health, hyperlink health, and named-range health.' \
-    "${label} help output no longer explains the aggregate workbook-health scope"
+    '--print-example <id>' \
+    "${label} help output no longer advertises built-in example printing"
+
+help_path="$(mktemp "${TMPDIR:-/tmp}/gridgrind-cli-help.XXXXXX.txt")"
+printf '%s\n' "${help_output}" > "${help_path}"
 
 catalog_path="$(mktemp "${TMPDIR:-/tmp}/gridgrind-cli-contract.XXXXXX.json")"
 "${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_path}"
 
-python3 - "${catalog_path}" <<'PY'
+python3 - "${catalog_path}" "${help_path}" <<'PY'
 import json
+import re
 import sys
 from pathlib import Path
 
 catalog = json.loads(Path(sys.argv[1]).read_text())
+help_output = Path(sys.argv[2]).read_text()
 
 def die(message: str) -> None:
     print(f"error: {message}", file=sys.stderr)
     raise SystemExit(1)
 
 plain_types = {entry["group"]: entry["type"] for entry in catalog["plainTypes"]}
-read_types = {entry["id"]: entry for entry in catalog["readTypes"]}
+inspection_query_types = {entry["id"]: entry for entry in catalog["inspectionQueryTypes"]}
+assertion_types = {entry["id"]: entry for entry in catalog["assertionTypes"]}
+cli_surface = catalog["cliSurface"]
+shipped_examples = catalog["shippedExamples"]
+
+for line in cli_surface["limitLines"]:
+    if line.startswith("STREAMING_WRITE mode:") and line not in help_output:
+        die("help output no longer includes the catalog-owned STREAMING_WRITE limit line")
+    if line.startswith("Formula authoring:") and line not in help_output:
+        die("help output no longer includes the catalog-owned formula authoring limit line")
+
+for line in cli_surface["requestLines"]:
+    if "ASSERTION steps for first-class verification" in line and line not in help_output:
+        die("help output no longer includes the catalog-owned step-kind summary")
+
+for line in cli_surface["discoveryLines"]:
+    if "ANALYZE_WORKBOOK_FINDINGS" in line and line not in help_output:
+        die("help output no longer includes the catalog-owned workbook findings discovery line")
+
+if not shipped_examples:
+    die("catalog shippedExamples is empty")
+for example in shipped_examples:
+    example_id = example["id"]
+    file_name = example["fileName"]
+    summary = example["summary"]
+    pattern = re.compile(
+        rf"^\s*{re.escape(example_id)}\s+examples/{re.escape(file_name)}\s+{re.escape(summary)}\s*$",
+        re.MULTILINE,
+    )
+    if not pattern.search(help_output):
+        die(f"help output no longer lists the built-in example line for {example_id}")
+
+execution_policy_summary = plain_types["executionPolicyInputType"]["summary"]
+if "execution.journal" not in execution_policy_summary:
+    die("catalog executionPolicyInputType summary no longer advertises execution.journal")
+if "execution.calculation" not in execution_policy_summary:
+    die("catalog executionPolicyInputType summary no longer advertises execution.calculation")
 
 execution_summary = plain_types["executionModeInputType"]["summary"]
-if "FORCE_FORMULA_RECALCULATION_ON_OPEN" not in execution_summary:
-    die("catalog executionModeInputType summary is missing the canonical recalc operation name")
+for needle in ("DO_NOT_CALCULATE", "markRecalculateOnOpen=true", "ENSURE_SHEET", "APPEND_ROW"):
+    if needle not in execution_summary:
+        die(f"catalog executionModeInputType summary is missing '{needle}'")
+if "FORCE_FORMULA_RECALCULATION_ON_OPEN" in execution_summary:
+    die("catalog executionModeInputType summary still exposes the deleted recalc mutation action")
 if "FORCE_FORMULA_RECALC_ON_OPEN" in execution_summary:
     die("catalog executionModeInputType summary still exposes the rejected legacy recalc shorthand")
 
-sheet_layout = read_types["GET_SHEET_LAYOUT"]["summary"]
+sheet_layout = inspection_query_types["GET_SHEET_LAYOUT"]["summary"]
 if "presentation" not in sheet_layout:
     die("catalog GET_SHEET_LAYOUT summary no longer advertises layout.presentation")
 
-formula_surface = read_types["GET_FORMULA_SURFACE"]["summary"]
+formula_surface = inspection_query_types["GET_FORMULA_SURFACE"]["summary"]
 if "analysis.totalFormulaCellCount" not in formula_surface:
     die("catalog GET_FORMULA_SURFACE summary no longer describes grouped formula output")
 
-formula_health = read_types["ANALYZE_FORMULA_HEALTH"]["summary"]
+formula_health = inspection_query_types["ANALYZE_FORMULA_HEALTH"]["summary"]
 if "analysis.checkedFormulaCellCount" not in formula_health:
     die("catalog ANALYZE_FORMULA_HEALTH summary no longer advertises checked-count output")
 
-named_range_surface = read_types["GET_NAMED_RANGE_SURFACE"]["summary"]
+named_range_surface = inspection_query_types["GET_NAMED_RANGE_SURFACE"]["summary"]
 if "analysis.workbookScopedCount" not in named_range_surface:
     die("catalog GET_NAMED_RANGE_SURFACE summary no longer advertises scope/count output")
 
-named_range_health = read_types["ANALYZE_NAMED_RANGE_HEALTH"]["summary"]
+named_range_health = inspection_query_types["ANALYZE_NAMED_RANGE_HEALTH"]["summary"]
 if "analysis.checkedNamedRangeCount" not in named_range_health:
     die("catalog ANALYZE_NAMED_RANGE_HEALTH summary no longer advertises checked-count output")
 
-workbook_findings = read_types["ANALYZE_WORKBOOK_FINDINGS"]["summary"]
+workbook_findings = inspection_query_types["ANALYZE_WORKBOOK_FINDINGS"]["summary"]
 for needle in (
     "all analysis families",
     "pivot-table health",
@@ -153,6 +195,11 @@ for needle in (
 ):
     if needle not in workbook_findings:
         die(f"catalog ANALYZE_WORKBOOK_FINDINGS summary is missing '{needle}'")
+
+if "EXPECT_CELL_VALUE" not in assertion_types:
+    die("catalog assertionTypes no longer includes EXPECT_CELL_VALUE")
+if "ALL_OF" not in assertion_types or "NOT" not in assertion_types:
+    die("catalog assertionTypes no longer includes the assertion composition operators")
 PY
 
 printf 'Verified CLI contract surface: %s\n' "${label}"

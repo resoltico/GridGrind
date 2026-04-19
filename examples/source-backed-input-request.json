@@ -1,0 +1,133 @@
+{
+  "protocolVersion" : "V1",
+  "planId" : "source-backed-input-workflow",
+  "source" : {
+    "type" : "NEW"
+  },
+  "persistence" : {
+    "type" : "NONE"
+  },
+  "steps" : [ {
+    "stepId" : "ensure-inputs",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Inputs"
+    },
+    "action" : {
+      "type" : "ENSURE_SHEET"
+    }
+  }, {
+    "stepId" : "seed-values",
+    "target" : {
+      "type" : "BY_RANGE",
+      "sheetName" : "Inputs",
+      "range" : "B2:B3"
+    },
+    "action" : {
+      "type" : "SET_RANGE",
+      "rows" : [ [ {
+        "type" : "NUMBER",
+        "number" : 12.0
+      } ], [ {
+        "type" : "NUMBER",
+        "number" : 18.0
+      } ] ]
+    }
+  }, {
+    "stepId" : "set-title-from-file",
+    "target" : {
+      "type" : "BY_ADDRESS",
+      "sheetName" : "Inputs",
+      "address" : "A1"
+    },
+    "action" : {
+      "type" : "SET_CELL",
+      "value" : {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "UTF8_FILE",
+          "path" : "examples/source-backed-input-assets/title.txt"
+        }
+      }
+    }
+  }, {
+    "stepId" : "set-total-formula-from-file",
+    "target" : {
+      "type" : "BY_ADDRESS",
+      "sheetName" : "Inputs",
+      "address" : "B4"
+    },
+    "action" : {
+      "type" : "SET_CELL",
+      "value" : {
+        "type" : "FORMULA",
+        "source" : {
+          "type" : "UTF8_FILE",
+          "path" : "examples/source-backed-input-assets/total-formula.txt"
+        }
+      }
+    }
+  }, {
+    "stepId" : "attach-payload-from-file",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Inputs"
+    },
+    "action" : {
+      "type" : "SET_EMBEDDED_OBJECT",
+      "embeddedObject" : {
+        "name" : "InputsPayload",
+        "label" : "Inputs payload",
+        "fileName" : "inputs-payload.txt",
+        "command" : "open",
+        "payload" : {
+          "type" : "FILE",
+          "path" : "examples/source-backed-input-assets/payload.bin"
+        },
+        "previewImage" : {
+          "format" : "PNG",
+          "source" : {
+            "type" : "INLINE_BASE64",
+            "base64Data" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+          }
+        },
+        "anchor" : {
+          "type" : "TWO_CELL",
+          "from" : {
+            "columnIndex" : 3,
+            "rowIndex" : 0,
+            "dx" : 0,
+            "dy" : 0
+          },
+          "to" : {
+            "columnIndex" : 5,
+            "rowIndex" : 4,
+            "dx" : 0,
+            "dy" : 0
+          },
+          "behavior" : "MOVE_AND_RESIZE"
+        }
+      }
+    }
+  }, {
+    "stepId" : "read-cells",
+    "target" : {
+      "type" : "BY_ADDRESSES",
+      "sheetName" : "Inputs",
+      "addresses" : [ "A1", "B4" ]
+    },
+    "query" : {
+      "type" : "GET_CELLS"
+    }
+  }, {
+    "stepId" : "read-payload",
+    "target" : {
+      "type" : "BY_NAME",
+      "sheetName" : "Inputs",
+      "objectName" : "InputsPayload"
+    },
+    "query" : {
+      "type" : "GET_DRAWING_OBJECT_PAYLOAD"
+    }
+  } ]
+}

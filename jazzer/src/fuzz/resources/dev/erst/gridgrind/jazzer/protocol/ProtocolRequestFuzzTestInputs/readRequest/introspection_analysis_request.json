@@ -1,202 +1,485 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "cli/build/generated-workbooks/gridgrind-introspection-analysis.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Dashboard" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Dashboard",
-      "range": "A1:C4",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Metric" },
-          { "type": "TEXT", "text": "Value" },
-          { "type": "TEXT", "text": "Notes" }
-        ],
-        [
-          { "type": "TEXT", "text": "Revenue" },
-          { "type": "NUMBER", "number": 125000.25 },
-          { "type": "TEXT", "text": "Closed month" }
-        ],
-        [
-          { "type": "TEXT", "text": "Margin" },
-          { "type": "NUMBER", "number": 0.42 },
-          { "type": "TEXT", "text": "Target 0.40" }
-        ],
-        [
-          { "type": "TEXT", "text": "Forecast" },
-          { "type": "FORMULA", "formula": "B2*(1+B3)" },
-          { "type": "TEXT", "text": "Projected next month" }
-        ]
-      ]
-    },
-    {
-      "type": "SET_HYPERLINK",
-      "sheetName": "Dashboard",
-      "address": "A1",
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
       "target": {
-        "type": "URL",
-        "target": "https://example.com/dashboard-handbook"
+        "type": "BY_NAME",
+        "name": "Dashboard"
       }
     },
     {
-      "type": "SET_COMMENT",
-      "sheetName": "Dashboard",
-      "address": "B4",
-      "comment": {
-        "text": "Forecast uses the revenue and margin rows above.",
-        "author": "GridGrind",
-        "visible": true
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Metric"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Value"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Notes"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Revenue"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 125000.25
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Closed month"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Margin"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 0.42
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Target 0.40"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Forecast"
+              }
+            },
+            {
+              "type": "FORMULA",
+              "source": {
+                "type": "INLINE",
+                "text": "B2*(1+B3)"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Projected next month"
+              }
+            }
+          ]
+        ]
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Dashboard",
+        "range": "A1:C4"
       }
     },
     {
-      "type": "SET_NAMED_RANGE",
-      "name": "ForecastValue",
-      "scope": { "type": "WORKBOOK" },
-      "target": { "sheetName": "Dashboard", "range": "B4" }
-    },
-    { "type": "MERGE_CELLS", "sheetName": "Dashboard", "range": "A6:C6" },
-    {
-      "type": "SET_CELL",
-      "sheetName": "Dashboard",
-      "address": "A6",
-      "value": { "type": "TEXT", "text": "Board Snapshot" }
-    },
-    {
-      "type": "SET_SHEET_PANE",
-      "sheetName": "Dashboard",
-      "pane": {
-        "type": "FROZEN",
-        "splitColumn": 0,
-        "splitRow": 1,
-        "leftmostColumn": 0,
-        "topRow": 1
+      "stepId": "step-03-set-hyperlink",
+      "action": {
+        "type": "SET_HYPERLINK",
+        "target": {
+          "type": "URL",
+          "target": "https://example.com/dashboard-handbook"
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Dashboard",
+        "address": "A1"
       }
     },
     {
-      "type": "SET_SHEET_ZOOM",
-      "sheetName": "Dashboard",
-      "zoomPercent": 115
-    },
-    {
-      "type": "SET_PRINT_LAYOUT",
-      "sheetName": "Dashboard",
-      "printLayout": {
-        "printArea": { "type": "RANGE", "range": "A1:C10" },
-        "orientation": "LANDSCAPE",
-        "scaling": { "type": "FIT", "widthPages": 1, "heightPages": 0 },
-        "repeatingRows": { "type": "BAND", "firstRowIndex": 0, "lastRowIndex": 0 },
-        "repeatingColumns": { "type": "NONE" },
-        "header": { "left": "Dashboard", "center": "Board Snapshot", "right": "" },
-        "footer": { "left": "", "center": "Internal", "right": "Page 1" }
-      }
-    },
-    { "type": "AUTO_SIZE_COLUMNS", "sheetName": "Dashboard" },
-    { "type": "EVALUATE_FORMULAS" }
-  ],
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
-    {
-      "type": "GET_CELLS",
-      "requestId": "cells",
-      "sheetName": "Dashboard",
-      "addresses": ["A1", "B4", "A6"]
-    },
-    {
-      "type": "GET_WINDOW",
-      "requestId": "window",
-      "sheetName": "Dashboard",
-      "topLeftAddress": "A1",
-      "rowCount": 6,
-      "columnCount": 3
-    },
-    {
-      "type": "GET_HYPERLINKS",
-      "requestId": "hyperlinks",
-      "sheetName": "Dashboard",
-      "selection": {
-        "type": "SELECTED",
-        "addresses": ["A1", "B4"]
+      "stepId": "step-04-set-comment",
+      "action": {
+        "type": "SET_COMMENT",
+        "comment": {
+          "text": {
+            "type": "INLINE",
+            "text": "Forecast uses the revenue and margin rows above."
+          },
+          "author": "GridGrind",
+          "visible": true
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Dashboard",
+        "address": "B4"
       }
     },
     {
-      "type": "GET_COMMENTS",
-      "requestId": "comments",
-      "sheetName": "Dashboard",
-      "selection": {
-        "type": "SELECTED",
-        "addresses": ["A1", "B4"]
+      "stepId": "step-05-set-named-range",
+      "action": {
+        "type": "SET_NAMED_RANGE",
+        "name": "ForecastValue",
+        "scope": {
+          "type": "WORKBOOK"
+        },
+        "target": {
+          "sheetName": "Dashboard",
+          "range": "B4"
+        }
+      },
+      "target": {
+        "type": "WORKBOOK_SCOPE",
+        "name": "ForecastValue"
       }
     },
     {
-      "type": "GET_MERGED_REGIONS",
-      "requestId": "merged",
-      "sheetName": "Dashboard"
-    },
-    {
-      "type": "GET_SHEET_LAYOUT",
-      "requestId": "layout",
-      "sheetName": "Dashboard"
-    },
-    {
-      "type": "GET_PRINT_LAYOUT",
-      "requestId": "print-layout",
-      "sheetName": "Dashboard"
-    },
-    {
-      "type": "GET_NAMED_RANGES",
-      "requestId": "named-ranges",
-      "selection": { "type": "ALL" }
-    },
-    {
-      "type": "GET_FORMULA_SURFACE",
-      "requestId": "formula-surface",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Dashboard"]
+      "stepId": "step-06-merge-cells",
+      "action": {
+        "type": "MERGE_CELLS"
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Dashboard",
+        "range": "A6:C6"
       }
     },
     {
-      "type": "GET_SHEET_SCHEMA",
-      "requestId": "schema",
-      "sheetName": "Dashboard",
-      "topLeftAddress": "A1",
-      "rowCount": 4,
-      "columnCount": 3
-    },
-    {
-      "type": "GET_NAMED_RANGE_SURFACE",
-      "requestId": "named-range-surface",
-      "selection": { "type": "ALL" }
-    },
-    {
-      "type": "ANALYZE_FORMULA_HEALTH",
-      "requestId": "formula-health",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Dashboard"]
+      "stepId": "step-07-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Board Snapshot"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Dashboard",
+        "address": "A6"
       }
     },
     {
-      "type": "ANALYZE_HYPERLINK_HEALTH",
-      "requestId": "hyperlink-health",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Dashboard"]
+      "stepId": "step-08-set-sheet-pane",
+      "action": {
+        "type": "SET_SHEET_PANE",
+        "pane": {
+          "type": "FROZEN",
+          "splitColumn": 0,
+          "splitRow": 1,
+          "leftmostColumn": 0,
+          "topRow": 1
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dashboard"
       }
     },
     {
-      "type": "ANALYZE_NAMED_RANGE_HEALTH",
-      "requestId": "named-range-health",
-      "selection": { "type": "ALL" }
+      "stepId": "step-09-set-sheet-zoom",
+      "action": {
+        "type": "SET_SHEET_ZOOM",
+        "zoomPercent": 115
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dashboard"
+      }
     },
     {
-      "type": "ANALYZE_WORKBOOK_FINDINGS",
-      "requestId": "workbook-findings"
+      "stepId": "step-10-set-print-layout",
+      "action": {
+        "type": "SET_PRINT_LAYOUT",
+        "printLayout": {
+          "printArea": {
+            "type": "RANGE",
+            "range": "A1:C10"
+          },
+          "orientation": "LANDSCAPE",
+          "scaling": {
+            "type": "FIT",
+            "widthPages": 1,
+            "heightPages": 0
+          },
+          "repeatingRows": {
+            "type": "BAND",
+            "firstRowIndex": 0,
+            "lastRowIndex": 0
+          },
+          "repeatingColumns": {
+            "type": "NONE"
+          },
+          "header": {
+            "left": {
+              "type": "INLINE",
+              "text": "Dashboard"
+            },
+            "center": {
+              "type": "INLINE",
+              "text": "Board Snapshot"
+            },
+            "right": {
+              "type": "INLINE",
+              "text": ""
+            }
+          },
+          "footer": {
+            "left": {
+              "type": "INLINE",
+              "text": ""
+            },
+            "center": {
+              "type": "INLINE",
+              "text": "Internal"
+            },
+            "right": {
+              "type": "INLINE",
+              "text": "Page 1"
+            }
+          }
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dashboard"
+      }
+    },
+    {
+      "stepId": "step-11-auto-size-columns",
+      "action": {
+        "type": "AUTO_SIZE_COLUMNS"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dashboard"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      },
+      "stepId": "workbook",
+      "target": {
+        "type": "CURRENT"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Dashboard",
+        "addresses": [
+          "A1",
+          "B4",
+          "A6"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WINDOW"
+      },
+      "stepId": "window",
+      "target": {
+        "type": "RECTANGULAR_WINDOW",
+        "sheetName": "Dashboard",
+        "topLeftAddress": "A1",
+        "rowCount": 6,
+        "columnCount": 3
+      }
+    },
+    {
+      "query": {
+        "type": "GET_HYPERLINKS"
+      },
+      "stepId": "hyperlinks",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Dashboard",
+        "addresses": [
+          "A1",
+          "B4"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_COMMENTS"
+      },
+      "stepId": "comments",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Dashboard",
+        "addresses": [
+          "A1",
+          "B4"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_MERGED_REGIONS"
+      },
+      "stepId": "merged",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dashboard"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_LAYOUT"
+      },
+      "stepId": "layout",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dashboard"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_PRINT_LAYOUT"
+      },
+      "stepId": "print-layout",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Dashboard"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_NAMED_RANGES"
+      },
+      "stepId": "named-ranges",
+      "target": {
+        "type": "ALL"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_FORMULA_SURFACE"
+      },
+      "stepId": "formula-surface",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Dashboard"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_SCHEMA"
+      },
+      "stepId": "schema",
+      "target": {
+        "type": "RECTANGULAR_WINDOW",
+        "sheetName": "Dashboard",
+        "topLeftAddress": "A1",
+        "rowCount": 4,
+        "columnCount": 3
+      }
+    },
+    {
+      "query": {
+        "type": "GET_NAMED_RANGE_SURFACE"
+      },
+      "stepId": "named-range-surface",
+      "target": {
+        "type": "ALL"
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_FORMULA_HEALTH"
+      },
+      "stepId": "formula-health",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Dashboard"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_HYPERLINK_HEALTH"
+      },
+      "stepId": "hyperlink-health",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Dashboard"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_NAMED_RANGE_HEALTH"
+      },
+      "stepId": "named-range-health",
+      "target": {
+        "type": "ALL"
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_WORKBOOK_FINDINGS"
+      },
+      "stepId": "workbook-findings",
+      "target": {
+        "type": "CURRENT"
+      }
     }
-  ]
+  ],
+  "execution": {
+    "calculation": {
+      "strategy": {
+        "type": "EVALUATE_ALL"
+      }
+    }
+  }
 }

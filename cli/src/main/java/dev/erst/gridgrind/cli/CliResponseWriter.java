@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.cli;
 
-import dev.erst.gridgrind.protocol.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
-import dev.erst.gridgrind.protocol.exec.GridGrindProblems;
-import dev.erst.gridgrind.protocol.json.GridGrindJson;
+import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
+import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.json.GridGrindJson;
+import dev.erst.gridgrind.executor.GridGrindProblems;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;

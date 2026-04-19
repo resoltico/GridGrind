@@ -73,7 +73,7 @@ class WorkbookReadCommandTest {
     WorkbookReadCommand.AnalyzeWorkbookFindings workbookFindings =
         new WorkbookReadCommand.AnalyzeWorkbookFindings("workbookFindings");
 
-    assertEquals("workbook", workbookSummary.requestId());
+    assertEquals("workbook", workbookSummary.stepId());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRanges.selection());
     assertEquals("Budget", sheetSummary.sheetName());
     assertEquals(List.of("A1"), cells.addresses());
@@ -97,7 +97,7 @@ class WorkbookReadCommandTest {
     assertInstanceOf(ExcelPivotTableSelection.ByNames.class, pivotTableHealth.selection());
     assertInstanceOf(ExcelSheetSelection.All.class, hyperlinkHealth.selection());
     assertInstanceOf(ExcelNamedRangeSelection.All.class, namedRangeHealth.selection());
-    assertEquals("workbookFindings", workbookFindings.requestId());
+    assertEquals("workbookFindings", workbookFindings.stepId());
   }
 
   @Test

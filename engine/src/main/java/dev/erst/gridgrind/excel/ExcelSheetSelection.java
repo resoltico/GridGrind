@@ -32,7 +32,7 @@ public sealed interface ExcelSheetSelection
         throw new IllegalArgumentException("sheetNames must not contain duplicates");
       }
     }
-    return List.copyOf(copy);
+    return copy;
   }
 
   private static void requireNonBlank(String value, String fieldName) {

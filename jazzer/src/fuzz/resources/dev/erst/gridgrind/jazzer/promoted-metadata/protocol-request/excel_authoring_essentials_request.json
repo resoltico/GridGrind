@@ -1,34 +1,35 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "../examples/excel-authoring-essentials-request.json",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/excel_authoring_essentials_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/excel_authoring_essentials_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 2858,
+      "inputBytes" : 5348,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
-      "operationCount" : 8,
+      "operationCount" : 7,
       "operationKinds" : {
-        "SET_NAMED_RANGE" : 2,
-        "EVALUATE_FORMULAS" : 1,
         "ENSURE_SHEET" : 1,
         "SET_COMMENT" : 1,
         "SET_RANGE" : 1,
+        "SET_NAMED_RANGE" : 2,
         "SET_HYPERLINK" : 2
       },
       "styleKinds" : { },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
       "readCount" : 6,
       "readKinds" : {
-        "GET_CELLS" : 1,
-        "GET_WINDOW" : 1,
         "GET_NAMED_RANGES" : 1,
         "GET_COMMENTS" : 1,
         "GET_HYPERLINKS" : 1,
-        "GET_NAMED_RANGE_SURFACE" : 1
+        "GET_NAMED_RANGE_SURFACE" : 1,
+        "GET_CELLS" : 1,
+        "GET_WINDOW" : 1
       }
     }
   },

@@ -1,13 +1,13 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "../examples/rich-text-request.json",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/rich_text_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/rich_text_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 1732,
+      "inputBytes" : 2877,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
@@ -18,19 +18,21 @@
         "APPLY_STYLE" : 1
       },
       "styleKinds" : {
-        "font" : 1,
-        "wrap_text" : 1,
         "alignment" : 1,
         "font_color" : 1,
         "font_height" : 1,
         "vertical_alignment" : 1,
         "font_name" : 1,
-        "font_height_points" : 1
+        "font_height_points" : 1,
+        "font" : 1,
+        "wrap_text" : 1
       },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "GET_CELLS" : 1,
-        "GET_WINDOW" : 1
+        "GET_WINDOW" : 1,
+        "GET_CELLS" : 1
       }
     }
   },

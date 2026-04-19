@@ -7,22 +7,25 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 2747,
+      "inputBytes" : 6083,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 5,
       "operationKinds" : {
-        "SET_RANGE" : 1,
-        "CLEAR_CONDITIONAL_FORMATTING" : 1,
         "SET_CONDITIONAL_FORMATTING" : 2,
-        "ENSURE_SHEET" : 1
+        "ENSURE_SHEET" : 1,
+        "SET_RANGE" : 1,
+        "CLEAR_CONDITIONAL_FORMATTING" : 1
       },
       "styleKinds" : { },
-      "readCount" : 2,
+      "assertionCount" : 0,
+      "assertionKinds" : { },
+      "readCount" : 3,
       "readKinds" : {
-        "ANALYZE_CONDITIONAL_FORMATTING_HEALTH" : 1,
-        "GET_CONDITIONAL_FORMATTING" : 1
+        "GET_CONDITIONAL_FORMATTING" : 1,
+        "ANALYZE_WORKBOOK_FINDINGS" : 1,
+        "ANALYZE_CONDITIONAL_FORMATTING_HEALTH" : 1
       }
     }
   },

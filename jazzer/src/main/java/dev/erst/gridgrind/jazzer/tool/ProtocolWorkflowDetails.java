@@ -10,6 +10,8 @@ public record ProtocolWorkflowDetails(
     int operationCount,
     Map<String, Long> operationKinds,
     Map<String, Long> styleKinds,
+    int assertionCount,
+    Map<String, Long> assertionKinds,
     int readCount,
     Map<String, Long> readKinds,
     String responseKind)

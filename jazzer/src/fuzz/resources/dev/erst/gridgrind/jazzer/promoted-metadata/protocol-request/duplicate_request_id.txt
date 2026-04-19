@@ -2,14 +2,16 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/duplicate_request_id.json
 Harness: protocol-request
 Outcome: EXPECTED_INVALID
-Kind: InvalidRequestException
-Message: reads must not contain duplicate requestId values: summary
-Input Bytes: 318
-Decode Outcome: INVALID_REQUEST
+Kind: InvalidRequestShapeException
+Message: Missing required field 'target'
+Input Bytes: 580
+Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED
 Operation Count: 0
+Assertion Count: 0
 Read Count: 0
+Assertion Kinds: (none)
 Read Kinds: (none)
 Style Kinds: (none)
 Operation Kinds: (none)

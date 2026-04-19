@@ -1,0 +1,107 @@
+{
+  "protocolVersion" : "V1",
+  "planId" : "assertion-workflow",
+  "source" : {
+    "type" : "NEW"
+  },
+  "persistence" : {
+    "type" : "NONE"
+  },
+  "execution" : {
+    "journal" : {
+      "level" : "VERBOSE"
+    }
+  },
+  "steps" : [ {
+    "stepId" : "ensure-budget",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Budget"
+    },
+    "action" : {
+      "type" : "ENSURE_SHEET"
+    }
+  }, {
+    "stepId" : "set-title",
+    "target" : {
+      "type" : "BY_ADDRESS",
+      "sheetName" : "Budget",
+      "address" : "A1"
+    },
+    "action" : {
+      "type" : "SET_CELL",
+      "value" : {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Quarterly Budget"
+        }
+      }
+    }
+  }, {
+    "stepId" : "set-total",
+    "target" : {
+      "type" : "BY_ADDRESS",
+      "sheetName" : "Budget",
+      "address" : "B2"
+    },
+    "action" : {
+      "type" : "SET_CELL",
+      "value" : {
+        "type" : "NUMBER",
+        "number" : 1200.0
+      }
+    }
+  }, {
+    "stepId" : "assert-title",
+    "target" : {
+      "type" : "BY_ADDRESS",
+      "sheetName" : "Budget",
+      "address" : "A1"
+    },
+    "assertion" : {
+      "type" : "EXPECT_CELL_VALUE",
+      "expectedValue" : {
+        "type" : "TEXT",
+        "text" : "Quarterly Budget"
+      }
+    }
+  }, {
+    "stepId" : "assert-total",
+    "target" : {
+      "type" : "BY_ADDRESS",
+      "sheetName" : "Budget",
+      "address" : "B2"
+    },
+    "assertion" : {
+      "type" : "EXPECT_CELL_VALUE",
+      "expectedValue" : {
+        "type" : "NUMBER",
+        "number" : 1200.0
+      }
+    }
+  }, {
+    "stepId" : "assert-formula-health",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Budget"
+    },
+    "assertion" : {
+      "type" : "EXPECT_ANALYSIS_MAX_SEVERITY",
+      "query" : {
+        "type" : "ANALYZE_FORMULA_HEALTH"
+      },
+      "maximumSeverity" : "INFO"
+    }
+  }, {
+    "stepId" : "read-budget",
+    "target" : {
+      "type" : "BY_ADDRESSES",
+      "sheetName" : "Budget",
+      "addresses" : [ "A1", "B2" ]
+    },
+    "query" : {
+      "type" : "GET_CELLS"
+    }
+  } ]
+}

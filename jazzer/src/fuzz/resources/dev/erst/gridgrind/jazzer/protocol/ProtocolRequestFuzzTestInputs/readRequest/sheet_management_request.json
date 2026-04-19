@@ -7,97 +7,232 @@
     "type": "SAVE_AS",
     "path": "generated/sheet-management.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Budget" },
-    { "type": "ENSURE_SHEET", "sheetName": "Archive" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Budget",
-      "range": "A1:B3",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Owner" },
-          { "type": "TEXT", "text": "Total" }
-        ],
-        [
-          { "type": "TEXT", "text": "Marta" },
-          { "type": "NUMBER", "number": 120.0 }
-        ],
-        [
-          { "type": "TEXT", "text": "Liam" },
-          { "type": "NUMBER", "number": 140.0 }
-        ]
-      ]
-    },
-    {
-      "type": "SET_CELL",
-      "sheetName": "Archive",
-      "address": "A1",
-      "value": { "type": "TEXT", "text": "Hidden archive" }
-    },
-    {
-      "type": "COPY_SHEET",
-      "sourceSheetName": "Budget",
-      "newSheetName": "Budget Review",
-      "position": { "type": "AT_INDEX", "targetIndex": 1 }
-    },
-    {
-      "type": "SET_CELL",
-      "sheetName": "Budget Review",
-      "address": "B3",
-      "value": { "type": "NUMBER", "number": 155.0 }
-    },
-    { "type": "SET_ACTIVE_SHEET", "sheetName": "Budget Review" },
-    {
-      "type": "SET_SELECTED_SHEETS",
-      "sheetNames": ["Budget", "Budget Review"]
-    },
-    {
-      "type": "SET_SHEET_VISIBILITY",
-      "sheetName": "Archive",
-      "visibility": "VERY_HIDDEN"
-    },
-    {
-      "type": "SET_SHEET_PROTECTION",
-      "sheetName": "Budget Review",
-      "protection": {
-        "autoFilterLocked": true,
-        "deleteColumnsLocked": true,
-        "deleteRowsLocked": true,
-        "formatCellsLocked": true,
-        "formatColumnsLocked": false,
-        "formatRowsLocked": false,
-        "insertColumnsLocked": true,
-        "insertHyperlinksLocked": true,
-        "insertRowsLocked": true,
-        "objectsLocked": true,
-        "pivotTablesLocked": true,
-        "scenariosLocked": true,
-        "selectLockedCellsLocked": true,
-        "selectUnlockedCellsLocked": false,
-        "sortLocked": true
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Budget"
       }
-    }
-  ],
-  "reads": [
-    { "type": "GET_WORKBOOK_SUMMARY", "requestId": "workbook" },
-    {
-      "type": "GET_SHEET_SUMMARY",
-      "requestId": "review-summary",
-      "sheetName": "Budget Review"
     },
     {
-      "type": "GET_SHEET_SUMMARY",
-      "requestId": "archive-summary",
-      "sheetName": "Archive"
+      "stepId": "step-02-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Archive"
+      }
     },
     {
-      "type": "GET_WINDOW",
-      "requestId": "review-window",
-      "sheetName": "Budget Review",
-      "topLeftAddress": "A1",
-      "rowCount": 3,
-      "columnCount": 2
+      "stepId": "step-03-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Owner"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Total"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Marta"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 120.0
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Liam"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 140.0
+            }
+          ]
+        ]
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Budget",
+        "range": "A1:B3"
+      }
+    },
+    {
+      "stepId": "step-04-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Hidden archive"
+          }
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Archive",
+        "address": "A1"
+      }
+    },
+    {
+      "stepId": "step-05-copy-sheet",
+      "action": {
+        "type": "COPY_SHEET",
+        "newSheetName": "Budget Review",
+        "position": {
+          "type": "AT_INDEX",
+          "targetIndex": 1
+        },
+        "source": {
+          "type": "BY_NAME",
+          "name": "Budget"
+        }
+      }
+    },
+    {
+      "stepId": "step-06-set-cell",
+      "action": {
+        "type": "SET_CELL",
+        "value": {
+          "type": "NUMBER",
+          "number": 155.0
+        }
+      },
+      "target": {
+        "type": "BY_ADDRESS",
+        "sheetName": "Budget Review",
+        "address": "B3"
+      }
+    },
+    {
+      "stepId": "step-07-set-active-sheet",
+      "action": {
+        "type": "SET_ACTIVE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Budget Review"
+      }
+    },
+    {
+      "stepId": "step-08-set-selected-sheets",
+      "action": {
+        "type": "SET_SELECTED_SHEETS"
+      },
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Budget",
+          "Budget Review"
+        ]
+      }
+    },
+    {
+      "stepId": "step-09-set-sheet-visibility",
+      "action": {
+        "type": "SET_SHEET_VISIBILITY",
+        "visibility": "VERY_HIDDEN"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Archive"
+      }
+    },
+    {
+      "stepId": "step-10-set-sheet-protection",
+      "action": {
+        "type": "SET_SHEET_PROTECTION",
+        "protection": {
+          "autoFilterLocked": true,
+          "deleteColumnsLocked": true,
+          "deleteRowsLocked": true,
+          "formatCellsLocked": true,
+          "formatColumnsLocked": false,
+          "formatRowsLocked": false,
+          "insertColumnsLocked": true,
+          "insertHyperlinksLocked": true,
+          "insertRowsLocked": true,
+          "objectsLocked": true,
+          "pivotTablesLocked": true,
+          "scenariosLocked": true,
+          "selectLockedCellsLocked": true,
+          "selectUnlockedCellsLocked": false,
+          "sortLocked": true
+        }
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Budget Review"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WORKBOOK_SUMMARY"
+      },
+      "stepId": "workbook",
+      "target": {
+        "type": "CURRENT"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_SUMMARY"
+      },
+      "stepId": "review-summary",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Budget Review"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_SHEET_SUMMARY"
+      },
+      "stepId": "archive-summary",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Archive"
+      }
+    },
+    {
+      "query": {
+        "type": "GET_WINDOW"
+      },
+      "stepId": "review-window",
+      "target": {
+        "type": "RECTANGULAR_WINDOW",
+        "sheetName": "Budget Review",
+        "topLeftAddress": "A1",
+        "rowCount": 3,
+        "columnCount": 2
+      }
     }
   ]
 }

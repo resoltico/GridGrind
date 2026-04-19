@@ -614,18 +614,6 @@ public final class XlsxRoundTripVerifier {
         case WorkbookCommand.AutoSizeColumns _ -> {
           // Auto-sizing does not add new candidate cells.
         }
-        case WorkbookCommand.EvaluateAllFormulas _ -> {
-          // Formula evaluation does not add new candidate cells.
-        }
-        case WorkbookCommand.EvaluateFormulaCells _ -> {
-          // Targeted formula evaluation does not add new candidate cells.
-        }
-        case WorkbookCommand.ClearFormulaCaches _ -> {
-          // Cache clearing does not add new candidate cells.
-        }
-        case WorkbookCommand.ForceFormulaRecalculationOnOpen _ -> {
-          // Force-recalc flags do not add new candidate cells.
-        }
       }
     }
 

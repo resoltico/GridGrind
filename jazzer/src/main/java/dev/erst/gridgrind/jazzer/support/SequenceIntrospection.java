@@ -1,10 +1,11 @@
 package dev.erst.gridgrind.jazzer.support;
 
+import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
+import dev.erst.gridgrind.contract.step.AssertionStep;
+import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.excel.WorkbookCommand;
-import dev.erst.gridgrind.protocol.dto.GridGrindRequest;
-import dev.erst.gridgrind.protocol.dto.GridGrindResponse;
-import dev.erst.gridgrind.protocol.operation.WorkbookOperation;
-import dev.erst.gridgrind.protocol.read.WorkbookReadOperation;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,11 +15,27 @@ import java.util.Objects;
 public final class SequenceIntrospection {
   private SequenceIntrospection() {}
 
-  /** Counts protocol operation kinds by stable wire-facing name. */
-  public static Map<String, Long> operationKinds(List<WorkbookOperation> operations) {
-    Objects.requireNonNull(operations, "operations must not be null");
+  /** Counts protocol mutation kinds by stable wire-facing action name. */
+  public static Map<String, Long> mutationKinds(List<MutationStep> mutations) {
+    Objects.requireNonNull(mutations, "mutations must not be null");
     LinkedHashMap<String, Long> counts = new LinkedHashMap<>();
-    operations.forEach(operation -> increment(counts, operationKind(operation)));
+    mutations.forEach(mutation -> increment(counts, mutationKind(mutation)));
+    return Map.copyOf(counts);
+  }
+
+  /** Counts protocol inspection kinds by stable wire-facing query name. */
+  public static Map<String, Long> inspectionKinds(List<InspectionStep> inspections) {
+    Objects.requireNonNull(inspections, "inspections must not be null");
+    LinkedHashMap<String, Long> counts = new LinkedHashMap<>();
+    inspections.forEach(inspection -> increment(counts, inspectionKind(inspection)));
+    return Map.copyOf(counts);
+  }
+
+  /** Counts protocol assertion kinds by stable wire-facing assertion name. */
+  public static Map<String, Long> assertionKinds(List<AssertionStep> assertions) {
+    Objects.requireNonNull(assertions, "assertions must not be null");
+    LinkedHashMap<String, Long> counts = new LinkedHashMap<>();
+    assertions.forEach(assertion -> increment(counts, assertionKind(assertion)));
     return Map.copyOf(counts);
   }
 
@@ -30,21 +47,14 @@ public final class SequenceIntrospection {
     return Map.copyOf(counts);
   }
 
-  /** Counts workbook read kinds by stable wire-facing name. */
-  public static Map<String, Long> readKinds(List<WorkbookReadOperation> reads) {
-    Objects.requireNonNull(reads, "reads must not be null");
+  /** Counts style-attribute labels observed in protocol style mutations. */
+  public static Map<String, Long> styleKinds(List<MutationStep> mutations) {
+    Objects.requireNonNull(mutations, "mutations must not be null");
     LinkedHashMap<String, Long> counts = new LinkedHashMap<>();
-    reads.forEach(read -> increment(counts, readKind(read)));
-    return Map.copyOf(counts);
-  }
-
-  /** Counts style-attribute labels observed in protocol style operations. */
-  public static Map<String, Long> styleKinds(List<WorkbookOperation> operations) {
-    Objects.requireNonNull(operations, "operations must not be null");
-    LinkedHashMap<String, Long> counts = new LinkedHashMap<>();
-    operations.forEach(
-        operation -> {
-          if (operation instanceof WorkbookOperation.ApplyStyle applyStyle) {
+    mutations.forEach(
+        mutation -> {
+          if (mutation.action()
+              instanceof dev.erst.gridgrind.contract.action.MutationAction.ApplyStyle applyStyle) {
             StyleKindIntrospection.styleKinds(applyStyle.style())
                 .forEach((key, value) -> counts.merge(key, value, Long::sum));
           }
@@ -75,102 +85,41 @@ public final class SequenceIntrospection {
     };
   }
 
-  /** Counts ordered workbook reads requested by the protocol workflow generator. */
-  public static int readCount(GridGrindRequest request) {
+  /** Counts ordered inspection steps requested by one authored workflow. */
+  public static int inspectionCount(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
-    return request.reads().size();
+    return request.inspectionSteps().size();
+  }
+
+  /** Counts ordered assertion steps requested by one authored workflow. */
+  public static int assertionCount(WorkbookPlan request) {
+    Objects.requireNonNull(request, "request must not be null");
+    return request.assertionSteps().size();
   }
 
   /** Returns the stable workbook source-type label for one request. */
-  public static String sourceKind(GridGrindRequest request) {
+  public static String sourceKind(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
     return switch (request.source()) {
-      case GridGrindRequest.WorkbookSource.New _ -> "NEW";
-      case GridGrindRequest.WorkbookSource.ExistingFile _ -> "EXISTING";
+      case WorkbookPlan.WorkbookSource.New _ -> "NEW";
+      case WorkbookPlan.WorkbookSource.ExistingFile _ -> "EXISTING";
     };
   }
 
   /** Returns the stable workbook persistence-type label for one request. */
-  public static String persistenceKind(GridGrindRequest request) {
+  public static String persistenceKind(WorkbookPlan request) {
     Objects.requireNonNull(request, "request must not be null");
     return switch (request.persistence()) {
-      case GridGrindRequest.WorkbookPersistence.None _ -> "NONE";
-      case GridGrindRequest.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
-      case GridGrindRequest.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
+      case WorkbookPlan.WorkbookPersistence.None _ -> "NONE";
+      case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
+      case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
     };
   }
 
-  /** Returns the stable wire-facing name for one protocol operation variant. */
-  static String operationKind(WorkbookOperation operation) {
-    Objects.requireNonNull(operation, "operation must not be null");
-    return switch (operation) {
-      case WorkbookOperation.EnsureSheet _ -> "ENSURE_SHEET";
-      case WorkbookOperation.RenameSheet _ -> "RENAME_SHEET";
-      case WorkbookOperation.DeleteSheet _ -> "DELETE_SHEET";
-      case WorkbookOperation.MoveSheet _ -> "MOVE_SHEET";
-      case WorkbookOperation.CopySheet _ -> "COPY_SHEET";
-      case WorkbookOperation.SetActiveSheet _ -> "SET_ACTIVE_SHEET";
-      case WorkbookOperation.SetSelectedSheets _ -> "SET_SELECTED_SHEETS";
-      case WorkbookOperation.SetSheetVisibility _ -> "SET_SHEET_VISIBILITY";
-      case WorkbookOperation.SetSheetProtection _ -> "SET_SHEET_PROTECTION";
-      case WorkbookOperation.ClearSheetProtection _ -> "CLEAR_SHEET_PROTECTION";
-      case WorkbookOperation.SetWorkbookProtection _ -> "SET_WORKBOOK_PROTECTION";
-      case WorkbookOperation.ClearWorkbookProtection _ -> "CLEAR_WORKBOOK_PROTECTION";
-      case WorkbookOperation.MergeCells _ -> "MERGE_CELLS";
-      case WorkbookOperation.UnmergeCells _ -> "UNMERGE_CELLS";
-      case WorkbookOperation.SetColumnWidth _ -> "SET_COLUMN_WIDTH";
-      case WorkbookOperation.SetRowHeight _ -> "SET_ROW_HEIGHT";
-      case WorkbookOperation.InsertRows _ -> "INSERT_ROWS";
-      case WorkbookOperation.DeleteRows _ -> "DELETE_ROWS";
-      case WorkbookOperation.ShiftRows _ -> "SHIFT_ROWS";
-      case WorkbookOperation.InsertColumns _ -> "INSERT_COLUMNS";
-      case WorkbookOperation.DeleteColumns _ -> "DELETE_COLUMNS";
-      case WorkbookOperation.ShiftColumns _ -> "SHIFT_COLUMNS";
-      case WorkbookOperation.SetRowVisibility _ -> "SET_ROW_VISIBILITY";
-      case WorkbookOperation.SetColumnVisibility _ -> "SET_COLUMN_VISIBILITY";
-      case WorkbookOperation.GroupRows _ -> "GROUP_ROWS";
-      case WorkbookOperation.UngroupRows _ -> "UNGROUP_ROWS";
-      case WorkbookOperation.GroupColumns _ -> "GROUP_COLUMNS";
-      case WorkbookOperation.UngroupColumns _ -> "UNGROUP_COLUMNS";
-      case WorkbookOperation.SetSheetPane _ -> "SET_SHEET_PANE";
-      case WorkbookOperation.SetSheetZoom _ -> "SET_SHEET_ZOOM";
-      case WorkbookOperation.SetSheetPresentation _ -> "SET_SHEET_PRESENTATION";
-      case WorkbookOperation.SetPrintLayout _ -> "SET_PRINT_LAYOUT";
-      case WorkbookOperation.ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
-      case WorkbookOperation.SetCell _ -> "SET_CELL";
-      case WorkbookOperation.SetRange _ -> "SET_RANGE";
-      case WorkbookOperation.ClearRange _ -> "CLEAR_RANGE";
-      case WorkbookOperation.SetHyperlink _ -> "SET_HYPERLINK";
-      case WorkbookOperation.ClearHyperlink _ -> "CLEAR_HYPERLINK";
-      case WorkbookOperation.SetComment _ -> "SET_COMMENT";
-      case WorkbookOperation.ClearComment _ -> "CLEAR_COMMENT";
-      case WorkbookOperation.SetPicture _ -> "SET_PICTURE";
-      case WorkbookOperation.SetChart _ -> "SET_CHART";
-      case WorkbookOperation.SetPivotTable _ -> "SET_PIVOT_TABLE";
-      case WorkbookOperation.SetShape _ -> "SET_SHAPE";
-      case WorkbookOperation.SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
-      case WorkbookOperation.SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
-      case WorkbookOperation.DeleteDrawingObject _ -> "DELETE_DRAWING_OBJECT";
-      case WorkbookOperation.ApplyStyle _ -> "APPLY_STYLE";
-      case WorkbookOperation.SetDataValidation _ -> "SET_DATA_VALIDATION";
-      case WorkbookOperation.ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
-      case WorkbookOperation.SetConditionalFormatting _ -> "SET_CONDITIONAL_FORMATTING";
-      case WorkbookOperation.ClearConditionalFormatting _ -> "CLEAR_CONDITIONAL_FORMATTING";
-      case WorkbookOperation.SetAutofilter _ -> "SET_AUTOFILTER";
-      case WorkbookOperation.ClearAutofilter _ -> "CLEAR_AUTOFILTER";
-      case WorkbookOperation.SetTable _ -> "SET_TABLE";
-      case WorkbookOperation.DeleteTable _ -> "DELETE_TABLE";
-      case WorkbookOperation.DeletePivotTable _ -> "DELETE_PIVOT_TABLE";
-      case WorkbookOperation.SetNamedRange _ -> "SET_NAMED_RANGE";
-      case WorkbookOperation.DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
-      case WorkbookOperation.AppendRow _ -> "APPEND_ROW";
-      case WorkbookOperation.AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
-      case WorkbookOperation.EvaluateFormulas _ -> "EVALUATE_FORMULAS";
-      case WorkbookOperation.EvaluateFormulaCells _ -> "EVALUATE_FORMULA_CELLS";
-      case WorkbookOperation.ClearFormulaCaches _ -> "CLEAR_FORMULA_CACHES";
-      case WorkbookOperation.ForceFormulaRecalculationOnOpen _ ->
-          "FORCE_FORMULA_RECALCULATION_ON_OPEN";
-    };
+  /** Returns the stable wire-facing name for one protocol mutation step. */
+  static String mutationKind(MutationStep mutation) {
+    Objects.requireNonNull(mutation, "mutation must not be null");
+    return mutation.action().actionType();
   }
 
   /** Returns the stable engine-facing name for one workbook command variant. */
@@ -238,52 +187,19 @@ public final class SequenceIntrospection {
       case WorkbookCommand.DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
       case WorkbookCommand.AppendRow _ -> "APPEND_ROW";
       case WorkbookCommand.AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
-      case WorkbookCommand.EvaluateAllFormulas _ -> "EVALUATE_ALL_FORMULAS";
-      case WorkbookCommand.EvaluateFormulaCells _ -> "EVALUATE_FORMULA_CELLS";
-      case WorkbookCommand.ClearFormulaCaches _ -> "CLEAR_FORMULA_CACHES";
-      case WorkbookCommand.ForceFormulaRecalculationOnOpen _ ->
-          "FORCE_FORMULA_RECALCULATION_ON_OPEN";
     };
   }
 
-  /** Returns the stable wire-facing name for one workbook read variant. */
-  static String readKind(WorkbookReadOperation read) {
-    Objects.requireNonNull(read, "read must not be null");
-    return switch (read) {
-      case WorkbookReadOperation.GetWorkbookSummary _ -> "GET_WORKBOOK_SUMMARY";
-      case WorkbookReadOperation.GetPackageSecurity _ -> "GET_PACKAGE_SECURITY";
-      case WorkbookReadOperation.GetWorkbookProtection _ -> "GET_WORKBOOK_PROTECTION";
-      case WorkbookReadOperation.GetNamedRanges _ -> "GET_NAMED_RANGES";
-      case WorkbookReadOperation.GetSheetSummary _ -> "GET_SHEET_SUMMARY";
-      case WorkbookReadOperation.GetCells _ -> "GET_CELLS";
-      case WorkbookReadOperation.GetWindow _ -> "GET_WINDOW";
-      case WorkbookReadOperation.GetMergedRegions _ -> "GET_MERGED_REGIONS";
-      case WorkbookReadOperation.GetHyperlinks _ -> "GET_HYPERLINKS";
-      case WorkbookReadOperation.GetComments _ -> "GET_COMMENTS";
-      case WorkbookReadOperation.GetDrawingObjects _ -> "GET_DRAWING_OBJECTS";
-      case WorkbookReadOperation.GetCharts _ -> "GET_CHARTS";
-      case WorkbookReadOperation.GetPivotTables _ -> "GET_PIVOT_TABLES";
-      case WorkbookReadOperation.GetDrawingObjectPayload _ -> "GET_DRAWING_OBJECT_PAYLOAD";
-      case WorkbookReadOperation.GetSheetLayout _ -> "GET_SHEET_LAYOUT";
-      case WorkbookReadOperation.GetPrintLayout _ -> "GET_PRINT_LAYOUT";
-      case WorkbookReadOperation.GetDataValidations _ -> "GET_DATA_VALIDATIONS";
-      case WorkbookReadOperation.GetConditionalFormatting _ -> "GET_CONDITIONAL_FORMATTING";
-      case WorkbookReadOperation.GetAutofilters _ -> "GET_AUTOFILTERS";
-      case WorkbookReadOperation.GetTables _ -> "GET_TABLES";
-      case WorkbookReadOperation.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
-      case WorkbookReadOperation.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
-      case WorkbookReadOperation.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
-      case WorkbookReadOperation.AnalyzeFormulaHealth _ -> "ANALYZE_FORMULA_HEALTH";
-      case WorkbookReadOperation.AnalyzeDataValidationHealth _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
-      case WorkbookReadOperation.AnalyzeConditionalFormattingHealth _ ->
-          "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
-      case WorkbookReadOperation.AnalyzeAutofilterHealth _ -> "ANALYZE_AUTOFILTER_HEALTH";
-      case WorkbookReadOperation.AnalyzeTableHealth _ -> "ANALYZE_TABLE_HEALTH";
-      case WorkbookReadOperation.AnalyzePivotTableHealth _ -> "ANALYZE_PIVOT_TABLE_HEALTH";
-      case WorkbookReadOperation.AnalyzeHyperlinkHealth _ -> "ANALYZE_HYPERLINK_HEALTH";
-      case WorkbookReadOperation.AnalyzeNamedRangeHealth _ -> "ANALYZE_NAMED_RANGE_HEALTH";
-      case WorkbookReadOperation.AnalyzeWorkbookFindings _ -> "ANALYZE_WORKBOOK_FINDINGS";
-    };
+  /** Returns the stable wire-facing name for one protocol inspection step. */
+  static String inspectionKind(InspectionStep inspection) {
+    Objects.requireNonNull(inspection, "inspection must not be null");
+    return inspection.query().queryType();
+  }
+
+  /** Returns the stable wire-facing name for one protocol assertion step. */
+  static String assertionKind(AssertionStep assertion) {
+    Objects.requireNonNull(assertion, "assertion must not be null");
+    return assertion.assertion().assertionType();
   }
 
   private static void increment(Map<String, Long> counts, String key) {

@@ -1,6 +1,6 @@
 {
   "targetKey" : "xlsx-roundtrip",
-  "sourcePath" : ".local/runs/xlsx-roundtrip/crash-8532f5071c334f5dc337c8a2dd48d4ca837d0343",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/named_range_normalization_roundtrip_success.bin",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/named_range_normalization_roundtrip_success.bin",
   "replayOutcome" : "EXPECTED_INVALID",
   "expectation" : {
@@ -10,8 +10,8 @@
       "inputBytes" : 28,
       "commandCount" : 8,
       "commandKinds" : {
-        "CREATE_SHEET" : 7,
-        "APPEND_ROW" : 1
+        "APPEND_ROW" : 1,
+        "CREATE_SHEET" : 7
       },
       "styleKinds" : { }
     }

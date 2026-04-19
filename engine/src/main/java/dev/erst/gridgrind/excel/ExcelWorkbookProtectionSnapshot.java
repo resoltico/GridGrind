@@ -4,6 +4,6 @@ package dev.erst.gridgrind.excel;
 public record ExcelWorkbookProtectionSnapshot(
     boolean structureLocked,
     boolean windowsLocked,
-    boolean revisionLocked,
+    boolean revisionsLocked,
     boolean workbookPasswordHashPresent,
     boolean revisionsPasswordHashPresent) {}

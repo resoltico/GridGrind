@@ -36,41 +36,40 @@ final class WorkbookAnalyzer {
     return switch (command) {
       case WorkbookReadCommand.AnalyzeFormulaHealth analyzeFormulaHealth ->
           new WorkbookReadResult.FormulaHealthResult(
-              analyzeFormulaHealth.requestId(),
+              analyzeFormulaHealth.stepId(),
               formulaHealth(workbook, analyzeFormulaHealth.selection()));
       case WorkbookReadCommand.AnalyzeDataValidationHealth analyzeDataValidationHealth ->
           new WorkbookReadResult.DataValidationHealthResult(
-              analyzeDataValidationHealth.requestId(),
+              analyzeDataValidationHealth.stepId(),
               dataValidationHealth(workbook, analyzeDataValidationHealth.selection()));
       case WorkbookReadCommand.AnalyzeConditionalFormattingHealth
               analyzeConditionalFormattingHealth ->
           new WorkbookReadResult.ConditionalFormattingHealthResult(
-              analyzeConditionalFormattingHealth.requestId(),
+              analyzeConditionalFormattingHealth.stepId(),
               conditionalFormattingHealth(
                   workbook, analyzeConditionalFormattingHealth.selection()));
       case WorkbookReadCommand.AnalyzeAutofilterHealth analyzeAutofilterHealth ->
           new WorkbookReadResult.AutofilterHealthResult(
-              analyzeAutofilterHealth.requestId(),
+              analyzeAutofilterHealth.stepId(),
               autofilterHealth(workbook, analyzeAutofilterHealth.selection()));
       case WorkbookReadCommand.AnalyzeTableHealth analyzeTableHealth ->
           new WorkbookReadResult.TableHealthResult(
-              analyzeTableHealth.requestId(),
-              tableHealth(workbook, analyzeTableHealth.selection()));
+              analyzeTableHealth.stepId(), tableHealth(workbook, analyzeTableHealth.selection()));
       case WorkbookReadCommand.AnalyzePivotTableHealth analyzePivotTableHealth ->
           new WorkbookReadResult.PivotTableHealthResult(
-              analyzePivotTableHealth.requestId(),
+              analyzePivotTableHealth.stepId(),
               pivotTableHealth(workbook, analyzePivotTableHealth.selection()));
       case WorkbookReadCommand.AnalyzeHyperlinkHealth analyzeHyperlinkHealth ->
           new WorkbookReadResult.HyperlinkHealthResult(
-              analyzeHyperlinkHealth.requestId(),
+              analyzeHyperlinkHealth.stepId(),
               hyperlinkHealth(workbook, workbookLocation, analyzeHyperlinkHealth.selection()));
       case WorkbookReadCommand.AnalyzeNamedRangeHealth analyzeNamedRangeHealth ->
           new WorkbookReadResult.NamedRangeHealthResult(
-              analyzeNamedRangeHealth.requestId(),
+              analyzeNamedRangeHealth.stepId(),
               namedRangeHealth(workbook, analyzeNamedRangeHealth.selection()));
       case WorkbookReadCommand.AnalyzeWorkbookFindings analyzeWorkbookFindings ->
           new WorkbookReadResult.WorkbookFindingsResult(
-              analyzeWorkbookFindings.requestId(), workbookFindings(workbook, workbookLocation));
+              analyzeWorkbookFindings.stepId(), workbookFindings(workbook, workbookLocation));
     };
   }
 

@@ -1,0 +1,17 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/OperationWorkflowFuzzTestInputs/executeWorkflow/workflow_case_04.bin
+Harness: protocol-workflow
+Outcome: EXPECTED_INVALID
+Kind: IllegalArgumentException
+Message: address must be a single-cell A1-style address
+Input Bytes: 30
+Source Kind: NOT_GENERATED
+Persistence Kind: NOT_GENERATED
+Operation Count: 0
+Assertion Count: 0
+Read Count: 0
+Assertion Kinds: (none)
+Read Kinds: (none)
+Response Kind: NOT_EXECUTED
+Style Kinds: (none)
+Operation Kinds: (none)

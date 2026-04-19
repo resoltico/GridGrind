@@ -1,13 +1,17 @@
 Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/clear_on_empty_cells.json
 Harness: protocol-request
-Outcome: SUCCESS
-Input Bytes: 603
-Decode Outcome: PARSED
-Source Kind: NEW
-Persistence Kind: NONE
-Operation Count: 5
-Read Count: 1
-Read Kinds: GET_SHEET_SUMMARY=1
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestShapeException
+Message: Missing required field 'target'
+Input Bytes: 1204
+Decode Outcome: INVALID_REQUEST_SHAPE
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
+Assertion Count: 0
+Read Count: 0
+Assertion Kinds: (none)
+Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: CLEAR_HYPERLINK=1, CLEAR_RANGE=1, ENSURE_SHEET=1, CLEAR_COMMENT=1, SET_CELL=1
+Operation Kinds: (none)

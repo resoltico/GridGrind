@@ -26,7 +26,7 @@ public final class App {
   }
 
   void run(String[] args) throws IOException {
-    int exitCode = cliFactory.create().run(args, System.in, System.out);
+    int exitCode = cliFactory.create().run(args, System.in, System.out, System.err);
     if (exitCode != 0) {
       exitHandler.exit(exitCode);
     }
@@ -36,7 +36,8 @@ public final class App {
   @FunctionalInterface
   interface CliRunner {
     /** Runs the CLI with the given args and streams, returning an exit code. */
-    int run(String[] args, InputStream stdin, OutputStream stdout) throws IOException;
+    int run(String[] args, InputStream stdin, OutputStream stdout, OutputStream stderr)
+        throws IOException;
   }
 
   /** Functional interface for creating a {@link CliRunner}. */

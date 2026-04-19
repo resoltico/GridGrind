@@ -11,8 +11,7 @@
       "commandCount" : 3,
       "commandKinds" : {
         "DELETE_PIVOT_TABLE" : 1,
-        "AUTO_SIZE_COLUMNS" : 1,
-        "FORCE_FORMULA_RECALCULATION_ON_OPEN" : 1
+        "AUTO_SIZE_COLUMNS" : 2
       },
       "styleKinds" : { }
     }

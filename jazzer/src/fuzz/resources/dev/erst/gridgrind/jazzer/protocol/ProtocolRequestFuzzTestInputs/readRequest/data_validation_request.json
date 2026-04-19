@@ -1,122 +1,296 @@
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "cli/build/generated-workbooks/gridgrind-data-validation-request.xlsx"
   },
-  "operations": [
-    { "type": "ENSURE_SHEET", "sheetName": "Intake" },
+  "steps": [
     {
-      "type": "SET_RANGE",
-      "sheetName": "Intake",
-      "range": "A1:E4",
-      "rows": [
-        [
-          { "type": "TEXT", "text": "Ticket" },
-          { "type": "TEXT", "text": "Status" },
-          { "type": "TEXT", "text": "Priority" },
-          { "type": "TEXT", "text": "ETA" },
-          { "type": "TEXT", "text": "Notes" }
-        ],
-        [
-          { "type": "TEXT", "text": "OPS-102" },
-          { "type": "TEXT", "text": "Queued" },
-          { "type": "NUMBER", "number": 2 },
-          { "type": "DATE", "date": "2026-04-03" },
-          { "type": "TEXT", "text": "Intake ready" }
-        ],
-        [
-          { "type": "TEXT", "text": "OPS-103" },
-          { "type": "TEXT", "text": "Done" },
-          { "type": "NUMBER", "number": 4 },
-          { "type": "DATE", "date": "2026-04-05" },
-          { "type": "TEXT", "text": "Awaiting sign-off" }
-        ],
-        [
-          { "type": "TEXT", "text": "OPS-104" },
-          { "type": "TEXT", "text": "Blocked" },
-          { "type": "NUMBER", "number": 5 },
-          { "type": "DATE", "date": "2026-04-08" },
-          { "type": "TEXT", "text": "Dependency gap" }
+      "stepId": "step-01-ensure-sheet",
+      "action": {
+        "type": "ENSURE_SHEET"
+      },
+      "target": {
+        "type": "BY_NAME",
+        "name": "Intake"
+      }
+    },
+    {
+      "stepId": "step-02-set-range",
+      "action": {
+        "type": "SET_RANGE",
+        "rows": [
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Ticket"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Status"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Priority"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "ETA"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Notes"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "OPS-102"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Queued"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 2
+            },
+            {
+              "type": "DATE",
+              "date": "2026-04-03"
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Intake ready"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "OPS-103"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Done"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 4
+            },
+            {
+              "type": "DATE",
+              "date": "2026-04-05"
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Awaiting sign-off"
+              }
+            }
+          ],
+          [
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "OPS-104"
+              }
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Blocked"
+              }
+            },
+            {
+              "type": "NUMBER",
+              "number": 5
+            },
+            {
+              "type": "DATE",
+              "date": "2026-04-08"
+            },
+            {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Dependency gap"
+              }
+            }
+          ]
         ]
-      ]
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Intake",
+        "range": "A1:E4"
+      }
     },
     {
-      "type": "SET_DATA_VALIDATION",
-      "sheetName": "Intake",
-      "range": "B2:B200",
-      "validation": {
-        "rule": {
-          "type": "EXPLICIT_LIST",
-          "values": ["Queued", "Done", "Blocked"]
-        },
-        "allowBlank": true,
-        "prompt": {
-          "title": "Status",
-          "text": "Pick one workflow state."
-        },
-        "errorAlert": {
-          "style": "STOP",
-          "title": "Invalid status",
-          "text": "Use one of the allowed values."
+      "stepId": "step-03-set-data-validation",
+      "action": {
+        "type": "SET_DATA_VALIDATION",
+        "validation": {
+          "rule": {
+            "type": "EXPLICIT_LIST",
+            "values": [
+              "Queued",
+              "Done",
+              "Blocked"
+            ]
+          },
+          "allowBlank": true,
+          "prompt": {
+            "title": {
+              "type": "INLINE",
+              "text": "Status"
+            },
+            "text": {
+              "type": "INLINE",
+              "text": "Pick one workflow state."
+            }
+          },
+          "errorAlert": {
+            "style": "STOP",
+            "title": {
+              "type": "INLINE",
+              "text": "Invalid status"
+            },
+            "text": {
+              "type": "INLINE",
+              "text": "Use one of the allowed values."
+            }
+          }
         }
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Intake",
+        "range": "B2:B200"
       }
     },
     {
-      "type": "SET_DATA_VALIDATION",
-      "sheetName": "Intake",
-      "range": "C2:C200",
-      "validation": {
-        "rule": {
-          "type": "WHOLE_NUMBER",
-          "operator": "BETWEEN",
-          "formula1": "1",
-          "formula2": "5"
+      "stepId": "step-04-set-data-validation",
+      "action": {
+        "type": "SET_DATA_VALIDATION",
+        "validation": {
+          "rule": {
+            "type": "WHOLE_NUMBER",
+            "operator": "BETWEEN",
+            "formula1": "1",
+            "formula2": "5"
+          }
         }
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Intake",
+        "range": "C2:C200"
       }
     },
     {
-      "type": "CLEAR_DATA_VALIDATIONS",
-      "sheetName": "Intake",
-      "selection": {
-        "type": "SELECTED",
-        "ranges": ["B3", "C4"]
+      "stepId": "step-05-clear-data-validations",
+      "action": {
+        "type": "CLEAR_DATA_VALIDATIONS"
+      },
+      "target": {
+        "type": "BY_RANGES",
+        "sheetName": "Intake",
+        "ranges": [
+          "B3",
+          "C4"
+        ]
       }
     },
     {
-      "type": "SET_DATA_VALIDATION",
-      "sheetName": "Intake",
-      "range": "D2:D200",
-      "validation": {
-        "rule": {
-          "type": "DATE",
-          "operator": "GREATER_OR_EQUAL",
-          "formula1": "TODAY()"
+      "stepId": "step-06-set-data-validation",
+      "action": {
+        "type": "SET_DATA_VALIDATION",
+        "validation": {
+          "rule": {
+            "type": "DATE",
+            "operator": "GREATER_OR_EQUAL",
+            "formula1": "TODAY()"
+          }
         }
-      }
-    }
-  ],
-  "reads": [
-    {
-      "type": "GET_DATA_VALIDATIONS",
-      "requestId": "validations",
-      "sheetName": "Intake",
-      "selection": { "type": "ALL" }
-    },
-    {
-      "type": "ANALYZE_DATA_VALIDATION_HEALTH",
-      "requestId": "validation-health",
-      "selection": {
-        "type": "SELECTED",
-        "sheetNames": ["Intake"]
+      },
+      "target": {
+        "type": "BY_RANGE",
+        "sheetName": "Intake",
+        "range": "D2:D200"
       }
     },
     {
-      "type": "GET_CELLS",
-      "requestId": "cells",
-      "sheetName": "Intake",
-      "addresses": ["B2", "C3", "D4"]
+      "query": {
+        "type": "GET_DATA_VALIDATIONS"
+      },
+      "stepId": "validations",
+      "target": {
+        "type": "ALL_ON_SHEET",
+        "sheetName": "Intake"
+      }
+    },
+    {
+      "query": {
+        "type": "ANALYZE_DATA_VALIDATION_HEALTH"
+      },
+      "stepId": "validation-health",
+      "target": {
+        "type": "BY_NAMES",
+        "names": [
+          "Intake"
+        ]
+      }
+    },
+    {
+      "query": {
+        "type": "GET_CELLS"
+      },
+      "stepId": "cells",
+      "target": {
+        "type": "BY_ADDRESSES",
+        "sheetName": "Intake",
+        "addresses": [
+          "B2",
+          "C3",
+          "D4"
+        ]
+      }
     }
   ]
 }

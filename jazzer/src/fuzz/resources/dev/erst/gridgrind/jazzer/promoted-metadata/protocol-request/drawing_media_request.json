@@ -1,33 +1,35 @@
 {
   "targetKey" : "protocol-request",
-  "sourcePath" : "../examples/drawing-media-request.json",
+  "sourcePath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/drawing_media_request.json",
   "promotedInputPath" : "src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/drawing_media_request.json",
   "replayOutcome" : "SUCCESS",
   "expectation" : {
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 4209,
+      "inputBytes" : 7536,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 9,
       "operationKinds" : {
-        "ENSURE_SHEET" : 1,
-        "SET_RANGE" : 1,
-        "SET_PICTURE" : 1,
-        "SET_COMMENT" : 1,
         "SET_SHAPE" : 2,
         "DELETE_DRAWING_OBJECT" : 1,
         "SET_EMBEDDED_OBJECT" : 1,
-        "SET_DRAWING_OBJECT_ANCHOR" : 1
+        "SET_DRAWING_OBJECT_ANCHOR" : 1,
+        "ENSURE_SHEET" : 1,
+        "SET_RANGE" : 1,
+        "SET_PICTURE" : 1,
+        "SET_COMMENT" : 1
       },
       "styleKinds" : { },
+      "assertionCount" : 0,
+      "assertionKinds" : { },
       "readCount" : 4,
       "readKinds" : {
+        "GET_DRAWING_OBJECTS" : 1,
         "GET_COMMENTS" : 1,
-        "GET_DRAWING_OBJECT_PAYLOAD" : 2,
-        "GET_DRAWING_OBJECTS" : 1
+        "GET_DRAWING_OBJECT_PAYLOAD" : 2
       }
     }
   },

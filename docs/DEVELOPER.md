@@ -1,10 +1,10 @@
 ---
 afad: "3.5"
-version: "0.47.0"
+version: "0.48.0"
 domain: DEVELOPER
-updated: "2026-04-16"
+updated: "2026-04-18"
 route:
-  keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, protocol, cli]
+  keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
 ---
 
@@ -18,6 +18,7 @@ Companion references:
 - [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md)
 - [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
 - [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md)
+- [DEVELOPER_CONTRACT_REPLACEMENT_ADR.md](./DEVELOPER_CONTRACT_REPLACEMENT_ADR.md)
 - [DEVELOPER_JAZZER.md](./DEVELOPER_JAZZER.md)
 - [DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md)
 - [DEVELOPER_JAZZER_COVERAGE.md](./DEVELOPER_JAZZER_COVERAGE.md)
@@ -26,36 +27,54 @@ Companion references:
 
 ## Architecture
 
-GridGrind is a three-module Gradle project with compiler-enforced JPMS boundaries:
+GridGrind is a five-module Gradle project with compiler-enforced JPMS boundaries:
 
 ```
 engine/     Apache-POI-backed workbook engine. Owns mutable workbook state,
             workbook mutation rules, and factual workbook inspection.
 
-protocol/   The external GridGrind contract plus the single execution bridge
-            into engine. Public contract code is protocol-owned and split by
-            responsibility: dto, operation, read, catalog, json, and exec.
-            DefaultGridGrindRequestExecutor is the only main-source class
-            here that is engine-aware.
+contract/   Canonical GridGrind contract model. Owns the public request and
+            response types, catalog metadata, JSON codecs, and transport-
+            neutral contract shapes.
 
-cli/        Thin transport adapter. Reads a protocol request from stdin
-            or --request file, delegates to protocol, writes the response,
+executor/   The only execution bridge from the canonical contract into the
+            workbook engine. Owns plan validation, request execution, and
+            parity-facing integration.
+
+authoring-java/
+            Fluent Java authoring layer. Owns selector builders, authored
+            step builders, and in-process execution entrypoints that compile
+            to the canonical contract without exposing engine internals.
+
+cli/        Thin transport adapter. Reads a contract request from stdin
+            or --request file, delegates to executor, writes the response,
             and exposes help/template/catalog discovery commands.
 ```
 
-The CLI is not the core. The foundation is `engine` plus `protocol`. The CLI is one adapter on
-top. Future adapters (HTTP, gRPC, library embedding) can be added without touching `engine` or
-`protocol`.
+The CLI is not the core. The foundation is `engine` plus `contract` plus `executor`. The
+`authoring-java` API and the CLI are two downstream surfaces on top of that foundation. Future
+adapters (HTTP, gRPC, library embedding) can be added without touching `engine`, `contract`, or
+`executor`.
 
 The enforced dependency graph is:
 
 ```text
-dev.erst.gridgrind.cli -> dev.erst.gridgrind.protocol -> dev.erst.gridgrind.engine
+dev.erst.gridgrind.authoring -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.engine
+dev.erst.gridgrind.cli -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.engine
 ```
 
-`cli` does not depend on `engine`, and `protocol` does not re-export `engine`. Shared Java build
-conventions enable `modularity.inferModulePath`, so the `module-info.java` descriptors in all
-three modules participate in normal local builds, CI, and release verification.
+`authoring-java` and `cli` do not depend on `engine`, and `executor` is the only module allowed
+to bridge from the canonical contract into workbook execution. Shared Java build conventions
+enable `modularity.inferModulePath`, so the `module-info.java` descriptors in all five product
+modules participate in normal local builds, CI, and release verification.
+
+## Contract Replacement Mode
+
+The legacy monolithic `protocol` module is gone. GridGrind is now in hard-break contract-replacement
+mode: new top-level contract surface growth must happen through the `contract` plus `executor`
+split and the accepted post-replacement architecture, not by reintroducing monolithic
+transport-and-execution ownership. The accepted architecture decision record for that freeze is
+[DEVELOPER_CONTRACT_REPLACEMENT_ADR.md](./DEVELOPER_CONTRACT_REPLACEMENT_ADR.md).
 
 ---
 
@@ -76,20 +95,26 @@ Kotlin `2.3.0` does not yet target JVM 26 directly. That build logic compiles wi
 toolchain and only lowers the emitted bytecode level, so the repository no longer requires a
 separate Java 25 installation.
 
+Jackson dependency note: Jackson 3.x databind intentionally still uses the
+`com.fasterxml.jackson.core:jackson-annotations` artifact and package namespace. That is upstream
+Jackson design, not a GridGrind version-skew bug.
+
 ---
 
 ## Commands
 
-`./gradlew check` remains the root-project CI gate: Spotless formatting, Error Prone, PMD, tests,
-and JaCoCo coverage verification for `engine`, `protocol`, and `cli`. `./check.sh` is the local
+`./gradlew check` remains the root-project CI gate: Spotless formatting, explicit-import
+verification, Error Prone, PMD, tests, and JaCoCo coverage verification for `engine`, `contract`,
+`executor`, `authoring-java`, and `cli`. `./check.sh` is the local
 full-stack gate: root `check`
-plus `coverage`, nested Jazzer `check`, `:cli:shadowJar`, shell syntax checks for the release-
-surface scripts, and a Docker smoke test that runs the image from a non-default working directory
-with weird request/response/save paths while also asserting the published help/version/response
-contract semantically. `check.sh` intentionally lives in the repository root as the canonical
-contributor entrypoint, while `scripts/` contains helper scripts invoked by the root gate and
-GitHub workflows. Both should be clean before a release-quality change is considered done. When
-Stage 1 reaches long-running Gradle `Test` tasks, the shared test conventions emit
+plus `coverage`, nested Jazzer `check`, `:cli:shadowJar`, architecture-split shell regressions,
+packaged-JAR CLI contract verification, release-surface shell checks, and a Docker smoke test
+that runs the image from a non-default working directory with weird request/response/save paths
+while also asserting the published help/version/response contract semantically. `check.sh`
+intentionally lives in the repository root as the canonical contributor entrypoint, while
+`scripts/` contains helper scripts invoked by the root gate and GitHub workflows. Both should be
+clean before a release-quality change is considered done. When Stage 1 reaches long-running Gradle
+`Test` tasks, the shared test conventions emit
 `[GRADLE-TEST-PULSE]` lines with class-start, class-complete, and throttled test-progress facts
 so the local watchdog tracks semantic execution rather than mistaking quiet test output for a
 hang.
@@ -127,15 +152,15 @@ and local Docker verification now requires `docker buildx` because Stage 5 build
 ./scripts/docker-smoke.sh
 ```
 
-The protocol catalog is generated from the protocol record signatures. If you change request
+The protocol catalog is generated from the contract record signatures. If you change request
 records, nested tagged unions, or plain input records, keep the field-shape output authoritative:
 every field should still publish required/optional status and the exact nested/plain group
 accepted by polymorphic inputs. Contract-bearing discovery prose such as low-memory mode limits,
 formula parse boundaries, and workbook-health summaries now lives in the core shared
-`GridGrindContractText` helper inside `protocol`, not in thin downstream string copies. `cli`
+`GridGrindContractText` helper inside `contract`, not in thin downstream string copies. `cli`
 renders that core-owned text into `--help`, the catalog uses it for agent-facing summaries, and
 request validation reuses the same phrases for execution-mode failures. The catalog build path now
-uses a small internal `protocol.catalog.gather` seam for the two cases that genuinely benefit
+uses a small internal `contract.catalog.gather` seam for the two cases that genuinely benefit
 from Stream Gatherers: ordered uniqueness and reflected field-metadata expansion. The built-in
 request template remains an ordinary constant because no domain gatherer semantics are needed
 there. Keep `--print-request-template` as the smallest valid machine-readable request; workflow
@@ -231,15 +256,21 @@ Coverage-gate protocol:
   `test.exec`
 - aggregated root coverage must read all subproject `build/jacoco/*.exec` files as well
 
-This rule is especially important in GridGrind because `protocol` already has more than one local
+This rule is especially important in GridGrind because `executor` already has more than one local
 `Test` task. A hardcoded `test.exec` assumption would silently exclude `parityTest` coverage from
 the gate. See [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md) for the canonical build-logic
 protocol.
 
+After the `contract` plus `executor` split, `contract` coverage intentionally includes downstream
+consumer execution data from `executor` and `cli` in addition to `contract`'s own tests. That is
+not a loophole: it is the correct ownership model for a canonical public contract whose behavior
+is exercised both by direct DTO/catalog tests and by the executor and CLI seams that consume it.
+
 | Module | Line Coverage | Branch Coverage |
 |:-------|:-------------|:----------------|
 | `engine` | 100% | 100% |
-| `protocol` | 100% | 100% |
+| `contract` | 100% | 100% |
+| `executor` | 100% | 100% |
 | `cli` | 100% | 100% |
 
 `./gradlew check` enforces the thresholds but does not write report files. Run
@@ -264,40 +295,46 @@ expansion semantics in shell wrappers that contributors run directly.
 
 ## Execution Semantics
 
-Operations run first. Reads run second. Persistence happens last.
+Mutation steps run first in authored order, assertion and inspection steps run wherever they are
+placed in authored order, and persistence happens only after every step succeeds.
 
-If a read fails, the request returns a structured error and no workbook is written. This gives
-agents deterministic failure semantics: a failure never leaves a partially-written file behind.
+If any assertion or inspection fails, the request returns a structured error and no workbook is
+written. This gives agents deterministic failure semantics: a failure never leaves a
+partially-written file behind.
 
 ---
 
 ## Workflow Fixtures
 
-These runnable examples cover the core operation surface:
+The shipped JSON fixtures are now generated mirrors of the contract-owned built-in example
+registry. Refresh them with [`scripts/sync-generated-examples.sh`](../scripts/sync-generated-examples.sh)
+or print any one of them directly from the artifact with `gridgrind --print-example <id>`.
+These fixtures and authoring examples cover the core surface:
 
 | File | What It Tests |
 |:-----|:-------------|
-| `examples/budget-request.json` | Range write, style, formula, workbook summary, cells, window, and schema reads |
-| `examples/advanced-readback-request.json` | Rich factual readback for workbook protection, rich comments, advanced print setup, structured style colors, autofilter criteria or sort state, and advanced table metadata |
-| `examples/advanced-mutation-request.json` | Workbook-core mutation parity example for password-bearing protection, formula-defined names, advanced table/autofilter mutation, advanced conditional formatting, and rich comments |
-| `examples/data-validation-request.json` | Validation authoring, partial clearing, factual validation reads, and validation-health analysis |
-| `examples/excel-authoring-essentials-request.json` | Hyperlink, comment, named-range authoring plus explicit metadata and named-range reads |
+| `examples/budget-request.json` | Range write, style, formula, workbook summary, cells, window, and schema inspection steps |
 | `examples/file-hyperlink-health-request.json` | File-hyperlink authoring plus explicit hyperlink metadata and hyperlink-health analysis |
-| `examples/formatting-depth-request.json` | Font, fill, and border styling with explicit post-mutation cell and window reads |
-| `examples/introspection-analysis-request.json` | Read-heavy workbook showcasing factual reads plus targeted formula, hyperlink, named-range, and aggregate workbook analysis together |
-| `examples/live-workflow-create.json` | Multi-sheet workbook with cross-sheet formulas and aggregations |
-| `examples/live-workflow-revise.json` | Reopen, revise, recalculate, and reread |
-| `examples/sheet-management-request.json` | Sheet copy, active/selected state, visibility, protection, and workbook-summary reads |
-| `examples/structural-layout-request.json` | Merge, size, pane, zoom, print-layout, and repeating-title shaping with layout reads |
+| `examples/introspection-analysis-request.json` | Inspection-heavy workbook showcasing factual reads plus targeted formula, hyperlink, named-range, and aggregate workbook analysis together |
+| `examples/java-authoring-workflow.java` | Fluent Java authoring example showing selector-first table-key targeting, source-backed row selection, ordered inspection, and assertion steps without hand-written JSON |
+| `examples/chart-request.json` | Supported simple-chart authoring with named-range-backed series and factual chart readback |
+| `examples/pivot-request.json` | Range-backed pivot authoring, pivot-table inspection, and pivot-health analysis |
+| `examples/package-security-inspect-request.json` | Encrypted workbook open plus factual package-security inspection |
+| `examples/source-backed-input-request.json` | File-backed text, formula, and binary payload authoring with drawing-payload extraction |
+| `examples/large-file-modes-request.json` | Low-memory `STREAMING_WRITE` execution plus open-time recalculation flagging |
+| `examples/assertion-request.json` | Ordered mutate-then-verify flow with first-class assertion steps and verbose journaling |
 | `examples/workbook-health-request.json` | Compact no-save health workflow combining sheet summary, formula health, aggregate workbook findings, and cell readback |
 
-Run any fixture with:
+Run any JSON fixture with:
 
 ```bash
 ./gradlew :cli:run --args="--request examples/<file>.json"
 ```
 
 Output workbooks are written to `cli/build/generated-workbooks/`.
+
+The Java example is compile-verified by `:authoring-java:test` and demonstrates how the
+`authoring-java` module emits one canonical `WorkbookPlan` without dropping to raw JSON.
 
 ---
 

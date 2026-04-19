@@ -194,12 +194,7 @@ class WorkbookCommandTest {
         new WorkbookCommand.DeleteNamedRange(
             "BudgetTotal", new ExcelNamedRangeScope.SheetScope("Budget")),
         new WorkbookCommand.AppendRow("Budget", values),
-        new WorkbookCommand.AutoSizeColumns("Budget"),
-        new WorkbookCommand.EvaluateAllFormulas(),
-        new WorkbookCommand.EvaluateFormulaCells(
-            List.of(new ExcelFormulaCellTarget("Budget", "B4"))),
-        new WorkbookCommand.ClearFormulaCaches(),
-        new WorkbookCommand.ForceFormulaRecalculationOnOpen());
+        new WorkbookCommand.AutoSizeColumns("Budget"));
   }
 
   private void assertCreatedCommands(CreatedCommands commands, ExcelCellStyle style) {
@@ -252,35 +247,16 @@ class WorkbookCommandTest {
         ((ExcelNamedRangeScope.SheetScope) commands.deleteNamedRange().scope()).sheetName());
     assertEquals(1, commands.appendRow().values().size());
     assertEquals("Budget", commands.autoSizeColumns().sheetName());
-    assertNotNull(commands.evaluate());
-    assertEquals(
-        List.of(new ExcelFormulaCellTarget("Budget", "B4")),
-        commands.evaluateFormulaCells().cells());
-    assertNotNull(commands.clearFormulaCaches());
-    assertNotNull(commands.recalc());
   }
 
   @Test
-  void validatesFormulaLifecycleCommandInputs() {
-    assertThrows(NullPointerException.class, () -> new WorkbookCommand.EvaluateFormulaCells(null));
-    assertThrows(
-        IllegalArgumentException.class, () -> new WorkbookCommand.EvaluateFormulaCells(List.of()));
-    assertThrows(
-        NullPointerException.class,
-        () -> new WorkbookCommand.EvaluateFormulaCells(List.of((ExcelFormulaCellTarget) null)));
+  void validatesFormulaCellTargetInputs() {
     assertThrows(NullPointerException.class, () -> new ExcelFormulaCellTarget(null, "A1"));
     assertThrows(IllegalArgumentException.class, () -> new ExcelFormulaCellTarget(" ", "A1"));
     assertThrows(NullPointerException.class, () -> new ExcelFormulaCellTarget("Budget", null));
     assertThrows(IllegalArgumentException.class, () -> new ExcelFormulaCellTarget("Budget", " "));
-
-    WorkbookCommand.EvaluateFormulaCells evaluateFormulaCells =
-        new WorkbookCommand.EvaluateFormulaCells(
-            List.of(new ExcelFormulaCellTarget("Budget", "C2")));
-    WorkbookCommand.ClearFormulaCaches clearFormulaCaches =
-        new WorkbookCommand.ClearFormulaCaches();
-
-    assertEquals(List.of(new ExcelFormulaCellTarget("Budget", "C2")), evaluateFormulaCells.cells());
-    assertNotNull(clearFormulaCaches);
+    assertEquals(
+        new ExcelFormulaCellTarget("Budget", "C2"), new ExcelFormulaCellTarget("Budget", "C2"));
   }
 
   @Test
@@ -825,11 +801,7 @@ class WorkbookCommandTest {
       WorkbookCommand.SetNamedRange setNamedRange,
       WorkbookCommand.DeleteNamedRange deleteNamedRange,
       WorkbookCommand.AppendRow appendRow,
-      WorkbookCommand.AutoSizeColumns autoSizeColumns,
-      WorkbookCommand.EvaluateAllFormulas evaluate,
-      WorkbookCommand.EvaluateFormulaCells evaluateFormulaCells,
-      WorkbookCommand.ClearFormulaCaches clearFormulaCaches,
-      WorkbookCommand.ForceFormulaRecalculationOnOpen recalc) {}
+      WorkbookCommand.AutoSizeColumns autoSizeColumns) {}
 
   private static ExcelPrintLayout defaultPrintLayout() {
     return new ExcelPrintLayout(
