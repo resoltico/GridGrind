@@ -28,7 +28,6 @@ import dev.erst.gridgrind.contract.step.WorkbookStep;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -47,8 +46,7 @@ public final class SourceBackedPlanResolver {
 
   /** Returns true when any authored mutation value requires stdin bytes for resolution. */
   public static boolean requiresStandardInput(WorkbookPlan plan) {
-    Objects.requireNonNull(plan, "plan must not be null");
-    return plan.steps().stream().anyMatch(SourceBackedPlanResolver::requiresStandardInput);
+    return SourceBackedInputRequirements.requiresStandardInput(plan);
   }
 
   static WorkbookPlan resolve(WorkbookPlan plan, ExecutionInputBindings bindings)
@@ -67,118 +65,6 @@ public final class SourceBackedPlanResolver {
         plan.execution(),
         plan.formulaEnvironment(),
         resolvedSteps);
-  }
-
-  private static boolean requiresStandardInput(WorkbookStep step) {
-    return requiresStandardInput(step.target())
-        || (step instanceof MutationStep mutationStep
-            && requiresStandardInput(mutationStep.action()));
-  }
-
-  private static boolean requiresStandardInput(MutationAction action) {
-    return switch (action) {
-      case MutationAction.SetCell setCell -> requiresStandardInput(setCell.value());
-      case MutationAction.SetRange setRange ->
-          setRange.rows().stream()
-              .flatMap(List::stream)
-              .anyMatch(SourceBackedPlanResolver::requiresStandardInput);
-      case MutationAction.SetComment setComment -> requiresStandardInput(setComment.comment());
-      case MutationAction.SetPicture setPicture -> requiresStandardInput(setPicture.picture());
-      case MutationAction.SetChart setChart -> requiresStandardInput(setChart.chart());
-      case MutationAction.SetShape setShape -> requiresStandardInput(setShape.shape());
-      case MutationAction.SetEmbeddedObject setEmbeddedObject ->
-          requiresStandardInput(setEmbeddedObject.embeddedObject());
-      case MutationAction.SetDataValidation setDataValidation ->
-          requiresStandardInput(setDataValidation.validation());
-      case MutationAction.SetTable setTable -> requiresStandardInput(setTable.table());
-      case MutationAction.AppendRow appendRow ->
-          appendRow.values().stream().anyMatch(SourceBackedPlanResolver::requiresStandardInput);
-      case MutationAction.SetPrintLayout setPrintLayout ->
-          requiresStandardInput(setPrintLayout.printLayout());
-      default -> false;
-    };
-  }
-
-  private static boolean requiresStandardInput(CellInput value) {
-    if (value instanceof CellInput.Text text) {
-      return requiresStandardInput(text.source());
-    }
-    if (value instanceof CellInput.RichText richText) {
-      return richText.runs().stream().anyMatch(SourceBackedPlanResolver::requiresStandardInput);
-    }
-    return value instanceof CellInput.Formula formula && requiresStandardInput(formula.source());
-  }
-
-  private static boolean requiresStandardInput(RichTextRunInput run) {
-    return requiresStandardInput(run.source());
-  }
-
-  private static boolean requiresStandardInput(CommentInput comment) {
-    return requiresStandardInput(comment.text())
-        || (comment.runs() != null
-            && comment.runs().stream().anyMatch(SourceBackedPlanResolver::requiresStandardInput));
-  }
-
-  private static boolean requiresStandardInput(PictureInput picture) {
-    return requiresStandardInput(picture.image())
-        || picture.description() instanceof TextSourceInput.StandardInput;
-  }
-
-  private static boolean requiresStandardInput(PictureDataInput pictureData) {
-    return requiresStandardInput(pictureData.source());
-  }
-
-  private static boolean requiresStandardInput(ChartInput chart) {
-    return requiresStandardInput(chart.title());
-  }
-
-  private static boolean requiresStandardInput(ChartInput.Title title) {
-    return title instanceof ChartInput.Title.Text text && requiresStandardInput(text.source());
-  }
-
-  private static boolean requiresStandardInput(ShapeInput shape) {
-    return shape.text() != null && requiresStandardInput(shape.text());
-  }
-
-  private static boolean requiresStandardInput(EmbeddedObjectInput embeddedObject) {
-    return requiresStandardInput(embeddedObject.payload())
-        || requiresStandardInput(embeddedObject.previewImage());
-  }
-
-  private static boolean requiresStandardInput(DataValidationInput validation) {
-    return (validation.prompt() != null && requiresStandardInput(validation.prompt()))
-        || (validation.errorAlert() != null && requiresStandardInput(validation.errorAlert()));
-  }
-
-  private static boolean requiresStandardInput(DataValidationPromptInput prompt) {
-    return requiresStandardInput(prompt.title()) || requiresStandardInput(prompt.text());
-  }
-
-  private static boolean requiresStandardInput(DataValidationErrorAlertInput alert) {
-    return requiresStandardInput(alert.title()) || requiresStandardInput(alert.text());
-  }
-
-  private static boolean requiresStandardInput(TableInput table) {
-    return requiresStandardInput(table.comment());
-  }
-
-  private static boolean requiresStandardInput(PrintLayoutInput printLayout) {
-    return requiresStandardInput(printLayout.header())
-        || requiresStandardInput(printLayout.footer());
-  }
-
-  private static boolean requiresStandardInput(HeaderFooterTextInput text) {
-    return requiresStandardInput(text.left())
-        || requiresStandardInput(text.center())
-        || requiresStandardInput(text.right());
-  }
-
-  private static boolean requiresStandardInput(TextSourceInput source) {
-    return source instanceof TextSourceInput.StandardInput;
-  }
-
-  private static boolean requiresStandardInput(BinarySourceInput source) {
-    return source instanceof BinarySourceInput.StandardInput;
   }
 
   private static WorkbookStep resolveStep(WorkbookStep step, ExecutionInputBindings bindings)
@@ -204,14 +90,6 @@ public final class SourceBackedPlanResolver {
             ? inspectionStep
             : new InspectionStep(inspectionStep.stepId(), resolvedTarget, inspectionStep.query());
       }
-    };
-  }
-
-  private static boolean requiresStandardInput(Selector selector) {
-    return switch (selector) {
-      case TableCellSelector.ByColumnName tableCell -> requiresStandardInput(tableCell.row());
-      case TableRowSelector.ByKeyCell byKeyCell -> requiresStandardInput(byKeyCell.expectedValue());
-      default -> false;
     };
   }
 
@@ -645,7 +523,8 @@ public final class SourceBackedPlanResolver {
 
   private static String readUtf8File(String path, ExecutionInputBindings bindings, String inputKind)
       throws IOException {
-    Path resolved = resolvePath(path, bindings.workingDirectory(), inputKind);
+    Path resolved =
+        SourceBackedPathResolver.resolvePath(path, bindings.workingDirectory(), inputKind);
     try {
       return Files.readString(resolved, StandardCharsets.UTF_8);
     } catch (java.nio.file.NoSuchFileException exception) {
@@ -688,7 +567,8 @@ public final class SourceBackedPlanResolver {
 
   private static byte[] readBinaryFile(
       String path, ExecutionInputBindings bindings, String inputKind) throws IOException {
-    Path resolved = resolvePath(path, bindings.workingDirectory(), inputKind);
+    Path resolved =
+        SourceBackedPathResolver.resolvePath(path, bindings.workingDirectory(), inputKind);
     try {
       return Files.readAllBytes(resolved);
     } catch (java.nio.file.NoSuchFileException exception) {
@@ -713,28 +593,6 @@ public final class SourceBackedPlanResolver {
           inputKind + " requires STANDARD_INPUT but no standard-input bytes were bound", inputKind);
     }
     return bindings.standardInputBytes();
-  }
-
-  private static Path resolvePath(String rawPath, Path workingDirectory, String inputKind)
-      throws InputSourceReadException {
-    try {
-      Path candidate = Path.of(rawPath);
-      Path resolved =
-          candidate.isAbsolute()
-              ? candidate.toAbsolutePath().normalize()
-              : workingDirectory.resolve(candidate).normalize();
-      if (Files.isDirectory(resolved)) {
-        throw new InputSourceReadException(
-            inputKind + " path must resolve to a file, not a directory: " + resolved,
-            inputKind,
-            resolved.toString(),
-            null);
-      }
-      return resolved;
-    } catch (InvalidPathException exception) {
-      throw new InputSourceReadException(
-          "Invalid " + inputKind + " path: " + rawPath, inputKind, rawPath, exception);
-    }
   }
 
   private static List<List<CellInput>> resolveRows(

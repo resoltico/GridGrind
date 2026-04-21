@@ -2,8 +2,10 @@ package dev.erst.gridgrind.contract.selector;
 
 import dev.erst.gridgrind.contract.dto.ProtocolCellAddressValidation;
 import dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation;
+import dev.erst.gridgrind.excel.ExcelAddressLists;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelPivotTableNaming;
+import dev.erst.gridgrind.excel.ExcelReadLimits;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelSheetNames;
 import java.util.ArrayList;
@@ -15,8 +17,6 @@ import java.util.Set;
 
 /** Shared validation helpers for selector families. */
 final class SelectorSupport {
-  static final int MAX_WINDOW_CELLS = 250_000; // LIM-001
-
   private SelectorSupport() {}
 
   static String requireNonBlank(String value, String fieldName) {
@@ -117,14 +117,20 @@ final class SelectorSupport {
 
   static void requireWindowSize(int rowCount, int columnCount) {
     long cells = (long) rowCount * columnCount;
-    if (cells > MAX_WINDOW_CELLS) {
+    if (cells > ExcelReadLimits.MAX_WINDOW_CELLS) {
       throw new IllegalArgumentException(
-          "rowCount * columnCount must not exceed " + MAX_WINDOW_CELLS + " but was " + cells);
+          "rowCount * columnCount must not exceed "
+              + ExcelReadLimits.MAX_WINDOW_CELLS
+              + " but was "
+              + cells);
     }
   }
 
   static List<String> copyDistinctAddresses(List<String> addresses, String fieldName) {
     Objects.requireNonNull(addresses, fieldName + " must not be null");
+    if ("addresses".equals(fieldName)) {
+      return ExcelAddressLists.copyNonEmptyDistinctAddresses(addresses);
+    }
     return copyDistinctStrings(addresses, fieldName, false, true, false);
   }
 
@@ -252,7 +258,7 @@ final class SelectorSupport {
     };
   }
 
-  private static String prefixedValidationMessage(String fieldName, String message) {
+  static String prefixedValidationMessage(String fieldName, String message) {
     if (message == null || message.isBlank() || message.startsWith(fieldName + " ")) {
       return message;
     }

@@ -1083,7 +1083,6 @@ public sealed interface GridGrindResponse {
       Objects.requireNonNull(message, "message must not be null");
       Objects.requireNonNull(resolution, "resolution must not be null");
       Objects.requireNonNull(context, "context must not be null");
-      assertionFailure = assertionFailure == null ? null : assertionFailure;
       causes = copyProblemCauses(causes);
     }
 
@@ -1111,10 +1110,14 @@ public sealed interface GridGrindResponse {
     @JsonSubTypes.Type(value = ProblemContext.ParseArguments.class, name = "PARSE_ARGUMENTS"),
     @JsonSubTypes.Type(value = ProblemContext.ReadRequest.class, name = "READ_REQUEST"),
     @JsonSubTypes.Type(value = ProblemContext.ValidateRequest.class, name = "VALIDATE_REQUEST"),
+    @JsonSubTypes.Type(value = ProblemContext.ResolveInputs.class, name = "RESOLVE_INPUTS"),
     @JsonSubTypes.Type(value = ProblemContext.OpenWorkbook.class, name = "OPEN_WORKBOOK"),
     @JsonSubTypes.Type(
-        value = ProblemContext.ExecuteCalculation.class,
-        name = "EXECUTE_CALCULATION"),
+        value = ProblemContext.ExecuteCalculation.Preflight.class,
+        name = "CALCULATION_PREFLIGHT"),
+    @JsonSubTypes.Type(
+        value = ProblemContext.ExecuteCalculation.Execution.class,
+        name = "CALCULATION_EXECUTION"),
     @JsonSubTypes.Type(value = ProblemContext.ExecuteStep.class, name = "EXECUTE_STEP"),
     @JsonSubTypes.Type(value = ProblemContext.PersistWorkbook.class, name = "PERSIST_WORKBOOK"),
     @JsonSubTypes.Type(value = ProblemContext.ExecuteRequest.class, name = "EXECUTE_REQUEST"),
@@ -1125,9 +1128,9 @@ public sealed interface GridGrindResponse {
     String stage();
 
     /**
-     * Source type string; populated by ValidateRequest, OpenWorkbook, ExecuteCalculation,
-     * ExecuteStep, PersistWorkbook, AnalyzeWorkbook, and ExecuteRequest. Null for all other
-     * subtypes.
+     * Source type string; populated by ValidateRequest, ResolveInputs, OpenWorkbook,
+     * CALCULATION_PREFLIGHT, CALCULATION_EXECUTION, ExecuteStep, PersistWorkbook, and
+     * ExecuteRequest. Null for all other subtypes.
      *
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
@@ -1137,9 +1140,9 @@ public sealed interface GridGrindResponse {
     }
 
     /**
-     * Persistence type string; populated by ValidateRequest, OpenWorkbook, ExecuteCalculation,
-     * ExecuteStep, PersistWorkbook, AnalyzeWorkbook, and ExecuteRequest. Null for all other
-     * subtypes.
+     * Persistence type string; populated by ValidateRequest, ResolveInputs, OpenWorkbook,
+     * CALCULATION_PREFLIGHT, CALCULATION_EXECUTION, ExecuteStep, PersistWorkbook, and
+     * ExecuteRequest. Null for all other subtypes.
      *
      * <p>Null is permitted here because this is a protocol-layer default method on a sealed
      * interface used for wire serialization; internal code must use a switch expression instead.
@@ -1389,30 +1392,71 @@ public sealed interface GridGrindResponse {
       }
     }
 
-    /** Context for failures that occur while executing top-level calculation policy. */
-    record ExecuteCalculation(
-        String sourceType,
-        String persistenceType,
-        String phase,
-        String sheetName,
-        String address,
-        String formula)
-        implements ProblemContext {
+    /** Common calculation-failure context for the two top-level calculation stages. */
+    sealed interface ExecuteCalculation extends ProblemContext
+        permits ExecuteCalculation.Preflight, ExecuteCalculation.Execution {
       @Override
-      public String stage() {
-        return phase;
-      }
+      String sourceType();
+
+      @Override
+      String persistenceType();
+
+      @Override
+      String sheetName();
+
+      @Override
+      String address();
+
+      @Override
+      String formula();
 
       /** Returns one copy enriched with exception-derived sheet, address, and formula facts. */
-      public ExecuteCalculation withExceptionData(
+      default ExecuteCalculation withExceptionData(
           String sheetName, String address, String formula) {
-        return new ExecuteCalculation(
-            sourceType,
-            persistenceType,
-            phase,
-            this.sheetName != null ? this.sheetName : sheetName,
-            this.address != null ? this.address : address,
-            this.formula != null ? this.formula : formula);
+        return switch (this) {
+          case Preflight context ->
+              new Preflight(
+                  context.sourceType(),
+                  context.persistenceType(),
+                  keepExisting(context.sheetName(), sheetName),
+                  keepExisting(context.address(), address),
+                  keepExisting(context.formula(), formula));
+          case Execution context ->
+              new Execution(
+                  context.sourceType(),
+                  context.persistenceType(),
+                  keepExisting(context.sheetName(), sheetName),
+                  keepExisting(context.address(), address),
+                  keepExisting(context.formula(), formula));
+        };
+      }
+
+      /** Context for failures that occur during calculation preflight analysis. */
+      record Preflight(
+          String sourceType,
+          String persistenceType,
+          String sheetName,
+          String address,
+          String formula)
+          implements ExecuteCalculation {
+        @Override
+        public String stage() {
+          return "CALCULATION_PREFLIGHT";
+        }
+      }
+
+      /** Context for failures that occur during immediate calculation execution. */
+      record Execution(
+          String sourceType,
+          String persistenceType,
+          String sheetName,
+          String address,
+          String formula)
+          implements ExecuteCalculation {
+        @Override
+        public String stage() {
+          return "CALCULATION_EXECUTION";
+        }
       }
     }
 
@@ -1515,10 +1559,10 @@ public sealed interface GridGrindResponse {
     GridGrindProblemCode failureCode =
         status == ExecutionJournal.Status.FAILED ? GridGrindProblemCode.INTERNAL_ERROR : null;
     return new ExecutionJournal(
-        "unknown-plan",
+        null,
         ExecutionJournalLevel.NORMAL,
-        new ExecutionJournal.SourceSummary("UNKNOWN", null),
-        new ExecutionJournal.PersistenceSummary("UNKNOWN", null),
+        new ExecutionJournal.SourceSummary(null, null),
+        new ExecutionJournal.PersistenceSummary(null, null),
         ExecutionJournal.Phase.notStarted(),
         ExecutionJournal.Phase.notStarted(),
         ExecutionJournal.Phase.notStarted(),
@@ -1599,5 +1643,9 @@ public sealed interface GridGrindResponse {
       copy.add(Objects.requireNonNull(cause, "causes must not contain nulls"));
     }
     return List.copyOf(copy);
+  }
+
+  private static String keepExisting(String current, String discovered) {
+    return current != null ? current : discovered;
   }
 }

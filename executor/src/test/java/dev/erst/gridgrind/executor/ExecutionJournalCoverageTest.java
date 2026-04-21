@@ -2,6 +2,7 @@ package dev.erst.gridgrind.executor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -331,8 +332,9 @@ class ExecutionJournalCoverageTest {
     ExecutionJournalRecorder recorder =
         ExecutionJournalRecorder.start(null, ExecutionJournalSink.NOOP);
     ExecutionJournal unknownJournal = recorder.buildSuccess(0);
-    assertEquals("UNKNOWN", unknownJournal.source().type());
-    assertEquals("UNKNOWN", unknownJournal.persistence().type());
+    assertNull(unknownJournal.planId());
+    assertNull(unknownJournal.source().type());
+    assertNull(unknownJournal.persistence().type());
 
     WorkbookPlan request = verbosePlan();
     ExecutionJournalRecorder verboseRecorder =

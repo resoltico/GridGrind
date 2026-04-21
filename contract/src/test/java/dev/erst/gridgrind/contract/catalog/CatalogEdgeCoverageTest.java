@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.catalog.gather.CatalogFieldMetadataSupport;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.step.InspectionStep;
@@ -28,7 +29,37 @@ class CatalogEdgeCoverageTest {
             null,
             "type",
             requestType,
-            new CliSurface(List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), "msg"),
+            new CliSurface(
+                new CliSurface.CliSection("Usage", List.of("gridgrind --help")),
+                new CliSurface.CliSection("Execution", List.of("Executes requests.")),
+                new CliSurface.CliDefinitionSection(
+                    "Limits", List.of(new CliSurface.DefinitionEntry("One", "Value"))),
+                new CliSurface.CliSection("Request", List.of("Request line")),
+                new CliSurface.CliDefinitionSection(
+                    "Files", List.of(new CliSurface.DefinitionEntry("Input", "Reads input"))),
+                new CliSurface.CliTableSection(
+                    "Coordinates",
+                    "Pattern",
+                    "Meaning",
+                    List.of(new CliSurface.CoordinateSystemEntry("A1", "Excel"))),
+                new CliSurface.CliTemplateSection("Minimal valid request"),
+                new CliSurface.CliCommandExample(
+                    "Read from stdin", List.of("cat request.json | gridgrind"), null),
+                new CliSurface.CliCommandExample(
+                    "Run in Docker", List.of("docker run {{CONTAINER_TAG}}"), "Uses the image"),
+                new CliSurface.CliDiscoverySection(
+                    "Discovery",
+                    List.of("List built-in examples"),
+                    "Built-in examples",
+                    "Print one example",
+                    "Protocol catalog note",
+                    "gridgrind --print-example WORKBOOK_HEALTH"),
+                new CliSurface.CliReferenceSection(
+                    "Docs",
+                    List.of(new CliSurface.ReferenceEntry("Quick start", "docs/QUICK_START.md"))),
+                new CliSurface.CliDefinitionSection(
+                    "Flags", List.of(new CliSurface.DefinitionEntry("--help", "Show help"))),
+                "msg"),
             List.of(),
             List.of(),
             List.of(),
@@ -167,6 +198,23 @@ class CatalogEdgeCoverageTest {
             IllegalArgumentException.class,
             () -> GridGrindContractText.typeNamesByClass(MissingJsonSubtypes.class));
     assertEquals(MissingJsonSubtypes.class + " is missing @JsonSubTypes", failure.getMessage());
+  }
+
+  @Test
+  void privateCatalogIdGuardAndCliCommandValidationStayCovered() {
+    assertEquals(
+        "description must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new CliSurface.CliCommandExample("Example", List.of("gridgrind"), " "))
+            .getMessage());
+    IllegalStateException mismatch =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                GridGrindProtocolCatalog.requireMatchingCatalogId(
+                    "BROKEN", "SET_CELL", MutationAction.SetCell.class));
+    assertTrue(mismatch.getMessage().contains("Catalog type id mismatch"));
   }
 
   /** Duplicate-id fixture used to cover ordered catalog-map rejection. */

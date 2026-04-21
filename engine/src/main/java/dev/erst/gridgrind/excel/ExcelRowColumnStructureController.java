@@ -342,7 +342,7 @@ final class ExcelRowColumnStructureController {
     }
   }
 
-  private void rejectAffectedRowStructuresForInsert(XSSFSheet sheet, int rowIndex) { // LIM-016
+  void rejectAffectedRowStructuresForInsert(XSSFSheet sheet, int rowIndex) { // LIM-016
     for (XSSFTable table : sheet.getTables()) {
       ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
       if (range.lastRow() >= rowIndex) {
@@ -373,7 +373,7 @@ final class ExcelRowColumnStructureController {
     }
   }
 
-  private void rejectAffectedRowStructuresForDelete(XSSFSheet sheet, ExcelRowSpan rows) { // LIM-016
+  void rejectAffectedRowStructuresForDelete(XSSFSheet sheet, ExcelRowSpan rows) { // LIM-016
     for (XSSFTable table : sheet.getTables()) {
       ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
       if (range.lastRow() >= rows.firstRowIndex()) {
@@ -405,7 +405,7 @@ final class ExcelRowColumnStructureController {
     rejectDestructiveNamedRangesForRowDelete(sheet.getWorkbook(), sheet, rows); // LIM-018
   }
 
-  private void rejectAffectedRowStructuresForShift(
+  void rejectAffectedRowStructuresForShift(
       XSSFSheet sheet, ExcelRowSpan rows, int delta) { // LIM-016
     for (XSSFTable table : sheet.getTables()) {
       ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
@@ -438,8 +438,7 @@ final class ExcelRowColumnStructureController {
     rejectDestructiveNamedRangesForRowShift(sheet.getWorkbook(), sheet, rows, delta); // LIM-018
   }
 
-  private void rejectAffectedColumnStructuresForInsert(
-      XSSFSheet sheet, int columnIndex) { // LIM-016
+  void rejectAffectedColumnStructuresForInsert(XSSFSheet sheet, int columnIndex) { // LIM-016
     for (XSSFTable table : sheet.getTables()) {
       ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
       if (range.lastColumn() >= columnIndex) {
@@ -470,7 +469,7 @@ final class ExcelRowColumnStructureController {
     }
   }
 
-  private void rejectAffectedColumnStructuresForDelete(
+  void rejectAffectedColumnStructuresForDelete(
       XSSFSheet sheet, ExcelColumnSpan columns) { // LIM-016
     for (XSSFTable table : sheet.getTables()) {
       ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
@@ -503,7 +502,7 @@ final class ExcelRowColumnStructureController {
     rejectDestructiveNamedRangesForColumnDelete(sheet.getWorkbook(), sheet, columns); // LIM-018
   }
 
-  private void rejectAffectedColumnStructuresForShift(
+  void rejectAffectedColumnStructuresForShift(
       XSSFSheet sheet, ExcelColumnSpan columns, int delta) { // LIM-016
     for (XSSFTable table : sheet.getTables()) {
       ExcelRange range = parsedRange(table.getCTTable().getRef(), "table", table.getName());
@@ -537,7 +536,7 @@ final class ExcelRowColumnStructureController {
         sheet.getWorkbook(), sheet, columns, delta); // LIM-018
   }
 
-  private void rejectDestructiveNamedRangesForRowDelete(
+  void rejectDestructiveNamedRangesForRowDelete(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
@@ -554,7 +553,7 @@ final class ExcelRowColumnStructureController {
     }
   }
 
-  private void rejectDestructiveNamedRangesForRowShift(
+  void rejectDestructiveNamedRangesForRowShift(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelRowSpan rows, int delta) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
@@ -572,7 +571,7 @@ final class ExcelRowColumnStructureController {
     }
   }
 
-  private void rejectDestructiveNamedRangesForColumnDelete(
+  void rejectDestructiveNamedRangesForColumnDelete(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {
@@ -590,7 +589,7 @@ final class ExcelRowColumnStructureController {
     }
   }
 
-  private void rejectDestructiveNamedRangesForColumnShift(
+  void rejectDestructiveNamedRangesForColumnShift(
       XSSFWorkbook workbook, XSSFSheet sheet, ExcelColumnSpan columns, int delta) {
     for (ResolvedNamedRange namedRange :
         resolvedRangeBackedNames(workbook, workbook.getAllNames())) {

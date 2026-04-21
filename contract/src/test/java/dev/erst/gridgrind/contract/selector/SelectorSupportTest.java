@@ -2,12 +2,8 @@ package dev.erst.gridgrind.contract.selector;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 /** Direct coverage for selector helper validation and normalization seams. */
@@ -132,6 +128,8 @@ class SelectorSupportTest {
     assertEquals(
         List.of("A1", "B2"),
         SelectorSupport.copyDistinctAddresses(List.of("A1", "B2"), "addresses"));
+    assertEquals(
+        List.of("A1", "B2"), SelectorSupport.copyDistinctAddresses(List.of("A1", "B2"), "cells"));
     assertEquals(List.of("A1:B2"), SelectorSupport.copyDistinctRanges(List.of("A1:B2"), "ranges"));
     assertEquals(
         List.of("Budget", "Ops"),
@@ -160,6 +158,12 @@ class SelectorSupportTest {
                 IllegalArgumentException.class,
                 () -> SelectorSupport.copyDistinctAddresses(List.of("A1", "A1"), "addresses"))
             .getMessage());
+    assertTrue(
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> SelectorSupport.copyDistinctAddresses(List.of("A0"), "cells"))
+            .getMessage()
+            .startsWith("cells[0] address "));
     assertEquals(
         "ranges must not contain duplicates",
         assertThrows(
@@ -234,65 +238,20 @@ class SelectorSupportTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.UseConcurrentHashMap")
-  void selectorSupportCoversZeroIterationAddressParsingAndCatalogLookupOrdering()
-      throws ReflectiveOperationException {
+  void selectorSupportCoversZeroIterationAddressParsingAndCatalogLookupOrdering() {
     assertEquals(-1, SelectorSupport.columnIndex(""));
     assertEquals(-1, SelectorSupport.columnIndex("123"));
     assertThrows(NumberFormatException.class, () -> SelectorSupport.rowIndex(""));
     assertEquals(122, SelectorSupport.rowIndex("123"));
-
-    Method lookupAssignableGroup = CatalogFieldLookupReflection.lookupAssignableGroupMethod();
-    Map<Class<?>, String> groups = new LinkedHashMap<>();
-    groups.put(SheetSelector.ByName.class, "exact");
-    groups.put(SheetSelector.class, "sheetSelectorTypes");
-    groups.put(Selector.class, "selectorTypes");
-
-    assertEquals(
-        "sheetSelectorTypes",
-        CatalogFieldLookupReflection.invokeLookupAssignableGroup(
-            lookupAssignableGroup, groups, SheetSelector.ByName.class));
   }
 
   @Test
-  void prefixedValidationMessagePreservesNullBlankAndAlreadyPrefixedMessages()
-      throws ReflectiveOperationException {
-    Method method = accessiblePrefixedValidationMessageMethod();
-
-    assertNull(method.invoke(null, "field", null));
-    assertEquals(" ", method.invoke(null, "field", " "));
+  void prefixedValidationMessagePreservesNullBlankAndAlreadyPrefixedMessages() {
+    assertNull(SelectorSupport.prefixedValidationMessage("field", null));
+    assertEquals(" ", SelectorSupport.prefixedValidationMessage("field", " "));
     assertEquals(
-        "field must not be blank", method.invoke(null, "field", "field must not be blank"));
-    assertEquals("field invalid", method.invoke(null, "field", "invalid"));
-  }
-
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-  private static Method accessiblePrefixedValidationMessageMethod() throws NoSuchMethodException {
-    Method method =
-        SelectorSupport.class.getDeclaredMethod(
-            "prefixedValidationMessage", String.class, String.class);
-    method.setAccessible(true);
-    return method;
-  }
-
-  /** Reflection seam for exercising private selector-support helpers that encode group ordering. */
-  private static final class CatalogFieldLookupReflection {
-    private CatalogFieldLookupReflection() {}
-
-    @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-    private static Method lookupAssignableGroupMethod() throws ReflectiveOperationException {
-      Class<?> type =
-          Class.forName("dev.erst.gridgrind.contract.catalog.gather.CatalogFieldMetadataSupport");
-      Method method =
-          type.getDeclaredMethod("lookupAssignableGroup", java.util.Map.class, Class.class);
-      method.setAccessible(true);
-      return method;
-    }
-
-    private static String invokeLookupAssignableGroup(
-        Method method, Map<Class<?>, String> groups, Class<?> classType)
-        throws InvocationTargetException, IllegalAccessException {
-      return (String) method.invoke(null, groups, classType);
-    }
+        "field must not be blank",
+        SelectorSupport.prefixedValidationMessage("field", "field must not be blank"));
+    assertEquals("field invalid", SelectorSupport.prefixedValidationMessage("field", "invalid"));
   }
 }

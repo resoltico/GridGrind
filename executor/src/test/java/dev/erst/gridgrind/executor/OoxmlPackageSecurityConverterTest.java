@@ -7,6 +7,7 @@ import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.OoxmlSignatureInput;
 import dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.ExcelOoxmlOpenOptions;
 import dev.erst.gridgrind.excel.ExcelOoxmlSignatureDigestAlgorithm;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
@@ -28,7 +29,10 @@ class OoxmlPackageSecurityConverterTest {
 
     assertEquals(
         "source-pass",
-        OoxmlPackageSecurityConverter.toExcelOpenOptions(new OoxmlOpenSecurityInput("source-pass"))
+        assertInstanceOf(
+                ExcelOoxmlOpenOptions.Encrypted.class,
+                OoxmlPackageSecurityConverter.toExcelOpenOptions(
+                    new OoxmlOpenSecurityInput("source-pass")))
             .password());
     assertEquals(
         "persist-pass",
@@ -58,7 +62,9 @@ class OoxmlPackageSecurityConverterTest {
         new OoxmlPersistenceSecurityInput(
             new OoxmlEncryptionInput("persist-pass", ExcelOoxmlEncryptionMode.AGILE), null);
 
-    assertNull(OoxmlPackageSecurityConverter.toExcelOpenOptions(null).password());
+    assertInstanceOf(
+        ExcelOoxmlOpenOptions.Unencrypted.class,
+        OoxmlPackageSecurityConverter.toExcelOpenOptions(null));
     assertTrue(OoxmlPackageSecurityConverter.toExcelPersistenceOptions(null).isEmpty());
     assertNull(OoxmlPackageSecurityConverter.toExcelPersistenceOptions(encryptionOnly).signature());
   }

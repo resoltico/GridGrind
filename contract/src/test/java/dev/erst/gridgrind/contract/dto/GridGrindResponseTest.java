@@ -39,7 +39,9 @@ class GridGrindResponseTest {
 
     assertEquals(GridGrindProtocolVersion.current(), success.protocolVersion());
     assertInstanceOf(GridGrindResponse.PersistenceOutcome.NotSaved.class, success.persistence());
-    assertEquals("unknown-plan", success.journal().planId());
+    assertNull(success.journal().planId());
+    assertNull(success.journal().source().type());
+    assertNull(success.journal().persistence().type());
     assertEquals(ExecutionJournal.Status.SUCCEEDED, success.journal().outcome().status());
     assertEquals(1, success.warnings().size());
     assertEquals(1, success.inspections().size());
@@ -55,7 +57,9 @@ class GridGrindResponseTest {
                 "boom",
                 new GridGrindResponse.ProblemContext.ExecuteRequest(null, null)));
 
-    assertEquals("unknown-plan", failure.journal().planId());
+    assertNull(failure.journal().planId());
+    assertNull(failure.journal().source().type());
+    assertNull(failure.journal().persistence().type());
     assertEquals(ExecutionJournal.Status.FAILED, failure.journal().outcome().status());
   }
 

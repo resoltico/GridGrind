@@ -29,90 +29,21 @@ public final class GridGrindCliHelp {
     CliSurface cliSurface = catalog.cliSurface();
     String requestTemplate = requestTemplateText();
     String discoveryExamples = formatExamples(catalog.shippedExamples());
-    return """
-        %s
-
-        Usage:
-          gridgrind [--request <path>] [--response <path>]
-          gridgrind --print-request-template
-          gridgrind --print-protocol-catalog [--operation <id>]
-          gridgrind --print-example <id>
-          gridgrind --help | -h
-          gridgrind --version
-
-        Execution:
-        %s
-
-        Limits:
-        %s
-
-        Request:
-        %s
-
-        File Workflow:
-        %s
-
-        Coordinate Systems:
-          Pattern                Convention / Example
-        %s
-
-        Minimal Valid Request:
-        %s
-
-        stdin Example:
-          gridgrind --print-request-template | gridgrind
-
-        Docker File Example:
-          docker run --rm -i \\
-            -v "$(pwd)":/workdir \\
-            -w /workdir \\
-            ghcr.io/resoltico/gridgrind:%s \\
-            --request request.json \\
-            --response response.json
-
-          In Docker, mount the host directory that contains your request and workbook files, then
-          set -w to that mount point so every relative path resolves inside the mounted directory.
-
-        Discovery:
-        %s
-          Built-in generated examples:
-        %s
-          Print one built-in example:
-            gridgrind --print-example WORKBOOK_HEALTH
-          The protocol catalog lists each field, whether it is required, and the nested/plain
-          type group accepted by polymorphic fields such as target, action, query, value, style,
-          and scope.
-
-        Docs:
-          Quick reference: %s/docs/QUICK_REFERENCE.md
-          Operations reference: %s/docs/OPERATIONS.md
-          Error reference: %s/docs/ERRORS.md
-
-        Flags:
-          --request <path>                 Read the JSON request from a file instead of stdin.
-          --response <path>                Write the JSON response to a file instead of stdout.
-          --print-request-template         Print a minimal valid request JSON document.
-          --print-protocol-catalog         Print the machine-readable protocol catalog.
-          --operation <id>                 With --print-protocol-catalog, print one entry.
-          --print-example <id>             Print one built-in generated example request.
-          --help, -h                       Print this help text.
-          --version                        Print the GridGrind version and description.
-          --license                        Print the GridGrind license and third-party notices.
-        """
-        .formatted(
-            productHeader(version, description),
-            indentLines(cliSurface.executionLines(), 2),
-            indentLines(cliSurface.limitLines(), 2),
-            indentLines(cliSurface.requestLines(), 2),
-            indentLines(cliSurface.fileWorkflowLines(), 2),
-            formatCoordinateSystems(cliSurface.coordinateSystems()),
-            indentBlock(requestTemplate),
-            containerTag,
-            indentLines(cliSurface.discoveryLines(), 2),
-            discoveryExamples,
-            documentRef,
-            documentRef,
-            documentRef);
+    return String.join(
+        "\n\n",
+        productHeader(version, description),
+        renderSection(cliSurface.usage()),
+        renderSection(cliSurface.execution()),
+        renderDefinitions(cliSurface.limits()),
+        renderSection(cliSurface.request()),
+        renderDefinitions(cliSurface.fileWorkflow()),
+        renderCoordinateSystems(cliSurface.coordinateSystems()),
+        renderTemplate(cliSurface.minimalValidRequest(), requestTemplate),
+        renderCommandExample(cliSurface.stdinExample(), containerTag),
+        renderCommandExample(cliSurface.dockerFileExample(), containerTag),
+        renderDiscovery(cliSurface.discovery(), discoveryExamples),
+        renderReferences(cliSurface.docs(), documentRef),
+        renderDefinitions(cliSurface.flags()));
   }
 
   /** Returns the shared two-line product header used by help and version surfaces. */
@@ -134,12 +65,91 @@ public final class GridGrindCliHelp {
         .stripTrailing();
   }
 
-  private static String formatCoordinateSystems(List<CliSurface.CoordinateSystemEntry> entries) {
-    return entries.stream()
-        .map(entry -> "  %-22s %s".formatted(entry.pattern(), entry.convention()))
-        .map(line -> line + "\n")
-        .collect(java.util.stream.Collectors.joining())
-        .stripTrailing();
+  private static String renderCoordinateSystems(CliSurface.CliTableSection section) {
+    return section.label()
+        + ":\n"
+        + "  %-22s %s\n".formatted(section.leftHeader(), section.rightHeader())
+        + section.entries().stream()
+            .map(entry -> "  %-22s %s".formatted(entry.pattern(), entry.convention()))
+            .map(line -> line + "\n")
+            .collect(java.util.stream.Collectors.joining())
+            .stripTrailing();
+  }
+
+  private static String renderSection(CliSurface.CliSection section) {
+    return section.label() + ":\n" + indentLines(section.lines(), 2);
+  }
+
+  static String renderDefinitions(CliSurface.CliDefinitionSection section) {
+    if (section.entries().isEmpty()) {
+      return section.label() + ":";
+    }
+    int width =
+        section.entries().stream().mapToInt(entry -> entry.label().length() + 1).max().orElse(0);
+    return section.label()
+        + ":\n"
+        + section.entries().stream()
+            .map(entry -> ("  %-" + width + "s  %s").formatted(entry.label() + ":", entry.value()))
+            .map(line -> line + "\n")
+            .collect(java.util.stream.Collectors.joining())
+            .stripTrailing();
+  }
+
+  private static String renderTemplate(
+      CliSurface.CliTemplateSection section, String requestTemplate) {
+    return section.label() + ":\n" + indentBlock(requestTemplate);
+  }
+
+  private static String renderCommandExample(
+      CliSurface.CliCommandExample section, String containerTag) {
+    String commands =
+        section.commandLines().stream()
+            .map(line -> replacePlaceholders(line, containerTag))
+            .map(line -> "  " + line)
+            .map(line -> line + "\n")
+            .collect(java.util.stream.Collectors.joining())
+            .stripTrailing();
+    if (section.description() == null) {
+      return section.label() + ":\n" + commands;
+    }
+    return section.label()
+        + ":\n"
+        + commands
+        + "\n\n"
+        + indentLines(List.of(section.description()), 2);
+  }
+
+  private static String renderDiscovery(
+      CliSurface.CliDiscoverySection section, String discoveryExamples) {
+    return section.label()
+        + ":\n"
+        + indentLines(section.lines(), 2)
+        + "\n"
+        + "  "
+        + section.builtInExamplesLabel()
+        + ":\n"
+        + discoveryExamples
+        + "\n"
+        + "  "
+        + section.printOneExampleLabel()
+        + ":\n"
+        + "    "
+        + section.printOneExampleCommand()
+        + "\n"
+        + indentLines(List.of(section.protocolCatalogNote()), 2);
+  }
+
+  static String renderReferences(CliSurface.CliReferenceSection section, String documentRef) {
+    if (section.entries().isEmpty()) {
+      return section.label() + ":";
+    }
+    return section.label()
+        + ":\n"
+        + section.entries().stream()
+            .map(entry -> "  " + entry.label() + ": " + documentRef + "/" + entry.relativePath())
+            .map(line -> line + "\n")
+            .collect(java.util.stream.Collectors.joining())
+            .stripTrailing();
   }
 
   private static String indentLines(List<String> lines, int indentSpaces) {
@@ -167,5 +177,9 @@ public final class GridGrindCliHelp {
 
   private static String indentBlock(String value) {
     return value.indent(2).stripTrailing();
+  }
+
+  private static String replacePlaceholders(String value, String containerTag) {
+    return value.replace("{{CONTAINER_TAG}}", containerTag);
   }
 }

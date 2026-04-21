@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: DEVELOPER
-updated: "2026-04-18"
+updated: "2026-04-21"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -85,7 +85,7 @@ transport-and-execution ownership. The accepted architecture decision record for
 | Java | 26 |
 | Docker runtime | Docker Desktop daemon plus `docker buildx` reachable through the active shell `docker` command; smoke and release verification use an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine |
 | Apache POI | 5.5.1 |
-| Jackson Databind | 3.0.3 |
+| Jackson Databind | 3.1.2 |
 | JUnit Jupiter | 6.0.3 |
 | Log4j Core | 2.25.3 |
 
@@ -149,6 +149,9 @@ and local Docker verification now requires `docker buildx` because Stage 5 build
 ./gradlew :cli:run --args="--version"
 ./gradlew :cli:run --args="--print-request-template"
 ./gradlew :cli:run --args="--print-protocol-catalog"
+./gradlew :cli:run --args="--print-task-catalog"
+./gradlew :cli:run --args="--print-task-plan DASHBOARD"
+./gradlew :cli:run --args='--print-goal-plan "monthly sales dashboard with charts"'
 ./scripts/docker-smoke.sh
 ```
 
@@ -156,16 +159,27 @@ The protocol catalog is generated from the contract record signatures. If you ch
 records, nested tagged unions, or plain input records, keep the field-shape output authoritative:
 every field should still publish required/optional status and the exact nested/plain group
 accepted by polymorphic inputs. Contract-bearing discovery prose such as low-memory mode limits,
-formula parse boundaries, and workbook-health summaries now lives in the core shared
-`GridGrindContractText` helper inside `contract`, not in thin downstream string copies. `cli`
-renders that core-owned text into `--help`, the catalog uses it for agent-facing summaries, and
-request validation reuses the same phrases for execution-mode failures. The catalog build path now
-uses a small internal `contract.catalog.gather` seam for the two cases that genuinely benefit
-from Stream Gatherers: ordered uniqueness and reflected field-metadata expansion. The built-in
-request template remains an ordinary constant because no domain gatherer semantics are needed
-there. Keep `--print-request-template` as the smallest valid machine-readable request; workflow
-snippets such as the no-save `ANALYZE_WORKBOOK_FINDINGS` lint pass belong in help text, public
-docs, and the example request set instead of the emitted template itself.
+formula parse boundaries, workbook-health summaries, and CLI help labels now live in the
+contract-owned metadata layer instead of thin downstream string copies. `GridGrindContractText`
+owns stable wording, `GridGrindExecutionModeMetadata` owns the structured EVENT_READ and
+STREAMING_WRITE contract rules plus their validation messages, and `CliSurface` owns the help
+section labels, key/value entries, flags, docs links, and example routing that `cli` renders.
+`GridGrindTaskCatalog` owns the high-level task descriptors, `GridGrindTaskPlanner` derives
+starter request scaffolds from those descriptors, and `GridGrindGoalPlanner` turns one freeform
+goal into ranked task candidates without hardcoding scenario permutations. Request linting is
+also part of that authoritative public surface now: `executor` owns `GridGrindRequestDoctor`, and
+the packaged-artifact verifier exercises the emitted doctor report instead of relying only on
+module-local tests. The build now also includes a contract-owned public-surface linter that fails
+if docs, generated help, catalog summaries, shipped examples, or shared runtime diagnostics
+mention a canonical mutation, assertion, or inspection id that is not registered in the catalog
+vocabulary.
+The catalog build path still uses a small internal
+`contract.catalog.gather` seam for the two cases that genuinely benefit from Stream Gatherers:
+ordered uniqueness and reflected field-metadata expansion. The built-in request template remains
+an ordinary constant because no domain gatherer semantics are needed there. Keep
+`--print-request-template` as the smallest valid machine-readable request; workflow snippets such
+as the no-save `ANALYZE_WORKBOOK_FINDINGS` lint pass belong in help text, public docs, and the
+example request set instead of the emitted template itself.
 
 ---
 
@@ -181,8 +195,9 @@ Release automation is split across three workflows:
 - `Container` first runs the same Docker smoke script against the local Dockerfile build, then
   builds and publishes the multi-arch GHCR image, verifies with an isolated anonymous Docker
   config that both the exact version tag and `latest` are publicly pullable and runnable, then
-  black-box verifies the published CLI help and protocol catalog from both tags before pruning
-  older container package versions.
+  black-box verifies the published CLI help, protocol catalog, task catalog, task planner,
+  goal planner, and doctor surfaces from both tags before pruning older container package
+  versions.
 - `Gradle wrapper validation` runs when wrapper files change and validates the checked-in wrapper
   surface.
 
@@ -271,6 +286,7 @@ is exercised both by direct DTO/catalog tests and by the executor and CLI seams 
 | `engine` | 100% | 100% |
 | `contract` | 100% | 100% |
 | `executor` | 100% | 100% |
+| `authoring-java` | 100% | 100% |
 | `cli` | 100% | 100% |
 
 `./gradlew check` enforces the thresholds but does not write report files. Run
@@ -278,7 +294,7 @@ is exercised both by direct DTO/catalog tests and by the executor and CLI seams 
 `build/reports/jacoco/` in each module plus an aggregated cross-module report at
 `build/reports/jacoco/aggregated/`.
 The root coverage tasks discover participating JaCoCo-enabled Java subprojects dynamically and
-collect every module `build/jacoco/*.exec` file, so adding a fourth product module must not
+collect every module `build/jacoco/*.exec` file, so adding another product module must not
 require hand-editing a root hardcoded task list.
 
 The table above applies only to the root product modules. The nested Jazzer build has a separate
@@ -298,9 +314,9 @@ expansion semantics in shell wrappers that contributors run directly.
 Mutation steps run first in authored order, assertion and inspection steps run wherever they are
 placed in authored order, and persistence happens only after every step succeeds.
 
-If any assertion or inspection fails, the request returns a structured error and no workbook is
-written. This gives agents deterministic failure semantics: a failure never leaves a
-partially-written file behind.
+If any step or calculation phase fails, the request returns a structured error and workbook
+persistence is skipped. This gives agents deterministic failure semantics at the `.xlsx` output
+boundary: GridGrind does not emit a partially written workbook file.
 
 ---
 
@@ -331,7 +347,8 @@ Run any JSON fixture with:
 ./gradlew :cli:run --args="--request examples/<file>.json"
 ```
 
-Output workbooks are written to `cli/build/generated-workbooks/`.
+Examples that persist a workbook write to `cli/build/generated-workbooks/`; the no-save examples
+return JSON only.
 
 The Java example is compile-verified by `:authoring-java:test` and demonstrates how the
 `authoring-java` module emits one canonical `WorkbookPlan` without dropping to raw JSON.
@@ -340,7 +357,7 @@ The Java example is compile-verified by `:authoring-java:test` and demonstrates 
 
 ## Jackson 3.x Package Notes
 
-GridGrind uses Jackson 3.x (`tools.jackson.core:jackson-databind:3.0.3`). The package split:
+GridGrind uses Jackson 3.x (`tools.jackson.core:jackson-databind:3.1.2`). The package split:
 
 | Surface | Package |
 |:--------|:--------|

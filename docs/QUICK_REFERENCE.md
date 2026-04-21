@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-18"
+updated: "2026-04-21"
 route:
   keywords: [gridgrind, quick-reference, snippets, json, operations, assertions, reads, introspection, analysis, expect-cell-value, expect-analysis-max-severity, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-chart, set-pivot-table, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, delete-pivot-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, execution-calculation, evaluate-all, evaluate-targets, clear-caches-only, markrecalculateonopen, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, source-backed, inline, utf8_file, standard_input, inline_base64, file, ooxml, package-security, encryption, signing, coordinates, rowindex, columnindex, warnings]
   questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "how do I assert a cell value in gridgrind", "how do I assert workbook health in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind package security example", "how do I open an encrypted workbook in gridgrind", "how do I inspect package signatures in gridgrind", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind chart example", "gridgrind pivot table example", "how do I read pivot tables in gridgrind", "how do I lint pivot tables in gridgrind", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving", "how do I load text from a file in gridgrind", "how do I send binary data to gridgrind"]
@@ -22,12 +22,22 @@ The artifact can emit the current contract directly:
 ```bash
 gridgrind --print-request-template
 gridgrind --print-protocol-catalog
+gridgrind --print-task-catalog
+gridgrind --print-task-plan DASHBOARD
+gridgrind --print-goal-plan "monthly sales dashboard with charts"
+printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' | gridgrind --doctor-request
 gridgrind --print-example WORKBOOK_HEALTH
 ```
 
 `--print-protocol-catalog` returns machine-readable field descriptors. Every catalog entry states
 which fields are required or optional and, for polymorphic fields, which nested or plain type
-group supplies the accepted JSON shape. `--print-example <id>` emits one contract-owned generated
+group supplies the accepted JSON shape. Mutation, assertion, and inspection entries also publish
+`targetSelectors` or `targetSelectorRule` so agents can see the exact allowed target families
+before sending a request. `--print-task-catalog` and `--print-task-plan <id>` expose the
+contract-owned intent layer, `--print-goal-plan "<goal>"` ranks likely tasks for one freeform
+goal, and `--doctor-request` returns a machine-readable lint report for one request without
+opening or mutating a workbook. Step kind is inferred from exactly one of `action`, `assertion`,
+or `query`; do not send `step.type`. `--print-example <id>` emits one contract-owned generated
 example request from the same registry that backs the committed `examples/*.json` fixtures.
 
 ---
@@ -131,6 +141,8 @@ Binary-bearing mutation fields use the matching binary source model:
 ```
 
 - Relative `UTF8_FILE` and `FILE` paths resolve from the current working directory.
+- The request JSON transport is capped at 16 MiB. Put large authored text and binary content in
+  `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` sources instead of inline JSON strings.
 - `STANDARD_INPUT` authored values require `--request <path>` on the CLI so stdin can carry the
   authored content instead of the request JSON.
 - Source-backed loading failures stop the request in `journal.inputResolution` and surface as
@@ -1061,6 +1073,9 @@ rejected instead of being rounded or truncated.
   }
 }
 ```
+
+`CellInput.TEXT` requires non-empty resolved text. Use `CellInput.BLANK` when you want an empty
+cell instead of a string payload.
 
 A leading `=` in `FORMULA` values is accepted and stripped automatically. `"=SUM(B1:B10)"` and `"SUM(B1:B10)"` are equivalent.
 Existing style, hyperlink, and comment state on the targeted cell is preserved. `DATE` and
@@ -2036,7 +2051,8 @@ unique case-insensitively. Overlapping different-name tables are rejected. Later
 style patches that touch the table header row keep the table's persisted column metadata aligned
 with the visible header cells. `showTotalsRow` is optional and defaults to `false`; when
 `totalsRowFunction` is present in a column entry, input is case-insensitive and canonicalized to
-Excel's lowercase stored token family.
+Excel's lowercase stored token family. The step target for `SET_TABLE` is
+`TableSelector.BY_NAME_ON_SHEET`.
 
 ## DELETE_TABLE
 
@@ -2047,6 +2063,8 @@ Excel's lowercase stored token family.
   "sheetName": "Sheet1"
 }
 ```
+
+`DELETE_TABLE` targets the existing table through `TableSelector.BY_NAME_ON_SHEET`.
 
 ## SET_PIVOT_TABLE
 
@@ -2142,6 +2160,7 @@ persists only one role per pivot field. When `reportFilters` is non-empty,
 `anchor.topLeftAddress` must be on Excel row `3` or lower so the page-filter layout has room
 above the rendered body. Supported `dataFields[*].function` values are `SUM`, `COUNT`,
 `COUNT_NUMS`, `AVERAGE`, `MAX`, `MIN`, `PRODUCT`, `STD_DEV`, `STD_DEVP`, `VAR`, and `VARP`.
+The step target for `SET_PIVOT_TABLE` is `PivotTableSelector.BY_NAME_ON_SHEET`.
 
 ## DELETE_PIVOT_TABLE
 
@@ -2152,6 +2171,8 @@ above the rendered body. Supported `dataFields[*].function` values are `SUM`, `C
   "sheetName": "Report"
 }
 ```
+
+`DELETE_PIVOT_TABLE` targets the existing pivot through `PivotTableSelector.BY_NAME_ON_SHEET`.
 
 ## APPEND_ROW
 
@@ -2421,6 +2442,8 @@ as a raw `*_NOT_FOUND` read failure.
 
 For a complete mutate-then-verify example, see
 [`examples/assertion-request.json`](../examples/assertion-request.json).
+For the full assertion-type matrix, selector families, and the less-common fact assertions, see
+[OPERATIONS.md](./OPERATIONS.md#assertions).
 
 ---
 

@@ -29,21 +29,17 @@ import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.Iterator;
-import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
 /** Focused Phase 6 coverage for calculation-policy paths in the default executor. */
-@SuppressWarnings("PMD.AvoidAccessibilityAlteration")
 class DefaultGridGrindRequestExecutorCalculationCoverageTest {
   @Test
   void executeRejectsMutationObservationOrderingAtValidationPhase() {
@@ -137,32 +133,8 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
 
   @Test
   void calculationHelpersMapPreflightExecutionAndContextDetails() throws Exception {
-    Method executeCalculationPolicy =
-        DefaultGridGrindRequestExecutor.class.getDeclaredMethod(
-            "executeCalculationPolicy",
-            ExcelWorkbook.class,
-            WorkbookPlan.class,
-            ExecutionJournalRecorder.class);
-    Method calculationProblemFor =
-        DefaultGridGrindRequestExecutor.class.getDeclaredMethod(
-            "calculationProblemFor",
-            WorkbookPlan.class,
-            CalculationPolicyExecutor.FailureDetail.class);
-    Method calculationContextFor =
-        DefaultGridGrindRequestExecutor.class.getDeclaredMethod(
-            "calculationContextFor",
-            WorkbookPlan.class,
-            String.class,
-            CalculationPolicyExecutor.FailureDetail.class);
-    Method stageFor =
-        DefaultGridGrindRequestExecutor.class.getDeclaredMethod(
-            "stageFor", CalculationPolicyExecutor.Phase.class);
-    executeCalculationPolicy.setAccessible(true);
-    calculationProblemFor.setAccessible(true);
-    calculationContextFor.setAccessible(true);
-    stageFor.setAccessible(true);
-
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    ExecutionCalculationSupport calculationSupport =
+        new ExecutionCalculationSupport(ExcelStreamingWorkbookWriter::markRecalculateOnOpen);
     WorkbookPlan preflightRequest =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -174,15 +146,14 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
       workbook.getOrCreateSheet("Ops");
       workbook.sheet("Ops").setCell("A1", ExcelCellValue.formula("TEXTAFTER(\"a,b\",\",\")"));
 
-      Object preflightOutcome =
-          executeCalculationPolicy.invoke(
-              executor,
+      ExecutionCalculationSupport.CalculationExecutionOutcome preflightOutcome =
+          calculationSupport.executeCalculationPolicy(
               workbook,
               preflightRequest,
               ExecutionJournalRecorder.start(preflightRequest, ExecutionJournalSink.NOOP));
 
-      CalculationReport preflightReport = reportFrom(preflightOutcome);
-      GridGrindResponse.Problem preflightFailure = failureFrom(preflightOutcome);
+      CalculationReport preflightReport = preflightOutcome.report();
+      GridGrindResponse.Problem preflightFailure = preflightOutcome.failure();
       assertEquals(CalculationExecutionStatus.FAILED, preflightReport.execution().status());
       assertEquals(
           GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION, preflightFailure.code());
@@ -200,15 +171,14 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             null,
             java.util.List.of());
     try (ExcelWorkbook workbook = instantiateWorkbook(new IteratorFailingWorkbook())) {
-      Object executionOutcome =
-          executeCalculationPolicy.invoke(
-              executor,
+      ExecutionCalculationSupport.CalculationExecutionOutcome executionOutcome =
+          calculationSupport.executeCalculationPolicy(
               workbook,
               clearCachesRequest,
               ExecutionJournalRecorder.start(clearCachesRequest, ExecutionJournalSink.NOOP));
 
-      CalculationReport executionReport = reportFrom(executionOutcome);
-      GridGrindResponse.Problem executionFailure = failureFrom(executionOutcome);
+      CalculationReport executionReport = executionOutcome.report();
+      GridGrindResponse.Problem executionFailure = executionOutcome.failure();
       assertEquals(CalculationExecutionStatus.FAILED, executionReport.execution().status());
       assertEquals(GridGrindProblemCode.INTERNAL_ERROR, executionFailure.code());
       assertEquals("CALCULATION_EXECUTION", executionFailure.context().stage());
@@ -225,17 +195,16 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             null,
             java.util.List.of());
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      Object markOnlyOutcome =
-          executeCalculationPolicy.invoke(
-              executor,
+      ExecutionCalculationSupport.CalculationExecutionOutcome markOnlyOutcome =
+          calculationSupport.executeCalculationPolicy(
               workbook,
               markOnlyRequest,
               ExecutionJournalRecorder.start(markOnlyRequest, ExecutionJournalSink.NOOP));
 
-      CalculationReport markOnlyReport = reportFrom(markOnlyOutcome);
+      CalculationReport markOnlyReport = markOnlyOutcome.report();
       assertEquals(CalculationExecutionStatus.SUCCEEDED, markOnlyReport.execution().status());
       assertTrue(markOnlyReport.execution().markRecalculateOnOpenApplied());
-      assertNull(failureFrom(markOnlyOutcome));
+      assertNull(markOnlyOutcome.failure());
     }
 
     CalculationPolicyExecutor.FailureDetail codeFailure =
@@ -248,68 +217,33 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
             "invalid formula",
             null);
     GridGrindResponse.Problem mappedCodeFailure =
-        (GridGrindResponse.Problem)
-            calculationProblemFor.invoke(executor, preflightRequest, codeFailure);
+        calculationSupport.calculationProblemFor(preflightRequest, codeFailure);
     assertEquals(GridGrindProblemCode.INVALID_FORMULA, mappedCodeFailure.code());
     assertEquals("CALCULATION_PREFLIGHT", mappedCodeFailure.context().stage());
 
     GridGrindResponse.ProblemContext.ExecuteCalculation nullFailureContext =
-        (GridGrindResponse.ProblemContext.ExecuteCalculation)
-            calculationContextFor.invoke(
-                executor, preflightRequest, "CALCULATION_EXECUTION", (Object) null);
+        calculationSupport.calculationContextFor(
+            preflightRequest, CalculationPolicyExecutor.Phase.EXECUTION, null);
     assertEquals("CALCULATION_EXECUTION", nullFailureContext.stage());
     assertNull(nullFailureContext.sheetName());
     assertNull(nullFailureContext.address());
     assertNull(nullFailureContext.formula());
 
-    assertEquals(
-        "CALCULATION_PREFLIGHT", stageFor.invoke(null, CalculationPolicyExecutor.Phase.PREFLIGHT));
-    assertEquals(
-        "CALCULATION_EXECUTION", stageFor.invoke(null, CalculationPolicyExecutor.Phase.EXECUTION));
+    GridGrindResponse.ProblemContext.ExecuteCalculation preflightNullFailureContext =
+        calculationSupport.calculationContextFor(
+            preflightRequest, CalculationPolicyExecutor.Phase.PREFLIGHT, null);
+    assertEquals("CALCULATION_PREFLIGHT", preflightNullFailureContext.stage());
+    assertNull(preflightNullFailureContext.sheetName());
+    assertNull(preflightNullFailureContext.address());
+    assertNull(preflightNullFailureContext.formula());
   }
 
   private static GridGrindResponse.Failure failure(GridGrindResponse response) {
     return assertInstanceOf(GridGrindResponse.Failure.class, response);
   }
 
-  private static CalculationReport reportFrom(Object outcome) {
-    try {
-      Method report = outcome.getClass().getDeclaredMethod("report");
-      report.setAccessible(true);
-      return (CalculationReport) report.invoke(outcome);
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException exception) {
-      throw new LinkageError(exception.getMessage(), exception);
-    }
-  }
-
-  private static GridGrindResponse.Problem failureFrom(Object outcome) {
-    try {
-      Method failure = outcome.getClass().getDeclaredMethod("failure");
-      failure.setAccessible(true);
-      return (GridGrindResponse.Problem) failure.invoke(outcome);
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException exception) {
-      throw new LinkageError(exception.getMessage(), exception);
-    }
-  }
-
   private static ExcelWorkbook instantiateWorkbook(XSSFWorkbook workbook) {
-    try {
-      Class<?> runtimeType = Class.forName("dev.erst.gridgrind.excel.ExcelFormulaRuntime");
-      Method runtimeFactory = runtimeType.getDeclaredMethod("poi", FormulaEvaluator.class);
-      runtimeFactory.setAccessible(true);
-      Object runtime =
-          runtimeFactory.invoke(null, workbook.getCreationHelper().createFormulaEvaluator());
-      Constructor<ExcelWorkbook> constructor =
-          ExcelWorkbook.class.getDeclaredConstructor(XSSFWorkbook.class, runtimeType);
-      constructor.setAccessible(true);
-      return constructor.newInstance(workbook, runtime);
-    } catch (ClassNotFoundException
-        | NoSuchMethodException
-        | IllegalAccessException
-        | InstantiationException
-        | InvocationTargetException exception) {
-      throw new LinkageError(exception.getMessage(), exception);
-    }
+    return ExcelWorkbook.wrap(workbook);
   }
 
   /**

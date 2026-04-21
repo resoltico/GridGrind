@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-04-16"
+updated: "2026-04-21"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -58,7 +58,8 @@ Then verify every item in this checklist. All must be true before any commit or 
 - `CHANGELOG.md` link footer has:
   - `[Unreleased]: .../compare/vX.Y.Z...HEAD`
   - `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`
-- All `docs/*.md` frontmatter `version:` fields equal the target version.
+- All Markdown docs that carry AFAD frontmatter — `README.md`, `PATENTS.md`, `jazzer/README.md`,
+  and every `docs/*.md` file — have `version:` set to the target version.
 - `README.md` does not reference any prior version's container tags.
 - All example JSON files use the current wire names and field shapes for this version.
 - GitHub repository settings are still aligned with this procedure:
@@ -87,7 +88,7 @@ rejected and wastes time. Always commit on a release branch.
 
 ```bash
 git checkout -b release/X.Y.Z
-git add <every modified file that belongs in the release — never .claude/>
+git add <every modified file that belongs in the release — never .codex/>
 git status --short
 git diff --cached --name-status
 git diff --cached --stat
@@ -310,9 +311,10 @@ duplicate release workflow run failed after the release was already created.
 The release workflow is expected to perform this same verification internally after publication.
 Before publication, that workflow also black-box verifies the packaged fat JAR with
 `./scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar` so the shipped `--help`
-and `--print-protocol-catalog` surfaces cannot drift from the core contract silently. The
-operator-side `gh release view` check remains mandatory because workflow success is still not the
-authoritative state.
+plus `--print-protocol-catalog`, `--print-task-catalog`, `--print-task-plan`, `--print-goal-plan`,
+and `--doctor-request` surfaces cannot drift from the core contract silently. The operator-side
+`gh release view` check remains mandatory because workflow success is still not the authoritative
+state.
 
 ### Step 9 — Verify public availability
 
@@ -329,9 +331,10 @@ gh release view vX.Y.Z                                                # GitHub R
 The verifier script must confirm both the exact `X.Y.Z` tag and `latest` are anonymously pullable,
 that both `docker run ... --version` results match the two-line product header for the target
 release version exactly — `GridGrind X.Y.Z` on the first line and the product description on the
-second — and that both published tags still expose the expected `--help` and
-`--print-protocol-catalog` contract. A successful `docker pull` alone is not sufficient
-verification. In particular: a multi-arch `docker pull` can succeed even when the platform
+second — and that both published tags still expose the expected `--help`,
+`--print-protocol-catalog`, `--print-task-catalog`, `--print-task-plan`, `--print-goal-plan`, and
+`--doctor-request` contract. A successful `docker pull` alone is not sufficient verification. In
+particular: a multi-arch `docker pull` can succeed even when the platform
 manifests have been deleted — the index manifest is still present but the image is not actually
 runnable. The `docker run --version` plus CLI-contract checks remain the definitive test.
 

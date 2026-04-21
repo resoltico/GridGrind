@@ -1,3 +1,13 @@
+---
+afad: "3.5"
+version: "0.49.0"
+domain: LEGAL
+updated: "2026-04-19"
+route:
+  keywords: [gridgrind, patent, patents, legal, contributors, dependencies, non-assertion, mit, apache, bsd]
+  questions: ["what is the patent posture for gridgrind", "does gridgrind include a patent non-assertion statement", "what do contributors need to know about patents"]
+---
+
 # Patent Considerations
 
 GridGrind is licensed under the MIT License, which does not include explicit patent grant language.

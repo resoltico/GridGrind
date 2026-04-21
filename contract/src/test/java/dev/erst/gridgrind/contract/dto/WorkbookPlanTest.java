@@ -43,10 +43,11 @@ class WorkbookPlanTest {
 
   @Test
   void copiesStepsAndRejectsDuplicateStepIds() {
-    List<WorkbookStep> steps = new ArrayList<>();
-    steps.add(
+    WorkbookStep authoredStep =
         new MutationStep(
-            "ensure-budget", new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()));
+            "ensure-budget", new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet());
+    List<WorkbookStep> steps = new ArrayList<>();
+    steps.add(authoredStep);
     WorkbookPlan plan =
         new WorkbookPlan(
             new WorkbookPlan.WorkbookSource.New(),
@@ -57,6 +58,7 @@ class WorkbookPlanTest {
 
     assertEquals(1, plan.steps().size());
     assertEquals("ensure-budget", plan.steps().getFirst().stepId());
+    assertThrows(UnsupportedOperationException.class, () -> plan.steps().add(authoredStep));
 
     IllegalArgumentException duplicateStepFailure =
         assertThrows(

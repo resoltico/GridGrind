@@ -236,12 +236,13 @@ public record WorkbookPlan(
     for (WorkbookStep step : steps) {
       Objects.requireNonNull(step, "steps must not contain nulls");
       copy.add(step);
+      // LIM-006
       if (!seen.add(step.stepId())) {
         throw new IllegalArgumentException(
             "steps must not contain duplicate stepId values: " + step.stepId());
       }
     }
-    return copy;
+    return List.copyOf(copy);
   }
 
   static void requireNonBlank(String value, String fieldName) {

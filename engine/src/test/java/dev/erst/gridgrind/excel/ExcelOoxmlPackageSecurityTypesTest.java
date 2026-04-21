@@ -13,20 +13,24 @@ import org.junit.jupiter.api.Test;
 class ExcelOoxmlPackageSecurityTypesTest {
   @Test
   void openOptionsEncryptionOptionsAndSignatureOptionsNormalizeInputs() {
-    ExcelOoxmlOpenOptions openOptions = new ExcelOoxmlOpenOptions("secret");
+    ExcelOoxmlOpenOptions openOptions = new ExcelOoxmlOpenOptions.Encrypted("secret");
     ExcelOoxmlEncryptionOptions encryptionOptions = new ExcelOoxmlEncryptionOptions("secret", null);
     ExcelOoxmlSignatureOptions signatureOptions =
         new ExcelOoxmlSignatureOptions(
             Path.of("/tmp/signing-material.p12"), "store-pass", null, null, null, null);
 
-    assertEquals("secret", openOptions.password());
+    assertEquals(
+        "secret", assertInstanceOf(ExcelOoxmlOpenOptions.Encrypted.class, openOptions).password());
     assertEquals(ExcelOoxmlEncryptionMode.AGILE, encryptionOptions.mode());
     assertEquals("store-pass", signatureOptions.keyPassword());
     assertEquals(ExcelOoxmlSignatureDigestAlgorithm.SHA256, signatureOptions.digestAlgorithm());
     assertNull(signatureOptions.alias());
     assertNull(signatureOptions.description());
 
-    assertThrows(IllegalArgumentException.class, () -> new ExcelOoxmlOpenOptions(" "));
+    assertInstanceOf(
+        ExcelOoxmlOpenOptions.Unencrypted.class, new ExcelOoxmlOpenOptions.Unencrypted());
+    assertThrows(IllegalArgumentException.class, () -> new ExcelOoxmlOpenOptions.Encrypted(" "));
+    assertThrows(NullPointerException.class, () -> new ExcelOoxmlOpenOptions.Encrypted(null));
     assertThrows(IllegalArgumentException.class, () -> new ExcelOoxmlEncryptionOptions(" ", null));
     assertThrows(
         IllegalArgumentException.class,
@@ -101,7 +105,8 @@ class ExcelOoxmlPackageSecurityTypesTest {
 
   @Test
   void coverageBranchesForSecurityTypesAndExceptionsStayExplicit() throws IOException {
-    assertNull(new ExcelOoxmlOpenOptions(null).password());
+    assertInstanceOf(
+        ExcelOoxmlOpenOptions.Unencrypted.class, new ExcelOoxmlOpenOptions.Unencrypted());
     assertEquals(
         ExcelOoxmlEncryptionMode.AGILE, ExcelOoxmlEncryptionMode.fromPoi(EncryptionMode.agile));
     assertEquals(

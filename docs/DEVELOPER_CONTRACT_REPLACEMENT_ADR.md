@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: DEVELOPER
-updated: "2026-04-18"
+updated: "2026-04-19"
 route:
   keywords: [gridgrind, adr, contract, executor, protocol, replacement, architecture, java, authoring-java]
   questions: ["what architecture decision locked the contract replacement", "why did gridgrind delete the protocol module", "what is contract replacement mode", "why is gridgrind split into contract and executor"]
@@ -82,8 +82,8 @@ confused ownership model.
 - Do not reintroduce `protocol` as a top-level module, JPMS module, or package root.
 - Do not move execution logic back into `contract`.
 - Do not put transport-specific behavior in `engine` or `executor`.
-- Do not treat the existing `operations[]` plus `reads[]` shape as the future architecture; it is
-  a temporary legacy contract pending later phases of the redesign.
+- Do not reintroduce separate `operations[]` and `reads[]` arrays; the canonical contract is the
+  ordered `steps[]` workflow surface.
 
 ---
 

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.step;
 
+import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.Selector;
 
@@ -14,6 +15,6 @@ public record InspectionStep(String stepId, Selector target, InspectionQuery que
 
   @Override
   public String stepKind() {
-    return "INSPECTION";
+    return GridGrindProtocolTypeNames.workbookStepTypeName(InspectionStep.class);
   }
 }

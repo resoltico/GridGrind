@@ -104,8 +104,7 @@ final class WorkbookStepValidation {
               Map.entry(MutationAction.SetChart.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(
                   MutationAction.SetPivotTable.class,
-                  targetTypes(
-                      PivotTableSelector.ByNameOnSheet.class, PivotTableSelector.ByName.class)),
+                  targetTypes(PivotTableSelector.ByNameOnSheet.class)),
               Map.entry(MutationAction.SetShape.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(
                   MutationAction.SetEmbeddedObject.class, targetTypes(SheetSelector.ByName.class)),
@@ -131,15 +130,12 @@ final class WorkbookStepValidation {
               Map.entry(
                   MutationAction.ClearAutofilter.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(
-                  MutationAction.SetTable.class,
-                  targetTypes(TableSelector.ByNameOnSheet.class, TableSelector.ByName.class)),
+                  MutationAction.SetTable.class, targetTypes(TableSelector.ByNameOnSheet.class)),
               Map.entry(
-                  MutationAction.DeleteTable.class,
-                  targetTypes(TableSelector.ByNameOnSheet.class, TableSelector.ByName.class)),
+                  MutationAction.DeleteTable.class, targetTypes(TableSelector.ByNameOnSheet.class)),
               Map.entry(
                   MutationAction.DeletePivotTable.class,
-                  targetTypes(
-                      PivotTableSelector.ByNameOnSheet.class, PivotTableSelector.ByName.class)),
+                  targetTypes(PivotTableSelector.ByNameOnSheet.class)),
               Map.entry(
                   MutationAction.SetNamedRange.class,
                   targetTypes(
@@ -334,12 +330,12 @@ final class WorkbookStepValidation {
 
   static Class<? extends Selector>[] allowedTargetTypes(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
-    return configuredTargetTypes(action.getClass(), MUTATION_TARGET_TYPES, "action");
+    return allowedTargetTypesForMutationActionType(action.getClass());
   }
 
   static Class<? extends Selector>[] allowedTargetTypes(InspectionQuery query) {
     Objects.requireNonNull(query, "query must not be null");
-    return configuredTargetTypes(query.getClass(), INSPECTION_TARGET_TYPES, "query");
+    return allowedTargetTypesForInspectionQueryType(query.getClass());
   }
 
   static Class<? extends Selector>[] allowedTargetTypes(Assertion assertion) {
@@ -362,7 +358,68 @@ final class WorkbookStepValidation {
     if (assertion instanceof Assertion.Not not) {
       return allowedTargetTypes(not.assertion());
     }
-    return configuredTargetTypes(assertion.getClass(), ASSERTION_TARGET_TYPES, "assertion");
+    return staticAllowedTargetTypesForAssertionType(assertion.getClass());
+  }
+
+  static Class<? extends Selector>[] allowedTargetTypesForMutationActionType(
+      Class<? extends MutationAction> actionType) {
+    Objects.requireNonNull(actionType, "actionType must not be null");
+    return configuredTargetTypes(actionType, MUTATION_TARGET_TYPES, "action");
+  }
+
+  static Class<? extends Selector>[] allowedTargetTypesForInspectionQueryType(
+      Class<? extends InspectionQuery> queryType) {
+    Objects.requireNonNull(queryType, "queryType must not be null");
+    return configuredTargetTypes(queryType, INSPECTION_TARGET_TYPES, "query");
+  }
+
+  static Class<? extends Selector>[] staticAllowedTargetTypesForAssertionType(
+      Class<? extends Assertion> assertionType) {
+    Objects.requireNonNull(assertionType, "assertionType must not be null");
+    String dynamicRule = dynamicTargetSelectorRuleForAssertionType(assertionType);
+    if (dynamicRule != null) {
+      throw new IllegalArgumentException(
+          "Assertion type "
+              + assertionType.getName()
+              + " derives target selectors dynamically: "
+              + dynamicRule);
+    }
+    return configuredTargetTypes(assertionType, ASSERTION_TARGET_TYPES, "assertion");
+  }
+
+  static String dynamicTargetSelectorRuleForAssertionType(
+      Class<? extends Assertion> assertionType) {
+    Objects.requireNonNull(assertionType, "assertionType must not be null");
+    if (assertionType.equals(Assertion.AnalysisMaxSeverity.class)
+        || assertionType.equals(Assertion.AnalysisFindingPresent.class)
+        || assertionType.equals(Assertion.AnalysisFindingAbsent.class)) {
+      return "Matches the nested analysis query's target selectors.";
+    }
+    if (assertionType.equals(Assertion.AllOf.class)
+        || assertionType.equals(Assertion.AnyOf.class)) {
+      return "Matches the intersection of every nested assertion's target selectors.";
+    }
+    if (assertionType.equals(Assertion.Not.class)) {
+      return "Matches the nested assertion's target selectors.";
+    }
+    return null;
+  }
+
+  static String targetSelectorRuleForAssertionType(Class<? extends Assertion> assertionType) {
+    Objects.requireNonNull(assertionType, "assertionType must not be null");
+    String dynamicRule = dynamicTargetSelectorRuleForAssertionType(assertionType);
+    if (dynamicRule != null) {
+      return dynamicRule;
+    }
+    if (assertionType.equals(Assertion.Present.class)
+        || assertionType.equals(Assertion.Absent.class)) {
+      return "Shared selector wire types remain family-sensitive here: ALL, BY_NAME, and"
+          + " BY_NAMES are ambiguous across NamedRangeSelector, TableSelector, and"
+          + " PivotTableSelector, while BY_NAME_ON_SHEET is ambiguous across TableSelector"
+          + " and PivotTableSelector. Author the field set that identifies exactly one"
+          + " family.";
+    }
+    return null;
   }
 
   private static <T> Class<? extends Selector>[] configuredTargetTypes(

@@ -1,3 +1,13 @@
+---
+afad: "3.5"
+version: "0.49.0"
+domain: TESTING
+updated: "2026-04-19"
+route:
+  keywords: [gridgrind, jazzer, fuzzing, regression, replay, promote, corpus, protocol-workflow, protocol-request, xlsx-roundtrip, engine-command-sequence]
+  questions: ["how do I run jazzer for gridgrind", "how do I replay a jazzer input", "how do I promote a jazzer finding", "what fuzz harnesses does gridgrind ship"]
+---
+
 # Jazzer
 
 Local-only Jazzer fuzzing layer for GridGrind.

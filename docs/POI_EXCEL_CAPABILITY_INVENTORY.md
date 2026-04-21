@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: INVENTORY
-updated: "2026-04-17"
+updated: "2026-04-19"
 route:
   keywords: [gridgrind, apache-poi, poi, xssf, xlsx, capability, inventory, workbook-protection, comments, drawings, charts, pivots, pictures, embedded-objects, print-layout, style, autofilter, table, conditional-formatting, package-security, encryption, signing, streaming]
   questions: ["what xlsx features does gridgrind support", "how does gridgrind compare to apache poi xssf", "does gridgrind support workbook protection", "does gridgrind support rich comments", "does gridgrind support charts", "does gridgrind support pivot tables", "does gridgrind support pictures or embedded objects", "does gridgrind support encrypted xlsx files", "what xlsx capabilities are not exposed in gridgrind"]
@@ -24,16 +24,20 @@ route:
 - Where Apache POI itself documents only limited support, GridGrind targets that limited extent,
   not full Microsoft Excel parity.
 
-**Verification snapshot**:
+**Verification basis**:
 - Apache POI version in this repo: `5.5.1` via `gradle/libs.versions.toml`
-- GridGrind workspace checked: `2026-04-15`
-- Verification rerun in this workspace:
+- Contract and implementation evidence re-reviewed in this workspace: `2026-04-19`
+- Canonical verification commands for this surface:
   - `./gradlew parity`
   - `./gradlew check`
   - `./gradlew --project-dir jazzer check`
   - `jazzer/bin/fuzz-protocol-request -PjazzerMaxDuration=15s --console=plain`
   - `jazzer/bin/fuzz-protocol-workflow -PjazzerMaxDuration=15s --console=plain`
   - `./check.sh`
+- On mounted external volumes, JaCoCo-backed verification can fail at filesystem-locking
+  boundaries. Use a local-disk checkout for a full rerun and see
+  [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md) plus [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md) for
+  the supported workstation model.
 
 ## Status Legend
 
@@ -132,13 +136,13 @@ Currently not exposed:
 
 | Capability | POI XSSF baseline | GridGrind status | GridGrind evidence | Notes |
 |:-----------|:------------------|:-----------------|:-------------------|:------|
-| Drawing-object factual reads and truthful anchor inspection | XSSF drawing usermodel and OOXML-backed read surface | `COMPLETE` | `contract/dto/DrawingObjectReport.java`, `contract/query/InspectionQuery.java`, `engine/excel/ExcelDrawingController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelDrawingControllerTest.java`, `executor/src/parityTest/java/dev/erst/gridgrind/executor/parity/XlsxParityProbeRegistry.java` | GridGrind reads pictures, simple shapes, connectors, groups, graphic frames, and embedded objects with factual `TWO_CELL`, `ONE_CELL`, or `ABSOLUTE` anchors. Preview-image relations, embedded-object metadata, and blank-title drawing facts are normalized truthfully on reopen instead of disappearing behind generic null handling. |
+| Drawing-object factual reads and truthful anchor inspection | XSSF drawing usermodel and OOXML-backed read surface | `COMPLETE` | `contract/dto/DrawingObjectReport.java`, `contract/query/InspectionQuery.java`, `engine/excel/ExcelDrawingController.java`, `engine/excel/ExcelDrawingAnchorSupport.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelDrawingControllerTest.java`, `executor/src/parityTest/java/dev/erst/gridgrind/executor/parity/XlsxParityProbeRegistry.java` | GridGrind reads pictures, simple shapes, connectors, groups, graphic frames, and embedded objects with factual `TWO_CELL`, `ONE_CELL`, or `ABSOLUTE` anchors. Preview-image relations, embedded-object metadata, and blank-title drawing facts are normalized truthfully on reopen instead of disappearing behind generic null handling. |
 | Picture authoring, anchor mutation, delete, and binary payload extraction | Documented quick-guide and XSSF drawing APIs | `COMPLETE` | `contract/dto/PictureInput.java`, `contract/action/MutationAction.java`, `engine/excel/ExcelDrawingController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelDrawingControllerTest.java`, `jazzer/src/test/java/dev/erst/gridgrind/jazzer/support/XlsxRoundTripVerifierTest.java` | GridGrind can create, replace, move, delete, read, and extract named pictures with explicit authored two-cell anchors. |
 | Simple-shape and connector authoring plus authored anchor replacement | Documented XSSF shape APIs | `COMPLETE` | `contract/dto/ShapeInput.java`, `contract/action/MutationAction.java`, `engine/excel/ExcelDrawingController.java`, `executor/src/test/java/dev/erst/gridgrind/executor/DefaultGridGrindRequestExecutorTest.java`, `jazzer/src/main/java/dev/erst/gridgrind/jazzer/support/WorkbookInvariantChecks.java` | The shipped authored shape boundary is intentionally honest: `SIMPLE_SHAPE` and `CONNECTOR` only, both backed by explicit two-cell anchors. |
 | Embedded-object authoring, preservation, and extracted payload reads | Documented quick-guide embedded-object APIs to the extent POI supports them | `COMPLETE` | `contract/dto/EmbeddedObjectInput.java`, `contract/dto/DrawingObjectPayloadReport.java`, `engine/excel/ExcelDrawingController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelDrawingControllerTest.java`, `executor/src/parityTest/java/dev/erst/gridgrind/executor/parity/XlsxParityOracle.java` | GridGrind creates named embedded objects with authoritative package bytes and preview images, preserves them across unrelated edits, and extracts truthful user-visible payload bytes on readback. |
 | Comment and drawing coexistence without package corruption | Interplay between XSSF comments, VML, and spreadsheet drawings | `COMPLETE` | `engine/excel/ExcelDrawingController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelDrawingControllerTest.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelSheetCopyControllerTest.java`, `executor/src/parityTest/java/dev/erst/gridgrind/executor/parity/XlsxParityProbeRegistry.java` | Comment mutation no longer risks deleting or corrupting unrelated drawing relationships, even on reopened workbooks that already contain POI-authored comment or drawing parts. |
-| Chart discovery, factual reads, and chart-backed drawing inventory | POI documents limited chart support and chart readback through XDDF/XSSF APIs | `COMPLETE` | `contract/dto/ChartReport.java`, `contract/query/InspectionQuery.java`, `contract/dto/DrawingObjectReport.java`, `engine/excel/ExcelDrawingController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelDrawingControllerTest.java`, `executor/src/parityTest/java/dev/erst/gridgrind/executor/parity/XlsxParityProbeRegistry.java` | `GET_CHARTS` returns supported simple `BAR`, `LINE`, and `PIE` charts authoritatively and surfaces unsupported plot families as explicit `UNSUPPORTED` entries. Blank static titles, cached formula titles, and adjacent drawing-frame state are all preserved through truthful rereads. |
-| Simple chart authoring, targeted mutation, named-range-backed series binding, and anchor integrity | POI documents limited simple-chart creation and editing | `COMPLETE` | `contract/dto/ChartInput.java`, `contract/action/MutationAction.java`, `engine/excel/ExcelChartDefinition.java`, `engine/excel/ExcelDrawingController.java`, `examples/chart-request.json`, `jazzer/src/test/java/dev/erst/gridgrind/jazzer/support/XlsxRoundTripVerifierTest.java` | GridGrind authors and mutates supported simple charts by name, binds series to contiguous ranges or defined names, keeps chart relations or explicit anchor updates intact across save or reopen, and rejects invalid chart payloads without leaving partial chart frames behind. |
+| Chart discovery, factual reads, and chart-backed drawing inventory | POI documents limited chart support and chart readback through XDDF/XSSF APIs | `COMPLETE` | `contract/dto/ChartReport.java`, `contract/query/InspectionQuery.java`, `contract/dto/DrawingObjectReport.java`, `engine/excel/ExcelDrawingController.java`, `engine/excel/ExcelDrawingChartSupport.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelDrawingControllerTest.java`, `executor/src/parityTest/java/dev/erst/gridgrind/executor/parity/XlsxParityProbeRegistry.java` | `GET_CHARTS` returns supported simple `BAR`, `LINE`, and `PIE` charts authoritatively and surfaces unsupported plot families as explicit `UNSUPPORTED` entries. Blank static titles, cached formula titles, and adjacent drawing-frame state are all preserved through truthful rereads. |
+| Simple chart authoring, targeted mutation, named-range-backed series binding, and anchor integrity | POI documents limited simple-chart creation and editing | `COMPLETE` | `contract/dto/ChartInput.java`, `contract/action/MutationAction.java`, `engine/excel/ExcelChartDefinition.java`, `engine/excel/ExcelDrawingController.java`, `engine/excel/ExcelDrawingChartSupport.java`, `engine/excel/ExcelDrawingAnchorSupport.java`, `examples/chart-request.json`, `jazzer/src/test/java/dev/erst/gridgrind/jazzer/support/XlsxRoundTripVerifierTest.java` | GridGrind authors and mutates supported simple charts by name, binds series to contiguous ranges or defined names, keeps chart relations or explicit anchor updates intact across save or reopen, and rejects invalid chart payloads without leaving partial chart frames behind. |
 | Unsupported chart preservation during unrelated workbook edits | POI loads more chart families than it can authoritatively mutate | `COMPLETE` | `engine/src/test/java/dev/erst/gridgrind/excel/ExcelDrawingControllerTest.java`, `executor/src/parityTest/java/dev/erst/gridgrind/executor/parity/XlsxParityOracle.java`, `executor/src/parityTest/java/dev/erst/gridgrind/executor/parity/XlsxParityProbeRegistry.java`, `executor/src/parityTest/resources/dev/erst/gridgrind/executor/parity/xssf-parity-ledger.json` | Unsupported loaded charts reopen as explicit `UNSUPPORTED` detail and survive unrelated edits non-lossily. |
 | Sparkline discovery and authoring | XSSF sheet sparkline APIs | `NOT_EXPOSED` | No protocol DTO, engine, or read surface for sparklines found | GridGrind does not expose sparkline-group discovery, metadata, or mutation, even though Apache POI exposes limited sparkline APIs at the XSSF sheet layer. |
 
@@ -170,6 +174,10 @@ Currently not exposed:
   reachable from XSSF has been productized.
 - Status notes call out narrower boundaries where the surrounding POI family is broader than the
   public GridGrind surface.
+- Evidence paths in the matrix use module-relative shorthand for production sources. For example,
+  `contract/dto/...` means `contract/src/main/java/dev/erst/gridgrind/...`, `engine/excel/...`
+  means `engine/src/main/java/dev/erst/gridgrind/...`, and explicit test paths are already written
+  as repo-relative test-source locations.
 
 ## Primary Apache POI Sources Used
 

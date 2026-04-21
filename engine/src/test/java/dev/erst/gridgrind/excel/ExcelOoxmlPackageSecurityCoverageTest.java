@@ -51,7 +51,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     try (ExcelOoxmlPackageSecuritySupport.ReadableWorkbook readableWorkbook =
         ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions(encryptedWorkbook.password()),
+            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
             tempFileFactory)) {
       assertNotEquals(
           encryptedWorkbook.workbookPath().toAbsolutePath().normalize(),
@@ -75,7 +75,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
             () ->
                 ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
                     legacyWorkbookPath,
-                    new ExcelOoxmlOpenOptions("unused"),
+                    new ExcelOoxmlOpenOptions.Encrypted("unused"),
                     Files::createTempFile));
     assertEquals("Only .xlsx workbooks are supported", legacyFailure.getMessage());
   }
@@ -93,7 +93,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
             () ->
                 ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
                     encryptedWorkbook.workbookPath(),
-                    new ExcelOoxmlOpenOptions("wrong-password"),
+                    new ExcelOoxmlOpenOptions.Encrypted("wrong-password"),
                     (prefix, suffix) -> {
                       decryptedPath[0] = Files.createTempFile(prefix, suffix);
                       return decryptedPath[0];
@@ -125,7 +125,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
             () ->
                 ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
                     encryptedWorkbook.workbookPath(),
-                    new ExcelOoxmlOpenOptions(null),
+                    new ExcelOoxmlOpenOptions.Unencrypted(),
                     Files::createTempFile));
     assertEquals(encryptedWorkbook.workbookPath(), nullPasswordFailure.workbookPath());
   }
@@ -211,13 +211,13 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     try (ExcelWorkbook workbook =
             ExcelWorkbook.open(
                 encryptedWorkbook.workbookPath(),
-                new ExcelOoxmlOpenOptions(encryptedWorkbook.password()),
+                new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
                 tempFileFactory);
         ExcelWorkbook workbookWithEnvironment =
             ExcelWorkbook.open(
                 encryptedWorkbook.workbookPath(),
                 ExcelFormulaEnvironment.defaults(),
-                new ExcelOoxmlOpenOptions(encryptedWorkbook.password()),
+                new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()),
                 tempFileFactory)) {
       assertEquals("Encrypted workbook", workbook.sheet("Encrypted").text("A1"));
       assertEquals("Encrypted workbook", workbookWithEnvironment.sheet("Encrypted").text("A1"));

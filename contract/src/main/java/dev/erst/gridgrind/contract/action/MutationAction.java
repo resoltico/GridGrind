@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.action;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
 import dev.erst.gridgrind.contract.dto.AutofilterSortStateInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
@@ -549,69 +550,8 @@ public sealed interface MutationAction {
 
   /** Returns the SCREAMING_SNAKE_CASE type name of this action as used in the wire protocol. */
   default String actionType() {
-    return switch (this) {
-      case EnsureSheet _ -> "ENSURE_SHEET";
-      case RenameSheet _ -> "RENAME_SHEET";
-      case DeleteSheet _ -> "DELETE_SHEET";
-      case MoveSheet _ -> "MOVE_SHEET";
-      case CopySheet _ -> "COPY_SHEET";
-      case SetActiveSheet _ -> "SET_ACTIVE_SHEET";
-      case SetSelectedSheets _ -> "SET_SELECTED_SHEETS";
-      case SetSheetVisibility _ -> "SET_SHEET_VISIBILITY";
-      case SetSheetProtection _ -> "SET_SHEET_PROTECTION";
-      case ClearSheetProtection _ -> "CLEAR_SHEET_PROTECTION";
-      case SetWorkbookProtection _ -> "SET_WORKBOOK_PROTECTION";
-      case ClearWorkbookProtection _ -> "CLEAR_WORKBOOK_PROTECTION";
-      case MergeCells _ -> "MERGE_CELLS";
-      case UnmergeCells _ -> "UNMERGE_CELLS";
-      case SetColumnWidth _ -> "SET_COLUMN_WIDTH";
-      case SetRowHeight _ -> "SET_ROW_HEIGHT";
-      case InsertRows _ -> "INSERT_ROWS";
-      case DeleteRows _ -> "DELETE_ROWS";
-      case ShiftRows _ -> "SHIFT_ROWS";
-      case InsertColumns _ -> "INSERT_COLUMNS";
-      case DeleteColumns _ -> "DELETE_COLUMNS";
-      case ShiftColumns _ -> "SHIFT_COLUMNS";
-      case SetRowVisibility _ -> "SET_ROW_VISIBILITY";
-      case SetColumnVisibility _ -> "SET_COLUMN_VISIBILITY";
-      case GroupRows _ -> "GROUP_ROWS";
-      case UngroupRows _ -> "UNGROUP_ROWS";
-      case GroupColumns _ -> "GROUP_COLUMNS";
-      case UngroupColumns _ -> "UNGROUP_COLUMNS";
-      case SetSheetPane _ -> "SET_SHEET_PANE";
-      case SetSheetZoom _ -> "SET_SHEET_ZOOM";
-      case SetSheetPresentation _ -> "SET_SHEET_PRESENTATION";
-      case SetPrintLayout _ -> "SET_PRINT_LAYOUT";
-      case ClearPrintLayout _ -> "CLEAR_PRINT_LAYOUT";
-      case SetCell _ -> "SET_CELL";
-      case SetRange _ -> "SET_RANGE";
-      case ClearRange _ -> "CLEAR_RANGE";
-      case SetHyperlink _ -> "SET_HYPERLINK";
-      case ClearHyperlink _ -> "CLEAR_HYPERLINK";
-      case SetComment _ -> "SET_COMMENT";
-      case ClearComment _ -> "CLEAR_COMMENT";
-      case SetPicture _ -> "SET_PICTURE";
-      case SetChart _ -> "SET_CHART";
-      case SetPivotTable _ -> "SET_PIVOT_TABLE";
-      case SetShape _ -> "SET_SHAPE";
-      case SetEmbeddedObject _ -> "SET_EMBEDDED_OBJECT";
-      case SetDrawingObjectAnchor _ -> "SET_DRAWING_OBJECT_ANCHOR";
-      case DeleteDrawingObject _ -> "DELETE_DRAWING_OBJECT";
-      case ApplyStyle _ -> "APPLY_STYLE";
-      case SetDataValidation _ -> "SET_DATA_VALIDATION";
-      case ClearDataValidations _ -> "CLEAR_DATA_VALIDATIONS";
-      case SetConditionalFormatting _ -> "SET_CONDITIONAL_FORMATTING";
-      case ClearConditionalFormatting _ -> "CLEAR_CONDITIONAL_FORMATTING";
-      case SetAutofilter _ -> "SET_AUTOFILTER";
-      case ClearAutofilter _ -> "CLEAR_AUTOFILTER";
-      case SetTable _ -> "SET_TABLE";
-      case DeleteTable _ -> "DELETE_TABLE";
-      case DeletePivotTable _ -> "DELETE_PIVOT_TABLE";
-      case SetNamedRange _ -> "SET_NAMED_RANGE";
-      case DeleteNamedRange _ -> "DELETE_NAMED_RANGE";
-      case AppendRow _ -> "APPEND_ROW";
-      case AutoSizeColumns _ -> "AUTO_SIZE_COLUMNS";
-    };
+    return GridGrindProtocolTypeNames.mutationActionTypeName(
+        getClass().asSubclass(MutationAction.class));
   }
 
   /** Shared validation helpers for MutationAction compact constructors. */

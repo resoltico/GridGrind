@@ -37,7 +37,7 @@ class ExecutionModeRequestExecutorTest {
       workbook.setSheetVisibility("Archive", ExcelSheetVisibility.HIDDEN);
       workbook.setActiveSheet("Ops");
       workbook.setSelectedSheets(List.of("Ops"));
-      workbook.forceFormulaRecalculationOnOpen();
+      workbook.formulas().markRecalculateOnOpen();
       workbook.sheet("Ops").setCell("A1", ExcelCellValue.text("Header"));
       workbook.sheet("Ops").setCell("C2", ExcelCellValue.number(42.0d));
       workbook.save(workbookPath);

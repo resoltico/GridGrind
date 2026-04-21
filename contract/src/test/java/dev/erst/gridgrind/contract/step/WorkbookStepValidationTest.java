@@ -65,7 +65,7 @@ class WorkbookStepValidationTest {
     MutationAction setCell = new MutationAction.SetCell(new CellInput.Text(text("Owner")));
     assertEquals(setCell, WorkbookStepValidation.requireCompatible(setCellTarget, setCell));
 
-    Selector tableTarget = new TableSelector.ByName("BudgetTable");
+    Selector tableTarget = new TableSelector.ByNameOnSheet("BudgetTable", "Budget");
     MutationAction deleteTable = new MutationAction.DeleteTable();
     assertEquals(deleteTable, WorkbookStepValidation.requireCompatible(tableTarget, deleteTable));
 
@@ -86,7 +86,7 @@ class WorkbookStepValidationTest {
                 WorkbookStepValidation.requireCompatible(
                     new WorkbookSelector.Current(), deleteTable));
     assertEquals(
-        "DELETE_TABLE requires target type ByNameOnSheet or ByName but got Current",
+        "DELETE_TABLE requires target type ByNameOnSheet but got Current",
         unionTargetFailure.getMessage());
   }
 
@@ -169,7 +169,7 @@ class WorkbookStepValidationTest {
         List.of(SheetSelector.ByName.class),
         List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.EnsureSheet())));
     assertEquals(
-        List.of(TableSelector.ByNameOnSheet.class, TableSelector.ByName.class),
+        List.of(TableSelector.ByNameOnSheet.class),
         List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteTable())));
     assertEquals(
         List.of(WorkbookSelector.class),
@@ -198,6 +198,35 @@ class WorkbookStepValidationTest {
   }
 
   @Test
+  void rejectsStaticSelectorLookupForDynamicAssertionFamilies() {
+    IllegalArgumentException failure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                WorkbookStepValidation.staticAllowedTargetTypesForAssertionType(
+                    Assertion.AnalysisFindingPresent.class));
+
+    assertEquals(
+        "Assertion type "
+            + Assertion.AnalysisFindingPresent.class.getName()
+            + " derives target selectors dynamically: Matches the nested analysis query's target selectors.",
+        failure.getMessage());
+  }
+
+  @Test
+  void exposesAssertionTargetSelectorRulesForDynamicAndSharedSelectorFamilies() {
+    assertEquals(
+        "Matches the nested analysis query's target selectors.",
+        WorkbookStepValidation.targetSelectorRuleForAssertionType(
+            Assertion.AnalysisFindingAbsent.class));
+    assertEquals(
+        "Shared selector wire types remain family-sensitive here: ALL, BY_NAME, and BY_NAMES are ambiguous across NamedRangeSelector, TableSelector, and PivotTableSelector, while BY_NAME_ON_SHEET is ambiguous across TableSelector and PivotTableSelector. Author the field set that identifies exactly one family.",
+        WorkbookStepValidation.targetSelectorRuleForAssertionType(Assertion.Absent.class));
+    assertEquals(
+        null, WorkbookStepValidation.targetSelectorRuleForAssertionType(Assertion.CellValue.class));
+  }
+
+  @Test
   void exposesEveryRemainingSelectorFamilyBranchAcrossActionsAndQueries() {
     assertEquals(
         List.of(RowBandSelector.Insertion.class),
@@ -216,7 +245,7 @@ class WorkbookStepValidationTest {
         List.of(
             WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteDrawingObject())));
     assertEquals(
-        List.of(PivotTableSelector.ByNameOnSheet.class, PivotTableSelector.ByName.class),
+        List.of(PivotTableSelector.ByNameOnSheet.class),
         List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeletePivotTable())));
     assertEquals(
         List.of(SheetSelector.class),
@@ -308,7 +337,7 @@ class WorkbookStepValidationTest {
                         new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1, 0, 0),
                         null)))));
     assertEquals(
-        List.of(TableSelector.ByNameOnSheet.class, TableSelector.ByName.class),
+        List.of(TableSelector.ByNameOnSheet.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
                 new MutationAction.SetTable(
@@ -319,7 +348,7 @@ class WorkbookStepValidationTest {
                         false,
                         new dev.erst.gridgrind.contract.dto.TableStyleInput.None())))));
     assertEquals(
-        List.of(PivotTableSelector.ByNameOnSheet.class, PivotTableSelector.ByName.class),
+        List.of(PivotTableSelector.ByNameOnSheet.class),
         List.of(
             WorkbookStepValidation.allowedTargetTypes(
                 new MutationAction.SetPivotTable(
@@ -448,10 +477,10 @@ class WorkbookStepValidationTest {
         List.of(
             WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteDrawingObject())));
     assertEquals(
-        List.of(TableSelector.ByNameOnSheet.class, TableSelector.ByName.class),
+        List.of(TableSelector.ByNameOnSheet.class),
         List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeleteTable())));
     assertEquals(
-        List.of(PivotTableSelector.ByNameOnSheet.class, PivotTableSelector.ByName.class),
+        List.of(PivotTableSelector.ByNameOnSheet.class),
         List.of(WorkbookStepValidation.allowedTargetTypes(new MutationAction.DeletePivotTable())));
     assertEquals(
         List.of(

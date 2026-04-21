@@ -6,7 +6,7 @@ import java.util.Objects;
 
 /** Structured execution telemetry returned for every GridGrind run, including failures. */
 public record ExecutionJournal(
-    String planId,
+    @JsonInclude(JsonInclude.Include.NON_NULL) String planId,
     ExecutionJournalLevel level,
     SourceSummary source,
     PersistenceSummary persistence,
@@ -21,7 +21,9 @@ public record ExecutionJournal(
     Outcome outcome,
     @JsonInclude(JsonInclude.Include.NON_EMPTY) List<Event> events) {
   public ExecutionJournal {
-    WorkbookPlan.requireNonBlank(planId, "planId");
+    if (planId != null) {
+      WorkbookPlan.requireNonBlank(planId, "planId");
+    }
     level = level == null ? ExecutionJournalLevel.NORMAL : level;
     Objects.requireNonNull(source, "source must not be null");
     Objects.requireNonNull(persistence, "persistence must not be null");
@@ -38,17 +40,24 @@ public record ExecutionJournal(
   }
 
   /** Summary of the authored workbook source for one execution. */
-  public record SourceSummary(String type, @JsonInclude(JsonInclude.Include.NON_NULL) String path) {
+  public record SourceSummary(
+      @JsonInclude(JsonInclude.Include.NON_NULL) String type,
+      @JsonInclude(JsonInclude.Include.NON_NULL) String path) {
     public SourceSummary {
-      WorkbookPlan.requireNonBlank(type, "type");
+      if (type != null) {
+        WorkbookPlan.requireNonBlank(type, "type");
+      }
     }
   }
 
   /** Summary of the authored persistence policy for one execution. */
   public record PersistenceSummary(
-      String type, @JsonInclude(JsonInclude.Include.NON_NULL) String path) {
+      @JsonInclude(JsonInclude.Include.NON_NULL) String type,
+      @JsonInclude(JsonInclude.Include.NON_NULL) String path) {
     public PersistenceSummary {
-      WorkbookPlan.requireNonBlank(type, "type");
+      if (type != null) {
+        WorkbookPlan.requireNonBlank(type, "type");
+      }
     }
   }
 

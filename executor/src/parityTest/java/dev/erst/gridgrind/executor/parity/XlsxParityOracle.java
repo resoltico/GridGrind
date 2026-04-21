@@ -47,6 +47,7 @@ import org.apache.poi.ss.formula.functions.FreeRefFunction;
 import org.apache.poi.ss.formula.udf.DefaultUDFFinder;
 import org.apache.poi.ss.usermodel.DataConsolidateFunction;
 import org.apache.poi.ss.usermodel.Name;
+import org.apache.poi.ss.usermodel.PageMargin;
 import org.apache.poi.ss.usermodel.SheetVisibility;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -195,10 +196,10 @@ final class XlsxParityOracle {
         workbook -> {
           XSSFSheet sheet = workbook.getSheet(sheetName);
           return new AdvancedPrintSnapshot(
-              sheet.getMargin(XSSFSheet.LeftMargin),
-              sheet.getMargin(XSSFSheet.RightMargin),
-              sheet.getMargin(XSSFSheet.TopMargin),
-              sheet.getMargin(XSSFSheet.BottomMargin),
+              sheet.getMargin(PageMargin.LEFT),
+              sheet.getMargin(PageMargin.RIGHT),
+              sheet.getMargin(PageMargin.TOP),
+              sheet.getMargin(PageMargin.BOTTOM),
               sheet.isPrintGridlines(),
               sheet.getHorizontallyCenter(),
               sheet.getVerticallyCenter(),

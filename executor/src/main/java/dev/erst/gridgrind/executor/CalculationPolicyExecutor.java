@@ -4,7 +4,6 @@ import dev.erst.gridgrind.contract.dto.CalculationExecutionStatus;
 import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
 import dev.erst.gridgrind.contract.dto.CalculationReport;
 import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
-import dev.erst.gridgrind.contract.dto.FormulaCapabilityKind;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
@@ -87,7 +86,8 @@ final class CalculationPolicyExecutor {
   }
 
   private static PreflightOutcome preflightAll(ExcelWorkbook workbook) {
-    List<ExcelFormulaCapabilityAssessment> assessments = workbook.assessAllFormulaCapabilities();
+    List<ExcelFormulaCapabilityAssessment> assessments =
+        workbook.formulas().assessAllCapabilities();
     return buildPreflightOutcome(CalculationReport.Scope.WORKBOOK, assessments);
   }
 
@@ -95,7 +95,7 @@ final class CalculationPolicyExecutor {
       ExcelWorkbook workbook, CalculationStrategyInput.EvaluateTargets strategy) {
     List<ExcelFormulaCellTarget> targets = toExcelFormulaTargets(strategy.cells());
     List<ExcelFormulaCapabilityAssessment> assessments =
-        workbook.assessFormulaCellCapabilities(targets);
+        workbook.formulas().assessCapabilities(targets);
     return buildPreflightOutcome(CalculationReport.Scope.TARGETS, assessments);
   }
 
@@ -103,7 +103,10 @@ final class CalculationPolicyExecutor {
       CalculationReport.Scope scope, List<ExcelFormulaCapabilityAssessment> assessments) {
     CalculationReport.Preflight report =
         new CalculationReport.Preflight(
-            scope, assessments.size(), summaryFor(assessments), toCapabilityReports(assessments));
+            scope,
+            assessments.size(),
+            CalculationCapabilityMappings.summaryFor(assessments),
+            toCapabilityReports(assessments));
     ExcelFormulaCapabilityAssessment blocking = mostSevereBlockingAssessment(assessments);
     return new PreflightOutcome(
         report,
@@ -111,7 +114,7 @@ final class CalculationPolicyExecutor {
         blocking == null
             ? null
             : new FailureDetail(
-                problemCodeFor(blocking),
+                CalculationCapabilityMappings.problemCodeFor(blocking),
                 Phase.PREFLIGHT,
                 blocking.sheetName(),
                 blocking.address(),
@@ -126,7 +129,7 @@ final class CalculationPolicyExecutor {
       ExcelWorkbook workbook, CalculationPolicyInput policy) {
     boolean marked = false;
     if (policy.markRecalculateOnOpen()) {
-      workbook.forceFormulaRecalculationOnOpen();
+      workbook.formulas().markRecalculateOnOpen();
       marked = true;
     }
     CalculationExecutionStatus status =
@@ -138,10 +141,10 @@ final class CalculationPolicyExecutor {
   private static ExecutionOutcome executeClearCachesOnly(
       ExcelWorkbook workbook, CalculationPolicyInput policy) {
     try {
-      workbook.clearFormulaCaches();
+      workbook.formulas().clearCaches();
       boolean marked = false;
       if (policy.markRecalculateOnOpen()) {
-        workbook.forceFormulaRecalculationOnOpen();
+        workbook.formulas().markRecalculateOnOpen();
         marked = true;
       }
       return new ExecutionOutcome(
@@ -163,10 +166,10 @@ final class CalculationPolicyExecutor {
   private static ExecutionOutcome executeEvaluateAll(
       ExcelWorkbook workbook, CalculationPolicyInput policy, int evaluationTargetCount) {
     try {
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
       boolean marked = false;
       if (policy.markRecalculateOnOpen()) {
-        workbook.forceFormulaRecalculationOnOpen();
+        workbook.formulas().markRecalculateOnOpen();
         marked = true;
       }
       return new ExecutionOutcome(
@@ -192,10 +195,10 @@ final class CalculationPolicyExecutor {
       int evaluationTargetCount) {
     List<ExcelFormulaCellTarget> targets = toExcelFormulaTargets(strategy.cells());
     try {
-      workbook.evaluateFormulaCells(targets);
+      workbook.formulas().evaluate(targets);
       boolean marked = false;
       if (policy.markRecalculateOnOpen()) {
-        workbook.forceFormulaRecalculationOnOpen();
+        workbook.formulas().markRecalculateOnOpen();
         marked = true;
       }
       return new ExecutionOutcome(
@@ -221,33 +224,6 @@ final class CalculationPolicyExecutor {
         .toList();
   }
 
-  private static CalculationReport.Summary summaryFor(
-      List<ExcelFormulaCapabilityAssessment> assessments) {
-    int evaluableNowCount =
-        Math.toIntExact(
-            assessments.stream()
-                .filter(
-                    assessment ->
-                        assessment.capability() == ExcelFormulaCapabilityKind.EVALUABLE_NOW)
-                .count());
-    int unevaluableNowCount =
-        Math.toIntExact(
-            assessments.stream()
-                .filter(
-                    assessment ->
-                        assessment.capability() == ExcelFormulaCapabilityKind.UNEVALUABLE_NOW)
-                .count());
-    int unparseableByPoiCount =
-        Math.toIntExact(
-            assessments.stream()
-                .filter(
-                    assessment ->
-                        assessment.capability() == ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI)
-                .count());
-    return new CalculationReport.Summary(
-        evaluableNowCount, unevaluableNowCount, unparseableByPoiCount);
-  }
-
   private static List<CalculationReport.FormulaCapability> toCapabilityReports(
       List<ExcelFormulaCapabilityAssessment> assessments) {
     return assessments.stream()
@@ -256,51 +232,18 @@ final class CalculationPolicyExecutor {
                 new CalculationReport.FormulaCapability(
                     new CellSelector.QualifiedAddress(assessment.sheetName(), assessment.address()),
                     assessment.formula(),
-                    capabilityKindFor(assessment.capability()),
-                    problemCodeFor(assessment),
+                    CalculationCapabilityMappings.capabilityKindFor(assessment.capability()),
+                    CalculationCapabilityMappings.problemCodeFor(assessment),
                     assessment.message()))
         .toList();
-  }
-
-  private static FormulaCapabilityKind capabilityKindFor(ExcelFormulaCapabilityKind capability) {
-    return switch (capability) {
-      case EVALUABLE_NOW -> FormulaCapabilityKind.EVALUABLE_NOW;
-      case UNEVALUABLE_NOW -> FormulaCapabilityKind.UNEVALUABLE_NOW;
-      case UNPARSEABLE_BY_POI -> FormulaCapabilityKind.UNPARSEABLE_BY_POI;
-    };
-  }
-
-  private static GridGrindProblemCode problemCodeFor(ExcelFormulaCapabilityAssessment assessment) {
-    Objects.requireNonNull(assessment, "assessment must not be null");
-    if (assessment.issue() == null) {
-      return null;
-    }
-    return switch (assessment.issue()) {
-      case INVALID_FORMULA -> GridGrindProblemCode.INVALID_FORMULA;
-      case MISSING_EXTERNAL_WORKBOOK -> GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK;
-      case UNREGISTERED_USER_DEFINED_FUNCTION ->
-          GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION;
-      case UNSUPPORTED_FORMULA -> GridGrindProblemCode.UNSUPPORTED_FORMULA;
-    };
   }
 
   private static ExcelFormulaCapabilityAssessment mostSevereBlockingAssessment(
       List<ExcelFormulaCapabilityAssessment> assessments) {
     return assessments.stream()
         .filter(assessment -> assessment.capability() != ExcelFormulaCapabilityKind.EVALUABLE_NOW)
-        .min(Comparator.comparingInt(CalculationPolicyExecutor::severityRank))
+        .min(Comparator.comparingInt(CalculationCapabilityMappings::severityRank))
         .orElse(null);
-  }
-
-  private static int severityRank(ExcelFormulaCapabilityAssessment assessment) {
-    Objects.requireNonNull(assessment, "assessment must not be null");
-    var issue = Objects.requireNonNull(assessment.issue(), "assessment.issue must not be null");
-    return switch (issue) {
-      case INVALID_FORMULA -> 0;
-      case MISSING_EXTERNAL_WORKBOOK -> 1;
-      case UNREGISTERED_USER_DEFINED_FUNCTION -> 2;
-      case UNSUPPORTED_FORMULA -> 3;
-    };
   }
 
   record PreflightOutcome(

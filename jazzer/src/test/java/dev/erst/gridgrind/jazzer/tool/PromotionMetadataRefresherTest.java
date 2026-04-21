@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.jazzer.tool;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.jazzer.support.JazzerHarness;
@@ -28,7 +29,7 @@ class PromotionMetadataRefresherTest {
           "steps": [
             {
               "stepId": "assert-sheet",
-              "target": { "type": "BY_NAME", "name": "Budget" },
+              "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
               "assertion": { "type": "EXPECT_PRESENT" }
             }
           ]
@@ -83,28 +84,26 @@ class PromotionMetadataRefresherTest {
     assertEquals(1, PromotionMetadataRefresher.refresh(projectDirectory, "protocol-request"));
 
     PromotionMetadata metadata = JazzerJson.read(metadataPath, PromotionMetadata.class);
-    assertEquals("SUCCESS", metadata.replayOutcome());
+    assertEquals("EXPECTED_INVALID", metadata.replayOutcome());
     assertEquals(
         PromotionMetadata.relativizePath(projectDirectory, promotedInputPath),
         metadata.sourcePath());
-    assertEquals(
-        new ReplayExpectation(
-            "SUCCESS",
-            new ProtocolRequestDetails(
-                input.length,
-                "PARSED",
-                "NEW",
-                "NONE",
-                0,
-                Map.of(),
-                Map.of(),
-                1,
-                Map.of("EXPECT_PRESENT", 1L),
-                0,
-                Map.of())),
-        metadata.expectation());
+    assertEquals("EXPECTED_INVALID", metadata.expectation().outcomeKind());
+    ProtocolRequestDetails details =
+        assertInstanceOf(ProtocolRequestDetails.class, metadata.expectation().details());
+    assertEquals(input.length, details.inputBytes());
+    assertEquals("INVALID_REQUEST_SHAPE", details.decodeOutcome());
+    assertEquals("NOT_PARSED", details.sourceKind());
+    assertEquals("NOT_PARSED", details.persistenceKind());
+    assertEquals(0, details.operationCount());
+    assertEquals(Map.of(), details.operationKinds());
+    assertEquals(Map.of(), details.styleKinds());
+    assertEquals(0, details.assertionCount());
+    assertEquals(Map.of(), details.assertionKinds());
+    assertEquals(0, details.readCount());
+    assertEquals(Map.of(), details.readKinds());
     String replayText = Files.readString(replayTextPath);
-    assertTrue(replayText.contains("Assertion Count: 1"));
-    assertTrue(replayText.contains("Assertion Kinds: EXPECT_PRESENT=1"));
+    assertTrue(replayText.contains("Decode Outcome: INVALID_REQUEST_SHAPE"));
+    assertTrue(replayText.contains("Source Kind: NOT_PARSED"));
   }
 }

@@ -16,8 +16,8 @@ final class OoxmlPackageSecurityConverter {
 
   static ExcelOoxmlOpenOptions toExcelOpenOptions(OoxmlOpenSecurityInput input) {
     return input == null
-        ? new ExcelOoxmlOpenOptions(null)
-        : new ExcelOoxmlOpenOptions(input.password());
+        ? new ExcelOoxmlOpenOptions.Unencrypted()
+        : new ExcelOoxmlOpenOptions.Encrypted(input.password());
   }
 
   static ExcelOoxmlPersistenceOptions toExcelPersistenceOptions(

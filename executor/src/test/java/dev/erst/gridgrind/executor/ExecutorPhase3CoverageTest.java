@@ -45,6 +45,7 @@ import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySnapshot;
+import dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySupport;
 import dev.erst.gridgrind.excel.ExcelOoxmlPersistenceOptions;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
@@ -270,8 +271,8 @@ class ExecutorPhase3CoverageTest {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     assertExecutionModesAndValidation(executor);
     assertDeleteAndSourceHelpers();
-    assertStreamingPersistenceBehaviors(executor);
-    assertRuntimeGuardBehaviors(executor);
+    assertStreamingPersistenceBehaviors();
+    assertRuntimeGuardBehaviors();
   }
 
   @Test
@@ -440,7 +441,7 @@ class ExecutorPhase3CoverageTest {
             new WorkbookPlan.WorkbookPersistence.None(),
             List.of(),
             List.of());
-    DefaultGridGrindRequestExecutor.ExecutionModeSelection defaults =
+    ExecutionModeSelection defaults =
         DefaultGridGrindRequestExecutor.executionModes(defaultModesRequest);
     assertEquals(ExecutionModeInput.ReadMode.FULL_XSSF, defaults.readMode());
     assertEquals(ExecutionModeInput.WriteMode.FULL_XSSF, defaults.writeMode());
@@ -458,7 +459,7 @@ class ExecutorPhase3CoverageTest {
                     "workbook",
                     new WorkbookSelector.Current(),
                     new InspectionQuery.GetWorkbookSummary())));
-    DefaultGridGrindRequestExecutor.ExecutionModeSelection eventModes =
+    ExecutionModeSelection eventModes =
         DefaultGridGrindRequestExecutor.executionModes(eventReadRequest);
     assertTrue(
         DefaultGridGrindRequestExecutor.directEventReadEligible(eventReadRequest, eventModes));
@@ -484,34 +485,33 @@ class ExecutorPhase3CoverageTest {
 
   private static void assertDeleteAndSourceHelpers() throws IOException {
     Path deleteTarget = Files.createTempFile("gridgrind-delete-", ".tmp");
-    DefaultGridGrindRequestExecutor.deleteIfExists(deleteTarget);
+    ExecutionWorkbookSupport.deleteIfExists(deleteTarget);
     assertFalse(Files.exists(deleteTarget));
 
     Path retained = Files.createTempFile("gridgrind-delete-retained-", ".tmp");
-    DefaultGridGrindRequestExecutor.deleteIfExists(
+    ExecutionWorkbookSupport.deleteIfExists(
         retained,
         ignored -> {
           throw new IOException("best effort");
         });
     assertTrue(Files.exists(retained));
-    DefaultGridGrindRequestExecutor.deleteIfExists(retained);
-    DefaultGridGrindRequestExecutor.deleteIfExists(
+    ExecutionWorkbookSupport.deleteIfExists(retained);
+    ExecutionWorkbookSupport.deleteIfExists(
         null,
         ignored -> {
           throw new AssertionError("null paths must not invoke the deleter");
         });
 
     ExcelOoxmlPersistenceOptions noneOptions =
-        DefaultGridGrindRequestExecutor.persistenceOptions(
-            new WorkbookPlan.WorkbookPersistence.None());
+        ExecutionRequestPaths.persistenceOptions(new WorkbookPlan.WorkbookPersistence.None());
     ExcelOoxmlPersistenceOptions saveAsOptions =
-        DefaultGridGrindRequestExecutor.persistenceOptions(
+        ExecutionRequestPaths.persistenceOptions(
             new WorkbookPlan.WorkbookPersistence.SaveAs(
                 "/tmp/out.xlsx",
                 new OoxmlPersistenceSecurityInput(
                     new OoxmlEncryptionInput("secret", ExcelOoxmlEncryptionMode.AGILE), null)));
     ExcelOoxmlPersistenceOptions overwriteOptions =
-        DefaultGridGrindRequestExecutor.persistenceOptions(
+        ExecutionRequestPaths.persistenceOptions(
             new WorkbookPlan.WorkbookPersistence.OverwriteSource(
                 new OoxmlPersistenceSecurityInput(
                     new OoxmlEncryptionInput("secret", ExcelOoxmlEncryptionMode.AGILE), null)));
@@ -520,31 +520,29 @@ class ExecutorPhase3CoverageTest {
     assertFalse(overwriteOptions.isEmpty());
 
     ExcelOoxmlPackageSecuritySnapshot newSecurity =
-        DefaultGridGrindRequestExecutor.sourcePackageSecurity(
-            new WorkbookPlan.WorkbookSource.New());
+        ExecutionRequestPaths.sourcePackageSecurity(new WorkbookPlan.WorkbookSource.New());
     ExcelOoxmlPackageSecuritySnapshot existingSecurity =
-        DefaultGridGrindRequestExecutor.sourcePackageSecurity(
+        ExecutionRequestPaths.sourcePackageSecurity(
             new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/in.xlsx"));
     assertFalse(newSecurity.isSecure());
     assertFalse(existingSecurity.isSecure());
     assertNull(
-        DefaultGridGrindRequestExecutor.sourceEncryptionPassword(
-            new WorkbookPlan.WorkbookSource.New()));
+        ExecutionRequestPaths.sourceEncryptionPassword(new WorkbookPlan.WorkbookSource.New()));
     assertNull(
-        DefaultGridGrindRequestExecutor.sourceEncryptionPassword(
+        ExecutionRequestPaths.sourceEncryptionPassword(
             new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/in.xlsx")));
     assertEquals(
         "open-secret",
-        DefaultGridGrindRequestExecutor.sourceEncryptionPassword(
+        ExecutionRequestPaths.sourceEncryptionPassword(
             new WorkbookPlan.WorkbookSource.ExistingFile(
                 "/tmp/in.xlsx", new OoxmlOpenSecurityInput("open-secret"))));
   }
 
-  private static void assertStreamingPersistenceBehaviors(DefaultGridGrindRequestExecutor executor)
-      throws IOException {
+  private static void assertStreamingPersistenceBehaviors() throws IOException {
+    ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
     Path materialized = createWorkbookFile("gridgrind-streaming-source-");
     GridGrindResponse.PersistenceOutcome notSaved =
-        executor.persistStreamingWorkbook(
+        workbookSupport.persistStreamingWorkbook(
             materialized,
             new WorkbookPlan.WorkbookPersistence.None(),
             new WorkbookPlan.WorkbookSource.New());
@@ -555,7 +553,7 @@ class ExecutorPhase3CoverageTest {
     GridGrindResponse.PersistenceOutcome.SavedAs savedAs =
         assertInstanceOf(
             GridGrindResponse.PersistenceOutcome.SavedAs.class,
-            executor.persistStreamingWorkbook(
+            workbookSupport.persistStreamingWorkbook(
                 materialized,
                 new WorkbookPlan.WorkbookPersistence.SaveAs(saveAsPath.toString()),
                 new WorkbookPlan.WorkbookSource.New()));
@@ -567,7 +565,7 @@ class ExecutorPhase3CoverageTest {
     GridGrindResponse.PersistenceOutcome.Overwritten overwritten =
         assertInstanceOf(
             GridGrindResponse.PersistenceOutcome.Overwritten.class,
-            executor.persistStreamingWorkbook(
+            workbookSupport.persistStreamingWorkbook(
                 overwriteMaterialized,
                 new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
                 new WorkbookPlan.WorkbookSource.ExistingFile(overwriteSourcePath.toString())));
@@ -577,7 +575,7 @@ class ExecutorPhase3CoverageTest {
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                executor.persistStreamingWorkbook(
+                workbookSupport.persistStreamingWorkbook(
                     materialized,
                     new WorkbookPlan.WorkbookPersistence.OverwriteSource(),
                     new WorkbookPlan.WorkbookSource.New()));
@@ -585,8 +583,10 @@ class ExecutorPhase3CoverageTest {
         "OVERWRITE persistence requires an EXISTING source", overwriteFailure.getMessage());
   }
 
-  private static void assertRuntimeGuardBehaviors(DefaultGridGrindRequestExecutor executor)
-      throws IOException {
+  private static void assertRuntimeGuardBehaviors() throws IOException {
+    ExecutionResponseSupport responseSupport =
+        new ExecutionResponseSupport(
+            ExcelWorkbook::close, ExcelOoxmlPackageSecuritySupport.ReadableWorkbook::close);
     WorkbookPlan request =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -596,7 +596,7 @@ class ExecutorPhase3CoverageTest {
     GridGrindResponse.Failure runtimeFailure =
         assertInstanceOf(
             GridGrindResponse.Failure.class,
-            executor.guardUnexpectedRuntime(
+            responseSupport.guardUnexpectedRuntime(
                 GridGrindProtocolVersion.V1,
                 request,
                 ExecutionJournalRecorder.start(request, ExecutionJournalSink.NOOP),
@@ -609,7 +609,7 @@ class ExecutorPhase3CoverageTest {
       GridGrindResponse.Failure workbookRuntimeFailure =
           assertInstanceOf(
               GridGrindResponse.Failure.class,
-              executor.guardUnexpectedRuntime(
+              responseSupport.guardUnexpectedRuntime(
                   GridGrindProtocolVersion.V1,
                   request,
                   ExecutionJournalRecorder.start(request, ExecutionJournalSink.NOOP),
@@ -621,17 +621,16 @@ class ExecutorPhase3CoverageTest {
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
-      DefaultGridGrindRequestExecutor closeFailingExecutor =
-          new DefaultGridGrindRequestExecutor(
-              new WorkbookCommandExecutor(),
-              new WorkbookReadExecutor(),
+      ExecutionResponseSupport closeFailingResponseSupport =
+          new ExecutionResponseSupport(
               ignored -> {
                 throw new IOException("close failed");
-              });
+              },
+              ExcelOoxmlPackageSecuritySupport.ReadableWorkbook::close);
       GridGrindResponse.Failure closeFailure =
           assertInstanceOf(
               GridGrindResponse.Failure.class,
-              closeFailingExecutor.guardUnexpectedRuntime(
+              closeFailingResponseSupport.guardUnexpectedRuntime(
                   GridGrindProtocolVersion.V1,
                   request,
                   ExecutionJournalRecorder.start(request, ExecutionJournalSink.NOOP),
@@ -679,31 +678,29 @@ class ExecutorPhase3CoverageTest {
     MutationAction.SetConditionalFormatting multiRangeFormatting =
         conditionalFormattingAction(List.of("B2:B5", "D2:D5"));
 
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(pivotFromRange));
-    assertEquals("C5", DefaultGridGrindRequestExecutor.addressFor(pivotFromRange));
-    assertEquals("A1:B5", DefaultGridGrindRequestExecutor.rangeFor(pivotFromRange));
-    assertNull(DefaultGridGrindRequestExecutor.rangeFor(pivotFromNamedRange));
-    assertNull(DefaultGridGrindRequestExecutor.rangeFor(pivotFromTable));
-    assertEquals(
-        "BudgetSource", DefaultGridGrindRequestExecutor.namedRangeNameFor(pivotFromNamedRange));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(pivotFromRange));
-    assertNull(DefaultGridGrindRequestExecutor.namedRangeNameFor(pivotFromTable));
-    assertEquals("Budget", DefaultGridGrindRequestExecutor.sheetNameFor(sheetScopedNamedRange));
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(workbookScopedNamedRange));
-    assertEquals(
-        "SUM(Budget!B2:B4)", DefaultGridGrindRequestExecutor.formulaFor(sheetScopedNamedRange));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(pivotFromRange));
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(setText));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setBlank));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setText));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setRichText));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setNumeric));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setBoolean));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setDate));
-    assertNull(DefaultGridGrindRequestExecutor.formulaFor(setDateTime));
-    assertEquals("SUM(A1:A2)", DefaultGridGrindRequestExecutor.formulaFor(setFormula));
-    assertEquals("B2:B5", DefaultGridGrindRequestExecutor.rangeFor(singleRangeFormatting));
-    assertNull(DefaultGridGrindRequestExecutor.rangeFor(multiRangeFormatting));
+    assertEquals("Budget", ExecutionDiagnosticFields.sheetNameFor(pivotFromRange));
+    assertEquals("C5", ExecutionDiagnosticFields.addressFor(pivotFromRange));
+    assertEquals("A1:B5", ExecutionDiagnosticFields.rangeFor(pivotFromRange));
+    assertNull(ExecutionDiagnosticFields.rangeFor(pivotFromNamedRange));
+    assertNull(ExecutionDiagnosticFields.rangeFor(pivotFromTable));
+    assertEquals("BudgetSource", ExecutionDiagnosticFields.namedRangeNameFor(pivotFromNamedRange));
+    assertNull(ExecutionDiagnosticFields.namedRangeNameFor(pivotFromRange));
+    assertNull(ExecutionDiagnosticFields.namedRangeNameFor(pivotFromTable));
+    assertEquals("Budget", ExecutionDiagnosticFields.sheetNameFor(sheetScopedNamedRange));
+    assertNull(ExecutionDiagnosticFields.sheetNameFor(workbookScopedNamedRange));
+    assertEquals("SUM(Budget!B2:B4)", ExecutionDiagnosticFields.formulaFor(sheetScopedNamedRange));
+    assertNull(ExecutionDiagnosticFields.formulaFor(pivotFromRange));
+    assertNull(ExecutionDiagnosticFields.sheetNameFor(setText));
+    assertNull(ExecutionDiagnosticFields.formulaFor(setBlank));
+    assertNull(ExecutionDiagnosticFields.formulaFor(setText));
+    assertNull(ExecutionDiagnosticFields.formulaFor(setRichText));
+    assertNull(ExecutionDiagnosticFields.formulaFor(setNumeric));
+    assertNull(ExecutionDiagnosticFields.formulaFor(setBoolean));
+    assertNull(ExecutionDiagnosticFields.formulaFor(setDate));
+    assertNull(ExecutionDiagnosticFields.formulaFor(setDateTime));
+    assertEquals("SUM(A1:A2)", ExecutionDiagnosticFields.formulaFor(setFormula));
+    assertEquals("B2:B5", ExecutionDiagnosticFields.rangeFor(singleRangeFormatting));
+    assertNull(ExecutionDiagnosticFields.rangeFor(multiRangeFormatting));
   }
 
   private static void assertSelectorSheetAndAddressDiagnostics() {
@@ -712,65 +709,59 @@ class ExecutorPhase3CoverageTest {
 
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(
-            new DrawingObjectSelector.AllOnSheet("Budget")));
+        ExecutionDiagnosticFields.sheetNameFor(new DrawingObjectSelector.AllOnSheet("Budget")));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(
-            new DrawingObjectSelector.ByName("Budget", "Logo")));
+        ExecutionDiagnosticFields.sheetNameFor(new DrawingObjectSelector.ByName("Budget", "Logo")));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(
-            new ChartSelector.ByName("Budget", "Revenue")));
+        ExecutionDiagnosticFields.sheetNameFor(new ChartSelector.ByName("Budget", "Revenue")));
     assertEquals(
-        "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(new ChartSelector.AllOnSheet("Budget")));
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(new TableSelector.All()));
+        "Budget", ExecutionDiagnosticFields.sheetNameFor(new ChartSelector.AllOnSheet("Budget")));
+    assertNull(ExecutionDiagnosticFields.sheetNameFor(new TableSelector.All()));
+    assertNull(ExecutionDiagnosticFields.sheetNameFor(new TableSelector.ByName("BudgetTable")));
     assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(new TableSelector.ByName("BudgetTable")));
-    assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new TableSelector.ByNames(List.of("BudgetTable", "ForecastTable"))));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new TableSelector.ByNameOnSheet("BudgetTable", "Budget")));
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(new PivotTableSelector.All()));
+    assertNull(ExecutionDiagnosticFields.sheetNameFor(new PivotTableSelector.All()));
+    assertNull(ExecutionDiagnosticFields.sheetNameFor(new PivotTableSelector.ByName("SalesPivot")));
     assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(new PivotTableSelector.ByName("SalesPivot")));
-    assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new PivotTableSelector.ByNames(List.of("SalesPivot", "ForecastPivot"))));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new PivotTableSelector.ByNameOnSheet("SalesPivot", "Budget")));
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(new NamedRangeSelector.All()));
+    assertNull(ExecutionDiagnosticFields.sheetNameFor(new NamedRangeSelector.All()));
     assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(new NamedRangeSelector.ByName("BudgetTotal")));
+        ExecutionDiagnosticFields.sheetNameFor(new NamedRangeSelector.ByName("BudgetTotal")));
     assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new NamedRangeSelector.ByNames(List.of("BudgetTotal", "ForecastTotal"))));
     assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new NamedRangeSelector.SheetScope("BudgetTotal", "Budget")));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new TableRowSelector.AllRows(
                 new TableSelector.ByNameOnSheet("BudgetTable", "Budget"))));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new TableRowSelector.ByIndex(
                 new TableSelector.ByNameOnSheet("BudgetTable", "Budget"), 0)));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new TableCellSelector.ByColumnName(
                 new TableRowSelector.ByKeyCell(
                     new TableSelector.ByNameOnSheet("BudgetTable", "Budget"),
@@ -779,135 +770,134 @@ class ExecutorPhase3CoverageTest {
                 "Amount")));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(new SheetSelector.ByNames(List.of("Budget"))));
+        ExecutionDiagnosticFields.sheetNameFor(new SheetSelector.ByNames(List.of("Budget"))));
     assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new SheetSelector.ByNames(List.of("Budget", "Forecast"))));
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(customSelector));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(new SheetSelector.ByName("Budget")));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(customSelector));
+    assertNull(ExecutionDiagnosticFields.sheetNameFor(customSelector));
+    assertNull(ExecutionDiagnosticFields.addressFor(new SheetSelector.ByName("Budget")));
+    assertNull(ExecutionDiagnosticFields.addressFor(customSelector));
 
     assertEquals(
         "A1",
-        DefaultGridGrindRequestExecutor.addressFor(
+        ExecutionDiagnosticFields.addressFor(
             new CellSelector.ByQualifiedAddresses(
                 List.of(new CellSelector.QualifiedAddress("Budget", "A1")))));
     assertNull(
-        DefaultGridGrindRequestExecutor.addressFor(
+        ExecutionDiagnosticFields.addressFor(
             new CellSelector.ByQualifiedAddresses(
                 List.of(
                     new CellSelector.QualifiedAddress("Budget", "A1"),
                     new CellSelector.QualifiedAddress("Forecast", "A1")))));
     assertEquals(
         "B2",
-        DefaultGridGrindRequestExecutor.addressFor(
+        ExecutionDiagnosticFields.addressFor(
             new RangeSelector.RectangularWindow("Budget", "B2", 2, 2)));
     assertEquals(
         "A1:B2",
-        DefaultGridGrindRequestExecutor.rangeFor(
-            new RangeSelector.ByRanges("Budget", List.of("A1:B2"))));
+        ExecutionDiagnosticFields.rangeFor(new RangeSelector.ByRanges("Budget", List.of("A1:B2"))));
     assertNull(
-        DefaultGridGrindRequestExecutor.rangeFor(
+        ExecutionDiagnosticFields.rangeFor(
             new RangeSelector.ByRanges("Budget", List.of("A1:B2", "C1:D2"))));
     assertEquals(
         "B2:C3",
-        DefaultGridGrindRequestExecutor.rangeFor(
+        ExecutionDiagnosticFields.rangeFor(
             new RangeSelector.RectangularWindow("Budget", "B2", 2, 2)));
   }
 
   private static void assertNamedRangeSelectorDiagnostics() {
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             new CellSelector.ByQualifiedAddresses(
                 List.of(new CellSelector.QualifiedAddress("Budget", "A1")))));
     assertNull(
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             new CellSelector.ByQualifiedAddresses(
                 List.of(
                     new CellSelector.QualifiedAddress("Budget", "A1"),
                     new CellSelector.QualifiedAddress("Forecast", "A1")))));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector) new NamedRangeSelector.SheetScope("LocalTotal", "Budget")));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector)
                 new NamedRangeSelector.AnyOf(
                     List.of(new NamedRangeSelector.SheetScope("LocalTotal", "Budget")))));
     assertNull(
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             new NamedRangeSelector.AnyOf(
                 List.of(
                     new NamedRangeSelector.SheetScope("LocalTotal", "Budget"),
                     new NamedRangeSelector.SheetScope("ForecastTotal", "Forecast")))));
     assertNull(
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector) new NamedRangeSelector.All()));
     assertNull(
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector) new NamedRangeSelector.ByName("BudgetTotal")));
     assertNull(
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector) new NamedRangeSelector.ByNames(List.of("BudgetTotal"))));
     assertNull(
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertNull(
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.ByName("BudgetTotal")));
     assertNull(
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.singleSheetName(
+        ExecutionDiagnosticFields.singleSheetName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.SheetScope("BudgetTotal", "Budget")));
 
-    assertNull(DefaultGridGrindRequestExecutor.singleNamedRangeName(new NamedRangeSelector.All()));
+    assertNull(ExecutionDiagnosticFields.singleNamedRangeName(new NamedRangeSelector.All()));
     assertEquals(
         "BudgetTotal",
-        DefaultGridGrindRequestExecutor.singleNamedRangeName(
+        ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector) new NamedRangeSelector.ByName("BudgetTotal")));
     assertEquals(
         "BudgetTotal",
-        DefaultGridGrindRequestExecutor.singleNamedRangeName(
+        ExecutionDiagnosticFields.singleNamedRangeName(
             new NamedRangeSelector.ByNames(List.of("BudgetTotal"))));
     assertNull(
-        DefaultGridGrindRequestExecutor.singleNamedRangeName(
+        ExecutionDiagnosticFields.singleNamedRangeName(
             new NamedRangeSelector.ByNames(List.of("BudgetTotal", "ForecastTotal"))));
     assertEquals(
         "BudgetTotal",
-        DefaultGridGrindRequestExecutor.singleNamedRangeName(
+        ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
         "BudgetTotal",
-        DefaultGridGrindRequestExecutor.singleNamedRangeName(
+        ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector) new NamedRangeSelector.SheetScope("BudgetTotal", "Budget")));
     assertEquals(
         "BudgetTotal",
-        DefaultGridGrindRequestExecutor.singleNamedRangeName(
+        ExecutionDiagnosticFields.singleNamedRangeName(
             new NamedRangeSelector.AnyOf(
                 List.of(new NamedRangeSelector.WorkbookScope("BudgetTotal")))));
     assertNull(
-        DefaultGridGrindRequestExecutor.singleNamedRangeName(
+        ExecutionDiagnosticFields.singleNamedRangeName(
             new NamedRangeSelector.AnyOf(
                 List.of(
                     new NamedRangeSelector.WorkbookScope("BudgetTotal"),
                     new NamedRangeSelector.WorkbookScope("ForecastTotal")))));
     assertEquals(
         "BudgetTotal",
-        DefaultGridGrindRequestExecutor.singleNamedRangeName(
+        ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.ByName("BudgetTotal")));
     assertEquals(
         "BudgetTotal",
-        DefaultGridGrindRequestExecutor.singleNamedRangeName(
+        ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.WorkbookScope("BudgetTotal")));
     assertEquals(
         "BudgetTotal",
-        DefaultGridGrindRequestExecutor.singleNamedRangeName(
+        ExecutionDiagnosticFields.singleNamedRangeName(
             (NamedRangeSelector.Ref) new NamedRangeSelector.SheetScope("BudgetTotal", "Budget")));
   }
 
@@ -924,26 +914,25 @@ class ExecutorPhase3CoverageTest {
         new MutationStep("cell-step", new CellSelector.ByAddress("Budget", "D4"), setText);
 
     assertEquals(
-        "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(new SheetNotFoundException("Budget")));
-    assertNull(DefaultGridGrindRequestExecutor.sheetNameFor(new RuntimeException("x")));
+        "Budget", ExecutionDiagnosticFields.sheetNameFor(new SheetNotFoundException("Budget")));
+    assertNull(ExecutionDiagnosticFields.sheetNameFor(new RuntimeException("x")));
     assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new NamedRangeNotFoundException(
                 "BudgetTotal", new ExcelNamedRangeScope.WorkbookScope())));
     assertEquals(
         "Budget",
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new NamedRangeNotFoundException(
                 "LocalTotal", new ExcelNamedRangeScope.SheetScope("Budget"))));
-    assertEquals("A1", DefaultGridGrindRequestExecutor.addressFor(new CellNotFoundException("A1")));
+    assertEquals("A1", ExecutionDiagnosticFields.addressFor(new CellNotFoundException("A1")));
     assertEquals(
         "BAD!",
-        DefaultGridGrindRequestExecutor.addressFor(
+        ExecutionDiagnosticFields.addressFor(
             new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))));
-    assertNull(DefaultGridGrindRequestExecutor.addressFor(new RuntimeException("x")));
-    assertEquals("C5", DefaultGridGrindRequestExecutor.addressFor(pivotStep));
-    assertEquals("D4", DefaultGridGrindRequestExecutor.addressFor(addressedCellStep));
+    assertNull(ExecutionDiagnosticFields.addressFor(new RuntimeException("x")));
+    assertEquals("C5", ExecutionDiagnosticFields.addressFor(pivotStep));
+    assertEquals("D4", ExecutionDiagnosticFields.addressFor(addressedCellStep));
   }
 
   private static MutationAction.SetPivotTable pivotTableAction(PivotTableInput.Source source) {

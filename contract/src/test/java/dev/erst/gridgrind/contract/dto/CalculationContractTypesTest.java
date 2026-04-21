@@ -196,13 +196,13 @@ class CalculationContractTypesTest {
   @Test
   void executeCalculationContextMergesExceptionFactsWithoutOverwritingExistingValues() {
     GridGrindResponse.ProblemContext.ExecuteCalculation base =
-        new GridGrindResponse.ProblemContext.ExecuteCalculation(
-            "EXISTING", "SAVE_AS", "CALCULATION_PREFLIGHT", null, null, null);
+        new GridGrindResponse.ProblemContext.ExecuteCalculation.Preflight(
+            "EXISTING", "SAVE_AS", null, null, null);
     GridGrindResponse.ProblemContext.ExecuteCalculation enriched =
         base.withExceptionData("Budget", "B1", "APP.TITLE()");
     GridGrindResponse.ProblemContext.ExecuteCalculation preserved =
-        new GridGrindResponse.ProblemContext.ExecuteCalculation(
-                "EXISTING", "SAVE_AS", "CALCULATION_EXECUTION", "Ops", "C4", "SUM(A1:A3)")
+        new GridGrindResponse.ProblemContext.ExecuteCalculation.Execution(
+                "EXISTING", "SAVE_AS", "Ops", "C4", "SUM(A1:A3)")
             .withExceptionData("Ignored", "Ignored", "Ignored");
 
     assertEquals("CALCULATION_PREFLIGHT", enriched.stage());

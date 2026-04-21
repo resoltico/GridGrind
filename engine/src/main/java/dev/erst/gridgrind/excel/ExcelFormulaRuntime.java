@@ -105,7 +105,8 @@ interface ExcelFormulaRuntime extends AutoCloseable {
         referencedWorkbooks.stream().map(ReferencedWorkbookHandle::workbook).toList());
   }
 
-  private static void validateUdfTemplates(List<ExcelFormulaUdfToolpack> udfToolpacks) {
+  /** Validates every authored UDF template against a scratch workbook before runtime setup. */
+  static void validateUdfTemplates(List<ExcelFormulaUdfToolpack> udfToolpacks) {
     for (ExcelFormulaUdfToolpack toolpack : udfToolpacks) {
       for (ExcelFormulaUdfFunction function : toolpack.functions()) {
         validateUdfTemplate(function);
@@ -113,11 +114,13 @@ interface ExcelFormulaRuntime extends AutoCloseable {
     }
   }
 
-  private static String scratchArgumentName(int oneBasedIndex) {
+  /** Returns the reserved scratch defined-name used to bind one template argument. */
+  static String scratchArgumentName(int oneBasedIndex) {
     return SCRATCH_ARGUMENT_NAME_PREFIX + oneBasedIndex;
   }
 
-  private static String toScratchFormula(String formulaTemplate) {
+  /** Rewrites authored `ARGn` placeholders into workbook-scoped scratch defined names. */
+  static String toScratchFormula(String formulaTemplate) {
     java.util.regex.Matcher matcher = ARGUMENT_PLACEHOLDER_PATTERN.matcher(formulaTemplate);
     StringBuffer translated = new StringBuffer();
     while (matcher.find()) {
@@ -128,7 +131,8 @@ interface ExcelFormulaRuntime extends AutoCloseable {
     return translated.toString();
   }
 
-  private static void validateUdfTemplate(ExcelFormulaUdfFunction function) {
+  /** Parses one UDF template inside a scratch workbook to reject invalid formulas early. */
+  static void validateUdfTemplate(ExcelFormulaUdfFunction function) {
     try (XSSFWorkbook scratchWorkbook = new XSSFWorkbook()) {
       org.apache.poi.xssf.usermodel.XSSFSheet argsSheet = scratchWorkbook.createSheet("Args");
       org.apache.poi.xssf.usermodel.XSSFSheet calcSheet = scratchWorkbook.createSheet("Calc");
@@ -150,7 +154,8 @@ interface ExcelFormulaRuntime extends AutoCloseable {
     }
   }
 
-  private static void defineScratchArgument(
+  /** Creates or refreshes one scratch-cell/name binding used while validating UDF templates. */
+  static void defineScratchArgument(
       XSSFWorkbook scratchWorkbook,
       org.apache.poi.xssf.usermodel.XSSFSheet argsSheet,
       int zeroBasedIndex) {
@@ -164,8 +169,8 @@ interface ExcelFormulaRuntime extends AutoCloseable {
     name.setRefersToFormula("Args!$A$" + (zeroBasedIndex + 1));
   }
 
-  private static void registerUdfToolpacks(
-      Workbook workbook, List<ExcelFormulaUdfToolpack> udfToolpacks) {
+  /** Registers authored UDF toolpacks with the target workbook's evaluator environment. */
+  static void registerUdfToolpacks(Workbook workbook, List<ExcelFormulaUdfToolpack> udfToolpacks) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     if (udfToolpacks.isEmpty()) {
       return;
@@ -183,7 +188,8 @@ interface ExcelFormulaRuntime extends AutoCloseable {
             names.toArray(String[]::new), functions.toArray(FreeRefFunction[]::new)));
   }
 
-  private static ReferencedWorkbookHandle openReferencedWorkbook(
+  /** Opens and configures one externally linked workbook required for formula evaluation. */
+  static ReferencedWorkbookHandle openReferencedWorkbook(
       ExcelFormulaExternalWorkbookBinding binding, ExcelFormulaEnvironment environment)
       throws IOException {
     Workbook referencedWorkbook =
@@ -197,8 +203,9 @@ interface ExcelFormulaRuntime extends AutoCloseable {
         binding.workbookName(), referencedWorkbook, referencedEvaluator);
   }
 
+  /** Closes all linked-workbook handles, aggregating any IO failures into one exception. */
   @SuppressWarnings("PMD.CloseResource")
-  private static void closeReferencedWorkbooks(List<ReferencedWorkbookHandle> referencedWorkbooks)
+  static void closeReferencedWorkbooks(List<ReferencedWorkbookHandle> referencedWorkbooks)
       throws IOException {
     IOException failure = null;
     for (ReferencedWorkbookHandle referencedWorkbook : referencedWorkbooks) {
@@ -217,8 +224,9 @@ interface ExcelFormulaRuntime extends AutoCloseable {
     }
   }
 
+  /** Closes raw referenced workbooks, preserving every close failure as suppressed data. */
   @SuppressWarnings("PMD.CloseResource")
-  private static void closeAll(List<Workbook> referencedWorkbooks) throws IOException {
+  static void closeAll(List<Workbook> referencedWorkbooks) throws IOException {
     IOException failure = null;
     for (Workbook referencedWorkbook : referencedWorkbooks) {
       try {
@@ -331,7 +339,7 @@ interface ExcelFormulaRuntime extends AutoCloseable {
       }
     }
 
-    private static org.apache.poi.ss.util.CellRangeAddress writeArgument(
+    static org.apache.poi.ss.util.CellRangeAddress writeArgument(
         org.apache.poi.xssf.usermodel.XSSFSheet argsSheet, int startRow, ValueEval argument) {
       if (argument instanceof RefEval refEval) {
         if (refEval.getNumberOfSheets() != 1) {
@@ -357,8 +365,7 @@ interface ExcelFormulaRuntime extends AutoCloseable {
       return new org.apache.poi.ss.util.CellRangeAddress(startRow, startRow, 0, 0);
     }
 
-    private static Cell cell(
-        org.apache.poi.xssf.usermodel.XSSFSheet sheet, int rowIndex, int columnIndex) {
+    static Cell cell(org.apache.poi.xssf.usermodel.XSSFSheet sheet, int rowIndex, int columnIndex) {
       org.apache.poi.ss.usermodel.Row row = sheet.getRow(rowIndex);
       if (row == null) {
         row = sheet.createRow(rowIndex);
@@ -367,7 +374,7 @@ interface ExcelFormulaRuntime extends AutoCloseable {
       return cell == null ? row.createCell(columnIndex) : cell;
     }
 
-    private static void writeScalarValue(Cell cell, ValueEval valueEval) {
+    static void writeScalarValue(Cell cell, ValueEval valueEval) {
       switch (valueEval) {
         case BlankEval _ -> cell.setBlank();
         case MissingArgEval _ -> cell.setBlank();
@@ -384,25 +391,39 @@ interface ExcelFormulaRuntime extends AutoCloseable {
       }
     }
 
-    private static String absoluteAreaReference(org.apache.poi.ss.util.CellRangeAddress address) {
+    static String absoluteAreaReference(org.apache.poi.ss.util.CellRangeAddress address) {
       return absoluteCellReference(address.getFirstRow(), address.getFirstColumn())
           + ":"
           + absoluteCellReference(address.getLastRow(), address.getLastColumn());
     }
 
-    private static String absoluteCellReference(int rowIndex, int columnIndex) {
+    static String absoluteCellReference(int rowIndex, int columnIndex) {
       return new org.apache.poi.ss.util.CellReference(rowIndex, columnIndex).formatAsString(true);
     }
 
-    private static ValueEval toValueEval(CellValue value) {
+    static ValueEval toValueEval(CellValue value) {
       if (value == null) {
         return BlankEval.instance;
       }
-      return switch (value.getCellType()) {
-        case NUMERIC -> new NumberEval(value.getNumberValue());
-        case STRING -> new StringEval(value.getStringValue());
-        case BOOLEAN -> BoolEval.valueOf(value.getBooleanValue());
-        case ERROR -> ErrorEval.valueOf(value.getErrorValue());
+      return toValueEval(
+          value.getCellType(),
+          value.getNumberValue(),
+          value.getBooleanValue(),
+          value.getStringValue(),
+          value.getErrorValue());
+    }
+
+    static ValueEval toValueEval(
+        CellType cellType,
+        double numberValue,
+        boolean booleanValue,
+        String stringValue,
+        int errorValue) {
+      return switch (cellType) {
+        case NUMERIC -> new NumberEval(numberValue);
+        case STRING -> new StringEval(stringValue);
+        case BOOLEAN -> BoolEval.valueOf(booleanValue);
+        case ERROR -> ErrorEval.valueOf(errorValue);
         case BLANK, _NONE -> BlankEval.instance;
         case FORMULA -> throw new IllegalStateException("Scratch evaluator returned FORMULA");
       };

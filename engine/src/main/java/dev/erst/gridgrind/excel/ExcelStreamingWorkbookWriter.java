@@ -7,8 +7,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.streaming.SXSSFCell;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
@@ -68,11 +66,7 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
 
   @Override
   public void close() throws IOException {
-    try {
-      workbook.close();
-    } finally {
-      workbook.dispose();
-    }
+    workbook.close();
   }
 
   private SXSSFSheet requiredSheet(String sheetName) {
@@ -112,12 +106,7 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
       }
       case ExcelCellValue.FormulaValue formulaValue -> {
         cell.setCellFormula(formulaValue.expression());
-        clearPersistedFormulaCache(cell);
       }
     }
-  }
-
-  private static void clearPersistedFormulaCache(Cell cell) {
-    cell.setCellType(CellType.FORMULA);
   }
 }

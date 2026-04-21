@@ -1417,6 +1417,11 @@ class ExcelSheetTest {
       assertFalse(ExcelSheet.shouldPreview(blankCell));
       assertTrue(ExcelSheet.shouldPreview(urlCell));
       assertTrue(ExcelSheet.shouldPreview(commentCell));
+      assertFalse(ExcelSheet.shouldPreview(CellType.BLANK, (short) 0, false, false));
+      assertTrue(ExcelSheet.shouldPreview(CellType.BLANK, (short) 1, false, false));
+      assertTrue(ExcelSheet.shouldPreview(CellType.BLANK, (short) 0, true, false));
+      assertTrue(ExcelSheet.shouldPreview(CellType.BLANK, (short) 0, false, true));
+      assertTrue(ExcelSheet.shouldPreview(CellType.STRING, (short) 0, false, false));
 
       assertNull(ExcelSheet.hyperlink(blankCell));
       assertEquals(
@@ -1975,6 +1980,7 @@ class ExcelSheetTest {
     assertTrue(ExcelSheet.hasMissingHyperlinkTarget(" "));
     assertFalse(ExcelSheet.hasMissingHyperlinkTarget("Budget!A1"));
     assertNull(ExcelSheet.comment((Cell) null));
+    assertNull(ExcelSheet.comment((Comment) null));
   }
 
   @Test

@@ -49,24 +49,25 @@ final class ExecutionJournalRecorder {
   static ExecutionJournalRecorder start(WorkbookPlan request, ExecutionJournalSink sink) {
     ExecutionJournalSink liveSink = ExecutionJournalSink.requireNonNull(sink);
     String planId =
-        request != null && request.planId() != null
-            ? request.planId()
-            : "plan-" + UUID.randomUUID().toString().toLowerCase(java.util.Locale.ROOT);
+        request == null
+            ? null
+            : request.planId() != null
+                ? request.planId()
+                : "plan-" + UUID.randomUUID().toString().toLowerCase(java.util.Locale.ROOT);
     ExecutionJournalLevel level =
         request == null ? ExecutionJournalLevel.NORMAL : request.journalLevel();
     ExecutionJournal.SourceSummary source =
         request == null
-            ? new ExecutionJournal.SourceSummary("UNKNOWN", null)
+            ? new ExecutionJournal.SourceSummary(null, null)
             : new ExecutionJournal.SourceSummary(
-                DefaultGridGrindRequestExecutor.reqSourceType(request),
-                DefaultGridGrindRequestExecutor.reqSourcePath(request));
+                ExecutionRequestPaths.reqSourceType(request),
+                ExecutionRequestPaths.reqSourcePath(request));
     ExecutionJournal.PersistenceSummary persistence =
         request == null
-            ? new ExecutionJournal.PersistenceSummary("UNKNOWN", null)
+            ? new ExecutionJournal.PersistenceSummary(null, null)
             : new ExecutionJournal.PersistenceSummary(
-                DefaultGridGrindRequestExecutor.reqPersistenceType(request),
-                DefaultGridGrindRequestExecutor.persistencePath(
-                    request.source(), request.persistence()));
+                ExecutionRequestPaths.reqPersistenceType(request),
+                ExecutionRequestPaths.persistencePath(request.source(), request.persistence()));
     return new ExecutionJournalRecorder(planId, level, source, persistence, liveSink);
   }
 
@@ -256,7 +257,7 @@ final class ExecutionJournalRecorder {
               stepIndex,
               step.stepId(),
               step.stepKind(),
-              DefaultGridGrindRequestExecutor.stepType(step),
+              ExecutionStepKinds.stepType(step),
               ExecutionJournalTargetResolver.resolve(step, level),
               phase,
               ExecutionJournal.StepOutcome.SUCCEEDED,
@@ -274,7 +275,7 @@ final class ExecutionJournalRecorder {
               stepIndex,
               step.stepId(),
               step.stepKind(),
-              DefaultGridGrindRequestExecutor.stepType(step),
+              ExecutionStepKinds.stepType(step),
               ExecutionJournalTargetResolver.resolve(step, level),
               phase,
               ExecutionJournal.StepOutcome.FAILED,

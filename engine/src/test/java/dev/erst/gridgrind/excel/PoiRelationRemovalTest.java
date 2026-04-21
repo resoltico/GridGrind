@@ -3,9 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
@@ -32,23 +30,14 @@ class PoiRelationRemovalTest {
     IllegalStateException failure =
         assertThrows(
             IllegalStateException.class,
-            () -> PoiRelationRemoval.removePoiRelationMethod(MethodHandles.publicLookup()));
+            () -> PoiRelationRemoval.removePoiRelationInvoker(MethodHandles.publicLookup()));
     assertTrue(failure.getMessage().contains("Failed to resolve POI removeRelation handle"));
   }
 
   @Test
-  void invocationFailuresAreWrappedInProductOwnedMessages() throws Throwable {
-    MethodHandle explodingHandle =
-        MethodHandles.lookup()
-            .findStatic(
-                PoiRelationRemovalTest.class,
-                "explode",
-                MethodType.methodType(
-                    boolean.class,
-                    POIXMLDocumentPart.class,
-                    POIXMLDocumentPart.class,
-                    boolean.class));
-
+  void invocationFailuresAreWrappedInProductOwnedMessages() throws Exception {
+    java.util.function.BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> explodingInvoker =
+        (parent, child) -> explode(parent, child, true);
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Charts");
       XSSFDrawing drawing = sheet.createDrawingPatriarch();
@@ -57,7 +46,7 @@ class PoiRelationRemovalTest {
       IllegalStateException failure =
           assertThrows(
               IllegalStateException.class,
-              () -> PoiRelationRemoval.invokePoiRelationRemoval(explodingHandle, drawing, chart));
+              () -> PoiRelationRemoval.invokePoiRelationRemoval(explodingInvoker, drawing, chart));
       assertTrue(failure.getMessage().contains("Failed to remove POI relation"));
       assertEquals("boom", failure.getCause().getMessage());
     }

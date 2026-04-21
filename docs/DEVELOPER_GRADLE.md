@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: DEVELOPER_GRADLE
 updated: "2026-04-18"
 route:

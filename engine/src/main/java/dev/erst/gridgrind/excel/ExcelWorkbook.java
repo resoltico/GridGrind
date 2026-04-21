@@ -26,6 +26,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   private final XSSFWorkbook workbook;
   private final WorkbookStyleRegistry styleRegistry;
   private final ExcelFormulaRuntime formulaRuntime;
+  private final ExcelWorkbookFormulas formulas;
   private final ExcelTableController tableController;
   private final ExcelPivotTableController pivotTableController;
   private final ExcelSheetCopyController sheetCopyController;
@@ -67,6 +68,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     this.workbook = workbook;
     this.styleRegistry = new WorkbookStyleRegistry(workbook);
     this.formulaRuntime = Objects.requireNonNull(formulaRuntime, "formulaRuntime must not be null");
+    this.formulas = new ExcelWorkbookFormulas(this);
     this.tableController = new ExcelTableController();
     this.pivotTableController = new ExcelPivotTableController();
     this.sheetCopyController = new ExcelSheetCopyController();
@@ -87,15 +89,26 @@ public final class ExcelWorkbook implements AutoCloseable {
     return new ExcelWorkbook(new XSSFWorkbook());
   }
 
+  /** Wraps one already-materialized POI workbook inside the GridGrind workbook boundary. */
+  public static ExcelWorkbook wrap(XSSFWorkbook workbook) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    return new ExcelWorkbook(workbook);
+  }
+
   /** Creates an empty XLSX workbook with the supplied formula-evaluation environment. */
   public static ExcelWorkbook create(ExcelFormulaEnvironment formulaEnvironment)
       throws IOException {
     return new ExcelWorkbook(new XSSFWorkbook(), formulaEnvironment);
   }
 
+  /** Returns the formula-operation surface for evaluation, cache management, and diagnostics. */
+  public ExcelWorkbookFormulas formulas() {
+    return formulas;
+  }
+
   /** Opens an existing workbook file from disk. */
   public static ExcelWorkbook open(Path workbookPath) throws IOException {
-    return open(workbookPath, (ExcelOoxmlOpenOptions) null);
+    return open(workbookPath, new ExcelOoxmlOpenOptions.Unencrypted());
   }
 
   /** Opens an existing workbook file from disk with optional OOXML package-open settings. */
@@ -382,8 +395,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     return this;
   }
 
-  /** Evaluates every formula cell currently present in the workbook. */
-  public ExcelWorkbook evaluateAllFormulas() {
+  ExcelWorkbook evaluateAllFormulasInternal() {
     formulaRuntime.clearCachedResults();
     for (Sheet sheet : workbook) {
       for (Row row : sheet) {
@@ -398,8 +410,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     return this;
   }
 
-  /** Classifies every formula cell currently present in the workbook under the current runtime. */
-  public List<ExcelFormulaCapabilityAssessment> assessAllFormulaCapabilities() {
+  List<ExcelFormulaCapabilityAssessment> assessAllFormulaCapabilitiesInternal() {
     formulaRuntime.clearCachedResults();
     List<ExcelFormulaCapabilityAssessment> assessments = new ArrayList<>();
     for (Sheet sheet : workbook) {
@@ -415,8 +426,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     return List.copyOf(assessments);
   }
 
-  /** Evaluates one or more explicit formula-cell targets and stores their cached results. */
-  public ExcelWorkbook evaluateFormulaCells(List<ExcelFormulaCellTarget> cells) {
+  ExcelWorkbook evaluateFormulaCellsInternal(List<ExcelFormulaCellTarget> cells) {
     Objects.requireNonNull(cells, "cells must not be null");
     formulaRuntime.clearCachedResults();
     for (ExcelFormulaCellTarget target : cells) {
@@ -432,8 +442,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     return this;
   }
 
-  /** Classifies one explicit set of formula-cell targets under the current runtime. */
-  public List<ExcelFormulaCapabilityAssessment> assessFormulaCellCapabilities(
+  List<ExcelFormulaCapabilityAssessment> assessFormulaCellCapabilitiesInternal(
       List<ExcelFormulaCellTarget> cells) {
     Objects.requireNonNull(cells, "cells must not be null");
     formulaRuntime.clearCachedResults();
@@ -451,8 +460,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     return List.copyOf(assessments);
   }
 
-  /** Clears persisted formula cached results and resets the in-process evaluator state. */
-  public ExcelWorkbook clearFormulaCaches() {
+  ExcelWorkbook clearFormulaCachesInternal() {
     clearPersistedFormulaCaches();
     invalidateFormulaRuntime();
     markPackageMutated();
@@ -526,8 +534,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     }
   }
 
-  /** Marks the workbook to recalculate formulas when opened in Excel-compatible clients. */
-  public ExcelWorkbook forceFormulaRecalculationOnOpen() {
+  ExcelWorkbook forceFormulaRecalculationOnOpenInternal() {
     workbook.setForceFormulaRecalculation(true);
     markPackageMutated();
     return this;
@@ -575,8 +582,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     return List.copyOf(namedRanges);
   }
 
-  /** Returns whether the workbook is marked to recalculate formulas when opened in Excel. */
-  public boolean forceFormulaRecalculationOnOpenEnabled() {
+  boolean forceFormulaRecalculationOnOpenEnabledInternal() {
     return workbook.getForceFormulaRecalculation();
   }
 

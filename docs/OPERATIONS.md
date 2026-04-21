@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: OPERATIONS
-updated: "2026-04-18"
+updated: "2026-04-19"
 route:
   keywords: [gridgrind, operations, assertions, reads, introspection, analysis, assert, expect-cell-value, expect-analysis-max-severity, set-cell, set-range, apply-style, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-data-validation, set-autofilter, clear-autofilter, set-table, delete-table, set-pivot-table, delete-pivot-table, set-picture, set-chart, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, append-row, clear-range, execution-calculation, evaluate-all, evaluate-targets, clear-caches-only, markrecalculateonopen, auto-size-columns, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-layout, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, source-backed, inline, utf8_file, standard_input, inline_base64, file, ooxml, package-security, encryption, signing, request, json, protocol, coordinates, rowindex, columnindex, warnings]
   questions: ["what operations does gridgrind support", "what assertions does gridgrind support", "what reads does gridgrind support", "how do I assert a cell value in gridgrind", "how do I assert workbook health in gridgrind", "how do I rename a sheet", "how do I delete a sheet", "how do I move a sheet", "how do I copy a sheet", "how do I set the active sheet", "how do I set selected sheets", "how do I set sheet visibility", "how do I set sheet protection", "how do I set workbook protection", "how do I inspect package security in gridgrind", "how do I open an encrypted workbook in gridgrind", "how do I sign a workbook in gridgrind", "how do I merge cells", "how do I set a column width", "how do I freeze panes", "how do I set split panes", "how do I set sheet zoom", "how do I set print layout", "how do I set a cell value", "how do I apply a style", "how do I write a range", "how do I create an autofilter in gridgrind", "how do I create a table in gridgrind", "how do I create a pivot table in gridgrind", "how do I read pivot tables in gridgrind", "how do I add a picture in gridgrind", "how do I author a chart in gridgrind", "how do I read charts in gridgrind", "how do I read drawing objects in gridgrind", "what is the request format", "what fields does SET_RANGE accept", "what does GET_CELLS accept", "which fields use A1 notation versus zero-based indexes", "how do I run workbook findings without saving", "how do I load long text from a file in gridgrind", "how do I send binary payloads to gridgrind"]
@@ -26,7 +26,9 @@ gridgrind --print-example ASSERTION
 The protocol catalog is designed for black-box consumers. Each published type entry includes field
 descriptors with required/optional status and recursive shape metadata, so fields like `target`,
 `action`, `query`, `value`, `style`, and `scope` point directly at the nested/plain type group
-that defines their accepted JSON structure. `--print-example <id>` emits one built-in generated
+that defines their accepted JSON structure. Mutation, assertion, and inspection entries also
+publish `targetSelectors` or `targetSelectorRule` so black-box callers can see the exact allowed
+target families before sending a request. `--print-example <id>` emits one built-in generated
 request from the same contract-owned registry that backs the committed `examples/*.json` files.
 
 ---
@@ -56,6 +58,8 @@ Binary-bearing mutation fields use `BinarySourceInput`:
 - Relative `UTF8_FILE` and `FILE` paths resolve from the current working directory.
 - `STANDARD_INPUT` authored values require `--request <path>` on the CLI because stdin cannot
   carry both the request JSON and authored input content in the same invocation.
+- The request JSON transport is capped at 16 MiB. Large authored text and binary payloads belong
+  in `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` sources instead of inline JSON strings.
 - Source-backed input loading happens before workbook open and is journaled under
   `journal.inputResolution`.
 - Source-backed failures classify as `INPUT_SOURCE_NOT_FOUND`, `INPUT_SOURCE_UNAVAILABLE`, or
@@ -89,7 +93,8 @@ Binary-bearing mutation fields use `BinarySourceInput`:
 
 Every tagged request union uses `type` as its discriminator field: `source`, `persistence`,
 `action`, `query`, cell values, hyperlink targets, selectors, and named-range scopes.
-Every step object carries exactly one of `action`, `assertion`, or `query`.
+Every step object carries exactly one of `action`, `assertion`, or `query`. Step kind is inferred
+from that field; request steps do not carry a separate `step.type`.
 
 ### Formula Environment
 
@@ -203,40 +208,47 @@ Every success and failure response includes a structured `journal` object:
     },
     "validation": {
       "status": "SUCCEEDED",
-      "durationMillis": 1,
-      "detail": "succeeded"
+      "startedAt": "2026-04-19T09:30:00Z",
+      "finishedAt": "2026-04-19T09:30:00Z",
+      "durationMillis": 1
     },
     "inputResolution": {
-      "status": "NOT_STARTED",
-      "durationMillis": 0,
-      "detail": "not started"
+      "status": "SUCCEEDED",
+      "startedAt": "2026-04-19T09:30:00Z",
+      "finishedAt": "2026-04-19T09:30:00Z",
+      "durationMillis": 0
     },
     "open": {
       "status": "SUCCEEDED",
-      "durationMillis": 9,
-      "detail": "succeeded"
+      "startedAt": "2026-04-19T09:30:00Z",
+      "finishedAt": "2026-04-19T09:30:09Z",
+      "durationMillis": 9
     },
     "calculation": {
       "preflight": {
         "status": "SUCCEEDED",
-        "durationMillis": 1,
-        "detail": "succeeded"
+        "startedAt": "2026-04-19T09:30:09Z",
+        "finishedAt": "2026-04-19T09:30:10Z",
+        "durationMillis": 1
       },
       "execution": {
         "status": "SUCCEEDED",
-        "durationMillis": 2,
-        "detail": "succeeded"
+        "startedAt": "2026-04-19T09:30:10Z",
+        "finishedAt": "2026-04-19T09:30:12Z",
+        "durationMillis": 2
       }
     },
     "persistencePhase": {
       "status": "SUCCEEDED",
-      "durationMillis": 14,
-      "detail": "succeeded"
+      "startedAt": "2026-04-19T09:30:14Z",
+      "finishedAt": "2026-04-19T09:30:28Z",
+      "durationMillis": 14
     },
     "close": {
       "status": "SUCCEEDED",
-      "durationMillis": 1,
-      "detail": "succeeded"
+      "startedAt": "2026-04-19T09:30:28Z",
+      "finishedAt": "2026-04-19T09:30:29Z",
+      "durationMillis": 1
     },
     "steps": [
       {
@@ -244,7 +256,7 @@ Every success and failure response includes a structured `journal` object:
         "stepId": "set-total",
         "stepKind": "MUTATION",
         "stepType": "SET_CELL",
-        "targets": [
+        "resolvedTargets": [
           {
             "kind": "CELL",
             "label": "Cell Budget!B2"
@@ -252,18 +264,19 @@ Every success and failure response includes a structured `journal` object:
         ],
         "phase": {
           "status": "SUCCEEDED",
-          "durationMillis": 2,
-          "detail": "succeeded"
+          "startedAt": "2026-04-19T09:30:12Z",
+          "finishedAt": "2026-04-19T09:30:14Z",
+          "durationMillis": 2
         },
         "outcome": "SUCCEEDED"
       }
     ],
-    "events": [],
+    "warnings": [],
     "outcome": {
       "status": "SUCCEEDED",
       "plannedStepCount": 1,
       "completedStepCount": 1,
-      "failedStepCount": 0
+      "durationMillis": 29
     }
   }
 }
@@ -271,13 +284,14 @@ Every success and failure response includes a structured `journal` object:
 
 | Field | Description |
 |:------|:------------|
-| `planId` | Caller-supplied plan correlation ID when present, otherwise a synthesized internal ID. |
+| `planId` | Caller-supplied plan correlation ID when present, otherwise a synthesized internal ID after request parsing. Pre-parse CLI failures may omit it because no request plan was available yet. |
 | `level` | `SUMMARY`, `NORMAL`, or `VERBOSE`, matching the effective `execution.journal.level`. |
-| `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries with status, duration, and detail. `inputResolution` records source-backed file/stdin loading before workbook open. |
+| `validation`, `inputResolution`, `open`, `persistencePhase`, `close` | Top-level pipeline phase summaries. Finished phases carry `status`, `startedAt`, `finishedAt`, and `durationMillis`; `NOT_STARTED` phases carry `status` plus `durationMillis=0` only. `inputResolution` records source-backed file/stdin loading before workbook open. |
 | `calculation` | Top-level calculation telemetry. `preflight` classifies authored formulas and `execution` records the requested evaluation or cache-clearing work. |
-| `steps[]` | Ordered per-step telemetry including target summaries, phase timing, outcome, and optional failure classification. |
+| `steps[]` | Ordered per-step telemetry including `resolvedTargets`, phase timing, outcome, and optional failure classification. `resolvedTargets` is compact in `SUMMARY` and expanded in `NORMAL`/`VERBOSE`. |
+| `warnings[]` | Request-phase warnings derived during execution, mirrored from the top-level success `warnings` array. |
 | `events[]` | Fine-grained live events. Present only when `level=VERBOSE`. |
-| `outcome` | Whole-run status plus planned/completed/failed step counts and the first failed step identity when applicable. |
+| `outcome` | Whole-run status plus `plannedStepCount`, `completedStepCount`, total `durationMillis`, and optional `failedStepIndex`, `failedStepId`, and `failureCode` when the run failed. |
 
 `VERBOSE` keeps the full response journal and also streams `events[]` entries live to CLI stderr
 while the request is running.
@@ -486,6 +500,8 @@ Used in `SET_CELL`, `SET_RANGE`, and `APPEND_ROW`:
 `TEXT`, `FORMULA`, and rich-text run payloads are source-backed: author inline text with
 `{ "type": "INLINE", "text": "..." }`, or use `UTF8_FILE` / `STANDARD_INPUT` when the value
 should come from the execution environment instead of the request body.
+`TEXT` requires non-empty resolved text. Use `BLANK` when you want the cell itself to become
+empty instead of storing a string value.
 `RICH_TEXT` writes an ordered, non-empty `runs` list. Every run must have non-empty resolved text,
 and the optional `font` object reuses the same font-field vocabulary as the nested style contract:
 `bold`, `italic`, `fontName`, `fontHeight`, `fontColor`, `underline`, and `strikeout`.
@@ -3025,6 +3041,8 @@ different-name tables are rejected. If the new table overlaps a sheet-level auto
 sheet-level filter is cleared so the table-owned autofilter becomes authoritative on that range.
 Later value writes and style patches that touch the table header row keep the persisted
 table-column metadata converged with the visible header cells.
+The step target must be `TableSelector.BY_NAME_ON_SHEET`, and the selector must match
+`table.name` plus `table.sheetName`.
 
 ```json
 {
@@ -3159,6 +3177,8 @@ table. `rowLabels`, `columnLabels`, `reportFilters`, and `dataFields` must use d
 columns because POI persists only one role per pivot field. When `reportFilters` is non-empty,
 `anchor.topLeftAddress` must be on Excel row `3` or lower so Excel's page-filter layout has room
 above the rendered body.
+The step target must be `PivotTableSelector.BY_NAME_ON_SHEET`, and the selector must match
+`pivotTable.name` plus `pivotTable.sheetName`.
 
 ```json
 {

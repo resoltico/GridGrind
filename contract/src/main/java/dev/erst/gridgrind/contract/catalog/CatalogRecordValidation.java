@@ -74,4 +74,50 @@ final class CatalogRecordValidation {
         .gather(CatalogGatherers.toOrderedUniqueOrThrow(FieldEntry::name, fieldName))
         .toList();
   }
+
+  static List<TargetSelectorEntry> copyTargetSelectorEntries(
+      List<TargetSelectorEntry> targetSelectors, String fieldName) {
+    Objects.requireNonNull(targetSelectors, fieldName + " must not be null");
+    List<TargetSelectorEntry> copy = new java.util.ArrayList<>(targetSelectors.size());
+    for (TargetSelectorEntry targetSelector : targetSelectors) {
+      copy.add(Objects.requireNonNull(targetSelector, fieldName + " must not contain nulls"));
+    }
+    return copy.stream()
+        .gather(CatalogGatherers.toOrderedUniqueOrThrow(TargetSelectorEntry::family, fieldName))
+        .toList();
+  }
+
+  static List<TaskEntry> copyTaskEntries(List<TaskEntry> tasks, String fieldName) {
+    Objects.requireNonNull(tasks, fieldName + " must not be null");
+    List<TaskEntry> copy = new java.util.ArrayList<>(tasks.size());
+    for (TaskEntry task : tasks) {
+      copy.add(Objects.requireNonNull(task, fieldName + " must not contain nulls"));
+    }
+    return copy.stream()
+        .gather(CatalogGatherers.toOrderedUniqueOrThrow(TaskEntry::id, fieldName))
+        .toList();
+  }
+
+  static List<TaskPhase> copyTaskPhases(List<TaskPhase> phases, String fieldName) {
+    Objects.requireNonNull(phases, fieldName + " must not be null");
+    List<TaskPhase> copy = new java.util.ArrayList<>(phases.size());
+    for (TaskPhase phase : phases) {
+      copy.add(Objects.requireNonNull(phase, fieldName + " must not contain nulls"));
+    }
+    return copy.stream()
+        .gather(CatalogGatherers.toOrderedUniqueOrThrow(TaskPhase::label, fieldName))
+        .toList();
+  }
+
+  static List<TaskCapabilityRef> copyTaskCapabilityRefs(
+      List<TaskCapabilityRef> capabilityRefs, String fieldName) {
+    Objects.requireNonNull(capabilityRefs, fieldName + " must not be null");
+    List<TaskCapabilityRef> copy = new java.util.ArrayList<>(capabilityRefs.size());
+    for (TaskCapabilityRef capabilityRef : capabilityRefs) {
+      copy.add(Objects.requireNonNull(capabilityRef, fieldName + " must not contain nulls"));
+    }
+    return copy.stream()
+        .gather(CatalogGatherers.toOrderedUniqueOrThrow(TaskCapabilityRef::qualifiedId, fieldName))
+        .toList();
+  }
 }
