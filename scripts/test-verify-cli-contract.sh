@@ -409,6 +409,17 @@ run_verify_expect_success() {
         "${verify_script}" binary "${fake_cli}" >/dev/null
 }
 
+run_verify_expect_success_without_tmpdir() {
+    env -u TMPDIR \
+        FAKE_GRIDGRIND_HELP="${success_help}" \
+        FAKE_GRIDGRIND_CATALOG="${success_catalog}" \
+        FAKE_GRIDGRIND_TASK_CATALOG="${success_task_catalog}" \
+        FAKE_GRIDGRIND_TASK_PLAN="${success_task_plan}" \
+        FAKE_GRIDGRIND_GOAL_PLAN="${success_goal_plan}" \
+        FAKE_GRIDGRIND_DOCTOR_REPORT="${success_doctor_report}" \
+        "${verify_script}" binary "${fake_cli}" >/dev/null
+}
+
 run_verify_expect_failure() {
     local help_text=$1
     local catalog_text=$2
@@ -428,6 +439,7 @@ run_verify_expect_failure() {
 }
 
 run_verify_expect_success
+run_verify_expect_success_without_tmpdir
 
 run_verify_expect_failure \
     "${success_help/markRecalculateOnOpen=true/FORCE_FORMULA_RECALC_ON_OPEN}" \

@@ -96,7 +96,9 @@ esac
 
 command -v python3 >/dev/null 2>&1 || die "python3 is required for CLI contract verification"
 
-temp_dir="$(mktemp -d "${TMPDIR%/}/gridgrind-cli-contract.XXXXXX")"
+temp_parent="${TMPDIR:-/tmp}"
+temp_parent="${temp_parent%/}"
+temp_dir="$(mktemp -d "${temp_parent}/gridgrind-cli-contract.XXXXXX")"
 help_path="${temp_dir}/help.txt"
 catalog_path="${temp_dir}/protocol-catalog.json"
 task_catalog_path="${temp_dir}/task-catalog.json"
