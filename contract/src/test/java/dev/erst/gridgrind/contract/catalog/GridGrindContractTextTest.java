@@ -5,9 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.dto.CalculationStrategyInput;
+import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
+import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,14 @@ class GridGrindContractTextTest {
     assertTrue(
         GridGrindContractText.workbookFindingsDiscoverySummary()
             .contains("ANALYZE_WORKBOOK_FINDINGS"));
+    assertEquals(
+        "execution.mode.readMode=EVENT_READ requires execution.calculation.strategy="
+            + "DO_NOT_CALCULATE and markRecalculateOnOpen=false",
+        GridGrindExecutionModeMetadata.eventRead().calculationFailureMessage());
+    assertEquals(
+        "execution.mode.writeMode=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only;"
+            + " unsupported mutation action type: SET_CELL",
+        GridGrindExecutionModeMetadata.streamingWrite().unsupportedActionMessage("SET_CELL"));
   }
 
   @Test
@@ -64,40 +73,48 @@ class GridGrindContractTextTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-  void privateHelpersCoverDefensiveBranches() throws Exception {
-    Method humanJoin = GridGrindContractText.class.getDeclaredMethod("humanJoin", List.class);
-    humanJoin.setAccessible(true);
-    assertEquals("only", invokeString(humanJoin, List.of("only")));
-    assertEquals("left and right", invokeString(humanJoin, List.of("left", "right")));
+  void helperBranchesStayCovered() {
+    assertEquals("only", GridGrindContractText.humanJoin(List.of("only")));
+    assertEquals("left and right", GridGrindContractText.humanJoin(List.of("left", "right")));
     assertEquals(
-        "left, middle, and right", invokeString(humanJoin, List.of("left", "middle", "right")));
+        "CLEAR_WORKBOOK_PROTECTION",
+        GridGrindContractText.typeNamesByClass(MutationAction.class)
+            .get(MutationAction.ClearWorkbookProtection.class));
+    assertEquals(
+        "left, middle, and right",
+        GridGrindContractText.humanJoin(List.of("left", "middle", "right")));
     assertEquals(
         "values must not be empty",
         assertThrows(
-                IllegalArgumentException.class, () -> invokeString(humanJoin, List.of("", " ")))
+                IllegalArgumentException.class,
+                () -> GridGrindContractText.humanJoin(List.of("", " ")))
             .getMessage());
   }
 
-  private static String invokeString(Method method, Object argument) {
-    return (String) invoke(method, argument);
-  }
-
-  @SuppressWarnings("PMD.PreserveStackTrace")
-  private static Object invoke(Method method, Object argument) {
-    try {
-      return method.invoke(null, argument);
-    } catch (IllegalAccessException exception) {
-      throw new AssertionError(exception);
-    } catch (InvocationTargetException exception) {
-      Throwable cause = exception.getCause();
-      if (cause instanceof RuntimeException runtimeException) {
-        throw runtimeException;
-      }
-      if (cause instanceof Error error) {
-        throw error;
-      }
-      throw new AssertionError(cause);
-    }
+  @Test
+  void executionModeMetadataRejectsEmptyAllowedLists() {
+    assertEquals(
+        "allowedQueries must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new GridGrindExecutionModeMetadata.EventReadMode(
+                        ExecutionModeInput.ReadMode.EVENT_READ,
+                        List.of(),
+                        CalculationStrategyInput.DoNotCalculate.class,
+                        false))
+            .getMessage());
+    assertEquals(
+        "allowedActions must not be empty",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new GridGrindExecutionModeMetadata.StreamingWriteMode(
+                        ExecutionModeInput.WriteMode.STREAMING_WRITE,
+                        WorkbookPlan.WorkbookSource.New.class,
+                        List.of(),
+                        CalculationStrategyInput.DoNotCalculate.class,
+                        true))
+            .getMessage());
   }
 }

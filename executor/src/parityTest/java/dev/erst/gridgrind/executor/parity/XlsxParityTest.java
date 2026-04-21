@@ -185,7 +185,7 @@ final class XlsxParityTest {
                                 "referenced.xlsx", scenario.attachment("referencedWorkbook"))),
                         ExcelFormulaMissingWorkbookPolicy.ERROR,
                         List.of()))) {
-              workbook.evaluateAllFormulas();
+              workbook.formulas().evaluateAll();
             }
           });
     } finally {

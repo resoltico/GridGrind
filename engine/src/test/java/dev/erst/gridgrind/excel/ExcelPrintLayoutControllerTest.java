@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.apache.poi.ss.usermodel.PageMargin;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFName;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -491,32 +492,32 @@ class ExcelPrintLayoutControllerTest {
     assertFalse(defaultMarginsSheet.getCTWorksheet().isSetPageMargins());
 
     var leftChangedSheet = workbook.createSheet("LeftMarginChanged");
-    leftChangedSheet.setMargin(XSSFSheet.LeftMargin, defaults.left() + 0.1d);
+    leftChangedSheet.setMargin(PageMargin.LEFT, defaults.left() + 0.1d);
     ExcelPrintLayoutController.normalizePageMarginsNode(leftChangedSheet);
     assertTrue(leftChangedSheet.getCTWorksheet().isSetPageMargins());
 
     var rightChangedSheet = workbook.createSheet("RightMarginChanged");
-    rightChangedSheet.setMargin(XSSFSheet.RightMargin, defaults.right() + 0.1d);
+    rightChangedSheet.setMargin(PageMargin.RIGHT, defaults.right() + 0.1d);
     ExcelPrintLayoutController.normalizePageMarginsNode(rightChangedSheet);
     assertTrue(rightChangedSheet.getCTWorksheet().isSetPageMargins());
 
     var topChangedSheet = workbook.createSheet("TopMarginChanged");
-    topChangedSheet.setMargin(XSSFSheet.TopMargin, defaults.top() + 0.1d);
+    topChangedSheet.setMargin(PageMargin.TOP, defaults.top() + 0.1d);
     ExcelPrintLayoutController.normalizePageMarginsNode(topChangedSheet);
     assertTrue(topChangedSheet.getCTWorksheet().isSetPageMargins());
 
     var bottomChangedSheet = workbook.createSheet("BottomMarginChanged");
-    bottomChangedSheet.setMargin(XSSFSheet.BottomMargin, defaults.bottom() + 0.1d);
+    bottomChangedSheet.setMargin(PageMargin.BOTTOM, defaults.bottom() + 0.1d);
     ExcelPrintLayoutController.normalizePageMarginsNode(bottomChangedSheet);
     assertTrue(bottomChangedSheet.getCTWorksheet().isSetPageMargins());
 
     var headerChangedSheet = workbook.createSheet("HeaderMarginChanged");
-    headerChangedSheet.setMargin(XSSFSheet.HeaderMargin, defaults.header() + 0.1d);
+    headerChangedSheet.setMargin(PageMargin.HEADER, defaults.header() + 0.1d);
     ExcelPrintLayoutController.normalizePageMarginsNode(headerChangedSheet);
     assertTrue(headerChangedSheet.getCTWorksheet().isSetPageMargins());
 
     var footerChangedSheet = workbook.createSheet("FooterMarginChanged");
-    footerChangedSheet.setMargin(XSSFSheet.FooterMargin, defaults.footer() + 0.1d);
+    footerChangedSheet.setMargin(PageMargin.FOOTER, defaults.footer() + 0.1d);
     ExcelPrintLayoutController.normalizePageMarginsNode(footerChangedSheet);
     assertTrue(footerChangedSheet.getCTWorksheet().isSetPageMargins());
   }

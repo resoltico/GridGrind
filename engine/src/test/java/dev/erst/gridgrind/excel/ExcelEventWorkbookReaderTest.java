@@ -5,9 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -24,7 +21,6 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbook;
 import org.xml.sax.helpers.AttributesImpl;
 
 /** Tests for low-memory workbook summary reads backed by POI's XSSF event model. */
-@SuppressWarnings("PMD.AvoidAccessibilityAlteration")
 class ExcelEventWorkbookReaderTest {
   @Test
   void matchesFullWorkbookAndSheetSummariesForSupportedReads() throws IOException {
@@ -38,7 +34,7 @@ class ExcelEventWorkbookReaderTest {
       workbook.setSheetVisibility("Archive", ExcelSheetVisibility.VERY_HIDDEN);
       workbook.setActiveSheet("Ops");
       workbook.setSelectedSheets(List.of("Ops"));
-      workbook.forceFormulaRecalculationOnOpen();
+      workbook.formulas().markRecalculateOnOpen();
       workbook.sheet("Ops").setCell("A1", ExcelCellValue.text("Header"));
       workbook.sheet("Ops").setCell("D3", ExcelCellValue.number(12.5d));
       workbook.sheet("Ops").setColumnWidth(5, 5, 18.0d);
@@ -407,110 +403,57 @@ class ExcelEventWorkbookReaderTest {
   }
 
   @Test
-  void reflectiveHelpersCoverSupportedSummaryCommandTypesAndEmptyMetadataGuard() throws Exception {
+  void helperSeamsCoverSupportedSummaryCommandTypesAndEmptyMetadataGuard() {
     assertEquals(
         "GET_WORKBOOK_SUMMARY",
-        invokeCommandType(new WorkbookReadCommand.GetWorkbookSummary("workbook")));
+        EventReadCommandTypes.commandType(new WorkbookReadCommand.GetWorkbookSummary("workbook")));
     assertEquals(
         "GET_SHEET_SUMMARY",
-        invokeCommandType(new WorkbookReadCommand.GetSheetSummary("sheet", "Ops")));
+        EventReadCommandTypes.commandType(new WorkbookReadCommand.GetSheetSummary("sheet", "Ops")));
     assertEquals(
         "GET_PACKAGE_SECURITY",
-        invokeCommandType(new WorkbookReadCommand.GetPackageSecurity("security")));
+        EventReadCommandTypes.commandType(new WorkbookReadCommand.GetPackageSecurity("security")));
     assertEquals(7, invokeActiveSheetIndexWithExplicitActiveTab());
     assertEquals(0, invokeActiveSheetIndexWithoutActiveTab());
     assertEquals(0, invokeActiveSheetIndexWithEmptyBookViews());
 
-    Constructor<?> constructor =
-        Class.forName("dev.erst.gridgrind.excel.ExcelEventWorkbookReader$EventWorkbookMetadata")
-            .getDeclaredConstructor(List.class, Map.class, int.class, int.class, boolean.class);
-    constructor.setAccessible(true);
-    Object metadata = constructor.newInstance(List.of(), Map.of(), 0, 0, false);
-
-    Method activeSheetName =
-        ExcelEventWorkbookReader.class.getDeclaredMethod("activeSheetName", metadata.getClass());
-    activeSheetName.setAccessible(true);
-
-    InvocationTargetException failure =
-        assertThrows(InvocationTargetException.class, () -> activeSheetName.invoke(null, metadata));
-    assertInstanceOf(IllegalStateException.class, failure.getCause());
-    assertEquals(
-        "workbook metadata must contain at least one sheet", failure.getCause().getMessage());
+    IllegalStateException failure =
+        assertThrows(
+            IllegalStateException.class,
+            () ->
+                EventWorkbookMetadata.activeSheetName(
+                    new EventWorkbookMetadata(List.of(), Map.of(), 0, 0, false)));
+    assertEquals("workbook metadata must contain at least one sheet", failure.getMessage());
   }
 
   @Test
-  void sheetSummaryHandlerFallsBackToQNameWhenLocalNameIsEmpty() throws Exception {
-    Constructor<?> constructor =
-        Class.forName("dev.erst.gridgrind.excel.ExcelEventWorkbookReader$SheetSummaryHandler")
-            .getDeclaredConstructor();
-    constructor.setAccessible(true);
-    Object handler = constructor.newInstance();
-
-    Method startElement =
-        handler
-            .getClass()
-            .getDeclaredMethod(
-                "startElement",
-                String.class,
-                String.class,
-                String.class,
-                org.xml.sax.Attributes.class);
-    startElement.setAccessible(true);
+  void sheetSummaryHandlerFallsBackToQNameWhenLocalNameIsEmpty() {
+    EventSheetSummaryHandler handler = new EventSheetSummaryHandler();
 
     AttributesImpl attributes = new AttributesImpl();
     attributes.addAttribute("", "r", "r", "CDATA", "2");
-    startElement.invoke(handler, "", "", "row", attributes);
+    handler.startElement("", "", "row", attributes);
 
-    Method summary = handler.getClass().getDeclaredMethod("summary");
-    summary.setAccessible(true);
-    Object eventSheetSummary = summary.invoke(handler);
-    Method lastRowIndex = eventSheetSummary.getClass().getDeclaredMethod("lastRowIndex");
-    lastRowIndex.setAccessible(true);
-
-    assertEquals(1, lastRowIndex.invoke(eventSheetSummary));
+    assertEquals(1, handler.summary().lastRowIndex());
   }
 
   @Test
-  void sheetSummaryHandlerAcceptsNullLocalNamesAndTrueAttributesCaseInsensitively()
-      throws Exception {
-    Constructor<?> constructor =
-        Class.forName("dev.erst.gridgrind.excel.ExcelEventWorkbookReader$SheetSummaryHandler")
-            .getDeclaredConstructor();
-    constructor.setAccessible(true);
-    Object handler = constructor.newInstance();
-
-    Method startElement =
-        handler
-            .getClass()
-            .getDeclaredMethod(
-                "startElement",
-                String.class,
-                String.class,
-                String.class,
-                org.xml.sax.Attributes.class);
-    startElement.setAccessible(true);
+  void sheetSummaryHandlerAcceptsNullLocalNamesAndTrueAttributesCaseInsensitively() {
+    EventSheetSummaryHandler handler = new EventSheetSummaryHandler();
 
     AttributesImpl selectedAttributes = new AttributesImpl();
     selectedAttributes.addAttribute("", "tabSelected", "tabSelected", "CDATA", "TRUE");
-    startElement.invoke(handler, "", null, "sheetView", selectedAttributes);
+    handler.startElement("", null, "sheetView", selectedAttributes);
 
-    startElement.invoke(handler, "", null, "sheetView", new AttributesImpl());
+    handler.startElement("", null, "sheetView", new AttributesImpl());
 
     AttributesImpl protectionAttributes = new AttributesImpl();
     protectionAttributes.addAttribute("", "sheet", "sheet", "CDATA", "1");
-    startElement.invoke(handler, "", null, "sheetProtection", protectionAttributes);
+    handler.startElement("", null, "sheetProtection", protectionAttributes);
 
-    Method summary = handler.getClass().getDeclaredMethod("summary");
-    summary.setAccessible(true);
-    Object eventSheetSummary = summary.invoke(handler);
-    Method selected = eventSheetSummary.getClass().getDeclaredMethod("selected");
-    selected.setAccessible(true);
-    Method protection = eventSheetSummary.getClass().getDeclaredMethod("protection");
-    protection.setAccessible(true);
-
-    assertEquals(true, selected.invoke(eventSheetSummary));
-    assertInstanceOf(
-        WorkbookReadResult.SheetProtection.Protected.class, protection.invoke(eventSheetSummary));
+    EventSheetSummary summary = handler.summary();
+    assertTrue(summary.selected());
+    assertInstanceOf(WorkbookReadResult.SheetProtection.Protected.class, summary.protection());
   }
 
   private static String expectedReadType(WorkbookReadCommand.Introspection command) {
@@ -646,15 +589,10 @@ class ExcelEventWorkbookReaderTest {
     assertEquals(-1, sheetSummary.lastColumnIndex());
   }
 
-  private static int invokeActiveSheetIndexWithEmptyBookViews()
-      throws ReflectiveOperationException {
+  private static int invokeActiveSheetIndexWithEmptyBookViews() {
     CTWorkbook workbook = CTWorkbook.Factory.newInstance();
     workbook.addNewBookViews(); // bookViews present but contains no workbookView entries
-
-    Method activeSheetIndex =
-        ExcelEventWorkbookReader.class.getDeclaredMethod("activeSheetIndex", CTWorkbook.class);
-    activeSheetIndex.setAccessible(true);
-    return (int) activeSheetIndex.invoke(null, workbook);
+    return EventWorkbookMetadata.activeSheetIndex(workbook);
   }
 
   private static String clearTabSelectedAttributes(String xml) {
@@ -672,34 +610,16 @@ class ExcelEventWorkbookReaderTest {
             + "</definedNames>");
   }
 
-  private static String invokeCommandType(WorkbookReadCommand.Introspection command)
-      throws ReflectiveOperationException {
-    Method commandType =
-        ExcelEventWorkbookReader.class.getDeclaredMethod(
-            "commandType", WorkbookReadCommand.Introspection.class);
-    commandType.setAccessible(true);
-    return (String) commandType.invoke(null, command);
-  }
-
-  private static int invokeActiveSheetIndexWithExplicitActiveTab()
-      throws ReflectiveOperationException {
+  private static int invokeActiveSheetIndexWithExplicitActiveTab() {
     CTWorkbook workbook = CTWorkbook.Factory.newInstance();
     workbook.addNewBookViews().addNewWorkbookView().setActiveTab(7);
-
-    Method activeSheetIndex =
-        ExcelEventWorkbookReader.class.getDeclaredMethod("activeSheetIndex", CTWorkbook.class);
-    activeSheetIndex.setAccessible(true);
-    return (int) activeSheetIndex.invoke(null, workbook);
+    return EventWorkbookMetadata.activeSheetIndex(workbook);
   }
 
-  private static int invokeActiveSheetIndexWithoutActiveTab() throws ReflectiveOperationException {
+  private static int invokeActiveSheetIndexWithoutActiveTab() {
     CTWorkbook workbook = CTWorkbook.Factory.newInstance();
     workbook.addNewBookViews().addNewWorkbookView();
-
-    Method activeSheetIndex =
-        ExcelEventWorkbookReader.class.getDeclaredMethod("activeSheetIndex", CTWorkbook.class);
-    activeSheetIndex.setAccessible(true);
-    return (int) activeSheetIndex.invoke(null, workbook);
+    return EventWorkbookMetadata.activeSheetIndex(workbook);
   }
 
   private static byte[] transformedEntryBytes(byte[] bytes, TextTransformer transformer) {

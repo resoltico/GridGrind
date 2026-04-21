@@ -2365,20 +2365,20 @@ class DefaultGridGrindRequestExecutorTest {
   void classifiesProblemCodesAndMessagesDeterministically() {
     assertEquals(
         GridGrindProblemCode.INVALID_CELL_ADDRESS,
-        DefaultGridGrindRequestExecutor.problemCodeFor(
+        ExecutionResponseSupport.problemCodeFor(
             new InvalidCellAddressException("BAD!", new IllegalArgumentException("bad"))));
     assertEquals(
         GridGrindProblemCode.INVALID_RANGE_ADDRESS,
-        DefaultGridGrindRequestExecutor.problemCodeFor(
+        ExecutionResponseSupport.problemCodeFor(
             new InvalidRangeAddressException("A1:", new IllegalArgumentException("bad"))));
     assertEquals(
         GridGrindProblemCode.INVALID_FORMULA,
-        DefaultGridGrindRequestExecutor.problemCodeFor(
+        ExecutionResponseSupport.problemCodeFor(
             new InvalidFormulaException(
                 "Budget", "B4", "SUM(", "bad formula", new IllegalArgumentException("bad"))));
     assertEquals(
         GridGrindProblemCode.UNSUPPORTED_FORMULA,
-        DefaultGridGrindRequestExecutor.problemCodeFor(
+        ExecutionResponseSupport.problemCodeFor(
             new UnsupportedFormulaException(
                 "Budget",
                 "C1",
@@ -2387,21 +2387,20 @@ class DefaultGridGrindRequestExecutorTest {
                 new IllegalArgumentException("bad"))));
     assertEquals(
         GridGrindProblemCode.WORKBOOK_NOT_FOUND,
-        DefaultGridGrindRequestExecutor.problemCodeFor(
+        ExecutionResponseSupport.problemCodeFor(
             new WorkbookNotFoundException(Path.of("missing.xlsx"))));
     assertEquals(
         GridGrindProblemCode.SHEET_NOT_FOUND,
-        DefaultGridGrindRequestExecutor.problemCodeFor(new SheetNotFoundException("Budget")));
+        ExecutionResponseSupport.problemCodeFor(new SheetNotFoundException("Budget")));
     assertEquals(
         GridGrindProblemCode.IO_ERROR,
-        DefaultGridGrindRequestExecutor.problemCodeFor(new IOException("disk")));
+        ExecutionResponseSupport.problemCodeFor(new IOException("disk")));
     assertEquals(
         GridGrindProblemCode.INVALID_REQUEST,
-        DefaultGridGrindRequestExecutor.problemCodeFor(
-            new IllegalArgumentException("bad request")));
+        ExecutionResponseSupport.problemCodeFor(new IllegalArgumentException("bad request")));
     assertEquals(
         GridGrindProblemCode.INTERNAL_ERROR,
-        DefaultGridGrindRequestExecutor.problemCodeFor(new UnsupportedOperationException()));
+        ExecutionResponseSupport.problemCodeFor(new UnsupportedOperationException()));
     assertEquals(
         "bad request", GridGrindProblems.messageFor(new IllegalArgumentException("bad request")));
     assertEquals(
@@ -2862,8 +2861,6 @@ class DefaultGridGrindRequestExecutorTest {
 
   @Test
   void persistencePathResolvesCorrectlyForAllPersistenceAndSourceCombinations() {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
-
     WorkbookPlan.WorkbookSource newSource = new WorkbookPlan.WorkbookSource.New();
     WorkbookPlan.WorkbookSource existingFile =
         new WorkbookPlan.WorkbookSource.ExistingFile("/tmp/source.xlsx");
@@ -2875,25 +2872,25 @@ class DefaultGridGrindRequestExecutorTest {
 
     assertEquals(
         Path.of("/tmp/out.xlsx").toAbsolutePath().normalize().toString(),
-        executor.persistencePath(newSource, saveAs));
+        ExecutionRequestPaths.persistencePath(newSource, saveAs));
     assertEquals(
         Path.of("/tmp/source.xlsx").toAbsolutePath().normalize().toString(),
-        executor.persistencePath(existingFile, overwrite));
-    assertNull(executor.persistencePath(newSource, overwrite));
-    assertNull(executor.persistencePath(newSource, none));
-    assertNull(executor.persistencePath(existingFile, none));
+        ExecutionRequestPaths.persistencePath(existingFile, overwrite));
+    assertNull(ExecutionRequestPaths.persistencePath(newSource, overwrite));
+    assertNull(ExecutionRequestPaths.persistencePath(newSource, none));
+    assertNull(ExecutionRequestPaths.persistencePath(existingFile, none));
   }
 
   @Test
   void persistWorkbookRejectsOverwriteForNewSources() throws Exception {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       IllegalArgumentException exception =
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  executor.persistWorkbook(
+                  workbookSupport.persistWorkbook(
                       workbook,
                       new WorkbookPlan.WorkbookSource.New(),
                       new WorkbookPlan.WorkbookPersistence.OverwriteSource()));
@@ -2904,24 +2901,23 @@ class DefaultGridGrindRequestExecutorTest {
 
   @Test
   void persistencePathNormalizesDoubleDotSegments() {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
     WorkbookPlan.WorkbookSource newSource = new WorkbookPlan.WorkbookSource.New();
     WorkbookPlan.WorkbookPersistence saveAs =
         new WorkbookPlan.WorkbookPersistence.SaveAs("/tmp/subdir/../out.xlsx");
 
-    assertEquals("/tmp/out.xlsx", executor.persistencePath(newSource, saveAs));
+    assertEquals("/tmp/out.xlsx", ExecutionRequestPaths.persistencePath(newSource, saveAs));
   }
 
   @Test
   void persistWorkbookSaveAsReportsNormalizedExecutionPath() throws Exception {
-    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    ExecutionWorkbookSupport workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
     Path tempDir = Files.createTempDirectory("gridgrind-normalize-test-");
     Path subDir = Files.createDirectory(tempDir.resolve("subdir"));
     String pathWithDotDot = subDir + "/../out.xlsx";
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       GridGrindResponse.PersistenceOutcome outcome =
-          executor.persistWorkbook(
+          workbookSupport.persistWorkbook(
               workbook,
               new WorkbookPlan.WorkbookSource.New(),
               new WorkbookPlan.WorkbookPersistence.SaveAs(pathWithDotDot));
@@ -5441,11 +5437,11 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   private static String sheetNameFor(WorkbookStep step) {
-    return DefaultGridGrindRequestExecutor.sheetNameFor(step);
+    return ExecutionDiagnosticFields.sheetNameFor(step);
   }
 
   private static String sheetNameFor(WorkbookStep step, Exception exception) {
-    return DefaultGridGrindRequestExecutor.sheetNameFor(step, exception);
+    return ExecutionDiagnosticFields.sheetNameFor(step, exception);
   }
 
   private static String sheetNameFor(
@@ -5454,7 +5450,7 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   private static String addressFor(WorkbookStep step, Exception exception) {
-    return DefaultGridGrindRequestExecutor.addressFor(step, exception);
+    return ExecutionDiagnosticFields.addressFor(step, exception);
   }
 
   private static String addressFor(
@@ -5463,7 +5459,7 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   private static String rangeFor(WorkbookStep step, Exception exception) {
-    return DefaultGridGrindRequestExecutor.rangeFor(step, exception);
+    return ExecutionDiagnosticFields.rangeFor(step, exception);
   }
 
   private static String rangeFor(
@@ -5472,7 +5468,7 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   private static String formulaFor(WorkbookStep step, Exception exception) {
-    return DefaultGridGrindRequestExecutor.formulaFor(step, exception);
+    return ExecutionDiagnosticFields.formulaFor(step, exception);
   }
 
   private static String formulaFor(
@@ -5486,7 +5482,7 @@ class DefaultGridGrindRequestExecutorTest {
   }
 
   private static String namedRangeNameFor(WorkbookStep step, Exception exception) {
-    return DefaultGridGrindRequestExecutor.namedRangeNameFor(step, exception);
+    return ExecutionDiagnosticFields.namedRangeNameFor(step, exception);
   }
 
   private static void assertReadContext(
@@ -5520,7 +5516,7 @@ class DefaultGridGrindRequestExecutorTest {
     Path existingWorkbookPath = Path.of("tmp", "existing-budget.xlsx").toAbsolutePath();
 
     WorkbookLocation workbookLocation =
-        DefaultGridGrindRequestExecutor.workbookLocationFor(
+        ExecutionRequestPaths.workbookLocationFor(
             new WorkbookPlan.WorkbookSource.ExistingFile(existingWorkbookPath.toString()),
             new WorkbookPlan.WorkbookPersistence.None());
 

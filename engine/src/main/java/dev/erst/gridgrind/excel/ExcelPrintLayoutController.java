@@ -6,6 +6,7 @@ import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Footer;
 import org.apache.poi.ss.usermodel.Header;
 import org.apache.poi.ss.usermodel.HeaderFooter;
+import org.apache.poi.ss.usermodel.PageMargin;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFName;
@@ -204,12 +205,12 @@ final class ExcelPrintLayoutController {
   }
 
   private static void applyMargins(XSSFSheet sheet, ExcelPrintMargins margins) {
-    sheet.setMargin(XSSFSheet.LeftMargin, margins.left());
-    sheet.setMargin(XSSFSheet.RightMargin, margins.right());
-    sheet.setMargin(XSSFSheet.TopMargin, margins.top());
-    sheet.setMargin(XSSFSheet.BottomMargin, margins.bottom());
-    sheet.setMargin(XSSFSheet.HeaderMargin, margins.header());
-    sheet.setMargin(XSSFSheet.FooterMargin, margins.footer());
+    sheet.setMargin(PageMargin.LEFT, margins.left());
+    sheet.setMargin(PageMargin.RIGHT, margins.right());
+    sheet.setMargin(PageMargin.TOP, margins.top());
+    sheet.setMargin(PageMargin.BOTTOM, margins.bottom());
+    sheet.setMargin(PageMargin.HEADER, margins.header());
+    sheet.setMargin(PageMargin.FOOTER, margins.footer());
   }
 
   private static void replaceBreaks(
@@ -316,12 +317,12 @@ final class ExcelPrintLayoutController {
     ExcelPrintMargins margins =
         sheet.getCTWorksheet().isSetPageMargins()
             ? new ExcelPrintMargins(
-                sheet.getMargin(XSSFSheet.LeftMargin),
-                sheet.getMargin(XSSFSheet.RightMargin),
-                sheet.getMargin(XSSFSheet.TopMargin),
-                sheet.getMargin(XSSFSheet.BottomMargin),
-                sheet.getMargin(XSSFSheet.HeaderMargin),
-                sheet.getMargin(XSSFSheet.FooterMargin))
+                sheet.getMargin(PageMargin.LEFT),
+                sheet.getMargin(PageMargin.RIGHT),
+                sheet.getMargin(PageMargin.TOP),
+                sheet.getMargin(PageMargin.BOTTOM),
+                sheet.getMargin(PageMargin.HEADER),
+                sheet.getMargin(PageMargin.FOOTER))
             : defaultMargins;
     return new ExcelPrintSetup(
         margins,
@@ -420,12 +421,12 @@ final class ExcelPrintLayoutController {
       return;
     }
     ExcelPrintMargins defaults = ExcelPrintSetup.defaults().margins();
-    if (sheet.getMargin(XSSFSheet.LeftMargin) == defaults.left()
-        && sheet.getMargin(XSSFSheet.RightMargin) == defaults.right()
-        && sheet.getMargin(XSSFSheet.TopMargin) == defaults.top()
-        && sheet.getMargin(XSSFSheet.BottomMargin) == defaults.bottom()
-        && sheet.getMargin(XSSFSheet.HeaderMargin) == defaults.header()
-        && sheet.getMargin(XSSFSheet.FooterMargin) == defaults.footer()) {
+    if (sheet.getMargin(PageMargin.LEFT) == defaults.left()
+        && sheet.getMargin(PageMargin.RIGHT) == defaults.right()
+        && sheet.getMargin(PageMargin.TOP) == defaults.top()
+        && sheet.getMargin(PageMargin.BOTTOM) == defaults.bottom()
+        && sheet.getMargin(PageMargin.HEADER) == defaults.header()
+        && sheet.getMargin(PageMargin.FOOTER) == defaults.footer()) {
       sheet.getCTWorksheet().unsetPageMargins();
     }
   }

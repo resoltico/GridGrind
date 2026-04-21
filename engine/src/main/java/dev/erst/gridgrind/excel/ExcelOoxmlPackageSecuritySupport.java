@@ -76,6 +76,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
       throws IOException {
     Objects.requireNonNull(workbookPath, "workbookPath must not be null");
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
+    ExcelOoxmlOpenOptions effectiveOpenOptions = normalizeOpenOptions(openOptions);
 
     Path absolutePath = workbookPath.toAbsolutePath().normalize();
     if (!Files.exists(absolutePath)) {
@@ -90,7 +91,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
               inspectPackageSecurity(absolutePath, ExcelOoxmlEncryptionSnapshot.none()),
               null,
               false);
-      case OLE2 -> decryptWorkbook(absolutePath, openOptions, tempFileFactory);
+      case OLE2 -> decryptWorkbook(absolutePath, effectiveOpenOptions, tempFileFactory);
       default ->
           throw new IllegalArgumentException(
               "Only .xlsx workbooks are supported; unsupported package magic at " + absolutePath);
@@ -267,10 +268,15 @@ public final class ExcelOoxmlPackageSecuritySupport {
   }
 
   private static String openPassword(Path workbookPath, ExcelOoxmlOpenOptions openOptions) {
-    if (openOptions == null || openOptions.password() == null) {
-      throw new WorkbookPasswordRequiredException(workbookPath);
-    }
-    return openOptions.password();
+    return switch (normalizeOpenOptions(openOptions)) {
+      case ExcelOoxmlOpenOptions.Unencrypted _ ->
+          throw new WorkbookPasswordRequiredException(workbookPath);
+      case ExcelOoxmlOpenOptions.Encrypted encrypted -> encrypted.password();
+    };
+  }
+
+  private static ExcelOoxmlOpenOptions normalizeOpenOptions(ExcelOoxmlOpenOptions openOptions) {
+    return openOptions == null ? new ExcelOoxmlOpenOptions.Unencrypted() : openOptions;
   }
 
   static ExcelOoxmlEncryptionSnapshot encryptionSnapshot(EncryptionInfo encryptionInfo)

@@ -23,12 +23,13 @@ class ExcelOoxmlPackageSecuritySupportTest {
         InvalidWorkbookPasswordException.class,
         () ->
             ExcelWorkbook.open(
-                encryptedWorkbook.workbookPath(), new ExcelOoxmlOpenOptions("wrong-password")));
+                encryptedWorkbook.workbookPath(),
+                new ExcelOoxmlOpenOptions.Encrypted("wrong-password")));
 
     try (ExcelWorkbook workbook =
         ExcelWorkbook.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions(encryptedWorkbook.password()))) {
+            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()))) {
       assertEquals(
           "Encrypted workbook",
           assertInstanceOf(
@@ -61,7 +62,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbook.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions(encryptedWorkbook.password()))) {
+            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()))) {
       workbook.save(unchangedCopy);
     }
     assertEquals(
@@ -72,7 +73,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
     try (ExcelWorkbook workbook =
         ExcelWorkbook.open(
             encryptedWorkbook.workbookPath(),
-            new ExcelOoxmlOpenOptions(encryptedWorkbook.password()))) {
+            new ExcelOoxmlOpenOptions.Encrypted(encryptedWorkbook.password()))) {
       new WorkbookCommandExecutor()
           .apply(
               workbook,

@@ -1,12 +1,9 @@
 package dev.erst.gridgrind.contract.catalog;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,6 +12,7 @@ import java.util.stream.Collectors;
  * protocol catalog summaries, and request-validation messages.
  */
 public final class GridGrindContractText {
+  private static final long REQUEST_DOCUMENT_LIMIT_BYTES = 16L * 1024 * 1024;
   private static final List<Class<? extends MutationAction>>
       STREAMING_WRITE_MUTATION_ACTION_CLASSES =
           List.of(MutationAction.EnsureSheet.class, MutationAction.AppendRow.class);
@@ -30,10 +28,6 @@ public final class GridGrindContractText {
           "pivot-table health",
           "hyperlink health",
           "named-range health");
-  private static final Map<Class<?>, String> MUTATION_ACTION_TYPE_NAMES =
-      typeNamesByClass(MutationAction.class);
-  private static final Map<Class<?>, String> INSPECTION_QUERY_TYPE_NAMES =
-      typeNamesByClass(InspectionQuery.class);
 
   private GridGrindContractText() {}
 
@@ -49,18 +43,12 @@ public final class GridGrindContractText {
 
   /** Human-readable mutation-action id list accepted by `STREAMING_WRITE`. */
   public static String streamingWriteMutationActionTypePhrase() {
-    return humanJoin(
-        STREAMING_WRITE_MUTATION_ACTION_CLASSES.stream()
-            .map(GridGrindContractText::mutationActionTypeName)
-            .toList());
+    return GridGrindExecutionModeMetadata.streamingWrite().allowedActionPhrase();
   }
 
   /** Human-readable inspection-query id list accepted by `EVENT_READ`. */
   public static String eventReadInspectionQueryTypePhrase() {
-    return humanJoin(
-        EVENT_READ_INSPECTION_QUERY_CLASSES.stream()
-            .map(GridGrindContractText::inspectionQueryTypeName)
-            .toList());
+    return GridGrindExecutionModeMetadata.eventRead().allowedQueryPhrase();
   }
 
   /** Human-readable aggregate analysis-family list used by workbook-health discovery surfaces. */
@@ -132,19 +120,35 @@ public final class GridGrindContractText {
 
   /** One stable catalog summary for `ExecutionModeInput`. */
   public static String executionModeInputSummary() {
+    GridGrindExecutionModeMetadata.EventReadMode eventRead =
+        GridGrindExecutionModeMetadata.eventRead();
+    GridGrindExecutionModeMetadata.StreamingWriteMode streamingWrite =
+        GridGrindExecutionModeMetadata.streamingWrite();
     return "Execution-mode settings that select low-memory read and write"
         + " execution families."
         + " readMode defaults to FULL_XSSF when omitted."
         + " writeMode defaults to FULL_XSSF when omitted."
-        + " EVENT_READ supports "
-        + eventReadInspectionQueryTypePhrase()
-        + " only and requires execution.calculation.strategy=DO_NOT_CALCULATE with"
-        + " markRecalculateOnOpen=false (LIM-019)."
-        + " STREAMING_WRITE supports "
-        + streamingWriteMutationActionTypePhrase()
-        + " on NEW workbooks only;"
-        + " execution.calculation may only keep strategy=DO_NOT_CALCULATE and optionally set"
-        + " markRecalculateOnOpen=true (LIM-020).";
+        + " "
+        + eventRead.mode().name()
+        + " supports "
+        + eventRead.allowedQueryPhrase()
+        + " only and requires execution.calculation.strategy="
+        + eventRead.requiredCalculationStrategyId()
+        + " with markRecalculateOnOpen="
+        + eventRead.markRecalculateOnOpenAllowed()
+        + " (LIM-019)."
+        + " "
+        + streamingWrite.mode().name()
+        + " supports "
+        + streamingWrite.allowedActionPhrase()
+        + " on "
+        + streamingWrite.requiredSourceTypeId()
+        + " workbooks only;"
+        + " execution.calculation may only keep strategy="
+        + streamingWrite.requiredCalculationStrategyId()
+        + " and optionally set markRecalculateOnOpen="
+        + streamingWrite.markRecalculateOnOpenAllowed()
+        + " (LIM-020).";
   }
 
   /** One stable catalog summary for `ExecutionPolicyInput`. */
@@ -194,44 +198,50 @@ public final class GridGrindContractText {
         + " content instead of the request JSON";
   }
 
+  /** Maximum accepted JSON request document size in bytes. */
+  public static long requestDocumentLimitBytes() {
+    return REQUEST_DOCUMENT_LIMIT_BYTES;
+  }
+
+  /** Human-readable summary of the canonical JSON request document limit. */
+  public static String requestDocumentLimitSummary() {
+    return "request JSON must not exceed 16 MiB ("
+        + REQUEST_DOCUMENT_LIMIT_BYTES
+        + " bytes); use UTF8_FILE, FILE, or STANDARD_INPUT sources for large authored payloads.";
+  }
+
+  /** One stable product-owned message for oversized JSON request payloads. */
+  public static String requestDocumentTooLargeMessage() {
+    return "Request JSON exceeds the maximum size of 16 MiB ("
+        + REQUEST_DOCUMENT_LIMIT_BYTES
+        + " bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT"
+        + " sources.";
+  }
+
   /** One stable step-kind explanation shared by help and discovery surfaces. */
   public static String stepKindSummary() {
     return "Use MUTATION steps for workbook changes, ASSERTION steps for first-class"
-        + " verification, and INSPECTION steps for factual or analytical reads.";
+        + " verification, and INSPECTION steps for factual or analytical reads."
+        + " Step kind is inferred from exactly one of action, assertion, or query;"
+        + " do not send step.type.";
   }
 
   /** Stable mutation-action discriminator lookup by protocol subtype class. */
   public static String mutationActionTypeName(Class<? extends MutationAction> mutationActionClass) {
-    return requiredTypeName(MUTATION_ACTION_TYPE_NAMES, mutationActionClass, "MutationAction");
+    return GridGrindProtocolTypeNames.mutationActionTypeName(mutationActionClass);
   }
 
   /** Stable inspection-query discriminator lookup by protocol subtype class. */
   public static String inspectionQueryTypeName(
       Class<? extends InspectionQuery> inspectionQueryClass) {
-    return requiredTypeName(INSPECTION_QUERY_TYPE_NAMES, inspectionQueryClass, "InspectionQuery");
-  }
-
-  private static String requiredTypeName(
-      Map<Class<?>, String> typeNamesByClass, Class<?> typeClass, String rootTypeName) {
-    Objects.requireNonNull(typeClass, "typeClass must not be null");
-    String typeName = typeNamesByClass.get(typeClass);
-    if (typeName == null) {
-      throw new IllegalArgumentException(
-          "No discriminator name registered for " + rootTypeName + " subtype " + typeClass);
-    }
-    return typeName;
+    return GridGrindProtocolTypeNames.inspectionQueryTypeName(inspectionQueryClass);
   }
 
   static Map<Class<?>, String> typeNamesByClass(Class<?> rootType) {
-    JsonSubTypes jsonSubTypes = rootType.getAnnotation(JsonSubTypes.class);
-    if (jsonSubTypes == null) {
-      throw new IllegalArgumentException(rootType + " is missing @JsonSubTypes");
-    }
-    return Arrays.stream(jsonSubTypes.value())
-        .collect(Collectors.toUnmodifiableMap(JsonSubTypes.Type::value, JsonSubTypes.Type::name));
+    return GridGrindProtocolTypeNames.typeNamesByClass(rootType);
   }
 
-  private static String humanJoin(List<String> values) {
+  static String humanJoin(List<String> values) {
     List<String> parts = values.stream().filter(value -> !value.isBlank()).toList();
     if (parts.isEmpty()) {
       throw new IllegalArgumentException("values must not be empty");

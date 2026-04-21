@@ -2,6 +2,8 @@ package dev.erst.gridgrind.contract.query;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
+import dev.erst.gridgrind.excel.ExcelReadLimits;
 
 /** Ordered post-mutation inspection queries that introspect or analyze workbook state. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -80,7 +82,7 @@ public sealed interface InspectionQuery
    * out-of-memory failures during serialization of large cell grids. See docs/LIMITATIONS.md
    * LIM-001.
    */
-  int MAX_WINDOW_CELLS = 250_000; // LIM-001
+  int MAX_WINDOW_CELLS = ExcelReadLimits.MAX_WINDOW_CELLS; // LIM-001
 
   /** Marker for raw workbook-fact queries with no higher-level interpretation. */
   sealed interface Introspection extends InspectionQuery
@@ -186,39 +188,7 @@ public sealed interface InspectionQuery
 
   /** Returns the stable SCREAMING_SNAKE_CASE discriminator for one inspection query. */
   default String queryType() {
-    return switch (this) {
-      case GetWorkbookSummary _ -> "GET_WORKBOOK_SUMMARY";
-      case GetPackageSecurity _ -> "GET_PACKAGE_SECURITY";
-      case GetWorkbookProtection _ -> "GET_WORKBOOK_PROTECTION";
-      case GetNamedRanges _ -> "GET_NAMED_RANGES";
-      case GetSheetSummary _ -> "GET_SHEET_SUMMARY";
-      case GetCells _ -> "GET_CELLS";
-      case GetWindow _ -> "GET_WINDOW";
-      case GetMergedRegions _ -> "GET_MERGED_REGIONS";
-      case GetHyperlinks _ -> "GET_HYPERLINKS";
-      case GetComments _ -> "GET_COMMENTS";
-      case GetDrawingObjects _ -> "GET_DRAWING_OBJECTS";
-      case GetCharts _ -> "GET_CHARTS";
-      case GetPivotTables _ -> "GET_PIVOT_TABLES";
-      case GetDrawingObjectPayload _ -> "GET_DRAWING_OBJECT_PAYLOAD";
-      case GetSheetLayout _ -> "GET_SHEET_LAYOUT";
-      case GetPrintLayout _ -> "GET_PRINT_LAYOUT";
-      case GetDataValidations _ -> "GET_DATA_VALIDATIONS";
-      case GetConditionalFormatting _ -> "GET_CONDITIONAL_FORMATTING";
-      case GetAutofilters _ -> "GET_AUTOFILTERS";
-      case GetTables _ -> "GET_TABLES";
-      case GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
-      case GetSheetSchema _ -> "GET_SHEET_SCHEMA";
-      case GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
-      case AnalyzeFormulaHealth _ -> "ANALYZE_FORMULA_HEALTH";
-      case AnalyzeDataValidationHealth _ -> "ANALYZE_DATA_VALIDATION_HEALTH";
-      case AnalyzeConditionalFormattingHealth _ -> "ANALYZE_CONDITIONAL_FORMATTING_HEALTH";
-      case AnalyzeAutofilterHealth _ -> "ANALYZE_AUTOFILTER_HEALTH";
-      case AnalyzeTableHealth _ -> "ANALYZE_TABLE_HEALTH";
-      case AnalyzePivotTableHealth _ -> "ANALYZE_PIVOT_TABLE_HEALTH";
-      case AnalyzeHyperlinkHealth _ -> "ANALYZE_HYPERLINK_HEALTH";
-      case AnalyzeNamedRangeHealth _ -> "ANALYZE_NAMED_RANGE_HEALTH";
-      case AnalyzeWorkbookFindings _ -> "ANALYZE_WORKBOOK_FINDINGS";
-    };
+    return GridGrindProtocolTypeNames.inspectionQueryTypeName(
+        getClass().asSubclass(InspectionQuery.class));
   }
 }

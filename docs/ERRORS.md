@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: ERRORS
-updated: "2026-04-16"
+updated: "2026-04-19"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report assertion failures", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures", "how does gridgrind report source-backed input failures", "what happens if a gridgrind input file is missing"]
@@ -34,40 +34,41 @@ route:
     },
     "validation": {
       "status": "SUCCEEDED",
-      "durationMillis": 1,
-      "detail": "succeeded"
+      "startedAt": "2026-04-19T09:30:00Z",
+      "finishedAt": "2026-04-19T09:30:00Z",
+      "durationMillis": 1
     },
     "inputResolution": {
-      "status": "NOT_STARTED",
-      "durationMillis": 0,
-      "detail": "not started"
+      "status": "SUCCEEDED",
+      "startedAt": "2026-04-19T09:30:00Z",
+      "finishedAt": "2026-04-19T09:30:00Z",
+      "durationMillis": 0
     },
     "open": {
       "status": "SUCCEEDED",
-      "durationMillis": 8,
-      "detail": "succeeded"
+      "startedAt": "2026-04-19T09:30:00Z",
+      "finishedAt": "2026-04-19T09:30:08Z",
+      "durationMillis": 8
     },
     "calculation": {
       "preflight": {
         "status": "NOT_STARTED",
-        "durationMillis": 0,
-        "detail": "not started"
+        "durationMillis": 0
       },
       "execution": {
         "status": "NOT_STARTED",
-        "durationMillis": 0,
-        "detail": "not started"
+        "durationMillis": 0
       }
     },
     "persistencePhase": {
       "status": "NOT_STARTED",
-      "durationMillis": 0,
-      "detail": "not started"
+      "durationMillis": 0
     },
     "close": {
       "status": "SUCCEEDED",
-      "durationMillis": 1,
-      "detail": "succeeded"
+      "startedAt": "2026-04-19T09:30:09Z",
+      "finishedAt": "2026-04-19T09:30:10Z",
+      "durationMillis": 1
     },
     "steps": [
       {
@@ -75,7 +76,7 @@ route:
         "stepId": "set-total",
         "stepKind": "MUTATION",
         "stepType": "SET_CELL",
-        "targets": [
+        "resolvedTargets": [
           {
             "kind": "CELL",
             "label": "Cell Inventory!ZZZ999999"
@@ -83,8 +84,9 @@ route:
         ],
         "phase": {
           "status": "FAILED",
-          "durationMillis": 1,
-          "detail": "failed (INVALID_CELL_ADDRESS)"
+          "startedAt": "2026-04-19T09:30:08Z",
+          "finishedAt": "2026-04-19T09:30:09Z",
+          "durationMillis": 1
         },
         "outcome": "FAILED",
         "failure": {
@@ -95,15 +97,28 @@ route:
         }
       }
     ],
-    "events": [],
+    "warnings": [],
     "outcome": {
       "status": "FAILED",
       "plannedStepCount": 4,
       "completedStepCount": 2,
-      "failedStepCount": 1,
-      "firstFailedStepIndex": 2,
-      "firstFailedStepId": "set-total",
-      "firstFailedStepType": "SET_CELL"
+      "durationMillis": 10,
+      "failedStepIndex": 2,
+      "failedStepId": "set-total",
+      "failureCode": "INVALID_CELL_ADDRESS"
+    }
+  },
+  "calculation": {
+    "policy": {
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      }
+    },
+    "execution": {
+      "status": "NOT_REQUESTED",
+      "evaluatedFormulaCount": 0,
+      "cachesCleared": false,
+      "markRecalculateOnOpenApplied": false
     }
   },
   "problem": {
@@ -117,6 +132,7 @@ route:
       "stage": "EXECUTE_STEP",
       "stepIndex": 2,
       "stepId": "set-total",
+      "stepKind": "MUTATION",
       "stepType": "SET_CELL",
       "sheetName": "Inventory",
       "address": "ZZZ999999"
@@ -124,7 +140,7 @@ route:
     "causes": [
       {
         "code": "INVALID_CELL_ADDRESS",
-        "message": "...",
+        "message": "Cell address 'ZZZ999999' is not a valid A1-notation address.",
         "stage": "EXECUTE_STEP"
       }
     ]
@@ -236,9 +252,9 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 |:-----|:--------|
 | `WORKBOOK_NOT_FOUND` | `source.type=EXISTING` path does not exist. |
 | `INPUT_SOURCE_NOT_FOUND` | A source-backed authored field referenced a `UTF8_FILE` or `FILE` path that does not exist. |
-| `SHEET_NOT_FOUND` | An operation or read references a sheet that does not exist. All mutation operations (`SET_CELL`, `SET_RANGE`, `APPLY_STYLE`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the sheet to exist; use `ENSURE_SHEET` first. |
-| `NAMED_RANGE_NOT_FOUND` | A named-range read selector or delete request references a workbook- or sheet-scoped name that does not exist. |
-| `CELL_NOT_FOUND` | Reserved. No current operation raises this code; `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are no-ops when the cell does not physically exist, and `GET_CELLS` returns blank snapshots for unwritten cells. |
+| `SHEET_NOT_FOUND` | A step target references a sheet that does not exist. All sheet-backed mutation steps (`SET_CELL`, `SET_RANGE`, `APPLY_STYLE`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the sheet to exist; use `ENSURE_SHEET` first. |
+| `NAMED_RANGE_NOT_FOUND` | A named-range inspection selector or delete step references a workbook- or sheet-scoped name that does not exist. |
+| `CELL_NOT_FOUND` | Reserved. No current step raises this code; `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are no-ops when the cell does not physically exist, and `GET_CELLS` returns blank snapshots for unwritten cells. |
 
 ### Security (`SECURITY` category)
 
@@ -296,12 +312,17 @@ The `context` block provides structured metadata about where the failure occurre
 | Field | Description |
 |:------|:------------|
 | `stage` | `PARSE_ARGUMENTS`, `READ_REQUEST`, `VALIDATE_REQUEST`, `RESOLVE_INPUTS`, `OPEN_WORKBOOK`, `EXECUTE_STEP`, `CALCULATION_PREFLIGHT`, `CALCULATION_EXECUTION`, `PERSIST_WORKBOOK`, `EXECUTE_REQUEST`, `WRITE_RESPONSE` |
+| `argument` | The CLI flag or argument token that failed parsing, when the stage is `PARSE_ARGUMENTS`. |
+| `requestPath` | The request file path used for `READ_REQUEST`, when the CLI read JSON from `--request <path>`. |
 | `sourceType` | Request `source.type` when the failure occurred after request parsing, including `EXECUTE_REQUEST` failures. |
 | `persistenceType` | Request `persistence.type` when the failure occurred after request parsing, including `EXECUTE_REQUEST` failures. |
+| `sourceWorkbookPath` | The workbook path involved in `OPEN_WORKBOOK` or `PERSIST_WORKBOOK`, when a source workbook path exists. |
+| `persistencePath` | The persistence destination path involved in `PERSIST_WORKBOOK`, when one exists. |
 | `inputKind` | Authored source-backed field family when the failure occurred during `RESOLVE_INPUTS`, for example `cell text`, `picture payload`, or `embedded object preview image`. |
 | `inputPath` | Authored `UTF8_FILE` or `FILE` path when the failure occurred during `RESOLVE_INPUTS`, if the failing source referenced a path. |
 | `stepIndex` | Zero-based index of the failing step in `steps`. |
 | `stepId` | Caller-defined step correlation ID for the failing step. |
+| `stepKind` | High-level step family of the failing step: `MUTATION`, `ASSERTION`, or `INSPECTION`. |
 | `stepType` | The action, assertion, or query `type` field of the failing step (for example `SET_CELL`, `EXPECT_CELL_VALUE`, or `GET_CELLS`). |
 | `sheetName` | Sheet referenced by the failing step, if applicable. |
 | `address` | Cell address, if applicable. |
@@ -311,6 +332,7 @@ The `context` block provides structured metadata about where the failure occurre
 | `jsonPath` | JSON Pointer to the field that failed parsing (transport errors only). |
 | `jsonLine` | Line number in the request payload (transport errors only). |
 | `jsonColumn` | Column number in the request payload (transport errors only). |
+| `responsePath` | The response file path that failed during `WRITE_RESPONSE`, when the CLI was writing to `--response <path>`. |
 
 ## Index-Based Validation Messages
 

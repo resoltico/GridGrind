@@ -3,6 +3,85 @@
 Notable changes to this project are documented in this file. The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.49.0] - 2026-04-21
+
+### Changed
+
+- GridGrind now publishes a contract-owned intent-discovery layer on top of the exact protocol:
+  `--print-task-catalog`, `--print-task-plan <id>`, `--print-goal-plan "<goal>"`, and
+  `--doctor-request`. The packaged JAR and Docker artifact verifiers now black-box these task,
+  planning, and diagnostics surfaces too, so the intent layer cannot drift silently from the core
+  protocol contract.
+
+### Fixed
+
+- The thin CLI and packaged artifact help surface now behave truthfully for black-box operators:
+  invoking GridGrind with no arguments and empty stdin prints help instead of falling through into
+  a JSON parse failure, and `--print-protocol-catalog --operation <id>` now rejects ambiguous raw
+  ids explicitly while teaching the canonical `<group>:<id>` lookup form.
+- Goal-plan normalization now handles common plural stems more truthfully for freeform task
+  discovery, including `quizzes -> quiz` and `sizes -> size`, instead of degrading ranked task
+  matches with avoidable stemming drift.
+- Chart readback now prefers live worksheet values over stale embedded chart caches for
+  reference-backed series, so packaged artifact smoke and operator readback reflect the workbook's
+  current sheet state instead of outdated OOXML cache text.
+- Failure `context.stage` is now truthful and round-trippable for `RESOLVE_INPUTS`,
+  `CALCULATION_PREFLIGHT`, and `CALCULATION_EXECUTION`; the calculation stage discriminator is now
+  owned by concrete context types instead of a mismatched dynamic field.
+- Synthetic CLI failure journals no longer invent `"unknown-plan"` or `"UNKNOWN"` source and
+  persistence types before a request has parsed. Pre-parse failures now omit unavailable plan and
+  transport facts instead of serializing misleading sentinel values.
+- Step-target parsing now reports disallowed selector types truthfully, including ambiguous
+  selector-family overlaps such as `BY_NAME`, instead of swallowing earlier parse failures and
+  blaming the last attempted selector shape.
+- `WorkbookPlan.steps()` now stays immutable after construction, so callers can no longer mutate a
+  parsed or authored plan in place and bypass the duplicate-`stepId` invariant.
+- Request-stream transport is now bounded at 16 MiB. Oversized JSON requests fail early with a
+  product-owned `INVALID_REQUEST` message, and the streamed request/response/catalog write APIs no
+  longer build whole-payload byte arrays before writing to caller-owned output streams.
+- The machine-readable catalog and CLI help now publish step-target selector families directly.
+  `mutationActionTypes`, `assertionTypes`, and `inspectionQueryTypes` now expose
+  `targetSelectors` and `targetSelectorRule`, table and pivot mutations now declare only
+  `BY_NAME_ON_SHEET`, and ambiguous shared selector ids such as `BY_NAME` are rejected explicitly
+  instead of being guessed by parser order.
+- `WorkbookStepJsonDeserializer` now uses Jackson 3's non-deprecated string-node APIs, and
+  print-layout margin reads and writes now use Apache POI's `PageMargin` enum surface instead of
+  the deprecated short-constant overloads. `ExcelStreamingWorkbookWriter` no longer carries a
+  deprecated no-op `Cell.setCellType(FORMULA)` call after `setCellFormula(...)`, and its
+  `close()` path now relies on `SXSSFWorkbook.close()`, which already disposes SXSSF temp files in
+  Apache POI 5.5.1.
+- `GridGrindJson` no longer emits `AlmostJavadoc` warnings from package-private parser-message
+  helpers. The production JSON wording helpers now use real Javadoc comments so static analysis
+  output stays signal-rich.
+- Stale promoted Jazzer metadata for invalid protocol-request seeds is now refreshed against the
+  current selector contract. The refresh test fixture now records the modern
+  `EXPECTED_INVALID`/`INVALID_REQUEST_SHAPE` replay surface instead of preserving pre-hard-break
+  authored source facts after parsing has already failed.
+- Encrypted `.xlsx` package handling now models unencrypted versus password-protected open state
+  explicitly instead of relying on nullable password sentinels, and POI relation-removal failures
+  no longer mask fatal JVM errors as ordinary state exceptions.
+- Exact-cell read validation is now single-sourced end to end. `GET_CELLS` address lists now share
+  one canonical duplicate, bounds, and shape validator across the contract and engine while still
+  preserving the indexed request messages callers already rely on.
+- The Java workbook engine now exposes formula evaluation, capability inspection, cache clearing,
+  and recalc-on-open toggles through a dedicated `workbook.formulas()` surface instead of crowding
+  those operations onto the root workbook wrapper, and distinct gradient fills now keep their own
+  OOXML entries even when Apache POI's public equality checks would otherwise alias different
+  gradient geometries together.
+- Executor and engine internals are now split into narrower helpers for execution validation,
+  request path facts, calculation workflows, response shaping, sheet annotations, prepared chart
+  models, chart source and snapshot handling, drawing removal and binary cleanup, drawing-chart
+  flows, and drawing anchor state. The public contract stays the same, but the request executor
+  and workbook engine are less monolithic and easier to evolve safely.
+- Canonical operation, assertion, and inspection ids, execution-mode limits, CLI help labels, and
+  shared discovery/error wording now derive from contract-owned structured metadata instead of
+  parallel string copies. The CLI help surface is now a typed catalog section tree, execution-mode
+  validation messages come from one shared metadata owner, and the build now fails if public
+  docs/help/catalog/example surfaces mention an unregistered canonical mutation, assertion, or
+  inspection id.
+
 ## [0.48.0] - 2026-04-19
 
 ### Changed
@@ -1891,7 +1970,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.48.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.49.0...HEAD
+[0.49.0]: https://github.com/resoltico/GridGrind/compare/v0.48.0...v0.49.0
 [0.48.0]: https://github.com/resoltico/GridGrind/compare/v0.47.0...v0.48.0
 [0.47.0]: https://github.com/resoltico/GridGrind/compare/v0.46.0...v0.47.0
 [0.46.0]: https://github.com/resoltico/GridGrind/compare/v0.45.0...v0.46.0

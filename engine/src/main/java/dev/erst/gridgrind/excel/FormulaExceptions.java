@@ -207,14 +207,13 @@ final class FormulaExceptions {
         && messageMentionsFunctionName(exception, normalized);
   }
 
-  private static boolean isKnownBuiltinFunction(String normalizedFunctionName) {
+  static boolean isKnownBuiltinFunction(String normalizedFunctionName) {
     return FunctionMetadataRegistry.getFunctionByName(normalizedFunctionName) != null
         || AnalysisToolPak.getSupportedFunctionNames().contains(normalizedFunctionName)
         || AnalysisToolPak.getNotSupportedFunctionNames().contains(normalizedFunctionName);
   }
 
-  private static boolean messageMentionsFunctionName(
-      Throwable exception, String normalizedFunctionName) {
+  static boolean messageMentionsFunctionName(Throwable exception, String normalizedFunctionName) {
     for (Throwable current = exception; current != null; current = current.getCause()) {
       String message = current.getMessage();
       if (message != null && message.toUpperCase(Locale.ROOT).contains(normalizedFunctionName)) {

@@ -1,9 +1,7 @@
 package dev.erst.gridgrind.excel;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 /** Workbook-core read commands executed after mutations and before persistence. */
 public sealed interface WorkbookReadCommand
@@ -103,7 +101,7 @@ public sealed interface WorkbookReadCommand
    * Enforced in both the protocol and engine layers to prevent out-of-memory failures during
    * cell-grid serialization. See docs/LIMITATIONS.md LIM-001.
    */
-  int MAX_WINDOW_CELLS = 250_000; // LIM-001
+  int MAX_WINDOW_CELLS = ExcelReadLimits.MAX_WINDOW_CELLS; // LIM-001
 
   /** Returns a rectangular window of cell snapshots anchored at the provided top-left address. */
   record GetWindow(
@@ -363,18 +361,6 @@ public sealed interface WorkbookReadCommand
   }
 
   private static List<String> copyAddresses(List<String> addresses) {
-    Objects.requireNonNull(addresses, "addresses must not be null");
-    List<String> copy = List.copyOf(addresses);
-    if (copy.isEmpty()) {
-      throw new IllegalArgumentException("addresses must not be empty");
-    }
-    Set<String> unique = new LinkedHashSet<>();
-    for (String address : copy) {
-      requireNonBlank(address, "addresses");
-      if (!unique.add(address)) {
-        throw new IllegalArgumentException("addresses must not contain duplicates");
-      }
-    }
-    return copy;
+    return ExcelAddressLists.copyNonEmptyDistinctAddresses(addresses);
   }
 }

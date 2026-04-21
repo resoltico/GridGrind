@@ -695,61 +695,61 @@ class AdvancedMutationCommandConverterTest {
     assertEquals("SET_WORKBOOK_PROTECTION", setProtection.actionType());
     assertEquals("CLEAR_WORKBOOK_PROTECTION", clearProtection.actionType());
     assertNull(
-        DefaultGridGrindRequestExecutor.formulaFor(
+        ExecutionDiagnosticFields.formulaFor(
             new MutationStep(
                 "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
             new IllegalStateException()));
     assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new MutationStep(
                 "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
             new IllegalStateException()));
     assertNull(
-        DefaultGridGrindRequestExecutor.addressFor(
+        ExecutionDiagnosticFields.addressFor(
             new MutationStep(
                 "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
             new IllegalStateException()));
     assertNull(
-        DefaultGridGrindRequestExecutor.rangeFor(
+        ExecutionDiagnosticFields.rangeFor(
             new MutationStep(
                 "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
             new IllegalStateException()));
     assertNull(
-        DefaultGridGrindRequestExecutor.namedRangeNameFor(
+        ExecutionDiagnosticFields.namedRangeNameFor(
             new MutationStep(
                 "step-01-set-workbook-protection", new WorkbookSelector.Current(), setProtection),
             new IllegalStateException()));
 
     assertNull(
-        DefaultGridGrindRequestExecutor.formulaFor(
+        ExecutionDiagnosticFields.formulaFor(
             new MutationStep(
                 "step-02-clear-workbook-protection",
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
     assertNull(
-        DefaultGridGrindRequestExecutor.sheetNameFor(
+        ExecutionDiagnosticFields.sheetNameFor(
             new MutationStep(
                 "step-02-clear-workbook-protection",
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
     assertNull(
-        DefaultGridGrindRequestExecutor.addressFor(
+        ExecutionDiagnosticFields.addressFor(
             new MutationStep(
                 "step-02-clear-workbook-protection",
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
     assertNull(
-        DefaultGridGrindRequestExecutor.rangeFor(
+        ExecutionDiagnosticFields.rangeFor(
             new MutationStep(
                 "step-02-clear-workbook-protection",
                 new WorkbookSelector.Current(),
                 clearProtection),
             new IllegalStateException()));
     assertNull(
-        DefaultGridGrindRequestExecutor.namedRangeNameFor(
+        ExecutionDiagnosticFields.namedRangeNameFor(
             new MutationStep(
                 "step-02-clear-workbook-protection",
                 new WorkbookSelector.Current(),

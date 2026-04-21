@@ -40,6 +40,7 @@ import tools.jackson.databind.exc.MismatchedInputException;
 import tools.jackson.databind.exc.UnrecognizedPropertyException;
 
 /** Tests for JSON serialization, parser wording, and the step-based wire shape. */
+@SuppressWarnings("NotJavadoc")
 class GridGrindJsonTest {
   @Test
   void defaultsRequestProtocolVersionDuringJsonRead() throws IOException {
@@ -57,6 +58,7 @@ class GridGrindJsonTest {
   }
 
   @Test
+  @SuppressWarnings("StringConcatToTextBlock")
   void roundTripsRequestsResponsesAndCatalogs() throws IOException {
     WorkbookPlan request =
         new WorkbookPlan(
@@ -96,6 +98,48 @@ class GridGrindJsonTest {
     assertEquals(
         catalog,
         GridGrindJson.readProtocolCatalog(GridGrindJson.writeProtocolCatalogBytes(catalog)));
+  }
+
+  @Test
+  void roundTripsResolveInputsAndCalculationFailureContexts() throws IOException {
+    GridGrindResponse resolveInputsFailure =
+        new GridGrindResponse.Failure(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.Problem(
+                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
+                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
+                    .category(),
+                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
+                    .recovery(),
+                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND.title(),
+                "missing payload",
+                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND
+                    .resolution(),
+                new GridGrindResponse.ProblemContext.ResolveInputs(
+                    "NEW", "NONE", "cell text", "missing.txt"),
+                null,
+                List.of()));
+    GridGrindResponse calculationFailure =
+        new GridGrindResponse.Failure(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.Problem(
+                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA,
+                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.category(),
+                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.recovery(),
+                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.title(),
+                "bad formula",
+                dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA.resolution(),
+                new GridGrindResponse.ProblemContext.ExecuteCalculation.Preflight(
+                    "EXISTING", "SAVE_AS", "Ops", "B1", "SUM("),
+                null,
+                List.of()));
+
+    assertEquals(
+        resolveInputsFailure,
+        GridGrindJson.readResponse(GridGrindJson.writeResponseBytes(resolveInputsFailure)));
+    assertEquals(
+        calculationFailure,
+        GridGrindJson.readResponse(GridGrindJson.writeResponseBytes(calculationFailure)));
   }
 
   private static TextSourceInput text(String value) {
@@ -308,6 +352,40 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void rejectsOversizedRequestPayloads() {
+    byte[] oversized =
+        ("{\"source\":{\"type\":\"NEW\"},\"steps\":[],\"pad\":\""
+                + "x".repeat((int) GridGrindJson.maxRequestDocumentBytes())
+                + "\"}")
+            .getBytes(StandardCharsets.UTF_8);
+
+    InvalidRequestException failure =
+        assertThrows(InvalidRequestException.class, () -> GridGrindJson.readRequest(oversized));
+
+    assertEquals(
+        "Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.",
+        failure.getMessage());
+  }
+
+  @Test
+  void rejectsOversizedRequestStreamsWithTheSameProductOwnedMessage() {
+    byte[] oversized =
+        ("{\"planId\":\""
+                + "x".repeat((int) GridGrindJson.maxRequestDocumentBytes())
+                + "\",\"source\":{\"type\":\"NEW\"},\"steps\":[]}")
+            .getBytes(StandardCharsets.UTF_8);
+
+    InvalidRequestException failure =
+        assertThrows(
+            InvalidRequestException.class,
+            () -> GridGrindJson.readRequest(new ByteArrayInputStream(oversized)));
+
+    assertEquals(
+        "Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.",
+        failure.getMessage());
+  }
+
+  @Test
   void readsInvalidResponsesAndCatalogsUsingPublicProblemTypes() {
     InvalidJsonException invalidResponse =
         assertThrows(
@@ -378,6 +456,7 @@ class GridGrindJsonTest {
   }
 
   /** Tracks whether the request reader closes the source stream after consuming it. */
+  @SuppressWarnings("NotJavadoc")
   private static final class TrackingInputStream extends InputStream {
     private final ByteArrayInputStream delegate;
     private boolean closed;
@@ -403,6 +482,7 @@ class GridGrindJsonTest {
   }
 
   /** Tracks whether the request writer closes the destination stream after producing JSON. */
+  @SuppressWarnings("NotJavadoc")
   private static final class TrackingOutputStream extends ByteArrayOutputStream {
     private boolean closed;
 

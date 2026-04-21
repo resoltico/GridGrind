@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.assertion;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
 import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.dto.ChartReport;
@@ -66,26 +67,7 @@ public sealed interface Assertion
 
   /** Stable SCREAMING_SNAKE_CASE discriminator mirrored in catalog and result surfaces. */
   default String assertionType() {
-    return switch (this) {
-      case Present _ -> "EXPECT_PRESENT";
-      case Absent _ -> "EXPECT_ABSENT";
-      case CellValue _ -> "EXPECT_CELL_VALUE";
-      case DisplayValue _ -> "EXPECT_DISPLAY_VALUE";
-      case FormulaText _ -> "EXPECT_FORMULA_TEXT";
-      case CellStyle _ -> "EXPECT_CELL_STYLE";
-      case WorkbookProtectionFacts _ -> "EXPECT_WORKBOOK_PROTECTION";
-      case SheetStructureFacts _ -> "EXPECT_SHEET_STRUCTURE";
-      case NamedRangeFacts _ -> "EXPECT_NAMED_RANGE_FACTS";
-      case TableFacts _ -> "EXPECT_TABLE_FACTS";
-      case PivotTableFacts _ -> "EXPECT_PIVOT_TABLE_FACTS";
-      case ChartFacts _ -> "EXPECT_CHART_FACTS";
-      case AnalysisMaxSeverity _ -> "EXPECT_ANALYSIS_MAX_SEVERITY";
-      case AnalysisFindingPresent _ -> "EXPECT_ANALYSIS_FINDING_PRESENT";
-      case AnalysisFindingAbsent _ -> "EXPECT_ANALYSIS_FINDING_ABSENT";
-      case AllOf _ -> "ALL_OF";
-      case AnyOf _ -> "ANY_OF";
-      case Not _ -> "NOT";
-    };
+    return GridGrindProtocolTypeNames.assertionTypeName(getClass().asSubclass(Assertion.class));
   }
 
   /** Expects the selector to resolve to one or more matching workbook entities. */

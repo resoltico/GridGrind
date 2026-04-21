@@ -230,7 +230,7 @@ class WorkbookStyleRegistryTest {
                   null)));
 
       XSSFCellStyle snapshotStyle = (XSSFCellStyle) cell.getCellStyle();
-      XSSFFont snapshotFont = workbook.getFontAt(snapshotStyle.getFontIndexAsInt());
+      XSSFFont snapshotFont = workbook.getFontAt(snapshotStyle.getFontIndex());
       var gradientFill =
           workbook
               .getStylesSource()
@@ -295,7 +295,7 @@ class WorkbookStyleRegistryTest {
                   null)));
 
       XSSFCellStyle mergedStyle = (XSSFCellStyle) cell.getCellStyle();
-      XSSFFont mergedFont = workbook.getFontAt(mergedStyle.getFontIndexAsInt());
+      XSSFFont mergedFont = workbook.getFontAt(mergedStyle.getFontIndex());
       var gradientFill =
           workbook
               .getStylesSource()
@@ -341,7 +341,7 @@ class WorkbookStyleRegistryTest {
                   null)));
 
       XSSFCellStyle mergedStyle = (XSSFCellStyle) cell.getCellStyle();
-      XSSFFont mergedFont = workbook.getFontAt(mergedStyle.getFontIndexAsInt());
+      XSSFFont mergedFont = workbook.getFontAt(mergedStyle.getFontIndex());
       assertEquals(1, mergedFont.getCTFont().sizeOfColorArray());
       assertEquals(
           "#102030",

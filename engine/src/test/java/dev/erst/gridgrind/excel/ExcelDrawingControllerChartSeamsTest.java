@@ -36,35 +36,33 @@ class ExcelDrawingControllerChartSeamsTest {
       IllegalArgumentException failure =
           assertThrows(
               IllegalArgumentException.class,
-              () -> ExcelDrawingController.requiredDefinedNameFormula(blankName));
+              () -> ExcelDrawingChartSupport.requiredDefinedNameFormula(blankName));
       assertTrue(failure.getMessage().contains("Defined name 'BlankSource'"));
     }
   }
 
   @Test
   void formulaScalarDecoderHandlesBlankAndRejectsMissingCachedResults() {
-    ExcelDrawingController controller = new ExcelDrawingController();
-
     assertEquals(
         new ExcelDrawingController.CellScalar(ExcelDrawingController.CellScalarKind.STRING, "", 0d),
-        controller.scalarFromFormula(new FormulaProbeCell(CellType.BLANK, "", 0d, false)));
+        ExcelDrawingChartSupport.scalarFromFormula(
+            new FormulaProbeCell(CellType.BLANK, "", 0d, false)));
     assertEquals(
         new ExcelDrawingController.CellScalar(ExcelDrawingController.CellScalarKind.STRING, "", 0d),
-        controller.scalarFromFormula(new FormulaProbeCell(CellType._NONE, "", 0d, false)));
+        ExcelDrawingChartSupport.scalarFromFormula(
+            new FormulaProbeCell(CellType._NONE, "", 0d, false)));
 
     IllegalArgumentException failure =
         assertThrows(
             IllegalArgumentException.class,
             () ->
-                controller.scalarFromFormula(
+                ExcelDrawingChartSupport.scalarFromFormula(
                     new FormulaProbeCell(CellType.FORMULA, "", 0d, false)));
     assertTrue(failure.getMessage().contains("must expose a cached scalar result"));
   }
 
   @Test
   void pieVaryColorsAndFrameLessChartRelationsAreHandledExplicitly() throws IOException {
-    ExcelDrawingController controller = new ExcelDrawingController();
-
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Charts");
       seedData(sheet);
@@ -81,9 +79,9 @@ class ExcelDrawingControllerChartSeamsTest {
           XDDFDataSourcesFactory.fromArray(new Double[] {10d, 18d, 15d}));
       pieChart.plot(pieData);
 
-      assertTrue(controller.pieVaryColors(pieChart));
+      assertTrue(ExcelDrawingChartSupport.pieVaryColors(pieChart));
       pieChart.getCTChart().getPlotArea().getPieChartArray(0).getVaryColors().setVal(false);
-      assertFalse(controller.pieVaryColors(pieChart));
+      assertFalse(ExcelDrawingChartSupport.pieVaryColors(pieChart));
     }
 
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-frameless-");

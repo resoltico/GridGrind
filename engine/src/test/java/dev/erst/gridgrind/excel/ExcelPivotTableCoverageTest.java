@@ -2,9 +2,6 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
@@ -21,16 +18,12 @@ import org.apache.poi.xssf.usermodel.XSSFPivotTable;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTField;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPivotCache;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPivotTableDefinition;
 
 /** Covers reflective and malformed-state branches for the Phase 7 pivot-table engine surface. */
-@SuppressWarnings({
-  "PMD.AvoidAccessibilityAlteration",
-  "PMD.CommentRequired",
-  "PMD.NcssCount",
-  "PMD.SignatureDeclareThrowsException"
-})
+@SuppressWarnings({"PMD.CommentRequired", "PMD.NcssCount", "PMD.SignatureDeclareThrowsException"})
 class ExcelPivotTableCoverageTest {
   private final ExcelPivotTableController controller = new ExcelPivotTableController();
 
@@ -299,6 +292,29 @@ class ExcelPivotTableCoverageTest {
                           List.of("Region"),
                           List.of())));
       assertTrue(duplicateHeaderFailure.getMessage().contains("unique case-insensitively"));
+
+      workbook
+          .getOrCreateSheet("BlankHeader")
+          .setRange(
+              "A1:B2",
+              List.of(
+                  List.of(ExcelCellValue.text(""), ExcelCellValue.text("Amount")),
+                  List.of(ExcelCellValue.text("North"), ExcelCellValue.number(10))));
+      IllegalArgumentException blankHeaderFailure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () ->
+                  controller.setPivotTable(
+                      workbook,
+                      definition(
+                          "Blank Header",
+                          "Report",
+                          new ExcelPivotTableDefinition.Source.Range("BlankHeader", "A1:B2"),
+                          "C5",
+                          List.of(),
+                          List.of("Region"),
+                          List.of())));
+      assertTrue(blankHeaderFailure.getMessage().contains("blank header cell"));
     }
   }
 
@@ -650,6 +666,15 @@ class ExcelPivotTableCoverageTest {
               String.class,
               new AreaReference("A1:B2", SpreadsheetVersion.EXCEL2007),
               workbookScoped,
+              "Fallback"));
+      assertEquals(
+          "Fallback",
+          invoke(
+              controller,
+              "sourceSheetName",
+              String.class,
+              new AreaReference("A1:B2", SpreadsheetVersion.EXCEL2007),
+              null,
               "Fallback"));
       assertInvocationFailure(
           IllegalArgumentException.class,
@@ -1672,19 +1697,8 @@ class ExcelPivotTableCoverageTest {
       int ordinalOnSheet,
       String sheetName,
       org.apache.poi.xssf.usermodel.XSSFSheet sheet,
-      XSSFPivotTable table)
-      throws Exception {
-    Class<?> handleType =
-        Class.forName("dev.erst.gridgrind.excel.ExcelPivotTableController$PivotHandle");
-    var constructor =
-        handleType.getDeclaredConstructor(
-            int.class,
-            int.class,
-            String.class,
-            org.apache.poi.xssf.usermodel.XSSFSheet.class,
-            XSSFPivotTable.class);
-    constructor.setAccessible(true);
-    return constructor.newInstance(sheetIndex, ordinalOnSheet, sheetName, sheet, table);
+      XSSFPivotTable table) {
+    return new PivotHandle(sheetIndex, ordinalOnSheet, sheetName, sheet, table);
   }
 
   private CTPivotTableDefinition pivotTableDefinition(
@@ -1698,67 +1712,150 @@ class ExcelPivotTableCoverageTest {
 
   private static <T> T invoke(Object target, String name, Class<T> returnType, Object... args)
       throws Exception {
-    Method method = findMethod(target.getClass(), name, args);
-    method.setAccessible(true);
-    return returnType.cast(method.invoke(target, args));
+    return returnType.cast(dispatch(target, name, args));
   }
 
   private static void invokeVoid(Object target, String name, Object... args) throws Exception {
-    Method method = findMethod(target.getClass(), name, args);
-    method.setAccessible(true);
-    method.invoke(target, args);
+    dispatch(target, name, args);
   }
 
-  private static Method findMethod(Class<?> type, String name, Object[] args)
-      throws NoSuchMethodException {
-    List<Method> matches = new ArrayList<>();
-    for (Method method : type.getDeclaredMethods()) {
-      if (!method.getName().equals(name) || method.getParameterCount() != args.length) {
-        continue;
-      }
-      Class<?>[] parameterTypes = method.getParameterTypes();
-      boolean compatible = true;
-      for (int index = 0; index < args.length; index++) {
-        if (args[index] == null) {
-          continue;
+  private static Object dispatch(Object target, String name, Object... args) throws Exception {
+    if (target instanceof ExcelPivotTableController controller) {
+      return switch (name) {
+        case "actualName" -> ExcelPivotTableIdentitySupport.actualName((PivotHandle) args[0]);
+        case "allPivotTables" -> controller.allPivotTables((ExcelWorkbook) args[0]);
+        case "cacheDefinition" -> controller.cacheDefinition((XSSFPivotTable) args[0]);
+        case "cacheDefinitionShared" ->
+            controller.cacheDefinitionShared(
+                (ExcelWorkbook) args[0], (PivotHandle) args[1], (XSSFPivotCacheDefinition) args[2]);
+        case "cacheFieldNames" -> controller.cacheFieldNames((XSSFPivotTable) args[0]);
+        case "cleanupPackagePartIfUnused" -> {
+          controller.cleanupPackagePartIfUnused(
+              (org.apache.poi.openxml4j.opc.OPCPackage) args[0],
+              (org.apache.poi.openxml4j.opc.PackagePartName) args[1]);
+          yield null;
         }
-        if (!wrap(parameterTypes[index]).isAssignableFrom(args[index].getClass())) {
-          compatible = false;
-          break;
+        case "contiguousArea" ->
+            ExcelPivotTableIdentitySupport.contiguousArea((String) args[0], (String) args[1]);
+        case "deletePivotHandle" -> {
+          controller.deletePivotHandle((ExcelWorkbook) args[0], (PivotHandle) args[1]);
+          yield null;
         }
+        case "finding" ->
+            controller.finding(
+                (WorkbookAnalysis.AnalysisFindingCode) args[0],
+                (WorkbookAnalysis.AnalysisSeverity) args[1],
+                (PivotHandle) args[2],
+                (String) args[3],
+                (String) args[4],
+                (List<String>) args[5]);
+        case "firstRelation" ->
+            controller.firstRelation(
+                (POIXMLDocumentPart) args[0], (Class<? extends POIXMLDocumentPart>) args[1]);
+        case "fromSubtotal" -> controller.fromSubtotal((Integer) args[0]);
+        case "matchingNamedRanges" ->
+            ExcelPivotTableSourceSupport.matchingNamedRanges(
+                (XSSFWorkbook) args[0], (String) args[1], (String) args[2]);
+        case "namedRangeArea" -> ExcelPivotTableSourceSupport.namedRangeArea((Name) args[0]);
+        case "nonBlankOrDefault" ->
+            ExcelPivotTableIdentitySupport.nonBlankOrDefault((String) args[0], (String) args[1]);
+        case "normalizeCacheId" -> {
+          controller.normalizeCacheId((XSSFWorkbook) args[0], (XSSFPivotTable) args[1]);
+          yield null;
+        }
+        case "normalizeArea" ->
+            ExcelPivotTableIdentitySupport.normalizeArea((AreaReference) args[0]);
+        case "numberFormat" -> controller.numberFormat((XSSFWorkbook) args[0], (Long) args[1]);
+        case "packagePartIndex" -> {
+          if (args[0] instanceof PackagePart part) {
+            yield controller.packagePartIndex(part, (String) args[1]);
+          }
+          yield controller.packagePartIndex((POIXMLDocumentPart) args[0], (String) args[1]);
+        }
+        case "pivotTableHealthFindings" ->
+            controller.pivotTableHealthFindings((XSSFWorkbook) args[0], (PivotHandle) args[1]);
+        case "pivotTableIdHighWaterMark" ->
+            controller.pivotTableIdHighWaterMark((XSSFWorkbook) args[0]);
+        case "primePivotTableAllocator" -> {
+          controller.primePivotTableAllocator((XSSFWorkbook) args[0], (XSSFPivotTable) args[1]);
+          yield null;
+        }
+        case "rawLocationRange" ->
+            ExcelPivotTableIdentitySupport.rawLocationRange((PivotHandle) args[0]);
+        case "removeWorkbookPivotCacheRegistration" -> {
+          controller.removeWorkbookPivotCacheRegistration(
+              (XSSFWorkbook) args[0], (Long) args[1], (String) args[2]);
+          yield null;
+        }
+        case "requireNonBlank" ->
+            ExcelPivotTableIdentitySupport.requireNonBlank((String) args[0], (String) args[1]);
+        case "requiredCacheDefinition" ->
+            controller.requiredCacheDefinition((XSSFPivotTable) args[0]);
+        case "requiredTableByName" ->
+            ExcelPivotTableSourceSupport.requiredTableByName(
+                (ExcelWorkbook) args[0], (String) args[1]);
+        case "resolvedName" -> ExcelPivotTableIdentitySupport.resolvedName((PivotHandle) args[0]);
+        case "safeLocation" -> ExcelPivotTableIdentitySupport.safeLocation((PivotHandle) args[0]);
+        case "sanitize" -> ExcelPivotTableIdentitySupport.sanitize((String) args[0]);
+        case "selectHandlesByName" ->
+            controller.selectHandlesByName((List<PivotHandle>) args[0], (List<String>) args[1]);
+        case "snapshot" -> controller.snapshot((XSSFWorkbook) args[0], (PivotHandle) args[1]);
+        case "snapshotColumnLabels" ->
+            controller.snapshotColumnLabels(
+                (CTPivotTableDefinition) args[0], (List<String>) args[1]);
+        case "snapshotDataFields" ->
+            controller.snapshotDataFields(
+                (XSSFWorkbook) args[0], (CTPivotTableDefinition) args[1], (List<String>) args[2]);
+        case "snapshotFields" ->
+            controller.snapshotFields(
+                args[0] == null ? null : (CTField[]) args[0], (List<String>) args[1]);
+        case "snapshotPageFields" ->
+            controller.snapshotPageFields(
+                (org.openxmlformats.schemas.spreadsheetml.x2006.main.CTPageField[]) args[0],
+                (List<String>) args[1]);
+        case "snapshotSource" ->
+            controller.snapshotSource((XSSFWorkbook) args[0], (XSSFPivotTable) args[1]);
+        case "sourceColumnName" ->
+            ExcelPivotTableSourceSupport.sourceColumnName(
+                (List<String>) args[0], (Integer) args[1]);
+        case "sourceColumns" ->
+            ExcelPivotTableSourceSupport.sourceColumns(
+                (org.apache.poi.xssf.usermodel.XSSFSheet) args[0],
+                (AreaReference) args[1],
+                (String) args[2]);
+        case "sourceSheetName" ->
+            ExcelPivotTableSourceSupport.sourceSheetName(
+                (AreaReference) args[0], (Name) args[1], (String) args[2]);
+        case "tableByName" ->
+            ExcelPivotTableSourceSupport.tableByName(
+                (XSSFWorkbook) args[0], (String) args[1], (String) args[2]);
+        case "workbookPivotCache" ->
+            controller.workbookPivotCache((XSSFWorkbook) args[0], (Long) args[1]);
+        default -> throw new IllegalArgumentException("Unsupported helper invocation: " + name);
+      };
+    }
+    if (target instanceof SourceColumns sourceColumns) {
+      if ("relativeIndex".equals(name)) {
+        return sourceColumns.relativeIndex((String) args[0]);
       }
-      if (compatible) {
-        matches.add(method);
+      throw new IllegalArgumentException("Unsupported helper invocation: " + name);
+    }
+    if (target instanceof ColumnAxisSnapshot columnAxisSnapshot) {
+      if ("columnLabels".equals(name)) {
+        return columnAxisSnapshot.columnLabels();
       }
+      if ("valuesAxisOnColumns".equals(name)) {
+        return columnAxisSnapshot.valuesAxisOnColumns();
+      }
+      throw new IllegalArgumentException("Unsupported helper invocation: " + name);
     }
-    if (matches.size() != 1) {
-      throw new NoSuchMethodException(name + " with " + args.length + " parameters");
-    }
-    return matches.getFirst();
-  }
-
-  private static Class<?> wrap(Class<?> type) {
-    if (!type.isPrimitive()) {
-      return type;
-    }
-    return switch (type.getName()) {
-      case "boolean" -> Boolean.class;
-      case "byte" -> Byte.class;
-      case "char" -> Character.class;
-      case "double" -> Double.class;
-      case "float" -> Float.class;
-      case "int" -> Integer.class;
-      case "long" -> Long.class;
-      case "short" -> Short.class;
-      default -> type;
-    };
+    throw new IllegalArgumentException(
+        "Unsupported helper target: " + target.getClass().getName() + "#" + name);
   }
 
   private static <T extends Throwable> T assertInvocationFailure(
       Class<T> type, ThrowingRunnable runnable) {
-    InvocationTargetException failure =
-        assertThrows(InvocationTargetException.class, runnable::run);
-    return assertInstanceOf(type, failure.getCause());
+    return assertThrows(type, runnable::run);
   }
 
   @FunctionalInterface

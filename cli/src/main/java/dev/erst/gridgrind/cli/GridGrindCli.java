@@ -3,9 +3,12 @@ package dev.erst.gridgrind.cli;
 import dev.erst.gridgrind.contract.catalog.GridGrindCliHelp;
 import dev.erst.gridgrind.contract.catalog.GridGrindContractText;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.contract.catalog.GridGrindTaskCatalog;
+import dev.erst.gridgrind.contract.catalog.GridGrindTaskPlanner;
 import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.json.InvalidJsonException;
@@ -14,13 +17,16 @@ import dev.erst.gridgrind.contract.json.InvalidRequestShapeException;
 import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.executor.ExecutionInputBindings;
 import dev.erst.gridgrind.executor.GridGrindProblems;
+import dev.erst.gridgrind.executor.GridGrindRequestDoctor;
 import dev.erst.gridgrind.executor.GridGrindRequestExecutor;
 import dev.erst.gridgrind.executor.SourceBackedPlanResolver;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.PushbackInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
 
@@ -70,6 +76,7 @@ public final class GridGrindCli {
   /**
    * Runs one CLI invocation against stdin/stdout/stderr or explicit request/response file paths.
    */
+  @SuppressWarnings("PMD.CloseResource")
   public int run(String[] args, InputStream stdin, OutputStream stdout, OutputStream stderr)
       throws IOException {
     Objects.requireNonNull(args, "args must not be null");
@@ -141,12 +148,88 @@ public final class GridGrindCli {
         stdout.flush();
         yield 0;
       }
+      case CliCommand.PrintTaskCatalog cmd -> {
+        if (cmd.taskFilter() == null) {
+          GridGrindJson.writeTaskCatalog(stdout, GridGrindTaskCatalog.catalog());
+          stdout.write('\n');
+          stdout.flush();
+          yield 0;
+        }
+        var entry = GridGrindTaskCatalog.entryFor(cmd.taskFilter());
+        if (entry.isEmpty()) {
+          responseWriter.write(
+              stdout,
+              failure(
+                  GridGrindProblemCode.INVALID_ARGUMENTS,
+                  "Unknown task: " + cmd.taskFilter(),
+                  new GridGrindResponse.ProblemContext.ParseArguments("--task"),
+                  new IllegalArgumentException("Unknown task: " + cmd.taskFilter())));
+          yield 2;
+        }
+        GridGrindJson.writeTaskEntry(stdout, entry.get());
+        stdout.write('\n');
+        stdout.flush();
+        yield 0;
+      }
+      case CliCommand.PrintTaskPlan cmd -> {
+        var task = GridGrindTaskCatalog.entryFor(cmd.taskId());
+        if (task.isEmpty()) {
+          responseWriter.write(
+              stdout,
+              failure(
+                  GridGrindProblemCode.INVALID_ARGUMENTS,
+                  "Unknown task: " + cmd.taskId(),
+                  new GridGrindResponse.ProblemContext.ParseArguments("--print-task-plan"),
+                  new IllegalArgumentException("Unknown task: " + cmd.taskId())));
+          yield 2;
+        }
+        GridGrindJson.writeTaskPlanTemplate(stdout, GridGrindTaskPlanner.planFor(task.get()));
+        stdout.write('\n');
+        stdout.flush();
+        yield 0;
+      }
+      case CliCommand.PrintGoalPlan cmd -> {
+        try {
+          GridGrindJson.writeGoalPlanReport(
+              stdout,
+              dev.erst.gridgrind.contract.catalog.GridGrindGoalPlanner.reportFor(cmd.goal()));
+          stdout.write('\n');
+          stdout.flush();
+          yield 0;
+        } catch (IllegalArgumentException exception) {
+          responseWriter.write(
+              stdout,
+              failure(
+                  GridGrindProblemCode.INVALID_ARGUMENTS,
+                  message(exception),
+                  new GridGrindResponse.ProblemContext.ParseArguments("--print-goal-plan"),
+                  exception));
+          yield 2;
+        }
+      }
+      case CliCommand.DoctorRequest doctor -> doctorRequest(doctor, stdin, stdout);
       case CliCommand.PrintProtocolCatalog cmd -> {
         if (cmd.operationFilter() == null) {
           GridGrindJson.writeProtocolCatalog(stdout, GridGrindProtocolCatalog.catalog());
           stdout.write('\n');
           stdout.flush();
           yield 0;
+        }
+        List<String> matches = GridGrindProtocolCatalog.matchingEntryIds(cmd.operationFilter());
+        if (matches.size() > 1) {
+          String message =
+              "Ambiguous operation: "
+                  + cmd.operationFilter()
+                  + ". Use one of: "
+                  + String.join(", ", matches);
+          responseWriter.write(
+              stdout,
+              failure(
+                  GridGrindProblemCode.INVALID_ARGUMENTS,
+                  message,
+                  new GridGrindResponse.ProblemContext.ParseArguments("--operation"),
+                  new IllegalArgumentException(message)));
+          yield 2;
         }
         var entry = GridGrindProtocolCatalog.entryFor(cmd.operationFilter());
         if (entry.isEmpty()) {
@@ -164,8 +247,33 @@ public final class GridGrindCli {
         stdout.flush();
         yield 0;
       }
-      case CliCommand.Execute execute -> executeCommand(execute, stdin, stdout, stderr);
+      case CliCommand.Execute execute -> {
+        InputStream requestInput = standardInputOrNullForImplicitHelp(execute, args, stdin, stdout);
+        if (requestInput == null) {
+          yield 0;
+        }
+        yield executeCommand(execute, requestInput, stdout, stderr);
+      }
     };
+  }
+
+  private InputStream standardInputOrNullForImplicitHelp(
+      CliCommand.Execute command, String[] args, InputStream stdin, OutputStream stdout)
+      throws IOException {
+    if (command.requestPath() != null) {
+      return stdin;
+    }
+    if (args.length != 0) {
+      return stdin;
+    }
+    PushbackInputStream peekable = new PushbackInputStream(stdin, 1);
+    int firstByte = peekable.read();
+    if (firstByte < 0) {
+      writeHelp(stdout);
+      return null;
+    }
+    peekable.unread(firstByte);
+    return peekable;
   }
 
   private int executeCommand(
@@ -229,6 +337,62 @@ public final class GridGrindCli {
     return responseWriter.write(command.responsePath(), stdout, response);
   }
 
+  private int doctorRequest(
+      CliCommand.DoctorRequest command, InputStream stdin, OutputStream stdout) throws IOException {
+    RequestDoctorReport report;
+    WorkbookPlan request;
+    try {
+      request = requestReader.read(command.requestPath(), stdin);
+    } catch (InvalidJsonException
+        | InvalidRequestShapeException
+        | InvalidRequestException exception) {
+      report =
+          RequestDoctorReport.invalid(
+              null,
+              List.of(),
+              GridGrindProblems.fromException(
+                  exception,
+                  new GridGrindResponse.ProblemContext.ReadRequest(
+                      pathString(command.requestPath()), null, null, null)));
+      return writeDoctorReport(stdout, report);
+    } catch (IOException exception) {
+      report =
+          RequestDoctorReport.invalid(
+              null,
+              List.of(),
+              GridGrindProblems.fromException(
+                  exception,
+                  new GridGrindResponse.ProblemContext.ReadRequest(
+                      pathString(command.requestPath()), null, null, null)));
+      return writeDoctorReport(stdout, report);
+    }
+
+    report = new GridGrindRequestDoctor().diagnose(request);
+    if (report.valid()
+        && command.requestPath() == null
+        && SourceBackedPlanResolver.requiresStandardInput(request)) {
+      String message = GridGrindContractText.standardInputRequiresRequestMessage();
+      report =
+          RequestDoctorReport.invalid(
+              report.summary(),
+              report.warnings(),
+              GridGrindProblems.problem(
+                  GridGrindProblemCode.INVALID_ARGUMENTS,
+                  message,
+                  new GridGrindResponse.ProblemContext.ParseArguments("--request"),
+                  new IllegalArgumentException(message)));
+    }
+    return writeDoctorReport(stdout, report);
+  }
+
+  private static int writeDoctorReport(OutputStream stdout, RequestDoctorReport report)
+      throws IOException {
+    GridGrindJson.writeRequestDoctorReport(stdout, report);
+    stdout.write('\n');
+    stdout.flush();
+    return report.valid() ? 0 : 1;
+  }
+
   private static String version() {
     return versionFrom(GridGrindCli.class.getPackage().getImplementationVersion());
   }
@@ -242,7 +406,15 @@ public final class GridGrindCli {
   static String helpText(String implementationVersion) {
     String version = versionFrom(implementationVersion);
     return GridGrindCliHelp.helpText(
-        version, descriptionFrom(GridGrindCli.class), documentRef(version), containerTag(version));
+        version,
+        descriptionFrom(GridGrindCli.class),
+        documentRef(version),
+        containerImageRef(version));
+  }
+
+  private void writeHelp(OutputStream stdout) throws IOException {
+    stdout.write(helpText(version()).getBytes(StandardCharsets.UTF_8));
+    stdout.flush();
   }
 
   /**
@@ -382,8 +554,9 @@ public final class GridGrindCli {
     }
   }
 
-  private static String containerTag(String version) {
-    return "unknown".equals(version) ? "latest" : version;
+  private static String containerImageRef(String version) {
+    String tag = "unknown".equals(version) ? "latest" : version;
+    return "ghcr.io/resoltico/gridgrind:" + tag;
   }
 
   private static String documentRef(String version) {

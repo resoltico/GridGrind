@@ -3,8 +3,6 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
@@ -118,7 +116,7 @@ class WorkbookCommandExecutorTest {
                       new ExcelHeaderFooterText("Budget", "", ""),
                       new ExcelHeaderFooterText("", "Confidential", ""))),
               new WorkbookCommand.UnmergeCells("Budget", "A1:B1")));
-      workbook.forceFormulaRecalculationOnOpen();
+      workbook.formulas().markRecalculateOnOpen();
       assertEquals(List.of("History", "Budget", "Ops"), workbook.sheetNames());
       assertEquals("Item", workbook.sheet("Budget").text("A1"));
       assertEquals(54.0, workbook.sheet("Budget").number("B3"));
@@ -130,7 +128,7 @@ class WorkbookCommandExecutorTest {
           workbook.sheet("Budget").snapshotCell("A1").style().alignment().horizontalAlignment());
       assertEquals("BLANK", workbook.sheet("Budget").snapshotCell("A2").effectiveType());
       assertThrows(SheetNotFoundException.class, () -> workbook.sheet("Scratch"));
-      assertTrue(workbook.forceFormulaRecalculationOnOpenEnabled());
+      assertTrue(workbook.formulas().recalculateOnOpenEnabled());
       WorkbookReadResult.AutofiltersResult autofilters =
           assertInstanceOf(
               WorkbookReadResult.AutofiltersResult.class,
@@ -789,20 +787,26 @@ class WorkbookCommandExecutorTest {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Budget");
 
-      assertPrivateHelperRejects(
-          "applyWorkbookScopeCommand",
-          workbook,
-          new WorkbookCommand.SetHyperlink(
-              "Budget", "A1", new ExcelHyperlink.Url("https://example.com")));
-      assertPrivateHelperRejects(
-          "applySheetStructureCommand", workbook, new WorkbookCommand.CreateSheet("Ops"));
-      assertPrivateHelperRejects(
-          "applyCellValueCommand",
-          workbook,
-          new WorkbookCommand.SetWorkbookProtection(
-              new ExcelWorkbookProtectionSettings(true, false, false, null, null)));
-      assertPrivateHelperRejects(
-          "applyWorkbookMetadataCommand", workbook, new WorkbookCommand.CreateSheet("Ops"));
+      assertHelperRejects(
+          () ->
+              WorkbookCommandExecutor.applyWorkbookScopeCommand(
+                  workbook,
+                  new WorkbookCommand.SetHyperlink(
+                      "Budget", "A1", new ExcelHyperlink.Url("https://example.com"))));
+      assertHelperRejects(
+          () ->
+              WorkbookCommandExecutor.applySheetStructureCommand(
+                  workbook, new WorkbookCommand.CreateSheet("Ops")));
+      assertHelperRejects(
+          () ->
+              WorkbookCommandExecutor.applyCellValueCommand(
+                  workbook,
+                  new WorkbookCommand.SetWorkbookProtection(
+                      new ExcelWorkbookProtectionSettings(true, false, false, null, null))));
+      assertHelperRejects(
+          () ->
+              WorkbookCommandExecutor.applyWorkbookMetadataCommand(
+                  workbook, new WorkbookCommand.CreateSheet("Ops")));
     }
   }
 
@@ -842,23 +846,8 @@ class WorkbookCommandExecutorTest {
         true);
   }
 
-  private static void assertPrivateHelperRejects(
-      String methodName, ExcelWorkbook workbook, WorkbookCommand command)
-      throws ReflectiveOperationException {
-    Method method =
-        accessibleMethod(
-            WorkbookCommandExecutor.class, methodName, ExcelWorkbook.class, WorkbookCommand.class);
-
-    InvocationTargetException failure =
-        assertThrows(InvocationTargetException.class, () -> method.invoke(null, workbook, command));
-    assertInstanceOf(IllegalStateException.class, failure.getCause());
-  }
-
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-  private static Method accessibleMethod(Class<?> type, String name, Class<?>... parameterTypes)
-      throws ReflectiveOperationException {
-    Method method = type.getDeclaredMethod(name, parameterTypes);
-    method.setAccessible(true);
-    return method;
+  private static void assertHelperRejects(Runnable invocation) {
+    assertInstanceOf(
+        IllegalStateException.class, assertThrows(IllegalStateException.class, invocation::run));
   }
 }

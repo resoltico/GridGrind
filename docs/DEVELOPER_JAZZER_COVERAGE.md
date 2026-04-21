@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-04-17"
+updated: "2026-04-19"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -48,7 +48,7 @@ Surface:
 
 What it asserts:
 - no unexpected crash during parsing
-- valid payloads produce a non-null `GridGrindRequest`
+- valid payloads produce a non-null `WorkbookPlan`
 - invalid JSON and invalid request shapes are classified as expected-invalid outcomes
 - promoted public examples continue to parse with their real defaulted-field contract, such as
   `SET_TABLE` requests that omit `showTotalsRow`, the formula-environment request, richer factual
@@ -196,15 +196,17 @@ These tests are not fuzz harnesses. They protect the Jazzer infrastructure itsel
 Committed custom seeds currently in source control. This list is exhaustive and should match the
 checked-in `*Inputs` directories exactly.
 
-### `protocol-request` (44)
+### `protocol-request` (45)
 
 - `advanced_mutation_request.json`
 - `advanced_readback_request.json`
 - `budget_request.json`
+- `chart_request.json`
 - `clear_on_empty_cells.json`
 - `conditional_formatting_request.json`
 - `data_validation_request.json`
 - `delete_last_sheet.json`
+- `drawing_media_request.json`
 - `duplicate_request_id.json`
 - `excel_authoring_essentials_request.json`
 - `file_hyperlink_health_request.json`
@@ -223,15 +225,19 @@ checked-in `*Inputs` directories exactly.
 - `invalid_request_shape_null_primitive_boolean.json`
 - `invalid_request_shape_null_primitive_int.json`
 - `invalid_request_shape_unknown_read_type.json`
+- `large_file_modes_request.json`
 - `live_workflow_create.json`
 - `live_workflow_revise.json`
+- `package_security_request.json`
 - `pane_and_print_reset_request.json`
+- `pivot_request.json`
 - `rich_text_request.json`
 - `row_column_structure_request.json`
 - `schema_empty_sheet.json`
 - `schema_formula_cells.json`
 - `sheet_management_request.json`
 - `sheet_name_too_long.json`
+- `source_backed_input_request.json`
 - `structural_layout_request.json`
 - `table_autofilter_request.json`
 - `unknown_field_rejection.json`

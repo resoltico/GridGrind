@@ -86,19 +86,19 @@ public final class WorkbookCommandExecutor {
     workbook.invalidateFormulaRuntime();
   }
 
-  private static boolean isWorkbookScopeCommand(WorkbookCommand command) {
+  static boolean isWorkbookScopeCommand(WorkbookCommand command) {
     return WORKBOOK_SCOPE_COMMAND_TYPES.contains(command.getClass());
   }
 
-  private static boolean isSheetStructureCommand(WorkbookCommand command) {
+  static boolean isSheetStructureCommand(WorkbookCommand command) {
     return SHEET_STRUCTURE_COMMAND_TYPES.contains(command.getClass());
   }
 
-  private static boolean isCellValueCommand(WorkbookCommand command) {
+  static boolean isCellValueCommand(WorkbookCommand command) {
     return CELL_VALUE_COMMAND_TYPES.contains(command.getClass());
   }
 
-  private static void applyWorkbookScopeCommand(ExcelWorkbook workbook, WorkbookCommand command) {
+  static void applyWorkbookScopeCommand(ExcelWorkbook workbook, WorkbookCommand command) {
     switch (command) {
       case WorkbookCommand.CreateSheet createSheet ->
           workbook.getOrCreateSheet(createSheet.sheetName());
@@ -131,7 +131,7 @@ public final class WorkbookCommandExecutor {
     }
   }
 
-  private static void applySheetStructureCommand(ExcelWorkbook workbook, WorkbookCommand command) {
+  static void applySheetStructureCommand(ExcelWorkbook workbook, WorkbookCommand command) {
     switch (command) {
       case WorkbookCommand.MergeCells mergeCells ->
           workbook.sheet(mergeCells.sheetName()).mergeCells(mergeCells.range());
@@ -203,7 +203,7 @@ public final class WorkbookCommandExecutor {
     }
   }
 
-  private static void applyCellValueCommand(ExcelWorkbook workbook, WorkbookCommand command) {
+  static void applyCellValueCommand(ExcelWorkbook workbook, WorkbookCommand command) {
     switch (command) {
       case WorkbookCommand.SetCell setCell ->
           workbook.sheet(setCell.sheetName()).setCell(setCell.address(), setCell.value());
@@ -221,8 +221,7 @@ public final class WorkbookCommandExecutor {
     }
   }
 
-  private static void applyWorkbookMetadataCommand(
-      ExcelWorkbook workbook, WorkbookCommand command) {
+  static void applyWorkbookMetadataCommand(ExcelWorkbook workbook, WorkbookCommand command) {
     switch (command) {
       case WorkbookCommand.SetHyperlink setHyperlink ->
           workbook

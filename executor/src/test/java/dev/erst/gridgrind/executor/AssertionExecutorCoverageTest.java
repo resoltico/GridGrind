@@ -53,7 +53,9 @@ import dev.erst.gridgrind.excel.ExcelFillPattern;
 import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
+import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.excel.WorkbookLocation;
+import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -1091,6 +1093,7 @@ class AssertionExecutorCoverageTest {
   @Test
   void streamingAssertionsAndPrivateExecutionModeBranchesAreCovered() throws Exception {
     DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    ExecutionStepSupport stepSupport = executionStepSupport();
 
     GridGrindResponse.Success success =
         success(
@@ -1130,7 +1133,7 @@ class AssertionExecutorCoverageTest {
         assertThrows(
             IllegalStateException.class,
             () ->
-                executor.executeAssertionStep(
+                stepSupport.executeAssertionStep(
                     new AssertionStep(
                         "assert",
                         new CellSelector.ByAddress("Ops", "A1"),
@@ -1151,7 +1154,7 @@ class AssertionExecutorCoverageTest {
     InspectionResult.WorkbookSummaryResult eventSummary =
         assertInstanceOf(
             InspectionResult.WorkbookSummaryResult.class,
-            executor.executeInspectionAgainstMaterializedPath(
+            stepSupport.executeInspectionAgainstMaterializedPath(
                 inspect(
                     "event-summary",
                     new WorkbookSelector.Current(),
@@ -1172,7 +1175,7 @@ class AssertionExecutorCoverageTest {
                         "workbook",
                         new WorkbookSelector.Current(),
                         new InspectionQuery.GetWorkbookSummary()))),
-            new DefaultGridGrindRequestExecutor.ExecutionModeSelection(
+            new ExecutionModeSelection(
                 ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF)));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
@@ -1181,7 +1184,7 @@ class AssertionExecutorCoverageTest {
                 new WorkbookPlan.WorkbookPersistence.None(),
                 List.of(),
                 List.of()),
-            new DefaultGridGrindRequestExecutor.ExecutionModeSelection(
+            new ExecutionModeSelection(
                 ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF)));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
@@ -1194,7 +1197,7 @@ class AssertionExecutorCoverageTest {
                         "workbook",
                         new WorkbookSelector.Current(),
                         new InspectionQuery.GetWorkbookSummary()))),
-            new DefaultGridGrindRequestExecutor.ExecutionModeSelection(
+            new ExecutionModeSelection(
                 ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF)));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
@@ -1203,7 +1206,7 @@ class AssertionExecutorCoverageTest {
                 new WorkbookPlan.WorkbookPersistence.None(),
                 List.of(mutate(new SheetSelector.ByName("Ops"), new MutationAction.EnsureSheet())),
                 List.of()),
-            new DefaultGridGrindRequestExecutor.ExecutionModeSelection(
+            new ExecutionModeSelection(
                 ExecutionModeInput.ReadMode.EVENT_READ, ExecutionModeInput.WriteMode.FULL_XSSF)));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
@@ -1216,7 +1219,7 @@ class AssertionExecutorCoverageTest {
                         "workbook",
                         new WorkbookSelector.Current(),
                         new InspectionQuery.GetWorkbookSummary()))),
-            new DefaultGridGrindRequestExecutor.ExecutionModeSelection(
+            new ExecutionModeSelection(
                 ExecutionModeInput.ReadMode.FULL_XSSF, ExecutionModeInput.WriteMode.FULL_XSSF)));
     assertFalse(
         DefaultGridGrindRequestExecutor.directEventReadEligible(
@@ -1229,13 +1232,12 @@ class AssertionExecutorCoverageTest {
                         "workbook",
                         new WorkbookSelector.Current(),
                         new InspectionQuery.GetWorkbookSummary()))),
-            new DefaultGridGrindRequestExecutor.ExecutionModeSelection(
+            new ExecutionModeSelection(
                 ExecutionModeInput.ReadMode.EVENT_READ,
                 ExecutionModeInput.WriteMode.STREAMING_WRITE)));
 
-    assertEquals(
-        "2+3", DefaultGridGrindRequestExecutor.formulaFor(new Assertion.FormulaText("2+3")));
-    assertEquals(null, DefaultGridGrindRequestExecutor.formulaFor(new Assertion.Present()));
+    assertEquals("2+3", ExecutionDiagnosticFields.formulaFor(new Assertion.FormulaText("2+3")));
+    assertEquals(null, ExecutionDiagnosticFields.formulaFor(new Assertion.Present()));
 
     assertTrue(
         executor
@@ -1349,6 +1351,17 @@ class AssertionExecutorCoverageTest {
 
   private static GridGrindResponse.Failure failure(GridGrindResponse response) {
     return assertInstanceOf(GridGrindResponse.Failure.class, response);
+  }
+
+  private static ExecutionStepSupport executionStepSupport() {
+    WorkbookReadExecutor readExecutor = new WorkbookReadExecutor();
+    SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(readExecutor);
+    return new ExecutionStepSupport(
+        new WorkbookCommandExecutor(),
+        readExecutor,
+        selectorResolver,
+        new AssertionExecutor(readExecutor, selectorResolver),
+        Files::createTempFile);
   }
 
   private static GridGrindResponse.Failure assertionFailure(

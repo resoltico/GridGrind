@@ -42,7 +42,7 @@ final class WorkbookStyleRegistry {
   private final StylesTableFillRegistryAccess fillRegistryAccess;
 
   WorkbookStyleRegistry(XSSFWorkbook workbook) {
-    this(workbook, StylesTableFillRegistryAccess.reflective());
+    this(workbook, StylesTableFillRegistryAccess.poiApi());
   }
 
   WorkbookStyleRegistry(XSSFWorkbook workbook, StylesTableFillRegistryAccess fillRegistryAccess) {
@@ -286,9 +286,7 @@ final class WorkbookStyleRegistry {
   }
 
   private int appendFill(XSSFCellFill fill) {
-    List<XSSFCellFill> fills = fillsList();
-    fills.add(fill);
-    return fills.size() - 1;
+    return fillRegistryAccess.appendFill(workbook.getStylesSource(), fill);
   }
 
   private List<XSSFCellFill> fillsList() {

@@ -36,7 +36,7 @@ class ExcelWorkbookTest {
                   "Budget", List.of(ExcelCellValue.text("Domain"), ExcelCellValue.number(12.0))),
               new WorkbookCommand.SetCell("Budget", "A4", ExcelCellValue.text("Total")),
               new WorkbookCommand.SetCell("Budget", "B4", ExcelCellValue.formula("SUM(B2:B3)"))));
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
       workbook.save(workbookPath);
     }
 
@@ -69,12 +69,12 @@ class ExcelWorkbookTest {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Hello"));
       workbook.getOrCreateSheet("Budget").setCell("B1", ExcelCellValue.number(12.0));
-      workbook.forceFormulaRecalculationOnOpen();
+      workbook.formulas().markRecalculateOnOpen();
       workbook.save(workbookPath);
 
       assertEquals(1, workbook.sheetCount());
       assertEquals(List.of("Budget"), workbook.sheetNames());
-      assertTrue(workbook.forceFormulaRecalculationOnOpenEnabled());
+      assertTrue(workbook.formulas().recalculateOnOpenEnabled());
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
@@ -111,19 +111,18 @@ class ExcelWorkbookTest {
       workbook.getOrCreateSheet("Budget");
       workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
       workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
       workbook.save(workbookPath);
 
       assertThrows(
           IllegalArgumentException.class,
-          () -> workbook.evaluateFormulaCells(List.of(new ExcelFormulaCellTarget("Budget", "A1"))));
+          () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "A1"))));
       assertThrows(
           InvalidCellAddressException.class,
-          () -> workbook.evaluateFormulaCells(List.of(new ExcelFormulaCellTarget("Budget", ":"))));
+          () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", ":"))));
       assertThrows(
           CellNotFoundException.class,
-          () ->
-              workbook.evaluateFormulaCells(List.of(new ExcelFormulaCellTarget("Budget", "Z99"))));
+          () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "Z99"))));
     }
 
     try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath, environment)) {
@@ -500,7 +499,7 @@ class ExcelWorkbookTest {
       workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
 
       InvalidFormulaException exception =
-          assertThrows(InvalidFormulaException.class, workbook::evaluateAllFormulas);
+          assertThrows(InvalidFormulaException.class, workbook.formulas()::evaluateAll);
       assertEquals("Budget", exception.sheetName());
       assertEquals("A1", exception.address());
       assertEquals("1+1", exception.formula());
@@ -515,7 +514,7 @@ class ExcelWorkbookTest {
                 poiWorkbook, poiWorkbook.getCreationHelper().createFormulaEvaluator())) {
       workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
 
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
 
       ExcelCellSnapshot.FormulaSnapshot snapshot =
           (ExcelCellSnapshot.FormulaSnapshot) workbook.sheet("Budget").snapshotCell("A1");
@@ -619,7 +618,7 @@ class ExcelWorkbookTest {
       workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Header"));
       assertThrows(
           CellNotFoundException.class,
-          () -> workbook.evaluateFormulaCells(List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
+          () -> workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
     }
 
     ThrowingCloseWorkbook workbookDelegate = new ThrowingCloseWorkbook("workbook close failure");
@@ -654,7 +653,7 @@ class ExcelWorkbookTest {
   void clearFormulaCachesRemovesInlineStringAndTypeMetadata() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("\"hello\""));
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
 
       org.apache.poi.xssf.usermodel.XSSFCell cell =
           workbook.xssfWorkbook().getSheet("Budget").getRow(0).getCell(0);
@@ -667,7 +666,7 @@ class ExcelWorkbookTest {
       assertTrue(ctCell.isSetIs());
       assertTrue(ctCell.isSetT());
 
-      workbook.clearFormulaCaches();
+      workbook.formulas().clearCaches();
 
       assertFalse(ctCell.isSetV());
       assertFalse(ctCell.isSetIs());
@@ -679,7 +678,7 @@ class ExcelWorkbookTest {
   void clearFormulaCachesLeavesUnsetTypeMetadataUnset() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
 
       org.apache.poi.xssf.usermodel.XSSFCell cell =
           workbook.xssfWorkbook().getSheet("Budget").getRow(0).getCell(0);
@@ -689,7 +688,7 @@ class ExcelWorkbookTest {
       }
       assertFalse(ctCell.isSetT());
 
-      workbook.clearFormulaCaches();
+      workbook.formulas().clearCaches();
 
       assertFalse(ctCell.isSetT());
     }

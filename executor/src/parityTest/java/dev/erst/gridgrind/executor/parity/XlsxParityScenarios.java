@@ -65,6 +65,7 @@ import org.apache.poi.ss.usermodel.DataConsolidateFunction;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.IconMultiStateFormatting;
 import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.PageMargin;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -228,10 +229,10 @@ public final class XlsxParityScenarios {
             sheet.protectSheet(SHEET_PROTECTION_PASSWORD);
             sheet.setSheetPassword(SHEET_PROTECTION_PASSWORD, HashAlgorithm.sha512);
 
-            sheet.setMargin(XSSFSheet.LeftMargin, 0.35d);
-            sheet.setMargin(XSSFSheet.RightMargin, 0.55d);
-            sheet.setMargin(XSSFSheet.TopMargin, 0.60d);
-            sheet.setMargin(XSSFSheet.BottomMargin, 0.45d);
+            sheet.setMargin(PageMargin.LEFT, 0.35d);
+            sheet.setMargin(PageMargin.RIGHT, 0.55d);
+            sheet.setMargin(PageMargin.TOP, 0.60d);
+            sheet.setMargin(PageMargin.BOTTOM, 0.45d);
             sheet.setHorizontallyCenter(true);
             sheet.setVerticallyCenter(true);
             sheet.setDisplayGridlines(false);

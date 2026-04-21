@@ -19,11 +19,24 @@ sealed interface CliCommand {
   /** Requests that one built-in generated example request be printed to stdout. */
   record PrintExample(String exampleId) implements CliCommand {}
 
+  /** Requests that the machine-readable task catalog be printed to stdout. */
+  record PrintTaskCatalog(String taskFilter) implements CliCommand {}
+
+  /** Requests that one machine-readable starter task plan be printed to stdout. */
+  record PrintTaskPlan(String taskId) implements CliCommand {}
+
+  /** Requests that one machine-readable goal-to-task match report be printed to stdout. */
+  record PrintGoalPlan(String goal) implements CliCommand {}
+
+  /** Requests that one authored request be linted and summarized without execution. */
+  record DoctorRequest(Path requestPath) implements CliCommand {}
+
   /**
    * Requests that the machine-readable protocol catalog be printed to stdout.
    *
-   * <p>When {@code operationFilter} is non-null, only the entry matching that operation id is
-   * printed. When null, the full catalog is printed.
+   * <p>When {@code operationFilter} is non-null, only the uniquely matching entry is printed.
+   * Duplicate ids must be qualified as {@code <group>:<id>}. When null, the full catalog is
+   * printed.
    */
   record PrintProtocolCatalog(String operationFilter) implements CliCommand {}
 

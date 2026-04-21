@@ -180,6 +180,15 @@ class CatalogFieldMetadataSupportTest {
                 dev.erst.gridgrind.contract.selector.Selector.class,
                 "selector"),
             dev.erst.gridgrind.contract.selector.SheetSelector.ByName.class));
+    assertEquals(
+        "selector",
+        CatalogFieldMetadataSupport.lookupAssignableGroup(
+            orderedGroupMap(
+                dev.erst.gridgrind.contract.selector.SheetSelector.class,
+                "nested",
+                dev.erst.gridgrind.contract.selector.Selector.class,
+                "selector"),
+            dev.erst.gridgrind.contract.selector.SheetSelector.class));
   }
 
   private record MetadataFixture(

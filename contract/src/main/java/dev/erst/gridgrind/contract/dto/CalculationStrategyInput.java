@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,7 +38,7 @@ public sealed interface CalculationStrategyInput {
   record DoNotCalculate() implements CalculationStrategyInput {
     @Override
     public String strategyType() {
-      return "DO_NOT_CALCULATE";
+      return GridGrindProtocolTypeNames.calculationStrategyTypeName(DoNotCalculate.class);
     }
   }
 
@@ -45,7 +46,7 @@ public sealed interface CalculationStrategyInput {
   record EvaluateAll() implements CalculationStrategyInput {
     @Override
     public String strategyType() {
-      return "EVALUATE_ALL";
+      return GridGrindProtocolTypeNames.calculationStrategyTypeName(EvaluateAll.class);
     }
   }
 
@@ -69,7 +70,7 @@ public sealed interface CalculationStrategyInput {
 
     @Override
     public String strategyType() {
-      return "EVALUATE_TARGETS";
+      return GridGrindProtocolTypeNames.calculationStrategyTypeName(EvaluateTargets.class);
     }
   }
 
@@ -77,7 +78,7 @@ public sealed interface CalculationStrategyInput {
   record ClearCachesOnly() implements CalculationStrategyInput {
     @Override
     public String strategyType() {
-      return "CLEAR_CACHES_ONLY";
+      return GridGrindProtocolTypeNames.calculationStrategyTypeName(ClearCachesOnly.class);
     }
   }
 }

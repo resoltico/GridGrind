@@ -4,8 +4,11 @@ import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
+import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Objects;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JacksonException.Reference;
@@ -101,10 +104,10 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
   private static String requiredText(
       ObjectNode stepNode, String fieldName, DeserializationContext context) {
     JsonNode node = requiredNode(stepNode, fieldName, context);
-    if (!node.isTextual()) {
+    if (!node.isString()) {
       throw inputMismatch(context.getParser(), "Field '%s' must be a string".formatted(fieldName));
     }
-    return node.textValue();
+    return node.asString();
   }
 
   private static <T> T deserializeNode(JsonNode node, JsonParser parser, Class<T> targetType) {
@@ -138,17 +141,126 @@ final class WorkbookStepJsonDeserializer extends ValueDeserializer<WorkbookStep>
       DeserializationContext context,
       String fieldName,
       Class<? extends Selector>... allowedTypes) {
-    JacksonException lastFailure = null;
-    for (Class<? extends Selector> allowedType : allowedTypes) {
+    if (!(targetNode instanceof ObjectNode targetObject)) {
+      throw fieldFailure(
+          context,
+          fieldName,
+          inputMismatch(parser, "Field '%s' must be a JSON object".formatted(fieldName)));
+    }
+    String authoredType = requiredTargetType(targetObject, parser, context, fieldName);
+    if (!SelectorJsonSupport.isKnownTypeId(authoredType)) {
+      throw fieldFailure(
+          context,
+          fieldName,
+          inputMismatch(parser, "Unknown type value '%s'".formatted(authoredType)));
+    }
+    Set<String> allowedTypeIds =
+        Arrays.stream(allowedTypes)
+            .flatMap(type -> SelectorJsonSupport.typeIdsFor(type).stream())
+            .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+    if (!allowedTypeIds.contains(authoredType)) {
+      throw fieldFailure(
+          context,
+          fieldName,
+          inputMismatch(
+              parser,
+              "Target selector type '%s' is not allowed for this step; allowed targets: %s"
+                  .formatted(authoredType, selectorFamilySummary(Arrays.asList(allowedTypes)))));
+    }
+    List<Class<? extends Selector>> candidateTypes =
+        Arrays.stream(allowedTypes)
+            .filter(allowedType -> SelectorJsonSupport.supportsTypeId(allowedType, authoredType))
+            .toList();
+    if (candidateTypes.size() == 1) {
+      return deserializeField(
+          targetNode, parser, context, castSelectorType(candidateTypes.getFirst()), fieldName);
+    }
+    return deserializeAmbiguousTarget(
+        targetNode, parser, context, fieldName, authoredType, candidateTypes);
+  }
+
+  private static String requiredTargetType(
+      ObjectNode targetNode, JsonParser parser, DeserializationContext context, String fieldName) {
+    JsonNode typeNode = targetNode.get("type");
+    if (typeNode == null) {
+      throw fieldFailure(
+          context, fieldName, inputMismatch(parser, "Missing required field 'type'"));
+    }
+    if (!typeNode.isString()) {
+      throw fieldFailure(
+          context, fieldName, inputMismatch(parser, "Field 'type' must be a string"));
+    }
+    return typeNode.asString();
+  }
+
+  @SuppressWarnings("unchecked")
+  static Class<Selector> castSelectorType(Class<? extends Selector> selectorType) {
+    return (Class<Selector>) selectorType;
+  }
+
+  private static Selector deserializeAmbiguousTarget(
+      JsonNode targetNode,
+      JsonParser parser,
+      DeserializationContext context,
+      String fieldName,
+      String authoredType,
+      List<Class<? extends Selector>> candidateTypes) {
+    Selector resolvedSelector = null;
+    List<Class<? extends Selector>> successfulTypes = new java.util.ArrayList<>();
+    for (Class<? extends Selector> candidateType : candidateTypes) {
       try {
-        return deserializeNode(targetNode, parser, allowedType);
-      } catch (JacksonException exception) {
-        lastFailure = exception;
+        Selector candidate = deserializeNode(targetNode, parser, castSelectorType(candidateType));
+        if (resolvedSelector == null) {
+          resolvedSelector = candidate;
+        }
+        successfulTypes.add(candidateType);
+      } catch (JacksonException ignored) {
+        // Deliberately try the other selector families that share the same wire type.
       }
     }
-    throw DatabindException.wrapWithPath(
+    if (successfulTypes.size() == 1) {
+      return resolvedSelector;
+    }
+    if (successfulTypes.size() > 1) {
+      throw fieldFailure(
+          context,
+          fieldName,
+          inputMismatch(
+              parser,
+              ("Target selector type '%s' is ambiguous for this step; the authored object"
+                      + " matches multiple selector families: %s")
+                  .formatted(
+                      authoredType, matchingSelectorFamilySummary(authoredType, successfulTypes))));
+    }
+    throw fieldFailure(
         context,
-        Objects.requireNonNull(lastFailure, "No allowed selector types declared for step target"),
-        new Reference(WorkbookStep.class, fieldName));
+        fieldName,
+        inputMismatch(
+            parser,
+            ("Target selector type '%s' has the wrong shape for this step; none of the matching"
+                    + " selector families accepted the authored fields. Matching families: %s")
+                .formatted(
+                    authoredType, matchingSelectorFamilySummary(authoredType, candidateTypes))));
+  }
+
+  private static JacksonException fieldFailure(
+      DeserializationContext context, String fieldName, JacksonException failure) {
+    return DatabindException.wrapWithPath(
+        context, failure, new Reference(WorkbookStep.class, fieldName));
+  }
+
+  static String selectorFamilySummary(Iterable<Class<? extends Selector>> selectorTypes) {
+    return SelectorJsonSupport.familySummary(selectorTypes);
+  }
+
+  private static String matchingSelectorFamilySummary(
+      String authoredType, Iterable<Class<? extends Selector>> selectorTypes) {
+    Set<String> familyNames = new LinkedHashSet<>();
+    for (Class<? extends Selector> selectorType : selectorTypes) {
+      familyNames.add(SelectorJsonSupport.familyName(selectorType));
+    }
+    return familyNames.stream()
+        .map(familyName -> familyName + "(" + authoredType + ")")
+        .collect(java.util.stream.Collectors.joining("; "));
   }
 }

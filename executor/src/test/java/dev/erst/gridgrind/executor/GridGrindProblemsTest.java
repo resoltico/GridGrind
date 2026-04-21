@@ -193,8 +193,8 @@ class GridGrindProblemsTest {
     GridGrindResponse.Problem problem =
         GridGrindProblems.fromException(
             new InvalidFormulaException("Budget", "B1", "SUM(", "bad formula", null),
-            new GridGrindResponse.ProblemContext.ExecuteCalculation(
-                "NEW", "SAVE_AS", "CALCULATION_PREFLIGHT", null, null, null));
+            new GridGrindResponse.ProblemContext.ExecuteCalculation.Preflight(
+                "NEW", "SAVE_AS", null, null, null));
 
     assertEquals("CALCULATION_PREFLIGHT", problem.context().stage());
     assertEquals("Budget", problem.context().sheetName());

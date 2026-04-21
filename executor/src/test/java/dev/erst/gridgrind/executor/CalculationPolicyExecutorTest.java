@@ -27,9 +27,6 @@ import dev.erst.gridgrind.excel.ExcelFormulaCapabilityKind;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -109,7 +106,7 @@ class CalculationPolicyExecutorTest {
       assertEquals(CalculationExecutionStatus.SUCCEEDED, execution.report().status());
       assertEquals(2, execution.report().evaluatedFormulaCount());
       assertTrue(execution.report().markRecalculateOnOpenApplied());
-      assertTrue(workbook.forceFormulaRecalculationOnOpenEnabled());
+      assertTrue(workbook.formulas().recalculateOnOpenEnabled());
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
@@ -134,7 +131,7 @@ class CalculationPolicyExecutorTest {
       workbook.getOrCreateSheet("Budget");
       workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
       workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
 
       CalculationPolicyExecutor.ExecutionOutcome clearCaches =
           CalculationPolicyExecutor.execute(
@@ -298,23 +295,7 @@ class CalculationPolicyExecutorTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-  void helperMappingsCoverAllCapabilityKindsAndProblemCodes() throws Exception {
-    Method summaryFor = CalculationPolicyExecutor.class.getDeclaredMethod("summaryFor", List.class);
-    Method problemCodeFor =
-        CalculationPolicyExecutor.class.getDeclaredMethod(
-            "problemCodeFor", ExcelFormulaCapabilityAssessment.class);
-    Method capabilityKindFor =
-        CalculationPolicyExecutor.class.getDeclaredMethod(
-            "capabilityKindFor", ExcelFormulaCapabilityKind.class);
-    Method severityRank =
-        CalculationPolicyExecutor.class.getDeclaredMethod(
-            "severityRank", ExcelFormulaCapabilityAssessment.class);
-    summaryFor.setAccessible(true);
-    problemCodeFor.setAccessible(true);
-    capabilityKindFor.setAccessible(true);
-    severityRank.setAccessible(true);
-
+  void helperMappingsCoverAllCapabilityKindsAndProblemCodes() {
     ExcelFormulaCapabilityAssessment evaluable =
         new ExcelFormulaCapabilityAssessment(
             "Budget", "A1", "1+1", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null);
@@ -352,38 +333,43 @@ class CalculationPolicyExecutorTest {
             "invalid");
 
     CalculationReport.Summary summary =
-        (CalculationReport.Summary)
-            summaryFor.invoke(null, List.of(evaluable, missingExternal, invalid));
+        CalculationCapabilityMappings.summaryFor(List.of(evaluable, missingExternal, invalid));
     assertEquals(1, summary.evaluableNowCount());
     assertEquals(1, summary.unevaluableNowCount());
     assertEquals(1, summary.unparseableByPoiCount());
-    assertEquals(null, problemCodeFor.invoke(null, evaluable));
+    assertEquals(null, CalculationCapabilityMappings.problemCodeFor(evaluable));
     assertEquals(
         GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK,
-        problemCodeFor.invoke(null, missingExternal));
+        CalculationCapabilityMappings.problemCodeFor(missingExternal));
     assertEquals(
         GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION,
-        problemCodeFor.invoke(null, unregistered));
+        CalculationCapabilityMappings.problemCodeFor(unregistered));
     assertEquals(
-        GridGrindProblemCode.UNSUPPORTED_FORMULA, problemCodeFor.invoke(null, unsupported));
-    assertEquals(GridGrindProblemCode.INVALID_FORMULA, problemCodeFor.invoke(null, invalid));
+        GridGrindProblemCode.UNSUPPORTED_FORMULA,
+        CalculationCapabilityMappings.problemCodeFor(unsupported));
+    assertEquals(
+        GridGrindProblemCode.INVALID_FORMULA,
+        CalculationCapabilityMappings.problemCodeFor(invalid));
     assertEquals(
         FormulaCapabilityKind.EVALUABLE_NOW,
-        capabilityKindFor.invoke(null, ExcelFormulaCapabilityKind.EVALUABLE_NOW));
+        CalculationCapabilityMappings.capabilityKindFor(ExcelFormulaCapabilityKind.EVALUABLE_NOW));
     assertEquals(
         FormulaCapabilityKind.UNEVALUABLE_NOW,
-        capabilityKindFor.invoke(null, ExcelFormulaCapabilityKind.UNEVALUABLE_NOW));
+        CalculationCapabilityMappings.capabilityKindFor(
+            ExcelFormulaCapabilityKind.UNEVALUABLE_NOW));
     assertEquals(
         FormulaCapabilityKind.UNPARSEABLE_BY_POI,
-        capabilityKindFor.invoke(null, ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI));
-    assertEquals(0, severityRank.invoke(null, invalid));
-    assertEquals(1, severityRank.invoke(null, missingExternal));
-    assertEquals(2, severityRank.invoke(null, unregistered));
-    assertEquals(3, severityRank.invoke(null, unsupported));
+        CalculationCapabilityMappings.capabilityKindFor(
+            ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI));
+    assertEquals(0, CalculationCapabilityMappings.severityRank(invalid));
+    assertEquals(1, CalculationCapabilityMappings.severityRank(missingExternal));
+    assertEquals(2, CalculationCapabilityMappings.severityRank(unregistered));
+    assertEquals(3, CalculationCapabilityMappings.severityRank(unsupported));
     assertEquals(
         "assessment.issue must not be null",
-        assertThrows(InvocationTargetException.class, () -> severityRank.invoke(null, evaluable))
-            .getCause()
+        assertThrows(
+                NullPointerException.class,
+                () -> CalculationCapabilityMappings.severityRank(evaluable))
             .getMessage());
   }
 
@@ -443,26 +429,8 @@ class CalculationPolicyExecutorTest {
     return instantiateWorkbook(new IteratorFailingWorkbook());
   }
 
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
   private static ExcelWorkbook instantiateWorkbook(XSSFWorkbook workbook) {
-    try {
-      Class<?> runtimeType = Class.forName("dev.erst.gridgrind.excel.ExcelFormulaRuntime");
-      Method runtimeFactory =
-          runtimeType.getDeclaredMethod("poi", org.apache.poi.ss.usermodel.FormulaEvaluator.class);
-      runtimeFactory.setAccessible(true);
-      Object runtime =
-          runtimeFactory.invoke(null, workbook.getCreationHelper().createFormulaEvaluator());
-      Constructor<ExcelWorkbook> constructor =
-          ExcelWorkbook.class.getDeclaredConstructor(XSSFWorkbook.class, runtimeType);
-      constructor.setAccessible(true);
-      return constructor.newInstance(workbook, runtime);
-    } catch (ClassNotFoundException
-        | NoSuchMethodException
-        | IllegalAccessException
-        | InstantiationException
-        | InvocationTargetException exception) {
-      throw new LinkageError(exception.getMessage(), exception);
-    }
+    return ExcelWorkbook.wrap(workbook);
   }
 
   /** Workbook whose sheet iteration path fails so cache clearing can surface execution errors. */

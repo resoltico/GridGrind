@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: LIMITATIONS
-updated: "2026-04-16"
+updated: "2026-04-20"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit"]
@@ -16,9 +16,10 @@ validation code that enforces the limit, in catalog summaries, and in help text,
 change to a limit value propagates consistently across all three surfaces.
 
 **Two categories of limits:**
-- **GridGrind** — operational constraints enforced by GridGrind compact constructors. Violations
-  produce a structured `INVALID_REQUEST` error with a precise message before any workbook work.
-  These are the limits most likely to change as the product evolves.
+- **GridGrind** — operational constraints enforced by request-model constructors, selector
+  helpers, or explicit request validation. Violations produce a structured `INVALID_REQUEST`
+  error with a precise message before any workbook work. These are the limits most likely to
+  change as the product evolves.
 - **Excel/POI** — structural ceilings of the `.xlsx` format reflected in Apache POI
   `SpreadsheetVersion.EXCEL2007`. GridGrind does not currently enforce these at request time;
   violations produce undefined POI behavior or corrupt output.
@@ -44,7 +45,7 @@ change to a limit value propagates consistently across all three surfaces.
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `rowCount * columnCount must not exceed 250000 but was {n}` |
 | **Applies to** | `GET_WINDOW`, `GET_SHEET_SCHEMA` |
-| **Code** | `WorkbookReadOperation.MAX_WINDOW_CELLS` (protocol); `WorkbookReadCommand.MAX_WINDOW_CELLS` (engine) |
+| **Code** | `ExcelReadLimits.MAX_WINDOW_CELLS`; `SelectorSupport.requireWindowSize // LIM-001`; `WorkbookReadCommand.requireWindowWithinLimit // LIM-001` |
 | **UX** | `--help` Limits section; `GET_WINDOW` and `GET_SHEET_SCHEMA` catalog summaries |
 
 Excel allows worksheets with up to 1,048,576 rows and 16,384 columns. POI can read arbitrarily
@@ -70,7 +71,7 @@ streaming is introduced.
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `path must point to a .xlsx workbook; .xls, .xlsm, and .xlsb are not supported: {path}` |
 | **Applies to** | `source` (EXISTING), `persistence` (SAVE_AS) |
-| **Code** | `GridGrindRequest.requireXlsxWorkbookPath` |
+| **Code** | `WorkbookPlan.requireXlsxWorkbookPath` |
 | **UX** | `--help` Limits section |
 
 GridGrind uses Apache POI XSSF, which implements only the `.xlsx` (OOXML) format. `.xls`
@@ -131,7 +132,7 @@ zero twips are also rejected.
 
 ---
 
-### LIM-006 — Duplicate Read Request IDs
+### LIM-006 — Duplicate Step IDs
 
 | Field | Value |
 |:------|:------|
@@ -140,7 +141,7 @@ zero twips are also rejected.
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `steps must not contain duplicate stepId values: {id}` |
 | **Applies to** | All `steps` entries |
-| **Code** | `WorkbookPlan.copySteps` |
+| **Code** | `WorkbookPlan.copySteps // LIM-006` |
 | **UX** | Not surfaced in help or catalog (structural protocol rule) |
 
 ---
@@ -154,7 +155,7 @@ zero twips are also rejected.
 | **Error** | `INVALID_REQUEST` |
 | **Messages** | `addresses must not be empty` / `addresses must not contain duplicates` |
 | **Applies to** | `GET_CELLS` |
-| **Code** | `WorkbookReadOperation.copyAddresses`; `WorkbookReadCommand.copyAddresses` |
+| **Code** | `SelectorSupport.copyDistinctAddresses // LIM-007`; `ExcelAddressLists.copyNonEmptyDistinctAddresses // LIM-007` |
 | **UX** | Not surfaced in help or catalog (structural protocol rule) |
 
 ---
@@ -264,7 +265,7 @@ effective limit when writing via GridGrind.
 | **Category** | GridGrind |
 | **Limit** | Row or column structural edits are rejected when they would move or truncate a table, sheet-owned autofilter, or data validation |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | Product-owned `INSERT_*`, `DELETE_*`, or `SHIFT_*` message naming the affected structure and sheet |
+| **Message** | Product-owned `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected structure and sheet |
 | **Applies to** | `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, `SHIFT_COLUMNS` |
 | **Code** | `ExcelRowColumnStructureController.rejectAffectedRowStructuresFor*`; `ExcelRowColumnStructureController.rejectAffectedColumnStructuresFor*` |
 | **UX** | `--help` Limits section; structural-edit catalog summaries |
@@ -310,7 +311,7 @@ Example message:
 | **Category** | GridGrind |
 | **Limit** | `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, and `SHIFT_COLUMNS` are rejected when they would truncate a range-backed named range or partially move / overwrite one outside the moved band |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | Product-owned `DELETE_*` or `SHIFT_*` message naming the affected named range and sheet |
+| **Message** | Product-owned `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected named range and sheet |
 | **Applies to** | `DELETE_ROWS`, `SHIFT_ROWS`, `DELETE_COLUMNS`, `SHIFT_COLUMNS` |
 | **Code** | `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForRowDelete`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForRowShift`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForColumnDelete`; `ExcelRowColumnStructureController.rejectDestructiveNamedRangesForColumnShift` |
 | **UX** | `--help` Limits section; structural-edit catalog summaries |
@@ -354,7 +355,7 @@ time instead of silently falling back to the normal in-memory executor.
 | **Category** | GridGrind |
 | **Limit** | `execution.mode.writeMode=STREAMING_WRITE` requires `source.type=NEW`, limits mutation actions to `ENSURE_SHEET` and `APPEND_ROW`, requires `execution.calculation.strategy=DO_NOT_CALCULATE`, allows `markRecalculateOnOpen=true`, requires `ENSURE_SHEET` before any append/assertion/inspection work, and requires at least one `ENSURE_SHEET` mutation |
 | **Error** | `INVALID_REQUEST` |
-| **Message** | `execution.mode.writeMode=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.writeMode=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported operation type: {type}`, `execution.mode.writeMode=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.writeMode=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.writeMode=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.writeMode=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.writeMode=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...` |
+| **Message** | `execution.mode.writeMode=STREAMING_WRITE requires source.type=NEW ...`, `execution.mode.writeMode=STREAMING_WRITE supports ENSURE_SHEET and APPEND_ROW only; unsupported mutation action type: {type}`, `execution.mode.writeMode=STREAMING_WRITE requires execution.calculation.strategy=DO_NOT_CALCULATE ...`, `execution.mode.writeMode=STREAMING_WRITE allows execution.calculation.markRecalculateOnOpen=true only when strategy=DO_NOT_CALCULATE ...`, `execution.mode.writeMode=STREAMING_WRITE requires ENSURE_SHEET before any assertion step ...`, `execution.mode.writeMode=STREAMING_WRITE requires ENSURE_SHEET before any inspection step ...`, or `execution.mode.writeMode=STREAMING_WRITE requires at least one ENSURE_SHEET mutation ...` |
 | **Applies to** | top-level `execution.mode.writeMode`, `source`, `steps[]` |
 | **Code** | `DefaultGridGrindRequestExecutor.executionModeFailure`; `ExcelStreamingWorkbookWriter.apply` |
 | **UX** | `--help` Limits section; request-shape docs; `execution.mode` docs; `executionModeInputType` catalog summary |
@@ -363,6 +364,26 @@ time instead of silently falling back to the normal in-memory executor.
 new workbooks and does not expose the full XSSF mutation surface. GridGrind validates the reduced
 operation contract up front so callers get deterministic structured errors instead of half-written
 streaming workbooks or hidden mode fallback.
+
+---
+
+### LIM-021 — Request JSON Size
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind |
+| **Limit** | request JSON must not exceed `16 MiB` (`16777216` bytes) |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `Request JSON exceeds the maximum size of 16 MiB (16777216 bytes); move large authored payloads into UTF8_FILE, FILE, or STANDARD_INPUT sources.` |
+| **Applies to** | CLI stdin request ingestion, `--request <path>` file ingestion, `GridGrindJson.readRequest(InputStream)`, `GridGrindJson.readRequest(byte[])` |
+| **Code** | `GridGrindContractText.requestDocumentLimitBytes`; `GridGrindJson.requireSupportedRequestLength`; request JSON stream constraints in `GridGrindJson` |
+| **UX** | `--help` Limits section; request-shape docs; source-backed input docs |
+
+GridGrind accepts large authored values through source-backed inputs (`UTF8_FILE`, `FILE`, and
+`STANDARD_INPUT`), not by letting the outer request document grow without bound. The CLI now
+rejects oversized request files before execution starts, and the JSON codec enforces the same
+document cap on stdin and byte-array entry points so every transport path fails with one stable
+product-owned `INVALID_REQUEST` message.
 
 ---
 
@@ -386,6 +407,9 @@ reads. GridGrind now exposes both as explicit opt-in execution modes:
   workbooks using `ENSURE_SHEET` and `APPEND_ROW` only, with optional
   `execution.calculation.markRecalculateOnOpen=true`
   (`LIM-020`)
+- request JSON documents capped at `16 MiB`, with large authored payloads moved to
+  `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` sources
+  (`LIM-021`)
 
 All other reads and mutations continue to use the normal full-XSSF in-memory executor.
 
@@ -400,6 +424,7 @@ All other reads and mutations continue to use the normal full-XSSF in-memory exe
 | Pivot tables | Limited supported surface: factual reads, health analysis, and authored range-, named-range-, and table-backed pivots. |
 | `.xls`, `.xlsm`, `.xlsb` | Not supported. See LIM-002. |
 | Streaming read/write | Supported only through `execution.mode`: `EVENT_READ` summary reads (`LIM-019`) and `STREAMING_WRITE` append-oriented `NEW` workbook authoring (`LIM-020`). |
+| Request JSON size | Capped at `16 MiB`; large authored values belong in `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` sources (`LIM-021`). |
 | OOXML encryption and signing | Supported for `.xlsx` package security on the full-XSSF path. `source.security.password` is required for encrypted sources, `GET_PACKAGE_SECURITY` is unavailable in `EVENT_READ`, and persisting mutations to a signed workbook requires explicit `persistence.security.signature` re-signing. |
 
 Apache POI feature coverage: https://poi.apache.org/components/spreadsheet/

@@ -52,7 +52,6 @@ import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -1078,258 +1077,178 @@ class SourceBackedPlanResolverTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-  void privatePredicateHelpersCoverRemainingSourceBackedBranches() throws Exception {
-    Method stepRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod(
-            "requiresStandardInput", dev.erst.gridgrind.contract.step.WorkbookStep.class);
-    Method cellRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod("requiresStandardInput", CellInput.class);
-    Method commentRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod(
-            "requiresStandardInput", CommentInput.class);
-    Method pictureRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod(
-            "requiresStandardInput", PictureInput.class);
-    Method titleRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod(
-            "requiresStandardInput", ChartInput.Title.class);
-    Method shapeRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod("requiresStandardInput", ShapeInput.class);
-    Method validationRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod(
-            "requiresStandardInput", DataValidationInput.class);
-    Method promptRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod(
-            "requiresStandardInput", DataValidationPromptInput.class);
-    Method alertRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod(
-            "requiresStandardInput", DataValidationErrorAlertInput.class);
-    Method printLayoutRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod(
-            "requiresStandardInput", PrintLayoutInput.class);
-    Method headerFooterRequires =
-        SourceBackedPlanResolver.class.getDeclaredMethod(
-            "requiresStandardInput", HeaderFooterTextInput.class);
-    Method resolvePath =
-        SourceBackedPlanResolver.class.getDeclaredMethod(
-            "resolvePath", String.class, Path.class, String.class);
-    stepRequires.setAccessible(true);
-    cellRequires.setAccessible(true);
-    commentRequires.setAccessible(true);
-    pictureRequires.setAccessible(true);
-    titleRequires.setAccessible(true);
-    shapeRequires.setAccessible(true);
-    validationRequires.setAccessible(true);
-    promptRequires.setAccessible(true);
-    alertRequires.setAccessible(true);
-    printLayoutRequires.setAccessible(true);
-    headerFooterRequires.setAccessible(true);
-    resolvePath.setAccessible(true);
+  void helperPredicatesCoverRemainingSourceBackedBranches() throws IOException {
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new AssertionStep(
+                "assert-owner",
+                new CellSelector.ByAddress("Budget", "A1"),
+                new Assertion.CellValue(new ExpectedCellValue.Text("Owner")))));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new InspectionStep(
+                "inspect-cells",
+                new CellSelector.ByAddress("Budget", "A1"),
+                new InspectionQuery.GetCells())));
+
+    assertFalse(SourceBackedInputRequirements.requiresStandardInput(new CellInput.Numeric(1.0d)));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(new CellInput.BooleanValue(true)));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellInput.Date(LocalDate.of(2026, 4, 18))));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CellInput.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
 
     assertFalse(
-        (Boolean)
-            stepRequires.invoke(
-                null,
-                new AssertionStep(
-                    "assert-owner",
-                    new CellSelector.ByAddress("Budget", "A1"),
-                    new Assertion.CellValue(new ExpectedCellValue.Text("Owner")))));
-    assertFalse(
-        (Boolean)
-            stepRequires.invoke(
-                null,
-                new InspectionStep(
-                    "inspect-cells",
-                    new CellSelector.ByAddress("Budget", "A1"),
-                    new InspectionQuery.GetCells())));
-
-    assertFalse((Boolean) cellRequires.invoke(null, new CellInput.Numeric(1.0d)));
-    assertFalse((Boolean) cellRequires.invoke(null, new CellInput.BooleanValue(true)));
-    assertFalse((Boolean) cellRequires.invoke(null, new CellInput.Date(LocalDate.of(2026, 4, 18))));
-    assertFalse(
-        (Boolean)
-            cellRequires.invoke(
-                null, new CellInput.DateTime(LocalDateTime.of(2026, 4, 18, 12, 30))));
-
-    assertFalse(
-        (Boolean)
-            commentRequires.invoke(
-                null,
-                new CommentInput(
-                    TextSourceInput.inline("Ada"),
-                    "Ada",
-                    false,
-                    List.of(new RichTextRunInput(TextSourceInput.inline("Ada"), null)),
-                    null)));
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CommentInput(
+                TextSourceInput.inline("Ada"),
+                "Ada",
+                false,
+                List.of(new RichTextRunInput(TextSourceInput.inline("Ada"), null)),
+                null)));
     assertTrue(
-        (Boolean)
-            commentRequires.invoke(
-                null,
-                new CommentInput(
-                    TextSourceInput.inline("Ada"),
-                    "Ada",
-                    false,
-                    List.of(new RichTextRunInput(TextSourceInput.standardInput(), null)),
-                    null)));
+        SourceBackedInputRequirements.requiresStandardInput(
+            new CommentInput(
+                TextSourceInput.inline("Ada"),
+                "Ada",
+                false,
+                List.of(new RichTextRunInput(TextSourceInput.standardInput(), null)),
+                null)));
 
     assertFalse(
-        (Boolean)
-            pictureRequires.invoke(
-                null,
-                new PictureInput(
-                    "Logo", inlinePictureData(), twoCellAnchor(), TextSourceInput.inline("Logo"))));
+        SourceBackedInputRequirements.requiresStandardInput(
+            new PictureInput(
+                "Logo", inlinePictureData(), twoCellAnchor(), TextSourceInput.inline("Logo"))));
     assertTrue(
-        (Boolean)
-            pictureRequires.invoke(
-                null,
-                new PictureInput(
-                    "Logo",
-                    new PictureDataInput(ExcelPictureFormat.PNG, BinarySourceInput.standardInput()),
-                    twoCellAnchor(),
-                    null)));
+        SourceBackedInputRequirements.requiresStandardInput(
+            new PictureInput(
+                "Logo",
+                new PictureDataInput(ExcelPictureFormat.PNG, BinarySourceInput.standardInput()),
+                twoCellAnchor(),
+                null)));
 
-    assertFalse((Boolean) titleRequires.invoke(null, new ChartInput.Title.None()));
-    assertFalse((Boolean) titleRequires.invoke(null, new ChartInput.Title.Formula("Budget!$A$1")));
+    assertFalse(SourceBackedInputRequirements.requiresStandardInput(new ChartInput.Title.None()));
     assertFalse(
-        (Boolean)
-            titleRequires.invoke(null, new ChartInput.Title.Text(TextSourceInput.inline("Title"))));
+        SourceBackedInputRequirements.requiresStandardInput(
+            new ChartInput.Title.Formula("Budget!$A$1")));
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new ChartInput.Title.Text(TextSourceInput.inline("Title"))));
     assertTrue(
-        (Boolean)
-            titleRequires.invoke(null, new ChartInput.Title.Text(TextSourceInput.standardInput())));
+        SourceBackedInputRequirements.requiresStandardInput(
+            new ChartInput.Title.Text(TextSourceInput.standardInput())));
 
     assertFalse(
-        (Boolean)
-            shapeRequires.invoke(
-                null,
-                new ShapeInput(
-                    "Shape",
-                    ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
-                    twoCellAnchor(),
-                    "roundRect",
-                    TextSourceInput.inline("Shape"))));
+        SourceBackedInputRequirements.requiresStandardInput(
+            new ShapeInput(
+                "Shape",
+                ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                twoCellAnchor(),
+                "roundRect",
+                TextSourceInput.inline("Shape"))));
     assertFalse(
-        (Boolean)
-            shapeRequires.invoke(
-                null,
-                new ShapeInput(
-                    "Shape",
-                    ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
-                    twoCellAnchor(),
-                    "roundRect",
-                    null)));
+        SourceBackedInputRequirements.requiresStandardInput(
+            new ShapeInput(
+                "Shape",
+                ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                twoCellAnchor(),
+                "roundRect",
+                null)));
 
     assertFalse(
-        (Boolean)
-            validationRequires.invoke(
-                null,
-                new DataValidationInput(
-                    new DataValidationRuleInput.ExplicitList(List.of("Open")),
-                    false,
-                    false,
-                    new DataValidationPromptInput(
-                        TextSourceInput.inline("Prompt"), TextSourceInput.inline("Body"), false),
-                    new DataValidationErrorAlertInput(
-                        ExcelDataValidationErrorStyle.STOP,
-                        TextSourceInput.inline("Alert"),
-                        TextSourceInput.inline("Body"),
-                        false))));
-    assertTrue(
-        (Boolean)
-            validationRequires.invoke(
-                null,
-                new DataValidationInput(
-                    new DataValidationRuleInput.ExplicitList(List.of("Open")),
-                    false,
-                    false,
-                    null,
-                    new DataValidationErrorAlertInput(
-                        ExcelDataValidationErrorStyle.STOP,
-                        TextSourceInput.standardInput(),
-                        TextSourceInput.inline("Body"),
-                        false))));
-
-    assertFalse(
-        (Boolean)
-            promptRequires.invoke(
-                null,
+        SourceBackedInputRequirements.requiresStandardInput(
+            new DataValidationInput(
+                new DataValidationRuleInput.ExplicitList(List.of("Open")),
+                false,
+                false,
                 new DataValidationPromptInput(
-                    TextSourceInput.inline("Prompt"), TextSourceInput.inline("Body"), false)));
-    assertTrue(
-        (Boolean)
-            promptRequires.invoke(
-                null,
-                new DataValidationPromptInput(
-                    TextSourceInput.inline("Prompt"), TextSourceInput.standardInput(), false)));
-
-    assertFalse(
-        (Boolean)
-            alertRequires.invoke(
-                null,
+                    TextSourceInput.inline("Prompt"), TextSourceInput.inline("Body"), false),
                 new DataValidationErrorAlertInput(
                     ExcelDataValidationErrorStyle.STOP,
                     TextSourceInput.inline("Alert"),
                     TextSourceInput.inline("Body"),
-                    false)));
+                    false))));
     assertTrue(
-        (Boolean)
-            alertRequires.invoke(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new DataValidationInput(
+                new DataValidationRuleInput.ExplicitList(List.of("Open")),
+                false,
+                false,
                 null,
                 new DataValidationErrorAlertInput(
                     ExcelDataValidationErrorStyle.STOP,
                     TextSourceInput.standardInput(),
                     TextSourceInput.inline("Body"),
-                    false)));
+                    false))));
 
     assertFalse(
-        (Boolean)
-            printLayoutRequires.invoke(
-                null,
-                new PrintLayoutInput(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    new HeaderFooterTextInput(
-                        TextSourceInput.inline("left"),
-                        TextSourceInput.inline("center"),
-                        TextSourceInput.inline("right")),
-                    null)));
+        SourceBackedInputRequirements.requiresStandardInput(
+            new DataValidationPromptInput(
+                TextSourceInput.inline("Prompt"), TextSourceInput.inline("Body"), false)));
     assertTrue(
-        (Boolean)
-            printLayoutRequires.invoke(
-                null,
-                new PrintLayoutInput(
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    new HeaderFooterTextInput(TextSourceInput.standardInput(), null, null))));
+        SourceBackedInputRequirements.requiresStandardInput(
+            new DataValidationPromptInput(
+                TextSourceInput.inline("Prompt"), TextSourceInput.standardInput(), false)));
 
     assertFalse(
-        (Boolean)
-            headerFooterRequires.invoke(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new DataValidationErrorAlertInput(
+                ExcelDataValidationErrorStyle.STOP,
+                TextSourceInput.inline("Alert"),
+                TextSourceInput.inline("Body"),
+                false)));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new DataValidationErrorAlertInput(
+                ExcelDataValidationErrorStyle.STOP,
+                TextSourceInput.standardInput(),
+                TextSourceInput.inline("Body"),
+                false)));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new PrintLayoutInput(
+                null,
+                null,
+                null,
+                null,
                 null,
                 new HeaderFooterTextInput(
                     TextSourceInput.inline("left"),
                     TextSourceInput.inline("center"),
-                    TextSourceInput.inline("right"))));
+                    TextSourceInput.inline("right")),
+                null)));
     assertTrue(
-        (Boolean)
-            headerFooterRequires.invoke(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new PrintLayoutInput(
                 null,
-                new HeaderFooterTextInput(
-                    TextSourceInput.inline("left"),
-                    TextSourceInput.inline("center"),
-                    TextSourceInput.standardInput())));
+                null,
+                null,
+                null,
+                null,
+                null,
+                new HeaderFooterTextInput(TextSourceInput.standardInput(), null, null))));
+
+    assertFalse(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new HeaderFooterTextInput(
+                TextSourceInput.inline("left"),
+                TextSourceInput.inline("center"),
+                TextSourceInput.inline("right"))));
+    assertTrue(
+        SourceBackedInputRequirements.requiresStandardInput(
+            new HeaderFooterTextInput(
+                TextSourceInput.inline("left"),
+                TextSourceInput.inline("center"),
+                TextSourceInput.standardInput())));
 
     Path absoluteFile = Files.createTempFile("gridgrind-source-backed-absolute-", ".txt");
     assertEquals(
         absoluteFile.toAbsolutePath().normalize(),
-        resolvePath.invoke(null, absoluteFile.toString(), Path.of(""), "cell text"));
+        SourceBackedPathResolver.resolvePath(absoluteFile.toString(), Path.of(""), "cell text"));
   }
 
   @Test

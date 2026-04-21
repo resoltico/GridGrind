@@ -19,7 +19,7 @@ final class ExcelSheetStateController {
           0,
           List.of(),
           workbook.namedRangeCount(),
-          workbook.forceFormulaRecalculationOnOpenEnabled());
+          workbook.forceFormulaRecalculationOnOpenEnabledInternal());
     }
     return new WorkbookReadResult.WorkbookSummary.WithSheets(
         workbook.sheetCount(),
@@ -27,7 +27,7 @@ final class ExcelSheetStateController {
         ExcelWorkbookSheetSupport.activeSheetName(workbook.xssfWorkbook()),
         ExcelWorkbookSheetSupport.selectedSheetNames(workbook.xssfWorkbook()),
         workbook.namedRangeCount(),
-        workbook.forceFormulaRecalculationOnOpenEnabled());
+        workbook.forceFormulaRecalculationOnOpenEnabledInternal());
   }
 
   /** Returns structural and state facts for one sheet. */

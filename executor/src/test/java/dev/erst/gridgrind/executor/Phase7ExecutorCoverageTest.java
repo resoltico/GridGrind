@@ -23,7 +23,6 @@ import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelPictureFormat;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -178,18 +177,184 @@ class Phase7ExecutorCoverageTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-  void privateInlineFormulaReturnsNullForNonInlineSources() throws Exception {
-    Method inlineFormula =
-        DefaultGridGrindRequestExecutor.class.getDeclaredMethod(
-            "inlineFormula", CellInput.Formula.class);
-    inlineFormula.setAccessible(true);
+  void formulaDiagnosticsExposeInlineFormulasOnly() {
+    MutationAction.SetCell fileBackedFormula =
+        new MutationAction.SetCell(new CellInput.Formula(TextSourceInput.utf8File("formula.txt")));
+    MutationAction.SetCell inlineFormula =
+        new MutationAction.SetCell(new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)")));
 
-    assertNull(
-        inlineFormula.invoke(null, new CellInput.Formula(TextSourceInput.utf8File("formula.txt"))));
+    assertNull(ExecutionDiagnosticFields.formulaFor(fileBackedFormula));
+    assertEquals("SUM(A1:A2)", ExecutionDiagnosticFields.formulaFor(inlineFormula));
+  }
+
+  @Test
+  void mutationAndRangeSelectorDiagnosticHelpersCoverNullAndSingleSheetForwarders() {
+    dev.erst.gridgrind.contract.dto.DrawingAnchorInput.TwoCell drawingAnchor =
+        new dev.erst.gridgrind.contract.dto.DrawingAnchorInput.TwoCell(
+            new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(0, 0),
+            new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1),
+            dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+    dev.erst.gridgrind.contract.dto.PictureDataInput imageData =
+        new dev.erst.gridgrind.contract.dto.PictureDataInput(
+            ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64("AQ=="));
+    dev.erst.gridgrind.contract.dto.ChartInput.Bar simpleChart =
+        new dev.erst.gridgrind.contract.dto.ChartInput.Bar(
+            "Revenue",
+            drawingAnchor,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            java.util.List.of(
+                new dev.erst.gridgrind.contract.dto.ChartInput.Series(
+                    new dev.erst.gridgrind.contract.dto.ChartInput.Title.None(),
+                    new dev.erst.gridgrind.contract.dto.ChartInput.DataSource("Budget!$A$1:$A$2"),
+                    new dev.erst.gridgrind.contract.dto.ChartInput.DataSource(
+                        "Budget!$B$1:$B$2"))));
+
+    for (MutationAction action :
+        java.util.List.of(
+            new MutationAction.EnsureSheet(),
+            new MutationAction.RenameSheet("Budget Copy"),
+            new MutationAction.DeleteSheet(),
+            new MutationAction.MoveSheet(0),
+            new MutationAction.CopySheet(
+                "Budget Copy", new dev.erst.gridgrind.contract.dto.SheetCopyPosition.AppendAtEnd()),
+            new MutationAction.SetActiveSheet(),
+            new MutationAction.SetSelectedSheets(),
+            new MutationAction.SetSheetVisibility(
+                dev.erst.gridgrind.excel.ExcelSheetVisibility.HIDDEN),
+            new MutationAction.SetSheetProtection(
+                new dev.erst.gridgrind.contract.dto.SheetProtectionSettings(
+                    false, false, false, false, false, false, false, false, false, false, false,
+                    false, false, false, false)),
+            new MutationAction.ClearSheetProtection(),
+            new MutationAction.SetWorkbookProtection(
+                new dev.erst.gridgrind.contract.dto.WorkbookProtectionInput(
+                    Boolean.TRUE, Boolean.FALSE, Boolean.FALSE, null, null)),
+            new MutationAction.ClearWorkbookProtection(),
+            new MutationAction.MergeCells(),
+            new MutationAction.UnmergeCells(),
+            new MutationAction.SetColumnWidth(8.5d),
+            new MutationAction.SetRowHeight(12.0d),
+            new MutationAction.InsertRows(),
+            new MutationAction.DeleteRows(),
+            new MutationAction.ShiftRows(1),
+            new MutationAction.InsertColumns(),
+            new MutationAction.DeleteColumns(),
+            new MutationAction.ShiftColumns(1),
+            new MutationAction.SetRowVisibility(Boolean.TRUE),
+            new MutationAction.SetColumnVisibility(Boolean.TRUE),
+            new MutationAction.GroupRows(Boolean.TRUE),
+            new MutationAction.UngroupRows(),
+            new MutationAction.GroupColumns(Boolean.TRUE),
+            new MutationAction.UngroupColumns(),
+            new MutationAction.SetSheetPane(
+                new dev.erst.gridgrind.contract.dto.PaneInput.Frozen(1, 1, 1, 1)),
+            new MutationAction.SetSheetZoom(125),
+            new MutationAction.SetSheetPresentation(
+                dev.erst.gridgrind.contract.dto.SheetPresentationInput.defaults()),
+            new MutationAction.SetPrintLayout(
+                new dev.erst.gridgrind.contract.dto.PrintLayoutInput(
+                    null, null, null, null, null, null, null)),
+            new MutationAction.SetRange(
+                java.util.List.of(
+                    java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget"))))),
+            new MutationAction.ClearRange(),
+            new MutationAction.SetHyperlink(
+                new dev.erst.gridgrind.contract.dto.HyperlinkTarget.Url("https://example.com")),
+            new MutationAction.ClearHyperlink(),
+            new MutationAction.SetComment(
+                new dev.erst.gridgrind.contract.dto.CommentInput(
+                    TextSourceInput.inline("Reviewed"), "GridGrind", Boolean.TRUE)),
+            new MutationAction.ClearComment(),
+            new MutationAction.SetPicture(
+                new PictureInput(
+                    "Logo", imageData, drawingAnchor, TextSourceInput.inline("Budget logo"))),
+            new MutationAction.SetChart(simpleChart),
+            new MutationAction.SetShape(
+                new dev.erst.gridgrind.contract.dto.ShapeInput(
+                    "BudgetBox",
+                    dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                    drawingAnchor,
+                    "rect",
+                    TextSourceInput.inline("Budget"))),
+            new MutationAction.SetEmbeddedObject(
+                new dev.erst.gridgrind.contract.dto.EmbeddedObjectInput(
+                    "Attachment",
+                    "Attachment",
+                    "attachment.bin",
+                    "open",
+                    BinarySourceInput.inlineBase64("AQ=="),
+                    imageData,
+                    drawingAnchor)),
+            new MutationAction.SetDrawingObjectAnchor(drawingAnchor),
+            new MutationAction.DeleteDrawingObject(),
+            new MutationAction.ApplyStyle(
+                new dev.erst.gridgrind.contract.dto.CellStyleInput(
+                    "0.00", null, null, null, null, null)),
+            new MutationAction.SetDataValidation(
+                new dev.erst.gridgrind.contract.dto.DataValidationInput(
+                    new dev.erst.gridgrind.contract.dto.DataValidationRuleInput.ExplicitList(
+                        java.util.List.of("Open", "Closed")),
+                    Boolean.TRUE,
+                    Boolean.FALSE,
+                    null,
+                    null)),
+            new MutationAction.SetConditionalFormatting(
+                new dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput(
+                    java.util.List.of("A1:A2", "C1:C2"),
+                    java.util.List.of(
+                        new dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput
+                            .FormulaRule("A1>0", false, null)))),
+            new MutationAction.SetAutofilter(),
+            new MutationAction.ClearPrintLayout(),
+            new MutationAction.ClearConditionalFormatting(),
+            new MutationAction.ClearDataValidations(),
+            new MutationAction.ClearAutofilter(),
+            new MutationAction.DeleteTable(),
+            new MutationAction.DeletePivotTable(),
+            new MutationAction.DeleteNamedRange(),
+            new MutationAction.AppendRow(
+                java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget")))),
+            new MutationAction.AutoSizeColumns())) {
+      assertNull(ExecutionActionDiagnosticFields.sheetNameFor(action));
+      assertNull(ExecutionActionDiagnosticFields.rangeFor(action));
+      assertNull(ExecutionActionDiagnosticFields.formulaFor(action));
+      assertNull(ExecutionActionDiagnosticFields.namedRangeNameFor(action));
+    }
+
+    MutationAction.SetNamedRange rangeDefinedNamedRange =
+        new MutationAction.SetNamedRange(
+            "BudgetWindow",
+            new dev.erst.gridgrind.contract.dto.NamedRangeScope.Sheet("Budget"),
+            new dev.erst.gridgrind.contract.dto.NamedRangeTarget("Budget", "A1:B2"));
+    assertEquals("Budget", ExecutionActionDiagnosticFields.sheetNameFor(rangeDefinedNamedRange));
+    assertEquals("A1:B2", ExecutionActionDiagnosticFields.rangeFor(rangeDefinedNamedRange));
+    assertNull(ExecutionActionDiagnosticFields.formulaFor(rangeDefinedNamedRange));
     assertEquals(
-        "SUM(A1:A2)",
-        inlineFormula.invoke(null, new CellInput.Formula(TextSourceInput.inline("SUM(A1:A2)"))));
+        "BudgetWindow", ExecutionActionDiagnosticFields.namedRangeNameFor(rangeDefinedNamedRange));
+
+    MutationAction.SetTable setTable =
+        new MutationAction.SetTable(
+            new dev.erst.gridgrind.contract.dto.TableInput(
+                "BudgetTable",
+                "Budget",
+                "A1:B5",
+                Boolean.FALSE,
+                new dev.erst.gridgrind.contract.dto.TableStyleInput.None()));
+    assertEquals("Budget", ExecutionActionDiagnosticFields.sheetNameFor(setTable));
+    assertEquals("A1:B5", ExecutionActionDiagnosticFields.rangeFor(setTable));
+    assertNull(ExecutionActionDiagnosticFields.formulaFor(setTable));
+    assertNull(ExecutionActionDiagnosticFields.namedRangeNameFor(setTable));
+
+    assertEquals(
+        "Budget",
+        ExecutionDiagnosticFields.singleSheetName(
+            (dev.erst.gridgrind.contract.selector.RangeSelector)
+                new dev.erst.gridgrind.contract.selector.RangeSelector.ByRange("Budget", "A1:B2")));
   }
 
   @Test

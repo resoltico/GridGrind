@@ -185,7 +185,7 @@ class ExcelFormulaEnvironmentTest {
                         "referenced.xlsx", scenario.referencedWorkbookPath())),
                 ExcelFormulaMissingWorkbookPolicy.ERROR,
                 List.of()))) {
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
       workbook.save(outputPath);
     }
 
@@ -202,7 +202,7 @@ class ExcelFormulaEnvironmentTest {
             scenario.workbookPath(),
             new ExcelFormulaEnvironment(
                 List.of(), ExcelFormulaMissingWorkbookPolicy.USE_CACHED_VALUE, List.of()))) {
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
       workbook.save(outputPath);
     }
 
@@ -224,7 +224,7 @@ class ExcelFormulaEnvironmentTest {
                     new ExcelFormulaUdfToolpack(
                         "math",
                         List.of(new ExcelFormulaUdfFunction("DOUBLE", 1, 1, "ARG1*2"))))))) {
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
       workbook.save(outputPath);
     }
 
@@ -240,9 +240,9 @@ class ExcelFormulaEnvironmentTest {
       workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
       workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
       workbook.sheet("Budget").setCell("C1", ExcelCellValue.formula("A1*3"));
-      workbook.evaluateAllFormulas();
+      workbook.formulas().evaluateAll();
       workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(4.0d));
-      workbook.evaluateFormulaCells(List.of(new ExcelFormulaCellTarget("Budget", "B1")));
+      workbook.formulas().evaluate(List.of(new ExcelFormulaCellTarget("Budget", "B1")));
       workbook.save(workbookPath);
     }
 
@@ -259,8 +259,8 @@ class ExcelFormulaEnvironmentTest {
       workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(2.0d));
       workbook.sheet("Budget").setCell("B1", ExcelCellValue.formula("A1*2"));
       workbook.sheet("Budget").setCell("C1", ExcelCellValue.formula("A1*3"));
-      workbook.evaluateAllFormulas();
-      workbook.clearFormulaCaches();
+      workbook.formulas().evaluateAll();
+      workbook.formulas().clearCaches();
       workbook.save(workbookPath);
     }
 
@@ -283,12 +283,12 @@ class ExcelFormulaEnvironmentTest {
           List.of(
               new ExcelFormulaCapabilityAssessment(
                   "Budget", "B1", "A1*2", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
-          workbook.assessAllFormulaCapabilities());
+          workbook.formulas().assessAllCapabilities());
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(externalScenario.workbookPath())) {
       ExcelFormulaCapabilityAssessment assessment =
-          workbook.assessAllFormulaCapabilities().getFirst();
+          workbook.formulas().assessAllCapabilities().getFirst();
 
       assertEquals(ExcelFormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
       assertEquals(ExcelFormulaCapabilityIssue.MISSING_EXTERNAL_WORKBOOK, assessment.issue());
@@ -297,7 +297,7 @@ class ExcelFormulaEnvironmentTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(udfWorkbookPath)) {
       ExcelFormulaCapabilityAssessment assessment =
-          workbook.assessAllFormulaCapabilities().getFirst();
+          workbook.formulas().assessAllCapabilities().getFirst();
 
       assertEquals(ExcelFormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
       assertEquals(
@@ -307,7 +307,7 @@ class ExcelFormulaEnvironmentTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(unsupportedWorkbookPath)) {
       ExcelFormulaCapabilityAssessment assessment =
-          workbook.assessAllFormulaCapabilities().getFirst();
+          workbook.formulas().assessAllCapabilities().getFirst();
 
       assertEquals(ExcelFormulaCapabilityKind.UNEVALUABLE_NOW, assessment.capability());
       assertEquals(ExcelFormulaCapabilityIssue.UNSUPPORTED_FORMULA, assessment.issue());
@@ -327,34 +327,39 @@ class ExcelFormulaEnvironmentTest {
           List.of(
               new ExcelFormulaCapabilityAssessment(
                   "Budget", "B1", "A1*2", ExcelFormulaCapabilityKind.EVALUABLE_NOW, null, null)),
-          workbook.assessFormulaCellCapabilities(
-              List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
-      assertThrows(NullPointerException.class, () -> workbook.assessFormulaCellCapabilities(null));
+          workbook
+              .formulas()
+              .assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "B1"))));
+      assertThrows(NullPointerException.class, () -> workbook.formulas().assessCapabilities(null));
       assertThrows(
           NullPointerException.class,
-          () -> workbook.assessFormulaCellCapabilities(List.of((ExcelFormulaCellTarget) null)));
+          () -> workbook.formulas().assessCapabilities(List.of((ExcelFormulaCellTarget) null)));
       assertThrows(
           IllegalArgumentException.class,
           () ->
-              workbook.assessFormulaCellCapabilities(
-                  List.of(new ExcelFormulaCellTarget("Budget", "A1"))));
+              workbook
+                  .formulas()
+                  .assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "A1"))));
       assertThrows(
           InvalidCellAddressException.class,
           () ->
-              workbook.assessFormulaCellCapabilities(
-                  List.of(new ExcelFormulaCellTarget("Budget", ":"))));
+              workbook
+                  .formulas()
+                  .assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", ":"))));
       assertThrows(
           CellNotFoundException.class,
           () ->
-              workbook.assessFormulaCellCapabilities(
-                  List.of(new ExcelFormulaCellTarget("Budget", "Z99"))));
+              workbook
+                  .formulas()
+                  .assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "Z99"))));
     }
 
     Path invalidWorkbookPath = createInvalidFormulaWorkbook();
     try (ExcelWorkbook workbook = ExcelWorkbook.open(invalidWorkbookPath)) {
       ExcelFormulaCapabilityAssessment assessment =
           workbook
-              .assessFormulaCellCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "B1")))
+              .formulas()
+              .assessCapabilities(List.of(new ExcelFormulaCellTarget("Budget", "B1")))
               .getFirst();
 
       assertEquals(ExcelFormulaCapabilityKind.UNPARSEABLE_BY_POI, assessment.capability());
@@ -377,7 +382,7 @@ class ExcelFormulaEnvironmentTest {
       workbook.sheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
 
       IllegalStateException failure =
-          assertThrows(IllegalStateException.class, workbook::assessAllFormulaCapabilities);
+          assertThrows(IllegalStateException.class, workbook.formulas()::assessAllCapabilities);
 
       assertEquals("boom", failure.getMessage());
     }

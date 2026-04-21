@@ -2,7 +2,6 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Set;
 import org.apache.poi.ss.formula.atp.AnalysisToolPak;
@@ -173,36 +172,30 @@ class FormulaExceptionsTest {
             new org.apache.poi.ss.formula.eval.FakeNotImplementedFunctionException("DOUBLE"),
             "DOUBLE(A1)"));
 
-    Method messageMentionsFunctionName =
-        accessibleMethod(
-            FormulaExceptions.class, "messageMentionsFunctionName", Throwable.class, String.class);
-    assertEquals(
-        false,
-        messageMentionsFunctionName.invoke(null, new RuntimeException((String) null), "DOUBLE"));
-    assertEquals(
-        true,
-        messageMentionsFunctionName.invoke(
-            null, new RuntimeException("function double is unknown"), "DOUBLE"));
+    assertFalse(
+        FormulaExceptions.messageMentionsFunctionName(
+            new RuntimeException((String) null), "DOUBLE"));
+    assertTrue(
+        FormulaExceptions.messageMentionsFunctionName(
+            new RuntimeException("function double is unknown"), "DOUBLE"));
 
-    Method isKnownBuiltinFunction =
-        accessibleMethod(FormulaExceptions.class, "isKnownBuiltinFunction", String.class);
-    assertEquals(true, isKnownBuiltinFunction.invoke(null, "SUM"));
+    assertTrue(FormulaExceptions.isKnownBuiltinFunction("SUM"));
 
     ExcelFormulaRuntimeContext emptyContext =
         new ExcelFormulaRuntimeContext(Set.of(), ExcelFormulaMissingWorkbookPolicy.ERROR, Set.of());
 
     String unsupportedPoiFunction =
         FunctionEval.getNotSupportedFunctionNames().stream().findFirst().orElseThrow();
-    assertEquals(true, isKnownBuiltinFunction.invoke(null, unsupportedPoiFunction));
+    assertTrue(FormulaExceptions.isKnownBuiltinFunction(unsupportedPoiFunction));
 
     String supportedAtpFunction =
         AnalysisToolPak.getSupportedFunctionNames().stream().findFirst().orElseThrow();
-    assertEquals(true, isKnownBuiltinFunction.invoke(null, supportedAtpFunction));
+    assertTrue(FormulaExceptions.isKnownBuiltinFunction(supportedAtpFunction));
 
     String unsupportedAtpFunction =
         AnalysisToolPak.getNotSupportedFunctionNames().stream().findFirst().orElseThrow();
-    assertEquals(true, isKnownBuiltinFunction.invoke(null, unsupportedAtpFunction));
-    assertEquals(false, isKnownBuiltinFunction.invoke(null, "GRIDGRIND_UNKNOWN_FN"));
+    assertTrue(FormulaExceptions.isKnownBuiltinFunction(unsupportedAtpFunction));
+    assertFalse(FormulaExceptions.isKnownBuiltinFunction("GRIDGRIND_UNKNOWN_FN"));
 
     // Cover AnalysisToolPak.getSupportedFunctionNames() as the "first true" OR branch:
     // find an ATP-supported function that is absent from FunctionMetadataRegistry and FunctionEval.
@@ -244,13 +237,5 @@ class FormulaExceptionsTest {
     private FakeWorkbookNotFoundException(String message) {
       super(message);
     }
-  }
-
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-  private static Method accessibleMethod(Class<?> type, String name, Class<?>... parameterTypes)
-      throws ReflectiveOperationException {
-    Method method = type.getDeclaredMethod(name, parameterTypes);
-    method.setAccessible(true);
-    return method;
   }
 }

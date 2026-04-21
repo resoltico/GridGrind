@@ -16,6 +16,9 @@ final class CliRequestReader {
     if (requestPath == null) {
       return GridGrindJson.readRequest(stdin);
     }
+    if (Files.isRegularFile(requestPath)) {
+      GridGrindJson.requireSupportedRequestLength(Files.size(requestPath));
+    }
     try (InputStream requestInput = Files.newInputStream(requestPath)) {
       return GridGrindJson.readRequest(requestInput);
     }

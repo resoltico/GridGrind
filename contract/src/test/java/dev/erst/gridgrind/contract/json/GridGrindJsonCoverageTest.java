@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.json;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -7,14 +8,23 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
+import dev.erst.gridgrind.contract.catalog.GoalPlanReport;
+import dev.erst.gridgrind.contract.catalog.GridGrindGoalPlanner;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolCatalog;
+import dev.erst.gridgrind.contract.catalog.GridGrindTaskCatalog;
+import dev.erst.gridgrind.contract.catalog.GridGrindTaskPlanner;
+import dev.erst.gridgrind.contract.catalog.TaskCatalog;
+import dev.erst.gridgrind.contract.catalog.TaskPlanTemplate;
 import dev.erst.gridgrind.contract.catalog.TypeEntry;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
+import dev.erst.gridgrind.contract.dto.RequestDoctorReport;
+import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.DateTimeException;
 import java.util.List;
@@ -40,15 +50,50 @@ class GridGrindJsonCoverageTest {
                     "summary",
                     new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false))));
     Catalog catalog = GridGrindProtocolCatalog.catalog();
+    TaskCatalog taskCatalog = GridGrindTaskCatalog.catalog();
+    TaskPlanTemplate taskPlanTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
+    GoalPlanReport goalPlanReport =
+        GridGrindGoalPlanner.reportFor("Create a monthly sales dashboard with charts");
+    RequestDoctorReport doctorReport =
+        RequestDoctorReport.warnings(
+            new RequestDoctorReport.Summary(
+                "NEW",
+                "NONE",
+                "FULL_XSSF",
+                "FULL_XSSF",
+                "DO_NOT_CALCULATE",
+                false,
+                false,
+                1,
+                1,
+                0,
+                0),
+            List.of(new RequestWarning(0, "step-1", "SET_CELL", "warning")));
 
     try (TrackingInputStream responseStream =
             new TrackingInputStream(GridGrindJson.writeResponseBytes(response));
         TrackingInputStream catalogStream =
-            new TrackingInputStream(GridGrindJson.writeProtocolCatalogBytes(catalog))) {
+            new TrackingInputStream(GridGrindJson.writeProtocolCatalogBytes(catalog));
+        TrackingInputStream taskCatalogStream =
+            new TrackingInputStream(GridGrindJson.writeTaskCatalogBytes(taskCatalog));
+        TrackingInputStream taskPlanStream =
+            new TrackingInputStream(GridGrindJson.writeTaskPlanTemplateBytes(taskPlanTemplate));
+        TrackingInputStream goalPlanStream =
+            new TrackingInputStream(GridGrindJson.writeGoalPlanReportBytes(goalPlanReport));
+        TrackingInputStream doctorReportStream =
+            new TrackingInputStream(GridGrindJson.writeRequestDoctorReportBytes(doctorReport))) {
       assertEquals(response, GridGrindJson.readResponse(responseStream));
       assertEquals(catalog, GridGrindJson.readProtocolCatalog(catalogStream));
+      assertEquals(taskCatalog, GridGrindJson.readTaskCatalog(taskCatalogStream));
+      assertEquals(taskPlanTemplate, GridGrindJson.readTaskPlanTemplate(taskPlanStream));
+      assertEquals(goalPlanReport, GridGrindJson.readGoalPlanReport(goalPlanStream));
+      assertEquals(doctorReport, GridGrindJson.readRequestDoctorReport(doctorReportStream));
       assertFalse(responseStream.closed);
       assertFalse(catalogStream.closed);
+      assertFalse(taskCatalogStream.closed);
+      assertFalse(taskPlanStream.closed);
+      assertFalse(goalPlanStream.closed);
+      assertFalse(doctorReportStream.closed);
     }
   }
 
@@ -58,6 +103,14 @@ class GridGrindJsonCoverageTest {
     try (TrackingInputStream responseStream =
             new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
         TrackingInputStream catalogStream =
+            new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
+        TrackingInputStream taskCatalogStream =
+            new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
+        TrackingInputStream taskPlanStream =
+            new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
+        TrackingInputStream goalPlanStream =
+            new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8));
+        TrackingInputStream doctorReportStream =
             new TrackingInputStream("{".getBytes(StandardCharsets.UTF_8))) {
       assertInstanceOf(
           InvalidJsonException.class,
@@ -67,9 +120,67 @@ class GridGrindJsonCoverageTest {
           InvalidJsonException.class,
           assertThrows(
               InvalidJsonException.class, () -> GridGrindJson.readProtocolCatalog(catalogStream)));
+      assertInstanceOf(
+          InvalidJsonException.class,
+          assertThrows(
+              InvalidJsonException.class, () -> GridGrindJson.readTaskCatalog(taskCatalogStream)));
+      assertInstanceOf(
+          InvalidJsonException.class,
+          assertThrows(
+              InvalidJsonException.class,
+              () -> GridGrindJson.readTaskPlanTemplate(taskPlanStream)));
+      assertInstanceOf(
+          InvalidJsonException.class,
+          assertThrows(
+              InvalidJsonException.class, () -> GridGrindJson.readGoalPlanReport(goalPlanStream)));
+      assertInstanceOf(
+          InvalidJsonException.class,
+          assertThrows(
+              InvalidJsonException.class,
+              () -> GridGrindJson.readRequestDoctorReport(doctorReportStream)));
       assertFalse(responseStream.closed);
       assertFalse(catalogStream.closed);
+      assertFalse(taskCatalogStream.closed);
+      assertFalse(taskPlanStream.closed);
+      assertFalse(goalPlanStream.closed);
+      assertFalse(doctorReportStream.closed);
     }
+  }
+
+  @Test
+  void invalidTaskCatalogBytesSurfaceInvalidJson() {
+    assertInstanceOf(
+        InvalidJsonException.class,
+        assertThrows(
+            InvalidJsonException.class,
+            () -> GridGrindJson.readTaskCatalog("{".getBytes(StandardCharsets.UTF_8))));
+  }
+
+  @Test
+  void invalidTaskPlanTemplateBytesSurfaceInvalidJson() {
+    assertInstanceOf(
+        InvalidJsonException.class,
+        assertThrows(
+            InvalidJsonException.class,
+            () -> GridGrindJson.readTaskPlanTemplate("{".getBytes(StandardCharsets.UTF_8))));
+  }
+
+  @Test
+  void invalidGoalPlanReportBytesSurfaceInvalidJson() {
+    assertInstanceOf(
+        InvalidJsonException.class,
+        assertThrows(
+            InvalidJsonException.class,
+            () -> GridGrindJson.readGoalPlanReport("{".getBytes(StandardCharsets.UTF_8))));
+  }
+
+  @Test
+  void invalidRequestDoctorReportBytesSurfaceInvalidJson() {
+    assertInstanceOf(
+        InvalidJsonException.class,
+        assertThrows(
+            InvalidJsonException.class,
+            () -> GridGrindJson.readRequestDoctorReport("{".getBytes(StandardCharsets.UTF_8))));
   }
 
   @Test
@@ -86,9 +197,52 @@ class GridGrindJsonCoverageTest {
                 () -> GridGrindJson.readProtocolCatalog((InputStream) null))
             .getMessage());
     assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class, () -> GridGrindJson.readTaskCatalog((InputStream) null))
+            .getMessage());
+    assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJson.readTaskPlanTemplate((InputStream) null))
+            .getMessage());
+    assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJson.readGoalPlanReport((InputStream) null))
+            .getMessage());
+    assertEquals(
+        "inputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJson.readRequestDoctorReport((InputStream) null))
+            .getMessage());
+    assertEquals(
         "bytes must not be null",
         assertThrows(
                 NullPointerException.class, () -> GridGrindJson.readProtocolCatalog((byte[]) null))
+            .getMessage());
+    assertEquals(
+        "bytes must not be null",
+        assertThrows(NullPointerException.class, () -> GridGrindJson.readTaskCatalog((byte[]) null))
+            .getMessage());
+    assertEquals(
+        "bytes must not be null",
+        assertThrows(
+                NullPointerException.class, () -> GridGrindJson.readTaskPlanTemplate((byte[]) null))
+            .getMessage());
+    assertEquals(
+        "bytes must not be null",
+        assertThrows(
+                NullPointerException.class, () -> GridGrindJson.readGoalPlanReport((byte[]) null))
+            .getMessage());
+    assertEquals(
+        "bytes must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJson.readRequestDoctorReport((byte[]) null))
             .getMessage());
     assertEquals(
         "request must not be null",
@@ -127,6 +281,51 @@ class GridGrindJsonCoverageTest {
         assertThrows(
                 NullPointerException.class,
                 () -> GridGrindJson.writeProtocolCatalog(null, GridGrindProtocolCatalog.catalog()))
+            .getMessage());
+    assertEquals(
+        "outputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () -> GridGrindJson.writeTaskCatalog(null, GridGrindTaskCatalog.catalog()))
+            .getMessage());
+    assertEquals(
+        "outputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJson.writeTaskPlanTemplate(
+                        null, GridGrindTaskPlanner.templateFor("DASHBOARD")))
+            .getMessage());
+    assertEquals(
+        "outputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJson.writeGoalPlanReport(
+                        null,
+                        GridGrindGoalPlanner.reportFor(
+                            "Create a monthly sales dashboard with charts")))
+            .getMessage());
+    assertEquals(
+        "outputStream must not be null",
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                    GridGrindJson.writeRequestDoctorReport(
+                        null,
+                        RequestDoctorReport.clean(
+                            new RequestDoctorReport.Summary(
+                                "NEW",
+                                "NONE",
+                                "FULL_XSSF",
+                                "FULL_XSSF",
+                                "DO_NOT_CALCULATE",
+                                false,
+                                false,
+                                0,
+                                0,
+                                0,
+                                0))))
             .getMessage());
   }
 
@@ -204,24 +403,126 @@ class GridGrindJsonCoverageTest {
   @Test
   void typeEntryAndRequestReadersStayDeterministicThroughPublicRoundTrip() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream taskOutputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream taskPlanOutputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream goalPlanOutputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream doctorReportOutputStream = new ByteArrayOutputStream();
     TypeEntry entry = GridGrindProtocolCatalog.entryFor("GET_CELLS").orElseThrow();
+    var taskEntry = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
+    TaskPlanTemplate taskPlanTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
+    GoalPlanReport goalPlanReport =
+        GridGrindGoalPlanner.reportFor("Create a monthly sales dashboard with charts");
+    RequestDoctorReport doctorReport =
+        RequestDoctorReport.clean(
+            new RequestDoctorReport.Summary(
+                "NEW",
+                "SAVE_AS",
+                "FULL_XSSF",
+                "FULL_XSSF",
+                "DO_NOT_CALCULATE",
+                false,
+                false,
+                0,
+                0,
+                0,
+                0));
     GridGrindJson.writeTypeEntry(outputStream, entry);
+    GridGrindJson.writeTaskEntry(taskOutputStream, taskEntry);
+    GridGrindJson.writeTaskPlanTemplate(taskPlanOutputStream, taskPlanTemplate);
+    GridGrindJson.writeGoalPlanReport(goalPlanOutputStream, goalPlanReport);
+    GridGrindJson.writeRequestDoctorReport(doctorReportOutputStream, doctorReport);
     Catalog catalog =
         GridGrindJson.readProtocolCatalog(
             new ByteArrayInputStream(
                 GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog())));
+    TaskCatalog taskCatalog =
+        GridGrindJson.readTaskCatalog(
+            new ByteArrayInputStream(
+                GridGrindJson.writeTaskCatalogBytes(GridGrindTaskCatalog.catalog())));
+    TaskPlanTemplate decodedTaskPlanTemplate =
+        GridGrindJson.readTaskPlanTemplate(
+            new ByteArrayInputStream(GridGrindJson.writeTaskPlanTemplateBytes(taskPlanTemplate)));
+    GoalPlanReport decodedGoalPlanReport =
+        GridGrindJson.readGoalPlanReport(
+            new ByteArrayInputStream(GridGrindJson.writeGoalPlanReportBytes(goalPlanReport)));
+    RequestDoctorReport decodedDoctorReport =
+        GridGrindJson.readRequestDoctorReport(
+            new ByteArrayInputStream(GridGrindJson.writeRequestDoctorReportBytes(doctorReport)));
     WorkbookPlan template =
         GridGrindJson.readRequest(
             new ByteArrayInputStream(
                 GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate())));
 
     assertFalse(outputStream.toString(StandardCharsets.UTF_8).isBlank());
+    assertFalse(taskOutputStream.toString(StandardCharsets.UTF_8).isBlank());
+    assertFalse(taskPlanOutputStream.toString(StandardCharsets.UTF_8).isBlank());
+    assertFalse(goalPlanOutputStream.toString(StandardCharsets.UTF_8).isBlank());
+    assertFalse(doctorReportOutputStream.toString(StandardCharsets.UTF_8).isBlank());
     assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
+    assertEquals(GridGrindTaskCatalog.catalog(), taskCatalog);
+    assertEquals(taskPlanTemplate, decodedTaskPlanTemplate);
+    assertEquals(goalPlanReport, decodedGoalPlanReport);
+    assertEquals(doctorReport, decodedDoctorReport);
     assertEquals(GridGrindProtocolCatalog.requestTemplate(), template);
+  }
+
+  @Test
+  void streamWriteApisMatchByteArraySerializationsForLargePayloads() throws IOException {
+    String largeText = "x".repeat(200_000);
+    WorkbookPlan request =
+        GridGrindJson.readRequest(
+            """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "set-owner",
+                          "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                          "action": {
+                            "type": "SET_CELL",
+                            "value": {
+                              "type": "TEXT",
+                              "source": { "type": "INLINE", "text": "%s" }
+                            }
+                          }
+                        }
+                      ]
+                    }
+                    """
+                .formatted(largeText)
+                .getBytes(StandardCharsets.UTF_8));
+    GridGrindResponse response =
+        new GridGrindResponse.Success(
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            List.of(
+                new dev.erst.gridgrind.contract.query.InspectionResult.WorkbookSummaryResult(
+                    "summary",
+                    new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false))));
+    Catalog catalog = GridGrindProtocolCatalog.catalog();
+    assertStreamSerializationMatchesBytes(
+        GridGrindJson.writeRequestBytes(request), out -> GridGrindJson.writeRequest(out, request));
+    assertStreamSerializationMatchesBytes(
+        GridGrindJson.writeResponseBytes(response),
+        out -> GridGrindJson.writeResponse(out, response));
+    assertStreamSerializationMatchesBytes(
+        GridGrindJson.writeProtocolCatalogBytes(catalog),
+        out -> GridGrindJson.writeProtocolCatalog(out, catalog));
   }
 
   private static IllegalArgumentException invokeInvalidPayload(JacksonException exception) {
     return GridGrindJson.invalidPayload(exception);
+  }
+
+  private static void assertStreamSerializationMatchesBytes(byte[] expected, StreamWriter writer)
+      throws IOException {
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    writer.write(outputStream);
+    assertArrayEquals(expected, outputStream.toByteArray());
   }
 
   /** Input stream wrapper that records whether caller-owned close was triggered. */
@@ -247,6 +548,13 @@ class GridGrindJsonCoverageTest {
     public void close() {
       closed = true;
     }
+  }
+
+  /** One streamed JSON writer shape used to prove output-stream APIs avoid buffering drift. */
+  @FunctionalInterface
+  @SuppressWarnings("NotJavadoc")
+  private interface StreamWriter {
+    void write(OutputStream outputStream) throws IOException;
   }
 
   /** Synthetic Jackson exception used to cover wrapped validation-cause wording. */

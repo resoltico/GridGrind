@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.48.0"
+version: "0.49.0"
 domain: DEVELOPER_JAZZER
 updated: "2026-04-17"
 route:
@@ -300,7 +300,7 @@ shared included build logic under `../gradle/build-logic`.
 - standard `main` source set for shared support and local operator tooling
 - standard `test` source set for deterministic support tests
 - custom `fuzz` source set for Jazzer harness classes and committed regression inputs
-- shared version-catalog dependency alignment for JUnit 6, Jazzer 0.30.0, Jackson 3.0.3,
+- shared version-catalog dependency alignment for JUnit 6, Jazzer 0.30.0, Jackson 3.1.2,
   Apache POI 5.5.1, Log4j, and the local product modules
 - `JavaExec` tasks for local operator commands and per-harness Jazzer execution
 - one explicit JUnit Platform launcher entrypoint for running Jazzer harnesses outside Gradle's
