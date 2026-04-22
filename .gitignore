@@ -8,6 +8,8 @@ target/
 # IDE compiler output (VSCode Java extension, Eclipse)
 bin/
 **/bin/
+!jazzer/bin/
+!jazzer/bin/*
 
 # Kotlin daemon sessions (buildSrc)
 .kotlin/

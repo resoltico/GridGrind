@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+gradle_args=()
+if [[ $# -ge 1 && "$1" != --* ]]; then
+  gradle_args+=("-PjazzerTarget=$1")
+  shift
+fi
+
+"${script_dir}/_run-task" jazzerRefreshPromotedMetadata "${gradle_args[@]}" "$@"

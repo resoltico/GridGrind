@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.51.0] - 2026-04-22
+
 ### Fixed
 
 - Sheet copy now repairs embedded-object sheet relationships that Apache POI XSSF `cloneSheet`
@@ -15,6 +17,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `scripts/verify-release-primary-checkout.sh`, a dedicated shell regression for it, and updated
   release docs/check wiring so releasing from a disposable worktree cannot quietly leave the
   primary checkout behind `origin/main` with stale version-bearing files and misleading overlays.
+- The supported Jazzer wrapper surface is now part of the tracked repository instead of hidden
+  behind ignored local `jazzer/bin/` files. Clean release worktrees now carry the same
+  `jazzer/bin/*` operator scripts as the primary checkout, and a new regression fails if the
+  documented Jazzer wrapper surface drifts from what a clean checkout actually ships.
 
 ## [0.50.0] - 2026-04-22
 
@@ -2036,7 +2042,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.50.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.51.0...HEAD
+[0.51.0]: https://github.com/resoltico/GridGrind/compare/v0.50.0...v0.51.0
 [0.50.0]: https://github.com/resoltico/GridGrind/compare/v0.49.0...v0.50.0
 [0.49.0]: https://github.com/resoltico/GridGrind/compare/v0.48.0...v0.49.0
 [0.48.0]: https://github.com/resoltico/GridGrind/compare/v0.47.0...v0.48.0

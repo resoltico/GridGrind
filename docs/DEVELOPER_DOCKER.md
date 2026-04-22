@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.50.0"
+version: "0.51.0"
 domain: DEVELOPER_DOCKER
 updated: "2026-04-16"
 route:

@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.50.0"
+version: "0.51.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-04-22"
 route:
@@ -98,6 +98,9 @@ Then verify every item in this checklist. All must be true before any commit or 
   - `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`
 - All Markdown docs that actually carry AFAD frontmatter — `PATENTS.md`, `jazzer/README.md`, and
   every `docs/*.md` file — have `version:` set to the target version.
+- Every documented operator surface is present from the clean release checkout itself. Do not rely
+  on ignored local helper scripts, generated wrappers, or other unpublished files from the primary
+  checkout.
 - `README.md` does not reference any prior version's container tags.
 - All example JSON files use the current wire names and field shapes for this version.
 - GitHub repository settings are still aligned with this procedure:

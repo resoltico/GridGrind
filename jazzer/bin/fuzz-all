@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+"${script_dir}/fuzz-protocol-request" "$@"
+"${script_dir}/fuzz-protocol-workflow" "$@"
+"${script_dir}/fuzz-engine-command-sequence" "$@"
+"${script_dir}/fuzz-xlsx-roundtrip" "$@"

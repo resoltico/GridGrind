@@ -746,6 +746,7 @@ run_shell_stage 'shell-syntax' 'Stage 4/5: checking release-surface shell script
         "'"${repo_root}"'/scripts/test-check-process-support.sh"
         "'"${repo_root}"'/scripts/test-contract-module-split.sh"
         "'"${repo_root}"'/scripts/test-explicit-import-gate.sh"
+        "'"${repo_root}"'/scripts/test-jazzer-public-surface.sh"
         "'"${repo_root}"'/scripts/test-jazzer-run-lock.sh"
         "'"${repo_root}"'/scripts/test-selector-contract-surface.sh"
         "'"${repo_root}"'/scripts/test-verify-release-merge-handoff.sh"
