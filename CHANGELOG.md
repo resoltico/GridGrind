@@ -5,6 +5,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.52.0] - 2026-04-22
+
+### Fixed
+
+- Chart readback now resolves `XSSFGraphicFrame -> chart relation -> XSSFChart` directly instead
+  of scanning every chart relation and trusting POI's optional `chart.getGraphicFrame()`
+  backpointer. Mixed live-chart plus frameless-chart states now degrade cleanly instead of
+  crashing factual drawing/chart inspection, explicit graphic-frame snapshotting no longer loses
+  formula-resolution context when POI leaves the chart backpointer unset, the reproduced
+  frameless-chart relation crash is now promoted as a committed success seed, and multi-chart
+  copied sheets are now covered by focused regressions so orphaned chart-frame associations
+  cannot drift back in quietly after the `0.51.0` release.
+- Excel-facing sheet layout limits are now consistent across the contract, engine, CLI catalog,
+  and docs. Row height now enforces Excel's real `409.0`-point ceiling instead of POI's wider
+  twip storage envelope, `SET_SHEET_PRESENTATION.sheetDefaults` now validates the same default
+  row/column limits as explicit sizing commands, `SET_SHEET_ZOOM` is now registered in the public
+  limitations registry, and malformed drawing packages with empty embedded-object bytes now
+  degrade into truthful zero-byte readback instead of crashing workbook inspection or Jazzer
+  round-trip verification.
+- The release protocol now covers the real bootstrap case where the primary checkout holds the
+  unpublished release payload but release verification must run from a clean worktree. The
+  documented flow now requires an explicit bootstrap branch or exported patch before applying that
+  payload in the release worktree, so a dirty or problematic primary checkout no longer forces
+  operators into an undocumented release path.
+
 ## [0.51.0] - 2026-04-22
 
 ### Fixed
@@ -2042,7 +2067,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.51.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.52.0...HEAD
+[0.52.0]: https://github.com/resoltico/GridGrind/compare/v0.51.0...v0.52.0
 [0.51.0]: https://github.com/resoltico/GridGrind/compare/v0.50.0...v0.51.0
 [0.50.0]: https://github.com/resoltico/GridGrind/compare/v0.49.0...v0.50.0
 [0.49.0]: https://github.com/resoltico/GridGrind/compare/v0.48.0...v0.49.0

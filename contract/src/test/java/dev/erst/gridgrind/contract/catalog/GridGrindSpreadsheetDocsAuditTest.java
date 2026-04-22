@@ -96,7 +96,23 @@ class GridGrindSpreadsheetDocsAuditTest {
             assertTrue(
                 limitations.contains(
                     "| Macro-enabled OOXML (`.xlsm`) | Out of scope for the shipped GridGrind contract; LIM-002 rejects it even though Apache POI can preserve and extract VBA from `.xlsm` packages. |"),
-                "unsupported-features table must describe .xlsm as an out-of-scope product choice"));
+                "unsupported-features table must describe .xlsm as an out-of-scope product choice"),
+        () ->
+            assertFalse(
+                limitations.contains("WorkbookOperation.Validation"),
+                "limitations doc must point at current validation owners"),
+        () ->
+            assertTrue(
+                limitations.contains("### LIM-022"),
+                "limitations doc must register the zoom ceiling"),
+        () ->
+            assertTrue(
+                limitations.contains("409.0"),
+                "limitations doc must use the Excel row-height ceiling"),
+        () ->
+            assertTrue(
+                limitations.contains("MutationAction.Validation.requireZoomPercent"),
+                "zoom limit entry must point at the current validation path"));
   }
 
   private static String readDoc(String relativePath) throws IOException {

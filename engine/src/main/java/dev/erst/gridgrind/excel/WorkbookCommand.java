@@ -1020,36 +1020,10 @@ public sealed interface WorkbookCommand
   }
 
   private static void requireColumnWidthCharacters(double widthCharacters) {
-    requireFinitePositive(widthCharacters, "widthCharacters");
-    if (widthCharacters > 255.0d) {
-      throw new IllegalArgumentException(
-          "widthCharacters must be less than or equal to 255.0: " + widthCharacters);
-    }
-    if (Math.round(widthCharacters * 256.0d) <= 0) {
-      throw new IllegalArgumentException(
-          "widthCharacters is too small to produce a visible Excel column width: "
-              + widthCharacters);
-    }
+    ExcelSheetLayoutLimits.requireColumnWidthCharacters(widthCharacters, "widthCharacters");
   }
 
   private static void requireRowHeightPoints(double heightPoints) {
-    requireFinitePositive(heightPoints, "heightPoints");
-    if (heightPoints > Short.MAX_VALUE / 20.0d) {
-      throw new IllegalArgumentException(
-          "heightPoints is too large for Excel row height storage: " + heightPoints);
-    }
-    if ((long) (heightPoints * 20.0d) <= 0) {
-      throw new IllegalArgumentException(
-          "heightPoints is too small to produce a visible Excel row height: " + heightPoints);
-    }
-  }
-
-  private static void requireFinitePositive(double value, String fieldName) {
-    if (!Double.isFinite(value)) {
-      throw new IllegalArgumentException(fieldName + " must be finite");
-    }
-    if (value <= 0.0d) {
-      throw new IllegalArgumentException(fieldName + " must be greater than 0");
-    }
+    ExcelSheetLayoutLimits.requireRowHeightPoints(heightPoints, "heightPoints");
   }
 }

@@ -83,6 +83,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -810,6 +811,53 @@ class DefaultGridGrindRequestExecutorTest {
     assertEquals(1, reopenedLayout.columns().get(1).outlineLevel());
     assertTrue(reopenedLayout.columns().get(4).collapsed());
     assertTrue(reopenedLayout.columns().get(5).hidden());
+  }
+
+  @Test
+  void returnsFactualMalformedPositiveLayoutValuesWithoutClampingReadback() throws IOException {
+    Path sourceWorkbook = XlsxRoundTrip.newWorkbookPath("gridgrind-layout-factual-source-");
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Layout");
+      workbook.sheet("Layout").setCell("A1", ExcelCellValue.text("Header"));
+      workbook.sheet("Layout").setColumnWidth(0, 0, 16.0d);
+      workbook.save(sourceWorkbook);
+    }
+
+    Path malformedWorkbook =
+        dev.erst.gridgrind.excel.OoxmlPartMutator.rewriteEntries(
+            sourceWorkbook,
+            Map.of(
+                "xl/worksheets/sheet1.xml",
+                xml ->
+                    xml.replace("<sheetFormatPr defaultRowHeight=\"15.0\"/>", "")
+                        .replace(
+                            "<sheetViews>", "<sheetFormatPr defaultRowHeight=\"999\"/><sheetViews>")
+                        .replace("width=\"16.0\"", "width=\"300.0\"")));
+
+    GridGrindResponse.Success success =
+        success(
+            new DefaultGridGrindRequestExecutor()
+                .execute(
+                    request(
+                        new WorkbookPlan.WorkbookSource.ExistingFile(malformedWorkbook.toString()),
+                        new WorkbookPlan.WorkbookPersistence.None(),
+                        List.of(),
+                        inspect(
+                            "layout",
+                            new SheetSelector.ByName("Layout"),
+                            new InspectionQuery.GetSheetLayout()))));
+
+    GridGrindResponse.SheetLayoutReport layout =
+        read(success, "layout", InspectionResult.SheetLayoutResult.class).layout();
+    assertEquals(999.0d, layout.presentation().sheetDefaults().defaultRowHeightPoints());
+    assertEquals(300.0d, layout.columns().getFirst().widthCharacters());
+    assertEquals(999.0d, layout.rows().getFirst().heightPoints());
+
+    dev.erst.gridgrind.excel.WorkbookReadResult.SheetLayout reopenedLayout =
+        XlsxRoundTrip.sheetLayout(malformedWorkbook, "Layout");
+    assertEquals(999.0d, reopenedLayout.presentation().sheetDefaults().defaultRowHeightPoints());
+    assertEquals(300.0d, reopenedLayout.columns().getFirst().widthCharacters());
+    assertEquals(999.0d, reopenedLayout.rows().getFirst().heightPoints());
   }
 
   @Test

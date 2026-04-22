@@ -7,6 +7,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
 import org.apache.poi.xssf.usermodel.XSSFChart;
+import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTArea3DChart;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTAreaChart;
@@ -33,11 +34,19 @@ final class ExcelChartPlotSnapshotSupport {
 
   static List<ExcelChartSnapshot.Plot> snapshotPlots(
       XSSFChart chart, List<XDDFChartData> chartData) {
-    return snapshotPlots(chart, chartData, null);
+    return snapshotPlots(chart, chart.getGraphicFrame(), chartData, null);
   }
 
   static List<ExcelChartSnapshot.Plot> snapshotPlots(
       XSSFChart chart, List<XDDFChartData> chartData, ExcelFormulaRuntime formulaRuntime) {
+    return snapshotPlots(chart, chart.getGraphicFrame(), chartData, formulaRuntime);
+  }
+
+  static List<ExcelChartSnapshot.Plot> snapshotPlots(
+      XSSFChart chart,
+      XSSFGraphicFrame graphicFrame,
+      List<XDDFChartData> chartData,
+      ExcelFormulaRuntime formulaRuntime) {
     if (chartData.isEmpty()) {
       return List.of(
           new ExcelChartSnapshot.Unsupported("UNKNOWN", "Chart contains no parsed plots"));
@@ -46,7 +55,7 @@ final class ExcelChartPlotSnapshotSupport {
     List<ExcelChartSnapshot.Plot> plots = new ArrayList<>();
     PlotAreaState state = new PlotAreaState(chart);
     PlotCursor cursor = new PlotCursor();
-    XSSFSheet contextSheet = chart.getGraphicFrame().getDrawing().getSheet();
+    XSSFSheet contextSheet = ExcelChartSnapshotSupport.contextSheet(chart, graphicFrame);
     for (XDDFChartData data : chartData) {
       try {
         plots.add(snapshotPlot(contextSheet, state, cursor, data, formulaRuntime));

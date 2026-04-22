@@ -119,6 +119,63 @@ class ExcelDrawingControllerChartSeamsTest {
     }
   }
 
+  @Test
+  void liveChartReadbackIgnoresUnrelatedFrameLessChartRelations() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-mixed-frameless-");
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Charts");
+      seedData(sheet);
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+
+      XSSFChart liveChart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 1, 1, 6, 10));
+      liveChart.getGraphicFrame().setName("LiveChart");
+      XDDFCategoryAxis liveCategoryAxis = liveChart.createCategoryAxis(AxisPosition.BOTTOM);
+      XDDFValueAxis liveValueAxis = liveChart.createValueAxis(AxisPosition.LEFT);
+      liveValueAxis.setCrosses(AxisCrosses.AUTO_ZERO);
+      var liveData = liveChart.createData(ChartTypes.LINE, liveCategoryAxis, liveValueAxis);
+      liveData.addSeries(
+          XDDFDataSourcesFactory.fromStringCellRange(sheet, CellRangeAddress.valueOf("A2:A4")),
+          XDDFDataSourcesFactory.fromNumericCellRange(sheet, CellRangeAddress.valueOf("B2:B4")));
+      liveChart.plot(liveData);
+
+      XSSFChart frameLessChart =
+          drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 8, 1, 13, 10));
+      frameLessChart.getGraphicFrame().setName("FrameLess");
+      XDDFCategoryAxis frameLessCategoryAxis =
+          frameLessChart.createCategoryAxis(AxisPosition.BOTTOM);
+      XDDFValueAxis frameLessValueAxis = frameLessChart.createValueAxis(AxisPosition.LEFT);
+      frameLessValueAxis.setCrosses(AxisCrosses.AUTO_ZERO);
+      var frameLessData =
+          frameLessChart.createData(ChartTypes.LINE, frameLessCategoryAxis, frameLessValueAxis);
+      frameLessData.addSeries(
+          XDDFDataSourcesFactory.fromStringCellRange(sheet, CellRangeAddress.valueOf("A2:A4")),
+          XDDFDataSourcesFactory.fromNumericCellRange(sheet, CellRangeAddress.valueOf("B2:B4")));
+      frameLessChart.plot(frameLessData);
+
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    rewriteWorkbookEntry(
+        workbookPath,
+        "/xl/drawings/drawing1.xml",
+        xml ->
+            xml.replaceFirst(
+                "(?s)<xdr:graphicFrame><xdr:nvGraphicFramePr><xdr:cNvPr[^>]*name=\"FrameLess\".*?</xdr:graphicFrame>",
+                ""));
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      ExcelSheet sheet = workbook.sheet("Charts");
+      assertEquals(
+          List.of("LiveChart"), sheet.charts().stream().map(ExcelChartSnapshot::name).toList());
+      assertEquals(
+          List.of("LiveChart"),
+          sheet.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
+    }
+  }
+
   private static void seedData(XSSFSheet sheet) {
     sheet.createRow(0).createCell(0).setCellValue("Month");
     sheet.getRow(0).createCell(1).setCellValue("Plan");

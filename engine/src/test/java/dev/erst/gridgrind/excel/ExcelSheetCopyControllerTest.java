@@ -210,6 +210,58 @@ class ExcelSheetCopyControllerTest {
   }
 
   @Test
+  void copySheetPreservesMultipleChartsWithoutFramelessRelations() throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet source = workbook.getOrCreateSheet("Source");
+      ExcelChartTestSupport.seedChartData(source);
+      source.setChart(
+          ExcelChartTestSupport.barChart(
+              "OpsBar",
+              ExcelChartTestSupport.anchor(0, 5, 6, 16),
+              new ExcelChartDefinition.Title.Text("Plan"),
+              new ExcelChartDefinition.Legend.Hidden(),
+              ExcelChartDisplayBlanksAs.GAP,
+              true,
+              false,
+              ExcelChartBarDirection.COLUMN,
+              List.of(
+                  new ExcelChartDefinition.Series(
+                      new ExcelChartDefinition.Title.Text("Plan"),
+                      ExcelChartTestSupport.ref("A2:A4"),
+                      ExcelChartTestSupport.ref("B2:B4")))));
+      source.setChart(
+          ExcelChartTestSupport.lineChart(
+              "OpsLine",
+              ExcelChartTestSupport.anchor(7, 5, 13, 16),
+              new ExcelChartDefinition.Title.Formula("C1"),
+              new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.RIGHT),
+              ExcelChartDisplayBlanksAs.SPAN,
+              true,
+              false,
+              List.of(
+                  new ExcelChartDefinition.Series(
+                      new ExcelChartDefinition.Title.Text("Actual"),
+                      ExcelChartTestSupport.ref("A2:A4"),
+                      ExcelChartTestSupport.ref("C2:C4")))));
+
+      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+
+      ExcelSheet replica = workbook.sheet("Replica");
+      assertEquals(
+          List.of("OpsBar", "OpsLine"),
+          replica.charts().stream().map(ExcelChartSnapshot::name).toList());
+      assertEquals(
+          List.of("OpsBar", "OpsLine"),
+          replica.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
+
+      XSSFDrawing drawing = replica.xssfSheet().getDrawingPatriarch();
+      assertNotNull(drawing);
+      drawing.getShapes();
+      assertTrue(drawing.getCharts().stream().allMatch(chart -> chart.getGraphicFrame() != null));
+    }
+  }
+
+  @Test
   void copySheetRetargetsAdvancedWorkbookCoreStructures() throws IOException {
     ExcelAutofilterController autofilterController = new ExcelAutofilterController();
     ExcelTableController tableController = new ExcelTableController();

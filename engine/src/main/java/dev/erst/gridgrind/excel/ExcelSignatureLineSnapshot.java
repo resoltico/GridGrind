@@ -48,8 +48,8 @@ public record ExcelSignatureLineSnapshot(
     if (previewFormat == null && previewByteSize != null) {
       throw new IllegalArgumentException("previewByteSize requires previewFormat");
     }
-    if (previewByteSize != null && previewByteSize <= 0L) {
-      throw new IllegalArgumentException("previewByteSize must be greater than 0");
+    if (previewByteSize != null && previewByteSize < 0L) {
+      throw new IllegalArgumentException("previewByteSize must not be negative");
     }
     if (previewFormat == null && previewSha256 != null) {
       throw new IllegalArgumentException("previewSha256 requires previewFormat");

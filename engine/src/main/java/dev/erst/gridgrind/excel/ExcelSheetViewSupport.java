@@ -65,10 +65,7 @@ final class ExcelSheetViewSupport {
   }
 
   /** Validates one requested zoom percentage. */
-  static void requireZoomPercent(int zoomPercent) {
-    if (zoomPercent < 10 || zoomPercent > 400) {
-      throw new IllegalArgumentException(
-          "zoomPercent must be between 10 and 400 inclusive: " + zoomPercent);
-    }
+  static void requireZoomPercent(int zoomPercent) { // LIM-022
+    ExcelSheetLayoutLimits.requireZoomPercent(zoomPercent, "zoomPercent");
   }
 }

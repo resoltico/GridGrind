@@ -629,6 +629,61 @@ class ExcelDrawingControllerTest {
   }
 
   @Test
+  void embeddedObjectReadbackSurvivesEmptyPackageBytes() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-empty-package-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook
+          .getOrCreateSheet("Ops")
+          .setEmbeddedObject(
+              new ExcelEmbeddedObjectDefinition(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  anchor(1, 1, 4, 6)));
+      workbook.save(workbookPath);
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFObjectData objectData =
+          workbook.getSheet("Ops").createDrawingPatriarch().getShapes().stream()
+              .filter(XSSFObjectData.class::isInstance)
+              .map(XSSFObjectData.class::cast)
+              .findFirst()
+              .orElseThrow();
+      org.apache.poi.openxml4j.opc.PackagePart objectPart =
+          new ExcelDrawingController().oleObjectPart(objectData);
+      assertNotNull(objectPart);
+      try (var outputStream = objectPart.getOutputStream()) {
+        outputStream.write(new byte[0]);
+      }
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
+          assertInstanceOf(
+              ExcelDrawingObjectSnapshot.EmbeddedObject.class,
+              workbook.sheet("Ops").drawingObjects().getFirst());
+      ExcelDrawingObjectPayload.EmbeddedObject payload =
+          assertInstanceOf(
+              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              workbook.sheet("Ops").drawingObjectPayload("OpsEmbed"));
+
+      assertEquals(0L, snapshot.byteSize());
+      assertEquals(ExcelDrawingBinarySupport.sha256(new byte[0]), snapshot.sha256());
+      assertEquals(0, payload.data().size());
+      assertArrayEquals(new byte[0], payload.data().bytes());
+    }
+  }
+
+  @Test
   void chartOperationsSupportAuthoringMutationAndDeletion() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-roundtrip-");
 

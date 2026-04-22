@@ -70,6 +70,7 @@ import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -757,7 +758,7 @@ public final class WorkbookInvariantChecks {
   private static void requirePictureDrawingObjectShape(DrawingObjectReport.Picture picture) {
     requireNonBlank(picture.contentType(), "picture contentType");
     requireNonBlank(picture.sha256(), "picture sha256");
-    require(picture.byteSize() > 0L, "picture byteSize must be positive");
+    require(picture.byteSize() >= 0L, "picture byteSize must not be negative");
     if (picture.widthPixels() != null) {
       require(picture.widthPixels() >= 0, "picture widthPixels must not be negative");
     }
@@ -790,7 +791,7 @@ public final class WorkbookInvariantChecks {
       DrawingObjectReport.EmbeddedObject embeddedObject) {
     requireNonBlank(embeddedObject.contentType(), "embedded object contentType");
     requireNonBlank(embeddedObject.sha256(), "embedded object sha256");
-    require(embeddedObject.byteSize() > 0L, "embedded object byteSize must be positive");
+    require(embeddedObject.byteSize() >= 0L, "embedded object byteSize must not be negative");
     if (embeddedObject.label() != null) {
       require(!embeddedObject.label().isBlank(), "embedded object label must not be blank");
     }
@@ -802,8 +803,8 @@ public final class WorkbookInvariantChecks {
     }
     if (embeddedObject.previewByteSize() != null) {
       require(
-          embeddedObject.previewByteSize() > 0L,
-          "embedded object previewByteSize must be positive");
+          embeddedObject.previewByteSize() >= 0L,
+          "embedded object previewByteSize must not be negative");
       require(
           embeddedObject.previewFormat() != null,
           "embedded object previewByteSize requires previewFormat");
@@ -841,7 +842,8 @@ public final class WorkbookInvariantChecks {
     }
     if (signatureLine.previewByteSize() != null) {
       require(
-          signatureLine.previewByteSize() > 0L, "signature line previewByteSize must be positive");
+          signatureLine.previewByteSize() >= 0L,
+          "signature line previewByteSize must not be negative");
       require(signatureLine.previewFormat() != null, "signature line previewFormat must exist");
     }
     if (signatureLine.previewSha256() != null) {
@@ -865,7 +867,7 @@ public final class WorkbookInvariantChecks {
     requireNonBlank(payload.name(), "drawing payload name");
     requireNonBlank(payload.contentType(), "drawing payload contentType");
     requireNonBlank(payload.sha256(), "drawing payload sha256");
-    requireNonBlank(payload.base64Data(), "drawing payload base64Data");
+    requireBase64(payload.base64Data(), "drawing payload base64Data");
     switch (payload) {
       case DrawingObjectPayloadReport.Picture picture -> {
         requireNonBlank(picture.fileName(), "picture payload fileName");
@@ -1156,7 +1158,7 @@ public final class WorkbookInvariantChecks {
       case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.Picture picture -> {
         requireNonBlank(picture.contentType(), "engine picture contentType");
         requireNonBlank(picture.sha256(), "engine picture sha256");
-        require(picture.byteSize() > 0L, "engine picture byteSize must be positive");
+        require(picture.byteSize() >= 0L, "engine picture byteSize must not be negative");
       }
       case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.Chart chart -> {
         require(chart.plotTypeTokens() != null, "engine chart plotTypeTokens must not be null");
@@ -1179,7 +1181,7 @@ public final class WorkbookInvariantChecks {
       case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.EmbeddedObject embeddedObject -> {
         requireNonBlank(embeddedObject.contentType(), "engine embedded contentType");
         requireNonBlank(embeddedObject.sha256(), "engine embedded sha256");
-        require(embeddedObject.byteSize() > 0L, "engine embedded byteSize must be positive");
+        require(embeddedObject.byteSize() >= 0L, "engine embedded byteSize must not be negative");
       }
       case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.SignatureLine signatureLine ->
           requireEngineSignatureLineDrawingObjectShape(signatureLine);
@@ -1223,8 +1225,8 @@ public final class WorkbookInvariantChecks {
     }
     if (signatureLine.previewByteSize() != null) {
       require(
-          signatureLine.previewByteSize() > 0L,
-          "engine signature line previewByteSize must be positive");
+          signatureLine.previewByteSize() >= 0L,
+          "engine signature line previewByteSize must not be negative");
       require(
           signatureLine.previewFormat() != null, "engine signature line previewFormat must exist");
     }
@@ -2557,6 +2559,15 @@ public final class WorkbookInvariantChecks {
   private static void requireNonBlank(String value, String fieldName) {
     require(value != null, fieldName + " must not be null");
     require(!value.isBlank(), fieldName + " must not be blank");
+  }
+
+  private static void requireBase64(String value, String fieldName) {
+    require(value != null, fieldName + " must not be null");
+    try {
+      Base64.getDecoder().decode(value);
+    } catch (IllegalArgumentException exception) {
+      throw new IllegalStateException(fieldName + " must be valid base64", exception);
+    }
   }
 
   private static void requireNonBlank(TextSourceInput value, String fieldName) {

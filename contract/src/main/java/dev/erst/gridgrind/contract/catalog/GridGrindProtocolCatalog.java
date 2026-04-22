@@ -213,9 +213,25 @@ public final class GridGrindProtocolCatalog {
                       "STREAMING_WRITE mode",
                       GridGrindExecutionModeMetadata.streamingWrite().catalogSummary()),
                   new CliSurface.DefinitionEntry(
-                      "Column widthCharacters", "> 0 and <= 255 (Excel limit)."),
+                      "Column widthCharacters",
+                      "authored widthCharacters > 0 and <= 255 (Excel limit)."),
                   new CliSurface.DefinitionEntry(
-                      "Row heightPoints", "> 0 and <= 1638.35 (Excel limit: 32767 twips)."),
+                      "Default sheet sizing",
+                      "authored defaultColumnWidth must be > 0 and <= 255;"
+                          + " authored defaultRowHeightPoints must be > 0 and <= "
+                          + dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS
+                          + " (Excel limits)."),
+                  new CliSurface.DefinitionEntry(
+                      "Row heightPoints",
+                      "authored heightPoints > 0 and <= "
+                          + dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS
+                          + " (Excel row height limit)."),
+                  new CliSurface.DefinitionEntry(
+                      "Zoom percent",
+                      dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.MIN_ZOOM_PERCENT
+                          + " to "
+                          + dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.MAX_ZOOM_PERCENT
+                          + " inclusive (Excel zoom limit)."),
                   new CliSurface.DefinitionEntry(
                       "Row structural edits",
                       "rejected when they would move tables, sheet autofilters, or data"
@@ -565,7 +581,9 @@ public final class GridGrindProtocolCatalog {
               MutationAction.SetRowHeight.class,
               "SET_ROW_HEIGHT",
               "Set one or more row heights in Excel point units."
-                  + " heightPoints must be > 0 and <= 1638.35 (Excel row height limit: 32767 twips)."),
+                  + " heightPoints must be > 0 and <= "
+                  + dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS
+                  + " (Excel row height limit)."),
           descriptor(
               MutationAction.InsertRows.class,
               "INSERT_ROWS",
@@ -652,15 +670,21 @@ public final class GridGrindProtocolCatalog {
               MutationAction.SetSheetZoom.class,
               "SET_SHEET_ZOOM",
               "Set the sheet zoom percentage."
-                  + " zoomPercent must be between 10 and 400 inclusive."),
+                  + " zoomPercent must be between "
+                  + dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.MIN_ZOOM_PERCENT
+                  + " and "
+                  + dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.MAX_ZOOM_PERCENT
+                  + " inclusive."),
           descriptor(
               MutationAction.SetSheetPresentation.class,
               "SET_SHEET_PRESENTATION",
               "Apply one authoritative supported sheet-presentation state to a sheet."
                   + " Omitted nested fields normalize to defaults or clear state."
                   + " The supported surface covers screen display flags, right-to-left mode,"
-                  + " tab color, outline summary placement, default row and column sizing,"
-                  + " and ignored-errors ranges."),
+                  + " tab color, outline summary placement, authored default row and column sizing"
+                  + " (defaultColumnWidth > 0 and <= 255; defaultRowHeightPoints > 0 and <= "
+                  + dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS
+                  + "), and ignored-errors ranges."),
           descriptor(
               MutationAction.SetPrintLayout.class,
               "SET_PRINT_LAYOUT",
@@ -2732,7 +2756,11 @@ public final class GridGrindProtocolCatalog {
               SheetDefaultsInput.class,
               "SheetDefaultsInput",
               "Default row and column sizing authored as part of sheet-presentation state."
-                  + " All fields are optional and normalize to defaults when omitted.",
+                  + " All fields are optional and normalize to defaults when omitted."
+                  + " defaultColumnWidth must be > 0 and <= 255;"
+                  + " defaultRowHeightPoints must be > 0 and <= "
+                  + dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS
+                  + ".",
               List.of("defaultColumnWidth", "defaultRowHeightPoints")),
           plainTypeDescriptor(
               "sheetDisplayInputType",

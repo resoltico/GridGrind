@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.51.0"
+version: "0.52.0"
 domain: LIMITATIONS
-updated: "2026-04-21"
+updated: "2026-04-22"
 route:
-  keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width]
-  questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit"]
+  keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width, zoom]
+  questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit", "what is the zoom limit"]
 ---
 
 # Limitations Registry
@@ -90,7 +90,7 @@ contract even though Apache POI can preserve and extract VBA-bearing `.xlsm` pac
 | **Error** | `INVALID_REQUEST` |
 | **Message** | `sheetName must not exceed 31 characters: {name}` or `sheetName contains invalid Excel character ':' at position 4: Bad:Name` |
 | **Applies to** | All operations with a `sheetName` field |
-| **Code** | `ExcelSheetNames.requireValid`; `WorkbookOperation.Validation.requireSheetName`; `ExcelWorkbookSheetSupport.requireSheetName` |
+| **Code** | `ExcelSheetNames.requireValid`; `MutationAction.Validation.requireSheetName`; `ExcelWorkbookSheetSupport.requireSheetName` |
 | **UX** | `--help` Limits section; `ENSURE_SHEET` and `RENAME_SHEET` catalog summaries |
 
 The 31-character ceiling and reserved-character rules are Excel hard limits. GridGrind validates
@@ -104,15 +104,18 @@ begins, instead of surfacing a raw Apache POI sheet-creation exception later in 
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind (enforces Excel limit) |
-| **Limit** | `widthCharacters` must be > 0 and ≤ 255 |
+| **Limit** | `widthCharacters` and `sheetDefaults.defaultColumnWidth` must be > 0 and ≤ 255 |
 | **Error** | `INVALID_REQUEST` |
-| **Messages** | `widthCharacters must be less than or equal to 255.0: {n}` / `widthCharacters is too small to produce a visible Excel column width: {n}` |
-| **Applies to** | `SET_COLUMN_WIDTH` |
-| **Code** | `WorkbookOperation.Validation.requireColumnWidthCharacters` |
-| **UX** | `--help` Limits section; `SET_COLUMN_WIDTH` catalog summary |
+| **Messages** | `widthCharacters must not exceed 255.0 (Excel column width limit): got {n}` / `widthCharacters is too small to produce a visible Excel column width: got {n}` |
+| **Applies to** | `SET_COLUMN_WIDTH`, `SET_SHEET_PRESENTATION.sheetDefaults.defaultColumnWidth` |
+| **Code** | `MutationAction.Validation.requireColumnWidthCharacters`; `ExcelSheetLayoutLimits.requireColumnWidthCharacters`; `ExcelSheetLayoutLimits.requireDefaultColumnWidth` |
+| **UX** | `--help` Limits section; `SET_COLUMN_WIDTH` and `SET_SHEET_PRESENTATION` catalog summaries |
 
-255 character units is the Excel column width ceiling. POI converts the value to internal units
-with `round(widthCharacters * 256)`. Values that round to zero are also rejected.
+255 character units is the Excel column width ceiling. POI converts explicit column widths to
+internal units with `round(widthCharacters * 256)`. Values that round to zero are also rejected.
+Sheet-wide default column widths are integer character counts and use the same Excel ceiling.
+`GET_SHEET_LAYOUT` remains factual on reopen, so malformed positive persisted explicit column
+widths can still be reported above `255` instead of being clamped.
 
 ---
 
@@ -120,17 +123,19 @@ with `round(widthCharacters * 256)`. Values that round to zero are also rejected
 
 | Field | Value |
 |:------|:------|
-| **Category** | GridGrind (enforces POI storage limit) |
-| **Limit** | `heightPoints` must be > 0 and ≤ 1,638.35 |
+| **Category** | GridGrind (enforces Excel limit) |
+| **Limit** | `heightPoints` and `sheetDefaults.defaultRowHeightPoints` must be > 0 and ≤ 409.0 |
 | **Error** | `INVALID_REQUEST` |
-| **Messages** | `heightPoints is too large for Excel row height storage: {n}` / `heightPoints is too small to produce a visible Excel row height: {n}` |
-| **Applies to** | `SET_ROW_HEIGHT` |
-| **Code** | `WorkbookOperation.Validation.requireRowHeightPoints` |
-| **UX** | `--help` Limits section; `SET_ROW_HEIGHT` catalog summary |
+| **Messages** | `heightPoints must not exceed 409.0 (Excel row height limit): got {n}` / `heightPoints is too small to produce a visible Excel row height: {n}` |
+| **Applies to** | `SET_ROW_HEIGHT`, `SET_SHEET_PRESENTATION.sheetDefaults.defaultRowHeightPoints` |
+| **Code** | `MutationAction.Validation.requireRowHeightPoints`; `ExcelSheetLayoutLimits.requireRowHeightPoints` |
+| **UX** | `--help` Limits section; `SET_ROW_HEIGHT` and `SET_SHEET_PRESENTATION` catalog summaries |
 
-POI stores row heights as a 16-bit signed integer in twips (1/20th of a point).
-`Short.MAX_VALUE = 32,767` twips equals approximately 1,638.35 points. Values that round to
-zero twips are also rejected.
+Excel's published maximum row height is 409 points for `.xlsx` worksheets. Apache POI can store a
+larger twip value internally, but GridGrind aligns the product contract to the real Excel limit
+instead of the wider storage envelope. Values that round to zero twips are also rejected.
+`GET_SHEET_LAYOUT` remains factual on reopen, so malformed positive persisted explicit row heights
+and default row-height values can still be reported above `409.0` instead of being clamped.
 
 ---
 
@@ -399,6 +404,24 @@ GridGrind accepts large authored values through source-backed inputs (`UTF8_FILE
 rejects oversized request files before execution starts, and the JSON codec enforces the same
 document cap on stdin and byte-array entry points so every transport path fails with one stable
 product-owned `INVALID_REQUEST` message.
+
+---
+
+### LIM-022 — Sheet Zoom Percentage
+
+| Field | Value |
+|:------|:------|
+| **Category** | GridGrind (enforces Excel limit) |
+| **Limit** | `zoomPercent` must be between 10 and 400 inclusive |
+| **Error** | `INVALID_REQUEST` |
+| **Message** | `zoomPercent must be between 10 and 400 inclusive: {n}` |
+| **Applies to** | `SET_SHEET_ZOOM` |
+| **Code** | `MutationAction.Validation.requireZoomPercent // LIM-022`; `ExcelSheetViewSupport.requireZoomPercent // LIM-022`; `GridGrindResponse.SheetLayoutReport` |
+| **UX** | `--help` Limits section; `SET_SHEET_ZOOM` catalog summary |
+
+Excel exposes worksheet zoom in the 10% to 400% range. GridGrind validates the authored value up
+front and reuses the same bound for factual sheet-layout reports so CLI operators and agents see
+one stable limit across mutation, help, catalog, and readback surfaces.
 
 ---
 

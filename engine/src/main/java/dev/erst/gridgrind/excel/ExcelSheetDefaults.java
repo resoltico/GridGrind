@@ -1,6 +1,12 @@
 package dev.erst.gridgrind.excel;
 
-/** Default row and column sizing applied when individual rows or columns do not override size. */
+/**
+ * Default row and column sizing applied when individual rows or columns do not override size.
+ *
+ * <p>This type is used for both authored defaults and factual readback, so persisted positive
+ * default row heights are preserved even when malformed OOXML stores values beyond normal authoring
+ * ceilings.
+ */
 public record ExcelSheetDefaults(int defaultColumnWidth, double defaultRowHeightPoints) {
   /** Returns the effective Excel defaults for one new worksheet. */
   public static ExcelSheetDefaults defaults() {

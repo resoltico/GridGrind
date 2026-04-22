@@ -160,7 +160,8 @@ class ExcelSheetTest {
       assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, 0.0));
       assertThrows(
           IllegalArgumentException.class,
-          () -> sheet.setRowHeight(0, 0, (Short.MAX_VALUE / 20.0d) + 1.0d));
+          () ->
+              sheet.setRowHeight(0, 0, Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
       assertThrows(
           IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, Double.MIN_VALUE));
       assertThrows(IllegalArgumentException.class, () -> sheet.setRowHeight(0, 0, Double.NaN));
@@ -1039,8 +1040,10 @@ class ExcelSheetTest {
       assertSame(sheet, sheet.setRowHeight(0, 1, 28.5));
       assertEquals((short) 570, poiSheet.getRow(0).getHeight());
       assertEquals((short) 570, poiSheet.getRow(1).getHeight());
-      sheet.setRowHeight(0, 0, 1638.35);
-      assertEquals(32767 / 20.0, sheet.layout().rows().get(0).heightPoints());
+      sheet.setRowHeight(0, 0, ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS);
+      assertEquals(
+          ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS,
+          sheet.layout().rows().get(0).heightPoints());
 
       assertSame(sheet, sheet.setPane(new ExcelSheetPane.Frozen(1, 2, 3, 4)));
       assertNotNull(poiSheet.getPaneInformation());
@@ -1115,13 +1118,16 @@ class ExcelSheetTest {
         IllegalArgumentException.class, () -> ExcelSheet.toColumnWidthUnits(Double.MIN_VALUE));
 
     assertEquals(28.5f, ExcelSheet.toRowHeightPoints(28.5d));
-    assertDoesNotThrow(() -> ExcelSheet.toRowHeightPoints(Short.MAX_VALUE / 20.0d));
+    assertDoesNotThrow(
+        () -> ExcelSheet.toRowHeightPoints(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ExcelSheet.toRowHeightPoints(Math.nextUp(Short.MAX_VALUE / 20.0d)));
+        () ->
+            ExcelSheet.toRowHeightPoints(
+                Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ExcelSheet.toRowHeightPoints((Short.MAX_VALUE / 20.0d) + 1.0d));
+        () -> ExcelSheet.toRowHeightPoints(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS + 1.0d));
     assertThrows(
         IllegalArgumentException.class, () -> ExcelSheet.toRowHeightPoints(Double.MIN_VALUE));
   }

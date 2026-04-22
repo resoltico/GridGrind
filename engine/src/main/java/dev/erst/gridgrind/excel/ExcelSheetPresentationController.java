@@ -93,6 +93,10 @@ final class ExcelSheetPresentationController {
   }
 
   private static void applyDefaults(XSSFSheet sheet, ExcelSheetDefaults defaults) {
+    ExcelSheetLayoutLimits.requireDefaultColumnWidth(
+        defaults.defaultColumnWidth(), "defaultColumnWidth");
+    ExcelSheetLayoutLimits.requireRowHeightPoints(
+        defaults.defaultRowHeightPoints(), "defaultRowHeightPoints");
     sheet.setDefaultColumnWidth(defaults.defaultColumnWidth());
     sheet.setDefaultRowHeightInPoints((float) defaults.defaultRowHeightPoints());
   }

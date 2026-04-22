@@ -1,0 +1,8 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/chart_graphic_frame_relation_lookup_roundtrip_success.bin
+Harness: xlsx-roundtrip
+Outcome: SUCCESS
+Input Bytes: 159
+Command Count: 8
+Style Kinds: (none)
+Command Kinds: SET_CHART=2, COPY_SHEET=1, SET_SHEET_PRESENTATION=1, CLEAR_SHEET_PROTECTION=1, APPEND_ROW=1, CLEAR_HYPERLINK=1, CREATE_SHEET=1

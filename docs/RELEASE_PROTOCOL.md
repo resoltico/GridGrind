@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.51.0"
+version: "0.52.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-04-22"
 route:
@@ -71,6 +71,31 @@ release session ends.
 If the primary checkout has unpublished local work, decide before the release whether that work is
 real or stale. Real work must move onto a named branch or exported patch before closeout. Stale
 work must be dropped. Never leave the primary checkout on stale `main` plus unpublished overlays.
+
+If the primary checkout contains the real release payload but release verification must happen from
+the clean release worktree, bootstrap that payload explicitly before you run any release build in
+the worktree:
+
+- preferred: move the unpublished release payload onto a local bootstrap branch, then create the
+  release worktree from that branch
+- acceptable: export one explicit patch from the primary checkout and apply it inside the clean
+  release worktree before running checks
+
+For example:
+
+```bash
+PRIMARY_CHECKOUT=$(git rev-parse --show-toplevel)
+git diff --binary > /tmp/gridgrind-release-bootstrap.patch
+RELEASE_WORKTREE="$(mktemp -d -t gridgrind-release-XXXXXX)"
+git worktree add -b release/X.Y.Z "$RELEASE_WORKTREE" origin/main
+cd "$RELEASE_WORKTREE"
+git apply --index /tmp/gridgrind-release-bootstrap.patch
+```
+
+If the unpublished payload includes new untracked release files, move them explicitly too — either
+by committing them on the bootstrap branch or copying them into the release worktree before the
+Step 2 staging checkpoint. Never fall back to running release verification from the dirty or
+problematic primary checkout just because the unpublished release payload currently lives there.
 
 Before running any build or release command, verify the local Java and Gradle runtime:
 

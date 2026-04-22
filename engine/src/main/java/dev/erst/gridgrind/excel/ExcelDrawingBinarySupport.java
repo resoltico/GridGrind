@@ -50,7 +50,7 @@ final class ExcelDrawingBinarySupport {
         pictureData.getPackagePart().getContentType(),
         objectName + format.defaultExtension(),
         sha256(bytes),
-        new ExcelBinaryData(bytes),
+        ExcelBinaryData.readback(bytes),
         nullIfBlank(picture.getCTPicture().getNvPicPr().getCNvPr().getDescr()));
   }
 
@@ -158,11 +158,8 @@ final class ExcelDrawingBinarySupport {
   }
 
   static ExcelBinaryData binary(byte[] bytes, String label) {
-    try {
-      return new ExcelBinaryData(bytes);
-    } catch (IllegalArgumentException exception) {
-      throw new IllegalStateException("Missing " + label + " bytes", exception);
-    }
+    Objects.requireNonNull(label, "label must not be null");
+    return ExcelBinaryData.readback(bytes);
   }
 
   static byte[] partBytes(org.apache.poi.openxml4j.opc.PackagePart part) {
@@ -192,6 +189,9 @@ final class ExcelDrawingBinarySupport {
   }
 
   static boolean looksLikeOle2Storage(byte[] bytes) throws IOException {
+    if (bytes.length == 0) {
+      return false;
+    }
     try (ByteArrayInputStream input = new ByteArrayInputStream(bytes)) {
       return org.apache.poi.poifs.filesystem.FileMagic.valueOf(
               org.apache.poi.poifs.filesystem.FileMagic.prepareToCheckMagic(input))
@@ -228,7 +228,7 @@ final class ExcelDrawingBinarySupport {
     try {
       if (looksLikeOle2Storage(rawPackage.bytes())) {
         org.apache.poi.poifs.filesystem.Ole10Native nativeData = ole10Native(rawPackage.bytes());
-        payload = new ExcelBinaryData(nativeData.getDataBuffer());
+        payload = ExcelBinaryData.readback(nativeData.getDataBuffer());
         label = firstNonBlank(nativeData.getLabel2(), nativeData.getLabel());
         fileName = firstNonBlank(nativeData.getFileName2(), nativeData.getFileName());
         command = firstNonBlank(nativeData.getCommand2(), nativeData.getCommand());

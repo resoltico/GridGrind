@@ -125,7 +125,7 @@ class MutationActionTest {
                 () -> MutationAction.Validation.requireColumnWidthCharacters(0.0001d))
             .getMessage());
     assertEquals(
-        "heightPoints must not exceed 1638.35 (Excel storage limit: 32767 twips): got 2000.0",
+        "heightPoints must not exceed 409.0 (Excel row height limit): got 2000.0",
         assertThrows(
                 IllegalArgumentException.class,
                 () -> MutationAction.Validation.requireRowHeightPoints(2000.0d))
@@ -137,18 +137,18 @@ class MutationActionTest {
                 () -> MutationAction.Validation.requireRowHeightPoints(0.01d))
             .getMessage());
     assertEquals(
-        "number must be finite",
+        "widthCharacters must be finite",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                    MutationAction.Validation.requireFinitePositive(
-                        Double.POSITIVE_INFINITY, "number"))
+                    MutationAction.Validation.requireColumnWidthCharacters(
+                        Double.POSITIVE_INFINITY))
             .getMessage());
     assertEquals(
-        "number must be greater than 0",
+        "heightPoints must be greater than 0",
         assertThrows(
                 IllegalArgumentException.class,
-                () -> MutationAction.Validation.requireFinitePositive(0.0d, "number"))
+                () -> MutationAction.Validation.requireRowHeightPoints(0.0d))
             .getMessage());
     assertEquals(
         "zoomPercent must be between 10 and 400 inclusive: 9",

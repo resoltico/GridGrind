@@ -173,6 +173,11 @@ class AdvancedDtoCoverageTest {
             base64,
             null);
     assertEquals(base64, picturePayload.base64Data());
+    assertEquals(
+        "",
+        new DrawingObjectPayloadReport.Picture(
+                "Picture 2", ExcelPictureFormat.PNG, "image/png", "empty.png", "sha", "", null)
+            .base64Data());
     DrawingObjectPayloadReport.EmbeddedObject embeddedPayload =
         new DrawingObjectPayloadReport.EmbeddedObject(
             "Object 1",

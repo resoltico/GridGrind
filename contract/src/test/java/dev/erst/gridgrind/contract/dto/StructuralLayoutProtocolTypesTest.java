@@ -11,6 +11,7 @@ import dev.erst.gridgrind.excel.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.excel.ExcelPaneRegion;
 import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
+import dev.erst.gridgrind.excel.ExcelSheetLayoutLimits;
 import org.junit.jupiter.api.Test;
 
 /** Direct tests for the structural-layout protocol input and report families. */
@@ -282,6 +283,12 @@ class StructuralLayoutProtocolTypesTest {
                 new IgnoredErrorReport(
                     "A1:B2", java.util.List.of(ExcelIgnoredErrorType.FORMULA)))));
     assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsInput(0, 15.0d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new SheetDefaultsInput(ExcelSheetLayoutLimits.MAX_DEFAULT_COLUMN_WIDTH + 1, 15.0d));
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> new SheetDefaultsInput(8, Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
     assertThrows(IllegalArgumentException.class, () -> new SheetDefaultsReport(8, 0.0d));
     assertThrows(
         IllegalArgumentException.class,
