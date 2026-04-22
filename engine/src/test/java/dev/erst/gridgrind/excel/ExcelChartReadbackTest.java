@@ -11,6 +11,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.function.UnaryOperator;
 import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
+import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
+import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -64,7 +66,7 @@ class ExcelChartReadbackTest {
       seedFormulaBackedChartData(sheet);
       workbook.formulas().evaluateAll();
       sheet.setChart(
-          new ExcelChartDefinition.Line(
+          ExcelChartTestSupport.lineChart(
               "ProjectedLoad",
               anchor(1, 5, 10, 18),
               new ExcelChartDefinition.Title.Text("Projected Load"),
@@ -75,8 +77,8 @@ class ExcelChartReadbackTest {
               List.of(
                   new ExcelChartDefinition.Series(
                       null,
-                      new ExcelChartDefinition.DataSource("A2:A4"),
-                      new ExcelChartDefinition.DataSource("C2:C4")))));
+                      ExcelChartTestSupport.ref("A2:A4"),
+                      ExcelChartTestSupport.ref("C2:C4")))));
       workbook.save(workbookPath);
     }
 
@@ -86,16 +88,58 @@ class ExcelChartReadbackTest {
         xml -> xml.replace(">4.0<", ">0.0<").replace(">6.0<", ">0.0<").replace(">10.0<", ">0.0<"));
 
     try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      ExcelChartSnapshot.Line chart =
-          assertInstanceOf(
-              ExcelChartSnapshot.Line.class, reopened.sheet("Summary").charts().getFirst());
+      ExcelChartSnapshot chart = reopened.sheet("Summary").charts().getFirst();
+      ExcelChartSnapshot.Line line =
+          ExcelChartTestSupport.singlePlot(chart, ExcelChartSnapshot.Line.class);
       ExcelChartSnapshot.DataSource.NumericReference values =
           assertInstanceOf(
               ExcelChartSnapshot.DataSource.NumericReference.class,
-              chart.series().getFirst().values());
+              line.series().getFirst().values());
 
       assertEquals("C2:C4", values.formula());
       assertEquals(List.of("4.0", "6.0", "10.0"), values.cachedValues());
+    }
+  }
+
+  @Test
+  void chartAuthoringPersistsEvaluatedFormulaBackedValueCaches() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-live-authoring-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Summary");
+      sheet.setCell("A1", ExcelCellValue.text("Owner"));
+      sheet.setCell("B1", ExcelCellValue.text("Projected"));
+      sheet.setCell("A2", ExcelCellValue.text("Ari"));
+      sheet.setCell("A3", ExcelCellValue.text("Bo"));
+      sheet.setCell("A4", ExcelCellValue.text("Cy"));
+      sheet.setCell("B2", ExcelCellValue.formula("40+2"));
+      sheet.setCell("B3", ExcelCellValue.number(7d));
+      sheet.setCell("B4", ExcelCellValue.formula("B3*2"));
+
+      sheet.setChart(
+          ExcelChartTestSupport.lineChart(
+              "ProjectedLoad",
+              anchor(1, 5, 10, 18),
+              new ExcelChartDefinition.Title.Formula("B1"),
+              new ExcelChartDefinition.Legend.Hidden(),
+              ExcelChartDisplayBlanksAs.GAP,
+              true,
+              false,
+              List.of(
+                  new ExcelChartDefinition.Series(
+                      null,
+                      ExcelChartTestSupport.ref("A2:A4"),
+                      ExcelChartTestSupport.ref("B2:B4")))));
+      workbook.save(workbookPath);
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFChart chart = reopened.getSheet("Summary").getDrawingPatriarch().getCharts().getFirst();
+      XDDFLineChartData lineData = (XDDFLineChartData) chart.getChartSeries().getFirst();
+
+      assertEquals("42.0", lineData.getSeries(0).getValuesData().getPointAt(0).toString());
+      assertEquals("7.0", lineData.getSeries(0).getValuesData().getPointAt(1).toString());
+      assertEquals("14.0", lineData.getSeries(0).getValuesData().getPointAt(2).toString());
     }
   }
 

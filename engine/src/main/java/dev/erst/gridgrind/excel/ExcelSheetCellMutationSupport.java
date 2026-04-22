@@ -3,10 +3,12 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
@@ -97,11 +99,52 @@ final class ExcelSheetCellMutationSupport {
         }
         resetToDefaultStyle(cell);
         cell.removeHyperlink();
-        cell.removeCellComment();
+        ExcelSheetAnnotationSupport.clearCellComment(cell);
         cell.setBlank();
       }
     }
     syncTableHeaders(excelRange);
+  }
+
+  void setArrayFormula(String range, ExcelArrayFormulaDefinition formula) {
+    ExcelSheet.requireNonBlank(range, "range");
+    Objects.requireNonNull(formula, "formula must not be null");
+
+    ExcelRange excelRange = ExcelRange.parse(range);
+    CellRangeAddress poiRange =
+        new CellRangeAddress(
+            excelRange.firstRow(),
+            excelRange.lastRow(),
+            excelRange.firstColumn(),
+            excelRange.lastColumn());
+    try {
+      xssfSheet().setArrayFormula(formula.formula(), poiRange);
+    } catch (RuntimeException exception) {
+      throw FormulaExceptions.wrap(
+          formulaRuntime,
+          sheet.getSheetName(),
+          new CellReference(excelRange.firstRow(), excelRange.firstColumn()).formatAsString(),
+          formula.formula(),
+          exception);
+    }
+    syncTableHeaders(excelRange);
+  }
+
+  void clearArrayFormula(String address) {
+    ExcelSheet.requireNonBlank(address, "address");
+    Cell cell = requiredCell(address);
+    if (!cell.isPartOfArrayFormulaGroup()) {
+      throw new IllegalArgumentException("Cell " + address + " is not part of an array formula.");
+    }
+    CellRangeAddress removed = cell.getArrayFormulaRange();
+    xssfSheet().removeArrayFormula(cell);
+    syncTableHeaders(
+        new ExcelRange(
+            removed.getFirstRow(),
+            removed.getLastRow(),
+            removed.getFirstColumn(),
+            removed.getLastColumn()));
+    drawingController.cleanupEmptyDrawingPatriarch(xssfSheet());
   }
 
   void applyStyle(String range, ExcelCellStyle style) {
@@ -178,6 +221,20 @@ final class ExcelSheetCellMutationSupport {
         .getCell(columnIndex, Row.MissingCellPolicy.CREATE_NULL_AS_BLANK);
   }
 
+  private Cell requiredCell(String address) {
+    CellReference cellReference = parseCellReference(address);
+    requireValidCellReference(address, cellReference);
+    Row row = sheet.getRow(cellReference.getRow());
+    if (row == null) {
+      throw new CellNotFoundException(address);
+    }
+    Cell cell = row.getCell(cellReference.getCol());
+    if (cell == null) {
+      throw new CellNotFoundException(address);
+    }
+    return cell;
+  }
+
   private XSSFSheet xssfSheet() {
     return (XSSFSheet) sheet;
   }
@@ -218,6 +275,18 @@ final class ExcelSheetCellMutationSupport {
       return new CellReference(address);
     } catch (IllegalArgumentException exception) {
       throw new InvalidCellAddressException(address, exception);
+    }
+  }
+
+  private static void requireValidCellReference(String address, CellReference cellReference) {
+    int row = cellReference.getRow();
+    int col = cellReference.getCol();
+    if (row < 0
+        || col < 0
+        || row > SpreadsheetVersion.EXCEL2007.getLastRowIndex()
+        || col > SpreadsheetVersion.EXCEL2007.getLastColumnIndex()) {
+      throw new InvalidCellAddressException(
+          address, new IllegalArgumentException("not a valid A1-style cell address: " + address));
     }
   }
 

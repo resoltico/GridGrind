@@ -251,22 +251,29 @@ final class ExcelDrawingBinarySupport {
 
   static boolean imagePartUsed(
       XSSFWorkbook workbook, org.apache.poi.openxml4j.opc.PackagePartName imagePartName) {
+    ExcelSignatureLineController signatureLineController = new ExcelSignatureLineController();
     for (int sheetIndex = 0; sheetIndex < workbook.getNumberOfSheets(); sheetIndex++) {
-      org.apache.poi.xssf.usermodel.XSSFDrawing drawing =
-          workbook.getSheetAt(sheetIndex).getDrawingPatriarch();
+      XSSFSheet sheet = workbook.getSheetAt(sheetIndex);
+      org.apache.poi.xssf.usermodel.XSSFDrawing drawing = sheet.getDrawingPatriarch();
       if (drawing == null) {
-        continue;
-      }
-      for (org.apache.poi.xssf.usermodel.XSSFShape shape : drawing.getShapes()) {
-        if (shape instanceof XSSFPicture picture
-            && picture.getPictureData().getPackagePart().getPartName().equals(imagePartName)) {
+        if (signatureLineController.usesImagePart(sheet, imagePartName)) {
           return true;
         }
-        if (shape instanceof org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
-          org.apache.poi.openxml4j.opc.PackagePart previewPart = previewImagePart(objectData);
-          if (previewPart != null && previewPart.getPartName().equals(imagePartName)) {
+      } else {
+        for (org.apache.poi.xssf.usermodel.XSSFShape shape : drawing.getShapes()) {
+          if (shape instanceof XSSFPicture picture
+              && picture.getPictureData().getPackagePart().getPartName().equals(imagePartName)) {
             return true;
           }
+          if (shape instanceof org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
+            org.apache.poi.openxml4j.opc.PackagePart previewPart = previewImagePart(objectData);
+            if (previewPart != null && previewPart.getPartName().equals(imagePartName)) {
+              return true;
+            }
+          }
+        }
+        if (signatureLineController.usesImagePart(sheet, imagePartName)) {
+          return true;
         }
       }
     }

@@ -87,7 +87,7 @@ class GridGrindPublicSurfaceLintTest {
         registeredIds,
         candidatePattern);
 
-    Path repositoryRoot = repositoryRoot();
+    Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
     collectUnknown(
         unknownBySurface, repositoryRoot.resolve("README.md"), registeredIds, candidatePattern);
     try (Stream<Path> docs = Files.walk(repositoryRoot.resolve("docs"));
@@ -235,16 +235,5 @@ class GridGrindPublicSurfaceLintTest {
         .forEach(summaries::add);
     catalog.shippedExamples().stream().map(ShippedExampleEntry::summary).forEach(summaries::add);
     return String.join("\n", summaries);
-  }
-
-  private static Path repositoryRoot() {
-    Path current = Path.of("").toAbsolutePath().normalize();
-    while (current != null) {
-      if (Files.isRegularFile(current.resolve("settings.gradle.kts"))) {
-        return current;
-      }
-      current = current.getParent();
-    }
-    throw new IllegalStateException("Failed to locate repository root from " + Path.of(""));
   }
 }

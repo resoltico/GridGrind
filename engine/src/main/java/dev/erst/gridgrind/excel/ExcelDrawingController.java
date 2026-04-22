@@ -21,31 +21,50 @@ import org.apache.xmlbeans.XmlObject;
 /** Package-aware drawing and media controller for read and mutation workflows. */
 final class ExcelDrawingController {
   private final BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> poiRelationRemover;
+  private final ExcelSignatureLineController signatureLineController;
 
   ExcelDrawingController() {
     this(PoiRelationRemoval.defaultRemover());
   }
 
   ExcelDrawingController(BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> poiRelationRemover) {
+    this(poiRelationRemover, new ExcelSignatureLineController());
+  }
+
+  ExcelDrawingController(
+      BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> poiRelationRemover,
+      ExcelSignatureLineController signatureLineController) {
     this.poiRelationRemover =
         Objects.requireNonNull(poiRelationRemover, "poiRelationRemover must not be null");
+    this.signatureLineController =
+        Objects.requireNonNull(signatureLineController, "signatureLineController must not be null");
   }
 
   List<ExcelDrawingObjectSnapshot> drawingObjects(XSSFSheet sheet) {
-    Objects.requireNonNull(sheet, "sheet must not be null");
-    XSSFDrawing drawing = sheet.getDrawingPatriarch();
-    if (drawing == null) {
-      return List.of();
-    }
+    return drawingObjects(sheet, null);
+  }
 
+  List<ExcelDrawingObjectSnapshot> drawingObjects(
+      XSSFSheet sheet, ExcelFormulaRuntime formulaRuntime) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
     List<ExcelDrawingObjectSnapshot> snapshots = new ArrayList<>();
-    for (XSSFShape shape : drawing.getShapes()) {
-      snapshots.add(snapshot(drawing, shape));
+    XSSFDrawing drawing = sheet.getDrawingPatriarch();
+    if (drawing != null) {
+      for (XSSFShape shape : drawing.getShapes()) {
+        snapshots.add(snapshot(drawing, shape, formulaRuntime));
+      }
+    }
+    for (ExcelSignatureLineSnapshot signatureLine : signatureLineController.signatureLines(sheet)) {
+      snapshots.add(toDrawingObjectSnapshot(signatureLine));
     }
     return List.copyOf(snapshots);
   }
 
   List<ExcelChartSnapshot> charts(XSSFSheet sheet) {
+    return charts(sheet, null);
+  }
+
+  List<ExcelChartSnapshot> charts(XSSFSheet sheet, ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
     if (drawing == null) {
@@ -59,7 +78,7 @@ final class ExcelDrawingController {
       if (graphicFrame == null) {
         continue;
       }
-      snapshots.add(ExcelDrawingChartSupport.snapshotChart(chart, graphicFrame));
+      snapshots.add(ExcelDrawingChartSupport.snapshotChart(chart, graphicFrame, formulaRuntime));
     }
     return List.copyOf(snapshots);
   }
@@ -68,7 +87,17 @@ final class ExcelDrawingController {
     Objects.requireNonNull(sheet, "sheet must not be null");
     requireNonBlank(objectName, "objectName");
 
-    LocatedShape located = requiredLocatedShape(sheet, objectName);
+    LocatedShape located = optionalLocatedShape(sheet, objectName);
+    boolean signatureLine = signatureLineController.hasNamedSignatureLine(sheet, objectName);
+    if (located != null && signatureLine) {
+      throw ambiguousObjectName(sheet, objectName);
+    }
+    if (located == null) {
+      if (signatureLine) {
+        throw noBinaryPayloadException(sheet, objectName);
+      }
+      throw new DrawingObjectNotFoundException(sheet.getSheetName(), objectName);
+    }
     XSSFShape shape = located.shape();
     if (shape instanceof XSSFPicture picture) {
       return picturePayload(objectName, picture);
@@ -76,19 +105,14 @@ final class ExcelDrawingController {
     if (shape instanceof org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
       return embeddedObjectPayload(objectName, objectData);
     }
-    throw new IllegalArgumentException(
-        "Drawing object '"
-            + objectName
-            + "' on sheet '"
-            + sheet.getSheetName()
-            + "' does not expose a binary payload");
+    throw noBinaryPayloadException(sheet, objectName);
   }
 
   void setPicture(XSSFSheet sheet, ExcelPictureDefinition definition) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    deleteNamedShapeIfPresent(sheet, definition.name());
+    deleteNamedObjectIfPresent(sheet, definition.name());
     XSSFDrawing drawing = sheet.createDrawingPatriarch();
     org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor =
         toPoiAnchor(drawing, definition.anchor());
@@ -104,28 +128,30 @@ final class ExcelDrawingController {
   }
 
   void setChart(XSSFSheet sheet, ExcelChartDefinition definition) {
+    setChart(sheet, definition, null);
+  }
+
+  void setChart(
+      XSSFSheet sheet, ExcelChartDefinition definition, ExcelFormulaRuntime formulaRuntime) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    PreparedChartDefinition prepared =
-        ExcelDrawingChartSupport.prepareChartDefinition(sheet, definition);
-    LocatedShape located = optionalLocatedShape(sheet, prepared.name());
-    if (located == null) {
-      ExcelDrawingChartSupport.createChart(sheet, prepared);
-      return;
+    ExcelDrawingChartSupport.validateChart(sheet, definition, formulaRuntime);
+    deleteNamedObjectIfPresent(sheet, definition.name());
+    try {
+      ExcelDrawingChartSupport.createChart(sheet, definition, formulaRuntime);
+    } catch (RuntimeException exception) {
+      deleteNamedObjectIfPresent(sheet, definition.name());
+      throw exception;
     }
+  }
 
-    if (located.shape() instanceof org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
-      XSSFChart chart =
-          ExcelDrawingChartSupport.chartForGraphicFrame(located.drawing(), graphicFrame);
-      if (chart != null) {
-        ExcelDrawingChartSupport.mutateChart(sheet, located, chart, prepared);
-        return;
-      }
-    }
+  void setSignatureLine(XSSFSheet sheet, ExcelSignatureLineDefinition definition) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    Objects.requireNonNull(definition, "definition must not be null");
 
-    deleteLocatedShape(sheet, located);
-    ExcelDrawingChartSupport.createChart(sheet, prepared);
+    deleteNamedObjectIfPresent(sheet, definition.name());
+    signatureLineController.setSignatureLine(sheet, definition);
   }
 
   void setShape(XSSFSheet sheet, ExcelShapeDefinition definition) {
@@ -136,7 +162,7 @@ final class ExcelDrawingController {
         definition.kind() == ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE
             ? shapeType(definition.presetGeometryToken())
             : null;
-    deleteNamedShapeIfPresent(sheet, definition.name());
+    deleteNamedObjectIfPresent(sheet, definition.name());
     XSSFDrawing drawing = sheet.createDrawingPatriarch();
     org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor =
         toPoiAnchor(drawing, definition.anchor());
@@ -157,7 +183,7 @@ final class ExcelDrawingController {
     Objects.requireNonNull(sheet, "sheet must not be null");
     Objects.requireNonNull(definition, "definition must not be null");
 
-    deleteNamedShapeIfPresent(sheet, definition.name());
+    deleteNamedObjectIfPresent(sheet, definition.name());
     XSSFDrawing drawing = sheet.createDrawingPatriarch();
     org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor =
         toPoiAnchor(drawing, definition.anchor());
@@ -190,16 +216,26 @@ final class ExcelDrawingController {
     requireNonBlank(objectName, "objectName");
     Objects.requireNonNull(anchor, "anchor must not be null");
 
-    LocatedShape located = requiredLocatedShape(sheet, objectName);
-    XSSFShape shape = located.shape();
+    LocatedShape located = optionalLocatedShape(sheet, objectName);
+    boolean signatureLine = signatureLineController.hasNamedSignatureLine(sheet, objectName);
+    if (located != null && signatureLine) {
+      throw ambiguousObjectName(sheet, objectName);
+    }
+    if (signatureLine) {
+      signatureLineController.updateAnchorIfPresent(sheet, objectName, anchor);
+      return;
+    }
+    LocatedShape requiredLocated = requiredLocatedShape(sheet, objectName);
+    XSSFShape shape = requiredLocated.shape();
     if (shape instanceof XSSFPicture
         || (shape instanceof org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame
-            && ExcelDrawingChartSupport.chartForGraphicFrame(located.drawing(), graphicFrame)
+            && ExcelDrawingChartSupport.chartForGraphicFrame(
+                    requiredLocated.drawing(), graphicFrame)
                 != null)
         || shape instanceof org.apache.poi.xssf.usermodel.XSSFObjectData
         || shape instanceof org.apache.poi.xssf.usermodel.XSSFConnector
         || shape instanceof org.apache.poi.xssf.usermodel.XSSFSimpleShape) {
-      updateAnchorInPlace(sheet, objectName, located.parentAnchor(), anchor);
+      updateAnchorInPlace(sheet, objectName, requiredLocated.parentAnchor(), anchor);
       return;
     }
     throw new IllegalArgumentException(
@@ -213,7 +249,19 @@ final class ExcelDrawingController {
   void deleteDrawingObject(XSSFSheet sheet, String objectName) {
     Objects.requireNonNull(sheet, "sheet must not be null");
     requireNonBlank(objectName, "objectName");
-    deleteLocatedShape(sheet, requiredLocatedShape(sheet, objectName));
+    LocatedShape located = optionalLocatedShape(sheet, objectName);
+    boolean signatureLine = signatureLineController.hasNamedSignatureLine(sheet, objectName);
+    if (located != null && signatureLine) {
+      throw ambiguousObjectName(sheet, objectName);
+    }
+    if (located != null) {
+      deleteLocatedShape(sheet, located);
+      return;
+    }
+    if (signatureLineController.deleteIfPresent(sheet, objectName)) {
+      return;
+    }
+    throw new DrawingObjectNotFoundException(sheet.getSheetName(), objectName);
   }
 
   void cleanupEmptyDrawingPatriarch(XSSFSheet sheet) {
@@ -224,8 +272,28 @@ final class ExcelDrawingController {
     // drawing part over emitting a corrupt package.
   }
 
-  private ExcelDrawingObjectSnapshot snapshot(XSSFDrawing drawing, XSSFShape shape) {
-    return ExcelDrawingSnapshotSupport.snapshot(drawing, shape);
+  private ExcelDrawingObjectSnapshot snapshot(
+      XSSFDrawing drawing, XSSFShape shape, ExcelFormulaRuntime formulaRuntime) {
+    return ExcelDrawingSnapshotSupport.snapshot(drawing, shape, formulaRuntime);
+  }
+
+  private ExcelDrawingObjectSnapshot.SignatureLine toDrawingObjectSnapshot(
+      ExcelSignatureLineSnapshot signatureLine) {
+    return new ExcelDrawingObjectSnapshot.SignatureLine(
+        signatureLine.name(),
+        signatureLine.anchor(),
+        signatureLine.setupId(),
+        signatureLine.allowComments(),
+        signatureLine.signingInstructions(),
+        signatureLine.suggestedSigner(),
+        signatureLine.suggestedSigner2(),
+        signatureLine.suggestedSignerEmail(),
+        signatureLine.previewFormat(),
+        signatureLine.previewContentType(),
+        signatureLine.previewByteSize(),
+        signatureLine.previewSha256(),
+        signatureLine.previewWidthPixels(),
+        signatureLine.previewHeightPixels());
   }
 
   ExcelDrawingObjectSnapshot.Shape snapshotShape(
@@ -252,6 +320,11 @@ final class ExcelDrawingController {
     if (located != null) {
       deleteLocatedShape(sheet, located);
     }
+  }
+
+  private void deleteNamedObjectIfPresent(XSSFSheet sheet, String objectName) {
+    deleteNamedShapeIfPresent(sheet, objectName);
+    signatureLineController.deleteIfPresent(sheet, objectName);
   }
 
   private void deleteLocatedShape(XSSFSheet sheet, LocatedShape located) {
@@ -307,6 +380,24 @@ final class ExcelDrawingController {
       throw new DrawingObjectNotFoundException(sheet.getSheetName(), objectName);
     }
     return located;
+  }
+
+  private IllegalArgumentException ambiguousObjectName(XSSFSheet sheet, String objectName) {
+    return new IllegalArgumentException(
+        "Multiple drawing objects named '"
+            + objectName
+            + "' exist on sheet '"
+            + sheet.getSheetName()
+            + "'");
+  }
+
+  private IllegalArgumentException noBinaryPayloadException(XSSFSheet sheet, String objectName) {
+    return new IllegalArgumentException(
+        "Drawing object '"
+            + objectName
+            + "' on sheet '"
+            + sheet.getSheetName()
+            + "' does not expose a binary payload");
   }
 
   private LocatedShape optionalLocatedShape(XSSFSheet sheet, String objectName) {

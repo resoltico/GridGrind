@@ -18,6 +18,12 @@ final class WorkbookSampleFixtures {
     return List.of(
         new WorkbookReadCommand.GetWorkbookSummary("workbook"),
         new WorkbookReadCommand.GetWorkbookProtection("protection"),
+        new WorkbookReadCommand.GetCustomXmlMappings("customXmlMappings"),
+        new WorkbookReadCommand.ExportCustomXmlMapping(
+            "customXmlExport",
+            new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"),
+            false,
+            StandardCharsets.UTF_8.name()),
         new WorkbookReadCommand.GetNamedRanges("ranges", new ExcelNamedRangeSelection.All()),
         new WorkbookReadCommand.GetSheetSummary("sheet", "Budget"),
         new WorkbookReadCommand.GetCells("cells", "Budget", List.of("A1")),
@@ -39,6 +45,8 @@ final class WorkbookSampleFixtures {
             "conditional", "Budget", new ExcelRangeSelection.Selected(List.of("A1:B2"))),
         new WorkbookReadCommand.GetAutofilters("autofilters", "Budget"),
         new WorkbookReadCommand.GetTables("tables", new ExcelTableSelection.All()),
+        new WorkbookReadCommand.GetArrayFormulas(
+            "arrayFormulas", new ExcelSheetSelection.Selected(List.of("Budget"))),
         new WorkbookReadCommand.GetFormulaSurface(
             "formula", new ExcelSheetSelection.Selected(List.of("Budget"))),
         new WorkbookReadCommand.GetSheetSchema("schema", "Budget", "A1", 1, 1),
@@ -90,6 +98,13 @@ final class WorkbookSampleFixtures {
         new WorkbookCommand.SetPrintLayout("Budget", defaultPrintLayout()),
         new WorkbookCommand.ClearPrintLayout("Budget"),
         new WorkbookCommand.SetCell("Budget", "A1", ExcelCellValue.date(LocalDate.of(2026, 3, 23))),
+        new WorkbookCommand.SetArrayFormula(
+            "Budget", "D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4")),
+        new WorkbookCommand.ClearArrayFormula("Budget", "D2"),
+        new WorkbookCommand.ImportCustomXmlMapping(
+            new ExcelCustomXmlImportDefinition(
+                new ExcelCustomXmlMappingLocator(1L, "CORSO_mapping"),
+                "<CORSO><NOME>Ops</NOME></CORSO>")),
         new WorkbookCommand.SetRange(
             "Budget",
             "A1:B2",
@@ -111,6 +126,20 @@ final class WorkbookSampleFixtures {
                 ExcelPictureFormat.PNG,
                 firstAnchor,
                 "Queue preview")),
+        new WorkbookCommand.SetSignatureLine(
+            "Budget",
+            new ExcelSignatureLineDefinition(
+                "BudgetSignature",
+                firstAnchor,
+                false,
+                "Review the budget before signing.",
+                "Ada Lovelace",
+                "Finance",
+                "ada@example.com",
+                null,
+                "invalid",
+                ExcelPictureFormat.PNG,
+                new ExcelBinaryData(PNG_PIXEL_BYTES))),
         new WorkbookCommand.SetChart("Budget", chartDefinition(firstAnchor)),
         new WorkbookCommand.SetPivotTable(
             new ExcelPivotTableDefinition(
@@ -202,7 +231,7 @@ final class WorkbookSampleFixtures {
   }
 
   private static ExcelChartDefinition chartDefinition(ExcelDrawingAnchor.TwoCell anchor) {
-    return new ExcelChartDefinition.Bar(
+    return ExcelChartTestSupport.barChart(
         "BudgetChart",
         anchor,
         new ExcelChartDefinition.Title.Text("Roadmap"),
@@ -214,8 +243,8 @@ final class WorkbookSampleFixtures {
         List.of(
             new ExcelChartDefinition.Series(
                 new ExcelChartDefinition.Title.Formula("B1"),
-                new ExcelChartDefinition.DataSource("A2:A4"),
-                new ExcelChartDefinition.DataSource("B2:B4"))));
+                ExcelChartTestSupport.ref("A2:A4"),
+                ExcelChartTestSupport.ref("B2:B4"))));
   }
 
   private static ExcelDataValidationDefinition validationDefinition() {

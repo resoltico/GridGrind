@@ -1680,7 +1680,7 @@ class ExcelRowColumnStructureControllerTest {
 
   @Test
   void repeatedExpandedColumnGroupingCanonicalizesOutlineLevelsBeforeRoundTrip() throws Exception {
-    Path workbookPath = Files.createTempFile("gridgrind-column-outline-", ".xlsx");
+    Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-column-outline-", ".xlsx");
 
     try {
       try (XSSFWorkbook workbook = new XSSFWorkbook()) {

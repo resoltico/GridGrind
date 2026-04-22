@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.49.0"
+version: "0.50.0"
 domain: DEVELOPER
 updated: "2026-04-21"
 route:
@@ -225,6 +225,9 @@ release groups instead of splitting a release across the retention boundary.
 `./check.sh` runs these same root-project gates, then runs nested Jazzer verification, builds the
 CLI fat JAR, syntax-checks the release-surface shell scripts, and finally runs the Docker smoke
 script.
+The release/publication shell verifiers and their regressions now use repo-local disposable
+scratch under `tmp/` rather than depending on macOS `/var/folders` temp behavior, so local runs
+and CI exercise the same deterministic shell surface.
 If Docker or shell-script stages materialize temporary secret-bearing fixtures, those fixtures must
 obey the same filesystem-security contract as production instead of weakening the runtime policy
 just to make smoke tests pass.
@@ -333,7 +336,10 @@ These fixtures and authoring examples cover the core surface:
 | `examples/file-hyperlink-health-request.json` | File-hyperlink authoring plus explicit hyperlink metadata and hyperlink-health analysis |
 | `examples/introspection-analysis-request.json` | Inspection-heavy workbook showcasing factual reads plus targeted formula, hyperlink, named-range, and aggregate workbook analysis together |
 | `examples/java-authoring-workflow.java` | Fluent Java authoring example showing selector-first table-key targeting, source-backed row selection, ordered inspection, and assertion steps without hand-written JSON |
-| `examples/chart-request.json` | Supported simple-chart authoring with named-range-backed series and factual chart readback |
+| `examples/array-formula-request.json` | Dedicated array-formula authoring, array-group readback, and group clearing |
+| `examples/custom-xml-request.json` | Existing-workbook custom-XML mapping discovery, XML export, file-backed XML import, and factual cell reread |
+| `examples/signature-line-request.json` | Signature-line authoring with drawing-object readback and authored anchor replacement |
+| `examples/chart-request.json` | Supported chart authoring with named-range-backed series and factual chart readback |
 | `examples/pivot-request.json` | Range-backed pivot authoring, pivot-table inspection, and pivot-health analysis |
 | `examples/package-security-inspect-request.json` | Encrypted workbook open plus factual package-security inspection |
 | `examples/source-backed-input-request.json` | File-backed text, formula, and binary payload authoring with drawing-payload extraction |

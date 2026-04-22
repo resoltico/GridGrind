@@ -22,8 +22,11 @@ public sealed interface WorkbookReadResult
       permits WorkbookSummaryResult,
           PackageSecurityResult,
           WorkbookProtectionResult,
+          CustomXmlMappingsResult,
+          CustomXmlExportResult,
           NamedRangesResult,
           SheetSummaryResult,
+          ArrayFormulasResult,
           CellsResult,
           WindowResult,
           MergedRegionsResult,
@@ -81,6 +84,24 @@ public sealed interface WorkbookReadResult
     }
   }
 
+  /** Returns factual workbook custom-XML mapping metadata. */
+  record CustomXmlMappingsResult(String stepId, List<ExcelCustomXmlMappingSnapshot> mappings)
+      implements Introspection {
+    public CustomXmlMappingsResult {
+      stepId = requireNonBlank(stepId, "stepId");
+      mappings = copyValues(mappings, "mappings");
+    }
+  }
+
+  /** Returns XML exported from one selected workbook custom-XML mapping. */
+  record CustomXmlExportResult(String stepId, ExcelCustomXmlExportSnapshot export)
+      implements Introspection {
+    public CustomXmlExportResult {
+      stepId = requireNonBlank(stepId, "stepId");
+      Objects.requireNonNull(export, "export must not be null");
+    }
+  }
+
   /** Returns selected named ranges. */
   record NamedRangesResult(String stepId, List<ExcelNamedRangeSnapshot> namedRanges)
       implements Introspection {
@@ -95,6 +116,15 @@ public sealed interface WorkbookReadResult
     public SheetSummaryResult {
       stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(sheet, "sheet must not be null");
+    }
+  }
+
+  /** Returns factual array-formula groups across the selected sheets. */
+  record ArrayFormulasResult(String stepId, List<ExcelArrayFormulaSnapshot> arrayFormulas)
+      implements Introspection {
+    public ArrayFormulasResult {
+      stepId = requireNonBlank(stepId, "stepId");
+      arrayFormulas = copyValues(arrayFormulas, "arrayFormulas");
     }
   }
 

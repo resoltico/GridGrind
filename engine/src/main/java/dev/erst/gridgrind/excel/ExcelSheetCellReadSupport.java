@@ -1,8 +1,10 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -172,6 +174,34 @@ final class ExcelSheetCellReadSupport {
                       new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
                       cell));
         }
+      }
+    }
+    return List.copyOf(formulas);
+  }
+
+  List<ExcelArrayFormulaSnapshot> arrayFormulas() {
+    Set<String> seenRanges = new LinkedHashSet<>();
+    List<ExcelArrayFormulaSnapshot> formulas = new ArrayList<>();
+    for (Row row : sheet) {
+      for (Cell cell : row) {
+        if (cell.getCellType() != CellType.FORMULA || !cell.isPartOfArrayFormulaGroup()) {
+          continue;
+        }
+        var range = cell.getArrayFormulaRange();
+        String rangeText = range.formatAsString();
+        if (!seenRanges.add(rangeText)) {
+          continue;
+        }
+        formulas.add(
+            new ExcelArrayFormulaSnapshot(
+                sheet.getSheetName(),
+                rangeText,
+                new CellReference(range.getFirstRow(), range.getFirstColumn()).formatAsString(),
+                xssfSheet()
+                    .getRow(range.getFirstRow())
+                    .getCell(range.getFirstColumn())
+                    .getCellFormula(),
+                range.getNumberOfCells() == 1));
       }
     }
     return List.copyOf(formulas);

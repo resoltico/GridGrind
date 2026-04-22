@@ -13,6 +13,7 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 11,
       "operationKinds" : {
+        "SET_SHEET_PANE" : 1,
         "MERGE_CELLS" : 1,
         "ENSURE_SHEET" : 1,
         "SET_PRINT_LAYOUT" : 1,
@@ -22,8 +23,7 @@
         "SET_NAMED_RANGE" : 1,
         "SET_SHEET_ZOOM" : 1,
         "AUTO_SIZE_COLUMNS" : 1,
-        "SET_HYPERLINK" : 1,
-        "SET_SHEET_PANE" : 1
+        "SET_HYPERLINK" : 1
       },
       "styleKinds" : { },
       "assertionCount" : 0,

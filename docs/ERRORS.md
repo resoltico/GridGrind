@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.49.0"
+version: "0.50.0"
 domain: ERRORS
 updated: "2026-04-19"
 route:
@@ -241,7 +241,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 
 | Code | Trigger |
 |:-----|:--------|
-| `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax, including request-authored array-formula braces such as `{=...}`. `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA` because Apache POI cannot parse them, and other newer constructs may fail the same way. |
+| `INVALID_FORMULA` | Formula syntax is not valid Excel formula syntax on the current request path. Scalar `SET_CELL` / `SET_RANGE` `FORMULA` values reject request-authored array-formula braces such as `{=...}`; use `SET_ARRAY_FORMULA` for contiguous array groups. `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA` because Apache POI cannot parse them, and other newer constructs may fail the same way. |
 | `MISSING_EXTERNAL_WORKBOOK` | Formula evaluation needs an external workbook binding that was not supplied and cached-value fallback is not enabled. |
 | `UNREGISTERED_USER_DEFINED_FUNCTION` | Formula evaluation encountered a UDF that is not registered in `formulaEnvironment`. |
 | `UNSUPPORTED_FORMULA` | Formula syntax is valid and Apache POI can load it, but the function or construct is not supported by Apache POI's evaluator. |

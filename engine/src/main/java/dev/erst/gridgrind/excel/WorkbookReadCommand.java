@@ -15,8 +15,11 @@ public sealed interface WorkbookReadCommand
       permits GetWorkbookSummary,
           GetPackageSecurity,
           GetWorkbookProtection,
+          GetCustomXmlMappings,
+          ExportCustomXmlMapping,
           GetNamedRanges,
           GetSheetSummary,
+          GetArrayFormulas,
           GetCells,
           GetWindow,
           GetMergedRegions,
@@ -69,6 +72,24 @@ public sealed interface WorkbookReadCommand
     }
   }
 
+  /** Returns factual workbook custom-XML mapping metadata. */
+  record GetCustomXmlMappings(String stepId) implements Introspection {
+    public GetCustomXmlMappings {
+      stepId = requireNonBlank(stepId, "stepId");
+    }
+  }
+
+  /** Exports XML for one existing workbook custom-XML mapping. */
+  record ExportCustomXmlMapping(
+      String stepId, ExcelCustomXmlMappingLocator mapping, boolean validateSchema, String encoding)
+      implements Introspection {
+    public ExportCustomXmlMapping {
+      stepId = requireNonBlank(stepId, "stepId");
+      Objects.requireNonNull(mapping, "mapping must not be null");
+      encoding = requireNonBlank(encoding, "encoding");
+    }
+  }
+
   /** Returns named ranges selected by exact selector or workbook-wide selection. */
   record GetNamedRanges(String stepId, ExcelNamedRangeSelection selection)
       implements Introspection {
@@ -83,6 +104,14 @@ public sealed interface WorkbookReadCommand
     public GetSheetSummary {
       stepId = requireNonBlank(stepId, "stepId");
       sheetName = requireNonBlank(sheetName, "sheetName");
+    }
+  }
+
+  /** Returns array-formula groups across the selected sheets. */
+  record GetArrayFormulas(String stepId, ExcelSheetSelection selection) implements Introspection {
+    public GetArrayFormulas {
+      stepId = requireNonBlank(stepId, "stepId");
+      Objects.requireNonNull(selection, "selection must not be null");
     }
   }
 

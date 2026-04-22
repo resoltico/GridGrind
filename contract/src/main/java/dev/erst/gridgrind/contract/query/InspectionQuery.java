@@ -17,8 +17,15 @@ import dev.erst.gridgrind.excel.ExcelReadLimits;
   @JsonSubTypes.Type(
       value = InspectionQuery.GetWorkbookProtection.class,
       name = "GET_WORKBOOK_PROTECTION"),
+  @JsonSubTypes.Type(
+      value = InspectionQuery.GetCustomXmlMappings.class,
+      name = "GET_CUSTOM_XML_MAPPINGS"),
+  @JsonSubTypes.Type(
+      value = InspectionQuery.ExportCustomXmlMapping.class,
+      name = "EXPORT_CUSTOM_XML_MAPPING"),
   @JsonSubTypes.Type(value = InspectionQuery.GetNamedRanges.class, name = "GET_NAMED_RANGES"),
   @JsonSubTypes.Type(value = InspectionQuery.GetSheetSummary.class, name = "GET_SHEET_SUMMARY"),
+  @JsonSubTypes.Type(value = InspectionQuery.GetArrayFormulas.class, name = "GET_ARRAY_FORMULAS"),
   @JsonSubTypes.Type(value = InspectionQuery.GetCells.class, name = "GET_CELLS"),
   @JsonSubTypes.Type(value = InspectionQuery.GetWindow.class, name = "GET_WINDOW"),
   @JsonSubTypes.Type(value = InspectionQuery.GetMergedRegions.class, name = "GET_MERGED_REGIONS"),
@@ -89,8 +96,11 @@ public sealed interface InspectionQuery
       permits GetWorkbookSummary,
           GetPackageSecurity,
           GetWorkbookProtection,
+          GetCustomXmlMappings,
+          ExportCustomXmlMapping,
           GetNamedRanges,
           GetSheetSummary,
+          GetArrayFormulas,
           GetCells,
           GetWindow,
           GetMergedRegions,
@@ -128,9 +138,30 @@ public sealed interface InspectionQuery
 
   record GetWorkbookProtection() implements Introspection {}
 
+  record GetCustomXmlMappings() implements Introspection {}
+
+  record ExportCustomXmlMapping(
+      dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator mapping,
+      Boolean validateSchema,
+      String encoding)
+      implements Introspection {
+    public ExportCustomXmlMapping {
+      java.util.Objects.requireNonNull(mapping, "mapping must not be null");
+      validateSchema = validateSchema == null ? Boolean.FALSE : validateSchema;
+      if (encoding == null) {
+        encoding = java.nio.charset.StandardCharsets.UTF_8.name();
+      }
+      if (encoding.isBlank()) {
+        throw new IllegalArgumentException("encoding must not be blank");
+      }
+    }
+  }
+
   record GetNamedRanges() implements Introspection {}
 
   record GetSheetSummary() implements Introspection {}
+
+  record GetArrayFormulas() implements Introspection {}
 
   record GetCells() implements Introspection {}
 

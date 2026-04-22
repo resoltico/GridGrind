@@ -2,6 +2,7 @@ package dev.erst.gridgrind.jazzer.support;
 
 import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
 import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
@@ -23,6 +24,11 @@ import dev.erst.gridgrind.contract.dto.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderReport;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderSideReport;
 import dev.erst.gridgrind.contract.dto.DifferentialStyleReport;
@@ -282,6 +288,14 @@ public final class WorkbookInvariantChecks {
       case InspectionQuery.GetWorkbookProtection _ ->
           requireWorkbookProtectionShape(
               ((InspectionResult.WorkbookProtectionResult) readResult).protection());
+      case InspectionQuery.GetCustomXmlMappings _ -> {
+        InspectionResult.CustomXmlMappingsResult result =
+            (InspectionResult.CustomXmlMappingsResult) readResult;
+        result.mappings().forEach(WorkbookInvariantChecks::requireCustomXmlMappingShape);
+      }
+      case InspectionQuery.ExportCustomXmlMapping _ ->
+          requireCustomXmlExportShape(
+              ((InspectionResult.CustomXmlExportResult) readResult).export());
       case InspectionQuery.GetNamedRanges _ -> {
         InspectionResult.NamedRangesResult result = (InspectionResult.NamedRangesResult) readResult;
         result.namedRanges().forEach(WorkbookInvariantChecks::requireNamedRangeShape);
@@ -295,6 +309,11 @@ public final class WorkbookInvariantChecks {
                 .name()
                 .equals(result.sheet().sheetName()),
             "sheet summary sheet mismatch");
+      }
+      case InspectionQuery.GetArrayFormulas _ -> {
+        InspectionResult.ArrayFormulasResult result =
+            (InspectionResult.ArrayFormulasResult) readResult;
+        result.arrayFormulas().forEach(WorkbookInvariantChecks::requireArrayFormulaShape);
       }
       case InspectionQuery.GetCells _ -> {
         InspectionResult.CellsResult result = (InspectionResult.CellsResult) readResult;
@@ -487,8 +506,11 @@ public final class WorkbookInvariantChecks {
       case InspectionResult.WorkbookSummaryResult _ -> "GET_WORKBOOK_SUMMARY";
       case InspectionResult.PackageSecurityResult _ -> "GET_PACKAGE_SECURITY";
       case InspectionResult.WorkbookProtectionResult _ -> "GET_WORKBOOK_PROTECTION";
+      case InspectionResult.CustomXmlMappingsResult _ -> "GET_CUSTOM_XML_MAPPINGS";
+      case InspectionResult.CustomXmlExportResult _ -> "EXPORT_CUSTOM_XML_MAPPING";
       case InspectionResult.NamedRangesResult _ -> "GET_NAMED_RANGES";
       case InspectionResult.SheetSummaryResult _ -> "GET_SHEET_SUMMARY";
+      case InspectionResult.ArrayFormulasResult _ -> "GET_ARRAY_FORMULAS";
       case InspectionResult.CellsResult _ -> "GET_CELLS";
       case InspectionResult.WindowResult _ -> "GET_WINDOW";
       case InspectionResult.MergedRegionsResult _ -> "GET_MERGED_REGIONS";
@@ -559,9 +581,15 @@ public final class WorkbookInvariantChecks {
           requirePackageSecurityShape(result.security());
       case InspectionResult.WorkbookProtectionResult result ->
           requireWorkbookProtectionShape(result.protection());
+      case InspectionResult.CustomXmlMappingsResult result ->
+          result.mappings().forEach(WorkbookInvariantChecks::requireCustomXmlMappingShape);
+      case InspectionResult.CustomXmlExportResult result ->
+          requireCustomXmlExportShape(result.export());
       case InspectionResult.NamedRangesResult result ->
           result.namedRanges().forEach(WorkbookInvariantChecks::requireNamedRangeShape);
       case InspectionResult.SheetSummaryResult result -> requireSheetSummaryShape(result.sheet());
+      case InspectionResult.ArrayFormulasResult result ->
+          result.arrayFormulas().forEach(WorkbookInvariantChecks::requireArrayFormulaShape);
       case InspectionResult.CellsResult result -> {
         require(result.sheetName() != null, "cells sheetName must not be null");
         require(!result.sheetName().isBlank(), "cells sheetName must not be blank");
@@ -721,6 +749,8 @@ public final class WorkbookInvariantChecks {
       case DrawingObjectReport.Shape shape -> requireShapeDrawingObjectShape(shape);
       case DrawingObjectReport.EmbeddedObject embeddedObject ->
           requireEmbeddedDrawingObjectShape(embeddedObject);
+      case DrawingObjectReport.SignatureLine signatureLine ->
+          requireSignatureLineDrawingObjectShape(signatureLine);
     }
   }
 
@@ -788,6 +818,48 @@ public final class WorkbookInvariantChecks {
     }
   }
 
+  private static void requireSignatureLineDrawingObjectShape(
+      DrawingObjectReport.SignatureLine signatureLine) {
+    if (signatureLine.setupId() != null) {
+      requireNonBlank(signatureLine.setupId(), "signature line setupId");
+    }
+    if (signatureLine.signingInstructions() != null) {
+      requireNonBlank(signatureLine.signingInstructions(), "signature line signingInstructions");
+    }
+    if (signatureLine.suggestedSigner() != null) {
+      requireNonBlank(signatureLine.suggestedSigner(), "signature line suggestedSigner");
+    }
+    if (signatureLine.suggestedSigner2() != null) {
+      requireNonBlank(signatureLine.suggestedSigner2(), "signature line suggestedSigner2");
+    }
+    if (signatureLine.suggestedSignerEmail() != null) {
+      requireNonBlank(signatureLine.suggestedSignerEmail(), "signature line suggestedSignerEmail");
+    }
+    if (signatureLine.previewContentType() != null) {
+      requireNonBlank(signatureLine.previewContentType(), "signature line previewContentType");
+      require(signatureLine.previewFormat() != null, "signature line previewFormat must exist");
+    }
+    if (signatureLine.previewByteSize() != null) {
+      require(
+          signatureLine.previewByteSize() > 0L, "signature line previewByteSize must be positive");
+      require(signatureLine.previewFormat() != null, "signature line previewFormat must exist");
+    }
+    if (signatureLine.previewSha256() != null) {
+      requireNonBlank(signatureLine.previewSha256(), "signature line previewSha256");
+      require(signatureLine.previewFormat() != null, "signature line previewFormat must exist");
+    }
+    if (signatureLine.previewWidthPixels() != null) {
+      require(
+          signatureLine.previewWidthPixels() >= 0,
+          "signature line previewWidthPixels must not be negative");
+    }
+    if (signatureLine.previewHeightPixels() != null) {
+      require(
+          signatureLine.previewHeightPixels() >= 0,
+          "signature line previewHeightPixels must not be negative");
+    }
+  }
+
   private static void requireDrawingObjectPayloadShape(DrawingObjectPayloadReport payload) {
     require(payload != null, "drawing payload must not be null");
     requireNonBlank(payload.name(), "drawing payload name");
@@ -851,26 +923,70 @@ public final class WorkbookInvariantChecks {
     require(chart != null, "chart report must not be null");
     requireNonBlank(chart.name(), "chart name");
     requireDrawingAnchorShape(chart.anchor());
-    switch (chart) {
+    requireChartTitleShape(chart.title());
+    requireChartLegendShape(chart.legend());
+    require(chart.displayBlanksAs() != null, "chart displayBlanksAs must not be null");
+    chart.plots().forEach(WorkbookInvariantChecks::requireChartPlotShape);
+  }
+
+  private static void requireChartLegendShape(ChartReport.Legend legend) {
+    require(legend != null, "chart legend must not be null");
+    switch (legend) {
+      case ChartReport.Legend.Hidden _ -> {}
+      case ChartReport.Legend.Visible visible ->
+          require(visible.position() != null, "chart legend position must not be null");
+    }
+  }
+
+  private static void requireChartPlotShape(ChartReport.Plot plot) {
+    require(plot != null, "chart plot must not be null");
+    switch (plot) {
+      case ChartReport.Area area -> {
+        require(area.grouping() != null, "area chart grouping must not be null");
+        area.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
+        area.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
+      case ChartReport.Area3D area3D -> {
+        require(area3D.grouping() != null, "area 3D chart grouping must not be null");
+        area3D.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
+        area3D.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
       case ChartReport.Bar bar -> {
-        require(bar.title() != null, "bar chart title must not be null");
-        require(bar.legend() != null, "bar chart legend must not be null");
-        require(bar.displayBlanksAs() != null, "bar chart displayBlanksAs must not be null");
         require(bar.barDirection() != null, "bar chart barDirection must not be null");
+        require(bar.grouping() != null, "bar chart grouping must not be null");
         bar.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
         bar.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
       }
+      case ChartReport.Bar3D bar3D -> {
+        require(bar3D.barDirection() != null, "bar 3D chart barDirection must not be null");
+        require(bar3D.grouping() != null, "bar 3D chart grouping must not be null");
+        bar3D.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
+        bar3D.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
+      case ChartReport.Doughnut doughnut -> {
+        if (doughnut.firstSliceAngle() != null) {
+          require(
+              doughnut.firstSliceAngle() >= 0 && doughnut.firstSliceAngle() <= 360,
+              "doughnut chart firstSliceAngle must be between 0 and 360");
+        }
+        if (doughnut.holeSize() != null) {
+          require(
+              doughnut.holeSize() >= 10 && doughnut.holeSize() <= 90,
+              "doughnut chart holeSize must be between 10 and 90");
+        }
+        doughnut.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
       case ChartReport.Line line -> {
-        require(line.title() != null, "line chart title must not be null");
-        require(line.legend() != null, "line chart legend must not be null");
-        require(line.displayBlanksAs() != null, "line chart displayBlanksAs must not be null");
+        require(line.grouping() != null, "line chart grouping must not be null");
         line.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
         line.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
       }
+      case ChartReport.Line3D line3D -> {
+        require(line3D.grouping() != null, "line 3D chart grouping must not be null");
+        line3D.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
+        line3D.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
       case ChartReport.Pie pie -> {
-        require(pie.title() != null, "pie chart title must not be null");
-        require(pie.legend() != null, "pie chart legend must not be null");
-        require(pie.displayBlanksAs() != null, "pie chart displayBlanksAs must not be null");
         if (pie.firstSliceAngle() != null) {
           require(
               pie.firstSliceAngle() >= 0 && pie.firstSliceAngle() <= 360,
@@ -878,10 +994,28 @@ public final class WorkbookInvariantChecks {
         }
         pie.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
       }
+      case ChartReport.Pie3D pie3D ->
+          pie3D.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      case ChartReport.Radar radar -> {
+        require(radar.style() != null, "radar chart style must not be null");
+        radar.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
+        radar.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
+      case ChartReport.Scatter scatter -> {
+        require(scatter.style() != null, "scatter chart style must not be null");
+        scatter.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
+        scatter.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
+      case ChartReport.Surface surface -> {
+        surface.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
+        surface.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
+      case ChartReport.Surface3D surface3D -> {
+        surface3D.axes().forEach(WorkbookInvariantChecks::requireChartAxisShape);
+        surface3D.series().forEach(WorkbookInvariantChecks::requireChartSeriesShape);
+      }
       case ChartReport.Unsupported unsupported -> {
-        unsupported
-            .plotTypeTokens()
-            .forEach(token -> requireNonBlank(token, "unsupported chart plotTypeToken"));
+        requireNonBlank(unsupported.plotTypeToken(), "unsupported chart plotTypeToken");
         requireNonBlank(unsupported.detail(), "unsupported chart detail");
       }
     }
@@ -1047,6 +1181,8 @@ public final class WorkbookInvariantChecks {
         requireNonBlank(embeddedObject.sha256(), "engine embedded sha256");
         require(embeddedObject.byteSize() > 0L, "engine embedded byteSize must be positive");
       }
+      case dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.SignatureLine signatureLine ->
+          requireEngineSignatureLineDrawingObjectShape(signatureLine);
     }
   }
 
@@ -1054,27 +1190,121 @@ public final class WorkbookInvariantChecks {
     require(chart != null, "engine chart must not be null");
     requireNonBlank(chart.name(), "engine chart name");
     requireEngineDrawingAnchorShape(chart.anchor());
-    switch (chart) {
+    requireEngineChartTitleShape(chart.title());
+    requireEngineChartLegendShape(chart.legend());
+    require(chart.displayBlanksAs() != null, "engine chart displayBlanksAs must not be null");
+    chart.plots().forEach(WorkbookInvariantChecks::requireEngineChartPlotShape);
+  }
+
+  private static void requireEngineSignatureLineDrawingObjectShape(
+      dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot.SignatureLine signatureLine) {
+    if (signatureLine.setupId() != null) {
+      requireNonBlank(signatureLine.setupId(), "engine signature line setupId");
+    }
+    if (signatureLine.signingInstructions() != null) {
+      requireNonBlank(
+          signatureLine.signingInstructions(), "engine signature line signingInstructions");
+    }
+    if (signatureLine.suggestedSigner() != null) {
+      requireNonBlank(signatureLine.suggestedSigner(), "engine signature line suggestedSigner");
+    }
+    if (signatureLine.suggestedSigner2() != null) {
+      requireNonBlank(signatureLine.suggestedSigner2(), "engine signature line suggestedSigner2");
+    }
+    if (signatureLine.suggestedSignerEmail() != null) {
+      requireNonBlank(
+          signatureLine.suggestedSignerEmail(), "engine signature line suggestedSignerEmail");
+    }
+    if (signatureLine.previewContentType() != null) {
+      requireNonBlank(
+          signatureLine.previewContentType(), "engine signature line previewContentType");
+      require(
+          signatureLine.previewFormat() != null, "engine signature line previewFormat must exist");
+    }
+    if (signatureLine.previewByteSize() != null) {
+      require(
+          signatureLine.previewByteSize() > 0L,
+          "engine signature line previewByteSize must be positive");
+      require(
+          signatureLine.previewFormat() != null, "engine signature line previewFormat must exist");
+    }
+    if (signatureLine.previewSha256() != null) {
+      requireNonBlank(signatureLine.previewSha256(), "engine signature line previewSha256");
+      require(
+          signatureLine.previewFormat() != null, "engine signature line previewFormat must exist");
+    }
+    if (signatureLine.previewWidthPixels() != null) {
+      require(
+          signatureLine.previewWidthPixels() >= 0,
+          "engine signature line previewWidthPixels must not be negative");
+    }
+    if (signatureLine.previewHeightPixels() != null) {
+      require(
+          signatureLine.previewHeightPixels() >= 0,
+          "engine signature line previewHeightPixels must not be negative");
+    }
+  }
+
+  private static void requireEngineChartLegendShape(
+      dev.erst.gridgrind.excel.ExcelChartSnapshot.Legend legend) {
+    require(legend != null, "engine chart legend must not be null");
+    switch (legend) {
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Legend.Hidden _ -> {}
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Legend.Visible visible ->
+          require(visible.position() != null, "engine chart legend position must not be null");
+    }
+  }
+
+  private static void requireEngineChartPlotShape(
+      dev.erst.gridgrind.excel.ExcelChartSnapshot.Plot plot) {
+    require(plot != null, "engine chart plot must not be null");
+    switch (plot) {
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Area area -> {
+        require(area.grouping() != null, "engine area chart grouping must not be null");
+        area.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
+        area.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Area3D area3D -> {
+        require(area3D.grouping() != null, "engine area 3D chart grouping must not be null");
+        area3D.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
+        area3D.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
       case dev.erst.gridgrind.excel.ExcelChartSnapshot.Bar bar -> {
-        require(bar.title() != null, "engine bar chart title must not be null");
-        require(bar.legend() != null, "engine bar chart legend must not be null");
-        require(bar.displayBlanksAs() != null, "engine bar chart displayBlanksAs must not be null");
         require(bar.barDirection() != null, "engine bar chart barDirection must not be null");
+        require(bar.grouping() != null, "engine bar chart grouping must not be null");
         bar.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
         bar.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
       }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Bar3D bar3D -> {
+        require(bar3D.barDirection() != null, "engine bar 3D chart barDirection must not be null");
+        require(bar3D.grouping() != null, "engine bar 3D chart grouping must not be null");
+        bar3D.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
+        bar3D.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Doughnut doughnut -> {
+        if (doughnut.firstSliceAngle() != null) {
+          require(
+              doughnut.firstSliceAngle() >= 0 && doughnut.firstSliceAngle() <= 360,
+              "engine doughnut chart firstSliceAngle must be between 0 and 360");
+        }
+        if (doughnut.holeSize() != null) {
+          require(
+              doughnut.holeSize() >= 10 && doughnut.holeSize() <= 90,
+              "engine doughnut chart holeSize must be between 10 and 90");
+        }
+        doughnut.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
       case dev.erst.gridgrind.excel.ExcelChartSnapshot.Line line -> {
-        require(line.title() != null, "engine line chart title must not be null");
-        require(line.legend() != null, "engine line chart legend must not be null");
-        require(
-            line.displayBlanksAs() != null, "engine line chart displayBlanksAs must not be null");
+        require(line.grouping() != null, "engine line chart grouping must not be null");
         line.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
         line.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
       }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Line3D line3D -> {
+        require(line3D.grouping() != null, "engine line 3D chart grouping must not be null");
+        line3D.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
+        line3D.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
       case dev.erst.gridgrind.excel.ExcelChartSnapshot.Pie pie -> {
-        require(pie.title() != null, "engine pie chart title must not be null");
-        require(pie.legend() != null, "engine pie chart legend must not be null");
-        require(pie.displayBlanksAs() != null, "engine pie chart displayBlanksAs must not be null");
         if (pie.firstSliceAngle() != null) {
           require(
               pie.firstSliceAngle() >= 0 && pie.firstSliceAngle() <= 360,
@@ -1082,10 +1312,28 @@ public final class WorkbookInvariantChecks {
         }
         pie.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
       }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Pie3D pie3D ->
+          pie3D.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Radar radar -> {
+        require(radar.style() != null, "engine radar chart style must not be null");
+        radar.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
+        radar.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Scatter scatter -> {
+        require(scatter.style() != null, "engine scatter chart style must not be null");
+        scatter.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
+        scatter.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Surface surface -> {
+        surface.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
+        surface.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
+      case dev.erst.gridgrind.excel.ExcelChartSnapshot.Surface3D surface3D -> {
+        surface3D.axes().forEach(WorkbookInvariantChecks::requireEngineChartAxisShape);
+        surface3D.series().forEach(WorkbookInvariantChecks::requireEngineChartSeriesShape);
+      }
       case dev.erst.gridgrind.excel.ExcelChartSnapshot.Unsupported unsupported -> {
-        unsupported
-            .plotTypeTokens()
-            .forEach(token -> requireNonBlank(token, "engine unsupported chart plotTypeToken"));
+        requireNonBlank(unsupported.plotTypeToken(), "engine unsupported chart plotTypeToken");
         requireNonBlank(unsupported.detail(), "engine unsupported chart detail");
       }
     }
@@ -2071,6 +2319,77 @@ public final class WorkbookInvariantChecks {
               requireNonBlank(signature.packagePartName(), "package signature part");
               require(signature.state() != null, "package signature state must not be null");
             });
+  }
+
+  private static void requireCustomXmlMappingShape(CustomXmlMappingReport mapping) {
+    require(mapping != null, "custom XML mapping must not be null");
+    require(mapping.mapId() > 0L, "custom XML mapping mapId must be positive");
+    requireNonBlank(mapping.name(), "custom XML mapping name");
+    requireNonBlank(mapping.rootElement(), "custom XML mapping rootElement");
+    requireNonBlank(mapping.schemaId(), "custom XML mapping schemaId");
+    if (mapping.schemaNamespace() != null) {
+      requireNonBlank(mapping.schemaNamespace(), "custom XML mapping schemaNamespace");
+    }
+    if (mapping.schemaLanguage() != null) {
+      requireNonBlank(mapping.schemaLanguage(), "custom XML mapping schemaLanguage");
+    }
+    if (mapping.schemaReference() != null) {
+      requireNonBlank(mapping.schemaReference(), "custom XML mapping schemaReference");
+    }
+    if (mapping.schemaXml() != null) {
+      requireNonBlank(mapping.schemaXml(), "custom XML mapping schemaXml");
+    }
+    if (mapping.dataBinding() != null) {
+      requireCustomXmlDataBindingShape(mapping.dataBinding());
+    }
+    mapping.linkedCells().forEach(WorkbookInvariantChecks::requireCustomXmlLinkedCellShape);
+    mapping.linkedTables().forEach(WorkbookInvariantChecks::requireCustomXmlLinkedTableShape);
+  }
+
+  private static void requireCustomXmlDataBindingShape(CustomXmlDataBindingReport dataBinding) {
+    require(dataBinding != null, "custom XML data binding must not be null");
+    if (dataBinding.dataBindingName() != null) {
+      requireNonBlank(dataBinding.dataBindingName(), "custom XML dataBindingName");
+    }
+    if (dataBinding.connectionId() != null) {
+      require(dataBinding.connectionId() >= 0L, "custom XML connectionId must not be negative");
+    }
+    if (dataBinding.fileBindingName() != null) {
+      requireNonBlank(dataBinding.fileBindingName(), "custom XML fileBindingName");
+    }
+    require(dataBinding.loadMode() >= 0L, "custom XML loadMode must not be negative");
+  }
+
+  private static void requireCustomXmlLinkedCellShape(CustomXmlLinkedCellReport linkedCell) {
+    require(linkedCell != null, "custom XML linked cell must not be null");
+    requireNonBlank(linkedCell.sheetName(), "custom XML linked cell sheetName");
+    requireNonBlank(linkedCell.address(), "custom XML linked cell address");
+    requireNonBlank(linkedCell.xpath(), "custom XML linked cell xpath");
+    requireNonBlank(linkedCell.xmlDataType(), "custom XML linked cell xmlDataType");
+  }
+
+  private static void requireCustomXmlLinkedTableShape(CustomXmlLinkedTableReport linkedTable) {
+    require(linkedTable != null, "custom XML linked table must not be null");
+    requireNonBlank(linkedTable.sheetName(), "custom XML linked table sheetName");
+    requireNonBlank(linkedTable.tableName(), "custom XML linked table tableName");
+    requireNonBlank(linkedTable.tableDisplayName(), "custom XML linked table tableDisplayName");
+    requireNonBlank(linkedTable.range(), "custom XML linked table range");
+    requireNonBlank(linkedTable.commonXPath(), "custom XML linked table commonXPath");
+  }
+
+  private static void requireCustomXmlExportShape(CustomXmlExportReport export) {
+    require(export != null, "custom XML export must not be null");
+    requireCustomXmlMappingShape(export.mapping());
+    requireNonBlank(export.encoding(), "custom XML export encoding");
+    requireNonBlank(export.xml(), "custom XML export xml");
+  }
+
+  private static void requireArrayFormulaShape(ArrayFormulaReport arrayFormula) {
+    require(arrayFormula != null, "array formula must not be null");
+    requireNonBlank(arrayFormula.sheetName(), "array formula sheetName");
+    requireNonBlank(arrayFormula.range(), "array formula range");
+    requireNonBlank(arrayFormula.topLeftAddress(), "array formula topLeftAddress");
+    requireNonBlank(arrayFormula.formula(), "array formula formula");
   }
 
   private static void requireCommentAnchorShape(CommentAnchorReport anchor) {

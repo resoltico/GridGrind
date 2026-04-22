@@ -298,6 +298,14 @@ public final class GridGrindJson {
     JSON_MAPPER.writeValue(outputStream, entry);
   }
 
+  /** Writes one protocol-catalog lookup value to an output stream without closing it. */
+  public static void writeCatalogLookupValue(OutputStream outputStream, Object value)
+      throws IOException {
+    Objects.requireNonNull(outputStream, "outputStream must not be null");
+    Objects.requireNonNull(value, "value must not be null");
+    JSON_MAPPER.writeValue(outputStream, value);
+  }
+
   /** Writes a single task entry to an output stream without closing the caller-owned stream. */
   public static void writeTaskEntry(OutputStream outputStream, TaskEntry entry) throws IOException {
     Objects.requireNonNull(outputStream, "outputStream must not be null");

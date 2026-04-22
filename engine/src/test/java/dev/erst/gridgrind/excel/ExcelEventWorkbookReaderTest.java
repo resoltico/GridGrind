@@ -24,7 +24,7 @@ import org.xml.sax.helpers.AttributesImpl;
 class ExcelEventWorkbookReaderTest {
   @Test
   void matchesFullWorkbookAndSheetSummariesForSupportedReads() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-event-read-", ".xlsx");
+    Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-event-read-", ".xlsx");
 
     WorkbookReadResult.WorkbookSummary expectedWorkbookSummary;
     WorkbookReadResult.SheetSummary expectedSheetSummary;
@@ -66,7 +66,8 @@ class ExcelEventWorkbookReaderTest {
 
   @Test
   void rejectsEveryUnsupportedReadCommandVariant() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-event-read-unsupported-", ".xlsx");
+    Path workbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-read-unsupported-", ".xlsx");
     ExcelEventWorkbookReader reader = new ExcelEventWorkbookReader();
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Budget");
@@ -96,7 +97,8 @@ class ExcelEventWorkbookReaderTest {
 
   @Test
   void reportsEmptyWorkbookSummaryWhenWorkbookXmlContainsNoSheets() throws IOException {
-    Path sourceWorkbook = Files.createTempFile("gridgrind-event-empty-source-", ".xlsx");
+    Path sourceWorkbook =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-empty-source-", ".xlsx");
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Original");
       try (OutputStream outputStream = Files.newOutputStream(sourceWorkbook)) {
@@ -125,7 +127,8 @@ class ExcelEventWorkbookReaderTest {
 
   @Test
   void fallsBackToFirstSheetWhenNoTabsAreSelectedAndActiveTabIsInvalid() throws IOException {
-    Path sourceWorkbook = Files.createTempFile("gridgrind-event-fallback-source-", ".xlsx");
+    Path sourceWorkbook =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-fallback-source-", ".xlsx");
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Visible");
       workbook.createSheet("Hidden");
@@ -199,7 +202,8 @@ class ExcelEventWorkbookReaderTest {
 
   @Test
   void fallsBackToFirstSheetWhenWorkbookXmlUsesNegativeActiveTabAndBareCalcPr() throws IOException {
-    Path sourceWorkbook = Files.createTempFile("gridgrind-event-negative-active-tab-", ".xlsx");
+    Path sourceWorkbook =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-negative-active-tab-", ".xlsx");
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Visible");
       workbook.createSheet("Other");
@@ -240,7 +244,8 @@ class ExcelEventWorkbookReaderTest {
 
   @Test
   void reportsSparseRowAndColumnFactsFromCustomizedSheetXml() throws IOException {
-    Path sourceWorkbook = Files.createTempFile("gridgrind-event-sparse-source-", ".xlsx");
+    Path sourceWorkbook =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-sparse-source-", ".xlsx");
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Sparse");
       try (OutputStream outputStream = Files.newOutputStream(sourceWorkbook)) {
@@ -295,7 +300,8 @@ class ExcelEventWorkbookReaderTest {
 
   @Test
   void throwsWhenSheetSummaryTargetsMissingSheet() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-event-missing-sheet-", ".xlsx");
+    Path workbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-missing-sheet-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.save(workbookPath);
@@ -315,7 +321,8 @@ class ExcelEventWorkbookReaderTest {
 
   @Test
   void rejectsNonXlsxAndWrapsMalformedWorkbookAndSheetXmlAsIoExceptions() throws IOException {
-    Path invalidWorkbook = Files.createTempFile("gridgrind-event-invalid-", ".xlsx");
+    Path invalidWorkbook =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-invalid-", ".xlsx");
     Files.writeString(invalidWorkbook, "not a workbook", StandardCharsets.UTF_8);
 
     IllegalArgumentException workbookFailure =
@@ -328,7 +335,8 @@ class ExcelEventWorkbookReaderTest {
                         List.of(new WorkbookReadCommand.GetWorkbookSummary("workbook"))));
     assertEquals("Only .xlsx workbooks are supported", workbookFailure.getMessage());
 
-    Path sourceWorkbook = Files.createTempFile("gridgrind-event-bad-workbook-source-", ".xlsx");
+    Path sourceWorkbook =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-bad-workbook-source-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.save(sourceWorkbook);
@@ -348,7 +356,8 @@ class ExcelEventWorkbookReaderTest {
             .getMessage()
             .contains("Failed to read workbook through the XSSF event model"));
 
-    Path malformedSheetSource = Files.createTempFile("gridgrind-event-bad-sheet-source-", ".xlsx");
+    Path malformedSheetSource =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-bad-sheet-source-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.save(malformedSheetSource);
@@ -370,7 +379,8 @@ class ExcelEventWorkbookReaderTest {
 
   @Test
   void wrapsNonSaxSheetParseFailuresWithSheetContext() throws IOException {
-    Path sourceWorkbook = Files.createTempFile("gridgrind-event-invalid-row-source-", ".xlsx");
+    Path sourceWorkbook =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-invalid-row-source-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Ops");
       workbook.save(sourceWorkbook);
@@ -460,6 +470,8 @@ class ExcelEventWorkbookReaderTest {
     return switch (command) {
       case WorkbookReadCommand.GetWorkbookSummary _ -> "GET_WORKBOOK_SUMMARY";
       case WorkbookReadCommand.GetWorkbookProtection _ -> "GET_WORKBOOK_PROTECTION";
+      case WorkbookReadCommand.GetCustomXmlMappings _ -> "GET_CUSTOM_XML_MAPPINGS";
+      case WorkbookReadCommand.ExportCustomXmlMapping _ -> "EXPORT_CUSTOM_XML_MAPPING";
       case WorkbookReadCommand.GetNamedRanges _ -> "GET_NAMED_RANGES";
       case WorkbookReadCommand.GetSheetSummary _ -> "GET_SHEET_SUMMARY";
       case WorkbookReadCommand.GetCells _ -> "GET_CELLS";
@@ -477,10 +489,11 @@ class ExcelEventWorkbookReaderTest {
       case WorkbookReadCommand.GetConditionalFormatting _ -> "GET_CONDITIONAL_FORMATTING";
       case WorkbookReadCommand.GetAutofilters _ -> "GET_AUTOFILTERS";
       case WorkbookReadCommand.GetTables _ -> "GET_TABLES";
+      case WorkbookReadCommand.GetArrayFormulas _ -> "GET_ARRAY_FORMULAS";
       case WorkbookReadCommand.GetFormulaSurface _ -> "GET_FORMULA_SURFACE";
       case WorkbookReadCommand.GetSheetSchema _ -> "GET_SHEET_SCHEMA";
-      case WorkbookReadCommand.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
       case WorkbookReadCommand.GetPackageSecurity _ -> "GET_PACKAGE_SECURITY";
+      case WorkbookReadCommand.GetNamedRangeSurface _ -> "GET_NAMED_RANGE_SURFACE";
     };
   }
 
@@ -505,7 +518,8 @@ class ExcelEventWorkbookReaderTest {
       }
     }
 
-    Path mutatedWorkbook = Files.createTempFile("gridgrind-event-mutated-", ".xlsx");
+    Path mutatedWorkbook =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-mutated-", ".xlsx");
     try (ZipOutputStream outputStream =
         new ZipOutputStream(Files.newOutputStream(mutatedWorkbook))) {
       for (ZipEntryBytes entry : entries) {
@@ -517,7 +531,8 @@ class ExcelEventWorkbookReaderTest {
 
   @Test
   void readsEdgeCasesInWorkbookXmlAndSheetXml() throws IOException {
-    Path sourceWorkbook = Files.createTempFile("gridgrind-event-edge-source-", ".xlsx");
+    Path sourceWorkbook =
+        ExcelTempFiles.createManagedTempFile("gridgrind-event-edge-source-", ".xlsx");
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Visible");
       workbook.createSheet("Other");

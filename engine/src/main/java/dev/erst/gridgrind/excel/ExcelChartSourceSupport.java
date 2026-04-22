@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
@@ -77,27 +78,68 @@ final class ExcelChartSourceSupport {
   }
 
   static org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> toCategoryDataSource(
-      XSSFSheet sheet, String formula) {
-    ResolvedChartSource source = resolveChartSource(sheet, formula);
-    return source.numeric()
-        ? org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
-            source.numericValues().toArray(Double[]::new), source.referenceFormula())
-        : org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
-            source.stringValues().toArray(String[]::new), source.referenceFormula());
+      XSSFSheet sheet, ExcelChartDefinition.DataSource source) {
+    return toCategoryDataSource(sheet, source, null);
+  }
+
+  static org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> toCategoryDataSource(
+      XSSFSheet sheet, ExcelChartDefinition.DataSource source, ExcelFormulaRuntime formulaRuntime) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return switch (source) {
+      case ExcelChartDefinition.DataSource.Reference reference -> {
+        ResolvedChartSource resolved =
+            resolveChartSource(sheet, reference.formula(), formulaRuntime);
+        yield resolved.numeric()
+            ? org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+                resolved.numericValues().toArray(Double[]::new), resolved.referenceFormula())
+            : org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+                resolved.stringValues().toArray(String[]::new), resolved.referenceFormula());
+      }
+      case ExcelChartDefinition.DataSource.StringLiteral literal ->
+          org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+              literal.values().toArray(String[]::new));
+      case ExcelChartDefinition.DataSource.NumericLiteral literal ->
+          org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+              literal.values().toArray(Double[]::new));
+    };
   }
 
   static org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<? extends Number>
-      toValueDataSource(XSSFSheet sheet, String formula) {
-    ResolvedChartSource source = resolveChartSource(sheet, formula);
-    if (!source.numeric()) {
-      throw new IllegalArgumentException(
-          "Chart value source must resolve to numeric cells: " + formula);
-    }
-    return org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
-        source.numericValues().toArray(Double[]::new), source.referenceFormula());
+      toValueDataSource(XSSFSheet sheet, ExcelChartDefinition.DataSource source) {
+    return toValueDataSource(sheet, source, null);
+  }
+
+  static org.apache.poi.xddf.usermodel.chart.XDDFNumericalDataSource<? extends Number>
+      toValueDataSource(
+          XSSFSheet sheet,
+          ExcelChartDefinition.DataSource source,
+          ExcelFormulaRuntime formulaRuntime) {
+    Objects.requireNonNull(sheet, "sheet must not be null");
+    return switch (source) {
+      case ExcelChartDefinition.DataSource.Reference reference -> {
+        ResolvedChartSource resolved =
+            resolveChartSource(sheet, reference.formula(), formulaRuntime);
+        if (!resolved.numeric()) {
+          throw new IllegalArgumentException(
+              "Chart value source must resolve to numeric cells: " + reference.formula());
+        }
+        yield org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+            resolved.numericValues().toArray(Double[]::new), resolved.referenceFormula());
+      }
+      case ExcelChartDefinition.DataSource.StringLiteral _ ->
+          throw new IllegalArgumentException("Chart value source must be numeric");
+      case ExcelChartDefinition.DataSource.NumericLiteral literal ->
+          org.apache.poi.xddf.usermodel.chart.XDDFDataSourcesFactory.fromArray(
+              literal.values().toArray(Double[]::new));
+    };
   }
 
   static ResolvedChartSource resolveChartSource(XSSFSheet sheet, String formula) {
+    return resolveChartSource(sheet, formula, null);
+  }
+
+  static ResolvedChartSource resolveChartSource(
+      XSSFSheet sheet, String formula, ExcelFormulaRuntime formulaRuntime) {
     String normalizedFormula = normalizeFormula(formula);
     ResolvedAreaReference resolved = resolveAreaReference(sheet, normalizedFormula);
     List<String> stringValues = new ArrayList<>();
@@ -108,7 +150,7 @@ final class ExcelChartSourceSupport {
           resolved.sheet().getRow(reference.getRow()) == null
               ? null
               : resolved.sheet().getRow(reference.getRow()).getCell(reference.getCol());
-      ExcelDrawingController.CellScalar scalar = scalar(cell);
+      ExcelDrawingController.CellScalar scalar = scalar(cell, formulaRuntime);
       if (scalar.kind() == ExcelDrawingController.CellScalarKind.NUMERIC) {
         stringValues.add(Double.toString(scalar.number()));
         numericValues.add(scalar.number());
@@ -157,6 +199,11 @@ final class ExcelChartSourceSupport {
   }
 
   static String scalarText(XSSFSheet sheet, CellReference reference) {
+    return scalarText(sheet, reference, null);
+  }
+
+  static String scalarText(
+      XSSFSheet sheet, CellReference reference, ExcelFormulaRuntime formulaRuntime) {
     Cell cell =
         sheet.getWorkbook().getSheet(reference.getSheetName()).getRow(reference.getRow()) == null
             ? null
@@ -165,7 +212,7 @@ final class ExcelChartSourceSupport {
                 .getSheet(reference.getSheetName())
                 .getRow(reference.getRow())
                 .getCell(reference.getCol());
-    ExcelDrawingController.CellScalar scalar = scalar(cell);
+    ExcelDrawingController.CellScalar scalar = scalar(cell, formulaRuntime);
     return scalar.kind() == ExcelDrawingController.CellScalarKind.NUMERIC
         ? Double.toString(scalar.number())
         : scalar.text();
@@ -242,7 +289,8 @@ final class ExcelChartSourceSupport {
     return sheet;
   }
 
-  private static ExcelDrawingController.CellScalar scalar(Cell cell) {
+  private static ExcelDrawingController.CellScalar scalar(
+      Cell cell, ExcelFormulaRuntime formulaRuntime) {
     if (cell == null) {
       return new ExcelDrawingController.CellScalar(
           ExcelDrawingController.CellScalarKind.STRING, "", 0d);
@@ -262,9 +310,39 @@ final class ExcelChartSourceSupport {
       case BLANK, _NONE ->
           new ExcelDrawingController.CellScalar(
               ExcelDrawingController.CellScalarKind.STRING, "", 0d);
-      case FORMULA -> scalarFromFormula(cell);
+      case FORMULA -> scalarFromFormula(cell, formulaRuntime);
       case ERROR ->
           throw new IllegalArgumentException("Chart source cells must not contain error values");
+    };
+  }
+
+  static ExcelDrawingController.CellScalar scalarFromFormula(
+      Cell cell, ExcelFormulaRuntime formulaRuntime) {
+    Objects.requireNonNull(cell, "cell must not be null");
+    if (formulaRuntime == null) {
+      return scalarFromFormula(cell);
+    }
+    CellType evaluatedType = formulaRuntime.evaluateFormulaCell(cell);
+    return switch (evaluatedType) {
+      case STRING ->
+          new ExcelDrawingController.CellScalar(
+              ExcelDrawingController.CellScalarKind.STRING, cell.getStringCellValue(), 0d);
+      case NUMERIC ->
+          new ExcelDrawingController.CellScalar(
+              ExcelDrawingController.CellScalarKind.NUMERIC, null, cell.getNumericCellValue());
+      case BOOLEAN ->
+          new ExcelDrawingController.CellScalar(
+              ExcelDrawingController.CellScalarKind.STRING,
+              Boolean.toString(cell.getBooleanCellValue()),
+              0d);
+      case BLANK, _NONE ->
+          new ExcelDrawingController.CellScalar(
+              ExcelDrawingController.CellScalarKind.STRING, "", 0d);
+      case ERROR ->
+          throw new IllegalArgumentException("Chart source formulas must not cache error values");
+      case FORMULA ->
+          throw new IllegalArgumentException(
+              "Chart source formulas must expose a cached scalar result");
     };
   }
 }

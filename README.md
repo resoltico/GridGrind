@@ -1,12 +1,15 @@
----
-afad: "3.5"
-version: "0.49.0"
-domain: OVERVIEW
-updated: "2026-04-20"
-route:
+<!--
+RETRIEVAL_HINTS:
   keywords: [gridgrind, excel, xlsx, workbook, automation, spreadsheet, quick-start]
   questions: ["what is gridgrind", "who is gridgrind for", "how do i start with gridgrind", "can gridgrind work with existing excel files", "do i need excel installed"]
----
+-->
+
+[![GridGrind Art](https://raw.githubusercontent.com/resoltico/GridGrind/main/images/GridGrind.jpg)](https://github.com/resoltico/GridGrind)
+
+[![CI](https://github.com/resoltico/GridGrind/actions/workflows/ci.yml/badge.svg)](https://github.com/resoltico/GridGrind/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/resoltico/GridGrind)](https://github.com/resoltico/GridGrind/releases/latest)
+
+-----
 
 # GridGrind — a calmer way to keep `.xlsx` workbook work on track
 
@@ -37,7 +40,7 @@ route:
 - If a run fails, GridGrind stops before writing the workbook, so you do not get a partly written file.
 - GridGrind ships a user-facing quick start, real example files, and supporting docs when you want more detail.
 - The limits are explicit instead of hand-wavy: low-memory `STREAMING_WRITE` is intentionally narrow and uses `ENSURE_SHEET`, `APPEND_ROW`, and optional `execution.calculation.markRecalculateOnOpen=true`.
-- Formula boundaries are explicit too: request-authored array braces, `LAMBDA`, and `LET` are rejected as `INVALID_FORMULA` today because Apache POI cannot parse them yet.
+- Formula boundaries are explicit too: scalar `FORMULA` cell values reject array-formula braces, while dedicated `SET_ARRAY_FORMULA` handles contiguous array-formula groups. `LAMBDA` and `LET` are still rejected as `INVALID_FORMULA` today because Apache POI cannot parse them yet.
 - Limits and format boundaries are documented up front in [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 - The scope is explicit: GridGrind is for `.xlsx` workbooks, while `.xls`, `.xlsm`, and `.xlsb` are out of scope.
 
@@ -46,6 +49,8 @@ route:
 - New to GridGrind: [docs/QUICK_START.md](docs/QUICK_START.md)
 - Want a concrete example first: [examples/budget-request.json](examples/budget-request.json)
 - Want a no-save health-check example: [examples/workbook-health-request.json](examples/workbook-health-request.json)
+- Want an existing-workbook XML import/export example: [examples/custom-xml-request.json](examples/custom-xml-request.json)
+- Want a drawing and signature-line example: [examples/signature-line-request.json](examples/signature-line-request.json)
 - Want the reference docs: [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md), [docs/OPERATIONS.md](docs/OPERATIONS.md), and [docs/ERRORS.md](docs/ERRORS.md)
 - Want the runnable download: [latest release](https://github.com/resoltico/GridGrind/releases/latest)
 

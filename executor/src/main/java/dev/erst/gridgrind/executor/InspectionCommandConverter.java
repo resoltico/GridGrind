@@ -31,12 +31,23 @@ final class InspectionCommandConverter {
           new WorkbookReadCommand.GetPackageSecurity(stepId);
       case InspectionQuery.GetWorkbookProtection _ ->
           new WorkbookReadCommand.GetWorkbookProtection(stepId);
+      case InspectionQuery.GetCustomXmlMappings _ ->
+          new WorkbookReadCommand.GetCustomXmlMappings(stepId);
+      case InspectionQuery.ExportCustomXmlMapping exportCustomXmlMapping ->
+          new WorkbookReadCommand.ExportCustomXmlMapping(
+              stepId,
+              toExcelCustomXmlMappingLocator(exportCustomXmlMapping.mapping()),
+              exportCustomXmlMapping.validateSchema(),
+              exportCustomXmlMapping.encoding());
       case InspectionQuery.GetNamedRanges _ ->
           new WorkbookReadCommand.GetNamedRanges(
               stepId, SelectorConverter.toExcelNamedRangeSelection((NamedRangeSelector) target));
       case InspectionQuery.GetSheetSummary _ ->
           new WorkbookReadCommand.GetSheetSummary(
               stepId, SelectorConverter.toSheetName((SheetSelector.ByName) target));
+      case InspectionQuery.GetArrayFormulas _ ->
+          new WorkbookReadCommand.GetArrayFormulas(
+              stepId, SelectorConverter.toExcelSheetSelection((SheetSelector) target));
       case InspectionQuery.GetCells _ -> {
         SelectorConverter.SheetLocalCellAddresses selection =
             SelectorConverter.toSheetLocalCellAddresses((CellSelector) target);
@@ -153,5 +164,12 @@ final class InspectionCommandConverter {
       case InspectionQuery.AnalyzeWorkbookFindings _ ->
           new WorkbookReadCommand.AnalyzeWorkbookFindings(stepId);
     };
+  }
+
+  private static dev.erst.gridgrind.excel.ExcelCustomXmlMappingLocator
+      toExcelCustomXmlMappingLocator(
+          dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator locator) {
+    return new dev.erst.gridgrind.excel.ExcelCustomXmlMappingLocator(
+        locator.mapId(), locator.name());
   }
 }

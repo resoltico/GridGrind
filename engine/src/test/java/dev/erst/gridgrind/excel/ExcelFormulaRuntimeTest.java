@@ -45,7 +45,7 @@ class ExcelFormulaRuntimeTest {
       assertTrue(failure.getMessage().contains("Invalid formulaTemplate"));
     }
 
-    Path directory = Files.createTempDirectory("gridgrind-formula-runtime-");
+    Path directory = ExcelTempFiles.createManagedTempDirectory("gridgrind-formula-runtime-");
     Path validWorkbookPath = directory.resolve("valid.xlsx");
     Path missingWorkbookPath = directory.resolve("missing.xlsx");
 

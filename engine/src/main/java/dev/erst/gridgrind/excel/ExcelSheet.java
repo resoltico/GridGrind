@@ -37,7 +37,7 @@ public final class ExcelSheet {
     ExcelRowColumnStructureController rowColumnStructureController =
         new ExcelRowColumnStructureController();
     ExcelDrawingController drawingController = new ExcelDrawingController();
-    this.drawingSupport = new ExcelSheetDrawingSupport(sheet, drawingController);
+    this.drawingSupport = new ExcelSheetDrawingSupport(sheet, drawingController, formulaRuntime);
     this.annotationSupport = new ExcelSheetAnnotationSupport(sheet, drawingController);
     this.metadataSupport =
         new ExcelSheetMetadataSupport(
@@ -86,6 +86,18 @@ public final class ExcelSheet {
     return this;
   }
 
+  /** Creates or replaces one dedicated array-formula group over a rectangular range. */
+  public ExcelSheet setArrayFormula(String range, ExcelArrayFormulaDefinition formula) {
+    mutationSupport.setArrayFormula(range, formula);
+    return this;
+  }
+
+  /** Removes the array-formula group containing one addressed cell. */
+  public ExcelSheet clearArrayFormula(String address) {
+    mutationSupport.clearArrayFormula(address);
+    return this;
+  }
+
   /** Replaces the hyperlink attached to one cell, creating the cell if necessary. */
   public ExcelSheet setHyperlink(String address, ExcelHyperlink hyperlink) {
     annotationSupport.setHyperlink(address, hyperlink);
@@ -113,6 +125,11 @@ public final class ExcelSheet {
   /** Creates or replaces one picture-backed drawing object on this sheet. */
   public ExcelSheet setPicture(ExcelPictureDefinition definition) {
     return drawingSupport.setPicture(definition, this);
+  }
+
+  /** Creates or replaces one signature-line drawing object on this sheet. */
+  public ExcelSheet setSignatureLine(ExcelSignatureLineDefinition definition) {
+    return drawingSupport.setSignatureLine(definition, this);
   }
 
   /** Creates or mutates one supported simple chart on this sheet. */
@@ -418,6 +435,11 @@ public final class ExcelSheet {
   /** Returns every formula cell currently present on the sheet. */
   public List<ExcelCellSnapshot.FormulaSnapshot> formulaCells() {
     return readSupport.formulaCells();
+  }
+
+  /** Returns factual array-formula groups on this sheet. */
+  public List<ExcelArrayFormulaSnapshot> arrayFormulas() {
+    return readSupport.arrayFormulas();
   }
 
   /** Returns the number of formula cells currently present on the sheet. */

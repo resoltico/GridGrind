@@ -136,8 +136,10 @@ public final class GridGrindTaskCatalog {
                                 "Use factual chart readback to confirm what the workbook now"
                                     + " contains."))),
                     List.of(
-                        "SET_CHART is intentionally limited to BAR, LINE, and PIE in the current"
-                            + " authoritative mutation contract.",
+                        "SET_CHART supports authored AREA, AREA_3D, BAR, BAR_3D, DOUGHNUT,"
+                            + " LINE, LINE_3D, PIE, PIE_3D, RADAR, SCATTER, SURFACE,"
+                            + " and SURFACE_3D plots in the current authoritative mutation"
+                            + " contract.",
                         "Chart title and series FORMULA titles must resolve to one cell.",
                         "Unsupported loaded chart detail is preserved on unrelated edits but is not"
                             + " available for authoritative mutation.")),

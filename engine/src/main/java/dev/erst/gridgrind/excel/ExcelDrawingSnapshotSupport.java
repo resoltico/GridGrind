@@ -14,6 +14,11 @@ final class ExcelDrawingSnapshotSupport {
   private ExcelDrawingSnapshotSupport() {}
 
   static ExcelDrawingObjectSnapshot snapshot(XSSFDrawing drawing, XSSFShape shape) {
+    return snapshot(drawing, shape, null);
+  }
+
+  static ExcelDrawingObjectSnapshot snapshot(
+      XSSFDrawing drawing, XSSFShape shape, ExcelFormulaRuntime formulaRuntime) {
     if (shape instanceof XSSFPicture picture) {
       return snapshotPicture(picture);
     }
@@ -30,7 +35,8 @@ final class ExcelDrawingSnapshotSupport {
       XSSFChart chart = ExcelDrawingChartSupport.chartForGraphicFrame(drawing, graphicFrame);
       return chart == null
           ? snapshotGraphicFrame(graphicFrame)
-          : ExcelDrawingChartSupport.snapshotChartDrawingObject(chart, graphicFrame);
+          : ExcelDrawingChartSupport.snapshotChartDrawingObject(
+              chart, graphicFrame, formulaRuntime);
     }
     if (shape instanceof org.apache.poi.xssf.usermodel.XSSFSimpleShape simpleShape) {
       return snapshotShape(simpleShape);

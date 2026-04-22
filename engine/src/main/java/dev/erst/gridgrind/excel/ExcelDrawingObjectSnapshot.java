@@ -8,7 +8,8 @@ public sealed interface ExcelDrawingObjectSnapshot
     permits ExcelDrawingObjectSnapshot.Picture,
         ExcelDrawingObjectSnapshot.Chart,
         ExcelDrawingObjectSnapshot.Shape,
-        ExcelDrawingObjectSnapshot.EmbeddedObject {
+        ExcelDrawingObjectSnapshot.EmbeddedObject,
+        ExcelDrawingObjectSnapshot.SignatureLine {
 
   /** Sheet-local drawing object name. */
   String name();
@@ -134,6 +135,67 @@ public sealed interface ExcelDrawingObjectSnapshot
       }
       if (previewFormat == null && previewSha256 != null) {
         throw new IllegalArgumentException("previewSha256 requires previewFormat");
+      }
+    }
+  }
+
+  /** Factual signature-line snapshot. */
+  record SignatureLine(
+      String name,
+      ExcelDrawingAnchor anchor,
+      String setupId,
+      Boolean allowComments,
+      String signingInstructions,
+      String suggestedSigner,
+      String suggestedSigner2,
+      String suggestedSignerEmail,
+      ExcelPictureFormat previewFormat,
+      String previewContentType,
+      Long previewByteSize,
+      String previewSha256,
+      Integer previewWidthPixels,
+      Integer previewHeightPixels)
+      implements ExcelDrawingObjectSnapshot {
+    public SignatureLine {
+      validateCommon(name, anchor);
+      if (setupId != null && setupId.isBlank()) {
+        throw new IllegalArgumentException("setupId must not be blank");
+      }
+      if (signingInstructions != null && signingInstructions.isBlank()) {
+        throw new IllegalArgumentException("signingInstructions must not be blank");
+      }
+      if (suggestedSigner != null && suggestedSigner.isBlank()) {
+        throw new IllegalArgumentException("suggestedSigner must not be blank");
+      }
+      if (suggestedSigner2 != null && suggestedSigner2.isBlank()) {
+        throw new IllegalArgumentException("suggestedSigner2 must not be blank");
+      }
+      if (suggestedSignerEmail != null && suggestedSignerEmail.isBlank()) {
+        throw new IllegalArgumentException("suggestedSignerEmail must not be blank");
+      }
+      if (previewFormat == null && previewContentType != null) {
+        throw new IllegalArgumentException("previewContentType requires previewFormat");
+      }
+      if (previewContentType != null && previewContentType.isBlank()) {
+        throw new IllegalArgumentException("previewContentType must not be blank");
+      }
+      if (previewFormat == null && previewByteSize != null) {
+        throw new IllegalArgumentException("previewByteSize requires previewFormat");
+      }
+      if (previewByteSize != null && previewByteSize <= 0L) {
+        throw new IllegalArgumentException("previewByteSize must be greater than 0");
+      }
+      if (previewFormat == null && previewSha256 != null) {
+        throw new IllegalArgumentException("previewSha256 requires previewFormat");
+      }
+      if (previewSha256 != null && previewSha256.isBlank()) {
+        throw new IllegalArgumentException("previewSha256 must not be blank");
+      }
+      if (previewWidthPixels != null && previewWidthPixels < 0) {
+        throw new IllegalArgumentException("previewWidthPixels must not be negative");
+      }
+      if (previewHeightPixels != null && previewHeightPixels < 0) {
+        throw new IllegalArgumentException("previewHeightPixels must not be negative");
       }
     }
   }

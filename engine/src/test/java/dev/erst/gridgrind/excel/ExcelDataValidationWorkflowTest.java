@@ -77,7 +77,8 @@ class ExcelDataValidationWorkflowTest {
 
   @Test
   void healthAnalysisFindsBrokenFormulaAndOverlaps() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-data-validation-health-", ".xlsx");
+    Path workbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-data-validation-health-", ".xlsx");
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet budget = workbook.createSheet("Budget");

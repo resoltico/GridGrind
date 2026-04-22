@@ -4,6 +4,7 @@ import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
@@ -14,6 +15,7 @@ import dev.erst.gridgrind.contract.dto.PictureInput;
 import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
 import dev.erst.gridgrind.contract.dto.RichTextRunInput;
 import dev.erst.gridgrind.contract.dto.ShapeInput;
+import dev.erst.gridgrind.contract.dto.SignatureLineInput;
 import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.selector.Selector;
@@ -141,6 +143,13 @@ public final class SourceBackedPlanResolver {
             ? setPicture
             : new MutationAction.SetPicture(resolvedPicture);
       }
+      case MutationAction.SetSignatureLine setSignatureLine -> {
+        SignatureLineInput resolvedSignatureLine =
+            resolveSignatureLine(setSignatureLine.signatureLine(), bindings);
+        yield sameReference(resolvedSignatureLine, setSignatureLine.signatureLine())
+            ? setSignatureLine
+            : new MutationAction.SetSignatureLine(resolvedSignatureLine);
+      }
       case MutationAction.SetChart setChart -> {
         ChartInput resolvedChart = resolveChart(setChart.chart(), bindings);
         yield sameReference(resolvedChart, setChart.chart())
@@ -185,6 +194,13 @@ public final class SourceBackedPlanResolver {
         yield sameReference(resolvedPrintLayout, setPrintLayout.printLayout())
             ? setPrintLayout
             : new MutationAction.SetPrintLayout(resolvedPrintLayout);
+      }
+      case MutationAction.ImportCustomXmlMapping importCustomXmlMapping -> {
+        CustomXmlImportInput resolvedImport =
+            resolveCustomXmlImport(importCustomXmlMapping.mapping(), bindings);
+        yield sameReference(resolvedImport, importCustomXmlMapping.mapping())
+            ? importCustomXmlMapping
+            : new MutationAction.ImportCustomXmlMapping(resolvedImport);
       }
       default -> action;
     };
@@ -249,6 +265,14 @@ public final class SourceBackedPlanResolver {
             resolvedText, comment.author(), comment.visible(), resolvedRuns, comment.anchor());
   }
 
+  private static CustomXmlImportInput resolveCustomXmlImport(
+      CustomXmlImportInput input, ExecutionInputBindings bindings) throws IOException {
+    TextSourceInput resolvedXml = resolveTextSource(input.xml(), bindings, true, "custom XML");
+    return sameReference(resolvedXml, input.xml())
+        ? input
+        : new CustomXmlImportInput(input.locator(), resolvedXml);
+  }
+
   private static PictureInput resolvePicture(PictureInput picture, ExecutionInputBindings bindings)
       throws IOException {
     PictureDataInput resolvedImage = resolvePictureData(picture.image(), bindings);
@@ -260,6 +284,28 @@ public final class SourceBackedPlanResolver {
             && sameReference(resolvedDescription, picture.description())
         ? picture
         : new PictureInput(picture.name(), resolvedImage, picture.anchor(), resolvedDescription);
+  }
+
+  private static SignatureLineInput resolveSignatureLine(
+      SignatureLineInput signatureLine, ExecutionInputBindings bindings) throws IOException {
+    if (signatureLine.plainSignature() == null) {
+      return signatureLine;
+    }
+    PictureDataInput resolvedPlainSignature =
+        resolvePictureData(signatureLine.plainSignature(), bindings);
+    return sameReference(resolvedPlainSignature, signatureLine.plainSignature())
+        ? signatureLine
+        : new SignatureLineInput(
+            signatureLine.name(),
+            signatureLine.anchor(),
+            signatureLine.allowComments(),
+            signatureLine.signingInstructions(),
+            signatureLine.suggestedSigner(),
+            signatureLine.suggestedSigner2(),
+            signatureLine.suggestedSignerEmail(),
+            signatureLine.caption(),
+            signatureLine.invalidStamp(),
+            resolvedPlainSignature);
   }
 
   private static PictureDataInput resolvePictureData(
@@ -291,52 +337,24 @@ public final class SourceBackedPlanResolver {
 
   private static ChartInput resolveChart(ChartInput chart, ExecutionInputBindings bindings)
       throws IOException {
-    return switch (chart) {
-      case ChartInput.Bar bar -> {
-        ChartInput.Title resolvedTitle = resolveChartTitle(bar.title(), bindings);
-        yield sameReference(resolvedTitle, bar.title())
-            ? bar
-            : new ChartInput.Bar(
-                bar.name(),
-                bar.anchor(),
-                resolvedTitle,
-                bar.legend(),
-                bar.displayBlanksAs(),
-                bar.plotOnlyVisibleCells(),
-                bar.varyColors(),
-                bar.barDirection(),
-                bar.series());
-      }
-      case ChartInput.Line line -> {
-        ChartInput.Title resolvedTitle = resolveChartTitle(line.title(), bindings);
-        yield sameReference(resolvedTitle, line.title())
-            ? line
-            : new ChartInput.Line(
-                line.name(),
-                line.anchor(),
-                resolvedTitle,
-                line.legend(),
-                line.displayBlanksAs(),
-                line.plotOnlyVisibleCells(),
-                line.varyColors(),
-                line.series());
-      }
-      case ChartInput.Pie pie -> {
-        ChartInput.Title resolvedTitle = resolveChartTitle(pie.title(), bindings);
-        yield sameReference(resolvedTitle, pie.title())
-            ? pie
-            : new ChartInput.Pie(
-                pie.name(),
-                pie.anchor(),
-                resolvedTitle,
-                pie.legend(),
-                pie.displayBlanksAs(),
-                pie.plotOnlyVisibleCells(),
-                pie.varyColors(),
-                pie.firstSliceAngle(),
-                pie.series());
-      }
-    };
+    ChartInput.Title resolvedTitle = resolveChartTitle(chart.title(), bindings);
+    List<ChartInput.Plot> resolvedPlots = new ArrayList<>(chart.plots().size());
+    boolean changed = !sameReference(resolvedTitle, chart.title());
+    for (ChartInput.Plot plot : chart.plots()) {
+      ChartInput.Plot resolvedPlot = resolveChartPlot(plot, bindings);
+      resolvedPlots.add(resolvedPlot);
+      changed |= !sameReference(resolvedPlot, plot);
+    }
+    return changed
+        ? new ChartInput(
+            chart.name(),
+            chart.anchor(),
+            resolvedTitle,
+            chart.legend(),
+            chart.displayBlanksAs(),
+            chart.plotOnlyVisibleCells(),
+            List.copyOf(resolvedPlots))
+        : chart;
   }
 
   private static ChartInput.Title resolveChartTitle(
@@ -351,6 +369,149 @@ public final class SourceBackedPlanResolver {
               : new ChartInput.Title.Text(
                   resolveTextSource(text.source(), bindings, true, "chart title"));
     };
+  }
+
+  private static ChartInput.Plot resolveChartPlot(
+      ChartInput.Plot plot, ExecutionInputBindings bindings) throws IOException {
+    return switch (plot) {
+      case ChartInput.Area area -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(area.series(), bindings);
+        yield resolvedSeries.equals(area.series())
+            ? area
+            : new ChartInput.Area(area.varyColors(), area.grouping(), area.axes(), resolvedSeries);
+      }
+      case ChartInput.Area3D area3D -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(area3D.series(), bindings);
+        yield resolvedSeries.equals(area3D.series())
+            ? area3D
+            : new ChartInput.Area3D(
+                area3D.varyColors(),
+                area3D.grouping(),
+                area3D.gapDepth(),
+                area3D.axes(),
+                resolvedSeries);
+      }
+      case ChartInput.Bar bar -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(bar.series(), bindings);
+        yield resolvedSeries.equals(bar.series())
+            ? bar
+            : new ChartInput.Bar(
+                bar.varyColors(),
+                bar.barDirection(),
+                bar.grouping(),
+                bar.gapWidth(),
+                bar.overlap(),
+                bar.axes(),
+                resolvedSeries);
+      }
+      case ChartInput.Bar3D bar3D -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(bar3D.series(), bindings);
+        yield resolvedSeries.equals(bar3D.series())
+            ? bar3D
+            : new ChartInput.Bar3D(
+                bar3D.varyColors(),
+                bar3D.barDirection(),
+                bar3D.grouping(),
+                bar3D.gapDepth(),
+                bar3D.gapWidth(),
+                bar3D.shape(),
+                bar3D.axes(),
+                resolvedSeries);
+      }
+      case ChartInput.Doughnut doughnut -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(doughnut.series(), bindings);
+        yield resolvedSeries.equals(doughnut.series())
+            ? doughnut
+            : new ChartInput.Doughnut(
+                doughnut.varyColors(),
+                doughnut.firstSliceAngle(),
+                doughnut.holeSize(),
+                resolvedSeries);
+      }
+      case ChartInput.Line line -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(line.series(), bindings);
+        yield resolvedSeries.equals(line.series())
+            ? line
+            : new ChartInput.Line(line.varyColors(), line.grouping(), line.axes(), resolvedSeries);
+      }
+      case ChartInput.Line3D line3D -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(line3D.series(), bindings);
+        yield resolvedSeries.equals(line3D.series())
+            ? line3D
+            : new ChartInput.Line3D(
+                line3D.varyColors(),
+                line3D.grouping(),
+                line3D.gapDepth(),
+                line3D.axes(),
+                resolvedSeries);
+      }
+      case ChartInput.Pie pie -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(pie.series(), bindings);
+        yield resolvedSeries.equals(pie.series())
+            ? pie
+            : new ChartInput.Pie(pie.varyColors(), pie.firstSliceAngle(), resolvedSeries);
+      }
+      case ChartInput.Pie3D pie3D -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(pie3D.series(), bindings);
+        yield resolvedSeries.equals(pie3D.series())
+            ? pie3D
+            : new ChartInput.Pie3D(pie3D.varyColors(), resolvedSeries);
+      }
+      case ChartInput.Radar radar -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(radar.series(), bindings);
+        yield resolvedSeries.equals(radar.series())
+            ? radar
+            : new ChartInput.Radar(radar.varyColors(), radar.style(), radar.axes(), resolvedSeries);
+      }
+      case ChartInput.Scatter scatter -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(scatter.series(), bindings);
+        yield resolvedSeries.equals(scatter.series())
+            ? scatter
+            : new ChartInput.Scatter(
+                scatter.varyColors(), scatter.style(), scatter.axes(), resolvedSeries);
+      }
+      case ChartInput.Surface surface -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(surface.series(), bindings);
+        yield resolvedSeries.equals(surface.series())
+            ? surface
+            : new ChartInput.Surface(
+                surface.varyColors(), surface.wireframe(), surface.axes(), resolvedSeries);
+      }
+      case ChartInput.Surface3D surface3D -> {
+        List<ChartInput.Series> resolvedSeries = resolveChartSeries(surface3D.series(), bindings);
+        yield resolvedSeries.equals(surface3D.series())
+            ? surface3D
+            : new ChartInput.Surface3D(
+                surface3D.varyColors(), surface3D.wireframe(), surface3D.axes(), resolvedSeries);
+      }
+    };
+  }
+
+  private static List<ChartInput.Series> resolveChartSeries(
+      List<ChartInput.Series> series, ExecutionInputBindings bindings) throws IOException {
+    List<ChartInput.Series> resolvedSeries = new ArrayList<>(series.size());
+    boolean changed = false;
+    for (ChartInput.Series value : series) {
+      ChartInput.Title resolvedTitle = resolveChartTitle(value.title(), bindings);
+      ChartInput.Series resolved = resolvedChartSeries(value, resolvedTitle);
+      resolvedSeries.add(resolved);
+      changed |= !sameReference(resolved, value);
+    }
+    return changed ? List.copyOf(resolvedSeries) : series;
+  }
+
+  private static ChartInput.Series resolvedChartSeries(
+      ChartInput.Series series, ChartInput.Title resolvedTitle) {
+    return sameReference(resolvedTitle, series.title())
+        ? series
+        : new ChartInput.Series(
+            resolvedTitle,
+            series.categories(),
+            series.values(),
+            series.smooth(),
+            series.markerStyle(),
+            series.markerSize(),
+            series.explosion());
   }
 
   private static ShapeInput resolveShape(ShapeInput shape, ExecutionInputBindings bindings)

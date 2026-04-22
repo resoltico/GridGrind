@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionInput;
 import dev.erst.gridgrind.contract.dto.AutofilterSortConditionInput;
@@ -20,6 +21,7 @@ import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
@@ -47,6 +49,7 @@ import dev.erst.gridgrind.contract.dto.ShapeInput;
 import dev.erst.gridgrind.contract.dto.SheetCopyPosition;
 import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
 import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
+import dev.erst.gridgrind.contract.dto.SignatureLineInput;
 import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.TableStyleInput;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
@@ -63,6 +66,7 @@ import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.contract.step.MutationStep;
+import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumn;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterion;
 import dev.erst.gridgrind.excel.ExcelAutofilterSortCondition;
@@ -83,6 +87,8 @@ import dev.erst.gridgrind.excel.ExcelCommentAnchor;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRule;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThreshold;
+import dev.erst.gridgrind.excel.ExcelCustomXmlImportDefinition;
+import dev.erst.gridgrind.excel.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorAlert;
 import dev.erst.gridgrind.excel.ExcelDataValidationPrompt;
@@ -117,6 +123,7 @@ import dev.erst.gridgrind.excel.ExcelSheetOutlineSummary;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
+import dev.erst.gridgrind.excel.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
@@ -291,6 +298,21 @@ final class WorkbookCommandConverter {
         RangeSelector.ByRange selector = rangeByRange(target, action);
         yield new WorkbookCommand.ClearRange(selector.sheetName(), selector.range());
       }
+      case MutationAction.SetArrayFormula setArrayFormula -> {
+        RangeSelector.ByRange selector = rangeByRange(target, action);
+        yield new WorkbookCommand.SetArrayFormula(
+            selector.sheetName(),
+            selector.range(),
+            toExcelArrayFormulaDefinition(setArrayFormula.formula()));
+      }
+      case MutationAction.ClearArrayFormula _ -> {
+        SelectorConverter.SingleCellTarget cellTarget =
+            SelectorConverter.toSingleCellTarget(cellByAddress(target, action));
+        yield new WorkbookCommand.ClearArrayFormula(cellTarget.sheetName(), cellTarget.address());
+      }
+      case MutationAction.ImportCustomXmlMapping importCustomXmlMapping ->
+          new WorkbookCommand.ImportCustomXmlMapping(
+              toExcelCustomXmlImportDefinition(importCustomXmlMapping.mapping()));
       case MutationAction.SetHyperlink setHyperlink -> {
         SelectorConverter.SingleCellTarget cellTarget =
             SelectorConverter.toSingleCellTarget(cellByAddress(target, action));
@@ -316,6 +338,10 @@ final class WorkbookCommandConverter {
       case MutationAction.SetPicture setPicture ->
           new WorkbookCommand.SetPicture(
               sheetByName(target, action).name(), toExcelPictureDefinition(setPicture.picture()));
+      case MutationAction.SetSignatureLine setSignatureLine ->
+          new WorkbookCommand.SetSignatureLine(
+              sheetByName(target, action).name(),
+              toExcelSignatureLineDefinition(setSignatureLine.signatureLine()));
       case MutationAction.SetChart setChart ->
           new WorkbookCommand.SetChart(
               sheetByName(target, action).name(), toExcelChartDefinition(setChart.chart()));
@@ -525,6 +551,21 @@ final class WorkbookCommandConverter {
     };
   }
 
+  static ExcelArrayFormulaDefinition toExcelArrayFormulaDefinition(ArrayFormulaInput input) {
+    return new ExcelArrayFormulaDefinition(inlineText(input.source(), "array formula"));
+  }
+
+  static ExcelCustomXmlImportDefinition toExcelCustomXmlImportDefinition(
+      CustomXmlImportInput input) {
+    return new ExcelCustomXmlImportDefinition(
+        toExcelCustomXmlMappingLocator(input.locator()), inlineText(input.xml(), "custom XML"));
+  }
+
+  static ExcelCustomXmlMappingLocator toExcelCustomXmlMappingLocator(
+      dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator locator) {
+    return new ExcelCustomXmlMappingLocator(locator.mapId(), locator.name());
+  }
+
   static ExcelRichText toExcelRichText(CellInput.RichText richText) {
     return new ExcelRichText(
         richText.runs().stream().map(WorkbookCommandConverter::toExcelRichTextRun).toList());
@@ -574,40 +615,34 @@ final class WorkbookCommandConverter {
   }
 
   static ExcelChartDefinition toExcelChartDefinition(ChartInput chart) {
-    return switch (chart) {
-      case ChartInput.Bar bar ->
-          new ExcelChartDefinition.Bar(
-              bar.name(),
-              toExcelDrawingAnchor(bar.anchor()),
-              toExcelChartTitle(bar.title()),
-              toExcelChartLegend(bar.legend()),
-              bar.displayBlanksAs(),
-              bar.plotOnlyVisibleCells(),
-              bar.varyColors(),
-              bar.barDirection(),
-              bar.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
-      case ChartInput.Line line ->
-          new ExcelChartDefinition.Line(
-              line.name(),
-              toExcelDrawingAnchor(line.anchor()),
-              toExcelChartTitle(line.title()),
-              toExcelChartLegend(line.legend()),
-              line.displayBlanksAs(),
-              line.plotOnlyVisibleCells(),
-              line.varyColors(),
-              line.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
-      case ChartInput.Pie pie ->
-          new ExcelChartDefinition.Pie(
-              pie.name(),
-              toExcelDrawingAnchor(pie.anchor()),
-              toExcelChartTitle(pie.title()),
-              toExcelChartLegend(pie.legend()),
-              pie.displayBlanksAs(),
-              pie.plotOnlyVisibleCells(),
-              pie.varyColors(),
-              pie.firstSliceAngle(),
-              pie.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
-    };
+    return new ExcelChartDefinition(
+        chart.name(),
+        toExcelDrawingAnchor(chart.anchor()),
+        toExcelChartTitle(chart.title()),
+        toExcelChartLegend(chart.legend()),
+        chart.displayBlanksAs(),
+        chart.plotOnlyVisibleCells(),
+        chart.plots().stream().map(WorkbookCommandConverter::toExcelChartPlot).toList());
+  }
+
+  static ExcelSignatureLineDefinition toExcelSignatureLineDefinition(
+      SignatureLineInput signatureLine) {
+    return new ExcelSignatureLineDefinition(
+        signatureLine.name(),
+        toExcelDrawingAnchor(signatureLine.anchor()),
+        signatureLine.allowComments(),
+        signatureLine.signingInstructions(),
+        signatureLine.suggestedSigner(),
+        signatureLine.suggestedSigner2(),
+        signatureLine.suggestedSignerEmail(),
+        signatureLine.caption(),
+        signatureLine.invalidStamp(),
+        signatureLine.plainSignature() == null ? null : signatureLine.plainSignature().format(),
+        signatureLine.plainSignature() == null
+            ? null
+            : new ExcelBinaryData(
+                inlineBinary(
+                    signatureLine.plainSignature().source(), "signature-line plain signature")));
   }
 
   static ExcelShapeDefinition toExcelShapeDefinition(ShapeInput shape) {
@@ -672,8 +707,122 @@ final class WorkbookCommandConverter {
   private static ExcelChartDefinition.Series toExcelChartSeries(ChartInput.Series series) {
     return new ExcelChartDefinition.Series(
         toExcelChartTitle(series.title()),
-        new ExcelChartDefinition.DataSource(series.categories().formula()),
-        new ExcelChartDefinition.DataSource(series.values().formula()));
+        toExcelChartDataSource(series.categories()),
+        toExcelChartDataSource(series.values()),
+        series.smooth(),
+        series.markerStyle(),
+        series.markerSize(),
+        series.explosion());
+  }
+
+  private static ExcelChartDefinition.DataSource toExcelChartDataSource(
+      ChartInput.DataSource source) {
+    return switch (source) {
+      case ChartInput.DataSource.Reference reference ->
+          new ExcelChartDefinition.DataSource.Reference(reference.formula());
+      case ChartInput.DataSource.StringLiteral literal ->
+          new ExcelChartDefinition.DataSource.StringLiteral(literal.values());
+      case ChartInput.DataSource.NumericLiteral literal ->
+          new ExcelChartDefinition.DataSource.NumericLiteral(literal.values());
+    };
+  }
+
+  private static ExcelChartDefinition.Axis toExcelChartAxis(ChartInput.Axis axis) {
+    return new ExcelChartDefinition.Axis(
+        axis.kind(), axis.position(), axis.crosses(), axis.visible());
+  }
+
+  private static ExcelChartDefinition.Plot toExcelChartPlot(ChartInput.Plot plot) {
+    return switch (plot) {
+      case ChartInput.Area area ->
+          new ExcelChartDefinition.Area(
+              area.varyColors(),
+              area.grouping(),
+              area.axes().stream().map(WorkbookCommandConverter::toExcelChartAxis).toList(),
+              area.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Area3D area3D ->
+          new ExcelChartDefinition.Area3D(
+              area3D.varyColors(),
+              area3D.grouping(),
+              area3D.gapDepth(),
+              area3D.axes().stream().map(WorkbookCommandConverter::toExcelChartAxis).toList(),
+              area3D.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Bar bar ->
+          new ExcelChartDefinition.Bar(
+              bar.varyColors(),
+              bar.barDirection(),
+              bar.grouping(),
+              bar.gapWidth(),
+              bar.overlap(),
+              bar.axes().stream().map(WorkbookCommandConverter::toExcelChartAxis).toList(),
+              bar.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Bar3D bar3D ->
+          new ExcelChartDefinition.Bar3D(
+              bar3D.varyColors(),
+              bar3D.barDirection(),
+              bar3D.grouping(),
+              bar3D.gapDepth(),
+              bar3D.gapWidth(),
+              bar3D.shape(),
+              bar3D.axes().stream().map(WorkbookCommandConverter::toExcelChartAxis).toList(),
+              bar3D.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Doughnut doughnut ->
+          new ExcelChartDefinition.Doughnut(
+              doughnut.varyColors(),
+              doughnut.firstSliceAngle(),
+              doughnut.holeSize(),
+              doughnut.series().stream()
+                  .map(WorkbookCommandConverter::toExcelChartSeries)
+                  .toList());
+      case ChartInput.Line line ->
+          new ExcelChartDefinition.Line(
+              line.varyColors(),
+              line.grouping(),
+              line.axes().stream().map(WorkbookCommandConverter::toExcelChartAxis).toList(),
+              line.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Line3D line3D ->
+          new ExcelChartDefinition.Line3D(
+              line3D.varyColors(),
+              line3D.grouping(),
+              line3D.gapDepth(),
+              line3D.axes().stream().map(WorkbookCommandConverter::toExcelChartAxis).toList(),
+              line3D.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Pie pie ->
+          new ExcelChartDefinition.Pie(
+              pie.varyColors(),
+              pie.firstSliceAngle(),
+              pie.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Pie3D pie3D ->
+          new ExcelChartDefinition.Pie3D(
+              pie3D.varyColors(),
+              pie3D.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Radar radar ->
+          new ExcelChartDefinition.Radar(
+              radar.varyColors(),
+              radar.style(),
+              radar.axes().stream().map(WorkbookCommandConverter::toExcelChartAxis).toList(),
+              radar.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Scatter scatter ->
+          new ExcelChartDefinition.Scatter(
+              scatter.varyColors(),
+              scatter.style(),
+              scatter.axes().stream().map(WorkbookCommandConverter::toExcelChartAxis).toList(),
+              scatter.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Surface surface ->
+          new ExcelChartDefinition.Surface(
+              surface.varyColors(),
+              surface.wireframe(),
+              surface.axes().stream().map(WorkbookCommandConverter::toExcelChartAxis).toList(),
+              surface.series().stream().map(WorkbookCommandConverter::toExcelChartSeries).toList());
+      case ChartInput.Surface3D surface3D ->
+          new ExcelChartDefinition.Surface3D(
+              surface3D.varyColors(),
+              surface3D.wireframe(),
+              surface3D.axes().stream().map(WorkbookCommandConverter::toExcelChartAxis).toList(),
+              surface3D.series().stream()
+                  .map(WorkbookCommandConverter::toExcelChartSeries)
+                  .toList());
+    };
   }
 
   static ExcelCellStyle toExcelCellStyle(CellStyleInput style) {

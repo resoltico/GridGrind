@@ -1953,7 +1953,11 @@ class GridGrindCliTest {
         help.contains("250,000"), "help must state the GET_WINDOW / GET_SHEET_SCHEMA cell limit");
     assertTrue(help.contains("255"), "help must state the column width limit");
     assertTrue(help.contains("1638"), "help must state the row height limit");
-    assertTrue(help.contains("BAR, LINE, and PIE"), "help must state the authored chart boundary");
+    assertTrue(
+        help.contains("AREA, AREA_3D, BAR, BAR_3D")
+            && help.contains("SURFACE_3D")
+            && help.contains("DOUGHNUT"),
+        "help must state the authored chart boundary");
     assertTrue(
         help.contains("NUMBER"),
         "help must note that DATE/DATE_TIME inputs are stored as NUMBER on read-back");
@@ -2022,6 +2026,42 @@ class GridGrindCliTest {
     assertFalse(
         output.contains("\"refersToFormula\""),
         "qualified lookup must not silently return the named-range report variant");
+  }
+
+  @Test
+  void printProtocolCatalogWithNestedGroupFilterReturnsMatchingNestedGroup() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {
+                  "--print-protocol-catalog", "--operation", "nestedTypes:cellInputTypes"
+                },
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(0, exitCode);
+    String output = stdout.toString(StandardCharsets.UTF_8).trim();
+    assertTrue(output.contains("\"group\" : \"cellInputTypes\""));
+    assertTrue(output.contains("\"discriminatorField\" : \"type\""));
+    assertTrue(output.contains("\"TEXT\""));
+  }
+
+  @Test
+  void printProtocolCatalogWithPlainGroupFilterReturnsMatchingPlainGroup() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--operation", "chartInputType"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(0, exitCode);
+    String output = stdout.toString(StandardCharsets.UTF_8).trim();
+    assertTrue(output.contains("\"group\" : \"chartInputType\""));
+    assertTrue(output.contains("\"ChartInput\""));
+    assertTrue(output.contains("\"plots\""));
   }
 
   @Test

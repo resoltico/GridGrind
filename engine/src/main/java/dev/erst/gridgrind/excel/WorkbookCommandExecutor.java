@@ -50,6 +50,8 @@ public final class WorkbookCommandExecutor {
           WorkbookCommand.SetCell.class,
           WorkbookCommand.SetRange.class,
           WorkbookCommand.ClearRange.class,
+          WorkbookCommand.SetArrayFormula.class,
+          WorkbookCommand.ClearArrayFormula.class,
           WorkbookCommand.AppendRow.class,
           WorkbookCommand.AutoSizeColumns.class);
 
@@ -211,6 +213,14 @@ public final class WorkbookCommandExecutor {
           workbook.sheet(setRange.sheetName()).setRange(setRange.range(), setRange.rows());
       case WorkbookCommand.ClearRange clearRange ->
           workbook.sheet(clearRange.sheetName()).clearRange(clearRange.range());
+      case WorkbookCommand.SetArrayFormula setArrayFormula ->
+          workbook
+              .sheet(setArrayFormula.sheetName())
+              .setArrayFormula(setArrayFormula.range(), setArrayFormula.formula());
+      case WorkbookCommand.ClearArrayFormula clearArrayFormula ->
+          workbook
+              .sheet(clearArrayFormula.sheetName())
+              .clearArrayFormula(clearArrayFormula.address());
       case WorkbookCommand.AppendRow appendRow ->
           workbook
               .sheet(appendRow.sheetName())
@@ -227,6 +237,8 @@ public final class WorkbookCommandExecutor {
           workbook
               .sheet(setHyperlink.sheetName())
               .setHyperlink(setHyperlink.address(), setHyperlink.target());
+      case WorkbookCommand.ImportCustomXmlMapping importCustomXmlMapping ->
+          workbook.importCustomXmlMapping(importCustomXmlMapping.mapping());
       case WorkbookCommand.ClearHyperlink clearHyperlink ->
           workbook.sheet(clearHyperlink.sheetName()).clearHyperlink(clearHyperlink.address());
       case WorkbookCommand.SetComment setComment ->
@@ -237,6 +249,10 @@ public final class WorkbookCommandExecutor {
           workbook.sheet(clearComment.sheetName()).clearComment(clearComment.address());
       case WorkbookCommand.SetPicture setPicture ->
           workbook.sheet(setPicture.sheetName()).setPicture(setPicture.picture());
+      case WorkbookCommand.SetSignatureLine setSignatureLine ->
+          workbook
+              .sheet(setSignatureLine.sheetName())
+              .setSignatureLine(setSignatureLine.signatureLine());
       case WorkbookCommand.SetChart setChart ->
           workbook.sheet(setChart.sheetName()).setChart(setChart.chart());
       case WorkbookCommand.SetShape setShape ->

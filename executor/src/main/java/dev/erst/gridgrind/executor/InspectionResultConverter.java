@@ -2,6 +2,7 @@ package dev.erst.gridgrind.executor;
 
 import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
 import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
 import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
@@ -23,6 +24,11 @@ import dev.erst.gridgrind.contract.dto.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.DataValidationEntryReport;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationHealthReport;
@@ -68,6 +74,7 @@ import dev.erst.gridgrind.contract.dto.TableStyleReport;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.excel.ExcelArrayFormulaSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumnSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterionSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
@@ -83,6 +90,11 @@ import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
+import dev.erst.gridgrind.excel.ExcelCustomXmlDataBindingSnapshot;
+import dev.erst.gridgrind.excel.ExcelCustomXmlExportSnapshot;
+import dev.erst.gridgrind.excel.ExcelCustomXmlLinkedCellSnapshot;
+import dev.erst.gridgrind.excel.ExcelCustomXmlLinkedTableSnapshot;
+import dev.erst.gridgrind.excel.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
@@ -134,6 +146,15 @@ final class InspectionResultConverter {
       case dev.erst.gridgrind.excel.WorkbookReadResult.WorkbookProtectionResult protection ->
           new InspectionResult.WorkbookProtectionResult(
               protection.stepId(), toWorkbookProtectionReport(protection.protection()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.CustomXmlMappingsResult customXmlMappings ->
+          new InspectionResult.CustomXmlMappingsResult(
+              customXmlMappings.stepId(),
+              customXmlMappings.mappings().stream()
+                  .map(InspectionResultConverter::toCustomXmlMappingReport)
+                  .toList());
+      case dev.erst.gridgrind.excel.WorkbookReadResult.CustomXmlExportResult customXmlExport ->
+          new InspectionResult.CustomXmlExportResult(
+              customXmlExport.stepId(), toCustomXmlExportReport(customXmlExport.export()));
       case dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangesResult namedRanges ->
           new InspectionResult.NamedRangesResult(
               namedRanges.stepId(),
@@ -150,6 +171,12 @@ final class InspectionResultConverter {
                   sheetSummary.sheet().physicalRowCount(),
                   sheetSummary.sheet().lastRowIndex(),
                   sheetSummary.sheet().lastColumnIndex()));
+      case dev.erst.gridgrind.excel.WorkbookReadResult.ArrayFormulasResult arrayFormulas ->
+          new InspectionResult.ArrayFormulasResult(
+              arrayFormulas.stepId(),
+              arrayFormulas.arrayFormulas().stream()
+                  .map(InspectionResultConverter::toArrayFormulaReport)
+                  .toList());
       case dev.erst.gridgrind.excel.WorkbookReadResult.CellsResult cells ->
           new InspectionResult.CellsResult(
               cells.stepId(),
@@ -431,52 +458,34 @@ final class InspectionResultConverter {
               embeddedObject.previewFormat(),
               embeddedObject.previewByteSize(),
               embeddedObject.previewSha256());
+      case ExcelDrawingObjectSnapshot.SignatureLine signatureLine ->
+          new DrawingObjectReport.SignatureLine(
+              signatureLine.name(),
+              toDrawingAnchorReport(signatureLine.anchor()),
+              signatureLine.setupId(),
+              signatureLine.allowComments(),
+              signatureLine.signingInstructions(),
+              signatureLine.suggestedSigner(),
+              signatureLine.suggestedSigner2(),
+              signatureLine.suggestedSignerEmail(),
+              signatureLine.previewFormat(),
+              signatureLine.previewContentType(),
+              signatureLine.previewByteSize(),
+              signatureLine.previewSha256(),
+              signatureLine.previewWidthPixels(),
+              signatureLine.previewHeightPixels());
     };
   }
 
   static ChartReport toChartReport(ExcelChartSnapshot snapshot) {
-    return switch (snapshot) {
-      case ExcelChartSnapshot.Bar bar ->
-          new ChartReport.Bar(
-              bar.name(),
-              toDrawingAnchorReport(bar.anchor()),
-              toChartTitleReport(bar.title()),
-              toChartLegendReport(bar.legend()),
-              bar.displayBlanksAs(),
-              bar.plotOnlyVisibleCells(),
-              bar.varyColors(),
-              bar.barDirection(),
-              bar.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              bar.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
-      case ExcelChartSnapshot.Line line ->
-          new ChartReport.Line(
-              line.name(),
-              toDrawingAnchorReport(line.anchor()),
-              toChartTitleReport(line.title()),
-              toChartLegendReport(line.legend()),
-              line.displayBlanksAs(),
-              line.plotOnlyVisibleCells(),
-              line.varyColors(),
-              line.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              line.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
-      case ExcelChartSnapshot.Pie pie ->
-          new ChartReport.Pie(
-              pie.name(),
-              toDrawingAnchorReport(pie.anchor()),
-              toChartTitleReport(pie.title()),
-              toChartLegendReport(pie.legend()),
-              pie.displayBlanksAs(),
-              pie.plotOnlyVisibleCells(),
-              pie.varyColors(),
-              pie.firstSliceAngle(),
-              pie.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
-      case ExcelChartSnapshot.Unsupported unsupported ->
-          new ChartReport.Unsupported(
-              unsupported.name(),
-              toDrawingAnchorReport(unsupported.anchor()),
-              unsupported.plotTypeTokens(),
-              unsupported.detail());
-    };
+    return new ChartReport(
+        snapshot.name(),
+        toDrawingAnchorReport(snapshot.anchor()),
+        toChartTitleReport(snapshot.title()),
+        toChartLegendReport(snapshot.legend()),
+        snapshot.displayBlanksAs(),
+        snapshot.plotOnlyVisibleCells(),
+        snapshot.plots().stream().map(InspectionResultConverter::toChartPlotReport).toList());
   }
 
   private static ChartReport.Title toChartTitleReport(ExcelChartSnapshot.Title title) {
@@ -504,7 +513,11 @@ final class InspectionResultConverter {
     return new ChartReport.Series(
         toChartTitleReport(series.title()),
         toChartDataSourceReport(series.categories()),
-        toChartDataSourceReport(series.values()));
+        toChartDataSourceReport(series.values()),
+        series.smooth(),
+        series.markerStyle(),
+        series.markerSize(),
+        series.explosion());
   }
 
   private static ChartReport.DataSource toChartDataSourceReport(
@@ -519,6 +532,109 @@ final class InspectionResultConverter {
           new ChartReport.DataSource.StringLiteral(literal.values());
       case ExcelChartSnapshot.DataSource.NumericLiteral literal ->
           new ChartReport.DataSource.NumericLiteral(literal.formatCode(), literal.values());
+    };
+  }
+
+  private static ChartReport.Plot toChartPlotReport(ExcelChartSnapshot.Plot plot) {
+    return switch (plot) {
+      case ExcelChartSnapshot.Area area ->
+          new ChartReport.Area(
+              area.varyColors(),
+              area.grouping(),
+              area.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
+              area.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
+      case ExcelChartSnapshot.Area3D area3D ->
+          new ChartReport.Area3D(
+              area3D.varyColors(),
+              area3D.grouping(),
+              area3D.gapDepth(),
+              area3D.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
+              area3D.series().stream()
+                  .map(InspectionResultConverter::toChartSeriesReport)
+                  .toList());
+      case ExcelChartSnapshot.Bar bar ->
+          new ChartReport.Bar(
+              bar.varyColors(),
+              bar.barDirection(),
+              bar.grouping(),
+              bar.gapWidth(),
+              bar.overlap(),
+              bar.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
+              bar.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
+      case ExcelChartSnapshot.Bar3D bar3D ->
+          new ChartReport.Bar3D(
+              bar3D.varyColors(),
+              bar3D.barDirection(),
+              bar3D.grouping(),
+              bar3D.gapDepth(),
+              bar3D.gapWidth(),
+              bar3D.shape(),
+              bar3D.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
+              bar3D.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
+      case ExcelChartSnapshot.Doughnut doughnut ->
+          new ChartReport.Doughnut(
+              doughnut.varyColors(),
+              doughnut.firstSliceAngle(),
+              doughnut.holeSize(),
+              doughnut.series().stream()
+                  .map(InspectionResultConverter::toChartSeriesReport)
+                  .toList());
+      case ExcelChartSnapshot.Line line ->
+          new ChartReport.Line(
+              line.varyColors(),
+              line.grouping(),
+              line.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
+              line.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
+      case ExcelChartSnapshot.Line3D line3D ->
+          new ChartReport.Line3D(
+              line3D.varyColors(),
+              line3D.grouping(),
+              line3D.gapDepth(),
+              line3D.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
+              line3D.series().stream()
+                  .map(InspectionResultConverter::toChartSeriesReport)
+                  .toList());
+      case ExcelChartSnapshot.Pie pie ->
+          new ChartReport.Pie(
+              pie.varyColors(),
+              pie.firstSliceAngle(),
+              pie.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
+      case ExcelChartSnapshot.Pie3D pie3D ->
+          new ChartReport.Pie3D(
+              pie3D.varyColors(),
+              pie3D.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
+      case ExcelChartSnapshot.Radar radar ->
+          new ChartReport.Radar(
+              radar.varyColors(),
+              radar.style(),
+              radar.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
+              radar.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
+      case ExcelChartSnapshot.Scatter scatter ->
+          new ChartReport.Scatter(
+              scatter.varyColors(),
+              scatter.style(),
+              scatter.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
+              scatter.series().stream()
+                  .map(InspectionResultConverter::toChartSeriesReport)
+                  .toList());
+      case ExcelChartSnapshot.Surface surface ->
+          new ChartReport.Surface(
+              surface.varyColors(),
+              surface.wireframe(),
+              surface.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
+              surface.series().stream()
+                  .map(InspectionResultConverter::toChartSeriesReport)
+                  .toList());
+      case ExcelChartSnapshot.Surface3D surface3D ->
+          new ChartReport.Surface3D(
+              surface3D.varyColors(),
+              surface3D.wireframe(),
+              surface3D.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
+              surface3D.series().stream()
+                  .map(InspectionResultConverter::toChartSeriesReport)
+                  .toList());
+      case ExcelChartSnapshot.Unsupported unsupported ->
+          new ChartReport.Unsupported(unsupported.plotTypeToken(), unsupported.detail());
     };
   }
 
@@ -1058,6 +1174,77 @@ final class InspectionResultConverter {
                         new CellGradientStopReport(
                             stop.position(), toCellColorReport(stop.color())))
                 .toList());
+  }
+
+  private static CustomXmlMappingReport toCustomXmlMappingReport(
+      ExcelCustomXmlMappingSnapshot snapshot) {
+    return new CustomXmlMappingReport(
+        snapshot.mapId(),
+        snapshot.name(),
+        snapshot.rootElement(),
+        snapshot.schemaId(),
+        snapshot.showImportExportValidationErrors(),
+        snapshot.autoFit(),
+        snapshot.append(),
+        snapshot.preserveSortAfLayout(),
+        snapshot.preserveFormat(),
+        snapshot.schemaNamespace(),
+        snapshot.schemaLanguage(),
+        snapshot.schemaReference(),
+        snapshot.schemaXml(),
+        toCustomXmlDataBindingReport(snapshot.dataBinding()),
+        snapshot.linkedCells().stream()
+            .map(InspectionResultConverter::toCustomXmlLinkedCellReport)
+            .toList(),
+        snapshot.linkedTables().stream()
+            .map(InspectionResultConverter::toCustomXmlLinkedTableReport)
+            .toList());
+  }
+
+  private static CustomXmlDataBindingReport toCustomXmlDataBindingReport(
+      ExcelCustomXmlDataBindingSnapshot snapshot) {
+    return snapshot == null
+        ? null
+        : new CustomXmlDataBindingReport(
+            snapshot.dataBindingName(),
+            snapshot.fileBinding(),
+            snapshot.connectionId(),
+            snapshot.fileBindingName(),
+            snapshot.loadMode());
+  }
+
+  private static CustomXmlLinkedCellReport toCustomXmlLinkedCellReport(
+      ExcelCustomXmlLinkedCellSnapshot snapshot) {
+    return new CustomXmlLinkedCellReport(
+        snapshot.sheetName(), snapshot.address(), snapshot.xpath(), snapshot.xmlDataType());
+  }
+
+  private static CustomXmlLinkedTableReport toCustomXmlLinkedTableReport(
+      ExcelCustomXmlLinkedTableSnapshot snapshot) {
+    return new CustomXmlLinkedTableReport(
+        snapshot.sheetName(),
+        snapshot.tableName(),
+        snapshot.tableDisplayName(),
+        snapshot.range(),
+        snapshot.commonXPath());
+  }
+
+  private static CustomXmlExportReport toCustomXmlExportReport(
+      ExcelCustomXmlExportSnapshot snapshot) {
+    return new CustomXmlExportReport(
+        toCustomXmlMappingReport(snapshot.mapping()),
+        snapshot.encoding(),
+        snapshot.schemaValidated(),
+        snapshot.xml());
+  }
+
+  private static ArrayFormulaReport toArrayFormulaReport(ExcelArrayFormulaSnapshot snapshot) {
+    return new ArrayFormulaReport(
+        snapshot.sheetName(),
+        snapshot.range(),
+        snapshot.topLeftAddress(),
+        snapshot.formula(),
+        snapshot.singleCell());
   }
 
   private static GridGrindResponse.FormulaSurfaceReport toFormulaSurfaceReport(

@@ -61,7 +61,7 @@ final class XlsxParityDocsTest {
                 Files.readString(
                     repositoryRoot().resolve("docs/POI_EXCEL_CAPABILITY_INVENTORY.md")));
 
-    assertTrue(inventory.contains("| Sheet copy | Documented API support | `PARTIAL` |"));
+    assertTrue(inventory.contains("| Sheet copy | Documented API support | `COMPLETE` |"));
     assertTrue(
         inventory.contains(
             "| Sheet presentation and sheet-level defaults | Documented XSSF sheet-view and worksheet APIs | `COMPLETE` |"));
@@ -70,10 +70,7 @@ final class XlsxParityDocsTest {
             "screen display flags, right-to-left layout, tab color, outline-summary placement,"));
     assertTrue(
         inventory.contains(
-            "| Threaded comments | Specialized XSSF support beyond classic comments | `NOT_EXPOSED` |"));
-    assertTrue(
-        inventory.contains(
-            "| Array-formula authoring and array-group metadata | XSSF array-formula APIs | `NOT_EXPOSED` |"));
+            "| Threaded comments | OOXML threaded-comment schemas exist, but no first-class XSSF threaded-comment usermodel APIs were found in audited POI 5.5.1 docs/source | `NOT_EXPOSED` |"));
     assertTrue(
         inventory.contains(
             "| Formula surface summaries | GridGrind-derived read over POI formula facts | `COMPLETE` |"));
@@ -91,13 +88,25 @@ final class XlsxParityDocsTest {
             "| Named-range health analysis | GridGrind-derived analysis over POI named-range facts | `COMPLETE` |"));
     assertTrue(
         inventory.contains(
-            "| Sparkline discovery and authoring | XSSF sheet sparkline APIs | `NOT_EXPOSED` |"));
+            "| Sparkline discovery and authoring | No first-class sparkline XSSF usermodel APIs were found in audited POI 5.5.1 docs/source | `NOT_EXPOSED` |"));
     assertTrue(
         inventory.contains(
             "| OOXML encryption, password-protected package open or save, and XML signing |"));
     assertTrue(
         inventory.contains(
-            "| XML-mapped tables and slicers | Broader XSSF table ecosystem | `NOT_EXPOSED` |"));
+            "| Array-formula authoring and array-group metadata | `Sheet.setArrayFormula(...)`, `Sheet.removeArrayFormula(...)`, and cell array-group metadata APIs | `COMPLETE` |"));
+    assertTrue(
+        inventory.contains(
+            "| Custom XML mappings and XML import/export | `XSSFWorkbook.getCustomXMLMappings()`, `getMapInfo()`, `XSSFImportFromXML`, and `XSSFExportToXml` | `COMPLETE` |"));
+    assertTrue(
+        inventory.contains(
+            "| Slicers | No first-class XSSF slicer usermodel APIs were found in audited POI 5.5.1 docs/source | `NOT_EXPOSED` |"));
+    assertTrue(
+        inventory.contains(
+            "| Broader XDDF chart authoring families and combo charts | XDDF `ChartTypes`/`createData(...)` support plus official scatter and combo examples | `COMPLETE` |"));
+    assertTrue(
+        inventory.contains(
+            "| Signature-line OOXML metadata | `XSSFSignatureLine` and `SignatureLine` APIs | `COMPLETE` |"));
     assertTrue(
         inventory.contains(
             "| Sheet schema inference | GridGrind-derived read over cell snapshots | `COMPLETE` |"));
@@ -120,7 +129,8 @@ final class XlsxParityDocsTest {
     assertTrue(inventory.contains("`LAMBDA` and `LET` are currently rejected"));
     assertTrue(inventory.contains("analysis.totalFormulaCellCount"));
     assertTrue(inventory.contains("analysis.checkedNamedRangeCount"));
-    assertTrue(inventory.contains("- drawing-family sheet copy"));
+    assertFalse(inventory.contains("- drawing-family sheet copy"));
+    assertFalse(inventory.contains("- signature lines"));
   }
 
   @Test
@@ -181,6 +191,49 @@ final class XlsxParityDocsTest {
             "read docs/QUICK_REFERENCE.md",
             () -> Files.readString(repositoryRoot.resolve("docs/QUICK_REFERENCE.md")));
     assertTrue(quickReference.contains("analysis.summary"));
+  }
+
+  @Test
+  void publicDocsDescribeCurrentChartAndSignatureLineContracts() {
+    Path repositoryRoot = repositoryRoot();
+    String operations =
+        XlsxParitySupport.call(
+            "read docs/OPERATIONS.md",
+            () -> Files.readString(repositoryRoot.resolve("docs/OPERATIONS.md")));
+    String quickReference =
+        XlsxParitySupport.call(
+            "read docs/QUICK_REFERENCE.md",
+            () -> Files.readString(repositoryRoot.resolve("docs/QUICK_REFERENCE.md")));
+    String readme =
+        XlsxParitySupport.call(
+            "read README.md", () -> Files.readString(repositoryRoot.resolve("README.md")));
+    String limitations =
+        XlsxParitySupport.call(
+            "read docs/LIMITATIONS.md",
+            () -> Files.readString(repositoryRoot.resolve("docs/LIMITATIONS.md")));
+
+    assertTrue(operations.contains("### SET_SIGNATURE_LINE"));
+    assertTrue(operations.contains("\"plots\": ["));
+    assertTrue(operations.contains("SIGNATURE_LINE"));
+    assertTrue(operations.contains("`GIF`, `TIFF`, `EPS`, `BMP`,"));
+    assertTrue(operations.contains("or `WPG`."));
+    assertFalse(operations.contains("Supported authored families are `BAR`, `LINE`, and `PIE`."));
+
+    assertTrue(quickReference.contains("## SET_SIGNATURE_LINE"));
+    assertTrue(quickReference.contains("\"plots\": ["));
+    assertTrue(quickReference.contains("SIGNATURE_LINE"));
+    assertTrue(
+        quickReference.contains(
+            "Supported authored plot families are `AREA`, `AREA_3D`, `BAR`, `BAR_3D`, `DOUGHNUT`, `LINE`,"));
+    assertFalse(
+        quickReference.contains("Supported authored families are `BAR`, `LINE`, and `PIE`."));
+
+    assertTrue(readme.contains("examples/signature-line-request.json"));
+    assertTrue(limitations.contains("AREA_3D"));
+    assertTrue(limitations.contains("SURFACE_3D"));
+    assertTrue(limitations.contains("UNSUPPORTED"));
+    assertFalse(
+        limitations.contains("Supported for factual reads and authored `BAR`, `LINE`, and `PIE`"));
   }
 
   private static Path repositoryRoot() {

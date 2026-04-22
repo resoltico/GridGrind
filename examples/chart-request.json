@@ -127,7 +127,6 @@
     "action" : {
       "type" : "SET_CHART",
       "chart" : {
-        "type" : "BAR",
         "name" : "OpsChart",
         "anchor" : {
           "type" : "TWO_CELL",
@@ -158,36 +157,65 @@
         },
         "displayBlanksAs" : "SPAN",
         "plotOnlyVisibleCells" : false,
-        "varyColors" : true,
-        "barDirection" : "COLUMN",
-        "series" : [ {
-          "title" : {
-            "type" : "TEXT",
-            "source" : {
-              "type" : "INLINE",
-              "text" : "Plan"
-            }
-          },
-          "categories" : {
-            "formula" : "ChartCategories"
-          },
-          "values" : {
-            "formula" : "Ops!$B$2:$B$4"
-          }
-        }, {
-          "title" : {
-            "type" : "TEXT",
-            "source" : {
-              "type" : "INLINE",
-              "text" : "Actual"
-            }
-          },
-          "categories" : {
-            "formula" : "ChartCategories"
-          },
-          "values" : {
-            "formula" : "ChartActual"
-          }
+        "plots" : [ {
+          "type" : "BAR",
+          "varyColors" : true,
+          "barDirection" : "COLUMN",
+          "grouping" : "CLUSTERED",
+          "gapWidth" : null,
+          "overlap" : null,
+          "axes" : [ {
+            "kind" : "CATEGORY",
+            "position" : "BOTTOM",
+            "crosses" : "AUTO_ZERO",
+            "visible" : true
+          }, {
+            "kind" : "VALUE",
+            "position" : "LEFT",
+            "crosses" : "AUTO_ZERO",
+            "visible" : true
+          } ],
+          "series" : [ {
+            "title" : {
+              "type" : "TEXT",
+              "source" : {
+                "type" : "INLINE",
+                "text" : "Plan"
+              }
+            },
+            "categories" : {
+              "type" : "REFERENCE",
+              "formula" : "ChartCategories"
+            },
+            "values" : {
+              "type" : "REFERENCE",
+              "formula" : "Ops!$B$2:$B$4"
+            },
+            "smooth" : null,
+            "markerStyle" : null,
+            "markerSize" : null,
+            "explosion" : null
+          }, {
+            "title" : {
+              "type" : "TEXT",
+              "source" : {
+                "type" : "INLINE",
+                "text" : "Actual"
+              }
+            },
+            "categories" : {
+              "type" : "REFERENCE",
+              "formula" : "ChartCategories"
+            },
+            "values" : {
+              "type" : "REFERENCE",
+              "formula" : "ChartActual"
+            },
+            "smooth" : null,
+            "markerStyle" : null,
+            "markerSize" : null,
+            "explosion" : null
+          } ]
         } ]
       }
     }

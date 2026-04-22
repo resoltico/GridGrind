@@ -2,11 +2,14 @@ package dev.erst.gridgrind.contract.query;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
 import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
 import dev.erst.gridgrind.contract.dto.AutofilterHealthReport;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingHealthReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.DataValidationEntryReport;
 import dev.erst.gridgrind.contract.dto.DataValidationHealthReport;
 import dev.erst.gridgrind.contract.dto.DrawingObjectPayloadReport;
@@ -35,8 +38,17 @@ import java.util.Objects;
   @JsonSubTypes.Type(
       value = InspectionResult.WorkbookProtectionResult.class,
       name = "GET_WORKBOOK_PROTECTION"),
+  @JsonSubTypes.Type(
+      value = InspectionResult.CustomXmlMappingsResult.class,
+      name = "GET_CUSTOM_XML_MAPPINGS"),
+  @JsonSubTypes.Type(
+      value = InspectionResult.CustomXmlExportResult.class,
+      name = "EXPORT_CUSTOM_XML_MAPPING"),
   @JsonSubTypes.Type(value = InspectionResult.NamedRangesResult.class, name = "GET_NAMED_RANGES"),
   @JsonSubTypes.Type(value = InspectionResult.SheetSummaryResult.class, name = "GET_SHEET_SUMMARY"),
+  @JsonSubTypes.Type(
+      value = InspectionResult.ArrayFormulasResult.class,
+      name = "GET_ARRAY_FORMULAS"),
   @JsonSubTypes.Type(value = InspectionResult.CellsResult.class, name = "GET_CELLS"),
   @JsonSubTypes.Type(value = InspectionResult.WindowResult.class, name = "GET_WINDOW"),
   @JsonSubTypes.Type(
@@ -108,8 +120,11 @@ public sealed interface InspectionResult
       permits WorkbookSummaryResult,
           PackageSecurityResult,
           WorkbookProtectionResult,
+          CustomXmlMappingsResult,
+          CustomXmlExportResult,
           NamedRangesResult,
           SheetSummaryResult,
+          ArrayFormulasResult,
           CellsResult,
           WindowResult,
           MergedRegionsResult,
@@ -168,6 +183,24 @@ public sealed interface InspectionResult
     }
   }
 
+  /** Returns factual workbook custom-XML mapping metadata. */
+  record CustomXmlMappingsResult(String stepId, List<CustomXmlMappingReport> mappings)
+      implements Introspection {
+    public CustomXmlMappingsResult {
+      stepId = requireNonBlank(stepId, "stepId");
+      mappings = copyValues(mappings, "mappings");
+    }
+  }
+
+  /** Returns XML exported from one selected workbook custom-XML mapping. */
+  record CustomXmlExportResult(String stepId, CustomXmlExportReport export)
+      implements Introspection {
+    public CustomXmlExportResult {
+      stepId = requireNonBlank(stepId, "stepId");
+      Objects.requireNonNull(export, "export must not be null");
+    }
+  }
+
   /** Returns named ranges selected by the originating read operation. */
   record NamedRangesResult(String stepId, List<GridGrindResponse.NamedRangeReport> namedRanges)
       implements Introspection {
@@ -183,6 +216,15 @@ public sealed interface InspectionResult
     public SheetSummaryResult {
       stepId = requireNonBlank(stepId, "stepId");
       Objects.requireNonNull(sheet, "sheet must not be null");
+    }
+  }
+
+  /** Returns factual array-formula groups across the selected sheets. */
+  record ArrayFormulasResult(String stepId, List<ArrayFormulaReport> arrayFormulas)
+      implements Introspection {
+    public ArrayFormulasResult {
+      stepId = requireNonBlank(stepId, "stepId");
+      arrayFormulas = copyValues(arrayFormulas, "arrayFormulas");
     }
   }
 

@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.49.0"
+version: "0.50.0"
 domain: DEVELOPER_JAZZER_OPERATIONS
 updated: "2026-04-17"
 route:
@@ -434,8 +434,10 @@ If one of those expectations fails, treat it as a Jazzer-layer bug.
 
 If you see `jcmd` during a Jazzer-adjacent local session, that is root `./check.sh` stall
 diagnostics collecting JVM thread dumps after a monitored stage stops making semantic progress.
-That diagnostic path is bounded to a small captured-process sample; the supported `jazzer/bin/*`
-happy path does not launch `jcmd`.
+That diagnostic path is bounded to a small captured-process sample and now tears timed-out
+diagnostic subprocess trees down authoritatively through the shared
+`scripts/check-process-support.sh` helper; the supported `jazzer/bin/*` happy path does not
+launch `jcmd`.
 
 Operator discipline:
 1. Prefer `./check.sh` when you want the supported sequential root-plus-nested verification flow.

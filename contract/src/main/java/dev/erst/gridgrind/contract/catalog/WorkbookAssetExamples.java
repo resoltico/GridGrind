@@ -2,14 +2,18 @@ package dev.erst.gridgrind.contract.catalog;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
 import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
 import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
 import dev.erst.gridgrind.contract.dto.PictureDataInput;
 import dev.erst.gridgrind.contract.dto.PivotTableInput;
+import dev.erst.gridgrind.contract.dto.SignatureLineInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.ChartSelector;
@@ -31,6 +35,60 @@ final class WorkbookAssetExamples {
       "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=";
 
   private WorkbookAssetExamples() {}
+
+  static GridGrindShippedExamples.ShippedExample arrayFormulaExample() {
+    return ExamplePlanSupport.example(
+        "ARRAY_FORMULA",
+        "array-formula-request.json",
+        "Array-formula authoring with factual group readback and group clearing.",
+        ExamplePlanSupport.plan(
+            "array-formula-workflow",
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            null,
+            ExamplePlanSupport.step(
+                "ensure-calc-sheet",
+                ExamplePlanSupport.sheet("Calc"),
+                new MutationAction.EnsureSheet()),
+            ExamplePlanSupport.step(
+                "seed-source-data",
+                ExamplePlanSupport.range("Calc", "A1:C4"),
+                new MutationAction.SetRange(
+                    ExamplePlanSupport.rows(
+                        ExamplePlanSupport.row(
+                            ExamplePlanSupport.text("Month"),
+                            ExamplePlanSupport.text("Plan"),
+                            ExamplePlanSupport.text("Actual")),
+                        ExamplePlanSupport.row(
+                            ExamplePlanSupport.text("Jan"),
+                            ExamplePlanSupport.number(10.0d),
+                            ExamplePlanSupport.number(12.0d)),
+                        ExamplePlanSupport.row(
+                            ExamplePlanSupport.text("Feb"),
+                            ExamplePlanSupport.number(18.0d),
+                            ExamplePlanSupport.number(16.0d)),
+                        ExamplePlanSupport.row(
+                            ExamplePlanSupport.text("Mar"),
+                            ExamplePlanSupport.number(15.0d),
+                            ExamplePlanSupport.number(21.0d))))),
+            ExamplePlanSupport.step(
+                "author-array-group",
+                ExamplePlanSupport.range("Calc", "D2:D4"),
+                new MutationAction.SetArrayFormula(
+                    new ArrayFormulaInput(TextSourceInput.inline("{=B2:B4*C2:C4}")))),
+            ExamplePlanSupport.read(
+                "read-array-groups",
+                ExamplePlanSupport.sheet("Calc"),
+                new InspectionQuery.GetArrayFormulas()),
+            ExamplePlanSupport.step(
+                "clear-array-group",
+                ExamplePlanSupport.cell("Calc", "D3"),
+                new MutationAction.ClearArrayFormula()),
+            ExamplePlanSupport.read(
+                "read-array-groups-after-clear",
+                ExamplePlanSupport.sheet("Calc"),
+                new InspectionQuery.GetArrayFormulas())));
+  }
 
   static GridGrindShippedExamples.ShippedExample sourceBackedInputExample() {
     return ExamplePlanSupport.example(
@@ -91,11 +149,96 @@ final class WorkbookAssetExamples {
                 new InspectionQuery.GetDrawingObjectPayload())));
   }
 
+  static GridGrindShippedExamples.ShippedExample signatureLineExample() {
+    return ExamplePlanSupport.example(
+        "SIGNATURE_LINE",
+        "signature-line-request.json",
+        "Signature-line authoring with drawing-object readback and authored anchor replacement.",
+        ExamplePlanSupport.plan(
+            "signature-line-workflow",
+            new WorkbookPlan.WorkbookSource.New(),
+            ExamplePlanSupport.saveAs(
+                "cli/build/generated-workbooks/gridgrind-signature-line.xlsx"),
+            null,
+            ExamplePlanSupport.step(
+                "step-01-ensure-sheet",
+                ExamplePlanSupport.sheet("Approvals"),
+                new MutationAction.EnsureSheet()),
+            ExamplePlanSupport.step(
+                "step-02-set-signature-line",
+                ExamplePlanSupport.sheet("Approvals"),
+                new MutationAction.SetSignatureLine(
+                    new SignatureLineInput(
+                        "BudgetSignature",
+                        ExamplePlanSupport.anchor(1, 1, 4, 6),
+                        false,
+                        "Review the budget before signing.",
+                        "Ada Lovelace",
+                        "Finance",
+                        "ada@example.com",
+                        null,
+                        "invalid",
+                        new PictureDataInput(
+                            ExcelPictureFormat.PNG,
+                            BinarySourceInput.inlineBase64(ONE_PIXEL_PNG_BASE64))))),
+            ExamplePlanSupport.read(
+                "step-03-read-drawing-objects",
+                new DrawingObjectSelector.AllOnSheet("Approvals"),
+                new InspectionQuery.GetDrawingObjects()),
+            ExamplePlanSupport.step(
+                "step-04-move-signature-line",
+                new DrawingObjectSelector.ByName("Approvals", "BudgetSignature"),
+                new MutationAction.SetDrawingObjectAnchor(ExamplePlanSupport.anchor(5, 1, 8, 6))),
+            ExamplePlanSupport.read(
+                "step-05-read-drawing-objects-after-move",
+                new DrawingObjectSelector.AllOnSheet("Approvals"),
+                new InspectionQuery.GetDrawingObjects())));
+  }
+
+  static GridGrindShippedExamples.ShippedExample customXmlExample() {
+    return ExamplePlanSupport.example(
+        "CUSTOM_XML",
+        "custom-xml-request.json",
+        "Existing-workbook custom-XML mapping discovery, XML export, and file-backed XML import.",
+        ExamplePlanSupport.plan(
+            "custom-xml-workflow",
+            new WorkbookPlan.WorkbookSource.ExistingFile(
+                "examples/custom-xml-assets/custom-xml-mapping.xlsx"),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            null,
+            ExamplePlanSupport.read(
+                "read-custom-xml-mappings",
+                ExamplePlanSupport.workbook(),
+                new InspectionQuery.GetCustomXmlMappings()),
+            ExamplePlanSupport.read(
+                "export-custom-xml-before-import",
+                ExamplePlanSupport.workbook(),
+                new InspectionQuery.ExportCustomXmlMapping(
+                    new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8")),
+            ExamplePlanSupport.step(
+                "import-custom-xml",
+                ExamplePlanSupport.workbook(),
+                new MutationAction.ImportCustomXmlMapping(
+                    new CustomXmlImportInput(
+                        new CustomXmlMappingLocator(1L, "CORSO_mapping"),
+                        TextSourceInput.utf8File(
+                            "examples/custom-xml-assets/custom-xml-update.xml")))),
+            ExamplePlanSupport.read(
+                "read-imported-cells",
+                ExamplePlanSupport.cells("Foglio1", "A1", "B1", "C1", "D1"),
+                new InspectionQuery.GetCells()),
+            ExamplePlanSupport.read(
+                "export-custom-xml-after-import",
+                ExamplePlanSupport.workbook(),
+                new InspectionQuery.ExportCustomXmlMapping(
+                    new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8"))));
+  }
+
   static GridGrindShippedExamples.ShippedExample chartExample() {
     return ExamplePlanSupport.example(
         "CHART",
         "chart-request.json",
-        "Supported simple-chart authoring with named-range-backed series and factual chart readback.",
+        "Supported chart authoring with named-range-backed series and factual chart readback.",
         ExamplePlanSupport.plan(
             "chart-workflow",
             new WorkbookPlan.WorkbookSource.New(),
@@ -144,24 +287,38 @@ final class WorkbookAssetExamples {
                 "step-05-set-chart",
                 ExamplePlanSupport.sheet("Ops"),
                 new MutationAction.SetChart(
-                    new ChartInput.Bar(
+                    new ChartInput(
                         "OpsChart",
                         ExamplePlanSupport.anchor(4, 0, 8, 12),
                         new ChartInput.Title.Text(TextSourceInput.inline("Roadmap")),
                         new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
                         ExcelChartDisplayBlanksAs.SPAN,
                         false,
-                        true,
-                        ExcelChartBarDirection.COLUMN,
                         List.of(
-                            new ChartInput.Series(
-                                new ChartInput.Title.Text(TextSourceInput.inline("Plan")),
-                                new ChartInput.DataSource("ChartCategories"),
-                                new ChartInput.DataSource("Ops!$B$2:$B$4")),
-                            new ChartInput.Series(
-                                new ChartInput.Title.Text(TextSourceInput.inline("Actual")),
-                                new ChartInput.DataSource("ChartCategories"),
-                                new ChartInput.DataSource("ChartActual")))))),
+                            new ChartInput.Bar(
+                                true,
+                                ExcelChartBarDirection.COLUMN,
+                                null,
+                                null,
+                                null,
+                                null,
+                                List.of(
+                                    new ChartInput.Series(
+                                        new ChartInput.Title.Text(TextSourceInput.inline("Plan")),
+                                        new ChartInput.DataSource.Reference("ChartCategories"),
+                                        new ChartInput.DataSource.Reference("Ops!$B$2:$B$4"),
+                                        null,
+                                        null,
+                                        null,
+                                        null),
+                                    new ChartInput.Series(
+                                        new ChartInput.Title.Text(TextSourceInput.inline("Actual")),
+                                        new ChartInput.DataSource.Reference("ChartCategories"),
+                                        new ChartInput.DataSource.Reference("ChartActual"),
+                                        null,
+                                        null,
+                                        null,
+                                        null))))))),
             ExamplePlanSupport.read(
                 "charts", ExamplePlanSupport.sheet("Ops"), new InspectionQuery.GetCharts()),
             ExamplePlanSupport.assertStep(

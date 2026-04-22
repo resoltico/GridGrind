@@ -47,6 +47,7 @@ readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly expected_description="$(load_expected_description "${repo_root}")"
 readonly verify_cli_contract_script="${repo_root}/scripts/verify-cli-contract.sh"
+readonly docker_config_parent="${repo_root}/tmp/verify-container-publication"
 docker_config_dir=''
 docker_endpoint=''
 
@@ -72,7 +73,10 @@ if [[ -z "${docker_endpoint}" ]]; then
             --format '{{.Endpoints.docker.Host}}' 2>/dev/null || true
     )"
 fi
-docker_config_dir="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind-publication-docker.XXXXXX")"
+mkdir -p "${docker_config_parent}"
+docker_config_dir="${docker_config_parent}/run.$$.${RANDOM}"
+rm -rf "${docker_config_dir}"
+mkdir -p "${docker_config_dir}"
 
 anonymous_docker() {
     if [[ -n "${docker_endpoint}" ]]; then

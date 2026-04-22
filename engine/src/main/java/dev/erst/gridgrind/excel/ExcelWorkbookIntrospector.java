@@ -42,12 +42,25 @@ final class ExcelWorkbookIntrospector {
       case WorkbookReadCommand.GetWorkbookProtection getWorkbookProtection ->
           new WorkbookReadResult.WorkbookProtectionResult(
               getWorkbookProtection.stepId(), workbook.workbookProtection());
+      case WorkbookReadCommand.GetCustomXmlMappings getCustomXmlMappings ->
+          new WorkbookReadResult.CustomXmlMappingsResult(
+              getCustomXmlMappings.stepId(), workbook.customXmlMappings());
+      case WorkbookReadCommand.ExportCustomXmlMapping exportCustomXmlMapping ->
+          new WorkbookReadResult.CustomXmlExportResult(
+              exportCustomXmlMapping.stepId(),
+              workbook.exportCustomXmlMapping(
+                  exportCustomXmlMapping.mapping(),
+                  exportCustomXmlMapping.validateSchema(),
+                  exportCustomXmlMapping.encoding()));
       case WorkbookReadCommand.GetNamedRanges getNamedRanges ->
           new WorkbookReadResult.NamedRangesResult(
               getNamedRanges.stepId(), selectNamedRanges(workbook, getNamedRanges.selection()));
       case WorkbookReadCommand.GetSheetSummary getSheetSummary ->
           new WorkbookReadResult.SheetSummaryResult(
               getSheetSummary.stepId(), workbook.sheetSummary(getSheetSummary.sheetName()));
+      case WorkbookReadCommand.GetArrayFormulas getArrayFormulas ->
+          new WorkbookReadResult.ArrayFormulasResult(
+              getArrayFormulas.stepId(), arrayFormulas(workbook, getArrayFormulas.selection()));
       case WorkbookReadCommand.GetCells getCells ->
           new WorkbookReadResult.CellsResult(
               getCells.stepId(),
@@ -252,6 +265,19 @@ final class ExcelWorkbookIntrospector {
               sheetName, formulaCells.size(), patterns.size(), List.copyOf(patterns)));
     }
     return new WorkbookReadResult.FormulaSurface(totalFormulaCellCount, List.copyOf(sheets));
+  }
+
+  private List<ExcelArrayFormulaSnapshot> arrayFormulas(
+      ExcelWorkbook workbook, ExcelSheetSelection selection) {
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    Objects.requireNonNull(selection, "selection must not be null");
+
+    List<String> sheetNames = selectSheets(workbook, selection);
+    List<ExcelArrayFormulaSnapshot> formulas = new ArrayList<>();
+    for (String sheetName : sheetNames) {
+      formulas.addAll(workbook.sheet(sheetName).arrayFormulas());
+    }
+    return List.copyOf(formulas);
   }
 
   /** Infers a simple schema from the provided sheet window. */
