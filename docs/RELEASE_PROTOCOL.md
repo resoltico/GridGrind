@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.50.0"
+version: "0.51.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-04-22"
 route:
@@ -98,6 +98,9 @@ Then verify every item in this checklist. All must be true before any commit or 
   - `[X.Y.Z]: .../compare/vPREV...vX.Y.Z`
 - All Markdown docs that actually carry AFAD frontmatter — `PATENTS.md`, `jazzer/README.md`, and
   every `docs/*.md` file — have `version:` set to the target version.
+- Every documented operator surface is present from the clean release checkout itself. Do not rely
+  on ignored local helper scripts, generated wrappers, or other unpublished files from the primary
+  checkout.
 - `README.md` does not reference any prior version's container tags.
 - All example JSON files use the current wire names and field shapes for this version.
 - GitHub repository settings are still aligned with this procedure:
@@ -472,27 +475,31 @@ Requirements before declaring the release session complete:
 ### Step 11 — Reconcile the primary checkout
 
 If the release used a dedicated release worktree or any checkout other than the primary checkout,
-the session is not complete until the primary checkout is truthful again.
+the session is not complete until the primary checkout is truthful again. This step is now a
+scripted gate, not a reminder. Do not declare the release complete until the verifier passes.
+
+If unpublished local work from the primary checkout is still needed, move it onto a named branch
+based on current `main` first, then return the primary checkout itself to `main`.
 
 Run:
 
 ```bash
-git -C "$PRIMARY_CHECKOUT" fetch origin --prune --tags
 git -C "$PRIMARY_CHECKOUT" checkout main
-git -C "$PRIMARY_CHECKOUT" rev-list --left-right --count HEAD...origin/main
 git -C "$PRIMARY_CHECKOUT" merge --ff-only origin/main
-git -C "$PRIMARY_CHECKOUT" rev-parse HEAD
-git -C "$PRIMARY_CHECKOUT" status --short
+./scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.Z"
 ```
+
+The verifier is authoritative. It fetches `origin`, requires the primary checkout to be on `main`,
+requires `HEAD` to equal `origin/main`, checks that `gradle.properties` and `CHANGELOG.md` reflect
+the released version, rejects tracked overlays, and rejects unexpected untracked debris outside the
+repo's explicit scratch prefixes.
 
 Requirements before declaring the release session complete:
 
-- the primary checkout `HEAD` equals `origin/main`
-- the primary checkout version-bearing files, including `gradle.properties` and `CHANGELOG.md`,
-  reflect the released version
+- `./scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.Z"` exits 0
 - no stale release-only checkout may be left behind with the appearance of being authoritative
 - if unpublished local work from the primary checkout is still needed, replay it deliberately onto
-  a named branch based on current `main`; do not leave it only in a stash
+  a named branch based on current `main`; do not leave it only in a stash or mixed into `main`
 - if that unpublished local work is stale, superseded, or regresses the shipped release state,
   delete it instead of preserving misleading debris
 

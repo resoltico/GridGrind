@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 2 ]]; then
+  echo "usage: $0 <target> <input-path> [--json] [gradle-args...]" >&2
+  exit 1
+fi
+
+script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+target="$1"
+input_path="$2"
+shift 2
+input_path="$(cd -P -- "$(dirname -- "${input_path}")" && pwd)/$(basename -- "${input_path}")"
+
+gradle_args=("-PjazzerTarget=${target}" "-PjazzerInput=${input_path}")
+if [[ $# -ge 1 && "$1" == "--json" ]]; then
+  gradle_args+=("-PjazzerJsonOutput=true")
+  shift
+fi
+
+"${script_dir}/_run-task" jazzerReplay "${gradle_args[@]}" "$@"

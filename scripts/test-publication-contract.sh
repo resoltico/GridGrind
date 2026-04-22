@@ -32,6 +32,7 @@ readonly root_plugin="${repo_root}/gradle/build-logic/src/main/kotlin/dev/erst/g
 readonly contract_build="${repo_root}/contract/build.gradle.kts"
 readonly docker_smoke_script="${repo_root}/scripts/docker-smoke.sh"
 readonly container_verify_script="${repo_root}/scripts/verify-container-publication.sh"
+readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
 
 grep -Eq \
     '^FROM azul/zulu-openjdk-alpine:26-jre@sha256:[0-9a-f]{64}$' \
@@ -61,6 +62,10 @@ grep -Fq '"${verify_cli_contract_script}" docker-image "${image_name}:${expected
     "${container_verify_script}" || die "public container verification no longer checks the version tag contract"
 grep -Fq '"${verify_cli_contract_script}" docker-image "${image_name}:latest"' \
     "${container_verify_script}" || die "public container verification no longer checks the latest tag contract"
+grep -Fq 'scripts/test-verify-release-primary-checkout.sh' "${repo_root}/check.sh" || die \
+    "root check no longer exercises the release primary-checkout regression"
+grep -Fq './scripts/verify-release-primary-checkout.sh "$PRIMARY_CHECKOUT" "X.Y.Z"' \
+    "${release_protocol_doc}" || die "release protocol no longer requires the primary-checkout closeout verifier"
 
 grep -Fq 'checks: read' "${release_workflow}" || die "release workflow is missing checks: read permission"
 grep -Fq 'checks: read' "${container_workflow}" || die "container workflow is missing checks: read permission"

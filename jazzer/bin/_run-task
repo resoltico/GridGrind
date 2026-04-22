@@ -1,0 +1,303 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+  echo "usage: $0 <gradle-task> [gradle-args...]" >&2
+  exit 1
+fi
+
+task_name="$1"
+shift
+gradle_args=("$@")
+gradle_pid=""
+watchdog_pid=""
+wrapper_shutdown_in_progress=0
+
+script_dir="$(cd -P -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+repo_root="$(cd -P -- "${script_dir}/../.." && pwd)"
+jazzer_root="${repo_root}/jazzer"
+local_root="${jazzer_root}/.local"
+lock_dir="${local_root}/run-lock"
+pid_file="${lock_dir}/pid"
+
+# shellcheck source=/dev/null
+source "${script_dir}/_run-lock-support"
+
+mkdir -p "${local_root}"
+
+run_target_for_task() {
+  case "$1" in
+    jazzerRegression) echo "regression" ;;
+    fuzzProtocolRequest) echo "protocol-request" ;;
+    fuzzProtocolWorkflow) echo "protocol-workflow" ;;
+    fuzzEngineCommandSequence) echo "engine-command-sequence" ;;
+    fuzzXlsxRoundTrip) echo "xlsx-roundtrip" ;;
+    *) echo "" ;;
+  esac
+}
+
+is_active_fuzz_task() {
+  case "$1" in
+    fuzzProtocolRequest|fuzzProtocolWorkflow|fuzzEngineCommandSequence|fuzzXlsxRoundTrip) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+ensure_plain_console() {
+  local has_console=0
+  for arg in "${gradle_args[@]}"; do
+    if [[ "$arg" == --console=* ]]; then
+      has_console=1
+      break
+    fi
+  done
+  if [[ $has_console -eq 0 ]]; then
+    gradle_args+=(--console=plain)
+  fi
+}
+
+remove_daemon_args() {
+  local filtered_args=()
+  local arg
+  for arg in "${gradle_args[@]}"; do
+    case "${arg}" in
+      --daemon|--no-daemon) ;;
+      *) filtered_args+=("${arg}") ;;
+    esac
+  done
+  gradle_args=("${filtered_args[@]}")
+}
+
+parse_duration_seconds() {
+  local raw="$1"
+  if [[ -z "${raw}" ]]; then
+    echo ""
+    return 0
+  fi
+  if [[ "${raw}" =~ ^([0-9]+)([smhd])$ ]]; then
+    local value="${BASH_REMATCH[1]}"
+    local unit="${BASH_REMATCH[2]}"
+    case "${unit}" in
+      s) echo "${value}" ;;
+      m) echo $((value * 60)) ;;
+      h) echo $((value * 3600)) ;;
+      d) echo $((value * 86400)) ;;
+    esac
+    return 0
+  fi
+  echo ""
+}
+
+requested_max_duration() {
+  local arg
+  for arg in "${gradle_args[@]}"; do
+    if [[ "${arg}" == -PjazzerMaxDuration=* ]]; then
+      echo "${arg#-PjazzerMaxDuration=}"
+      return 0
+    fi
+  done
+  echo ""
+}
+
+corpus_file_count() {
+  local run_dir="$1"
+  local corpus_dir="${run_dir}/.cifuzz-corpus"
+  if [[ ! -d "${corpus_dir}" ]]; then
+    echo 0
+    return
+  fi
+  find "${corpus_dir}" -type f | wc -l | tr -d '[:space:]'
+}
+
+corpus_total_bytes() {
+  local run_dir="$1"
+  local corpus_dir="${run_dir}/.cifuzz-corpus"
+  if [[ ! -d "${corpus_dir}" ]]; then
+    echo 0
+    return
+  fi
+  find "${corpus_dir}" -type f -exec stat -f '%z' {} + 2>/dev/null | awk '{sum += $1} END {print sum + 0}'
+}
+
+collect_descendant_pids() {
+  local parent_pid=$1
+  local child_pid=''
+  while IFS= read -r child_pid; do
+    [[ -n "${child_pid}" ]] || continue
+    printf '%s\n' "${child_pid}"
+    collect_descendant_pids "${child_pid}"
+  done < <(pgrep -P "${parent_pid}" 2>/dev/null || true)
+}
+
+cancel_watchdog() {
+  if [[ -n "${watchdog_pid}" ]]; then
+    kill "${watchdog_pid}" 2>/dev/null || true
+    wait "${watchdog_pid}" 2>/dev/null || true
+    watchdog_pid=""
+  fi
+}
+
+terminate_gradle_run() {
+  local initial_signal=$1
+  local escalation_signal=$2
+  local process_ids=()
+  local process_id=''
+  local attempt=0
+
+  if [[ -z "${gradle_pid}" ]]; then
+    return 0
+  fi
+
+  if ! kill -0 "${gradle_pid}" 2>/dev/null; then
+    return 0
+  fi
+
+  while IFS= read -r process_id; do
+    [[ -n "${process_id}" ]] || continue
+    process_ids+=("${process_id}")
+  done < <(
+    {
+      printf '%s\n' "${gradle_pid}"
+      collect_descendant_pids "${gradle_pid}"
+    } | awk '!seen[$0]++'
+  )
+
+  if ((${#process_ids[@]} == 0)); then
+    return 0
+  fi
+
+  kill -s "${initial_signal}" "${process_ids[@]}" 2>/dev/null || true
+  for ((attempt = 0; attempt < 10; attempt++)); do
+    if ! kill -0 "${gradle_pid}" 2>/dev/null; then
+      break
+    fi
+    sleep 1
+  done
+
+  if kill -0 "${gradle_pid}" 2>/dev/null; then
+    kill -TERM "${process_ids[@]}" 2>/dev/null || true
+    sleep 3
+  fi
+
+  if kill -0 "${gradle_pid}" 2>/dev/null; then
+    kill -s "${escalation_signal}" "${process_ids[@]}" 2>/dev/null || true
+  fi
+
+  wait "${gradle_pid}" 2>/dev/null || true
+}
+
+cleanup_on_exit() {
+  cancel_watchdog
+  if [[ "${wrapper_shutdown_in_progress}" -eq 0 ]]; then
+    terminate_gradle_run TERM KILL
+  fi
+  cleanup_lock
+}
+
+handle_signal() {
+  local signal_name=$1
+  local exit_code=$2
+  wrapper_shutdown_in_progress=1
+  cancel_watchdog
+  terminate_gradle_run "${signal_name}" KILL
+  cleanup_lock
+  exit "${exit_code}"
+}
+
+acquire_lock
+trap cleanup_on_exit EXIT
+trap 'handle_signal INT 130' INT
+trap 'handle_signal TERM 143' TERM
+
+ensure_plain_console
+
+target_key="$(run_target_for_task "${task_name}")"
+active_fuzz_task=0
+if is_active_fuzz_task "${task_name}"; then
+  active_fuzz_task=1
+  remove_daemon_args
+fi
+
+if [[ -z "${target_key}" ]]; then
+  "${repo_root}/gradlew" --project-dir "${jazzer_root}" --no-configuration-cache "${task_name}" "${gradle_args[@]}"
+  exit $?
+fi
+
+run_dir="${jazzer_root}/.local/runs/${target_key}"
+history_stamp="$(date -u +%Y%m%dT%H%M%SZ)"
+history_dir="${run_dir}/history/${history_stamp}"
+log_path="${history_dir}/run.log"
+latest_log_path="${run_dir}/latest.log"
+started_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+before_files="$(corpus_file_count "${run_dir}")"
+before_bytes="$(corpus_total_bytes "${run_dir}")"
+
+mkdir -p "${history_dir}" "${run_dir}"
+
+export GRIDGRIND_JAZZER_TARGET_KEY="${target_key}"
+export GRIDGRIND_JAZZER_HISTORY_DIR="${history_dir}"
+export GRIDGRIND_JAZZER_RUN_STARTED_AT="${started_at}"
+
+set +e
+timeout_flag="${history_dir}/timed-out"
+requested_duration="$(requested_max_duration)"
+duration_seconds="$(parse_duration_seconds "${requested_duration}")"
+watchdog_seconds=""
+if [[ -n "${duration_seconds}" ]]; then
+  watchdog_seconds=$((duration_seconds + 120))
+fi
+
+gradle_command=("${repo_root}/gradlew" --project-dir "${jazzer_root}")
+if [[ "${active_fuzz_task}" -eq 1 ]]; then
+  gradle_command+=(--no-daemon)
+fi
+
+"${gradle_command[@]}" "${task_name}" "${gradle_args[@]}" \
+  > >(tee "${log_path}" "${latest_log_path}") 2>&1 &
+gradle_pid="$!"
+
+if [[ -n "${watchdog_seconds}" ]]; then
+  (
+    sleep "${watchdog_seconds}"
+    if kill -0 "${gradle_pid}" 2>/dev/null; then
+      printf 'Jazzer task %s exceeded requested max duration %s plus 120s grace; terminating.\n' \
+        "${task_name}" "${requested_duration}" | tee -a "${log_path}" "${latest_log_path}" >&2
+      : > "${timeout_flag}"
+      terminate_gradle_run TERM KILL
+    fi
+  ) &
+  watchdog_pid="$!"
+fi
+
+wait "${gradle_pid}"
+task_exit="$?"
+cancel_watchdog
+set -e
+
+finished_at="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+
+set +e
+"${repo_root}/gradlew" --project-dir "${jazzer_root}" --no-configuration-cache jazzerSummarizeRun --console=plain \
+  -PjazzerTarget="${target_key}" \
+  -PjazzerTaskName="${task_name}" \
+  -PjazzerLogPath="${log_path}" \
+  -PjazzerHistoryDirectory="${history_dir}" \
+  -PjazzerStartedAt="${started_at}" \
+  -PjazzerFinishedAt="${finished_at}" \
+  -PjazzerExitCode="${task_exit}" \
+  -PjazzerCorpusBeforeFiles="${before_files}" \
+  -PjazzerCorpusBeforeBytes="${before_bytes}" >/dev/null
+summary_exit="$?"
+set -e
+
+if [[ "${task_exit}" -ne 0 ]]; then
+  if [[ -f "${timeout_flag}" ]]; then
+    echo "Jazzer task ${task_name} timed out after requested max duration ${requested_duration} plus grace" >&2
+  fi
+  exit "${task_exit}"
+fi
+
+if [[ "${summary_exit}" -ne 0 ]]; then
+  echo "Jazzer summary generation failed for ${task_name}" >&2
+  exit "${summary_exit}"
+fi
