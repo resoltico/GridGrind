@@ -77,11 +77,21 @@ final class ExcelRowColumnStructureController {
     normalizeColumnDefinitionContainer(sheet);
     int lastColumnIndex = lastColumnIndex(sheet);
     Map<Integer, CTCol> explicitColumns = snapshotColumnDefinitions(sheet);
+    ExcelSheetCommentRepairSupport commentRepairSupport = new ExcelSheetCommentRepairSupport(sheet);
+    boolean repairComments = commentRepairSupport.hasPersistedComments();
+    List<ExcelSheetCommentRepairSupport.CommentRewriteSnapshot> expectedComments = List.of();
+    if (repairComments) {
+      expectedComments =
+          commentRepairSupport.expectedCommentsAfterInsertColumns(columnIndex, columnCount);
+    }
     rejectAffectedColumnStructuresForInsert(sheet, columnIndex); // LIM-016
     if (columnIndex <= lastColumnIndex) {
       sheet.shiftColumns(columnIndex, lastColumnIndex, columnCount);
     }
     rebuildColumnDefinitions(sheet, shiftedForInsert(explicitColumns, columnIndex, columnCount));
+    if (repairComments) {
+      commentRepairSupport.replaceComments(expectedComments);
+    }
   }
 
   /** Deletes the requested inclusive zero-based column band. */
@@ -102,6 +112,12 @@ final class ExcelRowColumnStructureController {
     rejectFormulaBearingWorkbookForColumnEdit(sheet.getWorkbook(), "DELETE_COLUMNS"); // LIM-017
     normalizeColumnDefinitionContainer(sheet);
     Map<Integer, CTCol> explicitColumns = snapshotColumnDefinitions(sheet);
+    ExcelSheetCommentRepairSupport commentRepairSupport = new ExcelSheetCommentRepairSupport(sheet);
+    boolean repairComments = commentRepairSupport.hasPersistedComments();
+    List<ExcelSheetCommentRepairSupport.CommentRewriteSnapshot> expectedComments = List.of();
+    if (repairComments) {
+      expectedComments = commentRepairSupport.expectedCommentsAfterDeleteColumns(columns);
+    }
     rejectAffectedColumnStructuresForDelete(sheet, columns); // LIM-016
     if (columns.lastColumnIndex() < lastColumnIndex) {
       sheet.shiftColumns(columns.lastColumnIndex() + 1, lastColumnIndex, -columns.count());
@@ -109,6 +125,9 @@ final class ExcelRowColumnStructureController {
     int clearStart = Math.max(columns.firstColumnIndex(), lastColumnIndex - columns.count() + 1);
     clearTrailingCells(sheet, clearStart, lastColumnIndex);
     rebuildColumnDefinitions(sheet, shiftedForDelete(explicitColumns, columns));
+    if (repairComments) {
+      commentRepairSupport.replaceComments(expectedComments);
+    }
   }
 
   /** Moves the requested inclusive zero-based column band by the provided signed delta. */
@@ -119,9 +138,18 @@ final class ExcelRowColumnStructureController {
     rejectFormulaBearingWorkbookForColumnEdit(sheet.getWorkbook(), "SHIFT_COLUMNS"); // LIM-017
     normalizeColumnDefinitionContainer(sheet);
     Map<Integer, CTCol> explicitColumns = snapshotColumnDefinitions(sheet);
+    ExcelSheetCommentRepairSupport commentRepairSupport = new ExcelSheetCommentRepairSupport(sheet);
+    boolean repairComments = commentRepairSupport.hasPersistedComments();
+    List<ExcelSheetCommentRepairSupport.CommentRewriteSnapshot> expectedComments = List.of();
+    if (repairComments) {
+      expectedComments = commentRepairSupport.expectedCommentsAfterShiftColumns(columns, delta);
+    }
     rejectAffectedColumnStructuresForShift(sheet, columns, delta); // LIM-016
     sheet.shiftColumns(columns.firstColumnIndex(), columns.lastColumnIndex(), delta);
     rebuildColumnDefinitions(sheet, shiftedForShift(explicitColumns, columns, delta));
+    if (repairComments) {
+      commentRepairSupport.replaceComments(expectedComments);
+    }
   }
 
   /** Sets the hidden state for the requested inclusive zero-based row band. */

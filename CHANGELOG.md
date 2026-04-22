@@ -5,6 +5,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.53.0] - 2026-04-22
+
+### Fixed
+
+- Public Markdown docs are now organized as stable entry-point docs plus focused long-form
+  references. `docs/OPERATIONS.md` and `docs/QUICK_REFERENCE.md` are now kept intentionally small,
+  the quick-start flow now teaches artifact-native `--print-example BUDGET`, the error reference
+  now documents the live `CELL_NOT_FOUND` path truthfully, the Java 26 workstation guide now
+  reflects the current official OpenJDK 26.0.1 download surface, and docs tests now fail on broken
+  local Markdown links or if the entry-point reference docs bloat back into god-files.
+- Worksheet comments now survive structural column edits deterministically even across the Apache
+  POI 5.5.1 collision case where moved comments can reopen with duplicate persisted comment refs
+  and the wrong visible note after `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS`.
+  GridGrind now rewrites the affected comment/VML state authoritatively after those edits, the
+  discovered `.xlsx` round-trip finding is promoted as a committed success seed, and the Jazzer
+  round-trip verifier now fails saved workbooks whose persisted comment refs are not unique.
+
 ## [0.52.0] - 2026-04-22
 
 ### Fixed
@@ -2067,7 +2084,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.52.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.53.0...HEAD
+[0.53.0]: https://github.com/resoltico/GridGrind/compare/v0.52.0...v0.53.0
 [0.52.0]: https://github.com/resoltico/GridGrind/compare/v0.51.0...v0.52.0
 [0.51.0]: https://github.com/resoltico/GridGrind/compare/v0.50.0...v0.51.0
 [0.50.0]: https://github.com/resoltico/GridGrind/compare/v0.49.0...v0.50.0

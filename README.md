@@ -20,7 +20,7 @@ RETRIEVAL_HINTS:
 - Keep recurring workbook work consistent.
 - Update a workbook, check it, and read back what matters in one pass.
 - Catch problems before a file is written.
-- Start from a quick start guide and real examples instead of a blank page.
+- Start from a quick start guide, built-in example generators, and real examples instead of a blank page.
 
 ## Who It's For
 
@@ -39,6 +39,9 @@ RETRIEVAL_HINTS:
 - GridGrind is built on Apache POI XSSF, a long-established Java `.xlsx` library, instead of a home-grown spreadsheet file layer.
 - If a run fails, GridGrind stops before writing the workbook, so you do not get a partly written file.
 - GridGrind ships a user-facing quick start, real example files, and supporting docs when you want more detail.
+- Save and reopen behavior is verified, not assumed: committed `.xlsx` round-trip regressions cover
+  workbook metadata such as comments, validations, tables, and drawing-backed content so
+  structural workbook edits do not quietly reopen differently later.
 - The limits are explicit instead of hand-wavy: low-memory `STREAMING_WRITE` is intentionally narrow and uses `ENSURE_SHEET`, `APPEND_ROW`, and optional `execution.calculation.markRecalculateOnOpen=true`.
 - Formula boundaries are explicit too: scalar `FORMULA` cell values reject array-formula braces, while dedicated `SET_ARRAY_FORMULA` handles contiguous array-formula groups. `LAMBDA` and `LET` are still rejected as `INVALID_FORMULA` today because Apache POI cannot parse them yet.
 - Limits and format boundaries are documented up front in [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
@@ -47,11 +50,11 @@ RETRIEVAL_HINTS:
 ## Start Here
 
 - New to GridGrind: [docs/QUICK_START.md](docs/QUICK_START.md)
-- Want a concrete example first: [examples/budget-request.json](examples/budget-request.json)
+- Want a concrete example first: `gridgrind --print-example BUDGET`, or [examples/budget-request.json](examples/budget-request.json) when you are already in a repo checkout
 - Want a no-save health-check example: [examples/workbook-health-request.json](examples/workbook-health-request.json)
 - Want an existing-workbook XML import/export example: [examples/custom-xml-request.json](examples/custom-xml-request.json)
 - Want a drawing and signature-line example: [examples/signature-line-request.json](examples/signature-line-request.json)
-- Want the reference docs: [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md), [docs/OPERATIONS.md](docs/OPERATIONS.md), and [docs/ERRORS.md](docs/ERRORS.md)
+- Want the reference docs: [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md), [docs/OPERATIONS.md](docs/OPERATIONS.md), and [docs/ERRORS.md](docs/ERRORS.md). The detailed long-form reference is split behind those entry points into focused docs under `docs/`.
 - Want the runnable download: [latest release](https://github.com/resoltico/GridGrind/releases/latest)
 
 ## Questions Before You Pour
@@ -66,7 +69,7 @@ Yes. GridGrind can start from a new workbook or open an existing `.xlsx` file.
 
 ### Do I need to start from scratch?
 
-No. GridGrind ships example files and a quick start, so you can start from something close to your own workbook job and adjust it.
+No. GridGrind ships built-in example generators, checked-in example files, and a quick start, so you can start from something close to your own workbook job and adjust it.
 
 ### What kinds of workbook work fit best?
 

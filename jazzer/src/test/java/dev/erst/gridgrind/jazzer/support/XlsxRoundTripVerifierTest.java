@@ -10,6 +10,7 @@ import dev.erst.gridgrind.excel.ExcelCellProtection;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelColor;
+import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockDefinition;
@@ -179,6 +180,25 @@ class XlsxRoundTripVerifierTest {
                     new WorkbookCommand.SetTable(
                         new ExcelTableDefinition(
                             "BudgetTable", "Budget", "A1:B4", true, new ExcelTableStyle.None())))));
+  }
+
+  @Test
+  void requireRoundTripReadableAcceptsCommentCollisionsDuringColumnEdits() {
+    assertDoesNotThrow(
+        () ->
+            roundTrip(
+                "gridgrind-jazzer-comment-column-roundtrip-",
+                List.of(
+                    new WorkbookCommand.CreateSheet("LL"),
+                    new WorkbookCommand.SetComment(
+                        "LL", "E2", new ExcelComment("Note BudgetTotal", "GridGrind", true)),
+                    new WorkbookCommand.SetComment(
+                        "LL", "A2", new ExcelComment("Note Report_Value", "GridGrind", true)),
+                    new WorkbookCommand.CreateSheet("LL"),
+                    new WorkbookCommand.DeleteColumns("LL", new ExcelColumnSpan(1, 3)),
+                    new WorkbookCommand.DeleteColumns("LL", new ExcelColumnSpan(0, 0)),
+                    new WorkbookCommand.AutoSizeColumns("LL"),
+                    new WorkbookCommand.AutoSizeColumns("LL"))));
   }
 
   @Test

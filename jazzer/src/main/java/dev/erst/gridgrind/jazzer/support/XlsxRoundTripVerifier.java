@@ -97,6 +97,7 @@ public final class XlsxRoundTripVerifier {
       throw new IllegalStateException("saved workbook must exist");
     }
     ExpectedWorkbookState expectedWorkbookState = expectedWorkbookState(workbook, commands);
+    XlsxCommentPackageInvariantSupport.requireCanonicalCommentPackageState(workbookPath);
 
     try (InputStream inputStream = Files.newInputStream(workbookPath);
         XSSFWorkbook reopenedWorkbook = new XSSFWorkbook(inputStream)) {

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.52.0"
+version: "0.53.0"
 domain: ERRORS
-updated: "2026-04-19"
+updated: "2026-04-22"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report assertion failures", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures", "how does gridgrind report source-backed input failures", "what happens if a gridgrind input file is missing"]
@@ -252,9 +252,9 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 |:-----|:--------|
 | `WORKBOOK_NOT_FOUND` | `source.type=EXISTING` path does not exist. |
 | `INPUT_SOURCE_NOT_FOUND` | A source-backed authored field referenced a `UTF8_FILE` or `FILE` path that does not exist. |
-| `SHEET_NOT_FOUND` | A step target references a sheet that does not exist. All sheet-backed mutation steps (`SET_CELL`, `SET_RANGE`, `APPLY_STYLE`, `SET_HYPERLINK`, `CLEAR_HYPERLINK`, `SET_COMMENT`, `CLEAR_COMMENT`, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`) require the sheet to exist; use `ENSURE_SHEET` first. |
+| `SHEET_NOT_FOUND` | A step target or nested payload references a sheet that does not exist. This can surface across sheet-backed writes and reads, layout or structure edits against existing sheets, table or pivot definitions, drawing selectors, and formula-evaluation targets. Use `ENSURE_SHEET` only for create-before-write flows; it does not replace references to already existing sheet names elsewhere in the request. |
 | `NAMED_RANGE_NOT_FOUND` | A named-range inspection selector or delete step references a workbook- or sheet-scoped name that does not exist. |
-| `CELL_NOT_FOUND` | Reserved. No current step raises this code; `CLEAR_HYPERLINK` and `CLEAR_COMMENT` are no-ops when the cell does not physically exist, and `GET_CELLS` returns blank snapshots for unwritten cells. |
+| `CELL_NOT_FOUND` | The request named a cell that does not physically exist for a workflow that requires a real stored cell. The current public path is `execution.calculation.strategy=EVALUATE_TARGETS`: every addressed target must point at an existing formula cell. By contrast, `GET_CELLS` returns blank snapshots for unwritten cells, and `CLEAR_HYPERLINK` / `CLEAR_COMMENT` stay no-ops when the cell does not physically exist. |
 
 ### Security (`SECURITY` category)
 

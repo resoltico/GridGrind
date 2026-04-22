@@ -1,0 +1,8 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/engine/XlsxRoundTripFuzzTestInputs/roundTrip/comment_collision_after_delete_columns_roundtrip_success.bin
+Harness: xlsx-roundtrip
+Outcome: SUCCESS
+Input Bytes: 109
+Command Count: 8
+Style Kinds: (none)
+Command Kinds: DELETE_COLUMNS=2, SET_COMMENT=2, CREATE_SHEET=2, AUTO_SIZE_COLUMNS=2

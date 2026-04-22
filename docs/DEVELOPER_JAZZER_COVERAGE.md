@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.52.0"
+version: "0.53.0"
 domain: DEVELOPER_JAZZER_COVERAGE
-updated: "2026-04-19"
+updated: "2026-04-22"
 route:
   keywords: [gridgrind, jazzer, fuzz, coverage, matrix, harnesses, regression inputs, promoted inputs, gaps]
   questions: ["what does jazzer cover in gridgrind", "which harnesses exist", "what are the promoted jazzer inputs", "what gaps remain in jazzer coverage", "what does each jazzer target assert"]
@@ -24,8 +24,8 @@ regression inputs exist, and what remains outside the current fuzzing surface.
 | `protocol-request` | `GridGrindJson.readRequest(byte[])` | raw JSON parsing and request validation | Yes | Yes | 45 |
 | `protocol-workflow` | `DefaultGridGrindRequestExecutor.execute(...)` | ordered request workflows through the production contract-plus-executor layer | Yes | Yes | 11 |
 | `engine-command-sequence` | `WorkbookCommandExecutor.apply(...)` | ordered workbook-command execution in the engine layer | Yes | Yes | 9 |
-| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 19 |
-| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 84 total across harnesses |
+| `xlsx-roundtrip` | `ExcelWorkbook.save(...)` plus POI reopen | `.xlsx` persistence and reopen invariants after bounded command sequences | Yes | Yes | 24 |
+| `regression` | four isolated per-harness regression tasks over all committed promoted inputs | replay of the committed custom seed floor | N/A | Yes | 89 total across harnesses |
 
 ---
 
@@ -141,6 +141,7 @@ What it asserts:
 - reopened workbook exposes coherent structural metadata
 - style-bearing command effects survive reopen for supported formatting-depth fields
 - hyperlink and comment metadata remain coherent after reopen when those commands succeed
+- persisted OOXML comment refs remain canonical after reopen, including column-edit collision cases
 - named ranges remain coherent after reopen, including normalized target ordering for reversed
   input ranges
 - data-validation state remains readable and normalized after reopen when those commands succeed
@@ -273,17 +274,22 @@ metadata for their authoritative decoded semantics.
 - `overlapping_collapsed_then_expanded_group_columns_expected_invalid.bin`
 - `set_hyperlink_clear_comment_invalid_sheet.bin`
 
-### `xlsx-roundtrip` (19)
+### `xlsx-roundtrip` (24)
 
 - `append_row_datetime_style_patch_roundtrip_success.bin`
 - `append_row_preserves_styled_blank_row_roundtrip_success.bin`
 - `apply_style_alignment_roundtrip_success.bin`
 - `apply_style_formatting_depth_roundtrip_success.bin`
 - `border_all_none_missing_color_roundtrip_success.bin`
+- `chart_formula_reference_cache_roundtrip_success.bin`
+- `chart_graphic_frame_relation_lookup_roundtrip_success.bin`
 - `chart_title_numeric_cache_roundtrip_success.bin`
 - `clear_sheet_protection_unprotected_roundtrip_success.bin`
+- `comment_collision_after_delete_columns_roundtrip_success.bin`
 - `create_sheet_roundtrip_case.bin`
 - `create_sheet_set_range_roundtrip_case.bin`
+- `embedded_object_copy_sheet_roundtrip_success.bin`
+- `embedded_object_empty_package_bytes_roundtrip_success.bin`
 - `hyperlink_comment_invalid_row_case.bin`
 - `named_range_normalization_roundtrip_success.bin`
 - `named_range_shift_overwrite_invalid.bin`
@@ -331,6 +337,8 @@ The current Jazzer layer is strongest at:
   last visible sheet
 - normalized local-file hyperlink path semantics in request seeds and `.xlsx` round-trip
   invariants
+- explicit regression coverage for comment-collision repair during structural column edits, plus
+  persisted-comment OOXML invariants that reject duplicate reopened comment refs
 - style-aware `.xlsx` round-trip verification for formatting depth, authoring metadata, and
   named-range normalization plus data-validation and table/autofilter persistence boundaries
 - explicit source/persistence-type telemetry for service-level workflow fuzzing

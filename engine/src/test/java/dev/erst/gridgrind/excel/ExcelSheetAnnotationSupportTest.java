@@ -1,8 +1,14 @@
 package dev.erst.gridgrind.excel;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import java.lang.reflect.Method;
+import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.xssf.model.CommentsTable;
+import org.apache.poi.xssf.usermodel.XSSFComment;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +40,45 @@ class ExcelSheetAnnotationSupportTest {
               InvalidCellAddressException.class,
               () -> support.setComment("XFE1", new ExcelComment("Review", "GridGrind", false)));
       assertEquals("XFE1", commentFailure.address());
+    }
+  }
+
+  @Test
+  void clearCellCommentHandlesAnchorlessCommentsWithoutVmlDrawing() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Ops");
+      var cell = sheet.createRow(0).createCell(0);
+      var commentsTable = new CommentsTable();
+      commentsTable.setSheet(sheet);
+
+      XSSFComment anchorless =
+          new XSSFComment(commentsTable, commentsTable.newComment(new CellAddress("A1")), null);
+      anchorless.setString("Review");
+      anchorless.setAuthor("GridGrind");
+      anchorless.setVisible(true);
+      cell.setCellComment(anchorless);
+
+      ExcelSheetAnnotationSupport.clearCellComment(cell);
+
+      assertNull(cell.getCellComment());
+    }
+  }
+
+  @Test
+  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
+  void removeCommentShapeIfPresentReturnsWhenSheetHasNoVmlDrawing() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      var sheet = workbook.createSheet("Ops");
+      assertNull(sheet.getVMLDrawing(false));
+      Method method =
+          ExcelSheetAnnotationSupport.class.getDeclaredMethod(
+              "removeCommentShapeIfPresent",
+              org.apache.poi.xssf.usermodel.XSSFSheet.class,
+              CellAddress.class);
+      method.setAccessible(true);
+
+      assertDoesNotThrow(() -> method.invoke(null, sheet, new CellAddress("A1")));
+      assertNull(sheet.getVMLDrawing(false));
     }
   }
 }

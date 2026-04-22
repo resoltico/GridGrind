@@ -15,6 +15,22 @@ import org.junit.jupiter.api.Test;
 final class XlsxParityDocsTest {
   private static final Pattern FRONTMATTER_VERSION_PATTERN =
       Pattern.compile("(?m)^version: \"([^\"]+)\"$");
+  private static final List<String> SPLIT_REFERENCE_DOCS =
+      List.of(
+          "docs/REQUEST_AND_EXECUTION_REFERENCE.md",
+          "docs/WORKBOOK_AND_LAYOUT_MUTATIONS.md",
+          "docs/CELL_AND_DRAWING_MUTATIONS.md",
+          "docs/STRUCTURED_FEATURE_MUTATIONS.md",
+          "docs/ASSERTION_AND_INSPECTION_REFERENCE.md");
+  private static final List<String> PUBLIC_REFERENCE_DOCS =
+      List.of(
+          "docs/OPERATIONS.md",
+          "docs/QUICK_REFERENCE.md",
+          "docs/REQUEST_AND_EXECUTION_REFERENCE.md",
+          "docs/WORKBOOK_AND_LAYOUT_MUTATIONS.md",
+          "docs/CELL_AND_DRAWING_MUTATIONS.md",
+          "docs/STRUCTURED_FEATURE_MUTATIONS.md",
+          "docs/ASSERTION_AND_INSPECTION_REFERENCE.md");
 
   @Test
   void publicCapabilityInventoryTracksCurrentReleaseVersion() {
@@ -141,6 +157,8 @@ final class XlsxParityDocsTest {
             "README.md",
             "docs/OPERATIONS.md",
             "docs/QUICK_REFERENCE.md",
+            "docs/REQUEST_AND_EXECUTION_REFERENCE.md",
+            "docs/STRUCTURED_FEATURE_MUTATIONS.md",
             "docs/LIMITATIONS.md",
             "docs/POI_EXCEL_CAPABILITY_INVENTORY.md")) {
       String document =
@@ -163,65 +181,78 @@ final class XlsxParityDocsTest {
   }
 
   @Test
-  void publicDocsDescribeCurrentFormulaAndAnalysisReadContracts() {
+  void publicReferenceDocsStaySplitIntoStableEntryPoints() {
     Path repositoryRoot = repositoryRoot();
-    for (String relativePath :
-        List.of("README.md", "docs/OPERATIONS.md", "docs/QUICK_REFERENCE.md", "docs/ERRORS.md")) {
-      String document =
-          XlsxParitySupport.call(
-              "read " + relativePath, () -> Files.readString(repositoryRoot.resolve(relativePath)));
+    String operations = readDoc(repositoryRoot, "docs/OPERATIONS.md");
+    String quickReference = readDoc(repositoryRoot, "docs/QUICK_REFERENCE.md");
 
+    for (String relativePath : SPLIT_REFERENCE_DOCS) {
       assertTrue(
-          document.contains("LAMBDA") && document.contains("LET"),
-          relativePath + " must mention the current LAMBDA/LET limitation");
+          Files.exists(repositoryRoot.resolve(relativePath)),
+          relativePath + " must exist as part of the split public reference surface");
       assertTrue(
-          document.contains("INVALID_FORMULA"),
-          relativePath + " must describe the INVALID_FORMULA boundary");
+          operations.contains(Path.of(relativePath).getFileName().toString()),
+          "docs/OPERATIONS.md must link to " + relativePath);
+      assertTrue(
+          quickReference.contains(Path.of(relativePath).getFileName().toString()),
+          "docs/QUICK_REFERENCE.md must link to " + relativePath);
     }
 
-    String operations =
-        XlsxParitySupport.call(
-            "read docs/OPERATIONS.md",
-            () -> Files.readString(repositoryRoot.resolve("docs/OPERATIONS.md")));
-    assertTrue(operations.contains("totalFormulaCellCount"));
-    assertTrue(operations.contains("checkedNamedRangeCount"));
+    assertTrue(
+        lineCount(operations) <= 220,
+        "docs/OPERATIONS.md must stay an index instead of growing back into a god-file");
+    assertTrue(
+        lineCount(quickReference) <= 400,
+        "docs/QUICK_REFERENCE.md must stay a cheat sheet instead of regrowing into a full manual");
+  }
 
-    String quickReference =
-        XlsxParitySupport.call(
-            "read docs/QUICK_REFERENCE.md",
-            () -> Files.readString(repositoryRoot.resolve("docs/QUICK_REFERENCE.md")));
-    assertTrue(quickReference.contains("analysis.summary"));
+  @Test
+  void publicDocsDescribeCurrentFormulaAndAnalysisReadContracts() {
+    Path repositoryRoot = repositoryRoot();
+    String formulaAndAnalysisCorpus =
+        readAllDocs(repositoryRoot, PUBLIC_REFERENCE_DOCS)
+            + readDoc(repositoryRoot, "README.md")
+            + readDoc(repositoryRoot, "docs/ERRORS.md");
+
+    assertTrue(
+        formulaAndAnalysisCorpus.contains("LAMBDA") && formulaAndAnalysisCorpus.contains("LET"),
+        "public docs must mention the current LAMBDA/LET limitation");
+    assertTrue(
+        formulaAndAnalysisCorpus.contains("INVALID_FORMULA"),
+        "public docs must describe the INVALID_FORMULA boundary");
+    assertTrue(
+        formulaAndAnalysisCorpus.contains("analysis.totalFormulaCellCount"),
+        "public docs must describe formula-surface aggregate counts");
+    assertTrue(
+        formulaAndAnalysisCorpus.contains("analysis.checkedNamedRangeCount"),
+        "public docs must describe named-range-health aggregate counts");
+    assertTrue(
+        formulaAndAnalysisCorpus.contains("analysis.summary"),
+        "public docs must describe analysis summary payloads");
   }
 
   @Test
   void publicDocsDescribeCurrentChartAndSignatureLineContracts() {
     Path repositoryRoot = repositoryRoot();
-    String operations =
-        XlsxParitySupport.call(
-            "read docs/OPERATIONS.md",
-            () -> Files.readString(repositoryRoot.resolve("docs/OPERATIONS.md")));
-    String quickReference =
-        XlsxParitySupport.call(
-            "read docs/QUICK_REFERENCE.md",
-            () -> Files.readString(repositoryRoot.resolve("docs/QUICK_REFERENCE.md")));
-    String readme =
-        XlsxParitySupport.call(
-            "read README.md", () -> Files.readString(repositoryRoot.resolve("README.md")));
-    String limitations =
-        XlsxParitySupport.call(
-            "read docs/LIMITATIONS.md",
-            () -> Files.readString(repositoryRoot.resolve("docs/LIMITATIONS.md")));
+    String operations = readDoc(repositoryRoot, "docs/OPERATIONS.md");
+    String quickReference = readDoc(repositoryRoot, "docs/QUICK_REFERENCE.md");
+    String cellAndDrawing = readDoc(repositoryRoot, "docs/CELL_AND_DRAWING_MUTATIONS.md");
+    String assertionsAndInspections =
+        readDoc(repositoryRoot, "docs/ASSERTION_AND_INSPECTION_REFERENCE.md");
+    String readme = readDoc(repositoryRoot, "README.md");
+    String limitations = readDoc(repositoryRoot, "docs/LIMITATIONS.md");
 
-    assertTrue(operations.contains("### SET_SIGNATURE_LINE"));
-    assertTrue(operations.contains("\"plots\": ["));
-    assertTrue(operations.contains("SIGNATURE_LINE"));
-    assertTrue(operations.contains("`GIF`, `TIFF`, `EPS`, `BMP`,"));
-    assertTrue(operations.contains("or `WPG`."));
-    assertFalse(operations.contains("Supported authored families are `BAR`, `LINE`, and `PIE`."));
+    assertTrue(operations.contains("CELL_AND_DRAWING_MUTATIONS.md"));
+    assertTrue(cellAndDrawing.contains("### SET_SIGNATURE_LINE"));
+    assertTrue(cellAndDrawing.contains("\"plots\": ["));
+    assertTrue(cellAndDrawing.contains("SIGNATURE_LINE"));
+    assertTrue(assertionsAndInspections.contains("SIGNATURE_LINE"));
+    assertTrue(cellAndDrawing.contains("`GIF`, `TIFF`, `EPS`, `BMP`,"));
+    assertTrue(cellAndDrawing.contains("or `WPG`."));
+    assertFalse(
+        cellAndDrawing.contains("Supported authored families are `BAR`, `LINE`, and `PIE`."));
 
-    assertTrue(quickReference.contains("## SET_SIGNATURE_LINE"));
-    assertTrue(quickReference.contains("\"plots\": ["));
-    assertTrue(quickReference.contains("SIGNATURE_LINE"));
+    assertTrue(quickReference.contains("SET_SIGNATURE_LINE"));
     assertTrue(
         quickReference.contains(
             "Supported authored plot families are `AREA`, `AREA_3D`, `BAR`, `BAR_3D`, `DOUGHNUT`, `LINE`,"));
@@ -257,6 +288,23 @@ final class XlsxParityDocsTest {
         .findFirst()
         .map(line -> line.substring("version=".length()))
         .orElseThrow(() -> new AssertionError("No version= entry found in gradle.properties"));
+  }
+
+  private static String readDoc(Path repositoryRoot, String relativePath) {
+    return XlsxParitySupport.call(
+        "read " + relativePath, () -> Files.readString(repositoryRoot.resolve(relativePath)));
+  }
+
+  private static String readAllDocs(Path repositoryRoot, List<String> relativePaths) {
+    StringBuilder builder = new StringBuilder();
+    for (String relativePath : relativePaths) {
+      builder.append(readDoc(repositoryRoot, relativePath)).append('\n');
+    }
+    return builder.toString();
+  }
+
+  private static long lineCount(String document) {
+    return document.lines().count();
   }
 
   private static String frontmatterVersion(Path documentPath) {

@@ -88,10 +88,10 @@ final class ExcelSheetCopyController {
     // cloneSheet can leave copied comments looking correct in-memory while reopening later
     // without a stable client anchor. Rewriting the copied comments makes the persisted
     // VML-backed comment state authoritative again.
-    for (WorkbookReadResult.CellComment expectedComment : expectedComments) {
-      targetSheet.clearComment(expectedComment.address());
-    }
-    copyComments(expectedComments, targetSheet);
+    ExcelSheetCommentRepairSupport commentRepairSupport =
+        new ExcelSheetCommentRepairSupport(targetSheet.xssfSheet());
+    commentRepairSupport.replaceComments(
+        ExcelSheetCommentRepairSupport.commentRewriteSnapshots(expectedComments));
   }
 
   private static void repairPrintLayout(
@@ -207,13 +207,6 @@ final class ExcelSheetCopyController {
         || formula.contains(quotedSourceSheetName + "!")
         || formula.contains(sourceSheetName + ":")
         || formula.contains(quotedSourceSheetName + ":");
-  }
-
-  private static void copyComments(
-      List<WorkbookReadResult.CellComment> comments, ExcelSheet targetSheet) {
-    for (WorkbookReadResult.CellComment comment : comments) {
-      targetSheet.setComment(comment.address(), comment.comment().toAuthoringComment());
-    }
   }
 
   private static void copyDataValidations(
