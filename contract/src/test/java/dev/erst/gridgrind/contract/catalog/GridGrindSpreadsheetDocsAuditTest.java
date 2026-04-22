@@ -115,6 +115,37 @@ class GridGrindSpreadsheetDocsAuditTest {
                 "zoom limit entry must point at the current validation path"));
   }
 
+  @Test
+  void quickStartUsesArtifactNativeBudgetBootstrapFlow() throws IOException {
+    String quickStart = readDoc("docs/QUICK_START.md");
+
+    assertAll(
+        () ->
+            assertTrue(
+                quickStart.contains("--print-example BUDGET"),
+                "quick start must teach the built-in budget example bootstrap flow"),
+        () ->
+            assertFalse(
+                quickStart.contains(
+                    "copy `examples/budget-request.json` into your working directory first"),
+                "quick start must not require a repo checkout for first-run artifact usage"));
+  }
+
+  @Test
+  void errorReferenceDescribesLiveCellNotFoundPathTruthfully() throws IOException {
+    String errors = readDoc("docs/ERRORS.md");
+
+    assertAll(
+        () ->
+            assertTrue(
+                errors.contains("execution.calculation.strategy=EVALUATE_TARGETS"),
+                "error reference must describe the current CELL_NOT_FOUND path"),
+        () ->
+            assertFalse(
+                errors.contains("Reserved. No current step raises this code"),
+                "error reference must not claim CELL_NOT_FOUND is unused"));
+  }
+
   private static String readDoc(String relativePath) throws IOException {
     Path repositoryRoot = RepositoryRootTestSupport.repositoryRoot();
     return Files.readString(repositoryRoot.resolve(relativePath));

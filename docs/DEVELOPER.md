@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.52.0"
+version: "0.53.0"
 domain: DEVELOPER
-updated: "2026-04-21"
+updated: "2026-04-22"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -149,6 +149,7 @@ and local Docker verification now requires `docker buildx` because Stage 5 build
 ./gradlew :cli:run --args="--version"
 ./gradlew :cli:run --args="--print-request-template"
 ./gradlew :cli:run --args="--print-protocol-catalog"
+./gradlew :cli:run --args="--print-example BUDGET"
 ./gradlew :cli:run --args="--print-task-catalog"
 ./gradlew :cli:run --args="--print-task-plan DASHBOARD"
 ./gradlew :cli:run --args='--print-goal-plan "monthly sales dashboard with charts"'

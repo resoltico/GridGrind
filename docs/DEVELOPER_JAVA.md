@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.52.0"
+version: "0.53.0"
 domain: DEVELOPER_JAVA
-updated: "2026-04-19"
+updated: "2026-04-22"
 route:
   keywords: [gridgrind, java26, gradle-wrapper, global-gradle, brew, openjdk.org, workstation, shell, java-home, macos]
   questions: ["what is the best-practice java and gradle setup for gridgrind", "why should gridgrind use ./gradlew instead of brew gradle", "how do i configure a fresh macos machine for java 26 and the gradle wrapper", "when is a global gradle install acceptable", "why is shell-level java still required for gridgrind"]
@@ -69,26 +69,25 @@ Reasons:
 
 ## Current Baseline
 
-The OpenJDK JDK 26 schedule lists `General Availability` on `2026-03-17`, but the official
-status surfaces are not fully synchronized yet. When re-checked on `2026-04-19`, the JDK 26
-project page still labeled JDK 26 as being in `Release Candidate` phase, and
-[`https://jdk.java.net/26/`](https://jdk.java.net/26/) still published
-`OpenJDK JDK 26 Release-Candidate Builds`.
+When re-checked on `2026-04-22`, the OpenJDK project page at
+[`https://openjdk.org/projects/jdk/26/`](https://openjdk.org/projects/jdk/26/) remained the
+authoritative schedule-and-features page for JDK 26, while
+[`https://jdk.java.net/26/`](https://jdk.java.net/26/) published the current `OpenJDK JDK 26.0.1
+GA Release` binaries.
 
-For GridGrind, `https://openjdk.org` is therefore the source of truth for Java 26 status and the
-authoritative starting point for choosing the binary download.
-
-Authoritative route:
-- start at [`https://openjdk.org/projects/jdk/26/`](https://openjdk.org/projects/jdk/26/)
-- use the JDK 26 page there as the authoritative release-status page
-- follow the OpenJDK-published build links from that page to choose the macOS AArch64 archive
-  hosted on `jdk.java.net` / `download.java.net`
-- do not replace that route in repo docs with Adoptium, Azul, SDKMAN, Homebrew, or other third-party distributions
+For GridGrind, use the two official surfaces together:
+- `https://openjdk.org/projects/jdk/26/` for the canonical project page, schedule, and feature
+  context
+- `https://jdk.java.net/26/` for the currently published GA download links
+- only follow OpenJDK-published build links from those pages when choosing the macOS AArch64
+  archive
+- do not replace that route in repo docs with Adoptium, Azul, SDKMAN, Homebrew, or other
+  third-party distributions
 
 Current macOS AArch64 archive name and published checksum used for this setup:
-- archive: `openjdk-26_macos-aarch64_bin.tar.gz`
+- archive: `openjdk-26.0.1_macos-aarch64_bin.tar.gz`
 - published SHA-256:
-  `254586bcd1bf6dcd125ad667ac32562cb1e2ab1abf3a61fb117b6fabb571e765`
+  `b2d57405194a312ed4ec6ec08e83b314d3fd2e425e895d704ec5ef8ea6059e17`
 
 Use `https://openjdk.org` as both:
 - the release-status reference

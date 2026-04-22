@@ -327,13 +327,13 @@ final class ExcelSheetAnnotationSupport {
     }
   }
 
-  private static void repairBrokenLegacyDrawingReference(XSSFSheet sheet) {
+  static void repairBrokenLegacyDrawingReference(XSSFSheet sheet) {
     if (sheet.getCTWorksheet().isSetLegacyDrawing() && legacyDrawingRelationId(sheet) == null) {
       sheet.getCTWorksheet().unsetLegacyDrawing();
     }
   }
 
-  private static void ensureLegacyDrawingReference(XSSFSheet sheet) {
+  static void ensureLegacyDrawingReference(XSSFSheet sheet) {
     String relationId = vmlDrawingRelationId(sheet);
     if (relationId == null) {
       return;
@@ -344,7 +344,7 @@ final class ExcelSheetAnnotationSupport {
     sheet.getCTWorksheet().getLegacyDrawing().setId(relationId);
   }
 
-  private static String legacyDrawingRelationId(XSSFSheet sheet) {
+  static String legacyDrawingRelationId(XSSFSheet sheet) {
     if (!sheet.getCTWorksheet().isSetLegacyDrawing()) {
       return null;
     }
@@ -358,7 +358,7 @@ final class ExcelSheetAnnotationSupport {
     return null;
   }
 
-  private static String vmlDrawingRelationId(XSSFSheet sheet) {
+  static String vmlDrawingRelationId(XSSFSheet sheet) {
     for (RelationPart relationPart : sheet.getRelationParts()) {
       if (relationPart.getDocumentPart() instanceof XSSFVMLDrawing) {
         return relationPart.getRelationship().getId();
