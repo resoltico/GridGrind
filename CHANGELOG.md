@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Sheet copy now repairs embedded-object sheet relationships that Apache POI XSSF `cloneSheet`
+  leaves behind for OLE package parts, so copied embedded objects survive in-memory inspection,
+  save/reopen, and the reproduced Jazzer `COPY_SHEET` round-trip regression. The failing fuzz case
+  is now promoted as a committed success seed.
+- The release closeout protocol is now executable instead of prose-only. GridGrind now ships
+  `scripts/verify-release-primary-checkout.sh`, a dedicated shell regression for it, and updated
+  release docs/check wiring so releasing from a disposable worktree cannot quietly leave the
+  primary checkout behind `origin/main` with stale version-bearing files and misleading overlays.
+
 ## [0.50.0] - 2026-04-22
 
 ### Fixed

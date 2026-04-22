@@ -30,6 +30,7 @@
 #   scripts/test-selector-contract-surface.sh
 #   scripts/test-verify-release-merge-handoff.sh
 #   scripts/test-verify-release-candidate-tag.sh
+#   scripts/test-verify-release-primary-checkout.sh
 #   scripts/test-verify-container-publication.sh
 #   scripts/test-publication-contract.sh
 #
@@ -140,7 +141,7 @@ print_usage() {
         '  1. check coverage' \
         '  2. jazzer check' \
         '  3. :cli:shadowJar' \
-        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar && scripts/test-check-process-support.sh && scripts/test-contract-module-split.sh && scripts/test-explicit-import-gate.sh && scripts/test-jazzer-run-lock.sh && scripts/test-selector-contract-surface.sh && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
+        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar && scripts/test-check-process-support.sh && scripts/test-contract-module-split.sh && scripts/test-explicit-import-gate.sh && scripts/test-jazzer-run-lock.sh && scripts/test-selector-contract-surface.sh && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-release-primary-checkout.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
         '  5. scripts/docker-smoke.sh' \
         '' \
         'Supported options:' \
@@ -749,6 +750,7 @@ run_shell_stage 'shell-syntax' 'Stage 4/5: checking release-surface shell script
         "'"${repo_root}"'/scripts/test-selector-contract-surface.sh"
         "'"${repo_root}"'/scripts/test-verify-release-merge-handoff.sh"
         "'"${repo_root}"'/scripts/test-verify-release-candidate-tag.sh"
+        "'"${repo_root}"'/scripts/test-verify-release-primary-checkout.sh"
         "'"${repo_root}"'/scripts/test-verify-cli-contract.sh"
         "'"${repo_root}"'/scripts/test-verify-container-publication.sh"
         "'"${repo_root}"'/scripts/test-publication-contract.sh"
