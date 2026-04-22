@@ -56,6 +56,10 @@ class GridGrindMarkdownDocsAuditTest {
         if (normalizedTarget.isEmpty()) {
           continue;
         }
+        if (normalizedTarget.startsWith("/")) {
+          brokenLinks.add(path + " -> " + target + " (absolute filesystem paths are not allowed)");
+          continue;
+        }
         if (!path.getParent().resolve(normalizedTarget).normalize().toFile().exists()) {
           brokenLinks.add(path + " -> " + target);
         }
