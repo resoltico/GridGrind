@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Exercise the release merge-handoff verifier against disposable Git repositories and a fake
-# GitHub CLI so the post-merge CI wait gate stays regression-tested without touching the network.
+# Exercise the release merge-handoff verifier against disposable Git repositories plus fake Git and
+# GitHub CLIs so the post-merge CI wait gate stays regression-tested without depending on network
+# or local clone/push transport behavior.
 
 set -euo pipefail
 
@@ -25,24 +26,21 @@ resolve_script_dir() {
 create_repo() {
     local target_dir=$1
     local version=$2
-    local origin_dir="${target_dir}/origin.git"
     local worktree_dir="${target_dir}/worktree"
 
-    git init --bare "${origin_dir}" >/dev/null
-    git clone "${origin_dir}" "${worktree_dir}" >/dev/null 2>&1
-
     (
+        git init "${worktree_dir}" >/dev/null
         cd "${worktree_dir}"
         git config user.name "GridGrind Test"
         git config user.email "gridgrind-test@example.com"
         git checkout -b main >/dev/null 2>&1
+        git remote add origin "${target_dir}/origin.git"
         cat > gradle.properties <<EOF
 version=${version}
 gridgrindDescription=GridGrind test description
 EOF
         git add gradle.properties
         git commit -m "Initial merge candidate" >/dev/null
-        git push -u origin main >/dev/null 2>&1
     )
 
     printf '%s\n' "${worktree_dir}"
@@ -51,10 +49,16 @@ EOF
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly verify_script="${repo_root}/scripts/verify-release-merge-handoff.sh"
+readonly real_git="$(command -v git)"
 
 [[ -x "${verify_script}" ]] || die "missing executable verifier script at ${verify_script}"
+[[ -n "${real_git}" ]] || die "failed to resolve git executable"
 
-test_root="$(mktemp -d)"
+readonly temp_parent="${repo_root}/tmp/test-verify-release-merge-handoff"
+mkdir -p "${temp_parent}"
+test_root="${temp_parent}/run.$$"
+rm -rf "${test_root}"
+mkdir -p "${test_root}"
 cleanup() {
     rm -rf "${test_root}"
 }
@@ -109,14 +113,37 @@ esac
 EOF
 chmod +x "${fake_bin}/gh"
 
+cat > "${fake_bin}/git" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+
+real_git="$(printf '%s' "${real_git}")"
+
+if [[ "\${1:-}" == "fetch" && "\${2:-}" == "--no-tags" && "\${3:-}" == "origin" ]]; then
+    branch_name="\${4:-}"
+    [[ -n "\${FAKE_REMOTE_MAIN_SHA:-}" ]] || {
+        printf 'missing FAKE_REMOTE_MAIN_SHA for fake git fetch\n' >&2
+        exit 1
+    }
+    "\${real_git}" update-ref "refs/remotes/origin/\${branch_name}" "\${FAKE_REMOTE_MAIN_SHA}"
+    exit 0
+fi
+
+exec "\${real_git}" "\$@"
+EOF
+chmod +x "${fake_bin}/git"
+
 run_verify_expect_success() {
     local worktree_dir=$1
+    local remote_head_sha=$2
+    shift
     shift
     (
         cd "${worktree_dir}"
         PATH="${fake_bin}:${PATH}" \
             FAKE_GH_REPO_FULL_NAME="example/gridgrind" \
             FAKE_GH_DEFAULT_BRANCH="main" \
+            FAKE_REMOTE_MAIN_SHA="${remote_head_sha}" \
             "$@" \
             "${verify_script}" >/dev/null
     )
@@ -124,12 +151,15 @@ run_verify_expect_success() {
 
 run_verify_expect_failure() {
     local worktree_dir=$1
+    local remote_head_sha=$2
+    shift
     shift
     (
         cd "${worktree_dir}"
         if PATH="${fake_bin}:${PATH}" \
             FAKE_GH_REPO_FULL_NAME="example/gridgrind" \
             FAKE_GH_DEFAULT_BRANCH="main" \
+            FAKE_REMOTE_MAIN_SHA="${remote_head_sha}" \
             "$@" \
             "${verify_script}" >/dev/null 2>&1; then
             die "verifier unexpectedly succeeded"
@@ -138,14 +168,17 @@ run_verify_expect_failure() {
 }
 
 success_repo="$(create_repo "${test_root}/success" "9.9.9")"
+readonly success_sha="$(git -C "${success_repo}" rev-parse HEAD)"
 successful_checks="$(printf 'Check\tcompleted\tsuccess\nDocker smoke\tcompleted\tsuccess')"
 run_verify_expect_success \
     "${success_repo}" \
+    "${success_sha}" \
     env \
     FAKE_GH_CHECK_RUNS_TSV="${successful_checks}" \
     GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS=0
 
 delayed_repo="$(create_repo "${test_root}/delayed" "8.8.8")"
+readonly delayed_sha="$(git -C "${delayed_repo}" rev-parse HEAD)"
 readonly delayed_checks_file="${test_root}/delayed-checks.tsv"
 printf 'Check\tin_progress\t\nDocker smoke\tqueued\t\n' > "${delayed_checks_file}"
 (
@@ -154,37 +187,37 @@ printf 'Check\tin_progress\t\nDocker smoke\tqueued\t\n' > "${delayed_checks_file
 ) &
 run_verify_expect_success \
     "${delayed_repo}" \
+    "${delayed_sha}" \
     env \
     FAKE_GH_CHECK_RUNS_FILE="${delayed_checks_file}" \
     GRIDGRIND_RELEASE_CHECK_POLL_INTERVAL_SECONDS=1 \
     GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS=5
 
 failure_repo="$(create_repo "${test_root}/failure" "7.7.7")"
+readonly failure_sha="$(git -C "${failure_repo}" rev-parse HEAD)"
 run_verify_expect_failure \
     "${failure_repo}" \
+    "${failure_sha}" \
     env \
     FAKE_GH_CHECK_RUNS_TSV="$(printf 'Check\tcompleted\tsuccess\nDocker smoke\tcompleted\tfailure')" \
     GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS=0
 
 stale_repo="$(create_repo "${test_root}/stale" "6.6.6")"
-readonly stale_origin_dir="${test_root}/stale/origin.git"
-readonly stale_updater_dir="${test_root}/stale/updater"
-git clone "${stale_origin_dir}" "${stale_updater_dir}" >/dev/null 2>&1
+readonly stale_local_sha="$(git -C "${stale_repo}" rev-parse HEAD)"
 (
-    cd "${stale_updater_dir}"
-    git config user.name "GridGrind Test"
-    git config user.email "gridgrind-test@example.com"
-    git checkout main >/dev/null 2>&1
+    cd "${stale_repo}"
     cat > gradle.properties <<'EOF'
 version=6.6.6
 gridgrindDescription=GridGrind updated test description
 EOF
     git add gradle.properties
     git commit -m "Advance origin main" >/dev/null
-    git push origin main >/dev/null 2>&1
 )
+readonly stale_remote_sha="$(git -C "${stale_repo}" rev-parse HEAD)"
+git -C "${stale_repo}" reset --hard "${stale_local_sha}" >/dev/null
 run_verify_expect_failure \
     "${stale_repo}" \
+    "${stale_remote_sha}" \
     env \
     FAKE_GH_CHECK_RUNS_TSV="${successful_checks}" \
     GRIDGRIND_RELEASE_CHECK_TIMEOUT_SECONDS=0

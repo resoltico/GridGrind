@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
 import dev.erst.gridgrind.excel.ExcelIgnoredErrorType;
@@ -287,6 +286,48 @@ class DtoEdgeCoverageTest {
                         null))
             .getMessage());
     assertEquals(
+        "previewContentType requires previewFormat",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new DrawingObjectReport.SignatureLine(
+                        "Signature",
+                        twoCell,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "image/png",
+                        null,
+                        null,
+                        null,
+                        null))
+            .getMessage());
+    assertEquals(
+        "previewHeightPixels must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new DrawingObjectReport.SignatureLine(
+                        "Signature",
+                        twoCell,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        ExcelPictureFormat.PNG,
+                        "image/png",
+                        1L,
+                        "sha",
+                        10,
+                        -1))
+            .getMessage());
+    assertEquals(
         "description must not be blank",
         assertThrows(
                 IllegalArgumentException.class,
@@ -361,16 +402,10 @@ class DtoEdgeCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new ChartReport.Pie(
-                        "Pie",
-                        new DrawingAnchorReport.Absolute(0L, 0L, 1L, 1L, null),
-                        new ChartReport.Title.None(),
-                        new ChartReport.Legend.Hidden(),
-                        ExcelChartDisplayBlanksAs.ZERO,
-                        false,
                         false,
                         -1,
                         List.of(
-                            new ChartReport.Series(
+                            chartSeries(
                                 new ChartReport.Title.Text("S1"),
                                 new ChartReport.DataSource.StringLiteral(List.of("Jan")),
                                 new ChartReport.DataSource.NumericLiteral(null, List.of("1"))))))
@@ -378,13 +413,7 @@ class DtoEdgeCoverageTest {
     assertEquals(
         "detail must not be blank",
         assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                    new ChartReport.Unsupported(
-                        "Unsupported",
-                        new DrawingAnchorReport.Absolute(0L, 0L, 1L, 1L, null),
-                        List.of("radar"),
-                        " "))
+                IllegalArgumentException.class, () -> new ChartReport.Unsupported("RADAR", " "))
             .getMessage());
     assertEquals(
         "formula must not be blank",
@@ -820,5 +849,10 @@ class DtoEdgeCoverageTest {
         null,
         false,
         false);
+  }
+
+  private static ChartReport.Series chartSeries(
+      ChartReport.Title title, ChartReport.DataSource categories, ChartReport.DataSource values) {
+    return new ChartReport.Series(title, categories, values, null, null, null, null);
   }
 }

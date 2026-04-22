@@ -1,0 +1,107 @@
+{
+  "protocolVersion" : "V1",
+  "planId" : "signature-line-workflow",
+  "source" : {
+    "type" : "NEW"
+  },
+  "persistence" : {
+    "type" : "SAVE_AS",
+    "path" : "cli/build/generated-workbooks/gridgrind-signature-line.xlsx"
+  },
+  "steps" : [ {
+    "stepId" : "step-01-ensure-sheet",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Approvals"
+    },
+    "action" : {
+      "type" : "ENSURE_SHEET"
+    }
+  }, {
+    "stepId" : "step-02-set-signature-line",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Approvals"
+    },
+    "action" : {
+      "type" : "SET_SIGNATURE_LINE",
+      "signatureLine" : {
+        "name" : "BudgetSignature",
+        "anchor" : {
+          "type" : "TWO_CELL",
+          "from" : {
+            "columnIndex" : 1,
+            "rowIndex" : 1,
+            "dx" : 0,
+            "dy" : 0
+          },
+          "to" : {
+            "columnIndex" : 4,
+            "rowIndex" : 6,
+            "dx" : 0,
+            "dy" : 0
+          },
+          "behavior" : "MOVE_AND_RESIZE"
+        },
+        "allowComments" : false,
+        "signingInstructions" : "Review the budget before signing.",
+        "suggestedSigner" : "Ada Lovelace",
+        "suggestedSigner2" : "Finance",
+        "suggestedSignerEmail" : "ada@example.com",
+        "caption" : null,
+        "invalidStamp" : "invalid",
+        "plainSignature" : {
+          "format" : "PNG",
+          "source" : {
+            "type" : "INLINE_BASE64",
+            "base64Data" : "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+          }
+        }
+      }
+    }
+  }, {
+    "stepId" : "step-03-read-drawing-objects",
+    "target" : {
+      "type" : "ALL_ON_SHEET",
+      "sheetName" : "Approvals"
+    },
+    "query" : {
+      "type" : "GET_DRAWING_OBJECTS"
+    }
+  }, {
+    "stepId" : "step-04-move-signature-line",
+    "target" : {
+      "type" : "BY_NAME",
+      "sheetName" : "Approvals",
+      "objectName" : "BudgetSignature"
+    },
+    "action" : {
+      "type" : "SET_DRAWING_OBJECT_ANCHOR",
+      "anchor" : {
+        "type" : "TWO_CELL",
+        "from" : {
+          "columnIndex" : 5,
+          "rowIndex" : 1,
+          "dx" : 0,
+          "dy" : 0
+        },
+        "to" : {
+          "columnIndex" : 8,
+          "rowIndex" : 6,
+          "dx" : 0,
+          "dy" : 0
+        },
+        "behavior" : "MOVE_AND_RESIZE"
+      }
+    }
+  }, {
+    "stepId" : "step-05-read-drawing-objects-after-move",
+    "target" : {
+      "type" : "ALL_ON_SHEET",
+      "sheetName" : "Approvals"
+    },
+    "query" : {
+      "type" : "GET_DRAWING_OBJECTS"
+    }
+  } ]
+}

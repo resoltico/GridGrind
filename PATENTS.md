@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.49.0"
+version: "0.50.0"
 domain: LEGAL
 updated: "2026-04-19"
 route:

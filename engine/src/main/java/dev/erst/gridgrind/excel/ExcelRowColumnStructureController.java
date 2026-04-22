@@ -910,7 +910,7 @@ final class ExcelRowColumnStructureController {
           continue;
         }
         cell.removeHyperlink();
-        cell.removeCellComment();
+        ExcelSheetAnnotationSupport.clearCellComment(cell);
         row.removeCell(cell);
       }
     }

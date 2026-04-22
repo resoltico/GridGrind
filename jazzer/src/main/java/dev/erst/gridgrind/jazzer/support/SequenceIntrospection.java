@@ -162,11 +162,15 @@ public final class SequenceIntrospection {
       case WorkbookCommand.SetCell _ -> "SET_CELL";
       case WorkbookCommand.SetRange _ -> "SET_RANGE";
       case WorkbookCommand.ClearRange _ -> "CLEAR_RANGE";
+      case WorkbookCommand.SetArrayFormula _ -> "SET_ARRAY_FORMULA";
+      case WorkbookCommand.ClearArrayFormula _ -> "CLEAR_ARRAY_FORMULA";
+      case WorkbookCommand.ImportCustomXmlMapping _ -> "IMPORT_CUSTOM_XML_MAPPING";
       case WorkbookCommand.SetHyperlink _ -> "SET_HYPERLINK";
       case WorkbookCommand.ClearHyperlink _ -> "CLEAR_HYPERLINK";
       case WorkbookCommand.SetComment _ -> "SET_COMMENT";
       case WorkbookCommand.ClearComment _ -> "CLEAR_COMMENT";
       case WorkbookCommand.SetPicture _ -> "SET_PICTURE";
+      case WorkbookCommand.SetSignatureLine _ -> "SET_SIGNATURE_LINE";
       case WorkbookCommand.SetChart _ -> "SET_CHART";
       case WorkbookCommand.SetPivotTable _ -> "SET_PIVOT_TABLE";
       case WorkbookCommand.SetShape _ -> "SET_SHAPE";

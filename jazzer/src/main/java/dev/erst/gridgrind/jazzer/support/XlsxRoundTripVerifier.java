@@ -517,6 +517,27 @@ public final class XlsxRoundTripVerifier {
                   recordValueBearing(
                       valueBearingCoordinatesBySheet, clearRange.sheetName(), coordinate, false);
                 });
+        case WorkbookCommand.SetArrayFormula setArrayFormula ->
+            forEachCell(
+                setArrayFormula.range(),
+                coordinate -> {
+                  recordCandidate(
+                      candidateCoordinatesBySheet, setArrayFormula.sheetName(), coordinate);
+                  recordValueBearing(
+                      valueBearingCoordinatesBySheet,
+                      setArrayFormula.sheetName(),
+                      coordinate,
+                      true);
+                });
+        case WorkbookCommand.ClearArrayFormula clearArrayFormula -> {
+          CellCoordinate coordinate = CellCoordinate.fromAddress(clearArrayFormula.address());
+          recordCandidate(candidateCoordinatesBySheet, clearArrayFormula.sheetName(), coordinate);
+          recordValueBearing(
+              valueBearingCoordinatesBySheet, clearArrayFormula.sheetName(), coordinate, false);
+        }
+        case WorkbookCommand.ImportCustomXmlMapping _ -> {
+          // Custom-XML imports mutate workbook content outside the fuzz model's candidate-cell set.
+        }
         case WorkbookCommand.SetHyperlink setHyperlink ->
             recordCandidate(
                 candidateCoordinatesBySheet,
@@ -539,6 +560,9 @@ public final class XlsxRoundTripVerifier {
                 CellCoordinate.fromAddress(clearComment.address()));
         case WorkbookCommand.SetPicture _ -> {
           // Drawing objects are validated through workbook readability, not candidate cell grids.
+        }
+        case WorkbookCommand.SetSignatureLine _ -> {
+          // Signature lines are validated through workbook readability, not candidate cell grids.
         }
         case WorkbookCommand.SetShape _ -> {
           // Drawing objects are validated through workbook readability, not candidate cell grids.

@@ -89,6 +89,13 @@ final class WorkbookStepValidation {
               Map.entry(MutationAction.SetRange.class, targetTypes(RangeSelector.ByRange.class)),
               Map.entry(MutationAction.ClearRange.class, targetTypes(RangeSelector.ByRange.class)),
               Map.entry(
+                  MutationAction.SetArrayFormula.class, targetTypes(RangeSelector.ByRange.class)),
+              Map.entry(
+                  MutationAction.ClearArrayFormula.class,
+                  targetTypes(CellSelector.ByAddress.class)),
+              Map.entry(
+                  MutationAction.ImportCustomXmlMapping.class, targetTypes(WorkbookSelector.class)),
+              Map.entry(
                   MutationAction.SetHyperlink.class,
                   targetTypes(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class)),
               Map.entry(
@@ -101,6 +108,8 @@ final class WorkbookStepValidation {
                   MutationAction.ClearComment.class,
                   targetTypes(CellSelector.ByAddress.class, TableCellSelector.ByColumnName.class)),
               Map.entry(MutationAction.SetPicture.class, targetTypes(SheetSelector.ByName.class)),
+              Map.entry(
+                  MutationAction.SetSignatureLine.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(MutationAction.SetChart.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(
                   MutationAction.SetPivotTable.class,
@@ -162,6 +171,11 @@ final class WorkbookStepValidation {
               Map.entry(
                   InspectionQuery.GetWorkbookProtection.class, targetTypes(WorkbookSelector.class)),
               Map.entry(
+                  InspectionQuery.GetCustomXmlMappings.class, targetTypes(WorkbookSelector.class)),
+              Map.entry(
+                  InspectionQuery.ExportCustomXmlMapping.class,
+                  targetTypes(WorkbookSelector.class)),
+              Map.entry(
                   InspectionQuery.AnalyzeWorkbookFindings.class,
                   targetTypes(WorkbookSelector.class)),
               Map.entry(
@@ -174,6 +188,7 @@ final class WorkbookStepValidation {
                   targetTypes(NamedRangeSelector.class)),
               Map.entry(
                   InspectionQuery.GetSheetSummary.class, targetTypes(SheetSelector.ByName.class)),
+              Map.entry(InspectionQuery.GetArrayFormulas.class, targetTypes(SheetSelector.class)),
               Map.entry(
                   InspectionQuery.GetMergedRegions.class, targetTypes(SheetSelector.ByName.class)),
               Map.entry(

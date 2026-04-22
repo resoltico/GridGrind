@@ -28,6 +28,7 @@ import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
 import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartBarGrouping;
 import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
@@ -269,7 +270,7 @@ class AssertionCoverageTest {
   }
 
   private static ChartReport chartReport() {
-    return new ChartReport.Bar(
+    return new ChartReport(
         "Revenue",
         new dev.erst.gridgrind.contract.dto.DrawingAnchorReport.Absolute(
             1L, 2L, 3L, 4L, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
@@ -277,18 +278,27 @@ class AssertionCoverageTest {
         new ChartReport.Legend.Visible(ExcelChartLegendPosition.RIGHT),
         ExcelChartDisplayBlanksAs.GAP,
         true,
-        false,
-        ExcelChartBarDirection.COLUMN,
         List.of(
-            new ChartReport.Axis(
-                ExcelChartAxisKind.CATEGORY,
-                ExcelChartAxisPosition.BOTTOM,
-                ExcelChartAxisCrosses.AUTO_ZERO,
-                true)),
-        List.of(
-            new ChartReport.Series(
-                new ChartReport.Title.Text("Series 1"),
-                new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
-                new ChartReport.DataSource.NumericLiteral("#,##0", List.of("1", "2")))));
+            new ChartReport.Bar(
+                false,
+                ExcelChartBarDirection.COLUMN,
+                ExcelChartBarGrouping.CLUSTERED,
+                null,
+                null,
+                List.of(
+                    new ChartReport.Axis(
+                        ExcelChartAxisKind.CATEGORY,
+                        ExcelChartAxisPosition.BOTTOM,
+                        ExcelChartAxisCrosses.AUTO_ZERO,
+                        true)),
+                List.of(
+                    new ChartReport.Series(
+                        new ChartReport.Title.Text("Series 1"),
+                        new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
+                        new ChartReport.DataSource.NumericLiteral("#,##0", List.of("1", "2")),
+                        null,
+                        null,
+                        null,
+                        null)))));
   }
 }

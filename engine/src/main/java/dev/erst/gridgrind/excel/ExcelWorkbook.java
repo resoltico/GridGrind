@@ -29,6 +29,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   private final ExcelWorkbookFormulas formulas;
   private final ExcelTableController tableController;
   private final ExcelPivotTableController pivotTableController;
+  private final ExcelCustomXmlController customXmlController;
   private final ExcelSheetCopyController sheetCopyController;
   private final ExcelSheetStateController sheetStateController;
   private final Path sourcePath;
@@ -71,6 +72,7 @@ public final class ExcelWorkbook implements AutoCloseable {
     this.formulas = new ExcelWorkbookFormulas(this);
     this.tableController = new ExcelTableController();
     this.pivotTableController = new ExcelPivotTableController();
+    this.customXmlController = new ExcelCustomXmlController();
     this.sheetCopyController = new ExcelSheetCopyController();
     this.sheetStateController = new ExcelSheetStateController();
     this.sourcePath = sourcePath;
@@ -115,7 +117,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   public static ExcelWorkbook open(Path workbookPath, ExcelOoxmlOpenOptions openOptions)
       throws IOException {
     return ExcelOoxmlPackageSecuritySupport.openWorkbook(
-        workbookPath, openOptions, Files::createTempFile);
+        workbookPath, openOptions, ExcelTempFiles::createManagedTempFile);
   }
 
   /**
@@ -171,7 +173,7 @@ public final class ExcelWorkbook implements AutoCloseable {
       ExcelOoxmlOpenOptions openOptions)
       throws IOException {
     return ExcelOoxmlPackageSecuritySupport.openWorkbook(
-        workbookPath, formulaEnvironment, openOptions, Files::createTempFile);
+        workbookPath, formulaEnvironment, openOptions, ExcelTempFiles::createManagedTempFile);
   }
 
   /**
@@ -319,6 +321,23 @@ public final class ExcelWorkbook implements AutoCloseable {
   /** Sets one sheet visibility while preserving a visible active selected sheet. */
   public ExcelWorkbook setSheetVisibility(String sheetName, ExcelSheetVisibility visibility) {
     return sheetStateController.setSheetVisibility(this, sheetName, visibility);
+  }
+
+  /** Returns factual workbook custom-XML mapping metadata. */
+  public List<ExcelCustomXmlMappingSnapshot> customXmlMappings() {
+    return customXmlController.mappings(workbook);
+  }
+
+  /** Exports XML for one existing workbook custom-XML mapping. */
+  public ExcelCustomXmlExportSnapshot exportCustomXmlMapping(
+      ExcelCustomXmlMappingLocator locator, boolean validateSchema, String encoding) {
+    return customXmlController.exportMapping(workbook, locator, validateSchema, encoding);
+  }
+
+  /** Imports one XML document into one existing workbook custom-XML mapping. */
+  public ExcelWorkbook importCustomXmlMapping(ExcelCustomXmlImportDefinition definition) {
+    customXmlController.importMapping(workbook, definition);
+    return this;
   }
 
   /** Enables sheet protection with the exact supported lock flags. */
@@ -614,7 +633,7 @@ public final class ExcelWorkbook implements AutoCloseable {
   /** Saves the workbook to disk with optional OOXML package-encryption and signing settings. */
   public void save(Path workbookPath, ExcelOoxmlPersistenceOptions persistenceOptions)
       throws IOException {
-    save(workbookPath, persistenceOptions, Files::createTempFile);
+    save(workbookPath, persistenceOptions, ExcelTempFiles::createManagedTempFile);
   }
 
   /** Saves the workbook to disk with explicit package-security temp-file ownership. */

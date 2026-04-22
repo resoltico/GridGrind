@@ -9,15 +9,22 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 final class ExcelSheetDrawingSupport {
   private final Sheet sheet;
   private final ExcelDrawingController drawingController;
+  private final ExcelFormulaRuntime formulaRuntime;
 
   ExcelSheetDrawingSupport(Sheet sheet) {
-    this(sheet, new ExcelDrawingController());
+    this(sheet, new ExcelDrawingController(), null);
   }
 
   ExcelSheetDrawingSupport(Sheet sheet, ExcelDrawingController drawingController) {
+    this(sheet, drawingController, null);
+  }
+
+  ExcelSheetDrawingSupport(
+      Sheet sheet, ExcelDrawingController drawingController, ExcelFormulaRuntime formulaRuntime) {
     this.sheet = Objects.requireNonNull(sheet, "sheet must not be null");
     this.drawingController =
         Objects.requireNonNull(drawingController, "drawingController must not be null");
+    this.formulaRuntime = formulaRuntime;
   }
 
   ExcelSheet setPicture(ExcelPictureDefinition definition, ExcelSheet owner) {
@@ -26,9 +33,15 @@ final class ExcelSheetDrawingSupport {
     return owner;
   }
 
+  ExcelSheet setSignatureLine(ExcelSignatureLineDefinition definition, ExcelSheet owner) {
+    Objects.requireNonNull(definition, "definition must not be null");
+    drawingController.setSignatureLine(xssfSheet(), definition);
+    return owner;
+  }
+
   ExcelSheet setChart(ExcelChartDefinition definition, ExcelSheet owner) {
     Objects.requireNonNull(definition, "definition must not be null");
-    drawingController.setChart(xssfSheet(), definition);
+    drawingController.setChart(xssfSheet(), definition, formulaRuntime);
     return owner;
   }
 
@@ -59,11 +72,11 @@ final class ExcelSheetDrawingSupport {
   }
 
   List<ExcelDrawingObjectSnapshot> drawingObjects() {
-    return drawingController.drawingObjects(xssfSheet());
+    return drawingController.drawingObjects(xssfSheet(), formulaRuntime);
   }
 
   List<ExcelChartSnapshot> charts() {
-    return drawingController.charts(xssfSheet());
+    return drawingController.charts(xssfSheet(), formulaRuntime);
   }
 
   ExcelDrawingObjectPayload drawingObjectPayload(String objectName) {

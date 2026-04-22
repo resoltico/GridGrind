@@ -1,0 +1,129 @@
+{
+  "protocolVersion" : "V1",
+  "planId" : "array-formula-workflow",
+  "source" : {
+    "type" : "NEW"
+  },
+  "persistence" : {
+    "type" : "NONE"
+  },
+  "steps" : [ {
+    "stepId" : "ensure-calc-sheet",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Calc"
+    },
+    "action" : {
+      "type" : "ENSURE_SHEET"
+    }
+  }, {
+    "stepId" : "seed-source-data",
+    "target" : {
+      "type" : "BY_RANGE",
+      "sheetName" : "Calc",
+      "range" : "A1:C4"
+    },
+    "action" : {
+      "type" : "SET_RANGE",
+      "rows" : [ [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Month"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Plan"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Actual"
+        }
+      } ], [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Jan"
+        }
+      }, {
+        "type" : "NUMBER",
+        "number" : 10.0
+      }, {
+        "type" : "NUMBER",
+        "number" : 12.0
+      } ], [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Feb"
+        }
+      }, {
+        "type" : "NUMBER",
+        "number" : 18.0
+      }, {
+        "type" : "NUMBER",
+        "number" : 16.0
+      } ], [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Mar"
+        }
+      }, {
+        "type" : "NUMBER",
+        "number" : 15.0
+      }, {
+        "type" : "NUMBER",
+        "number" : 21.0
+      } ] ]
+    }
+  }, {
+    "stepId" : "author-array-group",
+    "target" : {
+      "type" : "BY_RANGE",
+      "sheetName" : "Calc",
+      "range" : "D2:D4"
+    },
+    "action" : {
+      "type" : "SET_ARRAY_FORMULA",
+      "formula" : {
+        "source" : {
+          "type" : "INLINE",
+          "text" : "B2:B4*C2:C4"
+        }
+      }
+    }
+  }, {
+    "stepId" : "read-array-groups",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Calc"
+    },
+    "query" : {
+      "type" : "GET_ARRAY_FORMULAS"
+    }
+  }, {
+    "stepId" : "clear-array-group",
+    "target" : {
+      "type" : "BY_ADDRESS",
+      "sheetName" : "Calc",
+      "address" : "D3"
+    },
+    "action" : {
+      "type" : "CLEAR_ARRAY_FORMULA"
+    }
+  }, {
+    "stepId" : "read-array-groups-after-clear",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Calc"
+    },
+    "query" : {
+      "type" : "GET_ARRAY_FORMULAS"
+    }
+  } ]
+}

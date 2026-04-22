@@ -56,7 +56,8 @@ class ExcelWorkbookIntrospectorTest {
 
   @Test
   void selectsNamedRangesByExactSelectorsAndRejectsMissingSelectors() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-introspector-ranges-", ".xlsx");
+    Path workbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-introspector-ranges-", ".xlsx");
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Budget");
@@ -274,7 +275,8 @@ class ExcelWorkbookIntrospectorTest {
 
   @Test
   void getFormulaSurfaceAndNamedRangeSurfaceRespectSelections() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-introspector-surface-", ".xlsx");
+    Path workbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-introspector-surface-", ".xlsx");
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       var budget = workbook.createSheet("Budget");
@@ -425,7 +427,8 @@ class ExcelWorkbookIntrospectorTest {
 
   @Test
   void schemaCountsBooleanAndErrorCellTypes() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-introspector-types-", ".xlsx");
+    Path workbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-introspector-types-", ".xlsx");
     try (XSSFWorkbook poiWorkbook = new XSSFWorkbook()) {
       var poiSheet = poiWorkbook.createSheet("Data");
       poiSheet.createRow(0).createCell(0).setCellValue("Flag");

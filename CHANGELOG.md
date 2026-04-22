@@ -5,6 +5,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.50.0] - 2026-04-22
+
+### Fixed
+
+- GridGrind now exposes Apache POI/XSSF workbook custom-XML mapping workflows as first-class
+  public contract operations. `IMPORT_CUSTOM_XML_MAPPING`, `GET_CUSTOM_XML_MAPPINGS`, and
+  `EXPORT_CUSTOM_XML_MAPPING` are now wired end to end across the contract, engine, executor,
+  shipped examples, and public docs, with source-backed XML import support and focused regression
+  coverage.
+- Dedicated array-formula workflows are now documented truthfully across the public surface.
+  README, reference docs, and the POI/XSSF capability inventory now distinguish scalar
+  `FORMULA` cell writes from `SET_ARRAY_FORMULA` / `CLEAR_ARRAY_FORMULA` / `GET_ARRAY_FORMULAS`
+  instead of incorrectly describing array formulas as wholly unsupported.
+- The Apache POI/XSSF public docs now match the audited Apache POI 5.5.1 surface more
+  truthfully. `docs/POI_EXCEL_CAPABILITY_INVENTORY.md` no longer overstates upstream support for
+  sparklines or threaded comments, now splits custom XML mappings from slicers, and now lists
+  previously omitted non-productized families such as signature lines and broader XDDF chart
+  authoring. `docs/LIMITATIONS.md` now states that row/column worksheet bounds are already
+  enforced on relevant request paths, and it no longer implies that Apache POI XSSF can only
+  handle plain `.xlsx` files. Contract-side doc and POI-runtime audit tests now fail the build if
+  these claims drift again or if the upstream jar surface changes underneath the published
+  inventory.
+- Sheet copy now rides POI XSSF's native clone path for the drawing family and then reapplies
+  GridGrind-owned repair passes for workbook-core details such as formulas, raw data validations,
+  conditional formatting, tables, sheet-owned autofilters, local names, comments, print layout,
+  and protection metadata. Copied sheets now preserve supported pictures and charts instead of
+  silently dropping them.
+- Multi-plot combo-chart authoring is now verified directly in the engine test suite, and the
+  public POI/XSSF capability inventory and operations docs now describe combo charts as a shipped
+  supported capability instead of an undocumented gap.
+- Signature-line drawing metadata is now exposed as a first-class `.xlsx` surface. GridGrind now
+  ships `SET_SIGNATURE_LINE`, factual `SIGNATURE_LINE` drawing-object readback, authored anchor
+  replacement and delete support for named signature lines, a generated signature-line example,
+  and public docs that describe the real XSSF picture-format surface (`GIF`, `TIFF`, `EPS`,
+  `BMP`, and `WPG` included) instead of the old narrower list.
+- Release-surface shell verification is now resilient on this macOS baseline too. The packaged
+  CLI/publication verifiers and their regression scripts now use repo-local disposable scratch
+  under `tmp/` instead of brittle `/var/folders` temp allocation, and the release merge-handoff
+  plus candidate-tag regression harnesses now fake the remote Git fetch surface directly instead
+  of depending on flaky local clone/push transport behavior.
+- `--print-protocol-catalog --operation` now exposes the nested and plain type groups that
+  operators actually need for black-box request authoring. Type-group lookups such as
+  `nestedTypes:cellInputTypes` and `plainTypes:chartInputType` now work directly instead of
+  forcing callers to download and parse the full catalog just to discover cell, chart, or source
+  payload shapes.
+- Formula-backed chart references now evaluate authoritatively during chart authoring and
+  readback instead of trusting stale worksheet or OOXML chart caches. Reference-backed series and
+  formula titles now round-trip deterministically through save/reopen and the reproduced Jazzer
+  crash is promoted as a committed success regression seed.
+- Root `./check.sh` stall diagnostics now own diagnostic subprocess lifecycles end to end. The
+  timeout path was extracted into a dedicated process-support helper, `capture_with_timeout` now
+  escalates from `TERM` to `KILL` across the full captured process tree, and a shell regression
+  now proves that TERM-ignoring parent/child trees do not leave orphaned `jcmd`-style processes
+  behind.
+
 ## [0.49.0] - 2026-04-21
 
 ### Changed
@@ -1970,7 +2025,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.49.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.50.0...HEAD
+[0.50.0]: https://github.com/resoltico/GridGrind/compare/v0.49.0...v0.50.0
 [0.49.0]: https://github.com/resoltico/GridGrind/compare/v0.48.0...v0.49.0
 [0.48.0]: https://github.com/resoltico/GridGrind/compare/v0.47.0...v0.48.0
 [0.47.0]: https://github.com/resoltico/GridGrind/compare/v0.46.0...v0.47.0

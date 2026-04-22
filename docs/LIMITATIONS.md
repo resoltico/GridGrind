@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.49.0"
+version: "0.50.0"
 domain: LIMITATIONS
-updated: "2026-04-20"
+updated: "2026-04-21"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit"]
@@ -21,8 +21,9 @@ change to a limit value propagates consistently across all three surfaces.
   error with a precise message before any workbook work. These are the limits most likely to
   change as the product evolves.
 - **Excel/POI** — structural ceilings of the `.xlsx` format reflected in Apache POI
-  `SpreadsheetVersion.EXCEL2007`. GridGrind does not currently enforce these at request time;
-  violations produce undefined POI behavior or corrupt output.
+  `SpreadsheetVersion.EXCEL2007`. Some, such as addressed row/column bounds, are already enforced
+  on relevant public request paths. Others remain format ceilings rather than universal preflight
+  guards and can still surface as raw POI failures or invalid output.
 
 **Primary references:**
 - Apache POI 5.5.1 SpreadsheetVersion:
@@ -74,8 +75,9 @@ streaming is introduced.
 | **Code** | `WorkbookPlan.requireXlsxWorkbookPath` |
 | **UX** | `--help` Limits section |
 
-GridGrind uses Apache POI XSSF, which implements only the `.xlsx` (OOXML) format. `.xls`
-(BIFF8/HSSF), `.xlsm` (macro-enabled), and `.xlsb` (binary) are not supported.
+GridGrind intentionally narrows Apache POI's broader OOXML workbook support to plain `.xlsx`.
+`.xls` (BIFF8/HSSF), macro-enabled `.xlsm`, and `.xlsb` (binary) are all rejected by the product
+contract even though Apache POI can preserve and extract VBA-bearing `.xlsm` packages.
 
 ---
 
@@ -163,19 +165,27 @@ zero twips are also rejected.
 ## Excel / Apache POI Structural Limits
 
 These are hard ceilings of the `.xlsx` format. They are reflected in
-`SpreadsheetVersion.EXCEL2007` in Apache POI 5.5.1. GridGrind does not currently enforce them
-at request time; exceeding them produces undefined POI behavior or a corrupt output file.
+`SpreadsheetVersion.EXCEL2007` in Apache POI 5.5.1. GridGrind already preflights some of them
+where the public request model exposes direct row/column addresses, spans, or print bands. The
+remaining entries in this section should be read as format ceilings, not a promise that every path
+fails early before POI sees an oversized workbook shape.
 
 ### LIM-008 — Maximum Rows per Worksheet
 
 | Field | Value |
 |:------|:------|
-| **Category** | Excel/POI |
+| **Category** | GridGrind (enforces Excel limit for addressed row indices and bands) |
 | **Limit** | 1,048,576 rows (2^20) |
 | **POI constant** | `SpreadsheetVersion.EXCEL2007.getMaxRows()` returns `0x100000` |
 | **Excel spec** | 1,048,576 |
+| **Code** | `ExcelRowSpan.MAX_ROW_INDEX`; `SelectorSupport.requireRowIndexWithinBounds // LIM-008`; `MutationAction.Validation.requireRowIndex // LIM-008`; `PrintTitleRowsInput.MAX_ROW_INDEX` |
+| **UX** | Structured `INVALID_REQUEST` bounds failures for row selectors, structural edits, and print-title row bands |
 
 Last valid zero-based row index: 1,048,575.
+
+GridGrind already rejects out-of-bounds addressed rows on the public request path for selectors,
+row-band operations, row-structural edits, and print-title row bands instead of deferring those
+errors to Apache POI.
 
 ---
 
@@ -183,12 +193,17 @@ Last valid zero-based row index: 1,048,575.
 
 | Field | Value |
 |:------|:------|
-| **Category** | Excel/POI |
+| **Category** | GridGrind (enforces Excel limit for addressed column indices and bands) |
 | **Limit** | 16,384 columns (2^14, column XFD) |
 | **POI constant** | `SpreadsheetVersion.EXCEL2007.getMaxColumns()` returns `0x4000` |
 | **Excel spec** | 16,384 |
+| **Code** | `ExcelColumnSpan.MAX_COLUMN_INDEX`; `SelectorSupport.requireColumnIndexWithinBounds // LIM-009`; `MutationAction.Validation.requireColumnIndex // LIM-009`; `PrintTitleColumnsInput.MAX_COLUMN_INDEX` |
+| **UX** | Structured `INVALID_REQUEST` bounds failures for column selectors, structural edits, and print-title column bands |
 
 Last valid zero-based column index: 16,383.
+
+GridGrind already rejects out-of-bounds addressed columns on the public request path for
+selectors, column-band operations, column-structural edits, and print-title column bands.
 
 ---
 
@@ -419,8 +434,8 @@ All other reads and mutations continue to use the normal full-XSSF in-memory exe
 
 | Feature | Status |
 |:--------|:-------|
-| Macros (VBA/XLM) | Read: preserved. Write: not creatable. |
-| Charts | Supported for factual reads and authored `BAR`, `LINE`, and `PIE`; unsupported loaded chart detail is preserved and rejected for authoritative mutation. |
+| Macro-enabled OOXML (`.xlsm`) | Out of scope for the shipped GridGrind contract; LIM-002 rejects it even though Apache POI can preserve and extract VBA from `.xlsm` packages. |
+| Charts | Supported for factual reads and authored XDDF plot families `AREA`, `AREA_3D`, `BAR`, `BAR_3D`, `DOUGHNUT`, `LINE`, `LINE_3D`, `PIE`, `PIE_3D`, `RADAR`, `SCATTER`, `SURFACE`, and `SURFACE_3D`, including multi-plot combos built from those families. The remaining limitation is loaded-detail fidelity: unsupported loaded plots still surface as `UNSUPPORTED` and are preserved on unrelated edits instead of being authoritatively mutable. |
 | Pivot tables | Limited supported surface: factual reads, health analysis, and authored range-, named-range-, and table-backed pivots. |
 | `.xls`, `.xlsm`, `.xlsb` | Not supported. See LIM-002. |
 | Streaming read/write | Supported only through `execution.mode`: `EVENT_READ` summary reads (`LIM-019`) and `STREAMING_WRITE` append-oriented `NEW` workbook authoring (`LIM-020`). |

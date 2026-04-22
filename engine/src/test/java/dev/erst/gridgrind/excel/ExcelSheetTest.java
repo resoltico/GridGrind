@@ -1777,7 +1777,8 @@ class ExcelSheetTest {
       ExcelSheet sheet =
           new ExcelSheet(poiSheet, new WorkbookStyleRegistry(poiWorkbook), evaluator);
 
-      Path reachableFile = Files.createTempFile("gridgrind-hyperlink-health-", ".xlsx");
+      Path reachableFile =
+          ExcelTempFiles.createManagedTempFile("gridgrind-hyperlink-health-", ".xlsx");
       Cell validFileCell = poiSheet.createRow(0).createCell(0);
       validFileCell.setHyperlink(
           hyperlink(poiWorkbook, HyperlinkType.FILE, reachableFile.toString()));

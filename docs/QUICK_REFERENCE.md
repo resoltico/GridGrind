@@ -1,11 +1,11 @@
 ---
 afad: "3.5"
-version: "0.49.0"
+version: "0.50.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-21"
 route:
-  keywords: [gridgrind, quick-reference, snippets, json, operations, assertions, reads, introspection, analysis, expect-cell-value, expect-analysis-max-severity, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-chart, set-pivot-table, set-shape, set-embedded-object, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, delete-pivot-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, execution-calculation, evaluate-all, evaluate-targets, clear-caches-only, markrecalculateonopen, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, source-backed, inline, utf8_file, standard_input, inline_base64, file, ooxml, package-security, encryption, signing, coordinates, rowindex, columnindex, warnings]
-  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "how do I assert a cell value in gridgrind", "how do I assert workbook health in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind package security example", "how do I open an encrypted workbook in gridgrind", "how do I inspect package signatures in gridgrind", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind chart example", "gridgrind pivot table example", "how do I read pivot tables in gridgrind", "how do I lint pivot tables in gridgrind", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving", "how do I load text from a file in gridgrind", "how do I send binary data to gridgrind"]
+  keywords: [gridgrind, quick-reference, snippets, json, operations, assertions, reads, introspection, analysis, expect-cell-value, expect-analysis-max-severity, copy-paste, ensure-sheet, rename-sheet, delete-sheet, move-sheet, copy-sheet, set-active-sheet, set-selected-sheets, set-sheet-visibility, set-sheet-protection, clear-sheet-protection, set-workbook-protection, clear-workbook-protection, merge-cells, unmerge-cells, set-column-width, set-row-height, set-sheet-pane, set-sheet-zoom, set-print-layout, clear-print-layout, freeze-panes, split-panes, set-cell, set-range, set-hyperlink, clear-hyperlink, set-comment, clear-comment, set-picture, set-chart, set-pivot-table, set-shape, set-embedded-object, set-signature-line, set-drawing-object-anchor, delete-drawing-object, set-data-validation, clear-data-validations, set-autofilter, clear-autofilter, set-table, delete-table, delete-pivot-table, set-named-range, delete-named-range, apply-style, append-row, clear-range, execution-calculation, evaluate-all, evaluate-targets, clear-caches-only, markrecalculateonopen, get-cells, get-window, get-print-layout, get-package-security, get-workbook-protection, get-data-validations, get-autofilters, get-tables, get-pivot-tables, get-drawing-objects, get-charts, get-drawing-object-payload, get-sheet-schema, analyze-autofilter-health, analyze-table-health, analyze-pivot-table-health, analyze-workbook-findings, source-backed, inline, utf8_file, standard_input, inline_base64, file, ooxml, package-security, encryption, signing, coordinates, rowindex, columnindex, warnings]
+  questions: ["gridgrind json snippets", "how do I write a cell in gridgrind", "how do I assert a cell value in gridgrind", "how do I assert workbook health in gridgrind", "gridgrind copy paste examples", "gridgrind copy sheet example", "gridgrind active sheet example", "gridgrind selected sheets example", "gridgrind sheet visibility example", "gridgrind sheet protection example", "gridgrind workbook protection example", "gridgrind package security example", "how do I open an encrypted workbook in gridgrind", "how do I inspect package signatures in gridgrind", "gridgrind hyperlink example", "gridgrind comment example", "gridgrind picture example", "gridgrind signature line example", "gridgrind chart example", "gridgrind pivot table example", "how do I read pivot tables in gridgrind", "how do I lint pivot tables in gridgrind", "gridgrind drawing payload example", "gridgrind table example", "gridgrind autofilter example", "gridgrind named range example", "what do gridgrind reads look like", "which gridgrind fields use A1 versus zero-based indexes", "how do I lint workbook health without saving", "how do I load text from a file in gridgrind", "how do I send binary data to gridgrind"]
 ---
 
 # Quick Reference
@@ -481,6 +481,33 @@ Drawing-family content such as pictures and charts remains outside the current c
   "type": "CLEAR_WORKBOOK_PROTECTION"
 }
 ```
+
+## IMPORT_CUSTOM_XML_MAPPING
+
+```json
+{
+  "stepId": "import-custom-xml",
+  "target": {
+    "type": "CURRENT"
+  },
+  "action": {
+    "type": "IMPORT_CUSTOM_XML_MAPPING",
+    "mapping": {
+      "locator": {
+        "mapId": 1,
+        "name": "CORSO_mapping"
+      },
+      "xml": {
+        "type": "UTF8_FILE",
+        "path": "examples/custom-xml-assets/custom-xml-update.xml"
+      }
+    }
+  }
+}
+```
+
+Workbook custom-XML mappings must already exist in the source workbook. GridGrind imports XML
+content into existing mappings; it does not author new map definitions.
 
 ## MERGE_CELLS
 
@@ -1081,10 +1108,12 @@ A leading `=` in `FORMULA` values is accepted and stripped automatically. `"=SUM
 Existing style, hyperlink, and comment state on the targeted cell is preserved. `DATE` and
 `DATE_TIME` writes keep existing presentation state and only layer the required number format on
 top.
-`FORMULA` payloads are scalar only. Array-formula braces such as `{=SUM(A1:A2*B1:B2)}` are
-rejected as `INVALID_FORMULA`. `LAMBDA` and `LET` are currently rejected as `INVALID_FORMULA`
-because Apache POI cannot parse them. Other newer Excel constructs may fail the same way. Loaded
-formulas that POI parses but cannot evaluate surface as `UNSUPPORTED_FORMULA`.
+`FORMULA` payloads are scalar only. Use `SET_ARRAY_FORMULA` for contiguous single-cell or
+multi-cell array-formula groups. Scalar `FORMULA` values that include array-formula braces such
+as `{=SUM(A1:A2*B1:B2)}` are rejected as `INVALID_FORMULA`. `LAMBDA` and `LET` are currently
+rejected as `INVALID_FORMULA` because Apache POI cannot parse them. Other newer Excel constructs
+may fail the same way. Loaded formulas that POI parses but cannot evaluate surface as
+`UNSUPPORTED_FORMULA`.
 
 ## SET_RANGE
 
@@ -1140,6 +1169,50 @@ formulas that POI parses but cannot evaluate surface as `UNSUPPORTED_FORMULA`.
   }
 }
 ```
+
+## SET_ARRAY_FORMULA
+
+```json
+{
+  "stepId": "set-array-formula",
+  "target": {
+    "type": "BY_RANGE",
+    "sheetName": "Sheet1",
+    "range": "D2:D4"
+  },
+  "action": {
+    "type": "SET_ARRAY_FORMULA",
+    "formula": {
+      "source": {
+        "type": "INLINE",
+        "text": "{=B2:B4*C2:C4}"
+      }
+    }
+  }
+}
+```
+
+`SET_ARRAY_FORMULA` authors one contiguous array-formula group. Inline formula text may include
+or omit a leading `=` or `{=...}` wrapper; GridGrind normalizes the stored formula text.
+
+## CLEAR_ARRAY_FORMULA
+
+```json
+{
+  "stepId": "clear-array-formula",
+  "target": {
+    "type": "BY_ADDRESS",
+    "sheetName": "Sheet1",
+    "address": "D3"
+  },
+  "action": {
+    "type": "CLEAR_ARRAY_FORMULA"
+  }
+}
+```
+
+`CLEAR_ARRAY_FORMULA` may target any member cell of the stored group and removes the whole
+array-formula group.
 
 ## CLEAR_RANGE
 
@@ -1365,6 +1438,9 @@ concatenate exactly to `comment.text`.
 Authored drawing mutations currently accept only `TWO_CELL` anchors with zero-based `from` and
 `to` markers. `behavior` defaults to `MOVE_AND_RESIZE` when omitted.
 
+`image.format` accepts `EMF`, `WMF`, `PICT`, `JPEG`, `PNG`, `DIB`, `GIF`, `TIFF`, `EPS`, `BMP`,
+or `WPG`.
+
 ## SET_SHAPE
 
 ```json
@@ -1467,6 +1543,50 @@ or leave a partial new shape behind.
 
 `previewImage` reuses the same `format` plus `base64Data` shape as `SET_PICTURE.picture.image`.
 
+## SET_SIGNATURE_LINE
+
+```json
+{
+  "type": "SET_SIGNATURE_LINE",
+  "sheetName": "Approvals",
+  "signatureLine": {
+    "name": "BudgetSignature",
+    "anchor": {
+      "type": "TWO_CELL",
+      "from": {
+        "columnIndex": 1,
+        "rowIndex": 1,
+        "dx": 0,
+        "dy": 0
+      },
+      "to": {
+        "columnIndex": 4,
+        "rowIndex": 6,
+        "dx": 0,
+        "dy": 0
+      }
+    },
+    "allowComments": false,
+    "signingInstructions": "Review the budget before signing.",
+    "suggestedSigner": "Ada Lovelace",
+    "suggestedSigner2": "Finance",
+    "suggestedSignerEmail": "ada@example.com",
+    "invalidStamp": "invalid",
+    "plainSignature": {
+      "format": "PNG",
+      "source": {
+        "type": "INLINE_BASE64",
+        "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+      }
+    }
+  }
+}
+```
+
+`allowComments` defaults to `true`. `caption` is optional but limited to three lines, and at least
+one signer-suggestion field (`caption`, `suggestedSigner`, `suggestedSigner2`, or
+`suggestedSignerEmail`) must be present.
+
 ## SET_CHART
 
 ```json
@@ -1474,7 +1594,6 @@ or leave a partial new shape behind.
   "type": "SET_CHART",
   "sheetName": "Ops",
   "chart": {
-    "type": "BAR",
     "name": "OpsChart",
     "anchor": {
       "type": "TWO_CELL",
@@ -1505,38 +1624,47 @@ or leave a partial new shape behind.
     },
     "displayBlanksAs": "SPAN",
     "plotOnlyVisibleCells": false,
-    "varyColors": true,
-    "barDirection": "COLUMN",
-    "series": [
+    "plots": [
       {
-        "title": {
-          "type": "TEXT",
-          "source": {
-            "type": "INLINE",
-            "text": "Plan"
+        "type": "BAR",
+        "varyColors": true,
+        "barDirection": "COLUMN",
+        "series": [
+          {
+            "title": {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Plan"
+              }
+            },
+            "categories": {
+              "type": "REFERENCE",
+              "formula": "ChartCategories"
+            },
+            "values": {
+              "type": "REFERENCE",
+              "formula": "Ops!$B$2:$B$4"
+            }
+          },
+          {
+            "title": {
+              "type": "TEXT",
+              "source": {
+                "type": "INLINE",
+                "text": "Actual"
+              }
+            },
+            "categories": {
+              "type": "REFERENCE",
+              "formula": "ChartCategories"
+            },
+            "values": {
+              "type": "REFERENCE",
+              "formula": "ChartActual"
+            }
           }
-        },
-        "categories": {
-          "formula": "ChartCategories"
-        },
-        "values": {
-          "formula": "Ops!$B$2:$B$4"
-        }
-      },
-      {
-        "title": {
-          "type": "TEXT",
-          "source": {
-            "type": "INLINE",
-            "text": "Actual"
-          }
-        },
-        "categories": {
-          "formula": "ChartCategories"
-        },
-        "values": {
-          "formula": "ChartActual"
-        }
+        ]
       }
     ]
   }
@@ -1544,13 +1672,15 @@ or leave a partial new shape behind.
 ```
 
 Formula-backed chart titles and series titles must resolve to one cell, either directly or through
-one defined name that resolves to one cell. `categories.formula` and `values.formula` may still
+one defined name that resolves to one cell. Reference-backed `categories` and `values` may still
 target one contiguous range or one defined name that resolves to one contiguous range. Failed
 validation is non-mutating: invalid chart payloads do not create partial charts or half-mutate an
 existing supported chart.
 
-Supported authored families are `BAR`, `LINE`, and `PIE`. Authored chart anchors currently accept
-only `TWO_CELL`, and series formulas can point at contiguous ranges or defined names.
+Supported authored plot families are `AREA`, `AREA_3D`, `BAR`, `BAR_3D`, `DOUGHNUT`, `LINE`,
+`LINE_3D`, `PIE`, `PIE_3D`, `RADAR`, `SCATTER`, `SURFACE`, and `SURFACE_3D`. Authored chart
+anchors currently accept only `TWO_CELL`, and one chart may carry multiple ordered `plots` to
+build a combo chart.
 
 ## SET_DRAWING_OBJECT_ANCHOR
 
@@ -2500,6 +2630,46 @@ workbook. This read requires the full-XSSF path; `EVENT_READ` rejects it.
 Returns `structureLocked`, `windowsLocked`, `revisionsLocked`, and whether workbook or revisions
 password hashes are present.
 
+## GET_CUSTOM_XML_MAPPINGS
+
+```json
+{
+  "stepId": "custom-xml-mappings",
+  "target": {
+    "type": "CURRENT"
+  },
+  "query": {
+    "type": "GET_CUSTOM_XML_MAPPINGS"
+  }
+}
+```
+
+Returns workbook custom-XML mapping metadata, including identifiers, schema metadata, linked
+cells, linked tables, and optional data-binding facts.
+
+## EXPORT_CUSTOM_XML_MAPPING
+
+```json
+{
+  "stepId": "custom-xml-export",
+  "target": {
+    "type": "CURRENT"
+  },
+  "query": {
+    "type": "EXPORT_CUSTOM_XML_MAPPING",
+    "mapping": {
+      "mapId": 1,
+      "name": "CORSO_mapping"
+    },
+    "validateSchema": true,
+    "encoding": "UTF-8"
+  }
+}
+```
+
+Returns the serialized XML payload for one existing custom-XML mapping together with the factual
+mapping metadata used for the export.
+
 ## GET_NAMED_RANGES
 
 ```json
@@ -2573,6 +2743,24 @@ String cells return `stringValue` and, when the stored cell contains authored ri
 optional ordered `richText` run list with effective per-run font facts.
 Read-side style colors are structured objects with `rgb` plus optional `theme`, `indexed`, and
 `tint`; gradient fills appear under `style.fill.gradient`.
+
+## GET_ARRAY_FORMULAS
+
+```json
+{
+  "stepId": "array-formulas",
+  "target": {
+    "type": "BY_NAME",
+    "name": "Calc"
+  },
+  "query": {
+    "type": "GET_ARRAY_FORMULAS"
+  }
+}
+```
+
+Returns factual array-formula group metadata for the selected sheets, including the stored range,
+top-left address, normalized formula text, and whether the group is single-cell.
 
 ## GET_WINDOW
 
@@ -2688,8 +2876,10 @@ Returned comments can include ordered rich-text `runs` plus an `anchor` with zer
 }
 ```
 
-Returned entries are `PICTURE`, `CHART`, `SHAPE`, or `EMBEDDED_OBJECT`. `CHART` entries expose
-`supported`, ordered `plotTypeTokens`, and title text. Read anchors can be `TWO_CELL`,
+Returned entries are `PICTURE`, `CHART`, `SHAPE`, `EMBEDDED_OBJECT`, or `SIGNATURE_LINE`.
+`CHART` entries expose `supported`, ordered `plotTypeTokens`, and title text. `SIGNATURE_LINE`
+entries expose signer metadata, comment-permission state, optional preview-image facts, and the
+stored anchor. Read anchors can be `TWO_CELL`,
 `ONE_CELL`, or `ABSOLUTE`.
 
 ## GET_CHARTS
@@ -2707,8 +2897,10 @@ Returned entries are `PICTURE`, `CHART`, `SHAPE`, or `EMBEDDED_OBJECT`. `CHART` 
 }
 ```
 
-Returned chart entries are `BAR`, `LINE`, `PIE`, or `UNSUPPORTED`. Supported simple charts include
-ordered `axes` plus `series`; unsupported plot families preserve `plotTypeTokens` and `detail`.
+Returned chart entries expose chart-level fields plus ordered `plots`. Plot entries are
+`AREA`, `AREA_3D`, `BAR`, `BAR_3D`, `DOUGHNUT`, `LINE`, `LINE_3D`, `PIE`, `PIE_3D`, `RADAR`,
+`SCATTER`, `SURFACE`, `SURFACE_3D`, or `UNSUPPORTED`. Unsupported loaded plots preserve
+`plotTypeTokens` and `detail`.
 Blank loaded chart titles normalize to `NONE`. Sparse literal caches surface missing positions as
 empty strings. If a chart relation is gone but the graphic frame still exists, `GET_CHARTS` skips
 the broken chart and `GET_DRAWING_OBJECTS` reports the surviving frame as read-only
@@ -2741,8 +2933,8 @@ the broken chart and `GET_DRAWING_OBJECTS` reports the surviving frame as read-o
 }
 ```
 
-Payload extraction is only for named pictures and embedded objects. Non-binary drawing shapes such
-as connectors and simple shapes are rejected.
+Payload extraction is only for named pictures and embedded objects. Non-binary drawing objects
+such as signature lines, connectors, and simple shapes are rejected.
 
 ## GET_SHEET_LAYOUT
 

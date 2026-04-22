@@ -2282,7 +2282,7 @@ final class XlsxParityProbeRegistry {
       return fail("GridGrind is missing the Phase 6 chart read types.");
     }
     if (directCharts.size() != 1
-        || !(directCharts.getFirst() instanceof ChartReport.Bar)
+        || !hasSinglePlot(directCharts.getFirst(), ChartReport.Bar.class)
         || directDrawing.objects().size() != 1
         || !(directDrawing.objects().getFirst()
             instanceof XlsxParityOracle.ChartDrawingObjectSnapshot directDrawingChart)) {
@@ -2330,17 +2330,19 @@ final class XlsxParityProbeRegistry {
       return fail("GridGrind is missing the Phase 6 chart authoring contract.");
     }
     if (directCharts.size() != 1
-        || !(directCharts.getFirst() instanceof ChartReport.Bar directChart)
+        || !hasSinglePlot(directCharts.getFirst(), ChartReport.Bar.class)
         || directDrawing.objects().size() != 1
         || !(directDrawing.objects().getFirst()
             instanceof XlsxParityOracle.ChartDrawingObjectSnapshot directDrawingChart)) {
       return fail(
           "GridGrind-authored chart corpus workbook is not in the expected single-bar-chart shape.");
     }
-    if (directChart.series().size() != 2
-        || !(directChart.series().get(1).categories()
+    ChartReport directChart = directCharts.getFirst();
+    ChartReport.Bar directChartPlot = onlyPlot(directChart, ChartReport.Bar.class);
+    if (directChartPlot.series().size() != 2
+        || !(directChartPlot.series().get(1).categories()
             instanceof ChartReport.DataSource.StringReference categories)
-        || !(directChart.series().get(1).values()
+        || !(directChartPlot.series().get(1).values()
             instanceof ChartReport.DataSource.NumericReference values)
         || !"ChartCategories".equals(categories.formula())
         || !"ChartActual".equals(values.formula())) {
@@ -2378,7 +2380,7 @@ final class XlsxParityProbeRegistry {
                 mutate(
                     new SheetSelector.ByName("Chart"),
                     new MutationAction.SetChart(
-                        new ChartInput.Bar(
+                        new ChartInput(
                             "OpsChart",
                             twoCellAnchorInput(
                                 4, 1, 11, 17, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
@@ -2386,13 +2388,23 @@ final class XlsxParityProbeRegistry {
                             new ChartInput.Legend.Hidden(),
                             ExcelChartDisplayBlanksAs.ZERO,
                             true,
-                            false,
-                            ExcelChartBarDirection.BAR,
                             List.of(
-                                new ChartInput.Series(
-                                    new ChartInput.Title.Formula("C1"),
-                                    new ChartInput.DataSource("A2:A4"),
-                                    new ChartInput.DataSource("C2:C4"))))))),
+                                new ChartInput.Bar(
+                                    false,
+                                    ExcelChartBarDirection.BAR,
+                                    null,
+                                    null,
+                                    null,
+                                    null,
+                                    List.of(
+                                        new ChartInput.Series(
+                                            new ChartInput.Title.Formula("C1"),
+                                            new ChartInput.DataSource.Reference("A2:A4"),
+                                            new ChartInput.DataSource.Reference("C2:C4"),
+                                            null,
+                                            null,
+                                            null,
+                                            null)))))))),
             inspect(
                 "charts", new ChartSelector.AllOnSheet("Chart"), new InspectionQuery.GetCharts()),
             inspect(
@@ -2407,7 +2419,7 @@ final class XlsxParityProbeRegistry {
     InspectionResult.DrawingObjectsResult drawing =
         XlsxParityGridGrind.read(success, "drawing", InspectionResult.DrawingObjectsResult.class);
     if (directCharts.size() != 1
-        || !(directCharts.getFirst() instanceof ChartReport.Bar directChart)
+        || !hasSinglePlot(directCharts.getFirst(), ChartReport.Bar.class)
         || directDrawing.objects().size() != 1
         || !(directDrawing.objects().getFirst()
             instanceof XlsxParityOracle.ChartDrawingObjectSnapshot directDrawingChart)
@@ -2418,12 +2430,14 @@ final class XlsxParityProbeRegistry {
       return fail(
           "Chart mutation parity did not produce the expected single updated supported chart.");
     }
+    ChartReport directChart = directCharts.getFirst();
+    ChartReport.Bar directChartPlot = onlyPlot(directChart, ChartReport.Bar.class);
     boolean matches =
         charts.charts().equals(directCharts)
             && chartDrawingMatches(reportChart, directDrawingChart)
-            && directChart.barDirection() == ExcelChartBarDirection.BAR
+            && directChartPlot.barDirection() == ExcelChartBarDirection.BAR
             && directChart.plotOnlyVisibleCells()
-            && !directChart.varyColors()
+            && !directChartPlot.varyColors()
             && directChart.legend() instanceof ChartReport.Legend.Hidden
             && directChart.title().equals(new ChartReport.Title.Text("Actual focus"));
     return matches
@@ -2484,51 +2498,71 @@ final class XlsxParityProbeRegistry {
         XlsxParityGridGrind.read(success, "charts", InspectionResult.ChartsResult.class);
     InspectionResult.DrawingObjectsResult drawing =
         XlsxParityGridGrind.read(success, "drawing", InspectionResult.DrawingObjectsResult.class);
-    GridGrindResponse.Failure failure =
-        XlsxParityGridGrind.mutateWorkbookExpectingFailure(
-            chart.workbookPath(),
-            List.of(
-                mutate(
-                    new SheetSelector.ByName("Chart"),
-                    new MutationAction.SetChart(
-                        new ChartInput.Bar(
-                            "ComboChart",
-                            twoCellAnchorInput(
-                                4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
-                            chartTitle("Roadmap"),
-                            new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
-                            ExcelChartDisplayBlanksAs.SPAN,
-                            false,
-                            true,
-                            ExcelChartBarDirection.COLUMN,
-                            List.of(
-                                new ChartInput.Series(
-                                    new ChartInput.Title.Formula("B1"),
-                                    new ChartInput.DataSource("A2:A4"),
-                                    new ChartInput.DataSource("B2:B4"))))))));
+    Path replacementPath = context.derivedWorkbook("chart-combo-replaced");
+    XlsxParityGridGrind.mutateWorkbook(
+        chart.workbookPath(),
+        replacementPath,
+        List.of(
+            mutate(
+                new SheetSelector.ByName("Chart"),
+                new MutationAction.SetChart(
+                    new ChartInput(
+                        "ComboChart",
+                        twoCellAnchorInput(
+                            4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                        chartTitle("Roadmap"),
+                        new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+                        ExcelChartDisplayBlanksAs.SPAN,
+                        false,
+                        List.of(
+                            new ChartInput.Bar(
+                                true,
+                                ExcelChartBarDirection.COLUMN,
+                                null,
+                                null,
+                                null,
+                                null,
+                                List.of(
+                                    new ChartInput.Series(
+                                        new ChartInput.Title.Formula("B1"),
+                                        new ChartInput.DataSource.Reference("A2:A4"),
+                                        new ChartInput.DataSource.Reference("B2:B4"),
+                                        null,
+                                        null,
+                                        null,
+                                        null)))))))));
     if (directCharts.size() != 1
-        || !(directCharts.getFirst() instanceof ChartReport.Unsupported directChart)
+        || directCharts.getFirst().plots().size() != 2
         || directDrawing.objects().size() != 1
         || !(directDrawing.objects().getFirst()
             instanceof XlsxParityOracle.ChartDrawingObjectSnapshot directDrawingChart)
         || charts.charts().size() != 1
-        || !(charts.charts().getFirst() instanceof ChartReport.Unsupported)
         || drawing.drawingObjects().size() != 1
         || !(drawing.drawingObjects().getFirst()
             instanceof DrawingObjectReport.Chart reportChart)) {
       return fail(
-          "Unsupported chart corpus workbook did not surface the expected unsupported chart shape.");
+          "Combo chart corpus workbook did not surface the expected multi-plot chart shape.");
     }
+    InspectionResult.ChartsResult replacedCharts =
+        XlsxParityGridGrind.read(
+            XlsxParityGridGrind.readWorkbook(
+                replacementPath,
+                inspect(
+                    "charts",
+                    new ChartSelector.AllOnSheet("Chart"),
+                    new InspectionQuery.GetCharts())),
+            "charts",
+            InspectionResult.ChartsResult.class);
     boolean matches =
         charts.charts().equals(directCharts)
             && chartDrawingMatches(reportChart, directDrawingChart)
-            && failure.problem().message().contains("unsupported detail")
-            && directChart.plotTypeTokens().equals(List.of("BAR", "LINE"));
+            && plotTypeTokens(directCharts.getFirst()).equals(List.of("BAR", "LINE"))
+            && replacedCharts.charts().size() == 1
+            && hasSinglePlot(replacedCharts.charts().getFirst(), ChartReport.Bar.class);
     return matches
         ? pass(
-            "Unsupported chart detail is surfaced truthfully, preserved losslessly, and rejects authoritative mutation.")
-        : fail(
-            "Unsupported chart handling diverged from the direct POI oracle or mutation contract.");
+            "Combo charts are surfaced truthfully, preserved losslessly, and can be authoritatively replaced.")
+        : fail("Combo-chart handling diverged from the direct POI oracle or replacement contract.");
   }
 
   private static ProbeResult probePivotPreservation(ProbeContext context) {
@@ -3580,6 +3614,42 @@ final class XlsxParityProbeRegistry {
         && observed.supported() == direct.supported()
         && observed.plotTypeTokens().equals(direct.plotTypeTokens())
         && observed.title().equals(direct.title());
+  }
+
+  private static boolean hasSinglePlot(
+      ChartReport chart, Class<? extends ChartReport.Plot> plotType) {
+    return chart.plots().size() == 1 && plotType.isInstance(chart.plots().getFirst());
+  }
+
+  private static <T extends ChartReport.Plot> T onlyPlot(ChartReport chart, Class<T> plotType) {
+    if (!hasSinglePlot(chart, plotType)) {
+      throw new IllegalStateException(
+          "Expected one " + plotType.getSimpleName() + " plot on chart " + chart.name());
+    }
+    return plotType.cast(chart.plots().getFirst());
+  }
+
+  private static List<String> plotTypeTokens(ChartReport chart) {
+    return chart.plots().stream()
+        .map(
+            plot ->
+                switch (plot) {
+                  case ChartReport.Area _ -> "AREA";
+                  case ChartReport.Area3D _ -> "AREA_3D";
+                  case ChartReport.Bar _ -> "BAR";
+                  case ChartReport.Bar3D _ -> "BAR_3D";
+                  case ChartReport.Doughnut _ -> "DOUGHNUT";
+                  case ChartReport.Line _ -> "LINE";
+                  case ChartReport.Line3D _ -> "LINE_3D";
+                  case ChartReport.Pie _ -> "PIE";
+                  case ChartReport.Pie3D _ -> "PIE_3D";
+                  case ChartReport.Radar _ -> "RADAR";
+                  case ChartReport.Scatter _ -> "SCATTER";
+                  case ChartReport.Surface _ -> "SURFACE";
+                  case ChartReport.Surface3D _ -> "SURFACE_3D";
+                  case ChartReport.Unsupported unsupported -> unsupported.plotTypeToken();
+                })
+        .toList();
   }
 
   private static <T extends XlsxParityOracle.DirectDrawingObjectSnapshot> T directObject(

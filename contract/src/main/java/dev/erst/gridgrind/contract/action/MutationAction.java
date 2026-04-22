@@ -3,6 +3,7 @@ package dev.erst.gridgrind.contract.action;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
 import dev.erst.gridgrind.contract.dto.AutofilterSortStateInput;
 import dev.erst.gridgrind.contract.dto.CellInput;
@@ -10,6 +11,7 @@ import dev.erst.gridgrind.contract.dto.CellStyleInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorInput;
 import dev.erst.gridgrind.contract.dto.EmbeddedObjectInput;
@@ -25,6 +27,7 @@ import dev.erst.gridgrind.contract.dto.ShapeInput;
 import dev.erst.gridgrind.contract.dto.SheetCopyPosition;
 import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
 import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
+import dev.erst.gridgrind.contract.dto.SignatureLineInput;
 import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
@@ -95,11 +98,17 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = MutationAction.SetCell.class, name = "SET_CELL"),
   @JsonSubTypes.Type(value = MutationAction.SetRange.class, name = "SET_RANGE"),
   @JsonSubTypes.Type(value = MutationAction.ClearRange.class, name = "CLEAR_RANGE"),
+  @JsonSubTypes.Type(value = MutationAction.SetArrayFormula.class, name = "SET_ARRAY_FORMULA"),
+  @JsonSubTypes.Type(value = MutationAction.ClearArrayFormula.class, name = "CLEAR_ARRAY_FORMULA"),
+  @JsonSubTypes.Type(
+      value = MutationAction.ImportCustomXmlMapping.class,
+      name = "IMPORT_CUSTOM_XML_MAPPING"),
   @JsonSubTypes.Type(value = MutationAction.SetHyperlink.class, name = "SET_HYPERLINK"),
   @JsonSubTypes.Type(value = MutationAction.ClearHyperlink.class, name = "CLEAR_HYPERLINK"),
   @JsonSubTypes.Type(value = MutationAction.SetComment.class, name = "SET_COMMENT"),
   @JsonSubTypes.Type(value = MutationAction.ClearComment.class, name = "CLEAR_COMMENT"),
   @JsonSubTypes.Type(value = MutationAction.SetPicture.class, name = "SET_PICTURE"),
+  @JsonSubTypes.Type(value = MutationAction.SetSignatureLine.class, name = "SET_SIGNATURE_LINE"),
   @JsonSubTypes.Type(value = MutationAction.SetChart.class, name = "SET_CHART"),
   @JsonSubTypes.Type(value = MutationAction.SetPivotTable.class, name = "SET_PIVOT_TABLE"),
   @JsonSubTypes.Type(value = MutationAction.SetShape.class, name = "SET_SHAPE"),
@@ -371,6 +380,25 @@ public sealed interface MutationAction {
     public ClearRange {}
   }
 
+  /** Creates or replaces one dedicated array-formula group over the addressed range. */
+  record SetArrayFormula(ArrayFormulaInput formula) implements MutationAction {
+    public SetArrayFormula {
+      Objects.requireNonNull(formula, "formula must not be null");
+    }
+  }
+
+  /** Removes the array-formula group containing the addressed cell and clears the group. */
+  record ClearArrayFormula() implements MutationAction {
+    public ClearArrayFormula {}
+  }
+
+  /** Imports one XML document into one existing workbook custom-XML mapping. */
+  record ImportCustomXmlMapping(CustomXmlImportInput mapping) implements MutationAction {
+    public ImportCustomXmlMapping {
+      Objects.requireNonNull(mapping, "mapping must not be null");
+    }
+  }
+
   /** Replaces the hyperlink attached to a single cell. */
   record SetHyperlink(HyperlinkTarget target) implements MutationAction {
     public SetHyperlink {
@@ -399,6 +427,13 @@ public sealed interface MutationAction {
   record SetPicture(PictureInput picture) implements MutationAction {
     public SetPicture {
       Objects.requireNonNull(picture, "picture must not be null");
+    }
+  }
+
+  /** Creates or replaces one signature-line drawing object on one sheet. */
+  record SetSignatureLine(SignatureLineInput signatureLine) implements MutationAction {
+    public SetSignatureLine {
+      Objects.requireNonNull(signatureLine, "signatureLine must not be null");
     }
   }
 

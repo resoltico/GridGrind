@@ -3,7 +3,6 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -17,7 +16,7 @@ class ExcelStreamingWorkbookWriterTest {
   @Test
   void writesEverySupportedCellValueTypeAndMaterializesNestedOutputPaths() throws IOException {
     Path workbookPath =
-        Files.createTempDirectory("gridgrind-streaming-write-")
+        ExcelTempFiles.createManagedTempDirectory("gridgrind-streaming-write-")
             .resolve("nested path")
             .resolve("streaming workbook.xlsx");
 

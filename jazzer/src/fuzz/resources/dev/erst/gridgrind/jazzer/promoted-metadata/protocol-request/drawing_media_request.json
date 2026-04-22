@@ -13,14 +13,14 @@
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 9,
       "operationKinds" : {
+        "SET_PICTURE" : 1,
+        "SET_COMMENT" : 1,
         "SET_SHAPE" : 2,
         "DELETE_DRAWING_OBJECT" : 1,
         "SET_EMBEDDED_OBJECT" : 1,
         "SET_DRAWING_OBJECT_ANCHOR" : 1,
         "ENSURE_SHEET" : 1,
-        "SET_RANGE" : 1,
-        "SET_PICTURE" : 1,
-        "SET_COMMENT" : 1
+        "SET_RANGE" : 1
       },
       "styleKinds" : { },
       "assertionCount" : 0,

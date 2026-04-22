@@ -38,7 +38,11 @@ readonly expected_description="$(
 [[ -x "${verify_script}" ]] || die "missing executable verifier script at ${verify_script}"
 [[ -n "${expected_description}" ]] || die "missing gridgrindDescription in gradle.properties"
 
-test_root="$(mktemp -d)"
+readonly temp_parent="${repo_root}/tmp/test-verify-container-publication"
+mkdir -p "${temp_parent}"
+test_root="${temp_parent}/run.$$"
+rm -rf "${test_root}"
+mkdir -p "${test_root}"
 cleanup() {
     rm -rf "${test_root}"
 }

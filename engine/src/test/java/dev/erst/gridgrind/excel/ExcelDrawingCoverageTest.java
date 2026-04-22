@@ -1676,7 +1676,7 @@ class ExcelDrawingCoverageTest {
           .getPtArray(0)
           .setV("Cached title");
       assertEquals(
-          "Cached title", ExcelDrawingChartSupport.cachedTitleText(cachedTitleChart, "Ops!$A$1"));
+          "Fallback title", ExcelDrawingChartSupport.cachedTitleText(cachedTitleChart, "Ops!$A$1"));
       assertEquals("", ExcelDrawingChartSupport.resolvedTitleFormulaText(cachedTitleChart, "Bad["));
 
       Object noImageDimensions =
@@ -1803,6 +1803,7 @@ class ExcelDrawingCoverageTest {
   @Test
   void drawingControllerChartFrameLookupDistinguishesOrphanedFramesFromLiveCharts()
       throws Exception {
+    ExcelDrawingController controller = new ExcelDrawingController();
     java.nio.file.Path workbookPath =
         XlsxRoundTrip.newWorkbookPath("gridgrind-drawing-orphan-frame-");
 
@@ -1830,7 +1831,8 @@ class ExcelDrawingCoverageTest {
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
-      XSSFDrawing drawing = workbook.xssfWorkbook().getSheet("Charts").getDrawingPatriarch();
+      XSSFSheet sheet = workbook.xssfWorkbook().getSheet("Charts");
+      XSSFDrawing drawing = sheet.getDrawingPatriarch();
       XSSFGraphicFrame orphanFrame =
           assertInstanceOf(
               XSSFGraphicFrame.class,
@@ -1839,6 +1841,24 @@ class ExcelDrawingCoverageTest {
                   .findFirst()
                   .orElseThrow());
       assertNull(ExcelDrawingChartSupport.chartForGraphicFrame(drawing, orphanFrame));
+      ExcelDrawingObjectSnapshot.Shape orphanSnapshot =
+          assertInstanceOf(
+              ExcelDrawingObjectSnapshot.Shape.class,
+              controller.drawingObjects(sheet).stream()
+                  .filter(snapshot -> "OrphanFrame".equals(snapshot.name()))
+                  .findFirst()
+                  .orElseThrow());
+      assertEquals(ExcelDrawingShapeKind.GRAPHIC_FRAME, orphanSnapshot.kind());
+      IllegalArgumentException moveFailure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> controller.setDrawingObjectAnchor(sheet, "OrphanFrame", anchor(10, 1, 14, 6)));
+      assertTrue(moveFailure.getMessage().contains("read-only"));
+      IllegalArgumentException deleteFailure =
+          assertThrows(
+              IllegalArgumentException.class,
+              () -> controller.deleteDrawingObject(sheet, "OrphanFrame"));
+      assertTrue(deleteFailure.getMessage().contains("read-only"));
     }
   }
 

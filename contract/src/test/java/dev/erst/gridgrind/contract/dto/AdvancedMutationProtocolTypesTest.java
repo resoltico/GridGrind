@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -196,6 +197,18 @@ class AdvancedMutationProtocolTypesTest {
             binary("cGF5bG9hZA=="),
             pictureData,
             anchor);
+    SignatureLineInput signatureLine =
+        new SignatureLineInput(
+            "OpsSignature",
+            anchor,
+            null,
+            "Review before signing.",
+            "Ada Lovelace",
+            "Finance",
+            "ada@example.com",
+            null,
+            "invalid",
+            pictureData);
 
     DrawingAnchorInput.TwoCell sameRowAnchor =
         new DrawingAnchorInput.TwoCell(
@@ -219,6 +232,8 @@ class AdvancedMutationProtocolTypesTest {
     assertEquals("rect", nullPresetShape.presetGeometryToken());
     assertEquals(ExcelAuthoredDrawingShapeKind.CONNECTOR, connector.kind());
     assertEquals("payload.txt", embeddedObject.fileName());
+    assertTrue(signatureLine.allowComments());
+    assertEquals("Ada Lovelace", signatureLine.suggestedSigner());
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(-1, 0, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(0, -1, 0, 0));
     assertThrows(IllegalArgumentException.class, () -> new DrawingMarkerInput(0, 0, -1, 0));
@@ -301,6 +316,63 @@ class AdvancedMutationProtocolTypesTest {
                 binary("cGF5bG9hZA=="),
                 pictureData,
                 anchor));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SignatureLineInput(
+                "OpsSignature", anchor, false, null, null, null, null, null, null, null));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            new SignatureLineInput(
+                "OpsSignature",
+                anchor,
+                false,
+                "Review before signing.",
+                "Ada Lovelace",
+                "Finance",
+                "ada@example.com",
+                "line1\nline2\nline3\nline4",
+                null,
+                pictureData));
+  }
+
+  @Test
+  void arrayFormulaInputsNormalizeInlineWrappers() {
+    ArrayFormulaInput wrapped = new ArrayFormulaInput(text("{=SUM(B2:B4*C2:C4)}"));
+    ArrayFormulaInput bare = new ArrayFormulaInput(text("SUM(B2:B4*C2:C4)"));
+    ArrayFormulaInput prefixed = new ArrayFormulaInput(text("=SUM(B2:B4*C2:C4)"));
+
+    assertEquals(
+        "SUM(B2:B4*C2:C4)",
+        assertInstanceOf(TextSourceInput.Inline.class, wrapped.source()).text());
+    assertEquals(
+        "SUM(B2:B4*C2:C4)", assertInstanceOf(TextSourceInput.Inline.class, bare.source()).text());
+    assertEquals(
+        "SUM(B2:B4*C2:C4)",
+        assertInstanceOf(TextSourceInput.Inline.class, prefixed.source()).text());
+
+    assertThrows(IllegalArgumentException.class, () -> new ArrayFormulaInput(text(" ")));
+    assertThrows(IllegalArgumentException.class, () -> new ArrayFormulaInput(text("{=}")));
+  }
+
+  @Test
+  void customXmlInputsNormalizeAndValidate() {
+    CustomXmlMappingLocator byId = new CustomXmlMappingLocator(1L, null);
+    CustomXmlMappingLocator byName = new CustomXmlMappingLocator(null, "CORSO_mapping");
+    CustomXmlImportInput inlineImport =
+        new CustomXmlImportInput(byName, text("<CORSO><NOME>Grid</NOME></CORSO>"));
+
+    assertEquals(1L, byId.mapId());
+    assertEquals("CORSO_mapping", byName.name());
+    assertEquals(byName, inlineImport.locator());
+    assertEquals(
+        "<CORSO><NOME>Grid</NOME></CORSO>",
+        assertInstanceOf(TextSourceInput.Inline.class, inlineImport.xml()).text());
+
+    assertThrows(IllegalArgumentException.class, () -> new CustomXmlMappingLocator(null, null));
+    assertThrows(IllegalArgumentException.class, () -> new CustomXmlMappingLocator(0L, null));
+    assertThrows(IllegalArgumentException.class, () -> new CustomXmlImportInput(byId, text(" ")));
   }
 
   @Test
@@ -309,114 +381,141 @@ class AdvancedMutationProtocolTypesTest {
         new DrawingAnchorInput.TwoCell(
             new DrawingMarkerInput(1, 2, 0, 0), new DrawingMarkerInput(6, 12, 0, 0), null);
     ChartInput.Series firstSeries =
-        new ChartInput.Series(
-            new ChartInput.Title.Formula("B1"),
-            new ChartInput.DataSource("A2:A4"),
-            new ChartInput.DataSource("B2:B4"));
-    ChartInput.Series secondSeries =
-        new ChartInput.Series(
+        chartSeries(new ChartInput.Title.Formula("B1"), "A2:A4", "B2:B4");
+    ChartInput.Series secondSeries = chartSeries(null, "ChartCategories", "ChartActual");
+    ChartInput bar =
+        chartInput(
+            "OpsChart",
+            anchor,
             null,
-            new ChartInput.DataSource("ChartCategories"),
-            new ChartInput.DataSource("ChartActual"));
-    ChartInput.Bar bar =
-        new ChartInput.Bar(
-            "OpsChart", anchor, null, null, null, null, null, null, List.of(firstSeries));
-    ChartInput.Line line =
-        new ChartInput.Line(
+            null,
+            null,
+            null,
+            new ChartInput.Bar(null, null, null, null, null, null, List.of(firstSeries)));
+    ChartInput line =
+        chartInput(
             "TrendChart",
             anchor,
             new ChartInput.Title.Text(text("Trend")),
             new ChartInput.Legend.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             false,
-            true,
-            List.of(secondSeries));
-    ChartInput.Line defaultLine =
-        new ChartInput.Line(
-            "DefaultTrend", anchor, null, null, null, null, null, List.of(secondSeries));
-    ChartInput.Pie pie =
-        new ChartInput.Pie(
-            "ShareChart", anchor, null, null, null, null, null, 180, List.of(secondSeries));
-    ChartInput.Pie defaultPie =
-        new ChartInput.Pie(
-            "DefaultShare", anchor, null, null, null, null, null, null, List.of(secondSeries));
-    ChartInput.Pie explicitPie =
-        new ChartInput.Pie(
+            new ChartInput.Line(true, null, null, List.of(secondSeries)));
+    ChartInput defaultLine =
+        chartInput(
+            "DefaultTrend",
+            anchor,
+            null,
+            null,
+            null,
+            null,
+            new ChartInput.Line(null, null, null, List.of(secondSeries)));
+    ChartInput pie =
+        chartInput(
+            "ShareChart",
+            anchor,
+            null,
+            null,
+            null,
+            null,
+            new ChartInput.Pie(null, 180, List.of(secondSeries)));
+    ChartInput defaultPie =
+        chartInput(
+            "DefaultShare",
+            anchor,
+            null,
+            null,
+            null,
+            null,
+            new ChartInput.Pie(null, null, List.of(secondSeries)));
+    ChartInput explicitPie =
+        chartInput(
             "ExplicitShare",
             anchor,
             new ChartInput.Title.Text(text("Share")),
             new ChartInput.Legend.Hidden(),
             ExcelChartDisplayBlanksAs.ZERO,
             false,
-            true,
-            90,
-            List.of(secondSeries));
+            new ChartInput.Pie(true, 90, List.of(secondSeries)));
+
+    ChartInput.Bar barPlot = assertInstanceOf(ChartInput.Bar.class, bar.plots().getFirst());
+    ChartInput.Line linePlot = assertInstanceOf(ChartInput.Line.class, line.plots().getFirst());
+    ChartInput.Line defaultLinePlot =
+        assertInstanceOf(ChartInput.Line.class, defaultLine.plots().getFirst());
+    ChartInput.Pie piePlot = assertInstanceOf(ChartInput.Pie.class, pie.plots().getFirst());
+    ChartInput.Pie defaultPiePlot =
+        assertInstanceOf(ChartInput.Pie.class, defaultPie.plots().getFirst());
+    ChartInput.Pie explicitPiePlot =
+        assertInstanceOf(ChartInput.Pie.class, explicitPie.plots().getFirst());
 
     assertTrue(bar.title() instanceof ChartInput.Title.None);
     assertEquals(new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT), bar.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, bar.displayBlanksAs());
     assertTrue(bar.plotOnlyVisibleCells());
-    assertFalse(bar.varyColors());
-    assertEquals(ExcelChartBarDirection.COLUMN, bar.barDirection());
-    assertEquals("B1", ((ChartInput.Title.Formula) bar.series().getFirst().title()).formula());
+    assertFalse(barPlot.varyColors());
+    assertEquals(ExcelChartBarDirection.COLUMN, barPlot.barDirection());
+    assertEquals("B1", ((ChartInput.Title.Formula) barPlot.series().getFirst().title()).formula());
     assertTrue(secondSeries.title() instanceof ChartInput.Title.None);
     assertEquals(ExcelChartDisplayBlanksAs.ZERO, line.displayBlanksAs());
     assertFalse(line.plotOnlyVisibleCells());
-    assertTrue(line.varyColors());
-    assertEquals(180, pie.firstSliceAngle());
+    assertTrue(linePlot.varyColors());
+    assertEquals(180, piePlot.firstSliceAngle());
     assertTrue(defaultLine.title() instanceof ChartInput.Title.None);
     assertEquals(
         new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT), defaultLine.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultLine.displayBlanksAs());
     assertTrue(defaultLine.plotOnlyVisibleCells());
-    assertFalse(defaultLine.varyColors());
+    assertFalse(defaultLinePlot.varyColors());
     assertTrue(defaultPie.title() instanceof ChartInput.Title.None);
     assertEquals(
         new ChartInput.Legend.Visible(ExcelChartLegendPosition.RIGHT), defaultPie.legend());
     assertEquals(ExcelChartDisplayBlanksAs.GAP, defaultPie.displayBlanksAs());
     assertTrue(defaultPie.plotOnlyVisibleCells());
-    assertFalse(defaultPie.varyColors());
-    assertNull(defaultPie.firstSliceAngle());
+    assertFalse(defaultPiePlot.varyColors());
+    assertNull(defaultPiePlot.firstSliceAngle());
     assertEquals(new ChartInput.Title.Text(text("Share")), explicitPie.title());
     assertEquals(new ChartInput.Legend.Hidden(), explicitPie.legend());
     assertEquals(ExcelChartDisplayBlanksAs.ZERO, explicitPie.displayBlanksAs());
     assertFalse(explicitPie.plotOnlyVisibleCells());
-    assertTrue(explicitPie.varyColors());
-    assertEquals(90, explicitPie.firstSliceAngle());
+    assertTrue(explicitPiePlot.varyColors());
+    assertEquals(90, explicitPiePlot.firstSliceAngle());
 
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new ChartInput.Bar(
-                " ", anchor, null, null, null, null, null, null, List.of(firstSeries)));
+            chartInput(
+                " ",
+                anchor,
+                null,
+                null,
+                null,
+                null,
+                new ChartInput.Bar(null, null, null, null, null, null, List.of(firstSeries))));
     assertThrows(
         NullPointerException.class,
         () ->
-            new ChartInput.Line(
-                "OpsChart", null, null, null, null, null, null, List.of(firstSeries)));
+            chartInput(
+                "OpsChart",
+                null,
+                null,
+                null,
+                null,
+                null,
+                new ChartInput.Line(null, null, null, List.of(firstSeries))));
     assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ChartInput.Pie(
-                "OpsChart", anchor, null, null, null, null, null, 361, List.of(firstSeries)));
+        IllegalArgumentException.class, () -> new ChartInput.Pie(null, 361, List.of(firstSeries)));
     assertThrows(
-        IllegalArgumentException.class,
-        () ->
-            new ChartInput.Pie(
-                "OpsChart", anchor, null, null, null, null, null, -1, List.of(firstSeries)));
+        IllegalArgumentException.class, () -> new ChartInput.Pie(null, -1, List.of(firstSeries)));
     assertThrows(IllegalArgumentException.class, () -> new ChartInput.Title.Text(text(" ")));
     assertThrows(IllegalArgumentException.class, () -> new ChartInput.Title.Formula(" "));
     assertThrows(NullPointerException.class, () -> new ChartInput.Legend.Visible(null));
-    assertThrows(IllegalArgumentException.class, () -> new ChartInput.DataSource(" "));
+    assertThrows(IllegalArgumentException.class, () -> new ChartInput.DataSource.Reference(" "));
     assertThrows(
         IllegalArgumentException.class,
-        () ->
-            new ChartInput.Bar("OpsChart", anchor, null, null, null, null, null, null, List.of()));
+        () -> new ChartInput.Bar(null, null, null, null, null, null, List.of()));
     assertThrows(
         NullPointerException.class,
-        () ->
-            new ChartInput.Line(
-                "OpsChart", anchor, null, null, null, null, null, List.of(firstSeries, null)));
+        () -> new ChartInput.Line(null, null, null, List.of(firstSeries, null)));
   }
 
   @Test
@@ -1260,5 +1359,29 @@ class AdvancedMutationProtocolTypesTest {
 
   private static BinarySourceInput binary(String value) {
     return BinarySourceInput.inlineBase64(value);
+  }
+
+  private static ChartInput chartInput(
+      String name,
+      DrawingAnchorInput.TwoCell anchor,
+      ChartInput.Title title,
+      ChartInput.Legend legend,
+      ExcelChartDisplayBlanksAs displayBlanksAs,
+      Boolean plotOnlyVisibleCells,
+      ChartInput.Plot plot) {
+    return new ChartInput(
+        name, anchor, title, legend, displayBlanksAs, plotOnlyVisibleCells, List.of(plot));
+  }
+
+  private static ChartInput.Series chartSeries(
+      ChartInput.Title title, String categoriesFormula, String valuesFormula) {
+    return new ChartInput.Series(
+        title,
+        new ChartInput.DataSource.Reference(categoriesFormula),
+        new ChartInput.DataSource.Reference(valuesFormula),
+        null,
+        null,
+        null,
+        null);
   }
 }

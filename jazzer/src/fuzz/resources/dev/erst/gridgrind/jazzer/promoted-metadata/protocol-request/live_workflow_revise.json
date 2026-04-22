@@ -20,10 +20,10 @@
       "assertionKinds" : { },
       "readCount" : 6,
       "readKinds" : {
+        "GET_WINDOW" : 2,
         "GET_WORKBOOK_SUMMARY" : 1,
         "GET_FORMULA_SURFACE" : 1,
-        "GET_CELLS" : 2,
-        "GET_WINDOW" : 2
+        "GET_CELLS" : 2
       }
     }
   },

@@ -8,7 +8,9 @@ import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
 import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartBarGrouping;
 import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartGrouping;
 import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
@@ -1330,7 +1332,7 @@ final class XlsxParityOracle {
         return new ChartDrawingObjectSnapshot(
             resolvedChartName(chart),
             anchor,
-            !(chartReport(chart) instanceof ChartReport.Unsupported),
+            chartSupported(chartReport(chart)),
             chartPlotTypeTokens(chart),
             chartTitleSummary(chart));
       }
@@ -1358,64 +1360,52 @@ final class XlsxParityOracle {
   private static ChartReport chartReport(XSSFChart chart) {
     XSSFGraphicFrame graphicFrame = requiredGraphicFrame(chart);
     List<XDDFChartData> chartData = chart.getChartSeries();
-    List<String> plotTypeTokens = chartPlotTypeTokens(chartData);
     DrawingAnchorReport anchor = drawingAnchorReport(graphicFrame);
-    if (chartData.size() != 1) {
-      return new ChartReport.Unsupported(
+    try {
+      return new ChartReport(
           resolvedChartName(chart),
           anchor,
-          plotTypeTokens,
-          "Only single-plot simple charts are modeled authoritatively.");
-    }
-
-    XDDFChartData data = chartData.getFirst();
-    try {
-      return switch (data) {
-        case XDDFBarChartData bar ->
-            new ChartReport.Bar(
-                resolvedChartName(chart),
-                anchor,
-                titleReport(chart),
-                legendReport(chart),
-                displayBlanksReport(chart),
-                chart.isPlotOnlyVisibleCells(),
-                varyColors(chart, bar),
-                fromPoiBarDirection(bar.getBarDirection()),
-                axes(chart),
-                series(bar));
-        case XDDFLineChartData line ->
-            new ChartReport.Line(
-                resolvedChartName(chart),
-                anchor,
-                titleReport(chart),
-                legendReport(chart),
-                displayBlanksReport(chart),
-                chart.isPlotOnlyVisibleCells(),
-                varyColors(chart, line),
-                axes(chart),
-                series(line));
-        case XDDFPieChartData pie ->
-            new ChartReport.Pie(
-                resolvedChartName(chart),
-                anchor,
-                titleReport(chart),
-                legendReport(chart),
-                displayBlanksReport(chart),
-                chart.isPlotOnlyVisibleCells(),
-                varyColors(chart, pie),
-                pie.getFirstSliceAngle(),
-                series(pie));
-        default ->
-            new ChartReport.Unsupported(
-                resolvedChartName(chart),
-                anchor,
-                plotTypeTokens,
-                "Chart plot family is outside the current modeled simple-chart contract.");
-      };
+          titleReport(chart),
+          legendReport(chart),
+          displayBlanksReport(chart),
+          chart.isPlotOnlyVisibleCells(),
+          chartData.stream().map(data -> chartPlot(chart, data)).toList());
     } catch (RuntimeException exception) {
-      return new ChartReport.Unsupported(
-          resolvedChartName(chart), anchor, plotTypeTokens, exception.getMessage());
+      return new ChartReport(
+          resolvedChartName(chart),
+          anchor,
+          titleReport(chart),
+          legendReport(chart),
+          displayBlanksReport(chart),
+          chart.isPlotOnlyVisibleCells(),
+          chartPlotTypeTokens(chartData).stream()
+              .<ChartReport.Plot>map(
+                  token -> new ChartReport.Unsupported(token, exception.getMessage()))
+              .toList());
     }
+  }
+
+  private static ChartReport.Plot chartPlot(XSSFChart chart, XDDFChartData data) {
+    return switch (data) {
+      case XDDFBarChartData bar ->
+          new ChartReport.Bar(
+              varyColors(chart, bar),
+              fromPoiBarDirection(bar.getBarDirection()),
+              ExcelChartBarGrouping.CLUSTERED,
+              null,
+              null,
+              axes(chart),
+              series(bar));
+      case XDDFLineChartData line ->
+          new ChartReport.Line(
+              varyColors(chart, line), ExcelChartGrouping.STANDARD, axes(chart), series(line));
+      case XDDFPieChartData pie ->
+          new ChartReport.Pie(varyColors(chart, pie), pie.getFirstSliceAngle(), series(pie));
+      default ->
+          new ChartReport.Unsupported(
+              chartPlotTypeToken(data),
+              "Chart plot family is outside the current modeled simple-chart contract.");
+    };
   }
 
   private static XSSFChart chartForGraphicFrame(
@@ -1562,7 +1552,15 @@ final class XlsxParityOracle {
     return new ChartReport.Series(
         seriesTitle(title),
         dataSource(series.getCategoryData()),
-        dataSource(series.getValuesData()));
+        dataSource(series.getValuesData()),
+        null,
+        null,
+        null,
+        null);
+  }
+
+  private static boolean chartSupported(ChartReport chart) {
+    return chart.plots().stream().noneMatch(ChartReport.Unsupported.class::isInstance);
   }
 
   private static ChartReport.Title seriesTitle(CTSerTx title) {
@@ -1606,15 +1604,18 @@ final class XlsxParityOracle {
   private static List<String> chartPlotTypeTokens(List<XDDFChartData> chartData) {
     List<String> tokens = new ArrayList<>();
     for (XDDFChartData value : chartData) {
-      tokens.add(
-          switch (value) {
-            case XDDFBarChartData _ -> "BAR";
-            case XDDFLineChartData _ -> "LINE";
-            case XDDFPieChartData _ -> "PIE";
-            default -> value.getClass().getSimpleName();
-          });
+      tokens.add(chartPlotTypeToken(value));
     }
     return List.copyOf(tokens);
+  }
+
+  private static String chartPlotTypeToken(XDDFChartData value) {
+    return switch (value) {
+      case XDDFBarChartData _ -> "BAR";
+      case XDDFLineChartData _ -> "LINE";
+      case XDDFPieChartData _ -> "PIE";
+      default -> value.getClass().getSimpleName();
+    };
   }
 
   private static boolean varyColors(XSSFChart chart, XDDFBarChartData unused) {

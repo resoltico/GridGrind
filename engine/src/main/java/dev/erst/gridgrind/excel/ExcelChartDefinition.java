@@ -1,107 +1,29 @@
 package dev.erst.gridgrind.excel;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/** Supported authored chart definitions. */
-public sealed interface ExcelChartDefinition
-    permits ExcelChartDefinition.Bar, ExcelChartDefinition.Line, ExcelChartDefinition.Pie {
-
-  /** Sheet-local chart name. */
-  String name();
-
-  /** Stored two-cell drawing anchor for the chart frame. */
-  ExcelDrawingAnchor.TwoCell anchor();
-
-  /** Authored chart title definition. */
-  Title title();
-
-  /** Authored legend visibility and position. */
-  Legend legend();
-
-  /** Blank-cell display behavior. */
-  ExcelChartDisplayBlanksAs displayBlanksAs();
-
-  /** Whether the chart should ignore hidden cells. */
-  boolean plotOnlyVisibleCells();
-
-  /** Whether the chart varies colors automatically. */
-  boolean varyColors();
-
-  /** Authored chart series in display order. */
-  List<Series> series();
-
-  /** Authored simple bar chart. */
-  record Bar(
-      String name,
-      ExcelDrawingAnchor.TwoCell anchor,
-      Title title,
-      Legend legend,
-      ExcelChartDisplayBlanksAs displayBlanksAs,
-      boolean plotOnlyVisibleCells,
-      boolean varyColors,
-      ExcelChartBarDirection barDirection,
-      List<Series> series)
-      implements ExcelChartDefinition {
-    public Bar {
-      requireName(name);
-      Objects.requireNonNull(anchor, "anchor must not be null");
-      Objects.requireNonNull(title, "title must not be null");
-      Objects.requireNonNull(legend, "legend must not be null");
-      Objects.requireNonNull(displayBlanksAs, "displayBlanksAs must not be null");
-      Objects.requireNonNull(barDirection, "barDirection must not be null");
-      series = copySeries(series);
-    }
-  }
-
-  /** Authored simple line chart. */
-  record Line(
-      String name,
-      ExcelDrawingAnchor.TwoCell anchor,
-      Title title,
-      Legend legend,
-      ExcelChartDisplayBlanksAs displayBlanksAs,
-      boolean plotOnlyVisibleCells,
-      boolean varyColors,
-      List<Series> series)
-      implements ExcelChartDefinition {
-    public Line {
-      requireName(name);
-      Objects.requireNonNull(anchor, "anchor must not be null");
-      Objects.requireNonNull(title, "title must not be null");
-      Objects.requireNonNull(legend, "legend must not be null");
-      Objects.requireNonNull(displayBlanksAs, "displayBlanksAs must not be null");
-      series = copySeries(series);
-    }
-  }
-
-  /** Authored simple pie chart. */
-  record Pie(
-      String name,
-      ExcelDrawingAnchor.TwoCell anchor,
-      Title title,
-      Legend legend,
-      ExcelChartDisplayBlanksAs displayBlanksAs,
-      boolean plotOnlyVisibleCells,
-      boolean varyColors,
-      Integer firstSliceAngle,
-      List<Series> series)
-      implements ExcelChartDefinition {
-    public Pie {
-      requireName(name);
-      Objects.requireNonNull(anchor, "anchor must not be null");
-      Objects.requireNonNull(title, "title must not be null");
-      Objects.requireNonNull(legend, "legend must not be null");
-      Objects.requireNonNull(displayBlanksAs, "displayBlanksAs must not be null");
-      if (firstSliceAngle != null && (firstSliceAngle < 0 || firstSliceAngle > 360)) {
-        throw new IllegalArgumentException("firstSliceAngle must be between 0 and 360");
-      }
-      series = copySeries(series);
-    }
+/** Authored chart definition used by workbook-core mutations. */
+public record ExcelChartDefinition(
+    String name,
+    ExcelDrawingAnchor.TwoCell anchor,
+    Title title,
+    Legend legend,
+    ExcelChartDisplayBlanksAs displayBlanksAs,
+    boolean plotOnlyVisibleCells,
+    List<Plot> plots) {
+  public ExcelChartDefinition {
+    requireNonBlank(name, "name");
+    Objects.requireNonNull(anchor, "anchor must not be null");
+    Objects.requireNonNull(title, "title must not be null");
+    Objects.requireNonNull(legend, "legend must not be null");
+    Objects.requireNonNull(displayBlanksAs, "displayBlanksAs must not be null");
+    plots = copyNonEmptyValues(plots, "plots");
   }
 
   /** Supported authored chart title shapes. */
-  sealed interface Title permits Title.None, Title.Text, Title.Formula {
+  public sealed interface Title permits Title.None, Title.Text, Title.Formula {
 
     /** Explicitly remove any chart or series title. */
     record None() implements Title {}
@@ -125,7 +47,7 @@ public sealed interface ExcelChartDefinition
   }
 
   /** Supported authored legend states. */
-  sealed interface Legend permits Legend.Hidden, Legend.Visible {
+  public sealed interface Legend permits Legend.Hidden, Legend.Visible {
 
     /** Hide the chart legend entirely. */
     record Hidden() implements Legend {}
@@ -138,36 +60,243 @@ public sealed interface ExcelChartDefinition
     }
   }
 
-  /** One authored chart series with workbook-bound category and value sources. */
-  record Series(Title title, DataSource categories, DataSource values) {
+  /** Authored axis definition. */
+  public record Axis(
+      ExcelChartAxisKind kind,
+      ExcelChartAxisPosition position,
+      ExcelChartAxisCrosses crosses,
+      boolean visible) {
+    public Axis {
+      Objects.requireNonNull(kind, "kind must not be null");
+      Objects.requireNonNull(position, "position must not be null");
+      Objects.requireNonNull(crosses, "crosses must not be null");
+    }
+  }
+
+  /** One authored chart series. */
+  public record Series(
+      Title title,
+      DataSource categories,
+      DataSource values,
+      Boolean smooth,
+      ExcelChartMarkerStyle markerStyle,
+      Short markerSize,
+      Long explosion) {
     public Series {
       title = title == null ? new Title.None() : title;
       Objects.requireNonNull(categories, "categories must not be null");
       Objects.requireNonNull(values, "values must not be null");
+      if (markerSize != null && (markerSize < 2 || markerSize > 72)) {
+        throw new IllegalArgumentException("markerSize must be between 2 and 72");
+      }
+      if (explosion != null && explosion < 0L) {
+        throw new IllegalArgumentException("explosion must not be negative");
+      }
+    }
+
+    /** Convenience overload for authored series that only need title, categories, and values. */
+    public Series(Title title, DataSource categories, DataSource values) {
+      this(title, categories, values, null, null, null, null);
     }
   }
 
-  /** Workbook-bound chart source formula. */
-  record DataSource(String formula) {
-    public DataSource {
-      formula = requireNonBlank(formula, "formula");
+  /** Authored chart data source. */
+  public sealed interface DataSource
+      permits DataSource.Reference, DataSource.StringLiteral, DataSource.NumericLiteral {
+
+    /** Workbook-bound chart source formula. */
+    record Reference(String formula) implements DataSource {
+      public Reference {
+        formula = requireNonBlank(formula, "formula");
+      }
+    }
+
+    /** Literal string source stored directly inside the chart part. */
+    record StringLiteral(List<String> values) implements DataSource {
+      public StringLiteral {
+        values = copyValues(values, "values");
+      }
+    }
+
+    /** Literal numeric source stored directly inside the chart part. */
+    record NumericLiteral(List<Double> values) implements DataSource {
+      public NumericLiteral {
+        values = copyValues(values, "values");
+      }
     }
   }
 
-  private static List<Series> copySeries(List<Series> series) {
-    Objects.requireNonNull(series, "series must not be null");
-    List<Series> copiedSeries = List.copyOf(series);
-    if (copiedSeries.isEmpty()) {
-      throw new IllegalArgumentException("series must not be empty");
+  /** Authored chart plot. */
+  public sealed interface Plot
+      permits Area,
+          Area3D,
+          Bar,
+          Bar3D,
+          Doughnut,
+          Line,
+          Line3D,
+          Pie,
+          Pie3D,
+          Radar,
+          Scatter,
+          Surface,
+          Surface3D {}
+
+  public record Area(
+      boolean varyColors, ExcelChartGrouping grouping, List<Axis> axes, List<Series> series)
+      implements Plot {
+    public Area {
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyNonEmptyValues(axes, "axes");
+      series = copyNonEmptyValues(series, "series");
     }
-    for (Series value : copiedSeries) {
-      Objects.requireNonNull(value, "series must not contain null values");
-    }
-    return copiedSeries;
   }
 
-  private static void requireName(String name) {
-    requireNonBlank(name, "name");
+  public record Area3D(
+      boolean varyColors,
+      ExcelChartGrouping grouping,
+      Integer gapDepth,
+      List<Axis> axes,
+      List<Series> series)
+      implements Plot {
+    public Area3D {
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyNonEmptyValues(axes, "axes");
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Bar(
+      boolean varyColors,
+      ExcelChartBarDirection barDirection,
+      ExcelChartBarGrouping grouping,
+      Integer gapWidth,
+      Integer overlap,
+      List<Axis> axes,
+      List<Series> series)
+      implements Plot {
+    public Bar {
+      Objects.requireNonNull(barDirection, "barDirection must not be null");
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyNonEmptyValues(axes, "axes");
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Bar3D(
+      boolean varyColors,
+      ExcelChartBarDirection barDirection,
+      ExcelChartBarGrouping grouping,
+      Integer gapDepth,
+      Integer gapWidth,
+      ExcelChartBarShape shape,
+      List<Axis> axes,
+      List<Series> series)
+      implements Plot {
+    public Bar3D {
+      Objects.requireNonNull(barDirection, "barDirection must not be null");
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyNonEmptyValues(axes, "axes");
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Doughnut(
+      boolean varyColors, Integer firstSliceAngle, Integer holeSize, List<Series> series)
+      implements Plot {
+    public Doughnut {
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Line(
+      boolean varyColors, ExcelChartGrouping grouping, List<Axis> axes, List<Series> series)
+      implements Plot {
+    public Line {
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyNonEmptyValues(axes, "axes");
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Line3D(
+      boolean varyColors,
+      ExcelChartGrouping grouping,
+      Integer gapDepth,
+      List<Axis> axes,
+      List<Series> series)
+      implements Plot {
+    public Line3D {
+      Objects.requireNonNull(grouping, "grouping must not be null");
+      axes = copyNonEmptyValues(axes, "axes");
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Pie(boolean varyColors, Integer firstSliceAngle, List<Series> series)
+      implements Plot {
+    public Pie {
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Pie3D(boolean varyColors, List<Series> series) implements Plot {
+    public Pie3D {
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Radar(
+      boolean varyColors, ExcelChartRadarStyle style, List<Axis> axes, List<Series> series)
+      implements Plot {
+    public Radar {
+      Objects.requireNonNull(style, "style must not be null");
+      axes = copyNonEmptyValues(axes, "axes");
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Scatter(
+      boolean varyColors, ExcelChartScatterStyle style, List<Axis> axes, List<Series> series)
+      implements Plot {
+    public Scatter {
+      Objects.requireNonNull(style, "style must not be null");
+      axes = copyNonEmptyValues(axes, "axes");
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Surface(boolean varyColors, boolean wireframe, List<Axis> axes, List<Series> series)
+      implements Plot {
+    public Surface {
+      axes = copyNonEmptyValues(axes, "axes");
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  public record Surface3D(
+      boolean varyColors, boolean wireframe, List<Axis> axes, List<Series> series) implements Plot {
+    public Surface3D {
+      axes = copyNonEmptyValues(axes, "axes");
+      series = copyNonEmptyValues(series, "series");
+    }
+  }
+
+  private static <T> List<T> copyNonEmptyValues(List<T> values, String fieldName) {
+    List<T> copiedValues = copyValues(values, fieldName);
+    if (copiedValues.isEmpty()) {
+      throw new IllegalArgumentException(fieldName + " must not be empty");
+    }
+    return copiedValues;
+  }
+
+  private static <T> List<T> copyValues(List<T> values, String fieldName) {
+    Objects.requireNonNull(values, fieldName + " must not be null");
+    List<T> copiedValues = new ArrayList<>(values.size());
+    for (T value : values) {
+      copiedValues.add(Objects.requireNonNull(value, fieldName + " must not contain null values"));
+    }
+    return List.copyOf(copiedValues);
   }
 
   private static String requireNonBlank(String value, String fieldName) {

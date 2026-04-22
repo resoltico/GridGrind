@@ -7,25 +7,25 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 5901,
+      "inputBytes" : 5478,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
-      "operationCount" : 6,
+      "operationCount" : 5,
       "operationKinds" : {
-        "ENSURE_SHEET" : 1,
-        "SET_RANGE" : 1,
-        "SET_DRAWING_OBJECT_ANCHOR" : 1,
+        "SET_CHART" : 1,
         "SET_NAMED_RANGE" : 2,
-        "SET_CHART" : 1
+        "ENSURE_SHEET" : 1,
+        "SET_RANGE" : 1
       },
       "styleKinds" : { },
-      "assertionCount" : 0,
-      "assertionKinds" : { },
-      "readCount" : 2,
+      "assertionCount" : 1,
+      "assertionKinds" : {
+        "EXPECT_PRESENT" : 1
+      },
+      "readCount" : 1,
       "readKinds" : {
-        "GET_CHARTS" : 1,
-        "GET_DRAWING_OBJECTS" : 1
+        "GET_CHARTS" : 1
       }
     }
   },

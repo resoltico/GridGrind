@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.Optional;
 import org.apache.poi.ss.formula.FormulaType;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellCopyPolicy;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.SheetVisibility;
@@ -14,9 +13,11 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTSheetProtection;
 
-/** Copies sheet-local workbook structures without relying on POI's raw sheet cloning. */
+/** Copies sheets by combining POI XSSF cloning with GridGrind-owned repair passes. */
 final class ExcelSheetCopyController {
   private final ExcelAutofilterController autofilterController = new ExcelAutofilterController();
+  private final ExcelSheetClonePreparationSupport clonePreparationSupport =
+      new ExcelSheetClonePreparationSupport();
 
   /** Copies one sheet into a new visible, unselected sheet at the requested workbook position. */
   ExcelWorkbook copySheet(
@@ -34,27 +35,25 @@ final class ExcelSheetCopyController {
     XSSFSheet sourcePoiSheet =
         ExcelWorkbookSheetSupport.requiredSheet(workbook.xssfWorkbook(), sourceSheetName);
     ExcelSheetCopySnapshot snapshot = snapshot(workbook, sourceSheetName, sourcePoiSheet);
-
-    XSSFSheet targetPoiSheet = workbook.xssfWorkbook().createSheet(newSheetName);
+    clonePreparationSupport.prepareSourceSheetForClone(sourcePoiSheet);
+    int sourceSheetIndex = workbook.xssfWorkbook().getSheetIndex(sourcePoiSheet);
+    XSSFSheet targetPoiSheet = workbook.xssfWorkbook().cloneSheet(sourceSheetIndex, newSheetName);
     ExcelSheet targetSheet = workbook.sheet(newSheetName);
 
-    copyRows(sourcePoiSheet, targetPoiSheet);
     retargetCopiedSheetFormulas(workbook, sourceSheetName, newSheetName, targetPoiSheet);
-    copyComments(snapshot.comments(), targetSheet);
-    copyMergedRegions(snapshot.mergedRegions(), targetSheet);
-    copyLayout(snapshot.layout(), targetSheet);
-    targetSheet.setPrintLayout(snapshot.printLayout());
-    copyDataValidations(
+    replaceDataValidations(
         snapshot.dataValidations(), targetPoiSheet, workbook, sourceSheetName, newSheetName);
-    copyConditionalFormatting(
+    replaceConditionalFormatting(
         snapshot.conditionalFormattingBlocks(),
         targetSheet,
         workbook,
         sourceSheetName,
         newSheetName);
-    copyTables(workbook, newSheetName, snapshot.tables());
-    copyAutofilter(snapshot.sheetAutofilter(), targetSheet);
-    copyLocalNamedRanges(workbook, sourceSheetName, newSheetName, snapshot.localNamedRanges());
+    repairComments(snapshot.comments(), targetSheet);
+    repairPrintLayout(snapshot.printLayout(), targetSheet);
+    replaceTables(workbook, newSheetName, snapshot.tables());
+    replaceAutofilter(snapshot.sheetAutofilter(), targetSheet);
+    replaceLocalNamedRanges(workbook, sourceSheetName, newSheetName, snapshot.localNamedRanges());
     copyProtection(sourcePoiSheet, targetPoiSheet);
 
     int targetSheetIndex = workbook.xssfWorkbook().getSheetIndex(targetPoiSheet);
@@ -62,7 +61,7 @@ final class ExcelSheetCopyController {
     targetPoiSheet.setSelected(false);
     switch (position) {
       case ExcelSheetCopyPosition.AppendAtEnd _ -> {
-        // createSheet already appends at the end.
+        // cloneSheet already appends at the end.
       }
       case ExcelSheetCopyPosition.AtIndex atIndex -> {
         ExcelWorkbookSheetSupport.requireTargetIndex(
@@ -73,6 +72,85 @@ final class ExcelSheetCopyController {
     ExcelWorkbookSheetSupport.normalizeWorkbookViewState(workbook.xssfWorkbook());
     targetPoiSheet.setSelected(false);
     return workbook;
+  }
+
+  private static void repairComments(
+      List<WorkbookReadResult.CellComment> expectedComments, ExcelSheet targetSheet) {
+    if (expectedComments.isEmpty()) {
+      return;
+    }
+    // cloneSheet can leave copied comments looking correct in-memory while reopening later
+    // without a stable client anchor. Rewriting the copied comments makes the persisted
+    // VML-backed comment state authoritative again.
+    for (WorkbookReadResult.CellComment expectedComment : expectedComments) {
+      targetSheet.clearComment(expectedComment.address());
+    }
+    copyComments(expectedComments, targetSheet);
+  }
+
+  private static void repairPrintLayout(
+      ExcelPrintLayout expectedPrintLayout, ExcelSheet targetSheet) {
+    if (expectedPrintLayout.equals(targetSheet.printLayout())) {
+      return;
+    }
+    targetSheet.setPrintLayout(expectedPrintLayout);
+  }
+
+  private static void replaceLocalNamedRanges(
+      ExcelWorkbook workbook,
+      String sourceSheetName,
+      String targetSheetName,
+      List<ExcelNamedRangeSnapshot> localNamedRanges) {
+    deleteLocalNamedRanges(workbook, targetSheetName);
+    copyLocalNamedRanges(workbook, sourceSheetName, targetSheetName, localNamedRanges);
+  }
+
+  private static void deleteLocalNamedRanges(ExcelWorkbook workbook, String sheetName) {
+    ExcelNamedRangeScope.SheetScope scope = new ExcelNamedRangeScope.SheetScope(sheetName);
+    for (ExcelNamedRangeSnapshot localName :
+        copyableLocalNames(workbook.namedRanges(), sheetName)) {
+      workbook.deleteNamedRange(localName.name(), scope);
+    }
+  }
+
+  private static void replaceDataValidations(
+      List<CTDataValidation> validations,
+      XSSFSheet targetPoiSheet,
+      ExcelWorkbook workbook,
+      String sourceSheetName,
+      String newSheetName) {
+    if (targetPoiSheet.getCTWorksheet().isSetDataValidations()) {
+      targetPoiSheet.getCTWorksheet().unsetDataValidations();
+    }
+    copyDataValidations(validations, targetPoiSheet, workbook, sourceSheetName, newSheetName);
+  }
+
+  private static void replaceConditionalFormatting(
+      List<ExcelConditionalFormattingBlockDefinition> blocks,
+      ExcelSheet targetSheet,
+      ExcelWorkbook workbook,
+      String sourceSheetName,
+      String newSheetName) {
+    targetSheet.clearConditionalFormatting(new ExcelRangeSelection.All());
+    copyConditionalFormatting(blocks, targetSheet, workbook, sourceSheetName, newSheetName);
+  }
+
+  private static void replaceTables(
+      ExcelWorkbook workbook, String targetSheetName, List<ExcelTableSnapshot> tables) {
+    List<String> existingTableNames =
+        workbook.sheet(targetSheetName).xssfSheet().getTables().stream()
+            .map(table -> table.getName())
+            .toList();
+    for (String existingTableName : existingTableNames) {
+      workbook.deleteTable(existingTableName, targetSheetName);
+    }
+    copyTables(workbook, targetSheetName, tables);
+  }
+
+  private static void replaceAutofilter(
+      ExcelAutofilterSnapshot.SheetOwned sheetAutofilter, ExcelSheet targetSheet) {
+    targetSheet.clearAutofilter();
+    copyAutofilter(sheetAutofilter, targetSheet);
   }
 
   private ExcelSheetCopySnapshot snapshot(
@@ -91,33 +169,15 @@ final class ExcelSheetCopyController {
         tablesOnSheet(sourcePoiSheet));
   }
 
-  private static void copyRows(XSSFSheet sourceSheet, XSSFSheet targetSheet) {
-    List<Row> sourceRows = new ArrayList<>();
-    for (Row sourceRow : sourceSheet) {
-      sourceRows.add(sourceRow);
-    }
-    if (sourceRows.isEmpty()) {
-      return;
-    }
-
-    CellCopyPolicy copyPolicy = new CellCopyPolicy();
-    copyPolicy.setCopyCellValue(true);
-    copyPolicy.setCopyCellStyle(true);
-    copyPolicy.setCopyCellFormula(true);
-    copyPolicy.setCopyHyperlink(true);
-    copyPolicy.setMergeHyperlink(false);
-    copyPolicy.setCopyRowHeight(true);
-    copyPolicy.setCondenseRows(false);
-    copyPolicy.setCopyMergedRegions(false);
-    targetSheet.copyRows(sourceRows, 0, copyPolicy);
-  }
-
   private static void retargetCopiedSheetFormulas(
       ExcelWorkbook workbook, String sourceSheetName, String newSheetName, XSSFSheet targetSheet) {
     int targetSheetIndex = workbook.xssfWorkbook().getSheetIndex(targetSheet);
     for (Row row : targetSheet) {
       for (Cell cell : row) {
         if (cell.getCellType() != CellType.FORMULA) {
+          continue;
+        }
+        if (!mayReferenceCopiedSheet(cell.getCellFormula(), sourceSheetName)) {
           continue;
         }
         String rewritten =
@@ -135,31 +195,19 @@ final class ExcelSheetCopyController {
     }
   }
 
+  private static boolean mayReferenceCopiedSheet(String formula, String sourceSheetName) {
+    String quotedSourceSheetName = "'" + sourceSheetName.replace("'", "''") + "'";
+    return formula.contains(sourceSheetName + "!")
+        || formula.contains(quotedSourceSheetName + "!")
+        || formula.contains(sourceSheetName + ":")
+        || formula.contains(quotedSourceSheetName + ":");
+  }
+
   private static void copyComments(
       List<WorkbookReadResult.CellComment> comments, ExcelSheet targetSheet) {
     for (WorkbookReadResult.CellComment comment : comments) {
       targetSheet.setComment(comment.address(), comment.comment().toAuthoringComment());
     }
-  }
-
-  private static void copyMergedRegions(
-      List<WorkbookReadResult.MergedRegion> mergedRegions, ExcelSheet targetSheet) {
-    for (WorkbookReadResult.MergedRegion mergedRegion : mergedRegions) {
-      targetSheet.mergeCells(mergedRegion.range());
-    }
-  }
-
-  private static void copyLayout(WorkbookReadResult.SheetLayout layout, ExcelSheet targetSheet) {
-    for (WorkbookReadResult.ColumnLayout column : layout.columns()) {
-      targetSheet.setColumnWidth(
-          column.columnIndex(), column.columnIndex(), column.widthCharacters());
-    }
-    for (WorkbookReadResult.RowLayout row : layout.rows()) {
-      targetSheet.setRowHeight(row.rowIndex(), row.rowIndex(), row.heightPoints());
-    }
-    targetSheet.setPane(layout.pane());
-    targetSheet.setZoom(layout.zoomPercent());
-    targetSheet.setPresentation(layout.presentation().toAuthoringPresentation());
   }
 
   private static void copyDataValidations(

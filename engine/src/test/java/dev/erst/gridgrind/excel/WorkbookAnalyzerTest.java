@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class WorkbookAnalyzerTest {
   @Test
   void executesEveryAnalysisCommandAgainstWorkbookState() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-analyzer-", ".xlsx");
+    Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-analyzer-", ".xlsx");
     writeAnalyzerFixture(workbookPath);
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
@@ -356,7 +356,8 @@ class WorkbookAnalyzerTest {
   @Test
   void namedRangeHealthHandlesQuotedLiteralAndUnresolvedFormulaShapes() throws Exception {
     Path workbookPath =
-        assertDoesNotThrow(() -> Files.createTempFile("gridgrind-ranges-", ".xlsx"));
+        assertDoesNotThrow(
+            () -> ExcelTempFiles.createManagedTempFile("gridgrind-ranges-", ".xlsx"));
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       workbook.createSheet("Quarter 1").createRow(0).createCell(0).setCellValue(42);

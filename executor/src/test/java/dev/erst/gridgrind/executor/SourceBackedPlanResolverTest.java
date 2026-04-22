@@ -17,6 +17,8 @@ import dev.erst.gridgrind.contract.assertion.ExpectedCellValue;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.ChartInput;
 import dev.erst.gridgrind.contract.dto.CommentInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
@@ -30,6 +32,7 @@ import dev.erst.gridgrind.contract.dto.PictureInput;
 import dev.erst.gridgrind.contract.dto.PrintLayoutInput;
 import dev.erst.gridgrind.contract.dto.RichTextRunInput;
 import dev.erst.gridgrind.contract.dto.ShapeInput;
+import dev.erst.gridgrind.contract.dto.SignatureLineInput;
 import dev.erst.gridgrind.contract.dto.TableInput;
 import dev.erst.gridgrind.contract.dto.TableStyleInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
@@ -40,6 +43,7 @@ import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableCellSelector;
 import dev.erst.gridgrind.contract.selector.TableRowSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
+import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.contract.step.AssertionStep;
@@ -106,7 +110,23 @@ class SourceBackedPlanResolverTest {
                             "open",
                             new BinarySourceInput.File("payload.bin"),
                             inlinePictureData(),
-                            twoCellAnchor())))));
+                            twoCellAnchor()))),
+                mutate(
+                    new SheetSelector.ByName("Budget"),
+                    new MutationAction.SetSignatureLine(
+                        new SignatureLineInput(
+                            "OpsSignature",
+                            twoCellAnchor(),
+                            false,
+                            "Review before signing.",
+                            "Ada Lovelace",
+                            "Finance",
+                            "ada@example.com",
+                            null,
+                            "invalid",
+                            new PictureDataInput(
+                                ExcelPictureFormat.PNG,
+                                new BinarySourceInput.File("payload.bin")))))));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
@@ -139,6 +159,16 @@ class SourceBackedPlanResolverTest {
         Base64.getEncoder().encodeToString(payloadBytes),
         ((BinarySourceInput.InlineBase64) embeddedObjectAction.embeddedObject().payload())
             .base64Data());
+
+    MutationAction.SetSignatureLine signatureLineAction =
+        assertInstanceOf(
+            MutationAction.SetSignatureLine.class,
+            ((MutationStep) resolved.steps().get(4)).action());
+    assertEquals(
+        Base64.getEncoder().encodeToString(payloadBytes),
+        ((BinarySourceInput.InlineBase64)
+                signatureLineAction.signatureLine().plainSignature().source())
+            .base64Data());
   }
 
   @Test
@@ -151,7 +181,22 @@ class SourceBackedPlanResolverTest {
                 mutate(
                     new CellSelector.ByAddress("Budget", "A1"),
                     new MutationAction.SetCell(
-                        new CellInput.Text(new TextSourceInput.StandardInput())))));
+                        new CellInput.Text(new TextSourceInput.StandardInput()))),
+                mutate(
+                    new SheetSelector.ByName("Budget"),
+                    new MutationAction.SetSignatureLine(
+                        new SignatureLineInput(
+                            "OpsSignature",
+                            twoCellAnchor(),
+                            false,
+                            "Review before signing.",
+                            "Ada Lovelace",
+                            "Finance",
+                            "ada@example.com",
+                            null,
+                            "invalid",
+                            new PictureDataInput(
+                                ExcelPictureFormat.PNG, new BinarySourceInput.StandardInput()))))));
     WorkbookPlan fileBackedPlan =
         request(
             new WorkbookPlan.WorkbookSource.New(),
@@ -164,6 +209,40 @@ class SourceBackedPlanResolverTest {
 
     assertTrue(SourceBackedPlanResolver.requiresStandardInput(standardInputPlan));
     assertFalse(SourceBackedPlanResolver.requiresStandardInput(fileBackedPlan));
+  }
+
+  @Test
+  void resolveRewritesCustomXmlImportSourcesIntoInlineValues() throws IOException {
+    Path workingDirectory = Files.createTempDirectory("gridgrind-custom-xml-resolve-");
+    Files.writeString(
+        workingDirectory.resolve("mapping.xml"),
+        "<CORSO><NOME>Grid</NOME><DOCENTE>Grind</DOCENTE></CORSO>",
+        StandardCharsets.UTF_8);
+
+    WorkbookPlan plan =
+        request(
+            new WorkbookPlan.WorkbookSource.New(),
+            new WorkbookPlan.WorkbookPersistence.None(),
+            mutations(
+                mutate(
+                    new WorkbookSelector.Current(),
+                    new MutationAction.ImportCustomXmlMapping(
+                        new CustomXmlImportInput(
+                            new CustomXmlMappingLocator(1L, "CORSO_mapping"),
+                            new TextSourceInput.Utf8File("mapping.xml"))))));
+
+    WorkbookPlan resolved =
+        SourceBackedPlanResolver.resolve(
+            plan, new ExecutionInputBindings(workingDirectory, (byte[]) null));
+
+    MutationAction.ImportCustomXmlMapping action =
+        assertInstanceOf(
+            MutationAction.ImportCustomXmlMapping.class,
+            assertInstanceOf(MutationStep.class, resolved.steps().getFirst()).action());
+    assertEquals(new CustomXmlMappingLocator(1L, "CORSO_mapping"), action.mapping().locator());
+    assertEquals(
+        "<CORSO><NOME>Grid</NOME><DOCENTE>Grind</DOCENTE></CORSO>",
+        assertInstanceOf(TextSourceInput.Inline.class, action.mapping().xml()).text());
   }
 
   @Test
@@ -238,30 +317,27 @@ class SourceBackedPlanResolverTest {
             "set-line-chart-file-backed",
             new SheetSelector.ByName("Budget"),
             new MutationAction.SetChart(
-                new ChartInput.Line(
+                chartInput(
                     "Line",
                     twoCellAnchor(),
                     new ChartInput.Title.Text(TextSourceInput.utf8File("line-title.txt")),
                     null,
                     ExcelChartDisplayBlanksAs.ZERO,
                     true,
-                    false,
-                    List.of(chartSeries()))));
+                    new ChartInput.Line(false, null, null, List.of(chartSeries())))));
     MutationStep pieChartStep =
         new MutationStep(
             "set-pie-chart-file-backed",
             new SheetSelector.ByName("Budget"),
             new MutationAction.SetChart(
-                new ChartInput.Pie(
+                chartInput(
                     "Pie",
                     twoCellAnchor(),
                     new ChartInput.Title.Text(TextSourceInput.utf8File("pie-title.txt")),
                     null,
                     ExcelChartDisplayBlanksAs.GAP,
                     true,
-                    false,
-                    15,
-                    List.of(chartSeries()))));
+                    new ChartInput.Pie(false, 15, List.of(chartSeries())))));
 
     WorkbookPlan resolved =
         SourceBackedPlanResolver.resolve(
@@ -281,22 +357,20 @@ class SourceBackedPlanResolverTest {
 
     MutationStep resolvedLineStep = assertInstanceOf(MutationStep.class, resolved.steps().get(1));
     assertNotSame(lineChartStep, resolvedLineStep);
-    ChartInput.Line resolvedLine =
-        assertInstanceOf(
-            ChartInput.Line.class,
-            assertInstanceOf(MutationAction.SetChart.class, resolvedLineStep.action()).chart());
+    ChartInput resolvedLineChart =
+        assertInstanceOf(MutationAction.SetChart.class, resolvedLineStep.action()).chart();
+    assertInstanceOf(ChartInput.Line.class, resolvedLineChart.plots().getFirst());
     ChartInput.Title.Text lineTitle =
-        assertInstanceOf(ChartInput.Title.Text.class, resolvedLine.title());
+        assertInstanceOf(ChartInput.Title.Text.class, resolvedLineChart.title());
     assertEquals("Quarterly Trend", ((TextSourceInput.Inline) lineTitle.source()).text());
 
     MutationStep resolvedPieStep = assertInstanceOf(MutationStep.class, resolved.steps().get(2));
     assertNotSame(pieChartStep, resolvedPieStep);
-    ChartInput.Pie resolvedPie =
-        assertInstanceOf(
-            ChartInput.Pie.class,
-            assertInstanceOf(MutationAction.SetChart.class, resolvedPieStep.action()).chart());
+    ChartInput resolvedPieChart =
+        assertInstanceOf(MutationAction.SetChart.class, resolvedPieStep.action()).chart();
+    assertInstanceOf(ChartInput.Pie.class, resolvedPieChart.plots().getFirst());
     ChartInput.Title.Text pieTitle =
-        assertInstanceOf(ChartInput.Title.Text.class, resolvedPie.title());
+        assertInstanceOf(ChartInput.Title.Text.class, resolvedPieChart.title());
     assertEquals("Category Mix", ((TextSourceInput.Inline) pieTitle.source()).text());
   }
 
@@ -402,41 +476,37 @@ class SourceBackedPlanResolverTest {
     assertTrue(
         requiresStandardInputFor(
             new MutationAction.SetChart(
-                new ChartInput.Bar(
+                chartInput(
                     "Bar",
                     twoCellAnchor(),
                     new ChartInput.Title.Text(TextSourceInput.standardInput()),
                     null,
                     ExcelChartDisplayBlanksAs.GAP,
                     true,
-                    false,
-                    null,
-                    List.of(chartSeries())))));
+                    new ChartInput.Bar(
+                        false, null, null, null, null, null, List.of(chartSeries()))))));
     assertFalse(
         requiresStandardInputFor(
             new MutationAction.SetChart(
-                new ChartInput.Line(
+                chartInput(
                     "Line",
                     twoCellAnchor(),
                     new ChartInput.Title.Formula("Budget!$A$1"),
                     null,
                     ExcelChartDisplayBlanksAs.ZERO,
                     true,
-                    false,
-                    List.of(chartSeries())))));
+                    new ChartInput.Line(false, null, null, List.of(chartSeries()))))));
     assertFalse(
         requiresStandardInputFor(
             new MutationAction.SetChart(
-                new ChartInput.Pie(
+                chartInput(
                     "Pie",
                     twoCellAnchor(),
                     new ChartInput.Title.None(),
                     null,
                     ExcelChartDisplayBlanksAs.GAP,
                     true,
-                    false,
-                    0,
-                    List.of(chartSeries())))));
+                    new ChartInput.Pie(false, 0, List.of(chartSeries()))))));
     assertTrue(
         requiresStandardInputFor(
             new MutationAction.SetShape(
@@ -673,43 +743,39 @@ class SourceBackedPlanResolverTest {
                     "step-03-set-bar-chart",
                     new SheetSelector.ByName("Budget"),
                     new MutationAction.SetChart(
-                        new ChartInput.Bar(
+                        chartInput(
                             "Bar",
                             twoCellAnchor(),
                             new ChartInput.Title.Text(TextSourceInput.utf8File("chart-title.txt")),
                             null,
                             ExcelChartDisplayBlanksAs.GAP,
                             true,
-                            false,
-                            null,
-                            List.of(chartSeries())))),
+                            new ChartInput.Bar(
+                                false, null, null, null, null, null, List.of(chartSeries()))))),
                 new MutationStep(
                     "step-04-set-line-chart",
                     new SheetSelector.ByName("Budget"),
                     new MutationAction.SetChart(
-                        new ChartInput.Line(
+                        chartInput(
                             "Line",
                             twoCellAnchor(),
                             new ChartInput.Title.Formula("Budget!$A$1"),
                             null,
                             ExcelChartDisplayBlanksAs.ZERO,
                             true,
-                            false,
-                            List.of(chartSeries())))),
+                            new ChartInput.Line(false, null, null, List.of(chartSeries()))))),
                 new MutationStep(
                     "step-05-set-pie-chart",
                     new SheetSelector.ByName("Budget"),
                     new MutationAction.SetChart(
-                        new ChartInput.Pie(
+                        chartInput(
                             "Pie",
                             twoCellAnchor(),
                             new ChartInput.Title.None(),
                             null,
                             ExcelChartDisplayBlanksAs.GAP,
                             true,
-                            false,
-                            0,
-                            List.of(chartSeries())))),
+                            new ChartInput.Pie(false, 0, List.of(chartSeries()))))),
                 new MutationStep(
                     "step-06-set-shape",
                     new SheetSelector.ByName("Budget"),
@@ -829,24 +895,25 @@ class SourceBackedPlanResolverTest {
     MutationAction.SetChart barChart =
         assertInstanceOf(
             MutationAction.SetChart.class, ((MutationStep) resolved.steps().get(2)).action());
-    ChartInput.Bar resolvedBar = assertInstanceOf(ChartInput.Bar.class, barChart.chart());
+    ChartInput resolvedBarChart = barChart.chart();
+    assertInstanceOf(ChartInput.Bar.class, resolvedBarChart.plots().getFirst());
     assertEquals(
         "Quarterly Trend",
         ((TextSourceInput.Inline)
-                assertInstanceOf(ChartInput.Title.Text.class, resolvedBar.title()).source())
+                assertInstanceOf(ChartInput.Title.Text.class, resolvedBarChart.title()).source())
             .text());
 
     MutationAction.SetChart lineChart =
         assertInstanceOf(
             MutationAction.SetChart.class, ((MutationStep) resolved.steps().get(3)).action());
-    assertInstanceOf(ChartInput.Line.class, lineChart.chart());
-    assertInstanceOf(ChartInput.Title.Formula.class, ((ChartInput.Line) lineChart.chart()).title());
+    assertInstanceOf(ChartInput.Line.class, lineChart.chart().plots().getFirst());
+    assertInstanceOf(ChartInput.Title.Formula.class, lineChart.chart().title());
 
     MutationAction.SetChart pieChart =
         assertInstanceOf(
             MutationAction.SetChart.class, ((MutationStep) resolved.steps().get(4)).action());
-    assertInstanceOf(ChartInput.Pie.class, pieChart.chart());
-    assertInstanceOf(ChartInput.Title.None.class, ((ChartInput.Pie) pieChart.chart()).title());
+    assertInstanceOf(ChartInput.Pie.class, pieChart.chart().plots().getFirst());
+    assertInstanceOf(ChartInput.Title.None.class, pieChart.chart().title());
 
     MutationAction.SetShape shapeAction =
         assertInstanceOf(
@@ -1884,8 +1951,24 @@ class SourceBackedPlanResolverTest {
   private static ChartInput.Series chartSeries() {
     return new ChartInput.Series(
         new ChartInput.Title.None(),
-        new ChartInput.DataSource("Budget!$A$2:$A$3"),
-        new ChartInput.DataSource("Budget!$B$2:$B$3"));
+        new ChartInput.DataSource.Reference("Budget!$A$2:$A$3"),
+        new ChartInput.DataSource.Reference("Budget!$B$2:$B$3"),
+        null,
+        null,
+        null,
+        null);
+  }
+
+  private static ChartInput chartInput(
+      String name,
+      DrawingAnchorInput.TwoCell anchor,
+      ChartInput.Title title,
+      ChartInput.Legend legend,
+      ExcelChartDisplayBlanksAs displayBlanksAs,
+      Boolean plotOnlyVisibleCells,
+      ChartInput.Plot plot) {
+    return new ChartInput(
+        name, anchor, title, legend, displayBlanksAs, plotOnlyVisibleCells, List.of(plot));
   }
 
   private static byte[] pngBytes() {

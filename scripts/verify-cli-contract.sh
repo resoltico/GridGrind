@@ -53,15 +53,10 @@ goal_plan_path=''
 doctor_report_path=''
 help_path=''
 temp_dir=''
+temp_parent=''
 
 cleanup() {
     [[ -n "${temp_dir}" ]] && rm -rf "${temp_dir}" || true
-    [[ -n "${help_path}" ]] && rm -f "${help_path}" || true
-    [[ -n "${catalog_path}" ]] && rm -f "${catalog_path}" || true
-    [[ -n "${task_catalog_path}" ]] && rm -f "${task_catalog_path}" || true
-    [[ -n "${task_plan_path}" ]] && rm -f "${task_plan_path}" || true
-    [[ -n "${goal_plan_path}" ]] && rm -f "${goal_plan_path}" || true
-    [[ -n "${doctor_report_path}" ]] && rm -f "${doctor_report_path}" || true
 }
 
 trap cleanup EXIT
@@ -96,9 +91,11 @@ esac
 
 command -v python3 >/dev/null 2>&1 || die "python3 is required for CLI contract verification"
 
-temp_parent="${TMPDIR:-/tmp}"
-temp_parent="${temp_parent%/}"
-temp_dir="$(mktemp -d "${temp_parent}/gridgrind-cli-contract.XXXXXX")"
+temp_parent="${repo_root}/tmp/verify-cli-contract"
+mkdir -p "${temp_parent}"
+temp_dir="${temp_parent}/run.$$.${RANDOM}"
+rm -rf "${temp_dir}"
+mkdir -p "${temp_dir}"
 help_path="${temp_dir}/help.txt"
 catalog_path="${temp_dir}/protocol-catalog.json"
 task_catalog_path="${temp_dir}/task-catalog.json"

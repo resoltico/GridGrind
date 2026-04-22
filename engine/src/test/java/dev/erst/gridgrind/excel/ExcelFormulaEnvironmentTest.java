@@ -390,7 +390,8 @@ class ExcelFormulaEnvironmentTest {
 
   private static ExternalFormulaScenario createExternalFormulaScenario(boolean seedCachedValue)
       throws IOException {
-    Path directory = Files.createTempDirectory("gridgrind-external-formula-scenario-");
+    Path directory =
+        ExcelTempFiles.createManagedTempDirectory("gridgrind-external-formula-scenario-");
     Path referencedWorkbookPath = directory.resolve("referenced.xlsx");
     Path workbookPath = directory.resolve("external-formula.xlsx");
 

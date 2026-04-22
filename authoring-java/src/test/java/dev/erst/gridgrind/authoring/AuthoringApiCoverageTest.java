@@ -717,7 +717,7 @@ class AuthoringApiCoverageTest {
   }
 
   private static ChartInput sampleChart() {
-    return new ChartInput.Bar(
+    return new ChartInput(
         "BudgetChart",
         new DrawingAnchorInput.TwoCell(
             new DrawingMarkerInput(0, 0),
@@ -727,12 +727,22 @@ class AuthoringApiCoverageTest {
         null,
         ExcelChartDisplayBlanksAs.GAP,
         true,
-        false,
-        ExcelChartBarDirection.COLUMN,
         List.of(
-            new ChartInput.Series(
-                new ChartInput.Title.Text(Values.inlineText("Amounts")),
-                new ChartInput.DataSource("Budget!$A$2:$A$3"),
-                new ChartInput.DataSource("Budget!$B$2:$B$3"))));
+            new ChartInput.Bar(
+                false,
+                ExcelChartBarDirection.COLUMN,
+                null,
+                null,
+                null,
+                null,
+                List.of(
+                    new ChartInput.Series(
+                        new ChartInput.Title.Text(Values.inlineText("Amounts")),
+                        new ChartInput.DataSource.Reference("Budget!$A$2:$A$3"),
+                        new ChartInput.DataSource.Reference("Budget!$B$2:$B$3"),
+                        null,
+                        null,
+                        null,
+                        null)))));
   }
 }

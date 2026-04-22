@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.microsoft.schemas.vml.CTShape;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -27,9 +28,11 @@ import org.apache.poi.xssf.usermodel.XSSFObjectData;
 import org.apache.poi.xssf.usermodel.XSSFRelation;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFShape;
+import org.apache.poi.xssf.usermodel.XSSFVMLDrawing;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.xmlbeans.XmlCursor;
 import org.junit.jupiter.api.Test;
+import org.openxmlformats.schemas.officeDocument.x2006.sharedTypes.STTrueFalse;
 
 /** Integration tests for drawing, picture, and embedded-object sheet workflows. */
 class ExcelDrawingControllerTest {
@@ -142,6 +145,90 @@ class ExcelDrawingControllerTest {
   }
 
   @Test
+  void signatureLinesSupportReadMoveDeleteAndRoundTrip() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-signature-line-roundtrip-");
+    ExcelDrawingAnchor.TwoCell movedAnchor = anchor(6, 2, 10, 7);
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.setSignatureLine(
+          new ExcelSignatureLineDefinition(
+              "OpsSignature",
+              anchor(1, 1, 4, 6),
+              false,
+              "Review the numbers before signing.",
+              "Ada Lovelace",
+              "Finance",
+              "ada@example.com",
+              null,
+              "invalid",
+              ExcelPictureFormat.PNG,
+              new ExcelBinaryData(PNG_PIXEL_BYTES)));
+
+      List<ExcelDrawingObjectSnapshot> snapshots = sheet.drawingObjects();
+      assertEquals(
+          List.of("OpsSignature"),
+          snapshots.stream().map(ExcelDrawingObjectSnapshot::name).toList());
+      ExcelDrawingObjectSnapshot.SignatureLine signatureLine =
+          assertInstanceOf(ExcelDrawingObjectSnapshot.SignatureLine.class, snapshots.getFirst());
+      assertFalse(signatureLine.allowComments());
+      assertEquals("Review the numbers before signing.", signatureLine.signingInstructions());
+      assertEquals("Ada Lovelace", signatureLine.suggestedSigner());
+      assertEquals(ExcelPictureFormat.PNG, signatureLine.previewFormat());
+      assertEquals(400, signatureLine.previewWidthPixels());
+      assertEquals(150, signatureLine.previewHeightPixels());
+
+      IllegalArgumentException noPayload =
+          assertThrows(
+              IllegalArgumentException.class, () -> sheet.drawingObjectPayload("OpsSignature"));
+      assertTrue(noPayload.getMessage().contains("does not expose a binary payload"));
+
+      sheet.setDrawingObjectAnchor("OpsSignature", movedAnchor);
+      ExcelDrawingObjectSnapshot.SignatureLine movedSignature =
+          assertInstanceOf(
+              ExcelDrawingObjectSnapshot.SignatureLine.class,
+              sheet.drawingObjects().stream()
+                  .filter(snapshot -> "OpsSignature".equals(snapshot.name()))
+                  .findFirst()
+                  .orElseThrow());
+      assertEquals(movedAnchor, movedSignature.anchor());
+
+      workbook.save(workbookPath);
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFVMLDrawing vmlDrawing = reopened.getSheet("Ops").getVMLDrawing(false);
+      assertNotNull(vmlDrawing);
+      CTShape signatureShape = firstSignatureShape(vmlDrawing);
+      assertEquals("OpsSignature", signatureShape.getAlt());
+      assertEquals(STTrueFalse.F, signatureShape.getSignaturelineArray(0).getAllowcomments());
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      ExcelSheet sheet = reopened.sheet("Ops");
+      ExcelDrawingObjectSnapshot.SignatureLine signatureLine =
+          assertInstanceOf(
+              ExcelDrawingObjectSnapshot.SignatureLine.class,
+              sheet.drawingObjects().stream()
+                  .filter(snapshot -> "OpsSignature".equals(snapshot.name()))
+                  .findFirst()
+                  .orElseThrow());
+      assertEquals(movedAnchor, signatureLine.anchor());
+      assertEquals("Finance", signatureLine.suggestedSigner2());
+      assertEquals("ada@example.com", signatureLine.suggestedSignerEmail());
+
+      sheet.deleteDrawingObject("OpsSignature");
+      reopened.save(workbookPath);
+    }
+
+    try (XSSFWorkbook reopened = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFVMLDrawing vmlDrawing = reopened.getSheet("Ops").getVMLDrawing(false);
+      assertNotNull(vmlDrawing);
+      assertEquals(0, signatureShapeCount(vmlDrawing));
+    }
+  }
+
+  @Test
   void formulaBackedNumericChartTitlePersistsExplicitCacheAcrossSaveAndLoad() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-title-cache-");
 
@@ -155,7 +242,7 @@ class ExcelDrawingControllerTest {
       sheet.setCell("B3", ExcelCellValue.number(12d));
       sheet.setCell("B4", ExcelCellValue.number(14d));
       sheet.setChart(
-          new ExcelChartDefinition.Bar(
+          ExcelChartTestSupport.barChart(
               "OpsChart",
               anchor(0, 0, 3, 4),
               new ExcelChartDefinition.Title.Formula("B1"),
@@ -167,8 +254,8 @@ class ExcelDrawingControllerTest {
               List.of(
                   new ExcelChartDefinition.Series(
                       new ExcelChartDefinition.Title.None(),
-                      new ExcelChartDefinition.DataSource("A2:A4"),
-                      new ExcelChartDefinition.DataSource("B2:B4")))));
+                      ExcelChartTestSupport.ref("A2:A4"),
+                      ExcelChartTestSupport.ref("B2:B4")))));
       workbook.save(workbookPath);
     }
 
@@ -184,8 +271,7 @@ class ExcelDrawingControllerTest {
     }
 
     try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      ExcelChartSnapshot.Bar chart =
-          assertInstanceOf(ExcelChartSnapshot.Bar.class, reopened.sheet("Ops").charts().getFirst());
+      ExcelChartSnapshot chart = reopened.sheet("Ops").charts().getFirst();
       ExcelChartSnapshot.Title.Formula title =
           assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, chart.title());
       assertEquals("Ops!$B$1", title.formula());
@@ -209,7 +295,7 @@ class ExcelDrawingControllerTest {
       sheet.setCell("D1", ExcelCellValue.number(1d));
       sheet.setCell("E1", ExcelCellValue.number(2d));
       sheet.setChart(
-          new ExcelChartDefinition.Bar(
+          ExcelChartTestSupport.barChart(
               "OpsChart",
               anchor(4, 1, 11, 16),
               new ExcelChartDefinition.Title.Text("Roadmap"),
@@ -221,15 +307,15 @@ class ExcelDrawingControllerTest {
               List.of(
                   new ExcelChartDefinition.Series(
                       new ExcelChartDefinition.Title.None(),
-                      new ExcelChartDefinition.DataSource("A2:A4"),
-                      new ExcelChartDefinition.DataSource("B2:B4")))));
+                      ExcelChartTestSupport.ref("A2:A4"),
+                      ExcelChartTestSupport.ref("B2:B4")))));
       workbook.save(workbookPath);
     }
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
       ExcelSheet sheet = workbook.sheet("Chart");
       sheet.setChart(
-          new ExcelChartDefinition.Bar(
+          ExcelChartTestSupport.barChart(
               "OpsChart",
               anchor(4, 1, 11, 16),
               new ExcelChartDefinition.Title.Formula("D1"),
@@ -241,10 +327,10 @@ class ExcelDrawingControllerTest {
               List.of(
                   new ExcelChartDefinition.Series(
                       new ExcelChartDefinition.Title.None(),
-                      new ExcelChartDefinition.DataSource("A2:A4"),
-                      new ExcelChartDefinition.DataSource("B2:B4")))));
+                      ExcelChartTestSupport.ref("A2:A4"),
+                      ExcelChartTestSupport.ref("B2:B4")))));
       sheet.setChart(
-          new ExcelChartDefinition.Bar(
+          ExcelChartTestSupport.barChart(
               "OpsChart",
               anchor(4, 1, 11, 16),
               new ExcelChartDefinition.Title.Formula("E1"),
@@ -256,8 +342,8 @@ class ExcelDrawingControllerTest {
               List.of(
                   new ExcelChartDefinition.Series(
                       new ExcelChartDefinition.Title.None(),
-                      new ExcelChartDefinition.DataSource("A2:A4"),
-                      new ExcelChartDefinition.DataSource("B2:B4")))));
+                      ExcelChartTestSupport.ref("A2:A4"),
+                      ExcelChartTestSupport.ref("B2:B4")))));
       workbook.save(workbookPath);
     }
 
@@ -277,13 +363,103 @@ class ExcelDrawingControllerTest {
     }
 
     try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
-      ExcelChartSnapshot.Bar chart =
-          assertInstanceOf(
-              ExcelChartSnapshot.Bar.class, reopened.sheet("Chart").charts().getFirst());
+      ExcelChartSnapshot chart = reopened.sheet("Chart").charts().getFirst();
       ExcelChartSnapshot.Title.Formula title =
           assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, chart.title());
       assertEquals("Chart!$E$1", title.formula());
       assertEquals("2.0", title.cachedText());
+    }
+  }
+
+  @Test
+  void chartAuthoringSupportsMultiPlotComboCharts() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-chart-combo-authored-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Chart");
+      seedChartData(sheet);
+      sheet.setChart(
+          new ExcelChartDefinition(
+              "ComboChart",
+              anchor(4, 1, 11, 16),
+              new ExcelChartDefinition.Title.Text("Roadmap"),
+              new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+              ExcelChartDisplayBlanksAs.GAP,
+              true,
+              List.of(
+                  new ExcelChartDefinition.Bar(
+                      true,
+                      ExcelChartBarDirection.COLUMN,
+                      ExcelChartBarGrouping.CLUSTERED,
+                      null,
+                      null,
+                      List.of(
+                          new ExcelChartDefinition.Axis(
+                              ExcelChartAxisKind.CATEGORY,
+                              ExcelChartAxisPosition.BOTTOM,
+                              ExcelChartAxisCrosses.AUTO_ZERO,
+                              true),
+                          new ExcelChartDefinition.Axis(
+                              ExcelChartAxisKind.VALUE,
+                              ExcelChartAxisPosition.LEFT,
+                              ExcelChartAxisCrosses.AUTO_ZERO,
+                              true)),
+                      List.of(
+                          new ExcelChartDefinition.Series(
+                              new ExcelChartDefinition.Title.Text("Plan"),
+                              ExcelChartTestSupport.ref("A2:A4"),
+                              ExcelChartTestSupport.ref("B2:B4")))),
+                  new ExcelChartDefinition.Line(
+                      false,
+                      ExcelChartGrouping.STANDARD,
+                      List.of(
+                          new ExcelChartDefinition.Axis(
+                              ExcelChartAxisKind.CATEGORY,
+                              ExcelChartAxisPosition.BOTTOM,
+                              ExcelChartAxisCrosses.AUTO_ZERO,
+                              true),
+                          new ExcelChartDefinition.Axis(
+                              ExcelChartAxisKind.VALUE,
+                              ExcelChartAxisPosition.LEFT,
+                              ExcelChartAxisCrosses.AUTO_ZERO,
+                              true)),
+                      List.of(
+                          new ExcelChartDefinition.Series(
+                              new ExcelChartDefinition.Title.Text("Actual"),
+                              ExcelChartTestSupport.ref("A2:A4"),
+                              ExcelChartTestSupport.ref("C2:C4")))))));
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      ExcelChartSnapshot comboChart = reopened.sheet("Chart").charts().getFirst();
+      assertEquals("ComboChart", comboChart.name());
+      assertEquals(
+          List.of("BAR", "LINE"),
+          comboChart.plots().stream()
+              .map(
+                  plot ->
+                      switch (plot) {
+                        case ExcelChartSnapshot.Bar _ -> "BAR";
+                        case ExcelChartSnapshot.Line _ -> "LINE";
+                        case ExcelChartSnapshot.Unsupported unsupported ->
+                            unsupported.plotTypeToken();
+                        default -> throw new AssertionError("Unexpected plot type: " + plot);
+                      })
+              .toList());
+      ExcelChartSnapshot.Bar barPlot =
+          assertInstanceOf(ExcelChartSnapshot.Bar.class, comboChart.plots().getFirst());
+      ExcelChartSnapshot.Line linePlot =
+          assertInstanceOf(ExcelChartSnapshot.Line.class, comboChart.plots().get(1));
+      assertEquals(
+          "Plan",
+          assertInstanceOf(ExcelChartSnapshot.Title.Text.class, barPlot.series().getFirst().title())
+              .text());
+      assertEquals(
+          "Actual",
+          assertInstanceOf(
+                  ExcelChartSnapshot.Title.Text.class, linePlot.series().getFirst().title())
+              .text());
     }
   }
 
@@ -536,38 +712,48 @@ class ExcelDrawingControllerTest {
 
     try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
       ExcelSheet sheet = workbook.sheet("Chart");
-      ExcelChartSnapshot.Unsupported unsupported =
-          assertInstanceOf(ExcelChartSnapshot.Unsupported.class, sheet.charts().getFirst());
-      assertEquals("ComboChart", unsupported.name());
-      assertEquals(List.of("BAR", "LINE"), unsupported.plotTypeTokens());
+      ExcelChartSnapshot comboChart = sheet.charts().getFirst();
+      assertEquals("ComboChart", comboChart.name());
+      assertEquals(
+          List.of("BAR", "LINE"),
+          comboChart.plots().stream()
+              .map(
+                  plot ->
+                      switch (plot) {
+                        case ExcelChartSnapshot.Bar _ -> "BAR";
+                        case ExcelChartSnapshot.Line _ -> "LINE";
+                        case ExcelChartSnapshot.Unsupported unsupported ->
+                            unsupported.plotTypeToken();
+                        default -> throw new AssertionError("Unexpected plot type: " + plot);
+                      })
+              .toList());
 
       ExcelDrawingObjectSnapshot.Chart drawingChart =
           assertInstanceOf(
               ExcelDrawingObjectSnapshot.Chart.class, sheet.drawingObjects().getFirst());
-      assertFalse(drawingChart.supported());
+      assertTrue(drawingChart.supported());
       assertEquals(List.of("BAR", "LINE"), drawingChart.plotTypeTokens());
 
-      IllegalArgumentException failure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () ->
-                  sheet.setChart(
-                      new ExcelChartDefinition.Bar(
-                          "ComboChart",
-                          anchor(4, 1, 11, 16),
-                          new ExcelChartDefinition.Title.Text("Roadmap"),
-                          new ExcelChartDefinition.Legend.Visible(
-                              ExcelChartLegendPosition.TOP_RIGHT),
-                          ExcelChartDisplayBlanksAs.SPAN,
-                          false,
-                          true,
-                          ExcelChartBarDirection.COLUMN,
-                          List.of(
-                              new ExcelChartDefinition.Series(
-                                  new ExcelChartDefinition.Title.Formula("B1"),
-                                  new ExcelChartDefinition.DataSource("A2:A4"),
-                                  new ExcelChartDefinition.DataSource("B2:B4"))))));
-      assertTrue(failure.getMessage().contains("unsupported detail"));
+      sheet.setChart(
+          ExcelChartTestSupport.barChart(
+              "ComboChart",
+              anchor(4, 1, 11, 16),
+              new ExcelChartDefinition.Title.Text("Roadmap"),
+              new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
+              ExcelChartDisplayBlanksAs.SPAN,
+              false,
+              true,
+              ExcelChartBarDirection.COLUMN,
+              List.of(
+                  new ExcelChartDefinition.Series(
+                      new ExcelChartDefinition.Title.Formula("B1"),
+                      ExcelChartTestSupport.ref("A2:A4"),
+                      ExcelChartTestSupport.ref("B2:B4")))));
+      ExcelChartSnapshot replaced = sheet.charts().getFirst();
+      assertEquals("ComboChart", replaced.name());
+      assertInstanceOf(
+          ExcelChartSnapshot.Bar.class,
+          ExcelChartTestSupport.singlePlot(replaced, ExcelChartSnapshot.Bar.class));
 
       sheet.setCell("F1", ExcelCellValue.text("Touch"));
       workbook.save(workbookPath);
@@ -577,7 +763,7 @@ class ExcelDrawingControllerTest {
       XSSFDrawing drawing = workbook.getSheet("Chart").getDrawingPatriarch();
       assertNotNull(drawing);
       assertEquals(1, drawing.getCharts().size());
-      assertEquals(2, drawing.getCharts().getFirst().getChartSeries().size());
+      assertEquals(1, drawing.getCharts().getFirst().getChartSeries().size());
     }
   }
 
@@ -617,16 +803,14 @@ class ExcelDrawingControllerTest {
       assertEquals(List.of(), sheet.charts());
 
       sheet.setChart(initialChartDefinition(anchor(4, 1, 11, 16)));
+      sheet.setChart(lineChartDefinition(anchor(7, 3, 13, 20)));
+      ExcelChartSnapshot typeChanged = sheet.charts().getFirst();
       List<ExcelDrawingObjectSnapshot> drawingObjectsBeforeFailure = sheet.drawingObjects();
       List<ExcelChartSnapshot> chartsBeforeFailure = sheet.charts();
-
-      IllegalArgumentException typeChangeFailure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> sheet.setChart(lineChartDefinition(anchor(7, 3, 13, 20))));
-      assertTrue(typeChangeFailure.getMessage().contains("Changing chart type"));
-      assertEquals(drawingObjectsBeforeFailure, sheet.drawingObjects());
-      assertEquals(chartsBeforeFailure, sheet.charts());
+      assertEquals("OpsChart", typeChanged.name());
+      assertInstanceOf(
+          ExcelChartSnapshot.Line.class,
+          ExcelChartTestSupport.singlePlot(typeChanged, ExcelChartSnapshot.Line.class));
 
       IllegalArgumentException invalidChartMutation =
           assertThrows(
@@ -664,6 +848,30 @@ class ExcelDrawingControllerTest {
     sheet.setCell("C4", ExcelCellValue.number(21d));
   }
 
+  private static CTShape firstSignatureShape(XSSFVMLDrawing vmlDrawing) {
+    try (XmlCursor cursor = vmlDrawing.getDocument().getXml().newCursor()) {
+      for (boolean found = cursor.toFirstChild(); found; found = cursor.toNextSibling()) {
+        if (cursor.getObject() instanceof CTShape shape && shape.sizeOfSignaturelineArray() > 0) {
+          return shape;
+        }
+      }
+    }
+    fail("Expected one signature-line VML shape");
+    throw new AssertionError("unreachable");
+  }
+
+  private static int signatureShapeCount(XSSFVMLDrawing vmlDrawing) {
+    int count = 0;
+    try (XmlCursor cursor = vmlDrawing.getDocument().getXml().newCursor()) {
+      for (boolean found = cursor.toFirstChild(); found; found = cursor.toNextSibling()) {
+        if (cursor.getObject() instanceof CTShape shape && shape.sizeOfSignaturelineArray() > 0) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
   private static void seedChartData(org.apache.poi.xssf.usermodel.XSSFSheet sheet) {
     sheet.createRow(0).createCell(0).setCellValue("Month");
     sheet.getRow(0).createCell(1).setCellValue("Plan");
@@ -694,23 +902,24 @@ class ExcelDrawingControllerTest {
   }
 
   private static void assertInitialChartSnapshot(ExcelSheet sheet) {
-    ExcelChartSnapshot.Bar initial =
-        assertInstanceOf(ExcelChartSnapshot.Bar.class, sheet.charts().getFirst());
+    ExcelChartSnapshot initial = sheet.charts().getFirst();
+    ExcelChartSnapshot.Bar bar =
+        ExcelChartTestSupport.singlePlot(initial, ExcelChartSnapshot.Bar.class);
     assertEquals("OpsChart", initial.name());
     assertEquals(new ExcelChartSnapshot.Title.Text("Roadmap"), initial.title());
     assertEquals(ExcelChartDisplayBlanksAs.SPAN, initial.displayBlanksAs());
     assertFalse(initial.plotOnlyVisibleCells());
-    assertTrue(initial.varyColors());
-    assertEquals(ExcelChartBarDirection.COLUMN, initial.barDirection());
-    assertEquals(2, initial.axes().size());
-    assertEquals(2, initial.series().size());
+    assertTrue(bar.varyColors());
+    assertEquals(ExcelChartBarDirection.COLUMN, bar.barDirection());
+    assertEquals(2, bar.axes().size());
+    assertEquals(2, bar.series().size());
     assertEquals(
         "A2:A4",
         assertInstanceOf(
                 ExcelChartSnapshot.DataSource.StringReference.class,
-                initial.series().getFirst().categories())
+                bar.series().getFirst().categories())
             .formula());
-    ExcelChartSnapshot.Series namedRangeSeries = initial.series().get(1);
+    ExcelChartSnapshot.Series namedRangeSeries = bar.series().get(1);
     ExcelChartSnapshot.Title.Formula namedRangeSeriesTitle =
         assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, namedRangeSeries.title());
     assertTrue(namedRangeSeriesTitle.formula().endsWith("$C$1"));
@@ -737,27 +946,28 @@ class ExcelDrawingControllerTest {
 
   private static void assertUpdatedChartSnapshot(
       ExcelSheet sheet, ExcelDrawingAnchor.TwoCell movedAnchor) {
-    ExcelChartSnapshot.Bar updated =
-        assertInstanceOf(ExcelChartSnapshot.Bar.class, sheet.charts().getFirst());
+    ExcelChartSnapshot updated = sheet.charts().getFirst();
+    ExcelChartSnapshot.Bar bar =
+        ExcelChartTestSupport.singlePlot(updated, ExcelChartSnapshot.Bar.class);
     assertEquals(movedAnchor, updated.anchor());
     assertEquals(new ExcelChartSnapshot.Title.Text("Actual focus"), updated.title());
     assertInstanceOf(ExcelChartSnapshot.Legend.Hidden.class, updated.legend());
     assertEquals(ExcelChartDisplayBlanksAs.ZERO, updated.displayBlanksAs());
     assertTrue(updated.plotOnlyVisibleCells());
-    assertFalse(updated.varyColors());
-    assertEquals(ExcelChartBarDirection.BAR, updated.barDirection());
-    assertEquals(1, updated.series().size());
+    assertFalse(bar.varyColors());
+    assertEquals(ExcelChartBarDirection.BAR, bar.barDirection());
+    assertEquals(1, bar.series().size());
     assertEquals(
         "ChartCategories",
         assertInstanceOf(
                 ExcelChartSnapshot.DataSource.StringReference.class,
-                updated.series().getFirst().categories())
+                bar.series().getFirst().categories())
             .formula());
     assertEquals(
         "ChartActual",
         assertInstanceOf(
                 ExcelChartSnapshot.DataSource.NumericReference.class,
-                updated.series().getFirst().values())
+                bar.series().getFirst().values())
             .formula());
   }
 
@@ -780,9 +990,8 @@ class ExcelDrawingControllerTest {
     }
   }
 
-  private static ExcelChartDefinition.Bar initialChartDefinition(
-      ExcelDrawingAnchor.TwoCell anchor) {
-    return new ExcelChartDefinition.Bar(
+  private static ExcelChartDefinition initialChartDefinition(ExcelDrawingAnchor.TwoCell anchor) {
+    return ExcelChartTestSupport.barChart(
         "OpsChart",
         anchor,
         new ExcelChartDefinition.Title.Text("Roadmap"),
@@ -794,17 +1003,16 @@ class ExcelDrawingControllerTest {
         List.of(
             new ExcelChartDefinition.Series(
                 new ExcelChartDefinition.Title.Formula("B1"),
-                new ExcelChartDefinition.DataSource("A2:A4"),
-                new ExcelChartDefinition.DataSource("B2:B4")),
+                ExcelChartTestSupport.ref("A2:A4"),
+                ExcelChartTestSupport.ref("B2:B4")),
             new ExcelChartDefinition.Series(
                 new ExcelChartDefinition.Title.Formula("C1"),
-                new ExcelChartDefinition.DataSource("ChartCategories"),
-                new ExcelChartDefinition.DataSource("ChartActual"))));
+                ExcelChartTestSupport.ref("ChartCategories"),
+                ExcelChartTestSupport.ref("ChartActual"))));
   }
 
-  private static ExcelChartDefinition.Bar updatedChartDefinition(
-      ExcelDrawingAnchor.TwoCell anchor) {
-    return new ExcelChartDefinition.Bar(
+  private static ExcelChartDefinition updatedChartDefinition(ExcelDrawingAnchor.TwoCell anchor) {
+    return ExcelChartTestSupport.barChart(
         "OpsChart",
         anchor,
         new ExcelChartDefinition.Title.Text("Actual focus"),
@@ -816,12 +1024,12 @@ class ExcelDrawingControllerTest {
         List.of(
             new ExcelChartDefinition.Series(
                 new ExcelChartDefinition.Title.Formula("C1"),
-                new ExcelChartDefinition.DataSource("ChartCategories"),
-                new ExcelChartDefinition.DataSource("ChartActual"))));
+                ExcelChartTestSupport.ref("ChartCategories"),
+                ExcelChartTestSupport.ref("ChartActual"))));
   }
 
-  private static ExcelChartDefinition.Line lineChartDefinition(ExcelDrawingAnchor.TwoCell anchor) {
-    return new ExcelChartDefinition.Line(
+  private static ExcelChartDefinition lineChartDefinition(ExcelDrawingAnchor.TwoCell anchor) {
+    return ExcelChartTestSupport.lineChart(
         "OpsChart",
         anchor,
         new ExcelChartDefinition.Title.Text("Line focus"),
@@ -832,13 +1040,13 @@ class ExcelDrawingControllerTest {
         List.of(
             new ExcelChartDefinition.Series(
                 new ExcelChartDefinition.Title.Formula("C1"),
-                new ExcelChartDefinition.DataSource("ChartCategories"),
-                new ExcelChartDefinition.DataSource("ChartActual"))));
+                ExcelChartTestSupport.ref("ChartCategories"),
+                ExcelChartTestSupport.ref("ChartActual"))));
   }
 
-  private static ExcelChartDefinition.Bar invalidBarChartDefinition(
+  private static ExcelChartDefinition invalidBarChartDefinition(
       String name, ExcelDrawingAnchor.TwoCell anchor) {
-    return new ExcelChartDefinition.Bar(
+    return ExcelChartTestSupport.barChart(
         name,
         anchor,
         new ExcelChartDefinition.Title.Text("Broken"),
@@ -850,7 +1058,7 @@ class ExcelDrawingControllerTest {
         List.of(
             new ExcelChartDefinition.Series(
                 new ExcelChartDefinition.Title.Text("Broken"),
-                new ExcelChartDefinition.DataSource("A2:A4"),
-                new ExcelChartDefinition.DataSource("A2:A4"))));
+                ExcelChartTestSupport.ref("A2:A4"),
+                ExcelChartTestSupport.ref("A2:A4"))));
   }
 }

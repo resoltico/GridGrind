@@ -8,7 +8,9 @@ import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
 import dev.erst.gridgrind.excel.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
 import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartBarGrouping;
 import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.ExcelChartGrouping;
 import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
@@ -118,6 +120,45 @@ class AdvancedDtoCoverageTest {
                         "def456",
                         null,
                         4L,
+                        null))
+            .getMessage());
+
+    DrawingObjectReport.SignatureLine signatureLine =
+        new DrawingObjectReport.SignatureLine(
+            "Signature 1",
+            twoCell,
+            "{ABC}",
+            false,
+            "Review before signing.",
+            "Ada Lovelace",
+            "Finance",
+            "ada@example.com",
+            ExcelPictureFormat.PNG,
+            "image/png",
+            42L,
+            "sig123",
+            400,
+            150);
+    assertFalse(signatureLine.allowComments());
+    assertEquals(
+        "previewByteSize requires previewFormat",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new DrawingObjectReport.SignatureLine(
+                        "Signature 1",
+                        twoCell,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        1L,
+                        null,
+                        null,
                         null))
             .getMessage());
 
@@ -425,6 +466,90 @@ class AdvancedDtoCoverageTest {
   }
 
   @Test
+  void arrayFormulaReportsValidateRequiredFields() {
+    ArrayFormulaReport report = new ArrayFormulaReport("Calc", "D2:D4", "D2", "B2:B4*C2:C4", false);
+
+    assertEquals("Calc", report.sheetName());
+    assertEquals("D2:D4", report.range());
+    assertEquals("D2", report.topLeftAddress());
+    assertEquals("B2:B4*C2:C4", report.formula());
+    assertFalse(report.singleCell());
+    assertEquals(
+        "range must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new ArrayFormulaReport("Calc", " ", "D2", "SUM(B2:C2)", true))
+            .getMessage());
+  }
+
+  @Test
+  void customXmlReportsValidateRequiredFields() {
+    CustomXmlDataBindingReport dataBinding =
+        new CustomXmlDataBindingReport("binding", true, 7L, "binding.xml", 2L);
+    CustomXmlLinkedCellReport linkedCell =
+        new CustomXmlLinkedCellReport("Foglio1", "A1", "/CORSO/NOME", "string");
+    CustomXmlMappingReport mapping =
+        new CustomXmlMappingReport(
+            1L,
+            "CORSO_mapping",
+            "CORSO",
+            "Schema1",
+            false,
+            true,
+            false,
+            true,
+            true,
+            null,
+            null,
+            null,
+            "<xsd:schema/>",
+            dataBinding,
+            List.of(linkedCell),
+            List.of());
+    CustomXmlExportReport exported =
+        new CustomXmlExportReport(mapping, "UTF-8", true, "<CORSO><NOME>Grid</NOME></CORSO>");
+
+    assertEquals(2L, dataBinding.loadMode());
+    assertEquals("A1", mapping.linkedCells().getFirst().address());
+    assertEquals("UTF-8", exported.encoding());
+    assertEquals(
+        "mapId must be greater than 0",
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                    new CustomXmlMappingReport(
+                        0L,
+                        "CORSO_mapping",
+                        "CORSO",
+                        "Schema1",
+                        false,
+                        true,
+                        false,
+                        true,
+                        true,
+                        null,
+                        null,
+                        null,
+                        null,
+                        null,
+                        List.of(linkedCell),
+                        List.of()))
+            .getMessage());
+    assertEquals(
+        "loadMode must not be negative",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new CustomXmlDataBindingReport(null, null, null, null, -1L))
+            .getMessage());
+    assertEquals(
+        "xml must not be blank",
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new CustomXmlExportReport(mapping, "UTF-8", false, " "))
+            .getMessage());
+  }
+
+  @Test
   void autofilterChartPivotAndTableReportsCoverValidAndInvalidShapes() {
     AutofilterFilterCriterionReport.Values values =
         new AutofilterFilterCriterionReport.Values(List.of("A", "B"), true);
@@ -481,27 +606,33 @@ class AdvancedDtoCoverageTest {
     DrawingAnchorReport.Absolute anchor =
         new DrawingAnchorReport.Absolute(
             1L, 2L, 3L, 4L, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
-    ChartReport.Bar bar =
-        new ChartReport.Bar(
+    ChartReport bar =
+        new ChartReport(
             "Revenue",
             anchor,
             new ChartReport.Title.Text("Revenue"),
             new ChartReport.Legend.Visible(ExcelChartLegendPosition.RIGHT),
             ExcelChartDisplayBlanksAs.GAP,
             true,
-            false,
-            ExcelChartBarDirection.COLUMN,
             List.of(
-                new ChartReport.Axis(
-                    ExcelChartAxisKind.CATEGORY,
-                    ExcelChartAxisPosition.BOTTOM,
-                    ExcelChartAxisCrosses.AUTO_ZERO,
-                    true)),
-            List.of(
-                new ChartReport.Series(
-                    new ChartReport.Title.Text("Series 1"),
-                    new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
-                    new ChartReport.DataSource.NumericLiteral("#,##0", List.of("1", "2")))));
+                new ChartReport.Bar(
+                    false,
+                    ExcelChartBarDirection.COLUMN,
+                    ExcelChartBarGrouping.CLUSTERED,
+                    null,
+                    null,
+                    List.of(
+                        new ChartReport.Axis(
+                            ExcelChartAxisKind.CATEGORY,
+                            ExcelChartAxisPosition.BOTTOM,
+                            ExcelChartAxisCrosses.AUTO_ZERO,
+                            true)),
+                    List.of(
+                        chartSeries(
+                            new ChartReport.Title.Text("Series 1"),
+                            new ChartReport.DataSource.StringLiteral(List.of("Jan", "Feb")),
+                            new ChartReport.DataSource.NumericLiteral(
+                                "#,##0", List.of("1", "2")))))));
     assertEquals("Revenue", bar.name());
     assertEquals(
         "firstSliceAngle must be between 0 and 360",
@@ -509,16 +640,10 @@ class AdvancedDtoCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new ChartReport.Pie(
-                        "Pie",
-                        anchor,
-                        new ChartReport.Title.None(),
-                        new ChartReport.Legend.Hidden(),
-                        ExcelChartDisplayBlanksAs.ZERO,
-                        false,
                         false,
                         361,
                         List.of(
-                            new ChartReport.Series(
+                            chartSeries(
                                 new ChartReport.Title.Text("Series 1"),
                                 new ChartReport.DataSource.StringLiteral(List.of("Jan")),
                                 new ChartReport.DataSource.NumericLiteral(null, List.of("1"))))))
@@ -529,29 +654,23 @@ class AdvancedDtoCoverageTest {
                 IllegalArgumentException.class,
                 () ->
                     new ChartReport.Line(
-                        "Line",
-                        anchor,
-                        new ChartReport.Title.Text("Revenue"),
-                        new ChartReport.Legend.Hidden(),
-                        ExcelChartDisplayBlanksAs.ZERO,
                         false,
-                        false,
-                        List.of(),
+                        ExcelChartGrouping.STANDARD,
+                        List.of(
+                            new ChartReport.Axis(
+                                ExcelChartAxisKind.CATEGORY,
+                                ExcelChartAxisPosition.BOTTOM,
+                                ExcelChartAxisCrosses.AUTO_ZERO,
+                                true)),
                         List.of()))
             .getMessage());
     assertEquals(
         180,
         new ChartReport.Pie(
-                "Pie",
-                anchor,
-                new ChartReport.Title.None(),
-                new ChartReport.Legend.Hidden(),
-                ExcelChartDisplayBlanksAs.ZERO,
-                false,
                 false,
                 180,
                 List.of(
-                    new ChartReport.Series(
+                    chartSeries(
                         new ChartReport.Title.Text("Series 1"),
                         new ChartReport.DataSource.StringLiteral(List.of("Jan")),
                         new ChartReport.DataSource.NumericLiteral(null, List.of("1")))))
@@ -559,16 +678,10 @@ class AdvancedDtoCoverageTest {
     assertEquals(
         null,
         new ChartReport.Pie(
-                "Pie",
-                anchor,
-                new ChartReport.Title.None(),
-                new ChartReport.Legend.Hidden(),
-                ExcelChartDisplayBlanksAs.ZERO,
-                false,
                 false,
                 null,
                 List.of(
-                    new ChartReport.Series(
+                    chartSeries(
                         new ChartReport.Title.Text("Series 1"),
                         new ChartReport.DataSource.StringLiteral(List.of("Jan")),
                         new ChartReport.DataSource.NumericLiteral(null, List.of("1")))))
@@ -650,5 +763,10 @@ class AdvancedDtoCoverageTest {
                 IllegalArgumentException.class,
                 () -> new AutofilterHealthReport(-1, summary, List.of(finding)))
             .getMessage());
+  }
+
+  private static ChartReport.Series chartSeries(
+      ChartReport.Title title, ChartReport.DataSource categories, ChartReport.DataSource values) {
+    return new ChartReport.Series(title, categories, values, null, null, null, null);
   }
 }

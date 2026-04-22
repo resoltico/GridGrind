@@ -215,7 +215,7 @@ public final class GridGrindCli {
           stdout.flush();
           yield 0;
         }
-        List<String> matches = GridGrindProtocolCatalog.matchingEntryIds(cmd.operationFilter());
+        List<String> matches = GridGrindProtocolCatalog.matchingLookupIds(cmd.operationFilter());
         if (matches.size() > 1) {
           String message =
               "Ambiguous operation: "
@@ -231,8 +231,8 @@ public final class GridGrindCli {
                   new IllegalArgumentException(message)));
           yield 2;
         }
-        var entry = GridGrindProtocolCatalog.entryFor(cmd.operationFilter());
-        if (entry.isEmpty()) {
+        var lookupValue = GridGrindProtocolCatalog.lookupValueFor(cmd.operationFilter());
+        if (lookupValue.isEmpty()) {
           responseWriter.write(
               stdout,
               failure(
@@ -242,7 +242,7 @@ public final class GridGrindCli {
                   new IllegalArgumentException("Unknown operation: " + cmd.operationFilter())));
           yield 2;
         }
-        GridGrindJson.writeTypeEntry(stdout, entry.get());
+        GridGrindJson.writeCatalogLookupValue(stdout, lookupValue.get());
         stdout.write('\n');
         stdout.flush();
         yield 0;

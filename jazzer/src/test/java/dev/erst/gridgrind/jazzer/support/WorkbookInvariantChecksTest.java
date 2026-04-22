@@ -8,6 +8,7 @@ import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
 import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
 import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
@@ -25,6 +26,12 @@ import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
 import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.CommentAnchorReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.DataValidationEntryReport;
 import dev.erst.gridgrind.contract.dto.DataValidationHealthReport;
 import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
@@ -71,7 +78,11 @@ import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
+import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
 import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartBarGrouping;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
@@ -1017,7 +1028,7 @@ class WorkbookInvariantChecksTest {
               List.of(
                   new WorkbookCommand.SetChart(
                       "Ops",
-                      new ExcelChartDefinition.Bar(
+                      new ExcelChartDefinition(
                           "OpsChart",
                           new ExcelDrawingAnchor.TwoCell(
                               new ExcelDrawingMarker(0, 0, 0, 0),
@@ -1028,13 +1039,25 @@ class WorkbookInvariantChecksTest {
                               ExcelChartLegendPosition.TOP_RIGHT),
                           ExcelChartDisplayBlanksAs.SPAN,
                           false,
-                          true,
-                          ExcelChartBarDirection.COLUMN,
                           List.of(
-                              new ExcelChartDefinition.Series(
-                                  new ExcelChartDefinition.Title.Text("Actual"),
-                                  new ExcelChartDefinition.DataSource("Ops!$A$2:$A$4"),
-                                  new ExcelChartDefinition.DataSource("Ops!$B$2:$B$4")))))));
+                              new ExcelChartDefinition.Bar(
+                                  true,
+                                  ExcelChartBarDirection.COLUMN,
+                                  ExcelChartBarGrouping.CLUSTERED,
+                                  null,
+                                  null,
+                                  excelCategoryAxes(),
+                                  List.of(
+                                      new ExcelChartDefinition.Series(
+                                          new ExcelChartDefinition.Title.Text("Actual"),
+                                          new ExcelChartDefinition.DataSource.Reference(
+                                              "Ops!$A$2:$A$4"),
+                                          new ExcelChartDefinition.DataSource.Reference(
+                                              "Ops!$B$2:$B$4"),
+                                          null,
+                                          null,
+                                          null,
+                                          null))))))));
 
       assertDoesNotThrow(() -> WorkbookInvariantChecks.requireWorkbookShape(workbook));
     }
@@ -1122,34 +1145,154 @@ class WorkbookInvariantChecksTest {
         () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
   }
 
-  private static ChartReport.Bar chartReport() {
-    return new ChartReport.Bar(
+  @Test
+  void acceptsWorkflowOutcomeShapeForCustomXmlArrayFormulaAndSignatureLineReads(
+      @TempDir Path tempDirectory) throws IOException {
+    Path workbookPath = tempDirectory.resolve("advanced.xlsx");
+    Files.writeString(workbookPath, "seed");
+
+    WorkbookPlan request =
+        existingRequest(
+            new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
+            inspect(
+                "custom-xml-mappings",
+                new WorkbookSelector.Current(),
+                new InspectionQuery.GetCustomXmlMappings()),
+            inspect(
+                "custom-xml-export",
+                new WorkbookSelector.Current(),
+                new InspectionQuery.ExportCustomXmlMapping(
+                    new CustomXmlMappingLocator(1L, "BudgetMap"), true, "UTF-8")),
+            inspect(
+                "array-formulas",
+                new SheetSelector.ByName("Ops"),
+                new InspectionQuery.GetArrayFormulas()),
+            inspect(
+                "drawing-objects",
+                new DrawingObjectSelector.AllOnSheet("Ops"),
+                new InspectionQuery.GetDrawingObjects()));
+    CustomXmlMappingReport mapping = customXmlMappingReport();
+    GridGrindResponse.Success response =
+        new GridGrindResponse.Success(
+            GridGrindProtocolVersion.V1,
+            new GridGrindResponse.PersistenceOutcome.NotSaved(),
+            List.of(),
+            List.of(),
+            List.of(
+                new InspectionResult.CustomXmlMappingsResult(
+                    "custom-xml-mappings", List.of(mapping)),
+                new InspectionResult.CustomXmlExportResult(
+                    "custom-xml-export",
+                    new CustomXmlExportReport(
+                        mapping,
+                        "UTF-8",
+                        true,
+                        "<BudgetMap><Owner>Ada Lovelace</Owner></BudgetMap>")),
+                new InspectionResult.ArrayFormulasResult(
+                    "array-formulas",
+                    List.of(new ArrayFormulaReport("Ops", "D2:D4", "D2", "B2:B4*C2:C4", false))),
+                new InspectionResult.DrawingObjectsResult(
+                    "drawing-objects", "Ops", List.of(signatureLineDrawingObjectReport()))));
+
+    assertDoesNotThrow(
+        () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));
+  }
+
+  private static ChartReport chartReport() {
+    return new ChartReport(
         "OpsChart",
         twoCellAnchor(),
         new ChartReport.Title.Text("Roadmap"),
         new ChartReport.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
         ExcelChartDisplayBlanksAs.SPAN,
         false,
+        List.of(
+            new ChartReport.Bar(
+                true,
+                ExcelChartBarDirection.COLUMN,
+                ExcelChartBarGrouping.CLUSTERED,
+                null,
+                null,
+                chartCategoryAxes(),
+                List.of(
+                    new ChartReport.Series(
+                        new ChartReport.Title.Text("Actual"),
+                        new ChartReport.DataSource.StringReference(
+                            "Ops!$A$2:$A$4", List.of("Jan", "Feb", "Mar")),
+                        new ChartReport.DataSource.NumericReference(
+                            "Ops!$B$2:$B$4", "General", List.of("12", "18", "15")),
+                        null,
+                        null,
+                        null,
+                        null)))));
+  }
+
+  private static CustomXmlMappingReport customXmlMappingReport() {
+    return new CustomXmlMappingReport(
+        1L,
+        "BudgetMap",
+        "BudgetMap",
+        "schema-1",
         true,
-        ExcelChartBarDirection.COLUMN,
+        true,
+        false,
+        true,
+        true,
+        "urn:gridgrind:budget",
+        "en-US",
+        "budget-map.xsd",
+        "<xs:schema/>",
+        new CustomXmlDataBindingReport("BudgetBinding", false, 42L, "budget.xml", 1L),
+        List.of(new CustomXmlLinkedCellReport("Ops", "A2", "/BudgetMap/Owner[1]", "string")),
         List.of(
-            new ChartReport.Axis(
-                dev.erst.gridgrind.excel.ExcelChartAxisKind.CATEGORY,
-                dev.erst.gridgrind.excel.ExcelChartAxisPosition.BOTTOM,
-                dev.erst.gridgrind.excel.ExcelChartAxisCrosses.AUTO_ZERO,
-                true),
-            new ChartReport.Axis(
-                dev.erst.gridgrind.excel.ExcelChartAxisKind.VALUE,
-                dev.erst.gridgrind.excel.ExcelChartAxisPosition.LEFT,
-                dev.erst.gridgrind.excel.ExcelChartAxisCrosses.AUTO_ZERO,
-                true)),
-        List.of(
-            new ChartReport.Series(
-                new ChartReport.Title.Text("Actual"),
-                new ChartReport.DataSource.StringReference(
-                    "Ops!$A$2:$A$4", List.of("Jan", "Feb", "Mar")),
-                new ChartReport.DataSource.NumericReference(
-                    "Ops!$B$2:$B$4", "General", List.of("12", "18", "15")))));
+            new CustomXmlLinkedTableReport(
+                "Ops", "BudgetTable", "BudgetTable", "A1:B4", "/BudgetMap/Rows")));
+  }
+
+  private static DrawingObjectReport.SignatureLine signatureLineDrawingObjectReport() {
+    return new DrawingObjectReport.SignatureLine(
+        "BudgetSignature",
+        twoCellAnchor(),
+        "sig-setup-01",
+        false,
+        "Review the budget before signing.",
+        "Ada Lovelace",
+        "Finance",
+        "ada@example.com",
+        ExcelPictureFormat.PNG,
+        "image/png",
+        128L,
+        "0123456789abcdef",
+        320,
+        120);
+  }
+
+  private static List<ChartReport.Axis> chartCategoryAxes() {
+    return List.of(
+        new ChartReport.Axis(
+            ExcelChartAxisKind.CATEGORY,
+            ExcelChartAxisPosition.BOTTOM,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true),
+        new ChartReport.Axis(
+            ExcelChartAxisKind.VALUE,
+            ExcelChartAxisPosition.LEFT,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true));
+  }
+
+  private static List<ExcelChartDefinition.Axis> excelCategoryAxes() {
+    return List.of(
+        new ExcelChartDefinition.Axis(
+            ExcelChartAxisKind.CATEGORY,
+            ExcelChartAxisPosition.BOTTOM,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true),
+        new ExcelChartDefinition.Axis(
+            ExcelChartAxisKind.VALUE,
+            ExcelChartAxisPosition.LEFT,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true));
   }
 
   @SafeVarargs

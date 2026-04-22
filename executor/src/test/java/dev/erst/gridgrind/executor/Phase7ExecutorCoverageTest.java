@@ -197,22 +197,33 @@ class Phase7ExecutorCoverageTest {
     dev.erst.gridgrind.contract.dto.PictureDataInput imageData =
         new dev.erst.gridgrind.contract.dto.PictureDataInput(
             ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64("AQ=="));
-    dev.erst.gridgrind.contract.dto.ChartInput.Bar simpleChart =
-        new dev.erst.gridgrind.contract.dto.ChartInput.Bar(
+    dev.erst.gridgrind.contract.dto.ChartInput simpleChart =
+        new dev.erst.gridgrind.contract.dto.ChartInput(
             "Revenue",
             drawingAnchor,
             null,
             null,
             null,
             null,
-            null,
-            null,
             java.util.List.of(
-                new dev.erst.gridgrind.contract.dto.ChartInput.Series(
-                    new dev.erst.gridgrind.contract.dto.ChartInput.Title.None(),
-                    new dev.erst.gridgrind.contract.dto.ChartInput.DataSource("Budget!$A$1:$A$2"),
-                    new dev.erst.gridgrind.contract.dto.ChartInput.DataSource(
-                        "Budget!$B$1:$B$2"))));
+                new dev.erst.gridgrind.contract.dto.ChartInput.Bar(
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null,
+                    java.util.List.of(
+                        new dev.erst.gridgrind.contract.dto.ChartInput.Series(
+                            new dev.erst.gridgrind.contract.dto.ChartInput.Title.None(),
+                            new dev.erst.gridgrind.contract.dto.ChartInput.DataSource.Reference(
+                                "Budget!$A$1:$A$2"),
+                            new dev.erst.gridgrind.contract.dto.ChartInput.DataSource.Reference(
+                                "Budget!$B$1:$B$2"),
+                            null,
+                            null,
+                            null,
+                            null)))));
 
     for (MutationAction action :
         java.util.List.of(

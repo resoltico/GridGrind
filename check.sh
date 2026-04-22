@@ -23,6 +23,7 @@
 # and runs targeted shell regressions:
 #   bash -n check.sh scripts/*.sh jazzer/bin/*
 #   scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar
+#   scripts/test-check-process-support.sh
 #   scripts/test-contract-module-split.sh
 #   scripts/test-explicit-import-gate.sh
 #   scripts/test-jazzer-run-lock.sh
@@ -97,6 +98,7 @@ resolve_script_dir() {
 
 readonly repo_root="$(resolve_script_dir)"
 readonly gradlew="${repo_root}/gradlew"
+readonly process_support_script="${repo_root}/scripts/check-process-support.sh"
 current_stage_id='startup'
 current_stage_label='starting'
 current_stage_log_path=''
@@ -108,6 +110,10 @@ readonly gradle_test_pulse_interval_millis=$((pulse_interval_seconds * 1000))
 readonly diagnostics_command_timeout_seconds=5
 readonly diagnostics_process_capture_limit=6
 readonly stall_exit_code=124
+
+[[ -f "${process_support_script}" ]] || die "missing process support helper at ${process_support_script}"
+# shellcheck source=/dev/null
+source "${process_support_script}"
 
 format_duration() {
     local total_seconds=$1
@@ -134,7 +140,7 @@ print_usage() {
         '  1. check coverage' \
         '  2. jazzer check' \
         '  3. :cli:shadowJar' \
-        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar && scripts/test-contract-module-split.sh && scripts/test-explicit-import-gate.sh && scripts/test-jazzer-run-lock.sh && scripts/test-selector-contract-surface.sh && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
+        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar && scripts/test-check-process-support.sh && scripts/test-contract-module-split.sh && scripts/test-explicit-import-gate.sh && scripts/test-jazzer-run-lock.sh && scripts/test-selector-contract-surface.sh && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
         '  5. scripts/docker-smoke.sh' \
         '' \
         'Supported options:' \
@@ -367,38 +373,6 @@ stage_progress_marker() {
     esac
 }
 
-collect_descendant_pids() {
-    local parent_pid=$1
-    local child_pid=''
-    while IFS= read -r child_pid; do
-        [[ -n "${child_pid}" ]] || continue
-        printf '%s\n' "${child_pid}"
-        collect_descendant_pids "${child_pid}"
-    done < <(pgrep -P "${parent_pid}" 2>/dev/null || true)
-}
-
-capture_with_timeout() {
-    local output_path=$1
-    local timeout_seconds=$2
-    shift 2
-
-    (
-        "$@" >"${output_path}" 2>&1
-    ) &
-    local command_pid=$!
-    (
-        sleep "${timeout_seconds}"
-        if kill -0 "${command_pid}" 2>/dev/null; then
-            kill -TERM "${command_pid}" 2>/dev/null || true
-        fi
-    ) &
-    local watchdog_pid=$!
-
-    wait "${command_pid}" 2>/dev/null || true
-    kill "${watchdog_pid}" 2>/dev/null || true
-    wait "${watchdog_pid}" 2>/dev/null || true
-}
-
 capture_stage_diagnostics() {
     local stage_id=$1
     local child_pid=$2
@@ -420,12 +394,7 @@ capture_stage_diagnostics() {
     while IFS= read -r process_id; do
         [[ -n "${process_id}" ]] || continue
         process_ids+=("${process_id}")
-    done < <(
-        {
-            printf '%s\n' "${child_pid}"
-            collect_descendant_pids "${child_pid}"
-        } | awk '!seen[$0]++'
-    )
+    done < <(collect_process_tree_pids "${child_pid}")
 
     {
         printf 'process_count=%s\n' "${#process_ids[@]}"
@@ -469,35 +438,7 @@ capture_stage_diagnostics() {
 
 terminate_stage_process() {
     local child_pid=$1
-    local process_ids=()
-    local process_id=''
-    while IFS= read -r process_id; do
-        [[ -n "${process_id}" ]] || continue
-        process_ids+=("${process_id}")
-    done < <(
-        {
-            printf '%s\n' "${child_pid}"
-            collect_descendant_pids "${child_pid}"
-        } | awk '!seen[$0]++'
-    )
-
-    if ((${#process_ids[@]} == 0)); then
-        return
-    fi
-
-    kill -TERM "${process_ids[@]}" 2>/dev/null || true
-    sleep 5
-
-    local remaining_process_ids=()
-    for process_id in "${process_ids[@]}"; do
-        if kill -0 "${process_id}" 2>/dev/null; then
-            remaining_process_ids+=("${process_id}")
-        fi
-    done
-
-    if ((${#remaining_process_ids[@]} > 0)); then
-        kill -KILL "${remaining_process_ids[@]}" 2>/dev/null || true
-    fi
+    terminate_process_tree "${child_pid}" 5
 }
 
 monitor_stage_process() {
@@ -801,6 +742,7 @@ run_shell_stage 'shell-syntax' 'Stage 4/5: checking release-surface shell script
         set -euo pipefail
         bash -n "$@"
         "'"${repo_root}"'/scripts/verify-cli-contract.sh" jar "'"${repo_root}"'/cli/build/libs/gridgrind.jar" >/dev/null
+        "'"${repo_root}"'/scripts/test-check-process-support.sh"
         "'"${repo_root}"'/scripts/test-contract-module-split.sh"
         "'"${repo_root}"'/scripts/test-explicit-import-gate.sh"
         "'"${repo_root}"'/scripts/test-jazzer-run-lock.sh"

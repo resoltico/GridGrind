@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import org.apache.poi.common.usermodel.HyperlinkType;
+import org.apache.poi.ooxml.POIXMLDocumentPart;
+import org.apache.poi.ooxml.POIXMLDocumentPart.RelationPart;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.ClientAnchor;
@@ -11,10 +13,14 @@ import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.ss.util.CellReference;
+import org.apache.poi.xssf.model.Comments;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
 import org.apache.poi.xssf.usermodel.XSSFComment;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFVMLDrawing;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /** Hyperlink, comment, and cell-annotation support for one sheet facade. */
@@ -54,8 +60,10 @@ final class ExcelSheetAnnotationSupport {
     Objects.requireNonNull(comment, "comment must not be null");
 
     CellReference cellReference = parseCellReference(address);
+    repairBrokenLegacyDrawingReference((XSSFSheet) sheet);
     Cell cell = getOrCreateCell(cellReference.getRow(), cellReference.getCol());
     cell.setCellComment(newComment(cellReference.getRow(), cellReference.getCol(), comment));
+    ensureLegacyDrawingReference((XSSFSheet) sheet);
     drawingController.cleanupEmptyDrawingPatriarch((org.apache.poi.xssf.usermodel.XSSFSheet) sheet);
   }
 
@@ -63,9 +71,22 @@ final class ExcelSheetAnnotationSupport {
     ExcelSheet.requireNonBlank(address, "address");
     Cell cell = optionalCell(address);
     if (cell != null) {
-      cell.removeCellComment();
+      clearCellComment(cell);
     }
     drawingController.cleanupEmptyDrawingPatriarch((org.apache.poi.xssf.usermodel.XSSFSheet) sheet);
+  }
+
+  static void clearCellComment(Cell cell) {
+    Objects.requireNonNull(cell, "cell must not be null");
+    if (!(cell.getSheet() instanceof XSSFSheet xssfSheet)
+        || !(cell.getCellComment() instanceof XSSFComment)) {
+      cell.removeCellComment();
+      return;
+    }
+
+    CellAddress address = new CellAddress(cell);
+    removeCommentFromTable(xssfSheet, address);
+    removeCommentShapeIfPresent(xssfSheet, address);
   }
 
   ExcelCellMetadataSnapshot metadata(Cell cell) {
@@ -282,6 +303,68 @@ final class ExcelSheetAnnotationSupport {
                 WorkbookStyleRegistry.snapshotFont(((XSSFWorkbook) workbook).getFontAt(0)));
     return new ExcelCommentSnapshot(
         plainComment.text(), plainComment.author(), plainComment.visible(), runs, anchor);
+  }
+
+  private static void removeCommentFromTable(XSSFSheet sheet, CellAddress address) {
+    for (POIXMLDocumentPart relation : sheet.getRelations()) {
+      if (relation instanceof Comments comments) {
+        comments.removeComment(address);
+        return;
+      }
+    }
+  }
+
+  private static void removeCommentShapeIfPresent(XSSFSheet sheet, CellAddress address) {
+    XSSFVMLDrawing vmlDrawing = sheet.getVMLDrawing(false);
+    if (vmlDrawing == null) {
+      return;
+    }
+    var commentShape = vmlDrawing.findCommentShape(address.getRow(), address.getColumn());
+    if (commentShape != null) {
+      try (var cursor = commentShape.newCursor()) {
+        cursor.removeXml();
+      }
+    }
+  }
+
+  private static void repairBrokenLegacyDrawingReference(XSSFSheet sheet) {
+    if (sheet.getCTWorksheet().isSetLegacyDrawing() && legacyDrawingRelationId(sheet) == null) {
+      sheet.getCTWorksheet().unsetLegacyDrawing();
+    }
+  }
+
+  private static void ensureLegacyDrawingReference(XSSFSheet sheet) {
+    String relationId = vmlDrawingRelationId(sheet);
+    if (relationId == null) {
+      return;
+    }
+    if (!sheet.getCTWorksheet().isSetLegacyDrawing()) {
+      sheet.getCTWorksheet().addNewLegacyDrawing();
+    }
+    sheet.getCTWorksheet().getLegacyDrawing().setId(relationId);
+  }
+
+  private static String legacyDrawingRelationId(XSSFSheet sheet) {
+    if (!sheet.getCTWorksheet().isSetLegacyDrawing()) {
+      return null;
+    }
+    String legacyDrawingId = sheet.getCTWorksheet().getLegacyDrawing().getId();
+    for (RelationPart relationPart : sheet.getRelationParts()) {
+      if (relationPart.getDocumentPart() instanceof XSSFVMLDrawing
+          && legacyDrawingId.equals(relationPart.getRelationship().getId())) {
+        return legacyDrawingId;
+      }
+    }
+    return null;
+  }
+
+  private static String vmlDrawingRelationId(XSSFSheet sheet) {
+    for (RelationPart relationPart : sheet.getRelationParts()) {
+      if (relationPart.getDocumentPart() instanceof XSSFVMLDrawing) {
+        return relationPart.getRelationship().getId();
+      }
+    }
+    return null;
   }
 
   private CellReference parseCellReference(String address) {

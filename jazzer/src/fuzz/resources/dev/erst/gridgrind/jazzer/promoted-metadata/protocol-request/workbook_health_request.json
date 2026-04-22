@@ -21,10 +21,10 @@
       "assertionKinds" : { },
       "readCount" : 4,
       "readKinds" : {
+        "GET_CELLS" : 1,
         "ANALYZE_WORKBOOK_FINDINGS" : 1,
         "GET_SHEET_SUMMARY" : 1,
-        "ANALYZE_FORMULA_HEALTH" : 1,
-        "GET_CELLS" : 1
+        "ANALYZE_FORMULA_HEALTH" : 1
       }
     }
   },

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFClientAnchor;
@@ -18,6 +19,11 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.STDataValidationType;
 
 /** Tests for sheet-copy planning and validation helpers. */
 class ExcelSheetCopyControllerTest {
+  private static final byte[] PNG_PIXEL_BYTES =
+      Base64.getDecoder()
+          .decode(
+              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII=");
+
   @Test
   void copySheetPreservesProtectionOnEmptySourceSheets() throws IOException {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
@@ -116,6 +122,90 @@ class ExcelSheetCopyControllerTest {
       workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
 
       assertEquals(advancedPrintLayout, workbook.sheet("Replica").printLayout());
+    }
+  }
+
+  @Test
+  void copySheetPreservesDrawingObjectsAndRetargetsCopiedCharts() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-drawings-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet source = workbook.getOrCreateSheet("Source");
+      ExcelChartTestSupport.seedChartData(source);
+      source.setPicture(
+          new ExcelPictureDefinition(
+              "OpsPicture",
+              new ExcelBinaryData(PNG_PIXEL_BYTES),
+              ExcelPictureFormat.PNG,
+              ExcelChartTestSupport.anchor(0, 5, 3, 9),
+              "Queue preview"));
+      source.setChart(
+          ExcelChartTestSupport.barChart(
+              "OpsChart",
+              ExcelChartTestSupport.anchor(6, 1, 12, 14),
+              new ExcelChartDefinition.Title.Text("Roadmap"),
+              new ExcelChartDefinition.Legend.Hidden(),
+              ExcelChartDisplayBlanksAs.GAP,
+              true,
+              false,
+              ExcelChartBarDirection.COLUMN,
+              List.of(
+                  new ExcelChartDefinition.Series(
+                      new ExcelChartDefinition.Title.Text("Plan"),
+                      ExcelChartTestSupport.ref("A2:A4"),
+                      ExcelChartTestSupport.ref("B2:B4")))));
+
+      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+
+      ExcelSheet replica = workbook.sheet("Replica");
+      assertEquals(
+          List.of("OpsPicture", "OpsChart"),
+          replica.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
+      ExcelDrawingObjectSnapshot.Picture copiedPicture =
+          assertInstanceOf(
+              ExcelDrawingObjectSnapshot.Picture.class,
+              replica.drawingObjects().stream()
+                  .filter(snapshot -> "OpsPicture".equals(snapshot.name()))
+                  .findFirst()
+                  .orElseThrow());
+      assertEquals(ExcelChartTestSupport.anchor(0, 5, 3, 9), copiedPicture.anchor());
+
+      ExcelChartSnapshot copiedChart = replica.charts().getFirst();
+      assertEquals("OpsChart", copiedChart.name());
+      assertEquals(ExcelChartTestSupport.anchor(6, 1, 12, 14), copiedChart.anchor());
+      ExcelChartSnapshot.Series copiedSeries =
+          ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
+              .series()
+              .getFirst();
+      assertEquals(
+          "Replica!$A$2:$A$4",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.StringReference.class, copiedSeries.categories())
+              .formula());
+      assertEquals(
+          "Replica!$B$2:$B$4",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
+              .formula());
+
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      ExcelSheet replica = reopened.sheet("Replica");
+      assertEquals(
+          List.of("OpsPicture", "OpsChart"),
+          replica.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
+      ExcelChartSnapshot copiedChart = replica.charts().getFirst();
+      ExcelChartSnapshot.Series copiedSeries =
+          ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
+              .series()
+              .getFirst();
+      assertEquals(
+          "Replica!$A$2:$A$4",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.StringReference.class, copiedSeries.categories())
+              .formula());
     }
   }
 
@@ -254,6 +344,26 @@ class ExcelSheetCopyControllerTest {
       assertFalse(copiedTable.insertRowShift());
       assertTrue(
           workbook.xssfWorkbook().getSheet("Replica").validateSheetPassword("gridgrind-copy"));
+    }
+  }
+
+  @Test
+  void copySheetPreservesAdvancedCommentsAfterSaveAndReopen() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-comment-reopen-");
+
+    List<WorkbookReadResult.CellComment> sourceComments;
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet source = seedAdvancedCopySource(workbook);
+      sourceComments = source.comments(new ExcelCellSelection.Selected(List.of("E2")));
+
+      workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd());
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      assertEquals(
+          sourceComments,
+          reopened.sheet("Replica").comments(new ExcelCellSelection.Selected(List.of("E2"))));
     }
   }
 

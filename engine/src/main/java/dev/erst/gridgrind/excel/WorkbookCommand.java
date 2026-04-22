@@ -44,11 +44,15 @@ public sealed interface WorkbookCommand
         WorkbookCommand.SetCell,
         WorkbookCommand.SetRange,
         WorkbookCommand.ClearRange,
+        WorkbookCommand.SetArrayFormula,
+        WorkbookCommand.ClearArrayFormula,
+        WorkbookCommand.ImportCustomXmlMapping,
         WorkbookCommand.SetHyperlink,
         WorkbookCommand.ClearHyperlink,
         WorkbookCommand.SetComment,
         WorkbookCommand.ClearComment,
         WorkbookCommand.SetPicture,
+        WorkbookCommand.SetSignatureLine,
         WorkbookCommand.SetChart,
         WorkbookCommand.SetPivotTable,
         WorkbookCommand.SetShape,
@@ -578,6 +582,41 @@ public sealed interface WorkbookCommand
     }
   }
 
+  record SetArrayFormula(String sheetName, String range, ExcelArrayFormulaDefinition formula)
+      implements WorkbookCommand {
+    public SetArrayFormula {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(range, "range must not be null");
+      Objects.requireNonNull(formula, "formula must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (range.isBlank()) {
+        throw new IllegalArgumentException("range must not be blank");
+      }
+    }
+  }
+
+  record ClearArrayFormula(String sheetName, String address) implements WorkbookCommand {
+    public ClearArrayFormula {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(address, "address must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+      if (address.isBlank()) {
+        throw new IllegalArgumentException("address must not be blank");
+      }
+    }
+  }
+
+  /** Imports one XML document into one existing workbook custom-XML mapping. */
+  record ImportCustomXmlMapping(ExcelCustomXmlImportDefinition mapping) implements WorkbookCommand {
+    public ImportCustomXmlMapping {
+      Objects.requireNonNull(mapping, "mapping must not be null");
+    }
+  }
+
   /** Replaces the hyperlink attached to a single cell. */
   record SetHyperlink(String sheetName, String address, ExcelHyperlink target)
       implements WorkbookCommand {
@@ -643,6 +682,18 @@ public sealed interface WorkbookCommand
     public SetPicture {
       Objects.requireNonNull(sheetName, "sheetName must not be null");
       Objects.requireNonNull(picture, "picture must not be null");
+      if (sheetName.isBlank()) {
+        throw new IllegalArgumentException("sheetName must not be blank");
+      }
+    }
+  }
+
+  /** Creates or replaces one signature-line drawing object on a single sheet. */
+  record SetSignatureLine(String sheetName, ExcelSignatureLineDefinition signatureLine)
+      implements WorkbookCommand {
+    public SetSignatureLine {
+      Objects.requireNonNull(sheetName, "sheetName must not be null");
+      Objects.requireNonNull(signatureLine, "signatureLine must not be null");
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }
@@ -936,11 +987,15 @@ public sealed interface WorkbookCommand
       case SetCell _ -> "SET_CELL";
       case SetRange _ -> "SET_RANGE";
       case ClearRange _ -> "CLEAR_RANGE";
+      case SetArrayFormula _ -> "SET_ARRAY_FORMULA";
+      case ClearArrayFormula _ -> "CLEAR_ARRAY_FORMULA";
+      case ImportCustomXmlMapping _ -> "IMPORT_CUSTOM_XML_MAPPING";
       case SetHyperlink _ -> "SET_HYPERLINK";
       case ClearHyperlink _ -> "CLEAR_HYPERLINK";
       case SetComment _ -> "SET_COMMENT";
       case ClearComment _ -> "CLEAR_COMMENT";
       case SetPicture _ -> "SET_PICTURE";
+      case SetSignatureLine _ -> "SET_SIGNATURE_LINE";
       case SetChart _ -> "SET_CHART";
       case SetPivotTable _ -> "SET_PIVOT_TABLE";
       case SetShape _ -> "SET_SHAPE";

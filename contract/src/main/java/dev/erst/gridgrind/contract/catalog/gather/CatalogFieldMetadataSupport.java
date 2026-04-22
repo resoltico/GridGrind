@@ -7,6 +7,8 @@ import dev.erst.gridgrind.contract.catalog.FieldEntry;
 import dev.erst.gridgrind.contract.catalog.FieldRequirement;
 import dev.erst.gridgrind.contract.catalog.FieldShape;
 import dev.erst.gridgrind.contract.catalog.ScalarType;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionInput;
 import dev.erst.gridgrind.contract.dto.AutofilterSortConditionInput;
@@ -41,6 +43,13 @@ import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
@@ -97,6 +106,7 @@ import dev.erst.gridgrind.contract.dto.SheetDisplayInput;
 import dev.erst.gridgrind.contract.dto.SheetOutlineSummaryInput;
 import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
 import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
+import dev.erst.gridgrind.contract.dto.SignatureLineInput;
 import dev.erst.gridgrind.contract.dto.TableColumnInput;
 import dev.erst.gridgrind.contract.dto.TableColumnReport;
 import dev.erst.gridgrind.contract.dto.TableEntryReport;
@@ -184,9 +194,10 @@ public final class CatalogFieldMetadataSupport {
               "namedRangeSelectorTypes"),
           Map.entry(NamedRangeScope.class, "namedRangeScopeTypes"),
           Map.entry(DrawingAnchorInput.class, "drawingAnchorInputTypes"),
-          Map.entry(ChartInput.class, "chartInputTypes"),
           Map.entry(ChartInput.Title.class, "chartTitleInputTypes"),
           Map.entry(ChartInput.Legend.class, "chartLegendInputTypes"),
+          Map.entry(ChartInput.DataSource.class, "chartDataSourceInputTypes"),
+          Map.entry(ChartInput.Plot.class, "chartPlotInputTypes"),
           Map.entry(PivotTableInput.Source.class, "pivotTableSourceTypes"),
           Map.entry(DataValidationRuleInput.class, "dataValidationRuleTypes"),
           Map.entry(AutofilterFilterCriterionInput.class, "autofilterFilterCriterionTypes"),
@@ -205,10 +216,10 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(TableStyleReport.class, "tableStyleReportTypes"),
           Map.entry(PivotTableReport.class, "pivotTableReportTypes"),
           Map.entry(PivotTableReport.Source.class, "pivotTableReportSourceTypes"),
-          Map.entry(ChartReport.class, "chartReportTypes"),
           Map.entry(ChartReport.Title.class, "chartTitleReportTypes"),
           Map.entry(ChartReport.Legend.class, "chartLegendReportTypes"),
           Map.entry(ChartReport.DataSource.class, "chartDataSourceReportTypes"),
+          Map.entry(ChartReport.Plot.class, "chartPlotReportTypes"),
           Map.entry(DrawingAnchorReport.class, "drawingAnchorReportTypes"));
   private static final Map<Class<?>, List<String>> NESTED_FIELD_SHAPE_UNIONS =
       Map.of(
@@ -276,12 +287,18 @@ public final class CatalogFieldMetadataSupport {
               dev.erst.gridgrind.contract.selector.CellSelector.QualifiedAddress.class,
               "qualifiedCellAddressType"),
           Map.entry(DrawingMarkerInput.class, "drawingMarkerInputType"),
+          Map.entry(ArrayFormulaInput.class, "arrayFormulaInputType"),
+          Map.entry(CustomXmlMappingLocator.class, "customXmlMappingLocatorType"),
+          Map.entry(CustomXmlImportInput.class, "customXmlImportInputType"),
+          Map.entry(ChartInput.class, "chartInputType"),
+          Map.entry(ChartInput.Axis.class, "chartAxisInputType"),
           Map.entry(ChartInput.Series.class, "chartSeriesInputType"),
-          Map.entry(ChartInput.DataSource.class, "chartDataSourceInputType"),
+          Map.entry(ChartReport.class, "chartReportType"),
           Map.entry(PictureDataInput.class, "pictureDataInputType"),
           Map.entry(PictureInput.class, "pictureInputType"),
           Map.entry(ShapeInput.class, "shapeInputType"),
           Map.entry(EmbeddedObjectInput.class, "embeddedObjectInputType"),
+          Map.entry(SignatureLineInput.class, "signatureLineInputType"),
           Map.entry(CommentAnchorInput.class, "commentAnchorInputType"),
           Map.entry(NamedRangeTarget.class, "namedRangeTargetType"),
           Map.entry(SheetProtectionSettings.class, "sheetProtectionSettingsType"),
@@ -345,6 +362,12 @@ public final class CatalogFieldMetadataSupport {
           Map.entry(PivotTableReport.Anchor.class, "pivotTableAnchorReportType"),
           Map.entry(PivotTableReport.Field.class, "pivotTableFieldReportType"),
           Map.entry(PivotTableReport.DataField.class, "pivotTableDataFieldReportType"),
+          Map.entry(ArrayFormulaReport.class, "arrayFormulaReportType"),
+          Map.entry(CustomXmlMappingReport.class, "customXmlMappingReportType"),
+          Map.entry(CustomXmlDataBindingReport.class, "customXmlDataBindingReportType"),
+          Map.entry(CustomXmlLinkedCellReport.class, "customXmlLinkedCellReportType"),
+          Map.entry(CustomXmlLinkedTableReport.class, "customXmlLinkedTableReportType"),
+          Map.entry(CustomXmlExportReport.class, "customXmlExportReportType"),
           Map.entry(ChartReport.Axis.class, "chartAxisReportType"),
           Map.entry(ChartReport.Series.class, "chartSeriesReportType"));
 

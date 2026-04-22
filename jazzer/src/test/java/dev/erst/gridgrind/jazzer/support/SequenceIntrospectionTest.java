@@ -41,14 +41,21 @@ import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
+import dev.erst.gridgrind.excel.ExcelArrayFormulaDefinition;
 import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelBinaryData;
+import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
 import dev.erst.gridgrind.excel.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.ExcelChartBarGrouping;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
 import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
 import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.ExcelCustomXmlImportDefinition;
+import dev.erst.gridgrind.excel.ExcelCustomXmlMappingLocator;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
@@ -67,6 +74,7 @@ import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
@@ -352,6 +360,25 @@ class SequenceIntrospectionTest {
         SequenceIntrospection.commandKind(
             new WorkbookCommand.SetPivotTable(excelPivotTableDefinition())));
     assertEquals(
+        "SET_ARRAY_FORMULA",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetArrayFormula(
+                "Budget", "D2:D4", new ExcelArrayFormulaDefinition("B2:B4*C2:C4"))));
+    assertEquals(
+        "CLEAR_ARRAY_FORMULA",
+        SequenceIntrospection.commandKind(new WorkbookCommand.ClearArrayFormula("Budget", "D2")));
+    assertEquals(
+        "IMPORT_CUSTOM_XML_MAPPING",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.ImportCustomXmlMapping(
+                new ExcelCustomXmlImportDefinition(
+                    new ExcelCustomXmlMappingLocator(1L, "BudgetMap"),
+                    "<Budget><Owner>Ada</Owner></Budget>"))));
+    assertEquals(
+        "SET_SIGNATURE_LINE",
+        SequenceIntrospection.commandKind(
+            new WorkbookCommand.SetSignatureLine("Budget", excelSignatureLineDefinition())));
+    assertEquals(
         "SET_DRAWING_OBJECT_ANCHOR",
         SequenceIntrospection.commandKind(
             new WorkbookCommand.SetDrawingObjectAnchor("Budget", "OpsPicture", excelAnchor())));
@@ -471,9 +498,25 @@ class SequenceIntrospectionTest {
                     new WorkbookSelector.Current(),
                     new InspectionQuery.GetWorkbookProtection()),
                 inspect(
+                    "custom-xml-mappings",
+                    new WorkbookSelector.Current(),
+                    new InspectionQuery.GetCustomXmlMappings()),
+                inspect(
+                    "custom-xml-export",
+                    new WorkbookSelector.Current(),
+                    new InspectionQuery.ExportCustomXmlMapping(
+                        new dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator(
+                            1L, "BudgetMap"),
+                        true,
+                        "UTF-8")),
+                inspect(
                     "cells",
                     new CellSelector.ByAddresses("Budget", List.of("A1")),
                     new InspectionQuery.GetCells()),
+                inspect(
+                    "array-formulas",
+                    new SheetSelector.ByName("Budget"),
+                    new InspectionQuery.GetArrayFormulas()),
                 inspect(
                     "drawing-objects",
                     new DrawingObjectSelector.AllOnSheet("Budget"),
@@ -534,9 +577,12 @@ class SequenceIntrospectionTest {
                     new WorkbookSelector.Current(),
                     new InspectionQuery.AnalyzeWorkbookFindings())));
 
-    assertEquals(19, inspectionCount(request));
+    assertEquals(22, inspectionCount(request));
     assertEquals(1L, inspectionKinds(request).get("GET_WORKBOOK_SUMMARY"));
     assertEquals(1L, inspectionKinds(request).get("GET_WORKBOOK_PROTECTION"));
+    assertEquals(1L, inspectionKinds(request).get("GET_CUSTOM_XML_MAPPINGS"));
+    assertEquals(1L, inspectionKinds(request).get("EXPORT_CUSTOM_XML_MAPPING"));
+    assertEquals(1L, inspectionKinds(request).get("GET_ARRAY_FORMULAS"));
     assertEquals(1L, inspectionKinds(request).get("GET_DRAWING_OBJECTS"));
     assertEquals(1L, inspectionKinds(request).get("GET_DRAWING_OBJECT_PAYLOAD"));
     assertEquals(1L, inspectionKinds(request).get("GET_CHARTS"));
@@ -643,21 +689,31 @@ class SequenceIntrospectionTest {
         protocolAnchor());
   }
 
-  private static ChartInput.Bar protocolChartInput() {
-    return new ChartInput.Bar(
+  private static ChartInput protocolChartInput() {
+    return new ChartInput(
         "OpsChart",
         protocolAnchor(),
         new ChartInput.Title.Text(TextSourceInput.inline("Roadmap")),
         new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
         ExcelChartDisplayBlanksAs.SPAN,
         false,
-        true,
-        ExcelChartBarDirection.COLUMN,
         List.of(
-            new ChartInput.Series(
-                new ChartInput.Title.Text(TextSourceInput.inline("Actual")),
-                new ChartInput.DataSource("Budget!$A$2:$A$4"),
-                new ChartInput.DataSource("Budget!$B$2:$B$4"))));
+            new ChartInput.Bar(
+                true,
+                ExcelChartBarDirection.COLUMN,
+                ExcelChartBarGrouping.CLUSTERED,
+                null,
+                null,
+                protocolCategoryAxes(),
+                List.of(
+                    new ChartInput.Series(
+                        new ChartInput.Title.Text(TextSourceInput.inline("Actual")),
+                        new ChartInput.DataSource.Reference("Budget!$A$2:$A$4"),
+                        new ChartInput.DataSource.Reference("Budget!$B$2:$B$4"),
+                        null,
+                        null,
+                        null,
+                        null)))));
   }
 
   private static PivotTableInput protocolPivotTableInput() {
@@ -705,21 +761,74 @@ class SequenceIntrospectionTest {
         excelAnchor());
   }
 
-  private static ExcelChartDefinition.Bar excelChartDefinition() {
-    return new ExcelChartDefinition.Bar(
+  private static ExcelSignatureLineDefinition excelSignatureLineDefinition() {
+    return new ExcelSignatureLineDefinition(
+        "OpsSignature",
+        excelAnchor(),
+        false,
+        "Review the budget before signing.",
+        "Ada Lovelace",
+        "Finance",
+        "ada@example.com",
+        null,
+        "invalid",
+        ExcelPictureFormat.PNG,
+        new ExcelBinaryData(java.util.Base64.getDecoder().decode(PNG_PIXEL_BASE64)));
+  }
+
+  private static ExcelChartDefinition excelChartDefinition() {
+    return new ExcelChartDefinition(
         "OpsChart",
         excelAnchor(),
         new ExcelChartDefinition.Title.Text("Roadmap"),
         new ExcelChartDefinition.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
         ExcelChartDisplayBlanksAs.SPAN,
         false,
-        true,
-        ExcelChartBarDirection.COLUMN,
         List.of(
-            new ExcelChartDefinition.Series(
-                new ExcelChartDefinition.Title.Text("Actual"),
-                new ExcelChartDefinition.DataSource("Budget!$A$2:$A$4"),
-                new ExcelChartDefinition.DataSource("Budget!$B$2:$B$4"))));
+            new ExcelChartDefinition.Bar(
+                true,
+                ExcelChartBarDirection.COLUMN,
+                ExcelChartBarGrouping.CLUSTERED,
+                null,
+                null,
+                excelCategoryAxes(),
+                List.of(
+                    new ExcelChartDefinition.Series(
+                        new ExcelChartDefinition.Title.Text("Actual"),
+                        new ExcelChartDefinition.DataSource.Reference("Budget!$A$2:$A$4"),
+                        new ExcelChartDefinition.DataSource.Reference("Budget!$B$2:$B$4"),
+                        null,
+                        null,
+                        null,
+                        null)))));
+  }
+
+  private static List<ChartInput.Axis> protocolCategoryAxes() {
+    return List.of(
+        new ChartInput.Axis(
+            ExcelChartAxisKind.CATEGORY,
+            ExcelChartAxisPosition.BOTTOM,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true),
+        new ChartInput.Axis(
+            ExcelChartAxisKind.VALUE,
+            ExcelChartAxisPosition.LEFT,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true));
+  }
+
+  private static List<ExcelChartDefinition.Axis> excelCategoryAxes() {
+    return List.of(
+        new ExcelChartDefinition.Axis(
+            ExcelChartAxisKind.CATEGORY,
+            ExcelChartAxisPosition.BOTTOM,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true),
+        new ExcelChartDefinition.Axis(
+            ExcelChartAxisKind.VALUE,
+            ExcelChartAxisPosition.LEFT,
+            ExcelChartAxisCrosses.AUTO_ZERO,
+            true));
   }
 
   private static ExcelPivotTableDefinition excelPivotTableDefinition() {

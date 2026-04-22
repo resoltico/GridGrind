@@ -27,6 +27,8 @@ import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.executor.ExecutionInputBindings;
+import dev.erst.gridgrind.executor.ExecutionJournalSink;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -200,7 +202,10 @@ public final class XlsxParityScenarios {
           Path scenarioDirectory = Files.createDirectories(temporaryRoot.resolve(CORE_WORKBOOK));
           Path workbookPath = scenarioDirectory.resolve("core.xlsx");
           WorkbookPlan request = coreWorkbookRequest(workbookPath);
-          GridGrindResponse response = new DefaultGridGrindRequestExecutor().execute(request);
+          GridGrindResponse response =
+              new DefaultGridGrindRequestExecutor()
+                  .execute(
+                      request, ExecutionInputBindings.processDefault(), ExecutionJournalSink.NOOP);
           if (!(response instanceof GridGrindResponse.Success)) {
             throw new IllegalStateException(
                 "Core parity workbook request must succeed: " + response);
@@ -507,7 +512,11 @@ public final class XlsxParityScenarios {
           Path workbookPath = scenarioDirectory.resolve("chart-authoring.xlsx");
 
           GridGrindResponse response =
-              new DefaultGridGrindRequestExecutor().execute(chartAuthoringRequest(workbookPath));
+              new DefaultGridGrindRequestExecutor()
+                  .execute(
+                      chartAuthoringRequest(workbookPath),
+                      ExecutionInputBindings.processDefault(),
+                      ExecutionJournalSink.NOOP);
           if (!(response instanceof GridGrindResponse.Success)) {
             throw new IllegalStateException(
                 "Chart authoring parity workbook request must succeed: " + response);
@@ -618,7 +627,11 @@ public final class XlsxParityScenarios {
           Path workbookPath = scenarioDirectory.resolve("pivot-authoring.xlsx");
 
           GridGrindResponse response =
-              new DefaultGridGrindRequestExecutor().execute(pivotAuthoringRequest(workbookPath));
+              new DefaultGridGrindRequestExecutor()
+                  .execute(
+                      pivotAuthoringRequest(workbookPath),
+                      ExecutionInputBindings.processDefault(),
+                      ExecutionJournalSink.NOOP);
           if (!(response instanceof GridGrindResponse.Success)) {
             throw new IllegalStateException(
                 "Pivot authoring parity workbook request must succeed: " + response);
@@ -670,7 +683,11 @@ public final class XlsxParityScenarios {
               Files.createDirectories(temporaryRoot.resolve(DRAWING_AUTHORING));
           Path workbookPath = scenarioDirectory.resolve("drawing-authoring.xlsx");
           GridGrindResponse response =
-              new DefaultGridGrindRequestExecutor().execute(drawingAuthoringRequest(workbookPath));
+              new DefaultGridGrindRequestExecutor()
+                  .execute(
+                      drawingAuthoringRequest(workbookPath),
+                      ExecutionInputBindings.processDefault(),
+                      ExecutionJournalSink.NOOP);
           if (!(response instanceof GridGrindResponse.Success)) {
             throw new IllegalStateException(
                 "GridGrind drawing authoring parity workbook request must succeed: " + response);
@@ -1390,7 +1407,7 @@ public final class XlsxParityScenarios {
             mutate(
                 new SheetSelector.ByName("Chart"),
                 new MutationAction.SetChart(
-                    new ChartInput.Bar(
+                    new ChartInput(
                         "OpsChart",
                         twoCellAnchorInput(
                             4, 1, 11, 16, ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
@@ -1398,17 +1415,31 @@ public final class XlsxParityScenarios {
                         new ChartInput.Legend.Visible(ExcelChartLegendPosition.TOP_RIGHT),
                         ExcelChartDisplayBlanksAs.SPAN,
                         false,
-                        true,
-                        ExcelChartBarDirection.COLUMN,
                         List.of(
-                            new ChartInput.Series(
-                                new ChartInput.Title.Formula("B1"),
-                                new ChartInput.DataSource("A2:A4"),
-                                new ChartInput.DataSource("B2:B4")),
-                            new ChartInput.Series(
-                                new ChartInput.Title.Formula("C1"),
-                                new ChartInput.DataSource("ChartCategories"),
-                                new ChartInput.DataSource("ChartActual"))))))),
+                            new ChartInput.Bar(
+                                true,
+                                ExcelChartBarDirection.COLUMN,
+                                null,
+                                null,
+                                null,
+                                null,
+                                List.of(
+                                    new ChartInput.Series(
+                                        new ChartInput.Title.Formula("B1"),
+                                        new ChartInput.DataSource.Reference("A2:A4"),
+                                        new ChartInput.DataSource.Reference("B2:B4"),
+                                        null,
+                                        null,
+                                        null,
+                                        null),
+                                    new ChartInput.Series(
+                                        new ChartInput.Title.Formula("C1"),
+                                        new ChartInput.DataSource.Reference("ChartCategories"),
+                                        new ChartInput.DataSource.Reference("ChartActual"),
+                                        null,
+                                        null,
+                                        null,
+                                        null)))))))),
         List.of());
   }
 

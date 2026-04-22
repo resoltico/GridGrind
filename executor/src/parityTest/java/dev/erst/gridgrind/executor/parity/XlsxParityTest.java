@@ -21,6 +21,8 @@ import dev.erst.gridgrind.excel.ExcelFormulaExternalWorkbookBinding;
 import dev.erst.gridgrind.excel.ExcelFormulaMissingWorkbookPolicy;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
+import dev.erst.gridgrind.executor.ExecutionInputBindings;
+import dev.erst.gridgrind.executor.ExecutionJournalSink;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -226,7 +228,9 @@ final class XlsxParityTest {
                           inspect(
                               "cells",
                               new CellSelector.ByAddresses("Ops", List.of("B1")),
-                              new InspectionQuery.GetCells()))));
+                              new InspectionQuery.GetCells()))),
+                  ExecutionInputBindings.processDefault(),
+                  ExecutionJournalSink.NOOP);
       assertInstanceOf(GridGrindResponse.Success.class, response);
     } finally {
       deleteRecursively(temporaryRoot);

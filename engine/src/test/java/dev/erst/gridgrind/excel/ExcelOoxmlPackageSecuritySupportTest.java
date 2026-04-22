@@ -3,7 +3,6 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -14,7 +13,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
   void encryptedWorkbookOpenRequiresCorrectPasswordAndReportsEncryptionFacts() throws IOException {
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
         OoxmlSecurityTestSupport.createEncryptedWorkbook(
-            Files.createTempDirectory("gridgrind-ooxml-encrypted-open-"));
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-ooxml-encrypted-open-"));
 
     assertThrows(
         WorkbookPasswordRequiredException.class,
@@ -53,7 +52,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
   void encryptedSourcePreservesEncryptionAcrossUnchangedAndMutatedSaves() throws IOException {
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
         OoxmlSecurityTestSupport.createEncryptedWorkbook(
-            Files.createTempDirectory("gridgrind-ooxml-encrypted-save-"));
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-ooxml-encrypted-save-"));
     Path unchangedCopy =
         encryptedWorkbook.workbookPath().getParent().resolve("encrypted-unchanged-copy.xlsx");
     Path mutatedCopy =
@@ -91,7 +90,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
   void signedWorkbookReportsValidInvalidatedAndResignedStates() throws IOException {
     OoxmlSecurityTestSupport.SignedWorkbook signedWorkbook =
         OoxmlSecurityTestSupport.createSignedWorkbook(
-            Files.createTempDirectory("gridgrind-ooxml-signed-save-"));
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-ooxml-signed-save-"));
     Path resignedOutput =
         signedWorkbook.workbookPath().getParent().resolve("signed-resigned-output.xlsx");
 
@@ -156,7 +155,7 @@ class ExcelOoxmlPackageSecuritySupportTest {
   void tamperedSignedWorkbookReadsBackAsInvalidInsteadOfFailingOpen() throws IOException {
     OoxmlSecurityTestSupport.SignedWorkbook signedWorkbook =
         OoxmlSecurityTestSupport.createSignedWorkbook(
-            Files.createTempDirectory("gridgrind-ooxml-signed-invalid-"));
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-ooxml-signed-invalid-"));
     Path tamperedWorkbook =
         signedWorkbook.workbookPath().getParent().resolve("signed-invalid-tampered.xlsx");
     OoxmlSecurityTestSupport.tamperWorkbookCell(

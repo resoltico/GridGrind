@@ -10,7 +10,6 @@ final class ExcelDocumentIntrospector {
   private final ExcelAutofilterController autofilterController;
   private final ExcelTableController tableController;
   private final ExcelPivotTableController pivotTableController;
-  private final ExcelDrawingController drawingController;
 
   ExcelDocumentIntrospector() {
     this(
@@ -18,8 +17,7 @@ final class ExcelDocumentIntrospector {
         new ExcelConditionalFormattingController(),
         new ExcelAutofilterController(),
         new ExcelTableController(),
-        new ExcelPivotTableController(),
-        new ExcelDrawingController());
+        new ExcelPivotTableController());
   }
 
   ExcelDocumentIntrospector(
@@ -27,8 +25,7 @@ final class ExcelDocumentIntrospector {
       ExcelConditionalFormattingController conditionalFormattingController,
       ExcelAutofilterController autofilterController,
       ExcelTableController tableController,
-      ExcelPivotTableController pivotTableController,
-      ExcelDrawingController drawingController) {
+      ExcelPivotTableController pivotTableController) {
     this.dataValidationController =
         Objects.requireNonNull(
             dataValidationController, "dataValidationController must not be null");
@@ -41,8 +38,6 @@ final class ExcelDocumentIntrospector {
         Objects.requireNonNull(tableController, "tableController must not be null");
     this.pivotTableController =
         Objects.requireNonNull(pivotTableController, "pivotTableController must not be null");
-    this.drawingController =
-        Objects.requireNonNull(drawingController, "drawingController must not be null");
   }
 
   /** Returns data-validation metadata for the selected ranges on one sheet. */
@@ -92,14 +87,14 @@ final class ExcelDocumentIntrospector {
   List<ExcelDrawingObjectSnapshot> drawingObjects(ExcelWorkbook workbook, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
-    return drawingController.drawingObjects(workbook.sheet(sheetName).xssfSheet());
+    return workbook.sheet(sheetName).drawingObjects();
   }
 
   /** Returns factual chart metadata for one sheet. */
   List<ExcelChartSnapshot> charts(ExcelWorkbook workbook, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
-    return drawingController.charts(workbook.sheet(sheetName).xssfSheet());
+    return workbook.sheet(sheetName).charts();
   }
 
   /** Returns the extracted binary payload for one existing drawing object on one sheet. */
@@ -108,7 +103,6 @@ final class ExcelDocumentIntrospector {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(sheetName, "sheetName must not be null");
     Objects.requireNonNull(objectName, "objectName must not be null");
-    return drawingController.drawingObjectPayload(
-        workbook.sheet(sheetName).xssfSheet(), objectName);
+    return workbook.sheet(sheetName).drawingObjectPayload(objectName);
   }
 }

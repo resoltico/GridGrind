@@ -7,6 +7,8 @@ import dev.erst.gridgrind.contract.assertion.Assertion;
 import dev.erst.gridgrind.contract.catalog.gather.CatalogDuplicateFailures;
 import dev.erst.gridgrind.contract.catalog.gather.CatalogFieldMetadataSupport;
 import dev.erst.gridgrind.contract.catalog.gather.CatalogGatherers;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaInput;
+import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnInput;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionInput;
 import dev.erst.gridgrind.contract.dto.AutofilterSortConditionInput;
@@ -41,6 +43,13 @@ import dev.erst.gridgrind.contract.dto.CommentInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingBlockInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleInput;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingThresholdInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlDataBindingReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlExportReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
+import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
+import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
@@ -98,6 +107,7 @@ import dev.erst.gridgrind.contract.dto.SheetDisplayInput;
 import dev.erst.gridgrind.contract.dto.SheetOutlineSummaryInput;
 import dev.erst.gridgrind.contract.dto.SheetPresentationInput;
 import dev.erst.gridgrind.contract.dto.SheetProtectionSettings;
+import dev.erst.gridgrind.contract.dto.SignatureLineInput;
 import dev.erst.gridgrind.contract.dto.TableColumnInput;
 import dev.erst.gridgrind.contract.dto.TableColumnReport;
 import dev.erst.gridgrind.contract.dto.TableEntryReport;
@@ -218,13 +228,20 @@ public final class GridGrindProtocolCatalog {
                           + " formula-defined names."),
                   new CliSurface.DefinitionEntry(
                       "Chart mutations",
-                      "SET_CHART authors BAR, LINE, and PIE only; unsupported loaded chart"
-                          + " detail is preserved on unrelated edits and rejected for"
+                      "SET_CHART authors AREA, AREA_3D, BAR, BAR_3D, DOUGHNUT, LINE,"
+                          + " LINE_3D, PIE, PIE_3D, RADAR, SCATTER, SURFACE, and SURFACE_3D;"
+                          + " unsupported loaded chart detail is preserved on unrelated edits"
+                          + " and rejected for"
                           + " authoritative mutation."),
                   new CliSurface.DefinitionEntry(
                       "Chart title formulas",
                       "SET_CHART title FORMULA and series.title FORMULA must resolve to one"
                           + " cell, directly or through one defined name."),
+                  new CliSurface.DefinitionEntry(
+                      "Array formulas",
+                      "SET_ARRAY_FORMULA authors one contiguous single-cell or multi-cell array"
+                          + " formula group; CLEAR_ARRAY_FORMULA may target any member cell and"
+                          + " removes the whole stored group."),
                   new CliSurface.DefinitionEntry(
                       "Drawing validation",
                       "failed SET_SHAPE / SET_CHART validation leaves existing drawing state"
@@ -344,7 +361,9 @@ public final class GridGrindProtocolCatalog {
                   + " targetSelectorRule so agents can see the allowed target families,"
                   + " derived selector rules, and any shared-selector disambiguation notes"
                   + " before sending a request. When ids repeat across groups, qualify the"
-                  + " lookup as <group>:<id> such as cellInputTypes:FORMULA.",
+                  + " lookup as <group>:<id> such as cellInputTypes:FORMULA. Nested and"
+                  + " plain type-group descriptors can also be queried directly, for example"
+                  + " nestedTypes:cellInputTypes or plainTypes:chartInputType.",
               "gridgrind --print-example " + GridGrindShippedExamples.examples().getFirst().id()),
           new CliSurface.CliReferenceSection(
               "Docs",
@@ -383,8 +402,9 @@ public final class GridGrindProtocolCatalog {
                       "--print-protocol-catalog", "Print the machine-readable protocol catalog."),
                   new CliSurface.DefinitionEntry(
                       "--operation <id>",
-                      "With --print-protocol-catalog, print one unique entry; qualify"
-                          + " duplicate ids as <group>:<id>."),
+                      "With --print-protocol-catalog, print one unique entry or one nested/"
+                          + " plain type group; qualify duplicate ids as <group>:<id> and"
+                          + " query type groups as nestedTypes:<group> or plainTypes:<group>."),
                   new CliSurface.DefinitionEntry(
                       "--print-example <id>", "Print one built-in generated example request."),
                   new CliSurface.DefinitionEntry("--help, -h", "Print this help text."),
@@ -662,6 +682,27 @@ public final class GridGrindProtocolCatalog {
               "SET_RANGE",
               "Write a rectangular grid of typed values."),
           descriptor(
+              MutationAction.SetArrayFormula.class,
+              "SET_ARRAY_FORMULA",
+              "Author one contiguous single-cell or multi-cell array-formula group."
+                  + " source accepts inline formula text with or without leading = or {=...}"
+                  + " wrapper syntax."),
+          descriptor(
+              MutationAction.ClearArrayFormula.class,
+              "CLEAR_ARRAY_FORMULA",
+              "Remove the stored array-formula group targeted by any member cell."
+                  + " Non-array cells are rejected explicitly."),
+          descriptor(
+              MutationAction.ImportCustomXmlMapping.class,
+              "IMPORT_CUSTOM_XML_MAPPING",
+              "Import XML content into one existing workbook custom-XML mapping."
+                  + " mapping locates one existing map by mapId and/or name and xml accepts"
+                  + " inline, file-backed, or STANDARD_INPUT text sources."
+                  + " Workbook custom-XML mappings themselves must already exist in the source"
+                  + " workbook; GridGrind imports data into them but does not author new map"
+                  + " definitions.",
+              "mapping"),
+          descriptor(
               MutationAction.ClearRange.class,
               "CLEAR_RANGE",
               "Clear value, style, hyperlink, and comment state from a range."),
@@ -695,10 +736,21 @@ public final class GridGrindProtocolCatalog {
                   + " currently supports TWO_CELL anchors."
                   + " Reusing an existing object name replaces that picture authoritatively."),
           descriptor(
+              MutationAction.SetSignatureLine.class,
+              "SET_SIGNATURE_LINE",
+              "Create or replace one named signature line on a sheet."
+                  + " Signature lines surface through GET_DRAWING_OBJECTS and reuse"
+                  + " SET_DRAWING_OBJECT_ANCHOR / DELETE_DRAWING_OBJECT for later edits."
+                  + " anchor uses the explicit DrawingAnchorInput discriminated shape and"
+                  + " currently supports TWO_CELL anchors."
+                  + " Reusing an existing object name replaces any prior drawing object of that"
+                  + " name authoritatively."),
+          descriptor(
               MutationAction.SetChart.class,
               "SET_CHART",
-              "Create or mutate one named simple chart on a sheet."
-                  + " Supported authored families are BAR, LINE, and PIE."
+              "Create or mutate one named chart on a sheet."
+                  + " Supported authored families are AREA, AREA_3D, BAR, BAR_3D, DOUGHNUT,"
+                  + " LINE, LINE_3D, PIE, PIE_3D, RADAR, SCATTER, SURFACE, and SURFACE_3D."
                   + " series bind to contiguous ranges or defined names and anchors currently"
                   + " support only TWO_CELL."
                   + " Chart and series FORMULA titles must resolve to one cell."
@@ -736,15 +788,16 @@ public final class GridGrindProtocolCatalog {
           descriptor(
               MutationAction.SetDrawingObjectAnchor.class,
               "SET_DRAWING_OBJECT_ANCHOR",
-              "Move one existing named picture, connector, simple shape, or embedded object"
-                  + " to a new authored anchor."
+              "Move one existing named picture, signature line, connector, simple shape,"
+                  + " chart frame, or embedded object to a new authored anchor."
                   + " anchor currently supports only TWO_CELL anchors."
                   + " Read-only loaded families such as groups and graphic frames are rejected."),
           descriptor(
               MutationAction.DeleteDrawingObject.class,
               "DELETE_DRAWING_OBJECT",
               "Delete one existing named drawing object from the sheet."
-                  + " Package relationships for picture media and embedded-object parts are"
+                  + " Package relationships for picture media, signature-line preview images,"
+                  + " and embedded-object parts are"
                   + " cleaned up when no other drawing object still references them."),
           descriptor(
               MutationAction.ApplyStyle.class,
@@ -945,6 +998,22 @@ public final class GridGrindProtocolCatalog {
               "Return workbook-level protection facts including structure, windows, and"
                   + " revisions lock state plus whether password hashes are present."),
           descriptor(
+              InspectionQuery.GetCustomXmlMappings.class,
+              "GET_CUSTOM_XML_MAPPINGS",
+              "Return workbook custom-XML mapping metadata, including map identifiers,"
+                  + " schema metadata, linked single cells, linked tables, and optional data"
+                  + " binding facts."),
+          descriptor(
+              InspectionQuery.ExportCustomXmlMapping.class,
+              "EXPORT_CUSTOM_XML_MAPPING",
+              "Export one existing workbook custom-XML mapping as serialized XML."
+                  + " mapping locates one existing map by mapId and/or name;"
+                  + " validateSchema defaults to false and encoding defaults to UTF-8 when"
+                  + " omitted.",
+              "mapping",
+              "validateSchema",
+              "encoding"),
+          descriptor(
               InspectionQuery.GetNamedRanges.class,
               "GET_NAMED_RANGES",
               "Return named ranges matched by the supplied selection."),
@@ -1003,16 +1072,22 @@ public final class GridGrindProtocolCatalog {
               InspectionQuery.GetDrawingObjects.class,
               "GET_DRAWING_OBJECTS",
               "Return factual drawing-object metadata for one sheet."
-                  + " Read families include pictures, simple shapes, connectors, groups,"
-                  + " charts, graphic frames, and embedded objects with truthful anchor and package"
-                  + " facts."),
+                  + " Read families include pictures, signature lines, simple shapes,"
+                  + " connectors, groups, charts, graphic frames, and embedded objects with"
+                  + " truthful anchor and package facts."),
           descriptor(
               InspectionQuery.GetCharts.class,
               "GET_CHARTS",
               "Return factual chart metadata for one sheet."
-                  + " Supported simple BAR, LINE, and PIE charts are modeled authoritatively;"
-                  + " unsupported plot families or multi-plot combinations are surfaced as"
+                  + " Supported authored chart families are modeled authoritatively;"
+                  + " unsupported plot families or unsupported loaded detail are surfaced as"
                   + " explicit UNSUPPORTED entries with preserved plot-type tokens."),
+          descriptor(
+              InspectionQuery.GetArrayFormulas.class,
+              "GET_ARRAY_FORMULAS",
+              "Return factual array-formula group metadata for the selected sheets,"
+                  + " including the stored range, top-left anchor cell, normalized formula text,"
+                  + " and whether the group is single-cell."),
           descriptor(
               InspectionQuery.GetPivotTables.class,
               "GET_PIVOT_TABLES",
@@ -1262,16 +1337,59 @@ public final class GridGrindProtocolCatalog {
                       "TABLE",
                       "Pivot source resolved from one workbook table."))),
           nestedTypeGroup(
-              "chartReportTypes",
-              ChartReport.class,
+              "chartPlotReportTypes",
+              ChartReport.Plot.class,
               List.of(
-                  descriptor(ChartReport.Bar.class, "BAR", "Exact supported bar-chart report."),
-                  descriptor(ChartReport.Line.class, "LINE", "Exact supported line-chart report."),
-                  descriptor(ChartReport.Pie.class, "PIE", "Exact supported pie-chart report."),
+                  descriptor(ChartReport.Area.class, "AREA", "Exact area-chart plot report."),
+                  descriptor(
+                      ChartReport.Area3D.class,
+                      "AREA_3D",
+                      "Exact 3D area-chart plot report.",
+                      "gapDepth"),
+                  descriptor(
+                      ChartReport.Bar.class,
+                      "BAR",
+                      "Exact bar-chart plot report.",
+                      "gapWidth",
+                      "overlap"),
+                  descriptor(
+                      ChartReport.Bar3D.class,
+                      "BAR_3D",
+                      "Exact 3D bar-chart plot report.",
+                      "gapDepth",
+                      "gapWidth",
+                      "shape"),
+                  descriptor(
+                      ChartReport.Doughnut.class,
+                      "DOUGHNUT",
+                      "Exact doughnut-chart plot report.",
+                      "firstSliceAngle",
+                      "holeSize"),
+                  descriptor(ChartReport.Line.class, "LINE", "Exact line-chart plot report."),
+                  descriptor(
+                      ChartReport.Line3D.class,
+                      "LINE_3D",
+                      "Exact 3D line-chart plot report.",
+                      "gapDepth"),
+                  descriptor(
+                      ChartReport.Pie.class,
+                      "PIE",
+                      "Exact pie-chart plot report.",
+                      "firstSliceAngle"),
+                  descriptor(ChartReport.Pie3D.class, "PIE_3D", "Exact 3D pie-chart plot report."),
+                  descriptor(ChartReport.Radar.class, "RADAR", "Exact radar-chart plot report."),
+                  descriptor(
+                      ChartReport.Scatter.class, "SCATTER", "Exact scatter-chart plot report."),
+                  descriptor(
+                      ChartReport.Surface.class, "SURFACE", "Exact surface-chart plot report."),
+                  descriptor(
+                      ChartReport.Surface3D.class,
+                      "SURFACE_3D",
+                      "Exact 3D surface-chart plot report."),
                   descriptor(
                       ChartReport.Unsupported.class,
                       "UNSUPPORTED",
-                      "Exact unsupported chart report preserved from the workbook."))),
+                      "Exact unsupported chart plot report preserved from the workbook."))),
           nestedTypeGroup(
               "chartTitleReportTypes",
               ChartReport.Title.class,
@@ -1643,44 +1761,119 @@ public final class GridGrindProtocolCatalog {
                           + " behavior defaults to MOVE_AND_RESIZE when omitted.",
                       "behavior"))),
           nestedTypeGroup(
-              "chartInputTypes",
-              ChartInput.class,
+              "chartPlotInputTypes",
+              ChartInput.Plot.class,
               List.of(
+                  descriptor(
+                      ChartInput.Area.class,
+                      "AREA",
+                      "Authored area-chart plot."
+                          + " varyColors, grouping, and axes default when omitted.",
+                      "varyColors",
+                      "grouping",
+                      "axes"),
+                  descriptor(
+                      ChartInput.Area3D.class,
+                      "AREA_3D",
+                      "Authored 3D area-chart plot."
+                          + " varyColors, grouping, gapDepth, and axes default when omitted.",
+                      "varyColors",
+                      "grouping",
+                      "gapDepth",
+                      "axes"),
                   descriptor(
                       ChartInput.Bar.class,
                       "BAR",
-                      "Authored simple bar chart."
-                          + " title, legend, displayBlanksAs, plotOnlyVisibleCells, varyColors,"
-                          + " and barDirection default when omitted.",
-                      "title",
-                      "legend",
-                      "displayBlanksAs",
-                      "plotOnlyVisibleCells",
+                      "Authored bar-chart plot."
+                          + " varyColors, barDirection, grouping, gapWidth, overlap,"
+                          + " and axes default when omitted.",
                       "varyColors",
-                      "barDirection"),
+                      "barDirection",
+                      "grouping",
+                      "gapWidth",
+                      "overlap",
+                      "axes"),
+                  descriptor(
+                      ChartInput.Bar3D.class,
+                      "BAR_3D",
+                      "Authored 3D bar-chart plot."
+                          + " varyColors, barDirection, grouping, gapDepth, gapWidth,"
+                          + " shape, and axes default when omitted.",
+                      "varyColors",
+                      "barDirection",
+                      "grouping",
+                      "gapDepth",
+                      "gapWidth",
+                      "shape",
+                      "axes"),
+                  descriptor(
+                      ChartInput.Doughnut.class,
+                      "DOUGHNUT",
+                      "Authored doughnut-chart plot."
+                          + " varyColors, firstSliceAngle, and holeSize are optional.",
+                      "varyColors",
+                      "firstSliceAngle",
+                      "holeSize"),
                   descriptor(
                       ChartInput.Line.class,
                       "LINE",
-                      "Authored simple line chart."
-                          + " title, legend, displayBlanksAs, plotOnlyVisibleCells, and"
-                          + " varyColors default when omitted.",
-                      "title",
-                      "legend",
-                      "displayBlanksAs",
-                      "plotOnlyVisibleCells",
-                      "varyColors"),
+                      "Authored line-chart plot."
+                          + " varyColors, grouping, and axes default when omitted.",
+                      "varyColors",
+                      "grouping",
+                      "axes"),
+                  descriptor(
+                      ChartInput.Line3D.class,
+                      "LINE_3D",
+                      "Authored 3D line-chart plot."
+                          + " varyColors, grouping, gapDepth, and axes default when omitted.",
+                      "varyColors",
+                      "grouping",
+                      "gapDepth",
+                      "axes"),
                   descriptor(
                       ChartInput.Pie.class,
                       "PIE",
-                      "Authored simple pie chart."
-                          + " title, legend, displayBlanksAs, plotOnlyVisibleCells,"
-                          + " varyColors, and firstSliceAngle are optional.",
-                      "title",
-                      "legend",
-                      "displayBlanksAs",
-                      "plotOnlyVisibleCells",
+                      "Authored pie-chart plot." + " varyColors and firstSliceAngle are optional.",
                       "varyColors",
-                      "firstSliceAngle"))),
+                      "firstSliceAngle"),
+                  descriptor(
+                      ChartInput.Pie3D.class,
+                      "PIE_3D",
+                      "Authored 3D pie-chart plot." + " varyColors defaults when omitted.",
+                      "varyColors"),
+                  descriptor(
+                      ChartInput.Radar.class,
+                      "RADAR",
+                      "Authored radar-chart plot."
+                          + " varyColors, style, and axes default when omitted.",
+                      "varyColors",
+                      "style",
+                      "axes"),
+                  descriptor(
+                      ChartInput.Scatter.class,
+                      "SCATTER",
+                      "Authored scatter-chart plot."
+                          + " varyColors, style, and axes default when omitted.",
+                      "varyColors",
+                      "style",
+                      "axes"),
+                  descriptor(
+                      ChartInput.Surface.class,
+                      "SURFACE",
+                      "Authored surface-chart plot."
+                          + " varyColors, wireframe, and axes default when omitted.",
+                      "varyColors",
+                      "wireframe",
+                      "axes"),
+                  descriptor(
+                      ChartInput.Surface3D.class,
+                      "SURFACE_3D",
+                      "Authored 3D surface-chart plot."
+                          + " varyColors, wireframe, and axes default when omitted.",
+                      "varyColors",
+                      "wireframe",
+                      "axes"))),
           nestedTypeGroup(
               "chartTitleInputTypes",
               ChartInput.Title.class,
@@ -1702,6 +1895,22 @@ public final class GridGrindProtocolCatalog {
                       ChartInput.Legend.Visible.class,
                       "VISIBLE",
                       "Show the legend at one explicit position."))),
+          nestedTypeGroup(
+              "chartDataSourceInputTypes",
+              ChartInput.DataSource.class,
+              List.of(
+                  descriptor(
+                      ChartInput.DataSource.Reference.class,
+                      "REFERENCE",
+                      "Workbook-backed chart source formula or defined name."),
+                  descriptor(
+                      ChartInput.DataSource.StringLiteral.class,
+                      "STRING_LITERAL",
+                      "Literal string chart source stored directly in the chart part."),
+                  descriptor(
+                      ChartInput.DataSource.NumericLiteral.class,
+                      "NUMERIC_LITERAL",
+                      "Literal numeric chart source stored directly in the chart part."))),
           nestedTypeGroup(
               "pivotTableSourceTypes",
               PivotTableInput.Source.class,
@@ -2161,17 +2370,48 @@ public final class GridGrindProtocolCatalog {
               "One zero-based drawing marker with explicit column, row, and in-cell offsets.",
               List.of()),
           plainTypeDescriptor(
+              "arrayFormulaInputType",
+              ArrayFormulaInput.class,
+              "ArrayFormulaInput",
+              "One authored array formula bound to a contiguous single-cell or multi-cell range."
+                  + " Leading = or {=...} wrappers normalize away for inline sources.",
+              List.of()),
+          plainTypeDescriptor(
+              "customXmlMappingLocatorType",
+              CustomXmlMappingLocator.class,
+              "CustomXmlMappingLocator",
+              "One locator for an existing workbook custom-XML mapping."
+                  + " Supply mapId, name, or both; the locator must resolve to exactly one"
+                  + " existing mapping.",
+              List.of("mapId", "name")),
+          plainTypeDescriptor(
+              "customXmlImportInputType",
+              CustomXmlImportInput.class,
+              "CustomXmlImportInput",
+              "One custom-XML import payload targeting an existing workbook mapping plus the XML"
+                  + " content to import.",
+              List.of()),
+          plainTypeDescriptor(
+              "chartInputType",
+              ChartInput.class,
+              "ChartInput",
+              "One authored chart with a drawing anchor, chart-level presentation state,"
+                  + " and one or more plots.",
+              List.of("title", "legend", "displayBlanksAs", "plotOnlyVisibleCells")),
+          plainTypeDescriptor(
+              "chartAxisInputType",
+              ChartInput.Axis.class,
+              "ChartAxisInput",
+              "One authored chart axis used by a chart plot."
+                  + " visible defaults to true when omitted.",
+              List.of("visible")),
+          plainTypeDescriptor(
               "chartSeriesInputType",
               ChartInput.Series.class,
               "ChartSeriesInput",
-              "One authored chart series with a title plus category and value data sources.",
-              List.of("title")),
-          plainTypeDescriptor(
-              "chartDataSourceInputType",
-              ChartInput.DataSource.class,
-              "ChartDataSourceInput",
-              "One contiguous chart source bound by formula or defined name.",
-              List.of()),
+              "One authored chart series with a title plus category and value data sources."
+                  + " smooth, marker, and explosion fields are optional by chart family.",
+              List.of("title", "smooth", "markerStyle", "markerSize", "explosion")),
           plainTypeDescriptor(
               "pictureDataInputType",
               PictureDataInput.class,
@@ -2184,6 +2424,22 @@ public final class GridGrindProtocolCatalog {
               "PictureInput",
               "Named picture-authoring payload for SET_PICTURE.",
               List.of("description")),
+          plainTypeDescriptor(
+              "signatureLineInputType",
+              SignatureLineInput.class,
+              "SignatureLineInput",
+              "Named signature-line authoring payload for SET_SIGNATURE_LINE."
+                  + " allowComments defaults to true when omitted and plainSignature is optional,"
+                  + " but caption or suggested signer metadata must still be present.",
+              List.of(
+                  "allowComments",
+                  "signingInstructions",
+                  "suggestedSigner",
+                  "suggestedSigner2",
+                  "suggestedSignerEmail",
+                  "caption",
+                  "invalidStamp",
+                  "plainSignature")),
           plainTypeDescriptor(
               "shapeInputType",
               ShapeInput.class,
@@ -2680,6 +2936,55 @@ public final class GridGrindProtocolCatalog {
               "Exact pivot data-field report.",
               List.of("valueFormat")),
           plainTypeDescriptor(
+              "arrayFormulaReportType",
+              ArrayFormulaReport.class,
+              "ArrayFormulaReport",
+              "One factual array-formula group report returned by GET_ARRAY_FORMULAS.",
+              List.of()),
+          plainTypeDescriptor(
+              "customXmlMappingReportType",
+              CustomXmlMappingReport.class,
+              "CustomXmlMappingReport",
+              "One factual workbook custom-XML mapping report.",
+              List.of(
+                  "schemaNamespace",
+                  "schemaLanguage",
+                  "schemaReference",
+                  "schemaXml",
+                  "dataBinding")),
+          plainTypeDescriptor(
+              "customXmlDataBindingReportType",
+              CustomXmlDataBindingReport.class,
+              "CustomXmlDataBindingReport",
+              "Optional custom-XML data-binding metadata attached to one workbook mapping.",
+              List.of("dataBindingName", "fileBinding", "connectionId", "fileBindingName")),
+          plainTypeDescriptor(
+              "customXmlLinkedCellReportType",
+              CustomXmlLinkedCellReport.class,
+              "CustomXmlLinkedCellReport",
+              "One single-cell binding linked to a custom-XML mapping.",
+              List.of()),
+          plainTypeDescriptor(
+              "customXmlLinkedTableReportType",
+              CustomXmlLinkedTableReport.class,
+              "CustomXmlLinkedTableReport",
+              "One XML-mapped table linked to a custom-XML mapping.",
+              List.of()),
+          plainTypeDescriptor(
+              "customXmlExportReportType",
+              CustomXmlExportReport.class,
+              "CustomXmlExportReport",
+              "One exported custom-XML mapping payload plus the factual mapping metadata used to"
+                  + " produce it.",
+              List.of()),
+          plainTypeDescriptor(
+              "chartReportType",
+              ChartReport.class,
+              "ChartReport",
+              "One factual chart report with chart-level presentation state and one or more"
+                  + " plots.",
+              List.of()),
+          plainTypeDescriptor(
               "chartAxisReportType",
               ChartReport.Axis.class,
               "ChartAxisReport",
@@ -2689,8 +2994,10 @@ public final class GridGrindProtocolCatalog {
               "chartSeriesReportType",
               ChartReport.Series.class,
               "ChartSeriesReport",
-              "Exact chart-series report.",
-              List.of()));
+              "Exact chart-series report."
+                  + " smooth, marker, and explosion fields are populated only when the"
+                  + " stored plot family supports them.",
+              List.of("smooth", "markerStyle", "markerSize", "explosion")));
   private static final Catalog CATALOG = buildCatalog();
 
   private GridGrindProtocolCatalog() {}
@@ -2728,6 +3035,18 @@ public final class GridGrindProtocolCatalog {
   }
 
   /**
+   * Returns the single catalog item matching the given lookup token.
+   *
+   * <p>Lookups may resolve either one concrete type entry such as {@code SET_CELL} or one nested /
+   * plain type-group descriptor such as {@code cellInputTypes} or {@code plainTypes:
+   * chartInputType}. Ambiguous or unknown lookups return empty.
+   */
+  public static Optional<Object> lookupValueFor(String idOrQualifiedId) {
+    List<CatalogLookupRef> matches = matchingLookupRefs(idOrQualifiedId);
+    return matches.size() == 1 ? Optional.of(matches.getFirst().value()) : Optional.empty();
+  }
+
+  /**
    * Returns every catalog match for the given lookup token as stable qualified ids.
    *
    * <p>Unqualified duplicate ids expand to every matching {@code <group>:<id>} so callers can
@@ -2735,6 +3054,16 @@ public final class GridGrindProtocolCatalog {
    */
   public static List<String> matchingEntryIds(String idOrQualifiedId) {
     return matchingEntryRefs(idOrQualifiedId).stream().map(CatalogEntryRef::qualifiedId).toList();
+  }
+
+  /**
+   * Returns every catalog match for the given lookup token as stable qualified ids.
+   *
+   * <p>This superset includes nested and plain type-group descriptors so CLI lookup can expose the
+   * exact authoring groups operators need when the protocol catalog advertises them.
+   */
+  public static List<String> matchingLookupIds(String idOrQualifiedId) {
+    return matchingLookupRefs(idOrQualifiedId).stream().map(CatalogLookupRef::qualifiedId).toList();
   }
 
   private static List<CatalogEntryRef> matchingEntryRefs(String idOrQualifiedId) {
@@ -2769,6 +3098,51 @@ public final class GridGrindProtocolCatalog {
                 .flatMap(group -> entryRefs(group.group(), group.types()).stream()),
             CATALOG.plainTypes().stream()
                 .map(group -> new CatalogEntryRef(group.group(), group.type())))
+        .flatMap(Function.identity())
+        .toList();
+  }
+
+  private static List<CatalogLookupRef> matchingLookupRefs(String idOrQualifiedId) {
+    String lookup =
+        CatalogRecordValidation.requireNonBlank(idOrQualifiedId, "idOrQualifiedId").trim();
+    int separator = lookup.indexOf(':');
+    if (separator >= 0) {
+      String group = lookup.substring(0, separator).trim();
+      String id = lookup.substring(separator + 1).trim();
+      if (group.isEmpty() || id.isEmpty()) {
+        return List.of();
+      }
+      return allLookupRefs().stream()
+          .filter(
+              lookupRef ->
+                  lookupRef.catalogGroup().equals(group) && lookupRef.lookupId().equals(id))
+          .toList();
+    }
+    return allLookupRefs().stream()
+        .filter(lookupRef -> lookupRef.lookupId().equals(lookup))
+        .toList();
+  }
+
+  private static List<CatalogLookupRef> allLookupRefs() {
+    return Stream.of(
+            allEntryRefs().stream()
+                .map(
+                    entryRef ->
+                        new CatalogLookupRef(
+                            entryRef.group(),
+                            entryRef.entry().id(),
+                            entryRef.qualifiedId(),
+                            entryRef.entry())),
+            CATALOG.nestedTypes().stream()
+                .map(
+                    group ->
+                        new CatalogLookupRef(
+                            "nestedTypes", group.group(), "nestedTypes:" + group.group(), group)),
+            CATALOG.plainTypes().stream()
+                .map(
+                    group ->
+                        new CatalogLookupRef(
+                            "plainTypes", group.group(), "plainTypes:" + group.group(), group)))
         .flatMap(Function.identity())
         .toList();
   }
@@ -3165,6 +3539,16 @@ public final class GridGrindProtocolCatalog {
 
     private String qualifiedId() {
       return group + ":" + entry.id();
+    }
+  }
+
+  private record CatalogLookupRef(
+      String catalogGroup, String lookupId, String qualifiedId, Object value) {
+    private CatalogLookupRef {
+      catalogGroup = CatalogRecordValidation.requireNonBlank(catalogGroup, "catalogGroup");
+      lookupId = CatalogRecordValidation.requireNonBlank(lookupId, "lookupId");
+      qualifiedId = CatalogRecordValidation.requireNonBlank(qualifiedId, "qualifiedId");
+      Objects.requireNonNull(value, "value must not be null");
     }
   }
 }

@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test;
 class ExcelOoxmlPackageSecurityCoverageTest {
   @Test
   void materializeReadableWorkbookDistinguishesPlainEncryptedAndLegacyInputs() throws IOException {
-    Path directory = Files.createTempDirectory("gridgrind-ooxml-materialize-");
+    Path directory = ExcelTempFiles.createManagedTempDirectory("gridgrind-ooxml-materialize-");
     Path plainWorkbookPath = directory.resolve("plain.xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Plain").setCell("A1", ExcelCellValue.text("Plain workbook"));
@@ -44,7 +44,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     Path[] decryptedPath = new Path[1];
     ExcelOoxmlPackageSecuritySupport.TempFileFactory tempFileFactory =
         (prefix, suffix) -> {
-          decryptedPath[0] = Files.createTempFile(prefix, suffix);
+          decryptedPath[0] = ExcelTempFiles.createManagedTempFile(prefix, suffix);
           return decryptedPath[0];
         };
 
@@ -62,7 +62,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     }
     assertFalse(Files.exists(decryptedPath[0]));
 
-    Path legacyWorkbookPath = Files.createTempFile("gridgrind-legacy-materialize-", ".xls");
+    Path legacyWorkbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-legacy-materialize-", ".xls");
     try (HSSFWorkbook workbook = new HSSFWorkbook();
         OutputStream outputStream = Files.newOutputStream(legacyWorkbookPath)) {
       workbook.createSheet("Legacy").createRow(0).createCell(0).setCellValue("Legacy workbook");
@@ -84,7 +85,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
   void encryptedMaterializationCleansTempFilesAfterPasswordFailure() throws IOException {
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
         OoxmlSecurityTestSupport.createEncryptedWorkbook(
-            Files.createTempDirectory("gridgrind-ooxml-materialize-cleanup-"));
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-ooxml-materialize-cleanup-"));
     Path[] decryptedPath = new Path[1];
 
     InvalidWorkbookPasswordException failure =
@@ -95,7 +96,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     encryptedWorkbook.workbookPath(),
                     new ExcelOoxmlOpenOptions.Encrypted("wrong-password"),
                     (prefix, suffix) -> {
-                      decryptedPath[0] = Files.createTempFile(prefix, suffix);
+                      decryptedPath[0] = ExcelTempFiles.createManagedTempFile(prefix, suffix);
                       return decryptedPath[0];
                     }));
 
@@ -108,7 +109,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
   void encryptedMaterializationRequiresOpenOptionsPassword() throws IOException {
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
         OoxmlSecurityTestSupport.createEncryptedWorkbook(
-            Files.createTempDirectory("gridgrind-ooxml-password-required-"));
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-ooxml-password-required-"));
 
     WorkbookPasswordRequiredException failure =
         assertThrows(
@@ -132,7 +133,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
   @Test
   void unsupportedMagicAndMaterializedWorkbookEdgeCasesStayExplicit() throws IOException {
-    Path unsupportedPath = Files.createTempFile("gridgrind-unsupported-magic-", ".bin");
+    Path unsupportedPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-unsupported-magic-", ".bin");
     Files.writeString(unsupportedPath, "plain text is not an OOXML workbook");
     IllegalArgumentException unsupportedMagicFailure =
         assertThrows(
@@ -143,7 +145,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     assertTrue(unsupportedMagicFailure.getMessage().contains("unsupported package magic"));
 
     Path missingWorkbookPath =
-        Files.createTempDirectory("gridgrind-materialized-missing-").resolve("missing.xlsx");
+        ExcelTempFiles.createManagedTempDirectory("gridgrind-materialized-missing-")
+            .resolve("missing.xlsx");
     WorkbookNotFoundException missingPlainFailure =
         assertThrows(
             WorkbookNotFoundException.class,
@@ -167,7 +170,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     null));
     assertEquals(missingWorkbookPath.toAbsolutePath(), missingFormulaFailure.workbookPath());
 
-    Path nonXlsxPath = Files.createTempFile("gridgrind-materialized-legacy-", ".xls");
+    Path nonXlsxPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-materialized-legacy-", ".xls");
     try (HSSFWorkbook workbook = new HSSFWorkbook();
         OutputStream outputStream = Files.newOutputStream(nonXlsxPath)) {
       workbook.createSheet("Legacy").createRow(0).createCell(0).setCellValue("Legacy workbook");
@@ -200,12 +204,12 @@ class ExcelOoxmlPackageSecurityCoverageTest {
   void workbookOpenOverloadsCoverCustomTempFactoriesAndMaterializedPaths() throws IOException {
     OoxmlSecurityTestSupport.EncryptedWorkbook encryptedWorkbook =
         OoxmlSecurityTestSupport.createEncryptedWorkbook(
-            Files.createTempDirectory("gridgrind-workbook-open-security-"));
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-workbook-open-security-"));
     AtomicInteger tempFilesCreated = new AtomicInteger();
     ExcelOoxmlPackageSecuritySupport.TempFileFactory tempFileFactory =
         (prefix, suffix) -> {
           tempFilesCreated.incrementAndGet();
-          return Files.createTempFile(prefix, suffix);
+          return ExcelTempFiles.createManagedTempFile(prefix, suffix);
         };
 
     try (ExcelWorkbook workbook =
@@ -224,7 +228,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     }
     assertEquals(2, tempFilesCreated.get());
 
-    Path materializedWorkbookPath = Files.createTempFile("gridgrind-materialized-open-", ".xlsx");
+    Path materializedWorkbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-materialized-open-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Plain").setCell("A1", ExcelCellValue.text("Materialized"));
       workbook.save(materializedWorkbookPath);
@@ -305,7 +310,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
   void securityHelpersCoverRemainingAliasAndFilesystemBranches() throws Exception {
     OoxmlSecurityTestSupport.SignedWorkbook signedWorkbook =
         OoxmlSecurityTestSupport.createSignedWorkbook(
-            Files.createTempDirectory("gridgrind-signing-helper-branches-"));
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-signing-helper-branches-"));
     KeyStore signingKeyStore =
         loadPkcs12(signedWorkbook.pkcs12Path(), signedWorkbook.keystorePassword());
     Certificate certificate = signingKeyStore.getCertificate(signedWorkbook.alias());
@@ -329,7 +334,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
   @Test
   void failureTranslationHelpersCoverSecurityBridgeDefensivePaths() throws Exception {
     Path invalidEncryptedWorkbookPath =
-        Files.createTempFile("gridgrind-invalid-encrypted-ooxml-", ".xlsx");
+        ExcelTempFiles.createManagedTempFile("gridgrind-invalid-encrypted-ooxml-", ".xlsx");
     try (POIFSFileSystem fileSystem = new POIFSFileSystem()) {
       fileSystem.createDocument(
           new ByteArrayInputStream(new byte[0]), Decryptor.DEFAULT_POIFS_ENTRY);
@@ -368,7 +373,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     () -> {
                       throw new GeneralSecurityException("decrypt failure");
                     },
-                    Files.createTempFile("gridgrind-decrypt-failure-", ".xlsx"),
+                    ExcelTempFiles.createManagedTempFile("gridgrind-decrypt-failure-", ".xlsx"),
                     invalidEncryptedWorkbookPath));
     assertTrue(
         decryptFailure.getMessage().contains("Failed to decrypt the OOXML workbook package"));
@@ -382,7 +387,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     assertTrue(
         encryptionSnapshotFailure.getMessage().contains("inspect OOXML encryption metadata"));
 
-    Path invalidPackagePath = Files.createTempFile("gridgrind-invalid-package-", ".txt");
+    Path invalidPackagePath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-invalid-package-", ".txt");
     Files.writeString(invalidPackagePath, "not a package");
     WorkbookSecurityException packageInspectionFailure =
         assertThrows(
@@ -398,7 +404,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
     OoxmlSecurityTestSupport.SignedWorkbook signedWorkbook =
         OoxmlSecurityTestSupport.createSignedWorkbook(
-            Files.createTempDirectory("gridgrind-signer-metadata-"));
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-signer-metadata-"));
     KeyStore signingKeyStore =
         loadPkcs12(signedWorkbook.pkcs12Path(), signedWorkbook.keystorePassword());
     java.security.cert.X509Certificate signer =
@@ -447,8 +453,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     fileSystem -> {
                       throw new GeneralSecurityException("encrypt failure");
                     },
-                    Files.createTempFile("gridgrind-encrypt-source-", ".xlsx"),
-                    Files.createTempFile("gridgrind-encrypt-target-", ".xlsx")));
+                    ExcelTempFiles.createManagedTempFile("gridgrind-encrypt-source-", ".xlsx"),
+                    ExcelTempFiles.createManagedTempFile("gridgrind-encrypt-target-", ".xlsx")));
     assertTrue(
         encryptFailure.getMessage().contains("Failed to encrypt the saved OOXML workbook package"));
 
@@ -474,7 +480,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
         "only-alias",
         ExcelOoxmlPackageSecuritySupport.resolveAlias(singleAliasKeyStore, null, signatureOptions));
 
-    Path malformedPackagePath = Files.createTempFile("gridgrind-sign-invalid-format-", ".xlsx");
+    Path malformedPackagePath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-sign-invalid-format-", ".xlsx");
     try (var outputStream =
         new java.util.zip.ZipOutputStream(Files.newOutputStream(malformedPackagePath))) {
       outputStream.putNextEntry(new java.util.zip.ZipEntry("broken.txt"));
@@ -492,7 +499,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
   @Test
   void saveAndPersistSecurityHelpersCoverPlainAndSignedGuardBranches() throws IOException {
-    Path plainSourcePath = Files.createTempFile("gridgrind-saveworkbook-plain-source-", ".xlsx");
+    Path plainSourcePath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-saveworkbook-plain-source-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Plain").setCell("A1", ExcelCellValue.text("Plain save"));
       workbook.save(plainSourcePath);
@@ -510,7 +518,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
       assertEquals("Plain save", workbook.sheet("Plain").text("A1"));
     }
 
-    Path plainWorkbookPath = Files.createTempFile("gridgrind-persist-signed-plain-", ".xlsx");
+    Path plainWorkbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-persist-signed-plain-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Guard").setCell("A1", ExcelCellValue.text("Signed guard"));
       workbook.save(plainWorkbookPath);
@@ -555,7 +564,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
   void saveWorkbookCoversInMemoryAndSignedPassthroughBranches() throws Exception {
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Memory").setCell("A1", ExcelCellValue.text("Memory save"));
-      Path memoryTarget = Files.createTempFile("gridgrind-save-memory-", ".xlsx");
+      Path memoryTarget = ExcelTempFiles.createManagedTempFile("gridgrind-save-memory-", ".xlsx");
 
       ExcelOoxmlPackageSecuritySupport.saveWorkbook(
           workbook, memoryTarget, null, Files::createTempFile);
@@ -567,7 +576,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
 
     OoxmlSecurityTestSupport.SignedWorkbook signedWorkbook =
         OoxmlSecurityTestSupport.createSignedWorkbook(
-            Files.createTempDirectory("gridgrind-save-signed-passthrough-"));
+            ExcelTempFiles.createManagedTempDirectory("gridgrind-save-signed-passthrough-"));
     Path copiedWorkbookPath =
         signedWorkbook.workbookPath().getParent().resolve("copied-signed.xlsx");
     AtomicInteger tempFilesCreated = new AtomicInteger();
@@ -578,7 +587,7 @@ class ExcelOoxmlPackageSecurityCoverageTest {
           new ExcelOoxmlPersistenceOptions(null, null),
           (prefix, suffix) -> {
             tempFilesCreated.incrementAndGet();
-            return Files.createTempFile(prefix, suffix);
+            return ExcelTempFiles.createManagedTempFile(prefix, suffix);
           });
     }
     assertEquals(0, tempFilesCreated.get());
@@ -615,12 +624,14 @@ class ExcelOoxmlPackageSecurityCoverageTest {
     assertArrayEquals(
         Files.readAllBytes(sourceWorkbookPath), Files.readAllBytes(copiedWorkbookPath));
 
-    Path deletedTempFile = Files.createTempFile("gridgrind-delete-if-exists-", ".tmp");
+    Path deletedTempFile =
+        ExcelTempFiles.createManagedTempFile("gridgrind-delete-if-exists-", ".tmp");
     ExcelOoxmlPackageSecuritySupport.deleteIfExists(null);
     ExcelOoxmlPackageSecuritySupport.deleteIfExists(deletedTempFile);
     assertFalse(Files.exists(deletedTempFile));
 
-    Path nonEmptyDirectory = Files.createTempDirectory("gridgrind-delete-if-exists-dir-");
+    Path nonEmptyDirectory =
+        ExcelTempFiles.createManagedTempDirectory("gridgrind-delete-if-exists-dir-");
     Files.writeString(nonEmptyDirectory.resolve("child.txt"), "keep");
     ExcelOoxmlPackageSecuritySupport.deleteIfExists(nonEmptyDirectory);
     assertTrue(Files.exists(nonEmptyDirectory));
@@ -853,7 +864,8 @@ class ExcelOoxmlPackageSecurityCoverageTest {
                     emptyChainKeyStore, signedWorkbook.pkcs12Path(), "alias"));
     assertTrue(emptyChainFailure.getMessage().contains("X.509 certificate chain"));
 
-    Path signableWorkbookPath = Files.createTempFile("gridgrind-sign-description-", ".xlsx");
+    Path signableWorkbookPath =
+        ExcelTempFiles.createManagedTempFile("gridgrind-sign-description-", ".xlsx");
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Signed").setCell("A1", ExcelCellValue.text("Signed workbook"));
       workbook.save(signableWorkbookPath);

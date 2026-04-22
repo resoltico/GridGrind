@@ -176,6 +176,26 @@ class WorkbookStepValidationTest {
         List.of(
             WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetWorkbookSummary())));
     assertEquals(
+        List.of(WorkbookSelector.class),
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new MutationAction.ImportCustomXmlMapping(
+                    new dev.erst.gridgrind.contract.dto.CustomXmlImportInput(
+                        new dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator(1L, "Map"),
+                        new TextSourceInput.Inline("<root/>"))))));
+    assertEquals(
+        List.of(WorkbookSelector.class),
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetCustomXmlMappings())));
+    assertEquals(
+        List.of(WorkbookSelector.class),
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new InspectionQuery.ExportCustomXmlMapping(
+                    new dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator(1L, "Map"),
+                    false,
+                    "UTF-8"))));
+    assertEquals(
         List.of(ChartSelector.AllOnSheet.class, SheetSelector.ByName.class),
         List.of(WorkbookStepValidation.allowedTargetTypes(new InspectionQuery.GetCharts())));
     assertEquals(
@@ -303,6 +323,26 @@ class WorkbookStepValidationTest {
                             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1, 0, 0),
                             null),
                         null)))));
+    assertEquals(
+        List.of(SheetSelector.ByName.class),
+        List.of(
+            WorkbookStepValidation.allowedTargetTypes(
+                new MutationAction.SetSignatureLine(
+                    new dev.erst.gridgrind.contract.dto.SignatureLineInput(
+                        "Signer",
+                        new dev.erst.gridgrind.contract.dto.DrawingAnchorInput.TwoCell(
+                            new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(0, 0, 0, 0),
+                            new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1, 0, 0),
+                            null),
+                        false,
+                        "Review before signing.",
+                        "Ada Lovelace",
+                        "Finance",
+                        "ada@example.com",
+                        null,
+                        null,
+                        new dev.erst.gridgrind.contract.dto.PictureDataInput(
+                            dev.erst.gridgrind.excel.ExcelPictureFormat.PNG, binary("AQID")))))));
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(

@@ -56,6 +56,12 @@ class GridGrindProtocolCatalogTest {
     assertFalse(GridGrindProtocolCatalog.entryFor("FORMULA").isPresent());
     assertFalse(GridGrindProtocolCatalog.entryFor(":FORMULA").isPresent());
     assertFalse(GridGrindProtocolCatalog.entryFor("cellInputTypes:").isPresent());
+    assertTrue(GridGrindProtocolCatalog.lookupValueFor("cellInputTypes").isPresent());
+    assertTrue(GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellInputTypes").isPresent());
+    assertTrue(GridGrindProtocolCatalog.lookupValueFor("chartInputType").isPresent());
+    assertTrue(GridGrindProtocolCatalog.lookupValueFor("plainTypes:chartInputType").isPresent());
+    assertTrue(GridGrindProtocolCatalog.lookupValueFor(":cellInputTypes").isEmpty());
+    assertTrue(GridGrindProtocolCatalog.lookupValueFor("nestedTypes:").isEmpty());
     assertTrue(
         GridGrindProtocolCatalog.matchingEntryIds("FORMULA").contains("cellInputTypes:FORMULA"));
     assertTrue(
@@ -64,11 +70,27 @@ class GridGrindProtocolCatalogTest {
     assertTrue(GridGrindProtocolCatalog.matchingEntryIds(":FORMULA").isEmpty());
     assertTrue(GridGrindProtocolCatalog.matchingEntryIds("cellInputTypes:").isEmpty());
     assertEquals(
+        List.of("nestedTypes:cellInputTypes"),
+        GridGrindProtocolCatalog.matchingLookupIds("cellInputTypes"));
+    assertEquals(
+        List.of("plainTypes:chartInputType"),
+        GridGrindProtocolCatalog.matchingLookupIds("chartInputType"));
+    assertEquals(
         "source",
         GridGrindProtocolCatalog.entryFor("cellInputTypes:FORMULA")
             .orElseThrow()
             .field("source")
             .name());
+    NestedTypeGroup cellInputs =
+        (NestedTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("nestedTypes:cellInputTypes").orElseThrow();
+    assertEquals("cellInputTypes", cellInputs.group());
+    assertEquals("TEXT", cellInputs.types().get(1).id());
+    PlainTypeGroup chartInput =
+        (PlainTypeGroup)
+            GridGrindProtocolCatalog.lookupValueFor("plainTypes:chartInputType").orElseThrow();
+    assertEquals("chartInputType", chartInput.group());
+    assertEquals("ChartInput", chartInput.type().id());
     assertEquals(catalog, decoded);
     assertEquals(
         List.of(new TargetSelectorEntry("TableSelector", List.of("BY_NAME_ON_SHEET"))),

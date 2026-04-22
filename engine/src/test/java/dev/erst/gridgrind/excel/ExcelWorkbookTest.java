@@ -20,7 +20,7 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCol;
 class ExcelWorkbookTest {
   @Test
   void snapshotsAndPreviewExposeFormulaResults() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-engine-", ".xlsx");
+    Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-engine-", ".xlsx");
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       WorkbookCommandExecutor commandExecutor = new WorkbookCommandExecutor();
@@ -64,7 +64,8 @@ class ExcelWorkbookTest {
   @Test
   void managesWorkbookLifecycleAndValidation() throws IOException {
     Path workbookPath =
-        Files.createTempDirectory("gridgrind-workbook-").resolve("nested/book.xlsx");
+        ExcelTempFiles.createManagedTempDirectory("gridgrind-workbook-")
+            .resolve("nested/book.xlsx");
 
     try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
       workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.text("Hello"));
@@ -86,7 +87,7 @@ class ExcelWorkbookTest {
   @Test
   void createAndOpenWithFormulaEnvironmentExposeRuntimeContextAndValidateFormulaTargets()
       throws IOException {
-    Path directory = Files.createTempDirectory("gridgrind-formula-workbook-");
+    Path directory = ExcelTempFiles.createManagedTempDirectory("gridgrind-formula-workbook-");
     Path referencedWorkbookPath = directory.resolve("rates.xlsx");
     Path workbookPath = directory.resolve("budget.xlsx");
 
@@ -526,7 +527,8 @@ class ExcelWorkbookTest {
   void validatesWorkbookInputsAndMissingResources() throws IOException {
     assertThrows(NullPointerException.class, () -> ExcelWorkbook.open(null));
 
-    Path missingPath = Files.createTempDirectory("gridgrind-missing-").resolve("missing.xlsx");
+    Path missingPath =
+        ExcelTempFiles.createManagedTempDirectory("gridgrind-missing-").resolve("missing.xlsx");
     WorkbookNotFoundException missingWorkbook =
         assertThrows(WorkbookNotFoundException.class, () -> ExcelWorkbook.open(missingPath));
     assertTrue(missingWorkbook.getMessage().contains("Workbook does not exist"));
@@ -574,7 +576,7 @@ class ExcelWorkbookTest {
 
   @Test
   void rejectsNonXlsxWorkbookFiles() throws Exception {
-    Path workbookPath = Files.createTempFile("gridgrind-legacy-", ".xls");
+    Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-legacy-", ".xls");
 
     try (HSSFWorkbook workbook = new HSSFWorkbook();
         var outputStream = Files.newOutputStream(workbookPath)) {
@@ -595,13 +597,14 @@ class ExcelWorkbookTest {
     assertThrows(NullPointerException.class, () -> ExcelWorkbook.open(null, defaults));
 
     Path missingPath =
-        Files.createTempDirectory("gridgrind-missing-env-").resolve("missing-with-env.xlsx");
+        ExcelTempFiles.createManagedTempDirectory("gridgrind-missing-env-")
+            .resolve("missing-with-env.xlsx");
     WorkbookNotFoundException missingWorkbook =
         assertThrows(
             WorkbookNotFoundException.class, () -> ExcelWorkbook.open(missingPath, defaults));
     assertEquals(missingPath.toAbsolutePath(), missingWorkbook.workbookPath());
 
-    Path legacyWorkbookPath = Files.createTempFile("gridgrind-legacy-env-", ".xls");
+    Path legacyWorkbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-legacy-env-", ".xls");
     try (HSSFWorkbook workbook = new HSSFWorkbook();
         var outputStream = Files.newOutputStream(legacyWorkbookPath)) {
       workbook.createSheet("Budget").createRow(0).createCell(0).setCellValue("Legacy");
@@ -696,7 +699,7 @@ class ExcelWorkbookTest {
 
   @Test
   void saveWithEmptyPersistenceOptionsActsLikePlainSave() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-empty-persist-", ".xlsx");
+    Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-empty-persist-", ".xlsx");
     try {
       try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
         workbook.getOrCreateSheet("Alpha").setCell("A1", ExcelCellValue.text("Hello"));
@@ -1050,7 +1053,7 @@ class ExcelWorkbookTest {
 
   @Test
   void saveCanonicalizesAmbiguousPoiColumnOutlineDefinitions() throws IOException {
-    Path workbookPath = Files.createTempFile("gridgrind-column-save-", ".xlsx");
+    Path workbookPath = ExcelTempFiles.createManagedTempFile("gridgrind-column-save-", ".xlsx");
 
     try {
       try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
