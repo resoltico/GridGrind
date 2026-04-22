@@ -436,14 +436,19 @@ class WorkbookCommandTest {
         IllegalArgumentException.class,
         () -> new WorkbookCommand.SetRowHeight("Budget", 2, 1, 28.5));
     assertDoesNotThrow(
-        () -> new WorkbookCommand.SetRowHeight("Budget", 0, 0, Short.MAX_VALUE / 20.0d));
+        () ->
+            new WorkbookCommand.SetRowHeight(
+                "Budget", 0, 0, ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS));
     assertThrows(
         IllegalArgumentException.class,
         () ->
-            new WorkbookCommand.SetRowHeight("Budget", 0, 0, Math.nextUp(Short.MAX_VALUE / 20.0d)));
+            new WorkbookCommand.SetRowHeight(
+                "Budget", 0, 0, Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)));
     assertThrows(
         IllegalArgumentException.class,
-        () -> new WorkbookCommand.SetRowHeight("Budget", 0, 0, (Short.MAX_VALUE / 20.0d) + 1.0d));
+        () ->
+            new WorkbookCommand.SetRowHeight(
+                "Budget", 0, 0, ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS + 1.0d));
     assertThrows(
         IllegalArgumentException.class,
         () -> new WorkbookCommand.SetRowHeight("Budget", 0, 0, Double.MIN_VALUE));

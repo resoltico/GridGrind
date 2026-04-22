@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.51.0"
+version: "0.52.0"
 domain: INVENTORY
-updated: "2026-04-21"
+updated: "2026-04-22"
 route:
   keywords: [gridgrind, apache-poi, poi, xssf, xlsx, capability, inventory, workbook-protection, comments, drawings, charts, pivots, pictures, embedded-objects, print-layout, style, autofilter, table, conditional-formatting, package-security, encryption, signing, streaming]
   questions: ["what xlsx features does gridgrind support", "how does gridgrind compare to apache poi xssf", "does gridgrind support workbook protection", "does gridgrind support rich comments", "does gridgrind support charts", "does gridgrind support pivot tables", "does gridgrind support pictures or embedded objects", "does gridgrind support encrypted xlsx files", "what xlsx capabilities are not exposed in gridgrind"]
@@ -29,7 +29,12 @@ route:
 
 **Verification basis**:
 - Apache POI version in this repo: `5.5.1` via `gradle/libs.versions.toml`
-- Apache POI docs plus REL_5_5_1 source tag re-reviewed in this workspace: `2026-04-21`
+- Apache POI docs plus REL_5_5_1 source tag re-reviewed in this workspace: `2026-04-22`
+- Exact `poi-5.5.1`, `poi-ooxml-5.5.1`, and `poi-ooxml-full-5.5.1` runtime jars re-inspected from
+  the local Gradle cache in this workspace: `2026-04-22`
+- CLI exposure re-audited against `MutationAction`, `InspectionQuery`,
+  `GridGrindProtocolCatalog`, `GridGrindCliHelp`, shipped examples, and public-surface lint tests:
+  `2026-04-22`
 - Canonical verification commands for this surface:
   - `./gradlew parity`
   - `./gradlew check`
@@ -75,6 +80,12 @@ Safe to assume in current GridGrind `.xlsx` workflows:
 - OOXML encrypted open or save, package-signature inspection, unchanged-signature preservation,
   and explicit re-signing on signed mutations
 
+CLI exposure status:
+- Every capability marked `COMPLETE` or `PARTIAL` in this document is invokable through the
+  current CLI JSON protocol and discoverable through `--print-protocol-catalog`.
+- No implemented `.xlsx` capability audited in the current GridGrind contract was found to be
+  missing from the CLI wiring, help surface, or catalog surface.
+
 Currently not exposed:
 - the remaining unsupported loaded-chart detail outside the shipped XDDF chart families
 - slicers
@@ -94,10 +105,10 @@ Currently not exposed:
 | Workbook protection including workbook or revisions passwords | Documented API support | `COMPLETE` | `contract/dto/WorkbookProtectionInput.java`, `contract/query/InspectionQuery.java`, `engine/excel/ExcelSheetStateController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelSheetStateControllerTest.java` | GridGrind can author, clear, and read workbook or revisions lock state plus password-hash presence. |
 | Sheet copy | Documented API support | `COMPLETE` | `contract/action/MutationAction.java`, `engine/excel/ExcelSheetCopyController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelSheetCopyControllerTest.java`, `executor/src/parityTest/java/dev/erst/gridgrind/executor/parity/XlsxParityProbeRegistry.java` | GridGrind now layers workbook-core repair passes on top of POI XSSF sheet cloning, so copied sheets preserve drawings, pictures, charts, comments, tables, validations, conditional formatting, local formula-defined names, print layout, and protection metadata while still retargeting supported workbook-core formulas to the new sheet identity. |
 | Merge and unmerge regions | Documented guide/API support | `COMPLETE` | `contract/action/MutationAction.java`, `engine/excel/ExcelSheet.java`, `contract/query/InspectionQuery.java`, `executor/src/test/java/dev/erst/gridgrind/executor/DefaultGridGrindRequestExecutorTest.java` | Mutation and factual reads both ship. |
-| Row and column sizing plus auto-size | Documented guide/API support | `COMPLETE` | `contract/action/MutationAction.java`, `engine/excel/ExcelSheet.java`, `executor/src/test/java/dev/erst/gridgrind/executor/DefaultGridGrindRequestExecutorTest.java` | Explicit widths, explicit heights, and auto-size are surfaced. |
+| Row and column sizing plus auto-size | Documented guide/API support | `COMPLETE` | `contract/action/MutationAction.java`, `engine/excel/ExcelSheet.java`, `executor/src/test/java/dev/erst/gridgrind/executor/DefaultGridGrindRequestExecutorTest.java` | Explicit widths, explicit heights, and auto-size are surfaced. Readback stays factual for malformed positive persisted explicit sizes instead of clamping them back to normal authoring ceilings. |
 | Row and column structure editing | Documented guide/API support | `COMPLETE` | `contract/action/MutationAction.java`, `engine/excel/ExcelRowColumnStructureController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelRowColumnStructureControllerTest.java`, `jazzer/src/main/java/dev/erst/gridgrind/jazzer/support/XlsxRoundTripVerifier.java` | Insert, delete, shift, hide, group, and ungroup ship with explicit safety guards where POI itself cannot normalize safely. |
 | Panes and zoom | Documented guide/API support | `COMPLETE` | `contract/dto/PaneInput.java`, `contract/action/MutationAction.java`, `engine/excel/ExcelSheet.java`, `executor/src/test/java/dev/erst/gridgrind/executor/DefaultGridGrindRequestExecutorTest.java` | Freeze, split, and integer zoom are surfaced. |
-| Sheet presentation and sheet-level defaults | Documented XSSF sheet-view and worksheet APIs | `COMPLETE` | `contract/dto/SheetPresentationInput.java`, `contract/action/MutationAction.java`, `engine/excel/ExcelSheetPresentationController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelSheetPresentationControllerTest.java`, `executor/src/test/java/dev/erst/gridgrind/executor/DefaultGridGrindRequestExecutorTest.java` | `SET_SHEET_PRESENTATION` and `GET_SHEET_LAYOUT.presentation` surface screen display flags, right-to-left layout, tab color, outline-summary placement, default row or column sizing, and ignored-error suppression. |
+| Sheet presentation and sheet-level defaults | Documented XSSF sheet-view and worksheet APIs | `COMPLETE` | `contract/dto/SheetPresentationInput.java`, `contract/action/MutationAction.java`, `engine/excel/ExcelSheetPresentationController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelSheetPresentationControllerTest.java`, `executor/src/test/java/dev/erst/gridgrind/executor/DefaultGridGrindRequestExecutorTest.java` | `SET_SHEET_PRESENTATION` and `GET_SHEET_LAYOUT.presentation` surface screen display flags, right-to-left layout, tab color, outline-summary placement, default row or column sizing, and ignored-error suppression. Mutation-time default sizing enforces Excel ceilings, while factual readback preserves malformed positive persisted default row height instead of clamping it. |
 | Print layout and advanced page setup | Documented guide/API support plus broader page-setup API surface | `COMPLETE` | `contract/dto/PrintLayoutInput.java`, `engine/excel/ExcelPrintLayoutController.java`, `engine/src/test/java/dev/erst/gridgrind/excel/ExcelPrintLayoutControllerTest.java`, `executor/src/parityTest/java/dev/erst/gridgrind/executor/parity/XlsxParityProbeRegistry.java` | Print area, titles, headers, footers, orientation, scaling, margins, print-gridline output, centering, paper size, draft, black-and-white, copies, first-page number, and row or column breaks all ship. |
 
 ### Cell Content, Styles, and Formulas
@@ -178,6 +189,9 @@ Currently not exposed:
   stay out because they obscure the actual public contract.
 - `COMPLETE` means complete for the current shipped GridGrind contract, not that every POI API
   reachable from XSSF has been productized.
+- Every `COMPLETE` and `PARTIAL` row here is meant as a CLI-facing statement, not just an
+  internal engine statement. If a capability is listed as shipped, it is already reachable via
+  the protocol, catalog, and converter wiring audited in this pass.
 - Status notes call out narrower boundaries where the surrounding POI family is broader than the
   public GridGrind surface.
 - Source-backed capability claims in this document require a first-class XSSF/XDDF or helper API
@@ -198,5 +212,6 @@ Currently not exposed:
 - [Encryption Support](https://poi.apache.org/encryption.html)
 - [History of Changes](https://poi.apache.org/changes.html)
 - [Apache POI REL_5_5_1 Source Tag](https://github.com/apache/poi/tree/REL_5_5_1)
-- [XSSFSheet API](https://poi.apache.org/apidocs/dev/org/apache/poi/xssf/usermodel/XSSFSheet.html)
-- [XSSFTable API](https://poi.apache.org/apidocs/dev/org/apache/poi/xssf/usermodel/XSSFTable.html)
+- [REL_5_5_1 `XSSFWorkbook.java`](https://github.com/apache/poi/blob/REL_5_5_1/poi-ooxml/src/main/java/org/apache/poi/xssf/usermodel/XSSFWorkbook.java)
+- [REL_5_5_1 `ChartTypes.java`](https://github.com/apache/poi/blob/REL_5_5_1/poi-ooxml/src/main/java/org/apache/poi/xddf/usermodel/chart/ChartTypes.java)
+- [SpreadsheetVersion API](https://poi.apache.org/apidocs/dev/org/apache/poi/ss/SpreadsheetVersion.html)

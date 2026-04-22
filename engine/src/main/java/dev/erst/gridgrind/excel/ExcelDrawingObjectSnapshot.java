@@ -33,8 +33,8 @@ public sealed interface ExcelDrawingObjectSnapshot
       validateCommon(name, anchor);
       Objects.requireNonNull(format, "format must not be null");
       contentType = requireNonBlank(contentType, "contentType");
-      if (byteSize <= 0L) {
-        throw new IllegalArgumentException("byteSize must be greater than 0");
+      if (byteSize < 0L) {
+        throw new IllegalArgumentException("byteSize must not be negative");
       }
       sha256 = requireNonBlank(sha256, "sha256");
       if (widthPixels != null && widthPixels < 0) {
@@ -121,8 +121,8 @@ public sealed interface ExcelDrawingObjectSnapshot
       if (command != null && command.isBlank()) {
         throw new IllegalArgumentException("command must not be blank");
       }
-      if (byteSize <= 0L) {
-        throw new IllegalArgumentException("byteSize must be greater than 0");
+      if (byteSize < 0L) {
+        throw new IllegalArgumentException("byteSize must not be negative");
       }
       if (previewFormat == null && previewByteSize != null) {
         throw new IllegalArgumentException("previewByteSize requires previewFormat");
@@ -130,8 +130,8 @@ public sealed interface ExcelDrawingObjectSnapshot
       if (previewSha256 != null && previewSha256.isBlank()) {
         throw new IllegalArgumentException("previewSha256 must not be blank");
       }
-      if (previewByteSize != null && previewByteSize <= 0L) {
-        throw new IllegalArgumentException("previewByteSize must be greater than 0");
+      if (previewByteSize != null && previewByteSize < 0L) {
+        throw new IllegalArgumentException("previewByteSize must not be negative");
       }
       if (previewFormat == null && previewSha256 != null) {
         throw new IllegalArgumentException("previewSha256 requires previewFormat");
@@ -182,8 +182,8 @@ public sealed interface ExcelDrawingObjectSnapshot
       if (previewFormat == null && previewByteSize != null) {
         throw new IllegalArgumentException("previewByteSize requires previewFormat");
       }
-      if (previewByteSize != null && previewByteSize <= 0L) {
-        throw new IllegalArgumentException("previewByteSize must be greater than 0");
+      if (previewByteSize != null && previewByteSize < 0L) {
+        throw new IllegalArgumentException("previewByteSize must not be negative");
       }
       if (previewFormat == null && previewSha256 != null) {
         throw new IllegalArgumentException("previewSha256 requires previewFormat");

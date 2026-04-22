@@ -24,6 +24,17 @@ import org.junit.jupiter.api.Test;
 /** Residual edge coverage for value objects and helper seams introduced by the XLSX rebuilds. */
 class ExcelEngineEdgeCoverageTest {
   @Test
+  void sheetLayoutLimitHelpersRejectNonPositiveDefaultColumnWidth() {
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ExcelSheetLayoutLimits.requireDefaultColumnWidth(0, "defaultColumnWidth"));
+    assertDoesNotThrow(
+        () ->
+            ExcelSheetLayoutLimits.requireDefaultColumnWidth(
+                ExcelSheetLayoutLimits.MAX_DEFAULT_COLUMN_WIDTH, "defaultColumnWidth"));
+  }
+
+  @Test
   void signatureLineValueObjectsRejectInvalidInputsAcrossAllSurfaces() {
     ExcelDrawingAnchor.TwoCell anchor = ExcelChartTestSupport.anchor(1, 1, 4, 6);
 
@@ -206,6 +217,24 @@ class ExcelEngineEdgeCoverageTest {
                 "hash",
                 400,
                 150));
+    assertEquals(
+        0L,
+        new ExcelSignatureLineSnapshot(
+                "Signature",
+                anchor,
+                "setup",
+                true,
+                "instructions",
+                "Ada",
+                "Finance",
+                "ada@example.com",
+                ExcelPictureFormat.PNG,
+                "image/png",
+                0L,
+                "hash",
+                400,
+                150)
+            .previewByteSize());
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -220,7 +249,7 @@ class ExcelEngineEdgeCoverageTest {
                 "ada@example.com",
                 ExcelPictureFormat.PNG,
                 "image/png",
-                0L,
+                -1L,
                 "hash",
                 400,
                 150));
@@ -422,6 +451,24 @@ class ExcelEngineEdgeCoverageTest {
                 "hash",
                 400,
                 150));
+    assertEquals(
+        0L,
+        new ExcelDrawingObjectSnapshot.SignatureLine(
+                "Signature",
+                anchor,
+                "setup",
+                true,
+                "instructions",
+                "Ada",
+                "Finance",
+                "ada@example.com",
+                ExcelPictureFormat.PNG,
+                "image/png",
+                0L,
+                "hash",
+                400,
+                150)
+            .previewByteSize());
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -436,7 +483,7 @@ class ExcelEngineEdgeCoverageTest {
                 "ada@example.com",
                 ExcelPictureFormat.PNG,
                 "image/png",
-                0L,
+                -1L,
                 "hash",
                 400,
                 150));

@@ -3,18 +3,13 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
-import java.util.zip.ZipOutputStream;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTWorkbook;
@@ -498,35 +493,15 @@ class ExcelEventWorkbookReaderTest {
   }
 
   private static Path rewriteEntry(
-      Path sourceWorkbook, String entryName, TextTransformer transformer) throws IOException {
-    return rewriteEntries(sourceWorkbook, Map.of(entryName, transformer));
+      Path sourceWorkbook, String entryName, java.util.function.UnaryOperator<String> transformer)
+      throws IOException {
+    return OoxmlPartMutator.rewriteEntry(sourceWorkbook, entryName, transformer);
   }
 
-  private static Path rewriteEntries(Path sourceWorkbook, Map<String, TextTransformer> transformers)
+  private static Path rewriteEntries(
+      Path sourceWorkbook, Map<String, java.util.function.UnaryOperator<String>> transformers)
       throws IOException {
-    List<ZipEntryBytes> entries = new ArrayList<>();
-    try (ZipFile zipFile = new ZipFile(sourceWorkbook.toFile())) {
-      Enumeration<? extends ZipEntry> enumeration = zipFile.entries();
-      while (enumeration.hasMoreElements()) {
-        ZipEntry entry = enumeration.nextElement();
-        try (InputStream inputStream = zipFile.getInputStream(entry)) {
-          byte[] bytes = inputStream.readAllBytes();
-          TextTransformer transformer = transformers.get(entry.getName());
-          entries.add(
-              new ZipEntryBytes(entry.getName(), transformedEntryBytes(bytes, transformer)));
-        }
-      }
-    }
-
-    Path mutatedWorkbook =
-        ExcelTempFiles.createManagedTempFile("gridgrind-event-mutated-", ".xlsx");
-    try (ZipOutputStream outputStream =
-        new ZipOutputStream(Files.newOutputStream(mutatedWorkbook))) {
-      for (ZipEntryBytes entry : entries) {
-        writeZipEntry(outputStream, entry.name(), entry.bytes());
-      }
-    }
-    return mutatedWorkbook;
+    return OoxmlPartMutator.rewriteEntries(sourceWorkbook, transformers);
   }
 
   @Test
@@ -635,46 +610,5 @@ class ExcelEventWorkbookReaderTest {
     CTWorkbook workbook = CTWorkbook.Factory.newInstance();
     workbook.addNewBookViews().addNewWorkbookView();
     return EventWorkbookMetadata.activeSheetIndex(workbook);
-  }
-
-  private static byte[] transformedEntryBytes(byte[] bytes, TextTransformer transformer) {
-    if (transformer == null) {
-      return bytes;
-    }
-    return transformer
-        .transform(new String(bytes, StandardCharsets.UTF_8))
-        .getBytes(StandardCharsets.UTF_8);
-  }
-
-  private static void writeZipEntry(ZipOutputStream outputStream, String name, byte[] bytes)
-      throws IOException {
-    outputStream.putNextEntry(new ZipEntry(name));
-    outputStream.write(bytes);
-    outputStream.closeEntry();
-  }
-
-  /** String-to-string zip-entry transformer used by the temporary workbook mutation helpers. */
-  @FunctionalInterface
-  private interface TextTransformer {
-    String transform(String xml);
-  }
-
-  /** Immutable zip-entry payload used to preserve original OOXML part order in test mutations. */
-  private static final class ZipEntryBytes {
-    private final String name;
-    private final byte[] bytes;
-
-    private ZipEntryBytes(String name, byte[] bytes) {
-      this.name = name;
-      this.bytes = bytes.clone();
-    }
-
-    private String name() {
-      return name;
-    }
-
-    private byte[] bytes() {
-      return bytes.clone();
-    }
   }
 }

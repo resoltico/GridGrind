@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.51.0"
+version: "0.52.0"
 domain: OPERATIONS
 updated: "2026-04-21"
 route:
@@ -1008,7 +1008,7 @@ Set the height of one or more contiguous rows. Row indexes are zero-based and in
 | `target` | Yes | Selector payload for the target workbook location. |
 | `firstRowIndex` | Yes | Zero-based first row index. |
 | `lastRowIndex` | Yes | Zero-based last row index. Must be greater than or equal to `firstRowIndex`. |
-| `heightPoints` | Yes | Positive Excel row height in points. Must be finite and > 0 and ≤ 1,638.35 (Excel storage limit: 32,767 twips). |
+| `heightPoints` | Yes | Positive Excel row height in points. Must be finite and > 0 and ≤ 409.0 (Excel row height limit). |
 
 ---
 
@@ -1504,11 +1504,15 @@ Nested constraints:
 
 - `display` supports `displayGridlines`, `displayZeros`, `displayRowColHeadings`,
   `displayFormulas`, and `rightToLeft`.
-- `sheetDefaults.defaultColumnWidth` must be a whole number greater than `0`.
-- `sheetDefaults.defaultRowHeightPoints` must be finite and greater than `0`.
+- `sheetDefaults.defaultColumnWidth` must be a whole number greater than `0` and less than or equal to `255`.
+- `sheetDefaults.defaultRowHeightPoints` must be finite, greater than `0`, and less than or equal to `409.0`.
 - Each `ignoredErrors` entry requires one A1-style rectangular `range` plus one or more distinct
   `errorTypes`.
 - `ignoredErrors` ranges must be unique within the request.
+
+Those ceilings apply to authored mutations. `GET_SHEET_LAYOUT` remains factual on reopen, so
+malformed positive persisted explicit row or column sizes, plus malformed positive persisted
+default row height, are reported as stored instead of being clamped back to authoring limits.
 
 ### SET_PRINT_LAYOUT
 
@@ -4650,6 +4654,10 @@ The returned `layout.presentation` object reports:
 - `outlineSummary`: `rowSumsBelow` and `rowSumsRight`
 - `sheetDefaults`: `defaultColumnWidth` and `defaultRowHeightPoints`
 - `ignoredErrors`: factual ignored-error blocks grouped by range
+
+`GET_SHEET_LAYOUT` is factual rather than revalidated. If a workbook already contains malformed but
+positive persisted explicit row heights, explicit column widths, or default row-height values,
+those values are returned as stored instead of being clamped to the normal mutation-time limits.
 
 ### GET_PRINT_LAYOUT
 

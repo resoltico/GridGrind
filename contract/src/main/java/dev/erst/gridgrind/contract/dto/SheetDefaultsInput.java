@@ -14,12 +14,9 @@ public record SheetDefaultsInput(Integer defaultColumnWidth, Double defaultRowHe
         defaultRowHeightPoints == null
             ? defaults().defaultRowHeightPoints()
             : defaultRowHeightPoints;
-    if (defaultColumnWidth <= 0) {
-      throw new IllegalArgumentException("defaultColumnWidth must be greater than 0");
-    }
-    if (!Double.isFinite(defaultRowHeightPoints) || defaultRowHeightPoints <= 0.0d) {
-      throw new IllegalArgumentException(
-          "defaultRowHeightPoints must be finite and greater than 0");
-    }
+    dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.requireDefaultColumnWidth(
+        defaultColumnWidth, "defaultColumnWidth");
+    dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.requireRowHeightPoints(
+        defaultRowHeightPoints, "defaultRowHeightPoints");
   }
 }

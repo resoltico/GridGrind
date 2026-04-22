@@ -93,12 +93,12 @@ public sealed interface DrawingObjectPayloadReport
   }
 
   private static String requireBase64(String value, String fieldName) {
-    String validatedValue = requireNonBlank(value, fieldName);
+    Objects.requireNonNull(value, fieldName + " must not be null");
     try {
-      Base64.getDecoder().decode(validatedValue);
+      Base64.getDecoder().decode(value);
     } catch (IllegalArgumentException exception) {
       throw new IllegalArgumentException(fieldName + " must be valid base64", exception);
     }
-    return validatedValue;
+    return value;
   }
 }

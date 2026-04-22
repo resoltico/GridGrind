@@ -1,10 +1,13 @@
 package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.util.List;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
@@ -28,6 +31,8 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx;
 
 /** Focused coverage for chart helper fallback and no-runtime wrapper branches. */
 class ExcelChartFallbackCoverageTest {
+  private static final VarHandle CHART_FRAME_HANDLE = chartFrameHandle();
+
   @Test
   void sourceScalarWrappersAndRuntimeFallbacksStayDeterministic() throws IOException {
     assertEquals(
@@ -179,6 +184,41 @@ class ExcelChartFallbackCoverageTest {
   }
 
   @Test
+  void snapshottingUsesExplicitGraphicFrameWhenPoiBackpointerIsMissing() throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Charts");
+      ExcelChartTestSupport.seedChartData(sheet);
+      XSSFDrawing drawing = sheet.createDrawingPatriarch();
+
+      XSSFChart chart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 1, 1, 8, 10));
+      chart.getGraphicFrame().setName("DetachedFrame");
+      chart.setTitleFormula("B1");
+      XDDFCategoryAxis categoryAxis = chart.createCategoryAxis(AxisPosition.BOTTOM);
+      XDDFValueAxis valueAxis = chart.createValueAxis(AxisPosition.LEFT);
+      XDDFLineChartData lineData =
+          (XDDFLineChartData) chart.createData(ChartTypes.LINE, categoryAxis, valueAxis);
+      lineData.addSeries(
+          XDDFDataSourcesFactory.fromStringCellRange(
+              sheet, org.apache.poi.ss.util.CellRangeAddress.valueOf("A2:A4")),
+          XDDFDataSourcesFactory.fromNumericCellRange(
+              sheet, org.apache.poi.ss.util.CellRangeAddress.valueOf("B2:B4")));
+      chart.plot(lineData);
+
+      var graphicFrame = chart.getGraphicFrame();
+      detachGraphicFrame(chart);
+      assertEquals("", ExcelChartSnapshotSupport.cachedTitleText(chart, "B1"));
+
+      ExcelChartSnapshot snapshot = ExcelChartSnapshotSupport.snapshotChart(chart, graphicFrame);
+      assertEquals("DetachedFrame", snapshot.name());
+      assertInstanceOf(ExcelChartSnapshot.Line.class, snapshot.plots().getFirst());
+      ExcelChartSnapshot.Title.Formula resolvedTitle =
+          assertInstanceOf(ExcelChartSnapshot.Title.Formula.class, snapshot.title());
+      assertEquals("B1", resolvedTitle.formula());
+      assertEquals("Plan", resolvedTitle.cachedText());
+    }
+  }
+
+  @Test
   void plotCreationWrapperDelegatesWithoutAnExplicitRuntime() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Charts");
@@ -224,6 +264,20 @@ class ExcelChartFallbackCoverageTest {
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
+  }
+
+  private static void detachGraphicFrame(XSSFChart chart) {
+    CHART_FRAME_HANDLE.set(chart, null);
+  }
+
+  private static VarHandle chartFrameHandle() {
+    try {
+      return MethodHandles.privateLookupIn(XSSFChart.class, MethodHandles.lookup())
+          .findVarHandle(
+              XSSFChart.class, "frame", org.apache.poi.xssf.usermodel.XSSFGraphicFrame.class);
+    } catch (ReflectiveOperationException exception) {
+      throw new LinkageError("Failed to access POI chart graphic-frame backpointer", exception);
+    }
   }
 
   /** Minimal formula cell stub for probing scalar-decoding branches without reflection. */

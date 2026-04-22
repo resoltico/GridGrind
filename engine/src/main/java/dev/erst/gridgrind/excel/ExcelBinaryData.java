@@ -9,8 +9,20 @@ public final class ExcelBinaryData {
 
   /** Creates an immutable binary payload from one non-empty byte array. */
   public ExcelBinaryData(byte[] bytes) {
+    this(bytes, false);
+  }
+
+  /**
+   * Creates an immutable binary payload from workbook-read bytes, which may be empty in malformed
+   * packages that GridGrind still reports factually.
+   */
+  public static ExcelBinaryData readback(byte[] bytes) {
+    return new ExcelBinaryData(bytes, true);
+  }
+
+  private ExcelBinaryData(byte[] bytes, boolean allowEmpty) {
     Objects.requireNonNull(bytes, "bytes must not be null");
-    if (bytes.length == 0) {
+    if (!allowEmpty && bytes.length == 0) {
       throw new IllegalArgumentException("bytes must not be empty");
     }
     this.bytes = bytes.clone();

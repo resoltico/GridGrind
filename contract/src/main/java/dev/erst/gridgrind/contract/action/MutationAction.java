@@ -33,6 +33,7 @@ import dev.erst.gridgrind.contract.dto.WorkbookProtectionInput;
 import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelPivotTableNaming;
 import dev.erst.gridgrind.excel.ExcelRowSpan;
+import dev.erst.gridgrind.excel.ExcelSheetLayoutLimits;
 import dev.erst.gridgrind.excel.ExcelSheetNames;
 import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import java.util.ArrayList;
@@ -650,30 +651,11 @@ public sealed interface MutationAction {
     }
 
     static void requireColumnWidthCharacters(double widthCharacters) { // LIM-004
-      requireFinitePositive(widthCharacters, "widthCharacters");
-      if (widthCharacters > 255.0d) {
-        throw new IllegalArgumentException(
-            "widthCharacters must not exceed 255.0 (Excel column width limit): got "
-                + widthCharacters);
-      }
-      if (Math.round(widthCharacters * 256.0d) <= 0) {
-        throw new IllegalArgumentException(
-            "widthCharacters is too small to produce a visible Excel column width: got "
-                + widthCharacters);
-      }
+      ExcelSheetLayoutLimits.requireColumnWidthCharacters(widthCharacters, "widthCharacters");
     }
 
     static void requireRowHeightPoints(double heightPoints) { // LIM-005
-      requireFinitePositive(heightPoints, "heightPoints");
-      if (Math.round(heightPoints * 20.0d) > Short.MAX_VALUE) {
-        throw new IllegalArgumentException(
-            "heightPoints must not exceed 1638.35 (Excel storage limit: 32767 twips): got "
-                + heightPoints);
-      }
-      if (Math.round(heightPoints * 20.0d) <= 0) {
-        throw new IllegalArgumentException(
-            "heightPoints is too small to produce a visible Excel row height: " + heightPoints);
-      }
+      ExcelSheetLayoutLimits.requireRowHeightPoints(heightPoints, "heightPoints");
     }
 
     static void requireNamedRangeName(String name) {
@@ -684,20 +666,8 @@ public sealed interface MutationAction {
       ExcelPivotTableNaming.validateName(name);
     }
 
-    static void requireFinitePositive(double value, String fieldName) {
-      if (!Double.isFinite(value)) {
-        throw new IllegalArgumentException(fieldName + " must be finite");
-      }
-      if (value <= 0.0d) {
-        throw new IllegalArgumentException(fieldName + " must be greater than 0");
-      }
-    }
-
-    static void requireZoomPercent(int zoomPercent) {
-      if (zoomPercent < 10 || zoomPercent > 400) {
-        throw new IllegalArgumentException(
-            "zoomPercent must be between 10 and 400 inclusive: " + zoomPercent);
-      }
+    static void requireZoomPercent(int zoomPercent) { // LIM-022
+      ExcelSheetLayoutLimits.requireZoomPercent(zoomPercent, "zoomPercent");
     }
 
     static List<List<CellInput>> copyRows(List<List<CellInput>> rows) {

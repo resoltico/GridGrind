@@ -63,6 +63,7 @@ class ExcelDrawingCoverageTest {
     assertNotEquals(data, new ExcelBinaryData(new byte[] {3, 2, 1}));
     assertNotEquals(data, "payload");
     assertTrue(data.toString().contains("size=3"));
+    assertEquals(0, ExcelBinaryData.readback(new byte[0]).size());
     assertThrows(NullPointerException.class, () -> new ExcelBinaryData(null));
     assertThrows(IllegalArgumentException.class, () -> new ExcelBinaryData(new byte[0]));
 
@@ -527,6 +528,19 @@ class ExcelDrawingCoverageTest {
         () ->
             new ExcelDrawingObjectSnapshot.Picture(
                 "Picture", twoCell, null, "image/png", 10L, "abc123", null, null, null));
+    assertEquals(
+        0L,
+        new ExcelDrawingObjectSnapshot.Picture(
+                "Picture",
+                twoCell,
+                ExcelPictureFormat.PNG,
+                "image/png",
+                0L,
+                "abc123",
+                null,
+                null,
+                null)
+            .byteSize());
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -535,7 +549,7 @@ class ExcelDrawingCoverageTest {
                 twoCell,
                 ExcelPictureFormat.PNG,
                 "image/png",
-                0L,
+                -1L,
                 "abc123",
                 null,
                 null,
@@ -715,6 +729,22 @@ class ExcelDrawingCoverageTest {
                 null,
                 null,
                 null));
+    assertEquals(
+        0L,
+        new ExcelDrawingObjectSnapshot.EmbeddedObject(
+                "Embed",
+                twoCell,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                "Payload",
+                "payload.txt",
+                "payload.txt",
+                "application/octet-stream",
+                0L,
+                "abc123",
+                null,
+                null,
+                null)
+            .byteSize());
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -726,7 +756,7 @@ class ExcelDrawingCoverageTest {
                 "payload.txt",
                 "payload.txt",
                 "application/octet-stream",
-                0L,
+                -1L,
                 "abc123",
                 null,
                 null,
@@ -747,6 +777,22 @@ class ExcelDrawingCoverageTest {
                 null,
                 1L,
                 null));
+    assertEquals(
+        0L,
+        new ExcelDrawingObjectSnapshot.EmbeddedObject(
+                "Embed",
+                twoCell,
+                ExcelEmbeddedObjectPackagingKind.OLE10_NATIVE,
+                "Payload",
+                "payload.txt",
+                "payload.txt",
+                "application/octet-stream",
+                5L,
+                "abc123",
+                ExcelPictureFormat.PNG,
+                0L,
+                null)
+            .previewByteSize());
     assertThrows(
         IllegalArgumentException.class,
         () ->
@@ -761,7 +807,7 @@ class ExcelDrawingCoverageTest {
                 5L,
                 "abc123",
                 ExcelPictureFormat.PNG,
-                0L,
+                -1L,
                 null));
     assertThrows(
         IllegalArgumentException.class,
@@ -1125,14 +1171,13 @@ class ExcelDrawingCoverageTest {
     ExcelBinaryData binary =
         invoke(controller, "binary", ExcelBinaryData.class, PNG_PIXEL_BYTES, "image");
     assertEquals(PNG_PIXEL_BYTES.length, binary.size());
-    IllegalStateException missingBytes =
-        assertInvocationFailure(
-            IllegalStateException.class,
-            () -> invoke(controller, "binary", ExcelBinaryData.class, new byte[0], "payload"));
-    assertTrue(missingBytes.getMessage().contains("Missing payload bytes"));
+    ExcelBinaryData emptyBinary =
+        invoke(controller, "binary", ExcelBinaryData.class, new byte[0], "payload");
+    assertEquals(0, emptyBinary.size());
 
     assertTrue(invoke(controller, "looksLikeOle2Storage", Boolean.class, ole2StorageBytes()));
     assertFalse(invoke(controller, "looksLikeOle2Storage", Boolean.class, PNG_PIXEL_BYTES));
+    assertFalse(invoke(controller, "looksLikeOle2Storage", Boolean.class, new byte[0]));
     assertEquals(
         "picture.png",
         invoke(

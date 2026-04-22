@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.51.0"
+version: "0.52.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-21"
 route:
@@ -853,7 +853,12 @@ band (`LIM-018`) and also rejects formula-bearing workbooks (`LIM-017`).
 ```
 
 `sheetDefaults.defaultColumnWidth` is an integer cell-count width, so fractional JSON numbers are
-rejected instead of being rounded or truncated.
+rejected instead of being rounded or truncated. The value must be greater than `0` and less than
+or equal to `255`, and `sheetDefaults.defaultRowHeightPoints` must be greater than `0` and less
+than or equal to `409.0`.
+Those ceilings apply to authored mutations; `GET_SHEET_LAYOUT` still reports malformed positive
+persisted explicit row or column sizes and malformed positive persisted default row height
+truthfully on reopen.
 
 ## SET_PRINT_LAYOUT
 
@@ -2407,7 +2412,7 @@ accepted and stored as `"A1:B4"`. Formula-defined targets must set `formula` onl
 ```
 
 `SET_COLUMN_WIDTH.widthCharacters` is converted to POI width units with `round(widthCharacters * 256)`. Must be > 0 and ≤ 255.0.
-`SET_ROW_HEIGHT.heightPoints` uses Excel point units. Must be > 0 and ≤ 1,638.35 (32,767 twips). `UNMERGE_CELLS` requires an exact merged-range match.
+`SET_ROW_HEIGHT.heightPoints` uses Excel point units. Must be > 0 and ≤ 409.0 (Excel row height limit). `UNMERGE_CELLS` requires an exact merged-range match.
 `DELETE_SHEET` returns `INVALID_REQUEST` when the sheet to delete is the only remaining sheet or the last visible sheet in the workbook.
 
 ## execution.calculation
@@ -2956,6 +2961,9 @@ where Excel exposes that state.
 
 `layout.presentation` reports screen display flags, right-to-left layout, tab color,
 outline-summary placement, sheet-default sizing, and ignored-error suppression.
+Readback is factual rather than revalidated, so malformed positive persisted explicit row heights,
+explicit column widths, and default row-height values are returned as stored instead of being
+clamped to the normal authoring ceilings.
 
 ## GET_PRINT_LAYOUT
 

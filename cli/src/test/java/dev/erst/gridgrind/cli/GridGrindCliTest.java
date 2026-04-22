@@ -1952,7 +1952,7 @@ class GridGrindCliTest {
     assertTrue(
         help.contains("250,000"), "help must state the GET_WINDOW / GET_SHEET_SCHEMA cell limit");
     assertTrue(help.contains("255"), "help must state the column width limit");
-    assertTrue(help.contains("1638"), "help must state the row height limit");
+    assertTrue(help.contains("409"), "help must state the row height limit");
     assertTrue(
         help.contains("AREA, AREA_3D, BAR, BAR_3D")
             && help.contains("SURFACE_3D")

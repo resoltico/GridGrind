@@ -79,7 +79,7 @@ class DtoEdgeCoverageTest {
         new DrawingAnchorReport.TwoCell(marker, new DrawingMarkerReport(1, 1, 0, 0), null);
 
     assertEquals(
-        "byteSize must be greater than 0",
+        "byteSize must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -88,7 +88,7 @@ class DtoEdgeCoverageTest {
                         twoCell,
                         ExcelPictureFormat.PNG,
                         "image/png",
-                        0L,
+                        -1L,
                         "sha",
                         10,
                         10,
@@ -248,7 +248,7 @@ class DtoEdgeCoverageTest {
                         "preview"))
             .getMessage());
     assertEquals(
-        "previewByteSize must be greater than 0",
+        "previewByteSize must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -263,11 +263,11 @@ class DtoEdgeCoverageTest {
                         1L,
                         "sha",
                         ExcelPictureFormat.PNG,
-                        0L,
+                        -1L,
                         null))
             .getMessage());
     assertEquals(
-        "byteSize must be greater than 0",
+        "byteSize must not be negative",
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
@@ -279,7 +279,7 @@ class DtoEdgeCoverageTest {
                         null,
                         null,
                         "application/octet-stream",
-                        0L,
+                        -1L,
                         "sha",
                         null,
                         null,

@@ -2,12 +2,18 @@ package dev.erst.gridgrind.excel;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.xml.namespace.QName;
+import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTBoolean;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /** Chart snapshot and chart-readback helpers. */
 final class ExcelChartSnapshotSupport {
@@ -39,30 +45,33 @@ final class ExcelChartSnapshotSupport {
   }
 
   static ExcelChartSnapshot snapshotChart(
-      XSSFChart chart,
-      org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame,
-      ExcelFormulaRuntime formulaRuntime) {
+      XSSFChart chart, XSSFGraphicFrame graphicFrame, ExcelFormulaRuntime formulaRuntime) {
     List<XDDFChartData> chartData = chart.getChartSeries();
     List<ExcelChartSnapshot.Plot> plots =
-        ExcelChartPlotSnapshotSupport.snapshotPlots(chart, chartData, formulaRuntime);
+        ExcelChartPlotSnapshotSupport.snapshotPlots(chart, graphicFrame, chartData, formulaRuntime);
     return new ExcelChartSnapshot(
         resolvedChartName(graphicFrame),
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(graphicFrame)),
-        snapshotTitle(chart, formulaRuntime),
+        snapshotTitle(chart, graphicFrame, formulaRuntime),
         snapshotLegend(chart),
         snapshotDisplayBlanks(chart),
         chart.isPlotOnlyVisibleCells(),
         plots);
   }
 
-  static XSSFChart chartForGraphicFrame(
-      XSSFDrawing drawing, org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
-    for (XSSFChart chart : drawing.getCharts()) {
-      if (chart.getGraphicFrame().getId() == graphicFrame.getId()) {
-        return chart;
-      }
+  static XSSFChart chartForGraphicFrame(XSSFDrawing drawing, XSSFGraphicFrame graphicFrame) {
+    if (graphicFrame == null) {
+      return null;
     }
-    return null;
+    String relationId = chartRelationId(graphicFrame);
+    if (relationId == null) {
+      return null;
+    }
+    POIXMLDocumentPart relation = drawing.getRelationById(relationId);
+    if (!(relation instanceof XSSFChart chart)) {
+      return null;
+    }
+    return chart;
   }
 
   static ExcelChartSnapshot.Title snapshotTitle(XSSFChart chart) {
@@ -71,13 +80,18 @@ final class ExcelChartSnapshotSupport {
 
   static ExcelChartSnapshot.Title snapshotTitle(
       XSSFChart chart, ExcelFormulaRuntime formulaRuntime) {
+    return snapshotTitle(chart, chart.getGraphicFrame(), formulaRuntime);
+  }
+
+  static ExcelChartSnapshot.Title snapshotTitle(
+      XSSFChart chart, XSSFGraphicFrame graphicFrame, ExcelFormulaRuntime formulaRuntime) {
     if (!chart.getCTChart().isSetTitle()) {
       return new ExcelChartSnapshot.Title.None();
     }
     String formula = chart.getTitleFormula();
     if (formula != null) {
       return new ExcelChartSnapshot.Title.Formula(
-          formula, cachedTitleText(chart, formula, formulaRuntime));
+          formula, cachedTitleText(chart, graphicFrame, formula, formulaRuntime));
     }
     String text = chart.getTitleText().getString();
     return text.isBlank()
@@ -91,7 +105,16 @@ final class ExcelChartSnapshotSupport {
 
   static String cachedTitleText(
       XSSFChart chart, String formula, ExcelFormulaRuntime formulaRuntime) {
-    String resolvedText = resolvedTitleFormulaTextOrNull(chart, formula, formulaRuntime);
+    return cachedTitleText(chart, chart.getGraphicFrame(), formula, formulaRuntime);
+  }
+
+  static String cachedTitleText(
+      XSSFChart chart,
+      XSSFGraphicFrame graphicFrame,
+      String formula,
+      ExcelFormulaRuntime formulaRuntime) {
+    String resolvedText =
+        resolvedTitleFormulaTextOrNull(chart, graphicFrame, formula, formulaRuntime);
     if (resolvedText != null) {
       return resolvedText;
     }
@@ -113,14 +136,21 @@ final class ExcelChartSnapshotSupport {
 
   static String resolvedTitleFormulaText(
       XSSFChart chart, String formula, ExcelFormulaRuntime formulaRuntime) {
-    String resolved = resolvedTitleFormulaTextOrNull(chart, formula, formulaRuntime);
+    String resolved =
+        resolvedTitleFormulaTextOrNull(chart, chart.getGraphicFrame(), formula, formulaRuntime);
     return resolved == null ? "" : resolved;
   }
 
   private static String resolvedTitleFormulaTextOrNull(
-      XSSFChart chart, String formula, ExcelFormulaRuntime formulaRuntime) {
+      XSSFChart chart,
+      XSSFGraphicFrame graphicFrame,
+      String formula,
+      ExcelFormulaRuntime formulaRuntime) {
     try {
-      XSSFSheet sheet = chart.getGraphicFrame().getDrawing().getSheet();
+      XSSFSheet sheet = contextSheet(chart, graphicFrame);
+      if (sheet == null) {
+        return null;
+      }
       return ExcelChartSourceSupport.scalarText(
           sheet,
           ExcelChartSourceSupport.resolveSingleCellReference(sheet, formula, "Chart title formula"),
@@ -216,8 +246,16 @@ final class ExcelChartSnapshotSupport {
     return List.copyOf(tokens);
   }
 
-  private static String resolvedChartName(
-      org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
+  static XSSFSheet contextSheet(XSSFChart chart, XSSFGraphicFrame graphicFrame) {
+    XSSFGraphicFrame resolvedGraphicFrame =
+        graphicFrame != null ? graphicFrame : chart.getGraphicFrame();
+    if (resolvedGraphicFrame == null) {
+      return null;
+    }
+    return resolvedGraphicFrame.getDrawing().getSheet();
+  }
+
+  private static String resolvedChartName(XSSFGraphicFrame graphicFrame) {
     String name = ExcelChartSourceSupport.nullIfBlank(graphicFrame.getName());
     return name != null ? name : "Chart-" + graphicFrame.getId();
   }
@@ -240,5 +278,63 @@ final class ExcelChartSnapshotSupport {
 
   private static boolean truthy(CTBoolean value) {
     return value != null && value.getVal();
+  }
+
+  private static String chartRelationId(XSSFGraphicFrame graphicFrame) {
+    NodeList nodes = chartRelationNodes(graphicFrame);
+    if (nodes == null) {
+      return null;
+    }
+    for (int index = 0; index < nodes.getLength(); index++) {
+      String relationId = chartRelationId(nodes.item(index));
+      if (relationId != null) {
+        return relationId;
+      }
+    }
+    return null;
+  }
+
+  private static NodeList chartRelationNodes(XSSFGraphicFrame graphicFrame) {
+    if (graphicFrame == null) {
+      return null;
+    }
+    var graphic = graphicFrame.getCTGraphicalObjectFrame().getGraphic();
+    if (graphic == null || graphic.getGraphicData() == null) {
+      return null;
+    }
+    return graphic.getGraphicData().getDomNode().getChildNodes();
+  }
+
+  private static String chartRelationId(Node node) {
+    if (!isChartNode(node)) {
+      return null;
+    }
+    return relationAttributeValue(node.getAttributes());
+  }
+
+  private static String relationAttributeValue(NamedNodeMap attributes) {
+    if (attributes == null) {
+      return null;
+    }
+    Node relationAttribute =
+        attributes.getNamedItemNS(
+            QName.valueOf("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id")
+                .getNamespaceURI(),
+            "id");
+    if (relationAttribute == null) {
+      relationAttribute = attributes.getNamedItem("r:id");
+    }
+    if (relationAttribute == null || relationAttribute.getNodeValue().isBlank()) {
+      return null;
+    }
+    return relationAttribute.getNodeValue();
+  }
+
+  private static boolean isChartNode(Node node) {
+    return node != null
+        && (("chart".equals(node.getLocalName())
+                && "http://schemas.openxmlformats.org/drawingml/2006/chart"
+                    .equals(node.getNamespaceURI()))
+            || "c:chart".equals(node.getNodeName()));
   }
 }

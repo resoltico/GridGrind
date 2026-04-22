@@ -75,7 +75,9 @@ public final class GridGrindContractText {
     return "Return one sheet's layout object with pane, zoomPercent, presentation,"
         + " and per-row or per-column metadata."
         + " Row and column entries include hidden, outlineLevel, and collapsed"
-        + " state where Excel persists it.";
+        + " state where Excel persists it."
+        + " Readback is factual and does not clamp malformed positive persisted"
+        + " row heights, column widths, or default row height values.";
   }
 
   /** One stable catalog summary for `GET_FORMULA_SURFACE`. */

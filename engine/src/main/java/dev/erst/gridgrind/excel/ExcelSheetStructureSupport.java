@@ -341,32 +341,13 @@ final class ExcelSheetStructureSupport {
   }
 
   static int toColumnWidthUnits(double widthCharacters) {
-    requireFinitePositive(widthCharacters, "widthCharacters");
-    if (widthCharacters > 255.0d) {
-      throw new IllegalArgumentException(
-          "widthCharacters must not exceed 255.0 (Excel column width limit): got "
-              + widthCharacters);
-    }
+    ExcelSheetLayoutLimits.requireColumnWidthCharacters(widthCharacters, "widthCharacters");
     int widthUnits = (int) Math.round(widthCharacters * 256.0d);
-    if (widthUnits <= 0) {
-      throw new IllegalArgumentException(
-          "widthCharacters is too small to produce a visible Excel column width: got "
-              + widthCharacters);
-    }
     return widthUnits;
   }
 
   static float toRowHeightPoints(double heightPoints) {
-    requireFinitePositive(heightPoints, "heightPoints");
-    if (heightPoints > Short.MAX_VALUE / 20.0d) {
-      throw new IllegalArgumentException(
-          "heightPoints must not exceed 1638.35 (Excel storage limit: 32767 twips): got "
-              + heightPoints);
-    }
-    if ((long) (heightPoints * 20.0d) <= 0L) {
-      throw new IllegalArgumentException(
-          "heightPoints is too small to produce a visible Excel row height: " + heightPoints);
-    }
+    ExcelSheetLayoutLimits.requireRowHeightPoints(heightPoints, "heightPoints");
     return (float) heightPoints;
   }
 
@@ -403,15 +384,6 @@ final class ExcelSheetStructureSupport {
       throw new IllegalArgumentException(
           ExcelIndexDisplay.mustNotBeLessThan(
               lastFieldName, lastValue, firstFieldName, firstValue));
-    }
-  }
-
-  private static void requireFinitePositive(double value, String fieldName) {
-    if (!Double.isFinite(value)) {
-      throw new IllegalArgumentException(fieldName + " must be finite");
-    }
-    if (value <= 0.0d) {
-      throw new IllegalArgumentException(fieldName + " must be greater than 0");
     }
   }
 }

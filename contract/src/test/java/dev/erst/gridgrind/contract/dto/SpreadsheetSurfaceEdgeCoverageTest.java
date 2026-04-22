@@ -413,7 +413,7 @@ class SpreadsheetSurfaceEdgeCoverageTest {
                 "ada@example.com",
                 ExcelPictureFormat.PNG,
                 "image/png",
-                0L,
+                -1L,
                 "sig123",
                 10,
                 10));

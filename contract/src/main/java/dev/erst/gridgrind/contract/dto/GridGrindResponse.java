@@ -693,10 +693,8 @@ public sealed interface GridGrindResponse {
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }
-      if (zoomPercent < 10 || zoomPercent > 400) {
-        throw new IllegalArgumentException(
-            "zoomPercent must be between 10 and 400 inclusive: " + zoomPercent);
-      }
+      dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.requireZoomPercent(
+          zoomPercent, "zoomPercent");
       columns = copyValues(columns, "columns");
       rows = copyValues(rows, "rows");
     }

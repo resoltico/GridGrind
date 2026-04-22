@@ -97,7 +97,7 @@ final class ExcelSheetCopyEmbeddedObjectSupport {
         relationship.getRelationshipType(),
         part.getContentType(),
         part.getPartName().getName(),
-        new ExcelBinaryData(ExcelDrawingBinarySupport.partBytes(part)));
+        ExcelBinaryData.readback(ExcelDrawingBinarySupport.partBytes(part)));
   }
 
   private static void repairCopiedEmbeddedObject(

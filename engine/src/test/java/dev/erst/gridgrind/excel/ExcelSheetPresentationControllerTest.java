@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
@@ -105,6 +106,53 @@ class ExcelSheetPresentationControllerTest {
       controller.clearPresentation(sheet);
 
       assertNull(sheet.getTabColor());
+    }
+  }
+
+  @Test
+  void setPresentationRejectsSheetDefaultsOutsideExcelLimits() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet sheet = workbook.createSheet("Ops");
+      ExcelSheetPresentationController controller = new ExcelSheetPresentationController();
+
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              controller.setPresentation(
+                  sheet,
+                  new ExcelSheetPresentation(
+                      ExcelSheetDisplay.defaults(),
+                      null,
+                      ExcelSheetOutlineSummary.defaults(),
+                      new ExcelSheetDefaults(
+                          0, ExcelSheetDefaults.defaults().defaultRowHeightPoints()),
+                      List.of())));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              controller.setPresentation(
+                  sheet,
+                  new ExcelSheetPresentation(
+                      ExcelSheetDisplay.defaults(),
+                      null,
+                      ExcelSheetOutlineSummary.defaults(),
+                      new ExcelSheetDefaults(
+                          ExcelSheetLayoutLimits.MAX_DEFAULT_COLUMN_WIDTH + 1,
+                          ExcelSheetDefaults.defaults().defaultRowHeightPoints()),
+                      List.of())));
+      assertThrows(
+          IllegalArgumentException.class,
+          () ->
+              controller.setPresentation(
+                  sheet,
+                  new ExcelSheetPresentation(
+                      ExcelSheetDisplay.defaults(),
+                      null,
+                      ExcelSheetOutlineSummary.defaults(),
+                      new ExcelSheetDefaults(
+                          ExcelSheetDefaults.defaults().defaultColumnWidth(),
+                          Math.nextUp(ExcelSheetLayoutLimits.MAX_ROW_HEIGHT_POINTS)),
+                      List.of())));
     }
   }
 }

@@ -467,7 +467,6 @@ public final class ExcelSheet {
     return analysisSupport.hyperlinkCount();
   }
 
-  /** Returns derived findings for hyperlink health on this sheet. */
   /**
    * Returns derived findings for hyperlink health on this sheet using the workbook path context.
    */
