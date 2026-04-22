@@ -205,11 +205,13 @@ fix the failure, push to the release branch, and wait again — do not merge a r
 ### Step 4 — Merge PR, wait for main CI, and verify the merge handoff
 
 ```bash
-gh pr merge <N> --merge --admin --delete-branch --subject "release: bump version to X.Y.Z (#N)"
-git checkout main
-git pull
+REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+gh pr merge <N> --repo "$REPO" --merge --admin --delete-branch \
+  --subject "release: bump version to X.Y.Z (#N)"
+git fetch origin main
+git switch --detach origin/main
 ./scripts/verify-release-merge-handoff.sh
-gh pr view <N> --json number,state,mergedAt,headRefName,baseRefName,url
+gh pr view <N> --repo "$REPO" --json number,state,mergedAt,headRefName,baseRefName,url
 ```
 
 The `--admin` flag uses administrator privileges to bypass branch-protection requirements,
@@ -218,12 +220,39 @@ This is the GitHub-intended escape hatch for single-owner repositories where an 
 the release end-to-end. CI status checks (`Check` and `Docker smoke`) remain the authoritative
 quality gate; the review requirement adds no signal in a solo-owner workflow.
 
+If the release is being driven from a dedicated worktree while the primary checkout already has
+`main` checked out, do not rely on `gh pr merge` or `git checkout main` in the auxiliary
+worktree without an explicit repository and detached-head plan. In that topology `gh pr merge`
+can invoke local git operations that fail with:
+
+```text
+fatal: 'main' is already checked out at '/path/to/primary-checkout'
+```
+
+In worktree mode, prefer `gh pr merge --repo "$REPO"` so the GitHub-side merge is independent
+of the local branch-checkout topology, then verify the merge handoff from any checkout whose
+`HEAD` exactly matches `origin/main`. A detached `origin/main` checkout in the release worktree
+is acceptable for Step 4. Step 11 remains the place where the primary checkout itself must be
+returned to a truthful `main`.
+
+Also, do not treat a non-zero `gh pr merge` exit as proof that the merge failed. The server-side
+merge can succeed before `gh` trips over a local git follow-up step. After any merge-command
+error, immediately inspect the PR directly:
+
+```bash
+gh pr view <N> --repo "$REPO" --json number,state,mergedAt,headRefName,baseRefName,url
+```
+
+If the PR already shows `state=MERGED` with `mergedAt` populated, treat GitHub's merged state as
+authoritative, do not retry the merge, and continue with the post-merge verification and branch
+hygiene steps.
+
 Requirements before continuing:
 
 - PR state is `MERGED`.
 - `mergedAt` is populated.
-- Local `main` contains the merge commit you expect.
-- Local `main` exactly matches `origin/main`.
+- The checked-out verifier commit contains the merge commit you expect.
+- The checkout used for `./scripts/verify-release-merge-handoff.sh` exactly matches `origin/main`.
 - The merged `main` commit already has successful `Check` and `Docker smoke` runs from workflow
   `CI`. `./scripts/verify-release-merge-handoff.sh` is the authoritative gate for this handoff.
 - The remote release branch is deleted by the merge step.
