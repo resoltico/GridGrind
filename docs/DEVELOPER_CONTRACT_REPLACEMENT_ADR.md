@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.56.0"
+version: "0.57.0"
 domain: DEVELOPER
-updated: "2026-04-19"
+updated: "2026-04-23"
 route:
   keywords: [gridgrind, adr, contract, executor, protocol, replacement, architecture, java, authoring-java]
   questions: ["what architecture decision locked the contract replacement", "why did gridgrind delete the protocol module", "what is contract replacement mode", "why is gridgrind split into contract and executor"]
@@ -22,7 +22,7 @@ The old monolithic `protocol` module is deleted and replaced by the current six-
 graph:
 
 ```text
-dev.erst.gridgrind.authoring -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
+dev.erst.gridgrind.authoring -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
 dev.erst.gridgrind.cli -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
 dev.erst.gridgrind.executor -> dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation
 ```
@@ -38,7 +38,8 @@ The ownership boundaries are now:
 - `executor`
   - the only bridge from contract to engine
 - `authoring-java`
-  - fluent Java authoring layer built strictly above executor
+  - fluent Java authoring layer built strictly above the canonical contract and intentionally
+    separate from execution
 - `cli`
   - thin transport adapter and discovery surface
 
@@ -77,7 +78,8 @@ confused ownership model.
 5. The CLI remains thin downstream from the core product graph.
 6. No backward compatibility, migration layer, alias path, or compatibility bridge is allowed for
    the redesign.
-7. Higher-level authoring work must build on `contract` plus `executor`, not around them.
+7. Higher-level authoring work must build on the canonical `contract`; execution remains a
+   separate concern layered through `executor`.
 
 ---
 
@@ -101,8 +103,8 @@ Phase 0 and Phase 1 of the redesign are complete when all of the following are t
   `authoring-java`, and `cli`, and no longer includes `protocol`
 - the old top-level `protocol/` module is absent
 - the CLI depends on `executor`, not directly on the deleted `protocol` module
-- `authoring-java` depends on `executor`, not directly on `engine` or the deleted `protocol`
-  module
+- `authoring-java` depends on `contract`, not directly on `executor`, `engine`, or the deleted
+  `protocol` module
 - help and catalog discovery still render from the canonical contract registry
 - relocated tests, parity suites, and quality gates remain green
 

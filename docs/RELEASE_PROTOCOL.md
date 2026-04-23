@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.56.0"
+version: "0.57.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-04-23"
 route:
@@ -415,11 +415,12 @@ duplicate release workflow run failed after the release was already created.
 The release workflow is expected to perform this same verification internally after publication.
 Before publication, that workflow also black-box verifies the packaged fat JAR with
 `./scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar` so the shipped `--help`
-plus `--print-protocol-catalog`, `--print-task-catalog`, `--print-task-plan`, `--print-goal-plan`,
-and `--doctor-request` surfaces cannot drift from the core contract silently. The operator-side
-`gh release view` check remains mandatory because workflow success is still not the authoritative
-state. The packaged verifier uses repo-local disposable scratch under `tmp/` so local operators
-and CI hit the same deterministic contract-verification path.
+surface, the interactive no-arg help path, plus `--print-protocol-catalog`,
+`--print-task-catalog`, `--print-task-plan`, `--print-goal-plan`, and `--doctor-request` cannot
+drift from the core contract silently. The operator-side `gh release view` check remains
+mandatory because workflow success is still not the authoritative state. The packaged verifier
+uses repo-local disposable scratch under `tmp/` so local operators and CI hit the same
+deterministic contract-verification path.
 
 ### Step 9 — Verify public availability
 
@@ -436,7 +437,7 @@ gh release view vX.Y.Z                                                # GitHub R
 The verifier script must confirm both the exact `X.Y.Z` tag and `latest` are anonymously pullable,
 that both `docker run ... --version` results match the two-line product header for the target
 release version exactly — `GridGrind X.Y.Z` on the first line and the product description on the
-second — and that both published tags still expose the expected `--help`,
+second — and that both published tags still expose the expected `--help`, interactive no-arg help,
 `--print-protocol-catalog`, `--print-task-catalog`, `--print-task-plan`, `--print-goal-plan`, and
 `--doctor-request` contract. The verifier uses a disposable anonymous Docker config rooted under
 repo-local `tmp/`, so a passing local run matches CI's anonymous publication check instead of

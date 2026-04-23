@@ -1,17 +1,17 @@
 ---
 afad: "3.5"
-version: "0.56.0"
+version: "0.57.0"
 domain: JAVA_AUTHORING
 updated: "2026-04-23"
 route:
-  keywords: [gridgrind, java, authoring, gridgrindplan, targets, values, queries, checks, workbookplan, executioninputbindings]
-  questions: ["can i use gridgrind from java", "how do i author gridgrind workflows in java", "what is gridgrindplan", "how do i run gridgrind in process", "how do source-backed inputs work from java"]
+  keywords: [gridgrind, java, authoring, gridgrindplan, targets, values, tables, links, workbookplan, executioninputbindings]
+  questions: ["can i use gridgrind from java", "how do i author gridgrind workflows in java", "what is gridgrindplan", "how do i execute a java-authored plan in process", "how do source-backed inputs work from java"]
 ---
 
 # Java Authoring Guide
 
 **Purpose**: Explain the fluent Java authoring layer that emits the same canonical `WorkbookPlan`
-as the JSON protocol and can either serialize JSON or execute in-process.
+as the JSON protocol and intentionally stops at that contract boundary.
 **Example**: [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)
 **Underlying contract**: [REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md)
 and [OPERATIONS.md](./OPERATIONS.md)
@@ -23,33 +23,46 @@ GridGrind has two first-class authoring surfaces:
 
 Both surfaces compile to the same canonical `WorkbookPlan`. The Java layer is not a separate
 execution engine and does not bypass request validation, execution-mode rules, or workbook safety
-checks.
+checks. It authors the canonical plan; execution stays explicit through the executor layer when
+you choose to run in process.
 
 Within the repository's JPMS layout, `dev.erst.gridgrind.authoring` requires transitive
-`dev.erst.gridgrind.executor`, which in turn bridges into the engine through the canonical
-contract split.
+`dev.erst.gridgrind.contract`. The executor remains a separate dependency so applications that
+only want to emit plan JSON do not inherit the in-process runtime graph.
 
-## Core Types
+## Authoring Types
 
 | Type | Owns |
 |:-----|:-----|
-| `GridGrindPlan` | Start a plan with `newWorkbook()`, `open(path)`, or `from(plan)`; set persistence, execution, and formula-environment policy; emit JSON; or execute in-process |
+| `GridGrindPlan` | Start a plan with `newWorkbook()`, `open(path)`, or `from(plan)`; set persistence and journal detail; emit the canonical `WorkbookPlan` or JSON |
 | `Targets` | Selector builders and fluent target-scoped mutation, inspection, and assertion builders |
-| `Values` | Typed cell values plus source-backed text and binary helpers |
-| `Queries` | Canonical factual inspection and analysis query builders |
-| `Checks` | Canonical assertion builders |
-| `ExecutionInputBindings` | Working directory plus optional `STANDARD_INPUT` bytes for in-process execution |
+| `Values` | Typed cell values, expected values, comments, and source-backed UTF-8 helpers |
+| `Tables` | Focused table definitions and style wrappers |
+| `Links` | URL, email, file, and document hyperlink targets |
+
+`Checks` and `Queries` still exist internally, but they are not part of the public authoring API.
+The public Java surface stays selector-first and hides raw request/response DTO plumbing such as
+`TableInput`, `HyperlinkTarget`, and `GridGrindResponse.*Report`.
+
+## Optional Explicit Execution Types
+
+If your application also chooses to execute authored plans in process, the explicit executor layer
+adds these types:
+
+| Type | Owns |
+|:-----|:-----|
+| `ExecutionInputBindings` | Working directory plus optional `STANDARD_INPUT` bytes for explicit in-process execution |
 | `GridGrindRequestExecutor` | Transport-neutral execution port; `DefaultGridGrindRequestExecutor` is the production implementation |
 
 Unnamed authored steps receive generated ids such as `mutation-001`, `inspection-001`, and
 `assertion-001`. If you need stable caller-owned ids, call `.named("...")` on a
 `PlannedMutation`, `PlannedInspection`, or `PlannedAssertion` before adding it to the plan.
 
-## Compile-Verified Example
+## Compile-And-Execution-Verified Example
 
 The checked-in example under
 [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java) is compiled
-by `:authoring-java:test`. A shortened excerpt:
+and executed by `:authoring-java:test`. A shortened excerpt:
 
 ```java
 GridGrindPlan plan =
@@ -67,12 +80,12 @@ GridGrindPlan plan =
         .mutate(
             Targets.tableOnSheet("BudgetTable", "Budget")
                 .define(
-                    new TableInput(
+                    Tables.define(
                         "BudgetTable",
                         "Budget",
                         "A1:B3",
                         false,
-                        new TableStyleInput.None())))
+                        Tables.noStyle())))
         .mutate(
             Targets.table("BudgetTable")
                 .rowByKey("Item", Values.textFile(Path.of("authored-inputs", "item.txt")))
@@ -93,25 +106,29 @@ GridGrindPlan plan =
 This is still the same GridGrind contract: the Java layer is simply constructing selectors,
 actions, queries, and assertions without hand-writing JSON.
 
-## Emit JSON Or Run In Process
+If you want to run that example against the repository checkout directly, use `examples/` as the
+workspace root so the example can read the committed
+[../examples/authored-inputs/item.txt](../examples/authored-inputs/item.txt) input file.
 
-`GridGrindPlan` can stop at the canonical contract boundary or execute immediately:
+## Emit JSON Or Execute Explicitly
+
+`GridGrindPlan` stays at the canonical contract boundary:
 
 - `toPlan()` returns the immutable `WorkbookPlan`
 - `toJsonBytes()`, `toJsonString()`, and `writeJson(...)` emit the same request JSON that the CLI
   would accept
-- `run()` executes through `DefaultGridGrindRequestExecutor` with
-  `ExecutionInputBindings.processDefault()`
-- `run(executor, bindings)` and `run(executor, bindings, sink)` let callers supply explicit
-  execution bindings and a live journal sink
+
+If you want to execute in process, pass that plan to an executor yourself:
 
 Typical in-process execution:
 
 ```java
 GridGrindResponse response =
-    plan.run(
-        new DefaultGridGrindRequestExecutor(),
-        new ExecutionInputBindings(workspace, (byte[]) null));
+    new DefaultGridGrindRequestExecutor()
+        .execute(
+            plan.toPlan(),
+            new ExecutionInputBindings(workspace, (byte[]) null),
+            ExecutionJournalSink.NOOP);
 ```
 
 ## Source-Backed Inputs From Java

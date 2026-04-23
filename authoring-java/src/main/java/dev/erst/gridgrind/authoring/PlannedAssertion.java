@@ -6,17 +6,21 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import java.util.Objects;
 
 /** One authored assertion step that receives a stable step id when added to a plan. */
-public record PlannedAssertion(String stepId, Selector target, Assertion assertion) {
-  public PlannedAssertion {
+public final class PlannedAssertion {
+  private final String stepId;
+  private final Selector target;
+  private final Assertion assertion;
+
+  PlannedAssertion(String stepId, Selector target, Assertion assertion) {
     if (stepId != null && stepId.isBlank()) {
       throw new IllegalArgumentException("stepId must not be blank");
     }
-    Objects.requireNonNull(target, "target must not be null");
-    Objects.requireNonNull(assertion, "assertion must not be null");
+    this.stepId = stepId;
+    this.target = Objects.requireNonNull(target, "target must not be null");
+    this.assertion = Objects.requireNonNull(assertion, "assertion must not be null");
   }
 
-  /** Creates an unnamed authored assertion that will receive an auto-generated step id. */
-  public PlannedAssertion(Selector target, Assertion assertion) {
+  PlannedAssertion(Selector target, Assertion assertion) {
     this(null, target, assertion);
   }
 

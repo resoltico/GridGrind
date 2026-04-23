@@ -478,7 +478,7 @@ final class GridGrindReportingTaskDefinitions {
             "build pivots",
             "pivot health"),
         rebasePlan(
-            WorkbookAssetExamples.pivotExample().plan(),
+            WorkbookAssetExamples.pivotExample(ExamplePathLayout.BUILT_IN).plan(),
             "pivot-report-starter",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs("pivot-report.xlsx")),

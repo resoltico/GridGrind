@@ -23,6 +23,10 @@ tasks.named<JavaExec>("run") {
     workingDir = rootProject.projectDir
 }
 
+tasks.named<Test>("test") {
+    jvmArgs("--enable-native-access=ALL-UNNAMED")
+}
+
 tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJar") {
     archiveBaseName = "gridgrind"
     archiveVersion = ""
@@ -50,6 +54,7 @@ tasks.named<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>("shadowJ
 
     manifest {
         attributes(
+            "Enable-Native-Access" to "ALL-UNNAMED",
             "Implementation-Title" to "GridGrind",
             "Implementation-Version" to project.version,
             "Implementation-Vendor" to "Ervins Strauhmanis",

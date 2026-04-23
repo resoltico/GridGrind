@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.56.0"
+version: "0.57.0"
 domain: OPERATIONS
 updated: "2026-04-23"
 route:
@@ -55,12 +55,19 @@ workflows, workbook maintenance, and drawing/signature workflows.
 
 | Reference | Owns |
 |:----------|:-----|
-| [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) | Fluent Java plan building, selector helpers, source-backed inputs, JSON emission, and in-process execution over the same canonical `WorkbookPlan` |
+| [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) | Fluent Java plan building, selector helpers, source-backed inputs, JSON emission, and optional explicit executor handoff over the same canonical `WorkbookPlan` |
 | [REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md) | Request envelope, `source`, `persistence`, source-backed inputs, `formulaEnvironment`, `execution`, response journal, coordinate systems, and core cell-value shapes |
-| [WORKBOOK_AND_LAYOUT_MUTATIONS.md](./WORKBOOK_AND_LAYOUT_MUTATIONS.md) | Workbook, sheet, protection, copy/move/rename, layout, pane, zoom, presentation, print-layout, row/column structure, and custom-XML import mutations |
-| [CELL_AND_DRAWING_MUTATIONS.md](./CELL_AND_DRAWING_MUTATIONS.md) | `SET_CELL`, `SET_RANGE`, array formulas, hyperlinks, comments, pictures, shapes, embedded objects, charts, signature lines, anchor updates, and drawing deletes |
-| [STRUCTURED_FEATURE_MUTATIONS.md](./STRUCTURED_FEATURE_MUTATIONS.md) | Styles, data validations, conditional formatting, autofilters, tables, pivot tables, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`, `execution.calculation`, and named ranges |
-| [ASSERTION_AND_INSPECTION_REFERENCE.md](./ASSERTION_AND_INSPECTION_REFERENCE.md) | All assertion families plus factual inspection and analysis queries |
+| [WORKBOOK_AND_SHEET_MUTATIONS.md](./WORKBOOK_AND_SHEET_MUTATIONS.md) | workbook lifecycle, sheet create/rename/delete/move/copy, active/selected sheets, protection, and custom XML import |
+| [LAYOUT_AND_STRUCTURE_MUTATIONS.md](./LAYOUT_AND_STRUCTURE_MUTATIONS.md) | merges, row and column inserts/deletes/shifts, visibility, grouping, panes, zoom, presentation, and print layout |
+| [CELL_VALUE_MUTATIONS.md](./CELL_VALUE_MUTATIONS.md) | `SET_CELL`, `SET_RANGE`, `SET_ARRAY_FORMULA`, `CLEAR_ARRAY_FORMULA`, and `CLEAR_RANGE` |
+| [LINK_AND_COMMENT_MUTATIONS.md](./LINK_AND_COMMENT_MUTATIONS.md) | hyperlink and comment authoring |
+| [DRAWING_MUTATIONS.md](./DRAWING_MUTATIONS.md) | pictures, shapes, embedded objects, charts, signature lines, anchor updates, and drawing deletes |
+| [STYLE_AND_VALIDATION_MUTATIONS.md](./STYLE_AND_VALIDATION_MUTATIONS.md) | styles, data validations, and conditional formatting |
+| [STRUCTURED_DATA_MUTATIONS.md](./STRUCTURED_DATA_MUTATIONS.md) | autofilters, tables, pivot tables, `APPEND_ROW`, `AUTO_SIZE_COLUMNS`, `execution.calculation`, and named ranges |
+| [ASSERTIONS.md](./ASSERTIONS.md) | all assertion families and common assertion step shapes |
+| [WORKBOOK_AND_CELL_INSPECTIONS.md](./WORKBOOK_AND_CELL_INSPECTIONS.md) | workbook, sheet, cell, range, and package-security factual reads |
+| [DRAWING_AND_STRUCTURED_INSPECTIONS.md](./DRAWING_AND_STRUCTURED_INSPECTIONS.md) | picture, shape, embedded-object, chart, signature-line, table, pivot, autofilter, and named-range factual reads |
+| [ANALYSIS_QUERIES.md](./ANALYSIS_QUERIES.md) | workbook-health and analysis query payloads |
 
 ## Mutation Action Groups
 
@@ -98,7 +105,10 @@ Assertion families include `EXPECT_PRESENT`, `EXPECT_ABSENT`, `EXPECT_CELL_VALUE
 
 Inspection queries cover workbook facts, sheet facts, drawing/chart facts, table/pivot facts,
 package security, named ranges, schemas, and every shipped health-analysis family. The detailed
-step shapes live in [ASSERTION_AND_INSPECTION_REFERENCE.md](./ASSERTION_AND_INSPECTION_REFERENCE.md).
+step shapes live in [ASSERTIONS.md](./ASSERTIONS.md),
+[WORKBOOK_AND_CELL_INSPECTIONS.md](./WORKBOOK_AND_CELL_INSPECTIONS.md),
+[DRAWING_AND_STRUCTURED_INSPECTIONS.md](./DRAWING_AND_STRUCTURED_INSPECTIONS.md), and
+[ANALYSIS_QUERIES.md](./ANALYSIS_QUERIES.md).
 
 Common response anchors:
 - `GET_FORMULA_SURFACE` returns `analysis.totalFormulaCellCount` plus grouped sheet summaries.
@@ -128,8 +138,8 @@ Common response anchors:
 ## Advanced Drawing And Chart Surface
 
 Drawing authoring and readback are first-class `.xlsx` surfaces. See
-[CELL_AND_DRAWING_MUTATIONS.md](./CELL_AND_DRAWING_MUTATIONS.md) and
-[ASSERTION_AND_INSPECTION_REFERENCE.md](./ASSERTION_AND_INSPECTION_REFERENCE.md) for the full
+[DRAWING_MUTATIONS.md](./DRAWING_MUTATIONS.md) and
+[DRAWING_AND_STRUCTURED_INSPECTIONS.md](./DRAWING_AND_STRUCTURED_INSPECTIONS.md) for the full
 shapes covering `SIGNATURE_LINE`, pictures, shapes, embedded objects, and charts.
 
 Supported authored plot families are `AREA`, `AREA_3D`, `BAR`, `BAR_3D`, `DOUGHNUT`, `LINE`,
@@ -139,6 +149,7 @@ charts are supported when every plot belongs to one of those families.
 ## Example Entry Points
 
 - First-run workbook creation: [QUICK_START.md](./QUICK_START.md)
+- Example map, path-rooting rules, and refresh flow: [EXAMPLES.md](./EXAMPLES.md)
 - Java-first authoring without hand-written JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
   [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)
 - Budget walkthrough: [../examples/budget-request.json](../examples/budget-request.json) or

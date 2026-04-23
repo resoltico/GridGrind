@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.56.0"
+version: "0.57.0"
 domain: DEVELOPER
 updated: "2026-04-23"
 route:
@@ -11,7 +11,7 @@ route:
 # Developer Reference
 
 **Purpose**: Build, test, architecture, and quality gate reference for GridGrind contributors.
-**Prerequisites**: Java 26 active in the current shell from the OpenJDK 26 bundle installed via [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md). Docker active in the current shell when running `./check.sh`, as codified in [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md). No global Gradle install is required for repo work; use `./gradlew`.
+**Prerequisites**: Java 26 active in the current shell as described in [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md). Docker active in the current shell when running `./check.sh`, as codified in [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md). No global Gradle install is required for repo work; use `./gradlew`.
 **Java and workstation setup**: [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
 
 Companion references:
@@ -49,8 +49,9 @@ executor/   The only execution bridge from the canonical contract into the
 
 authoring-java/
             Fluent Java authoring layer. Owns selector builders, authored
-            step builders, and in-process execution entrypoints that compile
-            to the canonical contract without exposing engine internals.
+            step builders, and canonical `WorkbookPlan` emission without
+            exposing engine internals or pulling executor runtime concerns
+            into the module boundary.
 
 cli/        Thin transport adapter. Reads a contract request from stdin
             or --request file, delegates to executor, writes the response,
@@ -65,17 +66,18 @@ foundation. Future adapters (HTTP, gRPC, library embedding) can be added without
 The enforced dependency graph is:
 
 ```text
-dev.erst.gridgrind.authoring -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
+dev.erst.gridgrind.authoring -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
 dev.erst.gridgrind.cli -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
 dev.erst.gridgrind.executor -> dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation
 ```
 
-`authoring-java` and `cli` do not depend on `engine`, and `executor` is the only module allowed
-to bridge from the canonical contract into workbook execution. `excel-foundation` is the only
-shared Excel-domain surface allowed to sit below both `contract` and `engine`, so the public
-contract no longer imports POI-backed engine internals just to reuse enums or limits. Shared Java
-build conventions enable `modularity.inferModulePath`, so the `module-info.java` descriptors in
-all six product modules participate in normal local builds, CI, and release verification.
+`authoring-java` and `cli` do not depend on `engine`, `authoring-java` also does not depend on
+`executor`, and `executor` is the only module allowed to bridge from the canonical contract into
+workbook execution. `excel-foundation` is the only shared Excel-domain surface allowed to sit
+below both `contract` and `engine`, so the public contract no longer imports POI-backed engine
+internals just to reuse enums or limits. Shared Java build conventions enable
+`modularity.inferModulePath`, so the `module-info.java` descriptors in all six product modules
+participate in normal local builds, CI, and release verification.
 
 The highest-churn architecture seams are intentionally split too:
 - `GridGrindProtocolCatalog` owns the top-level catalog assembly, while `GridGrindProtocolCatalogFieldGroupSupport` owns the large nested/plain field-shape descriptor registry and `GridGrindProtocolCatalogLookupSupport` owns lookup/search behavior.
@@ -133,11 +135,13 @@ clean before a release-quality change is considered done. When Stage 1 reaches l
 so the local watchdog tracks semantic execution rather than mistaking quiet test output for a
 hang.
 
-Use `./gradlew`, not Brew `gradle`. GridGrind's CLI, fat JAR, release flow, and `./check.sh` all
-depend on the ambient shell `java`, so the local shell must resolve Java 26 from the installed
-OpenJDK bundle. Keep the repository on the local filesystem; mounted external volumes are outside
-the supported setup because Gradle project-cache and JaCoCo file locking can fail there on macOS.
-`./check.sh` now fails fast if the shell runtime is wrong.
+Use `./gradlew`, not path-global `gradle`. GridGrind's CLI, fat JAR, release flow, and
+`./check.sh` all depend on the ambient shell `java`, so the local shell must resolve Java 26 from
+a real full JDK. Keep the repository on the local filesystem when you run the full verification
+loop; mounted external volumes are outside the supported setup because Gradle project-cache and
+JaCoCo file locking can fail there on macOS. If you edit from a mounted volume, run the heavy
+build/test loop from a local-disk worktree or disposable mirror instead. `./check.sh` now fails
+fast if the shell runtime is wrong.
 Docker smoke and release verification should likewise stay independent from personal Docker login
 state by using an anonymous `DOCKER_CONFIG` while still targeting the active local Docker engine,
 and local Docker verification now requires `docker buildx` because Stage 5 builds through
@@ -342,10 +346,12 @@ boundary: GridGrind does not emit a partially written workbook file.
 
 ## Workflow Fixtures
 
-The shipped JSON fixtures are now generated mirrors of the contract-owned built-in example
-registry. Refresh them with [`scripts/sync-generated-examples.sh`](../scripts/sync-generated-examples.sh)
-or print any one of them directly from the artifact with `gridgrind --print-example <id>`.
-These fixtures and authoring examples cover the core surface:
+The shipped JSON fixtures are generated from the contract-owned example registry in
+checkout-rooted form. Refresh them with
+[`scripts/sync-generated-examples.sh`](../scripts/sync-generated-examples.sh), or print any one of
+the artifact-native built-in examples directly with `gridgrind --print-example <id>`. The full
+map, path-rooting rules, and verification loop live in [EXAMPLES.md](./EXAMPLES.md). These
+fixtures and authoring examples cover the core surface:
 
 | File | What It Tests |
 |:-----|:-------------|
@@ -373,7 +379,7 @@ Run any JSON fixture with:
 Examples that persist a workbook write to `cli/build/generated-workbooks/`; the no-save examples
 return JSON only.
 
-The Java example is compile-verified by `:authoring-java:test` and demonstrates how the
+The Java example is compiled and executed by `:authoring-java:test` and demonstrates how the
 `authoring-java` module emits one canonical `WorkbookPlan` without dropping to raw JSON. The
 public walkthrough for that surface lives in [JAVA_AUTHORING.md](./JAVA_AUTHORING.md).
 

@@ -1,0 +1,81 @@
+---
+afad: "3.5"
+version: "0.57.0"
+domain: EXAMPLES
+updated: "2026-04-23"
+route:
+  keywords: [gridgrind, examples, print-example, request fixtures, package security, java authoring]
+  questions: ["what examples ship with gridgrind", "what is the difference between built-in and checked-in examples", "how do i run the java example", "how do i refresh the example fixtures"]
+---
+
+# Example Guide
+
+**Purpose**: Map the shipped example surfaces, explain how their paths resolve, and show how to
+refresh and verify them.
+**Fastest artifact-native path**: `gridgrind --print-example <ID>`
+**Checkout-owned fixtures**: [`../examples/`](../examples/)
+
+GridGrind ships the same example workflows in two forms:
+
+- **Built-in artifact examples** from `gridgrind --print-example <ID>`. These are designed to run
+  from an artifact working directory and use artifact-rooted paths such as `examples/...` or
+  `cli/build/generated-workbooks/...`.
+- **Checked-in repository fixtures** under [`../examples/`](../examples/). These are generated from
+  the same contract-owned registry, but their relative paths are rooted from the request file's own
+  directory so they run in place from a repository checkout.
+
+## Path Rules
+
+- Built-in examples are for the release JAR, Docker image, or `:cli:run` when you first print the
+  example into your own working directory.
+- Checked-in `examples/*.json` are checkout-rooted fixtures. Persisted outputs intentionally use
+  `../cli/build/generated-workbooks/...` because the request files themselves live under
+  `examples/`.
+- Asset-backed checked-in examples keep sibling assets beside the requests:
+  - [`../examples/custom-xml-assets/`](../examples/custom-xml-assets/)
+  - [`../examples/source-backed-input-assets/`](../examples/source-backed-input-assets/)
+  - [`../examples/package-security-assets/`](../examples/package-security-assets/)
+
+## JSON Request Fixtures
+
+| Example | Shape | Notes |
+|:--------|:------|:------|
+| [`../examples/budget-request.json`](../examples/budget-request.json) | create and save | budget walkthrough; matches built-in `BUDGET` |
+| [`../examples/assertion-request.json`](../examples/assertion-request.json) | no-save verify | ordered mutate-then-assert flow |
+| [`../examples/workbook-health-request.json`](../examples/workbook-health-request.json) | no-save inspect | compact workbook-health workflow |
+| [`../examples/sheet-maintenance-request.json`](../examples/sheet-maintenance-request.json) | create and save | copy-sheet and workbook-maintenance flow |
+| [`../examples/array-formula-request.json`](../examples/array-formula-request.json) | no-save inspect | array-formula authoring and group readback |
+| [`../examples/chart-request.json`](../examples/chart-request.json) | create and save | chart authoring with factual readback |
+| [`../examples/pivot-request.json`](../examples/pivot-request.json) | create and save | pivot authoring plus pivot-health analysis |
+| [`../examples/file-hyperlink-health-request.json`](../examples/file-hyperlink-health-request.json) | create and save | hyperlink authoring and hyperlink-health analysis |
+| [`../examples/introspection-analysis-request.json`](../examples/introspection-analysis-request.json) | create and save | inspection-heavy workbook analysis surface |
+| [`../examples/large-file-modes-request.json`](../examples/large-file-modes-request.json) | create and save | `STREAMING_WRITE` and recalculation-open flagging |
+| [`../examples/source-backed-input-request.json`](../examples/source-backed-input-request.json) | no-save inspect | sibling file-backed text, formula, and binary payloads |
+| [`../examples/custom-xml-request.json`](../examples/custom-xml-request.json) | existing workbook | sibling custom-XML assets and XML import/export |
+| [`../examples/signature-line-request.json`](../examples/signature-line-request.json) | create and save | signature-line and drawing-anchor surface |
+| [`../examples/package-security-inspect-request.json`](../examples/package-security-inspect-request.json) | existing encrypted workbook | reopens the committed encrypted asset under `package-security-assets/` |
+
+## Java Authoring Example
+
+The Java-first example lives at [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java).
+It is compiled and executed by `:authoring-java:test`, not merely syntax-checked.
+
+If you want to run that example against the repository checkout directly, pass the `examples/`
+directory as the workspace root so the example can read the committed
+[../examples/authored-inputs/item.txt](../examples/authored-inputs/item.txt) file.
+
+## Refresh And Verification
+
+Refresh the checkout-rooted request fixtures and the generated package-security workbook asset with:
+
+```bash
+./scripts/sync-generated-examples.sh
+```
+
+The authoritative verification loop for the shipped examples is:
+
+```bash
+./gradlew :contract:test --tests dev.erst.gridgrind.contract.json.ExampleRequestFixturesTest
+./gradlew :executor:test --tests dev.erst.gridgrind.executor.ExampleExecutionFixturesTest
+./gradlew :authoring-java:test --tests dev.erst.gridgrind.authoring.GridGrindPlanTest
+```

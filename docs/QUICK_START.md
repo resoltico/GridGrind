@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.56.0"
+version: "0.57.0"
 domain: QUICK_START
 updated: "2026-04-23"
 route:
@@ -48,6 +48,8 @@ If you want the standalone JAR, download it from the
 [latest release](https://github.com/resoltico/GridGrind/releases/latest).
 
 The JAR path requires Java 26.
+Running `java -jar gridgrind.jar` with no arguments in an interactive terminal prints the same
+help text as `--help` and exits with code `0`.
 
 ## First Successful Run
 
@@ -95,6 +97,7 @@ After a successful run:
 
 ## Good Second Steps
 
+- Want the full example map, path rules, and refresh flow: [EXAMPLES.md](./EXAMPLES.md)
 - Want GridGrind to explain itself from the artifact instead of from prose:
   - `--print-task-catalog` lists the contract-owned high-level office-work tasks, including dashboards, pivot reports, custom XML workflows, workbook maintenance, and drawing/signature flows.
   - `--print-task-plan DASHBOARD` emits a starter request scaffold for one task.

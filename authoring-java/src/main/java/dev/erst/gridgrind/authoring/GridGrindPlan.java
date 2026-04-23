@@ -1,26 +1,16 @@
 package dev.erst.gridgrind.authoring;
 
-import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.assertion.Assertion;
-import dev.erst.gridgrind.contract.dto.CalculationPolicyInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalInput;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
-import dev.erst.gridgrind.contract.dto.ExecutionModeInput;
 import dev.erst.gridgrind.contract.dto.ExecutionPolicyInput;
 import dev.erst.gridgrind.contract.dto.FormulaEnvironmentInput;
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
-import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
-import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
-import dev.erst.gridgrind.contract.query.InspectionQuery;
-import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.contract.step.AssertionStep;
+import dev.erst.gridgrind.contract.step.InspectionStep;
+import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
-import dev.erst.gridgrind.executor.ExecutionInputBindings;
-import dev.erst.gridgrind.executor.ExecutionJournalSink;
-import dev.erst.gridgrind.executor.GridGrindRequestExecutor;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -30,7 +20,12 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Primary fluent Java entrypoint that compiles authored workflows to canonical WorkbookPlan data.
+ * Primary fluent Java entrypoint that authors focused workbook workflows and compiles them to the
+ * canonical {@link WorkbookPlan}.
+ *
+ * <p>This module intentionally stops at the contract boundary. Callers that need in-process
+ * execution should pass {@link #toPlan()} to an executor explicitly instead of relying on hidden
+ * runtime coupling from the authoring surface.
  */
 public final class GridGrindPlan {
   private GridGrindProtocolVersion protocolVersion;
@@ -80,19 +75,13 @@ public final class GridGrindPlan {
     return new GridGrindPlan(new WorkbookPlan.WorkbookSource.New());
   }
 
-  /** Starts one plan against an existing workbook path with no explicit open security. */
+  /** Starts one plan against an existing workbook path. */
   public static GridGrindPlan open(Path path) {
-    return open(path, null);
-  }
-
-  /** Starts one plan against an existing workbook path with explicit open security. */
-  public static GridGrindPlan open(Path path, OoxmlOpenSecurityInput security) {
     Objects.requireNonNull(path, "path must not be null");
-    return new GridGrindPlan(
-        new WorkbookPlan.WorkbookSource.ExistingFile(path.toString(), security));
+    return new GridGrindPlan(new WorkbookPlan.WorkbookSource.ExistingFile(path.toString()));
   }
 
-  /** Continues authoring from an existing canonical WorkbookPlan. */
+  /** Continues authoring from an existing canonical workbook plan. */
   public static GridGrindPlan from(WorkbookPlan plan) {
     Objects.requireNonNull(plan, "plan must not be null");
     return new GridGrindPlan(
@@ -114,85 +103,32 @@ public final class GridGrindPlan {
     return this;
   }
 
-  /** Replaces the persistence policy directly with the canonical contract object. */
-  public GridGrindPlan persistence(WorkbookPlan.WorkbookPersistence newPersistence) {
-    this.persistence =
-        Objects.requireNonNullElseGet(newPersistence, WorkbookPlan.WorkbookPersistence.None::new);
-    return this;
-  }
-
   /** Keeps the workbook in memory only and skips persistence. */
   public GridGrindPlan inMemoryOnly() {
-    return persistence(new WorkbookPlan.WorkbookPersistence.None());
+    this.persistence = new WorkbookPlan.WorkbookPersistence.None();
+    return this;
   }
 
   /** Saves the resulting workbook to a new `.xlsx` path. */
   public GridGrindPlan saveAs(Path path) {
-    return saveAs(path, null);
-  }
-
-  /** Saves the resulting workbook to a new `.xlsx` path with explicit persistence security. */
-  public GridGrindPlan saveAs(Path path, OoxmlPersistenceSecurityInput security) {
     Objects.requireNonNull(path, "path must not be null");
-    return persistence(new WorkbookPlan.WorkbookPersistence.SaveAs(path.toString(), security));
+    this.persistence = new WorkbookPlan.WorkbookPersistence.SaveAs(path.toString());
+    return this;
   }
 
   /** Overwrites the source workbook path. */
   public GridGrindPlan overwriteSource() {
-    return overwriteSource(null);
-  }
-
-  /** Overwrites the source workbook path with explicit persistence security. */
-  public GridGrindPlan overwriteSource(OoxmlPersistenceSecurityInput security) {
-    return persistence(new WorkbookPlan.WorkbookPersistence.OverwriteSource(security));
-  }
-
-  /** Replaces the full execution policy directly with the canonical contract object. */
-  public GridGrindPlan execution(ExecutionPolicyInput newExecution) {
-    this.execution = newExecution;
+    this.persistence = new WorkbookPlan.WorkbookPersistence.OverwriteSource();
     return this;
   }
 
-  /** Replaces the execution mode while preserving existing journal and calculation settings. */
-  public GridGrindPlan mode(ExecutionModeInput mode) {
-    this.execution =
-        new ExecutionPolicyInput(
-            mode,
-            execution == null ? null : execution.journal(),
-            execution == null ? null : execution.calculation());
-    return this;
-  }
-
-  /** Replaces the execution journal level while preserving existing mode and calculation. */
+  /** Sets the execution journal level while preserving any existing execution mode or policy. */
   public GridGrindPlan journal(ExecutionJournalLevel level) {
     this.execution =
         new ExecutionPolicyInput(
             execution == null ? null : execution.mode(),
             new ExecutionJournalInput(level),
             execution == null ? null : execution.calculation());
-    return this;
-  }
-
-  /** Replaces the calculation policy while preserving existing mode and journal settings. */
-  public GridGrindPlan calculation(CalculationPolicyInput calculationPolicy) {
-    this.execution =
-        new ExecutionPolicyInput(
-            execution == null ? null : execution.mode(),
-            execution == null ? null : execution.journal(),
-            calculationPolicy);
-    return this;
-  }
-
-  /** Replaces the request-scoped formula environment. */
-  public GridGrindPlan formulaEnvironment(FormulaEnvironmentInput newFormulaEnvironment) {
-    this.formulaEnvironment = newFormulaEnvironment;
-    return this;
-  }
-
-  /** Appends one already-built canonical workbook step. */
-  public GridGrindPlan addStep(WorkbookStep step) {
-    this.steps.add(Objects.requireNonNull(step, "step must not be null"));
-    recountStepIds(this.steps);
     return this;
   }
 
@@ -204,34 +140,12 @@ public final class GridGrindPlan {
     return this;
   }
 
-  /** Appends one mutation step from a canonical selector and action. */
-  public GridGrindPlan mutate(Selector target, MutationAction action) {
-    return mutate(new PlannedMutation(target, action));
-  }
-
-  /** Appends one mutation step from a fluent authoring target and canonical action. */
-  public GridGrindPlan mutate(SelectorTarget target, MutationAction action) {
-    Objects.requireNonNull(target, "target must not be null");
-    return mutate(target.selector(), action);
-  }
-
   /** Appends one authored inspection with an auto-generated step id when needed. */
   public GridGrindPlan inspect(PlannedInspection inspection) {
     Objects.requireNonNull(inspection, "inspection must not be null");
     inspectionCount++;
     steps.add(inspection.toStep(nextStepId("inspection", inspectionCount)));
     return this;
-  }
-
-  /** Appends one inspection step from a canonical selector and query. */
-  public GridGrindPlan inspect(Selector target, InspectionQuery query) {
-    return inspect(new PlannedInspection(target, query));
-  }
-
-  /** Appends one inspection step from a fluent authoring target and canonical query. */
-  public GridGrindPlan inspect(SelectorTarget target, InspectionQuery query) {
-    Objects.requireNonNull(target, "target must not be null");
-    return inspect(target.selector(), query);
   }
 
   /** Appends one authored assertion with an auto-generated step id when needed. */
@@ -242,61 +156,25 @@ public final class GridGrindPlan {
     return this;
   }
 
-  /** Appends one assertion step from a canonical selector and assertion. */
-  public GridGrindPlan assertThat(Selector target, Assertion assertion) {
-    return assertThat(new PlannedAssertion(target, assertion));
-  }
-
-  /** Appends one assertion step from a fluent authoring target and canonical assertion. */
-  public GridGrindPlan assertThat(SelectorTarget target, Assertion assertion) {
-    Objects.requireNonNull(target, "target must not be null");
-    return assertThat(target.selector(), assertion);
-  }
-
-  /** Returns the immutable canonical WorkbookPlan emitted by the authoring builder. */
+  /** Returns the immutable canonical {@link WorkbookPlan} emitted by this authoring builder. */
   public WorkbookPlan toPlan() {
     return new WorkbookPlan(
         protocolVersion, planId, source, persistence, execution, formulaEnvironment, steps);
   }
 
-  /** Serializes the canonical WorkbookPlan as UTF-8 JSON bytes. */
+  /** Serializes the canonical workbook plan as UTF-8 JSON bytes. */
   public byte[] toJsonBytes() throws IOException {
     return GridGrindJson.writeRequestBytes(toPlan());
   }
 
-  /** Serializes the canonical WorkbookPlan as an indented UTF-8 JSON string. */
+  /** Serializes the canonical workbook plan as an indented UTF-8 JSON string. */
   public String toJsonString() throws IOException {
     return new String(toJsonBytes(), StandardCharsets.UTF_8);
   }
 
-  /** Writes the canonical WorkbookPlan JSON to one caller-owned output stream. */
+  /** Writes the canonical workbook-plan JSON to one caller-owned output stream. */
   public void writeJson(OutputStream outputStream) throws IOException {
     GridGrindJson.writeRequest(outputStream, toPlan());
-  }
-
-  /** Executes the authored plan through the production in-process executor and default bindings. */
-  public GridGrindResponse run() {
-    return run(new DefaultGridGrindRequestExecutor());
-  }
-
-  /** Executes the authored plan through the provided executor and default process bindings. */
-  public GridGrindResponse run(GridGrindRequestExecutor executor) {
-    return run(executor, ExecutionInputBindings.processDefault(), ExecutionJournalSink.NOOP);
-  }
-
-  /** Executes the authored plan with explicit input bindings and no live journal sink. */
-  public GridGrindResponse run(GridGrindRequestExecutor executor, ExecutionInputBindings bindings) {
-    return run(executor, bindings, ExecutionJournalSink.NOOP);
-  }
-
-  /** Executes the authored plan with explicit input bindings and live journal emission. */
-  public GridGrindResponse run(
-      GridGrindRequestExecutor executor,
-      ExecutionInputBindings bindings,
-      ExecutionJournalSink sink) {
-    return GridGrindRequestExecutor.requireNonNull(executor)
-        .execute(
-            toPlan(), bindings == null ? ExecutionInputBindings.processDefault() : bindings, sink);
   }
 
   private String nextStepId(String prefix, int index) {
@@ -309,9 +187,9 @@ public final class GridGrindPlan {
     assertionCount = 0;
     for (WorkbookStep step : existingSteps) {
       switch (step) {
-        case dev.erst.gridgrind.contract.step.MutationStep _ -> mutationCount++;
-        case dev.erst.gridgrind.contract.step.InspectionStep _ -> inspectionCount++;
-        case dev.erst.gridgrind.contract.step.AssertionStep _ -> assertionCount++;
+        case MutationStep _ -> mutationCount++;
+        case InspectionStep _ -> inspectionCount++;
+        case AssertionStep _ -> assertionCount++;
       }
     }
   }

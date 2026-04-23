@@ -46,7 +46,7 @@
         "type" : "TEXT",
         "source" : {
           "type" : "UTF8_FILE",
-          "path" : "examples/source-backed-input-assets/title.txt"
+          "path" : "source-backed-input-assets/title.txt"
         }
       }
     }
@@ -63,7 +63,7 @@
         "type" : "FORMULA",
         "source" : {
           "type" : "UTF8_FILE",
-          "path" : "examples/source-backed-input-assets/total-formula.txt"
+          "path" : "source-backed-input-assets/total-formula.txt"
         }
       }
     }
@@ -82,7 +82,7 @@
         "command" : "open",
         "payload" : {
           "type" : "FILE",
-          "path" : "examples/source-backed-input-assets/payload.bin"
+          "path" : "source-backed-input-assets/payload.bin"
         },
         "previewImage" : {
           "format" : "PNG",

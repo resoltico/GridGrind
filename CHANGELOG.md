@@ -5,6 +5,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.57.0] - 2026-04-24
+
+### Fixed
+
+- Running the packaged CLI with no arguments from an interactive terminal no longer hangs silently
+  while waiting for stdin. `gridgrind` and `java -jar gridgrind.jar` now print the same help text
+  as `--help` and exit with code `0`, including cases where stdin is interactive but stdout is
+  redirected. The release-surface CLI verifier now asserts that interactive no-arg behavior under
+  a real PTY so this path cannot regress quietly again.
+- The Java authoring surface now stops cleanly at the canonical `WorkbookPlan` boundary instead of
+  pulling executor runtime concerns into the `authoring-java` module. `dev.erst.gridgrind.authoring`
+  now depends transitively on `contract`, the fluent API no longer exposes `run(...)`, raw
+  request DTOs, or response-report types as intended public authoring vocabulary, and the
+  shipped Java example now executes in process through an explicit executor call.
+- Goal planning is now less noisy for agents and operators. `--print-goal-plan` no longer keeps
+  low-signal candidates alive solely because one capability summary happened to share a word with
+  the goal, and `suggestedIntentTags` now come from the strongest matching tasks instead of from
+  the entire catalog.
+- Protocol-catalog field-group metadata is no longer collapsed into one giant nested/plain support
+  file. The nested and plain descriptor registries now live in dedicated support types again, with
+  the thin facade left in place only as the local assembly seam.
+- Release-surface shell regressions no longer duplicate the same fake help/catalog/task/doctor
+  payloads in multiple scripts. The shared fake public-contract fixtures now live in one sourced
+  shell helper so verifier updates have one maintenance point instead of two drifting copies.
+
 ## [0.56.0] - 2026-04-23
 
 ### Changed
@@ -2191,7 +2216,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.56.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.57.0...HEAD
+[0.57.0]: https://github.com/resoltico/GridGrind/compare/v0.56.0...v0.57.0
 [0.56.0]: https://github.com/resoltico/GridGrind/compare/v0.55.0...v0.56.0
 [0.55.0]: https://github.com/resoltico/GridGrind/compare/v0.54.0...v0.55.0
 [0.54.0]: https://github.com/resoltico/GridGrind/compare/v0.53.0...v0.54.0

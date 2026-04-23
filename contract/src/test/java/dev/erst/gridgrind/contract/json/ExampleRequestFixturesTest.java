@@ -38,14 +38,15 @@ final class ExampleRequestFixturesTest {
     List<String> actualFiles =
         exampleFiles.stream().map(path -> path.getFileName().toString()).toList();
     List<String> expectedFiles =
-        GridGrindShippedExamples.examples().stream()
+        GridGrindShippedExamples.repositoryExamples().stream()
             .map(GridGrindShippedExamples.ShippedExample::fileName)
             .sorted()
             .toList();
 
     assertEquals(
         expectedFiles, actualFiles, "examples/ must mirror the generated registry exactly");
-    for (GridGrindShippedExamples.ShippedExample example : GridGrindShippedExamples.examples()) {
+    for (GridGrindShippedExamples.ShippedExample example :
+        GridGrindShippedExamples.repositoryExamples()) {
       Path exampleFile = examplesDirectory().resolve(example.fileName());
       byte[] expectedBytes = GridGrindJson.writeRequestBytes(example.plan());
       byte[] actualBytes = Files.readAllBytes(exampleFile);

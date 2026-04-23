@@ -9,7 +9,9 @@ import dev.erst.gridgrind.contract.json.GridGrindJson;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /** Focused invocation-path tests for stdin discovery and execution behavior. */
@@ -19,7 +21,7 @@ class GridGrindCliInvocationTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new GridGrindCli().run(new String[0], new ByteArrayInputStream(new byte[0]), stdout);
+        nonInteractiveCli().run(new String[0], new ByteArrayInputStream(new byte[0]), stdout);
 
     assertEquals(0, exitCode);
     String help = stdout.toString(StandardCharsets.UTF_8);
@@ -37,7 +39,7 @@ class GridGrindCliInvocationTest {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
-        new GridGrindCli()
+        nonInteractiveCli()
             .run(
                 new String[0],
                 new ByteArrayInputStream(
@@ -54,5 +56,52 @@ class GridGrindCliInvocationTest {
     assertEquals(0, exitCode);
     assertInstanceOf(
         GridGrindResponse.Success.class, GridGrindJson.readResponse(stdout.toByteArray()));
+  }
+
+  @Test
+  void noArgInvocationWithInteractiveStandardInputPrintsHelpWithoutReadingInput()
+      throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    try (InputStream blockingStdin =
+        new InputStream() {
+          @Override
+          public int read() throws IOException {
+            throw new AssertionError("interactive no-arg help must not read stdin");
+          }
+
+          @Override
+          public int read(byte[] b, int off, int len) throws IOException {
+            throw new AssertionError("interactive no-arg help must not read stdin");
+          }
+        }) {
+      int exitCode = interactiveCli().run(new String[0], blockingStdin, stdout);
+
+      assertEquals(0, exitCode);
+      String help = stdout.toString(StandardCharsets.UTF_8);
+      assertTrue(help.contains("Usage:"));
+      assertTrue(help.contains("--doctor-request"));
+      assertTrue(help.contains("--print-protocol-catalog"));
+    }
+  }
+
+  private static GridGrindCli nonInteractiveCli() {
+    return new GridGrindCli(
+        (ignoredRequest, ignoredBindings, ignoredSink) ->
+            new GridGrindResponse.Success(null, null, List.of(), List.of(), List.of()),
+        new CliRequestReader(),
+        new CliResponseWriter(),
+        new CliJournalWriter(),
+        () -> false);
+  }
+
+  private static GridGrindCli interactiveCli() {
+    return new GridGrindCli(
+        (ignoredRequest, ignoredBindings, ignoredSink) -> {
+          throw new AssertionError("interactive no-arg help must not execute a request");
+        },
+        new CliRequestReader(),
+        new CliResponseWriter(),
+        new CliJournalWriter(),
+        () -> true);
   }
 }

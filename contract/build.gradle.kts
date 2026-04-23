@@ -1,4 +1,6 @@
 import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.JavaExec
+import org.gradle.api.plugins.JavaPluginExtension
 import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
@@ -47,4 +49,17 @@ tasks.named<JacocoReport>("jacocoTestReport") {
 tasks.named<JacocoCoverageVerification>("jacocoTestCoverageVerification") {
     dependsOn(downstreamCoverageTaskPaths())
     executionData.from(downstreamCoverageExecutionData())
+}
+
+pluginManager.withPlugin("java") {
+    tasks.register<JavaExec>("writeRepositoryExamples") {
+        group = "documentation"
+        description =
+            "Regenerates the checkout-rooted examples/*.json fixtures from the contract-owned example registry."
+        dependsOn(tasks.named("testClasses"))
+        classpath =
+            project.the<JavaPluginExtension>().sourceSets.named("test").get().runtimeClasspath
+        mainClass = "dev.erst.gridgrind.contract.json.ExampleRequestFixturesWriter"
+        workingDir = rootProject.projectDir
+    }
 }

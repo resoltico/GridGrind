@@ -6,17 +6,21 @@ import dev.erst.gridgrind.contract.step.MutationStep;
 import java.util.Objects;
 
 /** One authored mutation step that receives a stable step id when added to a plan. */
-public record PlannedMutation(String stepId, Selector target, MutationAction action) {
-  public PlannedMutation {
+public final class PlannedMutation {
+  private final String stepId;
+  private final Selector target;
+  private final MutationAction action;
+
+  PlannedMutation(String stepId, Selector target, MutationAction action) {
     if (stepId != null && stepId.isBlank()) {
       throw new IllegalArgumentException("stepId must not be blank");
     }
-    Objects.requireNonNull(target, "target must not be null");
-    Objects.requireNonNull(action, "action must not be null");
+    this.stepId = stepId;
+    this.target = Objects.requireNonNull(target, "target must not be null");
+    this.action = Objects.requireNonNull(action, "action must not be null");
   }
 
-  /** Creates an unnamed authored mutation that will receive an auto-generated step id. */
-  public PlannedMutation(Selector target, MutationAction action) {
+  PlannedMutation(Selector target, MutationAction action) {
     this(null, target, action);
   }
 

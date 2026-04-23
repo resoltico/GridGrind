@@ -36,7 +36,7 @@ final class WorkbookAssetExamples {
 
   private WorkbookAssetExamples() {}
 
-  static GridGrindShippedExamples.ShippedExample arrayFormulaExample() {
+  static GridGrindShippedExamples.ShippedExample arrayFormulaExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "ARRAY_FORMULA",
         "array-formula-request.json",
@@ -90,11 +90,11 @@ final class WorkbookAssetExamples {
                 new InspectionQuery.GetArrayFormulas())));
   }
 
-  static GridGrindShippedExamples.ShippedExample sourceBackedInputExample() {
+  static GridGrindShippedExamples.ShippedExample sourceBackedInputExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "SOURCE_BACKED_INPUT",
         "source-backed-input-request.json",
-        "File-backed text, formula, and binary payload authoring without large inline literals.",
+        "Repo-asset-backed file text, formula, and binary payload authoring without large inline literals.",
         ExamplePlanSupport.plan(
             "source-backed-input-workflow",
             new WorkbookPlan.WorkbookSource.New(),
@@ -117,14 +117,14 @@ final class WorkbookAssetExamples {
                 new MutationAction.SetCell(
                     new CellInput.Text(
                         TextSourceInput.utf8File(
-                            "examples/source-backed-input-assets/title.txt")))),
+                            paths.asset("source-backed-input-assets/title.txt"))))),
             ExamplePlanSupport.step(
                 "set-total-formula-from-file",
                 ExamplePlanSupport.cell("Inputs", "B4"),
                 new MutationAction.SetCell(
                     new CellInput.Formula(
                         TextSourceInput.utf8File(
-                            "examples/source-backed-input-assets/total-formula.txt")))),
+                            paths.asset("source-backed-input-assets/total-formula.txt"))))),
             ExamplePlanSupport.step(
                 "attach-payload-from-file",
                 ExamplePlanSupport.sheet("Inputs"),
@@ -134,7 +134,8 @@ final class WorkbookAssetExamples {
                         "Inputs payload",
                         "inputs-payload.txt",
                         "open",
-                        BinarySourceInput.file("examples/source-backed-input-assets/payload.bin"),
+                        BinarySourceInput.file(
+                            paths.asset("source-backed-input-assets/payload.bin")),
                         new PictureDataInput(
                             ExcelPictureFormat.PNG,
                             BinarySourceInput.inlineBase64(ONE_PIXEL_PNG_BASE64)),
@@ -149,7 +150,7 @@ final class WorkbookAssetExamples {
                 new InspectionQuery.GetDrawingObjectPayload())));
   }
 
-  static GridGrindShippedExamples.ShippedExample signatureLineExample() {
+  static GridGrindShippedExamples.ShippedExample signatureLineExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "SIGNATURE_LINE",
         "signature-line-request.json",
@@ -157,8 +158,7 @@ final class WorkbookAssetExamples {
         ExamplePlanSupport.plan(
             "signature-line-workflow",
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs(
-                "cli/build/generated-workbooks/gridgrind-signature-line.xlsx"),
+            ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-signature-line.xlsx")),
             null,
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",
@@ -195,15 +195,15 @@ final class WorkbookAssetExamples {
                 new InspectionQuery.GetDrawingObjects())));
   }
 
-  static GridGrindShippedExamples.ShippedExample customXmlExample() {
+  static GridGrindShippedExamples.ShippedExample customXmlExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "CUSTOM_XML",
         "custom-xml-request.json",
-        "Existing-workbook custom-XML mapping discovery, XML export, and file-backed XML import.",
+        "Repo-asset-backed existing-workbook custom-XML mapping discovery, XML export, and file-backed XML import.",
         ExamplePlanSupport.plan(
             "custom-xml-workflow",
             new WorkbookPlan.WorkbookSource.ExistingFile(
-                "examples/custom-xml-assets/custom-xml-mapping.xlsx"),
+                paths.asset("custom-xml-assets/custom-xml-mapping.xlsx")),
             new WorkbookPlan.WorkbookPersistence.None(),
             null,
             ExamplePlanSupport.read(
@@ -222,7 +222,7 @@ final class WorkbookAssetExamples {
                     new CustomXmlImportInput(
                         new CustomXmlMappingLocator(1L, "CORSO_mapping"),
                         TextSourceInput.utf8File(
-                            "examples/custom-xml-assets/custom-xml-update.xml")))),
+                            paths.asset("custom-xml-assets/custom-xml-update.xml"))))),
             ExamplePlanSupport.read(
                 "read-imported-cells",
                 ExamplePlanSupport.cells("Foglio1", "A1", "B1", "C1", "D1"),
@@ -234,7 +234,7 @@ final class WorkbookAssetExamples {
                     new CustomXmlMappingLocator(1L, "CORSO_mapping"), true, "UTF-8"))));
   }
 
-  static GridGrindShippedExamples.ShippedExample chartExample() {
+  static GridGrindShippedExamples.ShippedExample chartExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "CHART",
         "chart-request.json",
@@ -242,7 +242,7 @@ final class WorkbookAssetExamples {
         ExamplePlanSupport.plan(
             "chart-workflow",
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs("cli/build/generated-workbooks/gridgrind-chart.xlsx"),
+            ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-chart.xlsx")),
             null,
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",
@@ -327,7 +327,7 @@ final class WorkbookAssetExamples {
                 new Assertion.Present())));
   }
 
-  static GridGrindShippedExamples.ShippedExample pivotExample() {
+  static GridGrindShippedExamples.ShippedExample pivotExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "PIVOT",
         "pivot-request.json",
@@ -335,7 +335,7 @@ final class WorkbookAssetExamples {
         ExamplePlanSupport.plan(
             "pivot-workflow",
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs("cli/build/generated-workbooks/gridgrind-pivot.xlsx"),
+            ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-pivot.xlsx")),
             null,
             ExamplePlanSupport.step(
                 "step-01-ensure-data",
@@ -403,15 +403,16 @@ final class WorkbookAssetExamples {
                 new InspectionQuery.AnalyzePivotTableHealth())));
   }
 
-  static GridGrindShippedExamples.ShippedExample packageSecurityInspectionExample() {
+  static GridGrindShippedExamples.ShippedExample packageSecurityInspectionExample(
+      ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "PACKAGE_SECURITY_INSPECTION",
         "package-security-inspect-request.json",
-        "Encrypted package open plus factual package-security and cell inspection.",
+        "Repo-asset-backed encrypted package open plus factual package-security and cell inspection.",
         ExamplePlanSupport.plan(
             "package-security-inspection-workflow",
             new WorkbookPlan.WorkbookSource.ExistingFile(
-                "cli/build/generated-workbooks/gridgrind-package-security.xlsx",
+                paths.asset("package-security-assets/gridgrind-package-security.xlsx"),
                 new OoxmlOpenSecurityInput("GridGrind-2026")),
             new WorkbookPlan.WorkbookPersistence.None(),
             null,

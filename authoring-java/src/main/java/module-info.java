@@ -1,5 +1,5 @@
 module dev.erst.gridgrind.authoring {
-  requires transitive dev.erst.gridgrind.executor;
+  requires transitive dev.erst.gridgrind.contract;
 
   exports dev.erst.gridgrind.authoring;
 }
