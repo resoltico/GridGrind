@@ -190,9 +190,18 @@ gh pr diff <N> --name-only
 gh pr view <N> --json number,state,mergeStateStatus,statusCheckRollup,url
 ```
 
+If `gh pr diff <N> --name-only` fails with GitHub's 300-file diff limit, fall back to the
+paginated pull-request files API instead of skipping the scope check:
+
+```bash
+REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+gh api --paginate repos/$REPO/pulls/<N>/files --jq '.[].filename'
+```
+
 Treat the PR itself as a second scope-verification checkpoint:
 
-- `gh pr diff <N> --name-only` must match the intended release file set.
+- The verified PR file list must match the intended release file set, whether it came from
+  `gh pr diff <N> --name-only` or the paginated pull-request files API fallback.
 - If the PR diff is missing files or includes unintended files, fix the release branch before
   waiting on CI or merging.
 - Every new commit pushed to the release branch reopens both the Step 2 staging checkpoint and
