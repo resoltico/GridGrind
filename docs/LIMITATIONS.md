@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.55.0"
+version: "0.56.0"
 domain: LIMITATIONS
-updated: "2026-04-22"
+updated: "2026-04-23"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width, zoom]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit", "what is the zoom limit"]
@@ -28,8 +28,12 @@ change to a limit value propagates consistently across all three surfaces.
 **Primary references:**
 - Apache POI 5.5.1 SpreadsheetVersion:
   https://poi.apache.org/apidocs/dev/org/apache/poi/ss/SpreadsheetVersion.html
+- Apache POI 5.5.1 busy developers quick guide:
+  https://poi.apache.org/components/spreadsheet/quick-guide.html
 - Apache POI spreadsheet limitations:
   https://poi.apache.org/components/spreadsheet/limitations.html
+- Apache POI REL_5_5_1 `XSSFSheet.java`:
+  https://github.com/apache/poi/blob/REL_5_5_1/poi-ooxml/src/main/java/org/apache/poi/xssf/usermodel/XSSFSheet.java
 - Microsoft Excel specifications and limits (.xlsx):
   https://support.microsoft.com/en-us/office/excel-specifications-and-limits-1672b34d-7043-467e-8e27-269d656771c3
 
@@ -169,9 +173,17 @@ and default row-height values can still be reported above `409.0` instead of bei
 
 ## Excel / Apache POI Structural Limits
 
-These are hard ceilings of the `.xlsx` format. They are reflected in
-`SpreadsheetVersion.EXCEL2007` in Apache POI 5.5.1. GridGrind already preflights some of them
-where the public request model exposes direct row/column addresses, spans, or print bands. The
+This section mixes two kinds of upstream-driven constraints:
+- workbook-shape ceilings from the `.xlsx` format itself. Many, such as max rows, max columns, max
+  text length, max styles, and max function arguments, are reflected in
+  `SpreadsheetVersion.EXCEL2007` in Apache POI 5.5.1.
+- product-owned safety limits that GridGrind adds because Apache POI 5.5.1 does not reliably
+  normalize some structural edits.
+
+Where POI 5.5.1 does not expose a dedicated constant (for example, hyperlink count, formula
+length, or nested-function depth), this registry cites the published Excel limit directly instead
+of implying a POI-side constant. GridGrind already preflights some workbook-shape ceilings where
+the public request model exposes direct row/column addresses, spans, or print bands. The
 remaining entries in this section should be read as format ceilings, not a promise that every path
 fails early before POI sees an oversized workbook shape.
 
@@ -241,7 +253,7 @@ effective limit when writing via GridGrind.
 
 | Field | Value |
 |:------|:------|
-| **Category** | Excel/POI |
+| **Category** | Excel format |
 | **Limit** | 65,530 |
 | **Excel spec** | 65,530 |
 
@@ -251,7 +263,7 @@ effective limit when writing via GridGrind.
 
 | Field | Value |
 |:------|:------|
-| **Category** | Excel/POI |
+| **Category** | Excel format |
 | **Limit** | 8,192 characters |
 | **Excel spec** | 8,192 |
 
@@ -261,7 +273,7 @@ effective limit when writing via GridGrind.
 
 | Field | Value |
 |:------|:------|
-| **Category** | Excel/POI |
+| **Category** | Excel format |
 | **Limit** | 64 |
 | **Excel spec** | 64 |
 

@@ -18,6 +18,7 @@ import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.NamedRangeTarget;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
+import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
@@ -168,6 +169,52 @@ final class WorkbookWorkflowExamples {
                 "summary-cells",
                 ExamplePlanSupport.cells("Summary", "A1"),
                 new InspectionQuery.GetCells())));
+  }
+
+  static GridGrindShippedExamples.ShippedExample sheetMaintenanceExample() {
+    return ExamplePlanSupport.example(
+        "SHEET_MAINTENANCE",
+        "sheet-maintenance-request.json",
+        "Copy-sheet maintenance walkthrough with comment reread and workbook findings.",
+        ExamplePlanSupport.plan(
+            "sheet-maintenance-workflow",
+            new WorkbookPlan.WorkbookSource.New(),
+            ExamplePlanSupport.saveAs(
+                "cli/build/generated-workbooks/gridgrind-sheet-maintenance.xlsx"),
+            null,
+            ExamplePlanSupport.step(
+                "step-01-ensure-template",
+                ExamplePlanSupport.sheet("Template"),
+                new MutationAction.EnsureSheet()),
+            ExamplePlanSupport.step(
+                "step-02-set-range",
+                ExamplePlanSupport.range("Template", "A1:B3"),
+                new MutationAction.SetRange(
+                    ExamplePlanSupport.rows(
+                        ExamplePlanSupport.row(
+                            ExamplePlanSupport.text("Owner"), ExamplePlanSupport.text("Status")),
+                        ExamplePlanSupport.row(
+                            ExamplePlanSupport.text("Ada"), ExamplePlanSupport.text("Ready")),
+                        ExamplePlanSupport.row(
+                            ExamplePlanSupport.text("Lin"), ExamplePlanSupport.text("Review"))))),
+            ExamplePlanSupport.step(
+                "step-03-set-comment",
+                ExamplePlanSupport.cell("Template", "A1"),
+                new MutationAction.SetComment(
+                    new CommentInput(
+                        TextSourceInput.inline("Template owner column"), "GridGrind", false))),
+            ExamplePlanSupport.step(
+                "step-04-copy-sheet",
+                ExamplePlanSupport.sheet("Template"),
+                new MutationAction.CopySheet("Template Copy", null)),
+            ExamplePlanSupport.read(
+                "step-05-read-comments",
+                new CellSelector.AllUsedInSheet("Template Copy"),
+                new InspectionQuery.GetComments()),
+            ExamplePlanSupport.read(
+                "step-06-read-workbook-findings",
+                ExamplePlanSupport.workbook(),
+                new InspectionQuery.AnalyzeWorkbookFindings())));
   }
 
   static GridGrindShippedExamples.ShippedExample assertionExample() {

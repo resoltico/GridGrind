@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.55.0"
+version: "0.56.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-04-22"
+updated: "2026-04-23"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
@@ -22,7 +22,10 @@ core value shapes.
 
 The long-form step reference is intentionally split. This document owns the request envelope and
 execution policy only; the detailed mutation, assertion, and inspection sections live in the
-focused references linked above.
+focused references linked above. The Java authoring layer emits this same envelope through
+`GridGrindPlan.toPlan()`, `toJsonBytes()`, and `toJsonString()`. See
+[JAVA_AUTHORING.md](./JAVA_AUTHORING.md) when you want to build the request from Java instead of
+hand-writing JSON.
 
 ## Source-Backed Authored Inputs
 
@@ -46,7 +49,9 @@ Binary-bearing mutation fields use `BinarySourceInput`:
 { "type": "STANDARD_INPUT" }
 ```
 
-- Relative `UTF8_FILE` and `FILE` paths resolve from the current working directory.
+- When the CLI reads a request via `--request <path>`, relative `UTF8_FILE` and `FILE` paths
+  resolve from that request file's directory. Without `--request`, they resolve in the current
+  execution environment.
 - `STANDARD_INPUT` authored values require `--request <path>` on the CLI because stdin cannot
   carry both the request JSON and authored input content in the same invocation.
 - The request JSON transport is capped at 16 MiB. Large authored text and binary payloads belong
@@ -87,6 +92,12 @@ Every tagged request union uses `type` as its discriminator field: `source`, `pe
 Every step object carries exactly one of `action`, `assertion`, or `query`. Step kind is inferred
 from that field; request steps do not carry a separate `step.type`.
 
+When the CLI reads the request from `--request <path>`, relative request-owned paths inside the
+JSON follow the request file directory. That includes `source.path`, `persistence.path`,
+source-backed `UTF8_FILE` / `FILE` payloads, `formulaEnvironment.externalWorkbooks[*].path`, and
+`persistence.security.signature.pkcs12Path`. The CLI flags themselves are separate: `--request`
+and `--response` still resolve from the shell working directory.
+
 ### Formula Environment
 
 `formulaEnvironment` is optional. Omit it for the default evaluator. Supply it when server-side
@@ -121,7 +132,7 @@ references, or template-backed UDFs.
 
 | Field | Required | Description |
 |:------|:---------|:------------|
-| `externalWorkbooks` | No | Workbook-name to path bindings used to satisfy formulas such as `[rates.xlsx]Sheet1!A1`. |
+| `externalWorkbooks` | No | Workbook-name to path bindings used to satisfy formulas such as `[rates.xlsx]Sheet1!A1`. Each `path` follows the same request-owned path rule described above. |
 | `missingWorkbookPolicy` | No | `ERROR` or `USE_CACHED_VALUE`. Defaults to `ERROR`. |
 | `udfToolpacks` | No | Named collections of template-backed UDFs. |
 
@@ -373,7 +384,8 @@ Open an existing `.xlsx` file.
 
 Open an encrypted existing `.xlsx` package by supplying `source.security.password`.
 
-Relative `path` values resolve from the current working directory.
+When the CLI reads the request via `--request <path>`, relative `path` values resolve from that
+request file's directory. Without `--request`, they resolve in the current execution environment.
 
 GridGrind supports `.xlsx` only. Paths ending in `.xls`, `.xlsm`, `.xlsb`, or any other
 non-`.xlsx` extension are rejected as invalid requests.
@@ -419,9 +431,12 @@ Write the workbook to the given path, creating parent directories as needed.
 `security.signature` applies OOXML package signing during persistence using a PKCS#12 keystore.
 `pkcs12Path` must point to a readable `.p12` or `.pfx` file, and `keystorePassword` plus
 `keyPassword` must unlock the selected key entry. Omit `alias` to use the sole keystore entry or
-the first key entry POI can resolve.
+the first key entry POI can resolve. `pkcs12Path` follows the same request-owned path rule as
+other request file paths.
 
-Relative `path` values resolve from the current working directory.
+When the CLI reads the request via `--request <path>`, relative persistence `path` values resolve
+from that request file's directory. Without `--request`, they resolve in the current execution
+environment.
 
 The save path must end in `.xlsx`.
 

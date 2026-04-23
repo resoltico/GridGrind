@@ -22,22 +22,29 @@ final class OoxmlPackageSecurityConverter {
 
   static ExcelOoxmlPersistenceOptions toExcelPersistenceOptions(
       OoxmlPersistenceSecurityInput input) {
+    return toExcelPersistenceOptions(input, Path.of(""));
+  }
+
+  static ExcelOoxmlPersistenceOptions toExcelPersistenceOptions(
+      OoxmlPersistenceSecurityInput input, Path workingDirectory) {
     if (input == null) {
       return new ExcelOoxmlPersistenceOptions(null, null);
     }
     return new ExcelOoxmlPersistenceOptions(
-        toExcelEncryptionOptions(input.encryption()), toExcelSignatureOptions(input.signature()));
+        toExcelEncryptionOptions(input.encryption()),
+        toExcelSignatureOptions(input.signature(), workingDirectory));
   }
 
   private static ExcelOoxmlEncryptionOptions toExcelEncryptionOptions(OoxmlEncryptionInput input) {
     return input == null ? null : new ExcelOoxmlEncryptionOptions(input.password(), input.mode());
   }
 
-  private static ExcelOoxmlSignatureOptions toExcelSignatureOptions(OoxmlSignatureInput input) {
+  private static ExcelOoxmlSignatureOptions toExcelSignatureOptions(
+      OoxmlSignatureInput input, Path workingDirectory) {
     return input == null
         ? null
         : new ExcelOoxmlSignatureOptions(
-            Path.of(input.pkcs12Path()),
+            ExecutionRequestPaths.normalizePath(input.pkcs12Path(), workingDirectory),
             input.keystorePassword(),
             input.keyPassword(),
             input.alias(),

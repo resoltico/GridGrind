@@ -183,7 +183,7 @@ final class SemanticSelectorResolver {
   }
 
   private boolean matchesKeyCell(ExcelCellSnapshot snapshot, CellInput expectedValue) {
-    GridGrindResponse.CellReport report = InspectionResultConverter.toCellReport(snapshot);
+    GridGrindResponse.CellReport report = InspectionResultCellReportSupport.toCellReport(snapshot);
     if (expectedValue instanceof CellInput.Blank) {
       return report instanceof GridGrindResponse.CellReport.BlankReport;
     }

@@ -16,12 +16,17 @@ final class FormulaEnvironmentConverter {
   private FormulaEnvironmentConverter() {}
 
   static ExcelFormulaEnvironment toExcelFormulaEnvironment(FormulaEnvironmentInput input) {
+    return toExcelFormulaEnvironment(input, Path.of(""));
+  }
+
+  static ExcelFormulaEnvironment toExcelFormulaEnvironment(
+      FormulaEnvironmentInput input, Path workingDirectory) {
     if (input == null) {
       return ExcelFormulaEnvironment.defaults();
     }
     return new ExcelFormulaEnvironment(
         input.externalWorkbooks().stream()
-            .map(FormulaEnvironmentConverter::toExcelFormulaExternalWorkbookBinding)
+            .map(binding -> toExcelFormulaExternalWorkbookBinding(binding, workingDirectory))
             .toList(),
         toExcelMissingWorkbookPolicy(input.missingWorkbookPolicy()),
         input.udfToolpacks().stream()
@@ -30,8 +35,9 @@ final class FormulaEnvironmentConverter {
   }
 
   private static ExcelFormulaExternalWorkbookBinding toExcelFormulaExternalWorkbookBinding(
-      FormulaExternalWorkbookInput input) {
-    return new ExcelFormulaExternalWorkbookBinding(input.workbookName(), Path.of(input.path()));
+      FormulaExternalWorkbookInput input, Path workingDirectory) {
+    return new ExcelFormulaExternalWorkbookBinding(
+        input.workbookName(), ExecutionRequestPaths.normalizePath(input.path(), workingDirectory));
   }
 
   private static ExcelFormulaMissingWorkbookPolicy toExcelMissingWorkbookPolicy(

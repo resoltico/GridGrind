@@ -68,4 +68,25 @@ class OoxmlPackageSecurityConverterTest {
     assertTrue(OoxmlPackageSecurityConverter.toExcelPersistenceOptions(null).isEmpty());
     assertNull(OoxmlPackageSecurityConverter.toExcelPersistenceOptions(encryptionOnly).signature());
   }
+
+  @Test
+  void rootsRelativeSigningMaterialPathsInTheProvidedWorkingDirectory() {
+    OoxmlPersistenceSecurityInput input =
+        new OoxmlPersistenceSecurityInput(
+            null,
+            new OoxmlSignatureInput(
+                "keys/signing-material.p12",
+                "keystore-pass",
+                "key-pass",
+                "gridgrind-signing",
+                ExcelOoxmlSignatureDigestAlgorithm.SHA256,
+                "GridGrind signing test"));
+    Path workingDirectory = Path.of("/tmp/gridgrind-request-bundle");
+
+    assertEquals(
+        workingDirectory.resolve("keys/signing-material.p12").normalize(),
+        OoxmlPackageSecurityConverter.toExcelPersistenceOptions(input, workingDirectory)
+            .signature()
+            .pkcs12Path());
+  }
 }

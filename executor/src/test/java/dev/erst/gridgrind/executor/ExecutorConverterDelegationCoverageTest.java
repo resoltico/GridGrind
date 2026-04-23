@@ -4,11 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
 import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
 import dev.erst.gridgrind.contract.dto.RichTextRunInput;
+import dev.erst.gridgrind.contract.selector.CellSelector;
+import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
@@ -48,13 +51,14 @@ class ExecutorConverterDelegationCoverageTest {
   }
 
   @Test
-  void inspectionResultConverterDelegatesRemainCovered() {
+  void inspectionResultConversionSupportDelegatesRemainCovered() {
     ExcelDrawingMarker marker = new ExcelDrawingMarker(1, 2, 3, 4);
-    DrawingMarkerReport markerReport = InspectionResultConverter.toDrawingMarkerReport(marker);
+    DrawingMarkerReport markerReport =
+        InspectionResultDrawingReportSupport.toDrawingMarkerReport(marker);
     DrawingAnchorReport.TwoCell anchorReport =
         assertInstanceOf(
             DrawingAnchorReport.TwoCell.class,
-            InspectionResultConverter.toDrawingAnchorReport(
+            InspectionResultDrawingReportSupport.toDrawingAnchorReport(
                 new ExcelDrawingAnchor.TwoCell(
                     marker,
                     new ExcelDrawingMarker(5, 6, 7, 8),
@@ -64,7 +68,7 @@ class ExecutorConverterDelegationCoverageTest {
     assertEquals(5, anchorReport.to().columnIndex());
     assertEquals(
         "Calibri",
-        InspectionResultConverter.toCellFontReport(
+        InspectionResultCellReportSupport.toCellFontReport(
                 new ExcelCellFontSnapshot(
                     true,
                     false,
@@ -76,9 +80,27 @@ class ExecutorConverterDelegationCoverageTest {
             .fontName());
     assertEquals(
         ExcelBorderStyle.THIN,
-        InspectionResultConverter.toCellBorderSideReport(
+        InspectionResultCellReportSupport.toCellBorderSideReport(
                 new ExcelBorderSideSnapshot(
                     ExcelBorderStyle.THIN, new ExcelColorSnapshot("#112233")))
             .style());
+  }
+
+  @Test
+  void familyMutationConvertersReturnNullForOutOfFamilyActions() {
+    MutationAction.SetCell setCell = new MutationAction.SetCell(new CellInput.Blank());
+
+    assertNull(
+        WorkbookCommandWorkbookMutationConverter.toCommand(
+            new CellSelector.ByAddress("Budget", "A1"), setCell));
+    assertNull(
+        WorkbookCommandCellMutationConverter.toCommand(
+            new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()));
+    assertNull(
+        WorkbookCommandDrawingMutationConverter.toCommand(
+            new CellSelector.ByAddress("Budget", "A1"), setCell));
+    assertNull(
+        WorkbookCommandStructuredMutationConverter.toCommand(
+            new CellSelector.ByAddress("Budget", "A1"), setCell));
   }
 }

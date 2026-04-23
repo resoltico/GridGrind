@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.catalog;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -21,7 +22,7 @@ class GridGrindTaskCatalogTest {
     assertEquals(catalog, decoded);
     assertTrue(GridGrindTaskCatalog.entryFor("DASHBOARD").isPresent());
     assertEquals(
-        "mutationActionTypes:SET_CHART",
+        "inspectionQueryTypes:GET_CHARTS",
         GridGrindTaskCatalog.entryFor("DASHBOARD")
             .orElseThrow()
             .phases()
@@ -32,6 +33,10 @@ class GridGrindTaskCatalogTest {
     assertTrue(GridGrindTaskCatalog.entryFor("TABULAR_REPORT").isPresent());
     assertTrue(GridGrindTaskCatalog.entryFor("AUDIT_EXISTING_WORKBOOK").isPresent());
     assertTrue(GridGrindTaskCatalog.entryFor("DATA_ENTRY_WORKFLOW").isPresent());
+    assertTrue(GridGrindTaskCatalog.entryFor("CUSTOM_XML_WORKFLOW").isPresent());
+    assertTrue(GridGrindTaskCatalog.entryFor("PIVOT_REPORT").isPresent());
+    assertTrue(GridGrindTaskCatalog.entryFor("DRAWING_AND_SIGNATURE_WORKFLOW").isPresent());
+    assertTrue(GridGrindTaskCatalog.entryFor("WORKBOOK_MAINTENANCE").isPresent());
     assertTrue(GridGrindTaskCatalog.entryFor("BOGUS_TASK").isEmpty());
   }
 
@@ -137,5 +142,11 @@ class GridGrindTaskCatalogTest {
         danglingReference
             .getMessage()
             .contains("Task BROKEN references unknown protocol capability"));
+  }
+
+  @Test
+  void taskCatalogValidationAcceptsTheBuiltInCatalog() {
+    assertDoesNotThrow(
+        () -> GridGrindTaskCatalog.validateCapabilityReferences(GridGrindTaskCatalog.catalog()));
   }
 }

@@ -12,12 +12,19 @@ final class ExecutionRequestPaths {
 
   static ExcelOoxmlPersistenceOptions persistenceOptions(
       WorkbookPlan.WorkbookPersistence persistence) {
+    return persistenceOptions(persistence, Path.of(""));
+  }
+
+  static ExcelOoxmlPersistenceOptions persistenceOptions(
+      WorkbookPlan.WorkbookPersistence persistence, Path workingDirectory) {
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ -> new ExcelOoxmlPersistenceOptions(null, null);
       case WorkbookPlan.WorkbookPersistence.OverwriteSource overwrite ->
-          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(overwrite.security());
+          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
+              overwrite.security(), workingDirectory);
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(saveAs.security());
+          OoxmlPackageSecurityConverter.toExcelPersistenceOptions(
+              saveAs.security(), workingDirectory);
     };
   }
 
@@ -39,19 +46,33 @@ final class ExecutionRequestPaths {
 
   static String persistencePath(
       WorkbookPlan.WorkbookSource source, WorkbookPlan.WorkbookPersistence persistence) {
-    return normalizedPersistencePath(source, persistence);
+    return persistencePath(source, persistence, Path.of(""));
+  }
+
+  static String persistencePath(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      Path workingDirectory) {
+    return normalizedPersistencePath(source, persistence, workingDirectory);
   }
 
   static WorkbookLocation workbookLocationFor(
       WorkbookPlan.WorkbookSource source, WorkbookPlan.WorkbookPersistence persistence) {
-    String persistencePath = normalizedPersistencePath(source, persistence);
+    return workbookLocationFor(source, persistence, Path.of(""));
+  }
+
+  static WorkbookLocation workbookLocationFor(
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      Path workingDirectory) {
+    String persistencePath = normalizedPersistencePath(source, persistence, workingDirectory);
     if (persistencePath != null) {
       return new WorkbookLocation.StoredWorkbook(Path.of(persistencePath));
     }
     return switch (source) {
       case WorkbookPlan.WorkbookSource.New _ -> new WorkbookLocation.UnsavedWorkbook();
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
-          new WorkbookLocation.StoredWorkbook(normalizePath(existingFile.path()));
+          new WorkbookLocation.StoredWorkbook(normalizePath(existingFile.path(), workingDirectory));
     };
   }
 
@@ -71,26 +92,40 @@ final class ExecutionRequestPaths {
   }
 
   static String reqSourcePath(WorkbookPlan request) {
+    return reqSourcePath(request, Path.of(""));
+  }
+
+  static String reqSourcePath(WorkbookPlan request, Path workingDirectory) {
     return switch (request.source()) {
       case WorkbookPlan.WorkbookSource.New _ -> null;
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
-          normalizePath(existingFile.path()).toString();
+          normalizePath(existingFile.path(), workingDirectory).toString();
     };
   }
 
   static Path normalizePath(String path) {
-    return Path.of(path).toAbsolutePath().normalize();
+    return normalizePath(path, Path.of(""));
+  }
+
+  static Path normalizePath(String path, Path workingDirectory) {
+    Path candidate = Path.of(path);
+    if (candidate.isAbsolute()) {
+      return candidate.toAbsolutePath().normalize();
+    }
+    return workingDirectory.toAbsolutePath().normalize().resolve(candidate).normalize();
   }
 
   private static String normalizedPersistencePath(
-      WorkbookPlan.WorkbookSource source, WorkbookPlan.WorkbookPersistence persistence) {
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      Path workingDirectory) {
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ -> null;
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs ->
-          normalizePath(saveAs.path()).toString();
+          normalizePath(saveAs.path(), workingDirectory).toString();
       case WorkbookPlan.WorkbookPersistence.OverwriteSource _ ->
           source instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile
-              ? normalizePath(existingFile.path()).toString()
+              ? normalizePath(existingFile.path(), workingDirectory).toString()
               : null;
     };
   }

@@ -75,7 +75,7 @@ final class InspectionResultAnalysisReportSupport {
                 entry ->
                     new GridGrindResponse.NamedRangeSurfaceEntryReport(
                         entry.name(),
-                        InspectionResultConverter.toNamedRangeScope(entry.scope()),
+                        InspectionResultWorkbookCoreReportSupport.toNamedRangeScope(entry.scope()),
                         entry.refersToFormula(),
                         switch (entry.kind()) {
                           case RANGE -> GridGrindResponse.NamedRangeBackingKind.RANGE;
@@ -202,7 +202,8 @@ final class InspectionResultAnalysisReportSupport {
           new GridGrindResponse.AnalysisLocationReport.Range(range.sheetName(), range.range());
       case WorkbookAnalysis.AnalysisLocation.NamedRange namedRange ->
           new GridGrindResponse.AnalysisLocationReport.NamedRange(
-              namedRange.name(), InspectionResultConverter.toNamedRangeScope(namedRange.scope()));
+              namedRange.name(),
+              InspectionResultWorkbookCoreReportSupport.toNamedRangeScope(namedRange.scope()));
     };
   }
 

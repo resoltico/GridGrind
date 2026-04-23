@@ -22,14 +22,24 @@ final class ExecutionWorkbookSupport {
   ExcelWorkbook openWorkbook(
       WorkbookPlan.WorkbookSource source, FormulaEnvironmentInput formulaEnvironment)
       throws IOException {
+    return openWorkbook(source, formulaEnvironment, Path.of(""));
+  }
+
+  ExcelWorkbook openWorkbook(
+      WorkbookPlan.WorkbookSource source,
+      FormulaEnvironmentInput formulaEnvironment,
+      Path workingDirectory)
+      throws IOException {
     return switch (source) {
       case WorkbookPlan.WorkbookSource.New _ ->
           ExcelWorkbook.create(
-              FormulaEnvironmentConverter.toExcelFormulaEnvironment(formulaEnvironment));
+              FormulaEnvironmentConverter.toExcelFormulaEnvironment(
+                  formulaEnvironment, workingDirectory));
       case WorkbookPlan.WorkbookSource.ExistingFile existingFile ->
           ExcelWorkbook.open(
-              ExecutionRequestPaths.normalizePath(existingFile.path()),
-              FormulaEnvironmentConverter.toExcelFormulaEnvironment(formulaEnvironment),
+              ExecutionRequestPaths.normalizePath(existingFile.path(), workingDirectory),
+              FormulaEnvironmentConverter.toExcelFormulaEnvironment(
+                  formulaEnvironment, workingDirectory),
               OoxmlPackageSecurityConverter.toExcelOpenOptions(existingFile.security()));
     };
   }
@@ -39,15 +49,24 @@ final class ExecutionWorkbookSupport {
       WorkbookPlan.WorkbookSource source,
       WorkbookPlan.WorkbookPersistence persistence)
       throws IOException {
+    return persistWorkbook(workbook, source, persistence, Path.of(""));
+  }
+
+  GridGrindResponse.PersistenceOutcome persistWorkbook(
+      ExcelWorkbook workbook,
+      WorkbookPlan.WorkbookSource source,
+      WorkbookPlan.WorkbookPersistence persistence,
+      Path workingDirectory)
+      throws IOException {
     Objects.requireNonNull(workbook, "workbook must not be null");
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ ->
           new GridGrindResponse.PersistenceOutcome.NotSaved();
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> {
-        Path executionPath = ExecutionRequestPaths.normalizePath(saveAs.path());
+        Path executionPath = ExecutionRequestPaths.normalizePath(saveAs.path(), workingDirectory);
         workbook.save(
             executionPath,
-            ExecutionRequestPaths.persistenceOptions(saveAs),
+            ExecutionRequestPaths.persistenceOptions(saveAs, workingDirectory),
             tempFileFactory::createTempFile);
         yield new GridGrindResponse.PersistenceOutcome.SavedAs(
             saveAs.path(), executionPath.toString());
@@ -56,10 +75,11 @@ final class ExecutionWorkbookSupport {
         if (!(source instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
           throw new IllegalArgumentException("OVERWRITE persistence requires an EXISTING source");
         }
-        Path executionPath = ExecutionRequestPaths.normalizePath(existingFile.path());
+        Path executionPath =
+            ExecutionRequestPaths.normalizePath(existingFile.path(), workingDirectory);
         workbook.save(
             executionPath,
-            ExecutionRequestPaths.persistenceOptions(overwrite),
+            ExecutionRequestPaths.persistenceOptions(overwrite, workingDirectory),
             tempFileFactory::createTempFile);
         yield new GridGrindResponse.PersistenceOutcome.Overwritten(
             existingFile.path(), executionPath.toString());
@@ -72,19 +92,28 @@ final class ExecutionWorkbookSupport {
       WorkbookPlan.WorkbookPersistence persistence,
       WorkbookPlan.WorkbookSource source)
       throws IOException {
+    return persistStreamingWorkbook(materializedPath, persistence, source, Path.of(""));
+  }
+
+  GridGrindResponse.PersistenceOutcome persistStreamingWorkbook(
+      Path materializedPath,
+      WorkbookPlan.WorkbookPersistence persistence,
+      WorkbookPlan.WorkbookSource source,
+      Path workingDirectory)
+      throws IOException {
     Objects.requireNonNull(materializedPath, "materializedPath must not be null");
     return switch (persistence) {
       case WorkbookPlan.WorkbookPersistence.None _ ->
           new GridGrindResponse.PersistenceOutcome.NotSaved();
       case WorkbookPlan.WorkbookPersistence.SaveAs saveAs -> {
-        Path executionPath = ExecutionRequestPaths.normalizePath(saveAs.path());
+        Path executionPath = ExecutionRequestPaths.normalizePath(saveAs.path(), workingDirectory);
         ExcelOoxmlPackageSecuritySupport.persistMaterializedWorkbook(
             materializedPath,
             executionPath,
             ExecutionRequestPaths.sourcePackageSecurity(source),
             ExecutionRequestPaths.sourceEncryptionPassword(source),
             true,
-            ExecutionRequestPaths.persistenceOptions(saveAs));
+            ExecutionRequestPaths.persistenceOptions(saveAs, workingDirectory));
         yield new GridGrindResponse.PersistenceOutcome.SavedAs(
             saveAs.path(), executionPath.toString());
       }
@@ -92,14 +121,15 @@ final class ExecutionWorkbookSupport {
         if (!(source instanceof WorkbookPlan.WorkbookSource.ExistingFile existingFile)) {
           throw new IllegalArgumentException("OVERWRITE persistence requires an EXISTING source");
         }
-        Path executionPath = ExecutionRequestPaths.normalizePath(existingFile.path());
+        Path executionPath =
+            ExecutionRequestPaths.normalizePath(existingFile.path(), workingDirectory);
         ExcelOoxmlPackageSecuritySupport.persistMaterializedWorkbook(
             materializedPath,
             executionPath,
             ExecutionRequestPaths.sourcePackageSecurity(source),
             ExecutionRequestPaths.sourceEncryptionPassword(source),
             true,
-            ExecutionRequestPaths.persistenceOptions(overwrite));
+            ExecutionRequestPaths.persistenceOptions(overwrite, workingDirectory));
         yield new GridGrindResponse.PersistenceOutcome.Overwritten(
             existingFile.path(), executionPath.toString());
       }

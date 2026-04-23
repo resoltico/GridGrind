@@ -58,7 +58,10 @@ RETRIEVAL_HINTS:
 
 - New to GridGrind: [docs/QUICK_START.md](docs/QUICK_START.md)
 - Want a concrete example first: `gridgrind --print-example BUDGET`, or [examples/budget-request.json](examples/budget-request.json) when you are already in a repo checkout
+- Want a starter scaffold for a common workbook job: `gridgrind --print-task-catalog`, `gridgrind --print-task-plan PIVOT_REPORT`, or `gridgrind --print-goal-plan "repair workbook comments and copy sheets safely"`
+- Want Java instead of hand-written JSON: [docs/JAVA_AUTHORING.md](docs/JAVA_AUTHORING.md) and [examples/java-authoring-workflow.java](examples/java-authoring-workflow.java)
 - Want a no-save health-check example: [examples/workbook-health-request.json](examples/workbook-health-request.json)
+- Want a copy-sheet maintenance example: [examples/sheet-maintenance-request.json](examples/sheet-maintenance-request.json)
 - Want an existing-workbook XML import/export example: [examples/custom-xml-request.json](examples/custom-xml-request.json)
 - Want a drawing and signature-line example: [examples/signature-line-request.json](examples/signature-line-request.json)
 - Need one operation or type fast without dumping the whole catalog: `gridgrind --print-protocol-catalog --search chart`
@@ -78,6 +81,12 @@ Yes. GridGrind can start from a new workbook or open an existing `.xlsx` file.
 ### Do I need to start from scratch?
 
 No. GridGrind ships built-in example generators, checked-in example files, and a quick start, so you can start from something close to your own workbook job and adjust it.
+
+### Can I author workflows in Java instead of raw JSON?
+
+Yes. The `authoring-java` module builds the same canonical `WorkbookPlan` used by the CLI and
+JSON protocol, and can either serialize JSON or run in-process. See
+[docs/JAVA_AUTHORING.md](docs/JAVA_AUTHORING.md).
 
 ### What kinds of workbook work fit best?
 

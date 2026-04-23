@@ -13,23 +13,29 @@ public final class GridGrindTaskPlanner {
 
   /** Returns a starter task-plan scaffold for one stable task id. */
   public static TaskPlanTemplate templateFor(String taskId) {
-    return planFor(
-        GridGrindTaskCatalog.entryFor(taskId)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Unknown task id for task planning: "
-                            + CatalogRecordValidation.requireNonBlank(taskId, "taskId"))));
+    return GridGrindTaskDefinitions.definitionFor(taskId)
+        .map(TaskDefinition::starterTemplate)
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Unknown task id for task planning: "
+                        + CatalogRecordValidation.requireNonBlank(taskId, "taskId")));
   }
 
   /** Returns a starter task-plan scaffold for one task entry. */
   public static TaskPlanTemplate planFor(TaskEntry task) {
     TaskEntry taskEntry = java.util.Objects.requireNonNull(task, "task must not be null");
-    WorkbookPlan.WorkbookSource source = sourceFor(taskEntry);
-    WorkbookPlan.WorkbookPersistence persistence = persistenceFor(taskEntry, source);
+    return GridGrindTaskDefinitions.definitionFor(taskEntry.id())
+        .map(TaskDefinition::starterTemplate)
+        .orElseGet(() -> genericTemplateFor(taskEntry));
+  }
+
+  private static TaskPlanTemplate genericTemplateFor(TaskEntry task) {
+    WorkbookPlan.WorkbookSource source = sourceFor(task);
+    WorkbookPlan.WorkbookPersistence persistence = persistenceFor(task, source);
     WorkbookPlan requestTemplate = new WorkbookPlan(source, persistence, List.of());
     return new TaskPlanTemplate(
-        GridGrindProtocolVersion.current(), taskEntry, requestTemplate, authoringNotes(taskEntry));
+        GridGrindProtocolVersion.current(), task, requestTemplate, genericAuthoringNotes(task));
   }
 
   private static WorkbookPlan.WorkbookSource sourceFor(TaskEntry task) {
@@ -88,15 +94,16 @@ public final class GridGrindTaskPlanner {
     return ids;
   }
 
-  private static List<String> authoringNotes(TaskEntry task) {
+  private static List<String> genericAuthoringNotes(TaskEntry task) {
     List<String> baseNotes =
         List.of(
-            "requestTemplate is intentionally minimal and valid: source and persistence are"
-                + " scaffolded, but steps stays empty until you author the workflow.",
+            "requestTemplate is intentionally minimal for this ad hoc task: source and"
+                + " persistence are scaffolded, but steps stay empty until you author the"
+                + " workflow.",
             "Use task.phases[*].capabilityRefs to discover the exact operation shapes through"
                 + " --print-protocol-catalog --search <text> or"
                 + " --print-protocol-catalog --operation <group>:<id>.",
-            "Replace any TODO-style .xlsx placeholder path before execution.");
+            "Replace any placeholder .xlsx path before execution.");
     if (capabilityIds(task, "persistenceTypes").contains("NONE")) {
       return List.of(
           baseNotes.get(0),

@@ -375,7 +375,7 @@ class SemanticSelectorResolverTest {
     assertEquals(expectedAddress, assertionTarget.address());
 
     GridGrindResponse.CellStyleReport expectedStyle =
-        InspectionResultConverter.toCellReport(
+        InspectionResultCellReportSupport.toCellReport(
                 workbook.sheet(expectedSheet).snapshotCell(expectedAddress))
             .style();
     assertEquals(

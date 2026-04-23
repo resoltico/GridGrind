@@ -28,6 +28,7 @@ public final class GridGrindShippedExamples {
       List.of(
           WorkbookWorkflowExamples.budgetExample(),
           WorkbookWorkflowExamples.workbookHealthExample(),
+          WorkbookWorkflowExamples.sheetMaintenanceExample(),
           WorkbookWorkflowExamples.assertionExample(),
           WorkbookAssetExamples.arrayFormulaExample(),
           WorkbookAssetExamples.customXmlExample(),

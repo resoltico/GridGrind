@@ -1584,10 +1584,12 @@ class DefaultGridGrindRequestExecutorTest {
   void convertsEmailAndDocumentHyperlinksToCanonicalProtocolTargets() {
     assertEquals(
         new HyperlinkTarget.Email("team@example.com"),
-        InspectionResultConverter.toHyperlinkTarget(new ExcelHyperlink.Email("team@example.com")));
+        InspectionResultCellReportSupport.toHyperlinkTarget(
+            new ExcelHyperlink.Email("team@example.com")));
     assertEquals(
         new HyperlinkTarget.Document("Budget!B4"),
-        InspectionResultConverter.toHyperlinkTarget(new ExcelHyperlink.Document("Budget!B4")));
+        InspectionResultCellReportSupport.toHyperlinkTarget(
+            new ExcelHyperlink.Document("Budget!B4")));
   }
 
   @Test
@@ -4453,7 +4455,7 @@ class DefaultGridGrindRequestExecutorTest {
   @Test
   void convertsNamedRangeFormulaSnapshotsAndFormulaBackedSurfaceEntries() {
     GridGrindResponse.NamedRangeReport formulaReport =
-        InspectionResultConverter.toNamedRangeReport(
+        InspectionResultWorkbookCoreReportSupport.toNamedRangeReport(
             new ExcelNamedRangeSnapshot.FormulaSnapshot(
                 "BudgetRollup", new ExcelNamedRangeScope.WorkbookScope(), "SUM(Budget!$B$2:$B$3)"));
     assertInstanceOf(GridGrindResponse.NamedRangeReport.FormulaReport.class, formulaReport);
@@ -5582,7 +5584,7 @@ class DefaultGridGrindRequestExecutorTest {
 
   private GridGrindResponse.CellStyleReport toResponseStyleReport(
       dev.erst.gridgrind.excel.ExcelCellStyleSnapshot style) {
-    return InspectionResultConverter.toCellStyleReport(style);
+    return InspectionResultCellReportSupport.toCellStyleReport(style);
   }
 
   private static ExcelCellStyleSnapshot defaultStyle() {

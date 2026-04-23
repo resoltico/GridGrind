@@ -52,9 +52,11 @@ final class ExecutionWorkflowSupport {
       ExcelWorkbook workbook,
       ExecutionModeSelection executionModes,
       List<RequestWarning> warnings,
-      ExecutionJournalRecorder journal) {
+      ExecutionJournalRecorder journal,
+      Path workingDirectory) {
     WorkbookLocation workbookLocation =
-        ExecutionRequestPaths.workbookLocationFor(request.source(), request.persistence());
+        ExecutionRequestPaths.workbookLocationFor(
+            request.source(), request.persistence(), workingDirectory);
     List<AssertionResult> assertions = new ArrayList<>();
     List<InspectionResult> inspections = new ArrayList<>();
     CalculationReport calculation =
@@ -152,7 +154,8 @@ final class ExecutionWorkflowSupport {
     GridGrindResponse.PersistenceOutcome persistence;
     try {
       persistence =
-          workbookSupport.persistWorkbook(workbook, request.source(), request.persistence());
+          workbookSupport.persistWorkbook(
+              workbook, request.source(), request.persistence(), workingDirectory);
     } catch (Exception exception) {
       GridGrindResponse.Problem problem =
           ExecutionResponseSupport.problemFor(
@@ -160,8 +163,9 @@ final class ExecutionWorkflowSupport {
               new GridGrindResponse.ProblemContext.PersistWorkbook(
                   ExecutionRequestPaths.reqSourceType(request),
                   ExecutionRequestPaths.reqPersistenceType(request),
-                  ExecutionRequestPaths.reqSourcePath(request),
-                  ExecutionRequestPaths.persistencePath(request.source(), request.persistence())));
+                  ExecutionRequestPaths.reqSourcePath(request, workingDirectory),
+                  ExecutionRequestPaths.persistencePath(
+                      request.source(), request.persistence(), workingDirectory)));
       persistencePhase.fail("failed (" + problem.code() + ")");
       return responseSupport.closeWorkbook(
           workbook,
@@ -196,7 +200,8 @@ final class ExecutionWorkflowSupport {
       GridGrindProtocolVersion protocolVersion,
       WorkbookPlan request,
       List<RequestWarning> warnings,
-      ExecutionJournalRecorder journal) {
+      ExecutionJournalRecorder journal,
+      Path workingDirectory) {
     CalculationReport calculation =
         CalculationPolicyExecutor.notRequestedReport(request.calculationPolicy());
     WorkbookPlan.WorkbookSource.ExistingFile source =
@@ -207,7 +212,7 @@ final class ExecutionWorkflowSupport {
     try {
       materialized =
           ExcelOoxmlPackageSecuritySupport.materializeReadableWorkbook(
-              Path.of(source.path()),
+              ExecutionRequestPaths.normalizePath(source.path(), workingDirectory),
               OoxmlPackageSecurityConverter.toExcelOpenOptions(source.security()),
               tempFileFactory::createTempFile);
     } catch (Exception exception) {
@@ -217,7 +222,7 @@ final class ExecutionWorkflowSupport {
               new GridGrindResponse.ProblemContext.OpenWorkbook(
                   ExecutionRequestPaths.reqSourceType(request),
                   ExecutionRequestPaths.reqPersistenceType(request),
-                  ExecutionRequestPaths.reqSourcePath(request)));
+                  ExecutionRequestPaths.reqSourcePath(request, workingDirectory)));
       openPhase.fail("failed (" + problem.code() + ")");
       return responseSupport.closeReadableWorkbook(
           null,
@@ -285,9 +290,11 @@ final class ExecutionWorkflowSupport {
       WorkbookPlan request,
       ExecutionModeSelection executionModes,
       List<RequestWarning> warnings,
-      ExecutionJournalRecorder journal) {
+      ExecutionJournalRecorder journal,
+      Path workingDirectory) {
     WorkbookLocation workbookLocation =
-        ExecutionRequestPaths.workbookLocationFor(request.source(), request.persistence());
+        ExecutionRequestPaths.workbookLocationFor(
+            request.source(), request.persistence(), workingDirectory);
     List<AssertionResult> assertions = new ArrayList<>();
     List<InspectionResult> inspections = new ArrayList<>();
     CalculationReport calculation =
@@ -367,7 +374,7 @@ final class ExecutionWorkflowSupport {
     try {
       persistence =
           workbookSupport.persistStreamingWorkbook(
-              materializedPath, request.persistence(), request.source());
+              materializedPath, request.persistence(), request.source(), workingDirectory);
       movedToPersistenceTarget =
           !(persistence instanceof GridGrindResponse.PersistenceOutcome.NotSaved);
     } catch (Exception exception) {
@@ -378,8 +385,9 @@ final class ExecutionWorkflowSupport {
               new GridGrindResponse.ProblemContext.PersistWorkbook(
                   ExecutionRequestPaths.reqSourceType(request),
                   ExecutionRequestPaths.reqPersistenceType(request),
-                  ExecutionRequestPaths.reqSourcePath(request),
-                  ExecutionRequestPaths.persistencePath(request.source(), request.persistence())));
+                  ExecutionRequestPaths.reqSourcePath(request, workingDirectory),
+                  ExecutionRequestPaths.persistencePath(
+                      request.source(), request.persistence(), workingDirectory)));
       persistencePhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(
           protocolVersion, journal, request.steps().size(), calculation, problem, null, null);

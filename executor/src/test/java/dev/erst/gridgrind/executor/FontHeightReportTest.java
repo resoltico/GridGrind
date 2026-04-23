@@ -12,7 +12,7 @@ class FontHeightReportTest {
   @Test
   void createsConsistentReportsFromEngineFontHeights() {
     FontHeightReport report =
-        InspectionResultConverter.toFontHeightReport(new ExcelFontHeight(230));
+        InspectionResultCellReportSupport.toFontHeightReport(new ExcelFontHeight(230));
 
     assertEquals(230, report.twips());
     assertEquals(new BigDecimal("11.5"), report.points());

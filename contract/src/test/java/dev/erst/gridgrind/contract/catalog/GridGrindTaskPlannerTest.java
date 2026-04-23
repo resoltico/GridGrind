@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.catalog;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,10 +24,13 @@ class GridGrindTaskPlannerTest {
             template.requestTemplate().persistence());
     assertTrue(persistence.path().endsWith(".xlsx"));
     assertTrue(persistence.path().contains("dashboard"));
-    assertTrue(template.requestTemplate().steps().isEmpty());
+    assertFalse(template.requestTemplate().steps().isEmpty());
+    assertTrue(
+        template.requestTemplate().steps().stream()
+            .anyMatch(step -> "set-chart".equals(step.stepId())));
     assertTrue(
         template.authoringNotes().stream()
-            .anyMatch(note -> note.contains("--print-protocol-catalog --operation <group>:<id>")));
+            .anyMatch(note -> note.contains("--print-protocol-catalog --search chart")));
   }
 
   @Test
@@ -37,11 +41,33 @@ class GridGrindTaskPlannerTest {
         assertInstanceOf(
             WorkbookPlan.WorkbookSource.ExistingFile.class, template.requestTemplate().source());
     assertTrue(source.path().endsWith(".xlsx"));
-    assertTrue(source.path().contains("audit-existing-workbook"));
+    assertTrue(source.path().contains("audit-input"));
     assertInstanceOf(
         WorkbookPlan.WorkbookPersistence.None.class, template.requestTemplate().persistence());
+    assertFalse(template.requestTemplate().steps().isEmpty());
     assertTrue(
         template.authoringNotes().stream().anyMatch(note -> note.contains("non-destructive")));
+  }
+
+  @Test
+  void plannerBuildsStarterTemplatesForSpecializedExistingWorkbookTasks() {
+    TaskPlanTemplate customXml = GridGrindTaskPlanner.templateFor("CUSTOM_XML_WORKFLOW");
+    TaskPlanTemplate maintenance = GridGrindTaskPlanner.templateFor("WORKBOOK_MAINTENANCE");
+
+    assertInstanceOf(
+        WorkbookPlan.WorkbookSource.ExistingFile.class, customXml.requestTemplate().source());
+    assertInstanceOf(
+        WorkbookPlan.WorkbookPersistence.SaveAs.class, customXml.requestTemplate().persistence());
+    assertFalse(customXml.requestTemplate().steps().isEmpty());
+    assertTrue(
+        customXml.authoringNotes().stream().anyMatch(note -> note.contains("TODO_MAPPING_NAME")));
+
+    assertInstanceOf(
+        WorkbookPlan.WorkbookSource.ExistingFile.class, maintenance.requestTemplate().source());
+    assertInstanceOf(
+        WorkbookPlan.WorkbookPersistence.SaveAs.class, maintenance.requestTemplate().persistence());
+    assertFalse(maintenance.requestTemplate().steps().isEmpty());
+    assertTrue(maintenance.authoringNotes().stream().anyMatch(note -> note.contains("Template")));
   }
 
   @Test
@@ -130,6 +156,69 @@ class GridGrindTaskPlannerTest {
   }
 
   @Test
+  void plannerBuildsGenericTemplatesForAdHocNoneAndSaveAsTasks() {
+    TaskEntry noneTask =
+        new TaskEntry(
+            "AD_HOC_DISCOVERY",
+            "summary",
+            List.of("office"),
+            List.of("outcome"),
+            List.of("input"),
+            List.of("feature"),
+            List.of(
+                new TaskPhase(
+                    "Phase",
+                    "Objective",
+                    List.of(
+                        new TaskCapabilityRef("sourceTypes", "NEW"),
+                        new TaskCapabilityRef("persistenceTypes", "NONE")),
+                    List.of("note"))),
+            List.of("pitfall"));
+    TaskEntry saveAsTask =
+        new TaskEntry(
+            "AD_HOC_EXPORT",
+            "summary",
+            List.of("office"),
+            List.of("outcome"),
+            List.of("input"),
+            List.of("feature"),
+            List.of(
+                new TaskPhase(
+                    "Phase",
+                    "Objective",
+                    List.of(
+                        new TaskCapabilityRef("sourceTypes", "EXISTING"),
+                        new TaskCapabilityRef("persistenceTypes", "SAVE_AS")),
+                    List.of("note"))),
+            List.of("pitfall"));
+
+    TaskPlanTemplate noneTemplate = GridGrindTaskPlanner.planFor(noneTask);
+    TaskPlanTemplate saveAsTemplate = GridGrindTaskPlanner.planFor(saveAsTask);
+    String noneNotes = String.join("\n", noneTemplate.authoringNotes());
+    String saveAsNotes = String.join("\n", saveAsTemplate.authoringNotes());
+
+    assertInstanceOf(
+        WorkbookPlan.WorkbookSource.New.class, noneTemplate.requestTemplate().source());
+    assertInstanceOf(
+        WorkbookPlan.WorkbookPersistence.None.class, noneTemplate.requestTemplate().persistence());
+    assertTrue(noneTemplate.requestTemplate().steps().isEmpty());
+    assertTrue(noneNotes.contains("non-destructive"));
+
+    WorkbookPlan.WorkbookSource.ExistingFile existingSource =
+        assertInstanceOf(
+            WorkbookPlan.WorkbookSource.ExistingFile.class,
+            saveAsTemplate.requestTemplate().source());
+    WorkbookPlan.WorkbookPersistence.SaveAs saveAs =
+        assertInstanceOf(
+            WorkbookPlan.WorkbookPersistence.SaveAs.class,
+            saveAsTemplate.requestTemplate().persistence());
+    assertEquals("todo-ad-hoc-export-input.xlsx", existingSource.path());
+    assertEquals("todo-ad-hoc-export-output.xlsx", saveAs.path());
+    assertTrue(saveAsTemplate.requestTemplate().steps().isEmpty());
+    assertFalse(saveAsNotes.contains("non-destructive"));
+  }
+
+  @Test
   void plannerRejectsNullAndUnsupportedCapabilityDefaults() {
     NullPointerException nullTask =
         assertThrows(NullPointerException.class, () -> GridGrindTaskPlanner.planFor(null));
@@ -200,40 +289,5 @@ class GridGrindTaskPlannerTest {
             IllegalStateException.class,
             () -> GridGrindTaskPlanner.planFor(missingPersistenceTask));
     assertTrue(missingPersistence.getMessage().contains("does not declare any persistenceTypes"));
-  }
-
-  @Test
-  void goalPlannerRanksDashboardAndAuditTasksDeterministically() {
-    GoalPlanReport dashboardReport =
-        GridGrindGoalPlanner.reportFor("Create a monthly sales dashboard with charts");
-    GoalPlanReport auditReport =
-        GridGrindGoalPlanner.reportFor("Audit an existing workbook for health findings");
-    GoalPlanReport noMatchReport = GridGrindGoalPlanner.reportFor("speaker notes presentation");
-
-    assertEquals("DASHBOARD", dashboardReport.candidates().getFirst().task().id());
-    assertTrue(dashboardReport.candidates().getFirst().matchedTerms().contains("dashboard"));
-    assertTrue(dashboardReport.candidates().getFirst().matchedTerms().contains("chart"));
-    assertEquals("AUDIT_EXISTING_WORKBOOK", auditReport.candidates().getFirst().task().id());
-    assertTrue(auditReport.candidates().getFirst().matchedTerms().contains("audit"));
-    assertTrue(auditReport.candidates().getFirst().matchedTerms().contains("existing"));
-    assertTrue(noMatchReport.candidates().isEmpty());
-    assertTrue(noMatchReport.unmatchedTerms().contains("speaker"));
-    assertTrue(noMatchReport.suggestedIntentTags().contains("dashboard"));
-  }
-
-  @Test
-  void goalPlannerNormalizesPluralVariantsAndBreaksTiesByStableTaskOrdering() {
-    GoalPlanReport tieBreakReport = GridGrindGoalPlanner.reportFor("saved");
-    GoalPlanReport normalizationReport =
-        GridGrindGoalPlanner.reportFor("___ boxes sizes quizzes matches classes brushes office");
-
-    assertEquals(
-        List.of("DASHBOARD", "DATA_ENTRY_WORKFLOW", "TABULAR_REPORT"),
-        tieBreakReport.candidates().stream().map(candidate -> candidate.task().id()).toList());
-    assertEquals(
-        List.of("box", "size", "quiz", "match", "class", "brush"),
-        normalizationReport.normalizedTerms());
-    assertTrue(
-        normalizationReport.unmatchedTerms().containsAll(normalizationReport.normalizedTerms()));
   }
 }

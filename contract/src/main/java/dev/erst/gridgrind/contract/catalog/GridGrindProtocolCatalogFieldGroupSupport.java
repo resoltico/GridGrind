@@ -154,8 +154,9 @@ final class GridGrindProtocolCatalogFieldGroupSupport {
                   descriptor(
                       TextSourceInput.Utf8File.class,
                       "UTF8_FILE",
-                      "Load UTF-8 text from one file path resolved in the execution"
-                          + " environment."),
+                      "Load UTF-8 text from one file path."
+                          + " "
+                          + GridGrindContractText.requestOwnedPathResolutionSummary()),
                   descriptor(
                       TextSourceInput.StandardInput.class,
                       "STANDARD_INPUT",
@@ -172,8 +173,9 @@ final class GridGrindProtocolCatalogFieldGroupSupport {
                   descriptor(
                       BinarySourceInput.File.class,
                       "FILE",
-                      "Load binary content from one file path resolved in the execution"
-                          + " environment."),
+                      "Load binary content from one file path."
+                          + " "
+                          + GridGrindContractText.requestOwnedPathResolutionSummary()),
                   descriptor(
                       BinarySourceInput.StandardInput.class,
                       "STANDARD_INPUT",
@@ -1217,7 +1219,9 @@ final class GridGrindProtocolCatalogFieldGroupSupport {
               OoxmlSignatureInput.class,
               "OoxmlSignatureInput",
               "OOXML package-signing settings for workbook persistence."
-                  + " pkcs12Path resolves in the current execution environment."
+                  + " pkcs12Path follows the request-owned path rule."
+                  + " "
+                  + GridGrindContractText.requestOwnedPathResolutionSummary()
                   + " keyPassword defaults to keystorePassword and digestAlgorithm defaults to"
                   + " SHA256 when omitted."
                   + " alias may be omitted only when the keystore contains exactly one"
@@ -1248,7 +1252,10 @@ final class GridGrindProtocolCatalogFieldGroupSupport {
               "formulaExternalWorkbookInputType",
               FormulaExternalWorkbookInput.class,
               "FormulaExternalWorkbookInput",
-              "One external workbook binding keyed by the workbook name used inside formulas.",
+              "One external workbook binding keyed by the workbook name used inside formulas."
+                  + " path follows the request-owned path rule."
+                  + " "
+                  + GridGrindContractText.requestOwnedPathResolutionSummary(),
               List.of()),
           plainTypeDescriptor(
               "formulaUdfToolpackInputType",

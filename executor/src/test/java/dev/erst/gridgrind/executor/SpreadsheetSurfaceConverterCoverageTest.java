@@ -146,7 +146,7 @@ class SpreadsheetSurfaceConverterCoverageTest {
             ExcelChartDisplayBlanksAs.SPAN,
             false,
             snapshotPlots(snapshotSeries(new ExcelChartSnapshot.Title.Text("Series"))));
-    ChartReport chartReport = InspectionResultConverter.toChartReport(snapshot);
+    ChartReport chartReport = InspectionResultDrawingReportSupport.toChartReport(snapshot);
     InspectionResult.CustomXmlMappingsResult mappings =
         assertInstanceOf(
             InspectionResult.CustomXmlMappingsResult.class,

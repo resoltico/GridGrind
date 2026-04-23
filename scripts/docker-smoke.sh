@@ -145,17 +145,21 @@ readonly streaming_read_response_rel='responses odd/nested/streaming readback [d
 readonly streaming_workbook_rel='books odd/nested/office streaming [docker #smoke].xlsx'
 readonly request_path="${smoke_root}/${request_rel}"
 readonly response_path="${smoke_root}/${response_rel}"
-readonly workbook_path="${smoke_root}/${workbook_rel}"
+readonly request_dir="${smoke_root}/requests odd"
+readonly legacy_workbook_path="${smoke_root}/${workbook_rel}"
+readonly workbook_path="${request_dir}/${workbook_rel}"
 readonly existing_request_path="${smoke_root}/${existing_request_rel}"
 readonly existing_response_path="${smoke_root}/${existing_response_rel}"
 readonly signature_request_path="${smoke_root}/${signature_request_rel}"
 readonly signature_response_path="${smoke_root}/${signature_response_rel}"
-readonly signature_workbook_path="${smoke_root}/${signature_workbook_rel}"
+readonly legacy_signature_workbook_path="${smoke_root}/${signature_workbook_rel}"
+readonly signature_workbook_path="${request_dir}/${signature_workbook_rel}"
 readonly streaming_request_path="${smoke_root}/${streaming_request_rel}"
 readonly streaming_response_path="${smoke_root}/${streaming_response_rel}"
 readonly streaming_read_request_path="${smoke_root}/${streaming_read_request_rel}"
 readonly streaming_read_response_path="${smoke_root}/${streaming_read_response_rel}"
-readonly streaming_workbook_path="${smoke_root}/${streaming_workbook_rel}"
+readonly legacy_streaming_workbook_path="${smoke_root}/${streaming_workbook_rel}"
+readonly streaming_workbook_path="${request_dir}/${streaming_workbook_rel}"
 readonly create_stderr_path="${smoke_root}/stderr create [docker #smoke].log"
 readonly existing_stderr_path="${smoke_root}/stderr reopen [docker #smoke].log"
 readonly signature_stderr_path="${smoke_root}/stderr signature [docker #smoke].log"
@@ -460,6 +464,8 @@ docker_with_repo_config run --rm \
 
 [[ -f "${response_path}" ]] || die "docker smoke response file was not written: ${response_path}"
 [[ -f "${workbook_path}" ]] || die "docker smoke workbook file was not written: ${workbook_path}"
+[[ ! -f "${legacy_workbook_path}" ]] || die \
+    "docker smoke wrote the workbook relative to the shell workdir instead of the request file directory: ${legacy_workbook_path}"
 grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${response_path}" || die \
     "docker smoke response did not report SUCCESS"
 grep -Eq '"journal"[[:space:]]*:' "${response_path}" || die \
@@ -500,6 +506,8 @@ docker_with_repo_config run --rm \
     "docker smoke signature response file was not written: ${signature_response_path}"
 [[ -f "${signature_workbook_path}" ]] || die \
     "docker smoke signature workbook file was not written: ${signature_workbook_path}"
+[[ ! -f "${legacy_signature_workbook_path}" ]] || die \
+    "docker smoke wrote the signature workbook relative to the shell workdir instead of the request file directory: ${legacy_signature_workbook_path}"
 grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${signature_response_path}" || die \
     "docker smoke signature-line authoring did not report SUCCESS"
 grep -Eq '"BudgetSignature"' "${signature_response_path}" || die \
@@ -520,6 +528,8 @@ docker_with_repo_config run --rm \
     "docker smoke streaming response file was not written: ${streaming_response_path}"
 [[ -f "${streaming_workbook_path}" ]] || die \
     "docker smoke streaming workbook file was not written: ${streaming_workbook_path}"
+[[ ! -f "${legacy_streaming_workbook_path}" ]] || die \
+    "docker smoke wrote the streaming workbook relative to the shell workdir instead of the request file directory: ${legacy_streaming_workbook_path}"
 grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${streaming_response_path}" || die \
     "docker smoke STREAMING_WRITE authoring did not report SUCCESS"
 [[ ! -s "${streaming_stderr_path}" ]] || die \

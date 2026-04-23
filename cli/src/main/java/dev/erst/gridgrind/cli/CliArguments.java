@@ -15,14 +15,10 @@ final class CliArguments {
     int index = 0;
     while (index < args.length) {
       String argument = args[index];
-      ImmediateParseResult immediate = parseImmediateCommand(args, index, argument);
+      ImmediateParseResult immediate =
+          index == 0 ? parseImmediateCommand(args, index, argument) : null;
       if (immediate != null) {
-        if (immediate.command() instanceof CliCommand.PrintProtocolCatalog
-            && immediate.nextIndex() != args.length) {
-          String trailingArgument = args[immediate.nextIndex()];
-          throw new CliArgumentsException(
-              trailingArgument, "Unknown argument: " + trailingArgument);
-        }
+        requireNoTrailingArguments(args, immediate.nextIndex());
         return immediate.command();
       }
       index = consumeArgument(args, index, argument, options);
@@ -120,6 +116,14 @@ final class CliArguments {
         new CliCommand.PrintProtocolCatalog(operationFilter, searchQuery), nextIndex);
   }
 
+  private static void requireNoTrailingArguments(String[] args, int nextIndex) {
+    if (nextIndex == args.length) {
+      return;
+    }
+    String trailingArgument = args[nextIndex];
+    throw new CliArgumentsException(trailingArgument, "Unknown argument: " + trailingArgument);
+  }
+
   private static int consumeArgument(
       String[] args, int index, String argument, ParsedOptions options) {
     return switch (argument) {
@@ -143,12 +147,7 @@ final class CliArguments {
         options.responsePath = Path.of(args[valueIndex]);
         yield valueIndex + 1;
       }
-      default -> {
-        if (options.doctorRequest) {
-          yield index + 1;
-        }
-        throw new CliArgumentsException(argument, "Unknown argument: " + argument);
-      }
+      default -> throw new CliArgumentsException(argument, "Unknown argument: " + argument);
     };
   }
 

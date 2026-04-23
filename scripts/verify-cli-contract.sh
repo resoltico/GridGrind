@@ -310,13 +310,22 @@ if task_plan_request.get("persistence", {}).get("type") != "SAVE_AS":
     die("task plan no longer defaults DASHBOARD to SAVE_AS persistence")
 if not task_plan_request.get("persistence", {}).get("path", "").endswith(".xlsx"):
     die("task plan no longer emits a syntactically valid SAVE_AS .xlsx path")
-if task_plan_request.get("steps") != []:
-    die("task plan requestTemplate must stay minimal with an empty steps list")
+task_plan_steps = task_plan_request.get("steps", [])
+if not isinstance(task_plan_steps, list) or not task_plan_steps:
+    die("task plan no longer emits a runnable starter scaffold with steps")
+if not all(isinstance(step.get("stepId"), str) and step["stepId"] for step in task_plan_steps):
+    die("task plan contains a step without a stable stepId")
+if not any(step.get("action", {}).get("type") == "SET_CHART" for step in task_plan_steps):
+    die("task plan no longer seeds the expected DASHBOARD chart authoring step")
+if not any(step.get("query", {}).get("type") == "GET_CHARTS" for step in task_plan_steps):
+    die("task plan no longer seeds the expected DASHBOARD chart verification step")
 authoring_notes = task_plan.get("authoringNotes", [])
 if not authoring_notes:
     die("task plan no longer publishes authoring notes")
-if not any("--print-protocol-catalog --operation <group>:<id>" in note for note in authoring_notes):
-    die("task plan no longer points authors back to exact protocol capability lookups")
+if not any("--print-protocol-catalog --operation mutationActionTypes:SET_CHART" in note for note in authoring_notes):
+    die("task plan no longer points authors back to exact chart capability lookups")
+if not any("--print-protocol-catalog --search chart" in note for note in authoring_notes):
+    die("task plan no longer points authors back to broader chart discovery")
 
 if goal_plan.get("goal") != "monthly sales dashboard with charts":
     die("goal plan no longer preserves the requested goal text")

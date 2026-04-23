@@ -28,11 +28,11 @@ class ConditionalFormattingRuleReportTest {
             ExcelConditionalFormattingThresholdType.MAX, null, 100.0d);
 
     ConditionalFormattingRuleReport dataBar =
-        InspectionResultConverter.toConditionalFormattingRuleReport(
+        InspectionResultValidationReportSupport.toConditionalFormattingRuleReport(
             new ExcelConditionalFormattingRuleSnapshot.DataBarRule(
                 4, false, "#102030", true, 10, 90, minThreshold, maxThreshold));
     ConditionalFormattingRuleReport iconSet =
-        InspectionResultConverter.toConditionalFormattingRuleReport(
+        InspectionResultValidationReportSupport.toConditionalFormattingRuleReport(
             new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
                 5,
                 true,
@@ -127,11 +127,12 @@ class ConditionalFormattingRuleReportTest {
             border,
             List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT));
 
-    DifferentialStyleReport report = InspectionResultConverter.toDifferentialStyleReport(style);
+    DifferentialStyleReport report =
+        InspectionResultValidationReportSupport.toDifferentialStyleReport(style);
     DifferentialBorderReport borderReport =
-        InspectionResultConverter.toDifferentialBorderReport(border);
+        InspectionResultValidationReportSupport.toDifferentialBorderReport(border);
     DifferentialBorderReport sparseBorderReport =
-        InspectionResultConverter.toDifferentialBorderReport(
+        InspectionResultValidationReportSupport.toDifferentialBorderReport(
             new ExcelDifferentialBorder(
                 new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#102030"),
                 null,
@@ -139,11 +140,11 @@ class ConditionalFormattingRuleReportTest {
                 null,
                 null));
     DifferentialBorderSideReport borderSideReport =
-        InspectionResultConverter.toDifferentialBorderSideReport(
+        InspectionResultValidationReportSupport.toDifferentialBorderSideReport(
             new ExcelDifferentialBorderSide(ExcelBorderStyle.THICK, "#AABBCC"));
 
-    assertNull(InspectionResultConverter.toDifferentialStyleReport(null));
-    assertNull(InspectionResultConverter.toDifferentialBorderReport(null));
+    assertNull(InspectionResultValidationReportSupport.toDifferentialStyleReport(null));
+    assertNull(InspectionResultValidationReportSupport.toDifferentialBorderReport(null));
     assertEquals("#111111", report.fontColor());
     assertEquals("#EEEEEE", report.fillColor());
     assertEquals(
@@ -180,13 +181,13 @@ class ConditionalFormattingRuleReportTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new DifferentialBorderReport(null, null, null, null, null));
-    assertNull(InspectionResultConverter.toDifferentialBorderSideReport(null));
+    assertNull(InspectionResultValidationReportSupport.toDifferentialBorderSideReport(null));
   }
 
   @Test
   void convertsAndValidatesThresholdReports() {
     ConditionalFormattingThresholdReport threshold =
-        InspectionResultConverter.toConditionalFormattingThresholdReport(
+        InspectionResultValidationReportSupport.toConditionalFormattingThresholdReport(
             new ExcelConditionalFormattingThresholdSnapshot(
                 ExcelConditionalFormattingThresholdType.FORMULA, "A1", null));
 

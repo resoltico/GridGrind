@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.55.0"
+version: "0.56.0"
 domain: OPERATIONS
 updated: "2026-04-23"
 route:
@@ -36,6 +36,10 @@ current request model, every mutation action, every assertion type, every inspec
 required versus optional fields, and the allowed nested selectors or payload groups for polymorphic
 fields. Use `--search` when you only know part of the name or summary, then switch to
 `--operation <group>:<id>` for the exact entry once you have the stable qualified id.
+Task discovery is layered on top of that same catalog surface:
+`--print-task-catalog`, `--print-task-plan <id>`, and `--print-goal-plan "<goal>"` now emit
+starter scaffolds for dashboards, tabular reports, data-entry flows, pivot reports, custom XML
+workflows, workbook maintenance, and drawing/signature workflows.
 
 ## Canonical Terminology
 
@@ -51,6 +55,7 @@ fields. Use `--search` when you only know part of the name or summary, then swit
 
 | Reference | Owns |
 |:----------|:-----|
+| [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) | Fluent Java plan building, selector helpers, source-backed inputs, JSON emission, and in-process execution over the same canonical `WorkbookPlan` |
 | [REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md) | Request envelope, `source`, `persistence`, source-backed inputs, `formulaEnvironment`, `execution`, response journal, coordinate systems, and core cell-value shapes |
 | [WORKBOOK_AND_LAYOUT_MUTATIONS.md](./WORKBOOK_AND_LAYOUT_MUTATIONS.md) | Workbook, sheet, protection, copy/move/rename, layout, pane, zoom, presentation, print-layout, row/column structure, and custom-XML import mutations |
 | [CELL_AND_DRAWING_MUTATIONS.md](./CELL_AND_DRAWING_MUTATIONS.md) | `SET_CELL`, `SET_RANGE`, array formulas, hyperlinks, comments, pictures, shapes, embedded objects, charts, signature lines, anchor updates, and drawing deletes |
@@ -134,10 +139,14 @@ charts are supported when every plot belongs to one of those families.
 ## Example Entry Points
 
 - First-run workbook creation: [QUICK_START.md](./QUICK_START.md)
+- Java-first authoring without hand-written JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
+  [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)
 - Budget walkthrough: [../examples/budget-request.json](../examples/budget-request.json) or
   `gridgrind --print-example BUDGET`
 - Assertion walkthrough: [../examples/assertion-request.json](../examples/assertion-request.json)
 - Workbook-health walkthrough:
   [../examples/workbook-health-request.json](../examples/workbook-health-request.json)
+- Workbook-maintenance walkthrough:
+  [../examples/sheet-maintenance-request.json](../examples/sheet-maintenance-request.json)
 - POI/XSSF capability audit: [POI_EXCEL_CAPABILITY_INVENTORY.md](./POI_EXCEL_CAPABILITY_INVENTORY.md)
 - Problem model and recovery: [ERRORS.md](./ERRORS.md)
