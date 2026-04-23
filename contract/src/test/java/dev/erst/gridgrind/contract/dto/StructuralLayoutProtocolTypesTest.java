@@ -6,12 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.selector.ColumnBandSelector;
 import dev.erst.gridgrind.contract.selector.RowBandSelector;
-import dev.erst.gridgrind.excel.ExcelColumnSpan;
-import dev.erst.gridgrind.excel.ExcelIgnoredErrorType;
-import dev.erst.gridgrind.excel.ExcelPaneRegion;
-import dev.erst.gridgrind.excel.ExcelPrintOrientation;
-import dev.erst.gridgrind.excel.ExcelRowSpan;
-import dev.erst.gridgrind.excel.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
 import org.junit.jupiter.api.Test;
 
 /** Direct tests for the structural-layout protocol input and report families. */
@@ -242,7 +242,8 @@ class StructuralLayoutProtocolTypesTest {
             java.util.List.of(
                 new IgnoredErrorInput(
                     "A1:B2",
-                    java.util.List.of(dev.erst.gridgrind.excel.ExcelIgnoredErrorType.FORMULA))));
+                    java.util.List.of(
+                        dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType.FORMULA))));
 
     assertEquals(SheetDisplayInput.defaults(), defaultPresentation.display());
     assertNull(defaultPresentation.tabColor());

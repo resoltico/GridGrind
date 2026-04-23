@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelSheetNames;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
 import java.util.Objects;
 
 /** Protocol-facing explicit cell or rectangular range target for named-range authoring. */

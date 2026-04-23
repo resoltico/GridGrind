@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import java.util.Locale;
 import java.util.Objects;
 

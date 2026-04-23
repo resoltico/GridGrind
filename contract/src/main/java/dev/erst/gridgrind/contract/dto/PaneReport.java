@@ -2,7 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.erst.gridgrind.excel.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
 import java.util.Objects;
 
 /** Pane state captured from a sheet layout read. */

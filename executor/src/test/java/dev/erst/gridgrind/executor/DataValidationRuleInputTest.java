@@ -3,8 +3,8 @@ package dev.erst.gridgrind.executor;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;

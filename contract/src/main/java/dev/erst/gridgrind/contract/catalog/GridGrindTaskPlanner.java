@@ -94,6 +94,7 @@ public final class GridGrindTaskPlanner {
             "requestTemplate is intentionally minimal and valid: source and persistence are"
                 + " scaffolded, but steps stays empty until you author the workflow.",
             "Use task.phases[*].capabilityRefs to discover the exact operation shapes through"
+                + " --print-protocol-catalog --search <text> or"
                 + " --print-protocol-catalog --operation <group>:<id>.",
             "Replace any TODO-style .xlsx placeholder path before execution.");
     if (capabilityIds(task, "persistenceTypes").contains("NONE")) {

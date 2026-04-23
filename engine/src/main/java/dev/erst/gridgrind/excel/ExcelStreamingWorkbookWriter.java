@@ -104,9 +104,8 @@ public final class ExcelStreamingWorkbookWriter implements AutoCloseable {
         cell.setCellValue(dateTimeValue.value());
         cell.setCellStyle(styleRegistry.localDateTimeStyle(cell));
       }
-      case ExcelCellValue.FormulaValue formulaValue -> {
-        cell.setCellFormula(formulaValue.expression());
-      }
+      case ExcelCellValue.FormulaValue formulaValue ->
+          ExcelFormulaWriteSupport.setAuthoredFormula(cell, formulaValue.expression());
     }
   }
 }

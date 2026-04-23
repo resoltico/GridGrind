@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.53.0"
+version: "0.54.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-04-22"
+updated: "2026-04-23"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -190,9 +190,18 @@ gh pr diff <N> --name-only
 gh pr view <N> --json number,state,mergeStateStatus,statusCheckRollup,url
 ```
 
+If `gh pr diff <N> --name-only` fails with GitHub's 300-file diff limit, fall back to the
+paginated pull-request files API instead of skipping the scope check:
+
+```bash
+REPO=$(gh repo view --json nameWithOwner -q .nameWithOwner)
+gh api --paginate repos/$REPO/pulls/<N>/files --jq '.[].filename'
+```
+
 Treat the PR itself as a second scope-verification checkpoint:
 
-- `gh pr diff <N> --name-only` must match the intended release file set.
+- The verified PR file list must match the intended release file set, whether it came from
+  `gh pr diff <N> --name-only` or the paginated pull-request files API fallback.
 - If the PR diff is missing files or includes unintended files, fix the release branch before
   waiting on CI or merging.
 - Every new commit pushed to the release branch reopens both the Step 2 staging checkpoint and
@@ -214,11 +223,11 @@ git switch --detach origin/main
 gh pr view <N> --repo "$REPO" --json number,state,mergedAt,headRefName,baseRefName,url
 ```
 
-The `--admin` flag uses administrator privileges to bypass branch-protection requirements,
-specifically the review-approval rule that GitHub prevents the PR author from satisfying.
-This is the GitHub-intended escape hatch for single-owner repositories where an agent drives
-the release end-to-end. CI status checks (`Check` and `Docker smoke`) remain the authoritative
-quality gate; the review requirement adds no signal in a solo-owner workflow.
+The `--admin` flag uses administrator privileges to get the merge through branch protection
+without relying on an interactive local follow-up flow. If required pull-request reviews are
+enabled, `--admin` also bypasses the self-approval dead-end that a PR author cannot satisfy in a
+single-owner release. CI status checks (`Check` and `Docker smoke`) remain the authoritative
+quality gate; any review requirement is optional policy, not the release-quality signal.
 
 If the release is being driven from a dedicated worktree while the primary checkout already has
 `main` checked out, do not rely on `gh pr merge` or `git checkout main` in the auxiliary

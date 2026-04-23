@@ -2,7 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.erst.gridgrind.excel.ExcelSheetNames;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
 
 /** Protocol-facing scope of a named range, either workbook-wide or local to one sheet. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")

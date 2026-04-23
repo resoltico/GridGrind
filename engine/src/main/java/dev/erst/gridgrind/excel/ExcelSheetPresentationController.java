@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
@@ -116,7 +118,7 @@ final class ExcelSheetPresentationController {
       sheet.addIgnoredErrors(
           CellRangeAddress.valueOf(ignoredError.range()),
           ignoredError.errorTypes().stream()
-              .map(ExcelIgnoredErrorType::toPoi)
+              .map(ExcelIgnoredErrorPoiBridge::toPoi)
               .toArray(IgnoredErrorType[]::new));
     }
   }
@@ -132,7 +134,7 @@ final class ExcelSheetPresentationController {
     Map<String, EnumSet<ExcelIgnoredErrorType>> ignoredErrorsByRange = new TreeMap<>();
     for (Map.Entry<IgnoredErrorType, java.util.Set<CellRangeAddress>> entry :
         sheet.getIgnoredErrors().entrySet()) {
-      ExcelIgnoredErrorType errorType = ExcelIgnoredErrorType.fromPoi(entry.getKey());
+      ExcelIgnoredErrorType errorType = ExcelIgnoredErrorPoiBridge.fromPoi(entry.getKey());
       entry.getValue().stream()
           .sorted(Comparator.comparing(CellRangeAddress::formatAsString))
           .map(CellRangeAddress::formatAsString)

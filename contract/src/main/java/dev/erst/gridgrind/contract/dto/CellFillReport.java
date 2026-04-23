@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import java.util.Objects;
 
 /** Effective fill facts reported with every analyzed cell. */

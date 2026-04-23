@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;

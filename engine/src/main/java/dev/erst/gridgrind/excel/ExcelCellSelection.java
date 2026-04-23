@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelAddressLists;
 import java.util.List;
 
 /** Selects which cells a metadata read command should inspect on one sheet. */

@@ -10,9 +10,9 @@ import dev.erst.gridgrind.contract.dto.CellStyleInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
 import dev.erst.gridgrind.excel.ExcelBorder;
 import dev.erst.gridgrind.excel.ExcelBorderSide;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellStyle;
-import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -196,7 +196,8 @@ public final class StyleKindIntrospection {
   }
 
   private static boolean isNone(ExcelBorderSide side) {
-    return side != null && side.style() == dev.erst.gridgrind.excel.ExcelBorderStyle.NONE;
+    return side != null
+        && side.style() == dev.erst.gridgrind.excel.foundation.ExcelBorderStyle.NONE;
   }
 
   private static boolean hasColor(CellBorderSideInput side) {

@@ -3,7 +3,7 @@ package dev.erst.gridgrind.contract.query;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.catalog.GridGrindProtocolTypeNames;
-import dev.erst.gridgrind.excel.ExcelReadLimits;
+import dev.erst.gridgrind.excel.foundation.ExcelReadLimits;
 
 /** Ordered post-mutation inspection queries that introspect or analyze workbook state. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")

@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -43,7 +45,8 @@ final class ExcelDrawingBinarySupport {
   static ExcelDrawingObjectPayload.Picture picturePayload(String objectName, XSSFPicture picture) {
     org.apache.poi.xssf.usermodel.XSSFPictureData pictureData = picture.getPictureData();
     byte[] bytes = pictureData.getData();
-    ExcelPictureFormat format = ExcelPictureFormat.fromPoiPictureType(pictureData.getPictureType());
+    ExcelPictureFormat format =
+        ExcelPicturePoiBridge.fromPoiPictureType(pictureData.getPictureType());
     return new ExcelDrawingObjectPayload.Picture(
         objectName,
         format,
@@ -109,11 +112,14 @@ final class ExcelDrawingBinarySupport {
 
   static void cleanupWorkbookImagePartIfUnused(
       XSSFWorkbook workbook, org.apache.poi.openxml4j.opc.PackagePartName imagePartName) {
-    if (imagePartName == null || imagePartUsed(workbook, imagePartName)) {
+    if (imagePartName == null) {
       return;
     }
-    removeRelationshipsToPart(workbook.getPackagePart(), imagePartName);
-    cleanupPackagePartIfUnused(workbook.getPackage(), imagePartName);
+    if (!imagePartUsed(workbook, imagePartName)) {
+      removeRelationshipsToPart(workbook.getPackagePart(), imagePartName);
+      cleanupPackagePartIfUnused(workbook.getPackage(), imagePartName);
+    }
+    ExcelWorkbookImageCatalogSupport.synchronizePictureCatalog(workbook);
   }
 
   static void removeOleObject(

@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.excel;
 
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandleProxies;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.VarHandle;
@@ -64,36 +63,31 @@ final class ExcelSheetClonePreparationSupport {
   }
 
   static VarHandle requireHyperlinksField(MethodHandles.Lookup lookup) {
-    Objects.requireNonNull(lookup, "lookup must not be null");
-    try {
-      return MethodHandles.privateLookupIn(XSSFSheet.class, lookup)
-          .findVarHandle(XSSFSheet.class, "hyperlinks", List.class);
-    } catch (ReflectiveOperationException exception) {
-      throw new IllegalStateException("Failed to access POI sheet hyperlink registry", exception);
-    }
+    return PoiPrivateAccessSupport.requireVarHandle(
+        lookup,
+        XSSFSheet.class,
+        "hyperlinks",
+        List.class,
+        "Failed to access POI sheet hyperlink registry");
   }
 
   static BiFunction<CTHyperlink, PackageRelationship, XSSFHyperlink> requireHyperlinkConstructor(
       MethodHandles.Lookup lookup) {
-    Objects.requireNonNull(lookup, "lookup must not be null");
-    try {
-      MethodHandle constructor =
-          MethodHandles.privateLookupIn(XSSFHyperlink.class, lookup)
-              .findConstructor(
-                  XSSFHyperlink.class,
-                  MethodType.methodType(void.class, CTHyperlink.class, PackageRelationship.class))
-              .asType(
-                  MethodType.methodType(
-                      XSSFHyperlink.class, CTHyperlink.class, PackageRelationship.class));
-      return hyperlinkConstructor(constructor);
-    } catch (ReflectiveOperationException exception) {
-      throw new IllegalStateException("Failed to access POI hyperlink constructor", exception);
-    }
+    MethodHandle constructor =
+        PoiPrivateAccessSupport.requireConstructor(
+                lookup,
+                XSSFHyperlink.class,
+                MethodType.methodType(void.class, CTHyperlink.class, PackageRelationship.class),
+                "Failed to access POI hyperlink constructor")
+            .asType(
+                MethodType.methodType(
+                    XSSFHyperlink.class, CTHyperlink.class, PackageRelationship.class));
+    return hyperlinkConstructor(constructor);
   }
 
   @SuppressWarnings("unchecked")
   private static BiFunction<CTHyperlink, PackageRelationship, XSSFHyperlink> hyperlinkConstructor(
       MethodHandle constructor) {
-    return MethodHandleProxies.asInterfaceInstance(BiFunction.class, constructor);
+    return PoiPrivateAccessSupport.asInterfaceInstance(BiFunction.class, constructor);
   }
 }

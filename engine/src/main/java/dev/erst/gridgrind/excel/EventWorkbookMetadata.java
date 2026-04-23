@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;

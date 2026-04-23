@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import java.util.Objects;
 
 /** One differential-style border side used by conditional-formatting rules. */

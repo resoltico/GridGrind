@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelIndexDisplay;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

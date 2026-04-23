@@ -2,6 +2,16 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -1203,14 +1213,14 @@ class ExcelSheetTest {
                 new ExcelPrintLayout.TitleColumns.None(),
                 ExcelHeaderFooterText.blank(),
                 ExcelHeaderFooterText.blank()));
-    assertEquals(ExcelPaneRegion.UPPER_LEFT, ExcelPaneRegion.fromPoi(PaneType.UPPER_LEFT));
-    assertEquals(ExcelPaneRegion.UPPER_RIGHT, ExcelPaneRegion.fromPoi(PaneType.UPPER_RIGHT));
-    assertEquals(ExcelPaneRegion.LOWER_LEFT, ExcelPaneRegion.fromPoi(PaneType.LOWER_LEFT));
-    assertEquals(ExcelPaneRegion.LOWER_RIGHT, ExcelPaneRegion.fromPoi(PaneType.LOWER_RIGHT));
-    assertEquals(PaneType.UPPER_LEFT, ExcelPaneRegion.UPPER_LEFT.toPoi());
-    assertEquals(PaneType.UPPER_RIGHT, ExcelPaneRegion.UPPER_RIGHT.toPoi());
-    assertEquals(PaneType.LOWER_LEFT, ExcelPaneRegion.LOWER_LEFT.toPoi());
-    assertEquals(PaneType.LOWER_RIGHT, ExcelPaneRegion.LOWER_RIGHT.toPoi());
+    assertEquals(ExcelPaneRegion.UPPER_LEFT, ExcelPanePoiBridge.fromPoi(PaneType.UPPER_LEFT));
+    assertEquals(ExcelPaneRegion.UPPER_RIGHT, ExcelPanePoiBridge.fromPoi(PaneType.UPPER_RIGHT));
+    assertEquals(ExcelPaneRegion.LOWER_LEFT, ExcelPanePoiBridge.fromPoi(PaneType.LOWER_LEFT));
+    assertEquals(ExcelPaneRegion.LOWER_RIGHT, ExcelPanePoiBridge.fromPoi(PaneType.LOWER_RIGHT));
+    assertEquals(PaneType.UPPER_LEFT, ExcelPanePoiBridge.toPoi(ExcelPaneRegion.UPPER_LEFT));
+    assertEquals(PaneType.UPPER_RIGHT, ExcelPanePoiBridge.toPoi(ExcelPaneRegion.UPPER_RIGHT));
+    assertEquals(PaneType.LOWER_LEFT, ExcelPanePoiBridge.toPoi(ExcelPaneRegion.LOWER_LEFT));
+    assertEquals(PaneType.LOWER_RIGHT, ExcelPanePoiBridge.toPoi(ExcelPaneRegion.LOWER_RIGHT));
     assertThrows(IllegalArgumentException.class, () -> ExcelSheetViewSupport.requireZoomPercent(9));
     assertThrows(
         IllegalArgumentException.class, () -> ExcelSheetViewSupport.requireZoomPercent(401));

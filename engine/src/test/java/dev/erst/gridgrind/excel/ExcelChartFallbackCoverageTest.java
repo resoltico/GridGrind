@@ -5,6 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
 import java.io.IOException;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.VarHandle;

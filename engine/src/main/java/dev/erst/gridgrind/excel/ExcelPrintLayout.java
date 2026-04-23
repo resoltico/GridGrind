@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelIndexDisplay;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.util.Objects;
 import org.apache.poi.ss.SpreadsheetVersion;
 

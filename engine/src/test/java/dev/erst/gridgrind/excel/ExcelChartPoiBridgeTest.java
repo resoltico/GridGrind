@@ -2,6 +2,18 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarShape;
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelChartMarkerStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import java.io.IOException;
 import org.apache.poi.xddf.usermodel.XDDFShapeProperties;
 import org.apache.poi.xddf.usermodel.chart.*;

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 
 /** Protocol-facing definition for one border side within a style patch. */
 public record CellBorderSideInput(

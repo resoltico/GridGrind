@@ -7,6 +7,7 @@ plugins {
 description = "Core GridGrind workbook automation engine"
 
 dependencies {
+    api(project(":excel-foundation"))
     implementation(libs.poi.ooxml)
     implementation(libs.poi.ooxml.full)
     implementation(libs.xmlsec)

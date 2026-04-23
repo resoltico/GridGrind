@@ -4,6 +4,15 @@ FROM azul/zulu-openjdk-alpine:26-jre@sha256:22242e6e6cd532a1af223554a12407618ffe
 LABEL org.opencontainers.image.licenses="MIT AND Apache-2.0 AND BSD-3-Clause"
 LABEL org.opencontainers.image.vendor="Ervins Strauhmanis"
 
+# Signature-line preview generation relies on Java2D/fontconfig even in headless mode.
+# Ship a minimal deterministic font stack and a writable cache location so Docker matches the
+# fat-JAR surface even when requests run as an arbitrary mounted-path UID:GID.
+RUN apk add --no-cache fontconfig ttf-dejavu >/dev/null \
+    && fc-cache -f >/dev/null
+ENV HOME=/tmp
+ENV XDG_CACHE_HOME=/tmp/.cache
+RUN install -d -m 1777 /tmp/.cache /tmp/.cache/fontconfig
+
 WORKDIR /app
 
 # The fat JAR is built by the GitHub Actions workflow (./gradlew :cli:shadowJar)

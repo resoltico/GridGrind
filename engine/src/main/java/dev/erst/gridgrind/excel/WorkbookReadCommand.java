@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelAddressLists;
+import dev.erst.gridgrind.excel.foundation.ExcelReadLimits;
 import java.util.List;
 import java.util.Objects;
 

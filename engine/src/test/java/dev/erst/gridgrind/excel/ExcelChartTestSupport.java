@@ -1,5 +1,13 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.util.List;
 
 /** Shared chart-authoring and chart-readback helpers for engine tests. */

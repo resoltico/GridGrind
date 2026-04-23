@@ -2,6 +2,18 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;

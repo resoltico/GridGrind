@@ -211,7 +211,7 @@ class OoxmlSecurityRequestExecutorTest {
     assertTrue(security.security().encryption().encrypted());
     assertEquals(1, security.security().signatures().size());
     assertEquals(
-        dev.erst.gridgrind.excel.ExcelOoxmlSignatureState.VALID,
+        dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState.VALID,
         security.security().signatures().getFirst().state());
     assertEquals(
         "Secured",
@@ -315,7 +315,7 @@ class OoxmlSecurityRequestExecutorTest {
     InspectionResult.PackageSecurityResult security =
         read(success, "security", InspectionResult.PackageSecurityResult.class);
     assertEquals(
-        dev.erst.gridgrind.excel.ExcelOoxmlSignatureState.INVALID,
+        dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState.INVALID,
         security.security().signatures().getFirst().state());
   }
 

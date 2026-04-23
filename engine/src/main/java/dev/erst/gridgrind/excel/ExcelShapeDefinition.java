@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import java.util.Objects;
 
 /** Authoritative simple-shape or connector creation or replacement payload. */

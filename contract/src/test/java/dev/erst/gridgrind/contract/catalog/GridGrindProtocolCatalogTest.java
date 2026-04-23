@@ -75,6 +75,12 @@ class GridGrindProtocolCatalogTest {
     assertEquals(
         List.of("plainTypes:chartInputType"),
         GridGrindProtocolCatalog.matchingLookupIds("chartInputType"));
+    CatalogSearchResult search = GridGrindProtocolCatalog.searchCatalog("sheet layout");
+    assertEquals("sheet layout", search.query());
+    assertTrue(
+        search.matches().stream()
+            .anyMatch(
+                match -> "inspectionQueryTypes:GET_SHEET_LAYOUT".equals(match.qualifiedId())));
     assertEquals(
         "source",
         GridGrindProtocolCatalog.entryFor("cellInputTypes:FORMULA")

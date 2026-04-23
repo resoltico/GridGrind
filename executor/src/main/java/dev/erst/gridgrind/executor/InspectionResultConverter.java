@@ -1,7 +1,5 @@
 package dev.erst.gridgrind.executor;
 
-import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
-import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.dto.ArrayFormulaReport;
 import dev.erst.gridgrind.contract.dto.AutofilterEntryReport;
 import dev.erst.gridgrind.contract.dto.AutofilterFilterColumnReport;
@@ -9,17 +7,10 @@ import dev.erst.gridgrind.contract.dto.AutofilterFilterCriterionReport;
 import dev.erst.gridgrind.contract.dto.AutofilterHealthReport;
 import dev.erst.gridgrind.contract.dto.AutofilterSortConditionReport;
 import dev.erst.gridgrind.contract.dto.AutofilterSortStateReport;
-import dev.erst.gridgrind.contract.dto.CellAlignmentReport;
-import dev.erst.gridgrind.contract.dto.CellBorderReport;
 import dev.erst.gridgrind.contract.dto.CellBorderSideReport;
 import dev.erst.gridgrind.contract.dto.CellColorReport;
-import dev.erst.gridgrind.contract.dto.CellFillReport;
 import dev.erst.gridgrind.contract.dto.CellFontReport;
-import dev.erst.gridgrind.contract.dto.CellGradientFillReport;
-import dev.erst.gridgrind.contract.dto.CellGradientStopReport;
-import dev.erst.gridgrind.contract.dto.CellProtectionReport;
 import dev.erst.gridgrind.contract.dto.ChartReport;
-import dev.erst.gridgrind.contract.dto.CommentAnchorReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingEntryReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingHealthReport;
 import dev.erst.gridgrind.contract.dto.ConditionalFormattingRuleReport;
@@ -30,10 +21,7 @@ import dev.erst.gridgrind.contract.dto.CustomXmlLinkedCellReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlLinkedTableReport;
 import dev.erst.gridgrind.contract.dto.CustomXmlMappingReport;
 import dev.erst.gridgrind.contract.dto.DataValidationEntryReport;
-import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationHealthReport;
-import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
-import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderReport;
 import dev.erst.gridgrind.contract.dto.DifferentialBorderSideReport;
 import dev.erst.gridgrind.contract.dto.DifferentialStyleReport;
@@ -61,7 +49,6 @@ import dev.erst.gridgrind.contract.dto.PrintScalingReport;
 import dev.erst.gridgrind.contract.dto.PrintSetupReport;
 import dev.erst.gridgrind.contract.dto.PrintTitleColumnsReport;
 import dev.erst.gridgrind.contract.dto.PrintTitleRowsReport;
-import dev.erst.gridgrind.contract.dto.RichTextRunReport;
 import dev.erst.gridgrind.contract.dto.SheetDefaultsReport;
 import dev.erst.gridgrind.contract.dto.SheetDisplayReport;
 import dev.erst.gridgrind.contract.dto.SheetOutlineSummaryReport;
@@ -73,7 +60,6 @@ import dev.erst.gridgrind.contract.dto.TableHealthReport;
 import dev.erst.gridgrind.contract.dto.TableStyleReport;
 import dev.erst.gridgrind.contract.dto.WorkbookProtectionReport;
 import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.excel.ExcelArrayFormulaSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterColumnSnapshot;
 import dev.erst.gridgrind.excel.ExcelAutofilterFilterCriterionSnapshot;
@@ -96,7 +82,6 @@ import dev.erst.gridgrind.excel.ExcelCustomXmlLinkedCellSnapshot;
 import dev.erst.gridgrind.excel.ExcelCustomXmlLinkedTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelCustomXmlMappingSnapshot;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
-import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorderSide;
@@ -106,14 +91,12 @@ import dev.erst.gridgrind.excel.ExcelDrawingMarker;
 import dev.erst.gridgrind.excel.ExcelDrawingObjectPayload;
 import dev.erst.gridgrind.excel.ExcelDrawingObjectSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.excel.ExcelGradientFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelHeaderFooterText;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelPivotTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelPrintLayout;
-import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetPresentationSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
@@ -122,8 +105,6 @@ import dev.erst.gridgrind.excel.ExcelTableSnapshot;
 import dev.erst.gridgrind.excel.ExcelTableStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSnapshot;
 import dev.erst.gridgrind.excel.WorkbookAnalysis;
-import java.util.Base64;
-import java.util.List;
 
 /**
  * Converts workbook-core inspection results into protocol response shapes.
@@ -397,298 +378,33 @@ final class InspectionResultConverter {
 
   /** Converts workbook-core hyperlink metadata into the canonical protocol hyperlink shape. */
   static HyperlinkTarget toHyperlinkTarget(ExcelHyperlink hyperlink) {
-    if (hyperlink == null) {
-      return null;
-    }
-    return switch (hyperlink) {
-      case ExcelHyperlink.Url url -> new HyperlinkTarget.Url(url.target());
-      case ExcelHyperlink.Email email -> new HyperlinkTarget.Email(email.target());
-      case ExcelHyperlink.File file -> new HyperlinkTarget.File(file.path());
-      case ExcelHyperlink.Document document -> new HyperlinkTarget.Document(document.target());
-    };
+    return InspectionResultCellReportSupport.toHyperlinkTarget(hyperlink);
   }
 
   /** Converts workbook-core comment metadata into the protocol inspection-result shape. */
   static GridGrindResponse.CommentReport toCommentReport(ExcelComment comment) {
-    if (comment == null) {
-      return null;
-    }
-    return new GridGrindResponse.CommentReport(comment.text(), comment.author(), comment.visible());
+    return InspectionResultCellReportSupport.toCommentReport(comment);
   }
 
   static DrawingObjectReport toDrawingObjectReport(ExcelDrawingObjectSnapshot snapshot) {
-    return switch (snapshot) {
-      case ExcelDrawingObjectSnapshot.Picture picture ->
-          new DrawingObjectReport.Picture(
-              picture.name(),
-              toDrawingAnchorReport(picture.anchor()),
-              picture.format(),
-              picture.contentType(),
-              picture.byteSize(),
-              picture.sha256(),
-              picture.widthPixels(),
-              picture.heightPixels(),
-              picture.description());
-      case ExcelDrawingObjectSnapshot.Chart chart ->
-          new DrawingObjectReport.Chart(
-              chart.name(),
-              toDrawingAnchorReport(chart.anchor()),
-              chart.supported(),
-              chart.plotTypeTokens(),
-              chart.title());
-      case ExcelDrawingObjectSnapshot.Shape shape ->
-          new DrawingObjectReport.Shape(
-              shape.name(),
-              toDrawingAnchorReport(shape.anchor()),
-              shape.kind(),
-              shape.presetGeometryToken(),
-              shape.text(),
-              shape.childCount());
-      case ExcelDrawingObjectSnapshot.EmbeddedObject embeddedObject ->
-          new DrawingObjectReport.EmbeddedObject(
-              embeddedObject.name(),
-              toDrawingAnchorReport(embeddedObject.anchor()),
-              embeddedObject.packagingKind(),
-              embeddedObject.label(),
-              embeddedObject.fileName(),
-              embeddedObject.command(),
-              embeddedObject.contentType(),
-              embeddedObject.byteSize(),
-              embeddedObject.sha256(),
-              embeddedObject.previewFormat(),
-              embeddedObject.previewByteSize(),
-              embeddedObject.previewSha256());
-      case ExcelDrawingObjectSnapshot.SignatureLine signatureLine ->
-          new DrawingObjectReport.SignatureLine(
-              signatureLine.name(),
-              toDrawingAnchorReport(signatureLine.anchor()),
-              signatureLine.setupId(),
-              signatureLine.allowComments(),
-              signatureLine.signingInstructions(),
-              signatureLine.suggestedSigner(),
-              signatureLine.suggestedSigner2(),
-              signatureLine.suggestedSignerEmail(),
-              signatureLine.previewFormat(),
-              signatureLine.previewContentType(),
-              signatureLine.previewByteSize(),
-              signatureLine.previewSha256(),
-              signatureLine.previewWidthPixels(),
-              signatureLine.previewHeightPixels());
-    };
+    return InspectionResultDrawingReportSupport.toDrawingObjectReport(snapshot);
   }
 
   static ChartReport toChartReport(ExcelChartSnapshot snapshot) {
-    return new ChartReport(
-        snapshot.name(),
-        toDrawingAnchorReport(snapshot.anchor()),
-        toChartTitleReport(snapshot.title()),
-        toChartLegendReport(snapshot.legend()),
-        snapshot.displayBlanksAs(),
-        snapshot.plotOnlyVisibleCells(),
-        snapshot.plots().stream().map(InspectionResultConverter::toChartPlotReport).toList());
-  }
-
-  private static ChartReport.Title toChartTitleReport(ExcelChartSnapshot.Title title) {
-    return switch (title) {
-      case ExcelChartSnapshot.Title.None _ -> new ChartReport.Title.None();
-      case ExcelChartSnapshot.Title.Text text -> new ChartReport.Title.Text(text.text());
-      case ExcelChartSnapshot.Title.Formula formula ->
-          new ChartReport.Title.Formula(formula.formula(), formula.cachedText());
-    };
-  }
-
-  private static ChartReport.Legend toChartLegendReport(ExcelChartSnapshot.Legend legend) {
-    return switch (legend) {
-      case ExcelChartSnapshot.Legend.Hidden _ -> new ChartReport.Legend.Hidden();
-      case ExcelChartSnapshot.Legend.Visible visible ->
-          new ChartReport.Legend.Visible(visible.position());
-    };
-  }
-
-  private static ChartReport.Axis toChartAxisReport(ExcelChartSnapshot.Axis axis) {
-    return new ChartReport.Axis(axis.kind(), axis.position(), axis.crosses(), axis.visible());
-  }
-
-  private static ChartReport.Series toChartSeriesReport(ExcelChartSnapshot.Series series) {
-    return new ChartReport.Series(
-        toChartTitleReport(series.title()),
-        toChartDataSourceReport(series.categories()),
-        toChartDataSourceReport(series.values()),
-        series.smooth(),
-        series.markerStyle(),
-        series.markerSize(),
-        series.explosion());
-  }
-
-  private static ChartReport.DataSource toChartDataSourceReport(
-      ExcelChartSnapshot.DataSource source) {
-    return switch (source) {
-      case ExcelChartSnapshot.DataSource.StringReference reference ->
-          new ChartReport.DataSource.StringReference(reference.formula(), reference.cachedValues());
-      case ExcelChartSnapshot.DataSource.NumericReference reference ->
-          new ChartReport.DataSource.NumericReference(
-              reference.formula(), reference.formatCode(), reference.cachedValues());
-      case ExcelChartSnapshot.DataSource.StringLiteral literal ->
-          new ChartReport.DataSource.StringLiteral(literal.values());
-      case ExcelChartSnapshot.DataSource.NumericLiteral literal ->
-          new ChartReport.DataSource.NumericLiteral(literal.formatCode(), literal.values());
-    };
-  }
-
-  private static ChartReport.Plot toChartPlotReport(ExcelChartSnapshot.Plot plot) {
-    return switch (plot) {
-      case ExcelChartSnapshot.Area area ->
-          new ChartReport.Area(
-              area.varyColors(),
-              area.grouping(),
-              area.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              area.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
-      case ExcelChartSnapshot.Area3D area3D ->
-          new ChartReport.Area3D(
-              area3D.varyColors(),
-              area3D.grouping(),
-              area3D.gapDepth(),
-              area3D.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              area3D.series().stream()
-                  .map(InspectionResultConverter::toChartSeriesReport)
-                  .toList());
-      case ExcelChartSnapshot.Bar bar ->
-          new ChartReport.Bar(
-              bar.varyColors(),
-              bar.barDirection(),
-              bar.grouping(),
-              bar.gapWidth(),
-              bar.overlap(),
-              bar.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              bar.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
-      case ExcelChartSnapshot.Bar3D bar3D ->
-          new ChartReport.Bar3D(
-              bar3D.varyColors(),
-              bar3D.barDirection(),
-              bar3D.grouping(),
-              bar3D.gapDepth(),
-              bar3D.gapWidth(),
-              bar3D.shape(),
-              bar3D.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              bar3D.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
-      case ExcelChartSnapshot.Doughnut doughnut ->
-          new ChartReport.Doughnut(
-              doughnut.varyColors(),
-              doughnut.firstSliceAngle(),
-              doughnut.holeSize(),
-              doughnut.series().stream()
-                  .map(InspectionResultConverter::toChartSeriesReport)
-                  .toList());
-      case ExcelChartSnapshot.Line line ->
-          new ChartReport.Line(
-              line.varyColors(),
-              line.grouping(),
-              line.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              line.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
-      case ExcelChartSnapshot.Line3D line3D ->
-          new ChartReport.Line3D(
-              line3D.varyColors(),
-              line3D.grouping(),
-              line3D.gapDepth(),
-              line3D.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              line3D.series().stream()
-                  .map(InspectionResultConverter::toChartSeriesReport)
-                  .toList());
-      case ExcelChartSnapshot.Pie pie ->
-          new ChartReport.Pie(
-              pie.varyColors(),
-              pie.firstSliceAngle(),
-              pie.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
-      case ExcelChartSnapshot.Pie3D pie3D ->
-          new ChartReport.Pie3D(
-              pie3D.varyColors(),
-              pie3D.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
-      case ExcelChartSnapshot.Radar radar ->
-          new ChartReport.Radar(
-              radar.varyColors(),
-              radar.style(),
-              radar.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              radar.series().stream().map(InspectionResultConverter::toChartSeriesReport).toList());
-      case ExcelChartSnapshot.Scatter scatter ->
-          new ChartReport.Scatter(
-              scatter.varyColors(),
-              scatter.style(),
-              scatter.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              scatter.series().stream()
-                  .map(InspectionResultConverter::toChartSeriesReport)
-                  .toList());
-      case ExcelChartSnapshot.Surface surface ->
-          new ChartReport.Surface(
-              surface.varyColors(),
-              surface.wireframe(),
-              surface.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              surface.series().stream()
-                  .map(InspectionResultConverter::toChartSeriesReport)
-                  .toList());
-      case ExcelChartSnapshot.Surface3D surface3D ->
-          new ChartReport.Surface3D(
-              surface3D.varyColors(),
-              surface3D.wireframe(),
-              surface3D.axes().stream().map(InspectionResultConverter::toChartAxisReport).toList(),
-              surface3D.series().stream()
-                  .map(InspectionResultConverter::toChartSeriesReport)
-                  .toList());
-      case ExcelChartSnapshot.Unsupported unsupported ->
-          new ChartReport.Unsupported(unsupported.plotTypeToken(), unsupported.detail());
-    };
+    return InspectionResultDrawingReportSupport.toChartReport(snapshot);
   }
 
   static DrawingObjectPayloadReport toDrawingObjectPayloadReport(
       ExcelDrawingObjectPayload payload) {
-    return switch (payload) {
-      case ExcelDrawingObjectPayload.Picture picture ->
-          new DrawingObjectPayloadReport.Picture(
-              picture.name(),
-              picture.format(),
-              picture.contentType(),
-              picture.fileName(),
-              picture.sha256(),
-              Base64.getEncoder().encodeToString(picture.data().bytes()),
-              picture.description());
-      case ExcelDrawingObjectPayload.EmbeddedObject embeddedObject ->
-          new DrawingObjectPayloadReport.EmbeddedObject(
-              embeddedObject.name(),
-              embeddedObject.packagingKind(),
-              embeddedObject.contentType(),
-              embeddedObject.fileName(),
-              embeddedObject.sha256(),
-              Base64.getEncoder().encodeToString(embeddedObject.data().bytes()),
-              embeddedObject.label(),
-              embeddedObject.command());
-    };
+    return InspectionResultDrawingReportSupport.toDrawingObjectPayloadReport(payload);
   }
 
   static DrawingAnchorReport toDrawingAnchorReport(ExcelDrawingAnchor anchor) {
-    return switch (anchor) {
-      case ExcelDrawingAnchor.TwoCell twoCell ->
-          new DrawingAnchorReport.TwoCell(
-              toDrawingMarkerReport(twoCell.from()),
-              toDrawingMarkerReport(twoCell.to()),
-              twoCell.behavior());
-      case ExcelDrawingAnchor.OneCell oneCell ->
-          new DrawingAnchorReport.OneCell(
-              toDrawingMarkerReport(oneCell.from()),
-              oneCell.widthEmu(),
-              oneCell.heightEmu(),
-              oneCell.behavior());
-      case ExcelDrawingAnchor.Absolute absolute ->
-          new DrawingAnchorReport.Absolute(
-              absolute.xEmu(),
-              absolute.yEmu(),
-              absolute.widthEmu(),
-              absolute.heightEmu(),
-              absolute.behavior());
-    };
+    return InspectionResultDrawingReportSupport.toDrawingAnchorReport(anchor);
   }
 
   static DrawingMarkerReport toDrawingMarkerReport(ExcelDrawingMarker marker) {
-    return new DrawingMarkerReport(
-        marker.columnIndex(), marker.rowIndex(), marker.dx(), marker.dy());
+    return InspectionResultDrawingReportSupport.toDrawingMarkerReport(marker);
   }
 
   /** Converts workbook-core workbook-protection state into the protocol inspection-result shape. */
@@ -704,216 +420,57 @@ final class InspectionResultConverter {
 
   static DataValidationEntryReport toDataValidationEntryReport(
       ExcelDataValidationSnapshot snapshot) {
-    return switch (snapshot) {
-      case ExcelDataValidationSnapshot.Supported supported ->
-          new DataValidationEntryReport.Supported(
-              supported.ranges(), toDataValidationDefinitionReport(supported.validation()));
-      case ExcelDataValidationSnapshot.Unsupported unsupported ->
-          new DataValidationEntryReport.Unsupported(
-              unsupported.ranges(), unsupported.kind(), unsupported.detail());
-    };
+    return InspectionResultValidationReportSupport.toDataValidationEntryReport(snapshot);
   }
 
   static DataValidationEntryReport.DataValidationDefinitionReport toDataValidationDefinitionReport(
       ExcelDataValidationDefinition definition) {
-    return new DataValidationEntryReport.DataValidationDefinitionReport(
-        toDataValidationRuleInput(definition.rule()),
-        definition.allowBlank(),
-        definition.suppressDropDownArrow(),
-        definition.prompt() == null
-            ? null
-            : new DataValidationPromptInput(
-                new TextSourceInput.Inline(definition.prompt().title()),
-                new TextSourceInput.Inline(definition.prompt().text()),
-                definition.prompt().showPromptBox()),
-        definition.errorAlert() == null
-            ? null
-            : new DataValidationErrorAlertInput(
-                definition.errorAlert().style(),
-                new TextSourceInput.Inline(definition.errorAlert().title()),
-                new TextSourceInput.Inline(definition.errorAlert().text()),
-                definition.errorAlert().showErrorBox()));
-  }
-
-  private static DataValidationRuleInput toDataValidationRuleInput(ExcelDataValidationRule rule) {
-    return switch (rule) {
-      case ExcelDataValidationRule.ExplicitList explicitList ->
-          new DataValidationRuleInput.ExplicitList(explicitList.values());
-      case ExcelDataValidationRule.FormulaList formulaList ->
-          new DataValidationRuleInput.FormulaList(formulaList.formula());
-      case ExcelDataValidationRule.WholeNumber wholeNumber ->
-          new DataValidationRuleInput.WholeNumber(
-              wholeNumber.operator(), wholeNumber.formula1(), wholeNumber.formula2());
-      case ExcelDataValidationRule.DecimalNumber decimalNumber ->
-          new DataValidationRuleInput.DecimalNumber(
-              decimalNumber.operator(), decimalNumber.formula1(), decimalNumber.formula2());
-      case ExcelDataValidationRule.DateRule dateRule ->
-          new DataValidationRuleInput.DateRule(
-              dateRule.operator(), dateRule.formula1(), dateRule.formula2());
-      case ExcelDataValidationRule.TimeRule timeRule ->
-          new DataValidationRuleInput.TimeRule(
-              timeRule.operator(), timeRule.formula1(), timeRule.formula2());
-      case ExcelDataValidationRule.TextLength textLength ->
-          new DataValidationRuleInput.TextLength(
-              textLength.operator(), textLength.formula1(), textLength.formula2());
-      case ExcelDataValidationRule.CustomFormula customFormula ->
-          new DataValidationRuleInput.CustomFormula(customFormula.formula());
-    };
+    return InspectionResultValidationReportSupport.toDataValidationDefinitionReport(definition);
   }
 
   static ConditionalFormattingEntryReport toConditionalFormattingEntryReport(
       ExcelConditionalFormattingBlockSnapshot block) {
-    return new ConditionalFormattingEntryReport(
-        block.ranges(),
-        block.rules().stream()
-            .map(InspectionResultConverter::toConditionalFormattingRuleReport)
-            .toList());
+    return InspectionResultValidationReportSupport.toConditionalFormattingEntryReport(block);
   }
 
   static ConditionalFormattingRuleReport toConditionalFormattingRuleReport(
       ExcelConditionalFormattingRuleSnapshot rule) {
-    return switch (rule) {
-      case ExcelConditionalFormattingRuleSnapshot.FormulaRule formulaRule ->
-          new ConditionalFormattingRuleReport.FormulaRule(
-              formulaRule.priority(),
-              formulaRule.stopIfTrue(),
-              formulaRule.formula(),
-              toDifferentialStyleReport(formulaRule.style()));
-      case ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule ->
-          new ConditionalFormattingRuleReport.CellValueRule(
-              cellValueRule.priority(),
-              cellValueRule.stopIfTrue(),
-              cellValueRule.operator(),
-              cellValueRule.formula1(),
-              cellValueRule.formula2(),
-              toDifferentialStyleReport(cellValueRule.style()));
-      case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule colorScaleRule ->
-          new ConditionalFormattingRuleReport.ColorScaleRule(
-              colorScaleRule.priority(),
-              colorScaleRule.stopIfTrue(),
-              colorScaleRule.thresholds().stream()
-                  .map(InspectionResultConverter::toConditionalFormattingThresholdReport)
-                  .toList(),
-              colorScaleRule.colors());
-      case ExcelConditionalFormattingRuleSnapshot.DataBarRule dataBarRule ->
-          new ConditionalFormattingRuleReport.DataBarRule(
-              dataBarRule.priority(),
-              dataBarRule.stopIfTrue(),
-              dataBarRule.color(),
-              dataBarRule.iconOnly(),
-              dataBarRule.widthMin(),
-              dataBarRule.widthMax(),
-              toConditionalFormattingThresholdReport(dataBarRule.minThreshold()),
-              toConditionalFormattingThresholdReport(dataBarRule.maxThreshold()));
-      case ExcelConditionalFormattingRuleSnapshot.IconSetRule iconSetRule ->
-          new ConditionalFormattingRuleReport.IconSetRule(
-              iconSetRule.priority(),
-              iconSetRule.stopIfTrue(),
-              iconSetRule.iconSet(),
-              iconSetRule.iconOnly(),
-              iconSetRule.reversed(),
-              iconSetRule.thresholds().stream()
-                  .map(InspectionResultConverter::toConditionalFormattingThresholdReport)
-                  .toList());
-      case ExcelConditionalFormattingRuleSnapshot.Top10Rule top10Rule ->
-          new ConditionalFormattingRuleReport.Top10Rule(
-              top10Rule.priority(),
-              top10Rule.stopIfTrue(),
-              top10Rule.rank(),
-              top10Rule.percent(),
-              top10Rule.bottom(),
-              toDifferentialStyleReport(top10Rule.style()));
-      case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
-          new ConditionalFormattingRuleReport.UnsupportedRule(
-              unsupportedRule.priority(),
-              unsupportedRule.stopIfTrue(),
-              unsupportedRule.kind(),
-              unsupportedRule.detail());
-    };
+    return InspectionResultValidationReportSupport.toConditionalFormattingRuleReport(rule);
   }
 
   static ConditionalFormattingThresholdReport toConditionalFormattingThresholdReport(
       ExcelConditionalFormattingThresholdSnapshot threshold) {
-    return new ConditionalFormattingThresholdReport(
-        threshold.type(), threshold.formula(), threshold.value());
+    return InspectionResultValidationReportSupport.toConditionalFormattingThresholdReport(
+        threshold);
   }
 
   static DifferentialStyleReport toDifferentialStyleReport(ExcelDifferentialStyleSnapshot style) {
-    if (style == null) {
-      return null;
-    }
-    return new DifferentialStyleReport(
-        style.numberFormat(),
-        style.bold(),
-        style.italic(),
-        toFontHeightReport(style.fontHeight()),
-        style.fontColor(),
-        style.underline(),
-        style.strikeout(),
-        style.fillColor(),
-        toDifferentialBorderReport(style.border()),
-        style.unsupportedFeatures());
+    return InspectionResultValidationReportSupport.toDifferentialStyleReport(style);
   }
 
   static DifferentialBorderReport toDifferentialBorderReport(ExcelDifferentialBorder border) {
-    if (border == null) {
-      return null;
-    }
-    return new DifferentialBorderReport(
-        toDifferentialBorderSideReport(border.all()),
-        toDifferentialBorderSideReport(border.top()),
-        toDifferentialBorderSideReport(border.right()),
-        toDifferentialBorderSideReport(border.bottom()),
-        toDifferentialBorderSideReport(border.left()));
+    return InspectionResultValidationReportSupport.toDifferentialBorderReport(border);
   }
 
   static DifferentialBorderSideReport toDifferentialBorderSideReport(
       ExcelDifferentialBorderSide side) {
-    return side == null ? null : new DifferentialBorderSideReport(side.style(), side.color());
+    return InspectionResultValidationReportSupport.toDifferentialBorderSideReport(side);
   }
 
   static FontHeightReport toFontHeightReport(ExcelFontHeight fontHeight) {
-    return fontHeight == null
-        ? null
-        : new FontHeightReport(fontHeight.twips(), fontHeight.points());
+    return InspectionResultCellReportSupport.toFontHeightReport(fontHeight);
   }
 
   static GridGrindResponse.CellStyleReport toCellStyleReport(ExcelCellStyleSnapshot style) {
-    return new GridGrindResponse.CellStyleReport(
-        style.numberFormat(),
-        new CellAlignmentReport(
-            style.alignment().wrapText(),
-            style.alignment().horizontalAlignment(),
-            style.alignment().verticalAlignment(),
-            style.alignment().textRotation(),
-            style.alignment().indentation()),
-        toCellFontReport(style.font()),
-        new CellFillReport(
-            style.fill().pattern(),
-            toCellColorReport(style.fill().foregroundColor()),
-            toCellColorReport(style.fill().backgroundColor()),
-            toCellGradientFillReport(style.fill().gradient())),
-        new CellBorderReport(
-            toCellBorderSideReport(style.border().top()),
-            toCellBorderSideReport(style.border().right()),
-            toCellBorderSideReport(style.border().bottom()),
-            toCellBorderSideReport(style.border().left())),
-        new CellProtectionReport(style.protection().locked(), style.protection().hiddenFormula()));
+    return InspectionResultCellReportSupport.toCellStyleReport(style);
   }
 
   static CellFontReport toCellFontReport(ExcelCellFontSnapshot font) {
-    return new CellFontReport(
-        font.bold(),
-        font.italic(),
-        font.fontName(),
-        toFontHeightReport(font.fontHeight()),
-        toCellColorReport(font.fontColor()),
-        font.underline(),
-        font.strikeout());
+    return InspectionResultCellReportSupport.toCellFontReport(font);
   }
 
   static CellBorderSideReport toCellBorderSideReport(ExcelBorderSideSnapshot side) {
-    return new CellBorderSideReport(side.style(), toCellColorReport(side.color()));
+    return InspectionResultCellReportSupport.toCellBorderSideReport(side);
   }
 
   private static GridGrindResponse.WindowReport toWindowReport(
@@ -1082,98 +639,11 @@ final class InspectionResultConverter {
   }
 
   static GridGrindResponse.CellReport toCellReport(ExcelCellSnapshot snapshot) {
-    GridGrindResponse.CellStyleReport style = toCellStyleReport(snapshot.style());
-    HyperlinkTarget hyperlink = toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null));
-    GridGrindResponse.CommentReport comment =
-        toCommentReport(snapshot.metadata().comment().orElse(null));
-
-    return switch (snapshot) {
-      case ExcelCellSnapshot.BlankSnapshot s ->
-          new GridGrindResponse.CellReport.BlankReport(
-              s.address(), s.declaredType(), s.displayValue(), style, hyperlink, comment);
-      case ExcelCellSnapshot.TextSnapshot s ->
-          new GridGrindResponse.CellReport.TextReport(
-              s.address(),
-              s.declaredType(),
-              s.displayValue(),
-              style,
-              hyperlink,
-              comment,
-              s.stringValue(),
-              toRichTextRunReports(s.richText()));
-      case ExcelCellSnapshot.NumberSnapshot s ->
-          new GridGrindResponse.CellReport.NumberReport(
-              s.address(),
-              s.declaredType(),
-              s.displayValue(),
-              style,
-              hyperlink,
-              comment,
-              s.numberValue());
-      case ExcelCellSnapshot.BooleanSnapshot s ->
-          new GridGrindResponse.CellReport.BooleanReport(
-              s.address(),
-              s.declaredType(),
-              s.displayValue(),
-              style,
-              hyperlink,
-              comment,
-              s.booleanValue());
-      case ExcelCellSnapshot.ErrorSnapshot s ->
-          new GridGrindResponse.CellReport.ErrorReport(
-              s.address(),
-              s.declaredType(),
-              s.displayValue(),
-              style,
-              hyperlink,
-              comment,
-              s.errorValue());
-      case ExcelCellSnapshot.FormulaSnapshot s ->
-          new GridGrindResponse.CellReport.FormulaReport(
-              s.address(),
-              s.declaredType(),
-              s.displayValue(),
-              style,
-              hyperlink,
-              comment,
-              s.formula(),
-              toCellReport(s.evaluation()));
-    };
-  }
-
-  @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-  private static List<RichTextRunReport> toRichTextRunReports(ExcelRichTextSnapshot richText) {
-    if (richText == null) {
-      return null;
-    }
-    return richText.runs().stream()
-        .map(run -> new RichTextRunReport(run.text(), toCellFontReport(run.font())))
-        .toList();
+    return InspectionResultCellReportSupport.toCellReport(snapshot);
   }
 
   private static CellColorReport toCellColorReport(ExcelColorSnapshot color) {
-    return color == null
-        ? null
-        : new CellColorReport(color.rgb(), color.theme(), color.indexed(), color.tint());
-  }
-
-  private static CellGradientFillReport toCellGradientFillReport(
-      ExcelGradientFillSnapshot gradient) {
-    return gradient == null
-        ? null
-        : new CellGradientFillReport(
-            gradient.type(),
-            gradient.degree(),
-            gradient.left(),
-            gradient.right(),
-            gradient.top(),
-            gradient.bottom(),
-            gradient.stops().stream()
-                .map(
-                    stop ->
-                        new CellGradientStopReport(
-                            stop.position(), toCellColorReport(stop.color())))
-                .toList());
+    return InspectionResultCellReportSupport.toCellColorReport(color);
   }
 
   private static CustomXmlMappingReport toCustomXmlMappingReport(
@@ -1249,194 +719,61 @@ final class InspectionResultConverter {
 
   private static GridGrindResponse.FormulaSurfaceReport toFormulaSurfaceReport(
       dev.erst.gridgrind.excel.WorkbookReadResult.FormulaSurface analysis) {
-    return new GridGrindResponse.FormulaSurfaceReport(
-        analysis.totalFormulaCellCount(),
-        analysis.sheets().stream()
-            .map(
-                sheet ->
-                    new GridGrindResponse.SheetFormulaSurfaceReport(
-                        sheet.sheetName(),
-                        sheet.formulaCellCount(),
-                        sheet.distinctFormulaCount(),
-                        sheet.formulas().stream()
-                            .map(
-                                formula ->
-                                    new GridGrindResponse.FormulaPatternReport(
-                                        formula.formula(),
-                                        formula.occurrenceCount(),
-                                        formula.addresses()))
-                            .toList()))
-            .toList());
+    return InspectionResultAnalysisReportSupport.toFormulaSurfaceReport(analysis);
   }
 
   private static GridGrindResponse.SheetSchemaReport toSheetSchemaReport(
       dev.erst.gridgrind.excel.WorkbookReadResult.SheetSchema analysis) {
-    return new GridGrindResponse.SheetSchemaReport(
-        analysis.sheetName(),
-        analysis.topLeftAddress(),
-        analysis.rowCount(),
-        analysis.columnCount(),
-        analysis.dataRowCount(),
-        analysis.columns().stream()
-            .map(
-                column ->
-                    new GridGrindResponse.SchemaColumnReport(
-                        column.columnIndex(),
-                        column.columnAddress(),
-                        column.headerDisplayValue(),
-                        column.populatedCellCount(),
-                        column.blankCellCount(),
-                        column.observedTypes().stream()
-                            .map(
-                                typeCount ->
-                                    new GridGrindResponse.TypeCountReport(
-                                        typeCount.type(), typeCount.count()))
-                            .toList(),
-                        column.dominantType()))
-            .toList());
+    return InspectionResultAnalysisReportSupport.toSheetSchemaReport(analysis);
   }
 
   private static GridGrindResponse.NamedRangeSurfaceReport toNamedRangeSurfaceReport(
       dev.erst.gridgrind.excel.WorkbookReadResult.NamedRangeSurface analysis) {
-    return new GridGrindResponse.NamedRangeSurfaceReport(
-        analysis.workbookScopedCount(),
-        analysis.sheetScopedCount(),
-        analysis.rangeBackedCount(),
-        analysis.formulaBackedCount(),
-        analysis.namedRanges().stream()
-            .map(
-                entry ->
-                    new GridGrindResponse.NamedRangeSurfaceEntryReport(
-                        entry.name(),
-                        toNamedRangeScope(entry.scope()),
-                        entry.refersToFormula(),
-                        switch (entry.kind()) {
-                          case RANGE -> GridGrindResponse.NamedRangeBackingKind.RANGE;
-                          case FORMULA -> GridGrindResponse.NamedRangeBackingKind.FORMULA;
-                        }))
-            .toList());
+    return InspectionResultAnalysisReportSupport.toNamedRangeSurfaceReport(analysis);
   }
 
   private static GridGrindResponse.FormulaHealthReport toFormulaHealthReport(
       WorkbookAnalysis.FormulaHealth analysis) {
-    return new GridGrindResponse.FormulaHealthReport(
-        analysis.checkedFormulaCellCount(),
-        toAnalysisSummaryReport(analysis.summary()),
-        analysis.findings().stream()
-            .map(InspectionResultConverter::toAnalysisFindingReport)
-            .toList());
+    return InspectionResultAnalysisReportSupport.toFormulaHealthReport(analysis);
   }
 
   private static DataValidationHealthReport toDataValidationHealthReport(
       WorkbookAnalysis.DataValidationHealth analysis) {
-    return new DataValidationHealthReport(
-        analysis.checkedValidationCount(),
-        toAnalysisSummaryReport(analysis.summary()),
-        analysis.findings().stream()
-            .map(InspectionResultConverter::toAnalysisFindingReport)
-            .toList());
+    return InspectionResultAnalysisReportSupport.toDataValidationHealthReport(analysis);
   }
 
   private static ConditionalFormattingHealthReport toConditionalFormattingHealthReport(
       WorkbookAnalysis.ConditionalFormattingHealth analysis) {
-    return new ConditionalFormattingHealthReport(
-        analysis.checkedConditionalFormattingBlockCount(),
-        toAnalysisSummaryReport(analysis.summary()),
-        analysis.findings().stream()
-            .map(InspectionResultConverter::toAnalysisFindingReport)
-            .toList());
+    return InspectionResultAnalysisReportSupport.toConditionalFormattingHealthReport(analysis);
   }
 
   private static AutofilterHealthReport toAutofilterHealthReport(
       WorkbookAnalysis.AutofilterHealth analysis) {
-    return new AutofilterHealthReport(
-        analysis.checkedAutofilterCount(),
-        toAnalysisSummaryReport(analysis.summary()),
-        analysis.findings().stream()
-            .map(InspectionResultConverter::toAnalysisFindingReport)
-            .toList());
+    return InspectionResultAnalysisReportSupport.toAutofilterHealthReport(analysis);
   }
 
   private static TableHealthReport toTableHealthReport(WorkbookAnalysis.TableHealth analysis) {
-    return new TableHealthReport(
-        analysis.checkedTableCount(),
-        toAnalysisSummaryReport(analysis.summary()),
-        analysis.findings().stream()
-            .map(InspectionResultConverter::toAnalysisFindingReport)
-            .toList());
+    return InspectionResultAnalysisReportSupport.toTableHealthReport(analysis);
   }
 
   private static PivotTableHealthReport toPivotTableHealthReport(
       WorkbookAnalysis.PivotTableHealth analysis) {
-    return new PivotTableHealthReport(
-        analysis.checkedPivotTableCount(),
-        toAnalysisSummaryReport(analysis.summary()),
-        analysis.findings().stream()
-            .map(InspectionResultConverter::toAnalysisFindingReport)
-            .toList());
+    return InspectionResultAnalysisReportSupport.toPivotTableHealthReport(analysis);
   }
 
   private static GridGrindResponse.HyperlinkHealthReport toHyperlinkHealthReport(
       WorkbookAnalysis.HyperlinkHealth analysis) {
-    return new GridGrindResponse.HyperlinkHealthReport(
-        analysis.checkedHyperlinkCount(),
-        toAnalysisSummaryReport(analysis.summary()),
-        analysis.findings().stream()
-            .map(InspectionResultConverter::toAnalysisFindingReport)
-            .toList());
+    return InspectionResultAnalysisReportSupport.toHyperlinkHealthReport(analysis);
   }
 
   private static GridGrindResponse.NamedRangeHealthReport toNamedRangeHealthReport(
       WorkbookAnalysis.NamedRangeHealth analysis) {
-    return new GridGrindResponse.NamedRangeHealthReport(
-        analysis.checkedNamedRangeCount(),
-        toAnalysisSummaryReport(analysis.summary()),
-        analysis.findings().stream()
-            .map(InspectionResultConverter::toAnalysisFindingReport)
-            .toList());
+    return InspectionResultAnalysisReportSupport.toNamedRangeHealthReport(analysis);
   }
 
   private static GridGrindResponse.WorkbookFindingsReport toWorkbookFindingsReport(
       WorkbookAnalysis.WorkbookFindings analysis) {
-    return new GridGrindResponse.WorkbookFindingsReport(
-        toAnalysisSummaryReport(analysis.summary()),
-        analysis.findings().stream()
-            .map(InspectionResultConverter::toAnalysisFindingReport)
-            .toList());
-  }
-
-  private static GridGrindResponse.AnalysisSummaryReport toAnalysisSummaryReport(
-      WorkbookAnalysis.AnalysisSummary summary) {
-    return new GridGrindResponse.AnalysisSummaryReport(
-        summary.totalCount(), summary.errorCount(), summary.warningCount(), summary.infoCount());
-  }
-
-  private static GridGrindResponse.AnalysisFindingReport toAnalysisFindingReport(
-      WorkbookAnalysis.AnalysisFinding finding) {
-    return new GridGrindResponse.AnalysisFindingReport(
-        toAnalysisFindingCode(finding.code()),
-        toAnalysisSeverity(finding.severity()),
-        finding.title(),
-        finding.message(),
-        toAnalysisLocationReport(finding.location()),
-        finding.evidence());
-  }
-
-  private static GridGrindResponse.AnalysisLocationReport toAnalysisLocationReport(
-      WorkbookAnalysis.AnalysisLocation location) {
-    return switch (location) {
-      case WorkbookAnalysis.AnalysisLocation.Workbook _ ->
-          new GridGrindResponse.AnalysisLocationReport.Workbook();
-      case WorkbookAnalysis.AnalysisLocation.Sheet sheet ->
-          new GridGrindResponse.AnalysisLocationReport.Sheet(sheet.sheetName());
-      case WorkbookAnalysis.AnalysisLocation.Cell cell ->
-          new GridGrindResponse.AnalysisLocationReport.Cell(cell.sheetName(), cell.address());
-      case WorkbookAnalysis.AnalysisLocation.Range range ->
-          new GridGrindResponse.AnalysisLocationReport.Range(range.sheetName(), range.range());
-      case WorkbookAnalysis.AnalysisLocation.NamedRange namedRange ->
-          new GridGrindResponse.AnalysisLocationReport.NamedRange(
-              namedRange.name(), toNamedRangeScope(namedRange.scope()));
-    };
+    return InspectionResultAnalysisReportSupport.toWorkbookFindingsReport(analysis);
   }
 
   private static AutofilterEntryReport toAutofilterEntryReport(ExcelAutofilterSnapshot snapshot) {
@@ -1541,21 +878,7 @@ final class InspectionResultConverter {
   }
 
   private static GridGrindResponse.CommentReport toCommentReport(ExcelCommentSnapshot comment) {
-    if (comment == null) {
-      return null;
-    }
-    return new GridGrindResponse.CommentReport(
-        comment.text(),
-        comment.author(),
-        comment.visible(),
-        toRichTextRunReports(comment.runs()),
-        comment.anchor() == null
-            ? null
-            : new CommentAnchorReport(
-                comment.anchor().firstColumn(),
-                comment.anchor().firstRow(),
-                comment.anchor().lastColumn(),
-                comment.anchor().lastRow()));
+    return InspectionResultCellReportSupport.toCommentReport(comment);
   }
 
   private static AutofilterFilterColumnReport toAutofilterFilterColumnReport(
@@ -1656,14 +979,5 @@ final class InspectionResultConverter {
         settings.selectLockedCellsLocked(),
         settings.selectUnlockedCellsLocked(),
         settings.sortLocked());
-  }
-
-  private static AnalysisFindingCode toAnalysisFindingCode(
-      WorkbookAnalysis.AnalysisFindingCode code) {
-    return AnalysisFindingCode.valueOf(code.name());
-  }
-
-  private static AnalysisSeverity toAnalysisSeverity(WorkbookAnalysis.AnalysisSeverity severity) {
-    return AnalysisSeverity.valueOf(severity.name());
   }
 }

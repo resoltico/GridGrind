@@ -2,6 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,88 +20,91 @@ class ExcelConditionalFormattingDomainModelTest {
   void mapsEverySupportedPoiIconSetAndThresholdType() {
     assertEquals(
         ExcelConditionalFormattingIconSet.GYR_3_ARROW,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.GYR_3_ARROW));
+        ExcelConditionalFormattingPoiBridge.fromPoi(IconMultiStateFormatting.IconSet.GYR_3_ARROW));
     assertEquals(
         ExcelConditionalFormattingIconSet.GREY_3_ARROWS,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.GREY_3_ARROWS));
+        ExcelConditionalFormattingPoiBridge.fromPoi(
+            IconMultiStateFormatting.IconSet.GREY_3_ARROWS));
     assertEquals(
         ExcelConditionalFormattingIconSet.GYR_3_FLAGS,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.GYR_3_FLAGS));
+        ExcelConditionalFormattingPoiBridge.fromPoi(IconMultiStateFormatting.IconSet.GYR_3_FLAGS));
     assertEquals(
         ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS,
-        ExcelConditionalFormattingIconSet.fromPoi(
+        ExcelConditionalFormattingPoiBridge.fromPoi(
             IconMultiStateFormatting.IconSet.GYR_3_TRAFFIC_LIGHTS));
     assertEquals(
         ExcelConditionalFormattingIconSet.GYR_3_TRAFFIC_LIGHTS_BOX,
-        ExcelConditionalFormattingIconSet.fromPoi(
+        ExcelConditionalFormattingPoiBridge.fromPoi(
             IconMultiStateFormatting.IconSet.GYR_3_TRAFFIC_LIGHTS_BOX));
     assertEquals(
         ExcelConditionalFormattingIconSet.GYR_3_SHAPES,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.GYR_3_SHAPES));
+        ExcelConditionalFormattingPoiBridge.fromPoi(IconMultiStateFormatting.IconSet.GYR_3_SHAPES));
     assertEquals(
         ExcelConditionalFormattingIconSet.GYR_3_SYMBOLS_CIRCLE,
-        ExcelConditionalFormattingIconSet.fromPoi(
+        ExcelConditionalFormattingPoiBridge.fromPoi(
             IconMultiStateFormatting.IconSet.GYR_3_SYMBOLS_CIRCLE));
     assertEquals(
         ExcelConditionalFormattingIconSet.GYR_3_SYMBOLS,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.GYR_3_SYMBOLS));
+        ExcelConditionalFormattingPoiBridge.fromPoi(
+            IconMultiStateFormatting.IconSet.GYR_3_SYMBOLS));
     assertEquals(
         ExcelConditionalFormattingIconSet.GYR_4_ARROWS,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.GYR_4_ARROWS));
+        ExcelConditionalFormattingPoiBridge.fromPoi(IconMultiStateFormatting.IconSet.GYR_4_ARROWS));
     assertEquals(
         ExcelConditionalFormattingIconSet.GREY_4_ARROWS,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.GREY_4_ARROWS));
+        ExcelConditionalFormattingPoiBridge.fromPoi(
+            IconMultiStateFormatting.IconSet.GREY_4_ARROWS));
     assertEquals(
         ExcelConditionalFormattingIconSet.RB_4_TRAFFIC_LIGHTS,
-        ExcelConditionalFormattingIconSet.fromPoi(
+        ExcelConditionalFormattingPoiBridge.fromPoi(
             IconMultiStateFormatting.IconSet.RB_4_TRAFFIC_LIGHTS));
     assertEquals(
         ExcelConditionalFormattingIconSet.RATINGS_4,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.RATINGS_4));
+        ExcelConditionalFormattingPoiBridge.fromPoi(IconMultiStateFormatting.IconSet.RATINGS_4));
     assertEquals(
         ExcelConditionalFormattingIconSet.GYRB_4_TRAFFIC_LIGHTS,
-        ExcelConditionalFormattingIconSet.fromPoi(
+        ExcelConditionalFormattingPoiBridge.fromPoi(
             IconMultiStateFormatting.IconSet.GYRB_4_TRAFFIC_LIGHTS));
     assertEquals(
         ExcelConditionalFormattingIconSet.GYYYR_5_ARROWS,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.GYYYR_5_ARROWS));
+        ExcelConditionalFormattingPoiBridge.fromPoi(
+            IconMultiStateFormatting.IconSet.GYYYR_5_ARROWS));
     assertEquals(
         ExcelConditionalFormattingIconSet.GREY_5_ARROWS,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.GREY_5_ARROWS));
+        ExcelConditionalFormattingPoiBridge.fromPoi(
+            IconMultiStateFormatting.IconSet.GREY_5_ARROWS));
     assertEquals(
         ExcelConditionalFormattingIconSet.RATINGS_5,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.RATINGS_5));
+        ExcelConditionalFormattingPoiBridge.fromPoi(IconMultiStateFormatting.IconSet.RATINGS_5));
     assertEquals(
         ExcelConditionalFormattingIconSet.QUARTERS_5,
-        ExcelConditionalFormattingIconSet.fromPoi(IconMultiStateFormatting.IconSet.QUARTERS_5));
+        ExcelConditionalFormattingPoiBridge.fromPoi(IconMultiStateFormatting.IconSet.QUARTERS_5));
 
     assertEquals(
         ExcelConditionalFormattingThresholdType.NUMBER,
-        ExcelConditionalFormattingThresholdType.fromPoi(
+        ExcelConditionalFormattingPoiBridge.fromPoi(
             ConditionalFormattingThreshold.RangeType.NUMBER));
     assertEquals(
         ExcelConditionalFormattingThresholdType.MIN,
-        ExcelConditionalFormattingThresholdType.fromPoi(
-            ConditionalFormattingThreshold.RangeType.MIN));
+        ExcelConditionalFormattingPoiBridge.fromPoi(ConditionalFormattingThreshold.RangeType.MIN));
     assertEquals(
         ExcelConditionalFormattingThresholdType.MAX,
-        ExcelConditionalFormattingThresholdType.fromPoi(
-            ConditionalFormattingThreshold.RangeType.MAX));
+        ExcelConditionalFormattingPoiBridge.fromPoi(ConditionalFormattingThreshold.RangeType.MAX));
     assertEquals(
         ExcelConditionalFormattingThresholdType.PERCENT,
-        ExcelConditionalFormattingThresholdType.fromPoi(
+        ExcelConditionalFormattingPoiBridge.fromPoi(
             ConditionalFormattingThreshold.RangeType.PERCENT));
     assertEquals(
         ExcelConditionalFormattingThresholdType.PERCENTILE,
-        ExcelConditionalFormattingThresholdType.fromPoi(
+        ExcelConditionalFormattingPoiBridge.fromPoi(
             ConditionalFormattingThreshold.RangeType.PERCENTILE));
     assertEquals(
         ExcelConditionalFormattingThresholdType.UNALLOCATED,
-        ExcelConditionalFormattingThresholdType.fromPoi(
+        ExcelConditionalFormattingPoiBridge.fromPoi(
             ConditionalFormattingThreshold.RangeType.UNALLOCATED));
     assertEquals(
         ExcelConditionalFormattingThresholdType.FORMULA,
-        ExcelConditionalFormattingThresholdType.fromPoi(
+        ExcelConditionalFormattingPoiBridge.fromPoi(
             ConditionalFormattingThreshold.RangeType.FORMULA));
   }
 

@@ -2,8 +2,8 @@ package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
-import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Base64;
 import java.util.Objects;
 

@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.CellBorderInput;
 import dev.erst.gridgrind.contract.dto.CellBorderSideInput;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import org.junit.jupiter.api.Test;
 
 /** Tests for CellBorderInput and CellBorderSideInput conversion and validation. */

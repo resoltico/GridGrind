@@ -8,6 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelChartMarkerStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
 import java.io.IOException;
 import java.util.List;
 import org.apache.poi.ss.usermodel.Name;

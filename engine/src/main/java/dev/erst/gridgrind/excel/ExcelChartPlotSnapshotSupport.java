@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelChartMarkerStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

@@ -209,6 +209,13 @@ public final class GridGrindCli {
       }
       case CliCommand.DoctorRequest doctor -> doctorRequest(doctor, stdin, stdout);
       case CliCommand.PrintProtocolCatalog cmd -> {
+        if (cmd.searchQuery() != null) {
+          GridGrindJson.writeCatalogLookupValue(
+              stdout, GridGrindProtocolCatalog.searchCatalog(cmd.searchQuery()));
+          stdout.write('\n');
+          stdout.flush();
+          yield 0;
+        }
         if (cmd.operationFilter() == null) {
           GridGrindJson.writeProtocolCatalog(stdout, GridGrindProtocolCatalog.catalog());
           stdout.write('\n');

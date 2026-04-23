@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.poi.ss.usermodel.ComparisonOperator;
@@ -14,52 +16,59 @@ class ExcelDataValidationModelTest {
   void comparisonOperatorRoundTripsPoiConstants() {
     assertEquals(
         ExcelComparisonOperator.BETWEEN,
-        ExcelComparisonOperator.fromPoiComparisonOperator(ComparisonOperator.BETWEEN));
+        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.BETWEEN));
     assertEquals(
         ExcelComparisonOperator.NOT_BETWEEN,
-        ExcelComparisonOperator.fromPoiComparisonOperator(ComparisonOperator.NOT_BETWEEN));
+        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.NOT_BETWEEN));
     assertEquals(
         ExcelComparisonOperator.EQUAL,
-        ExcelComparisonOperator.fromPoiComparisonOperator(ComparisonOperator.EQUAL));
+        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.EQUAL));
     assertEquals(
         ExcelComparisonOperator.NOT_EQUAL,
-        ExcelComparisonOperator.fromPoiComparisonOperator(ComparisonOperator.NOT_EQUAL));
+        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.NOT_EQUAL));
     assertEquals(
         ExcelComparisonOperator.GREATER_THAN,
-        ExcelComparisonOperator.fromPoiComparisonOperator(ComparisonOperator.GT));
+        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.GT));
     assertEquals(
         ExcelComparisonOperator.LESS_THAN,
-        ExcelComparisonOperator.fromPoiComparisonOperator(ComparisonOperator.LT));
+        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.LT));
     assertEquals(
         ExcelComparisonOperator.GREATER_OR_EQUAL,
-        ExcelComparisonOperator.fromPoiComparisonOperator(ComparisonOperator.GE));
+        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.GE));
     assertEquals(
         ExcelComparisonOperator.LESS_OR_EQUAL,
-        ExcelComparisonOperator.fromPoiComparisonOperator(ComparisonOperator.LE));
+        ExcelComparisonOperatorPoiBridge.fromPoi(ComparisonOperator.LE));
     assertEquals(
-        ComparisonOperator.BETWEEN, ExcelComparisonOperator.BETWEEN.toPoiComparisonOperator());
+        ComparisonOperator.BETWEEN,
+        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.BETWEEN));
     assertEquals(
         ComparisonOperator.NOT_BETWEEN,
-        ExcelComparisonOperator.NOT_BETWEEN.toPoiComparisonOperator());
-    assertEquals(ComparisonOperator.EQUAL, ExcelComparisonOperator.EQUAL.toPoiComparisonOperator());
+        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.NOT_BETWEEN));
     assertEquals(
-        ComparisonOperator.NOT_EQUAL, ExcelComparisonOperator.NOT_EQUAL.toPoiComparisonOperator());
+        ComparisonOperator.EQUAL,
+        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.EQUAL));
     assertEquals(
-        ComparisonOperator.GT, ExcelComparisonOperator.GREATER_THAN.toPoiComparisonOperator());
+        ComparisonOperator.NOT_EQUAL,
+        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.NOT_EQUAL));
     assertEquals(
-        ComparisonOperator.LT, ExcelComparisonOperator.LESS_THAN.toPoiComparisonOperator());
+        ComparisonOperator.GT,
+        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.GREATER_THAN));
     assertEquals(
-        ComparisonOperator.GE, ExcelComparisonOperator.GREATER_OR_EQUAL.toPoiComparisonOperator());
+        ComparisonOperator.LT,
+        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.LESS_THAN));
     assertEquals(
-        ComparisonOperator.LE, ExcelComparisonOperator.LESS_OR_EQUAL.toPoiComparisonOperator());
+        ComparisonOperator.GE,
+        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.GREATER_OR_EQUAL));
+    assertEquals(
+        ComparisonOperator.LE,
+        ExcelComparisonOperatorPoiBridge.toPoi(ExcelComparisonOperator.LESS_OR_EQUAL));
   }
 
   @Test
   void comparisonOperatorRejectsUnsupportedPoiValues() {
     IllegalArgumentException failure =
         assertThrows(
-            IllegalArgumentException.class,
-            () -> ExcelComparisonOperator.fromPoiComparisonOperator(-99));
+            IllegalArgumentException.class, () -> ExcelComparisonOperatorPoiBridge.fromPoi(-99));
 
     assertEquals("Unsupported Apache POI comparison operator: -99", failure.getMessage());
   }
@@ -68,20 +77,22 @@ class ExcelDataValidationModelTest {
   void errorStyleRoundTripsPoiConstants() {
     assertEquals(
         ExcelDataValidationErrorStyle.STOP,
-        ExcelDataValidationErrorStyle.fromPoiErrorStyle(DataValidation.ErrorStyle.STOP));
+        ExcelDataValidationPoiBridge.fromPoiErrorStyle(DataValidation.ErrorStyle.STOP));
     assertEquals(
         ExcelDataValidationErrorStyle.WARNING,
-        ExcelDataValidationErrorStyle.fromPoiErrorStyle(DataValidation.ErrorStyle.WARNING));
+        ExcelDataValidationPoiBridge.fromPoiErrorStyle(DataValidation.ErrorStyle.WARNING));
     assertEquals(
         ExcelDataValidationErrorStyle.INFORMATION,
-        ExcelDataValidationErrorStyle.fromPoiErrorStyle(DataValidation.ErrorStyle.INFO));
+        ExcelDataValidationPoiBridge.fromPoiErrorStyle(DataValidation.ErrorStyle.INFO));
     assertEquals(
-        DataValidation.ErrorStyle.STOP, ExcelDataValidationErrorStyle.STOP.toPoiErrorStyle());
+        DataValidation.ErrorStyle.STOP,
+        ExcelDataValidationPoiBridge.toPoiErrorStyle(ExcelDataValidationErrorStyle.STOP));
     assertEquals(
-        DataValidation.ErrorStyle.WARNING, ExcelDataValidationErrorStyle.WARNING.toPoiErrorStyle());
+        DataValidation.ErrorStyle.WARNING,
+        ExcelDataValidationPoiBridge.toPoiErrorStyle(ExcelDataValidationErrorStyle.WARNING));
     assertEquals(
         DataValidation.ErrorStyle.INFO,
-        ExcelDataValidationErrorStyle.INFORMATION.toPoiErrorStyle());
+        ExcelDataValidationPoiBridge.toPoiErrorStyle(ExcelDataValidationErrorStyle.INFORMATION));
   }
 
   @Test
@@ -89,7 +100,7 @@ class ExcelDataValidationModelTest {
     IllegalArgumentException failure =
         assertThrows(
             IllegalArgumentException.class,
-            () -> ExcelDataValidationErrorStyle.fromPoiErrorStyle(-77));
+            () -> ExcelDataValidationPoiBridge.fromPoiErrorStyle(-77));
 
     assertEquals("Unsupported Apache POI error style: -77", failure.getMessage());
   }

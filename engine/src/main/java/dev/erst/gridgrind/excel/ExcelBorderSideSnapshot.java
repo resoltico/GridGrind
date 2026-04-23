@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import java.util.Objects;
 
 /** One resolved workbook border side preserving style and factual color semantics. */

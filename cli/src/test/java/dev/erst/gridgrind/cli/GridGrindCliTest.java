@@ -1964,7 +1964,7 @@ class GridGrindCliTest {
   }
 
   @Test
-  void printProtocolCatalogWithNonOperationTrailingArgReturnsFullCatalog() throws IOException {
+  void printProtocolCatalogWithUnexpectedTrailingArgReturnsError() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
     int exitCode =
         new GridGrindCli()
@@ -1973,16 +1973,12 @@ class GridGrindCliTest {
                 InputStream.nullInputStream(),
                 stdout);
 
-    // --version after --print-protocol-catalog is not --operation so filter stays null;
-    // full catalog is returned (--version is silently ignored as a trailing arg)
-    assertEquals(0, exitCode);
-    String output = stdout.toString(StandardCharsets.UTF_8).trim();
-    assertTrue(
-        output.contains("mutationActionTypes"),
-        "full catalog must contain mutationActionTypes key");
-    assertTrue(
-        output.contains("inspectionQueryTypes"),
-        "full catalog must contain inspectionQueryTypes key");
+    assertEquals(2, exitCode);
+    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertTrue(failure.problem().message().contains("--version"));
   }
 
   @Test
@@ -2117,6 +2113,44 @@ class GridGrindCliTest {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
     assertTrue(failure.problem().message().contains("BOGUS_XYZ"));
+  }
+
+  @Test
+  void printProtocolCatalogWithSearchReturnsRankedMatches() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--search", "sheet layout"},
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(0, exitCode);
+    String output = stdout.toString(StandardCharsets.UTF_8).trim();
+    assertTrue(output.contains("\"query\" : \"sheet layout\""));
+    assertTrue(output.contains("\"qualifiedId\" : \"inspectionQueryTypes:GET_SHEET_LAYOUT\""));
+    assertTrue(output.contains("\"kind\" : \"ENTRY\""));
+  }
+
+  @Test
+  void printProtocolCatalogRejectsOperationAndSearchTogether() throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {
+                  "--print-protocol-catalog", "--operation", "SET_CELL", "--search", "cell"
+                },
+                InputStream.nullInputStream(),
+                stdout);
+
+    assertEquals(2, exitCode);
+    GridGrindResponse response = GridGrindJson.readResponse(stdout.toByteArray());
+    assertInstanceOf(GridGrindResponse.Failure.class, response);
+    GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertTrue(failure.problem().message().contains("--operation"));
+    assertTrue(failure.problem().message().contains("--search"));
   }
 
   @Test

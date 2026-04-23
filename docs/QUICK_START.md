@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.53.0"
+version: "0.54.0"
 domain: QUICK_START
 updated: "2026-04-22"
 route:
@@ -35,6 +35,9 @@ If Docker is the easiest path on your machine, pull the latest image:
 ```bash
 docker pull ghcr.io/resoltico/gridgrind:latest
 ```
+
+The published image already includes the font stack required for signature-line preview
+generation, so signature-line requests work in Docker without extra image customization.
 
 ### Release JAR
 

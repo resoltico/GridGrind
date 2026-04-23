@@ -76,34 +76,34 @@ import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.step.InspectionStep;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellValue;
-import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
-import dev.erst.gridgrind.excel.ExcelChartAxisKind;
-import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
-import dev.erst.gridgrind.excel.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.ExcelChartBarGrouping;
 import dev.erst.gridgrind.excel.ExcelChartDefinition;
-import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelDrawingMarker;
-import dev.erst.gridgrind.excel.ExcelDrawingShapeKind;
-import dev.erst.gridgrind.excel.ExcelEmbeddedObjectPackagingKind;
-import dev.erst.gridgrind.excel.ExcelFillPattern;
-import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
 import dev.erst.gridgrind.excel.ExcelPivotTableDefinition;
-import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
-import dev.erst.gridgrind.excel.ExcelSheetVisibility;
-import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.WorkbookCommand;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -1126,7 +1126,7 @@ class WorkbookInvariantChecksTest {
                     new dev.erst.gridgrind.contract.dto.OoxmlPackageSecurityReport(
                         new dev.erst.gridgrind.contract.dto.OoxmlEncryptionReport(
                             true,
-                            dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode.AGILE,
+                            dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode.AGILE,
                             "aes",
                             "sha512",
                             "ChainingModeCBC",
@@ -1139,7 +1139,8 @@ class WorkbookInvariantChecksTest {
                                 "CN=GridGrind Signing",
                                 "CN=GridGrind Signing",
                                 "01",
-                                dev.erst.gridgrind.excel.ExcelOoxmlSignatureState.VALID))))));
+                                dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState
+                                    .VALID))))));
 
     assertDoesNotThrow(
         () -> WorkbookInvariantChecks.requireWorkflowOutcomeShape(request, response));

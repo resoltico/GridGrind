@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.poi.ooxml.POIXMLDocumentPart;

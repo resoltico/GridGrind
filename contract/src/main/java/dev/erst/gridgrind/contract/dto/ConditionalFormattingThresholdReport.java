@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
 import java.util.Objects;
 
 /** Protocol-facing factual report for one advanced conditional-formatting threshold. */

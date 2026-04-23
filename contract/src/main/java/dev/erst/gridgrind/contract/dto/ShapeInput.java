@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
 import java.util.Objects;
 
 /** Authoritative simple-shape or connector creation or replacement payload. */

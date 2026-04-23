@@ -1,5 +1,17 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarShape;
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelChartMarkerStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelChartRadarStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelChartScatterStyle;
 import java.util.Locale;
 import java.util.Objects;
 import org.apache.poi.xddf.usermodel.chart.AxisCrosses;
@@ -19,6 +31,7 @@ import org.apache.poi.xddf.usermodel.chart.XDDFAreaChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFBar3DChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFBarChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFCategoryAxis;
+import org.apache.poi.xddf.usermodel.chart.XDDFChart;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFDateAxis;
@@ -49,6 +62,19 @@ final class ExcelChartPoiBridge {
       case XDDFValueAxis _ -> ExcelChartAxisKind.VALUE;
       default ->
           throw new IllegalArgumentException("Unsupported chart axis family: " + axis.getClass());
+    };
+  }
+
+  static XDDFChartAxis createAxis(
+      XDDFChart chart, ExcelChartAxisKind axisKind, ExcelChartAxisPosition position) {
+    Objects.requireNonNull(chart, "chart must not be null");
+    Objects.requireNonNull(axisKind, "axisKind must not be null");
+    Objects.requireNonNull(position, "position must not be null");
+    return switch (axisKind) {
+      case CATEGORY -> chart.createCategoryAxis(toPoiAxisPosition(position));
+      case DATE -> chart.createDateAxis(toPoiAxisPosition(position));
+      case SERIES -> chart.createSeriesAxis(toPoiAxisPosition(position));
+      case VALUE -> chart.createValueAxis(toPoiAxisPosition(position));
     };
   }
 

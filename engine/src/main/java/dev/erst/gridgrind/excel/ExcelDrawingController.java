@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -117,9 +119,10 @@ final class ExcelDrawingController {
     org.apache.poi.xssf.usermodel.XSSFClientAnchor anchor =
         toPoiAnchor(drawing, definition.anchor());
     int pictureIndex =
-        sheet
-            .getWorkbook()
-            .addPicture(definition.imageData().bytes(), definition.format().poiPictureType());
+        ExcelWorkbookImageCatalogSupport.addPicture(
+            sheet.getWorkbook(),
+            definition.imageData().bytes(),
+            ExcelPicturePoiBridge.toPoiPictureType(definition.format()));
     XSSFPicture picture = drawing.createPicture(anchor, pictureIndex);
     picture.getCTPicture().getNvPicPr().getCNvPr().setName(definition.name());
     if (definition.description() != null) {
@@ -200,11 +203,10 @@ final class ExcelDrawingController {
                           definition.fileName(),
                           definition.command());
               int pictureIndex =
-                  sheet
-                      .getWorkbook()
-                      .addPicture(
-                          definition.previewImage().bytes(),
-                          definition.previewFormat().poiPictureType());
+                  ExcelWorkbookImageCatalogSupport.addPicture(
+                      sheet.getWorkbook(),
+                      definition.previewImage().bytes(),
+                      ExcelPicturePoiBridge.toPoiPictureType(definition.previewFormat()));
               return drawing.createObjectData(anchor, storageId, pictureIndex);
             });
     objectData.getCTShape().getNvSpPr().getCNvPr().setName(definition.name());

@@ -3,13 +3,13 @@ package dev.erst.gridgrind.executor;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.dto.*;
-import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Test;

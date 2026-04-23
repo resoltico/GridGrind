@@ -2,7 +2,7 @@ package dev.erst.gridgrind.contract.dto;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.util.Objects;
 
 /** Authored drawing anchor input. Phase 5 currently supports two-cell anchors for mutation. */

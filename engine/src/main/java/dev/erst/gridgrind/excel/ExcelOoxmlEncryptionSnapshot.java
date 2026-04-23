@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import java.util.Objects;
 
 /** Immutable factual snapshot of one workbook package's OOXML encryption state. */

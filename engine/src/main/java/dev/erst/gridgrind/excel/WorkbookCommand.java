@@ -1,5 +1,10 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelIndexDisplay;
+import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.List;
 import java.util.Objects;
 

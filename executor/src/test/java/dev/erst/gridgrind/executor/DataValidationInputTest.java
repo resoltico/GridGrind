@@ -7,12 +7,12 @@ import dev.erst.gridgrind.contract.dto.DataValidationErrorAlertInput;
 import dev.erst.gridgrind.contract.dto.DataValidationInput;
 import dev.erst.gridgrind.contract.dto.DataValidationPromptInput;
 import dev.erst.gridgrind.contract.dto.DataValidationRuleInput;
-import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelDataValidationDefinition;
 import dev.erst.gridgrind.excel.ExcelDataValidationErrorAlert;
-import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelDataValidationPrompt;
 import dev.erst.gridgrind.excel.ExcelDataValidationRule;
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import org.junit.jupiter.api.Test;
 
 /** Tests for the top-level data-validation transport model. */

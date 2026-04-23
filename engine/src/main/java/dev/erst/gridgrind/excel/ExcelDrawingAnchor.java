@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.util.Objects;
 
 /** Immutable factual or authored drawing anchor state. */

@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import org.junit.jupiter.api.Test;
 
 /** Tests for ExcelBorder and ExcelBorderSide record construction. */

@@ -317,7 +317,8 @@ class WorkbookStepValidationTest {
                     new dev.erst.gridgrind.contract.dto.PictureInput(
                         "Logo",
                         new dev.erst.gridgrind.contract.dto.PictureDataInput(
-                            dev.erst.gridgrind.excel.ExcelPictureFormat.PNG, binary("AQID")),
+                            dev.erst.gridgrind.excel.foundation.ExcelPictureFormat.PNG,
+                            binary("AQID")),
                         new dev.erst.gridgrind.contract.dto.DrawingAnchorInput.TwoCell(
                             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(0, 0, 0, 0),
                             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1, 0, 0),
@@ -342,7 +343,8 @@ class WorkbookStepValidationTest {
                         null,
                         null,
                         new dev.erst.gridgrind.contract.dto.PictureDataInput(
-                            dev.erst.gridgrind.excel.ExcelPictureFormat.PNG, binary("AQID")))))));
+                            dev.erst.gridgrind.excel.foundation.ExcelPictureFormat.PNG,
+                            binary("AQID")))))));
     assertEquals(
         List.of(WorkbookSelector.class),
         List.of(
@@ -404,7 +406,8 @@ class WorkbookStepValidationTest {
                         List.of(
                             new dev.erst.gridgrind.contract.dto.PivotTableInput.DataField(
                                 "Amount",
-                                dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                                dev.erst.gridgrind.excel.foundation
+                                    .ExcelPivotDataConsolidateFunction.SUM,
                                 "Total Amount",
                                 null)))))));
     assertEquals(

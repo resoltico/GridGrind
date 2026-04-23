@@ -2,6 +2,15 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -605,12 +614,19 @@ class ExcelAdvancedValueObjectTest {
 
   private static void assertConditionalFormattingSupportValueObjects() {
     for (ExcelConditionalFormattingIconSet iconSet : ExcelConditionalFormattingIconSet.values()) {
-      assertEquals(iconSet, ExcelConditionalFormattingIconSet.fromPoi(iconSet.toPoi()));
-      assertEquals(iconSet.toPoi().num, iconSet.thresholdCount());
+      assertEquals(
+          iconSet,
+          ExcelConditionalFormattingPoiBridge.fromPoi(
+              ExcelConditionalFormattingPoiBridge.toPoi(iconSet)));
+      assertEquals(
+          ExcelConditionalFormattingPoiBridge.toPoi(iconSet).num, iconSet.thresholdCount());
     }
     for (ExcelConditionalFormattingThresholdType type :
         ExcelConditionalFormattingThresholdType.values()) {
-      assertEquals(type, ExcelConditionalFormattingThresholdType.fromPoi(type.toPoi()));
+      assertEquals(
+          type,
+          ExcelConditionalFormattingPoiBridge.fromPoi(
+              ExcelConditionalFormattingPoiBridge.toPoi(type)));
     }
 
     var min =

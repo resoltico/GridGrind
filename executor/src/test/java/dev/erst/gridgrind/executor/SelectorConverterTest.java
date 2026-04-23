@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.excel.*;
+import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

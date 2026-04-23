@@ -8,11 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
-import dev.erst.gridgrind.excel.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import org.junit.jupiter.api.Test;
 
 /** Dedicated coverage for Phase 7 source-backed contract value objects and contexts. */

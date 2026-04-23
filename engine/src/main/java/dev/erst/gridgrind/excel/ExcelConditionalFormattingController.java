@@ -214,11 +214,12 @@ final class ExcelConditionalFormattingController {
               ? sheet
                   .getSheetConditionalFormatting()
                   .createConditionalFormattingRule(
-                      cellValueRule.operator().toPoiComparisonOperator(), cellValueRule.formula1())
+                      ExcelComparisonOperatorPoiBridge.toPoi(cellValueRule.operator()),
+                      cellValueRule.formula1())
               : sheet
                   .getSheetConditionalFormatting()
                   .createConditionalFormattingRule(
-                      cellValueRule.operator().toPoiComparisonOperator(),
+                      ExcelComparisonOperatorPoiBridge.toPoi(cellValueRule.operator()),
                       cellValueRule.formula1(),
                       cellValueRule.formula2());
       case ExcelConditionalFormattingRule.ColorScaleRule colorScaleRule ->
@@ -272,7 +273,8 @@ final class ExcelConditionalFormattingController {
     XSSFConditionalFormattingRule created =
         sheet
             .getSheetConditionalFormatting()
-            .createConditionalFormattingRule(rule.iconSet().toPoi());
+            .createConditionalFormattingRule(
+                ExcelConditionalFormattingPoiBridge.toPoi(rule.iconSet()));
     var formatting = created.getMultiStateFormatting();
     formatting.setIconOnly(rule.iconOnly());
     formatting.setReversed(rule.reversed());
@@ -286,7 +288,7 @@ final class ExcelConditionalFormattingController {
   private static void applyThreshold(
       ConditionalFormattingThreshold threshold,
       ExcelConditionalFormattingThreshold authoredThreshold) {
-    threshold.setRangeType(authoredThreshold.type().toPoi());
+    threshold.setRangeType(ExcelConditionalFormattingPoiBridge.toPoi(authoredThreshold.type()));
     if (authoredThreshold.formula() != null) {
       threshold.setFormula(authoredThreshold.formula());
     } else if (authoredThreshold.value() != null) {
@@ -501,7 +503,7 @@ final class ExcelConditionalFormattingController {
   private static ExcelConditionalFormattingThresholdSnapshot threshold(
       ConditionalFormattingThreshold threshold) {
     return new ExcelConditionalFormattingThresholdSnapshot(
-        ExcelConditionalFormattingThresholdType.fromPoi(threshold.getRangeType()),
+        ExcelConditionalFormattingPoiBridge.fromPoi(threshold.getRangeType()),
         threshold.getFormula(),
         threshold.getValue());
   }
@@ -634,7 +636,7 @@ final class ExcelConditionalFormattingController {
       return new ExcelConditionalFormattingRuleSnapshot.CellValueRule(
           ctRule.getPriority(),
           ctRule.getStopIfTrue(),
-          ExcelComparisonOperator.fromPoiComparisonOperator(rule.getComparisonOperation()),
+          ExcelComparisonOperatorPoiBridge.fromPoi(rule.getComparisonOperation()),
           formula1,
           rule.getFormula2(),
           style);
@@ -702,7 +704,7 @@ final class ExcelConditionalFormattingController {
       return new ExcelConditionalFormattingRuleSnapshot.IconSetRule(
           ctRule.getPriority(),
           ctRule.getStopIfTrue(),
-          ExcelConditionalFormattingIconSet.fromPoi(iconFormatting.getIconSet()),
+          ExcelConditionalFormattingPoiBridge.fromPoi(iconFormatting.getIconSet()),
           iconFormatting.isIconOnly(),
           iconFormatting.isReversed(),
           thresholds(iconFormatting.getThresholds()));

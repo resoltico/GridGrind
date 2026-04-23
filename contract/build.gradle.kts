@@ -27,7 +27,7 @@ fun downstreamCoverageExecutionData() =
     }
 
 dependencies {
-    implementation(project(":engine"))
+    api(project(":excel-foundation"))
     // Jackson 3.x still owns annotations via the Jackson 2.x coordinates and package namespace.
     api(libs.jackson.annotations)
     implementation(libs.jackson.databind)

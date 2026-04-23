@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import java.util.Objects;
 
 /** Factual OOXML package-encryption report for one workbook package. */

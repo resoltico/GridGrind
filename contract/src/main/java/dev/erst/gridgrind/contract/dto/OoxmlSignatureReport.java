@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import java.util.Objects;
 
 /** Factual OOXML package-signature report for one signature part. */

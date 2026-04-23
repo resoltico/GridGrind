@@ -12,11 +12,9 @@ import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
 import dev.erst.gridgrind.excel.ExcelAutofilterSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSideSnapshot;
 import dev.erst.gridgrind.excel.ExcelBorderSnapshot;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelCellAlignmentSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelCellFontSnapshot;
@@ -28,28 +26,19 @@ import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelColorSnapshot;
 import dev.erst.gridgrind.excel.ExcelComment;
 import dev.erst.gridgrind.excel.ExcelCommentSnapshot;
-import dev.erst.gridgrind.excel.ExcelComparisonOperator;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingBlockSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingRuleSnapshot;
 import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdSnapshot;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
-import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
 import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.ExcelFontHeight;
-import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelIgnoredError;
-import dev.erst.gridgrind.excel.ExcelIgnoredErrorType;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSnapshot;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
-import dev.erst.gridgrind.excel.ExcelPaneRegion;
-import dev.erst.gridgrind.excel.ExcelPictureFormat;
 import dev.erst.gridgrind.excel.ExcelPrintMarginsSnapshot;
-import dev.erst.gridgrind.excel.ExcelPrintOrientation;
 import dev.erst.gridgrind.excel.ExcelPrintSetupSnapshot;
 import dev.erst.gridgrind.excel.ExcelSheetCopyPosition;
 import dev.erst.gridgrind.excel.ExcelSheetDefaults;
@@ -58,10 +47,8 @@ import dev.erst.gridgrind.excel.ExcelSheetOutlineSummary;
 import dev.erst.gridgrind.excel.ExcelSheetPane;
 import dev.erst.gridgrind.excel.ExcelSheetPresentation;
 import dev.erst.gridgrind.excel.ExcelSheetProtectionSettings;
-import dev.erst.gridgrind.excel.ExcelSheetVisibility;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
 import dev.erst.gridgrind.excel.ExcelTableSnapshot;
-import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
 import dev.erst.gridgrind.excel.InvalidCellAddressException;
 import dev.erst.gridgrind.excel.InvalidFormulaException;
@@ -76,6 +63,19 @@ import dev.erst.gridgrind.excel.WorkbookNotFoundException;
 import dev.erst.gridgrind.excel.WorkbookReadCommand;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
 import dev.erst.gridgrind.excel.XlsxRoundTrip;
+import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.excel.foundation.ExcelPaneRegion;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Files;
@@ -2582,7 +2582,7 @@ class DefaultGridGrindRequestExecutorTest {
                                             true,
                                             true),
                                         new CellFillInput(
-                                            dev.erst.gridgrind.excel.ExcelFillPattern
+                                            dev.erst.gridgrind.excel.foundation.ExcelFillPattern
                                                 .THIN_HORIZONTAL_BANDS,
                                             "#FFF2CC",
                                             "#DDEBF7"),
@@ -2618,7 +2618,8 @@ class DefaultGridGrindRequestExecutorTest {
     assertTrue(style.font().underline());
     assertTrue(style.font().strikeout());
     assertEquals(
-        dev.erst.gridgrind.excel.ExcelFillPattern.THIN_HORIZONTAL_BANDS, style.fill().pattern());
+        dev.erst.gridgrind.excel.foundation.ExcelFillPattern.THIN_HORIZONTAL_BANDS,
+        style.fill().pattern());
     assertEquals(rgb("#FFF2CC"), style.fill().foregroundColor());
     assertEquals(rgb("#DDEBF7"), style.fill().backgroundColor());
     assertEquals(ExcelBorderStyle.THIN, style.border().top().style());
@@ -2665,7 +2666,8 @@ class DefaultGridGrindRequestExecutorTest {
                                             null, true, null, null, null, 6, null, -0.35d, null,
                                             null),
                                         new CellFillInput(
-                                            dev.erst.gridgrind.excel.ExcelFillPattern.SOLID,
+                                            dev.erst.gridgrind.excel.foundation.ExcelFillPattern
+                                                .SOLID,
                                             null,
                                             3,
                                             null,
@@ -4057,7 +4059,7 @@ class DefaultGridGrindRequestExecutorTest {
                 "sheet",
                 new dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary(
                     "Budget",
-                    dev.erst.gridgrind.excel.ExcelSheetVisibility.VISIBLE,
+                    dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility.VISIBLE,
                     new dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Unprotected(),
                     4,
                     3,
@@ -4570,7 +4572,7 @@ class DefaultGridGrindRequestExecutorTest {
                 "sheet",
                 new dev.erst.gridgrind.excel.WorkbookReadResult.SheetSummary(
                     "Budget",
-                    dev.erst.gridgrind.excel.ExcelSheetVisibility.VERY_HIDDEN,
+                    dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility.VERY_HIDDEN,
                     new dev.erst.gridgrind.excel.WorkbookReadResult.SheetProtection.Protected(
                         excelProtectionSettings()),
                     4,
@@ -5596,7 +5598,8 @@ class DefaultGridGrindRequestExecutorTest {
             null,
             false,
             false),
-        new ExcelCellFillSnapshot(dev.erst.gridgrind.excel.ExcelFillPattern.NONE, null, null),
+        new ExcelCellFillSnapshot(
+            dev.erst.gridgrind.excel.foundation.ExcelFillPattern.NONE, null, null),
         new ExcelBorderSnapshot(
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),
             new ExcelBorderSideSnapshot(ExcelBorderStyle.NONE, null),

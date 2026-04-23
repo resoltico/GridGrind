@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import java.io.IOException;
 import java.util.List;
 import org.apache.poi.ss.usermodel.FormulaError;

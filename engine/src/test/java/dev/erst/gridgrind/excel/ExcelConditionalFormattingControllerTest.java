@@ -2,6 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.file.Path;

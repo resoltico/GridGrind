@@ -1,6 +1,6 @@
 module dev.erst.gridgrind.contract {
   requires transitive com.fasterxml.jackson.annotation;
-  requires dev.erst.gridgrind.engine;
+  requires transitive dev.erst.gridgrind.excel.foundation;
   requires tools.jackson.databind;
 
   exports dev.erst.gridgrind.contract.assertion;

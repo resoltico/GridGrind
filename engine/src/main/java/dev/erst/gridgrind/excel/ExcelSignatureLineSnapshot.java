@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Objects;
 
 /** Immutable factual signature-line snapshot returned by workbook reads. */

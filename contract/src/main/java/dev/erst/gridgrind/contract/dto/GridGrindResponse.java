@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import dev.erst.gridgrind.contract.assertion.AssertionFailure;
 import dev.erst.gridgrind.contract.assertion.AssertionResult;
 import dev.erst.gridgrind.contract.query.InspectionResult;
-import dev.erst.gridgrind.excel.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -693,7 +693,7 @@ public sealed interface GridGrindResponse {
       if (sheetName.isBlank()) {
         throw new IllegalArgumentException("sheetName must not be blank");
       }
-      dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.requireZoomPercent(
+      dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits.requireZoomPercent(
           zoomPercent, "zoomPercent");
       columns = copyValues(columns, "columns");
       rows = copyValues(rows, "rows");

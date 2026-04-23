@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import dev.erst.gridgrind.excel.foundation.ExcelGradientFillGeometry;
 import org.junit.jupiter.api.Test;
 
 /** Tests the shared authored-gradient geometry rules. */

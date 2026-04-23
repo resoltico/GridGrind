@@ -14,9 +14,9 @@ public record SheetDefaultsInput(Integer defaultColumnWidth, Double defaultRowHe
         defaultRowHeightPoints == null
             ? defaults().defaultRowHeightPoints()
             : defaultRowHeightPoints;
-    dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.requireDefaultColumnWidth(
+    dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits.requireDefaultColumnWidth(
         defaultColumnWidth, "defaultColumnWidth");
-    dev.erst.gridgrind.excel.ExcelSheetLayoutLimits.requireRowHeightPoints(
+    dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits.requireRowHeightPoints(
         defaultRowHeightPoints, "defaultRowHeightPoints");
   }
 }

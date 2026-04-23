@@ -8,7 +8,7 @@ import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.PivotTableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
-import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

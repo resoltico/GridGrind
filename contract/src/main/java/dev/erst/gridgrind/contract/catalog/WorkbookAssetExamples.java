@@ -22,11 +22,11 @@ import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
 import dev.erst.gridgrind.contract.selector.PivotTableSelector;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.util.List;
 
 /** Generated examples that focus on charts, pivots, packages, and binary payload handling. */

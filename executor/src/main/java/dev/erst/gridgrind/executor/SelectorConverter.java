@@ -11,15 +11,15 @@ import dev.erst.gridgrind.contract.selector.RowBandSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.excel.ExcelCellSelection;
-import dev.erst.gridgrind.excel.ExcelColumnSpan;
 import dev.erst.gridgrind.excel.ExcelFormulaCellTarget;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSelection;
 import dev.erst.gridgrind.excel.ExcelNamedRangeSelector;
 import dev.erst.gridgrind.excel.ExcelPivotTableSelection;
 import dev.erst.gridgrind.excel.ExcelRangeSelection;
-import dev.erst.gridgrind.excel.ExcelRowSpan;
 import dev.erst.gridgrind.excel.ExcelSheetSelection;
 import dev.erst.gridgrind.excel.ExcelTableSelection;
+import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
 import java.util.List;
 
 /** Central conversion seam between contract selectors and workbook-core selector primitives. */

@@ -2,6 +2,8 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
 import java.math.BigDecimal;
 import java.util.List;
 import org.apache.poi.xssf.usermodel.XSSFConditionalFormattingRule;

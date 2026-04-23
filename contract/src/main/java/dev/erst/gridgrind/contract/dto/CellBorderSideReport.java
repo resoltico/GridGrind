@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import java.util.Objects;
 
 /** Effective facts for one resolved cell-border side. */

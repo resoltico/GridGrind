@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.util.Objects;
 
 /** Immutable snapshot of the alignment currently applied to a cell. */

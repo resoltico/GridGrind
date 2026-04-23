@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;

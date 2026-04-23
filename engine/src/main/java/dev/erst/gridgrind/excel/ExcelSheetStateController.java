@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -39,7 +40,7 @@ final class ExcelSheetStateController {
     ExcelSheet excelSheet = workbook.sheet(sheetName);
     return new WorkbookReadResult.SheetSummary(
         sheetName,
-        ExcelSheetVisibility.fromPoi(
+        ExcelSheetVisibilityPoiBridge.fromPoi(
             workbook
                 .xssfWorkbook()
                 .getSheetVisibility(workbook.xssfWorkbook().getSheetIndex(sheet))),
@@ -78,6 +79,7 @@ final class ExcelSheetStateController {
     if (sheetName.equals(newSheetName)) {
       return workbook;
     }
+    ExcelTableCalculatedColumnCanonicalizer.canonicalizeWorkbook(workbook.xssfWorkbook());
     workbook.xssfWorkbook().setSheetName(sheetIndex, newSheetName);
     return workbook;
   }
@@ -181,7 +183,8 @@ final class ExcelSheetStateController {
     int sheetIndex =
         ExcelWorkbookSheetSupport.requiredSheetIndex(workbook.xssfWorkbook(), sheetName);
     ExcelSheetVisibility currentVisibility =
-        ExcelSheetVisibility.fromPoi(workbook.xssfWorkbook().getSheetVisibility(sheetIndex));
+        ExcelSheetVisibilityPoiBridge.fromPoi(
+            workbook.xssfWorkbook().getSheetVisibility(sheetIndex));
     if (visibility != ExcelSheetVisibility.VISIBLE
         && currentVisibility == ExcelSheetVisibility.VISIBLE) {
       ExcelWorkbookSheetSupport.requireNotLastVisibleSheet(
@@ -189,7 +192,9 @@ final class ExcelSheetStateController {
           sheetIndex,
           "cannot hide the last visible sheet '" + sheetName + "'");
     }
-    workbook.xssfWorkbook().setSheetVisibility(sheetIndex, visibility.toPoi());
+    workbook
+        .xssfWorkbook()
+        .setSheetVisibility(sheetIndex, ExcelSheetVisibilityPoiBridge.toPoi(visibility));
     ExcelWorkbookSheetSupport.normalizeWorkbookViewState(workbook.xssfWorkbook());
     return workbook;
   }

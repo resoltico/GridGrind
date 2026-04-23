@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Base64;

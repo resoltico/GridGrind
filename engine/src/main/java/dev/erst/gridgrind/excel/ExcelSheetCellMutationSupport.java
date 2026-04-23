@@ -197,18 +197,13 @@ final class ExcelSheetCellMutationSupport {
         cell.setCellValue(dateTimeValue.value());
         cell.setCellStyle(styleRegistry.localDateTimeStyle(cell));
       }
-      case ExcelCellValue.FormulaValue formulaValue -> {
-        try {
-          cell.setCellFormula(formulaValue.expression());
-        } catch (RuntimeException exception) {
-          throw FormulaExceptions.wrap(
+      case ExcelCellValue.FormulaValue formulaValue ->
+          ExcelFormulaWriteSupport.setAuthoredFormula(
+              cell,
+              formulaValue.expression(),
               formulaRuntime,
               sheet.getSheetName(),
-              new CellReference(rowIndex, columnIndex).formatAsString(),
-              formulaValue.expression(),
-              exception);
-        }
-      }
+              new CellReference(rowIndex, columnIndex).formatAsString());
     }
   }
 
