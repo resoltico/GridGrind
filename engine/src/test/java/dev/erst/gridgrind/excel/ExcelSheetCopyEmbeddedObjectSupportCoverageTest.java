@@ -5,10 +5,13 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
+import java.util.Set;
 import javax.xml.namespace.QName;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.openxml4j.opc.OPCPackage;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackagePartName;
@@ -123,6 +126,105 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
 
       XSSFObjectData copiedObject = requiredEmbeddedObject(replica.xssfSheet(), "OpsEmbed");
       addObjectPreviewReference(copiedObject, "rIdSyntheticPreview");
+
+      support.repairCopiedEmbeddedObjects(replica, snapshot);
+
+      ExcelDrawingObjectPayload.EmbeddedObject payload =
+          assertInstanceOf(
+              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              replica.drawingObjectPayload("OpsEmbed"));
+      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
+    }
+  }
+
+  @Test
+  void snapshotAndRepairHandleEmbeddedObjectsWithoutDrawingPreviewRelations() throws Exception {
+    ExcelSheetCopyEmbeddedObjectSupport support = new ExcelSheetCopyEmbeddedObjectSupport();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
+      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+
+      XSSFObjectData sourceObject = requiredEmbeddedObject(sourceSheet.xssfSheet(), "OpsEmbed");
+      sourceObject.getCTShape().getSpPr().unsetBlipFill();
+
+      ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot snapshot = support.snapshot(sourceSheet);
+      assertEquals(1, snapshot.embeddedObjects().size());
+
+      workbook
+          .xssfWorkbook()
+          .cloneSheet(workbook.xssfWorkbook().getSheetIndex("Source"), "Replica");
+      ExcelSheet replica = workbook.sheet("Replica");
+      support.repairCopiedEmbeddedObjects(replica, snapshot);
+
+      ExcelDrawingObjectPayload.EmbeddedObject payload =
+          assertInstanceOf(
+              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              replica.drawingObjectPayload("OpsEmbed"));
+      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
+    }
+  }
+
+  @Test
+  void repairCopiedEmbeddedObjectsSkipsDrawingPreviewRepairWhenCopiedObjectLosesPreviewBlip()
+      throws Exception {
+    ExcelSheetCopyEmbeddedObjectSupport support = new ExcelSheetCopyEmbeddedObjectSupport();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
+      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+
+      ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot snapshot = support.snapshot(sourceSheet);
+      workbook
+          .xssfWorkbook()
+          .cloneSheet(workbook.xssfWorkbook().getSheetIndex("Source"), "Replica");
+      ExcelSheet replica = workbook.sheet("Replica");
+
+      XSSFObjectData copiedObject = requiredEmbeddedObject(replica.xssfSheet(), "OpsEmbed");
+      if (copiedObject.getCTShape().getSpPr().isSetBlipFill()) {
+        copiedObject.getCTShape().getSpPr().unsetBlipFill();
+      }
+      assertNull(ExcelDrawingBinarySupport.previewDrawingRelationId(copiedObject));
+
+      support.repairCopiedEmbeddedObjects(replica, snapshot);
+
+      ExcelDrawingObjectPayload.EmbeddedObject payload =
+          assertInstanceOf(
+              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              replica.drawingObjectPayload("OpsEmbed"));
+      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
+    }
+  }
+
+  @Test
+  void repairCopiedEmbeddedObjectsSkipsDrawingPreviewRepairWhenSnapshotLacksDrawingPreviewPart()
+      throws Exception {
+    ExcelSheetCopyEmbeddedObjectSupport support = new ExcelSheetCopyEmbeddedObjectSupport();
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sourceSheet = workbook.getOrCreateSheet("Source");
+      sourceSheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+
+      XSSFObjectData sourceObject = requiredEmbeddedObject(sourceSheet.xssfSheet(), "OpsEmbed");
+      String previewDrawingRelationId =
+          ExcelDrawingBinarySupport.previewDrawingRelationId(sourceObject);
+      assertNotNull(previewDrawingRelationId);
+      sourceObject.getCTShape().getSpPr().unsetBlipFill();
+
+      ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot snapshot = support.snapshot(sourceSheet);
+      sourceObject
+          .getCTShape()
+          .getSpPr()
+          .addNewBlipFill()
+          .addNewBlip()
+          .setEmbed(previewDrawingRelationId);
+
+      workbook
+          .xssfWorkbook()
+          .cloneSheet(workbook.xssfWorkbook().getSheetIndex("Source"), "Replica");
+      ExcelSheet replica = workbook.sheet("Replica");
+      XSSFObjectData copiedObject = requiredEmbeddedObject(replica.xssfSheet(), "OpsEmbed");
+      assertNotNull(ExcelDrawingBinarySupport.previewDrawingRelationId(copiedObject));
 
       support.repairCopiedEmbeddedObjects(replica, snapshot);
 
@@ -290,6 +392,423 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
     }
   }
 
+  @Test
+  void nextWorksheetRelationIdRespectsReservedIdsAndWrapsRelationshipInspectionFailures()
+      throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+
+      var worksheet = sheet.xssfSheet().getCTWorksheet();
+      worksheet.addNewLegacyDrawingHF().setId("rIdHeaderLegacy");
+      worksheet.addNewDrawingHF().setId("rIdHeaderFooter");
+
+      String nextId =
+          ExcelSheetCopyEmbeddedObjectSupport.nextWorksheetRelationId(
+              sheet.xssfSheet(), () -> List.of());
+      assertNotEquals("rIdHeaderLegacy", nextId);
+      assertNotEquals("rIdHeaderFooter", nextId);
+
+      IllegalStateException failure =
+          assertThrows(
+              IllegalStateException.class,
+              () ->
+                  ExcelSheetCopyEmbeddedObjectSupport.nextWorksheetRelationId(
+                      sheet.xssfSheet(),
+                      () -> {
+                        throw new InvalidFormatException("broken relationships");
+                      }));
+      assertTrue(failure.getMessage().contains("Failed to inspect worksheet relationships"));
+    }
+  }
+
+  @Test
+  void worksheetRelationHelpersRecognizeWorksheetAndOtherEmbeddedObjectReferences()
+      throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      XSSFSheet blankSheet = workbook.xssfWorkbook().createSheet("Blank");
+      blankSheet.getCTWorksheet().addNewDrawing().setId("rIdDrawing");
+      blankSheet.getCTWorksheet().addNewLegacyDrawing().setId("rIdLegacy");
+      assertTrue(
+          ExcelSheetCopyEmbeddedObjectSupport.worksheetStructureReferencesId(
+              blankSheet.getCTWorksheet(), "rIdDrawing"));
+      assertTrue(
+          ExcelSheetCopyEmbeddedObjectSupport.worksheetStructureReferencesId(
+              blankSheet.getCTWorksheet(), "rIdLegacy"));
+      Set<String> blankReferencedIds =
+          ExcelSheetCopyEmbeddedObjectSupport.referencedWorksheetRelationIds(
+              workbook.xssfWorkbook().createSheet("ReallyBlank"));
+      assertEquals(Set.of(), blankReferencedIds);
+
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsA", "alpha"));
+      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsB", "beta"));
+
+      XSSFSheet poiSheet = sheet.xssfSheet();
+      XSSFObjectData firstObject = requiredEmbeddedObject(poiSheet, "OpsA");
+      XSSFObjectData secondObject = requiredEmbeddedObject(poiSheet, "OpsB");
+      assertFalse(
+          worksheetRelationIdReferencedElsewhere(
+              workbook.xssfWorkbook().createSheet("NoOleObjects"),
+              firstObject,
+              ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.OLE_OBJECT,
+              "rIdMissing"));
+      var worksheet = poiSheet.getCTWorksheet();
+      worksheet.addNewLegacyDrawingHF().setId("rIdHeaderLegacy");
+      worksheet.addNewDrawingHF().setId("rIdHeaderFooter");
+
+      assertTrue(
+          ExcelSheetCopyEmbeddedObjectSupport.worksheetStructureReferencesId(
+              worksheet, "rIdHeaderLegacy"));
+      assertTrue(
+          ExcelSheetCopyEmbeddedObjectSupport.worksheetStructureReferencesId(
+              worksheet, "rIdHeaderFooter"));
+
+      Set<String> referencedIds =
+          ExcelSheetCopyEmbeddedObjectSupport.referencedWorksheetRelationIds(poiSheet);
+      assertTrue(referencedIds.contains("rIdHeaderLegacy"));
+      assertTrue(referencedIds.contains("rIdHeaderFooter"));
+
+      assertTrue(
+          worksheetRelationIdReferencedElsewhere(
+              poiSheet,
+              firstObject,
+              ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.OLE_OBJECT,
+              ExcelDrawingBinarySupport.nullIfBlank(secondObject.getOleObject().getId())));
+      assertTrue(
+          worksheetRelationIdReferencedElsewhere(
+              poiSheet,
+              firstObject,
+              ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.PREVIEW_SHEET,
+              ExcelDrawingBinarySupport.previewSheetRelationId(secondObject.getOleObject())));
+    }
+  }
+
+  @Test
+  void repairSheetDrawingRelationCoversEarlyReturnsAndMissingPatriarch() throws IOException {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet noDrawing = workbook.createSheet("NoDrawing");
+      ExcelSheetCopyEmbeddedObjectSupport.repairSheetDrawingRelation(noDrawing);
+
+      XSSFSheet blankDrawingId = workbook.createSheet("BlankDrawingId");
+      blankDrawingId.getCTWorksheet().addNewDrawing().setId(" ");
+      ExcelSheetCopyEmbeddedObjectSupport.repairSheetDrawingRelation(blankDrawingId);
+
+      XSSFSheet missingPatriarch = workbook.createSheet("Ghost");
+      missingPatriarch.getCTWorksheet().addNewDrawing().setId("rIdGhost");
+      IllegalStateException missingDrawing =
+          assertThrows(
+              IllegalStateException.class,
+              () ->
+                  ExcelSheetCopyEmbeddedObjectSupport.repairSheetDrawingRelation(missingPatriarch));
+      assertTrue(missingDrawing.getMessage().contains("missing its drawing patriarch"));
+    }
+  }
+
+  @Test
+  void repairSheetDrawingRelationRebindsDrawingRelations()
+      throws IOException, InvalidFormatException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+
+      XSSFSheet poiSheet = sheet.xssfSheet();
+      var drawingPatriarch = poiSheet.createDrawingPatriarch();
+      String originalDrawingRelationId = poiSheet.getCTWorksheet().getDrawing().getId();
+      ExcelSheetCopyEmbeddedObjectSupport.repairSheetDrawingRelation(poiSheet, drawingPatriarch);
+
+      poiSheet.getCTWorksheet().getDrawing().setId(" ");
+      ExcelSheetCopyEmbeddedObjectSupport.repairSheetDrawingRelation(poiSheet, drawingPatriarch);
+      poiSheet.getCTWorksheet().getDrawing().setId(originalDrawingRelationId);
+
+      XSSFObjectData objectData = requiredEmbeddedObject(poiSheet, "OpsEmbed");
+      String conflictingId = objectData.getOleObject().getId();
+      poiSheet.getCTWorksheet().getDrawing().setId(conflictingId);
+
+      ExcelSheetCopyEmbeddedObjectSupport.repairSheetDrawingRelation(poiSheet, drawingPatriarch);
+
+      assertEquals(
+          XSSFRelation.DRAWINGS.getRelation(),
+          poiSheet.getPackagePart().getRelationship(conflictingId).getRelationshipType());
+      assertEquals(
+          drawingPatriarch.getPackagePart().getPartName(),
+          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), conflictingId)
+              .getPartName());
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet source = workbook.getOrCreateSheet("Source");
+      source.setEmbeddedObject(embeddedObjectDefinition("SourceEmbed", "payload"));
+      ExcelSheet target = workbook.getOrCreateSheet("Target");
+      target.setEmbeddedObject(embeddedObjectDefinition("TargetEmbed", "payload"));
+
+      XSSFSheet sourceSheet = source.xssfSheet();
+      XSSFSheet targetSheet = target.xssfSheet();
+      var sourceDrawing = sourceSheet.createDrawingPatriarch();
+      var targetDrawing = targetSheet.createDrawingPatriarch();
+
+      String targetDrawingRelationId = targetSheet.getCTWorksheet().getDrawing().getId();
+      targetSheet
+          .getPackagePart()
+          .addRelationship(
+              sourceDrawing.getPackagePart().getPartName(),
+              TargetMode.INTERNAL,
+              XSSFRelation.DRAWINGS.getRelation(),
+              "rIdForeignDrawing");
+      targetSheet.getCTWorksheet().getDrawing().setId("rIdForeignDrawing");
+
+      ExcelSheetCopyEmbeddedObjectSupport.repairSheetDrawingRelation(targetSheet, targetDrawing);
+      assertEquals(
+          targetDrawing.getPackagePart().getPartName(),
+          ExcelDrawingBinarySupport.relatedInternalPart(
+                  targetSheet.getPackagePart(), targetSheet.getCTWorksheet().getDrawing().getId())
+              .getPartName());
+
+      targetSheet.getCTWorksheet().getDrawing().setId(targetDrawingRelationId + "Missing");
+      ExcelSheetCopyEmbeddedObjectSupport.repairSheetDrawingRelation(targetSheet, targetDrawing);
+      assertEquals(
+          targetDrawing.getPackagePart().getPartName(),
+          ExcelDrawingBinarySupport.relatedInternalPart(
+                  targetSheet.getPackagePart(), targetSheet.getCTWorksheet().getDrawing().getId())
+              .getPartName());
+
+      targetSheet
+          .getPackagePart()
+          .addRelationship(
+              PackagingURIHelper.createPartName("/xl/drawings/missing-drawing.xml"),
+              TargetMode.INTERNAL,
+              XSSFRelation.DRAWINGS.getRelation(),
+              "rIdMissingPart");
+      targetSheet.getCTWorksheet().getDrawing().setId("rIdMissingPart");
+      ExcelSheetCopyEmbeddedObjectSupport.repairSheetDrawingRelation(targetSheet, targetDrawing);
+      assertEquals(
+          targetDrawing.getPackagePart().getPartName(),
+          ExcelDrawingBinarySupport.relatedInternalPart(
+                  targetSheet.getPackagePart(), targetSheet.getCTWorksheet().getDrawing().getId())
+              .getPartName());
+    }
+  }
+
+  @Test
+  void repairWorksheetBoundRelationReusesIdsForReplaceableAndMissingRelations()
+      throws IOException, InvalidFormatException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+
+      XSSFSheet poiSheet = sheet.xssfSheet();
+      XSSFObjectData objectData = requiredEmbeddedObject(poiSheet, "OpsEmbed");
+      String relationId = objectData.getOleObject().getId();
+      ExcelSheetCopyEmbeddedObjectSupport.InternalRelationSnapshot sourcePart =
+          ExcelSheetCopyEmbeddedObjectSupport.requiredInternalRelation(
+              poiSheet.getPackagePart(), relationId, "OpsEmbed", "embedded object package");
+
+      PackagePart existingPart =
+          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), relationId);
+      PackagePartName existingPartName = existingPart.getPartName();
+      try (var outputStream = existingPart.getOutputStream()) {
+        outputStream.write("wrong".getBytes(StandardCharsets.UTF_8));
+      }
+
+      String repairedId =
+          ExcelSheetCopyEmbeddedObjectSupport.repairWorksheetBoundRelation(
+              poiSheet,
+              objectData,
+              ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.OLE_OBJECT,
+              relationId,
+              sourcePart,
+              "embedded object package",
+              "OpsEmbed");
+      assertEquals(relationId, repairedId);
+      PackagePart repairedPart =
+          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), repairedId);
+      assertNotNull(repairedPart);
+      assertNotEquals(existingPartName, repairedPart.getPartName());
+      assertArrayEquals(sourcePart.bytes().bytes(), repairedPart.getInputStream().readAllBytes());
+      assertFalse(workbook.xssfWorkbook().getPackage().containPart(existingPartName));
+
+      poiSheet.getPackagePart().removeRelationship(repairedId);
+      String restoredMissingId =
+          ExcelSheetCopyEmbeddedObjectSupport.repairWorksheetBoundRelation(
+              poiSheet,
+              objectData,
+              ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.OLE_OBJECT,
+              repairedId,
+              sourcePart,
+              "embedded object package",
+              "OpsEmbed");
+      assertEquals(repairedId, restoredMissingId);
+      assertNotNull(
+          ExcelDrawingBinarySupport.relatedInternalPart(
+              poiSheet.getPackagePart(), restoredMissingId));
+    }
+  }
+
+  @Test
+  void repairWorksheetBoundRelationReusesIdsWhenRelationshipsPointAtMissingParts()
+      throws IOException, InvalidFormatException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+
+      XSSFSheet poiSheet = sheet.xssfSheet();
+      XSSFObjectData objectData = requiredEmbeddedObject(poiSheet, "OpsEmbed");
+      ExcelSheetCopyEmbeddedObjectSupport.InternalRelationSnapshot sourcePart =
+          ExcelSheetCopyEmbeddedObjectSupport.requiredInternalRelation(
+              poiSheet.getPackagePart(),
+              objectData.getOleObject().getId(),
+              "OpsEmbed",
+              "embedded object package");
+
+      poiSheet
+          .getPackagePart()
+          .addRelationship(
+              PackagingURIHelper.createPartName("/xl/embeddings/missing-part.bin"),
+              TargetMode.INTERNAL,
+              sourcePart.relationshipType(),
+              "rIdMissingPart");
+      objectData.getOleObject().setId("rIdMissingPart");
+
+      String repairedId =
+          ExcelSheetCopyEmbeddedObjectSupport.repairWorksheetBoundRelation(
+              poiSheet,
+              objectData,
+              ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.OLE_OBJECT,
+              "rIdMissingPart",
+              sourcePart,
+              "embedded object package",
+              "OpsEmbed");
+      assertEquals("rIdMissingPart", repairedId);
+      assertNotNull(
+          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), repairedId));
+    }
+  }
+
+  @Test
+  void repairWorksheetBoundRelationReallocatesWrongRelationTargets()
+      throws IOException, InvalidFormatException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsEmbed", "payload"));
+
+      XSSFSheet poiSheet = sheet.xssfSheet();
+      XSSFObjectData objectData = requiredEmbeddedObject(poiSheet, "OpsEmbed");
+      ExcelSheetCopyEmbeddedObjectSupport.InternalRelationSnapshot sourcePart =
+          ExcelSheetCopyEmbeddedObjectSupport.requiredInternalRelation(
+              poiSheet.getPackagePart(),
+              objectData.getOleObject().getId(),
+              "OpsEmbed",
+              "embedded object package");
+
+      PackagePart bogusImage =
+          workbook
+              .xssfWorkbook()
+              .getPackage()
+              .createPart(
+                  PackagingURIHelper.createPartName("/xl/media/gridgrind-bogus.png"), "image/png");
+      try (var outputStream = bogusImage.getOutputStream()) {
+        outputStream.write(PNG_PIXEL_BYTES);
+      }
+      poiSheet
+          .getPackagePart()
+          .addRelationship(
+              bogusImage.getPartName(),
+              TargetMode.INTERNAL,
+              XSSFRelation.IMAGES.getRelation(),
+              "rIdBogus");
+      objectData.getOleObject().setId("rIdBogus");
+
+      String imageRepairedId =
+          ExcelSheetCopyEmbeddedObjectSupport.repairWorksheetBoundRelation(
+              poiSheet,
+              objectData,
+              ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.OLE_OBJECT,
+              "rIdBogus",
+              sourcePart,
+              "embedded object package",
+              "OpsEmbed");
+      assertNotEquals("rIdBogus", imageRepairedId);
+      assertEquals(
+          sourcePart.relationshipType(),
+          poiSheet.getPackagePart().getRelationship(imageRepairedId).getRelationshipType());
+      assertArrayEquals(
+          sourcePart.bytes().bytes(),
+          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), imageRepairedId)
+              .getInputStream()
+              .readAllBytes());
+
+      PackagePart wrongContentTypePart =
+          workbook
+              .xssfWorkbook()
+              .getPackage()
+              .createPart(
+                  PackagingURIHelper.createPartName("/xl/embeddings/gridgrind-wrong.bin"),
+                  "application/octet-stream");
+      try (var outputStream = wrongContentTypePart.getOutputStream()) {
+        outputStream.write(sourcePart.bytes().bytes());
+      }
+      poiSheet
+          .getPackagePart()
+          .addRelationship(
+              wrongContentTypePart.getPartName(),
+              TargetMode.INTERNAL,
+              sourcePart.relationshipType(),
+              "rIdWrongContent");
+      objectData.getOleObject().setId("rIdWrongContent");
+
+      String contentTypeRepairedId =
+          ExcelSheetCopyEmbeddedObjectSupport.repairWorksheetBoundRelation(
+              poiSheet,
+              objectData,
+              ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.OLE_OBJECT,
+              "rIdWrongContent",
+              sourcePart,
+              "embedded object package",
+              "OpsEmbed");
+      assertNotEquals("rIdWrongContent", contentTypeRepairedId);
+      assertArrayEquals(
+          sourcePart.bytes().bytes(),
+          ExcelDrawingBinarySupport.relatedInternalPart(
+                  poiSheet.getPackagePart(), contentTypeRepairedId)
+              .getInputStream()
+              .readAllBytes());
+    }
+  }
+
+  @Test
+  void repairWorksheetBoundRelationReallocatesIdsOwnedByAnotherObject()
+      throws IOException, InvalidFormatException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsA", "alpha"));
+      sheet.setEmbeddedObject(embeddedObjectDefinition("OpsB", "beta"));
+
+      XSSFSheet poiSheet = sheet.xssfSheet();
+      XSSFObjectData firstObject = requiredEmbeddedObject(poiSheet, "OpsA");
+      XSSFObjectData secondObject = requiredEmbeddedObject(poiSheet, "OpsB");
+      String secondRelationId = secondObject.getOleObject().getId();
+      ExcelSheetCopyEmbeddedObjectSupport.InternalRelationSnapshot secondSourcePart =
+          ExcelSheetCopyEmbeddedObjectSupport.requiredInternalRelation(
+              poiSheet.getPackagePart(), secondRelationId, "OpsB", "embedded object package");
+
+      String repairedId =
+          ExcelSheetCopyEmbeddedObjectSupport.repairWorksheetBoundRelation(
+              poiSheet,
+              firstObject,
+              ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole.OLE_OBJECT,
+              secondRelationId,
+              secondSourcePart,
+              "embedded object package",
+              "OpsA");
+      assertNotEquals(secondRelationId, repairedId);
+      assertArrayEquals(
+          secondSourcePart.bytes().bytes(),
+          ExcelDrawingBinarySupport.relatedInternalPart(poiSheet.getPackagePart(), repairedId)
+              .getInputStream()
+              .readAllBytes());
+    }
+  }
+
   private static void createPicture(XSSFWorkbook workbook, XSSFSheet sheet, String objectName) {
     int pictureIndex = workbook.addPicture(PNG_PIXEL_BYTES, Workbook.PICTURE_TYPE_PNG);
     var drawing = sheet.createDrawingPatriarch();
@@ -337,5 +856,14 @@ class ExcelSheetCopyEmbeddedObjectSupportCoverageTest {
       cursor.insertAttributeWithValue(
           new QName(PackageRelationshipTypes.CORE_PROPERTIES_ECMA376_NS, "id"), relationId);
     }
+  }
+
+  private static boolean worksheetRelationIdReferencedElsewhere(
+      XSSFSheet sheet,
+      XSSFObjectData objectData,
+      ExcelSheetCopyEmbeddedObjectSupport.WorksheetRelationRole relationRole,
+      String relationId) {
+    return ExcelSheetCopyEmbeddedObjectSupport.worksheetRelationIdReferencedElsewhere(
+        sheet, objectData, relationRole, relationId);
   }
 }

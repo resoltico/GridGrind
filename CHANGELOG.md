@@ -5,6 +5,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.55.0] - 2026-04-23
+
+### Fixed
+
+- Copied-sheet picture readback no longer depends on Apache POI leaving cloned drawing relation ids
+  intact. GridGrind now repairs copied picture `r:embed` references against the target drawing
+  relations after `COPY_SHEET`, picture reads or payload extraction now fail with a clear
+  picture-specific integrity error instead of a raw `NullPointerException` when an external
+  workbook is malformed, and the reproduced Jazzer `COPY_SHEET` picture crash is now covered by a
+  promoted round-trip success seed plus persisted drawing-picture OOXML invariants.
+- Malformed picture XML that still has `<pic:blipFill>` but no nested `<a:blip>` no longer leaks
+  Apache POI's raw `NullPointerException` through picture inspection or delete flows. GridGrind
+  now short-circuits those states as missing image relationships, keeps the delete path safe, and
+  covers the blip-less picture seam with focused engine regressions.
+- Copied embedded objects now keep their preview-image drawing relations intact through
+  `COPY_SHEET` round-trips. GridGrind now repairs the preview media relationship referenced from
+  the copied object shape itself, so saved copied worksheets no longer reopen with unresolved
+  drawing `a:blip` ids in the embedded-object preview path.
+- Copied embedded objects now also keep their worksheet-bound relation ids authoritative through
+  `COPY_SHEET`, even when cloned `oleObject` or `objectPr` ids collide with the copied sheet's
+  drawing, comment-VML, or other worksheet relations. GridGrind now rewrites those copied ids onto
+  safe worksheet-owned relation ids, restores the sheet-to-drawing relation explicitly, treats
+  sheet preview refs as image-only during read/delete flows, extends persisted OOXML invariants to
+  worksheet `objectPr` preview refs, and promotes the reproduced round-trip artifact as a
+  committed success seed.
+
 ## [0.54.0] - 2026-04-23
 
 ### Fixed
@@ -2129,7 +2155,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.54.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.55.0...HEAD
+[0.55.0]: https://github.com/resoltico/GridGrind/compare/v0.54.0...v0.55.0
 [0.54.0]: https://github.com/resoltico/GridGrind/compare/v0.53.0...v0.54.0
 [0.53.0]: https://github.com/resoltico/GridGrind/compare/v0.52.0...v0.53.0
 [0.52.0]: https://github.com/resoltico/GridGrind/compare/v0.51.0...v0.52.0

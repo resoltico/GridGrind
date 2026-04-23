@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.54.0"
+version: "0.55.0"
 domain: RELEASE_PROTOCOL
 updated: "2026-04-23"
 route:

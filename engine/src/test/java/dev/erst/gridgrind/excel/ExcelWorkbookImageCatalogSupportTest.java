@@ -172,6 +172,7 @@ class ExcelWorkbookImageCatalogSupportTest {
               ExcelPicturePoiBridge.toPoiPictureType(format));
       assertNotNull(relation);
       assertEquals(format.defaultContentType(), relation.getContentType());
+      assertEquals(relation, ExcelWorkbookImageCatalogSupport.pictureRelation(format));
     }
     assertThrows(
         IllegalArgumentException.class,

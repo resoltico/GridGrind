@@ -18,6 +18,8 @@ final class ExcelSheetCopyController {
       new ExcelSheetClonePreparationSupport();
   private final ExcelSheetCopyEmbeddedObjectSupport embeddedObjectCopySupport =
       new ExcelSheetCopyEmbeddedObjectSupport();
+  private final ExcelSheetCopyPictureSupport pictureCopySupport =
+      new ExcelSheetCopyPictureSupport();
 
   /** Copies one sheet into a new visible, unselected sheet at the requested workbook position. */
   ExcelWorkbook copySheet(
@@ -35,6 +37,8 @@ final class ExcelSheetCopyController {
     XSSFSheet sourcePoiSheet =
         ExcelWorkbookSheetSupport.requiredSheet(workbook.xssfWorkbook(), sourceSheetName);
     ExcelSheet sourceSheet = workbook.sheet(sourceSheetName);
+    ExcelSheetCopyPictureSupport.CopySnapshot pictures =
+        pictureCopySupport.snapshot(sourcePoiSheet);
     ExcelSheetCopySnapshot snapshot = snapshot(workbook, sourceSheetName, sourcePoiSheet);
     ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot embeddedObjects =
         embeddedObjectCopySupport.snapshot(sourceSheet);
@@ -47,6 +51,7 @@ final class ExcelSheetCopyController {
             .map(table -> Objects.requireNonNullElse(table.getName(), ""))
             .toList();
 
+    pictureCopySupport.repairCopiedPictures(targetPoiSheet, pictures);
     retargetCopiedSheetFormulas(workbook, sourceSheetName, newSheetName, targetPoiSheet);
     ExcelSheetCopySupport.replaceDataValidations(
         snapshot.dataValidations(), targetPoiSheet, workbook, sourceSheetName, newSheetName);

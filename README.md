@@ -43,8 +43,9 @@ RETRIEVAL_HINTS:
   bleed-through, direct ad hoc formula writes, and discovery-surface regressions fail CI instead
   of lingering quietly between releases.
 - Save and reopen behavior is verified, not assumed: committed `.xlsx` round-trip regressions cover
-  workbook metadata such as comments, validations, tables, and drawing-backed content so
-  structural workbook edits do not quietly reopen differently later.
+  workbook metadata such as comments, validations, tables, copied sheets, and drawing-backed
+  content so structural workbook edits do not quietly reopen differently later, including copied
+  embedded-object relation graphs that Apache POI sheet cloning leaves in a non-canonical state.
 - The published Docker image matches the drawing surface too: it ships the minimal font stack
   required for signature-line preview generation instead of leaving container users to discover a
   runtime fontconfig failure mid-request.

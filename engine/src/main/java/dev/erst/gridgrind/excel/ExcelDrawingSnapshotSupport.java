@@ -21,7 +21,7 @@ final class ExcelDrawingSnapshotSupport {
   static ExcelDrawingObjectSnapshot snapshot(
       XSSFDrawing drawing, XSSFShape shape, ExcelFormulaRuntime formulaRuntime) {
     if (shape instanceof XSSFPicture picture) {
-      return snapshotPicture(picture);
+      return ExcelDrawingPictureSupport.snapshotPicture(picture);
     }
     if (shape instanceof org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
       return ExcelDrawingBinarySupport.snapshotEmbeddedObject(objectData);
@@ -59,23 +59,6 @@ final class ExcelDrawingSnapshotSupport {
         preset == null ? null : preset.toString(),
         ExcelDrawingBinarySupport.nullIfBlank(shape.getText()),
         0);
-  }
-
-  private static ExcelDrawingObjectSnapshot.Picture snapshotPicture(XSSFPicture picture) {
-    org.apache.poi.xssf.usermodel.XSSFPictureData pictureData = picture.getPictureData();
-    byte[] bytes = pictureData.getData();
-    RasterDimensions dimensions = rasterDimensions(bytes);
-    return new ExcelDrawingObjectSnapshot.Picture(
-        ExcelDrawingAnchorSupport.resolvedName(picture),
-        ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(picture)),
-        ExcelPicturePoiBridge.fromPoiPictureType(pictureData.getPictureType()),
-        pictureData.getPackagePart().getContentType(),
-        bytes.length,
-        ExcelDrawingBinarySupport.sha256(bytes),
-        dimensions.widthPixels(),
-        dimensions.heightPixels(),
-        ExcelDrawingBinarySupport.nullIfBlank(
-            picture.getCTPicture().getNvPicPr().getCNvPr().getDescr()));
   }
 
   private static ExcelDrawingObjectSnapshot.Shape snapshotConnector(
