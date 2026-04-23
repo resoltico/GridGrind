@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -67,7 +68,7 @@ final class ExcelDrawingSnapshotSupport {
     return new ExcelDrawingObjectSnapshot.Picture(
         ExcelDrawingAnchorSupport.resolvedName(picture),
         ExcelDrawingAnchorSupport.snapshotAnchor(ExcelDrawingAnchorSupport.shapeXml(picture)),
-        ExcelPictureFormat.fromPoiPictureType(pictureData.getPictureType()),
+        ExcelPicturePoiBridge.fromPoiPictureType(pictureData.getPictureType()),
         pictureData.getPackagePart().getContentType(),
         bytes.length,
         ExcelDrawingBinarySupport.sha256(bytes),

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.53.0"
+version: "0.54.0"
 domain: DEVELOPER
-updated: "2026-04-22"
+updated: "2026-04-23"
 route:
   keywords: [gridgrind, build, gradle, architecture, coverage, jacoco, pmd, errorprone, spotless, java26, engine, contract, executor, authoring-java, cli]
   questions: ["how do I build gridgrind", "how do I run tests", "what is the gridgrind architecture", "how are quality gates configured", "what are the coverage requirements"]
@@ -27,9 +27,14 @@ Companion references:
 
 ## Architecture
 
-GridGrind is a five-module Gradle project with compiler-enforced JPMS boundaries:
+GridGrind is a six-module Gradle project with compiler-enforced JPMS boundaries:
 
 ```
+excel-foundation/
+            Shared Excel-domain foundation. Owns the POI-free `.xlsx` enums,
+            limits, and span/value objects shared by contract, engine,
+            executor-facing tests, and downstream adapters.
+
 engine/     Apache-POI-backed workbook engine. Owns mutable workbook state,
             workbook mutation rules, and factual workbook inspection.
 
@@ -51,22 +56,30 @@ cli/        Thin transport adapter. Reads a contract request from stdin
             and exposes help/template/catalog discovery commands.
 ```
 
-The CLI is not the core. The foundation is `engine` plus `contract` plus `executor`. The
-`authoring-java` API and the CLI are two downstream surfaces on top of that foundation. Future
-adapters (HTTP, gRPC, library embedding) can be added without touching `engine`, `contract`, or
-`executor`.
+The CLI is not the core. The foundation is `excel-foundation` plus `engine` plus `contract` plus
+`executor`. The `authoring-java` API and the CLI are two downstream surfaces on top of that
+foundation. Future adapters (HTTP, gRPC, library embedding) can be added without touching
+`excel-foundation`, `engine`, `contract`, or `executor`.
 
 The enforced dependency graph is:
 
 ```text
-dev.erst.gridgrind.authoring -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.engine
-dev.erst.gridgrind.cli -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.engine
+dev.erst.gridgrind.authoring -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
+dev.erst.gridgrind.cli -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
+dev.erst.gridgrind.executor -> dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation
 ```
 
 `authoring-java` and `cli` do not depend on `engine`, and `executor` is the only module allowed
-to bridge from the canonical contract into workbook execution. Shared Java build conventions
-enable `modularity.inferModulePath`, so the `module-info.java` descriptors in all five product
-modules participate in normal local builds, CI, and release verification.
+to bridge from the canonical contract into workbook execution. `excel-foundation` is the only
+shared Excel-domain surface allowed to sit below both `contract` and `engine`, so the public
+contract no longer imports POI-backed engine internals just to reuse enums or limits. Shared Java
+build conventions enable `modularity.inferModulePath`, so the `module-info.java` descriptors in
+all six product modules participate in normal local builds, CI, and release verification.
+
+The highest-churn architecture seams are intentionally split too:
+- `GridGrindProtocolCatalog` owns the top-level catalog assembly, while `GridGrindProtocolCatalogFieldGroupSupport` owns the large nested/plain field-shape descriptor registry and `GridGrindProtocolCatalogLookupSupport` owns lookup/search behavior.
+- Jazzer request generation is no longer one monolith: `OperationSequenceModel` owns orchestration, `OperationSequenceValueFactory` owns bounded payload/value generation, and `WorkbookInvariantChecks` is split across focused workbook/cell/engine-surface invariant helpers.
+- Build-failing architecture audits protect these boundaries. Contract source must stay on `excel-foundation`, direct `Cell.setCellFormula(...)` calls must stay inside `ExcelFormulaWriteSupport`, POI reflective access must stay inside `PoiPrivateAccessSupport`, and the split hotspot files must stay below their enforced size ceilings.
 
 ## Contract Replacement Mode
 
@@ -305,7 +318,9 @@ The table above applies only to the root product modules. The nested Jazzer buil
 coverage contract because its local-only generator, telemetry, and operator classes are exercised
 primarily through regression replay and live fuzzing rather than ordinary unit tests. Run
 `./gradlew --project-dir jazzer check` to enforce Jazzer's dedicated coverage scope together with
-its shared Spotless and PMD gates.
+its shared Spotless and PMD gates. The extracted `OperationSequenceValueFactory` follows the same
+coverage scope as `OperationSequenceModel`, and direct selector-sweep seam tests still exercise
+both generator layers so the exclusion does not mean "untested".
 
 Supported `jazzer/bin/*` wrappers are part of that operator contract too. They must remain
 compatible with stock macOS `/bin/bash` 3.2 under `set -u`; do not assume Bash 4+ empty-array

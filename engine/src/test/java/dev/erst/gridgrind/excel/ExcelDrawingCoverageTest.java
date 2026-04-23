@@ -2,6 +2,11 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -143,10 +148,13 @@ class ExcelDrawingCoverageTest {
         () -> new ExcelDrawingAnchor.Absolute(0L, 0L, 1L, 0L, null));
 
     for (ExcelPictureFormat format : ExcelPictureFormat.values()) {
-      assertSame(format, ExcelPictureFormat.fromPoiPictureType(format.poiPictureType()));
+      assertSame(
+          format,
+          ExcelPicturePoiBridge.fromPoiPictureType(ExcelPicturePoiBridge.toPoiPictureType(format)));
       assertSame(format, ExcelPictureFormat.fromContentType(format.defaultContentType()));
     }
-    assertThrows(IllegalArgumentException.class, () -> ExcelPictureFormat.fromPoiPictureType(-1));
+    assertThrows(
+        IllegalArgumentException.class, () -> ExcelPicturePoiBridge.fromPoiPictureType(-1));
     assertThrows(
         IllegalArgumentException.class,
         () -> ExcelPictureFormat.fromContentType("application/x-gridgrind"));

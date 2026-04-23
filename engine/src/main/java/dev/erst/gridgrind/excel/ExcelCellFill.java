@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+
 /** Fill patch applied through {@link ExcelCellStyle}. */
 public record ExcelCellFill(
     ExcelFillPattern pattern,

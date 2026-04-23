@@ -5,10 +5,10 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.ExcelFillPattern;
-import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
@@ -159,7 +159,7 @@ class GridGrindResponseEdgeCoverageTest {
                 () ->
                     new GridGrindResponse.SheetSummaryReport(
                         " ",
-                        dev.erst.gridgrind.excel.ExcelSheetVisibility.VISIBLE,
+                        dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility.VISIBLE,
                         new GridGrindResponse.SheetProtectionReport.Unprotected(),
                         0,
                         -1,

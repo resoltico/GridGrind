@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import java.util.Objects;
 
 /** OOXML package-signing settings applied during workbook persistence. */

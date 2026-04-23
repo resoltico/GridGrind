@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
-import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Objects;
 
 /** Binary picture payload used for authored drawing pictures and embedded-object previews. */

@@ -284,7 +284,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
     try {
       return new ExcelOoxmlEncryptionSnapshot(
           true,
-          ExcelOoxmlEncryptionMode.fromPoi(encryptionInfo.getEncryptionMode()),
+          ExcelOoxmlSecurityPoiBridge.fromPoi(encryptionInfo.getEncryptionMode()),
           encryptionInfo.getHeader().getCipherAlgorithm().name(),
           encryptionInfo.getVerifier().getHashAlgorithm().name(),
           encryptionInfo.getHeader().getChainingMode().name(),
@@ -359,8 +359,8 @@ public final class ExcelOoxmlPackageSecuritySupport {
         signerIssuer(signer),
         signerSerialNumber(signer),
         signaturePart.validate()
-            ? ExcelOoxmlSignatureState.VALID
-            : ExcelOoxmlSignatureState.INVALID);
+            ? dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState.VALID
+            : dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState.INVALID);
   }
 
   static String signerSubject(X509Certificate signer) {
@@ -382,7 +382,8 @@ public final class ExcelOoxmlPackageSecuritySupport {
       SignatureConfig signatureConfig = new SignatureConfig();
       signatureConfig.setKey(signingMaterial.privateKey());
       signatureConfig.setSigningCertificateChain(signingMaterial.certificateChain());
-      signatureConfig.setDigestAlgo(signatureOptions.digestAlgorithm().poiHashAlgorithm());
+      signatureConfig.setDigestAlgo(
+          ExcelOoxmlSecurityPoiBridge.toPoi(signatureOptions.digestAlgorithm()));
       if (signatureOptions.description() != null) {
         signatureConfig.setSignatureDescription(signatureOptions.description());
       }
@@ -538,7 +539,8 @@ public final class ExcelOoxmlPackageSecuritySupport {
   static void encryptWorkbook(
       Path plainWorkbookPath, Path targetPath, ExcelOoxmlEncryptionOptions encryptionOptions)
       throws IOException {
-    EncryptionInfo encryptionInfo = new EncryptionInfo(encryptionOptions.mode().poiMode());
+    EncryptionInfo encryptionInfo =
+        new EncryptionInfo(ExcelOoxmlSecurityPoiBridge.toPoi(encryptionOptions.mode()));
     Encryptor encryptor = encryptionInfo.getEncryptor();
     encryptor.confirmPassword(encryptionOptions.password());
 

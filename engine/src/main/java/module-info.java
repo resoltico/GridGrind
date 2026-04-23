@@ -1,4 +1,5 @@
 module dev.erst.gridgrind.engine {
+  requires dev.erst.gridgrind.excel.foundation;
   requires java.desktop;
   requires java.xml;
   requires java.xml.crypto;

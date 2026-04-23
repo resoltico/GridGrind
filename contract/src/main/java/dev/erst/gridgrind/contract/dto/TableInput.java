@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.ExcelSheetNames;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
 import java.util.Objects;
 
 /** Protocol-facing table definition attached to one table authoring request. */

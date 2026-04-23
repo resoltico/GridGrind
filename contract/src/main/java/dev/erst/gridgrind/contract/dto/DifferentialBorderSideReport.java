@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
 import java.util.Objects;
 
 /** Protocol-facing factual report for one conditional-formatting differential border side. */

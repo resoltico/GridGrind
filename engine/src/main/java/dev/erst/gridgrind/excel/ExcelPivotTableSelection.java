@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;

@@ -39,9 +39,15 @@ RETRIEVAL_HINTS:
 - GridGrind is built on Apache POI XSSF, a long-established Java `.xlsx` library, instead of a home-grown spreadsheet file layer.
 - If a run fails, GridGrind stops before writing the workbook, so you do not get a partly written file.
 - GridGrind ships a user-facing quick start, real example files, and supporting docs when you want more detail.
+- Help/catalog drift and a few key architecture seams are build-audited, so contract-to-engine
+  bleed-through, direct ad hoc formula writes, and discovery-surface regressions fail CI instead
+  of lingering quietly between releases.
 - Save and reopen behavior is verified, not assumed: committed `.xlsx` round-trip regressions cover
   workbook metadata such as comments, validations, tables, and drawing-backed content so
   structural workbook edits do not quietly reopen differently later.
+- The published Docker image matches the drawing surface too: it ships the minimal font stack
+  required for signature-line preview generation instead of leaving container users to discover a
+  runtime fontconfig failure mid-request.
 - The limits are explicit instead of hand-wavy: low-memory `STREAMING_WRITE` is intentionally narrow and uses `ENSURE_SHEET`, `APPEND_ROW`, and optional `execution.calculation.markRecalculateOnOpen=true`.
 - Formula boundaries are explicit too: scalar `FORMULA` cell values reject array-formula braces, while dedicated `SET_ARRAY_FORMULA` handles contiguous array-formula groups. `LAMBDA` and `LET` are still rejected as `INVALID_FORMULA` today because Apache POI cannot parse them yet.
 - Limits and format boundaries are documented up front in [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
@@ -54,6 +60,7 @@ RETRIEVAL_HINTS:
 - Want a no-save health-check example: [examples/workbook-health-request.json](examples/workbook-health-request.json)
 - Want an existing-workbook XML import/export example: [examples/custom-xml-request.json](examples/custom-xml-request.json)
 - Want a drawing and signature-line example: [examples/signature-line-request.json](examples/signature-line-request.json)
+- Need one operation or type fast without dumping the whole catalog: `gridgrind --print-protocol-catalog --search chart`
 - Want the reference docs: [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md), [docs/OPERATIONS.md](docs/OPERATIONS.md), and [docs/ERRORS.md](docs/ERRORS.md). The detailed long-form reference is split behind those entry points into focused docs under `docs/`.
 - Want the runnable download: [latest release](https://github.com/resoltico/GridGrind/releases/latest)
 

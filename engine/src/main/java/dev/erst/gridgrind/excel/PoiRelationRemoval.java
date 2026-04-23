@@ -1,7 +1,6 @@
 package dev.erst.gridgrind.excel;
 
 import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandleProxies;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.Objects;
@@ -20,23 +19,19 @@ final class PoiRelationRemoval {
 
   static BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> removePoiRelationInvoker(
       MethodHandles.Lookup lookup) {
-    Objects.requireNonNull(lookup, "lookup must not be null");
-    try {
-      MethodHandle methodHandle =
-          MethodHandles.privateLookupIn(POIXMLDocumentPart.class, lookup)
-              .findVirtual(
-                  POIXMLDocumentPart.class,
-                  "removeRelation",
-                  MethodType.methodType(boolean.class, POIXMLDocumentPart.class, boolean.class));
-      MethodHandle typedInvoker =
-          MethodHandles.insertArguments(methodHandle, 2, true)
-              .asType(
-                  MethodType.methodType(
-                      boolean.class, POIXMLDocumentPart.class, POIXMLDocumentPart.class));
-      return relationInvoker(typedInvoker);
-    } catch (ReflectiveOperationException | IllegalArgumentException exception) {
-      throw new IllegalStateException("Failed to resolve POI removeRelation handle", exception);
-    }
+    MethodHandle methodHandle =
+        PoiPrivateAccessSupport.requireVirtual(
+            lookup,
+            POIXMLDocumentPart.class,
+            "removeRelation",
+            MethodType.methodType(boolean.class, POIXMLDocumentPart.class, boolean.class),
+            "Failed to resolve POI removeRelation handle");
+    MethodHandle typedInvoker =
+        MethodHandles.insertArguments(methodHandle, 2, true)
+            .asType(
+                MethodType.methodType(
+                    boolean.class, POIXMLDocumentPart.class, POIXMLDocumentPart.class));
+    return relationInvoker(typedInvoker);
   }
 
   static boolean invokePoiRelationRemoval(
@@ -56,6 +51,6 @@ final class PoiRelationRemoval {
   @SuppressWarnings("unchecked")
   private static BiPredicate<POIXMLDocumentPart, POIXMLDocumentPart> relationInvoker(
       MethodHandle typedInvoker) {
-    return MethodHandleProxies.asInterfaceInstance(BiPredicate.class, typedInvoker);
+    return PoiPrivateAccessSupport.asInterfaceInstance(BiPredicate.class, typedInvoker);
   }
 }

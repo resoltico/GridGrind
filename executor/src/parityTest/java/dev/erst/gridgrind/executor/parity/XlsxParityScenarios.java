@@ -12,20 +12,20 @@ import dev.erst.gridgrind.contract.json.GridGrindJson;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.ExcelComparisonOperator;
-import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.ExcelFillPattern;
-import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.ExcelPictureFormat;
-import dev.erst.gridgrind.excel.ExcelPrintOrientation;
-import dev.erst.gridgrind.excel.ExcelSheetVisibility;
-import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.executor.ExecutionInputBindings;
 import dev.erst.gridgrind.executor.ExecutionJournalSink;
@@ -1562,7 +1562,7 @@ public final class XlsxParityScenarios {
   private static PivotTableInput.DataField defaultPivotDataFieldInput() {
     return new PivotTableInput.DataField(
         "Amount",
-        dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+        dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction.SUM,
         "Total Amount",
         "#,##0.00");
   }

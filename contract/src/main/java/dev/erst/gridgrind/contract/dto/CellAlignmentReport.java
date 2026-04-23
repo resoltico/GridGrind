@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.util.Objects;
 
 /** Effective alignment facts reported with every analyzed cell. */

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.53.0"
+version: "0.54.0"
 domain: OPERATIONS
-updated: "2026-04-22"
+updated: "2026-04-23"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -12,6 +12,7 @@ route:
 
 **Purpose**: Stable public map of the shipped GridGrind `.xlsx` contract.
 **Machine-readable discovery**: `gridgrind --print-protocol-catalog`
+**Ranked search**: `gridgrind --print-protocol-catalog --search <text>`
 **Copy-paste cheat sheet**: [QUICK_REFERENCE.md](./QUICK_REFERENCE.md)
 **Hard ceilings and unsupported boundaries**: [LIMITATIONS.md](./LIMITATIONS.md)
 
@@ -23,6 +24,8 @@ focused documents so the public surface stays easier to audit and harder to let 
 ```bash
 gridgrind --print-request-template
 gridgrind --print-protocol-catalog
+gridgrind --print-protocol-catalog --search chart
+gridgrind --print-protocol-catalog --operation mutationActionTypes:SET_CELL
 gridgrind --print-example BUDGET
 gridgrind --print-example ASSERTION
 printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' | gridgrind --doctor-request
@@ -31,7 +34,8 @@ printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' | gridgrind --doctor-reques
 `--print-protocol-catalog` is the authoritative machine-readable shape inventory. It publishes the
 current request model, every mutation action, every assertion type, every inspection query,
 required versus optional fields, and the allowed nested selectors or payload groups for polymorphic
-fields.
+fields. Use `--search` when you only know part of the name or summary, then switch to
+`--operation <group>:<id>` for the exact entry once you have the stable qualified id.
 
 ## Canonical Terminology
 

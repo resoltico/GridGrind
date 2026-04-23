@@ -2,6 +2,9 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;

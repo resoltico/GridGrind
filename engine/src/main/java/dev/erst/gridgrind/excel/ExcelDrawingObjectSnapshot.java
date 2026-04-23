@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
+import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.List;
 import java.util.Objects;
 

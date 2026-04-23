@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelEmbeddedObjectPackagingKind;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Objects;
 
 /** Extracted binary drawing-object payload surfaced through read operations. */

@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
 import java.util.Objects;
 
 /** Authored threshold used by advanced conditional-formatting rules. */

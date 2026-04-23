@@ -18,7 +18,7 @@ import dev.erst.gridgrind.contract.step.AssertionStep;
 import dev.erst.gridgrind.contract.step.InspectionStep;
 import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import java.util.List;
 
 /** Shared DSL helpers for the contract-owned generated example registry. */

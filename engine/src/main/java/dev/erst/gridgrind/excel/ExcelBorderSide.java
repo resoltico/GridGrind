@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+
 /** One side of a border patch or snapshot, defined by style and optional RGB color. */
 public record ExcelBorderSide(ExcelBorderStyle style, ExcelColor color) {
   /** Creates a border side with the supplied style and no explicit RGB color override. */

@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 
 /** Protocol-facing fill patch used by {@link CellStyleInput}. */
 public record CellFillInput(

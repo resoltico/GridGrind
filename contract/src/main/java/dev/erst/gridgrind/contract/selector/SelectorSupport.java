@@ -2,12 +2,12 @@ package dev.erst.gridgrind.contract.selector;
 
 import dev.erst.gridgrind.contract.dto.ProtocolCellAddressValidation;
 import dev.erst.gridgrind.contract.dto.ProtocolDefinedNameValidation;
-import dev.erst.gridgrind.excel.ExcelAddressLists;
-import dev.erst.gridgrind.excel.ExcelColumnSpan;
-import dev.erst.gridgrind.excel.ExcelPivotTableNaming;
-import dev.erst.gridgrind.excel.ExcelReadLimits;
-import dev.erst.gridgrind.excel.ExcelRowSpan;
-import dev.erst.gridgrind.excel.ExcelSheetNames;
+import dev.erst.gridgrind.excel.foundation.ExcelAddressLists;
+import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
+import dev.erst.gridgrind.excel.foundation.ExcelReadLimits;
+import dev.erst.gridgrind.excel.foundation.ExcelRowSpan;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetNames;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;

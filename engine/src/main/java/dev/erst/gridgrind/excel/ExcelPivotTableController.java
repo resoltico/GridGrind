@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -97,7 +99,7 @@ final class ExcelPivotTableController {
     }
     for (ExcelPivotTableDefinition.DataField dataField : definition.dataFields()) {
       pivotTable.addColumnLabel(
-          dataField.function().toPoiFunction(),
+          ExcelPivotDataPoiBridge.toPoi(dataField.function()),
           columns.relativeIndex(dataField.sourceColumnName()),
           dataField.displayName(),
           dataField.valueFormat());
@@ -108,7 +110,7 @@ final class ExcelPivotTableController {
   void deletePivotTable(ExcelWorkbook workbook, String name, String sheetName) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     String validatedName = ExcelPivotTableNaming.validateName(name);
-    ExcelSheetNames.requireValid(sheetName, "sheetName");
+    dev.erst.gridgrind.excel.foundation.ExcelSheetNames.requireValid(sheetName, "sheetName");
 
     PivotHandle handle = pivotByName(workbook, validatedName);
     if (handle == null || !handle.sheetName().equals(sheetName)) {
@@ -792,7 +794,7 @@ final class ExcelPivotTableController {
   ExcelPivotDataConsolidateFunction fromSubtotal(int subtotalValue) {
     for (DataConsolidateFunction function : DataConsolidateFunction.values()) {
       if (function.getValue() == subtotalValue) {
-        return ExcelPivotDataConsolidateFunction.fromPoiFunction(function);
+        return ExcelPivotDataPoiBridge.fromPoi(function);
       }
     }
     throw new IllegalArgumentException(

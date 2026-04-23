@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelIgnoredErrorType;
+import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;

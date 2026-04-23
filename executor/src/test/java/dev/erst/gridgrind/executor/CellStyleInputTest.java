@@ -10,11 +10,11 @@ import dev.erst.gridgrind.contract.dto.CellFontInput;
 import dev.erst.gridgrind.contract.dto.CellProtectionInput;
 import dev.erst.gridgrind.contract.dto.CellStyleInput;
 import dev.erst.gridgrind.contract.dto.FontHeightInput;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
 import dev.erst.gridgrind.excel.ExcelColor;
-import dev.erst.gridgrind.excel.ExcelFillPattern;
-import dev.erst.gridgrind.excel.ExcelHorizontalAlignment;
-import dev.erst.gridgrind.excel.ExcelVerticalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 

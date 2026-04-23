@@ -4,6 +4,8 @@ import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.office.office.CTSignatureLine;
 import com.microsoft.schemas.vml.CTImageData;
 import com.microsoft.schemas.vml.CTShape;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

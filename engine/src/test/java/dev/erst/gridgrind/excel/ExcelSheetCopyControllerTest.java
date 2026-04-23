@@ -2,6 +2,15 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -869,6 +878,11 @@ class ExcelSheetCopyControllerTest {
 
   @Test
   void sheetOwnedAutofilterRangeHandlesEmptySheetOwnedAndInvalidTableOwnedStates() {
+    assertNull(ExcelSheetCopyController.sheetOwnedAutofilter(List.of()));
+    assertEquals(
+        new ExcelAutofilterSnapshot.SheetOwned("A1:B3"),
+        ExcelSheetCopyController.sheetOwnedAutofilter(
+            List.of(new ExcelAutofilterSnapshot.SheetOwned("A1:B3"))));
     assertEquals(Optional.empty(), ExcelSheetCopyController.sheetOwnedAutofilterRange(List.of()));
     assertEquals(
         Optional.of("A1:B3"),

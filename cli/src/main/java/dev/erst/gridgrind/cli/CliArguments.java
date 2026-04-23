@@ -15,9 +15,15 @@ final class CliArguments {
     int index = 0;
     while (index < args.length) {
       String argument = args[index];
-      CliCommand immediate = parseImmediateCommand(args, index, argument);
+      ImmediateParseResult immediate = parseImmediateCommand(args, index, argument);
       if (immediate != null) {
-        return immediate;
+        if (immediate.command() instanceof CliCommand.PrintProtocolCatalog
+            && immediate.nextIndex() != args.length) {
+          String trailingArgument = args[immediate.nextIndex()];
+          throw new CliArgumentsException(
+              trailingArgument, "Unknown argument: " + trailingArgument);
+        }
+        return immediate.command();
       }
       index = consumeArgument(args, index, argument, options);
     }
@@ -36,47 +42,82 @@ final class CliArguments {
     return valueIndex;
   }
 
-  private static CliCommand parseImmediateCommand(String[] args, int index, String argument) {
+  private static ImmediateParseResult parseImmediateCommand(
+      String[] args, int index, String argument) {
     return switch (argument) {
-      case "--help", "-h" -> new CliCommand.Help();
-      case "--version" -> new CliCommand.Version();
-      case "--license" -> new CliCommand.License();
-      case "--print-request-template" -> new CliCommand.PrintRequestTemplate();
+      case "--help", "-h" -> new ImmediateParseResult(new CliCommand.Help(), index + 1);
+      case "--version" -> new ImmediateParseResult(new CliCommand.Version(), index + 1);
+      case "--license" -> new ImmediateParseResult(new CliCommand.License(), index + 1);
+      case "--print-request-template" ->
+          new ImmediateParseResult(new CliCommand.PrintRequestTemplate(), index + 1);
       case "--print-example" -> {
         int valueIndex = nextValueIndex(args, index, "--print-example");
-        yield new CliCommand.PrintExample(args[valueIndex]);
+        yield new ImmediateParseResult(
+            new CliCommand.PrintExample(args[valueIndex]), valueIndex + 1);
       }
       case "--print-task-catalog" -> parseTaskCatalogCommand(args, index);
       case "--print-task-plan" -> {
         int valueIndex = nextValueIndex(args, index, "--print-task-plan");
-        yield new CliCommand.PrintTaskPlan(args[valueIndex]);
+        yield new ImmediateParseResult(
+            new CliCommand.PrintTaskPlan(args[valueIndex]), valueIndex + 1);
       }
       case "--print-goal-plan" -> {
         int valueIndex = nextValueIndex(args, index, "--print-goal-plan");
-        yield new CliCommand.PrintGoalPlan(args[valueIndex]);
+        yield new ImmediateParseResult(
+            new CliCommand.PrintGoalPlan(args[valueIndex]), valueIndex + 1);
       }
       case "--print-protocol-catalog" -> parseProtocolCatalogCommand(args, index);
       default -> null;
     };
   }
 
-  private static CliCommand.PrintTaskCatalog parseTaskCatalogCommand(String[] args, int index) {
+  private static ImmediateParseResult parseTaskCatalogCommand(String[] args, int index) {
     String taskFilter = null;
+    int nextIndex = index + 1;
     if (index + 1 < args.length && "--task".equals(args[index + 1])) {
       int valueIndex = nextValueIndex(args, index + 1, "--task");
       taskFilter = args[valueIndex];
+      nextIndex = valueIndex + 1;
     }
-    return new CliCommand.PrintTaskCatalog(taskFilter);
+    return new ImmediateParseResult(new CliCommand.PrintTaskCatalog(taskFilter), nextIndex);
   }
 
-  private static CliCommand.PrintProtocolCatalog parseProtocolCatalogCommand(
-      String[] args, int index) {
+  private static ImmediateParseResult parseProtocolCatalogCommand(String[] args, int index) {
     String operationFilter = null;
-    if (index + 1 < args.length && "--operation".equals(args[index + 1])) {
-      int valueIndex = nextValueIndex(args, index + 1, "--operation");
-      operationFilter = args[valueIndex];
+    String searchQuery = null;
+    int nextIndex = index + 1;
+    boolean keepParsing = true;
+    while (nextIndex < args.length && keepParsing) {
+      String argument = args[nextIndex];
+      if ("--operation".equals(argument)) {
+        if (operationFilter != null) {
+          throw new CliArgumentsException("--operation", "Duplicate argument: --operation");
+        }
+        int valueIndex = nextValueIndex(args, nextIndex, "--operation");
+        operationFilter = args[valueIndex];
+        nextIndex = valueIndex + 1;
+      } else if ("--search".equals(argument)) {
+        if (searchQuery != null) {
+          throw new CliArgumentsException("--search", "Duplicate argument: --search");
+        }
+        int valueIndex = nextValueIndex(args, nextIndex, "--search");
+        searchQuery = args[valueIndex];
+        nextIndex = valueIndex + 1;
+      } else {
+        keepParsing = false;
+      }
     }
-    return new CliCommand.PrintProtocolCatalog(operationFilter);
+    return protocolCatalogCommand(operationFilter, searchQuery, nextIndex);
+  }
+
+  private static ImmediateParseResult protocolCatalogCommand(
+      String operationFilter, String searchQuery, int nextIndex) {
+    if (operationFilter != null && searchQuery != null) {
+      throw new CliArgumentsException(
+          "--search", "--print-protocol-catalog does not allow both --operation and --search");
+    }
+    return new ImmediateParseResult(
+        new CliCommand.PrintProtocolCatalog(operationFilter, searchQuery), nextIndex);
   }
 
   private static int consumeArgument(
@@ -130,4 +171,6 @@ final class CliArguments {
     private Path responsePath;
     private boolean doctorRequest;
   }
+
+  private record ImmediateParseResult(CliCommand command, int nextIndex) {}
 }

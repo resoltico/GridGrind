@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelGradientFillGeometry;
+import dev.erst.gridgrind.excel.foundation.ExcelGradientFillGeometry;
 import java.util.List;
 import java.util.Objects;
 

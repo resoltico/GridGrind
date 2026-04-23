@@ -1,5 +1,7 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
+import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -50,7 +52,8 @@ final class ExcelDataValidationController {
       validation.setShowErrorBox(false);
     } else {
       validation.setShowErrorBox(validationDefinition.errorAlert().showErrorBox());
-      validation.setErrorStyle(validationDefinition.errorAlert().style().toPoiErrorStyle());
+      validation.setErrorStyle(
+          ExcelDataValidationPoiBridge.toPoiErrorStyle(validationDefinition.errorAlert().style()));
       validation.createErrorBox(
           validationDefinition.errorAlert().title(), validationDefinition.errorAlert().text());
     }
@@ -238,28 +241,28 @@ final class ExcelDataValidationController {
           helper.createFormulaListConstraint(formulaList.formula());
       case ExcelDataValidationRule.WholeNumber wholeNumber ->
           helper.createIntegerConstraint(
-              wholeNumber.operator().toPoiComparisonOperator(),
+              ExcelComparisonOperatorPoiBridge.toPoi(wholeNumber.operator()),
               wholeNumber.formula1(),
               wholeNumber.formula2());
       case ExcelDataValidationRule.DecimalNumber decimalNumber ->
           helper.createDecimalConstraint(
-              decimalNumber.operator().toPoiComparisonOperator(),
+              ExcelComparisonOperatorPoiBridge.toPoi(decimalNumber.operator()),
               decimalNumber.formula1(),
               decimalNumber.formula2());
       case ExcelDataValidationRule.DateRule dateRule ->
           helper.createDateConstraint(
-              dateRule.operator().toPoiComparisonOperator(),
+              ExcelComparisonOperatorPoiBridge.toPoi(dateRule.operator()),
               dateRule.formula1(),
               dateRule.formula2(),
               null);
       case ExcelDataValidationRule.TimeRule timeRule ->
           helper.createTimeConstraint(
-              timeRule.operator().toPoiComparisonOperator(),
+              ExcelComparisonOperatorPoiBridge.toPoi(timeRule.operator()),
               timeRule.formula1(),
               timeRule.formula2());
       case ExcelDataValidationRule.TextLength textLength ->
           helper.createTextLengthConstraint(
-              textLength.operator().toPoiComparisonOperator(),
+              ExcelComparisonOperatorPoiBridge.toPoi(textLength.operator()),
               textLength.formula1(),
               textLength.formula2());
       case ExcelDataValidationRule.CustomFormula customFormula ->
@@ -408,7 +411,7 @@ final class ExcelDataValidationController {
     }
     ExcelComparisonOperator operator;
     try {
-      operator = ExcelComparisonOperator.fromPoiComparisonOperator(constraint.getOperator());
+      operator = ExcelComparisonOperatorPoiBridge.fromPoi(constraint.getOperator());
     } catch (IllegalArgumentException exception) {
       return new ExcelDataValidationSnapshot.Unsupported(
           ranges,
@@ -541,7 +544,7 @@ final class ExcelDataValidationController {
       return null;
     }
     return new ExcelDataValidationErrorAlert(
-        ExcelDataValidationErrorStyle.fromPoiErrorStyle(validation.getErrorStyle()),
+        ExcelDataValidationPoiBridge.fromPoiErrorStyle(validation.getErrorStyle()),
         title,
         text,
         validation.getShowErrorBox());

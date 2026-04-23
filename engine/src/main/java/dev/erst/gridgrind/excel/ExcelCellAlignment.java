@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
+
 /** Alignment patch applied through {@link ExcelCellStyle}. */
 public record ExcelCellAlignment(
     Boolean wrapText,

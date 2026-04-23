@@ -140,10 +140,11 @@ interface ExcelFormulaRuntime extends AutoCloseable {
       for (int index = 0; index < placeholderCount; index++) {
         defineScratchArgument(scratchWorkbook, argsSheet, index);
       }
-      calcSheet
-          .createRow(0)
-          .createCell(0)
-          .setCellFormula(toScratchFormula(function.formulaTemplate()));
+      Cell formulaCell = calcSheet.createRow(0).createCell(0);
+      ExcelFormulaWriteSupport.setScratchFormula(
+          formulaCell,
+          toScratchFormula(function.formulaTemplate()),
+          "user-defined function " + function.name());
     } catch (IOException | RuntimeException exception) {
       throw new IllegalArgumentException(
           "Invalid formulaTemplate for user-defined function "
@@ -331,7 +332,10 @@ interface ExcelFormulaRuntime extends AutoCloseable {
           nextStartRow = address.getLastRow() + 2;
         }
         Cell formulaCell = calcSheet.createRow(0).createCell(0);
-        formulaCell.setCellFormula(toScratchFormula(function.formulaTemplate()));
+        ExcelFormulaWriteSupport.setScratchFormula(
+            formulaCell,
+            toScratchFormula(function.formulaTemplate()),
+            "user-defined function " + function.name());
         return toValueEval(
             scratchWorkbook.getCreationHelper().createFormulaEvaluator().evaluate(formulaCell));
       } catch (RuntimeException | IOException exception) {

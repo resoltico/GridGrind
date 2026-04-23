@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import java.util.Objects;
 
 /** Immutable factual snapshot of one OOXML package-signature part. */

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Build the local Docker image and verify the packaged CLI works correctly from a non-default
 # working directory with weird request, response, and workbook paths, including reopening an
-# existing workbook and low-memory streaming write readback from the materialized output.
+# existing workbook, authoring a signature line, and low-memory streaming write readback from the
+# materialized output.
 
 set -euo pipefail
 
@@ -134,6 +135,9 @@ readonly response_rel='responses odd/nested/response [docker #smoke].json'
 readonly workbook_rel='books odd/nested/office [docker #smoke].xlsx'
 readonly existing_request_rel='requests odd/request reopen [docker #smoke].json'
 readonly existing_response_rel='responses odd/nested/reopen [docker #smoke].json'
+readonly signature_request_rel='requests odd/request signature [docker #smoke].json'
+readonly signature_response_rel='responses odd/nested/signature [docker #smoke].json'
+readonly signature_workbook_rel='books odd/nested/office signature [docker #smoke].xlsx'
 readonly streaming_request_rel='requests odd/request streaming [docker #smoke].json'
 readonly streaming_response_rel='responses odd/nested/streaming [docker #smoke].json'
 readonly streaming_read_request_rel='requests odd/request streaming readback [docker #smoke].json'
@@ -144,6 +148,9 @@ readonly response_path="${smoke_root}/${response_rel}"
 readonly workbook_path="${smoke_root}/${workbook_rel}"
 readonly existing_request_path="${smoke_root}/${existing_request_rel}"
 readonly existing_response_path="${smoke_root}/${existing_response_rel}"
+readonly signature_request_path="${smoke_root}/${signature_request_rel}"
+readonly signature_response_path="${smoke_root}/${signature_response_rel}"
+readonly signature_workbook_path="${smoke_root}/${signature_workbook_rel}"
 readonly streaming_request_path="${smoke_root}/${streaming_request_rel}"
 readonly streaming_response_path="${smoke_root}/${streaming_response_rel}"
 readonly streaming_read_request_path="${smoke_root}/${streaming_read_request_rel}"
@@ -151,6 +158,7 @@ readonly streaming_read_response_path="${smoke_root}/${streaming_read_response_r
 readonly streaming_workbook_path="${smoke_root}/${streaming_workbook_rel}"
 readonly create_stderr_path="${smoke_root}/stderr create [docker #smoke].log"
 readonly existing_stderr_path="${smoke_root}/stderr reopen [docker #smoke].log"
+readonly signature_stderr_path="${smoke_root}/stderr signature [docker #smoke].log"
 readonly streaming_stderr_path="${smoke_root}/stderr streaming [docker #smoke].log"
 readonly streaming_read_stderr_path="${smoke_root}/stderr streaming readback [docker #smoke].log"
 
@@ -205,6 +213,81 @@ cat > "${existing_request_path}" <<JSON
       },
       "query": {
         "type": "GET_WORKBOOK_SUMMARY"
+      }
+    }
+  ]
+}
+JSON
+
+cat > "${signature_request_path}" <<JSON
+{
+  "source": { "type": "NEW" },
+  "persistence": {
+    "type": "SAVE_AS",
+    "path": "${signature_workbook_rel}"
+  },
+  "steps": [
+    {
+      "stepId": "ensure-approvals",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Approvals"
+      },
+      "action": {
+        "type": "ENSURE_SHEET"
+      }
+    },
+    {
+      "stepId": "set-signature-line",
+      "target": {
+        "type": "BY_NAME",
+        "name": "Approvals"
+      },
+      "action": {
+        "type": "SET_SIGNATURE_LINE",
+        "signatureLine": {
+          "name": "BudgetSignature",
+          "anchor": {
+            "type": "TWO_CELL",
+            "from": {
+              "columnIndex": 1,
+              "rowIndex": 1,
+              "dx": 0,
+              "dy": 0
+            },
+            "to": {
+              "columnIndex": 4,
+              "rowIndex": 6,
+              "dx": 0,
+              "dy": 0
+            },
+            "behavior": "MOVE_AND_RESIZE"
+          },
+          "allowComments": false,
+          "signingInstructions": "Review the budget before signing.",
+          "suggestedSigner": "Ada Lovelace",
+          "suggestedSigner2": "Finance",
+          "suggestedSignerEmail": "ada@example.com",
+          "caption": null,
+          "invalidStamp": "invalid",
+          "plainSignature": {
+            "format": "PNG",
+            "source": {
+              "type": "INLINE_BASE64",
+              "base64Data": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+X2kQAAAAASUVORK5CYII="
+            }
+          }
+        }
+      }
+    },
+    {
+      "stepId": "read-signature",
+      "target": {
+        "type": "ALL_ON_SHEET",
+        "sheetName": "Approvals"
+      },
+      "query": {
+        "type": "GET_DRAWING_OBJECTS"
       }
     }
   ]
@@ -403,6 +486,26 @@ grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${existing_response_path}
     "docker smoke EXISTING-source reopen did not report SUCCESS"
 [[ ! -s "${existing_stderr_path}" ]] || die \
     "docker smoke EXISTING-source reopen wrote unexpected stderr: $(tr '\n' ' ' < "${existing_stderr_path}")"
+
+printf 'Docker smoke: verifying signature-line authoring under container fonts\n'
+docker_with_repo_config run --rm \
+    --user "${docker_run_user}" \
+    -w /workdir \
+    -v "${smoke_root}:/workdir" \
+    "${image_tag}" \
+    --request "${signature_request_rel}" \
+    --response "${signature_response_rel}" >/dev/null 2>"${signature_stderr_path}"
+
+[[ -f "${signature_response_path}" ]] || die \
+    "docker smoke signature response file was not written: ${signature_response_path}"
+[[ -f "${signature_workbook_path}" ]] || die \
+    "docker smoke signature workbook file was not written: ${signature_workbook_path}"
+grep -Eq '"status"[[:space:]]*:[[:space:]]*"SUCCESS"' "${signature_response_path}" || die \
+    "docker smoke signature-line authoring did not report SUCCESS"
+grep -Eq '"BudgetSignature"' "${signature_response_path}" || die \
+    "docker smoke signature-line response did not include the authored drawing object"
+[[ ! -s "${signature_stderr_path}" ]] || die \
+    "docker smoke signature-line request wrote unexpected stderr: $(tr '\n' ' ' < "${signature_stderr_path}")"
 
 printf 'Docker smoke: verifying STREAMING_WRITE readback from materialized output\n'
 docker_with_repo_config run --rm \

@@ -1,7 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.ExcelDataValidationErrorStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelDataValidationErrorStyle;
 import java.util.Objects;
 
 /** Error-box configuration attached to one data-validation rule. */

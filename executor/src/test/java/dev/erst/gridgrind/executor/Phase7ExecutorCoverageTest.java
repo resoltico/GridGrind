@@ -22,7 +22,7 @@ import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.ExcelPictureFormat;
+import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -113,7 +113,7 @@ class Phase7ExecutorCoverageTest {
             new dev.erst.gridgrind.contract.dto.DrawingAnchorInput.TwoCell(
                 new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(0, 0, 0, 0),
                 new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1, 0, 0),
-                dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
+                dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE),
             TextSourceInput.inline("Logo"));
     assertEquals(
         "picture payload must be resolved to INLINE_BASE64 before conversion",
@@ -193,7 +193,7 @@ class Phase7ExecutorCoverageTest {
         new dev.erst.gridgrind.contract.dto.DrawingAnchorInput.TwoCell(
             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(0, 0),
             new dev.erst.gridgrind.contract.dto.DrawingMarkerInput(1, 1),
-            dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+            dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
     dev.erst.gridgrind.contract.dto.PictureDataInput imageData =
         new dev.erst.gridgrind.contract.dto.PictureDataInput(
             ExcelPictureFormat.PNG, BinarySourceInput.inlineBase64("AQ=="));
@@ -236,7 +236,7 @@ class Phase7ExecutorCoverageTest {
             new MutationAction.SetActiveSheet(),
             new MutationAction.SetSelectedSheets(),
             new MutationAction.SetSheetVisibility(
-                dev.erst.gridgrind.excel.ExcelSheetVisibility.HIDDEN),
+                dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility.HIDDEN),
             new MutationAction.SetSheetProtection(
                 new dev.erst.gridgrind.contract.dto.SheetProtectionSettings(
                     false, false, false, false, false, false, false, false, false, false, false,
@@ -288,7 +288,7 @@ class Phase7ExecutorCoverageTest {
             new MutationAction.SetShape(
                 new dev.erst.gridgrind.contract.dto.ShapeInput(
                     "BudgetBox",
-                    dev.erst.gridgrind.excel.ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
+                    dev.erst.gridgrind.excel.foundation.ExcelAuthoredDrawingShapeKind.SIMPLE_SHAPE,
                     drawingAnchor,
                     "rect",
                     TextSourceInput.inline("Budget"))),

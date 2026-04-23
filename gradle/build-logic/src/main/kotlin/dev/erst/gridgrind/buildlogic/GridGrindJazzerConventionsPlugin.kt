@@ -454,6 +454,7 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                 "dev/erst/gridgrind/jazzer/support/HarnessTelemetry*.class",
                 "dev/erst/gridgrind/jazzer/support/JazzerGridGrindFuzzData*.class",
                 "dev/erst/gridgrind/jazzer/support/OperationSequenceModel*.class",
+                "dev/erst/gridgrind/jazzer/support/OperationSequenceValueFactory*.class",
                 "dev/erst/gridgrind/jazzer/support/StyleKindIntrospection*.class",
                 "dev/erst/gridgrind/jazzer/support/WorkbookStyleInputs*.class",
                 "dev/erst/gridgrind/jazzer/tool/JazzerCli*.class",

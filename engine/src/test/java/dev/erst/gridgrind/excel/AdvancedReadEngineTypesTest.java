@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;

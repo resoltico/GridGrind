@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelSheetLayoutLimits;
 import java.util.Objects;
 import org.apache.poi.ss.util.PaneInformation;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -24,7 +25,7 @@ final class ExcelSheetViewSupport {
               split.ySplitPosition(),
               split.leftmostColumn(),
               split.topRow(),
-              split.activePane().toPoi());
+              ExcelPanePoiBridge.toPoi(split.activePane()));
     }
   }
 
@@ -47,7 +48,7 @@ final class ExcelSheetViewSupport {
         paneInformation.getHorizontalSplitPosition(),
         paneInformation.getVerticalSplitLeftColumn(),
         paneInformation.getHorizontalSplitTopRow(),
-        ExcelPaneRegion.fromPoi(paneInformation.getActivePaneType()));
+        ExcelPanePoiBridge.fromPoi(paneInformation.getActivePaneType()));
   }
 
   /** Applies one zoom percentage to the provided sheet. */

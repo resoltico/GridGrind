@@ -43,7 +43,6 @@ import dev.erst.gridgrind.contract.step.MutationStep;
 import dev.erst.gridgrind.excel.CellNotFoundException;
 import dev.erst.gridgrind.excel.ExcelCellValue;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
-import dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySnapshot;
 import dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySupport;
 import dev.erst.gridgrind.excel.ExcelOoxmlPersistenceOptions;
@@ -55,6 +54,7 @@ import dev.erst.gridgrind.excel.SheetNotFoundException;
 import dev.erst.gridgrind.excel.UnregisteredUserDefinedFunctionException;
 import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
 import dev.erst.gridgrind.excel.WorkbookReadExecutor;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -123,7 +123,8 @@ class ExecutorPhase3CoverageTest {
                             List.of(
                                 new PivotTableInput.DataField(
                                     "Amount",
-                                    dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                                    dev.erst.gridgrind.excel.foundation
+                                        .ExcelPivotDataConsolidateFunction.SUM,
                                     null,
                                     null))))));
     assertEquals(
@@ -148,7 +149,8 @@ class ExecutorPhase3CoverageTest {
                             List.of(
                                 new PivotTableInput.DataField(
                                     "Amount",
-                                    dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                                    dev.erst.gridgrind.excel.foundation
+                                        .ExcelPivotDataConsolidateFunction.SUM,
                                     null,
                                     null))))));
     assertEquals(
@@ -948,7 +950,7 @@ class ExecutorPhase3CoverageTest {
             List.of(
                 new PivotTableInput.DataField(
                     "Amount",
-                    dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                    dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction.SUM,
                     null,
                     null))));
   }

@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.53.0"
+version: "0.54.0"
 domain: DEVELOPER_DOCKER
 updated: "2026-04-16"
 route:
@@ -40,6 +40,9 @@ The repository now enforces these Docker-runtime rules in `scripts/docker-smoke.
 Release-build reproducibility is part of that contract too:
 - `Dockerfile` pins the Azul Java 26 base image to a manifest-list digest instead of a floating
   tag; update that digest deliberately when the runtime base moves forward
+- the production image must keep the minimal headless font stack required by signature-line
+  preview generation (`fontconfig` plus DejaVu today) so Docker matches the fat-JAR drawing
+  surface instead of silently dropping `SET_SIGNATURE_LINE`
 - the GHCR publication workflow emits OCI provenance and SBOM attestations for the published
   multi-arch image in addition to the runnable image tags
 
@@ -89,8 +92,9 @@ Then the supported local gates are:
 - runs mounted-path container commands under the caller's UID:GID so response files and saved
   workbooks stay owned by the invoking operator on both macOS Docker Desktop and Linux CI runners
 - verifies `--help` and `--version`
-- verifies create-from-`NEW`, reopen-from-`EXISTING`, and `STREAMING_WRITE` readback flows through
-  a mounted working directory with spaces and punctuation in the paths
+- verifies create-from-`NEW`, reopen-from-`EXISTING`, signature-line authoring, and
+  `STREAMING_WRITE` readback flows through a mounted working directory with spaces and punctuation
+  in the paths
 - rejects unexpected stderr on the successful request paths so agent consumers do not silently
   accumulate logger or runtime-noise regressions
 

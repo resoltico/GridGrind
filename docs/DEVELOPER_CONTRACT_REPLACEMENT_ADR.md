@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.53.0"
+version: "0.54.0"
 domain: DEVELOPER
 updated: "2026-04-19"
 route:
@@ -18,16 +18,19 @@ route:
 
 GridGrind is in hard-break contract-replacement mode.
 
-The old monolithic `protocol` module is deleted and replaced by the current five-module product
+The old monolithic `protocol` module is deleted and replaced by the current six-module product
 graph:
 
 ```text
-dev.erst.gridgrind.authoring -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.engine
-dev.erst.gridgrind.cli -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.engine
+dev.erst.gridgrind.authoring -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
+dev.erst.gridgrind.cli -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation
+dev.erst.gridgrind.executor -> dev.erst.gridgrind.engine -> dev.erst.gridgrind.excel.foundation
 ```
 
 The ownership boundaries are now:
 
+- `excel-foundation`
+  - shared POI-free Excel-domain foundation types, limits, and value objects
 - `engine`
   - workbook domain behavior and POI-backed execution
 - `contract`
@@ -41,7 +44,9 @@ The ownership boundaries are now:
 
 No new top-level request growth may reintroduce monolithic transport-plus-execution ownership.
 Future redesign work must proceed through new accepted decision records or new blocking redesign
-programs rooted in the post-replacement module graph.
+programs rooted in the post-replacement module graph. The later `excel-foundation` extraction is
+part of that same post-replacement architecture: it preserves the no-`protocol` rule while making
+`contract` a real boundary instead of a façade over engine-owned Excel types.
 
 ---
 
@@ -92,8 +97,8 @@ confused ownership model.
 Phase 0 and Phase 1 of the redesign are complete when all of the following are true:
 
 - this ADR is accepted and linked from developer documentation
-- `settings.gradle.kts` includes `engine`, `contract`, `executor`, `authoring-java`, and `cli`,
-  and no longer includes `protocol`
+- `settings.gradle.kts` includes `excel-foundation`, `engine`, `contract`, `executor`,
+  `authoring-java`, and `cli`, and no longer includes `protocol`
 - the old top-level `protocol/` module is absent
 - the CLI depends on `executor`, not directly on the deleted `protocol` module
 - `authoring-java` depends on `executor`, not directly on `engine` or the deleted `protocol`

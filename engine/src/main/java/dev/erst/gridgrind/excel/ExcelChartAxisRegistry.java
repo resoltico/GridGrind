@@ -81,7 +81,8 @@ final class ExcelChartAxisRegistry {
     if (existing != null) {
       return existing;
     }
-    XDDFChartAxis created = definition.kind().createAxis(chart, definition.position());
+    XDDFChartAxis created =
+        ExcelChartPoiBridge.createAxis(chart, definition.kind(), definition.position());
     created.setCrosses(ExcelChartPoiBridge.toPoiAxisCrosses(definition.crosses()));
     created.setVisible(definition.visible());
     axesByDefinition.put(definition, created);

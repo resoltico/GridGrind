@@ -2,9 +2,10 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.foundation.ExcelPivotTableNaming;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.poi.ss.usermodel.DataConsolidateFunction;
 import org.junit.jupiter.api.Test;
 
 /** Tests for pivot-table value objects, validation helpers, and enum mappings. */
@@ -109,14 +110,14 @@ class ExcelPivotTableTypesTest {
 
   @Test
   void pivotDataConsolidateFunctionsRoundTripSupportedPoiValues() {
-    assertEquals(
-        DataConsolidateFunction.SUM, ExcelPivotDataConsolidateFunction.SUM.toPoiFunction());
-    assertEquals(
-        ExcelPivotDataConsolidateFunction.MAX,
-        ExcelPivotDataConsolidateFunction.fromPoiFunction(DataConsolidateFunction.MAX));
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> ExcelPivotDataConsolidateFunction.fromPoiFunction(null));
+    for (ExcelPivotDataConsolidateFunction function : ExcelPivotDataConsolidateFunction.values()) {
+      assertEquals(
+          function,
+          ExcelPivotDataPoiBridge.fromPoi(ExcelPivotDataPoiBridge.toPoi(function)),
+          () -> "pivot function must round-trip through the POI bridge: " + function);
+    }
+    assertThrows(IllegalArgumentException.class, () -> ExcelPivotDataPoiBridge.fromPoi(null));
+    assertThrows(IllegalArgumentException.class, () -> ExcelPivotDataPoiBridge.toPoi(null));
   }
 
   @Test

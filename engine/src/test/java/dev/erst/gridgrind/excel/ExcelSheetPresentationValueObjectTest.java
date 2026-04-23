@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.foundation.ExcelIgnoredErrorType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -16,11 +17,16 @@ class ExcelSheetPresentationValueObjectTest {
   @Test
   void ignoredErrorTypesRoundTripEveryPoiFamily() {
     for (ExcelIgnoredErrorType ignoredErrorType : ExcelIgnoredErrorType.values()) {
-      assertEquals(ignoredErrorType, ExcelIgnoredErrorType.fromPoi(ignoredErrorType.toPoi()));
+      assertEquals(
+          ignoredErrorType,
+          ExcelIgnoredErrorPoiBridge.fromPoi(ExcelIgnoredErrorPoiBridge.toPoi(ignoredErrorType)));
     }
 
     for (IgnoredErrorType poiIgnoredErrorType : IgnoredErrorType.values()) {
-      assertEquals(poiIgnoredErrorType, ExcelIgnoredErrorType.fromPoi(poiIgnoredErrorType).toPoi());
+      assertEquals(
+          poiIgnoredErrorType,
+          ExcelIgnoredErrorPoiBridge.toPoi(
+              ExcelIgnoredErrorPoiBridge.fromPoi(poiIgnoredErrorType)));
     }
   }
 

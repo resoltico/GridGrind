@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.53.0"
+version: "0.54.0"
 domain: DEVELOPER_JAZZER_COVERAGE
 updated: "2026-04-22"
 route:
@@ -380,6 +380,8 @@ What the current four-harness stack gives us together:
 - protocol-layer workflow composition pressure
 - engine-layer composition pressure
 - persistence/reopen pressure
+- direct selector-sweep seam coverage for the extracted operation-sequence generator/value-factory
+  layers outside live native fuzzing
 
 What it does not yet give us:
 - exhaustive product-surface fuzzing

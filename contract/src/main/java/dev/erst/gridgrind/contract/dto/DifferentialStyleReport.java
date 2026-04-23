@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingUnsupportedFeature;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingUnsupportedFeature;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;

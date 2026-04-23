@@ -4,16 +4,16 @@ import dev.erst.gridgrind.contract.dto.ChartReport;
 import dev.erst.gridgrind.contract.dto.DrawingAnchorReport;
 import dev.erst.gridgrind.contract.dto.DrawingMarkerReport;
 import dev.erst.gridgrind.contract.dto.PivotTableReport;
-import dev.erst.gridgrind.excel.ExcelChartAxisCrosses;
-import dev.erst.gridgrind.excel.ExcelChartAxisKind;
-import dev.erst.gridgrind.excel.ExcelChartAxisPosition;
-import dev.erst.gridgrind.excel.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.ExcelChartBarGrouping;
-import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.ExcelChartGrouping;
-import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisCrosses;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
+import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
+import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -810,7 +810,19 @@ final class XlsxParityOracle {
   private static ExcelPivotDataConsolidateFunction pivotFunction(int subtotalValue) {
     for (DataConsolidateFunction function : DataConsolidateFunction.values()) {
       if (function.getValue() == subtotalValue) {
-        return ExcelPivotDataConsolidateFunction.fromPoiFunction(function);
+        return switch (function) {
+          case SUM -> ExcelPivotDataConsolidateFunction.SUM;
+          case COUNT -> ExcelPivotDataConsolidateFunction.COUNT;
+          case COUNT_NUMS -> ExcelPivotDataConsolidateFunction.COUNT_NUMS;
+          case AVERAGE -> ExcelPivotDataConsolidateFunction.AVERAGE;
+          case MAX -> ExcelPivotDataConsolidateFunction.MAX;
+          case MIN -> ExcelPivotDataConsolidateFunction.MIN;
+          case PRODUCT -> ExcelPivotDataConsolidateFunction.PRODUCT;
+          case STD_DEV -> ExcelPivotDataConsolidateFunction.STD_DEV;
+          case STD_DEVP -> ExcelPivotDataConsolidateFunction.STD_DEVP;
+          case VAR -> ExcelPivotDataConsolidateFunction.VAR;
+          case VARP -> ExcelPivotDataConsolidateFunction.VARP;
+        };
       }
     }
     throw new IllegalStateException(

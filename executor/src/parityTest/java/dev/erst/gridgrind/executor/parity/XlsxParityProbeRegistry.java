@@ -13,17 +13,17 @@ import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.query.InspectionResult;
 import dev.erst.gridgrind.contract.selector.*;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
-import dev.erst.gridgrind.excel.ExcelBorderStyle;
-import dev.erst.gridgrind.excel.ExcelChartBarDirection;
-import dev.erst.gridgrind.excel.ExcelChartDisplayBlanksAs;
-import dev.erst.gridgrind.excel.ExcelChartLegendPosition;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingIconSet;
-import dev.erst.gridgrind.excel.ExcelConditionalFormattingThresholdType;
-import dev.erst.gridgrind.excel.ExcelDrawingAnchorBehavior;
-import dev.erst.gridgrind.excel.ExcelFillPattern;
-import dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode;
-import dev.erst.gridgrind.excel.ExcelOoxmlSignatureState;
-import dev.erst.gridgrind.excel.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelChartBarDirection;
+import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
+import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingIconSet;
+import dev.erst.gridgrind.excel.foundation.ExcelConditionalFormattingThresholdType;
+import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import dev.erst.gridgrind.executor.parity.ParityPlanSupport.PendingMutation;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -228,7 +228,7 @@ final class XlsxParityProbeRegistry {
       mismatches.add("ops sheet protection did not report Protected");
     }
     if (observation.queueSummary().sheet().visibility()
-        != dev.erst.gridgrind.excel.ExcelSheetVisibility.HIDDEN) {
+        != dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility.HIDDEN) {
       mismatches.add(
           "queue visibility=%s".formatted(observation.queueSummary().sheet().visibility()));
     }
@@ -366,7 +366,7 @@ final class XlsxParityProbeRegistry {
       mismatches.add("pane=%s".formatted(observation.layout().layout().pane()));
     }
     if (observation.print().layout().orientation()
-        != dev.erst.gridgrind.excel.ExcelPrintOrientation.LANDSCAPE) {
+        != dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation.LANDSCAPE) {
       mismatches.add("printOrientation=%s".formatted(observation.print().layout().orientation()));
     }
   }
@@ -2150,7 +2150,8 @@ final class XlsxParityProbeRegistry {
             && directPicture.pictureDigest().equals(picturePayloadReport.sha256())
             && matchesAnchor(reportShape.anchor(), directShape.anchor())
             && "SIMPLE_SHAPE".equals(directShape.kind())
-            && reportShape.kind() == dev.erst.gridgrind.excel.ExcelDrawingShapeKind.SIMPLE_SHAPE
+            && reportShape.kind()
+                == dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind.SIMPLE_SHAPE
             && Objects.equals(directShape.presetGeometryToken(), reportShape.presetGeometryToken())
             && Objects.equals(directShape.text(), reportShape.text())
             && matchesAnchor(reportEmbedded.anchor(), directEmbedded.anchor())
@@ -2684,7 +2685,8 @@ final class XlsxParityProbeRegistry {
                             List.of(
                                 new PivotTableInput.DataField(
                                     "Amount",
-                                    dev.erst.gridgrind.excel.ExcelPivotDataConsolidateFunction.SUM,
+                                    dev.erst.gridgrind.excel.foundation
+                                        .ExcelPivotDataConsolidateFunction.SUM,
                                     "Total Amount",
                                     "#,##0.00"))))),
                 mutate(

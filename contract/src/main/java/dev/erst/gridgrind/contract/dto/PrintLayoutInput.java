@@ -1,6 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
-import dev.erst.gridgrind.excel.ExcelPrintOrientation;
+import dev.erst.gridgrind.excel.foundation.ExcelPrintOrientation;
 import java.util.Objects;
 
 /** One authoritative supported print-layout payload in protocol form. */

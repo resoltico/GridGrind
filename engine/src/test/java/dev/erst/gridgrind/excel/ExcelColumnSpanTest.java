@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import org.junit.jupiter.api.Test;
 
 /** Tests for ExcelColumnSpan bounds and count semantics. */

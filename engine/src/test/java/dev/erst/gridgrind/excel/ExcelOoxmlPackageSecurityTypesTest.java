@@ -2,11 +2,15 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureState;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.poi.poifs.crypt.EncryptionMode;
+import org.apache.poi.poifs.crypt.HashAlgorithm;
 import org.junit.jupiter.api.Test;
 
 /** Direct validation tests for OOXML package-security engine value types. */
@@ -108,13 +112,27 @@ class ExcelOoxmlPackageSecurityTypesTest {
     assertInstanceOf(
         ExcelOoxmlOpenOptions.Unencrypted.class, new ExcelOoxmlOpenOptions.Unencrypted());
     assertEquals(
-        ExcelOoxmlEncryptionMode.AGILE, ExcelOoxmlEncryptionMode.fromPoi(EncryptionMode.agile));
+        EncryptionMode.agile, ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlEncryptionMode.AGILE));
+    assertEquals(
+        EncryptionMode.standard,
+        ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlEncryptionMode.STANDARD));
+    assertEquals(
+        ExcelOoxmlEncryptionMode.AGILE, ExcelOoxmlSecurityPoiBridge.fromPoi(EncryptionMode.agile));
     assertEquals(
         ExcelOoxmlEncryptionMode.STANDARD,
-        ExcelOoxmlEncryptionMode.fromPoi(EncryptionMode.standard));
+        ExcelOoxmlSecurityPoiBridge.fromPoi(EncryptionMode.standard));
     assertThrows(
         IllegalArgumentException.class,
-        () -> ExcelOoxmlEncryptionMode.fromPoi(EncryptionMode.binaryRC4));
+        () -> ExcelOoxmlSecurityPoiBridge.fromPoi(EncryptionMode.binaryRC4));
+    assertEquals(
+        HashAlgorithm.sha256,
+        ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlSignatureDigestAlgorithm.SHA256));
+    assertEquals(
+        HashAlgorithm.sha384,
+        ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlSignatureDigestAlgorithm.SHA384));
+    assertEquals(
+        HashAlgorithm.sha512,
+        ExcelOoxmlSecurityPoiBridge.toPoi(ExcelOoxmlSignatureDigestAlgorithm.SHA512));
 
     ExcelOoxmlEncryptionSnapshot none = ExcelOoxmlEncryptionSnapshot.none();
     assertFalse(none.encrypted());

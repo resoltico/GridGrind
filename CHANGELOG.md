@@ -5,6 +5,51 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.54.0] - 2026-04-23
+
+### Fixed
+
+- The public contract no longer depends on the POI-backed engine module for shared Excel domain
+  types. GridGrind now ships a dedicated `excel-foundation` module and package for the shared
+  `.xlsx` enums, limits, and span/value objects consumed by the contract, engine, executor, and
+  tests, so the `contract` module is a real boundary instead of a named-module cycle hiding behind
+  `dev.erst.gridgrind.excel`.
+- Developer architecture docs and release-surface shell regressions now describe and enforce the
+  real six-module product graph. `excel-foundation` is now part of the documented JPMS graph, the
+  accepted contract-replacement ADR no longer claims GridGrind is still a five-module system, and
+  `./check.sh` no longer fails Stage 4 just because the shared foundation module exists.
+- Formula authoring and formula-rewrite paths now go through one engine seam instead of each
+  mutation mode setting formulas ad hoc. Streaming append writes, direct cell writes, copied-sheet
+  sheet-name rewrites, and copied-table structured-reference rewrites now share consistent error
+  handling for authored, rewritten, and scratch validation formulas.
+- Protocol discovery no longer forces operators and agents to dump the full catalog and grep it
+  externally. `gridgrind --print-protocol-catalog --search <text>` now returns ranked
+  machine-readable matches across ids, qualified ids, groups, and summaries, and
+  `--print-protocol-catalog` now rejects stray trailing flags instead of silently ignoring them.
+- Copy-sheet table normalization is now deterministic across both in-memory mutation and later
+  sheet rename flows. GridGrind now normalizes POI-cloned calculated-column body formulas back to
+  its metadata-owned table shape, rewrites copied totals-row structured references from POI's
+  transient clone names such as `Table2` to the final copied table names, and keeps copied sheets
+  rename-safe instead of failing with structured-reference parser crashes or dead transient table
+  names.
+- Drawing media and container signature-line authoring are now reliable across the packaged fat
+  JAR and Docker image. GridGrind now rebuilds POI's private workbook picture catalog from actual
+  `/xl/media/*` parts before picture-backed mutations so signature-line preview images cannot
+  collide with later picture or embedded-object preview creation, and the Docker image now ships
+  fontconfig plus DejaVu fonts so `SET_SIGNATURE_LINE` works in headless container runs. Docker
+  smoke now verifies signature-line authoring directly.
+- The largest remaining protocol and Jazzer god-files are now split at stable seams instead of
+  continuing to accumulate unrelated responsibilities. Nested/plain protocol field-group catalog
+  descriptors now live in dedicated support types, Jazzer workbook-operation generation now
+  separates orchestration from value-payload factories, and build-failing architecture audits now
+  keep contract/foundation boundaries, formula-write centralization, POI private-access
+  centralization, and the new file-size ceilings from silently regressing.
+- Jazzer verification now keeps its coverage contract aligned with the intended deterministic
+  support subset after the operation-generator split. The extracted
+  `OperationSequenceValueFactory` now shares `OperationSequenceModel`'s coverage scope, and new
+  selector-sweep seam tests directly exercise the extracted value factory plus workflow/command
+  cleanup paths so the refactor stays verified without distorting the Jazzer coverage gate.
+
 ## [0.53.0] - 2026-04-22
 
 ### Fixed
@@ -2084,7 +2129,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.53.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.54.0...HEAD
+[0.54.0]: https://github.com/resoltico/GridGrind/compare/v0.53.0...v0.54.0
 [0.53.0]: https://github.com/resoltico/GridGrind/compare/v0.52.0...v0.53.0
 [0.52.0]: https://github.com/resoltico/GridGrind/compare/v0.51.0...v0.52.0
 [0.51.0]: https://github.com/resoltico/GridGrind/compare/v0.50.0...v0.51.0

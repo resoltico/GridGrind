@@ -48,7 +48,7 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                         "gradle/**/*.toml",
                         "examples/**/*.json",
                     )
-                    targetExclude("**/build/**", "**/.gradle/**")
+                    targetExclude("**/build/**", "**/.gradle/**", "**/*.class", "**/*.jar")
                     trimTrailingWhitespace()
                     endWithNewline()
                 }

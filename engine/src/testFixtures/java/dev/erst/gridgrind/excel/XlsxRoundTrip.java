@@ -1,5 +1,11 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelBorderStyle;
+import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
+import dev.erst.gridgrind.excel.foundation.ExcelGradientFillGeometry;
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -85,7 +91,7 @@ public final class XlsxRoundTrip {
           if (sheetIndex < 0) {
             throw new SheetNotFoundException(sheetName);
           }
-          return ExcelSheetVisibility.fromPoi(workbook.getSheetVisibility(sheetIndex));
+          return ExcelSheetVisibilityPoiBridge.fromPoi(workbook.getSheetVisibility(sheetIndex));
         });
   }
 

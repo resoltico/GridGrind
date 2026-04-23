@@ -42,11 +42,7 @@ final class StylesTableFillRegistryAccess {
   }
 
   static VarHandle requireFillsField(MethodHandles.Lookup lookup) {
-    try {
-      return MethodHandles.privateLookupIn(StylesTable.class, lookup)
-          .findVarHandle(StylesTable.class, "fills", List.class);
-    } catch (ReflectiveOperationException exception) {
-      throw new IllegalStateException("Failed to access POI fill registry", exception);
-    }
+    return PoiPrivateAccessSupport.requireVarHandle(
+        lookup, StylesTable.class, "fills", List.class, "Failed to access POI fill registry");
   }
 }

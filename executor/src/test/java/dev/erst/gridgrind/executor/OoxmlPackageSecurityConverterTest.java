@@ -6,9 +6,9 @@ import dev.erst.gridgrind.contract.dto.OoxmlEncryptionInput;
 import dev.erst.gridgrind.contract.dto.OoxmlOpenSecurityInput;
 import dev.erst.gridgrind.contract.dto.OoxmlPersistenceSecurityInput;
 import dev.erst.gridgrind.contract.dto.OoxmlSignatureInput;
-import dev.erst.gridgrind.excel.ExcelOoxmlEncryptionMode;
 import dev.erst.gridgrind.excel.ExcelOoxmlOpenOptions;
-import dev.erst.gridgrind.excel.ExcelOoxmlSignatureDigestAlgorithm;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlEncryptionMode;
+import dev.erst.gridgrind.excel.foundation.ExcelOoxmlSignatureDigestAlgorithm;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 

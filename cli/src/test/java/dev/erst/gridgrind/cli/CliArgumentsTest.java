@@ -10,6 +10,104 @@ import org.junit.jupiter.api.Test;
 /** Focused parser tests for doctor-request specific argument behavior. */
 class CliArgumentsTest {
   @Test
+  void printProtocolCatalogSearchParsesIntoDedicatedCommand() {
+    CliCommand.PrintProtocolCatalog command =
+        assertInstanceOf(
+            CliCommand.PrintProtocolCatalog.class,
+            CliArguments.parse(new String[] {"--print-protocol-catalog", "--search", "sheet"}));
+
+    assertNull(command.operationFilter());
+    assertEquals("sheet", command.searchQuery());
+  }
+
+  @Test
+  void printProtocolCatalogOperationParsesIntoDedicatedCommand() {
+    CliCommand.PrintProtocolCatalog command =
+        assertInstanceOf(
+            CliCommand.PrintProtocolCatalog.class,
+            CliArguments.parse(
+                new String[] {"--print-protocol-catalog", "--operation", "SET_CELL"}));
+
+    assertEquals("SET_CELL", command.operationFilter());
+    assertNull(command.searchQuery());
+  }
+
+  @Test
+  void printProtocolCatalogRejectsDuplicateSearchArguments() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {
+                      "--print-protocol-catalog", "--search", "sheet", "--search", "layout"
+                    }));
+
+    assertEquals("--search", exception.argument());
+    assertEquals("Duplicate argument: --search", exception.getMessage());
+  }
+
+  @Test
+  void printProtocolCatalogRejectsDuplicateOperationArguments() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {
+                      "--print-protocol-catalog",
+                      "--operation",
+                      "SET_CELL",
+                      "--operation",
+                      "GET_CELL"
+                    }));
+
+    assertEquals("--operation", exception.argument());
+    assertEquals("Duplicate argument: --operation", exception.getMessage());
+  }
+
+  @Test
+  void printProtocolCatalogRejectsMissingSearchValue() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--print-protocol-catalog", "--search"}));
+
+    assertEquals("--search", exception.argument());
+    assertEquals("Missing value for --search", exception.getMessage());
+  }
+
+  @Test
+  void printProtocolCatalogRejectsOperationAndSearchTogether() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {
+                      "--print-protocol-catalog", "--operation", "SET_CELL", "--search", "cell"
+                    }));
+
+    assertEquals("--search", exception.argument());
+    assertEquals(
+        "--print-protocol-catalog does not allow both --operation and --search",
+        exception.getMessage());
+  }
+
+  @Test
+  void printProtocolCatalogRejectsUnexpectedTrailingArguments() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {"--print-protocol-catalog", "--search", "sheet", "--version"}));
+
+    assertEquals("--version", exception.argument());
+    assertEquals("Unknown argument: --version", exception.getMessage());
+  }
+
+  @Test
   void printGoalPlanParsesIntoItsDedicatedCommand() {
     CliCommand.PrintGoalPlan command =
         assertInstanceOf(

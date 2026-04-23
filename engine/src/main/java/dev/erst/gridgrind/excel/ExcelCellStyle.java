@@ -1,5 +1,8 @@
 package dev.erst.gridgrind.excel;
 
+import dev.erst.gridgrind.excel.foundation.ExcelHorizontalAlignment;
+import dev.erst.gridgrind.excel.foundation.ExcelVerticalAlignment;
+
 /** Agent-facing style patch that can be applied to one cell or a rectangular range. */
 public record ExcelCellStyle(
     String numberFormat,
