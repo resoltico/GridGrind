@@ -214,11 +214,11 @@ git switch --detach origin/main
 gh pr view <N> --repo "$REPO" --json number,state,mergedAt,headRefName,baseRefName,url
 ```
 
-The `--admin` flag uses administrator privileges to bypass branch-protection requirements,
-specifically the review-approval rule that GitHub prevents the PR author from satisfying.
-This is the GitHub-intended escape hatch for single-owner repositories where an agent drives
-the release end-to-end. CI status checks (`Check` and `Docker smoke`) remain the authoritative
-quality gate; the review requirement adds no signal in a solo-owner workflow.
+The `--admin` flag uses administrator privileges to get the merge through branch protection
+without relying on an interactive local follow-up flow. If required pull-request reviews are
+enabled, `--admin` also bypasses the self-approval dead-end that a PR author cannot satisfy in a
+single-owner release. CI status checks (`Check` and `Docker smoke`) remain the authoritative
+quality gate; any review requirement is optional policy, not the release-quality signal.
 
 If the release is being driven from a dedicated worktree while the primary checkout already has
 `main` checked out, do not rely on `gh pr merge` or `git checkout main` in the auxiliary
