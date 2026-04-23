@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-/** Focused parser tests for doctor-request specific argument behavior. */
+/** Focused parser tests for CLI command exclusivity and argument validation. */
 class CliArgumentsTest {
   @Test
   void printProtocolCatalogSearchParsesIntoDedicatedCommand() {
@@ -119,13 +119,14 @@ class CliArgumentsTest {
   }
 
   @Test
-  void doctorRequestIgnoresUnknownTrailingArguments() {
-    CliCommand.DoctorRequest command =
-        assertInstanceOf(
-            CliCommand.DoctorRequest.class,
-            CliArguments.parse(new String[] {"--doctor-request", "--goal", "budget report"}));
+  void doctorRequestRejectsUnknownTrailingArguments() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--doctor-request", "--goal", "budget report"}));
 
-    assertNull(command.requestPath());
+    assertEquals("--goal", exception.argument());
+    assertEquals("Unknown argument: --goal", exception.getMessage());
   }
 
   @Test
@@ -139,5 +140,35 @@ class CliArgumentsTest {
 
     assertEquals("--response", exception.argument());
     assertEquals("--response is not supported with --doctor-request", exception.getMessage());
+  }
+
+  @Test
+  void immediateCommandsRejectTrailingExecutionFlags() {
+    CliArgumentsException versionFailure =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--version", "--request", "ignored.json"}));
+    assertEquals("--request", versionFailure.argument());
+    assertEquals("Unknown argument: --request", versionFailure.getMessage());
+
+    CliArgumentsException taskFailure =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {"--print-task-plan", "DASHBOARD", "--request", "ignored.json"}));
+    assertEquals("--request", taskFailure.argument());
+    assertEquals("Unknown argument: --request", taskFailure.getMessage());
+  }
+
+  @Test
+  void immediateCommandsMustAppearFirstWhenPresent() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () -> CliArguments.parse(new String[] {"--request", "req.json", "--version"}));
+
+    assertEquals("--version", exception.argument());
+    assertEquals("Unknown argument: --version", exception.getMessage());
   }
 }

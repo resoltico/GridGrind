@@ -200,6 +200,18 @@ public final class GridGrindContractText {
         + " content instead of the request JSON";
   }
 
+  /** Stable wording for how relative paths inside the request are resolved. */
+  public static String requestOwnedPathResolutionSummary() {
+    return "When the CLI reads a request via --request, relative request-owned paths resolve from"
+        + " the request file directory; otherwise they resolve in the current execution"
+        + " environment.";
+  }
+
+  /** Stable wording for how CLI file-flag paths are resolved. */
+  public static String cliFlagPathResolutionSummary() {
+    return "--request and --response themselves resolve from the current working directory.";
+  }
+
   /** Maximum accepted JSON request document size in bytes. */
   public static long requestDocumentLimitBytes() {
     return REQUEST_DOCUMENT_LIMIT_BYTES;

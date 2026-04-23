@@ -26,6 +26,7 @@
 #   scripts/test-check-process-support.sh
 #   scripts/test-contract-module-split.sh
 #   scripts/test-explicit-import-gate.sh
+#   scripts/test-jazzer-public-surface.sh
 #   scripts/test-jazzer-run-lock.sh
 #   scripts/test-selector-contract-surface.sh
 #   scripts/test-verify-release-merge-handoff.sh
@@ -141,7 +142,7 @@ print_usage() {
         '  1. check coverage' \
         '  2. jazzer check' \
         '  3. :cli:shadowJar' \
-        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar && scripts/test-check-process-support.sh && scripts/test-contract-module-split.sh && scripts/test-explicit-import-gate.sh && scripts/test-jazzer-run-lock.sh && scripts/test-selector-contract-surface.sh && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-release-primary-checkout.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
+        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar && scripts/test-check-process-support.sh && scripts/test-contract-module-split.sh && scripts/test-explicit-import-gate.sh && scripts/test-jazzer-public-surface.sh && scripts/test-jazzer-run-lock.sh && scripts/test-selector-contract-surface.sh && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-release-primary-checkout.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
         '  5. scripts/docker-smoke.sh' \
         '' \
         'Supported options:' \

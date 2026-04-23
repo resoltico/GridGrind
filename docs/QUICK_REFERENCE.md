@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.55.0"
+version: "0.56.0"
 domain: QUICK_REFERENCE
 updated: "2026-04-23"
 route:
@@ -21,6 +21,7 @@ gridgrind --print-protocol-catalog
 gridgrind --print-protocol-catalog --search validation
 gridgrind --print-protocol-catalog --operation inspectionQueryTypes:GET_SHEET_LAYOUT
 gridgrind --print-example BUDGET
+gridgrind --print-example SHEET_MAINTENANCE
 gridgrind --print-example WORKBOOK_HEALTH
 gridgrind --print-example ASSERTION
 printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' | gridgrind --doctor-request
@@ -102,6 +103,11 @@ Binary sources:
 
 The request JSON transport is capped at `16 MiB`. Large authored text or binary content belongs in
 `UTF8_FILE`, `FILE`, or `STANDARD_INPUT` sources instead of inline JSON strings.
+
+When the CLI reads a request via `--request <path>`, relative request-owned paths such as
+`source.path`, `persistence.path`, `UTF8_FILE` / `FILE`, external workbook bindings, and signing
+material paths resolve from that request file's directory. `--request` and `--response`
+themselves still resolve from the shell working directory.
 
 ## Execution, Formula, And Mode Rules
 
@@ -317,6 +323,7 @@ Run a no-save workbook-health pass:
 
 ## Detailed References
 
+- [JAVA_AUTHORING.md](./JAVA_AUTHORING.md)
 - [OPERATIONS.md](./OPERATIONS.md)
 - [REQUEST_AND_EXECUTION_REFERENCE.md](./REQUEST_AND_EXECUTION_REFERENCE.md)
 - [WORKBOOK_AND_LAYOUT_MUTATIONS.md](./WORKBOOK_AND_LAYOUT_MUTATIONS.md)

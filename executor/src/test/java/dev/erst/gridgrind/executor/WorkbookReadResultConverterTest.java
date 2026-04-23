@@ -133,11 +133,12 @@ class InspectionResultConverterTest {
 
   @Test
   void convertsPlainCommentAndWorkbookProtectionFactsDirectly() {
-    assertNull(InspectionResultConverter.toCommentReport((ExcelComment) null));
+    assertNull(InspectionResultCellReportSupport.toCommentReport((ExcelComment) null));
     GridGrindResponse.CommentReport plainComment =
-        InspectionResultConverter.toCommentReport(new ExcelComment("Review", "GridGrind", false));
+        InspectionResultCellReportSupport.toCommentReport(
+            new ExcelComment("Review", "GridGrind", false));
     WorkbookProtectionReport protection =
-        InspectionResultConverter.toWorkbookProtectionReport(
+        InspectionResultWorkbookCoreReportSupport.toWorkbookProtectionReport(
             new ExcelWorkbookProtectionSnapshot(true, false, true, true, false));
 
     assertEquals("Review", plainComment.text());
@@ -397,7 +398,7 @@ class InspectionResultConverterTest {
     DrawingObjectPayloadReport.Picture picturePayload =
         assertInstanceOf(
             DrawingObjectPayloadReport.Picture.class,
-            InspectionResultConverter.toDrawingObjectPayloadReport(
+            InspectionResultDrawingReportSupport.toDrawingObjectPayloadReport(
                 new ExcelDrawingObjectPayload.Picture(
                     "OpsPicture",
                     ExcelPictureFormat.PNG,
@@ -654,14 +655,15 @@ class InspectionResultConverterTest {
                 "AREA", "Only simple single-plot charts are modeled."));
 
     ChartReport lineReport =
-        InspectionResultConverter.toChartReport((ExcelChartSnapshot) lineSnapshot);
+        InspectionResultDrawingReportSupport.toChartReport((ExcelChartSnapshot) lineSnapshot);
     ChartReport.Line linePlot =
         assertInstanceOf(ChartReport.Line.class, lineReport.plots().getFirst());
     ChartReport pieReport =
-        InspectionResultConverter.toChartReport((ExcelChartSnapshot) pieSnapshot);
+        InspectionResultDrawingReportSupport.toChartReport((ExcelChartSnapshot) pieSnapshot);
     ChartReport.Pie piePlot = assertInstanceOf(ChartReport.Pie.class, pieReport.plots().getFirst());
     ChartReport unsupportedReport =
-        InspectionResultConverter.toChartReport((ExcelChartSnapshot) unsupportedSnapshot);
+        InspectionResultDrawingReportSupport.toChartReport(
+            (ExcelChartSnapshot) unsupportedSnapshot);
     ChartReport.Unsupported unsupportedPlot =
         assertInstanceOf(ChartReport.Unsupported.class, unsupportedReport.plots().getFirst());
 

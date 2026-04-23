@@ -213,9 +213,15 @@ public final class GridGrindProtocolCatalog {
                       "persistence OVERWRITE",
                       "write back to source.path; no path field is supplied."),
                   new CliSurface.DefinitionEntry(
-                      "Relative paths",
-                      "in --request, --response, source.path, and persistence.path resolve from"
-                          + " the current working directory."),
+                      "Relative CLI flag paths",
+                      GridGrindContractText.cliFlagPathResolutionSummary()),
+                  new CliSurface.DefinitionEntry(
+                      "Relative request-owned paths",
+                      "source.path, persistence paths, source-backed file inputs,"
+                          + " formulaEnvironment.externalWorkbooks[*].path, and"
+                          + " persistence.security.signature.pkcs12Path follow one rule:"
+                          + " "
+                          + GridGrindContractText.requestOwnedPathResolutionSummary()),
                   new CliSurface.DefinitionEntry(
                       "Relative FILE hyperlink targets",
                       "are analyzed against the persisted workbook path when one exists; use"
@@ -351,7 +357,8 @@ public final class GridGrindProtocolCatalog {
               WorkbookPlan.WorkbookSource.ExistingFile.class,
               "EXISTING",
               "Open an existing .xlsx workbook from disk."
-                  + " Relative paths resolve in the current execution environment."
+                  + " "
+                  + GridGrindContractText.requestOwnedPathResolutionSummary()
                   + " source.security.password unlocks encrypted OOXML packages.",
               "security"));
   private static final List<CatalogTypeDescriptor> PERSISTENCE_TYPES =
@@ -366,7 +373,8 @@ public final class GridGrindProtocolCatalog {
               "Overwrite the opened source workbook at source.path."
                   + " No path field is accepted on OVERWRITE;"
                   + " the write target is the same path opened by the EXISTING source."
-                  + " Relative source.path values resolve in the current execution environment."
+                  + " "
+                  + GridGrindContractText.requestOwnedPathResolutionSummary()
                   + " persistence.security can encrypt and/or sign the saved OOXML package."
                   + " The response persistence.type echoes OVERWRITE and includes sourcePath"
                   + " (the original source path string) and executionPath (absolute normalized).",
@@ -375,7 +383,8 @@ public final class GridGrindProtocolCatalog {
               WorkbookPlan.WorkbookPersistence.SaveAs.class,
               "SAVE_AS",
               "Save the workbook to a new .xlsx path."
-                  + " Relative paths resolve in the current execution environment."
+                  + " "
+                  + GridGrindContractText.requestOwnedPathResolutionSummary()
                   + " persistence.security can encrypt and/or sign the saved OOXML package."
                   + " The response persistence.type echoes SAVE_AS and includes requestedPath"
                   + " (the literal path from the request) and executionPath (the absolute"

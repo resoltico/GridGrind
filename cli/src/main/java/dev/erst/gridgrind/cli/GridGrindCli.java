@@ -326,9 +326,7 @@ public final class GridGrindCli {
     }
 
     ExecutionInputBindings bindings =
-        new ExecutionInputBindings(
-            Path.of(""),
-            SourceBackedPlanResolver.requiresStandardInput(request) ? stdin.readAllBytes() : null);
+        CliExecutionBindingsFactory.create(command.requestPath(), request, stdin);
     try {
       response = requestExecutor.execute(request, bindings, journalWriter.sinkFor(request, stderr));
     } catch (Exception exception) {

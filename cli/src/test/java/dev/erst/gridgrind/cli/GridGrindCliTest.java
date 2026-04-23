@@ -957,7 +957,7 @@ class GridGrindCliTest {
   }
 
   @Test
-  void printTaskCatalogWithNonTaskTrailingArgReturnsFullCatalog() throws IOException {
+  void printTaskCatalogRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -967,11 +967,13 @@ class GridGrindCliTest {
                 InputStream.nullInputStream(),
                 stdout);
 
-    assertEquals(0, exitCode);
-    String output = stdout.toString(StandardCharsets.UTF_8).trim();
-    assertTrue(output.contains("\"tasks\""), "full task catalog must contain the tasks key");
-    assertTrue(
-        output.contains("\"DASHBOARD\""), "full task catalog must contain the dashboard task");
+    assertEquals(2, exitCode);
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("--version", failure.problem().context().argument());
+    assertTrue(failure.problem().message().contains("Unknown argument"));
   }
 
   @Test
@@ -1012,7 +1014,7 @@ class GridGrindCliTest {
   }
 
   @Test
-  void printTaskPlanFlagTakesPrecedenceOverExecutionFlags() throws IOException {
+  void printTaskPlanRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -1022,10 +1024,13 @@ class GridGrindCliTest {
                 new ByteArrayInputStream(new byte[0]),
                 stdout);
 
-    TaskPlanTemplate template = GridGrindJson.readTaskPlanTemplate(stdout.toByteArray());
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
 
-    assertEquals(0, exitCode);
-    assertEquals("DASHBOARD", template.task().id());
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("--request", failure.problem().context().argument());
   }
 
   @Test
@@ -1257,7 +1262,7 @@ class GridGrindCliTest {
   }
 
   @Test
-  void versionFlagTakesPrecedenceOverOtherFlags() throws IOException {
+  void versionFlagRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -1267,14 +1272,17 @@ class GridGrindCliTest {
                 new ByteArrayInputStream(new byte[0]),
                 stdout);
 
-    assertEquals(0, exitCode);
-    String output = stdout.toString(StandardCharsets.UTF_8);
-    assertTrue(output.startsWith("GridGrind unknown\n"), "must start with GridGrind unknown");
-    assertTrue(output.endsWith("\n"), "must end with newline");
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("--request", failure.problem().context().argument());
   }
 
   @Test
-  void helpFlagTakesPrecedenceOverOtherFlags() throws IOException {
+  void helpFlagRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -1284,12 +1292,17 @@ class GridGrindCliTest {
                 new ByteArrayInputStream(new byte[0]),
                 stdout);
 
-    assertEquals(0, exitCode);
-    assertTrue(stdout.toString(StandardCharsets.UTF_8).contains("GridGrind"));
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("--request", failure.problem().context().argument());
   }
 
   @Test
-  void printRequestTemplateFlagTakesPrecedenceOverOtherFlags() throws IOException {
+  void printRequestTemplateRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -1299,14 +1312,17 @@ class GridGrindCliTest {
                 new ByteArrayInputStream(new byte[0]),
                 stdout);
 
-    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
 
-    assertEquals(0, exitCode);
-    assertEquals(GridGrindProtocolCatalog.requestTemplate(), request);
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("--request", failure.problem().context().argument());
   }
 
   @Test
-  void printExampleFlagTakesPrecedenceOverExecutionFlags() throws IOException {
+  void printExampleRejectsTrailingExecutionFlags() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
     int exitCode =
@@ -1316,10 +1332,13 @@ class GridGrindCliTest {
                 new ByteArrayInputStream(new byte[0]),
                 stdout);
 
-    WorkbookPlan request = GridGrindJson.readRequest(stdout.toByteArray());
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
 
-    assertEquals(0, exitCode);
-    assertEquals(GridGrindProtocolCatalog.exampleFor("ASSERTION").orElseThrow().plan(), request);
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("--request", failure.problem().context().argument());
   }
 
   @Test

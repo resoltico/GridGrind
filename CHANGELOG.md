@@ -5,6 +5,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.56.0] - 2026-04-23
+
+### Changed
+
+- Task discovery now ships broader runnable starter scaffolds instead of thin placeholders.
+  `--print-task-catalog`, `--print-task-plan`, and `--print-goal-plan` now cover tabular
+  reports, dashboards, data-entry workflows, workbook audits, custom XML workflows, pivot
+  reports, drawing/signature workflows, and workbook-maintenance flows with non-empty starter
+  plans.
+
+### Fixed
+
+- CLI request-path handling is now portable and internally consistent. When the CLI reads a
+  request via `--request`, relative request-owned paths now resolve from the request file
+  directory instead of the shell working directory, including `source.path`, persistence paths,
+  source-backed `UTF8_FILE` / `FILE` payloads, formula external workbook bindings, and OOXML
+  signing keystore paths.
+- CLI discovery commands now reject stray trailing flags consistently instead of silently
+  accepting malformed invocations. `--help`, `--version`, `--license`, `--print-example`,
+  `--print-task-catalog`, `--print-task-plan`, `--print-goal-plan`, `--print-request-template`,
+  and `--print-protocol-catalog` now fail fast on extra arguments, and `--doctor-request` no
+  longer ignores unknown trailing flags.
+- Public docs, help text, and shipped examples now match the live discovery and path-resolution
+  surface. The request/execution reference, quick-start flow, quick reference, README, operations
+  index, and generated example set now document request-file-rooted relative paths, the broader
+  task planner surface, and the new sheet-maintenance example.
+- Release-surface shell validation no longer assumes every verification checkout is a live Git
+  worktree. The Jazzer public-surface regression still verifies Git tracking when `.git` is
+  present, but copied validation checkouts now pass based on the actual shipped shell surface
+  instead of failing on missing repository metadata, and `./check.sh` now truthfully lists that
+  Jazzer public-surface regression in its own Stage 4 contract summary.
+- The largest new discovery seam no longer lives in one 900-line registry file. Task-definition
+  builders are now split by responsibility, and the executor conversion surface remains split
+  across workbook, cell, drawing, structured-feature, read-result, and workbook-report seams
+  instead of regressing into new god-files.
+
 ## [0.55.0] - 2026-04-23
 
 ### Fixed
@@ -2155,7 +2191,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.55.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.56.0...HEAD
+[0.56.0]: https://github.com/resoltico/GridGrind/compare/v0.55.0...v0.56.0
 [0.55.0]: https://github.com/resoltico/GridGrind/compare/v0.54.0...v0.55.0
 [0.54.0]: https://github.com/resoltico/GridGrind/compare/v0.53.0...v0.54.0
 [0.53.0]: https://github.com/resoltico/GridGrind/compare/v0.52.0...v0.53.0

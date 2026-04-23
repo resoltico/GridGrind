@@ -286,7 +286,7 @@ readonly success_task_plan='{
         "capabilityRefs": [
           { "group": "sourceTypes", "id": "NEW" },
           { "group": "persistenceTypes", "id": "SAVE_AS" },
-          { "group": "mutationActionTypes", "id": "SET_TABLE" }
+          { "group": "mutationActionTypes", "id": "SET_CHART" }
         ],
         "notes": ["note"]
       }
@@ -296,11 +296,22 @@ readonly success_task_plan='{
   "requestTemplate": {
     "source": { "type": "NEW" },
     "persistence": { "type": "SAVE_AS", "path": "todo-dashboard-output.xlsx" },
-    "steps": []
+    "steps": [
+      {
+        "stepId": "author-chart",
+        "target": { "type": "BY_NAME", "name": "Dashboard" },
+        "action": { "type": "SET_CHART" }
+      },
+      {
+        "stepId": "verify-chart",
+        "target": { "type": "ALL_ON_SHEET", "sheetName": "Dashboard" },
+        "query": { "type": "GET_CHARTS" }
+      }
+    ]
   },
   "authoringNotes": [
-    "requestTemplate is intentionally minimal and valid: source and persistence are scaffolded, but steps stays empty until you author the workflow.",
-    "Use task.phases[*].capabilityRefs to discover the exact operation shapes through --print-protocol-catalog --operation <group>:<id>.",
+    "The starter plan is runnable and seeds one simple dashboard chart workflow.",
+    "Use --print-protocol-catalog --operation mutationActionTypes:SET_CHART for exact chart request shapes, or --print-protocol-catalog --search chart when browsing nearby surfaces.",
     "Replace any TODO-style .xlsx placeholder path before execution."
   ]
 }'
@@ -366,11 +377,22 @@ readonly success_goal_plan='{
         "requestTemplate": {
           "source": { "type": "NEW" },
           "persistence": { "type": "SAVE_AS", "path": "todo-dashboard-output.xlsx" },
-          "steps": []
+          "steps": [
+            {
+              "stepId": "author-chart",
+              "target": { "type": "BY_NAME", "name": "Dashboard" },
+              "action": { "type": "SET_CHART" }
+            },
+            {
+              "stepId": "verify-chart",
+              "target": { "type": "ALL_ON_SHEET", "sheetName": "Dashboard" },
+              "query": { "type": "GET_CHARTS" }
+            }
+          ]
         },
         "authoringNotes": [
-          "requestTemplate is intentionally minimal and valid: source and persistence are scaffolded, but steps stays empty until you author the workflow.",
-          "Use task.phases[*].capabilityRefs to discover the exact operation shapes through --print-protocol-catalog --operation <group>:<id>.",
+          "The starter plan is runnable and seeds one simple dashboard chart workflow.",
+          "Use --print-protocol-catalog --operation mutationActionTypes:SET_CHART for exact chart request shapes, or --print-protocol-catalog --search chart when browsing nearby surfaces.",
           "Replace any TODO-style .xlsx placeholder path before execution."
         ]
       }

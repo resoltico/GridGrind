@@ -1,0 +1,118 @@
+{
+  "protocolVersion" : "V1",
+  "planId" : "sheet-maintenance-workflow",
+  "source" : {
+    "type" : "NEW"
+  },
+  "persistence" : {
+    "type" : "SAVE_AS",
+    "path" : "cli/build/generated-workbooks/gridgrind-sheet-maintenance.xlsx"
+  },
+  "steps" : [ {
+    "stepId" : "step-01-ensure-template",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Template"
+    },
+    "action" : {
+      "type" : "ENSURE_SHEET"
+    }
+  }, {
+    "stepId" : "step-02-set-range",
+    "target" : {
+      "type" : "BY_RANGE",
+      "sheetName" : "Template",
+      "range" : "A1:B3"
+    },
+    "action" : {
+      "type" : "SET_RANGE",
+      "rows" : [ [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Owner"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Status"
+        }
+      } ], [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Ada"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Ready"
+        }
+      } ], [ {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Lin"
+        }
+      }, {
+        "type" : "TEXT",
+        "source" : {
+          "type" : "INLINE",
+          "text" : "Review"
+        }
+      } ] ]
+    }
+  }, {
+    "stepId" : "step-03-set-comment",
+    "target" : {
+      "type" : "BY_ADDRESS",
+      "sheetName" : "Template",
+      "address" : "A1"
+    },
+    "action" : {
+      "type" : "SET_COMMENT",
+      "comment" : {
+        "text" : {
+          "type" : "INLINE",
+          "text" : "Template owner column"
+        },
+        "author" : "GridGrind",
+        "visible" : false,
+        "runs" : null,
+        "anchor" : null
+      }
+    }
+  }, {
+    "stepId" : "step-04-copy-sheet",
+    "target" : {
+      "type" : "BY_NAME",
+      "name" : "Template"
+    },
+    "action" : {
+      "type" : "COPY_SHEET",
+      "newSheetName" : "Template Copy",
+      "position" : {
+        "type" : "APPEND_AT_END"
+      }
+    }
+  }, {
+    "stepId" : "step-05-read-comments",
+    "target" : {
+      "type" : "ALL_USED_IN_SHEET",
+      "sheetName" : "Template Copy"
+    },
+    "query" : {
+      "type" : "GET_COMMENTS"
+    }
+  }, {
+    "stepId" : "step-06-read-workbook-findings",
+    "target" : {
+      "type" : "CURRENT"
+    },
+    "query" : {
+      "type" : "ANALYZE_WORKBOOK_FINDINGS"
+    }
+  } ]
+}

@@ -26,6 +26,7 @@ readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly jazzer_bin_dir="${repo_root}/jazzer/bin"
 readonly jazzer_readme="${repo_root}/jazzer/README.md"
 readonly jazzer_operations_doc="${repo_root}/docs/DEVELOPER_JAZZER_OPERATIONS.md"
+readonly git_dir="${repo_root}/.git"
 
 expected_support_scripts=(
     _run-lock-support
@@ -56,8 +57,10 @@ for script_name in "${expected_scripts[@]}"; do
     script_path="${jazzer_bin_dir}/${script_name}"
     [[ -f "${script_path}" ]] || die "missing tracked Jazzer script ${script_name}"
     [[ -x "${script_path}" ]] || die "Jazzer script ${script_name} is not executable"
-    git -C "${repo_root}" ls-files --error-unmatch "jazzer/bin/${script_name}" >/dev/null 2>&1 || die \
-        "Jazzer script ${script_name} is not tracked by git"
+    if [[ -e "${git_dir}" ]]; then
+        git -C "${repo_root}" ls-files --error-unmatch "jazzer/bin/${script_name}" >/dev/null 2>&1 || die \
+            "Jazzer script ${script_name} is not tracked by git"
+    fi
 done
 
 while IFS= read -r script_path; do

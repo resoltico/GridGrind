@@ -6,6 +6,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.step.WorkbookStep;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,11 @@ final class ExecutionJournalRecorder {
   }
 
   static ExecutionJournalRecorder start(WorkbookPlan request, ExecutionJournalSink sink) {
+    return start(request, sink, Path.of(""));
+  }
+
+  static ExecutionJournalRecorder start(
+      WorkbookPlan request, ExecutionJournalSink sink, Path workingDirectory) {
     ExecutionJournalSink liveSink = ExecutionJournalSink.requireNonNull(sink);
     String planId =
         request == null
@@ -61,13 +67,14 @@ final class ExecutionJournalRecorder {
             ? new ExecutionJournal.SourceSummary(null, null)
             : new ExecutionJournal.SourceSummary(
                 ExecutionRequestPaths.reqSourceType(request),
-                ExecutionRequestPaths.reqSourcePath(request));
+                ExecutionRequestPaths.reqSourcePath(request, workingDirectory));
     ExecutionJournal.PersistenceSummary persistence =
         request == null
             ? new ExecutionJournal.PersistenceSummary(null, null)
             : new ExecutionJournal.PersistenceSummary(
                 ExecutionRequestPaths.reqPersistenceType(request),
-                ExecutionRequestPaths.persistencePath(request.source(), request.persistence()));
+                ExecutionRequestPaths.persistencePath(
+                    request.source(), request.persistence(), workingDirectory));
     return new ExecutionJournalRecorder(planId, level, source, persistence, liveSink);
   }
 

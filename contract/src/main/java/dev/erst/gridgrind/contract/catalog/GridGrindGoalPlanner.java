@@ -56,8 +56,8 @@ public final class GridGrindGoalPlanner {
     String requestedGoal = CatalogRecordValidation.requireNonBlank(goal, "goal");
     List<String> normalizedTerms = normalizedTerms(requestedGoal);
     List<GoalPlanReport.Candidate> candidates =
-        GridGrindTaskCatalog.catalog().tasks().stream()
-            .map(task -> candidateFor(task, normalizedTerms))
+        GridGrindTaskDefinitions.definitions().stream()
+            .map(definition -> candidateFor(definition, normalizedTerms))
             .filter(Objects::nonNull)
             .sorted(
                 java.util.Comparator.comparingInt(GoalPlanReport.Candidate::score)
@@ -76,13 +76,17 @@ public final class GridGrindGoalPlanner {
         candidates);
   }
 
-  private static GoalPlanReport.Candidate candidateFor(TaskEntry task, List<String> goalTerms) {
+  private static GoalPlanReport.Candidate candidateFor(
+      TaskDefinition definition, List<String> goalTerms) {
+    TaskEntry task = definition.task();
     TaskMatchAccumulator accumulator = new TaskMatchAccumulator(task);
+    scoreSurface(goalTerms, definition.searchTerms(), "search term", 18, accumulator);
+    scoreSurface(goalTerms, List.of(task.id().replace('_', ' ')), "task id", 14, accumulator);
     scoreSurface(goalTerms, task.intentTags(), "intent tag", 12, accumulator);
-    scoreSurface(goalTerms, List.of(task.summary()), "summary", 5, accumulator);
-    scoreSurface(goalTerms, task.outcomes(), "outcome", 4, accumulator);
-    scoreSurface(goalTerms, task.requiredInputs(), "required input", 4, accumulator);
-    scoreSurface(goalTerms, task.optionalFeatures(), "optional feature", 3, accumulator);
+    scoreSurface(goalTerms, List.of(task.summary()), "summary", 7, accumulator);
+    scoreSurface(goalTerms, task.outcomes(), "outcome", 5, accumulator);
+    scoreSurface(goalTerms, task.requiredInputs(), "required input", 5, accumulator);
+    scoreSurface(goalTerms, task.optionalFeatures(), "optional feature", 4, accumulator);
     scorePhaseSurface(goalTerms, task.phases(), accumulator);
     scoreCapabilitySurface(goalTerms, task.phases(), accumulator);
     if (accumulator.score == 0) {
@@ -93,7 +97,7 @@ public final class GridGrindGoalPlanner {
         accumulator.score,
         List.copyOf(accumulator.matchedTerms),
         List.copyOf(accumulator.reasons),
-        GridGrindTaskPlanner.planFor(task));
+        definition.starterTemplate());
   }
 
   private static void scorePhaseSurface(
@@ -110,7 +114,12 @@ public final class GridGrindGoalPlanner {
     for (TaskPhase phase : phases) {
       for (TaskCapabilityRef capabilityRef : phase.capabilityRefs()) {
         String capabilityText = capabilityRef.id().replace('_', ' ').toLowerCase(Locale.ROOT);
-        scoreSurface(goalTerms, List.of(capabilityText), "capability", 2, accumulator);
+        scoreSurface(goalTerms, List.of(capabilityText), "capability id", 6, accumulator);
+        GridGrindProtocolCatalog.entryFor(capabilityRef.qualifiedId())
+            .ifPresent(
+                entry ->
+                    scoreSurface(
+                        goalTerms, List.of(entry.summary()), "capability summary", 5, accumulator));
       }
     }
   }
@@ -150,8 +159,8 @@ public final class GridGrindGoalPlanner {
 
   private static List<String> suggestedIntentTags() {
     Set<String> tags = new LinkedHashSet<>();
-    for (TaskEntry task : GridGrindTaskCatalog.catalog().tasks()) {
-      tags.addAll(task.intentTags());
+    for (TaskDefinition definition : GridGrindTaskDefinitions.definitions()) {
+      tags.addAll(definition.task().intentTags());
     }
     return List.copyOf(tags);
   }

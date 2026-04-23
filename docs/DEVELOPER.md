@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.55.0"
+version: "0.56.0"
 domain: DEVELOPER
 updated: "2026-04-23"
 route:
@@ -18,6 +18,7 @@ Companion references:
 - [DEVELOPER_DOCKER.md](./DEVELOPER_DOCKER.md)
 - [DEVELOPER_JAVA.md](./DEVELOPER_JAVA.md)
 - [DEVELOPER_GRADLE.md](./DEVELOPER_GRADLE.md)
+- [JAVA_AUTHORING.md](./JAVA_AUTHORING.md)
 - [DEVELOPER_CONTRACT_REPLACEMENT_ADR.md](./DEVELOPER_CONTRACT_REPLACEMENT_ADR.md)
 - [DEVELOPER_JAZZER.md](./DEVELOPER_JAZZER.md)
 - [DEVELOPER_JAZZER_OPERATIONS.md](./DEVELOPER_JAZZER_OPERATIONS.md)
@@ -373,7 +374,8 @@ Examples that persist a workbook write to `cli/build/generated-workbooks/`; the 
 return JSON only.
 
 The Java example is compile-verified by `:authoring-java:test` and demonstrates how the
-`authoring-java` module emits one canonical `WorkbookPlan` without dropping to raw JSON.
+`authoring-java` module emits one canonical `WorkbookPlan` without dropping to raw JSON. The
+public walkthrough for that surface lives in [JAVA_AUTHORING.md](./JAVA_AUTHORING.md).
 
 ---
 

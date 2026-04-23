@@ -137,7 +137,7 @@ class DataValidationEntryReportTest {
     assertInstanceOf(DataValidationRuleInput.CustomFormula.class, custom.rule());
     assertThrows(
         NullPointerException.class,
-        () -> InspectionResultConverter.toDataValidationDefinitionReport(null));
+        () -> InspectionResultValidationReportSupport.toDataValidationDefinitionReport(null));
   }
 
   @Test
@@ -154,6 +154,6 @@ class DataValidationEntryReportTest {
 
   private static DataValidationEntryReport.DataValidationDefinitionReport reportFor(
       ExcelDataValidationDefinition definition) {
-    return InspectionResultConverter.toDataValidationDefinitionReport(definition);
+    return InspectionResultValidationReportSupport.toDataValidationDefinitionReport(definition);
   }
 }

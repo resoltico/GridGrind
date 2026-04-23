@@ -12,6 +12,7 @@ import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.RangeSelector;
 import dev.erst.gridgrind.contract.selector.Selector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
+import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import dev.erst.gridgrind.contract.step.AssertionStep;
@@ -60,6 +61,10 @@ final class ExamplePlanSupport {
 
   static SheetSelector.ByNames sheets(String... names) {
     return new SheetSelector.ByNames(List.of(names));
+  }
+
+  static TableSelector.ByNameOnSheet table(String name, String sheetName) {
+    return new TableSelector.ByNameOnSheet(name, sheetName);
   }
 
   static CellSelector.ByAddress cell(String sheetName, String address) {

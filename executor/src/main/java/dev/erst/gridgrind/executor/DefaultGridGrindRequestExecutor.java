@@ -119,7 +119,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
       WorkbookPlan request, ExecutionInputBindings bindings, ExecutionJournalSink sink) {
     ExecutionInputBindings executionBindings =
         bindings == null ? ExecutionInputBindings.processDefault() : bindings;
-    ExecutionJournalRecorder journal = ExecutionJournalRecorder.start(request, sink);
+    ExecutionJournalRecorder journal =
+        ExecutionJournalRecorder.start(request, sink, executionBindings.workingDirectory());
     GridGrindProtocolVersion protocolVersion =
         request == null ? GridGrindProtocolVersion.current() : request.protocolVersion();
 
@@ -182,7 +183,11 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           journal,
           () ->
               workflowSupport.executeDirectEventReadWorkflow(
-                  protocolVersion, resolvedRequest, warnings, journal));
+                  protocolVersion,
+                  resolvedRequest,
+                  warnings,
+                  journal,
+                  executionBindings.workingDirectory()));
     }
     if (executionModes.writeMode() == ExecutionModeInput.WriteMode.STREAMING_WRITE) {
       return responseSupport.guardUnexpectedRuntime(
@@ -191,13 +196,20 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
           journal,
           () ->
               workflowSupport.executeStreamingWorkflow(
-                  protocolVersion, resolvedRequest, executionModes, warnings, journal));
+                  protocolVersion,
+                  resolvedRequest,
+                  executionModes,
+                  warnings,
+                  journal,
+                  executionBindings.workingDirectory()));
     }
 
     ExecutionJournalRecorder.PhaseHandle openPhase = journal.beginOpen();
     ExcelWorkbook workbook;
     try {
-      workbook = workbookSupport.openWorkbook(request.source(), request.formulaEnvironment());
+      workbook =
+          workbookSupport.openWorkbook(
+              request.source(), request.formulaEnvironment(), executionBindings.workingDirectory());
     } catch (Exception exception) {
       GridGrindResponse.Problem problem =
           ExecutionResponseSupport.problemFor(
@@ -205,7 +217,8 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
               new GridGrindResponse.ProblemContext.OpenWorkbook(
                   ExecutionRequestPaths.reqSourceType(request),
                   ExecutionRequestPaths.reqPersistenceType(request),
-                  ExecutionRequestPaths.reqSourcePath(request)));
+                  ExecutionRequestPaths.reqSourcePath(
+                      request, executionBindings.workingDirectory())));
       openPhase.fail("failed (" + problem.code() + ")");
       return ExecutionResponseSupport.failureResponse(
           protocolVersion,
@@ -225,7 +238,13 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
         workbook,
         () ->
             workflowSupport.executeWorkbookWorkflow(
-                protocolVersion, resolvedRequest, workbook, executionModes, warnings, journal));
+                protocolVersion,
+                resolvedRequest,
+                workbook,
+                executionModes,
+                warnings,
+                journal,
+                executionBindings.workingDirectory()));
   }
 
   Optional<String> calculationPolicyFailure(WorkbookPlan request) {

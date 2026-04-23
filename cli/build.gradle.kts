@@ -9,6 +9,7 @@ description = "CLI transport adapter for the GridGrind protocol"
 dependencies {
     implementation(project(":executor"))
     testImplementation(libs.junit.jupiter)
+    testImplementation(libs.poi.ooxml)
     testRuntimeOnly(libs.junit.platform.launcher)
     runtimeOnly(libs.log4j.core)
     runtimeOnly(libs.log4j.slf4j2.impl)
