@@ -6,7 +6,7 @@
   },
   "persistence" : {
     "type" : "SAVE_AS",
-    "path" : "cli/build/generated-workbooks/gridgrind-file-hyperlink-health.xlsx"
+    "path" : "../cli/build/generated-workbooks/gridgrind-file-hyperlink-health.xlsx"
   },
   "steps" : [ {
     "stepId" : "step-01-ensure-sheet",

@@ -29,13 +29,16 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Properties;
+import java.util.function.BooleanSupplier;
 
 /** Thin command-line transport for the GridGrind protocol. */
+@SuppressWarnings("PMD.ExcessiveImports")
 public final class GridGrindCli {
   private final GridGrindRequestExecutor requestExecutor;
   private final CliRequestReader requestReader;
   private final CliResponseWriter responseWriter;
   private final CliJournalWriter journalWriter;
+  private final BooleanSupplier standardInputIsInteractive;
 
   /** Creates the production CLI backed by the default request executor and transport helpers. */
   public GridGrindCli() {
@@ -43,18 +46,29 @@ public final class GridGrindCli {
         new DefaultGridGrindRequestExecutor(),
         new CliRequestReader(),
         new CliResponseWriter(),
-        new CliJournalWriter());
+        new CliJournalWriter(),
+        StandardInputInteractivity.currentProcess());
   }
 
   GridGrindCli(GridGrindRequestExecutor requestExecutor) {
-    this(requestExecutor, new CliRequestReader(), new CliResponseWriter(), new CliJournalWriter());
+    this(
+        requestExecutor,
+        new CliRequestReader(),
+        new CliResponseWriter(),
+        new CliJournalWriter(),
+        StandardInputInteractivity.never());
   }
 
   GridGrindCli(
       GridGrindRequestExecutor requestExecutor,
       CliRequestReader requestReader,
       CliResponseWriter responseWriter) {
-    this(requestExecutor, requestReader, responseWriter, new CliJournalWriter());
+    this(
+        requestExecutor,
+        requestReader,
+        responseWriter,
+        new CliJournalWriter(),
+        StandardInputInteractivity.never());
   }
 
   GridGrindCli(
@@ -62,10 +76,27 @@ public final class GridGrindCli {
       CliRequestReader requestReader,
       CliResponseWriter responseWriter,
       CliJournalWriter journalWriter) {
+    this(
+        requestExecutor,
+        requestReader,
+        responseWriter,
+        journalWriter,
+        StandardInputInteractivity.never());
+  }
+
+  GridGrindCli(
+      GridGrindRequestExecutor requestExecutor,
+      CliRequestReader requestReader,
+      CliResponseWriter responseWriter,
+      CliJournalWriter journalWriter,
+      BooleanSupplier standardInputIsInteractive) {
     this.requestExecutor = GridGrindRequestExecutor.requireNonNull(requestExecutor);
     this.requestReader = Objects.requireNonNull(requestReader, "requestReader must not be null");
     this.responseWriter = Objects.requireNonNull(responseWriter, "responseWriter must not be null");
     this.journalWriter = Objects.requireNonNull(journalWriter, "journalWriter must not be null");
+    this.standardInputIsInteractive =
+        Objects.requireNonNull(
+            standardInputIsInteractive, "standardInputIsInteractive must not be null");
   }
 
   /** Runs one CLI invocation against stdin/stdout or explicit request/response file paths. */
@@ -272,6 +303,10 @@ public final class GridGrindCli {
     }
     if (args.length != 0) {
       return stdin;
+    }
+    if (standardInputIsInteractive.getAsBoolean()) {
+      writeHelp(stdout);
+      return null;
     }
     PushbackInputStream peekable = new PushbackInputStream(stdin, 1);
     int firstByte = peekable.read();

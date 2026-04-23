@@ -49,8 +49,10 @@ grep -Fq 'include("excel-foundation", "engine", "contract", "executor", "authori
 grep -Fq '"protocol"' "${settings_file}" && die \
     "settings.gradle.kts still includes the deleted protocol module"
 
-grep -Fq 'api(project(":executor"))' "${authoring_build_file}" || die \
-    "authoring-java no longer depends on executor as its only execution bridge"
+grep -Fq 'api(project(":contract"))' "${authoring_build_file}" || die \
+    "authoring-java no longer depends on contract as its canonical authoring boundary"
+grep -Fq 'api(project(":executor"))' "${authoring_build_file}" && die \
+    "authoring-java still depends on executor despite the contract-only authoring boundary"
 grep -Fq 'implementation(project(":executor"))' "${cli_build_file}" || die \
     "cli no longer depends on executor"
 grep -Fq 'implementation(project(":protocol"))' "${cli_build_file}" && die \
@@ -58,8 +60,10 @@ grep -Fq 'implementation(project(":protocol"))' "${cli_build_file}" && die \
 
 grep -Fq 'module dev.erst.gridgrind.authoring {' "${authoring_module_file}" || die \
     "authoring-java module-info does not declare the canonical authoring module name"
-grep -Fq 'requires transitive dev.erst.gridgrind.executor;' "${authoring_module_file}" || die \
-    "authoring-java module-info no longer depends transitively on executor"
+grep -Fq 'requires transitive dev.erst.gridgrind.contract;' "${authoring_module_file}" || die \
+    "authoring-java module-info no longer depends transitively on contract"
+grep -Fq 'requires transitive dev.erst.gridgrind.executor;' "${authoring_module_file}" && die \
+    "authoring-java module-info still depends transitively on executor"
 grep -Fq 'requires dev.erst.gridgrind.executor;' "${cli_module_file}" || die \
     "cli module-info no longer requires executor"
 grep -Fq 'requires dev.erst.gridgrind.protocol;' "${cli_module_file}" && die \
@@ -84,7 +88,7 @@ grep -Fq '"dev.erst.gridgrind:protocol"' "${jazzer_conventions_file}" && die \
 
 grep -Fq 'DEVELOPER_CONTRACT_REPLACEMENT_ADR.md' "${developer_doc}" || die \
     "developer reference no longer links the accepted contract-replacement ADR"
-grep -Fq 'dev.erst.gridgrind.authoring -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation' "${developer_doc}" || die \
+grep -Fq 'dev.erst.gridgrind.authoring -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation' "${developer_doc}" || die \
     "developer reference no longer documents the authoring-java module graph"
 grep -Fq 'dev.erst.gridgrind.cli -> dev.erst.gridgrind.executor -> dev.erst.gridgrind.contract -> dev.erst.gridgrind.excel.foundation' "${developer_doc}" || die \
     "developer reference no longer documents the canonical module graph"

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Verify that one built GridGrind artifact exposes the expected public help and protocol-catalog
-# contract. This is intentionally black-box: it only uses the artifact's own CLI surface.
+# contract, including the interactive no-arg help path. This is intentionally black-box: it only
+# uses the artifact's own CLI surface.
 
 set -euo pipefail
 
@@ -27,6 +28,102 @@ require_absent() {
     if grep -Fq -- "${needle}" <<<"${text}"; then
         die "${description}"
     fi
+}
+
+verify_implicit_interactive_help() {
+    local expected_help_path=$1
+    shift
+
+    python3 - "${expected_help_path}" "$@" <<'PY'
+import errno
+import os
+import pty
+import select
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+expected_help = Path(sys.argv[1]).read_text().replace('\r', '').rstrip('\n')
+command = sys.argv[2:]
+timeout_seconds = 10.0
+
+master_fd, slave_fd = pty.openpty()
+process = None
+captured = bytearray()
+
+try:
+    process = subprocess.Popen(
+        command,
+        stdin=slave_fd,
+        stdout=slave_fd,
+        stderr=slave_fd,
+        close_fds=True,
+    )
+finally:
+    os.close(slave_fd)
+
+try:
+    deadline = time.monotonic() + timeout_seconds
+    while True:
+        if process.poll() is not None:
+            break
+        if time.monotonic() >= deadline:
+            process.terminate()
+            try:
+                process.wait(timeout=2.0)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=2.0)
+            output = captured.decode('utf-8', 'replace').replace('\r', '').rstrip('\n')
+            print(
+                'error: interactive no-arg invocation did not exit promptly; '
+                + f'partial output: {output[:400]!r}',
+                file=sys.stderr,
+            )
+            raise SystemExit(1)
+        ready, _, _ = select.select([master_fd], [], [], 0.1)
+        if not ready:
+            continue
+        try:
+            chunk = os.read(master_fd, 4096)
+        except OSError as exc:
+            if exc.errno == errno.EIO:
+                break
+            raise
+        if not chunk:
+            break
+        captured.extend(chunk)
+
+    while True:
+        try:
+            chunk = os.read(master_fd, 4096)
+        except OSError as exc:
+            if exc.errno == errno.EIO:
+                break
+            raise
+        if not chunk:
+            break
+        captured.extend(chunk)
+finally:
+    os.close(master_fd)
+
+process.wait(timeout=2.0)
+output = captured.decode('utf-8', 'replace').replace('\r', '').rstrip('\n')
+if process.returncode != 0:
+    print(
+        'error: interactive no-arg invocation exited non-zero '
+        + f'({process.returncode}) with output {output[:400]!r}',
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+if output != expected_help:
+    print(
+        'error: interactive no-arg invocation output differed from --help output',
+        file=sys.stderr,
+    )
+    raise SystemExit(1)
+PY
 }
 
 resolve_script_dir() {
@@ -68,6 +165,7 @@ case "${mode}" in
     binary)
         [[ -x "${target}" ]] || die "binary target is not executable: ${target}"
         launcher=("${target}")
+        interactive_launcher=("${target}")
         doctor_launcher=("${target}")
         label="binary ${target}"
         ;;
@@ -75,12 +173,14 @@ case "${mode}" in
         command -v java >/dev/null 2>&1 || die "java is required for jar verification"
         [[ -f "${target}" ]] || die "missing jar target: ${target}"
         launcher=(java -jar "${target}")
+        interactive_launcher=(java -jar "${target}")
         doctor_launcher=(java -jar "${target}")
         label="jar ${target}"
         ;;
     docker-image)
         command -v docker >/dev/null 2>&1 || die "docker is required for docker-image verification"
         launcher=(docker run --rm "${target}")
+        interactive_launcher=(docker run --rm -i -t "${target}")
         doctor_launcher=(docker run --rm -i "${target}")
         label="docker image ${target}"
         ;;
@@ -133,7 +233,8 @@ require_contains \
     '--print-example <id>' \
     "${label} help output no longer advertises built-in example printing"
 
-printf '%s\n' "${help_output}" > "${help_path}"
+printf '%s' "${help_output}" > "${help_path}"
+verify_implicit_interactive_help "${help_path}" "${interactive_launcher[@]}"
 
 "${launcher[@]}" --print-protocol-catalog | tr -d '\r' > "${catalog_path}"
 "${launcher[@]}" --print-task-catalog | tr -d '\r' > "${task_catalog_path}"

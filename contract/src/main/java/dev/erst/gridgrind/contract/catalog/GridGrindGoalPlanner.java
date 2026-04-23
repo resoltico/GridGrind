@@ -2,6 +2,7 @@ package dev.erst.gridgrind.contract.catalog;
 
 import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -59,20 +60,14 @@ public final class GridGrindGoalPlanner {
         GridGrindTaskDefinitions.definitions().stream()
             .map(definition -> candidateFor(definition, normalizedTerms))
             .filter(Objects::nonNull)
-            .sorted(
-                java.util.Comparator.comparingInt(GoalPlanReport.Candidate::score)
-                    .reversed()
-                    .thenComparing(
-                        candidate -> candidate.matchedTerms().size(),
-                        java.util.Comparator.reverseOrder())
-                    .thenComparing(candidate -> candidate.task().id()))
+            .sorted(candidateOrdering())
             .toList();
     return new GoalPlanReport(
         GridGrindProtocolVersion.current(),
         requestedGoal,
         normalizedTerms,
         unmatchedTerms(normalizedTerms, candidates),
-        suggestedIntentTags(),
+        suggestedIntentTags(normalizedTerms, candidates),
         candidates);
   }
 
@@ -80,16 +75,16 @@ public final class GridGrindGoalPlanner {
       TaskDefinition definition, List<String> goalTerms) {
     TaskEntry task = definition.task();
     TaskMatchAccumulator accumulator = new TaskMatchAccumulator(task);
-    scoreSurface(goalTerms, definition.searchTerms(), "search term", 18, accumulator);
-    scoreSurface(goalTerms, List.of(task.id().replace('_', ' ')), "task id", 14, accumulator);
-    scoreSurface(goalTerms, task.intentTags(), "intent tag", 12, accumulator);
-    scoreSurface(goalTerms, List.of(task.summary()), "summary", 7, accumulator);
-    scoreSurface(goalTerms, task.outcomes(), "outcome", 5, accumulator);
-    scoreSurface(goalTerms, task.requiredInputs(), "required input", 5, accumulator);
-    scoreSurface(goalTerms, task.optionalFeatures(), "optional feature", 4, accumulator);
+    scoreSurface(goalTerms, definition.searchTerms(), "search term", 18, true, accumulator);
+    scoreSurface(goalTerms, List.of(task.id().replace('_', ' ')), "task id", 14, true, accumulator);
+    scoreSurface(goalTerms, task.intentTags(), "intent tag", 12, true, accumulator);
+    scoreSurface(goalTerms, List.of(task.summary()), "summary", 7, true, accumulator);
+    scoreSurface(goalTerms, task.outcomes(), "outcome", 5, true, accumulator);
+    scoreSurface(goalTerms, task.requiredInputs(), "required input", 5, true, accumulator);
+    scoreSurface(goalTerms, task.optionalFeatures(), "optional feature", 4, true, accumulator);
     scorePhaseSurface(goalTerms, task.phases(), accumulator);
     scoreCapabilitySurface(goalTerms, task.phases(), accumulator);
-    if (accumulator.score == 0) {
+    if (accumulator.score == 0 || !accumulator.hasSemanticMatch) {
       return null;
     }
     return new GoalPlanReport.Candidate(
@@ -103,9 +98,9 @@ public final class GridGrindGoalPlanner {
   private static void scorePhaseSurface(
       List<String> goalTerms, List<TaskPhase> phases, TaskMatchAccumulator accumulator) {
     for (TaskPhase phase : phases) {
-      scoreSurface(goalTerms, List.of(phase.label()), "phase label", 2, accumulator);
-      scoreSurface(goalTerms, List.of(phase.objective()), "phase objective", 2, accumulator);
-      scoreSurface(goalTerms, phase.notes(), "phase note", 1, accumulator);
+      scoreSurface(goalTerms, List.of(phase.label()), "phase label", 2, true, accumulator);
+      scoreSurface(goalTerms, List.of(phase.objective()), "phase objective", 2, true, accumulator);
+      scoreSurface(goalTerms, phase.notes(), "phase note", 1, true, accumulator);
     }
   }
 
@@ -114,12 +109,17 @@ public final class GridGrindGoalPlanner {
     for (TaskPhase phase : phases) {
       for (TaskCapabilityRef capabilityRef : phase.capabilityRefs()) {
         String capabilityText = capabilityRef.id().replace('_', ' ').toLowerCase(Locale.ROOT);
-        scoreSurface(goalTerms, List.of(capabilityText), "capability id", 6, accumulator);
+        scoreSurface(goalTerms, List.of(capabilityText), "capability id", 6, false, accumulator);
         GridGrindProtocolCatalog.entryFor(capabilityRef.qualifiedId())
             .ifPresent(
                 entry ->
                     scoreSurface(
-                        goalTerms, List.of(entry.summary()), "capability summary", 5, accumulator));
+                        goalTerms,
+                        List.of(entry.summary()),
+                        "capability summary",
+                        5,
+                        false,
+                        accumulator));
       }
     }
   }
@@ -129,6 +129,7 @@ public final class GridGrindGoalPlanner {
       List<String> surfaces,
       String surfaceLabel,
       int scorePerTerm,
+      boolean semanticSurface,
       TaskMatchAccumulator accumulator) {
     for (String surface : surfaces) {
       List<String> matchedTerms = intersection(goalTerms, normalizedTerms(surface));
@@ -137,6 +138,7 @@ public final class GridGrindGoalPlanner {
       }
       accumulator.score += scorePerTerm * matchedTerms.size();
       accumulator.matchedTerms.addAll(matchedTerms);
+      accumulator.hasSemanticMatch |= semanticSurface;
       accumulator.reasons.add(
           "Matched "
               + surfaceLabel
@@ -157,12 +159,57 @@ public final class GridGrindGoalPlanner {
     return goalTerms.stream().filter(term -> !matched.contains(term)).toList();
   }
 
-  private static List<String> suggestedIntentTags() {
-    Set<String> tags = new LinkedHashSet<>();
-    for (TaskDefinition definition : GridGrindTaskDefinitions.definitions()) {
-      tags.addAll(definition.task().intentTags());
+  static Comparator<GoalPlanReport.Candidate> candidateOrdering() {
+    return Comparator.comparingInt(GoalPlanReport.Candidate::score)
+        .reversed()
+        .thenComparing(candidate -> candidate.matchedTerms().size(), Comparator.reverseOrder())
+        .thenComparing(candidate -> candidate.task().id());
+  }
+
+  static List<String> suggestedIntentTags(
+      List<String> goalTerms, List<GoalPlanReport.Candidate> candidates) {
+    if (candidates.isEmpty()) {
+      return List.of();
     }
-    return List.copyOf(tags);
+    int topScore = candidates.getFirst().score();
+    List<TagSuggestion> suggestionScores = new ArrayList<>();
+    for (GoalPlanReport.Candidate candidate : candidates) {
+      if (candidate.score() * 4 < topScore) {
+        continue;
+      }
+      for (String tag : candidate.task().intentTags()) {
+        int overlapCount = intersection(goalTerms, normalizedTerms(tag)).size();
+        int weightedScore = candidate.score() + (overlapCount * 10_000);
+        mergeTagSuggestion(suggestionScores, tag, weightedScore);
+      }
+    }
+    return suggestionScores.stream()
+        .sorted(
+            java.util.Comparator.comparingInt(TagSuggestion::score)
+                .reversed()
+                .thenComparing(TagSuggestion::tag))
+        .limit(8)
+        .map(TagSuggestion::tag)
+        .toList();
+  }
+
+  private static void mergeTagSuggestion(
+      List<TagSuggestion> suggestions, String tag, int weightedScore) {
+    int existingIndex = -1;
+    for (int index = 0; index < suggestions.size(); index++) {
+      if (suggestions.get(index).tag().equals(tag)) {
+        existingIndex = index;
+        break;
+      }
+    }
+    if (existingIndex < 0) {
+      suggestions.add(new TagSuggestion(tag, weightedScore));
+      return;
+    }
+    TagSuggestion existing = suggestions.get(existingIndex);
+    if (weightedScore > existing.score()) {
+      suggestions.set(existingIndex, new TagSuggestion(tag, weightedScore));
+    }
   }
 
   private static List<String> normalizedTerms(String text) {
@@ -218,10 +265,13 @@ public final class GridGrindGoalPlanner {
   private static final class TaskMatchAccumulator {
     private final Set<String> matchedTerms = new LinkedHashSet<>();
     private final List<String> reasons = new ArrayList<>();
+    private boolean hasSemanticMatch;
     private int score;
 
     private TaskMatchAccumulator(TaskEntry task) {
       Objects.requireNonNull(task, "task must not be null");
     }
   }
+
+  private record TagSuggestion(String tag, int score) {}
 }

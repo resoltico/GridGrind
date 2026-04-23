@@ -1,12 +1,12 @@
 import dev.erst.gridgrind.authoring.GridGrindPlan;
+import dev.erst.gridgrind.authoring.Tables;
 import dev.erst.gridgrind.authoring.Targets;
 import dev.erst.gridgrind.authoring.Values;
 import dev.erst.gridgrind.contract.dto.ExecutionJournalLevel;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
-import dev.erst.gridgrind.contract.dto.TableInput;
-import dev.erst.gridgrind.contract.dto.TableStyleInput;
 import dev.erst.gridgrind.executor.DefaultGridGrindRequestExecutor;
 import dev.erst.gridgrind.executor.ExecutionInputBindings;
+import dev.erst.gridgrind.executor.ExecutionJournalSink;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -35,12 +35,12 @@ final class JavaAuthoringWorkflowExample {
         .mutate(
             Targets.tableOnSheet("BudgetTable", "Budget")
                 .define(
-                    new TableInput(
+                    Tables.define(
                         "BudgetTable",
                         "Budget",
                         "A1:B3",
                         false,
-                        new TableStyleInput.None())))
+                        Tables.noStyle())))
         .mutate(
             Targets.table("BudgetTable")
                 .rowByKey(
@@ -63,9 +63,10 @@ final class JavaAuthoringWorkflowExample {
 
   /** Executes the authored workflow in-process against the canonical executor. */
   public static GridGrindResponse run(Path workspace) throws Exception {
-    return build(workspace)
-        .run(
-            new DefaultGridGrindRequestExecutor(),
-            new ExecutionInputBindings(workspace, (byte[]) null));
+    return new DefaultGridGrindRequestExecutor()
+        .execute(
+            build(workspace).toPlan(),
+            new ExecutionInputBindings(workspace, (byte[]) null),
+            ExecutionJournalSink.NOOP);
   }
 }

@@ -3,7 +3,7 @@
   "planId" : "package-security-inspection-workflow",
   "source" : {
     "type" : "EXISTING",
-    "path" : "cli/build/generated-workbooks/gridgrind-package-security.xlsx",
+    "path" : "package-security-assets/gridgrind-package-security.xlsx",
     "security" : {
       "password" : "GridGrind-2026"
     }

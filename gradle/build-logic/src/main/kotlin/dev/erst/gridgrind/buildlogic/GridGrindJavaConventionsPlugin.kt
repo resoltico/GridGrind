@@ -45,6 +45,33 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 javaExtension.toolchain.languageVersion.set(JavaLanguageVersion.of(gridgrindJavaVersion))
                 javaExtension.modularity.inferModulePath.set(true)
                 javaExtension.withSourcesJar()
+
+                val mainSourceSet = javaExtension.sourceSets.named("main")
+                val coverageClasses =
+                    mainSourceSet.map { sourceSet ->
+                        sourceSet.output.classesDirs.asFileTree.matching {
+                            exclude("module-info.class")
+                        }
+                    }
+
+                tasks.named("jacocoTestReport", JacocoReport::class.java).configure(
+                    object : Action<JacocoReport> {
+                        override fun execute(report: JacocoReport) {
+                            report.sourceDirectories.setFrom(mainSourceSet.map { it.allJava.srcDirs })
+                            report.classDirectories.setFrom(coverageClasses)
+                        }
+                    },
+                )
+
+                tasks.named("jacocoTestCoverageVerification", JacocoCoverageVerification::class.java)
+                    .configure(
+                        object : Action<JacocoCoverageVerification> {
+                            override fun execute(verification: JacocoCoverageVerification) {
+                                verification.sourceDirectories.setFrom(mainSourceSet.map { it.allJava.srcDirs })
+                                verification.classDirectories.setFrom(coverageClasses)
+                            }
+                        },
+                    )
             }
 
             dependencies.add("errorprone", libs.findLibrary("errorprone-core").get().get())

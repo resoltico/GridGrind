@@ -6,17 +6,21 @@ import dev.erst.gridgrind.contract.step.InspectionStep;
 import java.util.Objects;
 
 /** One authored inspection step that receives a stable step id when added to a plan. */
-public record PlannedInspection(String stepId, Selector target, InspectionQuery query) {
-  public PlannedInspection {
+public final class PlannedInspection {
+  private final String stepId;
+  private final Selector target;
+  private final InspectionQuery query;
+
+  PlannedInspection(String stepId, Selector target, InspectionQuery query) {
     if (stepId != null && stepId.isBlank()) {
       throw new IllegalArgumentException("stepId must not be blank");
     }
-    Objects.requireNonNull(target, "target must not be null");
-    Objects.requireNonNull(query, "query must not be null");
+    this.stepId = stepId;
+    this.target = Objects.requireNonNull(target, "target must not be null");
+    this.query = Objects.requireNonNull(query, "query must not be null");
   }
 
-  /** Creates an unnamed authored inspection that will receive an auto-generated step id. */
-  public PlannedInspection(Selector target, InspectionQuery query) {
+  PlannedInspection(Selector target, InspectionQuery query) {
     this(null, target, query);
   }
 

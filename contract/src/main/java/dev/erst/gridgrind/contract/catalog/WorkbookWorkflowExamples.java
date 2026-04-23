@@ -29,7 +29,7 @@ import java.util.List;
 final class WorkbookWorkflowExamples {
   private WorkbookWorkflowExamples() {}
 
-  static GridGrindShippedExamples.ShippedExample budgetExample() {
+  static GridGrindShippedExamples.ShippedExample budgetExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "BUDGET",
         "budget-request.json",
@@ -37,7 +37,7 @@ final class WorkbookWorkflowExamples {
         ExamplePlanSupport.plan(
             "budget-workflow",
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs("cli/build/generated-workbooks/gridgrind-budget.xlsx"),
+            ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-budget.xlsx")),
             null,
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",
@@ -123,7 +123,7 @@ final class WorkbookWorkflowExamples {
                 new InspectionQuery.GetFormulaSurface())));
   }
 
-  static GridGrindShippedExamples.ShippedExample workbookHealthExample() {
+  static GridGrindShippedExamples.ShippedExample workbookHealthExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "WORKBOOK_HEALTH",
         "workbook-health-request.json",
@@ -171,7 +171,7 @@ final class WorkbookWorkflowExamples {
                 new InspectionQuery.GetCells())));
   }
 
-  static GridGrindShippedExamples.ShippedExample sheetMaintenanceExample() {
+  static GridGrindShippedExamples.ShippedExample sheetMaintenanceExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "SHEET_MAINTENANCE",
         "sheet-maintenance-request.json",
@@ -179,8 +179,7 @@ final class WorkbookWorkflowExamples {
         ExamplePlanSupport.plan(
             "sheet-maintenance-workflow",
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs(
-                "cli/build/generated-workbooks/gridgrind-sheet-maintenance.xlsx"),
+            ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-sheet-maintenance.xlsx")),
             null,
             ExamplePlanSupport.step(
                 "step-01-ensure-template",
@@ -217,7 +216,7 @@ final class WorkbookWorkflowExamples {
                 new InspectionQuery.AnalyzeWorkbookFindings())));
   }
 
-  static GridGrindShippedExamples.ShippedExample assertionExample() {
+  static GridGrindShippedExamples.ShippedExample assertionExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "ASSERTION",
         "assertion-request.json",
@@ -259,7 +258,7 @@ final class WorkbookWorkflowExamples {
                 new InspectionQuery.GetCells())));
   }
 
-  static GridGrindShippedExamples.ShippedExample largeFileModesExample() {
+  static GridGrindShippedExamples.ShippedExample largeFileModesExample(ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "LARGE_FILE_MODES",
         "large-file-modes-request.json",
@@ -267,8 +266,7 @@ final class WorkbookWorkflowExamples {
         ExamplePlanSupport.plan(
             "large-file-modes-workflow",
             new WorkbookPlan.WorkbookSource.New(),
-            ExamplePlanSupport.saveAs(
-                "cli/build/generated-workbooks/gridgrind-large-file-modes.xlsx"),
+            ExamplePlanSupport.saveAs(paths.generatedWorkbook("gridgrind-large-file-modes.xlsx")),
             new ExecutionPolicyInput(
                 new ExecutionModeInput(null, ExecutionModeInput.WriteMode.STREAMING_WRITE),
                 null,
@@ -311,7 +309,8 @@ final class WorkbookWorkflowExamples {
                 new InspectionQuery.GetSheetSummary())));
   }
 
-  static GridGrindShippedExamples.ShippedExample fileHyperlinkHealthExample() {
+  static GridGrindShippedExamples.ShippedExample fileHyperlinkHealthExample(
+      ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "FILE_HYPERLINK_HEALTH",
         "file-hyperlink-health-request.json",
@@ -320,7 +319,7 @@ final class WorkbookWorkflowExamples {
             "file-hyperlink-health-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(
-                "cli/build/generated-workbooks/gridgrind-file-hyperlink-health.xlsx"),
+                paths.generatedWorkbook("gridgrind-file-hyperlink-health.xlsx")),
             null,
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",
@@ -368,7 +367,8 @@ final class WorkbookWorkflowExamples {
                 new InspectionQuery.AnalyzeHyperlinkHealth())));
   }
 
-  static GridGrindShippedExamples.ShippedExample introspectionAnalysisExample() {
+  static GridGrindShippedExamples.ShippedExample introspectionAnalysisExample(
+      ExamplePathLayout paths) {
     return ExamplePlanSupport.example(
         "INTROSPECTION_ANALYSIS",
         "introspection-analysis-request.json",
@@ -377,7 +377,7 @@ final class WorkbookWorkflowExamples {
             "introspection-analysis-workflow",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs(
-                "cli/build/generated-workbooks/gridgrind-introspection-analysis.xlsx"),
+                paths.generatedWorkbook("gridgrind-introspection-analysis.xlsx")),
             null,
             ExamplePlanSupport.step(
                 "step-01-ensure-sheet",

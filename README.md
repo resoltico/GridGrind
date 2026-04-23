@@ -57,6 +57,8 @@ RETRIEVAL_HINTS:
 ## Start Here
 
 - New to GridGrind: [docs/QUICK_START.md](docs/QUICK_START.md)
+- Want the shipped example map and path rules: [docs/EXAMPLES.md](docs/EXAMPLES.md)
+- Want a quick runtime sanity check: run `java -jar gridgrind.jar` in an interactive terminal. It prints the same help text as `--help` and exits with code `0`.
 - Want a concrete example first: `gridgrind --print-example BUDGET`, or [examples/budget-request.json](examples/budget-request.json) when you are already in a repo checkout
 - Want a starter scaffold for a common workbook job: `gridgrind --print-task-catalog`, `gridgrind --print-task-plan PIVOT_REPORT`, or `gridgrind --print-goal-plan "repair workbook comments and copy sheets safely"`
 - Want Java instead of hand-written JSON: [docs/JAVA_AUTHORING.md](docs/JAVA_AUTHORING.md) and [examples/java-authoring-workflow.java](examples/java-authoring-workflow.java)
@@ -85,7 +87,8 @@ No. GridGrind ships built-in example generators, checked-in example files, and a
 ### Can I author workflows in Java instead of raw JSON?
 
 Yes. The `authoring-java` module builds the same canonical `WorkbookPlan` used by the CLI and
-JSON protocol, and can either serialize JSON or run in-process. See
+JSON protocol, and it intentionally stops at that contract boundary. If you want in-process
+execution, pass `plan.toPlan()` to a `GridGrindRequestExecutor` explicitly. See
 [docs/JAVA_AUTHORING.md](docs/JAVA_AUTHORING.md).
 
 ### What kinds of workbook work fit best?

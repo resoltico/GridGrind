@@ -260,7 +260,7 @@ final class GridGrindWorkbookTaskDefinitions {
             "embedded object",
             "move drawing anchor"),
         rebasePlan(
-            WorkbookAssetExamples.signatureLineExample().plan(),
+            WorkbookAssetExamples.signatureLineExample(ExamplePathLayout.BUILT_IN).plan(),
             "drawing-and-signature-starter",
             new WorkbookPlan.WorkbookSource.New(),
             ExamplePlanSupport.saveAs("signature-workflow.xlsx")),

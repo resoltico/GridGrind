@@ -6,7 +6,7 @@
   },
   "persistence" : {
     "type" : "SAVE_AS",
-    "path" : "cli/build/generated-workbooks/gridgrind-large-file-modes.xlsx"
+    "path" : "../cli/build/generated-workbooks/gridgrind-large-file-modes.xlsx"
   },
   "execution" : {
     "mode" : {

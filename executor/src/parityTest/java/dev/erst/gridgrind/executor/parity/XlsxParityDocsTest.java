@@ -18,19 +18,33 @@ final class XlsxParityDocsTest {
   private static final List<String> SPLIT_REFERENCE_DOCS =
       List.of(
           "docs/REQUEST_AND_EXECUTION_REFERENCE.md",
-          "docs/WORKBOOK_AND_LAYOUT_MUTATIONS.md",
-          "docs/CELL_AND_DRAWING_MUTATIONS.md",
-          "docs/STRUCTURED_FEATURE_MUTATIONS.md",
-          "docs/ASSERTION_AND_INSPECTION_REFERENCE.md");
+          "docs/WORKBOOK_AND_SHEET_MUTATIONS.md",
+          "docs/LAYOUT_AND_STRUCTURE_MUTATIONS.md",
+          "docs/CELL_VALUE_MUTATIONS.md",
+          "docs/LINK_AND_COMMENT_MUTATIONS.md",
+          "docs/DRAWING_MUTATIONS.md",
+          "docs/STYLE_AND_VALIDATION_MUTATIONS.md",
+          "docs/STRUCTURED_DATA_MUTATIONS.md",
+          "docs/ASSERTIONS.md",
+          "docs/WORKBOOK_AND_CELL_INSPECTIONS.md",
+          "docs/DRAWING_AND_STRUCTURED_INSPECTIONS.md",
+          "docs/ANALYSIS_QUERIES.md");
   private static final List<String> PUBLIC_REFERENCE_DOCS =
       List.of(
           "docs/OPERATIONS.md",
           "docs/QUICK_REFERENCE.md",
           "docs/REQUEST_AND_EXECUTION_REFERENCE.md",
-          "docs/WORKBOOK_AND_LAYOUT_MUTATIONS.md",
-          "docs/CELL_AND_DRAWING_MUTATIONS.md",
-          "docs/STRUCTURED_FEATURE_MUTATIONS.md",
-          "docs/ASSERTION_AND_INSPECTION_REFERENCE.md");
+          "docs/WORKBOOK_AND_SHEET_MUTATIONS.md",
+          "docs/LAYOUT_AND_STRUCTURE_MUTATIONS.md",
+          "docs/CELL_VALUE_MUTATIONS.md",
+          "docs/LINK_AND_COMMENT_MUTATIONS.md",
+          "docs/DRAWING_MUTATIONS.md",
+          "docs/STYLE_AND_VALIDATION_MUTATIONS.md",
+          "docs/STRUCTURED_DATA_MUTATIONS.md",
+          "docs/ASSERTIONS.md",
+          "docs/WORKBOOK_AND_CELL_INSPECTIONS.md",
+          "docs/DRAWING_AND_STRUCTURED_INSPECTIONS.md",
+          "docs/ANALYSIS_QUERIES.md");
 
   @Test
   void publicCapabilityInventoryTracksCurrentReleaseVersion() {
@@ -158,7 +172,7 @@ final class XlsxParityDocsTest {
             "docs/OPERATIONS.md",
             "docs/QUICK_REFERENCE.md",
             "docs/REQUEST_AND_EXECUTION_REFERENCE.md",
-            "docs/STRUCTURED_FEATURE_MUTATIONS.md",
+            "docs/STRUCTURED_DATA_MUTATIONS.md",
             "docs/LIMITATIONS.md",
             "docs/POI_EXCEL_CAPABILITY_INVENTORY.md")) {
       String document =
@@ -236,21 +250,21 @@ final class XlsxParityDocsTest {
     Path repositoryRoot = repositoryRoot();
     String operations = readDoc(repositoryRoot, "docs/OPERATIONS.md");
     String quickReference = readDoc(repositoryRoot, "docs/QUICK_REFERENCE.md");
-    String cellAndDrawing = readDoc(repositoryRoot, "docs/CELL_AND_DRAWING_MUTATIONS.md");
-    String assertionsAndInspections =
-        readDoc(repositoryRoot, "docs/ASSERTION_AND_INSPECTION_REFERENCE.md");
+    String drawingMutations = readDoc(repositoryRoot, "docs/DRAWING_MUTATIONS.md");
+    String drawingAndStructuredInspections =
+        readDoc(repositoryRoot, "docs/DRAWING_AND_STRUCTURED_INSPECTIONS.md");
     String readme = readDoc(repositoryRoot, "README.md");
     String limitations = readDoc(repositoryRoot, "docs/LIMITATIONS.md");
 
-    assertTrue(operations.contains("CELL_AND_DRAWING_MUTATIONS.md"));
-    assertTrue(cellAndDrawing.contains("### SET_SIGNATURE_LINE"));
-    assertTrue(cellAndDrawing.contains("\"plots\": ["));
-    assertTrue(cellAndDrawing.contains("SIGNATURE_LINE"));
-    assertTrue(assertionsAndInspections.contains("SIGNATURE_LINE"));
-    assertTrue(cellAndDrawing.contains("`GIF`, `TIFF`, `EPS`, `BMP`,"));
-    assertTrue(cellAndDrawing.contains("or `WPG`."));
+    assertTrue(operations.contains("DRAWING_MUTATIONS.md"));
+    assertTrue(drawingMutations.contains("### SET_SIGNATURE_LINE"));
+    assertTrue(drawingMutations.contains("\"plots\": ["));
+    assertTrue(drawingMutations.contains("SIGNATURE_LINE"));
+    assertTrue(drawingAndStructuredInspections.contains("SIGNATURE_LINE"));
+    assertTrue(drawingMutations.contains("`GIF`, `TIFF`, `EPS`, `BMP`,"));
+    assertTrue(drawingMutations.contains("or `WPG`."));
     assertFalse(
-        cellAndDrawing.contains("Supported authored families are `BAR`, `LINE`, and `PIE`."));
+        drawingMutations.contains("Supported authored families are `BAR`, `LINE`, and `PIE`."));
 
     assertTrue(quickReference.contains("SET_SIGNATURE_LINE"));
     assertTrue(

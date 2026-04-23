@@ -29,9 +29,13 @@ class GridGrindReferenceDocsCoverageTest {
     List<String> actualHeadings = new ArrayList<>();
     for (String relativePath :
         List.of(
-            "docs/WORKBOOK_AND_LAYOUT_MUTATIONS.md",
-            "docs/CELL_AND_DRAWING_MUTATIONS.md",
-            "docs/STRUCTURED_FEATURE_MUTATIONS.md")) {
+            "docs/WORKBOOK_AND_SHEET_MUTATIONS.md",
+            "docs/LAYOUT_AND_STRUCTURE_MUTATIONS.md",
+            "docs/CELL_VALUE_MUTATIONS.md",
+            "docs/LINK_AND_COMMENT_MUTATIONS.md",
+            "docs/DRAWING_MUTATIONS.md",
+            "docs/STYLE_AND_VALIDATION_MUTATIONS.md",
+            "docs/STRUCTURED_DATA_MUTATIONS.md")) {
       actualHeadings.addAll(thirdLevelIdHeadings(readDoc(relativePath)));
     }
 
@@ -51,8 +55,14 @@ class GridGrindReferenceDocsCoverageTest {
         GridGrindProtocolCatalog.catalog().inspectionQueryTypes().stream()
             .map(TypeEntry::id)
             .collect(Collectors.toCollection(LinkedHashSet::new));
-    List<String> actualHeadings =
-        thirdLevelIdHeadings(readDoc("docs/ASSERTION_AND_INSPECTION_REFERENCE.md"));
+    List<String> actualHeadings = new ArrayList<>();
+    for (String relativePath :
+        List.of(
+            "docs/WORKBOOK_AND_CELL_INSPECTIONS.md",
+            "docs/DRAWING_AND_STRUCTURED_INSPECTIONS.md",
+            "docs/ANALYSIS_QUERIES.md")) {
+      actualHeadings.addAll(thirdLevelIdHeadings(readDoc(relativePath)));
+    }
 
     assertEquals(
         actualHeadings.size(),
@@ -70,7 +80,7 @@ class GridGrindReferenceDocsCoverageTest {
         GridGrindProtocolCatalog.catalog().assertionTypes().stream()
             .map(TypeEntry::id)
             .collect(Collectors.toCollection(LinkedHashSet::new));
-    String document = readDoc("docs/ASSERTION_AND_INSPECTION_REFERENCE.md");
+    String document = readDoc("docs/ASSERTIONS.md");
     String assertionTable =
         between(document, "Assertion families:", "Common assertion step shapes:");
     List<String> actualRows = findAll(ASSERTION_TABLE_ROW, assertionTable);

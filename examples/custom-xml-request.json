@@ -3,7 +3,7 @@
   "planId" : "custom-xml-workflow",
   "source" : {
     "type" : "EXISTING",
-    "path" : "examples/custom-xml-assets/custom-xml-mapping.xlsx"
+    "path" : "custom-xml-assets/custom-xml-mapping.xlsx"
   },
   "persistence" : {
     "type" : "NONE"
@@ -44,7 +44,7 @@
         },
         "xml" : {
           "type" : "UTF8_FILE",
-          "path" : "examples/custom-xml-assets/custom-xml-update.xml"
+          "path" : "custom-xml-assets/custom-xml-update.xml"
         }
       }
     }

@@ -6,7 +6,8 @@ plugins {
 description = "Java-first fluent authoring API over the canonical GridGrind contract"
 
 dependencies {
-    api(project(":executor"))
+    api(project(":contract"))
+    testImplementation(project(":executor"))
     testImplementation(libs.junit.jupiter)
     testImplementation(testFixtures(project(":engine")))
     testRuntimeOnly(libs.junit.platform.launcher)

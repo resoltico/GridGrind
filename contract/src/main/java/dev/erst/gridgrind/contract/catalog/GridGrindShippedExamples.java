@@ -24,28 +24,22 @@ public final class GridGrindShippedExamples {
     }
   }
 
-  private static final List<ShippedExample> EXAMPLES =
-      List.of(
-          WorkbookWorkflowExamples.budgetExample(),
-          WorkbookWorkflowExamples.workbookHealthExample(),
-          WorkbookWorkflowExamples.sheetMaintenanceExample(),
-          WorkbookWorkflowExamples.assertionExample(),
-          WorkbookAssetExamples.arrayFormulaExample(),
-          WorkbookAssetExamples.customXmlExample(),
-          WorkbookAssetExamples.sourceBackedInputExample(),
-          WorkbookAssetExamples.signatureLineExample(),
-          WorkbookWorkflowExamples.largeFileModesExample(),
-          WorkbookAssetExamples.chartExample(),
-          WorkbookAssetExamples.pivotExample(),
-          WorkbookAssetExamples.packageSecurityInspectionExample(),
-          WorkbookWorkflowExamples.fileHyperlinkHealthExample(),
-          WorkbookWorkflowExamples.introspectionAnalysisExample());
+  private static final List<ShippedExample> EXAMPLES = buildExamples(ExamplePathLayout.BUILT_IN);
+  private static final List<ShippedExample> REPOSITORY_EXAMPLES =
+      buildExamples(ExamplePathLayout.REPOSITORY);
 
   private GridGrindShippedExamples() {}
 
   /** Returns the ordered list of built-in examples. */
   public static List<ShippedExample> examples() {
     return EXAMPLES;
+  }
+
+  /**
+   * Returns the checked-in example fixtures rooted for in-repository execution from `examples/`.
+   */
+  public static List<ShippedExample> repositoryExamples() {
+    return REPOSITORY_EXAMPLES;
   }
 
   /** Returns public catalog metadata for the built-in example set. */
@@ -60,5 +54,23 @@ public final class GridGrindShippedExamples {
   public static Optional<ShippedExample> find(String id) {
     Objects.requireNonNull(id, "id must not be null");
     return EXAMPLES.stream().filter(example -> example.id().equals(id)).findFirst();
+  }
+
+  private static List<ShippedExample> buildExamples(ExamplePathLayout paths) {
+    return List.of(
+        WorkbookWorkflowExamples.budgetExample(paths),
+        WorkbookWorkflowExamples.workbookHealthExample(paths),
+        WorkbookWorkflowExamples.sheetMaintenanceExample(paths),
+        WorkbookWorkflowExamples.assertionExample(paths),
+        WorkbookAssetExamples.arrayFormulaExample(paths),
+        WorkbookAssetExamples.customXmlExample(paths),
+        WorkbookAssetExamples.sourceBackedInputExample(paths),
+        WorkbookAssetExamples.signatureLineExample(paths),
+        WorkbookWorkflowExamples.largeFileModesExample(paths),
+        WorkbookAssetExamples.chartExample(paths),
+        WorkbookAssetExamples.pivotExample(paths),
+        WorkbookAssetExamples.packageSecurityInspectionExample(paths),
+        WorkbookWorkflowExamples.fileHyperlinkHealthExample(paths),
+        WorkbookWorkflowExamples.introspectionAnalysisExample(paths));
   }
 }

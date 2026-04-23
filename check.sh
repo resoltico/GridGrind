@@ -19,8 +19,8 @@
 # Stage 3 mirrors the GitHub release packaging workflow:
 #   :cli:shadowJar -> build the distributable fat JAR
 #
-# Stage 4 syntax-checks the release-surface shell scripts, verifies the packaged CLI contract,
-# and runs targeted shell regressions:
+# Stage 4 syntax-checks the release-surface shell scripts, verifies the packaged CLI contract
+# including interactive no-arg help, and runs targeted shell regressions:
 #   bash -n check.sh scripts/*.sh jazzer/bin/*
 #   scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar
 #   scripts/test-check-process-support.sh

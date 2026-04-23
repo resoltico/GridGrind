@@ -6,7 +6,7 @@
   },
   "persistence" : {
     "type" : "SAVE_AS",
-    "path" : "cli/build/generated-workbooks/gridgrind-sheet-maintenance.xlsx"
+    "path" : "../cli/build/generated-workbooks/gridgrind-sheet-maintenance.xlsx"
   },
   "steps" : [ {
     "stepId" : "step-01-ensure-template",
