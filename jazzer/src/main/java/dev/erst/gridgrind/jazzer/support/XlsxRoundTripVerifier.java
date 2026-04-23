@@ -98,6 +98,7 @@ public final class XlsxRoundTripVerifier {
     }
     ExpectedWorkbookState expectedWorkbookState = expectedWorkbookState(workbook, commands);
     XlsxCommentPackageInvariantSupport.requireCanonicalCommentPackageState(workbookPath);
+    XlsxPicturePackageInvariantSupport.requireCanonicalPicturePackageState(workbookPath);
 
     try (InputStream inputStream = Files.newInputStream(workbookPath);
         XSSFWorkbook reopenedWorkbook = new XSSFWorkbook(inputStream)) {

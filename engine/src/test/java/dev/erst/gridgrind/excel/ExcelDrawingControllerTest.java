@@ -41,6 +41,7 @@ import org.apache.poi.xssf.usermodel.XSSFObjectData;
 import org.apache.poi.xssf.usermodel.XSSFRelation;
 import org.apache.poi.xssf.usermodel.XSSFRichTextString;
 import org.apache.poi.xssf.usermodel.XSSFShape;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFVMLDrawing;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.xmlbeans.XmlCursor;
@@ -642,6 +643,93 @@ class ExcelDrawingControllerTest {
   }
 
   @Test
+  void embeddedObjectReadbackFallsBackWhenSheetPreviewIdTargetsSheetDrawing() throws IOException {
+    Path workbookPath =
+        XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-preview-sheet-drawing-fallback-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook
+          .getOrCreateSheet("Ops")
+          .setEmbeddedObject(
+              new ExcelEmbeddedObjectDefinition(
+                  "OpsEmbed",
+                  "Payload",
+                  "payload.txt",
+                  "payload.txt",
+                  new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+                  ExcelPictureFormat.PNG,
+                  new ExcelBinaryData(PNG_PIXEL_BYTES),
+                  anchor(1, 1, 4, 6)));
+      workbook.save(workbookPath);
+    }
+
+    try (XSSFWorkbook workbook = new XSSFWorkbook(Files.newInputStream(workbookPath))) {
+      XSSFSheet sheet = workbook.getSheet("Ops");
+      XSSFObjectData objectData = firstEmbeddedObject(sheet);
+      ExcelDrawingBinarySupport.setPreviewSheetRelationId(
+          objectData.getOleObject(), sheetDrawingRelationId(sheet));
+      try (var outputStream = Files.newOutputStream(workbookPath)) {
+        workbook.write(outputStream);
+      }
+    }
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.open(workbookPath)) {
+      ExcelDrawingObjectSnapshot.EmbeddedObject snapshot =
+          assertInstanceOf(
+              ExcelDrawingObjectSnapshot.EmbeddedObject.class,
+              workbook.sheet("Ops").drawingObjects().getFirst());
+      ExcelDrawingObjectPayload.EmbeddedObject payload =
+          assertInstanceOf(
+              ExcelDrawingObjectPayload.EmbeddedObject.class,
+              workbook.sheet("Ops").drawingObjectPayload("OpsEmbed"));
+
+      assertEquals(ExcelPictureFormat.PNG, snapshot.previewFormat());
+      assertNotNull(snapshot.previewByteSize());
+      assertNotNull(snapshot.previewSha256());
+      assertArrayEquals("payload".getBytes(StandardCharsets.UTF_8), payload.data().bytes());
+    }
+  }
+
+  @Test
+  void deleteEmbeddedObjectPreservesSheetDrawingWhenSheetPreviewIdTargetsSheetDrawing()
+      throws IOException {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet sheet = workbook.getOrCreateSheet("Ops");
+      sheet.setPicture(
+          new ExcelPictureDefinition(
+              "OpsPicture",
+              new ExcelBinaryData(PNG_PIXEL_BYTES),
+              ExcelPictureFormat.PNG,
+              anchor(1, 1, 4, 6),
+              "Queue preview"));
+      sheet.setEmbeddedObject(
+          new ExcelEmbeddedObjectDefinition(
+              "OpsEmbed",
+              "Payload",
+              "payload.txt",
+              "payload.txt",
+              new ExcelBinaryData("payload".getBytes(StandardCharsets.UTF_8)),
+              ExcelPictureFormat.PNG,
+              new ExcelBinaryData(PNG_PIXEL_BYTES),
+              anchor(5, 1, 8, 6)));
+
+      XSSFSheet poiSheet = sheet.xssfSheet();
+      XSSFObjectData objectData = firstEmbeddedObject(poiSheet);
+      ExcelDrawingBinarySupport.setPreviewSheetRelationId(
+          objectData.getOleObject(), sheetDrawingRelationId(poiSheet));
+
+      sheet.deleteDrawingObject("OpsEmbed");
+
+      assertEquals(
+          List.of("OpsPicture"),
+          sheet.drawingObjects().stream().map(ExcelDrawingObjectSnapshot::name).toList());
+      assertNotNull(poiSheet.getDrawingPatriarch());
+      assertEquals(1, poiSheet.getDrawingPatriarch().getShapes().size());
+      assertNotNull(sheet.drawingObjectPayload("OpsPicture"));
+    }
+  }
+
+  @Test
   void embeddedObjectReadbackSurvivesEmptyPackageBytes() throws IOException {
     Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-embedded-empty-package-");
 
@@ -899,6 +987,19 @@ class ExcelDrawingControllerTest {
         new ExcelDrawingMarker(fromColumn, fromRow),
         new ExcelDrawingMarker(toColumn, toRow),
         ExcelDrawingAnchorBehavior.MOVE_AND_RESIZE);
+  }
+
+  private static XSSFObjectData firstEmbeddedObject(XSSFSheet sheet) {
+    return sheet.createDrawingPatriarch().getShapes().stream()
+        .filter(XSSFObjectData.class::isInstance)
+        .map(XSSFObjectData.class::cast)
+        .findFirst()
+        .orElseThrow();
+  }
+
+  private static String sheetDrawingRelationId(XSSFSheet sheet) {
+    assertTrue(sheet.getCTWorksheet().isSetDrawing());
+    return sheet.getCTWorksheet().getDrawing().getId();
   }
 
   private static void seedChartData(ExcelSheet sheet) {

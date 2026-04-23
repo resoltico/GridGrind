@@ -64,12 +64,7 @@ final class ExcelDrawingRemovalSupport {
 
   private static void deletePicture(
       XSSFSheet sheet, ExcelDrawingController.LocatedShape located, XSSFPicture picture) {
-    org.apache.poi.openxml4j.opc.PackagePartName imagePartName =
-        picture.getPictureData().getPackagePart().getPartName();
-    String relationId = picture.getCTPicture().getBlipFill().getBlip().getEmbed();
-    located.drawing().getPackagePart().removeRelationship(relationId);
-    removeParentAnchor(located.drawing(), located.parentAnchor());
-    ExcelDrawingBinarySupport.cleanupWorkbookImagePartIfUnused(sheet.getWorkbook(), imagePartName);
+    ExcelDrawingPictureSupport.deletePicture(sheet, located, picture);
   }
 
   private static void deleteEmbeddedObject(
@@ -88,7 +83,7 @@ final class ExcelDrawingRemovalSupport {
     String drawingPreviewRelationId =
         ExcelDrawingBinarySupport.previewDrawingRelationId(objectData);
     String sheetPreviewRelationId =
-        ExcelDrawingBinarySupport.previewSheetRelationId(objectData.getOleObject());
+        ExcelDrawingBinarySupport.previewSheetImageRelationId(objectData);
     String oleRelationId = objectData.getOleObject().getId();
 
     if (drawingPreviewRelationId != null) {

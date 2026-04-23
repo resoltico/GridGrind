@@ -20,12 +20,14 @@ import dev.erst.gridgrind.excel.ExcelDataValidationRule;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyle;
 import dev.erst.gridgrind.excel.ExcelDrawingAnchor;
 import dev.erst.gridgrind.excel.ExcelDrawingMarker;
+import dev.erst.gridgrind.excel.ExcelEmbeddedObjectDefinition;
 import dev.erst.gridgrind.excel.ExcelGradientFill;
 import dev.erst.gridgrind.excel.ExcelGradientStop;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelNamedRangeDefinition;
 import dev.erst.gridgrind.excel.ExcelNamedRangeScope;
 import dev.erst.gridgrind.excel.ExcelNamedRangeTarget;
+import dev.erst.gridgrind.excel.ExcelPictureDefinition;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
 import dev.erst.gridgrind.excel.ExcelSignatureLineDefinition;
@@ -42,6 +44,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Base64;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -199,6 +202,73 @@ class XlsxRoundTripVerifierTest {
                     new WorkbookCommand.DeleteColumns("LL", new ExcelColumnSpan(0, 0)),
                     new WorkbookCommand.AutoSizeColumns("LL"),
                     new WorkbookCommand.AutoSizeColumns("LL"))));
+  }
+
+  @Test
+  void requireRoundTripReadableAcceptsCopiedPicturesWithRetargetedRelations() {
+    assertDoesNotThrow(
+        () ->
+            roundTrip(
+                "gridgrind-jazzer-copy-picture-roundtrip-",
+                List.of(
+                    new WorkbookCommand.CreateSheet("Queue"),
+                    new WorkbookCommand.SetPicture(
+                        "Queue",
+                        new ExcelPictureDefinition(
+                            "QueuePreview",
+                            new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+                            ExcelPictureFormat.PNG,
+                            new ExcelDrawingAnchor.TwoCell(
+                                new ExcelDrawingMarker(1, 1, 0, 0),
+                                new ExcelDrawingMarker(4, 6, 0, 0),
+                                null),
+                            "Queue preview")),
+                    new WorkbookCommand.SetPicture(
+                        "Queue",
+                        new ExcelPictureDefinition(
+                            "QueuePreview2",
+                            new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+                            ExcelPictureFormat.PNG,
+                            new ExcelDrawingAnchor.TwoCell(
+                                new ExcelDrawingMarker(6, 1, 0, 0),
+                                new ExcelDrawingMarker(9, 6, 0, 0),
+                                null),
+                            null)),
+                    new WorkbookCommand.CopySheet(
+                        "Queue",
+                        "Queue Copy",
+                        new dev.erst.gridgrind.excel.ExcelSheetCopyPosition.AppendAtEnd()))));
+  }
+
+  @Test
+  void requireRoundTripReadableAcceptsCopiedEmbeddedObjectPreviewRelations() {
+    assertDoesNotThrow(
+        () ->
+            roundTrip(
+                "gridgrind-jazzer-copy-embedded-preview-roundtrip-",
+                List.of(
+                    new WorkbookCommand.CreateSheet("Queue"),
+                    new WorkbookCommand.SetEmbeddedObject(
+                        "Queue",
+                        new ExcelEmbeddedObjectDefinition(
+                            "QueueEmbed",
+                            "Payload",
+                            "payload.txt",
+                            "payload.txt",
+                            new ExcelBinaryData(
+                                "payload".getBytes(java.nio.charset.StandardCharsets.UTF_8)),
+                            ExcelPictureFormat.PNG,
+                            new ExcelBinaryData(Base64.getDecoder().decode(PNG_PIXEL_BASE64)),
+                            new ExcelDrawingAnchor.TwoCell(
+                                new ExcelDrawingMarker(1, 1, 0, 0),
+                                new ExcelDrawingMarker(4, 6, 0, 0),
+                                null))),
+                    new WorkbookCommand.SetComment(
+                        "Queue", "B2", new ExcelComment("Queue note", "GridGrind", true)),
+                    new WorkbookCommand.CopySheet(
+                        "Queue",
+                        "Queue Copy",
+                        new dev.erst.gridgrind.excel.ExcelSheetCopyPosition.AppendAtEnd()))));
   }
 
   @Test

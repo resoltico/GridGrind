@@ -135,8 +135,14 @@ final class ExcelWorkbookImageCatalogSupport {
     return PICTURE_CONSTRUCTOR.apply(part);
   }
 
-  static POIXMLRelation pictureRelation(int poiPictureType) {
-    return switch (ExcelPicturePoiBridge.fromPoiPictureType(poiPictureType)) {
+  static XSSFPictureData pictureDataForPart(PackagePart part) {
+    Objects.requireNonNull(part, "part must not be null");
+    return newPictureData(part);
+  }
+
+  static POIXMLRelation pictureRelation(ExcelPictureFormat format) {
+    Objects.requireNonNull(format, "format must not be null");
+    return switch (format) {
       case EMF -> XSSFRelation.IMAGE_EMF;
       case WMF -> XSSFRelation.IMAGE_WMF;
       case PICT -> XSSFRelation.IMAGE_PICT;
@@ -149,6 +155,10 @@ final class ExcelWorkbookImageCatalogSupport {
       case BMP -> XSSFRelation.IMAGE_BMP;
       case WPG -> XSSFRelation.IMAGE_WPG;
     };
+  }
+
+  static POIXMLRelation pictureRelation(int poiPictureType) {
+    return pictureRelation(ExcelPicturePoiBridge.fromPoiPictureType(poiPictureType));
   }
 
   static int requireAllocatedPartNumber(int partNumber) {

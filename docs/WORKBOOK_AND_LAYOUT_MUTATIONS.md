@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.54.0"
+version: "0.55.0"
 domain: WORKBOOK_LAYOUT_MUTATIONS
 updated: "2026-04-22"
 route:
@@ -131,9 +131,11 @@ the operation runs, after all earlier operations in the same request.
 Copy one sheet into a new visible, unselected sheet. The copied sheet is placed either at the end
 of workbook order or at an explicit zero-based index. GridGrind preserves supported sheet-local
 content such as formulas, validations, conditional formatting, comments, hyperlinks, merged
-regions, tables, sheet-scoped names, protection metadata, and layout state. Drawing-family
-content such as pictures and charts remains outside the current copy contract, so sheet copy is
-complete for non-drawing workbook-core structures and intentionally partial for drawing families.
+regions, tables, sheet-scoped names, protection metadata, layout state, and supported drawing
+content such as pictures, charts, and embedded objects. GridGrind runs repair passes after POI
+sheet cloning so copied drawing relations, copied comments, copied embedded-object worksheet
+relation ids, and copied workbook-core structures stay authoritative both in memory and after save
+or reopen.
 
 ```json
 {
