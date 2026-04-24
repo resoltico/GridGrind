@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.57.0"
+version: "0.58.0"
 domain: OPERATIONS
-updated: "2026-04-23"
+updated: "2026-04-24"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -40,6 +40,9 @@ Task discovery is layered on top of that same catalog surface:
 `--print-task-catalog`, `--print-task-plan <id>`, and `--print-goal-plan "<goal>"` now emit
 starter scaffolds for dashboards, tabular reports, data-entry flows, pivot reports, custom XML
 workflows, workbook maintenance, and drawing/signature workflows.
+`--doctor-request` is the fast preflight path for request shape, execution-mode limits,
+source-backed input resolution, and existing workbook-source accessibility; it does not mutate a
+workbook.
 
 ## Canonical Terminology
 

@@ -109,8 +109,7 @@ public final class ExcelOoxmlPackageSecuritySupport {
     Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
 
     Path normalizedTarget = targetPath.toAbsolutePath().normalize();
-    Files.createDirectories(
-        Objects.requireNonNullElse(normalizedTarget.getParent(), normalizedTarget.getRoot()));
+    createTargetParentDirectories(normalizedTarget);
 
     ExcelOoxmlPersistenceOptions explicitOptions =
         persistenceOptions == null
@@ -166,6 +165,9 @@ public final class ExcelOoxmlPackageSecuritySupport {
     Objects.requireNonNull(sourceSecurity, "sourceSecurity must not be null");
     Objects.requireNonNull(persistenceOptions, "persistenceOptions must not be null");
 
+    Path normalizedTarget = targetPath.toAbsolutePath().normalize();
+    createTargetParentDirectories(normalizedTarget);
+
     if (!sourceSecurity.signatures().isEmpty()
         && sourceMutated
         && persistenceOptions.signature() == null) {
@@ -181,10 +183,16 @@ public final class ExcelOoxmlPackageSecuritySupport {
       signWorkbook(plainWorkbookPath, effectiveOptions.signature());
     }
     if (effectiveOptions.encryption() != null) {
-      encryptWorkbook(plainWorkbookPath, targetPath, effectiveOptions.encryption());
+      encryptWorkbook(plainWorkbookPath, normalizedTarget, effectiveOptions.encryption());
     } else {
-      Files.move(plainWorkbookPath, targetPath, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+      Files.move(
+          plainWorkbookPath, normalizedTarget, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
     }
+  }
+
+  private static void createTargetParentDirectories(Path targetPath) throws IOException {
+    Path parentOrRoot = Objects.requireNonNullElse(targetPath.getParent(), targetPath.getRoot());
+    Files.createDirectories(parentOrRoot);
   }
 
   private static boolean passThroughEligible(

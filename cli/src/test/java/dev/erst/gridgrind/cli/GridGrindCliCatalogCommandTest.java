@@ -360,6 +360,55 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void doctorRequestResolvesRelativeInputsFromTheRequestFileDirectory() throws IOException {
+    Path requestDirectory = Files.createTempDirectory("gridgrind-doctor-root-");
+    Path requestPath = requestDirectory.resolve("doctor request.json");
+    Path payloadPath = requestDirectory.resolve("blank.txt");
+    Files.writeString(payloadPath, "");
+    Files.writeString(
+        requestPath,
+        """
+        {
+          "source": { "type": "NEW" },
+          "steps": [
+            {
+              "stepId": "ensure-budget",
+              "target": { "type": "BY_NAME", "name": "Budget" },
+              "action": { "type": "ENSURE_SHEET" }
+            },
+            {
+              "stepId": "set-title",
+              "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+              "action": {
+                "type": "SET_CELL",
+                "value": {
+                  "type": "TEXT",
+                  "source": { "type": "UTF8_FILE", "path": "blank.txt" }
+                }
+              }
+            }
+          ]
+        }
+        """);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request", "--request", requestPath.toString()},
+                InputStream.nullInputStream(),
+                stdout);
+
+    RequestDoctorReport report = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().code());
+    assertEquals("RESOLVE_INPUTS", report.problem().context().stage());
+    assertEquals("cell text must not be blank", report.problem().message());
+  }
+
+  @Test
   void doctorRequestReturnsStructuredInvalidReportForSemanticallyInvalidRequests()
       throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -385,6 +434,45 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertFalse(report.valid());
     assertEquals(GridGrindProblemCode.INVALID_REQUEST, report.problem().code());
     assertEquals("NEW", report.summary().sourceType());
+  }
+
+  @Test
+  void doctorRequestPreflightsExistingWorkbookSourcesFromTheRequestFileDirectory()
+      throws IOException {
+    Path requestDirectory = Files.createTempDirectory("gridgrind-doctor-source-");
+    Path requestPath = requestDirectory.resolve("doctor-existing.json");
+    Files.writeString(
+        requestPath,
+        """
+        {
+          "source": { "type": "EXISTING", "path": "missing-workbook.xlsx" },
+          "steps": [
+            {
+              "stepId": "summary",
+              "target": { "type": "CURRENT" },
+              "query": { "type": "GET_WORKBOOK_SUMMARY" }
+            }
+          ]
+        }
+        """);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request", "--request", requestPath.toString()},
+                InputStream.nullInputStream(),
+                stdout);
+
+    RequestDoctorReport report = GridGrindJson.readRequestDoctorReport(stdout.toByteArray());
+
+    assertEquals(1, exitCode);
+    assertFalse(report.valid());
+    assertEquals(GridGrindProblemCode.WORKBOOK_NOT_FOUND, report.problem().code());
+    assertEquals("OPEN_WORKBOOK", report.problem().context().stage());
+    assertEquals(
+        requestDirectory.resolve("missing-workbook.xlsx").toString(),
+        report.problem().context().sourceWorkbookPath());
   }
 
   @Test
@@ -575,6 +663,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     assertInstanceOf(GridGrindResponse.Failure.class, response);
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.journal().outcome().failureCode());
     assertTrue(failure.problem().message().contains("BOGUS_XYZ"));
   }
 

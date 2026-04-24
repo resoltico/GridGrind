@@ -550,8 +550,8 @@ class ExecutorPhase3CoverageTest {
             new WorkbookPlan.WorkbookSource.New());
     assertInstanceOf(GridGrindResponse.PersistenceOutcome.NotSaved.class, notSaved);
 
-    Path saveAsPath = Files.createTempFile("gridgrind-streaming-saveas-", ".xlsx");
-    Files.deleteIfExists(saveAsPath);
+    Path saveAsRoot = Files.createTempDirectory("gridgrind-streaming-saveas-");
+    Path saveAsPath = saveAsRoot.resolve("nested output").resolve("streaming save-as.xlsx");
     GridGrindResponse.PersistenceOutcome.SavedAs savedAs =
         assertInstanceOf(
             GridGrindResponse.PersistenceOutcome.SavedAs.class,

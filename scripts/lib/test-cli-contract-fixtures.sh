@@ -30,7 +30,7 @@ Flags:
   --print-task-catalog           Print the machine-readable task catalog of high-level office-work recipes.
   --print-task-plan <id>         Print a machine-readable starter request scaffold for one task id.
   --print-goal-plan <goal>       Print ranked contract-owned task matches plus starter scaffolds for one freeform goal.
-  --doctor-request               Lint one request and emit a machine-readable doctor report without opening or mutating a workbook.
+  --doctor-request               Lint one request, preflight source-backed input resolution plus existing workbook-source accessibility, and emit a machine-readable doctor report without mutating a workbook.
   --print-example <id>             Print one built-in generated example request.
 '
 
@@ -92,12 +92,16 @@ readonly success_catalog='{
     {
       "id": "WORKBOOK_HEALTH",
       "fileName": "workbook-health-request.json",
-      "summary": "Compact no-save workbook-health pass with targeted formula and aggregate findings."
+      "summary": "Compact no-save workbook-health pass with targeted formula and aggregate findings.",
+      "workspaceMode": "BLANK_WORKSPACE",
+      "requiredPaths": []
     },
     {
       "id": "ASSERTION",
       "fileName": "assertion-request.json",
-      "summary": "Mutate then verify with first-class assertions, verbose journaling, and factual readback."
+      "summary": "Mutate then verify with first-class assertions, verbose journaling, and factual readback.",
+      "workspaceMode": "BLANK_WORKSPACE",
+      "requiredPaths": []
     }
   ],
   "plainTypes": [

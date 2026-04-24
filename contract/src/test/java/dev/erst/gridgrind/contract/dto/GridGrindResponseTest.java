@@ -53,7 +53,7 @@ class GridGrindResponseTest {
         new GridGrindResponse.Failure(
             null,
             GridGrindResponse.Problem.of(
-                GridGrindProblemCode.INTERNAL_ERROR,
+                GridGrindProblemCode.INVALID_ARGUMENTS,
                 "boom",
                 new GridGrindResponse.ProblemContext.ExecuteRequest(null, null)));
 
@@ -61,6 +61,26 @@ class GridGrindResponseTest {
     assertNull(failure.journal().source().type());
     assertNull(failure.journal().persistence().type());
     assertEquals(ExecutionJournal.Status.FAILED, failure.journal().outcome().status());
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.journal().outcome().failureCode());
+  }
+
+  @Test
+  void syntheticJournalRejectsInvalidFailureCodeCombinations() {
+    IllegalArgumentException missingFailureCode =
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> GridGrindResponse.syntheticJournal(ExecutionJournal.Status.FAILED, null));
+    assertEquals(
+        "failureCode must be present when status is FAILED", missingFailureCode.getMessage());
+
+    IllegalArgumentException unexpectedFailureCode =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                GridGrindResponse.syntheticJournal(
+                    ExecutionJournal.Status.SUCCEEDED, GridGrindProblemCode.INVALID_ARGUMENTS));
+    assertEquals(
+        "failureCode is only permitted when status is FAILED", unexpectedFailureCode.getMessage());
   }
 
   @Test

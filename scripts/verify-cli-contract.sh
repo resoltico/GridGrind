@@ -304,12 +304,22 @@ for example in shipped_examples:
     example_id = example["id"]
     file_name = example["fileName"]
     summary = example["summary"]
+    workspace_mode = example.get("workspaceMode")
+    required_paths = example.get("requiredPaths")
     pattern = re.compile(
         rf"^\s*{re.escape(example_id)}\s+examples/{re.escape(file_name)}\s+{re.escape(summary)}\s*$",
         re.MULTILINE,
     )
     if not pattern.search(help_output):
         die(f"help output no longer lists the built-in example line for {example_id}")
+    if workspace_mode not in {"BLANK_WORKSPACE", "REPOSITORY_ASSETS"}:
+        die(f"catalog shipped example {example_id} no longer declares a valid workspaceMode")
+    if not isinstance(required_paths, list):
+        die(f"catalog shipped example {example_id} no longer declares requiredPaths as a list")
+    if workspace_mode == "BLANK_WORKSPACE" and required_paths != []:
+        die(f"catalog shipped example {example_id} must keep requiredPaths empty for blank workspaces")
+    if workspace_mode == "REPOSITORY_ASSETS" and not required_paths:
+        die(f"catalog shipped example {example_id} must list requiredPaths for repository assets")
 
 execution_policy_summary = plain_types["executionPolicyInputType"]["summary"]
 if "execution.journal" not in execution_policy_summary:

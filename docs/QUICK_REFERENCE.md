@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.57.0"
+version: "0.58.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-23"
+updated: "2026-04-24"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -16,6 +16,7 @@ cheat sheet, then jump to the detailed references when you need the full field l
 ## Artifact Discovery
 
 ```bash
+gridgrind help
 gridgrind --print-request-template
 gridgrind --print-protocol-catalog
 gridgrind --print-protocol-catalog --search validation
@@ -26,6 +27,10 @@ gridgrind --print-example WORKBOOK_HEALTH
 gridgrind --print-example ASSERTION
 printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' | gridgrind --doctor-request
 ```
+
+`gridgrind help` is the explicit alias for `--help`. `--doctor-request` validates request shape,
+resolves source-backed inputs, and preflights existing workbook-source access without mutating a
+workbook.
 
 `--search` is the fast discovery path when you only know part of an id or summary. Use
 `--operation <group>:<id>` once you want one exact machine-readable entry.

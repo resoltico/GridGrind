@@ -407,10 +407,8 @@ public final class GridGrindCli {
       return writeDoctorReport(stdout, report);
     }
 
-    report = new GridGrindRequestDoctor().diagnose(request);
-    if (report.valid()
-        && command.requestPath() == null
-        && SourceBackedPlanResolver.requiresStandardInput(request)) {
+    if (command.requestPath() == null && SourceBackedPlanResolver.requiresStandardInput(request)) {
+      report = new GridGrindRequestDoctor().diagnose(request);
       String message = GridGrindContractText.standardInputRequiresRequestMessage();
       report =
           RequestDoctorReport.invalid(
@@ -421,7 +419,14 @@ public final class GridGrindCli {
                   message,
                   new GridGrindResponse.ProblemContext.ParseArguments("--request"),
                   new IllegalArgumentException(message)));
+      return writeDoctorReport(stdout, report);
     }
+
+    ExecutionInputBindings bindings =
+        command.requestPath() == null
+            ? ExecutionInputBindings.processDefault()
+            : CliExecutionBindingsFactory.create(command.requestPath(), request, stdin);
+    report = new GridGrindRequestDoctor().diagnose(request, bindings);
     return writeDoctorReport(stdout, report);
   }
 

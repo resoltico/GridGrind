@@ -74,9 +74,12 @@ public sealed interface GridGrindResponse {
     public Failure {
       protocolVersion =
           protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
-      journal = journal == null ? syntheticJournal(ExecutionJournal.Status.FAILED) : journal;
-      calculation = calculation == null ? CalculationReport.notRequested() : calculation;
       Objects.requireNonNull(problem, "problem must not be null");
+      journal =
+          journal == null
+              ? syntheticJournal(ExecutionJournal.Status.FAILED, problem.code())
+              : journal;
+      calculation = calculation == null ? CalculationReport.notRequested() : calculation;
     }
 
     /** Backfill constructor used by tests and helpers that do not care about journal details. */
@@ -1553,9 +1556,20 @@ public sealed interface GridGrindResponse {
     return List.copyOf(copy);
   }
 
-  private static ExecutionJournal syntheticJournal(ExecutionJournal.Status status) {
-    GridGrindProblemCode failureCode =
-        status == ExecutionJournal.Status.FAILED ? GridGrindProblemCode.INTERNAL_ERROR : null;
+  /** Creates a synthetic journal for non-step-oriented responses without a failure code. */
+  static ExecutionJournal syntheticJournal(ExecutionJournal.Status status) {
+    return syntheticJournal(status, null);
+  }
+
+  /** Creates a synthetic journal for non-step-oriented responses with an optional failure code. */
+  static ExecutionJournal syntheticJournal(
+      ExecutionJournal.Status status, GridGrindProblemCode failureCode) {
+    if (status == ExecutionJournal.Status.FAILED && failureCode == null) {
+      throw new IllegalArgumentException("failureCode must be present when status is FAILED");
+    }
+    if (status != ExecutionJournal.Status.FAILED && failureCode != null) {
+      throw new IllegalArgumentException("failureCode is only permitted when status is FAILED");
+    }
     return new ExecutionJournal(
         null,
         ExecutionJournalLevel.NORMAL,

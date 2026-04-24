@@ -60,7 +60,8 @@ class GridGrindTaskPlannerTest {
         WorkbookPlan.WorkbookPersistence.SaveAs.class, customXml.requestTemplate().persistence());
     assertFalse(customXml.requestTemplate().steps().isEmpty());
     assertTrue(
-        customXml.authoringNotes().stream().anyMatch(note -> note.contains("TODO_MAPPING_NAME")));
+        customXml.authoringNotes().stream().anyMatch(note -> note.contains("discover-mappings")));
+    assertEquals(1, customXml.requestTemplate().steps().size());
 
     assertInstanceOf(
         WorkbookPlan.WorkbookSource.ExistingFile.class, maintenance.requestTemplate().source());

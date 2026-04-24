@@ -151,6 +151,12 @@ class GridGrindProtocolCatalogTest {
     assertTrue(
         catalog.cliSurface().discovery().lines().stream()
             .anyMatch(line -> line.contains("--print-goal-plan")));
+    assertTrue(
+        catalog.shippedExamples().stream()
+            .anyMatch(
+                example ->
+                    example.workspaceMode() == ShippedExampleEntry.WorkspaceMode.REPOSITORY_ASSETS
+                        && !example.requiredPaths().isEmpty()));
   }
 
   @Test

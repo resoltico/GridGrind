@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.57.0"
+version: "0.58.0"
 domain: QUICK_START
-updated: "2026-04-23"
+updated: "2026-04-24"
 route:
   keywords: [gridgrind, quick start, first run, docker, jar, xlsx, example, response]
   questions: ["how do i do a first run with gridgrind", "what is the fastest way to try gridgrind", "how do i run the shipped examples", "how do i get my first successful gridgrind run"]
@@ -49,13 +49,17 @@ If you want the standalone JAR, download it from the
 
 The JAR path requires Java 26.
 Running `java -jar gridgrind.jar` with no arguments in an interactive terminal prints the same
-help text as `--help` and exits with code `0`.
+help text as `--help` and exits with code `0`. `java -jar gridgrind.jar help` is the explicit
+equivalent.
 
 ## First Successful Run
 
 Use the built-in `BUDGET` example for the first pass. It writes a sample workbook and a JSON
 response, so you can see both the output file and the run result. If you are already in a repo
 checkout, [budget-request.json](../examples/budget-request.json) is the matching checked-in copy.
+`BUDGET` is intentionally self-contained in a blank artifact workspace. A few other built-in
+examples are repo-asset-backed and expect copied `examples/` assets; [EXAMPLES.md](./EXAMPLES.md)
+calls those out explicitly.
 
 ### Docker Example
 
@@ -102,7 +106,7 @@ After a successful run:
   - `--print-task-catalog` lists the contract-owned high-level office-work tasks, including dashboards, pivot reports, custom XML workflows, workbook maintenance, and drawing/signature flows.
   - `--print-task-plan DASHBOARD` emits a starter request scaffold for one task.
   - `--print-goal-plan "monthly sales dashboard with charts"` ranks likely tasks for one freeform goal.
-  - `--doctor-request` lints a request and returns a machine-readable diagnostics report without opening or mutating a workbook.
+  - `--doctor-request` lints a request, resolves source-backed authored inputs, preflights existing workbook-source access, and returns a machine-readable diagnostics report without mutating a workbook.
 - Want Java instead of raw JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
   [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)
 - Want a no-save health check: [workbook-health-request.json](../examples/workbook-health-request.json)
