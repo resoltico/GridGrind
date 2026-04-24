@@ -14,14 +14,15 @@ import dev.erst.gridgrind.contract.selector.TableCellSelector;
 import dev.erst.gridgrind.contract.selector.TableRowSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
 import dev.erst.gridgrind.contract.selector.WorkbookSelector;
+import java.util.Optional;
 
 /** Selector diagnostic field extraction for execution journal contexts. */
 final class ExecutionSelectorDiagnosticFields {
   private ExecutionSelectorDiagnosticFields() {}
 
-  static String sheetNameFor(Selector selector) {
+  static Optional<String> sheetNameFor(Selector selector) {
     if (selector instanceof WorkbookSelector) {
-      return null;
+      return Optional.empty();
     }
     if (selector instanceof SheetSelector sheetSelector) {
       return sheetNameFor(sheetSelector);
@@ -33,28 +34,28 @@ final class ExecutionSelectorDiagnosticFields {
       return singleSheetName(rangeSelector);
     }
     if (selector instanceof RowBandSelector.Span span) {
-      return span.sheetName();
+      return Optional.of(span.sheetName());
     }
     if (selector instanceof RowBandSelector.Insertion insertion) {
-      return insertion.sheetName();
+      return Optional.of(insertion.sheetName());
     }
     if (selector instanceof ColumnBandSelector.Span span) {
-      return span.sheetName();
+      return Optional.of(span.sheetName());
     }
     if (selector instanceof ColumnBandSelector.Insertion insertion) {
-      return insertion.sheetName();
+      return Optional.of(insertion.sheetName());
     }
     if (selector instanceof DrawingObjectSelector.AllOnSheet allOnSheet) {
-      return allOnSheet.sheetName();
+      return Optional.of(allOnSheet.sheetName());
     }
     if (selector instanceof DrawingObjectSelector.ByName byName) {
-      return byName.sheetName();
+      return Optional.of(byName.sheetName());
     }
     if (selector instanceof ChartSelector.AllOnSheet allOnSheet) {
-      return allOnSheet.sheetName();
+      return Optional.of(allOnSheet.sheetName());
     }
     if (selector instanceof ChartSelector.ByName byName) {
-      return byName.sheetName();
+      return Optional.of(byName.sheetName());
     }
     if (selector instanceof TableSelector tableSelector) {
       return sheetNameFor(tableSelector);
@@ -71,138 +72,144 @@ final class ExecutionSelectorDiagnosticFields {
     if (selector instanceof TableCellSelector.ByColumnName byColumnName) {
       return sheetNameFor(byColumnName.row());
     }
-    return null;
+    return Optional.empty();
   }
 
-  static String addressFor(Selector selector) {
+  static Optional<String> addressFor(Selector selector) {
     if (selector instanceof CellSelector.ByAddress byAddress) {
-      return byAddress.address();
+      return Optional.of(byAddress.address());
     }
     if (selector instanceof CellSelector.ByQualifiedAddresses qualifiedAddresses) {
       return qualifiedAddresses.cells().size() == 1
-          ? qualifiedAddresses.cells().getFirst().address()
-          : null;
+          ? Optional.of(qualifiedAddresses.cells().getFirst().address())
+          : Optional.empty();
     }
     if (selector instanceof RangeSelector.RectangularWindow window) {
-      return window.topLeftAddress();
+      return Optional.of(window.topLeftAddress());
     }
-    return null;
+    return Optional.empty();
   }
 
-  static String rangeFor(Selector selector) {
+  static Optional<String> rangeFor(Selector selector) {
     if (selector instanceof RangeSelector.ByRange byRange) {
-      return byRange.range();
+      return Optional.of(byRange.range());
     }
     if (selector instanceof RangeSelector.ByRanges byRanges) {
-      return byRanges.ranges().size() == 1 ? byRanges.ranges().getFirst() : null;
+      return byRanges.ranges().size() == 1
+          ? Optional.of(byRanges.ranges().getFirst())
+          : Optional.empty();
     }
     if (selector instanceof RangeSelector.RectangularWindow window) {
-      return window.range();
+      return Optional.of(window.range());
     }
-    return null;
+    return Optional.empty();
   }
 
-  static String namedRangeNameFor(Selector selector) {
+  static Optional<String> namedRangeNameFor(Selector selector) {
     if (selector instanceof NamedRangeSelector namedRangeSelector) {
       return singleNamedRangeName(namedRangeSelector);
     }
-    return null;
+    return Optional.empty();
   }
 
-  static String singleSheetName(CellSelector selector) {
+  static Optional<String> singleSheetName(CellSelector selector) {
     return switch (selector) {
-      case CellSelector.AllUsedInSheet allUsedInSheet -> allUsedInSheet.sheetName();
-      case CellSelector.ByAddress byAddress -> byAddress.sheetName();
-      case CellSelector.ByAddresses byAddresses -> byAddresses.sheetName();
+      case CellSelector.AllUsedInSheet allUsedInSheet -> Optional.of(allUsedInSheet.sheetName());
+      case CellSelector.ByAddress byAddress -> Optional.of(byAddress.sheetName());
+      case CellSelector.ByAddresses byAddresses -> Optional.of(byAddresses.sheetName());
       case CellSelector.ByQualifiedAddresses qualifiedAddresses ->
           qualifiedAddresses.cells().stream()
                       .map(CellSelector.QualifiedAddress::sheetName)
                       .distinct()
                       .count()
                   == 1
-              ? qualifiedAddresses.cells().getFirst().sheetName()
-              : null;
+              ? Optional.of(qualifiedAddresses.cells().getFirst().sheetName())
+              : Optional.empty();
     };
   }
 
-  static String singleSheetName(RangeSelector selector) {
+  static Optional<String> singleSheetName(RangeSelector selector) {
     return switch (selector) {
-      case RangeSelector.AllOnSheet allOnSheet -> allOnSheet.sheetName();
-      case RangeSelector.ByRange byRange -> byRange.sheetName();
-      case RangeSelector.ByRanges byRanges -> byRanges.sheetName();
-      case RangeSelector.RectangularWindow window -> window.sheetName();
+      case RangeSelector.AllOnSheet allOnSheet -> Optional.of(allOnSheet.sheetName());
+      case RangeSelector.ByRange byRange -> Optional.of(byRange.sheetName());
+      case RangeSelector.ByRanges byRanges -> Optional.of(byRanges.sheetName());
+      case RangeSelector.RectangularWindow window -> Optional.of(window.sheetName());
     };
   }
 
-  static String singleSheetName(NamedRangeSelector selector) {
+  static Optional<String> singleSheetName(NamedRangeSelector selector) {
     return switch (selector) {
-      case NamedRangeSelector.All _ -> null;
-      case NamedRangeSelector.ByName _ -> null;
-      case NamedRangeSelector.ByNames _ -> null;
-      case NamedRangeSelector.WorkbookScope _ -> null;
-      case NamedRangeSelector.SheetScope sheetScope -> sheetScope.sheetName();
+      case NamedRangeSelector.All _ -> Optional.empty();
+      case NamedRangeSelector.ByName _ -> Optional.empty();
+      case NamedRangeSelector.ByNames _ -> Optional.empty();
+      case NamedRangeSelector.WorkbookScope _ -> Optional.empty();
+      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.sheetName());
       case NamedRangeSelector.AnyOf anyOf ->
-          anyOf.selectors().size() == 1 ? singleSheetName(anyOf.selectors().getFirst()) : null;
+          anyOf.selectors().size() == 1
+              ? singleSheetName(anyOf.selectors().getFirst())
+              : Optional.empty();
     };
   }
 
-  static String singleSheetName(NamedRangeSelector.Ref selector) {
+  static Optional<String> singleSheetName(NamedRangeSelector.Ref selector) {
     return switch (selector) {
-      case NamedRangeSelector.ByName _ -> null;
-      case NamedRangeSelector.WorkbookScope _ -> null;
-      case NamedRangeSelector.SheetScope sheetScope -> sheetScope.sheetName();
+      case NamedRangeSelector.ByName _ -> Optional.empty();
+      case NamedRangeSelector.WorkbookScope _ -> Optional.empty();
+      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.sheetName());
     };
   }
 
-  static String singleNamedRangeName(NamedRangeSelector selector) {
+  static Optional<String> singleNamedRangeName(NamedRangeSelector selector) {
     return switch (selector) {
-      case NamedRangeSelector.All _ -> null;
-      case NamedRangeSelector.ByName byName -> byName.name();
+      case NamedRangeSelector.All _ -> Optional.empty();
+      case NamedRangeSelector.ByName byName -> Optional.of(byName.name());
       case NamedRangeSelector.ByNames byNames ->
-          byNames.names().size() == 1 ? byNames.names().getFirst() : null;
-      case NamedRangeSelector.WorkbookScope workbookScope -> workbookScope.name();
-      case NamedRangeSelector.SheetScope sheetScope -> sheetScope.name();
+          byNames.names().size() == 1 ? Optional.of(byNames.names().getFirst()) : Optional.empty();
+      case NamedRangeSelector.WorkbookScope workbookScope -> Optional.of(workbookScope.name());
+      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.name());
       case NamedRangeSelector.AnyOf anyOf ->
-          anyOf.selectors().size() == 1 ? singleNamedRangeName(anyOf.selectors().getFirst()) : null;
+          anyOf.selectors().size() == 1
+              ? singleNamedRangeName(anyOf.selectors().getFirst())
+              : Optional.empty();
     };
   }
 
-  static String singleNamedRangeName(NamedRangeSelector.Ref selector) {
+  static Optional<String> singleNamedRangeName(NamedRangeSelector.Ref selector) {
     return switch (selector) {
-      case NamedRangeSelector.ByName byName -> byName.name();
-      case NamedRangeSelector.WorkbookScope workbookScope -> workbookScope.name();
-      case NamedRangeSelector.SheetScope sheetScope -> sheetScope.name();
+      case NamedRangeSelector.ByName byName -> Optional.of(byName.name());
+      case NamedRangeSelector.WorkbookScope workbookScope -> Optional.of(workbookScope.name());
+      case NamedRangeSelector.SheetScope sheetScope -> Optional.of(sheetScope.name());
     };
   }
 
-  private static String sheetNameFor(SheetSelector selector) {
+  private static Optional<String> sheetNameFor(SheetSelector selector) {
     return switch (selector) {
-      case SheetSelector.All _ -> null;
-      case SheetSelector.ByName byName -> byName.name();
+      case SheetSelector.All _ -> Optional.empty();
+      case SheetSelector.ByName byName -> Optional.of(byName.name());
       case SheetSelector.ByNames byNames ->
-          byNames.names().size() == 1 ? byNames.names().getFirst() : null;
+          byNames.names().size() == 1 ? Optional.of(byNames.names().getFirst()) : Optional.empty();
     };
   }
 
-  private static String sheetNameFor(TableSelector selector) {
+  private static Optional<String> sheetNameFor(TableSelector selector) {
     return switch (selector) {
-      case TableSelector.All _ -> null;
-      case TableSelector.ByName _ -> null;
-      case TableSelector.ByNames _ -> null;
-      case TableSelector.ByNameOnSheet byNameOnSheet -> byNameOnSheet.sheetName();
+      case TableSelector.All _ -> Optional.empty();
+      case TableSelector.ByName _ -> Optional.empty();
+      case TableSelector.ByNames _ -> Optional.empty();
+      case TableSelector.ByNameOnSheet byNameOnSheet -> Optional.of(byNameOnSheet.sheetName());
     };
   }
 
-  private static String sheetNameFor(PivotTableSelector selector) {
+  private static Optional<String> sheetNameFor(PivotTableSelector selector) {
     return switch (selector) {
-      case PivotTableSelector.All _ -> null;
-      case PivotTableSelector.ByName _ -> null;
-      case PivotTableSelector.ByNames _ -> null;
-      case PivotTableSelector.ByNameOnSheet byNameOnSheet -> byNameOnSheet.sheetName();
+      case PivotTableSelector.All _ -> Optional.empty();
+      case PivotTableSelector.ByName _ -> Optional.empty();
+      case PivotTableSelector.ByNames _ -> Optional.empty();
+      case PivotTableSelector.ByNameOnSheet byNameOnSheet -> Optional.of(byNameOnSheet.sheetName());
     };
   }
 
-  private static String sheetNameFor(TableRowSelector selector) {
+  private static Optional<String> sheetNameFor(TableRowSelector selector) {
     return switch (selector) {
       case TableRowSelector.AllRows allRows -> sheetNameFor(allRows.table());
       case TableRowSelector.ByIndex byIndex -> sheetNameFor(byIndex.table());

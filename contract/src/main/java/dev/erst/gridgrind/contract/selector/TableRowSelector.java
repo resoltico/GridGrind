@@ -8,9 +8,9 @@ import java.util.Objects;
 /** Selects one or more logical rows within one selected table. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = TableRowSelector.AllRows.class, name = "ALL_ROWS"),
-  @JsonSubTypes.Type(value = TableRowSelector.ByIndex.class, name = "BY_INDEX"),
-  @JsonSubTypes.Type(value = TableRowSelector.ByKeyCell.class, name = "BY_KEY_CELL")
+  @JsonSubTypes.Type(value = TableRowSelector.AllRows.class, name = "TABLE_ROW_ALL_ROWS"),
+  @JsonSubTypes.Type(value = TableRowSelector.ByIndex.class, name = "TABLE_ROW_BY_INDEX"),
+  @JsonSubTypes.Type(value = TableRowSelector.ByKeyCell.class, name = "TABLE_ROW_BY_KEY_CELL")
 })
 public sealed interface TableRowSelector extends Selector
     permits TableRowSelector.AllRows, TableRowSelector.ByIndex, TableRowSelector.ByKeyCell {

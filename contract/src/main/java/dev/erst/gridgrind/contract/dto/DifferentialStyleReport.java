@@ -21,8 +21,8 @@ public record DifferentialStyleReport(
     if (numberFormat != null && numberFormat.isBlank()) {
       throw new IllegalArgumentException("numberFormat must not be blank");
     }
-    fontColor = ProtocolRgbColorSupport.normalizeRgbHex(fontColor, "fontColor");
-    fillColor = ProtocolRgbColorSupport.normalizeRgbHex(fillColor, "fillColor");
+    fontColor = ProtocolRgbColorSupport.normalizeRgbHex(fontColor, "fontColor").orElse(null);
+    fillColor = ProtocolRgbColorSupport.normalizeRgbHex(fillColor, "fillColor").orElse(null);
     Objects.requireNonNull(unsupportedFeatures, "unsupportedFeatures must not be null");
     unsupportedFeatures = List.copyOf(unsupportedFeatures);
     for (ExcelConditionalFormattingUnsupportedFeature unsupportedFeature : unsupportedFeatures) {

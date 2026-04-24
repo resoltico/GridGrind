@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Budget"
       }
     },
@@ -84,7 +84,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Budget",
         "range": "A1:B4"
       }
@@ -99,7 +99,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Budget",
         "address": "A1"
       }
@@ -114,7 +114,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Budget",
         "address": "A2"
       }
@@ -133,7 +133,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Budget",
         "address": "B4"
       }
@@ -152,7 +152,7 @@
         }
       },
       "target": {
-        "type": "WORKBOOK_SCOPE",
+        "type": "NAMED_RANGE_WORKBOOK_SCOPE",
         "name": "BudgetTotal"
       }
     },
@@ -171,7 +171,7 @@
         }
       },
       "target": {
-        "type": "SHEET_SCOPE",
+        "type": "NAMED_RANGE_SHEET_SCOPE",
         "name": "BudgetTable",
         "sheetName": "Budget"
       }
@@ -182,7 +182,7 @@
       },
       "stepId": "cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Budget",
         "addresses": [
           "A1",
@@ -197,7 +197,7 @@
       },
       "stepId": "window",
       "target": {
-        "type": "RECTANGULAR_WINDOW",
+        "type": "RANGE_RECTANGULAR_WINDOW",
         "sheetName": "Budget",
         "topLeftAddress": "A1",
         "rowCount": 4,
@@ -210,7 +210,7 @@
       },
       "stepId": "hyperlinks",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Budget",
         "addresses": [
           "A1",
@@ -225,7 +225,7 @@
       },
       "stepId": "comments",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Budget",
         "addresses": [
           "A1",
@@ -239,7 +239,7 @@
       },
       "stepId": "named-ranges",
       "target": {
-        "type": "ALL"
+        "type": "NAMED_RANGE_ALL"
       }
     },
     {
@@ -248,7 +248,7 @@
       },
       "stepId": "named-range-surface",
       "target": {
-        "type": "ALL"
+        "type": "NAMED_RANGE_ALL"
       }
     }
   ],

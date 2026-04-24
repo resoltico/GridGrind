@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: LAYOUT_STRUCTURE_MUTATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, layout mutations, merge-cells, rows, columns, pane, zoom, presentation, print-layout]
   questions: ["how do i change workbook layout in gridgrind", "how do i insert or delete rows in gridgrind", "how do i set panes or print layout in gridgrind"]
@@ -26,7 +26,7 @@ cells. Repeating the same merge is a no-op, but overlapping a different merged r
 {
   "stepId": "merge-cells",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Inventory",
     "range": "A1:C1"
   },
@@ -52,7 +52,7 @@ unmerge intersecting regions; the range must identify the merged region exactly.
 {
   "stepId": "unmerge-cells",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Inventory",
     "range": "A1:C1"
   },
@@ -140,8 +140,9 @@ exists there.
 | `rowIndex` | Yes | Zero-based insertion point. Must be within the current row bounds or exactly one past the last existing row. |
 | `rowCount` | Yes | Positive number of blank rows to insert. |
 
-GridGrind rejects the edit when Apache POI would leave a moved table, sheet-owned autofilter, or
-data validation stale (`LIM-016`).
+GridGrind preserves and retargets existing data validations across the insert so the moved cells
+keep their authored validation coverage. It still rejects the edit when Apache POI would leave a
+moved table or sheet-owned autofilter stale (`LIM-016`).
 
 ---
 
@@ -224,10 +225,11 @@ explicit column metadata exist there.
 | `columnIndex` | Yes | Zero-based insertion point. Must be within the current column bounds or exactly one past the last existing column. |
 | `columnCount` | Yes | Positive number of blank columns to insert. |
 
-GridGrind rejects the edit when Apache POI would leave a moved table, sheet-owned autofilter, or
-data validation stale (`LIM-016`), and it also rejects the edit when the workbook contains any
-formula cells or formula-defined named ranges because Apache POI leaves some column references
-stale after column moves (`LIM-017`).
+GridGrind preserves and retargets existing data validations across the insert so the moved cells
+keep their authored validation coverage. It still rejects the edit when Apache POI would leave a
+moved table or sheet-owned autofilter stale (`LIM-016`), and it also rejects the edit when the
+workbook contains any formula cells or formula-defined named ranges because Apache POI leaves some
+column references stale after column moves (`LIM-017`).
 
 ---
 
@@ -447,7 +449,7 @@ behavior, or `SPLIT` for Excel split panes.
 {
   "stepId": "set-sheet-pane",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {
@@ -467,7 +469,7 @@ behavior, or `SPLIT` for Excel split panes.
 {
   "stepId": "set-sheet-pane",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {
@@ -530,7 +532,7 @@ Set one explicit zoom percentage for a sheet.
 {
   "stepId": "set-sheet-zoom",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {
@@ -554,7 +556,7 @@ normalize to defaults or clear state.
 {
   "stepId": "set-sheet-presentation",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {
@@ -629,7 +631,7 @@ to default or cleared state.
 {
   "stepId": "set-print-layout",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {
@@ -765,7 +767,7 @@ Clear the supported print-layout state from a sheet and restore the default supp
 {
   "stepId": "clear-print-layout",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {

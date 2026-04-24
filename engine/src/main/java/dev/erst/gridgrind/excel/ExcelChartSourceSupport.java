@@ -18,7 +18,7 @@ final class ExcelChartSourceSupport {
 
   static Name resolveDefinedNameReference(XSSFSheet contextSheet, String formula) {
     if (!formula.matches("^[A-Za-z_][A-Za-z0-9_.]*$")) {
-      return null;
+      return java.util.Optional.<Name>empty().orElse(null);
     }
 
     int contextSheetIndex = contextSheet.getWorkbook().getSheetIndex(contextSheet);

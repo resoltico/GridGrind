@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
 class AssertionTypesTest {
   @Test
   void exposesStableDiscriminatorsAndValidatesLeafInputs() {
-    assertEquals("EXPECT_PRESENT", new Assertion.Present().assertionType());
+    assertEquals("EXPECT_TABLE_PRESENT", new Assertion.TablePresent().assertionType());
     assertEquals(
         "EXPECT_ANALYSIS_FINDING_PRESENT",
         new Assertion.AnalysisFindingPresent(
@@ -22,7 +22,8 @@ class AssertionTypesTest {
                 AnalysisSeverity.ERROR,
                 "error")
             .assertionType());
-    assertEquals("ALL_OF", new Assertion.AllOf(List.of(new Assertion.Present())).assertionType());
+    assertEquals(
+        "ALL_OF", new Assertion.AllOf(List.of(new Assertion.TablePresent())).assertionType());
     assertEquals(
         "expectedValue must not be null",
         assertThrows(NullPointerException.class, () -> new Assertion.CellValue(null)).getMessage());

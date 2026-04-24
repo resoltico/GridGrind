@@ -1,5 +1,6 @@
 package dev.erst.gridgrind.contract.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.ArrayList;
@@ -20,14 +21,24 @@ public sealed interface AutofilterEntryReport
   /** Persisted filter-column criteria carried by the autofilter. */
   java.util.List<AutofilterFilterColumnReport> filterColumns();
 
-  /** Persisted sort-state metadata carried by the autofilter, when present. */
-  AutofilterSortStateReport sortState();
+  /**
+   * Persisted sort-state metadata carried by the autofilter, when present.
+   *
+   * <p>Null is permitted here because this is a protocol-layer default method on a sealed interface
+   * used for wire serialization; internal code must use a switch expression instead.
+   */
+  default AutofilterSortStateReport sortState() {
+    return switch (this) {
+      case SheetOwned sheetOwned -> sheetOwned.persistedSortState();
+      case TableOwned tableOwned -> tableOwned.persistedSortState();
+    };
+  }
 
   /** One sheet-owned autofilter stored directly on the worksheet. */
   record SheetOwned(
       String range,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
-      AutofilterSortStateReport sortState)
+      @JsonProperty("sortState") AutofilterSortStateReport persistedSortState)
       implements AutofilterEntryReport {
     /** Creates a sheet-owned autofilter report with no persisted criteria or sort state. */
     public SheetOwned(String range) {
@@ -45,7 +56,7 @@ public sealed interface AutofilterEntryReport
       String range,
       String tableName,
       java.util.List<AutofilterFilterColumnReport> filterColumns,
-      AutofilterSortStateReport sortState)
+      @JsonProperty("sortState") AutofilterSortStateReport persistedSortState)
       implements AutofilterEntryReport {
     /** Creates a table-owned autofilter report with no persisted criteria or sort state. */
     public TableOwned(String range, String tableName) {

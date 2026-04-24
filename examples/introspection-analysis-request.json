@@ -11,7 +11,7 @@
   "steps" : [ {
     "stepId" : "step-01-ensure-sheet",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Dashboard"
     },
     "action" : {
@@ -20,7 +20,7 @@
   }, {
     "stepId" : "step-02-set-range",
     "target" : {
-      "type" : "BY_RANGE",
+      "type" : "RANGE_BY_RANGE",
       "sheetName" : "Dashboard",
       "range" : "A1:C4"
     },
@@ -97,7 +97,7 @@
   }, {
     "stepId" : "step-03-set-hyperlink",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Dashboard",
       "address" : "A1"
     },
@@ -111,7 +111,7 @@
   }, {
     "stepId" : "step-04-set-comment",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Dashboard",
       "address" : "B4"
     },
@@ -131,7 +131,7 @@
   }, {
     "stepId" : "step-05-set-named-range",
     "target" : {
-      "type" : "WORKBOOK_SCOPE",
+      "type" : "NAMED_RANGE_WORKBOOK_SCOPE",
       "name" : "ForecastValue"
     },
     "action" : {
@@ -149,7 +149,7 @@
   }, {
     "stepId" : "workbook",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "query" : {
       "type" : "GET_WORKBOOK_SUMMARY"
@@ -157,7 +157,7 @@
   }, {
     "stepId" : "formula-surface",
     "target" : {
-      "type" : "BY_NAMES",
+      "type" : "SHEET_BY_NAMES",
       "names" : [ "Dashboard" ]
     },
     "query" : {
@@ -166,7 +166,7 @@
   }, {
     "stepId" : "schema",
     "target" : {
-      "type" : "RECTANGULAR_WINDOW",
+      "type" : "RANGE_RECTANGULAR_WINDOW",
       "sheetName" : "Dashboard",
       "topLeftAddress" : "A1",
       "rowCount" : 4,
@@ -178,7 +178,7 @@
   }, {
     "stepId" : "named-range-surface",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "NAMED_RANGE_BY_NAME",
       "name" : "ForecastValue"
     },
     "query" : {
@@ -187,7 +187,7 @@
   }, {
     "stepId" : "formula-health",
     "target" : {
-      "type" : "BY_NAMES",
+      "type" : "SHEET_BY_NAMES",
       "names" : [ "Dashboard" ]
     },
     "query" : {
@@ -196,7 +196,7 @@
   }, {
     "stepId" : "hyperlink-health",
     "target" : {
-      "type" : "BY_NAMES",
+      "type" : "SHEET_BY_NAMES",
       "names" : [ "Dashboard" ]
     },
     "query" : {
@@ -205,7 +205,7 @@
   }, {
     "stepId" : "named-range-health",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "NAMED_RANGE_BY_NAME",
       "name" : "ForecastValue"
     },
     "query" : {
@@ -214,7 +214,7 @@
   }, {
     "stepId" : "workbook-findings",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "query" : {
       "type" : "ANALYZE_WORKBOOK_FINDINGS"

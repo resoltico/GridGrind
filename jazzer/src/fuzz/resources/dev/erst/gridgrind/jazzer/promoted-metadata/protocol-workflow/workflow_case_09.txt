@@ -8,8 +8,8 @@ Persistence Kind: SAVE_AS
 Operation Count: 5
 Assertion Count: 3
 Read Count: 6
-Assertion Kinds: EXPECT_PRESENT=3
+Assertion Kinds: EXPECT_PIVOT_TABLE_PRESENT=3
 Read Kinds: ANALYZE_WORKBOOK_FINDINGS=6
 Response Kind: FAILURE
-Style Kinds: border=2, wrap_text=2, font_height=2, font_height_twips=2, font=2, text_rotation=2, fill_patterned=2, border_top_color=2, border_bottom_color=2, horizontal_alignment=2, font_color=2, locked=2, protection=2, border_bottom=2, font_name=2, border_top=2, underline=2, strikeout=2, vertical_alignment=2, fill_pattern=2, indentation=2, alignment=2, hidden_formula=2, fill=2, bold=1, italic=1
+Style Kinds: hidden_formula=2, alignment=2, indentation=2, underline=2, vertical_alignment=2, strikeout=2, fill_pattern=2, border_top=2, font_name=2, border_bottom=2, protection=2, locked=2, font_color=2, horizontal_alignment=2, border_top_color=2, border_bottom_color=2, font=2, text_rotation=2, fill_patterned=2, font_height=2, wrap_text=2, font_height_twips=2, border=2, fill=2, italic=1, bold=1
 Operation Kinds: AUTO_SIZE_COLUMNS=3, APPLY_STYLE=2

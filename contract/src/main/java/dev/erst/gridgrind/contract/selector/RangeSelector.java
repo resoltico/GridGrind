@@ -7,10 +7,12 @@ import java.util.List;
 /** Selects one or more A1-style rectangular ranges on one sheet. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = RangeSelector.AllOnSheet.class, name = "ALL_ON_SHEET"),
-  @JsonSubTypes.Type(value = RangeSelector.ByRange.class, name = "BY_RANGE"),
-  @JsonSubTypes.Type(value = RangeSelector.ByRanges.class, name = "BY_RANGES"),
-  @JsonSubTypes.Type(value = RangeSelector.RectangularWindow.class, name = "RECTANGULAR_WINDOW")
+  @JsonSubTypes.Type(value = RangeSelector.AllOnSheet.class, name = "RANGE_ALL_ON_SHEET"),
+  @JsonSubTypes.Type(value = RangeSelector.ByRange.class, name = "RANGE_BY_RANGE"),
+  @JsonSubTypes.Type(value = RangeSelector.ByRanges.class, name = "RANGE_BY_RANGES"),
+  @JsonSubTypes.Type(
+      value = RangeSelector.RectangularWindow.class,
+      name = "RANGE_RECTANGULAR_WINDOW")
 })
 public sealed interface RangeSelector extends Selector
     permits RangeSelector.AllOnSheet,

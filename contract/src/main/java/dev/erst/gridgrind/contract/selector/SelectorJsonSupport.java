@@ -99,12 +99,19 @@ public final class SelectorJsonSupport {
 
   static Map<Class<?>, String> buildTypeIds(List<Class<?>> selectorRoots) {
     Map<Class<?>, String> typeIds = new ConcurrentHashMap<>();
+    Map<String, Class<?>> typeIdOwners = new ConcurrentHashMap<>();
     for (Class<?> root : selectorRoots) {
       JsonSubTypes jsonSubTypes = root.getAnnotation(JsonSubTypes.class);
       if (jsonSubTypes == null) {
         throw new IllegalStateException("Selector root is missing @JsonSubTypes: " + root);
       }
       for (JsonSubTypes.Type subtype : jsonSubTypes.value()) {
+        Class<?> previousOwner = typeIdOwners.putIfAbsent(subtype.name(), subtype.value());
+        if (previousOwner != null && !previousOwner.equals(subtype.value())) {
+          throw new IllegalStateException(
+              "Duplicate selector type id '%s' for %s and %s"
+                  .formatted(subtype.name(), previousOwner.getName(), subtype.value().getName()));
+        }
         typeIds.put(subtype.value(), subtype.name());
       }
     }

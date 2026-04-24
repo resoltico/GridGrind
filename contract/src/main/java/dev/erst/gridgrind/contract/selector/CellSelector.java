@@ -7,12 +7,12 @@ import java.util.List;
 /** Selects one or more cells, either on one sheet or by exact workbook-qualified addresses. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = CellSelector.AllUsedInSheet.class, name = "ALL_USED_IN_SHEET"),
-  @JsonSubTypes.Type(value = CellSelector.ByAddress.class, name = "BY_ADDRESS"),
-  @JsonSubTypes.Type(value = CellSelector.ByAddresses.class, name = "BY_ADDRESSES"),
+  @JsonSubTypes.Type(value = CellSelector.AllUsedInSheet.class, name = "CELL_ALL_USED_IN_SHEET"),
+  @JsonSubTypes.Type(value = CellSelector.ByAddress.class, name = "CELL_BY_ADDRESS"),
+  @JsonSubTypes.Type(value = CellSelector.ByAddresses.class, name = "CELL_BY_ADDRESSES"),
   @JsonSubTypes.Type(
       value = CellSelector.ByQualifiedAddresses.class,
-      name = "BY_QUALIFIED_ADDRESSES")
+      name = "CELL_BY_QUALIFIED_ADDRESSES")
 })
 public sealed interface CellSelector extends Selector
     permits CellSelector.AllUsedInSheet,

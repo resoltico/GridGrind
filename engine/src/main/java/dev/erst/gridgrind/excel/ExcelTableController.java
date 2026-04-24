@@ -369,7 +369,7 @@ final class ExcelTableController {
         return tableHandle;
       }
     }
-    return null;
+    return java.util.Optional.<TableHandle>empty().orElse(null);
   }
 
   private static XSSFSheet requiredSheet(ExcelWorkbook workbook, String sheetName) {

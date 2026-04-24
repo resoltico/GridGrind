@@ -182,7 +182,7 @@ class ConditionalFormattingInputTest {
             new ExcelDifferentialBorderSide(ExcelBorderStyle.DOUBLE, "#304050"),
             new ExcelDifferentialBorderSide(ExcelBorderStyle.HAIR, "#405060"),
             new ExcelDifferentialBorderSide(ExcelBorderStyle.DOTTED, "#506070")),
-        WorkbookCommandConverter.toExcelDifferentialBorder(border));
+        WorkbookCommandConverter.toExcelDifferentialBorder(border).orElseThrow());
   }
 
   @Test

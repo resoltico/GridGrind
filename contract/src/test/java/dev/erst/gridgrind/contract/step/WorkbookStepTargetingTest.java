@@ -18,7 +18,8 @@ class WorkbookStepTargetingTest {
         WorkbookStepTargeting.forMutationActionType(MutationAction.SetTable.class);
 
     assertEquals(
-        List.of(new SelectorJsonSupport.FamilyInfo("TableSelector", List.of("BY_NAME_ON_SHEET"))),
+        List.of(
+            new SelectorJsonSupport.FamilyInfo("TableSelector", List.of("TABLE_BY_NAME_ON_SHEET"))),
         targetSurface.selectorFamilies());
     assertEquals(null, targetSurface.rule());
   }
@@ -33,25 +34,17 @@ class WorkbookStepTargetingTest {
   }
 
   @Test
-  void exposesFamiliesAndDisambiguationRuleForSharedSelectorAssertions() {
+  void exposesFamiliesForDirectSelectorAssertionsWithoutDisambiguationNotes() {
     WorkbookStepTargeting.TargetSurface targetSurface =
-        WorkbookStepTargeting.forAssertionType(Assertion.Present.class);
+        WorkbookStepTargeting.forAssertionType(Assertion.TablePresent.class);
 
     assertEquals(
         List.of(
             new SelectorJsonSupport.FamilyInfo(
-                "NamedRangeSelector",
-                List.of("ALL", "ANY_OF", "BY_NAME", "BY_NAMES", "WORKBOOK_SCOPE", "SHEET_SCOPE")),
-            new SelectorJsonSupport.FamilyInfo(
-                "TableSelector", List.of("ALL", "BY_NAME", "BY_NAMES", "BY_NAME_ON_SHEET")),
-            new SelectorJsonSupport.FamilyInfo(
-                "PivotTableSelector", List.of("ALL", "BY_NAME", "BY_NAMES", "BY_NAME_ON_SHEET")),
-            new SelectorJsonSupport.FamilyInfo(
-                "ChartSelector", List.of("ALL_ON_SHEET", "BY_NAME"))),
+                "TableSelector",
+                List.of("TABLE_ALL", "TABLE_BY_NAME", "TABLE_BY_NAMES", "TABLE_BY_NAME_ON_SHEET"))),
         targetSurface.selectorFamilies());
-    assertTrue(targetSurface.rule().contains("Shared selector wire types remain family-sensitive"));
-    assertTrue(targetSurface.rule().contains("BY_NAMES"));
-    assertTrue(targetSurface.rule().contains("BY_NAME_ON_SHEET"));
+    assertEquals(null, targetSurface.rule());
   }
 
   @Test

@@ -18,8 +18,18 @@ import java.util.Objects;
 /** First-class verification contract evaluated against a workbook target. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = Assertion.Present.class, name = "EXPECT_PRESENT"),
-  @JsonSubTypes.Type(value = Assertion.Absent.class, name = "EXPECT_ABSENT"),
+  @JsonSubTypes.Type(
+      value = Assertion.NamedRangePresent.class,
+      name = "EXPECT_NAMED_RANGE_PRESENT"),
+  @JsonSubTypes.Type(value = Assertion.NamedRangeAbsent.class, name = "EXPECT_NAMED_RANGE_ABSENT"),
+  @JsonSubTypes.Type(value = Assertion.TablePresent.class, name = "EXPECT_TABLE_PRESENT"),
+  @JsonSubTypes.Type(value = Assertion.TableAbsent.class, name = "EXPECT_TABLE_ABSENT"),
+  @JsonSubTypes.Type(
+      value = Assertion.PivotTablePresent.class,
+      name = "EXPECT_PIVOT_TABLE_PRESENT"),
+  @JsonSubTypes.Type(value = Assertion.PivotTableAbsent.class, name = "EXPECT_PIVOT_TABLE_ABSENT"),
+  @JsonSubTypes.Type(value = Assertion.ChartPresent.class, name = "EXPECT_CHART_PRESENT"),
+  @JsonSubTypes.Type(value = Assertion.ChartAbsent.class, name = "EXPECT_CHART_ABSENT"),
   @JsonSubTypes.Type(value = Assertion.CellValue.class, name = "EXPECT_CELL_VALUE"),
   @JsonSubTypes.Type(value = Assertion.DisplayValue.class, name = "EXPECT_DISPLAY_VALUE"),
   @JsonSubTypes.Type(value = Assertion.FormulaText.class, name = "EXPECT_FORMULA_TEXT"),
@@ -46,8 +56,14 @@ import java.util.Objects;
   @JsonSubTypes.Type(value = Assertion.Not.class, name = "NOT")
 })
 public sealed interface Assertion
-    permits Assertion.Present,
-        Assertion.Absent,
+    permits Assertion.NamedRangePresent,
+        Assertion.NamedRangeAbsent,
+        Assertion.TablePresent,
+        Assertion.TableAbsent,
+        Assertion.PivotTablePresent,
+        Assertion.PivotTableAbsent,
+        Assertion.ChartPresent,
+        Assertion.ChartAbsent,
         Assertion.CellValue,
         Assertion.DisplayValue,
         Assertion.FormulaText,
@@ -70,11 +86,29 @@ public sealed interface Assertion
     return GridGrindProtocolTypeNames.assertionTypeName(getClass().asSubclass(Assertion.class));
   }
 
-  /** Expects the selector to resolve to one or more matching workbook entities. */
-  record Present() implements Assertion {}
+  /** Expects the named-range selector to resolve to one or more matching named ranges. */
+  record NamedRangePresent() implements Assertion {}
 
-  /** Expects the selector to resolve to no matching workbook entities. */
-  record Absent() implements Assertion {}
+  /** Expects the named-range selector to resolve to no matching named ranges. */
+  record NamedRangeAbsent() implements Assertion {}
+
+  /** Expects the table selector to resolve to one or more matching tables. */
+  record TablePresent() implements Assertion {}
+
+  /** Expects the table selector to resolve to no matching tables. */
+  record TableAbsent() implements Assertion {}
+
+  /** Expects the pivot-table selector to resolve to one or more matching pivot tables. */
+  record PivotTablePresent() implements Assertion {}
+
+  /** Expects the pivot-table selector to resolve to no matching pivot tables. */
+  record PivotTableAbsent() implements Assertion {}
+
+  /** Expects the chart selector to resolve to one or more matching charts. */
+  record ChartPresent() implements Assertion {}
+
+  /** Expects the chart selector to resolve to no matching charts. */
+  record ChartAbsent() implements Assertion {}
 
   /** Expects every selected cell to have the exact effective value. */
   record CellValue(ExpectedCellValue expectedValue) implements Assertion {

@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.microsoft.schemas.office.excel.CTClientData;
 import com.microsoft.schemas.vml.CTShape;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -214,8 +213,7 @@ class ExcelSignatureLineControllerTest {
 
       CTShape shape = signatureShapes(sheet.getVMLDrawing(false)).getFirst();
       shape.removeImagedata(0);
-      invokePrivateStatic(
-          ExcelSignatureLineController.class, "applyImageTitle", shape, "LeanSignature");
+      ExcelSignatureLineController.applyImageTitle(shape, "LeanSignature");
       shape.getSignaturelineArray(0).unsetAllowcomments();
 
       ExcelSignatureLineSnapshot snapshot = controller.signatureLines(sheet).getFirst();
@@ -254,22 +252,5 @@ class ExcelSignatureLineControllerTest {
       }
     }
     return List.copyOf(shapes);
-  }
-
-  @SuppressWarnings({"PMD.SignatureDeclareThrowsException", "PMD.AvoidAccessibilityAlteration"})
-  private static void invokePrivateStatic(Class<?> type, String name, Object... args)
-      throws Exception {
-    Method method = null;
-    for (Method candidate : type.getDeclaredMethods()) {
-      if (candidate.getName().equals(name) && candidate.getParameterCount() == args.length) {
-        method = candidate;
-        break;
-      }
-    }
-    if (method == null) {
-      throw new NoSuchMethodException(name);
-    }
-    method.setAccessible(true);
-    method.invoke(null, args);
   }
 }

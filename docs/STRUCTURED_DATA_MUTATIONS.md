@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: STRUCTURED_DATA_MUTATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, autofilter, table, pivot table, append-row, auto-size, execution calculation, named range]
   questions: ["how do i manage tables in gridgrind", "how do i set pivot tables in gridgrind", "how do i use append row or calculation policies in gridgrind"]
@@ -28,7 +28,7 @@ metadata on the same autofilter.
 {
   "stepId": "set-autofilter",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Inventory",
     "range": "A1:C200"
   },
@@ -115,7 +115,7 @@ their tables.
 {
   "stepId": "clear-autofilter",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {
@@ -437,7 +437,7 @@ Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid 
 {
   "stepId": "append-row",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {
@@ -485,7 +485,7 @@ Resize columns to fit their content. Applies to all columns with data on the she
 {
   "stepId": "auto-size-columns",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {

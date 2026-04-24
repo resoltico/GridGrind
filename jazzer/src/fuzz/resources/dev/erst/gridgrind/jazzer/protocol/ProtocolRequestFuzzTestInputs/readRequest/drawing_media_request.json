@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ops"
       }
     },
@@ -74,7 +74,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Ops",
         "range": "A1:B3"
       }
@@ -93,7 +93,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Ops",
         "address": "B2"
       }
@@ -134,7 +134,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ops"
       }
     },
@@ -169,7 +169,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ops"
       }
     },
@@ -199,7 +199,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ops"
       }
     },
@@ -242,7 +242,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ops"
       }
     },
@@ -268,7 +268,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "DRAWING_OBJECT_BY_NAME",
         "sheetName": "Ops",
         "objectName": "OpsPicture"
       }
@@ -279,7 +279,7 @@
         "type": "DELETE_DRAWING_OBJECT"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "DRAWING_OBJECT_BY_NAME",
         "sheetName": "Ops",
         "objectName": "OpsConnector"
       }
@@ -290,7 +290,7 @@
       },
       "stepId": "drawing-objects",
       "target": {
-        "type": "ALL_ON_SHEET",
+        "type": "DRAWING_OBJECT_ALL_ON_SHEET",
         "sheetName": "Ops"
       }
     },
@@ -300,7 +300,7 @@
       },
       "stepId": "picture-payload",
       "target": {
-        "type": "BY_NAME",
+        "type": "DRAWING_OBJECT_BY_NAME",
         "sheetName": "Ops",
         "objectName": "OpsPicture"
       }
@@ -311,7 +311,7 @@
       },
       "stepId": "embedded-payload",
       "target": {
-        "type": "BY_NAME",
+        "type": "DRAWING_OBJECT_BY_NAME",
         "sheetName": "Ops",
         "objectName": "OpsEmbed"
       }
@@ -322,7 +322,7 @@
       },
       "stepId": "comments",
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Ops",
         "address": "B2"
       }

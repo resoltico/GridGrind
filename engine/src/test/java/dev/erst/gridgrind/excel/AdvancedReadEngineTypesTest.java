@@ -6,6 +6,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelFillPattern;
 import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -118,10 +119,10 @@ class AdvancedReadEngineTypesTest {
       assertEquals(
           new ExcelColorSnapshot(null, 3, null, 0.25d),
           ExcelColorSnapshotSupport.snapshot(tintedTheme));
-      assertEquals("#112233", ExcelRgbColorSupport.toRgbHex(rgbColor));
-      assertNull(ExcelRgbColorSupport.toRgbHex(null));
-      assertNull(ExcelRgbColorSupport.toRgbHex(tintedTheme));
-      assertNull(ExcelRgbColorSupport.toRgbHex(malformedRgb));
+      assertEquals(Optional.of("#112233"), ExcelRgbColorSupport.toRgbHex(rgbColor));
+      assertEquals(Optional.empty(), ExcelRgbColorSupport.toRgbHex(null));
+      assertEquals(Optional.empty(), ExcelRgbColorSupport.toRgbHex(tintedTheme));
+      assertEquals(Optional.empty(), ExcelRgbColorSupport.toRgbHex(malformedRgb));
       assertNull(ExcelColorSnapshotSupport.snapshot(workbook, null));
       assertEquals(
           new ExcelColorSnapshot(null, 2, null, null),
@@ -346,26 +347,27 @@ class AdvancedReadEngineTypesTest {
                 new ExcelAutofilterFilterColumnSnapshot(3L, true, top10),
                 new ExcelAutofilterFilterColumnSnapshot(4L, true, color),
                 new ExcelAutofilterFilterColumnSnapshot(5L, true, icon)),
-            sortState);
+            java.util.Optional.of(sortState));
     ExcelAutofilterSnapshot.TableOwned tableOwned =
-        new ExcelAutofilterSnapshot.TableOwned("H1:I5", "QueueTable", List.of(), sortState);
+        new ExcelAutofilterSnapshot.TableOwned(
+            "H1:I5", "QueueTable", List.of(), java.util.Optional.of(sortState));
     ExcelAutofilterSnapshot.TableOwned tableOwnedWithColumn =
         new ExcelAutofilterSnapshot.TableOwned(
             "N1:O5",
             "QueueMirror",
             List.of(new ExcelAutofilterFilterColumnSnapshot(9L, true, values)),
-            sortState);
+            java.util.Optional.of(sortState));
     ExcelAutofilterSnapshot.TableOwned defaultTableOwned =
         new ExcelAutofilterSnapshot.TableOwned("L1:M4", "AuditTable");
     ExcelAutofilterFilterCriterionSnapshot.Values emptyValues =
         new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false);
 
-    assertEquals(sortState, sheetOwned.sortState());
+    assertEquals(java.util.Optional.of(sortState), sheetOwned.sortState());
     assertEquals("QueueTable", tableOwned.tableName());
     assertEquals(1, tableOwnedWithColumn.filterColumns().size());
     assertEquals(List.of(), emptyValues.values());
     assertEquals(List.of(), defaultTableOwned.filterColumns());
-    assertNull(defaultTableOwned.sortState());
+    assertTrue(defaultTableOwned.sortState().isEmpty());
     assertEquals("", sortCondition.sortBy());
     assertEquals("", sortState.sortMethod());
 
@@ -439,7 +441,7 @@ class AdvancedReadEngineTypesTest {
                 "A1:F5",
                 "QueueTable",
                 Arrays.asList(sheetOwned.filterColumns().getFirst(), null),
-                sortState));
+                java.util.Optional.of(sortState)));
   }
 
   @Test

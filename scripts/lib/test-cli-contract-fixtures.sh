@@ -123,7 +123,7 @@ readonly success_catalog='{
       "id": "SET_TABLE",
       "summary": "Create or replace one workbook-global table definition.",
       "targetSelectors": [
-        { "family": "TableSelector", "typeIds": ["BY_NAME_ON_SHEET"] }
+        { "family": "TableSelector", "typeIds": ["TABLE_BY_NAME_ON_SHEET"] }
       ]
     }
   ],
@@ -237,12 +237,12 @@ readonly success_task_plan='{
     "steps": [
       {
         "stepId": "author-chart",
-        "target": { "type": "BY_NAME", "name": "Dashboard" },
+        "target": { "type": "SHEET_BY_NAME", "name": "Dashboard" },
         "action": { "type": "SET_CHART" }
       },
       {
         "stepId": "verify-chart",
-        "target": { "type": "ALL_ON_SHEET", "sheetName": "Dashboard" },
+        "target": { "type": "CHART_ALL_ON_SHEET", "sheetName": "Dashboard" },
         "query": { "type": "GET_CHARTS" }
       }
     ]
@@ -318,12 +318,12 @@ readonly success_goal_plan='{
           "steps": [
             {
               "stepId": "author-chart",
-              "target": { "type": "BY_NAME", "name": "Dashboard" },
+              "target": { "type": "SHEET_BY_NAME", "name": "Dashboard" },
               "action": { "type": "SET_CHART" }
             },
             {
               "stepId": "verify-chart",
-              "target": { "type": "ALL_ON_SHEET", "sheetName": "Dashboard" },
+              "target": { "type": "CHART_ALL_ON_SHEET", "sheetName": "Dashboard" },
               "query": { "type": "GET_CHARTS" }
             }
           ]

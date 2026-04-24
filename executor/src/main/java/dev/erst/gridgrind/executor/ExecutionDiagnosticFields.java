@@ -93,86 +93,86 @@ final class ExecutionDiagnosticFields {
   }
 
   static String sheetNameFor(Exception exception) {
-    return ExecutionExceptionDiagnosticFields.sheetNameFor(exception);
+    return ExecutionExceptionDiagnosticFields.sheetNameFor(exception).orElse(null);
   }
 
   static String addressFor(Exception exception) {
-    return ExecutionExceptionDiagnosticFields.addressFor(exception);
+    return ExecutionExceptionDiagnosticFields.addressFor(exception).orElse(null);
   }
 
   static String rangeFor(Exception exception) {
-    return ExecutionExceptionDiagnosticFields.rangeFor(exception);
+    return ExecutionExceptionDiagnosticFields.rangeFor(exception).orElse(null);
   }
 
   static String formulaFor(Exception exception) {
-    return ExecutionExceptionDiagnosticFields.formulaFor(exception);
+    return ExecutionExceptionDiagnosticFields.formulaFor(exception).orElse(null);
   }
 
   static String namedRangeNameFor(Exception exception) {
-    return ExecutionExceptionDiagnosticFields.namedRangeNameFor(exception);
+    return ExecutionExceptionDiagnosticFields.namedRangeNameFor(exception).orElse(null);
   }
 
   static String sheetNameFor(MutationAction action) {
-    return ExecutionActionDiagnosticFields.sheetNameFor(action);
+    return ExecutionActionDiagnosticFields.sheetNameFor(action).orElse(null);
   }
 
   static String addressFor(MutationAction action) {
-    return ExecutionActionDiagnosticFields.addressFor(action);
+    return ExecutionActionDiagnosticFields.addressFor(action).orElse(null);
   }
 
   static String rangeFor(MutationAction action) {
-    return ExecutionActionDiagnosticFields.rangeFor(action);
+    return ExecutionActionDiagnosticFields.rangeFor(action).orElse(null);
   }
 
   static String formulaFor(MutationAction action) {
-    return ExecutionActionDiagnosticFields.formulaFor(action);
+    return ExecutionActionDiagnosticFields.formulaFor(action).orElse(null);
   }
 
   static String formulaFor(Assertion assertion) {
-    return ExecutionActionDiagnosticFields.formulaFor(assertion);
+    return ExecutionActionDiagnosticFields.formulaFor(assertion).orElse(null);
   }
 
   static String namedRangeNameFor(MutationAction action) {
-    return ExecutionActionDiagnosticFields.namedRangeNameFor(action);
+    return ExecutionActionDiagnosticFields.namedRangeNameFor(action).orElse(null);
   }
 
   static String sheetNameFor(Selector selector) {
-    return ExecutionSelectorDiagnosticFields.sheetNameFor(selector);
+    return ExecutionSelectorDiagnosticFields.sheetNameFor(selector).orElse(null);
   }
 
   static String addressFor(Selector selector) {
-    return ExecutionSelectorDiagnosticFields.addressFor(selector);
+    return ExecutionSelectorDiagnosticFields.addressFor(selector).orElse(null);
   }
 
   static String rangeFor(Selector selector) {
-    return ExecutionSelectorDiagnosticFields.rangeFor(selector);
+    return ExecutionSelectorDiagnosticFields.rangeFor(selector).orElse(null);
   }
 
   static String namedRangeNameFor(Selector selector) {
-    return ExecutionSelectorDiagnosticFields.namedRangeNameFor(selector);
+    return ExecutionSelectorDiagnosticFields.namedRangeNameFor(selector).orElse(null);
   }
 
   static String singleSheetName(CellSelector selector) {
-    return ExecutionSelectorDiagnosticFields.singleSheetName(selector);
+    return ExecutionSelectorDiagnosticFields.singleSheetName(selector).orElse(null);
   }
 
   static String singleSheetName(RangeSelector selector) {
-    return ExecutionSelectorDiagnosticFields.singleSheetName(selector);
+    return ExecutionSelectorDiagnosticFields.singleSheetName(selector).orElse(null);
   }
 
   static String singleSheetName(NamedRangeSelector selector) {
-    return ExecutionSelectorDiagnosticFields.singleSheetName(selector);
+    return ExecutionSelectorDiagnosticFields.singleSheetName(selector).orElse(null);
   }
 
   static String singleSheetName(NamedRangeSelector.Ref selector) {
-    return ExecutionSelectorDiagnosticFields.singleSheetName(selector);
+    return ExecutionSelectorDiagnosticFields.singleSheetName(selector).orElse(null);
   }
 
   static String singleNamedRangeName(NamedRangeSelector selector) {
-    return ExecutionSelectorDiagnosticFields.singleNamedRangeName(selector);
+    return ExecutionSelectorDiagnosticFields.singleNamedRangeName(selector).orElse(null);
   }
 
   static String singleNamedRangeName(NamedRangeSelector.Ref selector) {
-    return ExecutionSelectorDiagnosticFields.singleNamedRangeName(selector);
+    return ExecutionSelectorDiagnosticFields.singleNamedRangeName(selector).orElse(null);
   }
 }

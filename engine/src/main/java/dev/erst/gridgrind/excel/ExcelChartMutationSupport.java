@@ -180,8 +180,7 @@ final class ExcelChartMutationSupport {
     }
   }
 
-  private static void applyChartTitleFormula(
-      XSSFChart chart, String cachedText, CellReference reference) {
+  static void applyChartTitleFormula(XSSFChart chart, String cachedText, CellReference reference) {
     CTTitle title =
         chart.getCTChart().isSetTitle()
             ? chart.getCTChart().getTitle()

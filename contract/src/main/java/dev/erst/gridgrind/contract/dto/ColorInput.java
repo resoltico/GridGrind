@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import java.util.Locale;
+import java.util.Optional;
 
 /** Protocol-facing color payload preserving RGB, theme, indexed, and tint semantics. */
 public record ColorInput(String rgb, Integer theme, Integer indexed, Double tint) {
@@ -10,7 +11,7 @@ public record ColorInput(String rgb, Integer theme, Integer indexed, Double tint
   }
 
   public ColorInput {
-    rgb = normalizeRgbHex(rgb);
+    rgb = normalizeRgbHex(rgb).orElse(null);
     if (theme != null && theme < 0) {
       throw new IllegalArgumentException("theme must not be negative");
     }
@@ -25,9 +26,9 @@ public record ColorInput(String rgb, Integer theme, Integer indexed, Double tint
     }
   }
 
-  private static String normalizeRgbHex(String rgb) {
+  private static Optional<String> normalizeRgbHex(String rgb) {
     if (rgb == null) {
-      return null;
+      return Optional.empty();
     }
     if (rgb.isBlank()) {
       throw new IllegalArgumentException("rgb must not be blank");
@@ -35,6 +36,6 @@ public record ColorInput(String rgb, Integer theme, Integer indexed, Double tint
     if (!rgb.matches("^#[0-9A-Fa-f]{6}$")) {
       throw new IllegalArgumentException("rgb must match #RRGGBB");
     }
-    return rgb.toUpperCase(Locale.ROOT);
+    return Optional.of(rgb.toUpperCase(Locale.ROOT));
   }
 }

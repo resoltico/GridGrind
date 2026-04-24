@@ -7,6 +7,6 @@ import java.util.Objects;
 public record ExcelDifferentialBorderSide(ExcelBorderStyle style, String color) {
   public ExcelDifferentialBorderSide {
     Objects.requireNonNull(style, "style must not be null");
-    color = ExcelRgbColorSupport.normalizeRgbHex(color, "color");
+    color = ExcelRgbColorSupport.normalizeRgbHex(color, "color").orElse(null);
   }
 }

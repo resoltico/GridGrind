@@ -18,7 +18,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "B3"
       }
@@ -33,7 +33,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "B5"
       }
@@ -48,7 +48,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Rates",
         "address": "B5"
       }
@@ -59,7 +59,7 @@
       },
       "stepId": "workbook",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     },
     {
@@ -68,7 +68,7 @@
       },
       "stepId": "rates-cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Rates",
         "addresses": [
           "B5"
@@ -81,7 +81,7 @@
       },
       "stepId": "rates-window",
       "target": {
-        "type": "RECTANGULAR_WINDOW",
+        "type": "RANGE_RECTANGULAR_WINDOW",
         "sheetName": "Rates",
         "topLeftAddress": "A1",
         "rowCount": 5,
@@ -94,7 +94,7 @@
       },
       "stepId": "sales-cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Sales",
         "addresses": [
           "E3",
@@ -113,7 +113,7 @@
       },
       "stepId": "sales-window",
       "target": {
-        "type": "RECTANGULAR_WINDOW",
+        "type": "RANGE_RECTANGULAR_WINDOW",
         "sheetName": "Sales",
         "topLeftAddress": "A1",
         "rowCount": 7,
@@ -126,7 +126,7 @@
       },
       "stepId": "sales-formula-surface",
       "target": {
-        "type": "BY_NAMES",
+        "type": "SHEET_BY_NAMES",
         "names": [
           "Sales"
         ]

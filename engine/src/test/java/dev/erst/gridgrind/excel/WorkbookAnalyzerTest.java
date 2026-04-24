@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 
@@ -399,11 +400,11 @@ class WorkbookAnalyzerTest {
   @Test
   void helperMethodsHandleQuotedLiteralAndDanglingReferenceShapes() throws Exception {
     WorkbookAnalyzer analyzer = new WorkbookAnalyzer();
-    assertEquals("Quarter 1", analyzer.referencedSheetName("'Quarter 1'!$A$1"));
-    assertNull(analyzer.referencedSheetName("42"));
-    assertEquals("Budget", analyzer.referencedSheetName("Budget!A1+1"));
-    assertEquals("'", analyzer.referencedSheetName("'!A1"));
-    assertEquals("'Budget", analyzer.referencedSheetName("'Budget!A1"));
+    assertEquals(Optional.of("Quarter 1"), analyzer.referencedSheetName("'Quarter 1'!$A$1"));
+    assertEquals(Optional.empty(), analyzer.referencedSheetName("42"));
+    assertEquals(Optional.of("Budget"), analyzer.referencedSheetName("Budget!A1+1"));
+    assertEquals(Optional.of("'"), analyzer.referencedSheetName("'!A1"));
+    assertEquals(Optional.of("'Budget"), analyzer.referencedSheetName("'Budget!A1"));
 
     assertTrue(analyzer.looksLikeSheetRangeReference("Budget!$A$1"));
     assertTrue(analyzer.looksLikeSheetRangeReference("Budget!A1:B2"));

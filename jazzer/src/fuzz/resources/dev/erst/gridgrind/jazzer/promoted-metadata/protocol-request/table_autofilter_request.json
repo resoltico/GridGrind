@@ -7,16 +7,16 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 6003,
+      "inputBytes" : 6063,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 6,
       "operationKinds" : {
         "SET_TABLE" : 1,
-        "SET_AUTOFILTER" : 2,
+        "SET_RANGE" : 2,
         "ENSURE_SHEET" : 1,
-        "SET_RANGE" : 2
+        "SET_AUTOFILTER" : 2
       },
       "styleKinds" : { },
       "assertionCount" : 0,
@@ -24,9 +24,9 @@
       "readCount" : 4,
       "readKinds" : {
         "ANALYZE_AUTOFILTER_HEALTH" : 1,
-        "GET_AUTOFILTERS" : 1,
+        "ANALYZE_TABLE_HEALTH" : 1,
         "GET_TABLES" : 1,
-        "ANALYZE_TABLE_HEALTH" : 1
+        "GET_AUTOFILTERS" : 1
       }
     }
   },

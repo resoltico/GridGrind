@@ -96,7 +96,7 @@ class JazzerTextRendererTest {
                 Map.of(),
                 Map.of(),
                 1,
-                Map.of("EXPECT_PRESENT", 1L),
+                Map.of("EXPECT_CHART_PRESENT", 1L),
                 0,
                 Map.of()));
 
@@ -110,6 +110,6 @@ class JazzerTextRendererTest {
             "Input: jazzer/src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/seed.json"));
     assertFalse(replayText.contains("/Users/erst/Tools/GridGrind"));
     assertTrue(replayText.contains("Assertion Count: 1"));
-    assertTrue(replayText.contains("Assertion Kinds: EXPECT_PRESENT=1"));
+    assertTrue(replayText.contains("Assertion Kinds: EXPECT_CHART_PRESENT=1"));
   }
 }

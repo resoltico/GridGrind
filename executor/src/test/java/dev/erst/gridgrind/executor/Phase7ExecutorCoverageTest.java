@@ -28,6 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
@@ -41,7 +42,7 @@ class Phase7ExecutorCoverageTest {
             new WorkbookPlan.WorkbookPersistence.None(),
             java.util.List.of());
     GridGrindResponse.Success expected =
-        new GridGrindResponse.Success(
+        GridGrindResponse.success(
             null,
             new GridGrindResponse.PersistenceOutcome.NotSaved(),
             java.util.List.of(),
@@ -331,10 +332,10 @@ class Phase7ExecutorCoverageTest {
             new MutationAction.AppendRow(
                 java.util.List.of(new CellInput.Text(TextSourceInput.inline("budget")))),
             new MutationAction.AutoSizeColumns())) {
-      assertNull(ExecutionActionDiagnosticFields.sheetNameFor(action));
-      assertNull(ExecutionActionDiagnosticFields.rangeFor(action));
-      assertNull(ExecutionActionDiagnosticFields.formulaFor(action));
-      assertNull(ExecutionActionDiagnosticFields.namedRangeNameFor(action));
+      assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.sheetNameFor(action));
+      assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.rangeFor(action));
+      assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.formulaFor(action));
+      assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.namedRangeNameFor(action));
     }
 
     MutationAction.SetNamedRange rangeDefinedNamedRange =
@@ -342,11 +343,16 @@ class Phase7ExecutorCoverageTest {
             "BudgetWindow",
             new dev.erst.gridgrind.contract.dto.NamedRangeScope.Sheet("Budget"),
             new dev.erst.gridgrind.contract.dto.NamedRangeTarget("Budget", "A1:B2"));
-    assertEquals("Budget", ExecutionActionDiagnosticFields.sheetNameFor(rangeDefinedNamedRange));
-    assertEquals("A1:B2", ExecutionActionDiagnosticFields.rangeFor(rangeDefinedNamedRange));
-    assertNull(ExecutionActionDiagnosticFields.formulaFor(rangeDefinedNamedRange));
     assertEquals(
-        "BudgetWindow", ExecutionActionDiagnosticFields.namedRangeNameFor(rangeDefinedNamedRange));
+        Optional.of("Budget"),
+        ExecutionActionDiagnosticFields.sheetNameFor(rangeDefinedNamedRange));
+    assertEquals(
+        Optional.of("A1:B2"), ExecutionActionDiagnosticFields.rangeFor(rangeDefinedNamedRange));
+    assertEquals(
+        Optional.empty(), ExecutionActionDiagnosticFields.formulaFor(rangeDefinedNamedRange));
+    assertEquals(
+        Optional.of("BudgetWindow"),
+        ExecutionActionDiagnosticFields.namedRangeNameFor(rangeDefinedNamedRange));
 
     MutationAction.SetTable setTable =
         new MutationAction.SetTable(
@@ -356,10 +362,10 @@ class Phase7ExecutorCoverageTest {
                 "A1:B5",
                 Boolean.FALSE,
                 new dev.erst.gridgrind.contract.dto.TableStyleInput.None()));
-    assertEquals("Budget", ExecutionActionDiagnosticFields.sheetNameFor(setTable));
-    assertEquals("A1:B5", ExecutionActionDiagnosticFields.rangeFor(setTable));
-    assertNull(ExecutionActionDiagnosticFields.formulaFor(setTable));
-    assertNull(ExecutionActionDiagnosticFields.namedRangeNameFor(setTable));
+    assertEquals(Optional.of("Budget"), ExecutionActionDiagnosticFields.sheetNameFor(setTable));
+    assertEquals(Optional.of("A1:B5"), ExecutionActionDiagnosticFields.rangeFor(setTable));
+    assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.formulaFor(setTable));
+    assertEquals(Optional.empty(), ExecutionActionDiagnosticFields.namedRangeNameFor(setTable));
 
     assertEquals(
         "Budget",

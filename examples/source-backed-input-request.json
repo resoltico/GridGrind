@@ -10,7 +10,7 @@
   "steps" : [ {
     "stepId" : "ensure-inputs",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Inputs"
     },
     "action" : {
@@ -19,7 +19,7 @@
   }, {
     "stepId" : "seed-values",
     "target" : {
-      "type" : "BY_RANGE",
+      "type" : "RANGE_BY_RANGE",
       "sheetName" : "Inputs",
       "range" : "B2:B3"
     },
@@ -36,7 +36,7 @@
   }, {
     "stepId" : "set-title-from-file",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Inputs",
       "address" : "A1"
     },
@@ -53,7 +53,7 @@
   }, {
     "stepId" : "set-total-formula-from-file",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Inputs",
       "address" : "B4"
     },
@@ -70,7 +70,7 @@
   }, {
     "stepId" : "attach-payload-from-file",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Inputs"
     },
     "action" : {
@@ -112,7 +112,7 @@
   }, {
     "stepId" : "read-cells",
     "target" : {
-      "type" : "BY_ADDRESSES",
+      "type" : "CELL_BY_ADDRESSES",
       "sheetName" : "Inputs",
       "addresses" : [ "A1", "B4" ]
     },
@@ -122,7 +122,7 @@
   }, {
     "stepId" : "read-payload",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "DRAWING_OBJECT_BY_NAME",
       "sheetName" : "Inputs",
       "objectName" : "InputsPayload"
     },

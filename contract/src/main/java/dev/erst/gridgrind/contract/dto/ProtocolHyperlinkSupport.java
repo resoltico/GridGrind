@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /** Protocol-owned hyperlink normalization and validation helpers. */
@@ -23,7 +24,7 @@ final class ProtocolHyperlinkSupport {
     if (isValidUrlTarget(normalized)) {
       return normalized;
     }
-    String scheme = absoluteUriScheme(normalized);
+    String scheme = absoluteUriScheme(normalized).orElse(null);
     if ("file".equalsIgnoreCase(scheme)) {
       throw new IllegalArgumentException("target uses file: scheme; use FILE hyperlinks instead");
     }
@@ -100,12 +101,12 @@ final class ProtocolHyperlinkSupport {
     return atIndex > 0 && atIndex == target.lastIndexOf('@') && atIndex < target.length() - 1;
   }
 
-  private static String absoluteUriScheme(String target) {
+  private static Optional<String> absoluteUriScheme(String target) {
     try {
       URI uri = URI.create(target);
-      return uri.isAbsolute() ? uri.getScheme() : null;
+      return uri.isAbsolute() ? Optional.ofNullable(uri.getScheme()) : Optional.empty();
     } catch (IllegalArgumentException exception) {
-      return null;
+      return Optional.empty();
     }
   }
 

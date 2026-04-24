@@ -1080,7 +1080,7 @@ public final class OperationSequenceModel {
   private static Assertion nextNamedRangeAssertion(GridGrindFuzzData data) {
     Assertion primary =
         switch (selectorSlot(nextSelectorByte(data)) % 3) {
-          case 0 -> new Assertion.Present();
+          case 0 -> new Assertion.NamedRangePresent();
           case 1 ->
               new Assertion.AnalysisMaxSeverity(
                   new InspectionQuery.AnalyzeNamedRangeHealth(), nextMaximumSeverity(data));
@@ -1091,7 +1091,7 @@ public final class OperationSequenceModel {
                   nextOptionalSeverity(data),
                   null);
         };
-    Assertion alternate = new Assertion.Absent();
+    Assertion alternate = new Assertion.NamedRangeAbsent();
     return maybeComposeAssertion(data, primary, alternate);
   }
 
@@ -1144,7 +1144,7 @@ public final class OperationSequenceModel {
   private static Assertion nextTableAssertion(GridGrindFuzzData data) {
     Assertion primary =
         switch (selectorSlot(nextSelectorByte(data)) % 3) {
-          case 0 -> new Assertion.Present();
+          case 0 -> new Assertion.TablePresent();
           case 1 ->
               new Assertion.AnalysisMaxSeverity(
                   new InspectionQuery.AnalyzeTableHealth(), nextMaximumSeverity(data));
@@ -1155,14 +1155,14 @@ public final class OperationSequenceModel {
                   nextOptionalSeverity(data),
                   null);
         };
-    Assertion alternate = new Assertion.Absent();
+    Assertion alternate = new Assertion.TableAbsent();
     return maybeComposeAssertion(data, primary, alternate);
   }
 
   private static Assertion nextPivotTableAssertion(GridGrindFuzzData data) {
     Assertion primary =
         switch (selectorSlot(nextSelectorByte(data)) % 3) {
-          case 0 -> new Assertion.Present();
+          case 0 -> new Assertion.PivotTablePresent();
           case 1 ->
               new Assertion.AnalysisMaxSeverity(
                   new InspectionQuery.AnalyzePivotTableHealth(), nextMaximumSeverity(data));
@@ -1173,13 +1173,15 @@ public final class OperationSequenceModel {
                   nextOptionalSeverity(data),
                   null);
         };
-    Assertion alternate = new Assertion.Absent();
+    Assertion alternate = new Assertion.PivotTableAbsent();
     return maybeComposeAssertion(data, primary, alternate);
   }
 
   private static Assertion nextChartAssertion(GridGrindFuzzData data) {
-    Assertion primary = data.consumeBoolean() ? new Assertion.Present() : new Assertion.Absent();
-    Assertion alternate = data.consumeBoolean() ? new Assertion.Absent() : new Assertion.Present();
+    Assertion primary =
+        data.consumeBoolean() ? new Assertion.ChartPresent() : new Assertion.ChartAbsent();
+    Assertion alternate =
+        data.consumeBoolean() ? new Assertion.ChartAbsent() : new Assertion.ChartPresent();
     return maybeComposeAssertion(data, primary, alternate);
   }
 

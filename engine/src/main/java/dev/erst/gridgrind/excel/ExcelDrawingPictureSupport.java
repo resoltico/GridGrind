@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ooxml.POIXMLDocumentPart.RelationPart;
 import org.apache.poi.openxml4j.opc.PackagePart;
 import org.apache.poi.openxml4j.opc.PackagePartName;
@@ -49,10 +50,10 @@ final class ExcelDrawingPictureSupport {
     Objects.requireNonNull(located, "located must not be null");
     Objects.requireNonNull(picture, "picture must not be null");
 
-    PackagePartName imagePartName = imagePartNameOrNull(picture);
-    String relationId = pictureRelationId(picture);
-    if (relationId != null) {
-      located.drawing().getPackagePart().removeRelationship(relationId);
+    PackagePartName imagePartName = imagePartNameOrNull(picture).orElse(null);
+    Optional<String> relationId = pictureRelationId(picture);
+    if (relationId.isPresent()) {
+      located.drawing().getPackagePart().removeRelationship(relationId.orElseThrow());
     }
     ExcelDrawingRemovalSupport.removeParentAnchor(located.drawing(), located.parentAnchor());
     if (imagePartName != null) {
@@ -63,7 +64,7 @@ final class ExcelDrawingPictureSupport {
 
   static PictureReadback requiredPictureReadback(XSSFPicture picture) {
     Objects.requireNonNull(picture, "picture must not be null");
-    XSSFPictureData pictureData = pictureDataOrNull(picture);
+    XSSFPictureData pictureData = pictureDataOrNull(picture).orElse(null);
     if (pictureData == null) {
       throw missingPictureRelationship(picture);
     }
@@ -76,65 +77,67 @@ final class ExcelDrawingPictureSupport {
         bytes);
   }
 
-  static XSSFPictureData pictureDataOrNull(XSSFPicture picture) {
+  static Optional<XSSFPictureData> pictureDataOrNull(XSSFPicture picture) {
     Objects.requireNonNull(picture, "picture must not be null");
-    String relationId = pictureRelationId(picture);
+    String relationId = pictureRelationId(picture).orElse(null);
     if (relationId == null) {
-      return null;
+      return Optional.empty();
     }
     XSSFPictureData pictureData = picture.getPictureData();
     if (pictureData != null) {
-      return pictureData;
+      return Optional.of(pictureData);
     }
     PackagePart imagePart =
         ExcelDrawingBinarySupport.relatedInternalPart(
             picture.getDrawing().getPackagePart(), relationId);
     if (imagePart == null) {
-      return null;
+      return Optional.empty();
     }
     try {
       ExcelPictureFormat.fromContentType(imagePart.getContentType());
     } catch (IllegalArgumentException ignored) {
-      return null;
+      return Optional.empty();
     }
-    return ExcelWorkbookImageCatalogSupport.pictureDataForPart(imagePart);
+    return Optional.of(ExcelWorkbookImageCatalogSupport.pictureDataForPart(imagePart));
   }
 
-  static PackagePart relatedImagePartOrNull(XSSFPicture picture) {
+  static Optional<PackagePart> relatedImagePartOrNull(XSSFPicture picture) {
     Objects.requireNonNull(picture, "picture must not be null");
-    String relationId = pictureRelationId(picture);
+    String relationId = pictureRelationId(picture).orElse(null);
     if (relationId == null) {
-      return null;
+      return Optional.empty();
     }
     XSSFPictureData pictureData = picture.getPictureData();
     if (pictureData != null) {
-      return pictureData.getPackagePart();
+      return Optional.of(pictureData.getPackagePart());
     }
-    return ExcelDrawingBinarySupport.relatedInternalPart(
-        picture.getDrawing().getPackagePart(), relationId);
+    return Optional.ofNullable(
+        ExcelDrawingBinarySupport.relatedInternalPart(
+            picture.getDrawing().getPackagePart(), relationId));
   }
 
-  static PackagePartName imagePartNameOrNull(XSSFPicture picture) {
-    PackagePart imagePart = relatedImagePartOrNull(picture);
+  static Optional<PackagePartName> imagePartNameOrNull(XSSFPicture picture) {
+    PackagePart imagePart = relatedImagePartOrNull(picture).orElse(null);
     if (imagePart == null) {
-      return null;
+      return Optional.empty();
     }
     try {
       ExcelPictureFormat.fromContentType(imagePart.getContentType());
-      return imagePart.getPartName();
+      return Optional.of(imagePart.getPartName());
     } catch (IllegalArgumentException ignored) {
-      return null;
+      return Optional.empty();
     }
   }
 
-  static String pictureRelationId(XSSFPicture picture) {
+  static Optional<String> pictureRelationId(XSSFPicture picture) {
     Objects.requireNonNull(picture, "picture must not be null");
     if (picture.getCTPicture().getBlipFill() == null
         || picture.getCTPicture().getBlipFill().getBlip() == null) {
-      return null;
+      return Optional.empty();
     }
-    return ExcelDrawingBinarySupport.nullIfBlank(
-        picture.getCTPicture().getBlipFill().getBlip().getEmbed());
+    return Optional.ofNullable(
+        ExcelDrawingBinarySupport.nullIfBlank(
+            picture.getCTPicture().getBlipFill().getBlip().getEmbed()));
   }
 
   static void setPictureRelationId(XSSFPicture picture, String relationId) {
@@ -155,26 +158,26 @@ final class ExcelDrawingPictureSupport {
     picture.getCTPicture().getBlipFill().getBlip().setEmbed(relationId);
   }
 
-  static String reusableRelationId(
+  static Optional<String> reusableRelationId(
       org.apache.poi.xssf.usermodel.XSSFDrawing drawing,
       String relationId,
       PackagePartName targetPartName) {
     Objects.requireNonNull(drawing, "drawing must not be null");
     Objects.requireNonNull(targetPartName, "targetPartName must not be null");
     if (relationId == null || relationId.isBlank()) {
-      return null;
+      return Optional.empty();
     }
     RelationPart existingRelation = drawing.getRelationPartById(relationId);
     if (existingRelation == null) {
-      return relationId;
+      return Optional.of(relationId);
     }
     return existingRelation.getDocumentPart().getPackagePart().getPartName().equals(targetPartName)
-        ? relationId
-        : null;
+        ? Optional.of(relationId)
+        : Optional.empty();
   }
 
   static IllegalStateException missingPictureRelationship(XSSFPicture picture) {
-    String relationId = pictureRelationId(picture);
+    String relationId = pictureRelationId(picture).orElse(null);
     String relationFragment =
         relationId == null ? "its image relationship" : "image relationship '" + relationId + "'";
     return new IllegalStateException(
@@ -198,19 +201,23 @@ final class ExcelDrawingPictureSupport {
     private final String contentType;
     private final byte[] bytes;
 
-    private PictureReadback(
+    PictureReadback(
         XSSFPictureData pictureData,
         PackagePart picturePart,
         ExcelPictureFormat format,
         String contentType,
         byte[] bytes) {
-      this.pictureData = Objects.requireNonNull(pictureData, "pictureData must not be null");
-      this.picturePart = Objects.requireNonNull(picturePart, "picturePart must not be null");
-      this.format = Objects.requireNonNull(format, "format must not be null");
-      this.contentType = Objects.requireNonNull(contentType, "contentType must not be null");
+      Objects.requireNonNull(pictureData, "pictureData must not be null");
+      Objects.requireNonNull(picturePart, "picturePart must not be null");
+      Objects.requireNonNull(format, "format must not be null");
+      Objects.requireNonNull(contentType, "contentType must not be null");
       if (contentType.isBlank()) {
         throw new IllegalArgumentException("contentType must not be blank");
       }
+      this.pictureData = pictureData;
+      this.picturePart = picturePart;
+      this.format = format;
+      this.contentType = contentType;
       this.bytes = Objects.requireNonNull(bytes, "bytes must not be null").clone();
     }
 

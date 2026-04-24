@@ -14,6 +14,8 @@ import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTDataValidation;
 /** Copies sheets by combining POI XSSF cloning with GridGrind-owned repair passes. */
 final class ExcelSheetCopyController {
   private final ExcelAutofilterController autofilterController = new ExcelAutofilterController();
+  private final ExcelSheetCloneChartPreparationSupport cloneChartPreparationSupport =
+      new ExcelSheetCloneChartPreparationSupport();
   private final ExcelSheetClonePreparationSupport clonePreparationSupport =
       new ExcelSheetClonePreparationSupport();
   private final ExcelSheetCopyEmbeddedObjectSupport embeddedObjectCopySupport =
@@ -42,9 +44,16 @@ final class ExcelSheetCopyController {
     ExcelSheetCopySnapshot snapshot = snapshot(workbook, sourceSheetName, sourcePoiSheet);
     ExcelSheetCopyEmbeddedObjectSupport.CopySnapshot embeddedObjects =
         embeddedObjectCopySupport.snapshot(sourceSheet);
+    ExcelSheetCloneChartPreparationSupport.RewrittenChartFormulas rewrittenChartFormulas =
+        cloneChartPreparationSupport.rewriteDefinedNameFormulas(sourcePoiSheet);
     clonePreparationSupport.prepareSourceSheetForClone(sourcePoiSheet);
     int sourceSheetIndex = workbook.xssfWorkbook().getSheetIndex(sourcePoiSheet);
-    XSSFSheet targetPoiSheet = workbook.xssfWorkbook().cloneSheet(sourceSheetIndex, newSheetName);
+    XSSFSheet targetPoiSheet;
+    try {
+      targetPoiSheet = workbook.xssfWorkbook().cloneSheet(sourceSheetIndex, newSheetName);
+    } finally {
+      rewrittenChartFormulas.restoreSourceFormulas();
+    }
     ExcelSheet targetSheet = workbook.sheet(newSheetName);
     List<String> transientCopiedTableNames =
         targetPoiSheet.getTables().stream()
@@ -112,7 +121,7 @@ final class ExcelSheetCopyController {
         ExcelSheetCopySupport.tablesOnSheet(sourcePoiSheet));
   }
 
-  private static void retargetCopiedSheetFormulas(
+  static void retargetCopiedSheetFormulas(
       ExcelWorkbook workbook, String sourceSheetName, String newSheetName, XSSFSheet targetSheet) {
     int targetSheetIndex = workbook.xssfWorkbook().getSheetIndex(targetSheet);
     for (Row row : targetSheet) {
@@ -139,7 +148,7 @@ final class ExcelSheetCopyController {
     }
   }
 
-  private static boolean mayReferenceCopiedSheet(String formula, String sourceSheetName) {
+  static boolean mayReferenceCopiedSheet(String formula, String sourceSheetName) {
     String quotedSourceSheetName = "'" + sourceSheetName.replace("'", "''") + "'";
     return formula.contains(sourceSheetName + "!")
         || formula.contains(quotedSourceSheetName + "!")

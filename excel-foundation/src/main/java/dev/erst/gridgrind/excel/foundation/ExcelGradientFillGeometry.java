@@ -2,7 +2,12 @@ package dev.erst.gridgrind.excel.foundation;
 
 import java.util.Locale;
 
-/** Shared normalization and geometry rules for authored gradient fills. */
+/**
+ * Shared normalization and geometry rules for authored gradient fills.
+ *
+ * <p>The normalized type tokens returned here are part of the published contract vocabulary when
+ * gradient fills cross the contract boundary.
+ */
 public final class ExcelGradientFillGeometry {
   private ExcelGradientFillGeometry() {}
 

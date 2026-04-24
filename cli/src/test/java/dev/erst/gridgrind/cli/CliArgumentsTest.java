@@ -18,6 +18,7 @@ class CliArgumentsTest {
 
     assertNull(command.operationFilter());
     assertEquals("sheet", command.searchQuery());
+    assertNull(command.responsePath());
   }
 
   @Test
@@ -30,6 +31,21 @@ class CliArgumentsTest {
 
     assertEquals("SET_CELL", command.operationFilter());
     assertNull(command.searchQuery());
+    assertNull(command.responsePath());
+  }
+
+  @Test
+  void printProtocolCatalogParsesResponsePath() {
+    CliCommand.PrintProtocolCatalog command =
+        assertInstanceOf(
+            CliCommand.PrintProtocolCatalog.class,
+            CliArguments.parse(
+                new String[] {
+                  "--print-protocol-catalog", "--search", "sheet", "--response", "catalog.json"
+                }));
+
+    assertEquals("sheet", command.searchQuery());
+    assertEquals("catalog.json", command.responsePath().toString());
   }
 
   @Test
@@ -120,7 +136,20 @@ class CliArgumentsTest {
 
   @Test
   void bareHelpAliasParsesIntoHelpCommand() {
-    assertInstanceOf(CliCommand.Help.class, CliArguments.parse(new String[] {"help"}));
+    CliCommand.Help command =
+        assertInstanceOf(CliCommand.Help.class, CliArguments.parse(new String[] {"help"}));
+
+    assertNull(command.responsePath());
+  }
+
+  @Test
+  void helpAcceptsResponsePath() {
+    CliCommand.Help command =
+        assertInstanceOf(
+            CliCommand.Help.class,
+            CliArguments.parse(new String[] {"--help", "--response", "help.txt"}));
+
+    assertEquals("help.txt", command.responsePath().toString());
   }
 
   @Test
@@ -135,16 +164,99 @@ class CliArgumentsTest {
   }
 
   @Test
-  void doctorRequestRejectsResponsePaths() {
+  void doctorRequestParsesResponsePaths() {
+    CliCommand.DoctorRequest command =
+        assertInstanceOf(
+            CliCommand.DoctorRequest.class,
+            CliArguments.parse(
+                new String[] {"--doctor-request", "--response", "doctor-report.json"}));
+
+    assertNull(command.requestPath());
+    assertEquals("doctor-report.json", command.responsePath().toString());
+  }
+
+  @Test
+  void printTaskCatalogParsesTaskFilterAndResponsePathTogether() {
+    CliCommand.PrintTaskCatalog command =
+        assertInstanceOf(
+            CliCommand.PrintTaskCatalog.class,
+            CliArguments.parse(
+                new String[] {
+                  "--print-task-catalog", "--task", "DASHBOARD", "--response", "task.json"
+                }));
+
+    assertEquals("DASHBOARD", command.taskFilter());
+    assertEquals("task.json", command.responsePath().toString());
+  }
+
+  @Test
+  void printTaskCatalogRejectsDuplicateTaskArguments() {
     CliArgumentsException exception =
         assertThrows(
             CliArgumentsException.class,
             () ->
                 CliArguments.parse(
-                    new String[] {"--doctor-request", "--response", "doctor-report.json"}));
+                    new String[] {
+                      "--print-task-catalog", "--task", "DASHBOARD", "--task", "AUDIT"
+                    }));
+
+    assertEquals("--task", exception.argument());
+    assertEquals("Duplicate argument: --task", exception.getMessage());
+  }
+
+  @Test
+  void printTaskCatalogRejectsDuplicateResponseArguments() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {
+                      "--print-task-catalog",
+                      "--task",
+                      "DASHBOARD",
+                      "--response",
+                      "a.json",
+                      "--response",
+                      "b.json"
+                    }));
 
     assertEquals("--response", exception.argument());
-    assertEquals("--response is not supported with --doctor-request", exception.getMessage());
+    assertEquals("Duplicate argument: --response", exception.getMessage());
+  }
+
+  @Test
+  void printProtocolCatalogRejectsDuplicateResponseArguments() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {
+                      "--print-protocol-catalog",
+                      "--search",
+                      "sheet",
+                      "--response",
+                      "a.json",
+                      "--response",
+                      "b.json"
+                    }));
+
+    assertEquals("--response", exception.argument());
+    assertEquals("Duplicate argument: --response", exception.getMessage());
+  }
+
+  @Test
+  void immediateCommandsRejectDuplicateTrailingResponseArguments() {
+    CliArgumentsException exception =
+        assertThrows(
+            CliArgumentsException.class,
+            () ->
+                CliArguments.parse(
+                    new String[] {"--help", "--response", "a.txt", "--response", "b.txt"}));
+
+    assertEquals("--response", exception.argument());
+    assertEquals("Duplicate argument: --response", exception.getMessage());
   }
 
   @Test

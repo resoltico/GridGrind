@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Optional;
 import javax.xml.transform.TransformerException;
 import org.apache.poi.util.XMLHelper;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -210,15 +211,14 @@ class ExcelCustomXmlControllerTest {
 
   @Test
   void requireMappingRejectsEmptyAndAmbiguousSelections() throws Exception {
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      IllegalArgumentException emptyFailure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () ->
-                  ExcelCustomXmlController.requireMapping(
-                      workbook, new ExcelCustomXmlMappingLocator(null, "missing")));
-      assertTrue(emptyFailure.getMessage().contains("does not contain any custom XML mappings"));
-    }
+    IllegalArgumentException emptyFailure =
+        assertThrows(
+            IllegalArgumentException.class,
+            () ->
+                ExcelCustomXmlController.requireMapping(
+                    List.<org.apache.poi.xssf.usermodel.XSSFMap>of(),
+                    new ExcelCustomXmlMappingLocator(null, "missing")));
+    assertTrue(emptyFailure.getMessage().contains("does not contain any custom XML mappings"));
 
     try (ExcelWorkbook workbook = CustomXmlWorkbookSamples.openSimpleCustomXmlWorkbook()) {
       IllegalArgumentException mixedMismatchFailure =
@@ -230,13 +230,20 @@ class ExcelCustomXmlControllerTest {
                       new ExcelCustomXmlMappingLocator(1L, "missing-name")));
       assertTrue(mixedMismatchFailure.getMessage().contains("No custom XML mapping matched"));
 
-      ExcelCustomXmlControllerTestSupport.addDuplicateMapping(workbook.xssfWorkbook());
+      CTMap duplicateMap = CTMap.Factory.newInstance();
+      duplicateMap.setID(2L);
+      duplicateMap.setName("CORSO_mapping");
+      duplicateMap.setRootElement("CORSO");
+      duplicateMap.setSchemaID("Schema1");
       IllegalArgumentException ambiguousFailure =
           assertThrows(
               IllegalArgumentException.class,
               () ->
                   ExcelCustomXmlController.requireMapping(
-                      workbook.xssfWorkbook(),
+                      List.of(
+                          workbook.xssfWorkbook().getCustomXMLMappings().iterator().next(),
+                          ExcelCustomXmlControllerTestSupport.fakeMap(
+                              duplicateMap, null, null, List.of(), List.of())),
                       new ExcelCustomXmlMappingLocator(null, "CORSO_mapping")));
       assertTrue(ambiguousFailure.getMessage().contains("Multiple custom XML mappings matched"));
     }
@@ -244,7 +251,8 @@ class ExcelCustomXmlControllerTest {
 
   @Test
   void dataBindingReturnsNullWhenCtMapHasNoBinding() {
-    assertNull(ExcelCustomXmlController.dataBinding(CTMap.Factory.newInstance()));
+    assertEquals(
+        Optional.empty(), ExcelCustomXmlController.dataBinding(CTMap.Factory.newInstance()));
   }
 
   @Test
@@ -261,7 +269,8 @@ class ExcelCustomXmlControllerTest {
     ctMap.setPreserveFormat(true);
     ctMap.addNewDataBinding().setDataBindingLoadMode(7L);
 
-    ExcelCustomXmlDataBindingSnapshot dataBinding = ExcelCustomXmlController.dataBinding(ctMap);
+    ExcelCustomXmlDataBindingSnapshot dataBinding =
+        ExcelCustomXmlController.dataBinding(ctMap).orElseThrow();
     assertNull(dataBinding.dataBindingName());
     assertNull(dataBinding.fileBinding());
     assertNull(dataBinding.connectionId());
@@ -283,7 +292,7 @@ class ExcelCustomXmlControllerTest {
     fullBinding.setFileBindingName("orders.xml");
     fullBinding.setDataBindingLoadMode(5L);
     ExcelCustomXmlDataBindingSnapshot fullDataBinding =
-        ExcelCustomXmlController.dataBinding(boundCtMap);
+        ExcelCustomXmlController.dataBinding(boundCtMap).orElseThrow();
     assertEquals("Binding", fullDataBinding.dataBindingName());
     assertEquals(true, fullDataBinding.fileBinding());
     assertEquals(9L, fullDataBinding.connectionId());
@@ -328,7 +337,8 @@ class ExcelCustomXmlControllerTest {
       assertNull(ExcelCustomXmlController.nullIfBlank(null));
       assertNull(ExcelCustomXmlController.nullIfBlank(" "));
       assertEquals("OrdersMapping", ExcelCustomXmlController.nullIfBlank("OrdersMapping"));
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           ExcelCustomXmlController.schemaXml(
               ExcelCustomXmlControllerTestSupport.fakeMap(
                   ctMap, schema, null, List.of(), List.of())));
@@ -372,8 +382,9 @@ class ExcelCustomXmlControllerTest {
     ExcelCustomXmlControllerTestSupport.FakeMap fakeMap =
         ExcelCustomXmlControllerTestSupport.fakeMap(ctMap, schema, null, List.of(), List.of());
 
-    assertNull(ExcelCustomXmlController.schemaXml(fakeMap));
-    assertNull(ExcelCustomXmlController.schemaXml(fakeMap, XMLHelper.newTransformer()));
+    assertEquals(Optional.empty(), ExcelCustomXmlController.schemaXml(fakeMap));
+    assertEquals(
+        Optional.empty(), ExcelCustomXmlController.schemaXml(fakeMap, XMLHelper.newTransformer()));
   }
 
   @Test

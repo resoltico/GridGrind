@@ -21,11 +21,14 @@ public final class GridGrindRequestDoctor {
 
   /** Creates the production doctor backed by the same request validator used for execution. */
   public GridGrindRequestDoctor() {
-    this(new ExecutionValidationSupport(), new ExecutionWorkbookSupport(Files::createTempFile));
+    this.validationSupport = new ExecutionValidationSupport();
+    this.workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
   }
 
   GridGrindRequestDoctor(ExecutionValidationSupport validationSupport) {
-    this(validationSupport, new ExecutionWorkbookSupport(Files::createTempFile));
+    this.validationSupport =
+        Objects.requireNonNull(validationSupport, "validationSupport must not be null");
+    this.workbookSupport = new ExecutionWorkbookSupport(Files::createTempFile);
   }
 
   GridGrindRequestDoctor(

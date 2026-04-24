@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NavigableMap;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
@@ -41,7 +42,7 @@ final class ExcelSheetCommentRepairSupport {
 
   boolean hasPersistedComments() {
     return !sheet.getCellComments().isEmpty()
-        || !rawCommentAddresses(commentsTable(sheet)).isEmpty();
+        || !rawCommentAddresses(commentsTable(sheet).orElse(null)).isEmpty();
   }
 
   List<CommentRewriteSnapshot> expectedCommentsAfterInsertColumns(
@@ -147,7 +148,7 @@ final class ExcelSheetCommentRepairSupport {
   }
 
   private void clearAllPersistedComments() {
-    CommentsTable commentsTable = commentsTable(sheet);
+    CommentsTable commentsTable = commentsTable(sheet).orElse(null);
     List<CellAddress> rawAddresses = rawCommentAddresses(commentsTable);
     if (rawAddresses.isEmpty()) {
       return;
@@ -246,16 +247,16 @@ final class ExcelSheetCommentRepairSupport {
     return List.copyOf(readComments);
   }
 
-  private static CommentsTable commentsTable(XSSFSheet sheet) {
+  private static Optional<CommentsTable> commentsTable(XSSFSheet sheet) {
     for (POIXMLDocumentPart relation : sheet.getRelations()) {
       if (relation instanceof CommentsTable commentsTable) {
-        return commentsTable;
+        return Optional.of(commentsTable);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
-  private static List<CellAddress> rawCommentAddresses(CommentsTable commentsTable) {
+  static List<CellAddress> rawCommentAddresses(CommentsTable commentsTable) {
     if (commentsTable == null || commentsTable.getCTComments().getCommentList() == null) {
       return List.of();
     }

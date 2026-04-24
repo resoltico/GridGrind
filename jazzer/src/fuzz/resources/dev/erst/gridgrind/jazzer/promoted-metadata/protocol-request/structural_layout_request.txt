@@ -2,7 +2,7 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/structural_layout_request.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 6168
+Input Bytes: 6259
 Decode Outcome: PARSED
 Source Kind: NEW
 Persistence Kind: SAVE_AS
@@ -10,6 +10,6 @@ Operation Count: 9
 Assertion Count: 0
 Read Count: 5
 Assertion Kinds: (none)
-Read Kinds: GET_WINDOW=1, GET_SHEET_LAYOUT=1, GET_CELLS=1, GET_MERGED_REGIONS=1, GET_PRINT_LAYOUT=1
+Read Kinds: GET_PRINT_LAYOUT=1, GET_MERGED_REGIONS=1, GET_CELLS=1, GET_SHEET_LAYOUT=1, GET_WINDOW=1
 Style Kinds: (none)
-Operation Kinds: SET_COLUMN_WIDTH=1, SET_CELL=1, SET_ROW_HEIGHT=1, SET_SHEET_PRESENTATION=1, MERGE_CELLS=1, ENSURE_SHEET=1, SET_SHEET_PANE=1, SET_PRINT_LAYOUT=1, SET_SHEET_ZOOM=1
+Operation Kinds: SET_ROW_HEIGHT=1, SET_CELL=1, SET_COLUMN_WIDTH=1, SET_SHEET_ZOOM=1, SET_PRINT_LAYOUT=1, SET_SHEET_PANE=1, ENSURE_SHEET=1, MERGE_CELLS=1, SET_SHEET_PRESENTATION=1

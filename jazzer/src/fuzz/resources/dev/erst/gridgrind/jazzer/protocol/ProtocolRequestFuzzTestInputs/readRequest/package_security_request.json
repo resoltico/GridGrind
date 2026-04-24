@@ -38,7 +38,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Secure",
         "address": "B2"
       }
@@ -49,7 +49,7 @@
       },
       "stepId": "security",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     },
     {
@@ -58,7 +58,7 @@
       },
       "stepId": "secure-cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Secure",
         "addresses": [
           "A1",

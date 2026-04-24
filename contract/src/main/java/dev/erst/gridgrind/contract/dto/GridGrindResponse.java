@@ -11,6 +11,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelSheetVisibility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Structured protocol response for both successful workbook workflows and deterministic failures.
@@ -32,6 +33,39 @@ public sealed interface GridGrindResponse {
    */
   CalculationReport calculation();
 
+  /**
+   * Creates a successful response with a synthetic success journal and a not-requested calculation
+   * report.
+   */
+  static Success success(
+      GridGrindProtocolVersion protocolVersion,
+      PersistenceOutcome persistence,
+      List<RequestWarning> warnings,
+      List<AssertionResult> assertions,
+      List<InspectionResult> inspections) {
+    return new Success(
+        protocolVersionOrCurrent(protocolVersion),
+        syntheticJournal(ExecutionJournal.Status.SUCCEEDED),
+        CalculationReport.notRequested(),
+        persistence == null ? new PersistenceOutcome.NotSaved() : persistence,
+        warnings == null ? List.of() : warnings,
+        assertions == null ? List.of() : assertions,
+        inspections == null ? List.of() : inspections);
+  }
+
+  /**
+   * Creates a failure response with a synthetic failure journal and a not-requested calculation
+   * report.
+   */
+  static Failure failure(GridGrindProtocolVersion protocolVersion, Problem problem) {
+    Objects.requireNonNull(problem, "problem must not be null");
+    return new Failure(
+        protocolVersionOrCurrent(protocolVersion),
+        syntheticJournal(ExecutionJournal.Status.FAILED, problem.code()),
+        CalculationReport.notRequested(),
+        problem);
+  }
+
   /** Successful workbook execution result. */
   record Success(
       GridGrindProtocolVersion protocolVersion,
@@ -43,24 +77,16 @@ public sealed interface GridGrindResponse {
       List<InspectionResult> inspections)
       implements GridGrindResponse {
     public Success {
-      protocolVersion =
-          protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
-      journal = journal == null ? syntheticJournal(ExecutionJournal.Status.SUCCEEDED) : journal;
-      calculation = calculation == null ? CalculationReport.notRequested() : calculation;
-      persistence = persistence == null ? new PersistenceOutcome.NotSaved() : persistence;
-      warnings = warnings == null ? List.of() : copyValues(warnings, "warnings");
-      assertions = assertions == null ? List.of() : copyValues(assertions, "assertions");
+      Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
+      Objects.requireNonNull(journal, "journal must not be null");
+      Objects.requireNonNull(calculation, "calculation must not be null");
+      Objects.requireNonNull(persistence, "persistence must not be null");
+      warnings =
+          copyValues(Objects.requireNonNull(warnings, "warnings must not be null"), "warnings");
+      assertions =
+          copyValues(
+              Objects.requireNonNull(assertions, "assertions must not be null"), "assertions");
       inspections = copyValues(inspections, "inspections");
-    }
-
-    /** Backfill constructor used by tests and helpers that do not care about journal details. */
-    public Success(
-        GridGrindProtocolVersion protocolVersion,
-        PersistenceOutcome persistence,
-        List<RequestWarning> warnings,
-        List<AssertionResult> assertions,
-        List<InspectionResult> inspections) {
-      this(protocolVersion, null, null, persistence, warnings, assertions, inspections);
     }
   }
 
@@ -72,19 +98,10 @@ public sealed interface GridGrindResponse {
       Problem problem)
       implements GridGrindResponse {
     public Failure {
-      protocolVersion =
-          protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
+      Objects.requireNonNull(protocolVersion, "protocolVersion must not be null");
+      Objects.requireNonNull(journal, "journal must not be null");
+      Objects.requireNonNull(calculation, "calculation must not be null");
       Objects.requireNonNull(problem, "problem must not be null");
-      journal =
-          journal == null
-              ? syntheticJournal(ExecutionJournal.Status.FAILED, problem.code())
-              : journal;
-      calculation = calculation == null ? CalculationReport.notRequested() : calculation;
-    }
-
-    /** Backfill constructor used by tests and helpers that do not care about journal details. */
-    public Failure(GridGrindProtocolVersion protocolVersion, Problem problem) {
-      this(protocolVersion, null, null, problem);
     }
   }
 
@@ -350,11 +367,41 @@ public sealed interface GridGrindResponse {
     /** Style snapshot captured for this cell. */
     CellStyleReport style();
 
-    /** Hyperlink metadata; null when the cell has no hyperlink. */
-    HyperlinkTarget hyperlink();
+    /**
+     * Hyperlink metadata; populated when the workbook stores a hyperlink for this cell and null for
+     * all other cases.
+     *
+     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
+     * interface used for wire serialization; internal code must use a switch expression instead.
+     */
+    default HyperlinkTarget hyperlink() {
+      return switch (this) {
+        case BlankReport blank -> blank.hyperlinkTarget();
+        case TextReport text -> text.hyperlinkTarget();
+        case NumberReport number -> number.hyperlinkTarget();
+        case BooleanReport booleanReport -> booleanReport.hyperlinkTarget();
+        case ErrorReport error -> error.hyperlinkTarget();
+        case FormulaReport formula -> formula.hyperlinkTarget();
+      };
+    }
 
-    /** Comment metadata; null when the cell has no comment. */
-    CommentReport comment();
+    /**
+     * Comment metadata; populated when the workbook stores a cell comment and null for all other
+     * cases.
+     *
+     * <p>Null is permitted here because this is a protocol-layer default method on a sealed
+     * interface used for wire serialization; internal code must use a switch expression instead.
+     */
+    default CommentReport comment() {
+      return switch (this) {
+        case BlankReport blank -> blank.commentReport();
+        case TextReport text -> text.commentReport();
+        case NumberReport number -> number.commentReport();
+        case BooleanReport booleanReport -> booleanReport.commentReport();
+        case ErrorReport error -> error.commentReport();
+        case FormulaReport formula -> formula.commentReport();
+      };
+    }
 
     /**
      * Formula text; populated only by FormulaReport, null for all other subtypes.
@@ -424,8 +471,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkTarget hyperlink,
-        CommentReport comment)
+        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
+        @JsonProperty("comment") CommentReport commentReport)
         implements CellReport {
       public BlankReport {
         Objects.requireNonNull(address, "address must not be null");
@@ -447,8 +494,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkTarget hyperlink,
-        CommentReport comment,
+        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
+        @JsonProperty("comment") CommentReport commentReport,
         String stringValue,
         List<RichTextRunReport> richText)
         implements CellReport {
@@ -458,7 +505,7 @@ public sealed interface GridGrindResponse {
         Objects.requireNonNull(displayValue, "displayValue must not be null");
         Objects.requireNonNull(style, "style must not be null");
         Objects.requireNonNull(stringValue, "stringValue must not be null");
-        richText = copyRichTextRuns(richText, "richText");
+        richText = copyRichTextRuns(richText, "richText").orElse(null);
         if (richText != null && !stringValue.equals(concatenateRichTextRuns(richText))) {
           throw new IllegalArgumentException(
               "richText run text must concatenate to the stringValue");
@@ -478,8 +525,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkTarget hyperlink,
-        CommentReport comment,
+        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
+        @JsonProperty("comment") CommentReport commentReport,
         Double numberValue)
         implements CellReport {
       public NumberReport {
@@ -502,8 +549,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkTarget hyperlink,
-        CommentReport comment,
+        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
+        @JsonProperty("comment") CommentReport commentReport,
         Boolean booleanValue)
         implements CellReport {
       public BooleanReport {
@@ -526,8 +573,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkTarget hyperlink,
-        CommentReport comment,
+        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
+        @JsonProperty("comment") CommentReport commentReport,
         String errorValue)
         implements CellReport {
       public ErrorReport {
@@ -550,8 +597,8 @@ public sealed interface GridGrindResponse {
         String declaredType,
         String displayValue,
         CellStyleReport style,
-        HyperlinkTarget hyperlink,
-        CommentReport comment,
+        @JsonProperty("hyperlink") HyperlinkTarget hyperlinkTarget,
+        @JsonProperty("comment") CommentReport commentReport,
         String formula,
         CellReport evaluation)
         implements CellReport {
@@ -1538,10 +1585,11 @@ public sealed interface GridGrindResponse {
     public ProblemCause {
       Objects.requireNonNull(code, "code must not be null");
       Objects.requireNonNull(message, "message must not be null");
+      Objects.requireNonNull(stage, "stage must not be null");
       if (message.isBlank()) {
         throw new IllegalArgumentException("message must not be blank");
       }
-      if (stage != null && stage.isBlank()) {
+      if (stage.isBlank()) {
         throw new IllegalArgumentException("stage must not be blank");
       }
     }
@@ -1588,6 +1636,11 @@ public sealed interface GridGrindResponse {
         List.of());
   }
 
+  private static GridGrindProtocolVersion protocolVersionOrCurrent(
+      GridGrindProtocolVersion protocolVersion) {
+    return protocolVersion == null ? GridGrindProtocolVersion.current() : protocolVersion;
+  }
+
   private static List<String> copyDistinctStrings(List<String> values, String fieldName) {
     List<String> copy = copyStrings(values, fieldName);
     if (copy.size() != new java.util.LinkedHashSet<>(copy).size()) {
@@ -1625,17 +1678,16 @@ public sealed interface GridGrindResponse {
     return List.copyOf(copy);
   }
 
-  @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-  private static List<RichTextRunReport> copyRichTextRuns(
+  private static Optional<List<RichTextRunReport>> copyRichTextRuns(
       List<RichTextRunReport> values, String fieldName) {
     if (values == null) {
-      return null;
+      return Optional.empty();
     }
     List<RichTextRunReport> copy = copyValues(values, fieldName);
     if (copy.isEmpty()) {
       throw new IllegalArgumentException(fieldName + " must not be empty");
     }
-    return copy;
+    return Optional.of(copy);
   }
 
   private static String concatenateRichTextRuns(List<RichTextRunReport> runs) {

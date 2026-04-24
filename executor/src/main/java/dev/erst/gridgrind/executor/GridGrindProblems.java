@@ -27,6 +27,7 @@ import java.time.DateTimeException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Centralized problem construction and exception classification for protocol and transport
@@ -171,7 +172,7 @@ public final class GridGrindProblems {
    * Returns the public diagnostic entries for one failure without exposing raw throwable internals.
    */
   static List<GridGrindResponse.ProblemCause> causesFor(Throwable exception) {
-    return causesFor(exception, null);
+    return causesFor(exception, "EXECUTE_REQUEST");
   }
 
   private static List<GridGrindResponse.ProblemCause> causesFor(Throwable exception, String stage) {
@@ -209,14 +210,16 @@ public final class GridGrindProblems {
       }
       case GridGrindResponse.ProblemContext.ExecuteCalculation executeCalculation ->
           executeCalculation.withExceptionData(
-              sheetNameFor(exception), addressFor(exception), formulaFor(exception));
+              sheetNameFor(exception).orElse(null),
+              addressFor(exception).orElse(null),
+              formulaFor(exception).orElse(null));
       case GridGrindResponse.ProblemContext.ExecuteStep executeStep ->
           executeStep.withExceptionData(
-              sheetNameFor(exception),
-              addressFor(exception),
-              rangeFor(exception),
-              formulaFor(exception),
-              namedRangeNameFor(exception));
+              sheetNameFor(exception).orElse(null),
+              addressFor(exception).orElse(null),
+              rangeFor(exception).orElse(null),
+              formulaFor(exception).orElse(null),
+              namedRangeNameFor(exception).orElse(null));
       case GridGrindResponse.ProblemContext.ParseArguments _ -> context;
       case GridGrindResponse.ProblemContext.ValidateRequest _ -> context;
       case GridGrindResponse.ProblemContext.ResolveInputs _ -> context;
@@ -227,48 +230,50 @@ public final class GridGrindProblems {
     };
   }
 
-  private static String sheetNameFor(Throwable exception) {
+  private static Optional<String> sheetNameFor(Throwable exception) {
     return switch (exception) {
-      case FormulaException formulaException -> formulaException.sheetName();
-      case SheetNotFoundException sheetNotFoundException -> sheetNotFoundException.sheetName();
+      case FormulaException formulaException -> Optional.of(formulaException.sheetName());
+      case SheetNotFoundException sheetNotFoundException ->
+          Optional.of(sheetNotFoundException.sheetName());
       case NamedRangeNotFoundException namedRangeNotFoundException ->
           switch (namedRangeNotFoundException.scope()) {
-            case dev.erst.gridgrind.excel.ExcelNamedRangeScope.WorkbookScope _ -> null;
+            case dev.erst.gridgrind.excel.ExcelNamedRangeScope.WorkbookScope _ -> Optional.empty();
             case dev.erst.gridgrind.excel.ExcelNamedRangeScope.SheetScope sheetScope ->
-                sheetScope.sheetName();
+                Optional.of(sheetScope.sheetName());
           };
-      default -> null;
+      default -> Optional.empty();
     };
   }
 
-  private static String addressFor(Throwable exception) {
+  private static Optional<String> addressFor(Throwable exception) {
     return switch (exception) {
-      case FormulaException formulaException -> formulaException.address();
-      case CellNotFoundException cellNotFoundException -> cellNotFoundException.address();
+      case FormulaException formulaException -> Optional.of(formulaException.address());
+      case CellNotFoundException cellNotFoundException ->
+          Optional.of(cellNotFoundException.address());
       case InvalidCellAddressException invalidCellAddressException ->
-          invalidCellAddressException.address();
-      default -> null;
+          Optional.of(invalidCellAddressException.address());
+      default -> Optional.empty();
     };
   }
 
-  private static String rangeFor(Throwable exception) {
+  private static Optional<String> rangeFor(Throwable exception) {
     if (exception instanceof InvalidRangeAddressException invalidRangeAddressException) {
-      return invalidRangeAddressException.range();
+      return Optional.of(invalidRangeAddressException.range());
     }
-    return null;
+    return Optional.empty();
   }
 
-  private static String formulaFor(Throwable exception) {
+  private static Optional<String> formulaFor(Throwable exception) {
     if (exception instanceof FormulaException formulaException) {
-      return formulaException.formula();
+      return Optional.of(formulaException.formula());
     }
-    return null;
+    return Optional.empty();
   }
 
-  private static String namedRangeNameFor(Throwable exception) {
+  private static Optional<String> namedRangeNameFor(Throwable exception) {
     if (exception instanceof NamedRangeNotFoundException namedRangeNotFoundException) {
-      return namedRangeNotFoundException.name();
+      return Optional.of(namedRangeNotFoundException.name());
     }
-    return null;
+    return Optional.empty();
   }
 }

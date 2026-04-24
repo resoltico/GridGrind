@@ -7,23 +7,23 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 3496,
+      "inputBytes" : 3529,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 4,
       "operationKinds" : {
-        "ENSURE_SHEET" : 1,
+        "SET_CELL" : 2,
         "SET_RANGE" : 1,
-        "SET_CELL" : 2
+        "ENSURE_SHEET" : 1
       },
       "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "GET_FORMULA_SURFACE" : 1,
-        "GET_CELLS" : 1
+        "GET_CELLS" : 1,
+        "GET_FORMULA_SURFACE" : 1
       }
     }
   },

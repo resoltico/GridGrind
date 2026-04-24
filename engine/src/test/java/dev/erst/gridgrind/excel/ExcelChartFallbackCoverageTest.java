@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -10,9 +11,8 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartAxisKind;
 import dev.erst.gridgrind.excel.foundation.ExcelChartAxisPosition;
 import dev.erst.gridgrind.excel.foundation.ExcelChartGrouping;
 import java.io.IOException;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.VarHandle;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellBase;
@@ -28,6 +28,7 @@ import org.apache.poi.xddf.usermodel.chart.XDDFLineChartData;
 import org.apache.poi.xddf.usermodel.chart.XDDFValueAxis;
 import org.apache.poi.xssf.usermodel.XSSFChart;
 import org.apache.poi.xssf.usermodel.XSSFDrawing;
+import org.apache.poi.xssf.usermodel.XSSFGraphicFrame;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -35,8 +36,6 @@ import org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx;
 
 /** Focused coverage for chart helper fallback and no-runtime wrapper branches. */
 class ExcelChartFallbackCoverageTest {
-  private static final VarHandle CHART_FRAME_HANDLE = chartFrameHandle();
-
   @Test
   void sourceScalarWrappersAndRuntimeFallbacksStayDeterministic() throws IOException {
     assertEquals(
@@ -188,7 +187,7 @@ class ExcelChartFallbackCoverageTest {
   }
 
   @Test
-  void snapshottingUsesExplicitGraphicFrameWhenPoiBackpointerIsMissing() throws IOException {
+  void snapshottingUsesExplicitGraphicFrameContextWithoutPoiReflection() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       XSSFSheet sheet = workbook.createSheet("Charts");
       ExcelChartTestSupport.seedChartData(sheet);
@@ -209,8 +208,23 @@ class ExcelChartFallbackCoverageTest {
       chart.plot(lineData);
 
       var graphicFrame = chart.getGraphicFrame();
-      detachGraphicFrame(chart);
-      assertEquals("", ExcelChartSnapshotSupport.cachedTitleText(chart, "B1"));
+      assertEquals(
+          Optional.empty(), ExcelChartSnapshotSupport.contextSheet((XSSFGraphicFrame) null));
+      assertNull(ExcelChartSnapshotSupport.contextSheet(null, null));
+      assertEquals(sheet, ExcelChartSnapshotSupport.contextSheet(chart, null));
+      assertEquals(sheet, ExcelChartSnapshotSupport.contextSheet(null, graphicFrame));
+      assertEquals(
+          Optional.empty(),
+          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(null, null, "B1", null));
+      assertEquals(
+          Optional.of("Plan"),
+          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(chart, null, "B1", null));
+      assertEquals(
+          Optional.of("Plan"),
+          ExcelChartSnapshotSupport.optionalResolvedTitleFormulaText(
+              null, graphicFrame, "B1", null));
+      assertEquals(
+          "Plan", ExcelChartSnapshotSupport.cachedTitleText(chart, graphicFrame, "B1", null));
 
       ExcelChartSnapshot snapshot = ExcelChartSnapshotSupport.snapshotChart(chart, graphicFrame);
       assertEquals("DetachedFrame", snapshot.name());
@@ -268,20 +282,6 @@ class ExcelChartFallbackCoverageTest {
             ExcelChartAxisPosition.LEFT,
             ExcelChartAxisCrosses.AUTO_ZERO,
             true));
-  }
-
-  private static void detachGraphicFrame(XSSFChart chart) {
-    CHART_FRAME_HANDLE.set(chart, null);
-  }
-
-  private static VarHandle chartFrameHandle() {
-    try {
-      return MethodHandles.privateLookupIn(XSSFChart.class, MethodHandles.lookup())
-          .findVarHandle(
-              XSSFChart.class, "frame", org.apache.poi.xssf.usermodel.XSSFGraphicFrame.class);
-    } catch (ReflectiveOperationException exception) {
-      throw new LinkageError("Failed to access POI chart graphic-frame backpointer", exception);
-    }
   }
 
   /** Minimal formula cell stub for probing scalar-decoding branches without reflection. */

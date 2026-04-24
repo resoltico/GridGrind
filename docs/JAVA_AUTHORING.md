@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: JAVA_AUTHORING
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, java, authoring, gridgrindplan, targets, values, tables, links, workbookplan, executioninputbindings]
   questions: ["can i use gridgrind from java", "how do i author gridgrind workflows in java", "what is gridgrindplan", "how do i execute a java-authored plan in process", "how do source-backed inputs work from java"]

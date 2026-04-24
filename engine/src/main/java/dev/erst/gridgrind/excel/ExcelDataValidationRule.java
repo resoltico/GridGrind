@@ -36,7 +36,8 @@ public sealed interface ExcelDataValidationRule
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
+              .orElse(null);
     }
   }
 
@@ -47,7 +48,8 @@ public sealed interface ExcelDataValidationRule
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
+              .orElse(null);
     }
   }
 
@@ -58,7 +60,8 @@ public sealed interface ExcelDataValidationRule
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
+              .orElse(null);
     }
   }
 
@@ -69,7 +72,8 @@ public sealed interface ExcelDataValidationRule
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
+              .orElse(null);
     }
   }
 
@@ -80,7 +84,8 @@ public sealed interface ExcelDataValidationRule
       ExcelComparisonFormulaSupport.validateComparisonRule(operator, formula1, formula2);
       formula1 = ExcelComparisonFormulaSupport.normalizeFormula(formula1, "formula1");
       formula2 =
-          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2);
+          ExcelComparisonFormulaSupport.normalizeOptionalComparisonUpperBound(operator, formula2)
+              .orElse(null);
     }
   }
 

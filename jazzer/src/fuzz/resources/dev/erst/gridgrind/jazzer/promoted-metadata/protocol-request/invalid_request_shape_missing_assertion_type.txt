@@ -1,0 +1,17 @@
+Replay Result
+Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/invalid_request_shape_missing_assertion_type.json
+Harness: protocol-request
+Outcome: EXPECTED_INVALID
+Kind: InvalidRequestShapeException
+Message: Missing required field 'type'
+Input Bytes: 242
+Decode Outcome: INVALID_REQUEST_SHAPE
+Source Kind: NOT_PARSED
+Persistence Kind: NOT_PARSED
+Operation Count: 0
+Assertion Count: 0
+Read Count: 0
+Assertion Kinds: (none)
+Read Kinds: (none)
+Style Kinds: (none)
+Operation Kinds: (none)

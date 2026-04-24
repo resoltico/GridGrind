@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: DEVELOPER_JAVA
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, java26, gradle wrapper, java_home, macos, shell, mounted volumes, local disk]
   questions: ["what java setup does gridgrind actually require", "how should i configure java 26 for gridgrind", "does the jdk vendor matter for gridgrind", "why does gridgrind need java in the shell"]
@@ -22,8 +22,9 @@ What the codebase and scripts actually enforce today:
 
 - the active shell must resolve a full JDK 26, not only a JRE
 - `java` and `javac` must both be reachable from the shell
-- `java` and `javac` must not resolve to the macOS `/usr/bin` launcher stubs
-- `java --version` must report major version `26`
+- `java --version` and `javac --version` must both report major version `26`
+- if `java` or `javac` resolve through macOS `/usr/bin` launchers, those launchers must
+  immediately resolve to the intended installed JDK instead of triggering the Apple install stub
 - all repository build and test commands should use `./gradlew`
 - full verification should run from a local-disk checkout or local mirror, not from a mounted
   external volume on macOS
@@ -118,8 +119,10 @@ javac --version
 
 Expected outcomes:
 
-- `command -v java` and `command -v javac` do not point at `/usr/bin/java` or `/usr/bin/javac`
 - `java --version` and `javac --version` report major version `26`
+- if `command -v java` or `command -v javac` point at `/usr/bin/java` or `/usr/bin/javac` on
+  macOS, those launchers still resolve immediately to the intended installed JDK instead of
+  surfacing the Apple install stub
 - `./gradlew --version` reports the wrapper-pinned Gradle version
 
 ## Full Repository Verification
@@ -138,7 +141,8 @@ rerun that sequence from a local-disk mirror or worktree instead of weakening th
 
 ## Common Pitfalls
 
-- relying on the macOS `/usr/bin/java` launcher stub instead of a real JDK
+- relying on the Apple install-stub behavior behind `/usr/bin/java` or `/usr/bin/javac` instead
+  of a real JDK 26 launcher
 - assuming Gradle toolchains cover `java -jar` or `./check.sh`
 - using `gradle` from `PATH` for repo work instead of `./gradlew`
 - running full verification from a mounted external volume on macOS

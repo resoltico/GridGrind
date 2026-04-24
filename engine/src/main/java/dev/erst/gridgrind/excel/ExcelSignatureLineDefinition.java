@@ -2,6 +2,7 @@ package dev.erst.gridgrind.excel;
 
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Authoritative signature-line creation or replacement payload. */
 public record ExcelSignatureLineDefinition(
@@ -22,12 +23,14 @@ public record ExcelSignatureLineDefinition(
       throw new IllegalArgumentException("name must not be blank");
     }
     Objects.requireNonNull(anchor, "anchor must not be null");
-    signingInstructions = normalizeOptional(signingInstructions, "signingInstructions");
-    suggestedSigner = normalizeOptional(suggestedSigner, "suggestedSigner");
-    suggestedSigner2 = normalizeOptional(suggestedSigner2, "suggestedSigner2");
-    suggestedSignerEmail = normalizeOptional(suggestedSignerEmail, "suggestedSignerEmail");
-    caption = normalizeOptional(caption, "caption");
-    invalidStamp = normalizeOptional(invalidStamp, "invalidStamp");
+    signingInstructions =
+        normalizeOptional(signingInstructions, "signingInstructions").orElse(null);
+    suggestedSigner = normalizeOptional(suggestedSigner, "suggestedSigner").orElse(null);
+    suggestedSigner2 = normalizeOptional(suggestedSigner2, "suggestedSigner2").orElse(null);
+    suggestedSignerEmail =
+        normalizeOptional(suggestedSignerEmail, "suggestedSignerEmail").orElse(null);
+    caption = normalizeOptional(caption, "caption").orElse(null);
+    invalidStamp = normalizeOptional(invalidStamp, "invalidStamp").orElse(null);
     if (caption != null && caption.lines().count() > 3L) {
       throw new IllegalArgumentException("caption must contain at most three lines");
     }
@@ -46,13 +49,13 @@ public record ExcelSignatureLineDefinition(
     }
   }
 
-  private static String normalizeOptional(String value, String fieldName) {
+  private static Optional<String> normalizeOptional(String value, String fieldName) {
     if (value == null) {
-      return null;
+      return Optional.empty();
     }
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
-    return value;
+    return Optional.of(value);
   }
 }

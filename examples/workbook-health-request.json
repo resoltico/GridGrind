@@ -10,7 +10,7 @@
   "steps" : [ {
     "stepId" : "step-01-ensure-budget-review",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Budget Review"
     },
     "action" : {
@@ -19,7 +19,7 @@
   }, {
     "stepId" : "step-02-ensure-summary",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Summary"
     },
     "action" : {
@@ -28,7 +28,7 @@
   }, {
     "stepId" : "step-03-set-budget-header",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Budget Review",
       "address" : "A1"
     },
@@ -45,7 +45,7 @@
   }, {
     "stepId" : "step-04-set-budget-value",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Budget Review",
       "address" : "B1"
     },
@@ -59,7 +59,7 @@
   }, {
     "stepId" : "step-05-set-summary-formula",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Summary",
       "address" : "A1"
     },
@@ -76,7 +76,7 @@
   }, {
     "stepId" : "summary-sheet",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Summary"
     },
     "query" : {
@@ -85,7 +85,7 @@
   }, {
     "stepId" : "formula-health",
     "target" : {
-      "type" : "BY_NAMES",
+      "type" : "SHEET_BY_NAMES",
       "names" : [ "Summary" ]
     },
     "query" : {
@@ -94,7 +94,7 @@
   }, {
     "stepId" : "lint",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "query" : {
       "type" : "ANALYZE_WORKBOOK_FINDINGS"
@@ -102,7 +102,7 @@
   }, {
     "stepId" : "summary-cells",
     "target" : {
-      "type" : "BY_ADDRESSES",
+      "type" : "CELL_BY_ADDRESSES",
       "sheetName" : "Summary",
       "addresses" : [ "A1" ]
     },

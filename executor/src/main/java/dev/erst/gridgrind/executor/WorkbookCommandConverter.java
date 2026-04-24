@@ -75,6 +75,7 @@ import dev.erst.gridgrind.excel.ExcelSignatureLineDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.WorkbookCommand;
+import java.util.Optional;
 
 /**
  * Converts contract mutation steps and style inputs into workbook-core commands.
@@ -97,14 +98,14 @@ final class WorkbookCommandConverter {
     return java
         .util
         .List
-        .<java.util.function.BiFunction<Selector, MutationAction, WorkbookCommand>>of(
+        .<java.util.function.BiFunction<Selector, MutationAction, Optional<WorkbookCommand>>>of(
             WorkbookCommandWorkbookMutationConverter::toCommand,
             WorkbookCommandCellMutationConverter::toCommand,
             WorkbookCommandDrawingMutationConverter::toCommand,
             WorkbookCommandStructuredMutationConverter::toCommand)
         .stream()
         .map(converter -> converter.apply(target, action))
-        .filter(java.util.Objects::nonNull)
+        .flatMap(Optional::stream)
         .findFirst()
         .orElseThrow();
   }
@@ -173,31 +174,31 @@ final class WorkbookCommandConverter {
     return WorkbookCommandCellInputConverter.toExcelCellStyle(style);
   }
 
-  static ExcelCellAlignment toExcelCellAlignment(CellAlignmentInput alignment) {
+  static Optional<ExcelCellAlignment> toExcelCellAlignment(CellAlignmentInput alignment) {
     return WorkbookCommandCellInputConverter.toExcelCellAlignment(alignment);
   }
 
-  static ExcelCellFont toExcelCellFont(CellFontInput font) {
+  static Optional<ExcelCellFont> toExcelCellFont(CellFontInput font) {
     return WorkbookCommandCellInputConverter.toExcelCellFont(font);
   }
 
-  static ExcelCellFill toExcelCellFill(CellFillInput fill) {
+  static Optional<ExcelCellFill> toExcelCellFill(CellFillInput fill) {
     return WorkbookCommandCellInputConverter.toExcelCellFill(fill);
   }
 
-  static ExcelCellProtection toExcelCellProtection(CellProtectionInput protection) {
+  static Optional<ExcelCellProtection> toExcelCellProtection(CellProtectionInput protection) {
     return WorkbookCommandCellInputConverter.toExcelCellProtection(protection);
   }
 
-  static ExcelFontHeight toExcelFontHeight(FontHeightInput fontHeight) {
+  static Optional<ExcelFontHeight> toExcelFontHeight(FontHeightInput fontHeight) {
     return WorkbookCommandCellInputConverter.toExcelFontHeight(fontHeight);
   }
 
-  static ExcelBorder toExcelBorder(CellBorderInput border) {
+  static Optional<ExcelBorder> toExcelBorder(CellBorderInput border) {
     return WorkbookCommandCellInputConverter.toExcelBorder(border);
   }
 
-  static ExcelBorderSide toExcelBorderSide(CellBorderSideInput side) {
+  static Optional<ExcelBorderSide> toExcelBorderSide(CellBorderSideInput side) {
     return WorkbookCommandCellInputConverter.toExcelBorderSide(side);
   }
 
@@ -210,11 +211,12 @@ final class WorkbookCommandConverter {
     return WorkbookCommandStructuredInputConverter.toExcelDataValidationRule(rule);
   }
 
-  static ExcelDataValidationPrompt toExcelDataValidationPrompt(DataValidationPromptInput prompt) {
+  static Optional<ExcelDataValidationPrompt> toExcelDataValidationPrompt(
+      DataValidationPromptInput prompt) {
     return WorkbookCommandStructuredInputConverter.toExcelDataValidationPrompt(prompt);
   }
 
-  static ExcelDataValidationErrorAlert toExcelDataValidationErrorAlert(
+  static Optional<ExcelDataValidationErrorAlert> toExcelDataValidationErrorAlert(
       DataValidationErrorAlertInput errorAlert) {
     return WorkbookCommandStructuredInputConverter.toExcelDataValidationErrorAlert(errorAlert);
   }
@@ -229,11 +231,12 @@ final class WorkbookCommandConverter {
     return WorkbookCommandStructuredInputConverter.toExcelConditionalFormattingRule(rule);
   }
 
-  static ExcelDifferentialStyle toExcelDifferentialStyle(DifferentialStyleInput style) {
+  static Optional<ExcelDifferentialStyle> toExcelDifferentialStyle(DifferentialStyleInput style) {
     return WorkbookCommandStructuredInputConverter.toExcelDifferentialStyle(style);
   }
 
-  static ExcelDifferentialBorder toExcelDifferentialBorder(DifferentialBorderInput border) {
+  static Optional<ExcelDifferentialBorder> toExcelDifferentialBorder(
+      DifferentialBorderInput border) {
     return WorkbookCommandStructuredInputConverter.toExcelDifferentialBorder(border);
   }
 

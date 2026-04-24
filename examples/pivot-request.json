@@ -11,7 +11,7 @@
   "steps" : [ {
     "stepId" : "step-01-ensure-data",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Data"
     },
     "action" : {
@@ -20,7 +20,7 @@
   }, {
     "stepId" : "step-02-ensure-report",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "RangeReport"
     },
     "action" : {
@@ -29,7 +29,7 @@
   }, {
     "stepId" : "step-03-set-range",
     "target" : {
-      "type" : "BY_RANGE",
+      "type" : "RANGE_BY_RANGE",
       "sheetName" : "Data",
       "range" : "A1:D5"
     },
@@ -148,7 +148,7 @@
   }, {
     "stepId" : "step-04-set-pivot",
     "target" : {
-      "type" : "BY_NAME_ON_SHEET",
+      "type" : "PIVOT_TABLE_BY_NAME_ON_SHEET",
       "name" : "RegionalTotals",
       "sheetName" : "RangeReport"
     },
@@ -179,7 +179,7 @@
   }, {
     "stepId" : "pivot-tables",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "PIVOT_TABLE_BY_NAME",
       "name" : "RegionalTotals"
     },
     "query" : {
@@ -188,7 +188,7 @@
   }, {
     "stepId" : "pivot-health",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "PIVOT_TABLE_BY_NAME",
       "name" : "RegionalTotals"
     },
     "query" : {

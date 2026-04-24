@@ -20,7 +20,7 @@ public record CellBorderSideInput(
   }
 
   public CellBorderSideInput {
-    color = ProtocolRgbColorSupport.normalizeRgbHex(color, "color");
+    color = ProtocolRgbColorSupport.normalizeRgbHex(color, "color").orElse(null);
     if (colorTheme != null && colorTheme < 0) {
       throw new IllegalArgumentException("colorTheme must not be negative");
     }

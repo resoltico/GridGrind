@@ -7,12 +7,14 @@ import java.util.List;
 /** Selects one or more named ranges by scope-aware identity. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = NamedRangeSelector.All.class, name = "ALL"),
-  @JsonSubTypes.Type(value = NamedRangeSelector.AnyOf.class, name = "ANY_OF"),
-  @JsonSubTypes.Type(value = NamedRangeSelector.ByName.class, name = "BY_NAME"),
-  @JsonSubTypes.Type(value = NamedRangeSelector.ByNames.class, name = "BY_NAMES"),
-  @JsonSubTypes.Type(value = NamedRangeSelector.WorkbookScope.class, name = "WORKBOOK_SCOPE"),
-  @JsonSubTypes.Type(value = NamedRangeSelector.SheetScope.class, name = "SHEET_SCOPE")
+  @JsonSubTypes.Type(value = NamedRangeSelector.All.class, name = "NAMED_RANGE_ALL"),
+  @JsonSubTypes.Type(value = NamedRangeSelector.AnyOf.class, name = "NAMED_RANGE_ANY_OF"),
+  @JsonSubTypes.Type(value = NamedRangeSelector.ByName.class, name = "NAMED_RANGE_BY_NAME"),
+  @JsonSubTypes.Type(value = NamedRangeSelector.ByNames.class, name = "NAMED_RANGE_BY_NAMES"),
+  @JsonSubTypes.Type(
+      value = NamedRangeSelector.WorkbookScope.class,
+      name = "NAMED_RANGE_WORKBOOK_SCOPE"),
+  @JsonSubTypes.Type(value = NamedRangeSelector.SheetScope.class, name = "NAMED_RANGE_SHEET_SCOPE")
 })
 public sealed interface NamedRangeSelector extends Selector
     permits NamedRangeSelector.All,
@@ -93,17 +95,17 @@ public sealed interface NamedRangeSelector extends Selector
   /** Marker for one explicit named-range reference used inside {@link AnyOf}. */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({
-    @JsonSubTypes.Type(value = ByName.class, name = "BY_NAME"),
-    @JsonSubTypes.Type(value = WorkbookScope.class, name = "WORKBOOK_SCOPE"),
-    @JsonSubTypes.Type(value = SheetScope.class, name = "SHEET_SCOPE")
+    @JsonSubTypes.Type(value = ByName.class, name = "NAMED_RANGE_BY_NAME"),
+    @JsonSubTypes.Type(value = WorkbookScope.class, name = "NAMED_RANGE_WORKBOOK_SCOPE"),
+    @JsonSubTypes.Type(value = SheetScope.class, name = "NAMED_RANGE_SHEET_SCOPE")
   })
   sealed interface Ref permits ByName, WorkbookScope, SheetScope {}
 
   /** Marker for one exact named-range identity that can be mutated or deleted authoritatively. */
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
   @JsonSubTypes({
-    @JsonSubTypes.Type(value = WorkbookScope.class, name = "WORKBOOK_SCOPE"),
-    @JsonSubTypes.Type(value = SheetScope.class, name = "SHEET_SCOPE")
+    @JsonSubTypes.Type(value = WorkbookScope.class, name = "NAMED_RANGE_WORKBOOK_SCOPE"),
+    @JsonSubTypes.Type(value = SheetScope.class, name = "NAMED_RANGE_SHEET_SCOPE")
   })
   sealed interface ScopedExact extends NamedRangeSelector permits WorkbookScope, SheetScope {}
 }

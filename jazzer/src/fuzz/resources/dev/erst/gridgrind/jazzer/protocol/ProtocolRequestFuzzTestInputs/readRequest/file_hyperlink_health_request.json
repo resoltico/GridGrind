@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Links"
       }
     },
@@ -90,7 +90,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Links",
         "range": "A1:B4"
       }
@@ -105,7 +105,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Links",
         "address": "A2"
       }
@@ -120,7 +120,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Links",
         "address": "A3"
       }
@@ -135,7 +135,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Links",
         "address": "A4"
       }
@@ -146,7 +146,7 @@
       },
       "stepId": "hyperlinks",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Links",
         "addresses": [
           "A2",
@@ -161,7 +161,7 @@
       },
       "stepId": "hyperlink-health",
       "target": {
-        "type": "BY_NAMES",
+        "type": "SHEET_BY_NAMES",
         "names": [
           "Links"
         ]

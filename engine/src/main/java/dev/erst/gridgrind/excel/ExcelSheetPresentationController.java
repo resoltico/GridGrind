@@ -74,7 +74,7 @@ final class ExcelSheetPresentationController {
     return color == null ? null : ExcelColorSnapshotSupport.snapshot(color);
   }
 
-  private static void clearTabColor(XSSFSheet sheet) {
+  static void clearTabColor(XSSFSheet sheet) {
     if (!sheet.getCTWorksheet().isSetSheetPr()) {
       return;
     }

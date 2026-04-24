@@ -31,6 +31,11 @@ class CatalogEdgeCoverageTest {
             requestType,
             new CliSurface(
                 new CliSurface.CliSection("Usage", List.of("gridgrind --help")),
+                new CliSurface.CliWorkflowSection(
+                    "Workflows",
+                    List.of(
+                        new CliSurface.WorkflowEntry(
+                            "Discover", List.of("gridgrind --print-task-catalog")))),
                 new CliSurface.CliSection("Execution", List.of("Executes requests.")),
                 new CliSurface.CliDefinitionSection(
                     "Limits", List.of(new CliSurface.DefinitionEntry("One", "Value"))),

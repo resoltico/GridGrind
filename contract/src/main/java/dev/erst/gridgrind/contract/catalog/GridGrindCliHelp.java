@@ -33,6 +33,7 @@ public final class GridGrindCliHelp {
         "\n\n",
         productHeader(version, description),
         renderSection(cliSurface.usage()),
+        renderWorkflows(cliSurface.workflows()),
         renderSection(cliSurface.execution()),
         renderDefinitions(cliSurface.limits()),
         renderSection(cliSurface.request()),
@@ -78,6 +79,14 @@ public final class GridGrindCliHelp {
 
   private static String renderSection(CliSurface.CliSection section) {
     return section.label() + ":\n" + indentLines(section.lines(), 2);
+  }
+
+  private static String renderWorkflows(CliSurface.CliWorkflowSection section) {
+    return section.label()
+        + ":\n"
+        + section.entries().stream()
+            .map(entry -> "  " + entry.title() + ":\n" + indentLines(entry.lines(), 4))
+            .collect(java.util.stream.Collectors.joining("\n"));
   }
 
   static String renderDefinitions(CliSurface.CliDefinitionSection section) {

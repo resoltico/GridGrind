@@ -348,13 +348,16 @@ class ExecutorPhase3CoverageTest {
         assertInstanceOf(
             GridGrindResponse.Failure.class,
             new DefaultGridGrindRequestExecutor(
-                    new WorkbookCommandExecutor(),
-                    new WorkbookReadExecutor(),
-                    ExcelWorkbook::close,
-                    Files::createTempFile,
-                    ignored -> {
-                      throw new IOException("close failed");
-                    })
+                    new DefaultGridGrindRequestExecutorDependencies(
+                        new WorkbookCommandExecutor(),
+                        new WorkbookReadExecutor(),
+                        ExcelWorkbook::close,
+                        Files::createTempFile,
+                        ignored -> {
+                          throw new IOException("close failed");
+                        },
+                        dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter
+                            ::markRecalculateOnOpen))
                 .execute(
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),
@@ -382,13 +385,16 @@ class ExecutorPhase3CoverageTest {
         assertInstanceOf(
             GridGrindResponse.Failure.class,
             new DefaultGridGrindRequestExecutor(
-                    new WorkbookCommandExecutor(),
-                    new WorkbookReadExecutor(),
-                    ExcelWorkbook::close,
-                    Files::createTempFile,
-                    ignored -> {
-                      throw new IOException("close failed");
-                    })
+                    new DefaultGridGrindRequestExecutorDependencies(
+                        new WorkbookCommandExecutor(),
+                        new WorkbookReadExecutor(),
+                        ExcelWorkbook::close,
+                        Files::createTempFile,
+                        ignored -> {
+                          throw new IOException("close failed");
+                        },
+                        dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter
+                            ::markRecalculateOnOpen))
                 .execute(
                     request(
                         new WorkbookPlan.WorkbookSource.ExistingFile(workbookPath.toString()),

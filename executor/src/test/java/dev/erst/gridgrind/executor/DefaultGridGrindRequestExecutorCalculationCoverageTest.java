@@ -99,14 +99,15 @@ class DefaultGridGrindRequestExecutorCalculationCoverageTest {
   void streamingCalculationRuntimeFailureReturnsCalculationFailureBeforePersistence() {
     DefaultGridGrindRequestExecutor executor =
         new DefaultGridGrindRequestExecutor(
-            new WorkbookCommandExecutor(),
-            new WorkbookReadExecutor(),
-            ExcelWorkbook::close,
-            Files::createTempFile,
-            ignored -> {},
-            writer -> {
-              throw new IllegalStateException("streaming calculation failed");
-            });
+            new DefaultGridGrindRequestExecutorDependencies(
+                new WorkbookCommandExecutor(),
+                new WorkbookReadExecutor(),
+                ExcelWorkbook::close,
+                Files::createTempFile,
+                ignored -> {},
+                writer -> {
+                  throw new IllegalStateException("streaming calculation failed");
+                }));
 
     GridGrindResponse.Failure failure =
         failure(

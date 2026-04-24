@@ -20,6 +20,7 @@ import dev.erst.gridgrind.excel.ExcelDataValidationSnapshot;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorder;
 import dev.erst.gridgrind.excel.ExcelDifferentialBorderSide;
 import dev.erst.gridgrind.excel.ExcelDifferentialStyleSnapshot;
+import java.util.Optional;
 
 /** Converts validation and conditional-format workbook snapshots into protocol reports. */
 final class InspectionResultValidationReportSupport {
@@ -43,19 +44,8 @@ final class InspectionResultValidationReportSupport {
         toDataValidationRuleInput(definition.rule()),
         definition.allowBlank(),
         definition.suppressDropDownArrow(),
-        definition.prompt() == null
-            ? null
-            : new DataValidationPromptInput(
-                new TextSourceInput.Inline(definition.prompt().title()),
-                new TextSourceInput.Inline(definition.prompt().text()),
-                definition.prompt().showPromptBox()),
-        definition.errorAlert() == null
-            ? null
-            : new DataValidationErrorAlertInput(
-                definition.errorAlert().style(),
-                new TextSourceInput.Inline(definition.errorAlert().title()),
-                new TextSourceInput.Inline(definition.errorAlert().text()),
-                definition.errorAlert().showErrorBox()));
+        promptInput(definition).orElse(null),
+        errorAlertInput(definition).orElse(null));
   }
 
   static ConditionalFormattingEntryReport toConditionalFormattingEntryReport(
@@ -75,7 +65,7 @@ final class InspectionResultValidationReportSupport {
               formulaRule.priority(),
               formulaRule.stopIfTrue(),
               formulaRule.formula(),
-              toDifferentialStyleReport(formulaRule.style()));
+              toDifferentialStyleReport(formulaRule.style()).orElse(null));
       case ExcelConditionalFormattingRuleSnapshot.CellValueRule cellValueRule ->
           new ConditionalFormattingRuleReport.CellValueRule(
               cellValueRule.priority(),
@@ -83,7 +73,7 @@ final class InspectionResultValidationReportSupport {
               cellValueRule.operator(),
               cellValueRule.formula1(),
               cellValueRule.formula2(),
-              toDifferentialStyleReport(cellValueRule.style()));
+              toDifferentialStyleReport(cellValueRule.style()).orElse(null));
       case ExcelConditionalFormattingRuleSnapshot.ColorScaleRule colorScaleRule ->
           new ConditionalFormattingRuleReport.ColorScaleRule(
               colorScaleRule.priority(),
@@ -123,7 +113,7 @@ final class InspectionResultValidationReportSupport {
               top10Rule.rank(),
               top10Rule.percent(),
               top10Rule.bottom(),
-              toDifferentialStyleReport(top10Rule.style()));
+              toDifferentialStyleReport(top10Rule.style()).orElse(null));
       case ExcelConditionalFormattingRuleSnapshot.UnsupportedRule unsupportedRule ->
           new ConditionalFormattingRuleReport.UnsupportedRule(
               unsupportedRule.priority(),
@@ -139,38 +129,67 @@ final class InspectionResultValidationReportSupport {
         threshold.type(), threshold.formula(), threshold.value());
   }
 
-  static DifferentialStyleReport toDifferentialStyleReport(ExcelDifferentialStyleSnapshot style) {
+  static Optional<DifferentialStyleReport> toDifferentialStyleReport(
+      ExcelDifferentialStyleSnapshot style) {
     if (style == null) {
-      return null;
+      return Optional.empty();
     }
-    return new DifferentialStyleReport(
-        style.numberFormat(),
-        style.bold(),
-        style.italic(),
-        InspectionResultCellReportSupport.toFontHeightReport(style.fontHeight()),
-        style.fontColor(),
-        style.underline(),
-        style.strikeout(),
-        style.fillColor(),
-        toDifferentialBorderReport(style.border()),
-        style.unsupportedFeatures());
+    return Optional.of(
+        new DifferentialStyleReport(
+            style.numberFormat(),
+            style.bold(),
+            style.italic(),
+            InspectionResultCellReportSupport.toFontHeightReport(style.fontHeight()),
+            style.fontColor(),
+            style.underline(),
+            style.strikeout(),
+            style.fillColor(),
+            toDifferentialBorderReport(style.border()).orElse(null),
+            style.unsupportedFeatures()));
   }
 
-  static DifferentialBorderReport toDifferentialBorderReport(ExcelDifferentialBorder border) {
+  static Optional<DifferentialBorderReport> toDifferentialBorderReport(
+      ExcelDifferentialBorder border) {
     if (border == null) {
-      return null;
+      return Optional.empty();
     }
-    return new DifferentialBorderReport(
-        toDifferentialBorderSideReport(border.all()),
-        toDifferentialBorderSideReport(border.top()),
-        toDifferentialBorderSideReport(border.right()),
-        toDifferentialBorderSideReport(border.bottom()),
-        toDifferentialBorderSideReport(border.left()));
+    return Optional.of(
+        new DifferentialBorderReport(
+            toDifferentialBorderSideReport(border.all()).orElse(null),
+            toDifferentialBorderSideReport(border.top()).orElse(null),
+            toDifferentialBorderSideReport(border.right()).orElse(null),
+            toDifferentialBorderSideReport(border.bottom()).orElse(null),
+            toDifferentialBorderSideReport(border.left()).orElse(null)));
   }
 
-  static DifferentialBorderSideReport toDifferentialBorderSideReport(
+  static Optional<DifferentialBorderSideReport> toDifferentialBorderSideReport(
       ExcelDifferentialBorderSide side) {
-    return side == null ? null : new DifferentialBorderSideReport(side.style(), side.color());
+    return side == null
+        ? Optional.empty()
+        : Optional.of(new DifferentialBorderSideReport(side.style(), side.color()));
+  }
+
+  private static Optional<DataValidationPromptInput> promptInput(
+      ExcelDataValidationDefinition definition) {
+    return definition.prompt() == null
+        ? Optional.empty()
+        : Optional.of(
+            new DataValidationPromptInput(
+                new TextSourceInput.Inline(definition.prompt().title()),
+                new TextSourceInput.Inline(definition.prompt().text()),
+                definition.prompt().showPromptBox()));
+  }
+
+  private static Optional<DataValidationErrorAlertInput> errorAlertInput(
+      ExcelDataValidationDefinition definition) {
+    return definition.errorAlert() == null
+        ? Optional.empty()
+        : Optional.of(
+            new DataValidationErrorAlertInput(
+                definition.errorAlert().style(),
+                new TextSourceInput.Inline(definition.errorAlert().title()),
+                new TextSourceInput.Inline(definition.errorAlert().text()),
+                definition.errorAlert().showErrorBox()));
   }
 
   private static DataValidationRuleInput toDataValidationRuleInput(ExcelDataValidationRule rule) {

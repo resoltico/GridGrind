@@ -395,12 +395,12 @@ public final class Targets {
 
     /** Returns one table presence assertion step. */
     public PlannedAssertion present() {
-      return new PlannedAssertion(selector, Checks.present());
+      return new PlannedAssertion(selector, Checks.tablePresent());
     }
 
     /** Returns one table absence assertion step. */
     public PlannedAssertion absent() {
-      return new PlannedAssertion(selector, Checks.absent());
+      return new PlannedAssertion(selector, Checks.tableAbsent());
     }
   }
 
@@ -526,12 +526,12 @@ public final class Targets {
 
     /** Returns one named-range presence assertion step. */
     public PlannedAssertion present() {
-      return new PlannedAssertion(selector, Checks.present());
+      return new PlannedAssertion(selector, Checks.namedRangePresent());
     }
 
     /** Returns one named-range absence assertion step. */
     public PlannedAssertion absent() {
-      return new PlannedAssertion(selector, Checks.absent());
+      return new PlannedAssertion(selector, Checks.namedRangeAbsent());
     }
   }
 
@@ -560,12 +560,12 @@ public final class Targets {
 
     /** Returns one chart presence assertion step. */
     public PlannedAssertion present() {
-      return new PlannedAssertion(selector, Checks.present());
+      return new PlannedAssertion(selector, Checks.chartPresent());
     }
 
     /** Returns one chart absence assertion step. */
     public PlannedAssertion absent() {
-      return new PlannedAssertion(selector, Checks.absent());
+      return new PlannedAssertion(selector, Checks.chartAbsent());
     }
   }
 
@@ -598,12 +598,12 @@ public final class Targets {
 
     /** Returns one pivot-table presence assertion step. */
     public PlannedAssertion present() {
-      return new PlannedAssertion(selector, Checks.present());
+      return new PlannedAssertion(selector, Checks.pivotTablePresent());
     }
 
     /** Returns one pivot-table absence assertion step. */
     public PlannedAssertion absent() {
-      return new PlannedAssertion(selector, Checks.absent());
+      return new PlannedAssertion(selector, Checks.pivotTableAbsent());
     }
   }
 }

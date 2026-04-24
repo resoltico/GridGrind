@@ -1437,13 +1437,13 @@ public final class XlsxRoundTripVerifier {
 
   private static ExcelColorSnapshot toColorSnapshot(XSSFColor color) {
     if (color == null) {
-      return null;
+      return java.util.Optional.<ExcelColorSnapshot>empty().orElse(null);
     }
     byte[] rgb = color.getRGB();
     String rgbHex = null;
     if (rgb != null) {
       if (rgb.length != 3) {
-        return null;
+        return java.util.Optional.<ExcelColorSnapshot>empty().orElse(null);
       }
       rgbHex = "#%02X%02X%02X".formatted(rgb[0] & 0xFF, rgb[1] & 0xFF, rgb[2] & 0xFF);
     }
@@ -1454,7 +1454,7 @@ public final class XlsxRoundTripVerifier {
       rgbHex = null;
     }
     if (rgbHex == null && theme == null && indexed == null) {
-      return null;
+      return java.util.Optional.<ExcelColorSnapshot>empty().orElse(null);
     }
     return new ExcelColorSnapshot(rgbHex, theme, indexed, tint);
   }
@@ -1498,11 +1498,11 @@ public final class XlsxRoundTripVerifier {
   private static ExcelHyperlink hyperlink(Cell cell) {
     XSSFHyperlink hyperlink = (XSSFHyperlink) cell.getHyperlink();
     if (hyperlink == null || hyperlink.getType() == null) {
-      return null;
+      return java.util.Optional.<ExcelHyperlink>empty().orElse(null);
     }
     String target = hyperlink.getAddress();
     if (target == null || target.isBlank()) {
-      return null;
+      return java.util.Optional.<ExcelHyperlink>empty().orElse(null);
     }
     try {
       return switch (hyperlink.getType()) {
@@ -1510,22 +1510,22 @@ public final class XlsxRoundTripVerifier {
         case EMAIL -> new ExcelHyperlink.Email(target);
         case FILE -> new ExcelHyperlink.File(target);
         case DOCUMENT -> new ExcelHyperlink.Document(target);
-        case NONE -> null;
+        case NONE -> java.util.Optional.<ExcelHyperlink>empty().orElse(null);
       };
     } catch (IllegalArgumentException exception) {
-      return null;
+      return java.util.Optional.<ExcelHyperlink>empty().orElse(null);
     }
   }
 
   private static ExcelComment comment(Cell cell) {
     var comment = cell.getCellComment();
     if (comment == null || comment.getString() == null) {
-      return null;
+      return java.util.Optional.<ExcelComment>empty().orElse(null);
     }
     String text = comment.getString().getString();
     String author = comment.getAuthor();
     if (text == null || text.isBlank() || author == null || author.isBlank()) {
-      return null;
+      return java.util.Optional.<ExcelComment>empty().orElse(null);
     }
     return new ExcelComment(text, author, comment.isVisible());
   }

@@ -2,7 +2,7 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/conditional_formatting_request.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 6083
+Input Bytes: 6134
 Decode Outcome: PARSED
 Source Kind: NEW
 Persistence Kind: SAVE_AS
@@ -10,6 +10,6 @@ Operation Count: 5
 Assertion Count: 0
 Read Count: 3
 Assertion Kinds: (none)
-Read Kinds: GET_CONDITIONAL_FORMATTING=1, ANALYZE_WORKBOOK_FINDINGS=1, ANALYZE_CONDITIONAL_FORMATTING_HEALTH=1
+Read Kinds: GET_CONDITIONAL_FORMATTING=1, ANALYZE_CONDITIONAL_FORMATTING_HEALTH=1, ANALYZE_WORKBOOK_FINDINGS=1
 Style Kinds: (none)
-Operation Kinds: SET_CONDITIONAL_FORMATTING=2, CLEAR_CONDITIONAL_FORMATTING=1, ENSURE_SHEET=1, SET_RANGE=1
+Operation Kinds: SET_CONDITIONAL_FORMATTING=2, CLEAR_CONDITIONAL_FORMATTING=1, SET_RANGE=1, ENSURE_SHEET=1

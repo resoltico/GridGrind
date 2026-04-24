@@ -197,7 +197,7 @@ final class GridGrindReportingTaskDefinitions {
                     "Create supported charts and verify that the expected entities exist.",
                     List.of(
                         ref("inspectionQueryTypes", "GET_CHARTS"),
-                        ref("assertionTypes", "EXPECT_PRESENT"),
+                        ref("assertionTypes", "EXPECT_CHART_PRESENT"),
                         ref("persistenceTypes", "SAVE_AS")),
                     List.of(
                         "Use factual chart readback to confirm what the workbook now contains."))),

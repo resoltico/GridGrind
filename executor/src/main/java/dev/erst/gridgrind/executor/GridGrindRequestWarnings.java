@@ -10,6 +10,7 @@ import dev.erst.gridgrind.contract.step.WorkbookStep;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -33,7 +34,7 @@ final class GridGrindRequestWarnings {
     return IntStream.range(0, request.steps().size())
         .mapToObj(
             stepIndex -> warningFor(request.steps().get(stepIndex), stepIndex, spacedSheetNames))
-        .filter(Objects::nonNull)
+        .flatMap(Optional::stream)
         .toList();
   }
 
@@ -83,23 +84,24 @@ final class GridGrindRequestWarnings {
     }
   }
 
-  private static RequestWarning warningFor(
+  private static Optional<RequestWarning> warningFor(
       WorkbookStep step, int stepIndex, Set<String> spacedSheetNames) {
     if (!(step instanceof MutationStep mutationStep)) {
-      return null;
+      return Optional.empty();
     }
     Set<String> offendingSheetNames = new LinkedHashSet<>();
     collectOffendingSheetNames(mutationStep, spacedSheetNames, offendingSheetNames);
     if (offendingSheetNames.isEmpty()) {
-      return null;
+      return Optional.empty();
     }
-    return new RequestWarning(
-        stepIndex,
-        mutationStep.stepId(),
-        mutationStep.action().actionType(),
-        "Formula references same-request sheet names with spaces without single quotes: "
-            + String.join(", ", offendingSheetNames)
-            + ". Use 'Sheet Name'!A1 syntax.");
+    return Optional.of(
+        new RequestWarning(
+            stepIndex,
+            mutationStep.stepId(),
+            mutationStep.action().actionType(),
+            "Formula references same-request sheet names with spaces without single quotes: "
+                + String.join(", ", offendingSheetNames)
+                + ". Use 'Sheet Name'!A1 syntax."));
   }
 
   private static void collectFromCellInput(

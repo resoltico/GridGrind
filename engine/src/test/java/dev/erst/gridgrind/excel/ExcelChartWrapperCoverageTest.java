@@ -8,11 +8,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.excel.foundation.ExcelChartDisplayBlanksAs;
 import java.io.IOException;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.lang.reflect.Proxy;
 import java.util.List;
+import java.util.Optional;
 import javax.xml.parsers.DocumentBuilderFactory;
 import org.apache.poi.xddf.usermodel.chart.XDDFDataSource;
 import org.apache.poi.xssf.usermodel.XSSFChart;
@@ -22,8 +20,8 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
 import org.openxmlformats.schemas.drawingml.x2006.chart.CTSerTx;
+import org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTGraphicalObjectFrame;
 import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
@@ -34,14 +32,6 @@ class ExcelChartWrapperCoverageTest {
   private static final String TEST_NAMESPACE = "urn:gridgrind:test";
   private static final String TEST_CHART_QNAME = "gg:chart";
   private static final String TEST_NON_CHART_QNAME = "gg:not-a-chart";
-  private static final MethodHandle GRAPHIC_FRAME_RELATION_ID_HANDLE =
-      graphicFrameRelationIdHandle();
-  private static final MethodHandle NODE_RELATION_ID_HANDLE = nodeRelationIdHandle();
-  private static final MethodHandle GRAPHIC_FRAME_CONSTRUCTOR_HANDLE =
-      graphicFrameConstructorHandle();
-  private static final MethodHandle IS_CHART_NODE_HANDLE = isChartNodeHandle();
-  private static final MethodHandle RELATION_ATTRIBUTE_VALUE_HANDLE =
-      relationAttributeValueHandle();
 
   @Test
   void chartMutationAndSnapshotWrappersDelegateWithoutAnExplicitFormulaRuntime()
@@ -215,7 +205,7 @@ class ExcelChartWrapperCoverageTest {
           graphicData.getOwnerDocument().createElementNS(TEST_NAMESPACE, TEST_NON_CHART_QNAME));
 
       assertNull(ExcelDrawingChartSupport.chartForGraphicFrame(drawing, graphicFrame));
-      assertNull(chartRelationIdViaHandle(graphicFrame));
+      assertEquals(Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(graphicFrame));
     }
 
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
@@ -233,69 +223,61 @@ class ExcelChartWrapperCoverageTest {
 
       assertEquals(chart, ExcelDrawingChartSupport.chartForGraphicFrame(drawing, graphicFrame));
       assertEquals(Node.COMMENT_NODE, graphicData.getFirstChild().getNodeType());
-      assertTrue(chartRelationIdViaHandle(graphicFrame).startsWith("rId"));
+      assertTrue(
+          ExcelChartSnapshotSupport.chartRelationId(graphicFrame).orElseThrow().startsWith("rId"));
     }
   }
 
   @Test
-  void chartNodeDetectionHelperRecognizesOnlyChartNodes() throws Throwable {
+  void chartNodeDetectionHelperRecognizesOnlyChartNodes() throws Exception {
     var document = DocumentBuilderFactory.newDefaultInstance().newDocumentBuilder().newDocument();
 
-    assertTrue(isChartNodeViaHandle(document.createElementNS(CHART_NAMESPACE, "c:chart")));
-    assertTrue(isChartNodeViaHandle(document.createElement("c:chart")));
-    assertFalse(isChartNodeViaHandle(document.createElementNS(TEST_NAMESPACE, TEST_CHART_QNAME)));
-    assertFalse(isChartNodeViaHandle(null));
+    assertTrue(
+        ExcelChartSnapshotSupport.isChartNode(
+            document.createElementNS(CHART_NAMESPACE, "c:chart")));
+    assertTrue(ExcelChartSnapshotSupport.isChartNode(document.createElement("c:chart")));
+    assertFalse(
+        ExcelChartSnapshotSupport.isChartNode(
+            document.createElementNS(TEST_NAMESPACE, TEST_CHART_QNAME)));
+    assertFalse(ExcelChartSnapshotSupport.isChartNode(null));
   }
 
   @Test
-  void graphicFrameRelationHelperHandlesMissingGraphicContainers() throws Throwable {
-    assertNull(chartRelationIdViaHandle((XSSFGraphicFrame) null));
+  void graphicFrameRelationHelperHandlesMissingGraphicContainers() {
+    assertEquals(
+        Optional.empty(), ExcelChartSnapshotSupport.chartRelationId((XSSFGraphicFrame) null));
 
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("GraphicMissing");
-      ExcelChartTestSupport.seedChartData(sheet);
-      XSSFDrawing drawing = sheet.createDrawingPatriarch();
-      XSSFGraphicFrame graphicFrame =
-          syntheticGraphicFrame(
-              drawing,
-              org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTGraphicalObjectFrame
-                  .Factory.newInstance());
+    CTGraphicalObjectFrame missingGraphic = CTGraphicalObjectFrame.Factory.newInstance();
+    assertEquals(Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(missingGraphic));
 
-      assertNull(chartRelationIdViaHandle(graphicFrame));
-    }
-
-    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      XSSFSheet sheet = workbook.createSheet("GraphicDataMissing");
-      ExcelChartTestSupport.seedChartData(sheet);
-      XSSFDrawing drawing = sheet.createDrawingPatriarch();
-      var ctGraphicFrame =
-          org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTGraphicalObjectFrame
-              .Factory.newInstance();
-      ctGraphicFrame.addNewGraphic();
-      XSSFGraphicFrame graphicFrame = syntheticGraphicFrame(drawing, ctGraphicFrame);
-
-      assertNull(chartRelationIdViaHandle(graphicFrame));
-    }
+    CTGraphicalObjectFrame missingGraphicData = CTGraphicalObjectFrame.Factory.newInstance();
+    missingGraphicData.addNewGraphic();
+    assertEquals(Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(missingGraphicData));
   }
 
   @Test
-  void nodeAndAttributeRelationHelpersTolerateNoiseAndMissingAttributes() throws Throwable {
+  void nodeAndAttributeRelationHelpersTolerateNoiseAndMissingAttributes() throws Exception {
     var document = DocumentBuilderFactory.newDefaultInstance().newDocumentBuilder().newDocument();
     Element chartNode = document.createElementNS(CHART_NAMESPACE, "c:chart");
 
-    assertNull(nodeRelationIdViaHandle(document.createComment("noise")));
-    assertNull(relationAttributeValueViaHandle(null));
-    assertNull(nodeRelationIdViaHandle(chartNode));
+    assertEquals(
+        Optional.empty(),
+        ExcelChartSnapshotSupport.chartRelationId(document.createComment("noise")));
+    assertEquals(Optional.empty(), ExcelChartSnapshotSupport.relationAttributeValue(null));
+    assertEquals(Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(chartNode));
 
     chartNode.setAttributeNS(
         "http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", " ");
-    assertNull(nodeRelationIdViaHandle(chartNode));
+    assertEquals(Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(chartNode));
 
     chartNode.setAttributeNS(
         "http://schemas.openxmlformats.org/officeDocument/2006/relationships", "r:id", "rId7");
-    assertEquals("rId7", nodeRelationIdViaHandle(chartNode));
-    assertEquals("rId7", relationAttributeValueViaHandle(chartNode.getAttributes()));
-    assertNull(nodeRelationIdViaHandle(attributeLessChartNode()));
+    assertEquals(Optional.of("rId7"), ExcelChartSnapshotSupport.chartRelationId(chartNode));
+    assertEquals(
+        Optional.of("rId7"),
+        ExcelChartSnapshotSupport.relationAttributeValue(chartNode.getAttributes()));
+    assertEquals(
+        Optional.empty(), ExcelChartSnapshotSupport.chartRelationId(attributeLessChartNode()));
   }
 
   private static ExcelChartDefinition lineChartDefinition(String name) {
@@ -339,98 +321,6 @@ class ExcelChartWrapperCoverageTest {
       }
     }
     throw new IllegalStateException("Expected chart graphic data to contain an element child");
-  }
-
-  private static MethodHandle graphicFrameRelationIdHandle() {
-    try {
-      return MethodHandles.privateLookupIn(ExcelChartSnapshotSupport.class, MethodHandles.lookup())
-          .findStatic(
-              ExcelChartSnapshotSupport.class,
-              "chartRelationId",
-              MethodType.methodType(String.class, XSSFGraphicFrame.class));
-    } catch (ReflectiveOperationException exception) {
-      throw new LinkageError("Failed to access chartRelationId helper", exception);
-    }
-  }
-
-  private static MethodHandle nodeRelationIdHandle() {
-    try {
-      return MethodHandles.privateLookupIn(ExcelChartSnapshotSupport.class, MethodHandles.lookup())
-          .findStatic(
-              ExcelChartSnapshotSupport.class,
-              "chartRelationId",
-              MethodType.methodType(String.class, Node.class));
-    } catch (ReflectiveOperationException exception) {
-      throw new LinkageError("Failed to access chartRelationId node helper", exception);
-    }
-  }
-
-  private static MethodHandle graphicFrameConstructorHandle() {
-    try {
-      return MethodHandles.privateLookupIn(XSSFGraphicFrame.class, MethodHandles.lookup())
-          .findConstructor(
-              XSSFGraphicFrame.class,
-              MethodType.methodType(
-                  void.class,
-                  XSSFDrawing.class,
-                  org.openxmlformats
-                      .schemas
-                      .drawingml
-                      .x2006
-                      .spreadsheetDrawing
-                      .CTGraphicalObjectFrame
-                      .class));
-    } catch (ReflectiveOperationException exception) {
-      throw new LinkageError("Failed to access XSSFGraphicFrame constructor", exception);
-    }
-  }
-
-  private static MethodHandle isChartNodeHandle() {
-    try {
-      return MethodHandles.privateLookupIn(ExcelChartSnapshotSupport.class, MethodHandles.lookup())
-          .findStatic(
-              ExcelChartSnapshotSupport.class,
-              "isChartNode",
-              MethodType.methodType(boolean.class, Node.class));
-    } catch (ReflectiveOperationException exception) {
-      throw new LinkageError("Failed to access isChartNode helper", exception);
-    }
-  }
-
-  private static MethodHandle relationAttributeValueHandle() {
-    try {
-      return MethodHandles.privateLookupIn(ExcelChartSnapshotSupport.class, MethodHandles.lookup())
-          .findStatic(
-              ExcelChartSnapshotSupport.class,
-              "relationAttributeValue",
-              MethodType.methodType(String.class, NamedNodeMap.class));
-    } catch (ReflectiveOperationException exception) {
-      throw new LinkageError("Failed to access relationAttributeValue helper", exception);
-    }
-  }
-
-  private static String chartRelationIdViaHandle(XSSFGraphicFrame graphicFrame) throws Throwable {
-    return (String) GRAPHIC_FRAME_RELATION_ID_HANDLE.invokeExact(graphicFrame);
-  }
-
-  private static String nodeRelationIdViaHandle(Node node) throws Throwable {
-    return (String) NODE_RELATION_ID_HANDLE.invokeExact(node);
-  }
-
-  private static boolean isChartNodeViaHandle(Node node) throws Throwable {
-    return (boolean) IS_CHART_NODE_HANDLE.invokeExact(node);
-  }
-
-  private static String relationAttributeValueViaHandle(NamedNodeMap attributes) throws Throwable {
-    return (String) RELATION_ATTRIBUTE_VALUE_HANDLE.invokeExact(attributes);
-  }
-
-  private static XSSFGraphicFrame syntheticGraphicFrame(
-      XSSFDrawing drawing,
-      org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTGraphicalObjectFrame
-          graphicFrame)
-      throws Throwable {
-    return (XSSFGraphicFrame) GRAPHIC_FRAME_CONSTRUCTOR_HANDLE.invokeExact(drawing, graphicFrame);
   }
 
   private static Node attributeLessChartNode() {

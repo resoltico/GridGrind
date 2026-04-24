@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: QUICK_REFERENCE
-updated: "2026-04-24"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, quick-reference, snippets, request, execution, examples, formula, workbook-health, chart, signature-line]
   questions: ["what is the quickest way to write a gridgrind request", "how do I generate a built-in gridgrind example", "what are the most common gridgrind request snippets", "where is the detailed gridgrind reference"]
@@ -17,20 +17,22 @@ cheat sheet, then jump to the detailed references when you need the full field l
 
 ```bash
 gridgrind help
-gridgrind --print-request-template
-gridgrind --print-protocol-catalog
-gridgrind --print-protocol-catalog --search validation
+gridgrind --print-request-template --response request.json
+gridgrind --print-protocol-catalog --response protocol-catalog.json
+gridgrind --print-protocol-catalog --search validation --response validation-search.json
 gridgrind --print-protocol-catalog --operation inspectionQueryTypes:GET_SHEET_LAYOUT
-gridgrind --print-example BUDGET
-gridgrind --print-example SHEET_MAINTENANCE
-gridgrind --print-example WORKBOOK_HEALTH
-gridgrind --print-example ASSERTION
+gridgrind --print-example BUDGET --response budget-request.json
+gridgrind --print-example SHEET_MAINTENANCE --response sheet-maintenance.json
+gridgrind --print-example WORKBOOK_HEALTH --response workbook-health.json
+gridgrind --print-example ASSERTION --response assertion.json
 printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' | gridgrind --doctor-request
+gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
 `gridgrind help` is the explicit alias for `--help`. `--doctor-request` validates request shape,
 resolves source-backed inputs, and preflights existing workbook-source access without mutating a
-workbook.
+workbook. `--response <path>` works across execution, doctoring, and discovery commands, so the
+primary output can be captured to a file instead of stdout.
 
 `--search` is the fast discovery path when you only know part of an id or summary. Use
 `--operation <group>:<id>` once you want one exact machine-readable entry.
@@ -40,13 +42,15 @@ workbook.
 ```json
 {
   "protocolVersion": "V1",
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "steps": []
 }
 ```
 
-Step kind is inferred from exactly one of `action`, `assertion`, or `query`. Do not send
-`step.type`.
+Every non-empty step needs a caller-defined `stepId`. Step kind is inferred from exactly one of
+`action`, `assertion`, or `query`; do not send `step.type`.
 
 ## Common Source And Persistence Shapes
 
@@ -90,17 +94,12 @@ Run without saving:
 
 ## Source-Backed Authored Inputs
 
-Text sources:
+Common text and binary sources:
 
 ```json
 { "type": "INLINE", "text": "Quarterly note" }
 { "type": "UTF8_FILE", "path": "authored-inputs/note.txt" }
 { "type": "STANDARD_INPUT" }
-```
-
-Binary sources:
-
-```json
 { "type": "INLINE_BASE64", "base64Data": "SGVsbG8=" }
 { "type": "FILE", "path": "authored-inputs/payload.bin" }
 { "type": "STANDARD_INPUT" }
@@ -111,8 +110,8 @@ The request JSON transport is capped at `16 MiB`. Large authored text or binary 
 
 When the CLI reads a request via `--request <path>`, relative request-owned paths such as
 `source.path`, `persistence.path`, `UTF8_FILE` / `FILE`, external workbook bindings, and signing
-material paths resolve from that request file's directory. `--request` and `--response`
-themselves still resolve from the shell working directory.
+material resolve from that request file's directory. `--request` and `--response` themselves
+still resolve from the shell working directory.
 
 ## Execution, Formula, And Mode Rules
 
@@ -121,9 +120,13 @@ Common execution block:
 ```json
 {
   "execution": {
-    "journal": { "level": "VERBOSE" },
+    "journal": {
+      "level": "VERBOSE"
+    },
     "calculation": {
-      "strategy": { "type": "DO_NOT_CALCULATE" },
+      "strategy": {
+        "type": "DO_NOT_CALCULATE"
+      },
       "markRecalculateOnOpen": true
     }
   }
@@ -139,8 +142,14 @@ Targeted evaluation:
       "strategy": {
         "type": "EVALUATE_TARGETS",
         "cells": [
-          { "sheetName": "Budget", "address": "D2" },
-          { "sheetName": "Budget", "address": "E2" }
+          {
+            "sheetName": "Budget",
+            "address": "D2"
+          },
+          {
+            "sheetName": "Budget",
+            "address": "E2"
+          }
         ]
       }
     }
@@ -168,7 +177,7 @@ Ensure a sheet exists:
 ```json
 {
   "stepId": "ensure-budget",
-  "target": { "type": "BY_NAME", "name": "Budget" },
+  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
   "action": { "type": "ENSURE_SHEET" }
 }
 ```
@@ -179,16 +188,13 @@ Write one cell:
 {
   "stepId": "set-title",
   "target": {
-    "type": "BY_ADDRESS",
+    "type": "CELL_BY_ADDRESS",
     "sheetName": "Budget",
     "address": "A1"
   },
   "action": {
     "type": "SET_CELL",
-    "value": {
-      "type": "TEXT",
-      "source": { "type": "INLINE", "text": "Quarterly Budget" }
-    }
+    "value": { "type": "TEXT", "source": { "type": "INLINE", "text": "Quarterly Budget" } }
   }
 }
 ```
@@ -199,17 +205,37 @@ Write a row range:
 {
   "stepId": "set-header-row",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Budget",
     "range": "A2:C2"
   },
   "action": {
     "type": "SET_RANGE",
-    "rows": [[
-      { "type": "TEXT", "source": { "type": "INLINE", "text": "Team" } },
-      { "type": "TEXT", "source": { "type": "INLINE", "text": "Plan" } },
-      { "type": "TEXT", "source": { "type": "INLINE", "text": "Actual" } }
-    ]]
+    "rows": [
+      [
+        {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Team"
+          }
+        },
+        {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Plan"
+          }
+        },
+        {
+          "type": "TEXT",
+          "source": {
+            "type": "INLINE",
+            "text": "Actual"
+          }
+        }
+      ]
+    ]
   }
 }
 ```
@@ -219,17 +245,10 @@ Apply a style patch:
 ```json
 {
   "stepId": "style-header",
-  "target": {
-    "type": "BY_RANGE",
-    "sheetName": "Budget",
-    "range": "A2:C2"
-  },
+  "target": { "type": "RANGE_BY_RANGE", "sheetName": "Budget", "range": "A2:C2" },
   "action": {
     "type": "APPLY_STYLE",
-    "style": {
-      "bold": true,
-      "fill": { "pattern": "SOLID", "foregroundColor": "#D9EAF7" }
-    }
+    "style": { "bold": true, "fill": { "pattern": "SOLID", "foregroundColor": "#D9EAF7" } }
   }
 }
 ```
@@ -252,11 +271,7 @@ Exact cell-value assertion:
 ```json
 {
   "stepId": "assert-total",
-  "target": {
-    "type": "BY_ADDRESS",
-    "sheetName": "Budget",
-    "address": "D2"
-  },
+  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "D2" },
   "assertion": {
     "type": "EXPECT_CELL_VALUE",
     "expectedValue": { "type": "NUMBER", "number": 1200 }
@@ -269,10 +284,14 @@ Workbook-health assertion:
 ```json
 {
   "stepId": "assert-workbook-clean",
-  "target": { "type": "CURRENT" },
+  "target": {
+    "type": "WORKBOOK_CURRENT"
+  },
   "assertion": {
     "type": "EXPECT_ANALYSIS_FINDING_ABSENT",
-    "query": { "type": "ANALYZE_WORKBOOK_FINDINGS" },
+    "query": {
+      "type": "ANALYZE_WORKBOOK_FINDINGS"
+    },
     "code": "HYPERLINK_MALFORMED_TARGET"
   }
 }
@@ -284,11 +303,16 @@ Read a small cell set:
 {
   "stepId": "cells",
   "target": {
-    "type": "BY_ADDRESSES",
+    "type": "CELL_BY_ADDRESSES",
     "sheetName": "Budget",
-    "addresses": ["A1", "D2"]
+    "addresses": [
+      "A1",
+      "D2"
+    ]
   },
-  "query": { "type": "GET_CELLS" }
+  "query": {
+    "type": "GET_CELLS"
+  }
 }
 ```
 
@@ -297,7 +321,7 @@ Read sheet layout:
 ```json
 {
   "stepId": "layout",
-  "target": { "type": "BY_NAME", "name": "Budget" },
+  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
   "query": { "type": "GET_SHEET_LAYOUT" }
 }
 ```
@@ -306,13 +330,22 @@ Run a no-save workbook-health pass:
 
 ```json
 {
-  "source": { "type": "EXISTING", "path": "budget.xlsx" },
-  "persistence": { "type": "NONE" },
+  "source": {
+    "type": "EXISTING",
+    "path": "budget.xlsx"
+  },
+  "persistence": {
+    "type": "NONE"
+  },
   "steps": [
     {
       "stepId": "lint",
-      "target": { "type": "CURRENT" },
-      "query": { "type": "ANALYZE_WORKBOOK_FINDINGS" }
+      "target": {
+        "type": "WORKBOOK_CURRENT"
+      },
+      "query": {
+        "type": "ANALYZE_WORKBOOK_FINDINGS"
+      }
     }
   ]
 }

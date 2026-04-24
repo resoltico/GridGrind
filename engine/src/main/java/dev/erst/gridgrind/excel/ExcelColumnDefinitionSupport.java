@@ -233,7 +233,7 @@ final class ExcelColumnDefinitionSupport {
       }
     }
     if (!hasMeaningfulColumnDefinition(baseDefinition, hidden, outlineLevel, collapsed)) {
-      return null;
+      return java.util.Optional.<CTCol>empty().orElse(null);
     }
     CTCol effectiveDefinition = copyOf(baseDefinition);
     effectiveDefinition.setMin(columnIndex + 1L);

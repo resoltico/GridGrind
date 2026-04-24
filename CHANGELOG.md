@@ -5,6 +5,82 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.59.0] - 2026-04-25
+
+### Changed
+
+- Structured success and failure response construction now uses explicit protocol factories for
+  synthetic journal-backed results, instead of public convenience constructors that inferred
+  omitted execution details from `null`.
+- Presence assertions are now family-specific on the public wire surface. `EXPECT_PRESENT` and
+  `EXPECT_ABSENT` have been replaced by `EXPECT_NAMED_RANGE_PRESENT`,
+  `EXPECT_NAMED_RANGE_ABSENT`, `EXPECT_TABLE_PRESENT`, `EXPECT_TABLE_ABSENT`,
+  `EXPECT_PIVOT_TABLE_PRESENT`, `EXPECT_PIVOT_TABLE_ABSENT`, `EXPECT_CHART_PRESENT`, and
+  `EXPECT_CHART_ABSENT`, so selector intent is explicit in the authored request instead of being
+  recovered from ambiguous shared selector ids.
+- Generated CLI help and the machine-readable CLI catalog now publish first-contact workflows for
+  discovery, drafting, doctoring, and execution, instead of presenting the public surface only as
+  a flat flag inventory.
+- Generated CLI help now teaches the save-then-reopen workflow explicitly too, including
+  `source.type=EXISTING` for reopening an `.xlsx` workbook from disk and the matching
+  `source.path` file-workflow wording, so first-contact operators do not have to infer the
+  existing-workbook discriminator from deeper protocol material.
+- Generated CLI help, the quick reference, and the request/execution reference now call out that
+  every non-empty step needs a caller-defined `stepId`, so first-contact request authors do not
+  have to discover that requirement only from a shape error after writing their first mutation or
+  inspection.
+
+### Fixed
+
+- Engine and executor helper seams no longer rely on test-only deep reflection or null-sentinel
+  returns for key optional facts. Residual coverage now exercises package-visible seams directly,
+  autofilter sort-state readback uses typed absence internally, and executor warning, diagnostic,
+  and analysis-severity helpers no longer encode "missing" with raw `null` in business logic.
+- Literal cell writes now actually replace existing formula cells instead of only updating POI's
+  cached formula result. `SET_CELL` and `SET_RANGE` clear the old formula first, so writing a
+  number, text, boolean, blank, date, or date-time value no longer leaves the prior formula alive
+  under the new cached display value.
+- `INSERT_ROWS` and `INSERT_COLUMNS` no longer fail just because the target sheet already owns
+  data validations. GridGrind now snapshots those validation structures before the structural
+  insert, shifts their covered ranges and supported formulas authoritatively, and reapplies them
+  after the insert so validated workbooks can be extended without a manual clear-and-rebuild pass.
+- `COPY_SHEET` no longer crashes when Apache POI tries to clone charts whose data sources are
+  authored through workbook or sheet defined names. GridGrind now normalizes those chart formulas
+  to explicit area references just for the clone pass, restores the source-sheet chart formulas
+  immediately afterward, and leaves the copied chart bound to the copied sheet instead of failing
+  with a negative-column reference error.
+- Failure diagnostics now require an explicit `problem.causes[*].stage` value, so structured cause
+  entries always preserve the pipeline stage that classified the failure.
+- Contract-exposed foundation enum tokens and gradient-fill type tokens are now pinned by
+  regression coverage, so accidental wire-vocabulary renames fail verification instead of
+  silently drifting the published protocol surface.
+- `./check.sh` Stage 4 documentation and usage text now list `scripts/test-verify-cli-contract.sh`
+  alongside the other release-surface shell regressions that the script already executes.
+- `--doctor-request` now accepts `--response <path>` just like normal execution, so machine-
+  readable doctor reports can be written to files in both fat-JAR and Docker runs instead of
+  forcing stdout-only handling.
+- `--response <path>` now works consistently across discovery and informational CLI commands too,
+  including `--help`, `--version`, `--print-request-template`, `--print-example`,
+  `--print-task-catalog`, `--print-task-plan`, `--print-goal-plan`, and
+  `--print-protocol-catalog`, with the same parent-directory creation and structured fallback
+  behavior already used by execution and doctoring.
+- Missing polymorphic `type` discriminators in request JSON no longer crash the parser's public
+  error-reporting path. Requests that omit a step assertion, action, query, source, or other
+  subtype `type` field now fail deterministically with the product-owned
+  `Missing required field 'type'` contract instead of surfacing a null-discriminator
+  `NullPointerException`.
+- Public Docker-first guidance now calls out that a plain `docker run ...:latest` can reuse a
+  stale local `latest` tag. Documentation now tells operators to `docker pull` first or use
+  `--pull=always` when they need the registry's current `latest`.
+- User-facing Docker-first copy-paste examples now use the freshness-safe form too. Documentation
+  no longer warns about stale `latest` tags in prose while still demonstrating plain
+  `docker run ...:latest` as the first command a new operator is likely to copy.
+- First-contact request-shape failures now teach the intended replacement surface instead of only
+  echoing an unknown discriminator token. `source.type=FILE` now points operators at
+  `source.type=EXISTING`, the removed ambiguous assertion ids point at the new family-specific
+  assertion ids, and `--print-example` now suggests the stable upper-case example id when the
+  authored token matches a shipped example file stem such as `chart-request`.
+
 ## [0.58.0] - 2026-04-24
 
 ### Changed
@@ -482,9 +558,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   inspections, and the shipped `examples/assertion-request.json` fixture is regression-tested as a
   public mutate-then-verify request.
 - Presence-style assertions now own selector-count semantics authoritatively: exact named-range
-  and chart misses are evaluated as zero observed entities for `EXPECT_PRESENT` and
-  `EXPECT_ABSENT` instead of leaking lower-level not-found failures, and the executor regression
-  suite now locks that behavior in.
+  and chart misses are evaluated as zero observed entities for
+  `EXPECT_NAMED_RANGE_PRESENT` / `EXPECT_NAMED_RANGE_ABSENT` and
+  `EXPECT_CHART_PRESENT` / `EXPECT_CHART_ABSENT` instead of leaking lower-level not-found
+  failures, and the executor regression suite now locks that behavior in.
 - Every response surface now exposes execution journaling consistently: success and failure payloads
   include structured phase and step telemetry, the shipped assertion example demonstrates
   `execution.journal.level=VERBOSE`, and Docker smoke now black-boxes both response-journal
@@ -2250,7 +2327,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.58.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.59.0...HEAD
+[0.59.0]: https://github.com/resoltico/GridGrind/compare/v0.58.0...v0.59.0
 [0.58.0]: https://github.com/resoltico/GridGrind/compare/v0.57.0...v0.58.0
 [0.57.0]: https://github.com/resoltico/GridGrind/compare/v0.56.0...v0.57.0
 [0.56.0]: https://github.com/resoltico/GridGrind/compare/v0.55.0...v0.56.0

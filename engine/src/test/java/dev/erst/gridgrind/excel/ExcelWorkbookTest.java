@@ -532,6 +532,43 @@ class ExcelWorkbookTest {
   }
 
   @Test
+  void setCellLiteralReplacesExistingFormulaCell() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
+
+      workbook.sheet("Budget").setCell("A1", ExcelCellValue.number(0.0d));
+
+      ExcelCellSnapshot.NumberSnapshot snapshot =
+          assertInstanceOf(
+              ExcelCellSnapshot.NumberSnapshot.class, workbook.sheet("Budget").snapshotCell("A1"));
+      assertEquals("NUMBER", snapshot.declaredType());
+      assertEquals(0.0d, snapshot.numberValue());
+    }
+  }
+
+  @Test
+  void setRangeLiteralReplacesExistingFormulaCells() throws Exception {
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      workbook.getOrCreateSheet("Budget").setCell("A1", ExcelCellValue.formula("1+1"));
+      workbook.getOrCreateSheet("Budget").setCell("B1", ExcelCellValue.formula("2+2"));
+
+      workbook
+          .sheet("Budget")
+          .setRange(
+              "A1:B1", List.of(List.of(ExcelCellValue.number(0.0d), ExcelCellValue.number(5.0d))));
+
+      ExcelCellSnapshot.NumberSnapshot first =
+          assertInstanceOf(
+              ExcelCellSnapshot.NumberSnapshot.class, workbook.sheet("Budget").snapshotCell("A1"));
+      ExcelCellSnapshot.NumberSnapshot second =
+          assertInstanceOf(
+              ExcelCellSnapshot.NumberSnapshot.class, workbook.sheet("Budget").snapshotCell("B1"));
+      assertEquals(0.0d, first.numberValue());
+      assertEquals(5.0d, second.numberValue());
+    }
+  }
+
+  @Test
   void validatesWorkbookInputsAndMissingResources() throws IOException {
     assertThrows(NullPointerException.class, () -> ExcelWorkbook.open(null));
 

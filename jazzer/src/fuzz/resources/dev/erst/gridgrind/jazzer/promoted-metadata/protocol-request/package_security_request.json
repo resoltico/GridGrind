@@ -7,7 +7,7 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 1427,
+      "inputBytes" : 1446,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "EXISTING",
       "persistenceKind" : "SAVE_AS",
@@ -20,8 +20,8 @@
       "assertionKinds" : { },
       "readCount" : 2,
       "readKinds" : {
-        "GET_PACKAGE_SECURITY" : 1,
-        "GET_CELLS" : 1
+        "GET_CELLS" : 1,
+        "GET_PACKAGE_SECURITY" : 1
       }
     }
   },

@@ -179,8 +179,9 @@ final class GridGrindProtocolCatalogTypeDescriptors {
                   + " rowIndex must be <= last existing row + 1."
                   + " Append-edge inserts on sparse sheets do not materialize a new physical tail"
                   + " row until content or row metadata exists there."
-                  + " GridGrind rejects row inserts that would move tables, sheet autofilters,"
-                  + " or data validations."),
+                  + " GridGrind preserves and retargets existing data validations across the"
+                  + " insert, but still rejects row inserts that would move tables or"
+                  + " sheet autofilters."),
           GridGrindProtocolCatalog.descriptor(
               MutationAction.DeleteRows.class,
               "DELETE_ROWS",
@@ -204,8 +205,9 @@ final class GridGrindProtocolCatalogTypeDescriptors {
                   + " Append-edge inserts on sparse sheets do not materialize a new physical"
                   + " tail column until cells or explicit column metadata exist there."
                   + " GridGrind rejects column inserts when the workbook contains formula cells"
-                  + " or formula-defined names, or when the edit would move tables,"
-                  + " sheet autofilters, or data validations."),
+                  + " or formula-defined names, and it still rejects inserts that would move"
+                  + " tables or sheet autofilters."
+                  + " Existing data validations are preserved and retargeted across the insert."),
           GridGrindProtocolCatalog.descriptor(
               MutationAction.DeleteColumns.class,
               "DELETE_COLUMNS",
@@ -509,13 +511,39 @@ final class GridGrindProtocolCatalogTypeDescriptors {
   static final List<CatalogTypeDescriptor> ASSERTION_TYPES =
       List.of(
           GridGrindProtocolCatalog.descriptor(
-              Assertion.Present.class,
-              "EXPECT_PRESENT",
-              "Require the selected target family to resolve to one or more workbook entities."),
+              Assertion.NamedRangePresent.class,
+              "EXPECT_NAMED_RANGE_PRESENT",
+              "Require the selected named-range selector to resolve to one or more named"
+                  + " ranges."),
           GridGrindProtocolCatalog.descriptor(
-              Assertion.Absent.class,
-              "EXPECT_ABSENT",
-              "Require the selected target family to resolve to no workbook entities."),
+              Assertion.NamedRangeAbsent.class,
+              "EXPECT_NAMED_RANGE_ABSENT",
+              "Require the selected named-range selector to resolve to no named ranges."),
+          GridGrindProtocolCatalog.descriptor(
+              Assertion.TablePresent.class,
+              "EXPECT_TABLE_PRESENT",
+              "Require the selected table selector to resolve to one or more tables."),
+          GridGrindProtocolCatalog.descriptor(
+              Assertion.TableAbsent.class,
+              "EXPECT_TABLE_ABSENT",
+              "Require the selected table selector to resolve to no tables."),
+          GridGrindProtocolCatalog.descriptor(
+              Assertion.PivotTablePresent.class,
+              "EXPECT_PIVOT_TABLE_PRESENT",
+              "Require the selected pivot-table selector to resolve to one or more pivot"
+                  + " tables."),
+          GridGrindProtocolCatalog.descriptor(
+              Assertion.PivotTableAbsent.class,
+              "EXPECT_PIVOT_TABLE_ABSENT",
+              "Require the selected pivot-table selector to resolve to no pivot tables."),
+          GridGrindProtocolCatalog.descriptor(
+              Assertion.ChartPresent.class,
+              "EXPECT_CHART_PRESENT",
+              "Require the selected chart selector to resolve to one or more charts."),
+          GridGrindProtocolCatalog.descriptor(
+              Assertion.ChartAbsent.class,
+              "EXPECT_CHART_ABSENT",
+              "Require the selected chart selector to resolve to no charts."),
           GridGrindProtocolCatalog.descriptor(
               Assertion.CellValue.class,
               "EXPECT_CELL_VALUE",

@@ -4,7 +4,7 @@ Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
 Message: Missing required field 'target'
-Input Bytes: 5058
+Input Bytes: 5143
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED

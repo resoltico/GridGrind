@@ -33,6 +33,8 @@ import dev.erst.gridgrind.excel.ExcelGradientStop;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelRichText;
 import dev.erst.gridgrind.excel.ExcelRichTextRun;
+import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Converts cell-local contract inputs into workbook-core value, style, and annotation records.
@@ -75,7 +77,7 @@ final class WorkbookCommandCellInputConverter {
   static ExcelRichTextRun toExcelRichTextRun(RichTextRunInput run) {
     return new ExcelRichTextRun(
         WorkbookCommandSourceSupport.inlineText(run.source(), "rich-text run"),
-        toExcelCellFont(run.font()));
+        toExcelCellFont(run.font()).orElse(null));
   }
 
   static ExcelHyperlink toExcelHyperlink(HyperlinkTarget target) {
@@ -92,141 +94,174 @@ final class WorkbookCommandCellInputConverter {
         WorkbookCommandSourceSupport.inlineText(comment.text(), "comment text"),
         comment.author(),
         comment.visible(),
-        comment.runs() == null
-            ? null
-            : new ExcelRichText(
-                comment.runs().stream()
-                    .map(WorkbookCommandCellInputConverter::toExcelRichTextRun)
-                    .toList()),
-        comment.anchor() == null
-            ? null
-            : new ExcelCommentAnchor(
-                comment.anchor().firstColumn(),
-                comment.anchor().firstRow(),
-                comment.anchor().lastColumn(),
-                comment.anchor().lastRow()));
+        commentRuns(comment).orElse(null),
+        commentAnchor(comment).orElse(null));
   }
 
   static ExcelCellStyle toExcelCellStyle(CellStyleInput style) {
     return new ExcelCellStyle(
         style.numberFormat(),
-        toExcelCellAlignment(style.alignment()),
-        toExcelCellFont(style.font()),
-        toExcelCellFill(style.fill()),
-        toExcelBorder(style.border()),
-        toExcelCellProtection(style.protection()));
+        toExcelCellAlignment(style.alignment()).orElse(null),
+        toExcelCellFont(style.font()).orElse(null),
+        toExcelCellFill(style.fill()).orElse(null),
+        toExcelBorder(style.border()).orElse(null),
+        toExcelCellProtection(style.protection()).orElse(null));
   }
 
-  static ExcelCellAlignment toExcelCellAlignment(CellAlignmentInput alignment) {
+  static Optional<ExcelCellAlignment> toExcelCellAlignment(CellAlignmentInput alignment) {
     if (alignment == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelCellAlignment(
-        alignment.wrapText(),
-        alignment.horizontalAlignment(),
-        alignment.verticalAlignment(),
-        alignment.textRotation(),
-        alignment.indentation());
+    return Optional.of(
+        new ExcelCellAlignment(
+            alignment.wrapText(),
+            alignment.horizontalAlignment(),
+            alignment.verticalAlignment(),
+            alignment.textRotation(),
+            alignment.indentation()));
   }
 
-  static ExcelCellFont toExcelCellFont(CellFontInput font) {
+  static Optional<ExcelCellFont> toExcelCellFont(CellFontInput font) {
     if (font == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelCellFont(
-        font.bold(),
-        font.italic(),
-        font.fontName(),
-        toExcelFontHeight(font.fontHeight()),
-        toExcelColor(
-            font.fontColor(), font.fontColorTheme(), font.fontColorIndexed(), font.fontColorTint()),
-        font.underline(),
-        font.strikeout());
+    return Optional.of(
+        new ExcelCellFont(
+            font.bold(),
+            font.italic(),
+            font.fontName(),
+            toExcelFontHeight(font.fontHeight()).orElse(null),
+            toExcelColor(
+                    font.fontColor(),
+                    font.fontColorTheme(),
+                    font.fontColorIndexed(),
+                    font.fontColorTint())
+                .orElse(null),
+            font.underline(),
+            font.strikeout()));
   }
 
-  static ExcelCellFill toExcelCellFill(CellFillInput fill) {
+  static Optional<ExcelCellFill> toExcelCellFill(CellFillInput fill) {
     if (fill == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelCellFill(
-        fill.pattern(),
-        toExcelColor(
-            fill.foregroundColor(),
-            fill.foregroundColorTheme(),
-            fill.foregroundColorIndexed(),
-            fill.foregroundColorTint()),
-        toExcelColor(
-            fill.backgroundColor(),
-            fill.backgroundColorTheme(),
-            fill.backgroundColorIndexed(),
-            fill.backgroundColorTint()),
-        toExcelGradientFill(fill.gradient()));
+    return Optional.of(
+        new ExcelCellFill(
+            fill.pattern(),
+            toExcelColor(
+                    fill.foregroundColor(),
+                    fill.foregroundColorTheme(),
+                    fill.foregroundColorIndexed(),
+                    fill.foregroundColorTint())
+                .orElse(null),
+            toExcelColor(
+                    fill.backgroundColor(),
+                    fill.backgroundColorTheme(),
+                    fill.backgroundColorIndexed(),
+                    fill.backgroundColorTint())
+                .orElse(null),
+            toExcelGradientFill(fill.gradient()).orElse(null)));
   }
 
-  static ExcelCellProtection toExcelCellProtection(CellProtectionInput protection) {
+  static Optional<ExcelCellProtection> toExcelCellProtection(CellProtectionInput protection) {
     if (protection == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelCellProtection(protection.locked(), protection.hiddenFormula());
+    return Optional.of(new ExcelCellProtection(protection.locked(), protection.hiddenFormula()));
   }
 
-  static ExcelFontHeight toExcelFontHeight(FontHeightInput fontHeight) {
+  static Optional<ExcelFontHeight> toExcelFontHeight(FontHeightInput fontHeight) {
     if (fontHeight == null) {
-      return null;
+      return Optional.empty();
     }
-    return switch (fontHeight) {
-      case FontHeightInput.Points points -> ExcelFontHeight.fromPoints(points.points());
-      case FontHeightInput.Twips twips -> new ExcelFontHeight(twips.twips());
-    };
+    return Optional.of(
+        switch (fontHeight) {
+          case FontHeightInput.Points points -> ExcelFontHeight.fromPoints(points.points());
+          case FontHeightInput.Twips twips -> new ExcelFontHeight(twips.twips());
+        });
   }
 
-  static ExcelBorder toExcelBorder(CellBorderInput border) {
+  static Optional<ExcelBorder> toExcelBorder(CellBorderInput border) {
     if (border == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelBorder(
-        toExcelBorderSide(border.all()),
-        toExcelBorderSide(border.top()),
-        toExcelBorderSide(border.right()),
-        toExcelBorderSide(border.bottom()),
-        toExcelBorderSide(border.left()));
+    return Optional.of(
+        new ExcelBorder(
+            toExcelBorderSide(border.all()).orElse(null),
+            toExcelBorderSide(border.top()).orElse(null),
+            toExcelBorderSide(border.right()).orElse(null),
+            toExcelBorderSide(border.bottom()).orElse(null),
+            toExcelBorderSide(border.left()).orElse(null)));
   }
 
-  static ExcelBorderSide toExcelBorderSide(CellBorderSideInput side) {
+  static Optional<ExcelBorderSide> toExcelBorderSide(CellBorderSideInput side) {
     return side == null
-        ? null
-        : new ExcelBorderSide(
-            side.style(),
-            toExcelColor(side.color(), side.colorTheme(), side.colorIndexed(), side.colorTint()));
+        ? Optional.empty()
+        : Optional.of(
+            new ExcelBorderSide(
+                side.style(),
+                toExcelColor(side.color(), side.colorTheme(), side.colorIndexed(), side.colorTint())
+                    .orElse(null)));
   }
 
-  static ExcelColor toExcelColor(String rgb, Integer theme, Integer indexed, Double tint) {
+  static Optional<ExcelColor> toExcelColor(
+      String rgb, Integer theme, Integer indexed, Double tint) {
     if (rgb == null && theme == null && indexed == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelColor(rgb, theme, indexed, tint);
+    return Optional.of(new ExcelColor(rgb, theme, indexed, tint));
   }
 
-  static ExcelGradientFill toExcelGradientFill(CellGradientFillInput gradient) {
+  static Optional<ExcelGradientFill> toExcelGradientFill(CellGradientFillInput gradient) {
     if (gradient == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelGradientFill(
-        gradient.type(),
-        gradient.degree(),
-        gradient.left(),
-        gradient.right(),
-        gradient.top(),
-        gradient.bottom(),
-        gradient.stops().stream()
-            .map(stop -> new ExcelGradientStop(stop.position(), toExcelColor(stop.color())))
-            .toList());
+    return Optional.of(
+        new ExcelGradientFill(
+            gradient.type(),
+            gradient.degree(),
+            gradient.left(),
+            gradient.right(),
+            gradient.top(),
+            gradient.bottom(),
+            gradient.stops().stream()
+                .map(
+                    stop ->
+                        new ExcelGradientStop(
+                            stop.position(), toRequiredExcelColor(stop.color(), "color")))
+                .toList()));
   }
 
-  static ExcelColor toExcelColor(ColorInput color) {
+  static Optional<ExcelColor> toExcelColor(ColorInput color) {
     if (color == null) {
-      return null;
+      return Optional.empty();
     }
+    return Optional.of(toRequiredExcelColor(color, "color"));
+  }
+
+  static ExcelColor toRequiredExcelColor(ColorInput color, String fieldName) {
+    Objects.requireNonNull(color, fieldName + " must not be null");
     return new ExcelColor(color.rgb(), color.theme(), color.indexed(), color.tint());
+  }
+
+  private static Optional<ExcelRichText> commentRuns(CommentInput comment) {
+    return comment.runs() == null
+        ? Optional.empty()
+        : Optional.of(
+            new ExcelRichText(
+                comment.runs().stream()
+                    .map(WorkbookCommandCellInputConverter::toExcelRichTextRun)
+                    .toList()));
+  }
+
+  private static Optional<ExcelCommentAnchor> commentAnchor(CommentInput comment) {
+    return comment.anchor() == null
+        ? Optional.empty()
+        : Optional.of(
+            new ExcelCommentAnchor(
+                comment.anchor().firstColumn(),
+                comment.anchor().firstRow(),
+                comment.anchor().lastColumn(),
+                comment.anchor().lastRow()));
   }
 }

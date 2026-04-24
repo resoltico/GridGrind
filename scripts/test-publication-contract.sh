@@ -25,18 +25,80 @@ resolve_script_dir() {
 
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
+readonly gitignore_file="${repo_root}/.gitignore"
+readonly gitattributes_file="${repo_root}/.gitattributes"
+readonly dockerignore_file="${repo_root}/.dockerignore"
 readonly dockerfile="${repo_root}/Dockerfile"
 readonly release_workflow="${repo_root}/.github/workflows/release.yml"
 readonly container_workflow="${repo_root}/.github/workflows/container.yml"
 readonly root_plugin="${repo_root}/gradle/build-logic/src/main/kotlin/dev/erst/gridgrind/buildlogic/GridGrindRootConventionsPlugin.kt"
 readonly contract_build="${repo_root}/contract/build.gradle.kts"
+readonly cli_jar="${repo_root}/cli/build/libs/gridgrind.jar"
 readonly docker_smoke_script="${repo_root}/scripts/docker-smoke.sh"
 readonly container_verify_script="${repo_root}/scripts/verify-container-publication.sh"
 readonly release_protocol_doc="${repo_root}/docs/RELEASE_PROTOCOL.md"
+readonly temp_parent="${repo_root}/tmp/test-publication-contract"
+test_root=''
+
+cleanup() {
+    [[ -n "${test_root}" ]] && rm -rf "${test_root}" || true
+}
+
+trap cleanup EXIT
 
 grep -Eq \
     '^FROM azul/zulu-openjdk-alpine:26-jre@sha256:[0-9a-f]{64}$' \
     "${dockerfile}" || die "Dockerfile base image is not digest-pinned"
+
+git -C "${repo_root}" check-ignore -q AGENTS.md && die \
+    "root AGENTS.md is still ignored, so agent instructions cannot be tracked"
+git -C "${repo_root}" check-ignore -q .codex/AGENTS_EXTRA.md && die \
+    "repo-owned /.codex/ content is still ignored, so agent instructions cannot be tracked"
+
+grep -Fq '/AGENTS.md   export-ignore' "${gitattributes_file}" || die \
+    ".gitattributes no longer excludes /AGENTS.md from source archives"
+grep -Fq '/.codex      export-ignore' "${gitattributes_file}" || die \
+    ".gitattributes no longer excludes /.codex from source archives"
+grep -Fq '/.codex/**   export-ignore' "${gitattributes_file}" || die \
+    ".gitattributes no longer excludes /.codex/** from source archives"
+
+grep -Eq '^!.*AGENTS\.md$' "${dockerignore_file}" && die \
+    ".dockerignore unexpectedly whitelists /AGENTS.md into the Docker build context"
+grep -Eq '^!.*\.codex(/|\*\*|$)' "${dockerignore_file}" && die \
+    ".dockerignore unexpectedly whitelists /.codex into the Docker build context"
+
+command -v jar >/dev/null 2>&1 || die "jar is required for publication contract verification"
+[[ -f "${cli_jar}" ]] || die "missing CLI fat JAR at ${cli_jar}"
+jar_listing="$(jar tf "${cli_jar}")"
+grep -Fq 'AGENTS.md' <<<"${jar_listing}" && die \
+    "CLI fat JAR unexpectedly contains /AGENTS.md"
+grep -Fq '.codex/' <<<"${jar_listing}" && die \
+    "CLI fat JAR unexpectedly contains /.codex/"
+
+mkdir -p "${temp_parent}"
+test_root="${temp_parent}/run.$$"
+rm -rf "${test_root}"
+mkdir -p "${test_root}/archive-root/.codex/protocol" "${test_root}/archive-root/src"
+cp "${gitattributes_file}" "${test_root}/archive-root/.gitattributes"
+printf '# synthetic agent entry point\n' > "${test_root}/archive-root/AGENTS.md"
+printf '# synthetic codex doc\n' > "${test_root}/archive-root/.codex/AGENTS_EXTRA.md"
+printf '# synthetic nested codex doc\n' > "${test_root}/archive-root/.codex/protocol/guide.md"
+printf 'public file\n' > "${test_root}/archive-root/src/published.txt"
+git -C "${test_root}/archive-root" init >/dev/null
+git -C "${test_root}/archive-root" config user.name "GridGrind Test"
+git -C "${test_root}/archive-root" config user.email "gridgrind-test@example.com"
+git -C "${test_root}/archive-root" add .gitattributes AGENTS.md .codex/AGENTS_EXTRA.md .codex/protocol/guide.md src/published.txt
+git -C "${test_root}/archive-root" commit -m "Archive surface fixture" >/dev/null
+git -C "${test_root}/archive-root" archive --format=tar --output "${test_root}/archive.tar" HEAD
+archive_listing="$(tar -tf "${test_root}/archive.tar")"
+grep -Fq 'src/published.txt' <<<"${archive_listing}" || die \
+    "git archive no longer includes ordinary tracked files for the public source asset"
+grep -Fq 'AGENTS.md' <<<"${archive_listing}" && die \
+    "git archive still includes /AGENTS.md in the public source asset"
+grep -Fq '.codex/AGENTS_EXTRA.md' <<<"${archive_listing}" && die \
+    "git archive still includes /.codex/AGENTS_EXTRA.md in the public source asset"
+grep -Fq '.codex/protocol/guide.md' <<<"${archive_listing}" && die \
+    "git archive still includes nested /.codex content in the public source asset"
 
 grep -Fq './scripts/verify-release-candidate-tag.sh "${{ steps.target-tag.outputs.tag }}"' \
     "${release_workflow}" || die "release workflow does not enforce the shared tag verifier"
@@ -44,8 +106,16 @@ grep -Fq './scripts/verify-release-candidate-tag.sh "${{ steps.target-tag.output
     "${container_workflow}" || die "container workflow does not enforce the shared tag verifier"
 grep -Fq './scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar' \
     "${release_workflow}" || die "release workflow does not verify the packaged CLI contract"
-grep -Fq '"${repo_root}/gradlew" --console=plain :cli:shadowJar >/dev/null' \
-    "${docker_smoke_script}" || die "docker smoke no longer rebuilds the packaged CLI fat JAR"
+grep -Fq 'gradle_command=(' "${docker_smoke_script}" || die \
+    "docker smoke no longer prepares a dedicated Gradle invocation for the packaged CLI fat JAR"
+grep -Fq '"${repo_root}/gradlew"' "${docker_smoke_script}" || die \
+    "docker smoke no longer invokes the repository Gradle wrapper"
+grep -Fq -- '--console=plain' "${docker_smoke_script}" || die \
+    "docker smoke no longer forces plain console output for the packaged CLI rebuild"
+grep -Fq -- '--no-daemon' "${docker_smoke_script}" || die \
+    "docker smoke no longer disables the Gradle daemon for the packaged CLI rebuild"
+grep -Fq 'gradle_command+=(:cli:shadowJar)' "${docker_smoke_script}" || die \
+    "docker smoke no longer rebuilds the packaged CLI fat JAR"
 grep -Fq '"${repo_root}/scripts/verify-cli-contract.sh" docker-image "${image_tag}"' \
     "${docker_smoke_script}" || die "docker smoke no longer verifies the local image CLI contract"
 grep -Fq "readonly streaming_read_request_rel='requests odd/request streaming readback [docker #smoke].json'" \

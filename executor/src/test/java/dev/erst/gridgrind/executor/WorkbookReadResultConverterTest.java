@@ -133,10 +133,11 @@ class InspectionResultConverterTest {
 
   @Test
   void convertsPlainCommentAndWorkbookProtectionFactsDirectly() {
-    assertNull(InspectionResultCellReportSupport.toCommentReport((ExcelComment) null));
+    assertTrue(InspectionResultCellReportSupport.toCommentReport((ExcelComment) null).isEmpty());
     GridGrindResponse.CommentReport plainComment =
         InspectionResultCellReportSupport.toCommentReport(
-            new ExcelComment("Review", "GridGrind", false));
+                new ExcelComment("Review", "GridGrind", false))
+            .orElseThrow();
     WorkbookProtectionReport protection =
         InspectionResultWorkbookCoreReportSupport.toWorkbookProtectionReport(
             new ExcelWorkbookProtectionSnapshot(true, false, true, true, false));
@@ -985,8 +986,10 @@ class InspectionResultConverterTest {
             new ExcelAutofilterFilterColumnSnapshot(
                 5L, true, new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2)));
     return List.of(
-        new ExcelAutofilterSnapshot.SheetOwned("A1:F5", filterColumns, sortState),
-        new ExcelAutofilterSnapshot.TableOwned("H1:I5", "QueueTable", List.of(), sortState));
+        new ExcelAutofilterSnapshot.SheetOwned(
+            "A1:F5", filterColumns, java.util.Optional.of(sortState)),
+        new ExcelAutofilterSnapshot.TableOwned(
+            "H1:I5", "QueueTable", List.of(), java.util.Optional.of(sortState)));
   }
 
   private static ExcelTableSnapshot advancedTable() {

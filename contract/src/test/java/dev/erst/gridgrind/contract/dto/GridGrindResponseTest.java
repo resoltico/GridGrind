@@ -32,7 +32,9 @@ class GridGrindResponseTest {
                 1, List.of("Budget"), "Budget", List.of("Budget"), 0, false)));
 
     GridGrindResponse.Success success =
-        new GridGrindResponse.Success(null, null, warnings, List.of(), inspections);
+        GridGrindResponse.success(null, null, warnings, List.of(), inspections);
+    GridGrindResponse.Success successWithoutInspections =
+        GridGrindResponse.success(null, null, warnings, List.of(), null);
 
     warnings.clear();
     inspections.clear();
@@ -45,12 +47,13 @@ class GridGrindResponseTest {
     assertEquals(ExecutionJournal.Status.SUCCEEDED, success.journal().outcome().status());
     assertEquals(1, success.warnings().size());
     assertEquals(1, success.inspections().size());
+    assertEquals(List.of(), successWithoutInspections.inspections());
   }
 
   @Test
   void failureBackfillConstructorCreatesFailedSyntheticJournal() {
     GridGrindResponse.Failure failure =
-        new GridGrindResponse.Failure(
+        GridGrindResponse.failure(
             null,
             GridGrindResponse.Problem.of(
                 GridGrindProblemCode.INVALID_ARGUMENTS,
@@ -172,6 +175,9 @@ class GridGrindResponseTest {
     assertNull(blankCell.numberValue());
     assertNull(blankCell.booleanValue());
     assertNull(blankCell.errorValue());
+    assertNull(blankCell.hyperlink());
+    assertNull(blankCell.comment());
+    assertNull(new AutofilterEntryReport.SheetOwned("A1:B2").sortState());
     assertNull(readRequest.sourceType());
     assertNull(readRequest.persistenceType());
     assertNull(readRequest.responsePath());
@@ -203,6 +209,57 @@ class GridGrindResponseTest {
     assertEquals("A1:B2", mergedExecute.range());
     assertEquals("SUM(A1)", mergedExecute.formula());
     assertEquals("BudgetTotal", mergedExecute.namedRangeName());
+  }
+
+  @Test
+  void cellReportDefaultAccessorsDispatchAcrossEverySubtype() {
+    HyperlinkTarget hyperlink = new HyperlinkTarget.Url("https://example.com/budget");
+    GridGrindResponse.CommentReport comment =
+        new GridGrindResponse.CommentReport("Reviewed", "Alice", true);
+    GridGrindResponse.CellReport textCell =
+        new GridGrindResponse.CellReport.TextReport(
+            "A1", "STRING", "Reviewed", minimalStyle(), hyperlink, comment, "Reviewed", null);
+    GridGrindResponse.CellReport numberCell =
+        new GridGrindResponse.CellReport.NumberReport(
+            "A2", "NUMERIC", "42", minimalStyle(), hyperlink, comment, 42.0d);
+    GridGrindResponse.CellReport booleanCell =
+        new GridGrindResponse.CellReport.BooleanReport(
+            "A3", "BOOLEAN", "TRUE", minimalStyle(), hyperlink, comment, true);
+    GridGrindResponse.CellReport errorCell =
+        new GridGrindResponse.CellReport.ErrorReport(
+            "A4", "ERROR", "#REF!", minimalStyle(), hyperlink, comment, "#REF!");
+    GridGrindResponse.CellReport formulaCell =
+        new GridGrindResponse.CellReport.FormulaReport(
+            "A5",
+            "FORMULA",
+            "42",
+            minimalStyle(),
+            hyperlink,
+            comment,
+            "SUM(A2:A4)",
+            new GridGrindResponse.CellReport.NumberReport(
+                "A5", "NUMERIC", "42", minimalStyle(), null, null, 42.0d));
+
+    assertEquals(hyperlink, textCell.hyperlink());
+    assertEquals(comment, textCell.comment());
+    assertEquals(hyperlink, numberCell.hyperlink());
+    assertEquals(comment, numberCell.comment());
+    assertEquals(hyperlink, booleanCell.hyperlink());
+    assertEquals(comment, booleanCell.comment());
+    assertEquals(hyperlink, errorCell.hyperlink());
+    assertEquals(comment, errorCell.comment());
+    assertEquals(hyperlink, formulaCell.hyperlink());
+    assertEquals(comment, formulaCell.comment());
+  }
+
+  @Test
+  void autofilterEntryDefaultSortStateDispatchesAcrossTableOwnedEntries() {
+    AutofilterSortStateReport sortState =
+        new AutofilterSortStateReport("A1:B4", false, true, "none", List.of());
+    AutofilterEntryReport entry =
+        new AutofilterEntryReport.TableOwned("A1:B4", "BudgetTable", List.of(), sortState);
+
+    assertEquals(sortState, entry.sortState());
   }
 
   @Test
@@ -270,7 +327,7 @@ class GridGrindResponseTest {
     assertions.add(new AssertionResult("assert-total", "EXPECT_CELL_VALUE"));
 
     GridGrindResponse.Success success =
-        new GridGrindResponse.Success(
+        GridGrindResponse.success(
             null,
             null,
             List.of(),

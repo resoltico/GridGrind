@@ -7,15 +7,15 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 1894,
+      "inputBytes" : 1911,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "NONE",
       "operationCount" : 3,
       "operationKinds" : {
-        "ENSURE_SHEET" : 1,
+        "SET_EMBEDDED_OBJECT" : 1,
         "SET_CELL" : 1,
-        "SET_EMBEDDED_OBJECT" : 1
+        "ENSURE_SHEET" : 1
       },
       "styleKinds" : { },
       "assertionCount" : 0,

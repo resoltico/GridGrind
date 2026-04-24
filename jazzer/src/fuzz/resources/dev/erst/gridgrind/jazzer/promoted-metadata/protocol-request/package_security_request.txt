@@ -2,7 +2,7 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/package_security_request.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 1427
+Input Bytes: 1446
 Decode Outcome: PARSED
 Source Kind: EXISTING
 Persistence Kind: SAVE_AS
@@ -10,6 +10,6 @@ Operation Count: 1
 Assertion Count: 0
 Read Count: 2
 Assertion Kinds: (none)
-Read Kinds: GET_PACKAGE_SECURITY=1, GET_CELLS=1
+Read Kinds: GET_CELLS=1, GET_PACKAGE_SECURITY=1
 Style Kinds: (none)
 Operation Kinds: SET_CELL=1

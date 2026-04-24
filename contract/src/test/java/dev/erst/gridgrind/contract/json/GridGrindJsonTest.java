@@ -3,8 +3,8 @@ package dev.erst.gridgrind.contract.json;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.assertion.Assertion;
@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.TokenStreamLocation;
 import tools.jackson.core.json.JsonFactory;
@@ -81,7 +82,7 @@ class GridGrindJsonTest {
                     new WorkbookSelector.Current(),
                     new InspectionQuery.GetWorkbookSummary())));
     GridGrindResponse response =
-        new GridGrindResponse.Success(
+        GridGrindResponse.success(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.PersistenceOutcome.NotSaved(),
             List.of(new RequestWarning(0, "set-owner", "SET_CELL", "warning")),
@@ -103,7 +104,7 @@ class GridGrindJsonTest {
   @Test
   void roundTripsResolveInputsAndCalculationFailureContexts() throws IOException {
     GridGrindResponse resolveInputsFailure =
-        new GridGrindResponse.Failure(
+        GridGrindResponse.failure(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND,
@@ -120,7 +121,7 @@ class GridGrindJsonTest {
                 null,
                 List.of()));
     GridGrindResponse calculationFailure =
-        new GridGrindResponse.Failure(
+        GridGrindResponse.failure(
             GridGrindProtocolVersion.V1,
             new GridGrindResponse.Problem(
                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_FORMULA,
@@ -186,7 +187,7 @@ class GridGrindJsonTest {
               "steps": [
                 {
                   "stepId": "set-owner",
-                  "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "action": {
                     "type": "SET_CELL",
                     "value": {
@@ -197,7 +198,7 @@ class GridGrindJsonTest {
                 },
                 {
                   "stepId": "assert-owner",
-                  "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "assertion": {
                     "type": "EXPECT_CELL_VALUE",
                     "expectedValue": { "type": "TEXT", "text": "Owner" }
@@ -205,7 +206,7 @@ class GridGrindJsonTest {
                 },
                 {
                   "stepId": "summary",
-                  "target": { "type": "CURRENT" },
+                  "target": { "type": "WORKBOOK_CURRENT" },
                   "query": { "type": "GET_WORKBOOK_SUMMARY" }
                 }
               ]
@@ -250,7 +251,7 @@ class GridGrindJsonTest {
                       "steps": [
                         {
                           "stepId": "bad",
-                          "target": { "type": "CURRENT" },
+                          "target": { "type": "WORKBOOK_CURRENT" },
                           "query": { "type": "NO_SUCH_QUERY" }
                         }
                       ]
@@ -269,7 +270,7 @@ class GridGrindJsonTest {
                         {
                           "stepId": "window",
                           "target": {
-                            "type": "RECTANGULAR_WINDOW",
+                            "type": "RANGE_RECTANGULAR_WINDOW",
                             "sheetName": "Budget",
                             "topLeftAddress": "A1",
                             "rowCount": 2.5,
@@ -288,6 +289,131 @@ class GridGrindJsonTest {
   }
 
   @Test
+  void surfacesProductOwnedSuggestionsForCommonFirstContactTypeMistakes() {
+    InvalidRequestShapeException legacyAssertion =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "legacy",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "assertion": { "type": "EXPECT_PRESENT" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException legacyAbsentAssertion =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "legacy-absent",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "assertion": { "type": "EXPECT_ABSENT" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException unknownAssertionType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "legacy-unknown",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "assertion": { "type": "EXPECT_LEGACYISH" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException wrongSourceType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": {
+                        "type": "FILE",
+                        "path": "budget.xlsx"
+                      },
+                      "steps": [ ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+    InvalidRequestShapeException unknownSourceType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": {
+                        "type": "ARCHIVE",
+                        "path": "budget.xlsx"
+                      },
+                      "steps": [ ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertTrue(
+        legacyAssertion.getMessage().contains("EXPECT_CHART_PRESENT"),
+        "legacy assertion failures must point at one of the new explicit family assertions");
+    assertTrue(
+        legacyAbsentAssertion.getMessage().contains("EXPECT_CHART_ABSENT"),
+        "legacy absence failures must point at one of the new explicit family assertions");
+    assertEquals("Unknown type value 'EXPECT_LEGACYISH'", unknownAssertionType.getMessage());
+    assertTrue(
+        wrongSourceType.getMessage().contains("source.type='EXISTING'"),
+        "source type failures must teach the existing-workbook discriminator");
+    assertEquals("Unknown type value 'ARCHIVE'", unknownSourceType.getMessage());
+  }
+
+  @Test
+  void rejectsMissingPolymorphicAssertionTypeWithoutCrashing() {
+    InvalidRequestShapeException missingAssertionType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": [
+                        {
+                          "stepId": "assertion-missing-type",
+                          "target": { "type": "WORKBOOK_CURRENT" },
+                          "assertion": { "F5pe": "EXPECT_CHART_PRESENT" }
+                        }
+                      ]
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)));
+
+    assertEquals("Missing required field 'type'", missingAssertionType.getMessage());
+    assertEquals("steps[0].assertion", missingAssertionType.jsonPath());
+  }
+
+  @Test
   void rejectsStepsThatMixActionAndQuery() {
     InvalidRequestShapeException invalidStep =
         assertThrows(
@@ -300,7 +426,7 @@ class GridGrindJsonTest {
                       "steps": [
                         {
                           "stepId": "bad",
-                          "target": { "type": "CURRENT" },
+                          "target": { "type": "WORKBOOK_CURRENT" },
                           "action": {
                             "type": "CLEAR_WORKBOOK_PROTECTION"
                           },
@@ -449,10 +575,12 @@ class GridGrindJsonTest {
         GridGrindJson.cleanJacksonMessage(
             "Cannot deserialize value as a subtype of `x` (for POJO property 'target') (set x.y to allow)"));
     assertEquals("Invalid JSON payload", GridGrindJson.cleanJacksonMessage(" "));
-    assertNull(GridGrindJson.jsonLine(null));
-    assertNull(GridGrindJson.jsonColumn(null));
-    assertEquals(4, GridGrindJson.jsonLine(new TokenStreamLocation(null, 0L, 0L, 4, 9)));
-    assertEquals(9, GridGrindJson.jsonColumn(new TokenStreamLocation(null, 0L, 0L, 4, 9)));
+    assertEquals(Optional.empty(), GridGrindJson.jsonLine(null));
+    assertEquals(Optional.empty(), GridGrindJson.jsonColumn(null));
+    assertEquals(
+        Optional.of(4), GridGrindJson.jsonLine(new TokenStreamLocation(null, 0L, 0L, 4, 9)));
+    assertEquals(
+        Optional.of(9), GridGrindJson.jsonColumn(new TokenStreamLocation(null, 0L, 0L, 4, 9)));
   }
 
   /** Tracks whether the request reader closes the source stream after consuming it. */

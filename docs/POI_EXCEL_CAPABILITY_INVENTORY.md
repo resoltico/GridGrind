@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: INVENTORY
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, apache-poi, poi, xssf, xlsx, capability, inventory, workbook-protection, comments, drawings, charts, pivots, pictures, embedded-objects, print-layout, style, autofilter, table, conditional-formatting, package-security, encryption, signing, streaming]
   questions: ["what xlsx features does gridgrind support", "how does gridgrind compare to apache poi xssf", "does gridgrind support workbook protection", "does gridgrind support rich comments", "does gridgrind support charts", "does gridgrind support pivot tables", "does gridgrind support pictures or embedded objects", "does gridgrind support encrypted xlsx files", "what xlsx capabilities are not exposed in gridgrind"]

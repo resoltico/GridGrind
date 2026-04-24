@@ -11,7 +11,7 @@
   "steps" : [ {
     "stepId" : "step-01-ensure-sheet",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Links"
     },
     "action" : {
@@ -20,7 +20,7 @@
   }, {
     "stepId" : "step-02-set-range",
     "target" : {
-      "type" : "BY_RANGE",
+      "type" : "RANGE_BY_RANGE",
       "sheetName" : "Links",
       "range" : "A1:B4"
     },
@@ -79,7 +79,7 @@
   }, {
     "stepId" : "step-03-relative-file-link",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Links",
       "address" : "A2"
     },
@@ -93,7 +93,7 @@
   }, {
     "stepId" : "step-04-absolute-file-link",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Links",
       "address" : "A3"
     },
@@ -107,7 +107,7 @@
   }, {
     "stepId" : "step-05-document-link",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Links",
       "address" : "A4"
     },
@@ -121,7 +121,7 @@
   }, {
     "stepId" : "hyperlinks",
     "target" : {
-      "type" : "BY_ADDRESSES",
+      "type" : "CELL_BY_ADDRESSES",
       "sheetName" : "Links",
       "addresses" : [ "A2", "A3", "A4" ]
     },
@@ -131,7 +131,7 @@
   }, {
     "stepId" : "hyperlink-health",
     "target" : {
-      "type" : "BY_NAMES",
+      "type" : "SHEET_BY_NAMES",
       "names" : [ "Links" ]
     },
     "query" : {

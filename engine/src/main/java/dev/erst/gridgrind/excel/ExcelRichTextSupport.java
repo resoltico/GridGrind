@@ -39,7 +39,7 @@ final class ExcelRichTextSupport {
 
     CTRElt[] runs = richText.getCTRst().getRArray();
     if (runs.length == 0) {
-      return null;
+      return java.util.Optional.<ExcelRichTextSnapshot>empty().orElse(null);
     }
 
     List<ExcelRichTextRunSnapshot> snapshots = new ArrayList<>(runs.length);
@@ -90,7 +90,7 @@ final class ExcelRichTextSupport {
   private static RunFontPatch runFontPatch(XSSFWorkbook workbook, CTRElt run) {
     CTRPrElt properties = run.getRPr();
     if (properties == null) {
-      return null;
+      return java.util.Optional.<RunFontPatch>empty().orElse(null);
     }
 
     Boolean bold = readBold(properties);
@@ -102,7 +102,7 @@ final class ExcelRichTextSupport {
     Boolean strikeout = readStrikeout(properties);
     if (allFontAttributesNull(
         bold, italic, fontName, fontHeight, fontColor, underline, strikeout)) {
-      return null;
+      return java.util.Optional.<RunFontPatch>empty().orElse(null);
     }
     return new RunFontPatch(bold, italic, fontName, fontHeight, fontColor, underline, strikeout);
   }
@@ -121,7 +121,7 @@ final class ExcelRichTextSupport {
 
   private static ExcelFontHeight readFontHeight(CTRPrElt properties) {
     if (properties.sizeOfSzArray() == 0) {
-      return null;
+      return java.util.Optional.<ExcelFontHeight>empty().orElse(null);
     }
     return ExcelFontHeight.fromPoints(
         java.math.BigDecimal.valueOf(properties.getSzArray(0).getVal()));

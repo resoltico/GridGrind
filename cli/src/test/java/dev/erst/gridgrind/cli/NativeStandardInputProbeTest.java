@@ -3,7 +3,6 @@ package dev.erst.gridgrind.cli;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -29,21 +28,21 @@ class NativeStandardInputProbeTest {
   }
 
   @Test
-  void libraryLookupOrNullReturnsLookupOnSuccess() {
+  void libraryLookupReturnsLookupOnSuccess() {
     SymbolLookup lookup = name -> Optional.empty();
 
-    assertSame(lookup, NativeStandardInputProbe.libraryLookupOrNull(() -> lookup));
+    assertEquals(Optional.of(lookup), NativeStandardInputProbe.libraryLookup(() -> lookup));
   }
 
   @Test
-  void libraryLookupOrNullReturnsNullWhenLookupFails() {
-    SymbolLookup lookup =
-        NativeStandardInputProbe.libraryLookupOrNull(
+  void libraryLookupReturnsEmptyWhenLookupFails() {
+    Optional<SymbolLookup> lookup =
+        NativeStandardInputProbe.libraryLookup(
             () -> {
               throw new UnsatisfiedLinkError("library not available");
             });
 
-    assertNull(lookup);
+    assertTrue(lookup.isEmpty());
   }
 
   @Test

@@ -13,7 +13,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Data"
       }
     },
@@ -23,7 +23,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Review"
       }
     },
@@ -41,7 +41,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Data"
       }
     },
@@ -66,7 +66,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Data"
       }
     },
@@ -79,7 +79,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Review"
       }
     },
@@ -89,7 +89,7 @@
         "type": "CLEAR_PRINT_LAYOUT"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Review"
       }
     },
@@ -99,7 +99,7 @@
       },
       "stepId": "data-layout",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Data"
       }
     },
@@ -109,7 +109,7 @@
       },
       "stepId": "data-print",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Data"
       }
     },
@@ -119,7 +119,7 @@
       },
       "stepId": "review-layout",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Review"
       }
     },
@@ -129,7 +129,7 @@
       },
       "stepId": "review-print",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Review"
       }
     }

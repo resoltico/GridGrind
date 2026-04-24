@@ -735,11 +735,8 @@ class ExcelRowColumnStructureControllerTest {
 
       XSSFSheet insertValidationSheet = workbook.createSheet("InsertValidationRows");
       seedDataValidation(insertValidationSheet);
-      IllegalArgumentException insertValidationFailure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> controller.insertRows(insertValidationSheet, 1, 1));
-      assertTrue(insertValidationFailure.getMessage().contains("data validation"));
+      assertDoesNotThrow(() -> controller.insertRows(insertValidationSheet, 1, 1));
+      assertEquals(List.of("A3:A5"), dataValidationRanges(insertValidationSheet));
 
       XSSFSheet deleteValidationSheet = workbook.createSheet("DeleteValidationRows");
       seedDataValidation(deleteValidationSheet);
@@ -800,11 +797,8 @@ class ExcelRowColumnStructureControllerTest {
 
       XSSFSheet insertValidationSheet = workbook.createSheet("InsertValidationColumns");
       seedDataValidation(insertValidationSheet);
-      IllegalArgumentException insertValidationFailure =
-          assertThrows(
-              IllegalArgumentException.class,
-              () -> controller.insertColumns(insertValidationSheet, 0, 1));
-      assertTrue(insertValidationFailure.getMessage().contains("data validation"));
+      assertDoesNotThrow(() -> controller.insertColumns(insertValidationSheet, 0, 1));
+      assertEquals(List.of("B2:B4"), dataValidationRanges(insertValidationSheet));
 
       XSSFSheet deleteValidationSheet = workbook.createSheet("DeleteValidationColumns");
       seedDataValidation(deleteValidationSheet);
@@ -887,12 +881,8 @@ class ExcelRowColumnStructureControllerTest {
 
       XSSFSheet insertRowValidationSheet = workbook.createSheet("InsertRowValidation");
       seedDataValidation(insertRowValidationSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedRowStructuresForInsert(insertRowValidationSheet, 1))
-              .getMessage()
-              .contains("data validation"));
+      assertDoesNotThrow(
+          () -> controller.rejectAffectedRowStructuresForInsert(insertRowValidationSheet, 1));
 
       XSSFSheet deleteRowTableSheet = workbook.createSheet("DeleteRowTable");
       seedTable(deleteRowTableSheet, workbook, "DeleteRowTable");
@@ -975,13 +965,8 @@ class ExcelRowColumnStructureControllerTest {
 
       XSSFSheet insertColumnValidationSheet = workbook.createSheet("InsertColumnValidation");
       seedDataValidation(insertColumnValidationSheet);
-      assertTrue(
-          unsupportedStructure(
-                  () ->
-                      controller.rejectAffectedColumnStructuresForInsert(
-                          insertColumnValidationSheet, 0))
-              .getMessage()
-              .contains("data validation"));
+      assertDoesNotThrow(
+          () -> controller.rejectAffectedColumnStructuresForInsert(insertColumnValidationSheet, 0));
 
       XSSFSheet deleteColumnTableSheet = workbook.createSheet("DeleteColumnTable");
       seedTable(deleteColumnTableSheet, workbook, "DeleteColumnTable");
@@ -1099,6 +1084,79 @@ class ExcelRowColumnStructureControllerTest {
                           workbook, shiftColumnsSheet, new ExcelColumnSpan(2, 3), -2))
               .getMessage()
               .contains("named range 'ShiftColumnsRange'"));
+    }
+  }
+
+  @Test
+  void rowInsertSplitsValidationRangesAndRetargetsValidationFormulas() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet splitSheet = workbook.createSheet("SplitRows");
+      seedDataValidation(splitSheet);
+
+      controller.insertRows(splitSheet, 2, 1);
+
+      assertEquals(List.of("A2", "A4:A5"), dataValidationRanges(splitSheet));
+
+      XSSFSheet formulaSheet = workbook.createSheet("FormulaRows");
+      new ExcelDataValidationController()
+          .setDataValidation(
+              formulaSheet,
+              "A2:A4",
+              new ExcelDataValidationDefinition(
+                  new ExcelDataValidationRule.CustomFormula("LEN(A2)>0"),
+                  false,
+                  false,
+                  null,
+                  null));
+      setString(formulaSheet, "A2", "Ready");
+
+      controller.insertRows(formulaSheet, 1, 1);
+
+      ExcelDataValidationSnapshot.Supported supported =
+          assertInstanceOf(
+              ExcelDataValidationSnapshot.Supported.class,
+              new ExcelDataValidationController()
+                  .dataValidations(formulaSheet, new ExcelRangeSelection.All())
+                  .getFirst());
+      assertEquals(List.of("A3:A5"), supported.ranges());
+      assertEquals(
+          new ExcelDataValidationRule.CustomFormula("LEN(A3)>0"), supported.validation().rule());
+    }
+  }
+
+  @Test
+  void columnInsertSplitsValidationRangesAndRetargetsValidationFormulas() throws Exception {
+    try (XSSFWorkbook workbook = new XSSFWorkbook()) {
+      XSSFSheet splitSheet = workbook.createSheet("SplitColumns");
+      seedDataValidation(splitSheet);
+
+      controller.insertColumns(splitSheet, 0, 1);
+
+      assertEquals(List.of("B2:B4"), dataValidationRanges(splitSheet));
+
+      XSSFSheet formulaSheet = workbook.createSheet("FormulaColumns");
+      new ExcelDataValidationController()
+          .setDataValidation(
+              formulaSheet,
+              "A1:A3",
+              new ExcelDataValidationDefinition(
+                  new ExcelDataValidationRule.CustomFormula("LEN(A1)>0"),
+                  false,
+                  false,
+                  null,
+                  null));
+
+      controller.insertColumns(formulaSheet, 0, 1);
+
+      ExcelDataValidationSnapshot.Supported supported =
+          assertInstanceOf(
+              ExcelDataValidationSnapshot.Supported.class,
+              new ExcelDataValidationController()
+                  .dataValidations(formulaSheet, new ExcelRangeSelection.All())
+                  .getFirst());
+      assertEquals(List.of("B1:B3"), supported.ranges());
+      assertEquals(
+          new ExcelDataValidationRule.CustomFormula("LEN(B1)>0"), supported.validation().rule());
     }
   }
 
@@ -2002,6 +2060,17 @@ class ExcelRowColumnStructureControllerTest {
     DataValidation validation =
         helper.createValidation(constraint, new CellRangeAddressList(1, 3, 0, 0));
     sheet.addValidationData(validation);
+  }
+
+  private static List<String> dataValidationRanges(XSSFSheet sheet) {
+    if (!sheet.getCTWorksheet().isSetDataValidations()) {
+      return List.of();
+    }
+    List<String> ranges = new java.util.ArrayList<>();
+    for (var validation : sheet.getCTWorksheet().getDataValidations().getDataValidationArray()) {
+      ranges.addAll(ExcelSqrefSupport.normalizedSqref(validation.getSqref()));
+    }
+    return List.copyOf(ranges);
   }
 
   private IllegalArgumentException unsupportedStructure(Executable executable) {

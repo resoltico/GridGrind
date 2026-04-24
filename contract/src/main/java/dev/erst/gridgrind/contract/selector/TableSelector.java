@@ -7,10 +7,10 @@ import java.util.List;
 /** Selects one or more tables by workbook-global identity. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = TableSelector.All.class, name = "ALL"),
-  @JsonSubTypes.Type(value = TableSelector.ByName.class, name = "BY_NAME"),
-  @JsonSubTypes.Type(value = TableSelector.ByNames.class, name = "BY_NAMES"),
-  @JsonSubTypes.Type(value = TableSelector.ByNameOnSheet.class, name = "BY_NAME_ON_SHEET")
+  @JsonSubTypes.Type(value = TableSelector.All.class, name = "TABLE_ALL"),
+  @JsonSubTypes.Type(value = TableSelector.ByName.class, name = "TABLE_BY_NAME"),
+  @JsonSubTypes.Type(value = TableSelector.ByNames.class, name = "TABLE_BY_NAMES"),
+  @JsonSubTypes.Type(value = TableSelector.ByNameOnSheet.class, name = "TABLE_BY_NAME_ON_SHEET")
 })
 public sealed interface TableSelector extends Selector
     permits TableSelector.All,

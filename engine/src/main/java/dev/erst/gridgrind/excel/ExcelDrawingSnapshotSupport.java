@@ -83,7 +83,7 @@ final class ExcelDrawingSnapshotSupport {
         drawing.getShapes(group).size());
   }
 
-  private static ExcelDrawingObjectSnapshot.Shape snapshotGraphicFrame(
+  static ExcelDrawingObjectSnapshot.Shape snapshotGraphicFrame(
       org.apache.poi.xssf.usermodel.XSSFGraphicFrame graphicFrame) {
     return new ExcelDrawingObjectSnapshot.Shape(
         ExcelDrawingAnchorSupport.resolvedName(graphicFrame),

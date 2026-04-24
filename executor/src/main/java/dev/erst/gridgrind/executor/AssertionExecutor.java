@@ -25,6 +25,7 @@ import dev.erst.gridgrind.excel.WorkbookReadResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Evaluates first-class assertion steps by adapting them onto canonical inspection reads. */
 final class AssertionExecutor {
@@ -66,8 +67,30 @@ final class AssertionExecutor {
       ExcelWorkbook workbook,
       WorkbookLocation workbookLocation) {
     return switch (assertion) {
-      case Assertion.Present _ -> evaluatePresent(stepId, target, workbook, workbookLocation);
-      case Assertion.Absent _ -> evaluateAbsent(stepId, target, workbook, workbookLocation);
+      case Assertion.NamedRangePresent namedRangePresent ->
+          evaluateEntityPresence(
+              stepId, target, namedRangePresent.assertionType(), true, workbook, workbookLocation);
+      case Assertion.NamedRangeAbsent namedRangeAbsent ->
+          evaluateEntityPresence(
+              stepId, target, namedRangeAbsent.assertionType(), false, workbook, workbookLocation);
+      case Assertion.TablePresent tablePresent ->
+          evaluateEntityPresence(
+              stepId, target, tablePresent.assertionType(), true, workbook, workbookLocation);
+      case Assertion.TableAbsent tableAbsent ->
+          evaluateEntityPresence(
+              stepId, target, tableAbsent.assertionType(), false, workbook, workbookLocation);
+      case Assertion.PivotTablePresent pivotTablePresent ->
+          evaluateEntityPresence(
+              stepId, target, pivotTablePresent.assertionType(), true, workbook, workbookLocation);
+      case Assertion.PivotTableAbsent pivotTableAbsent ->
+          evaluateEntityPresence(
+              stepId, target, pivotTableAbsent.assertionType(), false, workbook, workbookLocation);
+      case Assertion.ChartPresent chartPresent ->
+          evaluateEntityPresence(
+              stepId, target, chartPresent.assertionType(), true, workbook, workbookLocation);
+      case Assertion.ChartAbsent chartAbsent ->
+          evaluateEntityPresence(
+              stepId, target, chartAbsent.assertionType(), false, workbook, workbookLocation);
       case Assertion.CellValue cellValue ->
           evaluateCellValue(stepId, target, cellValue.expectedValue(), workbook, workbookLocation);
       case Assertion.DisplayValue displayValue ->
@@ -132,25 +155,24 @@ final class AssertionExecutor {
     };
   }
 
-  private Evaluation evaluatePresent(
-      String stepId, Selector target, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
+  private Evaluation evaluateEntityPresence(
+      String stepId,
+      Selector target,
+      String assertionType,
+      boolean shouldExist,
+      ExcelWorkbook workbook,
+      WorkbookLocation workbookLocation) {
     List<InspectionResult> observations =
         List.of(presenceObservation(stepId, target, workbook, workbookLocation));
     int count = observedCount(observations.getFirst());
-    return count > 0
-        ? Evaluation.pass(observations)
-        : Evaluation.fail(observations, "EXPECT_PRESENT observed no matching workbook entities");
-  }
-
-  private Evaluation evaluateAbsent(
-      String stepId, Selector target, ExcelWorkbook workbook, WorkbookLocation workbookLocation) {
-    List<InspectionResult> observations =
-        List.of(presenceObservation(stepId, target, workbook, workbookLocation));
-    int count = observedCount(observations.getFirst());
-    return count == 0
+    boolean matchedExpectation = shouldExist ? count > 0 : count == 0;
+    return matchedExpectation
         ? Evaluation.pass(observations)
         : Evaluation.fail(
-            observations, "EXPECT_ABSENT observed " + count + " matching workbook entities");
+            observations,
+            shouldExist
+                ? assertionType + " observed no matching workbook entities"
+                : assertionType + " observed " + count + " matching workbook entities");
   }
 
   private Evaluation evaluateCellValue(
@@ -366,13 +388,13 @@ final class AssertionExecutor {
     InspectionResult.Analysis result =
         (InspectionResult.Analysis)
             executeObservation(stepId, target, query, workbook, workbookLocation);
-    AnalysisSeverity observedSeverity = highestSeverity(result);
-    return severityRank(observedSeverity) <= severityRank(maximumSeverity)
+    Optional<AnalysisSeverity> observedSeverity = highestSeverity(result);
+    return severityRank(observedSeverity) <= severityRank(Optional.of(maximumSeverity))
         ? Evaluation.pass(List.of(result))
         : Evaluation.fail(
             List.of(result),
             "EXPECT_ANALYSIS_MAX_SEVERITY observed highest severity "
-                + observedSeverity
+                + observedSeverity.map(Enum::name).orElse("NONE")
                 + " which exceeds "
                 + maximumSeverity);
   }
@@ -573,25 +595,27 @@ final class AssertionExecutor {
     };
   }
 
-  static AnalysisSeverity highestSeverity(InspectionResult.Analysis result) {
+  static Optional<AnalysisSeverity> highestSeverity(InspectionResult.Analysis result) {
     GridGrindResponse.AnalysisSummaryReport summary = analysisSummary(result);
     if (summary.errorCount() > 0) {
-      return AnalysisSeverity.ERROR;
+      return Optional.of(AnalysisSeverity.ERROR);
     }
     if (summary.warningCount() > 0) {
-      return AnalysisSeverity.WARNING;
+      return Optional.of(AnalysisSeverity.WARNING);
     }
     if (summary.infoCount() > 0) {
-      return AnalysisSeverity.INFO;
+      return Optional.of(AnalysisSeverity.INFO);
     }
-    return null;
+    return Optional.empty();
   }
 
-  static int severityRank(AnalysisSeverity severity) {
-    if (severity == null) {
-      return -1;
-    }
-    return switch (severity) {
+  static int severityRank(Optional<AnalysisSeverity> severity) {
+    Objects.requireNonNull(severity, "severity must not be null");
+    return severity.map(AssertionExecutor::severityRank).orElse(-1);
+  }
+
+  private static int severityRank(AnalysisSeverity severity) {
+    return switch (Objects.requireNonNull(severity, "severity must not be null")) {
       case INFO -> 0;
       case WARNING -> 1;
       case ERROR -> 2;

@@ -2,15 +2,16 @@ package dev.erst.gridgrind.contract.dto;
 
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Shared RGB color normalization helpers for protocol-facing style payloads. */
 final class ProtocolRgbColorSupport {
   private ProtocolRgbColorSupport() {}
 
   /** Normalizes one optional {@code #RRGGBB} literal for protocol storage and comparison. */
-  static String normalizeRgbHex(String color, String fieldName) {
+  static Optional<String> normalizeRgbHex(String color, String fieldName) {
     if (color == null) {
-      return null;
+      return Optional.empty();
     }
     Objects.requireNonNull(fieldName, "fieldName must not be null");
     if (color.isBlank()) {
@@ -19,6 +20,6 @@ final class ProtocolRgbColorSupport {
     if (!color.matches("^#[0-9A-Fa-f]{6}$")) {
       throw new IllegalArgumentException(fieldName + " must match #RRGGBB");
     }
-    return color.toUpperCase(Locale.ROOT);
+    return Optional.of(color.toUpperCase(Locale.ROOT));
   }
 }

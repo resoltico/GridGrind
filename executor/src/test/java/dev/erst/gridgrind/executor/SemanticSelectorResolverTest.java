@@ -74,7 +74,11 @@ class SemanticSelectorResolverTest {
           tableCell,
           resolver.resolveMutationTarget(workbook, tableCell, new MutationAction.ClearRange()));
       assertSame(
-          tableCell, resolver.resolveAssertionTarget(workbook, tableCell, new Assertion.Present()));
+          tableCell,
+          resolver.resolveAssertionTarget(
+              workbook,
+              tableCell,
+              new Assertion.Not(new Assertion.CellValue(new ExpectedCellValue.Text("Updated")))));
 
       SemanticSelectorResolver.ResolvedInspectionTarget inspectionTarget =
           resolver.resolveInspectionTarget(

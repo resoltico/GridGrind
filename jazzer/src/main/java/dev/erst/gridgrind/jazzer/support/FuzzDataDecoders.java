@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Decodes bounded structured values from a Jazzer data provider. */
 public final class FuzzDataDecoders {
@@ -197,7 +198,8 @@ public final class FuzzDataDecoders {
     for (int runIndex = 0; runIndex < runCount; runIndex++) {
       ExcelCellFont fontPatch = data.consumeBoolean() ? nextRichTextFontPatch(data) : null;
       runs.add(
-          new RichTextRunInput(TextSourceInput.inline(nextText(data)), toCellFontInput(fontPatch)));
+          new RichTextRunInput(
+              TextSourceInput.inline(nextText(data)), toCellFontInput(fontPatch).orElse(null)));
     }
     return new CellInput.RichText(List.copyOf(runs));
   }
@@ -418,21 +420,22 @@ public final class FuzzDataDecoders {
     return data.consumeRegularDouble(-1.0d, 1.0d);
   }
 
-  private static CellFontInput toCellFontInput(ExcelCellFont font) {
+  private static Optional<CellFontInput> toCellFontInput(ExcelCellFont font) {
     if (font == null) {
-      return null;
+      return Optional.empty();
     }
-    return new CellFontInput(
-        font.bold(),
-        font.italic(),
-        font.fontName(),
-        font.fontHeight() == null ? null : new FontHeightInput.Twips(font.fontHeight().twips()),
-        font.fontColor() == null ? null : font.fontColor().rgb(),
-        font.fontColor() == null ? null : font.fontColor().theme(),
-        font.fontColor() == null ? null : font.fontColor().indexed(),
-        font.fontColor() == null ? null : font.fontColor().tint(),
-        font.underline(),
-        font.strikeout());
+    return Optional.of(
+        new CellFontInput(
+            font.bold(),
+            font.italic(),
+            font.fontName(),
+            font.fontHeight() == null ? null : new FontHeightInput.Twips(font.fontHeight().twips()),
+            font.fontColor() == null ? null : font.fontColor().rgb(),
+            font.fontColor() == null ? null : font.fontColor().theme(),
+            font.fontColor() == null ? null : font.fontColor().indexed(),
+            font.fontColor() == null ? null : font.fontColor().tint(),
+            font.underline(),
+            font.strikeout()));
   }
 
   private static ExcelBorder nextExcelBorder(GridGrindFuzzData data) {

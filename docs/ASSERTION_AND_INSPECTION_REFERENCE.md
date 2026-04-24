@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: ASSERTION_INSPECTION_REFERENCE
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, assertions, inspections, analysis, get-cells, charts, workbook-health]
   questions: ["where is the assertion and inspection reference", "how are assertions and inspections split in gridgrind", "where do i find workbook health queries in gridgrind"]

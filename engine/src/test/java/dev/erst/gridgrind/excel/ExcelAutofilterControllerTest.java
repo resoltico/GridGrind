@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.ss.util.AreaReference;
@@ -128,11 +129,11 @@ class ExcelAutofilterControllerTest {
               STSortBy.CELL_COLOR.toString(),
               new ExcelColorSnapshot("#102030"),
               null),
-          snapshot.sortState().conditions().get(0));
+          snapshot.sortState().orElseThrow().conditions().get(0));
       assertEquals(
           new ExcelAutofilterSortConditionSnapshot(
               "B2:B3", false, STSortBy.ICON.toString(), null, 4),
-          snapshot.sortState().conditions().get(1));
+          snapshot.sortState().orElseThrow().conditions().get(1));
     }
   }
 
@@ -332,7 +333,7 @@ class ExcelAutofilterControllerTest {
                           1L,
                           true,
                           new ExcelAutofilterFilterCriterionSnapshot.Values(List.of(), false))),
-                  null)),
+                  java.util.Optional.empty())),
           controller.sheetOwnedAutofilters(sheet));
     }
   }
@@ -379,7 +380,7 @@ class ExcelAutofilterControllerTest {
   void sheetOwnedAutofilters_readsPersistedSortStateDetails() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       ExcelAutofilterSnapshot.SheetOwned snapshot = persistedAutofilterSnapshot(workbook);
-      ExcelAutofilterSortStateSnapshot sortSnapshot = snapshot.sortState();
+      ExcelAutofilterSortStateSnapshot sortSnapshot = snapshot.sortState().orElseThrow();
       assertEquals("A1:H5", sortSnapshot.range());
       assertTrue(sortSnapshot.caseSensitive());
       assertTrue(sortSnapshot.columnSort());
@@ -465,41 +466,51 @@ class ExcelAutofilterControllerTest {
           ExcelAutofilterController.iconCriterion(icon));
 
       assertEquals(
-          new ExcelColorSnapshot("#AABBCC"),
+          Optional.of(new ExcelColorSnapshot("#AABBCC")),
           ExcelAutofilterController.dxfColor(workbook, fillDxfId, true));
       assertEquals(
-          new ExcelColorSnapshot("#102030"),
+          Optional.of(new ExcelColorSnapshot("#102030")),
           ExcelAutofilterController.dxfColor(workbook, fontDxfId, false));
       assertEquals(
-          new ExcelColorSnapshot("#AABBCC"),
+          Optional.of(new ExcelColorSnapshot("#AABBCC")),
           ExcelAutofilterController.dxfColor(workbook, fillDxfId, false));
       assertEquals(
-          new ExcelColorSnapshot("#102030"),
+          Optional.of(new ExcelColorSnapshot("#102030")),
           ExcelAutofilterController.dxfColor(workbook, fontDxfId, true));
-      assertNull(ExcelAutofilterController.dxfColor(workbook, emptyDxfId, true));
-      assertNull(ExcelAutofilterController.dxfColor(workbook, 99L, true));
-      assertNull(ExcelAutofilterController.dxfAt(workbook.getStylesSource(), -1L));
-      assertNotNull(ExcelAutofilterController.dxfAt(workbook.getStylesSource(), fillDxfId));
+      assertEquals(
+          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, emptyDxfId, true));
+      assertEquals(Optional.empty(), ExcelAutofilterController.dxfColor(workbook, 99L, true));
+      assertEquals(
+          Optional.empty(), ExcelAutofilterController.dxfAt(workbook.getStylesSource(), -1L));
+      assertTrue(
+          ExcelAutofilterController.dxfAt(workbook.getStylesSource(), fillDxfId).isPresent());
       // Gradient fill (no patternFill) — covers isSetPatternFill()=false in both cellColor and
       // fallback-fill branches.
       long gradientFillDxfId = putGradientFillDxf(workbook);
-      assertNull(ExcelAutofilterController.dxfColor(workbook, gradientFillDxfId, true));
-      assertNull(ExcelAutofilterController.dxfColor(workbook, gradientFillDxfId, false));
+      assertEquals(
+          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, gradientFillDxfId, true));
+      assertEquals(
+          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, gradientFillDxfId, false));
       // PatternFill with no fgColor — covers isSetFgColor()=false in both cellColor and
       // fallback-fill branches.
       long noFgColorDxfId = putPatternFillNoFgColorDxf(workbook);
-      assertNull(ExcelAutofilterController.dxfColor(workbook, noFgColorDxfId, true));
-      assertNull(ExcelAutofilterController.dxfColor(workbook, noFgColorDxfId, false));
+      assertEquals(
+          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, noFgColorDxfId, true));
+      assertEquals(
+          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, noFgColorDxfId, false));
       // Font with no color array — covers sizeOfColorArray()=0 in both font branches.
       long fontNoColorDxfId = putFontNoColorDxf(workbook);
-      assertNull(ExcelAutofilterController.dxfColor(workbook, fontNoColorDxfId, false));
-      assertNull(ExcelAutofilterController.dxfColor(workbook, fontNoColorDxfId, true));
+      assertEquals(
+          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, fontNoColorDxfId, false));
+      assertEquals(
+          Optional.empty(), ExcelAutofilterController.dxfColor(workbook, fontNoColorDxfId, true));
 
       var autoFilter =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter.Factory.newInstance();
       var sortState = autoFilter.addNewSortState();
       sortState.addNewSortCondition().setRef("A2:A5");
-      ExcelAutofilterSortStateSnapshot sortSnapshot = controller.sortState(workbook, autoFilter);
+      ExcelAutofilterSortStateSnapshot sortSnapshot =
+          controller.sortState(workbook, autoFilter).orElseThrow();
       assertEquals("", sortSnapshot.range());
       assertEquals("", sortSnapshot.sortMethod());
     }
@@ -539,15 +550,15 @@ class ExcelAutofilterControllerTest {
           ExcelAutofilterController.colorCriterion(workbook, fontColorFilter));
 
       assertEquals(
-          new ExcelColorSnapshot("#214365"),
+          Optional.of(new ExcelColorSnapshot("#214365")),
           ExcelAutofilterController.dxfColor(workbook, mixedDxfId, true));
       assertEquals(
-          new ExcelColorSnapshot("#FEDCBA"),
+          Optional.of(new ExcelColorSnapshot("#FEDCBA")),
           ExcelAutofilterController.dxfColor(workbook, mixedDxfId, false));
 
       var autoFilter =
           org.openxmlformats.schemas.spreadsheetml.x2006.main.CTAutoFilter.Factory.newInstance();
-      assertNull(controller.sortState(workbook, autoFilter));
+      assertEquals(Optional.empty(), controller.sortState(workbook, autoFilter));
 
       var sortState = autoFilter.addNewSortState();
       sortState.setRef("A1:E5");
@@ -575,7 +586,8 @@ class ExcelAutofilterControllerTest {
       iconOnlySort.setSortBy(STSortBy.ICON);
       iconOnlySort.setIconId(4L);
 
-      ExcelAutofilterSortStateSnapshot snapshot = controller.sortState(workbook, autoFilter);
+      ExcelAutofilterSortStateSnapshot snapshot =
+          controller.sortState(workbook, autoFilter).orElseThrow();
       assertEquals("A1:E5", snapshot.range());
       assertFalse(snapshot.caseSensitive());
       assertFalse(snapshot.columnSort());
@@ -635,12 +647,14 @@ class ExcelAutofilterControllerTest {
       explicitFalseSort.setDescending(false);
 
       assertEquals(
-          new ExcelAutofilterSortStateSnapshot(
-              "A1:B3",
-              false,
-              false,
-              "",
-              List.of(new ExcelAutofilterSortConditionSnapshot("A2:A3", false, "", null, null))),
+          Optional.of(
+              new ExcelAutofilterSortStateSnapshot(
+                  "A1:B3",
+                  false,
+                  false,
+                  "",
+                  List.of(
+                      new ExcelAutofilterSortConditionSnapshot("A2:A3", false, "", null, null)))),
           controller.sortState(workbook, autoFilter));
 
       var values =
@@ -717,6 +731,7 @@ class ExcelAutofilterControllerTest {
           new ExcelAutofilterSortConditionSnapshot("A2:A3", false, "", null, null),
           assertInstanceOf(ExcelAutofilterSnapshot.SheetOwned.class, snapshot)
               .sortState()
+              .orElseThrow()
               .conditions()
               .getFirst());
     }

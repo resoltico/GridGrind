@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTable;
@@ -23,16 +24,13 @@ final class ExcelTableCatalogSupport {
 
     List<ExcelTableSnapshot> selected = new ArrayList<>();
     for (String name : names) {
-      ExcelTableSnapshot snapshot = findTableSnapshotByName(allTables, name);
-      if (snapshot != null) {
-        selected.add(snapshot);
-      }
+      findTableSnapshotByName(allTables, name).ifPresent(selected::add);
     }
     return List.copyOf(selected);
   }
 
   /** Returns one factual table snapshot by workbook-global name or null when absent. */
-  static ExcelTableSnapshot findTableSnapshotByName(
+  static Optional<ExcelTableSnapshot> findTableSnapshotByName(
       List<ExcelTableSnapshot> allTables, String name) {
     Objects.requireNonNull(allTables, "allTables must not be null");
     Objects.requireNonNull(name, "name must not be null");
@@ -40,10 +38,10 @@ final class ExcelTableCatalogSupport {
     String expectedName = name.toUpperCase(Locale.ROOT);
     for (ExcelTableSnapshot snapshot : allTables) {
       if (snapshot.name().toUpperCase(Locale.ROOT).equals(expectedName)) {
-        return snapshot;
+        return Optional.of(snapshot);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   /** Returns the named table from one sheet or throws when the sheet does not contain it. */

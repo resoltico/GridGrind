@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Authored autofilter criterion for one filter column. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
@@ -53,8 +54,8 @@ public sealed interface AutofilterFilterCriterionInput
       if (type.isBlank()) {
         throw new IllegalArgumentException("type must not be blank");
       }
-      value = finiteOrNull(value, "value");
-      maxValue = finiteOrNull(maxValue, "maxValue");
+      value = finiteOrNull(value, "value").orElse(null);
+      maxValue = finiteOrNull(maxValue, "maxValue").orElse(null);
     }
   }
 
@@ -110,13 +111,13 @@ public sealed interface AutofilterFilterCriterionInput
     return copy;
   }
 
-  private static Double finiteOrNull(Double value, String fieldName) {
+  private static Optional<Double> finiteOrNull(Double value, String fieldName) {
     if (value == null) {
-      return null;
+      return Optional.empty();
     }
     if (!Double.isFinite(value)) {
       throw new IllegalArgumentException(fieldName + " must be finite");
     }
-    return value;
+    return Optional.of(value);
   }
 }

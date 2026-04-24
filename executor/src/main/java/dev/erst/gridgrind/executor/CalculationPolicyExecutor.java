@@ -13,6 +13,7 @@ import dev.erst.gridgrind.excel.ExcelWorkbook;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Applies the explicit calculation policy against a fully opened workbook. */
 final class CalculationPolicyExecutor {
@@ -107,22 +108,24 @@ final class CalculationPolicyExecutor {
             assessments.size(),
             CalculationCapabilityMappings.summaryFor(assessments),
             toCapabilityReports(assessments));
-    ExcelFormulaCapabilityAssessment blocking = mostSevereBlockingAssessment(assessments);
+    Optional<ExcelFormulaCapabilityAssessment> blocking = mostSevereBlockingAssessment(assessments);
     return new PreflightOutcome(
         report,
         assessments.size(),
-        blocking == null
-            ? null
-            : new FailureDetail(
-                CalculationCapabilityMappings.problemCodeFor(blocking),
-                Phase.PREFLIGHT,
-                blocking.sheetName(),
-                blocking.address(),
-                blocking.formula(),
-                Objects.requireNonNullElse(
-                    blocking.message(),
-                    "Calculation preflight found formulas that are not immediately evaluable."),
-                null));
+        blocking
+            .map(
+                assessment ->
+                    new FailureDetail(
+                        CalculationCapabilityMappings.problemCodeFor(assessment).orElse(null),
+                        Phase.PREFLIGHT,
+                        assessment.sheetName(),
+                        assessment.address(),
+                        assessment.formula(),
+                        Objects.requireNonNullElse(
+                            assessment.message(),
+                            "Calculation preflight found formulas that are not immediately evaluable."),
+                        null))
+            .orElse(null));
   }
 
   private static ExecutionOutcome executeDoNotCalculate(
@@ -233,17 +236,16 @@ final class CalculationPolicyExecutor {
                     new CellSelector.QualifiedAddress(assessment.sheetName(), assessment.address()),
                     assessment.formula(),
                     CalculationCapabilityMappings.capabilityKindFor(assessment.capability()),
-                    CalculationCapabilityMappings.problemCodeFor(assessment),
+                    CalculationCapabilityMappings.problemCodeFor(assessment).orElse(null),
                     assessment.message()))
         .toList();
   }
 
-  private static ExcelFormulaCapabilityAssessment mostSevereBlockingAssessment(
+  private static Optional<ExcelFormulaCapabilityAssessment> mostSevereBlockingAssessment(
       List<ExcelFormulaCapabilityAssessment> assessments) {
     return assessments.stream()
         .filter(assessment -> assessment.capability() != ExcelFormulaCapabilityKind.EVALUABLE_NOW)
-        .min(Comparator.comparingInt(CalculationCapabilityMappings::severityRank))
-        .orElse(null);
+        .min(Comparator.comparingInt(CalculationCapabilityMappings::severityRank));
   }
 
   record PreflightOutcome(

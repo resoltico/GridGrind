@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
@@ -102,7 +103,14 @@ final class ExcelCustomXmlController {
   }
 
   static XSSFMap requireMapping(XSSFWorkbook workbook, ExcelCustomXmlMappingLocator locator) {
-    Collection<XSSFMap> mappings = workbook.getCustomXMLMappings();
+    Objects.requireNonNull(workbook, "workbook must not be null");
+    return requireMapping(workbook.getCustomXMLMappings(), locator);
+  }
+
+  static XSSFMap requireMapping(
+      Collection<? extends XSSFMap> mappings, ExcelCustomXmlMappingLocator locator) {
+    Objects.requireNonNull(mappings, "mappings must not be null");
+    Objects.requireNonNull(locator, "locator must not be null");
     if (mappings.isEmpty()) {
       throw new IllegalArgumentException("Workbook does not contain any custom XML mappings");
     }
@@ -149,23 +157,28 @@ final class ExcelCustomXmlController {
             ? nullIfBlank(schema.getSchemaLanguage())
             : null,
         schema != null && schema.isSetSchemaRef() ? nullIfBlank(schema.getSchemaRef()) : null,
-        schemaXml(mapping),
-        dataBinding(ctMap),
+        schemaXml(mapping).orElse(null),
+        dataBinding(ctMap).orElse(null),
         linkedCells(mapping),
         linkedTables(mapping));
   }
 
-  static ExcelCustomXmlDataBindingSnapshot dataBinding(CTMap ctMap) {
+  static Optional<ExcelCustomXmlDataBindingSnapshot> dataBinding(CTMap ctMap) {
     if (!ctMap.isSetDataBinding()) {
-      return null;
+      return Optional.empty();
     }
     CTDataBinding dataBinding = ctMap.getDataBinding();
-    return new ExcelCustomXmlDataBindingSnapshot(
-        dataBinding.isSetDataBindingName() ? nullIfBlank(dataBinding.getDataBindingName()) : null,
-        dataBinding.isSetFileBinding() ? dataBinding.getFileBinding() : null,
-        dataBinding.isSetConnectionID() ? dataBinding.getConnectionID() : null,
-        dataBinding.isSetFileBindingName() ? nullIfBlank(dataBinding.getFileBindingName()) : null,
-        dataBinding.getDataBindingLoadMode());
+    return Optional.of(
+        new ExcelCustomXmlDataBindingSnapshot(
+            dataBinding.isSetDataBindingName()
+                ? nullIfBlank(dataBinding.getDataBindingName())
+                : null,
+            dataBinding.isSetFileBinding() ? dataBinding.getFileBinding() : null,
+            dataBinding.isSetConnectionID() ? dataBinding.getConnectionID() : null,
+            dataBinding.isSetFileBindingName()
+                ? nullIfBlank(dataBinding.getFileBindingName())
+                : null,
+            dataBinding.getDataBindingLoadMode()));
   }
 
   static List<ExcelCustomXmlLinkedCellSnapshot> linkedCells(XSSFMap mapping) {
@@ -196,13 +209,13 @@ final class ExcelCustomXmlController {
     return List.copyOf(snapshots);
   }
 
-  static String schemaXml(XSSFMap mapping) {
+  static Optional<String> schemaXml(XSSFMap mapping) {
     Node schema = mapping.getSchema();
     if (schema == null) {
-      return null;
+      return Optional.empty();
     }
     try {
-      return schemaXml(mapping, schema, XMLHelper.newTransformer());
+      return Optional.ofNullable(schemaXml(mapping, schema, XMLHelper.newTransformer()));
     } catch (TransformerException exception) {
       throw new IllegalStateException(
           "Failed to serialize custom XML schema for mapping '" + mappingName(mapping) + "'",
@@ -210,12 +223,12 @@ final class ExcelCustomXmlController {
     }
   }
 
-  static String schemaXml(XSSFMap mapping, Transformer transformer) {
+  static Optional<String> schemaXml(XSSFMap mapping, Transformer transformer) {
     Node schema = mapping.getSchema();
     if (schema == null) {
-      return null;
+      return Optional.empty();
     }
-    return schemaXml(mapping, schema, transformer);
+    return Optional.ofNullable(schemaXml(mapping, schema, transformer));
   }
 
   private static String schemaXml(XSSFMap mapping, Node schema, Transformer transformer) {

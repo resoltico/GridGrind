@@ -45,7 +45,7 @@ class ExecutionJournalCoverageTest {
   void defaultExecutorMethodForwardsAndRejectsNullSink() {
     WorkbookPlan request = new WorkbookPlan(new WorkbookPlan.WorkbookSource.New(), null, List.of());
     GridGrindResponse.Success expected =
-        new GridGrindResponse.Success(
+        GridGrindResponse.success(
             null,
             new GridGrindResponse.PersistenceOutcome.NotSaved(),
             List.of(),

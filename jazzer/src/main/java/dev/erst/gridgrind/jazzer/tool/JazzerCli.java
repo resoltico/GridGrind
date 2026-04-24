@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Implements the local operator command surface that surrounds the Jazzer harnesses. */
 public final class JazzerCli {
@@ -56,11 +57,11 @@ public final class JazzerCli {
 
   private static void status(List<String> args) throws IOException {
     Path projectDirectory = projectDirectory(args);
-    String targetKey = optionalValue(args, "--target");
+    Optional<String> targetKey = optionalValue(args, "--target");
     List<LocalRunSummary> summaries =
-        targetKey == null
+        targetKey.isEmpty()
             ? availableSummaries(projectDirectory)
-            : singleSummary(projectDirectory, JazzerRunTarget.fromKey(targetKey));
+            : singleSummary(projectDirectory, JazzerRunTarget.fromKey(targetKey.orElseThrow()));
     if (summaries.isEmpty()) {
       System.out.println("No Jazzer summaries recorded yet.");
       return;
@@ -70,11 +71,11 @@ public final class JazzerCli {
 
   private static void report(List<String> args) throws IOException {
     Path projectDirectory = projectDirectory(args);
-    String targetKey = optionalValue(args, "--target");
+    Optional<String> targetKey = optionalValue(args, "--target");
     List<LocalRunSummary> summaries =
-        targetKey == null
+        targetKey.isEmpty()
             ? availableSummaries(projectDirectory)
-            : singleSummary(projectDirectory, JazzerRunTarget.fromKey(targetKey));
+            : singleSummary(projectDirectory, JazzerRunTarget.fromKey(targetKey.orElseThrow()));
     if (summaries.isEmpty()) {
       System.out.println("No Jazzer summaries recorded yet.");
       return;
@@ -89,11 +90,11 @@ public final class JazzerCli {
 
   private static void listFindings(List<String> args) throws IOException {
     Path projectDirectory = projectDirectory(args);
-    String targetKey = optionalValue(args, "--target");
+    Optional<String> targetKey = optionalValue(args, "--target");
     List<JazzerRunTarget> targets =
-        targetKey == null
+        targetKey.isEmpty()
             ? List.of(JazzerRunTarget.values())
-            : List.of(JazzerRunTarget.fromKey(targetKey));
+            : List.of(JazzerRunTarget.fromKey(targetKey.orElseThrow()));
 
     for (int index = 0; index < targets.size(); index++) {
       JazzerRunTarget target = targets.get(index);
@@ -109,15 +110,15 @@ public final class JazzerCli {
 
   private static void listCorpus(List<String> args) throws IOException {
     Path projectDirectory = projectDirectory(args);
-    String targetKey = optionalValue(args, "--target");
+    Optional<String> targetKey = optionalValue(args, "--target");
     List<JazzerRunTarget> targets =
-        targetKey == null
+        targetKey.isEmpty()
             ? List.of(
                 JazzerRunTarget.protocolRequest(),
                 JazzerRunTarget.protocolWorkflow(),
                 JazzerRunTarget.engineCommandSequence(),
                 JazzerRunTarget.xlsxRoundTrip())
-            : List.of(JazzerRunTarget.fromKey(targetKey));
+            : List.of(JazzerRunTarget.fromKey(targetKey.orElseThrow()));
 
     for (int index = 0; index < targets.size(); index++) {
       JazzerRunTarget target = targets.get(index);
@@ -216,8 +217,9 @@ public final class JazzerCli {
 
   private static void refreshPromotedMetadata(List<String> args) throws IOException {
     Path projectDirectory = projectDirectory(args);
-    String targetKey = optionalValue(args, "--target");
-    int refreshed = PromotionMetadataRefresher.refresh(projectDirectory, targetKey);
+    int refreshed =
+        PromotionMetadataRefresher.refresh(
+            projectDirectory, optionalValue(args, "--target").orElse(null));
     System.out.println("Refreshed " + refreshed + " promoted metadata entries.");
   }
 
@@ -241,10 +243,11 @@ public final class JazzerCli {
   }
 
   private static Path projectDirectory(List<String> args) {
-    String configured = optionalValue(args, "--project-dir");
-    return configured == null
-        ? Path.of("").toAbsolutePath().normalize()
-        : Path.of(configured).toAbsolutePath().normalize();
+    return optionalValue(args, "--project-dir")
+        .map(Path::of)
+        .map(Path::toAbsolutePath)
+        .map(Path::normalize)
+        .orElseGet(() -> Path.of("").toAbsolutePath().normalize());
   }
 
   private static Path requiredPath(List<String> args, String flag) {
@@ -252,22 +255,19 @@ public final class JazzerCli {
   }
 
   private static String requiredValue(List<String> args, String flag) {
-    String value = optionalValue(args, flag);
-    if (value == null) {
-      throw new IllegalArgumentException("Missing required option " + flag);
-    }
-    return value;
+    return optionalValue(args, flag)
+        .orElseThrow(() -> new IllegalArgumentException("Missing required option " + flag));
   }
 
-  private static String optionalValue(List<String> args, String flag) {
+  private static Optional<String> optionalValue(List<String> args, String flag) {
     Objects.requireNonNull(args, "args must not be null");
     Objects.requireNonNull(flag, "flag must not be null");
     for (int index = 0; index < args.size() - 1; index++) {
       if (args.get(index).equals(flag)) {
-        return args.get(index + 1);
+        return Optional.of(args.get(index + 1));
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   private static boolean hasFlag(List<String> args, String flag) {

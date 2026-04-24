@@ -53,8 +53,14 @@ class AssertionCoverageTest {
             "Budget!B2",
             new dev.erst.gridgrind.contract.dto.NamedRangeTarget("Budget", "B2"));
 
-    assertEquals("EXPECT_PRESENT", new Assertion.Present().assertionType());
-    assertEquals("EXPECT_ABSENT", new Assertion.Absent().assertionType());
+    assertEquals("EXPECT_NAMED_RANGE_PRESENT", new Assertion.NamedRangePresent().assertionType());
+    assertEquals("EXPECT_NAMED_RANGE_ABSENT", new Assertion.NamedRangeAbsent().assertionType());
+    assertEquals("EXPECT_TABLE_PRESENT", new Assertion.TablePresent().assertionType());
+    assertEquals("EXPECT_TABLE_ABSENT", new Assertion.TableAbsent().assertionType());
+    assertEquals("EXPECT_PIVOT_TABLE_PRESENT", new Assertion.PivotTablePresent().assertionType());
+    assertEquals("EXPECT_PIVOT_TABLE_ABSENT", new Assertion.PivotTableAbsent().assertionType());
+    assertEquals("EXPECT_CHART_PRESENT", new Assertion.ChartPresent().assertionType());
+    assertEquals("EXPECT_CHART_ABSENT", new Assertion.ChartAbsent().assertionType());
     assertEquals(
         "EXPECT_CELL_VALUE",
         new Assertion.CellValue(new ExpectedCellValue.Text("Owner")).assertionType());
@@ -148,8 +154,8 @@ class AssertionCoverageTest {
                 1, List.of("Budget"), "Budget", List.of("Budget"), 1, false));
 
     assertEquals(
-        List.of(new Assertion.Present()),
-        AssertionSupport.copyAssertions(List.of(new Assertion.Present()), "assertions"));
+        List.of(new Assertion.TablePresent()),
+        AssertionSupport.copyAssertions(List.of(new Assertion.TablePresent()), "assertions"));
     assertEquals(
         List.of(namedRange), AssertionSupport.copyNamedRanges(List.of(namedRange), "namedRanges"));
     assertEquals(

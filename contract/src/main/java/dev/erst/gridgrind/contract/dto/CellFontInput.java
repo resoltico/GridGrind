@@ -28,7 +28,7 @@ public record CellFontInput(
     if (fontName != null && fontName.isBlank()) {
       throw new IllegalArgumentException("fontName must not be blank");
     }
-    fontColor = ProtocolRgbColorSupport.normalizeRgbHex(fontColor, "fontColor");
+    fontColor = ProtocolRgbColorSupport.normalizeRgbHex(fontColor, "fontColor").orElse(null);
     if (fontColorTheme != null && fontColorTheme < 0) {
       throw new IllegalArgumentException("fontColorTheme must not be negative");
     }

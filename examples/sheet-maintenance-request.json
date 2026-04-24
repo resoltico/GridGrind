@@ -11,7 +11,7 @@
   "steps" : [ {
     "stepId" : "step-01-ensure-template",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Template"
     },
     "action" : {
@@ -20,7 +20,7 @@
   }, {
     "stepId" : "step-02-set-range",
     "target" : {
-      "type" : "BY_RANGE",
+      "type" : "RANGE_BY_RANGE",
       "sheetName" : "Template",
       "range" : "A1:B3"
     },
@@ -67,7 +67,7 @@
   }, {
     "stepId" : "step-03-set-comment",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Template",
       "address" : "A1"
     },
@@ -87,7 +87,7 @@
   }, {
     "stepId" : "step-04-copy-sheet",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Template"
     },
     "action" : {
@@ -100,7 +100,7 @@
   }, {
     "stepId" : "step-05-read-comments",
     "target" : {
-      "type" : "ALL_USED_IN_SHEET",
+      "type" : "CELL_ALL_USED_IN_SHEET",
       "sheetName" : "Template Copy"
     },
     "query" : {
@@ -109,7 +109,7 @@
   }, {
     "stepId" : "step-06-read-workbook-findings",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "query" : {
       "type" : "ANALYZE_WORKBOOK_FINDINGS"

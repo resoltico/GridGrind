@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: WORKBOOK_CELL_INSPECTIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, inspections, get-workbook-summary, get-package-security, get-cells, get-window, get-comments]
   questions: ["how do i inspect workbook facts in gridgrind", "how do i read cells in gridgrind", "how do i inspect package security in gridgrind"]
@@ -26,7 +26,7 @@ force-recalculation flag.
 {
   "stepId": "workbook",
   "target": {
-    "type": "CURRENT"
+    "type": "WORKBOOK_CURRENT"
   },
   "query": {
     "type": "GET_WORKBOOK_SUMMARY"
@@ -51,7 +51,7 @@ package signature.
 {
   "stepId": "security",
   "target": {
-    "type": "CURRENT"
+    "type": "WORKBOOK_CURRENT"
   },
   "query": {
     "type": "GET_PACKAGE_SECURITY"
@@ -101,7 +101,7 @@ whether the workbook stores password hashes for the workbook or revisions protec
 {
   "stepId": "workbook-protection",
   "target": {
-    "type": "CURRENT"
+    "type": "WORKBOOK_CURRENT"
   },
   "query": {
     "type": "GET_WORKBOOK_PROTECTION"
@@ -133,7 +133,7 @@ single cells, linked tables, and optional data-binding facts. The step target is
 {
   "stepId": "custom-xml-mappings",
   "target": {
-    "type": "CURRENT"
+    "type": "WORKBOOK_CURRENT"
   },
   "query": {
     "type": "GET_CUSTOM_XML_MAPPINGS"
@@ -173,7 +173,7 @@ Export one existing workbook custom-XML mapping as serialized XML. The step targ
 {
   "stepId": "custom-xml-export",
   "target": {
-    "type": "CURRENT"
+    "type": "WORKBOOK_CURRENT"
   },
   "query": {
     "type": "EXPORT_CUSTOM_XML_MAPPING",
@@ -207,7 +207,7 @@ Returns exact named-range reports selected by workbook-wide or exact-selector in
 {
   "stepId": "named-ranges",
   "target": {
-    "type": "ALL"
+    "type": "NAMED_RANGE_ALL"
   },
   "query": {
     "type": "GET_NAMED_RANGES"
@@ -219,14 +219,14 @@ Returns exact named-range reports selected by workbook-wide or exact-selector in
 {
   "stepId": "selected-named-ranges",
   "target": {
-    "type": "ANY_OF",
+    "type": "NAMED_RANGE_ANY_OF",
     "selectors": [
       {
-        "type": "WORKBOOK_SCOPE",
+        "type": "NAMED_RANGE_WORKBOOK_SCOPE",
         "name": "BudgetTotal"
       },
       {
-        "type": "SHEET_SCOPE",
+        "type": "NAMED_RANGE_SHEET_SCOPE",
         "sheetName": "Budget",
         "name": "BudgetTable"
       }
@@ -254,7 +254,7 @@ Returns structural summary facts for one sheet.
 {
   "stepId": "sheet-summary",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "query": {
@@ -282,7 +282,7 @@ Returns exact cell snapshots for one sheet and an ordered list of A1 addresses.
 {
   "stepId": "cells",
   "target": {
-    "type": "BY_ADDRESSES",
+    "type": "CELL_BY_ADDRESSES",
     "sheetName": "Inventory",
     "addresses": [
       "A1",
@@ -360,7 +360,7 @@ Return factual array-formula group metadata for the selected sheets.
 {
   "stepId": "array-formulas",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Calc"
   },
   "query": {
@@ -401,7 +401,7 @@ with `INVALID_REQUEST`.
 {
   "stepId": "window",
   "target": {
-    "type": "RECTANGULAR_WINDOW",
+    "type": "RANGE_RECTANGULAR_WINDOW",
     "sheetName": "Inventory",
     "topLeftAddress": "A1",
     "rowCount": 5,
@@ -425,7 +425,7 @@ Returns the exact merged regions defined on one sheet.
 {
   "stepId": "merged",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "query": {
@@ -444,7 +444,7 @@ normalized plain path strings, not `file:` URIs.
 {
   "stepId": "hyperlinks",
   "target": {
-    "type": "ALL_USED_IN_SHEET",
+    "type": "CELL_ALL_USED_IN_SHEET",
     "sheetName": "Inventory"
   },
   "query": {
@@ -457,7 +457,7 @@ normalized plain path strings, not `file:` URIs.
 {
   "stepId": "selected-hyperlinks",
   "target": {
-    "type": "BY_ADDRESSES",
+    "type": "CELL_BY_ADDRESSES",
     "sheetName": "Inventory",
     "addresses": [
       "A1",
@@ -478,7 +478,7 @@ Returns comment metadata for selected cells on one sheet.
 {
   "stepId": "comments",
   "target": {
-    "type": "ALL_USED_IN_SHEET",
+    "type": "CELL_ALL_USED_IN_SHEET",
     "sheetName": "Inventory"
   },
   "query": {
@@ -491,7 +491,7 @@ Returns comment metadata for selected cells on one sheet.
 {
   "stepId": "selected-comments",
   "target": {
-    "type": "BY_ADDRESSES",
+    "type": "CELL_BY_ADDRESSES",
     "sheetName": "Inventory",
     "addresses": [
       "A1",
@@ -508,11 +508,11 @@ Cell-selector payloads use:
 
 ```json
 {
-  "type": "ALL_USED_IN_SHEET",
+  "type": "CELL_ALL_USED_IN_SHEET",
   "sheetName": "Inventory"
 }
 {
-  "type": "BY_ADDRESSES",
+  "type": "CELL_BY_ADDRESSES",
   "sheetName": "Inventory",
   "addresses": [
     "A1",

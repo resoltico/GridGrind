@@ -76,9 +76,10 @@ final class ExcelSheetCopyPictureSupport {
         requiredImagePart(targetPicture.getDrawing().getPackagePart(), sourcePicture);
     String preferredRelationId =
         ExcelDrawingPictureSupport.reusableRelationId(
-            targetPicture.getDrawing(),
-            ExcelDrawingPictureSupport.pictureRelationId(targetPicture),
-            imagePart.getPartName());
+                targetPicture.getDrawing(),
+                ExcelDrawingPictureSupport.pictureRelationId(targetPicture).orElse(null),
+                imagePart.getPartName())
+            .orElse(null);
     RelationPart relation =
         targetPicture
             .getDrawing()
@@ -117,11 +118,11 @@ final class ExcelSheetCopyPictureSupport {
     }
   }
 
-  private record PictureCopyPlan(
+  record PictureCopyPlan(
       String objectName,
       String sourcePartName,
       dev.erst.gridgrind.excel.foundation.ExcelPictureFormat format) {
-    private PictureCopyPlan {
+    PictureCopyPlan {
       Objects.requireNonNull(objectName, "objectName must not be null");
       if (objectName.isBlank()) {
         throw new IllegalArgumentException("objectName must not be blank");

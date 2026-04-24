@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: STYLE_VALIDATION_MUTATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, style mutations, data validation, conditional formatting, apply-style]
   questions: ["how do i style cells in gridgrind", "how do i set data validation in gridgrind", "how do i manage conditional formatting in gridgrind"]
@@ -26,7 +26,7 @@ unspecified style properties are left untouched.
 {
   "stepId": "apply-style",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Inventory",
     "range": "A1:C1"
   },
@@ -75,7 +75,7 @@ unspecified style properties are left untouched.
 {
   "stepId": "apply-style",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Inventory",
     "range": "J2:J3"
   },
@@ -275,7 +275,7 @@ authoritative on its target cells and any remaining fragments are retained aroun
 {
   "stepId": "set-data-validation",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Inventory",
     "range": "B2:B200"
   },
@@ -321,7 +321,7 @@ authoritative on its target cells and any remaining fragments are retained aroun
 {
   "stepId": "set-data-validation",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Inventory",
     "range": "C2:C200"
   },
@@ -383,7 +383,7 @@ ranges, preserving any remaining coverage fragments around the cleared area.
 {
   "stepId": "clear-data-validations",
   "target": {
-    "type": "ALL_ON_SHEET",
+    "type": "RANGE_ALL_ON_SHEET",
     "sheetName": "Inventory"
   },
   "action": {
@@ -396,7 +396,7 @@ ranges, preserving any remaining coverage fragments around the cleared area.
 {
   "stepId": "clear-data-validations",
   "target": {
-    "type": "BY_RANGES",
+    "type": "RANGE_BY_RANGES",
     "sheetName": "Inventory",
     "ranges": [
       "B4",
@@ -437,7 +437,7 @@ differential, not a whole-cell style patch. Supported differential-style attribu
 {
   "stepId": "set-conditional-formatting",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {
@@ -469,7 +469,7 @@ differential, not a whole-cell style patch. Supported differential-style attribu
 {
   "stepId": "set-conditional-formatting",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {
@@ -533,7 +533,7 @@ intersect any of the selected A1 ranges.
 {
   "stepId": "clear-conditional-formatting",
   "target": {
-    "type": "ALL_ON_SHEET",
+    "type": "RANGE_ALL_ON_SHEET",
     "sheetName": "Inventory"
   },
   "action": {
@@ -546,7 +546,7 @@ intersect any of the selected A1 ranges.
 {
   "stepId": "clear-conditional-formatting",
   "target": {
-    "type": "BY_RANGES",
+    "type": "RANGE_BY_RANGES",
     "sheetName": "Inventory",
     "ranges": [
       "D2:D200",

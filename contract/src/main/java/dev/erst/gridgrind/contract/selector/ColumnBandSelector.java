@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 /** Selects a column band or one column-band insertion point on one sheet. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = ColumnBandSelector.Span.class, name = "SPAN"),
-  @JsonSubTypes.Type(value = ColumnBandSelector.Insertion.class, name = "INSERTION")
+  @JsonSubTypes.Type(value = ColumnBandSelector.Span.class, name = "COLUMN_BAND_SPAN"),
+  @JsonSubTypes.Type(value = ColumnBandSelector.Insertion.class, name = "COLUMN_BAND_INSERTION")
 })
 public sealed interface ColumnBandSelector extends Selector
     permits ColumnBandSelector.Span, ColumnBandSelector.Insertion {

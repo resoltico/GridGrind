@@ -8,7 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.erst.gridgrind.excel.foundation.ExcelColumnSpan;
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -452,14 +451,9 @@ class ExcelSheetCommentRepairSupportTest {
     return Map.copyOf(snapshots);
   }
 
-  @SuppressWarnings({"PMD.AvoidAccessibilityAlteration", "unchecked"})
   private static List<CellAddress> invokeRawCommentAddresses(CommentsTable commentsTable)
       throws ReflectiveOperationException {
-    Method method =
-        ExcelSheetCommentRepairSupport.class.getDeclaredMethod(
-            "rawCommentAddresses", CommentsTable.class);
-    method.setAccessible(true);
-    return (List<CellAddress>) method.invoke(null, commentsTable);
+    return ExcelSheetCommentRepairSupport.rawCommentAddresses(commentsTable);
   }
 
   private static ExcelCellFontSnapshot baseFontWithoutColor() {

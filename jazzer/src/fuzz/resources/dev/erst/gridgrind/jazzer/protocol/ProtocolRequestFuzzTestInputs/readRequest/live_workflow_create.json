@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Rates"
       }
     },
@@ -47,7 +47,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Rates"
       }
     },
@@ -74,7 +74,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Rates"
       }
     },
@@ -101,7 +101,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Rates"
       }
     },
@@ -128,7 +128,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Rates"
       }
     },
@@ -155,7 +155,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Rates"
       }
     },
@@ -165,7 +165,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Sales"
       }
     },
@@ -233,7 +233,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Sales"
       }
     },
@@ -256,7 +256,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Sales"
       }
     },
@@ -279,7 +279,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Sales"
       }
     },
@@ -302,7 +302,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Sales"
       }
     },
@@ -325,7 +325,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Sales"
       }
     },
@@ -342,7 +342,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "C2"
       }
@@ -360,7 +360,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "C3"
       }
@@ -378,7 +378,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "C4"
       }
@@ -396,7 +396,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "C5"
       }
@@ -414,7 +414,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "D2"
       }
@@ -432,7 +432,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "D3"
       }
@@ -450,7 +450,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "D4"
       }
@@ -468,7 +468,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "D5"
       }
@@ -486,7 +486,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "E2"
       }
@@ -504,7 +504,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "E3"
       }
@@ -522,7 +522,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "E4"
       }
@@ -540,7 +540,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "E5"
       }
@@ -558,7 +558,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "F2"
       }
@@ -576,7 +576,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "F3"
       }
@@ -594,7 +594,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "F4"
       }
@@ -612,7 +612,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "F5"
       }
@@ -630,7 +630,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "G2"
       }
@@ -648,7 +648,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "G3"
       }
@@ -666,7 +666,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "G4"
       }
@@ -684,7 +684,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "G5"
       }
@@ -702,7 +702,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "A7"
       }
@@ -720,7 +720,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "B7"
       }
@@ -738,7 +738,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "E7"
       }
@@ -756,7 +756,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "F7"
       }
@@ -774,7 +774,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "G7"
       }
@@ -792,7 +792,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Sales",
         "address": "H7"
       }
@@ -803,7 +803,7 @@
         "type": "AUTO_SIZE_COLUMNS"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Rates"
       }
     },
@@ -813,7 +813,7 @@
         "type": "AUTO_SIZE_COLUMNS"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Sales"
       }
     },
@@ -823,7 +823,7 @@
       },
       "stepId": "workbook",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     },
     {
@@ -832,7 +832,7 @@
       },
       "stepId": "rates-cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Rates",
         "addresses": [
           "A2",
@@ -847,7 +847,7 @@
       },
       "stepId": "rates-window",
       "target": {
-        "type": "RECTANGULAR_WINDOW",
+        "type": "RANGE_RECTANGULAR_WINDOW",
         "sheetName": "Rates",
         "topLeftAddress": "A1",
         "rowCount": 5,
@@ -860,7 +860,7 @@
       },
       "stepId": "sales-cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Sales",
         "addresses": [
           "C2",
@@ -877,7 +877,7 @@
       },
       "stepId": "sales-window",
       "target": {
-        "type": "RECTANGULAR_WINDOW",
+        "type": "RANGE_RECTANGULAR_WINDOW",
         "sheetName": "Sales",
         "topLeftAddress": "A1",
         "rowCount": 7,
@@ -890,7 +890,7 @@
       },
       "stepId": "sales-formula-surface",
       "target": {
-        "type": "BY_NAMES",
+        "type": "SHEET_BY_NAMES",
         "names": [
           "Sales"
         ]
@@ -902,7 +902,7 @@
       },
       "stepId": "sales-schema",
       "target": {
-        "type": "RECTANGULAR_WINDOW",
+        "type": "RANGE_RECTANGULAR_WINDOW",
         "sheetName": "Sales",
         "topLeftAddress": "A1",
         "rowCount": 7,

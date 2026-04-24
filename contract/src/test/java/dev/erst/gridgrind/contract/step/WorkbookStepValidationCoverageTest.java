@@ -9,9 +9,6 @@ import dev.erst.gridgrind.contract.dto.AnalysisFindingCode;
 import dev.erst.gridgrind.contract.dto.AnalysisSeverity;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.CellSelector;
-import dev.erst.gridgrind.contract.selector.ChartSelector;
-import dev.erst.gridgrind.contract.selector.NamedRangeSelector;
-import dev.erst.gridgrind.contract.selector.PivotTableSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
 import dev.erst.gridgrind.contract.selector.TableCellSelector;
 import dev.erst.gridgrind.contract.selector.TableSelector;
@@ -23,26 +20,16 @@ class WorkbookStepValidationCoverageTest {
   @Test
   void resolvesCompositeAndNegatedAssertionTargetFamilies() {
     Assertion.AllOf allOf =
-        new Assertion.AllOf(List.of(new Assertion.Present(), new Assertion.Absent()));
+        new Assertion.AllOf(List.of(new Assertion.TablePresent(), new Assertion.TableAbsent()));
     Assertion.AnyOf anyOf =
-        new Assertion.AnyOf(List.of(new Assertion.Present(), new Assertion.Absent()));
+        new Assertion.AnyOf(List.of(new Assertion.TablePresent(), new Assertion.TableAbsent()));
     Assertion.Not not =
         new Assertion.Not(new Assertion.CellValue(new ExpectedCellValue.Text("Owner")));
 
     assertEquals(
-        List.of(
-            NamedRangeSelector.class,
-            TableSelector.class,
-            PivotTableSelector.class,
-            ChartSelector.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(allOf)));
+        List.of(TableSelector.class), List.of(WorkbookStepValidation.allowedTargetTypes(allOf)));
     assertEquals(
-        List.of(
-            NamedRangeSelector.class,
-            TableSelector.class,
-            PivotTableSelector.class,
-            ChartSelector.class),
-        List.of(WorkbookStepValidation.allowedTargetTypes(anyOf)));
+        List.of(TableSelector.class), List.of(WorkbookStepValidation.allowedTargetTypes(anyOf)));
     assertEquals(
         List.of(
             CellSelector.ByAddress.class,
@@ -88,7 +75,7 @@ class WorkbookStepValidationCoverageTest {
                 WorkbookStepValidation.allowedTargetTypes(
                     new Assertion.AnyOf(
                         List.of(
-                            new Assertion.Present(),
+                            new Assertion.TablePresent(),
                             new Assertion.CellValue(new ExpectedCellValue.Text("Owner"))))));
 
     assertEquals(

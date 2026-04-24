@@ -36,7 +36,7 @@ class GridGrindCliRequestPathRootingTest {
           "steps": [
             {
               "stepId": "ensure-budget",
-              "target": { "type": "BY_NAME", "name": "Budget" },
+              "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
               "action": { "type": "ENSURE_SHEET" }
             }
           ]
@@ -78,7 +78,7 @@ class GridGrindCliRequestPathRootingTest {
           "steps": [
             {
               "stepId": "cells",
-              "target": { "type": "BY_ADDRESS", "sheetName": "Ops", "address": "A1" },
+              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Ops", "address": "A1" },
               "query": { "type": "GET_CELLS" }
             }
           ]
@@ -121,12 +121,12 @@ class GridGrindCliRequestPathRootingTest {
           "steps": [
             {
               "stepId": "ensure-budget",
-              "target": { "type": "BY_NAME", "name": "Budget" },
+              "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
               "action": { "type": "ENSURE_SHEET" }
             },
             {
               "stepId": "set-title",
-              "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
               "action": {
                 "type": "SET_CELL",
                 "value": {
@@ -137,7 +137,7 @@ class GridGrindCliRequestPathRootingTest {
             },
             {
               "stepId": "read-title",
-              "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
               "query": { "type": "GET_CELLS" }
             }
           ]
@@ -187,7 +187,7 @@ class GridGrindCliRequestPathRootingTest {
           "steps": [
             {
               "stepId": "cells",
-              "target": { "type": "BY_ADDRESS", "sheetName": "Ops", "address": "B1" },
+              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Ops", "address": "B1" },
               "query": { "type": "GET_CELLS" }
             }
           ]

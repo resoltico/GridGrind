@@ -247,11 +247,12 @@ final class SelectorSupport {
 
   private static String namedRangeRefIdentity(NamedRangeSelector.Ref selector) {
     return switch (selector) {
-      case NamedRangeSelector.ByName byName -> "BY_NAME|" + byName.name().toUpperCase(Locale.ROOT);
+      case NamedRangeSelector.ByName byName ->
+          "NAMED_RANGE_BY_NAME|" + byName.name().toUpperCase(Locale.ROOT);
       case NamedRangeSelector.WorkbookScope workbookScope ->
-          "WORKBOOK_SCOPE|" + workbookScope.name().toUpperCase(Locale.ROOT);
+          "NAMED_RANGE_WORKBOOK_SCOPE|" + workbookScope.name().toUpperCase(Locale.ROOT);
       case NamedRangeSelector.SheetScope sheetScope ->
-          "SHEET_SCOPE|"
+          "NAMED_RANGE_SHEET_SCOPE|"
               + sheetScope.sheetName().toUpperCase(Locale.ROOT)
               + "|"
               + sheetScope.name().toUpperCase(Locale.ROOT);

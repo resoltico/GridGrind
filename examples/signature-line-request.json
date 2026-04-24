@@ -11,7 +11,7 @@
   "steps" : [ {
     "stepId" : "step-01-ensure-sheet",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Approvals"
     },
     "action" : {
@@ -20,7 +20,7 @@
   }, {
     "stepId" : "step-02-set-signature-line",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Approvals"
     },
     "action" : {
@@ -62,7 +62,7 @@
   }, {
     "stepId" : "step-03-read-drawing-objects",
     "target" : {
-      "type" : "ALL_ON_SHEET",
+      "type" : "DRAWING_OBJECT_ALL_ON_SHEET",
       "sheetName" : "Approvals"
     },
     "query" : {
@@ -71,7 +71,7 @@
   }, {
     "stepId" : "step-04-move-signature-line",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "DRAWING_OBJECT_BY_NAME",
       "sheetName" : "Approvals",
       "objectName" : "BudgetSignature"
     },
@@ -97,7 +97,7 @@
   }, {
     "stepId" : "step-05-read-drawing-objects-after-move",
     "target" : {
-      "type" : "ALL_ON_SHEET",
+      "type" : "DRAWING_OBJECT_ALL_ON_SHEET",
       "sheetName" : "Approvals"
     },
     "query" : {

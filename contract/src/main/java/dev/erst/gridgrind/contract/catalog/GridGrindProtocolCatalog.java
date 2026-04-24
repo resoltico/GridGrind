@@ -228,18 +228,26 @@ public final class GridGrindProtocolCatalog {
   @SuppressWarnings("unchecked")
   private static WorkbookStepTargeting.TargetSurface targetSurfaceFor(
       Class<? extends Record> recordType) {
+    return optionalTargetSurfaceFor(recordType).orElse(null);
+  }
+
+  private static Optional<WorkbookStepTargeting.TargetSurface> optionalTargetSurfaceFor(
+      Class<? extends Record> recordType) {
     if (MutationAction.class.isAssignableFrom(recordType)) {
-      return WorkbookStepTargeting.forMutationActionType(
-          (Class<? extends MutationAction>) recordType);
+      return Optional.of(
+          WorkbookStepTargeting.forMutationActionType(
+              (Class<? extends MutationAction>) recordType));
     }
     if (Assertion.class.isAssignableFrom(recordType)) {
-      return WorkbookStepTargeting.forAssertionType((Class<? extends Assertion>) recordType);
+      return Optional.of(
+          WorkbookStepTargeting.forAssertionType((Class<? extends Assertion>) recordType));
     }
     if (InspectionQuery.class.isAssignableFrom(recordType)) {
-      return WorkbookStepTargeting.forInspectionQueryType(
-          (Class<? extends InspectionQuery>) recordType);
+      return Optional.of(
+          WorkbookStepTargeting.forInspectionQueryType(
+              (Class<? extends InspectionQuery>) recordType));
     }
-    return null;
+    return Optional.empty();
   }
 
   @SuppressWarnings("unchecked")

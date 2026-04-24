@@ -171,7 +171,13 @@ final class ExecutionResponseSupport {
       Integer failedStepIndex,
       String failedStepId) {
     return failureResponse(
-        protocolVersion, journal, plannedStepCount, null, problem, failedStepIndex, failedStepId);
+        protocolVersion,
+        journal,
+        plannedStepCount,
+        CalculationReport.notRequested(),
+        problem,
+        failedStepIndex,
+        failedStepId);
   }
 
   static GridGrindResponse.Failure failureResponse(

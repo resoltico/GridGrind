@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import tools.jackson.core.JacksonException;
@@ -327,7 +328,7 @@ public final class GridGrindJson {
 
   static IllegalArgumentException invalidPayload(JacksonException exception) {
     PayloadMetadata metadata = payloadMetadata(exception);
-    Throwable validationCause = validationCause(exception);
+    Optional<Throwable> validationCause = validationCause(exception);
     if (exception instanceof StreamReadException) {
       return new InvalidJsonException(
           message(exception),
@@ -336,9 +337,9 @@ public final class GridGrindJson {
           metadata.jsonColumn(),
           exception);
     }
-    if (validationCause != null) {
+    if (validationCause.isPresent()) {
       return new InvalidRequestException(
-          message(validationCause),
+          message(validationCause.orElseThrow()),
           metadata.jsonPath(),
           metadata.jsonLine(),
           metadata.jsonColumn(),
@@ -367,16 +368,16 @@ public final class GridGrindJson {
     return invalidPayload(exception);
   }
 
-  private static Throwable validationCause(Throwable throwable) {
+  private static Optional<Throwable> validationCause(Throwable throwable) {
     Throwable current = throwable;
     while (current != null) {
       if (current instanceof IllegalArgumentException
           || current instanceof java.time.DateTimeException) {
-        return current;
+        return Optional.of(current);
       }
       current = current.getCause();
     }
-    return null;
+    return Optional.empty();
   }
 
   /**
@@ -388,8 +389,7 @@ public final class GridGrindJson {
   static String message(Throwable throwable) {
     if (throwable
         instanceof tools.jackson.databind.exc.InvalidTypeIdException invalidTypeIdException) {
-      String typeId = invalidTypeIdException.getTypeId();
-      return "Unknown type value '" + typeId + "'";
+      return unknownTypeValueMessage(invalidTypeIdException);
     }
     if (throwable
         instanceof
@@ -426,6 +426,47 @@ public final class GridGrindJson {
       return floatingPointIntoIntegerMessage(exception);
     }
     return productOwnedJacksonMessage(cleanJacksonMessage(original));
+  }
+
+  private static String unknownTypeValueMessage(
+      tools.jackson.databind.exc.InvalidTypeIdException exception) {
+    String typeId = exception.getTypeId();
+    if (typeId == null) {
+      return productOwnedJacksonMessage(cleanJacksonMessage(exception.getOriginalMessage()));
+    }
+    String defaultMessage = "Unknown type value '" + typeId + "'";
+    Optional<String> containerName = terminalContainerName(exception.getPath());
+    if (containerName.isPresent() && "source".equals(containerName.orElseThrow())) {
+      if ("FILE".equals(typeId)) {
+        return defaultMessage
+            + "; use source.type='EXISTING' to open a workbook from disk"
+            + " (FILE is only valid for source-backed authored payload inputs)";
+      }
+      return defaultMessage;
+    }
+    if (containerName.isPresent() && "assertion".equals(containerName.orElseThrow())) {
+      return switch (typeId) {
+        case "EXPECT_PRESENT" ->
+            defaultMessage
+                + "; use one explicit family assertion such as EXPECT_NAMED_RANGE_PRESENT,"
+                + " EXPECT_TABLE_PRESENT, EXPECT_PIVOT_TABLE_PRESENT, or"
+                + " EXPECT_CHART_PRESENT";
+        case "EXPECT_ABSENT" ->
+            defaultMessage
+                + "; use one explicit family assertion such as EXPECT_NAMED_RANGE_ABSENT,"
+                + " EXPECT_TABLE_ABSENT, EXPECT_PIVOT_TABLE_ABSENT, or"
+                + " EXPECT_CHART_ABSENT";
+        default -> defaultMessage;
+      };
+    }
+    return defaultMessage;
+  }
+
+  private static Optional<String> terminalContainerName(List<JacksonException.Reference> path) {
+    if (path.isEmpty()) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(path.getLast().getPropertyName());
   }
 
   private static String nullIntoPrimitiveMessage(
@@ -506,8 +547,8 @@ public final class GridGrindJson {
   private static PayloadMetadata payloadMetadata(JacksonException exception) {
     return new PayloadMetadata(
         jsonPath(exception),
-        jsonLine(exception.getLocation()),
-        jsonColumn(exception.getLocation()));
+        jsonLine(exception.getLocation()).orElse(null),
+        jsonColumn(exception.getLocation()).orElse(null));
   }
 
   private static String jsonPath(JacksonException exception) {
@@ -527,21 +568,21 @@ public final class GridGrindJson {
   }
 
   /* Returns the 1-based line number from the location, or null when unavailable. */
-  static Integer jsonLine(TokenStreamLocation location) {
+  static Optional<Integer> jsonLine(TokenStreamLocation location) {
     if (location == null) {
-      return null;
+      return Optional.empty();
     }
     int line = location.getLineNr();
-    return line > 0 ? line : null;
+    return line > 0 ? Optional.of(line) : Optional.empty();
   }
 
   /* Returns the 1-based column number from the location, or null when unavailable. */
-  static Integer jsonColumn(TokenStreamLocation location) {
+  static Optional<Integer> jsonColumn(TokenStreamLocation location) {
     if (location == null) {
-      return null;
+      return Optional.empty();
     }
     int column = location.getColumnNr();
-    return column > 0 ? column : null;
+    return column > 0 ? Optional.of(column) : Optional.empty();
   }
 
   private static byte[] writeBytes(Object value) throws IOException {

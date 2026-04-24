@@ -20,6 +20,7 @@ import dev.erst.gridgrind.executor.GridGrindProblems;
 import dev.erst.gridgrind.executor.GridGrindRequestDoctor;
 import dev.erst.gridgrind.executor.GridGrindRequestExecutor;
 import dev.erst.gridgrind.executor.SourceBackedPlanResolver;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -27,7 +28,9 @@ import java.io.PushbackInputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.function.BooleanSupplier;
 
@@ -107,7 +110,6 @@ public final class GridGrindCli {
   /**
    * Runs one CLI invocation against stdin/stdout/stderr or explicit request/response file paths.
    */
-  @SuppressWarnings("PMD.CloseResource")
   public int run(String[] args, InputStream stdin, OutputStream stdout, OutputStream stderr)
       throws IOException {
     Objects.requireNonNull(args, "args must not be null");
@@ -139,119 +141,118 @@ public final class GridGrindCli {
     }
 
     return switch (command) {
-      case CliCommand.Help _ -> {
-        stdout.write(helpText(version()).getBytes(StandardCharsets.UTF_8));
-        stdout.flush();
-        yield 0;
-      }
-      case CliCommand.Version _ -> {
+      case CliCommand.Help cmd ->
+          writePayload(
+              cmd.responsePath(), stdout, helpText(version()).getBytes(StandardCharsets.UTF_8));
+      case CliCommand.Version cmd -> {
         String ver = version();
         String desc = descriptionFrom(GridGrindCli.class);
-        stdout.write((productHeader(ver, desc) + "\n").getBytes(StandardCharsets.UTF_8));
-        stdout.flush();
-        yield 0;
+        yield writePayload(
+            cmd.responsePath(), stdout, productHeader(ver, desc).getBytes(StandardCharsets.UTF_8));
       }
-      case CliCommand.License _ -> {
-        stdout.write(licenseText(GridGrindCli.class).getBytes(StandardCharsets.UTF_8));
-        stdout.flush();
-        yield 0;
-      }
-      case CliCommand.PrintRequestTemplate _ -> {
-        GridGrindJson.writeRequest(stdout, GridGrindProtocolCatalog.requestTemplate());
-        stdout.write('\n');
-        stdout.flush();
-        yield 0;
-      }
+      case CliCommand.License cmd ->
+          writePayload(
+              cmd.responsePath(),
+              stdout,
+              licenseText(GridGrindCli.class).getBytes(StandardCharsets.UTF_8));
+      case CliCommand.PrintRequestTemplate cmd ->
+          writePayload(
+              cmd.responsePath(),
+              stdout,
+              GridGrindJson.writeRequestBytes(GridGrindProtocolCatalog.requestTemplate()));
       case CliCommand.PrintExample cmd -> {
         var example = GridGrindProtocolCatalog.exampleFor(cmd.exampleId());
         if (example.isEmpty()) {
-          responseWriter.write(
+          String message = unknownExampleMessage(cmd.exampleId());
+          yield responseWriter.write(
+              cmd.responsePath(),
               stdout,
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
-                  "Unknown example: " + cmd.exampleId(),
+                  message,
                   new GridGrindResponse.ProblemContext.ParseArguments("--print-example"),
-                  new IllegalArgumentException("Unknown example: " + cmd.exampleId())));
-          yield 2;
+                  new IllegalArgumentException(message)),
+              2);
         }
-        GridGrindJson.writeRequest(stdout, example.get().plan());
-        stdout.write('\n');
-        stdout.flush();
-        yield 0;
+        yield writePayload(
+            cmd.responsePath(), stdout, GridGrindJson.writeRequestBytes(example.get().plan()));
       }
       case CliCommand.PrintTaskCatalog cmd -> {
         if (cmd.taskFilter() == null) {
-          GridGrindJson.writeTaskCatalog(stdout, GridGrindTaskCatalog.catalog());
-          stdout.write('\n');
-          stdout.flush();
-          yield 0;
+          yield writePayload(
+              cmd.responsePath(),
+              stdout,
+              GridGrindJson.writeTaskCatalogBytes(GridGrindTaskCatalog.catalog()));
         }
         var entry = GridGrindTaskCatalog.entryFor(cmd.taskFilter());
         if (entry.isEmpty()) {
-          responseWriter.write(
+          yield responseWriter.write(
+              cmd.responsePath(),
               stdout,
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   "Unknown task: " + cmd.taskFilter(),
                   new GridGrindResponse.ProblemContext.ParseArguments("--task"),
-                  new IllegalArgumentException("Unknown task: " + cmd.taskFilter())));
-          yield 2;
+                  new IllegalArgumentException("Unknown task: " + cmd.taskFilter())),
+              2);
         }
-        GridGrindJson.writeTaskEntry(stdout, entry.get());
-        stdout.write('\n');
-        stdout.flush();
-        yield 0;
+        yield writePayload(
+            cmd.responsePath(),
+            stdout,
+            output -> GridGrindJson.writeTaskEntry(output, entry.get()));
       }
       case CliCommand.PrintTaskPlan cmd -> {
         var task = GridGrindTaskCatalog.entryFor(cmd.taskId());
         if (task.isEmpty()) {
-          responseWriter.write(
+          yield responseWriter.write(
+              cmd.responsePath(),
               stdout,
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   "Unknown task: " + cmd.taskId(),
                   new GridGrindResponse.ProblemContext.ParseArguments("--print-task-plan"),
-                  new IllegalArgumentException("Unknown task: " + cmd.taskId())));
-          yield 2;
+                  new IllegalArgumentException("Unknown task: " + cmd.taskId())),
+              2);
         }
-        GridGrindJson.writeTaskPlanTemplate(stdout, GridGrindTaskPlanner.planFor(task.get()));
-        stdout.write('\n');
-        stdout.flush();
-        yield 0;
+        yield writePayload(
+            cmd.responsePath(),
+            stdout,
+            GridGrindJson.writeTaskPlanTemplateBytes(GridGrindTaskPlanner.planFor(task.get())));
       }
       case CliCommand.PrintGoalPlan cmd -> {
         try {
-          GridGrindJson.writeGoalPlanReport(
+          yield writePayload(
+              cmd.responsePath(),
               stdout,
-              dev.erst.gridgrind.contract.catalog.GridGrindGoalPlanner.reportFor(cmd.goal()));
-          stdout.write('\n');
-          stdout.flush();
-          yield 0;
+              GridGrindJson.writeGoalPlanReportBytes(
+                  dev.erst.gridgrind.contract.catalog.GridGrindGoalPlanner.reportFor(cmd.goal())));
         } catch (IllegalArgumentException exception) {
-          responseWriter.write(
+          yield responseWriter.write(
+              cmd.responsePath(),
               stdout,
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   message(exception),
                   new GridGrindResponse.ProblemContext.ParseArguments("--print-goal-plan"),
-                  exception));
-          yield 2;
+                  exception),
+              2);
         }
       }
       case CliCommand.DoctorRequest doctor -> doctorRequest(doctor, stdin, stdout);
       case CliCommand.PrintProtocolCatalog cmd -> {
         if (cmd.searchQuery() != null) {
-          GridGrindJson.writeCatalogLookupValue(
-              stdout, GridGrindProtocolCatalog.searchCatalog(cmd.searchQuery()));
-          stdout.write('\n');
-          stdout.flush();
-          yield 0;
+          yield writePayload(
+              cmd.responsePath(),
+              stdout,
+              output ->
+                  GridGrindJson.writeCatalogLookupValue(
+                      output, GridGrindProtocolCatalog.searchCatalog(cmd.searchQuery())));
         }
         if (cmd.operationFilter() == null) {
-          GridGrindJson.writeProtocolCatalog(stdout, GridGrindProtocolCatalog.catalog());
-          stdout.write('\n');
-          stdout.flush();
-          yield 0;
+          yield writePayload(
+              cmd.responsePath(),
+              stdout,
+              GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog()));
         }
         List<String> matches = GridGrindProtocolCatalog.matchingLookupIds(cmd.operationFilter());
         if (matches.size() > 1) {
@@ -260,62 +261,99 @@ public final class GridGrindCli {
                   + cmd.operationFilter()
                   + ". Use one of: "
                   + String.join(", ", matches);
-          responseWriter.write(
+          yield responseWriter.write(
+              cmd.responsePath(),
               stdout,
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   message,
                   new GridGrindResponse.ProblemContext.ParseArguments("--operation"),
-                  new IllegalArgumentException(message)));
-          yield 2;
+                  new IllegalArgumentException(message)),
+              2);
         }
         var lookupValue = GridGrindProtocolCatalog.lookupValueFor(cmd.operationFilter());
         if (lookupValue.isEmpty()) {
-          responseWriter.write(
+          yield responseWriter.write(
+              cmd.responsePath(),
               stdout,
               failure(
                   GridGrindProblemCode.INVALID_ARGUMENTS,
                   "Unknown operation: " + cmd.operationFilter(),
                   new GridGrindResponse.ProblemContext.ParseArguments("--operation"),
-                  new IllegalArgumentException("Unknown operation: " + cmd.operationFilter())));
-          yield 2;
+                  new IllegalArgumentException("Unknown operation: " + cmd.operationFilter())),
+              2);
         }
-        GridGrindJson.writeCatalogLookupValue(stdout, lookupValue.get());
-        stdout.write('\n');
-        stdout.flush();
-        yield 0;
+        yield writePayload(
+            cmd.responsePath(),
+            stdout,
+            output -> GridGrindJson.writeCatalogLookupValue(output, lookupValue.get()));
       }
       case CliCommand.Execute execute -> {
-        InputStream requestInput = standardInputOrNullForImplicitHelp(execute, args, stdin, stdout);
-        if (requestInput == null) {
+        Optional<InputStream> requestInput =
+            standardInputOrNullForImplicitHelp(execute, args, stdin, stdout);
+        if (requestInput.isEmpty()) {
           yield 0;
         }
-        yield executeCommand(execute, requestInput, stdout, stderr);
+        yield executeCommand(execute, requestInput.orElseThrow(), stdout, stderr);
       }
     };
   }
 
-  private InputStream standardInputOrNullForImplicitHelp(
+  private Optional<InputStream> standardInputOrNullForImplicitHelp(
       CliCommand.Execute command, String[] args, InputStream stdin, OutputStream stdout)
       throws IOException {
     if (command.requestPath() != null) {
-      return stdin;
+      return Optional.of(stdin);
     }
     if (args.length != 0) {
-      return stdin;
+      return Optional.of(stdin);
     }
     if (standardInputIsInteractive.getAsBoolean()) {
       writeHelp(stdout);
-      return null;
+      return Optional.empty();
     }
     PushbackInputStream peekable = new PushbackInputStream(stdin, 1);
     int firstByte = peekable.read();
     if (firstByte < 0) {
       writeHelp(stdout);
-      return null;
+      return Optional.empty();
     }
     peekable.unread(firstByte);
-    return peekable;
+    return Optional.of(peekable);
+  }
+
+  private static String unknownExampleMessage(String exampleId) {
+    return suggestedExampleId(exampleId)
+        .map(
+            suggestion ->
+                "Unknown example: "
+                    + exampleId
+                    + ". Example ids use stable upper-case tokens; did you mean "
+                    + suggestion
+                    + "?")
+        .orElse("Unknown example: " + exampleId);
+  }
+
+  private static Optional<String> suggestedExampleId(String exampleId) {
+    String normalizedExampleId = normalizeLookupToken(exampleId);
+    return GridGrindProtocolCatalog.shippedExamples().stream()
+        .filter(
+            example ->
+                example.id().equalsIgnoreCase(exampleId)
+                    || example.fileName().equalsIgnoreCase(exampleId)
+                    || exampleStem(example.fileName()).equalsIgnoreCase(exampleId)
+                    || normalizeLookupToken(exampleStem(example.fileName()))
+                        .equals(normalizedExampleId))
+        .map(dev.erst.gridgrind.contract.catalog.GridGrindShippedExamples.ShippedExample::id)
+        .findFirst();
+  }
+
+  private static String normalizeLookupToken(String value) {
+    return value.toUpperCase(Locale.ROOT).replace('-', '_').replace(' ', '_');
+  }
+
+  private static String exampleStem(String fileName) {
+    return fileName.substring(0, fileName.length() - 5);
   }
 
   private int executeCommand(
@@ -330,7 +368,7 @@ public final class GridGrindCli {
       return responseWriter.write(
           command.responsePath(),
           stdout,
-          new GridGrindResponse.Failure(
+          GridGrindResponse.failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
@@ -340,7 +378,7 @@ public final class GridGrindCli {
       return responseWriter.write(
           command.responsePath(),
           stdout,
-          new GridGrindResponse.Failure(
+          GridGrindResponse.failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
@@ -366,7 +404,7 @@ public final class GridGrindCli {
       response = requestExecutor.execute(request, bindings, journalWriter.sinkFor(request, stderr));
     } catch (Exception exception) {
       response =
-          new GridGrindResponse.Failure(
+          GridGrindResponse.failure(
               GridGrindProtocolVersion.current(),
               GridGrindProblems.fromException(
                   exception,
@@ -394,7 +432,7 @@ public final class GridGrindCli {
                   exception,
                   new GridGrindResponse.ProblemContext.ReadRequest(
                       pathString(command.requestPath()), null, null, null)));
-      return writeDoctorReport(stdout, report);
+      return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
     } catch (IOException exception) {
       report =
           RequestDoctorReport.invalid(
@@ -404,7 +442,7 @@ public final class GridGrindCli {
                   exception,
                   new GridGrindResponse.ProblemContext.ReadRequest(
                       pathString(command.requestPath()), null, null, null)));
-      return writeDoctorReport(stdout, report);
+      return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
     }
 
     if (command.requestPath() == null && SourceBackedPlanResolver.requiresStandardInput(request)) {
@@ -419,7 +457,7 @@ public final class GridGrindCli {
                   message,
                   new GridGrindResponse.ProblemContext.ParseArguments("--request"),
                   new IllegalArgumentException(message)));
-      return writeDoctorReport(stdout, report);
+      return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
     }
 
     ExecutionInputBindings bindings =
@@ -427,15 +465,7 @@ public final class GridGrindCli {
             ? ExecutionInputBindings.processDefault()
             : CliExecutionBindingsFactory.create(command.requestPath(), request, stdin);
     report = new GridGrindRequestDoctor().diagnose(request, bindings);
-    return writeDoctorReport(stdout, report);
-  }
-
-  private static int writeDoctorReport(OutputStream stdout, RequestDoctorReport report)
-      throws IOException {
-    GridGrindJson.writeRequestDoctorReport(stdout, report);
-    stdout.write('\n');
-    stdout.flush();
-    return report.valid() ? 0 : 1;
+    return responseWriter.writeDoctorReport(command.responsePath(), stdout, report);
   }
 
   private static String version() {
@@ -460,6 +490,18 @@ public final class GridGrindCli {
   private void writeHelp(OutputStream stdout) throws IOException {
     stdout.write(helpText(version()).getBytes(StandardCharsets.UTF_8));
     stdout.flush();
+  }
+
+  private int writePayload(Path responsePath, OutputStream stdout, byte[] payload)
+      throws IOException {
+    return responseWriter.writePayload(responsePath, stdout, payload, 0);
+  }
+
+  private int writePayload(Path responsePath, OutputStream stdout, OutputRenderer renderer)
+      throws IOException {
+    ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+    renderer.write(buffer);
+    return responseWriter.writePayload(responsePath, stdout, buffer.toByteArray(), 0);
   }
 
   /**
@@ -614,7 +656,7 @@ public final class GridGrindCli {
       String message,
       GridGrindResponse.ProblemContext context,
       Throwable cause) {
-    return new GridGrindResponse.Failure(
+    return GridGrindResponse.failure(
         GridGrindProtocolVersion.current(),
         GridGrindProblems.problem(code, message, context, cause));
   }
@@ -640,6 +682,13 @@ public final class GridGrindCli {
       case WorkbookPlan.WorkbookPersistence.OverwriteSource _ -> "OVERWRITE";
       case WorkbookPlan.WorkbookPersistence.SaveAs _ -> "SAVE_AS";
     };
+  }
+
+  /** Supplies request-template bytes for help rendering. */
+  @FunctionalInterface
+  private interface OutputRenderer {
+    /** Writes one command payload into the supplied caller-owned output stream. */
+    void write(OutputStream outputStream) throws IOException;
   }
 
   /** Supplies request-template bytes for help rendering. */

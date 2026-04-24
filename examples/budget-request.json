@@ -11,7 +11,7 @@
   "steps" : [ {
     "stepId" : "step-01-ensure-sheet",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Budget"
     },
     "action" : {
@@ -20,7 +20,7 @@
   }, {
     "stepId" : "step-02-set-range",
     "target" : {
-      "type" : "BY_RANGE",
+      "type" : "RANGE_BY_RANGE",
       "sheetName" : "Budget",
       "range" : "A1:C3"
     },
@@ -73,7 +73,7 @@
   }, {
     "stepId" : "step-03-apply-header-style",
     "target" : {
-      "type" : "BY_RANGE",
+      "type" : "RANGE_BY_RANGE",
       "sheetName" : "Budget",
       "range" : "A1:C1"
     },
@@ -108,7 +108,7 @@
   }, {
     "stepId" : "step-04-apply-number-style",
     "target" : {
-      "type" : "BY_RANGE",
+      "type" : "RANGE_BY_RANGE",
       "sheetName" : "Budget",
       "range" : "B2:B4"
     },
@@ -132,7 +132,7 @@
   }, {
     "stepId" : "step-05-set-total-label",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Budget",
       "address" : "A4"
     },
@@ -149,7 +149,7 @@
   }, {
     "stepId" : "step-06-set-total-formula",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Budget",
       "address" : "B4"
     },
@@ -166,7 +166,7 @@
   }, {
     "stepId" : "step-07-auto-size",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Budget"
     },
     "action" : {
@@ -175,7 +175,7 @@
   }, {
     "stepId" : "workbook",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "query" : {
       "type" : "GET_WORKBOOK_SUMMARY"
@@ -183,7 +183,7 @@
   }, {
     "stepId" : "cells",
     "target" : {
-      "type" : "BY_ADDRESSES",
+      "type" : "CELL_BY_ADDRESSES",
       "sheetName" : "Budget",
       "addresses" : [ "A1", "B4", "C2" ]
     },
@@ -193,7 +193,7 @@
   }, {
     "stepId" : "window",
     "target" : {
-      "type" : "RECTANGULAR_WINDOW",
+      "type" : "RANGE_RECTANGULAR_WINDOW",
       "sheetName" : "Budget",
       "topLeftAddress" : "A1",
       "rowCount" : 4,
@@ -205,7 +205,7 @@
   }, {
     "stepId" : "schema",
     "target" : {
-      "type" : "RECTANGULAR_WINDOW",
+      "type" : "RANGE_RECTANGULAR_WINDOW",
       "sheetName" : "Budget",
       "topLeftAddress" : "A1",
       "rowCount" : 4,
@@ -217,7 +217,7 @@
   }, {
     "stepId" : "formula-surface",
     "target" : {
-      "type" : "BY_NAMES",
+      "type" : "SHEET_BY_NAMES",
       "names" : [ "Budget" ]
     },
     "query" : {

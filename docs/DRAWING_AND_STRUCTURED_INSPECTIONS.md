@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: DRAWING_STRUCTURED_INSPECTIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, inspections, get-drawing-objects, get-charts, get-tables, get-pivot-tables, get-sheet-schema]
   questions: ["how do i inspect drawings in gridgrind", "how do i inspect tables or pivots in gridgrind", "how do i inspect sheet layout or schema in gridgrind"]
@@ -25,7 +25,7 @@ Returns factual drawing-object metadata for one sheet.
 {
   "stepId": "drawing-objects",
   "target": {
-    "type": "ALL_ON_SHEET",
+    "type": "DRAWING_OBJECT_ALL_ON_SHEET",
     "sheetName": "Ops"
   },
   "query": {
@@ -62,7 +62,7 @@ surface as explicit `UNSUPPORTED` plot entries with preserved detail inside the 
 {
   "stepId": "charts",
   "target": {
-    "type": "ALL_ON_SHEET",
+    "type": "CHART_ALL_ON_SHEET",
     "sheetName": "Ops"
   },
   "query": {
@@ -102,7 +102,7 @@ sheet.
 {
   "stepId": "picture-payload",
   "target": {
-    "type": "BY_NAME",
+    "type": "DRAWING_OBJECT_BY_NAME",
     "sheetName": "Ops",
     "objectName": "OpsPicture"
   },
@@ -116,7 +116,7 @@ sheet.
 {
   "stepId": "embedded-payload",
   "target": {
-    "type": "BY_NAME",
+    "type": "DRAWING_OBJECT_BY_NAME",
     "sheetName": "Ops",
     "objectName": "OpsEmbed"
   },
@@ -148,7 +148,7 @@ and `collapsed` where Excel exposes that state.
 {
   "stepId": "layout",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "query": {
@@ -184,7 +184,7 @@ Returns the supported print-layout state for one sheet.
 {
   "stepId": "print-layout",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "query": {
@@ -211,7 +211,7 @@ Returns factual data-validation structures for one sheet. Each returned entry is
 {
   "stepId": "data-validations",
   "target": {
-    "type": "ALL_ON_SHEET",
+    "type": "RANGE_ALL_ON_SHEET",
     "sheetName": "Inventory"
   },
   "query": {
@@ -224,7 +224,7 @@ Returns factual data-validation structures for one sheet. Each returned entry is
 {
   "stepId": "selected-data-validations",
   "target": {
-    "type": "BY_RANGES",
+    "type": "RANGE_BY_RANGES",
     "sheetName": "Inventory",
     "ranges": [
       "B2:B200",
@@ -241,11 +241,11 @@ Range-selector payloads use:
 
 ```json
 {
-  "type": "ALL_ON_SHEET",
+  "type": "RANGE_ALL_ON_SHEET",
   "sheetName": "Inventory"
 }
 {
-  "type": "BY_RANGES",
+  "type": "RANGE_BY_RANGES",
   "sheetName": "Inventory",
   "ranges": [
     "B2:B200",
@@ -273,7 +273,7 @@ workbooks can still be inspected instead of aborting the read.
 {
   "stepId": "conditional-formatting",
   "target": {
-    "type": "ALL_ON_SHEET",
+    "type": "RANGE_ALL_ON_SHEET",
     "sheetName": "Inventory"
   },
   "query": {
@@ -286,7 +286,7 @@ workbooks can still be inspected instead of aborting the read.
 {
   "stepId": "selected-conditional-formatting",
   "target": {
-    "type": "BY_RANGES",
+    "type": "RANGE_BY_RANGES",
     "sheetName": "Inventory",
     "ranges": [
       "A2:D200",
@@ -310,7 +310,7 @@ Returns factual autofilter metadata for one sheet. The result may include:
 {
   "stepId": "autofilters",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "query": {
@@ -343,7 +343,7 @@ Returns factual table metadata selected by workbook-global table name or all tab
 {
   "stepId": "tables",
   "target": {
-    "type": "ALL"
+    "type": "TABLE_ALL"
   },
   "query": {
     "type": "GET_TABLES"
@@ -355,7 +355,7 @@ Returns factual table metadata selected by workbook-global table name or all tab
 {
   "stepId": "selected-tables",
   "target": {
-    "type": "BY_NAMES",
+    "type": "TABLE_BY_NAMES",
     "names": [
       "InventoryTable",
       "Trips"
@@ -393,10 +393,10 @@ Table-selector payloads use:
 
 ```json
 {
-  "type": "ALL"
+  "type": "TABLE_ALL"
 }
 {
-  "type": "BY_NAMES",
+  "type": "TABLE_BY_NAMES",
   "names": [
     "InventoryTable",
     "Trips"
@@ -415,7 +415,7 @@ preserved detail instead of causing read failure.
 {
   "stepId": "pivots",
   "target": {
-    "type": "ALL"
+    "type": "PIVOT_TABLE_ALL"
   },
   "query": {
     "type": "GET_PIVOT_TABLES"
@@ -427,7 +427,7 @@ preserved detail instead of causing read failure.
 {
   "stepId": "selected-pivots",
   "target": {
-    "type": "BY_NAMES",
+    "type": "PIVOT_TABLE_BY_NAMES",
     "names": [
       "SalesPivot",
       "NamedPivot"
@@ -465,7 +465,7 @@ Groups formula usage across one or more sheets.
 {
   "stepId": "formula-surface",
   "target": {
-    "type": "ALL"
+    "type": "SHEET_ALL"
   },
   "query": {
     "type": "GET_FORMULA_SURFACE"
@@ -477,7 +477,7 @@ Groups formula usage across one or more sheets.
 {
   "stepId": "selected-formula-surface",
   "target": {
-    "type": "BY_NAMES",
+    "type": "SHEET_BY_NAMES",
     "names": [
       "Inventory",
       "Summary"
@@ -497,10 +497,10 @@ Sheet-selector payloads use:
 
 ```json
 {
-  "type": "ALL"
+  "type": "SHEET_ALL"
 }
 {
-  "type": "BY_NAMES",
+  "type": "SHEET_BY_NAMES",
   "names": [
     "Inventory",
     "Summary"
@@ -525,7 +525,7 @@ for the highest count. Formula cells contribute their evaluated result type (e.g
 {
   "stepId": "schema",
   "target": {
-    "type": "RECTANGULAR_WINDOW",
+    "type": "RANGE_RECTANGULAR_WINDOW",
     "sheetName": "Inventory",
     "topLeftAddress": "A1",
     "rowCount": 5,
@@ -545,7 +545,7 @@ Summarizes the scope and backing kind of selected named ranges.
 {
   "stepId": "named-range-surface",
   "target": {
-    "type": "ALL"
+    "type": "NAMED_RANGE_ALL"
   },
   "query": {
     "type": "GET_NAMED_RANGE_SURFACE"
@@ -557,14 +557,14 @@ Summarizes the scope and backing kind of selected named ranges.
 {
   "stepId": "selected-named-range-surface",
   "target": {
-    "type": "ANY_OF",
+    "type": "NAMED_RANGE_ANY_OF",
     "selectors": [
       {
-        "type": "WORKBOOK_SCOPE",
+        "type": "NAMED_RANGE_WORKBOOK_SCOPE",
         "name": "BudgetTotal"
       },
       {
-        "type": "SHEET_SCOPE",
+        "type": "NAMED_RANGE_SHEET_SCOPE",
         "sheetName": "Budget",
         "name": "BudgetTable"
       }

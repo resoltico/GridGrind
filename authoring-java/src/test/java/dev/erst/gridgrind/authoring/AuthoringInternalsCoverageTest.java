@@ -96,8 +96,14 @@ class AuthoringInternalsCoverageTest {
   void checksCoverAllSupportedAssertionHelpers() {
     InspectionQuery.AnalyzeFormulaHealth analysisQuery = Queries.formulaHealth();
 
-    assertInstanceOf(Assertion.Present.class, Checks.present());
-    assertInstanceOf(Assertion.Absent.class, Checks.absent());
+    assertInstanceOf(Assertion.NamedRangePresent.class, Checks.namedRangePresent());
+    assertInstanceOf(Assertion.NamedRangeAbsent.class, Checks.namedRangeAbsent());
+    assertInstanceOf(Assertion.TablePresent.class, Checks.tablePresent());
+    assertInstanceOf(Assertion.TableAbsent.class, Checks.tableAbsent());
+    assertInstanceOf(Assertion.PivotTablePresent.class, Checks.pivotTablePresent());
+    assertInstanceOf(Assertion.PivotTableAbsent.class, Checks.pivotTableAbsent());
+    assertInstanceOf(Assertion.ChartPresent.class, Checks.chartPresent());
+    assertInstanceOf(Assertion.ChartAbsent.class, Checks.chartAbsent());
     assertInstanceOf(Assertion.CellValue.class, Checks.cellValue(Values.expectedText("Owner")));
     assertInstanceOf(Assertion.DisplayValue.class, Checks.displayValue("Owner"));
     assertInstanceOf(Assertion.FormulaText.class, Checks.formulaText("SUM(A1:A2)"));
@@ -118,12 +124,12 @@ class AuthoringInternalsCoverageTest {
             AnalysisFindingCode.PIVOT_TABLE_UNSUPPORTED_DETAIL,
             AnalysisSeverity.ERROR,
             "detail"));
-    Assertion.AllOf allOf = Checks.allOf(Checks.present(), Checks.absent());
-    Assertion.AnyOf anyOf = Checks.anyOf(Checks.present(), Checks.absent());
-    Assertion.Not not = Checks.not(Checks.present());
+    Assertion.AllOf allOf = Checks.allOf(Checks.chartPresent(), Checks.chartAbsent());
+    Assertion.AnyOf anyOf = Checks.anyOf(Checks.tablePresent(), Checks.tableAbsent());
+    Assertion.Not not = Checks.not(Checks.namedRangePresent());
     assertEquals(2, allOf.assertions().size());
     assertEquals(2, anyOf.assertions().size());
-    assertInstanceOf(Assertion.Present.class, not.assertion());
+    assertInstanceOf(Assertion.NamedRangePresent.class, not.assertion());
     assertEquals(
         "assertion must not be null",
         assertThrows(NullPointerException.class, () -> Checks.not(null)).getMessage());

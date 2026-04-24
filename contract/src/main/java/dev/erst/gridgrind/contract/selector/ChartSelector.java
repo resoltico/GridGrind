@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 /** Selects one or more sheet-local charts. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = ChartSelector.AllOnSheet.class, name = "ALL_ON_SHEET"),
-  @JsonSubTypes.Type(value = ChartSelector.ByName.class, name = "BY_NAME")
+  @JsonSubTypes.Type(value = ChartSelector.AllOnSheet.class, name = "CHART_ALL_ON_SHEET"),
+  @JsonSubTypes.Type(value = ChartSelector.ByName.class, name = "CHART_BY_NAME")
 })
 public sealed interface ChartSelector extends Selector
     permits ChartSelector.AllOnSheet, ChartSelector.ByName {

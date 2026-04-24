@@ -32,6 +32,7 @@
 #   scripts/test-verify-release-merge-handoff.sh
 #   scripts/test-verify-release-candidate-tag.sh
 #   scripts/test-verify-release-primary-checkout.sh
+#   scripts/test-verify-cli-contract.sh
 #   scripts/test-verify-container-publication.sh
 #   scripts/test-publication-contract.sh
 #
@@ -47,8 +48,9 @@
 # the caller already selected a console mode.
 #
 # Local shell resolution must already point at Java 26. GridGrind's product modules, CLI fat JAR,
-# and release flow all rely on the ambient `java` command, not only Gradle toolchains. The macOS
-# `/usr/bin/java` launcher stub is therefore an invalid local runtime for this script.
+# and release flow all rely on the ambient `java` command, not only Gradle toolchains. On macOS,
+# `/usr/bin/java` or `/usr/bin/javac` are acceptable only when they immediately resolve to the
+# intended installed Java 26 JDK rather than the Apple install stub.
 #
 # Exit status: 0 on success. Any failing Gradle stage or script precondition returns a non-zero
 # exit status. The script emits per-stage finish lines with durations plus one final human-readable
@@ -65,22 +67,37 @@ die() {
 }
 
 require_shell_java_26() {
-    local resolved_java resolved_javac java_version_line java_version_token
+    local resolved_java resolved_javac
+    local java_version_line java_version_token
+    local javac_version_line javac_version_token
 
     resolved_java="$(command -v java || true)"
     [[ -n "${resolved_java}" ]] || die "no 'java' command found in PATH; GridGrind requires Java 26 in the active shell. See docs/DEVELOPER_JAVA.md."
-    [[ "${resolved_java}" != '/usr/bin/java' ]] || die "java resolves to the macOS /usr/bin/java stub. Activate Java 26 in your shell before running ./check.sh. See docs/DEVELOPER_JAVA.md."
 
     resolved_javac="$(command -v javac || true)"
     [[ -n "${resolved_javac}" ]] || die "no 'javac' command found in PATH; GridGrind requires a full Java 26 JDK in the active shell. See docs/DEVELOPER_JAVA.md."
-    [[ "${resolved_javac}" != '/usr/bin/javac' ]] || die "javac resolves to the macOS /usr/bin/javac stub. Activate Java 26 in your shell before running ./check.sh. See docs/DEVELOPER_JAVA.md."
 
     java_version_line="$("${resolved_java}" --version 2>/dev/null | head -1 || true)"
     java_version_token="$(printf '%s\n' "${java_version_line}" | awk 'NR == 1 { print $2 }')"
     case "${java_version_token}" in
         26|26.*) ;;
         *)
+            if [[ "${resolved_java}" == '/usr/bin/java' ]]; then
+                die "java resolves to the macOS /usr/bin/java launcher but does not report Java 26 ('${java_version_line:-unknown version}'). Activate a real Java 26 JDK in your shell before running ./check.sh. See docs/DEVELOPER_JAVA.md."
+            fi
             die "java resolves to ${resolved_java} but reports '${java_version_line:-unknown version}'. GridGrind requires Java 26 in the active shell. See docs/DEVELOPER_JAVA.md."
+            ;;
+    esac
+
+    javac_version_line="$("${resolved_javac}" --version 2>/dev/null | head -1 || true)"
+    javac_version_token="$(printf '%s\n' "${javac_version_line}" | awk 'NR == 1 { print $2 }')"
+    case "${javac_version_token}" in
+        26|26.*) ;;
+        *)
+            if [[ "${resolved_javac}" == '/usr/bin/javac' ]]; then
+                die "javac resolves to the macOS /usr/bin/javac launcher but does not report JDK 26 ('${javac_version_line:-unknown version}'). Activate a real Java 26 JDK in your shell before running ./check.sh. See docs/DEVELOPER_JAVA.md."
+            fi
+            die "javac resolves to ${resolved_javac} but reports '${javac_version_line:-unknown version}'. GridGrind requires a full Java 26 JDK in the active shell. See docs/DEVELOPER_JAVA.md."
             ;;
     esac
 }
@@ -98,8 +115,19 @@ resolve_script_dir() {
     cd -P -- "$(dirname -- "${source_path}")" && pwd
 }
 
+prepare_project_cache_dir() {
+    local cache_root=$1
+    if [[ -z "${cache_root}" ]]; then
+        return 0
+    fi
+    mkdir -p "${cache_root}"
+    mktemp -d "${cache_root%/}/run.XXXXXX"
+}
+
 readonly repo_root="$(resolve_script_dir)"
 readonly gradlew="${repo_root}/gradlew"
+readonly project_cache_dir_root="${GRIDGRIND_PROJECT_CACHE_DIR:-}"
+readonly project_cache_dir="$(prepare_project_cache_dir "${project_cache_dir_root}")"
 readonly process_support_script="${repo_root}/scripts/check-process-support.sh"
 current_stage_id='startup'
 current_stage_label='starting'
@@ -107,7 +135,8 @@ current_stage_log_path=''
 current_stage_diagnostics_directory=''
 emit_final_status_enabled=true
 readonly pulse_interval_seconds=15
-readonly stall_threshold_seconds=90
+readonly default_stall_threshold_seconds=90
+readonly gradle_stall_threshold_seconds=300
 readonly gradle_test_pulse_interval_millis=$((pulse_interval_seconds * 1000))
 readonly diagnostics_command_timeout_seconds=5
 readonly diagnostics_process_capture_limit=6
@@ -142,7 +171,7 @@ print_usage() {
         '  1. check coverage' \
         '  2. jazzer check' \
         '  3. :cli:shadowJar' \
-        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar && scripts/test-check-process-support.sh && scripts/test-contract-module-split.sh && scripts/test-explicit-import-gate.sh && scripts/test-jazzer-public-surface.sh && scripts/test-jazzer-run-lock.sh && scripts/test-selector-contract-surface.sh && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-release-primary-checkout.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
+        '  4. bash -n check.sh scripts/*.sh jazzer/bin/* && scripts/verify-cli-contract.sh jar ./cli/build/libs/gridgrind.jar && scripts/test-check-process-support.sh && scripts/test-contract-module-split.sh && scripts/test-explicit-import-gate.sh && scripts/test-jazzer-public-surface.sh && scripts/test-jazzer-run-lock.sh && scripts/test-selector-contract-surface.sh && scripts/test-verify-release-merge-handoff.sh && scripts/test-verify-release-candidate-tag.sh && scripts/test-verify-release-primary-checkout.sh && scripts/test-verify-cli-contract.sh && scripts/test-verify-container-publication.sh && scripts/test-publication-contract.sh' \
         '  5. scripts/docker-smoke.sh' \
         '' \
         'Supported options:' \
@@ -375,6 +404,18 @@ stage_progress_marker() {
     esac
 }
 
+stall_threshold_for_stage() {
+    local stage_id=$1
+    case "${stage_id}" in
+        quality-gates|jazzer-check|cli-shadowjar)
+            printf '%s' "${gradle_stall_threshold_seconds}"
+            ;;
+        *)
+            printf '%s' "${default_stall_threshold_seconds}"
+            ;;
+    esac
+}
+
 capture_stage_diagnostics() {
     local stage_id=$1
     local child_pid=$2
@@ -449,6 +490,8 @@ monitor_stage_process() {
     local log_path=$3
     local diagnostics_root=$4
     local child_pid=$5
+    local stall_threshold_seconds
+    stall_threshold_seconds="$(stall_threshold_for_stage "${stage_id}")"
     local started_at
     local last_output_at
     local last_progress_at
@@ -694,12 +737,16 @@ run_stage() {
     local project_dir=$3
     shift 3
     local command_prefix=()
+    local project_cache_args=()
     if [[ "${stage_id}" == 'quality-gates' ]]; then
         command_prefix+=(
             env
             "GRIDGRIND_TEST_PULSE=1"
             "GRIDGRIND_TEST_PULSE_INTERVAL_MS=${gradle_test_pulse_interval_millis}"
         )
+    fi
+    if [[ -n "${project_cache_dir}" ]]; then
+        project_cache_args+=(--project-cache-dir "${project_cache_dir}")
     fi
     run_monitored_command \
         "${stage_id}" \
@@ -708,6 +755,7 @@ run_stage() {
         ${command_prefix[@]+"${command_prefix[@]}"} \
         "${gradlew}" \
         --project-dir "${project_dir}" \
+        ${project_cache_args[@]+"${project_cache_args[@]}"} \
         "$@" \
         ${gradle_args[@]+"${gradle_args[@]}"}
 }

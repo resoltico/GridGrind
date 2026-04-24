@@ -27,10 +27,14 @@ final class ExcelRowColumnStructureController {
     Objects.requireNonNull(sheet, "sheet must not be null");
     requireInsertRowBounds(sheet, rowIndex, rowCount);
     int lastRowIndex = sheet.getLastRowNum();
+    List<CTDataValidation> expectedValidations =
+        ExcelDataValidationStructureSupport.expectedValidationsAfterInsertRows(
+            sheet, rowIndex, rowCount);
     rejectAffectedRowStructuresForInsert(sheet, rowIndex); // LIM-016
     if (rowIndex <= lastRowIndex) {
       sheet.shiftRows(rowIndex, lastRowIndex, rowCount, true, false);
     }
+    ExcelDataValidationStructureSupport.replaceDataValidations(sheet, expectedValidations);
   }
 
   /** Deletes the requested inclusive zero-based row band. */
@@ -78,6 +82,9 @@ final class ExcelRowColumnStructureController {
     normalizeColumnDefinitionContainer(sheet);
     int lastColumnIndex = lastColumnIndex(sheet);
     var explicitColumns = snapshotColumnDefinitions(sheet);
+    List<CTDataValidation> expectedValidations =
+        ExcelDataValidationStructureSupport.expectedValidationsAfterInsertColumns(
+            sheet, columnIndex, columnCount);
     ExcelSheetCommentRepairSupport commentRepairSupport = new ExcelSheetCommentRepairSupport(sheet);
     boolean repairComments = commentRepairSupport.hasPersistedComments();
     List<ExcelSheetCommentRepairSupport.CommentRewriteSnapshot> expectedComments = List.of();
@@ -91,6 +98,7 @@ final class ExcelRowColumnStructureController {
     }
     ExcelColumnDefinitionSupport.rebuildColumnDefinitions(
         sheet, shiftedForInsert(explicitColumns, columnIndex, columnCount));
+    ExcelDataValidationStructureSupport.replaceDataValidations(sheet, expectedValidations);
     if (repairComments) {
       commentRepairSupport.replaceComments(expectedComments);
     }
@@ -366,16 +374,6 @@ final class ExcelRowColumnStructureController {
           "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
           "row structural edits that would move sheet autofilters are not supported");
     }
-    for (String validationRange : dataValidationRanges(sheet)) {
-      ExcelRange range = parsedRange(validationRange, "data validation", validationRange);
-      if (range.lastRow() >= rowIndex) {
-        throw unsupportedStructure(
-            "INSERT_ROWS",
-            sheet,
-            "data validation " + validationRange,
-            "row structural edits that would move data validations are not supported");
-      }
-    }
   }
 
   void rejectAffectedRowStructuresForDelete(XSSFSheet sheet, ExcelRowSpan rows) { // LIM-016
@@ -461,16 +459,6 @@ final class ExcelRowColumnStructureController {
           sheet,
           "sheet autofilter " + ExcelSheetStructureSupport.formatRange(autofilter),
           "column structural edits that would move sheet autofilters are not supported");
-    }
-    for (String validationRange : dataValidationRanges(sheet)) {
-      ExcelRange range = parsedRange(validationRange, "data validation", validationRange);
-      if (range.lastColumn() >= columnIndex) {
-        throw unsupportedStructure(
-            "INSERT_COLUMNS",
-            sheet,
-            "data validation " + validationRange,
-            "column structural edits that would move data validations are not supported");
-      }
     }
   }
 
@@ -788,7 +776,7 @@ final class ExcelRowColumnStructureController {
 
   private static ExcelRange sheetAutofilterRange(XSSFSheet sheet) {
     if (!sheet.getCTWorksheet().isSetAutoFilter()) {
-      return null;
+      return java.util.Optional.<ExcelRange>empty().orElse(null);
     }
     return parsedRange(
         sheet.getCTWorksheet().getAutoFilter().getRef(),

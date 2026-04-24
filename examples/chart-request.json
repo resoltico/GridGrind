@@ -11,7 +11,7 @@
   "steps" : [ {
     "stepId" : "step-01-ensure-sheet",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Ops"
     },
     "action" : {
@@ -20,7 +20,7 @@
   }, {
     "stepId" : "step-02-set-range",
     "target" : {
-      "type" : "BY_RANGE",
+      "type" : "RANGE_BY_RANGE",
       "sheetName" : "Ops",
       "range" : "A1:C4"
     },
@@ -85,7 +85,7 @@
   }, {
     "stepId" : "step-03-set-categories",
     "target" : {
-      "type" : "WORKBOOK_SCOPE",
+      "type" : "NAMED_RANGE_WORKBOOK_SCOPE",
       "name" : "ChartCategories"
     },
     "action" : {
@@ -103,7 +103,7 @@
   }, {
     "stepId" : "step-04-set-actual",
     "target" : {
-      "type" : "WORKBOOK_SCOPE",
+      "type" : "NAMED_RANGE_WORKBOOK_SCOPE",
       "name" : "ChartActual"
     },
     "action" : {
@@ -121,7 +121,7 @@
   }, {
     "stepId" : "step-05-set-chart",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Ops"
     },
     "action" : {
@@ -222,7 +222,7 @@
   }, {
     "stepId" : "charts",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Ops"
     },
     "query" : {
@@ -231,12 +231,12 @@
   }, {
     "stepId" : "chart-present",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "CHART_BY_NAME",
       "sheetName" : "Ops",
       "chartName" : "OpsChart"
     },
     "assertion" : {
-      "type" : "EXPECT_PRESENT"
+      "type" : "EXPECT_CHART_PRESENT"
     }
   } ]
 }

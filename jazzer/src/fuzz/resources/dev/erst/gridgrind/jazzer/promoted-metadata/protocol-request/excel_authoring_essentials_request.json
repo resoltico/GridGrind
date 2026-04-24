@@ -7,29 +7,29 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 5348,
+      "inputBytes" : 5444,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 7,
       "operationKinds" : {
-        "SET_HYPERLINK" : 2,
         "ENSURE_SHEET" : 1,
-        "SET_COMMENT" : 1,
+        "SET_HYPERLINK" : 2,
+        "SET_NAMED_RANGE" : 2,
         "SET_RANGE" : 1,
-        "SET_NAMED_RANGE" : 2
+        "SET_COMMENT" : 1
       },
       "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
       "readCount" : 6,
       "readKinds" : {
-        "GET_WINDOW" : 1,
         "GET_NAMED_RANGES" : 1,
-        "GET_COMMENTS" : 1,
-        "GET_HYPERLINKS" : 1,
+        "GET_WINDOW" : 1,
+        "GET_CELLS" : 1,
         "GET_NAMED_RANGE_SURFACE" : 1,
-        "GET_CELLS" : 1
+        "GET_HYPERLINKS" : 1,
+        "GET_COMMENTS" : 1
       }
     }
   },

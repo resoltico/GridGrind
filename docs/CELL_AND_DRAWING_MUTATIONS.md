@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: CELL_DRAWING_MUTATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, cell mutations, drawing mutations, hyperlink, comment, picture, chart, signature-line]
   questions: ["where is the cell and drawing mutation reference", "how are cell and drawing mutations split in gridgrind", "where do i find chart or comment mutations in gridgrind"]

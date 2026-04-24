@@ -78,7 +78,7 @@ final class ExcelSheetAnalysisSupport {
                     List.of(formula, workbookName)));
           }
         }
-        String leadingFunctionName = FormulaExceptions.leadingFunctionName(formula);
+        String leadingFunctionName = FormulaExceptions.leadingFunctionName(formula).orElse(null);
         if (hasUnregisteredUserDefinedFunction(formulaContext, leadingFunctionName, formula)) {
           findings.add(
               new WorkbookAnalysis.AnalysisFinding(

@@ -65,7 +65,7 @@ class JazzerReplaySupportTest {
               "steps": [
                 {
                   "query": { "type": "GET_WORKBOOK_SUMMARY" },
-                  "target": { "type": "CURRENT" }
+                  "target": { "type": "WORKBOOK_CURRENT" }
                 }
               ]
             }
@@ -279,7 +279,7 @@ class JazzerReplaySupportTest {
                 Map.entry("font_height", 2L),
                 Map.entry("font_height_twips", 2L)),
             3,
-            Map.of("EXPECT_PRESENT", 3L),
+            Map.of("EXPECT_PIVOT_TABLE_PRESENT", 3L),
             6,
             Map.of("ANALYZE_WORKBOOK_FINDINGS", 6L),
             "FAILURE"),

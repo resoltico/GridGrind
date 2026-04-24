@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-04-24"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -124,9 +124,17 @@ java --version
 
 Requirements before continuing:
 
-- `command -v java` must not be `/usr/bin/java`.
+- `command -v java` must resolve to a working Java launcher.
 - `java --version` must report Java 26.
 - Use `./gradlew`, never Brew `gradle`, for every repo build or release step.
+
+On macOS, `/usr/bin/java` is acceptable only if it immediately resolves to the intended installed
+JDK rather than the Apple stub prompt. Treat `/usr/bin/java` as a blocker only when one of these
+is true:
+
+- `java --version` fails or triggers the macOS install prompt instead of reporting Java 26.
+- `./gradlew --version --console=plain` reports a different or unexpected JVM than the intended
+  Java 26 runtime.
 
 Then run `./check.sh`. It must exit 0. If it fails, fix all failures before proceeding.
 
@@ -171,13 +179,17 @@ rejected and wastes time. Always commit on a release branch.
 
 ```bash
 git checkout -b release/X.Y.Z
-git add <every modified file that belongs in the release — never .codex/>
+git add <every modified file that belongs in the release, including /.codex/ or /AGENTS.md when intentionally changed>
 git status --short
 git diff --cached --name-status
 git diff --cached --stat
 git commit -m "release: bump version to X.Y.Z"
 git push origin release/X.Y.Z
 ```
+
+Repo-owned agent instructions under `/.codex/` and `/AGENTS.md` may be staged when they are part
+of the release branch. They remain excluded from GitHub source archives via `export-ignore`, and
+they are not part of the fat-JAR or Docker publication surfaces.
 
 Treat staging as a handoff checkpoint, not a formality. Before committing:
 

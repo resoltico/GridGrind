@@ -12,7 +12,7 @@
         "type": "GET_WORKBOOK_SUMMARY"
       },
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     }
   ]

@@ -17,6 +17,7 @@ import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
 import org.gradle.process.JavaForkOptions
+import org.gradle.testing.jacoco.plugins.JacocoTaskExtension
 import org.gradle.testing.jacoco.tasks.JacocoCoverageVerification
 import org.gradle.testing.jacoco.tasks.JacocoReport
 
@@ -250,8 +251,17 @@ class GridGrindJazzerConventionsPlugin : Plugin<Project> {
                     description =
                         "Verifies deterministic-unit coverage for the Jazzer support-contract subset."
                     group = "verification"
-                    dependsOn(tasks.named<Test>("test"))
-                    executionData.from(layout.buildDirectory.file("jacoco/test.exec"))
+                    val jazzerTest = tasks.named<Test>("test")
+                    dependsOn(jazzerTest)
+                    executionData.from(
+                        provider {
+                            jazzerTest
+                                .get()
+                                .extensions
+                                .getByType(JacocoTaskExtension::class.java)
+                                .destinationFile
+                        },
+                    )
                     sourceDirectories.setFrom(mainSourceSet.allJava.srcDirs)
                     classDirectories.setFrom(jazzerCoverageClasses)
                     violationRules {

@@ -10,17 +10,53 @@ final class GridGrindProtocolCatalogCliSurface {
               "Usage",
               List.of(
                   "gridgrind [--request <path>] [--response <path>]",
-                  "gridgrind --doctor-request [--request <path>]",
-                  "gridgrind --print-request-template",
-                  "gridgrind --print-task-catalog [--task <id>]",
-                  "gridgrind --print-task-plan <id>",
-                  "gridgrind --print-goal-plan <goal>",
-                  "gridgrind --print-protocol-catalog",
-                  "gridgrind --print-protocol-catalog --operation <id>|<group>:<id>",
-                  "gridgrind --print-protocol-catalog --search <text>",
-                  "gridgrind --print-example <id>",
-                  "gridgrind --help | -h | help",
-                  "gridgrind --version")),
+                  "gridgrind --doctor-request [--request <path>] [--response <path>]",
+                  "gridgrind --print-request-template [--response <path>]",
+                  "gridgrind --print-task-catalog [--task <id>] [--response <path>]",
+                  "gridgrind --print-task-plan <id> [--response <path>]",
+                  "gridgrind --print-goal-plan <goal> [--response <path>]",
+                  "gridgrind --print-protocol-catalog [--response <path>]",
+                  "gridgrind --print-protocol-catalog --operation <id>|<group>:<id> [--response"
+                      + " <path>]",
+                  "gridgrind --print-protocol-catalog --search <text> [--response <path>]",
+                  "gridgrind --print-example <id> [--response <path>]",
+                  "gridgrind --help | -h | help [--response <path>]",
+                  "gridgrind --version [--response <path>]")),
+          new CliSurface.CliWorkflowSection(
+              "First-Contact Workflows",
+              List.of(
+                  new CliSurface.WorkflowEntry(
+                      "Discover What To Send",
+                      List.of(
+                          "List shipped task recipes: gridgrind --print-task-catalog"
+                              + " --response tasks.json",
+                          "Get one starter task scaffold: gridgrind --print-task-plan"
+                              + " DASHBOARD --response dashboard-plan.json",
+                          "Search exact protocol shapes: gridgrind --print-protocol-catalog"
+                              + " --search \"chart title\" --response catalog-search.json")),
+                  new CliSurface.WorkflowEntry(
+                      "Draft And Preflight",
+                      List.of(
+                          "Start from the minimal request: gridgrind --print-request-template"
+                              + " --response request.json",
+                          "When you add steps, give each one a stable stepId and copy the"
+                              + " exact action, assertion, or query shape from"
+                              + " --print-task-plan or --print-protocol-catalog.",
+                          "Or copy one built-in example: gridgrind --print-example"
+                              + " WORKBOOK_HEALTH --response example.json",
+                          "Lint before executing: gridgrind --doctor-request --request"
+                              + " request.json --response doctor.json")),
+                  new CliSurface.WorkflowEntry(
+                      "Execute And Keep Artifacts",
+                      List.of(
+                          "Run locally and capture the response: gridgrind --request"
+                              + " request.json --response response.json",
+                          "Reopen a saved workbook by switching source.type to EXISTING and"
+                              + " pointing source.path at the .xlsx file you want to inspect"
+                              + " or mutate.",
+                          "Use persistence.type=SAVE_AS when the workbook should be written,"
+                              + " and persistence.type=NONE when the run is read-only or"
+                              + " diagnostic.")))),
           new CliSurface.CliSection(
               "Execution",
               List.of(
@@ -116,6 +152,8 @@ final class GridGrindProtocolCatalogCliSurface {
               "Request",
               List.of(
                   "protocolVersion is optional; omit it and the current version is assumed.",
+                  "source.type is required; use NEW to create a blank workbook or EXISTING"
+                      + " with source.path to reopen a workbook from disk.",
                   "persistence is optional; omit it and the workbook stays in memory only"
                       + " (NONE).",
                   "planId is optional; omit it and GridGrind will generate one for the"
@@ -150,12 +188,16 @@ final class GridGrindProtocolCatalogCliSurface {
                   new CliSurface.DefinitionEntry(
                       "--request <path>", "read the JSON request from that file."),
                   new CliSurface.DefinitionEntry(
-                      "No --response flag", "write the JSON response to stdout."),
+                      "No --response flag", "write the primary command output to stdout."),
                   new CliSurface.DefinitionEntry(
                       "--response <path>",
-                      "write the JSON response to that file; parent directories are created."),
+                      "write the primary command output to that file; parent directories are"
+                          + " created. Execution writes the JSON response, doctoring writes"
+                          + " the doctor report, and help or discovery commands write their"
+                          + " rendered text or JSON payload."),
                   new CliSurface.DefinitionEntry(
-                      "source.path", "open an existing workbook from that path."),
+                      "source.type=EXISTING + source.path",
+                      "open an existing workbook from that path."),
                   new CliSurface.DefinitionEntry(
                       "persistence SAVE_AS.path",
                       "write a new workbook to that path; parent directories are created."),
@@ -207,12 +249,13 @@ final class GridGrindProtocolCatalogCliSurface {
           new CliSurface.CliDiscoverySection(
               "Discovery",
               List.of(
-                  "gridgrind --print-request-template",
-                  "gridgrind --doctor-request",
-                  "gridgrind --print-task-catalog",
-                  "gridgrind --print-task-plan <id>",
-                  "gridgrind --print-goal-plan \"monthly sales dashboard with charts\"",
-                  "gridgrind --print-protocol-catalog",
+                  "gridgrind --print-request-template --response request.json",
+                  "gridgrind --doctor-request --request request.json --response doctor.json",
+                  "gridgrind --print-task-catalog --response tasks.json",
+                  "gridgrind --print-task-plan <id> --response task-plan.json",
+                  "gridgrind --print-goal-plan \"monthly sales dashboard with charts\""
+                      + " --response goal-plan.json",
+                  "gridgrind --print-protocol-catalog --response protocol-catalog.json",
                   GridGrindContractText.workbookFindingsDiscoverySummary()),
               "Built-in generated examples",
               "Print one built-in example",
@@ -222,13 +265,15 @@ final class GridGrindProtocolCatalogCliSurface {
                   + " the nested/plain type group accepted by polymorphic fields such as"
                   + " target, action, query, value, style, and scope. Mutation, assertion,"
                   + " and inspection entries also publish targetSelectors and/or"
-                  + " targetSelectorRule so agents can see the allowed target families,"
-                  + " derived selector rules, and any shared-selector disambiguation notes"
-                  + " before sending a request. When ids repeat across groups, qualify the"
+                  + " targetSelectorRule so agents can see the allowed target families and"
+                  + " any derived selector rules before sending a request. When ids repeat"
+                  + " across groups, qualify the"
                   + " lookup as <group>:<id> such as cellInputTypes:FORMULA. Nested and"
                   + " plain type-group descriptors can also be queried directly, for example"
                   + " nestedTypes:cellInputTypes or plainTypes:chartInputType.",
-              "gridgrind --print-example " + GridGrindShippedExamples.examples().getFirst().id()),
+              "gridgrind --print-example "
+                  + GridGrindShippedExamples.examples().getFirst().id()
+                  + " --response example.json"),
           new CliSurface.CliReferenceSection(
               "Docs",
               List.of(
@@ -241,7 +286,8 @@ final class GridGrindProtocolCatalogCliSurface {
                   new CliSurface.DefinitionEntry(
                       "--request <path>", "Read the JSON request from a file instead of stdin."),
                   new CliSurface.DefinitionEntry(
-                      "--response <path>", "Write the JSON response to a file instead of stdout."),
+                      "--response <path>",
+                      "Write the primary command output to a file instead of stdout."),
                   new CliSurface.DefinitionEntry(
                       "--doctor-request",
                       "Lint one request, preflight source-backed input resolution plus existing"
