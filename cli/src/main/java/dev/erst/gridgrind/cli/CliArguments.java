@@ -41,7 +41,7 @@ final class CliArguments {
   private static ImmediateParseResult parseImmediateCommand(
       String[] args, int index, String argument) {
     return switch (argument) {
-      case "--help", "-h" -> new ImmediateParseResult(new CliCommand.Help(), index + 1);
+      case "--help", "-h", "help" -> new ImmediateParseResult(new CliCommand.Help(), index + 1);
       case "--version" -> new ImmediateParseResult(new CliCommand.Version(), index + 1);
       case "--license" -> new ImmediateParseResult(new CliCommand.License(), index + 1);
       case "--print-request-template" ->

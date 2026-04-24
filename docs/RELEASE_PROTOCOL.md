@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.57.0"
+version: "0.58.0"
 domain: RELEASE_PROTOCOL
-updated: "2026-04-23"
+updated: "2026-04-24"
 route:
   keywords: [gridgrind, release, gh, github-cli, java26, gradlew, tag, ci, container, docker]
   questions: ["how do I release gridgrind", "what is the gridgrind release procedure", "how do I verify java before a gridgrind release", "how do I publish a gridgrind tag release"]
@@ -67,6 +67,23 @@ Use a Git worktree, not a disconnected clone, whenever possible. A worktree shar
 primary checkout and makes post-release reconciliation mechanically obvious. A separate clone is a
 last resort and, if used, must still be reconciled back into the primary checkout before the
 release session ends.
+
+Treat mounted, removable, or otherwise non-local filesystems as problematic release hosts the
+moment Gradle shows filesystem-specific behavior before normal project verification even starts —
+for example file-lock creation failures such as:
+
+```text
+java.io.IOException: Operation not supported
+```
+
+or a `./check.sh` stall that never gets past early Gradle bootstrap on the mounted checkout while
+the same repository state runs normally from a local checkout. In that situation:
+
+- keep the mounted checkout as the primary checkout if that is the path the user will keep using
+- stop retrying release verification from the mounted checkout itself
+- create the clean release worktree on local storage and continue the release there
+- do not patch release scripts just to special-case the mounted filesystem before you have first
+  used the worktree escape hatch that this protocol already permits
 
 If the primary checkout has unpublished local work, decide before the release whether that work is
 real or stale. Real work must move onto a named branch or exported patch before closeout. Stale

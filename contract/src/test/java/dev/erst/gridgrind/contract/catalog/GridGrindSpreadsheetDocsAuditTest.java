@@ -206,6 +206,86 @@ class GridGrindSpreadsheetDocsAuditTest {
   }
 
   @Test
+  void examplesGuideDocumentsBuiltInExamplePortabilityTruthfully() throws IOException {
+    String examples = readDoc("docs/EXAMPLES.md");
+    String normalizedExamples = examples.replaceAll("\\s+", " ");
+
+    assertAll(
+        () ->
+            assertTrue(
+                normalizedExamples.contains(
+                    "Self-contained built-ins can run from a blank artifact workspace"),
+                "examples guide must describe self-contained built-ins"),
+        () ->
+            assertTrue(
+                normalizedExamples.contains(
+                    "Repo-asset-backed built-ins require the matching `examples/` asset directories"),
+                "examples guide must describe repo-asset-backed built-ins honestly"),
+        () ->
+            assertTrue(
+                examples.contains("CUSTOM_XML")
+                    && examples.contains("SOURCE_BACKED_INPUT")
+                    && examples.contains("PACKAGE_SECURITY_INSPECTION"),
+                "examples guide must name the repo-asset-backed built-ins"),
+        () ->
+            assertTrue(
+                normalizedExamples.contains("shippedExamples[*].workspaceMode")
+                    && normalizedExamples.contains("shippedExamples[*].requiredPaths"),
+                "examples guide must document the machine-readable prerequisite metadata"));
+  }
+
+  @Test
+  void docsDescribeDoctorScopeTruthfully() throws IOException {
+    String requestReference = readDoc("docs/REQUEST_AND_EXECUTION_REFERENCE.md");
+    String quickStart = readDoc("docs/QUICK_START.md");
+    String quickReference = readDoc("docs/QUICK_REFERENCE.md");
+    String operations = readDoc("docs/OPERATIONS.md");
+    String normalizedRequestReference = requestReference.replaceAll("\\s+", " ");
+    String normalizedQuickStart = quickStart.replaceAll("\\s+", " ");
+    String normalizedQuickReference = quickReference.replaceAll("\\s+", " ");
+    String normalizedOperations = operations.replaceAll("\\s+", " ");
+
+    assertAll(
+        () ->
+            assertTrue(
+                normalizedRequestReference.contains("source-backed authored input resolution"),
+                "request reference must explain that doctor preflights source-backed inputs"),
+        () ->
+            assertTrue(
+                normalizedRequestReference.contains(
+                    "existing workbook-source accessibility without mutating a workbook"),
+                "request reference must explain the doctor workbook-source preflight boundary"),
+        () ->
+            assertTrue(
+                normalizedRequestReference.contains("OPEN_WORKBOOK"),
+                "request reference must explain that doctor can fail during OPEN_WORKBOOK"),
+        () ->
+            assertTrue(
+                normalizedQuickStart.contains("resolves source-backed authored inputs"),
+                "quick start must describe doctor scope accurately"),
+        () ->
+            assertTrue(
+                normalizedQuickStart.contains("preflights existing workbook-source access"),
+                "quick start must mention doctor workbook-source preflight"),
+        () ->
+            assertTrue(
+                normalizedQuickReference.contains("resolves source-backed inputs"),
+                "quick reference must summarize doctor scope accurately"),
+        () ->
+            assertTrue(
+                normalizedQuickReference.contains("preflights existing workbook-source access"),
+                "quick reference must mention doctor workbook-source preflight"),
+        () ->
+            assertTrue(
+                normalizedOperations.contains("source-backed input resolution"),
+                "operations index must summarize doctor scope accurately"),
+        () ->
+            assertTrue(
+                normalizedOperations.contains("existing workbook-source accessibility"),
+                "operations index must mention doctor workbook-source preflight"));
+  }
+
+  @Test
   void requestDocsDescribeRequestOwnedPathResolutionTruthfully() throws IOException {
     String requestReference = readDoc("docs/REQUEST_AND_EXECUTION_REFERENCE.md");
     String quickReference = readDoc("docs/QUICK_REFERENCE.md");

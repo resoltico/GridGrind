@@ -179,9 +179,12 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(help.contains("--print-task-plan <id>"));
     assertTrue(help.contains("--print-goal-plan <goal>"));
     assertTrue(help.contains("--doctor-request"));
+    assertTrue(
+        help.contains("preflight source-backed input resolution"),
+        "help must describe the doctor input-resolution scope");
     assertTrue(help.contains("--print-protocol-catalog"));
     assertTrue(help.contains("--print-example <id>"));
-    assertTrue(help.contains("--help, -h"));
+    assertTrue(help.contains("--help, -h, help"));
     assertTrue(help.contains("blob/main/docs/QUICK_REFERENCE.md"));
     assertTrue(help.contains("Coordinate Systems:"));
     assertTrue(
@@ -208,6 +211,13 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
             .run(new String[] {"-h"}, new ByteArrayInputStream(new byte[0]), shortStdout);
     assertEquals(0, shortExitCode);
     assertEquals(help, shortStdout.toString(StandardCharsets.UTF_8));
+
+    ByteArrayOutputStream bareStdout = new ByteArrayOutputStream();
+    int bareExitCode =
+        new GridGrindCli()
+            .run(new String[] {"help"}, new ByteArrayInputStream(new byte[0]), bareStdout);
+    assertEquals(0, bareExitCode);
+    assertEquals(help, bareStdout.toString(StandardCharsets.UTF_8));
   }
 
   @Test

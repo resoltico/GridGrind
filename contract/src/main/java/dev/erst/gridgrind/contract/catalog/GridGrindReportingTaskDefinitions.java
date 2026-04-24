@@ -417,7 +417,7 @@ final class GridGrindReportingTaskDefinitions {
             protocolLookupNote(
                 "validation and large-file execution shapes",
                 List.of(
-                    "mutationActionTypes:SET_DATA_VALIDATION", "executionModes:STREAMING_WRITE"),
+                    "mutationActionTypes:SET_DATA_VALIDATION", "plainTypes:executionModeInputType"),
                 List.of("data validation", "streaming write"))));
   }
 

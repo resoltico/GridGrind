@@ -1,6 +1,6 @@
 ---
 afad: "3.5"
-version: "0.57.0"
+version: "0.58.0"
 domain: CELL_VALUE_MUTATIONS
 updated: "2026-04-23"
 route:

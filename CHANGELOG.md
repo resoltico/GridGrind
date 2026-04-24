@@ -5,6 +5,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.58.0] - 2026-04-24
+
+### Changed
+
+- Public docs now distinguish built-in examples that are fully self-contained in a blank artifact
+  workspace from the three repo-asset-backed examples (`CUSTOM_XML`, `SOURCE_BACKED_INPUT`, and
+  `PACKAGE_SECURITY_INSPECTION`) that require copied `examples/` assets. Runtime example tests now
+  cover that portability split directly instead of leaving it implied by prose.
+- Public docs and generated help now describe the doctor surface more precisely:
+  `--doctor-request` validates request shape, source-backed authored input resolution, and
+  existing-workbook source accessibility up front, while still leaving workbook mutation to the
+  real execution path.
+- Built-in example discovery now publishes machine-readable workspace requirements through
+  `workspaceMode` and `requiredPaths`, so operators and agents can tell which examples need copied
+  repository assets without relying on prose or trial execution.
+- The release protocol now explicitly treats mounted or removable primary checkouts that break
+  Gradle locking or stall preflight as problematic release hosts and directs operators onto a clean
+  local worktree before any release build, instead of leaving that failure mode implicit.
+
+### Fixed
+
+- `SAVE_AS` persistence now creates missing parent directories consistently on both the normal
+  XSSF path and the `STREAMING_WRITE` path, matching the documented file-workflow contract.
+- `--doctor-request` no longer reports some requests as valid when they would immediately fail
+  during input resolution or workbook opening at execution time. Source-backed authored input
+  loading and existing-workbook accessibility are now preflighted in doctor mode as well.
+- Bare `help` now works as a first-class alias for `--help` in the packaged CLI instead of failing
+  as an unknown argument.
+- Non-step CLI failures now preserve their real problem classification in the synthetic execution
+  journal instead of always backfilling `INTERNAL_ERROR`.
+- Root-project formatting checks no longer race concurrent compilation by scanning a mutating
+  checkout during `./check.sh`; the repository-wide Spotless project-file pass now runs against a
+  stable tree before build outputs are produced.
+
 ## [0.57.0] - 2026-04-24
 
 ### Fixed
@@ -2216,7 +2250,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release.
 
-[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.57.0...HEAD
+[Unreleased]: https://github.com/resoltico/GridGrind/compare/v0.58.0...HEAD
+[0.58.0]: https://github.com/resoltico/GridGrind/compare/v0.57.0...v0.58.0
 [0.57.0]: https://github.com/resoltico/GridGrind/compare/v0.56.0...v0.57.0
 [0.56.0]: https://github.com/resoltico/GridGrind/compare/v0.55.0...v0.56.0
 [0.55.0]: https://github.com/resoltico/GridGrind/compare/v0.54.0...v0.55.0

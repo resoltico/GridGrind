@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.57.0"
+version: "0.58.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-04-23"
+updated: "2026-04-24"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
@@ -62,6 +62,17 @@ Binary-bearing mutation fields use `BinarySourceInput`:
   `INPUT_SOURCE_IO_ERROR`.
 - See [`examples/source-backed-input-request.json`](../examples/source-backed-input-request.json)
   for a complete file-backed text, formula, and binary request.
+
+## Doctor Requests
+
+`--doctor-request` validates request shape, execution-mode rules, source-backed authored input
+resolution, and existing workbook-source accessibility without mutating a workbook.
+
+- It resolves `UTF8_FILE`, `FILE`, and `STANDARD_INPUT` authored payloads early, so missing or
+  unreadable authored inputs can fail under `journal.inputResolution`.
+- It also preflights `source.type: EXISTING` workbook access, so missing or unreadable
+  `source.path` workbooks can already fail during doctoring under `OPEN_WORKBOOK`.
+- It emits a machine-readable `RequestDoctorReport` instead of a normal execution response.
 
 ---
 
@@ -172,11 +183,11 @@ journaling.
 
 - `execution.mode.readMode: EVENT_READ` selects the low-memory XSSF event-model reader. It supports only
   `GET_WORKBOOK_SUMMARY` and `GET_SHEET_SUMMARY` (`LIM-019`).
-- `execution.mode.writeMode: STREAMING_WRITE` selects the low-memory SXSSF writer. It requires `source.type:
-  NEW`, supports only `ENSURE_SHEET` and `APPEND_ROW`,
+- `execution.mode.writeMode: STREAMING_WRITE` selects the low-memory SXSSF writer. It requires
+  `source.type: NEW`, supports only `ENSURE_SHEET` and `APPEND_ROW`,
   requires `execution.calculation.strategy=DO_NOT_CALCULATE`,
   allows `markRecalculateOnOpen=true`, and
-  requires at least one `ENSURE_SHEET` or `APPEND_ROW` (`LIM-020`).
+  requires at least one `ENSURE_SHEET` mutation (`LIM-020`).
 - `execution.journal.level` accepts `SUMMARY`, `NORMAL`, and `VERBOSE`.
 - `execution.calculation.strategy` accepts `DO_NOT_CALCULATE`, `EVALUATE_ALL`,
   `EVALUATE_TARGETS`, and `CLEAR_CACHES_ONLY`.

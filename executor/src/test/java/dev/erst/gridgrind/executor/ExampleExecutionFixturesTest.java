@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.catalog.GridGrindShippedExamples;
+import dev.erst.gridgrind.contract.dto.GridGrindProblemCode;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.json.GridGrindJson;
@@ -18,6 +19,28 @@ import org.junit.jupiter.api.io.TempDir;
 /** Executes the published example requests so checked-in and built-in examples stay runnable. */
 class ExampleExecutionFixturesTest {
   @TempDir Path tempDir;
+
+  @Test
+  void selfContainedBuiltInExamplesExecuteFromABlankArtifactWorkspace() throws IOException {
+    Path workspace = Files.createDirectories(tempDir.resolve("blank-artifact-workspace"));
+
+    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace, (byte[]) null);
+    for (GridGrindShippedExamples.ShippedExample example :
+        GridGrindShippedExamples.selfContainedExamples()) {
+      WorkbookPlan request = example.plan();
+      GridGrindResponse.Success success =
+          assertInstanceOf(
+              GridGrindResponse.Success.class,
+              executor.execute(request, workspaceBindings),
+              () -> "self-contained built-in example must execute successfully: " + example.id());
+      assertEquals(
+          request.planId(),
+          success.journal().planId(),
+          () -> "success journal must retain the example plan id: " + example.id());
+      assertPersistedWorkbookExists(request, workspace);
+    }
+  }
 
   @Test
   void builtInExamplesExecuteFromARepositoryRootWorkspace() throws IOException {
@@ -39,6 +62,28 @@ class ExampleExecutionFixturesTest {
           success.journal().planId(),
           () -> "success journal must retain the example plan id: " + example.id());
       assertPersistedWorkbookExists(request, workspace);
+    }
+  }
+
+  @Test
+  void repositoryAssetBackedBuiltInExamplesFailFromABlankArtifactWorkspace() throws IOException {
+    Path workspace = Files.createDirectories(tempDir.resolve("artifact-workspace-missing-assets"));
+
+    DefaultGridGrindRequestExecutor executor = new DefaultGridGrindRequestExecutor();
+    ExecutionInputBindings workspaceBindings = new ExecutionInputBindings(workspace, (byte[]) null);
+    for (GridGrindShippedExamples.ShippedExample example :
+        GridGrindShippedExamples.repositoryAssetBackedExamples()) {
+      GridGrindResponse.Failure failure =
+          assertInstanceOf(
+              GridGrindResponse.Failure.class,
+              executor.execute(example.plan(), workspaceBindings),
+              () ->
+                  "repo-asset-backed built-in example must fail without copied assets: "
+                      + example.id());
+      assertEquals(
+          expectedBlankWorkspaceFailureCode(example.id()),
+          failure.problem().code(),
+          () -> "blank artifact workspace must fail with the documented problem code");
     }
   }
 
@@ -67,6 +112,15 @@ class ExampleExecutionFixturesTest {
           () -> "success journal must retain the repository example plan id: " + example.id());
       assertPersistedWorkbookExists(request, requestPath.getParent());
     }
+  }
+
+  private static GridGrindProblemCode expectedBlankWorkspaceFailureCode(String exampleId) {
+    return switch (exampleId) {
+      case "CUSTOM_XML", "SOURCE_BACKED_INPUT" -> GridGrindProblemCode.INPUT_SOURCE_NOT_FOUND;
+      case "PACKAGE_SECURITY_INSPECTION" -> GridGrindProblemCode.WORKBOOK_NOT_FOUND;
+      default ->
+          throw new AssertionError("Unexpected repository-asset-backed example id: " + exampleId);
+    };
   }
 
   private static void assertPersistedWorkbookExists(WorkbookPlan request, Path workingDirectory) {

@@ -5,6 +5,7 @@ import java.util.Optional;
 
 /** Internal registry that couples public task entries with richer discovery and starter plans. */
 final class GridGrindTaskDefinitions {
+  private static final String PROTOCOL_OPERATION_PREFIX = "--print-protocol-catalog --operation ";
   private static final List<TaskDefinition> DEFINITIONS = buildDefinitions();
   private static final TaskCatalog CATALOG =
       new TaskCatalog(
@@ -41,6 +42,7 @@ final class GridGrindTaskDefinitions {
             .flatMap(List::stream)
             .toList();
     validateTaskCapabilityReferences(definitions.stream().map(TaskDefinition::task).toList());
+    validateStarterTemplates(definitions);
     return definitions;
   }
 
@@ -56,6 +58,57 @@ final class GridGrindTaskDefinitions {
                     + capabilityRef.qualifiedId());
           }
         }
+      }
+    }
+  }
+
+  static void validateStarterTemplates(List<TaskDefinition> definitions) {
+    for (TaskDefinition definition : definitions) {
+      validateStarterTemplatePlaceholders(definition);
+      validateStarterTemplateLookups(definition);
+    }
+  }
+
+  static void validateStarterTemplatePlaceholders(TaskDefinition definition) {
+    String requestText = definition.requestTemplate().toString();
+    if (requestText.contains("TODO_")) {
+      throw new IllegalStateException(
+          "Task "
+              + definition.task().id()
+              + " starter request template contains unresolved TODO placeholders");
+    }
+    for (String note : definition.authoringNotes()) {
+      if (note.contains("TODO_")) {
+        throw new IllegalStateException(
+            "Task "
+                + definition.task().id()
+                + " authoring note contains unresolved TODO placeholders");
+      }
+    }
+  }
+
+  static void validateStarterTemplateLookups(TaskDefinition definition) {
+    for (String note : definition.authoringNotes()) {
+      int searchIndex = 0;
+      while (true) {
+        int prefixIndex = note.indexOf(PROTOCOL_OPERATION_PREFIX, searchIndex);
+        if (prefixIndex < 0) {
+          break;
+        }
+        int valueStart = prefixIndex + PROTOCOL_OPERATION_PREFIX.length();
+        int valueEnd = valueStart;
+        while (valueEnd < note.length() && !Character.isWhitespace(note.charAt(valueEnd))) {
+          valueEnd++;
+        }
+        String lookupId = note.substring(valueStart, valueEnd).replaceAll("[.,)]+$", "");
+        if (GridGrindProtocolCatalog.lookupValueFor(lookupId).isEmpty()) {
+          throw new IllegalStateException(
+              "Task "
+                  + definition.task().id()
+                  + " authoring note references unknown protocol lookup "
+                  + lookupId);
+        }
+        searchIndex = valueEnd;
       }
     }
   }

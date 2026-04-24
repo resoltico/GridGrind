@@ -119,6 +119,11 @@ class CliArgumentsTest {
   }
 
   @Test
+  void bareHelpAliasParsesIntoHelpCommand() {
+    assertInstanceOf(CliCommand.Help.class, CliArguments.parse(new String[] {"help"}));
+  }
+
+  @Test
   void doctorRequestRejectsUnknownTrailingArguments() {
     CliArgumentsException exception =
         assertThrows(

@@ -167,6 +167,16 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
                 val subprojectCoverageVerification =
                     taskPathsByName(coverageSubprojects, "jacocoTestCoverageVerification")
                 val subprojectSpotlessTasks = taskPathsByName(coverageSubprojects, "spotlessJava")
+                val projectFileSpotlessTasks =
+                    listOfNotNull(
+                        tasks.findByName("spotlessProjectFiles"),
+                        tasks.findByName("spotlessProjectFilesCheck"),
+                    )
+                val projectFileSpotlessTaskPaths = projectFileSpotlessTasks.map(Task::getPath).toSet()
+                val allRootAndSubprojectTasks =
+                    (listOf(this@with) + subprojects).flatMap { candidateProject ->
+                        candidateProject.tasks.toList()
+                    }
 
                 jacocoAggregatedReport.configure {
                     dependsOn(subprojectTestTasks)
@@ -175,6 +185,16 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
 
                 coverage.configure {
                     dependsOn(subprojectCoverageVerification + subprojectCoverageReports)
+                }
+
+                // Keep repository-wide project-file formatting on a stable file tree. The target set spans
+                // the whole checkout, so letting compile/test tasks create build outputs in parallel can make
+                // Spotless walk paths that appear or disappear mid-scan.
+                projectFileSpotlessTasks.forEach { projectFileTask ->
+                    allRootAndSubprojectTasks
+                        .asSequence()
+                        .filter { candidateTask -> candidateTask.path !in projectFileSpotlessTaskPaths }
+                        .forEach { candidateTask -> candidateTask.mustRunAfter(projectFileTask) }
                 }
             }
         }

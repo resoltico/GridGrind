@@ -58,8 +58,9 @@ RETRIEVAL_HINTS:
 
 - New to GridGrind: [docs/QUICK_START.md](docs/QUICK_START.md)
 - Want the shipped example map and path rules: [docs/EXAMPLES.md](docs/EXAMPLES.md)
-- Want a quick runtime sanity check: run `java -jar gridgrind.jar` in an interactive terminal. It prints the same help text as `--help` and exits with code `0`.
+- Want a quick runtime sanity check: run `java -jar gridgrind.jar` in an interactive terminal. It prints the same help text as `--help`, and `java -jar gridgrind.jar help` is the explicit equivalent; both exit with code `0`.
 - Want a concrete example first: `gridgrind --print-example BUDGET`, or [examples/budget-request.json](examples/budget-request.json) when you are already in a repo checkout
+- Need to know which built-in examples are fully self-contained versus repo-asset-backed: [docs/EXAMPLES.md](docs/EXAMPLES.md)
 - Want a starter scaffold for a common workbook job: `gridgrind --print-task-catalog`, `gridgrind --print-task-plan PIVOT_REPORT`, or `gridgrind --print-goal-plan "repair workbook comments and copy sheets safely"`
 - Want Java instead of hand-written JSON: [docs/JAVA_AUTHORING.md](docs/JAVA_AUTHORING.md) and [examples/java-authoring-workflow.java](examples/java-authoring-workflow.java)
 - Want a no-save health-check example: [examples/workbook-health-request.json](examples/workbook-health-request.json)

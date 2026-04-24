@@ -8,14 +8,11 @@ import static dev.erst.gridgrind.contract.catalog.GridGrindTaskDefinitionSupport
 import static dev.erst.gridgrind.contract.catalog.GridGrindTaskDefinitionSupport.task;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
-import dev.erst.gridgrind.contract.dto.CustomXmlImportInput;
-import dev.erst.gridgrind.contract.dto.CustomXmlMappingLocator;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
 import dev.erst.gridgrind.contract.query.InspectionQuery;
 import dev.erst.gridgrind.contract.selector.CellSelector;
 import dev.erst.gridgrind.contract.selector.DrawingObjectSelector;
 import dev.erst.gridgrind.contract.selector.SheetSelector;
-import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.util.List;
 
 /** Contract-owned task definitions for maintenance, XML, audit, and drawing workflows. */
@@ -110,7 +107,7 @@ final class GridGrindWorkbookTaskDefinitions {
                 + " only add mutations later if the audit calls for them.",
             protocolLookupNote(
                 "assertion shapes",
-                List.of("assertionTypes:EXPECT_PRESENT", "assertionTypes:EXPECT_EQUALS"),
+                List.of("assertionTypes:EXPECT_PRESENT", "assertionTypes:EXPECT_CELL_VALUE"),
                 List.of("assertion"))));
   }
 
@@ -176,32 +173,18 @@ final class GridGrindWorkbookTaskDefinitions {
             ExamplePlanSupport.read(
                 "discover-mappings",
                 ExamplePlanSupport.workbook(),
-                new InspectionQuery.GetCustomXmlMappings()),
-            ExamplePlanSupport.read(
-                "export-before-import",
-                ExamplePlanSupport.workbook(),
-                new InspectionQuery.ExportCustomXmlMapping(
-                    new CustomXmlMappingLocator(1L, "TODO_MAPPING_NAME"), true, "UTF-8")),
-            ExamplePlanSupport.step(
-                "import-xml",
-                ExamplePlanSupport.workbook(),
-                new MutationAction.ImportCustomXmlMapping(
-                    new CustomXmlImportInput(
-                        new CustomXmlMappingLocator(1L, "TODO_MAPPING_NAME"),
-                        TextSourceInput.utf8File("custom-xml-update.xml")))),
-            ExamplePlanSupport.read(
-                "export-after-import",
-                ExamplePlanSupport.workbook(),
-                new InspectionQuery.ExportCustomXmlMapping(
-                    new CustomXmlMappingLocator(1L, "TODO_MAPPING_NAME"), true, "UTF-8"))),
+                new InspectionQuery.GetCustomXmlMappings())),
         List.of(
-            "Replace mapped-workbook.xlsx, TODO_MAPPING_NAME, and the map id with the facts from"
-                + " discover-mappings before you execute the import step.",
+            "Replace mapped-workbook.xlsx with the mapped workbook you want to inspect.",
+            "Run discover-mappings first, then add EXPORT_CUSTOM_XML_MAPPING and"
+                + " IMPORT_CUSTOM_XML_MAPPING steps with the exact locator returned by that"
+                + " discovery output.",
             "The starter plan uses SAVE_AS so XML imports do not have to overwrite the source"
                 + " workbook.",
             protocolLookupNote(
-                "mapping and export payload shapes",
+                "mapping discovery, export, and import shapes",
                 List.of(
+                    "inspectionQueryTypes:GET_CUSTOM_XML_MAPPINGS",
                     "mutationActionTypes:IMPORT_CUSTOM_XML_MAPPING",
                     "inspectionQueryTypes:EXPORT_CUSTOM_XML_MAPPING"),
                 List.of("custom xml"))));
