@@ -7,98 +7,100 @@ import dev.erst.gridgrind.contract.dto.NamedRangeScope;
 import dev.erst.gridgrind.contract.dto.PivotTableInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Mutation and assertion diagnostic field extraction for execution journal contexts. */
 final class ExecutionActionDiagnosticFields {
   private ExecutionActionDiagnosticFields() {}
 
-  static String sheetNameFor(MutationAction action) {
+  static Optional<String> sheetNameFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
     if (action instanceof MutationAction.SetTable setTable) {
-      return setTable.table().sheetName();
+      return Optional.of(setTable.table().sheetName());
     }
     if (action instanceof MutationAction.SetPivotTable setPivotTable) {
-      return setPivotTable.pivotTable().sheetName();
+      return Optional.of(setPivotTable.pivotTable().sheetName());
     }
     if (action instanceof MutationAction.SetNamedRange setNamedRange) {
-      return setNamedRange.target().sheetName() != null
-          ? setNamedRange.target().sheetName()
-          : sheetNameFor(setNamedRange.scope());
+      return Optional.ofNullable(setNamedRange.target().sheetName())
+          .or(() -> sheetNameFor(setNamedRange.scope()));
     }
-    return null;
+    return Optional.empty();
   }
 
-  static String addressFor(MutationAction action) {
+  static Optional<String> addressFor(MutationAction action) {
     if (action instanceof MutationAction.SetPivotTable setPivotTable) {
-      return setPivotTable.pivotTable().anchor().topLeftAddress();
+      return Optional.of(setPivotTable.pivotTable().anchor().topLeftAddress());
     }
-    return null;
+    return Optional.empty();
   }
 
-  static String rangeFor(MutationAction action) {
+  static Optional<String> rangeFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
     if (action instanceof MutationAction.SetTable setTable) {
-      return setTable.table().range();
+      return Optional.of(setTable.table().range());
     }
     if (action instanceof MutationAction.SetPivotTable setPivotTable) {
       if (setPivotTable.pivotTable().source() instanceof PivotTableInput.Source.Range range) {
-        return range.range();
+        return Optional.of(range.range());
       }
-      return null;
+      return Optional.empty();
     }
     if (action instanceof MutationAction.SetNamedRange setNamedRange) {
-      return setNamedRange.target().range();
+      return Optional.ofNullable(setNamedRange.target().range());
     }
     if (action instanceof MutationAction.SetConditionalFormatting setConditionalFormatting) {
       return setConditionalFormatting.conditionalFormatting().ranges().size() == 1
-          ? setConditionalFormatting.conditionalFormatting().ranges().getFirst()
-          : null;
+          ? Optional.of(setConditionalFormatting.conditionalFormatting().ranges().getFirst())
+          : Optional.empty();
     }
-    return null;
+    return Optional.empty();
   }
 
-  static String formulaFor(MutationAction action) {
+  static Optional<String> formulaFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
     if (action instanceof MutationAction.SetCell setCell) {
-      return setCell.value() instanceof CellInput.Formula formula ? inlineFormula(formula) : null;
+      return setCell.value() instanceof CellInput.Formula formula
+          ? inlineFormula(formula)
+          : Optional.empty();
     }
     if (action instanceof MutationAction.SetNamedRange setNamedRange) {
-      return setNamedRange.target().formula();
+      return Optional.ofNullable(setNamedRange.target().formula());
     }
-    return null;
+    return Optional.empty();
   }
 
-  static String formulaFor(Assertion assertion) {
+  static Optional<String> formulaFor(Assertion assertion) {
     if (assertion instanceof Assertion.FormulaText formulaText) {
-      return formulaText.formula();
+      return Optional.of(formulaText.formula());
     }
-    return null;
+    return Optional.empty();
   }
 
-  static String namedRangeNameFor(MutationAction action) {
+  static Optional<String> namedRangeNameFor(MutationAction action) {
     Objects.requireNonNull(action, "action must not be null");
     if (action instanceof MutationAction.SetNamedRange setNamedRange) {
-      return setNamedRange.name();
+      return Optional.of(setNamedRange.name());
     }
     if (action instanceof MutationAction.SetPivotTable setPivotTable
         && setPivotTable.pivotTable().source()
             instanceof PivotTableInput.Source.NamedRange namedRange) {
-      return namedRange.name();
+      return Optional.of(namedRange.name());
     }
-    return null;
+    return Optional.empty();
   }
 
-  private static String inlineFormula(CellInput.Formula formula) {
+  private static Optional<String> inlineFormula(CellInput.Formula formula) {
     if (formula.source() instanceof TextSourceInput.Inline inline) {
-      return inline.text();
+      return Optional.of(inline.text());
     }
-    return null;
+    return Optional.empty();
   }
 
-  private static String sheetNameFor(NamedRangeScope scope) {
+  private static Optional<String> sheetNameFor(NamedRangeScope scope) {
     return switch (scope) {
-      case NamedRangeScope.Workbook _ -> null;
-      case NamedRangeScope.Sheet sheet -> sheet.sheetName();
+      case NamedRangeScope.Workbook _ -> Optional.empty();
+      case NamedRangeScope.Sheet sheet -> Optional.of(sheet.sheetName());
     };
   }
 }

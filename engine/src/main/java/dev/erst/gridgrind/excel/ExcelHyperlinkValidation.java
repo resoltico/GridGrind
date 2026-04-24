@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /** Package-private non-throwing hyperlink target checks reused by authoring and analysis paths. */
@@ -54,15 +55,15 @@ final class ExcelHyperlinkValidation {
     return ExcelFileHyperlinkTargets.normalizePath(target);
   }
 
-  static String absoluteUriScheme(String target) {
+  static Optional<String> absoluteUriScheme(String target) {
     if (target == null || target.isBlank()) {
-      return null;
+      return Optional.empty();
     }
     try {
       URI uri = URI.create(target);
-      return uri.isAbsolute() ? uri.getScheme() : null;
+      return uri.isAbsolute() ? Optional.ofNullable(uri.getScheme()) : Optional.empty();
     } catch (IllegalArgumentException exception) {
-      return null;
+      return Optional.empty();
     }
   }
 

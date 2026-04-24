@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Advanced"
       }
     },
@@ -183,7 +183,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "A1:D6"
       }
@@ -299,7 +299,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "F1:H5"
       }
@@ -415,7 +415,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "J1:L6"
       }
@@ -530,7 +530,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "N1:Q5"
       }
@@ -570,7 +570,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "S1:S3"
       }
@@ -624,7 +624,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Advanced",
         "address": "B4"
       }
@@ -707,7 +707,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Advanced"
       }
     },
@@ -735,7 +735,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "S2:S2"
       }
@@ -769,7 +769,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "S3:S3"
       }
@@ -787,7 +787,7 @@
         }
       },
       "target": {
-        "type": "WORKBOOK_SCOPE",
+        "type": "NAMED_RANGE_WORKBOOK_SCOPE",
         "name": "AdvancedHoursTotal"
       }
     },
@@ -806,7 +806,7 @@
         }
       },
       "target": {
-        "type": "SHEET_SCOPE",
+        "type": "NAMED_RANGE_SHEET_SCOPE",
         "name": "AdvancedQueue",
         "sheetName": "Advanced"
       }
@@ -849,7 +849,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "D2:D5"
       }
@@ -887,7 +887,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "F1:H5"
       }
@@ -933,7 +933,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME_ON_SHEET",
+        "type": "TABLE_BY_NAME_ON_SHEET",
         "name": "AdvancedSales",
         "sheetName": "Advanced"
       }
@@ -978,7 +978,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Advanced"
       }
     },
@@ -1011,7 +1011,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Advanced"
       }
     },
@@ -1049,7 +1049,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Advanced"
       }
     },
@@ -1073,7 +1073,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Advanced"
       }
     },
@@ -1101,7 +1101,7 @@
         "password": "Sheet-2026"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Advanced"
       }
     },
@@ -1118,7 +1118,7 @@
         }
       },
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     },
     {
@@ -1127,7 +1127,7 @@
       },
       "stepId": "workbook",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     },
     {
@@ -1136,7 +1136,7 @@
       },
       "stepId": "workbook-protection",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     },
     {
@@ -1145,7 +1145,7 @@
       },
       "stepId": "sheet-summary",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Advanced"
       }
     },
@@ -1155,7 +1155,7 @@
       },
       "stepId": "cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Advanced",
         "addresses": [
           "B4",
@@ -1170,7 +1170,7 @@
       },
       "stepId": "comments",
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Advanced",
         "address": "B4"
       }
@@ -1181,7 +1181,7 @@
       },
       "stepId": "print-layout",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Advanced"
       }
     },
@@ -1191,7 +1191,7 @@
       },
       "stepId": "named-ranges",
       "target": {
-        "type": "ALL"
+        "type": "NAMED_RANGE_ALL"
       }
     },
     {
@@ -1200,7 +1200,7 @@
       },
       "stepId": "data-validations",
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "D2:D5"
       }
@@ -1211,7 +1211,7 @@
       },
       "stepId": "autofilters",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Advanced"
       }
     },
@@ -1221,7 +1221,7 @@
       },
       "stepId": "tables",
       "target": {
-        "type": "BY_NAMES",
+        "type": "TABLE_BY_NAMES",
         "names": [
           "AdvancedSales"
         ]
@@ -1233,7 +1233,7 @@
       },
       "stepId": "conditional-formatting",
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Advanced",
         "range": "N2:Q5"
       }
@@ -1244,7 +1244,7 @@
       },
       "stepId": "findings",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     }
   ],

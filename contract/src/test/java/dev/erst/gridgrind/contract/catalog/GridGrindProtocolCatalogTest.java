@@ -44,7 +44,9 @@ class GridGrindProtocolCatalogTest {
     assertFalse(catalog.cliSurface().limits().entries().isEmpty());
     assertEquals("Usage", catalog.cliSurface().usage().label());
     assertEquals(
-        "gridgrind --print-example " + GridGrindShippedExamples.examples().getFirst().id(),
+        "gridgrind --print-example "
+            + GridGrindShippedExamples.examples().getFirst().id()
+            + " --response example.json",
         catalog.cliSurface().discovery().printOneExampleCommand());
     assertTrue(GridGrindProtocolCatalog.entryFor("MUTATION").isPresent());
     assertTrue(GridGrindProtocolCatalog.entryFor("ASSERTION").isPresent());
@@ -99,29 +101,49 @@ class GridGrindProtocolCatalogTest {
     assertEquals("ChartInput", chartInput.type().id());
     assertEquals(catalog, decoded);
     assertEquals(
-        List.of(new TargetSelectorEntry("TableSelector", List.of("BY_NAME_ON_SHEET"))),
+        List.of(new TargetSelectorEntry("TableSelector", List.of("TABLE_BY_NAME_ON_SHEET"))),
         GridGrindProtocolCatalog.entryFor("SET_TABLE").orElseThrow().targetSelectors());
     assertEquals(
         "Matches the nested analysis query's target selectors.",
         GridGrindProtocolCatalog.entryFor("EXPECT_ANALYSIS_FINDING_PRESENT")
             .orElseThrow()
             .targetSelectorRule());
-    TypeEntry present = GridGrindProtocolCatalog.entryFor("EXPECT_PRESENT").orElseThrow();
+    TypeEntry present = GridGrindProtocolCatalog.entryFor("EXPECT_TABLE_PRESENT").orElseThrow();
     assertEquals(
         List.of(
             new TargetSelectorEntry(
-                "NamedRangeSelector",
-                List.of("ALL", "ANY_OF", "BY_NAME", "BY_NAMES", "WORKBOOK_SCOPE", "SHEET_SCOPE")),
-            new TargetSelectorEntry(
-                "TableSelector", List.of("ALL", "BY_NAME", "BY_NAMES", "BY_NAME_ON_SHEET")),
-            new TargetSelectorEntry(
-                "PivotTableSelector", List.of("ALL", "BY_NAME", "BY_NAMES", "BY_NAME_ON_SHEET")),
-            new TargetSelectorEntry("ChartSelector", List.of("ALL_ON_SHEET", "BY_NAME"))),
+                "TableSelector",
+                List.of("TABLE_ALL", "TABLE_BY_NAME", "TABLE_BY_NAMES", "TABLE_BY_NAME_ON_SHEET"))),
         present.targetSelectors());
-    assertTrue(
-        present
-            .targetSelectorRule()
-            .contains("Shared selector wire types remain family-sensitive"));
+    assertEquals(null, present.targetSelectorRule());
+  }
+
+  @Test
+  void assertionTargetSelectorsNeverReuseOneWireTypeAcrossMultipleFamilies() {
+    for (TypeEntry assertionType : GridGrindProtocolCatalog.catalog().assertionTypes()) {
+      assertSelectorFamiliesDoNotReuseTypeIds(assertionType);
+    }
+  }
+
+  @SuppressWarnings("PMD.UseConcurrentHashMap")
+  private static void assertSelectorFamiliesDoNotReuseTypeIds(TypeEntry assertionType) {
+    Map<String, String> familyByTypeId = new java.util.TreeMap<>();
+    for (TargetSelectorEntry targetSelector : assertionType.targetSelectors()) {
+      for (String typeId : targetSelector.typeIds()) {
+        String previousFamily = familyByTypeId.putIfAbsent(typeId, targetSelector.family());
+        assertEquals(
+            null,
+            previousFamily,
+            () ->
+                assertionType.id()
+                    + " must not reuse selector type "
+                    + typeId
+                    + " across "
+                    + previousFamily
+                    + " and "
+                    + targetSelector.family());
+      }
+    }
   }
 
   @Test
@@ -270,11 +292,11 @@ class GridGrindProtocolCatalogTest {
             "SET_TABLE",
             "summary",
             List.of(),
-            List.of(new TargetSelectorEntry("TableSelector", List.of("BY_NAME_ON_SHEET"))),
+            List.of(new TargetSelectorEntry("TableSelector", List.of("TABLE_BY_NAME_ON_SHEET"))),
             "Requires the table selector family.");
 
     assertEquals(
-        List.of(new TargetSelectorEntry("TableSelector", List.of("BY_NAME_ON_SHEET"))),
+        List.of(new TargetSelectorEntry("TableSelector", List.of("TABLE_BY_NAME_ON_SHEET"))),
         typeEntry.targetSelectors());
     assertEquals("Requires the table selector family.", typeEntry.targetSelectorRule());
     assertEquals(

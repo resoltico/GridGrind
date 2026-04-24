@@ -40,7 +40,7 @@ class WorkbookStepJsonDeserializerTest {
                         requestWithStepBody(
                             """
                     "stepId": "bad",
-                    "target": { "type": "CURRENT" },
+                    "target": { "type": "WORKBOOK_CURRENT" },
                     "query": { "type": "GET_WORKBOOK_SUMMARY" },
                     "legacy": true
                     """)))
@@ -53,7 +53,7 @@ class WorkbookStepJsonDeserializerTest {
                     GridGrindJson.readRequest(
                         requestWithStepBody(
                             """
-                    "target": { "type": "CURRENT" },
+                    "target": { "type": "WORKBOOK_CURRENT" },
                     "query": { "type": "GET_WORKBOOK_SUMMARY" }
                     """)))
             .getMessage());
@@ -78,7 +78,7 @@ class WorkbookStepJsonDeserializerTest {
                         requestWithStepBody(
                             """
                     "stepId": "bad",
-                    "target": { "type": "CURRENT" }
+                    "target": { "type": "WORKBOOK_CURRENT" }
                     """)))
             .getMessage());
     assertEquals(
@@ -90,7 +90,7 @@ class WorkbookStepJsonDeserializerTest {
                         requestWithStepBody(
                             """
                     "stepId": 3,
-                    "target": { "type": "CURRENT" },
+                    "target": { "type": "WORKBOOK_CURRENT" },
                     "query": { "type": "GET_WORKBOOK_SUMMARY" }
                     """)))
             .getMessage());
@@ -105,7 +105,7 @@ class WorkbookStepJsonDeserializerTest {
                     requestWithStepBody(
                         """
                     "stepId": "assert-owner",
-                    "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                    "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                     "assertion": {
                       "type": "EXPECT_CELL_VALUE",
                       "expectedValue": { "type": "TEXT", "text": "Owner" }
@@ -126,7 +126,7 @@ class WorkbookStepJsonDeserializerTest {
                     requestWithStepBody(
                         """
                         "stepId": "set-cell",
-                        "target": { "type": "CURRENT" },
+                        "target": { "type": "WORKBOOK_CURRENT" },
                         "action": {
                           "type": "SET_CELL",
                           "value": {
@@ -143,16 +143,16 @@ class WorkbookStepJsonDeserializerTest {
                     requestWithStepBody(
                         """
                         "stepId": "window",
-                        "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                        "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                         "query": { "type": "GET_WINDOW" }
                         """)));
 
     assertEquals(
-        "Target selector type 'CURRENT' is not allowed for this step; allowed targets: CellSelector(BY_ADDRESS); TableCellSelector(BY_COLUMN_NAME)",
+        "Target selector type 'WORKBOOK_CURRENT' is not allowed for this step; allowed targets: CellSelector(CELL_BY_ADDRESS); TableCellSelector(TABLE_CELL_BY_COLUMN_NAME)",
         wrongMutationTarget.getMessage());
     assertEquals("steps[0].target", wrongMutationTarget.jsonPath());
     assertEquals(
-        "Target selector type 'BY_ADDRESS' is not allowed for this step; allowed targets: RangeSelector(RECTANGULAR_WINDOW)",
+        "Target selector type 'CELL_BY_ADDRESS' is not allowed for this step; allowed targets: RangeSelector(RANGE_RECTANGULAR_WINDOW)",
         wrongInspectionTarget.getMessage());
     assertEquals("steps[0].target", wrongInspectionTarget.jsonPath());
   }
@@ -210,12 +210,34 @@ class WorkbookStepJsonDeserializerTest {
     assertEquals("steps[0].target", missingTargetType.jsonPath());
     assertEquals("Field 'type' must be a string", nonStringTargetType.getMessage());
     assertEquals("steps[0].target", nonStringTargetType.jsonPath());
-    assertEquals("Unknown type value 'BY_RIDDLE'", unknownTargetType.getMessage());
+    assertEquals(
+        "Unknown target selector type 'BY_RIDDLE'; allowed targets: WorkbookSelector(WORKBOOK_CURRENT)",
+        unknownTargetType.getMessage());
     assertEquals("steps[0].target", unknownTargetType.jsonPath());
   }
 
   @Test
-  void reportsAmbiguousByNameTargetsWithOneProductOwnedMessage() {
+  void reportsLegacyGenericTargetIdsWithFamilySpecificGuidance() {
+    InvalidRequestShapeException legacyTargetType =
+        assertThrows(
+            InvalidRequestShapeException.class,
+            () ->
+                GridGrindJson.readRequest(
+                    requestWithStepBody(
+                        """
+                        "stepId": "bad-target",
+                        "target": { "type": "BY_NAME" },
+                        "query": { "type": "GET_WORKBOOK_SUMMARY" }
+                        """)));
+
+    assertEquals(
+        "Unknown target selector type 'BY_NAME'; target selector ids are family-specific; allowed targets: WorkbookSelector(WORKBOOK_CURRENT)",
+        legacyTargetType.getMessage());
+    assertEquals("steps[0].target", legacyTargetType.jsonPath());
+  }
+
+  @Test
+  void reportsWrongShapeWithinOneSelectorFamilyAgainstTheTargetField() {
     InvalidRequestShapeException wrongShapeByName =
         assertThrows(
             InvalidRequestShapeException.class,
@@ -223,35 +245,26 @@ class WorkbookStepJsonDeserializerTest {
                 GridGrindJson.readRequest(
                     requestWithStepBody(
                         """
-                        "stepId": "assert-present",
-                        "target": { "type": "BY_NAME", "sheetName": "Ops" },
-                        "assertion": { "type": "EXPECT_PRESENT" }
+                        "stepId": "assert-table-present",
+                        "target": { "type": "TABLE_BY_NAME", "sheetName": "Ops" },
+                        "assertion": { "type": "EXPECT_TABLE_PRESENT" }
                         """)));
 
-    assertEquals(
-        "Target selector type 'BY_NAME' has the wrong shape for this step; none of the matching selector families accepted the authored fields. Matching families: NamedRangeSelector(BY_NAME); TableSelector(BY_NAME); PivotTableSelector(BY_NAME); ChartSelector(BY_NAME)",
-        wrongShapeByName.getMessage());
+    assertEquals("Missing required field 'name'", wrongShapeByName.getMessage());
     assertEquals("steps[0].target", wrongShapeByName.jsonPath());
   }
 
   @Test
-  void rejectsSharedSelectorWireShapesThatMatchMultipleFamilies() {
-    InvalidRequestShapeException ambiguousByName =
-        assertThrows(
-            InvalidRequestShapeException.class,
-            () ->
-                GridGrindJson.readRequest(
-                    requestWithStepBody(
-                        """
-                        "stepId": "assert-present",
-                        "target": { "type": "BY_NAME", "name": "ExpensePivot" },
-                        "assertion": { "type": "EXPECT_PRESENT" }
-                        """)));
-
-    assertEquals(
-        "Target selector type 'BY_NAME' is ambiguous for this step; the authored object matches multiple selector families: NamedRangeSelector(BY_NAME); TableSelector(BY_NAME); PivotTableSelector(BY_NAME)",
-        ambiguousByName.getMessage());
-    assertEquals("steps[0].target", ambiguousByName.jsonPath());
+  void readsFamilySpecificPresenceAssertionsWithoutSharedSelectorAmbiguity() {
+    assertDoesNotThrow(
+        () ->
+            GridGrindJson.readRequest(
+                requestWithStepBody(
+                    """
+                    "stepId": "assert-pivot-present",
+                    "target": { "type": "PIVOT_TABLE_BY_NAME", "name": "ExpensePivot" },
+                    "assertion": { "type": "EXPECT_PIVOT_TABLE_PRESENT" }
+                    """)));
   }
 
   @Test
@@ -260,7 +273,7 @@ class WorkbookStepJsonDeserializerTest {
         TableSelector.ByName.class,
         WorkbookStepJsonDeserializer.castSelectorType(TableSelector.ByName.class));
     assertEquals(
-        "TableSelector(BY_NAME, BY_NAME_ON_SHEET)",
+        "TableSelector(TABLE_BY_NAME, TABLE_BY_NAME_ON_SHEET)",
         WorkbookStepJsonDeserializer.selectorFamilySummary(
             List.of(
                 (Class<? extends Selector>) TableSelector.ByName.class,

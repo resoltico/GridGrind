@@ -7,14 +7,14 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 2369,
+      "inputBytes" : 2422,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "NONE",
       "operationCount" : 5,
       "operationKinds" : {
-        "ENSURE_SHEET" : 2,
-        "SET_CELL" : 3
+        "SET_CELL" : 3,
+        "ENSURE_SHEET" : 2
       },
       "styleKinds" : { },
       "assertionCount" : 0,
@@ -22,9 +22,9 @@
       "readCount" : 4,
       "readKinds" : {
         "GET_CELLS" : 1,
-        "ANALYZE_WORKBOOK_FINDINGS" : 1,
+        "ANALYZE_FORMULA_HEALTH" : 1,
         "GET_SHEET_SUMMARY" : 1,
-        "ANALYZE_FORMULA_HEALTH" : 1
+        "ANALYZE_WORKBOOK_FINDINGS" : 1
       }
     }
   },

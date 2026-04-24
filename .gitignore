@@ -36,8 +36,13 @@ replay_pid*
 
 # OS and local scratch files
 .claude/
-.codex/
 .gemini/
+
+# Repository-owned agent instructions are source files, not local assistant scratch.
+!/AGENTS.md
+!/.codex/
+!/.codex/**
+
 .DS_Store
 *.swp
 *.swo

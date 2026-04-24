@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: LIMITATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, limitations, limits, constraints, cell count, row count, column count, window, sheet name, memory, oom, apache poi, xlsx, excel, max rows, max columns, max cells, max styles, hyperlinks, formula, row height, column width, zoom]
   questions: ["what are the gridgrind limits", "how many rows does gridgrind support", "how many columns does gridgrind support", "what is the maximum window size", "why does gridgrind reject large windows", "what is the cell limit", "what are excel limits", "what are apache poi limits", "does gridgrind support xls", "what is the sheet name limit", "what is the column width limit", "what is the row height limit", "what is the zoom limit"]
@@ -295,17 +295,18 @@ effective limit when writing via GridGrind.
 | Field | Value |
 |:------|:------|
 | **Category** | GridGrind |
-| **Limit** | Row or column structural edits are rejected when they would move or truncate a table, sheet-owned autofilter, or data validation |
+| **Limit** | Structural inserts are rejected when they would move a table or sheet-owned autofilter; structural deletes and shifts are also rejected when they would move or truncate a data validation |
 | **Error** | `INVALID_REQUEST` |
 | **Message** | Product-owned `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, or `SHIFT_COLUMNS` message naming the affected structure and sheet |
 | **Applies to** | `INSERT_ROWS`, `DELETE_ROWS`, `SHIFT_ROWS`, `INSERT_COLUMNS`, `DELETE_COLUMNS`, `SHIFT_COLUMNS` |
 | **Code** | `ExcelRowColumnStructureController.rejectAffectedRowStructuresFor*`; `ExcelRowColumnStructureController.rejectAffectedColumnStructuresFor*` |
 | **UX** | `--help` Limits section; structural-edit catalog summaries |
 
-Apache POI 5.5.1 does not reliably normalize table refs, sheet autofilter refs, or data-validation
-coverage when rows or columns are structurally inserted, deleted, or shifted. GridGrind rejects
-those edits instead of persisting stale workbook XML or silently moving only part of the owned
-structure.
+Apache POI 5.5.1 does not reliably normalize table refs or sheet autofilter refs when rows or
+columns are structurally inserted, deleted, or shifted, and it still leaves data-validation
+coverage unsafe for delete and shift flows. GridGrind now rebuilds data validations across row and
+column inserts, but it still rejects the remaining unsafe structural edits instead of persisting
+stale workbook XML or silently moving only part of the owned structure.
 
 The rejection is precise and structure-owned. Example messages include:
 - `INSERT_ROWS cannot move table 'BudgetTable' on sheet 'Budget'; row structural edits that would move tables are not supported`

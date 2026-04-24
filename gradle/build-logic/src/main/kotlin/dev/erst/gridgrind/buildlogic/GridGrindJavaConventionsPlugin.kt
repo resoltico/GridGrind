@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.buildlogic
 
 import com.diffplug.gradle.spotless.SpotlessExtension
+import java.io.File
 import java.math.BigDecimal
 import org.gradle.api.Action
 import org.gradle.api.Plugin
@@ -151,6 +152,15 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
             tasks.withType(Test::class.java).configureEach(
                 object : Action<Test> {
                     override fun execute(test: Test) {
+                        val jacocoDestinationFile = jacocoExecutionDataFile(repositoryLayout, test)
+                        val jacoco = test.extensions.getByType(JacocoTaskExtension::class.java)
+                        jacoco.destinationFile = jacocoDestinationFile
+                        test.doFirst {
+                            jacocoDestinationFile.parentFile.mkdirs()
+                            if (jacocoDestinationFile.exists()) {
+                                jacocoDestinationFile.delete()
+                            }
+                        }
                         test.useJUnitPlatform()
 
                         val progressPulseEnabled =
@@ -248,5 +258,23 @@ class GridGrindJavaConventionsPlugin : Plugin<Project> {
                 },
             )
         }
+    }
+
+    private fun jacocoExecutionDataFile(
+        repositoryLayout: GridGrindRepositoryLayout,
+        test: Test,
+    ): File {
+        val repositoryId =
+            Integer.toUnsignedString(repositoryLayout.repositoryRoot.absolutePath.hashCode(), 16)
+        val buildId = test.project.rootProject.name.replace(Regex("[^A-Za-z0-9._-]"), "-")
+        val projectPath =
+            test.project.path.removePrefix(":").replace(':', File.separatorChar).ifBlank { "root" }
+        return File(
+            File(
+                File(System.getProperty("java.io.tmpdir"), "gridgrind-jacoco"),
+                "${buildId}-${repositoryId}",
+            ),
+            "${projectPath}${File.separator}${test.name}.exec",
+        )
     }
 }

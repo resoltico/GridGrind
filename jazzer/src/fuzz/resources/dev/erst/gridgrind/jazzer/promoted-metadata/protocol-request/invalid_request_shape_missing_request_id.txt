@@ -4,7 +4,7 @@ Harness: protocol-request
 Outcome: EXPECTED_INVALID
 Kind: InvalidRequestShapeException
 Message: Missing required field 'stepId'
-Input Bytes: 257
+Input Bytes: 266
 Decode Outcome: INVALID_REQUEST_SHAPE
 Source Kind: NOT_PARSED
 Persistence Kind: NOT_PARSED

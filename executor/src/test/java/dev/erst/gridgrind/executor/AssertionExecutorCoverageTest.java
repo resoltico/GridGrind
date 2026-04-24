@@ -194,15 +194,15 @@ class AssertionExecutorCoverageTest {
                         assertThat(
                             "present-named-range",
                             new NamedRangeSelector.WorkbookScope("BudgetTotal"),
-                            new Assertion.Present()),
+                            new Assertion.NamedRangePresent()),
                         assertThat(
                             "absent-named-range",
                             new NamedRangeSelector.WorkbookScope("MissingTotal"),
-                            new Assertion.Absent()),
+                            new Assertion.NamedRangeAbsent()),
                         assertThat(
                             "present-table",
                             new TableSelector.ByName("BudgetTable"),
-                            new Assertion.Present()),
+                            new Assertion.TablePresent()),
                         assertThat(
                             "cell-text",
                             new CellSelector.ByAddress("Budget", "A2"),
@@ -464,8 +464,8 @@ class AssertionExecutorCoverageTest {
             workbookPath,
             "present-missing-range",
             new NamedRangeSelector.WorkbookScope("MissingTotal"),
-            new Assertion.Present());
-    assertTrue(presentMissing.problem().message().contains("EXPECT_PRESENT"));
+            new Assertion.NamedRangePresent());
+    assertTrue(presentMissing.problem().message().contains("EXPECT_NAMED_RANGE_PRESENT"));
     assertEquals(
         List.of(),
         assertInstanceOf(
@@ -479,8 +479,8 @@ class AssertionExecutorCoverageTest {
             workbookPath,
             "absent-table",
             new TableSelector.ByName("BudgetTable"),
-            new Assertion.Absent());
-    assertTrue(absentTable.problem().message().contains("EXPECT_ABSENT"));
+            new Assertion.TableAbsent());
+    assertTrue(absentTable.problem().message().contains("EXPECT_TABLE_ABSENT"));
 
     GridGrindResponse.Failure styleMismatch =
         assertionFailure(
@@ -828,11 +828,11 @@ class AssertionExecutorCoverageTest {
                         assertThat(
                             "chart-present",
                             new ChartSelector.ByName("Ops", charts.charts().getFirst().name()),
-                            new Assertion.Present()),
+                            new Assertion.ChartPresent()),
                         assertThat(
                             "chart-absent",
                             new ChartSelector.ByName("Ops", "MissingChart"),
-                            new Assertion.Absent())),
+                            new Assertion.ChartAbsent())),
                     List.of())));
     assertEquals(3, asserted.assertions().size());
 
@@ -851,11 +851,11 @@ class AssertionExecutorCoverageTest {
                         assertThat(
                             "pivot-present",
                             new PivotTableSelector.ByName(pivots.pivotTables().getFirst().name()),
-                            new Assertion.Present()),
+                            new Assertion.PivotTablePresent()),
                         assertThat(
                             "pivot-absent",
                             new PivotTableSelector.ByName("Missing Pivot"),
-                            new Assertion.Absent())),
+                            new Assertion.PivotTableAbsent())),
                     List.of())));
     assertEquals(3, pivotAssertions.assertions().size());
 
@@ -999,29 +999,32 @@ class AssertionExecutorCoverageTest {
     for (InspectionResult.Analysis analysis : analyses) {
       assertEquals(summary, AssertionExecutor.analysisSummary(analysis));
       assertEquals(List.of(finding), AssertionExecutor.analysisFindings(analysis));
-      assertEquals(AnalysisSeverity.ERROR, AssertionExecutor.highestSeverity(analysis));
+      assertEquals(
+          java.util.Optional.of(AnalysisSeverity.ERROR),
+          AssertionExecutor.highestSeverity(analysis));
     }
 
-    assertEquals(-1, AssertionExecutor.severityRank(null));
-    assertEquals(0, AssertionExecutor.severityRank(AnalysisSeverity.INFO));
-    assertEquals(1, AssertionExecutor.severityRank(AnalysisSeverity.WARNING));
-    assertEquals(2, AssertionExecutor.severityRank(AnalysisSeverity.ERROR));
+    assertEquals(-1, AssertionExecutor.severityRank(java.util.Optional.empty()));
+    assertEquals(0, AssertionExecutor.severityRank(java.util.Optional.of(AnalysisSeverity.INFO)));
     assertEquals(
-        AnalysisSeverity.WARNING,
+        1, AssertionExecutor.severityRank(java.util.Optional.of(AnalysisSeverity.WARNING)));
+    assertEquals(2, AssertionExecutor.severityRank(java.util.Optional.of(AnalysisSeverity.ERROR)));
+    assertEquals(
+        java.util.Optional.of(AnalysisSeverity.WARNING),
         AssertionExecutor.highestSeverity(
             new InspectionResult.FormulaHealthResult(
                 "warning",
                 new GridGrindResponse.FormulaHealthReport(
                     1, new AnalysisSummaryReport(1, 0, 1, 0), List.of()))));
     assertEquals(
-        AnalysisSeverity.INFO,
+        java.util.Optional.of(AnalysisSeverity.INFO),
         AssertionExecutor.highestSeverity(
             new InspectionResult.FormulaHealthResult(
                 "info",
                 new GridGrindResponse.FormulaHealthReport(
                     1, new AnalysisSummaryReport(1, 0, 0, 1), List.of()))));
     assertEquals(
-        null,
+        java.util.Optional.empty(),
         AssertionExecutor.highestSeverity(
             new InspectionResult.FormulaHealthResult(
                 "clean",
@@ -1237,7 +1240,7 @@ class AssertionExecutorCoverageTest {
                 ExecutionModeInput.WriteMode.STREAMING_WRITE)));
 
     assertEquals("2+3", ExecutionDiagnosticFields.formulaFor(new Assertion.FormulaText("2+3")));
-    assertEquals(null, ExecutionDiagnosticFields.formulaFor(new Assertion.Present()));
+    assertEquals(null, ExecutionDiagnosticFields.formulaFor(new Assertion.TablePresent()));
 
     assertTrue(
         executor

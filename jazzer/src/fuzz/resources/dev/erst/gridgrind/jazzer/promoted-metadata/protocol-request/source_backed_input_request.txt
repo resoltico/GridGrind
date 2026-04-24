@@ -2,7 +2,7 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/source_backed_input_request.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 1894
+Input Bytes: 1911
 Decode Outcome: PARSED
 Source Kind: NEW
 Persistence Kind: NONE
@@ -12,4 +12,4 @@ Read Count: 0
 Assertion Kinds: (none)
 Read Kinds: (none)
 Style Kinds: (none)
-Operation Kinds: ENSURE_SHEET=1, SET_CELL=1, SET_EMBEDDED_OBJECT=1
+Operation Kinds: SET_EMBEDDED_OBJECT=1, SET_CELL=1, ENSURE_SHEET=1

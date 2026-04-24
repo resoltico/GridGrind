@@ -20,7 +20,7 @@
       },
       "stepId": "summary",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     },
     {
@@ -29,7 +29,7 @@
       },
       "stepId": "summary",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     }
   ]

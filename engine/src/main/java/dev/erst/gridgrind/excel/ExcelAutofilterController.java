@@ -1,9 +1,9 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Name;
 import org.apache.poi.xssf.model.StylesTable;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -338,26 +338,28 @@ final class ExcelAutofilterController {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(autoFilter, "autoFilter must not be null");
 
-    return Arrays.stream(autoFilter.getFilterColumnArray())
+    return java.util.Arrays.stream(autoFilter.getFilterColumnArray())
         .map(filterColumn -> filterColumnSnapshot(workbook, filterColumn))
         .toList();
   }
 
-  ExcelAutofilterSortStateSnapshot sortState(XSSFWorkbook workbook, CTAutoFilter autoFilter) {
+  Optional<ExcelAutofilterSortStateSnapshot> sortState(
+      XSSFWorkbook workbook, CTAutoFilter autoFilter) {
     Objects.requireNonNull(workbook, "workbook must not be null");
     Objects.requireNonNull(autoFilter, "autoFilter must not be null");
     if (!autoFilter.isSetSortState()) {
-      return null;
+      return Optional.empty();
     }
     CTSortState sortState = autoFilter.getSortState();
-    return new ExcelAutofilterSortStateSnapshot(
-        Objects.requireNonNullElse(sortState.getRef(), ""),
-        sortState.isSetCaseSensitive() && sortState.getCaseSensitive(),
-        sortState.isSetColumnSort() && sortState.getColumnSort(),
-        sortState.isSetSortMethod() ? sortState.getSortMethod().toString() : "",
-        Arrays.stream(sortState.getSortConditionArray())
-            .map(condition -> sortConditionSnapshot(workbook, condition))
-            .toList());
+    return Optional.of(
+        new ExcelAutofilterSortStateSnapshot(
+            Objects.requireNonNullElse(sortState.getRef(), ""),
+            sortState.isSetCaseSensitive() && sortState.getCaseSensitive(),
+            sortState.isSetColumnSort() && sortState.getColumnSort(),
+            sortState.isSetSortMethod() ? sortState.getSortMethod().toString() : "",
+            java.util.Arrays.stream(sortState.getSortConditionArray())
+                .map(condition -> sortConditionSnapshot(workbook, condition))
+                .toList()));
   }
 
   private static ExcelAutofilterFilterColumnSnapshot filterColumnSnapshot(
@@ -410,7 +412,7 @@ final class ExcelAutofilterController {
   static ExcelAutofilterFilterCriterionSnapshot customCriterion(CTCustomFilters customFilters) {
     return new ExcelAutofilterFilterCriterionSnapshot.Custom(
         customFilters.isSetAnd() && customFilters.getAnd(),
-        Arrays.stream(customFilters.getCustomFilterArray())
+        java.util.Arrays.stream(customFilters.getCustomFilterArray())
             .map(ExcelAutofilterController::customCondition)
             .toList());
   }
@@ -444,9 +446,10 @@ final class ExcelAutofilterController {
         colorFilter.isSetCellColor() && colorFilter.getCellColor(),
         colorFilter.isSetDxfId()
             ? dxfColor(
-                workbook,
-                colorFilter.getDxfId(),
-                colorFilter.isSetCellColor() && colorFilter.getCellColor())
+                    workbook,
+                    colorFilter.getDxfId(),
+                    colorFilter.isSetCellColor() && colorFilter.getCellColor())
+                .orElse(null)
             : null);
   }
 
@@ -470,41 +473,47 @@ final class ExcelAutofilterController {
         sortCondition.isSetSortBy() ? sortCondition.getSortBy().toString() : "",
         sortCondition.isSetDxfId()
             ? dxfColor(workbook, sortCondition.getDxfId(), sortByCellColor || !sortByFontColor)
+                .orElse(null)
             : null,
         sortCondition.isSetIconId() ? Math.toIntExact(sortCondition.getIconId()) : null);
   }
 
-  static ExcelColorSnapshot dxfColor(XSSFWorkbook workbook, long dxfId, boolean cellColor) {
-    CTDxf dxf = dxfAt(workbook.getStylesSource(), dxfId);
+  static Optional<ExcelColorSnapshot> dxfColor(
+      XSSFWorkbook workbook, long dxfId, boolean cellColor) {
+    CTDxf dxf = dxfAt(workbook.getStylesSource(), dxfId).orElse(null);
     if (dxf == null) {
-      return null;
+      return Optional.empty();
     }
     if (cellColor
         && dxf.isSetFill()
         && dxf.getFill().isSetPatternFill()
         && dxf.getFill().getPatternFill().isSetFgColor()) {
-      return ExcelColorSnapshotSupport.snapshot(
-          workbook, dxf.getFill().getPatternFill().getFgColor());
+      return Optional.of(
+          ExcelColorSnapshotSupport.snapshot(
+              workbook, dxf.getFill().getPatternFill().getFgColor()));
     }
     if (!cellColor && dxf.isSetFont() && dxf.getFont().sizeOfColorArray() > 0) {
-      return ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0));
+      return Optional.of(
+          ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0)));
     }
     if (dxf.isSetFill()
         && dxf.getFill().isSetPatternFill()
         && dxf.getFill().getPatternFill().isSetFgColor()) {
-      return ExcelColorSnapshotSupport.snapshot(
-          workbook, dxf.getFill().getPatternFill().getFgColor());
+      return Optional.of(
+          ExcelColorSnapshotSupport.snapshot(
+              workbook, dxf.getFill().getPatternFill().getFgColor()));
     }
     if (dxf.isSetFont() && dxf.getFont().sizeOfColorArray() > 0) {
-      return ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0));
+      return Optional.of(
+          ExcelColorSnapshotSupport.snapshot(workbook, dxf.getFont().getColorArray(0)));
     }
-    return null;
+    return Optional.empty();
   }
 
-  static CTDxf dxfAt(StylesTable stylesTable, long dxfId) {
+  static Optional<CTDxf> dxfAt(StylesTable stylesTable, long dxfId) {
     if (dxfId < 0L || dxfId >= stylesTable._getDXfsSize()) {
-      return null;
+      return Optional.empty();
     }
-    return stylesTable.getDxfAt(Math.toIntExact(dxfId));
+    return Optional.of(stylesTable.getDxfAt(Math.toIntExact(dxfId)));
   }
 }

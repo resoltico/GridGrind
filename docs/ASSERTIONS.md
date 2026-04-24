@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: ASSERTIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, assertions, expect-cell-value, expect-display-value, expect-analysis-max-severity]
   questions: ["what assertions does gridgrind support", "how do assertions work in gridgrind", "how do i verify workbook facts in gridgrind"]
@@ -52,17 +52,23 @@ Failed assertions stop the workflow with `ASSERTION_FAILED` and attach a structu
 `problem.assertionFailure` payload describing the failed assertion plus the observed factual read
 results that caused the mismatch.
 
-`EXPECT_PRESENT` and `EXPECT_ABSENT` are selector-count assertions, not strict read lookups. If an
-exact named range, chart, table, or pivot-table selector matches nothing, the assertion observes
-zero entities and then passes or fails from that count; GridGrind does not surface
-selector-specific `*_NOT_FOUND` problems for these assertion families.
+Entity-presence assertions are selector-count assertions, not strict read lookups. If an exact
+named-range, chart, table, or pivot-table selector matches nothing, the assertion observes zero
+entities and then passes or fails from that count; GridGrind does not surface selector-specific
+`*_NOT_FOUND` problems for these assertion families.
 
 Assertion families:
 
 | Assertion `type` | Valid target families | Purpose |
 |:-----------------|:----------------------|:--------|
-| `EXPECT_PRESENT` | `NamedRangeSelector`, `TableSelector`, `PivotTableSelector`, `ChartSelector` | Require at least one matching workbook entity; selector misses count as zero observed entities. |
-| `EXPECT_ABSENT` | `NamedRangeSelector`, `TableSelector`, `PivotTableSelector`, `ChartSelector` | Require zero matching workbook entities; selector misses count as zero observed entities. |
+| `EXPECT_NAMED_RANGE_PRESENT` | `NamedRangeSelector` | Require at least one matching named range; selector misses count as zero observed entities. |
+| `EXPECT_NAMED_RANGE_ABSENT` | `NamedRangeSelector` | Require zero matching named ranges; selector misses count as zero observed entities. |
+| `EXPECT_TABLE_PRESENT` | `TableSelector` | Require at least one matching table; selector misses count as zero observed entities. |
+| `EXPECT_TABLE_ABSENT` | `TableSelector` | Require zero matching tables; selector misses count as zero observed entities. |
+| `EXPECT_PIVOT_TABLE_PRESENT` | `PivotTableSelector` | Require at least one matching pivot table; selector misses count as zero observed entities. |
+| `EXPECT_PIVOT_TABLE_ABSENT` | `PivotTableSelector` | Require zero matching pivot tables; selector misses count as zero observed entities. |
+| `EXPECT_CHART_PRESENT` | `ChartSelector` | Require at least one matching chart; selector misses count as zero observed entities. |
+| `EXPECT_CHART_ABSENT` | `ChartSelector` | Require zero matching charts; selector misses count as zero observed entities. |
 | `EXPECT_CELL_VALUE` | `CellSelector` | Require exact effective cell values. |
 | `EXPECT_DISPLAY_VALUE` | `CellSelector` | Require exact formatted display strings. |
 | `EXPECT_FORMULA_TEXT` | `CellSelector` | Require exact stored formula text. |
@@ -86,7 +92,7 @@ Common assertion step shapes:
 {
   "stepId": "assert-title",
   "target": {
-    "type": "BY_ADDRESS",
+    "type": "CELL_BY_ADDRESS",
     "sheetName": "Budget",
     "address": "A1"
   },
@@ -104,8 +110,8 @@ Common assertion step shapes:
 {
   "stepId": "assert-formula-health",
   "target": {
-    "type": "BY_NAME",
-    "sheetName": "Budget"
+    "type": "SHEET_BY_NAME",
+    "name": "Budget"
   },
   "assertion": {
     "type": "EXPECT_ANALYSIS_MAX_SEVERITY",
@@ -121,7 +127,7 @@ Common assertion step shapes:
 {
   "stepId": "assert-workbook-links",
   "target": {
-    "type": "CURRENT"
+    "type": "WORKBOOK_CURRENT"
   },
   "assertion": {
     "type": "EXPECT_ANALYSIS_FINDING_ABSENT",
@@ -137,7 +143,7 @@ Common assertion step shapes:
 {
   "stepId": "assert-total-state",
   "target": {
-    "type": "BY_ADDRESS",
+    "type": "CELL_BY_ADDRESS",
     "sheetName": "Budget",
     "address": "B2"
   },

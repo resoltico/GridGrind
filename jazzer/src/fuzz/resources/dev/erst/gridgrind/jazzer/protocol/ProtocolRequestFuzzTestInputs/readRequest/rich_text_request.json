@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Narrative"
       }
     },
@@ -38,7 +38,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Narrative",
         "range": "A1:A2"
       }
@@ -83,7 +83,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Narrative",
         "address": "A1"
       }
@@ -101,7 +101,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Narrative",
         "address": "A2"
       }
@@ -112,7 +112,7 @@
       },
       "stepId": "cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Narrative",
         "addresses": [
           "A1",
@@ -126,7 +126,7 @@
       },
       "stepId": "window",
       "target": {
-        "type": "RECTANGULAR_WINDOW",
+        "type": "RANGE_RECTANGULAR_WINDOW",
         "sheetName": "Narrative",
         "topLeftAddress": "A1",
         "rowCount": 2,

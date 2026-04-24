@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: DEVELOPER_JAZZER
-updated: "2026-04-17"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, jazzer, fuzz, fuzzing, developer, local-only, regression, corpus, replay, promote, telemetry, composite-build, gradle, junit, xlsx, architecture]
   questions: ["how does jazzer fit into gridgrind", "where does jazzer live in this repo", "how is jazzer wired into the project", "what commands exist for jazzer", "where do jazzer corpus files and summaries go", "how do replay and promotion work", "what does jazzer cover in gridgrind"]

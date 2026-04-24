@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: REQUEST_EXECUTION_REFERENCE
-updated: "2026-04-24"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, request, source, persistence, execution, formula-environment, source-backed, input, calculation, journal, event-read, streaming-write]
   questions: ["what does a gridgrind request look like", "how do source-backed inputs work in gridgrind", "how does execution.calculation work", "what is the response journal", "how do event read and streaming write work"]
@@ -73,6 +73,8 @@ resolution, and existing workbook-source accessibility without mutating a workbo
 - It also preflights `source.type: EXISTING` workbook access, so missing or unreadable
   `source.path` workbooks can already fail during doctoring under `OPEN_WORKBOOK`.
 - It emits a machine-readable `RequestDoctorReport` instead of a normal execution response.
+- `--response <path>` works here too, so the doctor report can be captured to a file instead of
+  stdout when the workflow needs a saved artifact.
 
 ---
 
@@ -96,12 +98,12 @@ resolution, and existing workbook-source accessibility without mutating a workbo
 | `persistence` | No | Where and whether to save. Omit to run steps without saving. |
 | `execution` | No | Optional execution policy for low-memory mode selection, structured journaling, and formula calculation handling. Omit for the default full-XSSF path with `NORMAL` journaling and `DO_NOT_CALCULATE`. |
 | `formulaEnvironment` | No | Request-scoped evaluator configuration for external workbook bindings, missing-workbook policy, and template-backed UDF toolpacks. |
-| `steps` | No | Ordered list of workbook mutations, assertions, and inspections. |
+| `steps` | No | Ordered list of workbook mutations, assertions, and inspections. Every non-empty step needs a caller-defined `stepId`. |
 
 Every tagged request union uses `type` as its discriminator field: `source`, `persistence`,
 `action`, `query`, cell values, hyperlink targets, selectors, and named-range scopes.
-Every step object carries exactly one of `action`, `assertion`, or `query`. Step kind is inferred
-from that field; request steps do not carry a separate `step.type`.
+Every step object carries a caller-defined `stepId` plus exactly one of `action`, `assertion`, or
+`query`. Step kind is inferred from that field; request steps do not carry a separate `step.type`.
 
 When the CLI reads the request from `--request <path>`, relative request-owned paths inside the
 JSON follow the request file directory. That includes `source.path`, `persistence.path`,
@@ -343,7 +345,7 @@ Use `ANALYZE_WORKBOOK_FINDINGS` as the primary workbook-health check. Pair it wi
     {
       "stepId": "lint",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       },
       "query": {
         "type": "ANALYZE_WORKBOOK_FINDINGS"

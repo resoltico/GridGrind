@@ -23,6 +23,8 @@ import dev.erst.gridgrind.contract.dto.PrintTitleRowsInput;
 import dev.erst.gridgrind.contract.dto.SheetCopyPosition;
 import dev.erst.gridgrind.contract.dto.TableStyleInput;
 import dev.erst.gridgrind.contract.dto.TableStyleReport;
+import dev.erst.gridgrind.contract.selector.Selector;
+import dev.erst.gridgrind.contract.selector.SelectorJsonSupport;
 import dev.erst.gridgrind.contract.source.BinarySourceInput;
 import dev.erst.gridgrind.contract.source.TextSourceInput;
 import java.util.List;
@@ -350,149 +352,122 @@ final class GridGrindProtocolCatalogNestedTypeGroups {
               "workbookSelectorTypes",
               dev.erst.gridgrind.contract.selector.WorkbookSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.WorkbookSelector.Current.class,
-                      "CURRENT",
                       "Target the workbook currently being executed."))),
           nestedTypeGroup(
               "sheetSelectorTypes",
               dev.erst.gridgrind.contract.selector.SheetSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.SheetSelector.All.class,
-                      "ALL",
                       "Select every sheet in workbook order."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.SheetSelector.ByName.class,
-                      "BY_NAME",
                       "Select one exact sheet by name."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.SheetSelector.ByNames.class,
-                      "BY_NAMES",
                       "Select one or more exact sheets by ordered name list."))),
           nestedTypeGroup(
               "cellSelectorTypes",
               dev.erst.gridgrind.contract.selector.CellSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.CellSelector.AllUsedInSheet.class,
-                      "ALL_USED_IN_SHEET",
                       "Select every physically present cell on one sheet."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.CellSelector.ByAddress.class,
-                      "BY_ADDRESS",
                       "Select one exact cell on one sheet."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.CellSelector.ByAddresses.class,
-                      "BY_ADDRESSES",
                       "Select one or more exact cells on one sheet."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.CellSelector.ByQualifiedAddresses.class,
-                      "BY_QUALIFIED_ADDRESSES",
                       "Select one or more exact cells across one or more sheets."))),
           nestedTypeGroup(
               "rangeSelectorTypes",
               dev.erst.gridgrind.contract.selector.RangeSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.RangeSelector.AllOnSheet.class,
-                      "ALL_ON_SHEET",
                       "Select every matching range-backed structure on one sheet."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.RangeSelector.ByRange.class,
-                      "BY_RANGE",
                       "Select one exact rectangular range on one sheet."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.RangeSelector.ByRanges.class,
-                      "BY_RANGES",
                       "Select one or more exact rectangular ranges on one sheet."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.RangeSelector.RectangularWindow.class,
-                      "RECTANGULAR_WINDOW",
                       "Select one rectangular window anchored at one top-left cell."))),
           nestedTypeGroup(
               "rowBandSelectorTypes",
               dev.erst.gridgrind.contract.selector.RowBandSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.RowBandSelector.Span.class,
-                      "SPAN",
                       "Select one inclusive zero-based row span on one sheet."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.RowBandSelector.Insertion.class,
-                      "INSERTION",
                       "Select one row insertion point plus row count on one sheet."))),
           nestedTypeGroup(
               "columnBandSelectorTypes",
               dev.erst.gridgrind.contract.selector.ColumnBandSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.ColumnBandSelector.Span.class,
-                      "SPAN",
                       "Select one inclusive zero-based column span on one sheet."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.ColumnBandSelector.Insertion.class,
-                      "INSERTION",
                       "Select one column insertion point plus column count on one sheet."))),
           nestedTypeGroup(
               "tableSelectorTypes",
               dev.erst.gridgrind.contract.selector.TableSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.TableSelector.All.class,
-                      "ALL",
                       "Select every table in workbook order."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.TableSelector.ByName.class,
-                      "BY_NAME",
                       "Select one workbook-global table by exact name."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.TableSelector.ByNames.class,
-                      "BY_NAMES",
                       "Select one or more workbook-global tables by exact name."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.TableSelector.ByNameOnSheet.class,
-                      "BY_NAME_ON_SHEET",
                       "Select one workbook-global table by exact name and expected owning sheet."))),
           nestedTypeGroup(
               "tableRowSelectorTypes",
               dev.erst.gridgrind.contract.selector.TableRowSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.TableRowSelector.AllRows.class,
-                      "ALL_ROWS",
                       "Select every logical data row in one selected table."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.TableRowSelector.ByIndex.class,
-                      "BY_INDEX",
                       "Select one zero-based data row by index in one selected table."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.TableRowSelector.ByKeyCell.class,
-                      "BY_KEY_CELL",
                       "Select one logical data row by matching one key-column cell value."))),
           nestedTypeGroup(
               "tableCellSelectorTypes",
               dev.erst.gridgrind.contract.selector.TableCellSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.TableCellSelector.ByColumnName.class,
-                      "BY_COLUMN_NAME",
                       "Select one logical cell within one selected table row by column name."))),
           nestedTypeGroup(
               "namedRangeRefSelectorTypes",
               dev.erst.gridgrind.contract.selector.NamedRangeSelector.Ref.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByName.class,
-                      "BY_NAME",
                       "Match a named range reference across all scopes by exact name."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope.class,
-                      "WORKBOOK_SCOPE",
                       "Match one workbook-scoped named range reference by exact name."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope.class,
-                      "SHEET_SCOPE",
                       "Match one sheet-scoped named range reference on one sheet."))),
           nestedTypeGroup(
               "namedRangeScopeTypes",
@@ -505,73 +480,59 @@ final class GridGrindProtocolCatalogNestedTypeGroups {
               "namedRangeSelectorTypes",
               dev.erst.gridgrind.contract.selector.NamedRangeSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.NamedRangeSelector.All.class,
-                      "ALL",
                       "Select every user-facing named range."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.NamedRangeSelector.AnyOf.class,
-                      "ANY_OF",
                       "Select the union of one or more explicit named-range references."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByName.class,
-                      "BY_NAME",
                       "Match a named range across all scopes by exact name."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.NamedRangeSelector.ByNames.class,
-                      "BY_NAMES",
                       "Match named ranges across all scopes by exact name set."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.NamedRangeSelector.WorkbookScope.class,
-                      "WORKBOOK_SCOPE",
                       "Match the workbook-scoped named range with the exact name."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.NamedRangeSelector.SheetScope.class,
-                      "SHEET_SCOPE",
                       "Match the sheet-scoped named range on one sheet."))),
           nestedTypeGroup(
               "drawingObjectSelectorTypes",
               dev.erst.gridgrind.contract.selector.DrawingObjectSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.DrawingObjectSelector.AllOnSheet.class,
-                      "ALL_ON_SHEET",
                       "Select every drawing object on one sheet."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.DrawingObjectSelector.ByName.class,
-                      "BY_NAME",
                       "Select one drawing object by exact sheet-local object name."))),
           nestedTypeGroup(
               "chartSelectorTypes",
               dev.erst.gridgrind.contract.selector.ChartSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.ChartSelector.AllOnSheet.class,
-                      "ALL_ON_SHEET",
                       "Select every chart on one sheet."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.ChartSelector.ByName.class,
-                      "BY_NAME",
                       "Select one chart by exact sheet-local chart name."))),
           nestedTypeGroup(
               "pivotTableSelectorTypes",
               dev.erst.gridgrind.contract.selector.PivotTableSelector.class,
               List.of(
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.PivotTableSelector.All.class,
-                      "ALL",
                       "Select every pivot table in workbook order."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.PivotTableSelector.ByName.class,
-                      "BY_NAME",
                       "Select one workbook-global pivot table by exact name."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.PivotTableSelector.ByNames.class,
-                      "BY_NAMES",
                       "Select one or more workbook-global pivot tables by exact name."),
-                  descriptor(
+                  selectorDescriptor(
                       dev.erst.gridgrind.contract.selector.PivotTableSelector.ByNameOnSheet.class,
-                      "BY_NAME_ON_SHEET",
                       "Select one workbook-global pivot table by exact name and expected owning sheet."))),
           nestedTypeGroup(
               "drawingAnchorInputTypes",
@@ -969,5 +930,11 @@ final class GridGrindProtocolCatalogNestedTypeGroups {
   private static CatalogTypeDescriptor descriptor(
       Class<? extends Record> recordType, String id, String summary, String... optionalFields) {
     return GridGrindProtocolCatalog.descriptor(recordType, id, summary, optionalFields);
+  }
+
+  private static <T extends Record & Selector> CatalogTypeDescriptor selectorDescriptor(
+      Class<T> recordType, String summary, String... optionalFields) {
+    return descriptor(
+        recordType, SelectorJsonSupport.typeIdFor(recordType), summary, optionalFields);
   }
 }

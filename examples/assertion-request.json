@@ -15,7 +15,7 @@
   "steps" : [ {
     "stepId" : "ensure-budget",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Budget"
     },
     "action" : {
@@ -24,7 +24,7 @@
   }, {
     "stepId" : "set-title",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Budget",
       "address" : "A1"
     },
@@ -41,7 +41,7 @@
   }, {
     "stepId" : "set-total",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Budget",
       "address" : "B2"
     },
@@ -55,7 +55,7 @@
   }, {
     "stepId" : "assert-title",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Budget",
       "address" : "A1"
     },
@@ -69,7 +69,7 @@
   }, {
     "stepId" : "assert-total",
     "target" : {
-      "type" : "BY_ADDRESS",
+      "type" : "CELL_BY_ADDRESS",
       "sheetName" : "Budget",
       "address" : "B2"
     },
@@ -83,7 +83,7 @@
   }, {
     "stepId" : "assert-formula-health",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Budget"
     },
     "assertion" : {
@@ -96,7 +96,7 @@
   }, {
     "stepId" : "read-budget",
     "target" : {
-      "type" : "BY_ADDRESSES",
+      "type" : "CELL_BY_ADDRESSES",
       "sheetName" : "Budget",
       "addresses" : [ "A1", "B2" ]
     },

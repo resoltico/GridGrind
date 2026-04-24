@@ -164,11 +164,11 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   @Test
   void convertsEmailAndDocumentHyperlinksToCanonicalProtocolTargets() {
     assertEquals(
-        new HyperlinkTarget.Email("team@example.com"),
+        java.util.Optional.of(new HyperlinkTarget.Email("team@example.com")),
         InspectionResultCellReportSupport.toHyperlinkTarget(
             new ExcelHyperlink.Email("team@example.com")));
     assertEquals(
-        new HyperlinkTarget.Document("Budget!B4"),
+        java.util.Optional.of(new HyperlinkTarget.Document("Budget!B4")),
         InspectionResultCellReportSupport.toHyperlinkTarget(
             new ExcelHyperlink.Document("Budget!B4")));
   }
@@ -929,11 +929,15 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   void returnsStructuredFailureWhenWorkbookCloseFailsAfterSuccess() {
     DefaultGridGrindRequestExecutor executor =
         new DefaultGridGrindRequestExecutor(
-            new WorkbookCommandExecutor(),
-            new WorkbookReadExecutor(),
-            workbook -> {
-              throw new IOException("close failed");
-            });
+            new DefaultGridGrindRequestExecutorDependencies(
+                new WorkbookCommandExecutor(),
+                new WorkbookReadExecutor(),
+                workbook -> {
+                  throw new IOException("close failed");
+                },
+                Files::createTempFile,
+                dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySupport.ReadableWorkbook::close,
+                dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter::markRecalculateOnOpen));
 
     GridGrindResponse.Failure failure =
         failure(
@@ -956,11 +960,15 @@ class DefaultGridGrindRequestExecutorFailureAndPersistenceTest
   void preservesPrimaryFailureWhenWorkbookCloseAlsoFails() {
     DefaultGridGrindRequestExecutor executor =
         new DefaultGridGrindRequestExecutor(
-            new WorkbookCommandExecutor(),
-            new WorkbookReadExecutor(),
-            workbook -> {
-              throw new IOException("close failed");
-            });
+            new DefaultGridGrindRequestExecutorDependencies(
+                new WorkbookCommandExecutor(),
+                new WorkbookReadExecutor(),
+                workbook -> {
+                  throw new IOException("close failed");
+                },
+                Files::createTempFile,
+                dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySupport.ReadableWorkbook::close,
+                dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter::markRecalculateOnOpen));
 
     GridGrindResponse.Failure failure =
         failure(

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: WORKBOOK_LAYOUT_MUTATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, workbook mutations, sheet mutations, layout, panes, print-layout, structure]
   questions: ["where is the workbook and layout mutation reference", "how are workbook mutations split in gridgrind", "where do i find sheet and layout steps in gridgrind"]

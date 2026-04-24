@@ -10,7 +10,7 @@
     {
       "stepId": "ensure-inputs",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Inputs"
       },
       "action": {
@@ -20,7 +20,7 @@
     {
       "stepId": "set-title-from-file",
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Inputs",
         "address": "A1"
       },
@@ -38,7 +38,7 @@
     {
       "stepId": "set-payload-from-file",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Inputs"
       },
       "action": {

@@ -11,7 +11,7 @@
   "steps" : [ {
     "stepId" : "read-custom-xml-mappings",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "query" : {
       "type" : "GET_CUSTOM_XML_MAPPINGS"
@@ -19,7 +19,7 @@
   }, {
     "stepId" : "export-custom-xml-before-import",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "query" : {
       "type" : "EXPORT_CUSTOM_XML_MAPPING",
@@ -33,7 +33,7 @@
   }, {
     "stepId" : "import-custom-xml",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "action" : {
       "type" : "IMPORT_CUSTOM_XML_MAPPING",
@@ -51,7 +51,7 @@
   }, {
     "stepId" : "read-imported-cells",
     "target" : {
-      "type" : "BY_ADDRESSES",
+      "type" : "CELL_BY_ADDRESSES",
       "sheetName" : "Foglio1",
       "addresses" : [ "A1", "B1", "C1", "D1" ]
     },
@@ -61,7 +61,7 @@
   }, {
     "stepId" : "export-custom-xml-after-import",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "query" : {
       "type" : "EXPORT_CUSTOM_XML_MAPPING",

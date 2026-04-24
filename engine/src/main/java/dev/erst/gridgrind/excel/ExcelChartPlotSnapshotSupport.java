@@ -4,6 +4,7 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartMarkerStyle;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartAxis;
 import org.apache.poi.xddf.usermodel.chart.XDDFChartData;
@@ -205,7 +206,7 @@ final class ExcelChartPlotSnapshotSupport {
     };
   }
 
-  private static List<ExcelChartSnapshot.Axis> snapshotAxes(
+  static List<ExcelChartSnapshot.Axis> snapshotAxes(
       Map<Long, XDDFChartAxis> axesById, List<CTUnsignedInt> axisIds) {
     List<ExcelChartSnapshot.Axis> axes = new ArrayList<>();
     for (CTUnsignedInt axisId : axisIds) {
@@ -318,7 +319,7 @@ final class ExcelChartPlotSnapshotSupport {
               value,
               value.getCTLineSer().getTx(),
               smooth(value.getCTLineSer().isSetSmooth(), value.isSmooth()),
-              markerStyle(value.getCTLineSer().getMarker()),
+              markerStyle(value.getCTLineSer().getMarker()).orElse(null),
               markerSize(value.getCTLineSer().getMarker()),
               formulaRuntime));
     }
@@ -339,7 +340,7 @@ final class ExcelChartPlotSnapshotSupport {
               value,
               value.getCTLineSer().getTx(),
               smooth(value.getCTLineSer().isSetSmooth(), value.isSmooth()),
-              markerStyle(value.getCTLineSer().getMarker()),
+              markerStyle(value.getCTLineSer().getMarker()).orElse(null),
               markerSize(value.getCTLineSer().getMarker()),
               formulaRuntime));
     }
@@ -425,7 +426,7 @@ final class ExcelChartPlotSnapshotSupport {
               value,
               value.getCTScatterSer().getTx(),
               smooth(value.getCTScatterSer().isSetSmooth(), value.isSmooth()),
-              markerStyle(value.getCTScatterSer().getMarker()),
+              markerStyle(value.getCTScatterSer().getMarker()).orElse(null),
               markerSize(value.getCTScatterSer().getMarker()),
               formulaRuntime));
     }
@@ -510,12 +511,12 @@ final class ExcelChartPlotSnapshotSupport {
   }
 
   @SuppressWarnings("unused")
-  private static ExcelChartSnapshot.DataSource snapshotDataSource(
+  static ExcelChartSnapshot.DataSource snapshotDataSource(
       XSSFSheet contextSheet, org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> source) {
     return snapshotDataSource(contextSheet, source, null);
   }
 
-  private static ExcelChartSnapshot.DataSource snapshotDataSource(
+  static ExcelChartSnapshot.DataSource snapshotDataSource(
       XSSFSheet contextSheet,
       org.apache.poi.xddf.usermodel.chart.XDDFDataSource<?> source,
       ExcelFormulaRuntime formulaRuntime) {
@@ -580,27 +581,28 @@ final class ExcelChartPlotSnapshotSupport {
     return value != null && value.getVal();
   }
 
-  private static ExcelChartMarkerStyle markerStyle(CTMarker marker) {
+  static Optional<ExcelChartMarkerStyle> markerStyle(CTMarker marker) {
     if (marker == null || !marker.isSetSymbol()) {
-      return null;
+      return Optional.empty();
     }
-    return switch (marker.getSymbol().getVal().toString().toUpperCase(java.util.Locale.ROOT)) {
-      case "CIRCLE" -> ExcelChartMarkerStyle.CIRCLE;
-      case "DASH" -> ExcelChartMarkerStyle.DASH;
-      case "DIAMOND" -> ExcelChartMarkerStyle.DIAMOND;
-      case "DOT" -> ExcelChartMarkerStyle.DOT;
-      case "NONE" -> ExcelChartMarkerStyle.NONE;
-      case "PICTURE" -> ExcelChartMarkerStyle.PICTURE;
-      case "PLUS" -> ExcelChartMarkerStyle.PLUS;
-      case "SQUARE" -> ExcelChartMarkerStyle.SQUARE;
-      case "STAR" -> ExcelChartMarkerStyle.STAR;
-      case "TRIANGLE" -> ExcelChartMarkerStyle.TRIANGLE;
-      case "X" -> ExcelChartMarkerStyle.X;
-      default -> null;
-    };
+    return Optional.ofNullable(
+        switch (marker.getSymbol().getVal().toString().toUpperCase(java.util.Locale.ROOT)) {
+          case "CIRCLE" -> ExcelChartMarkerStyle.CIRCLE;
+          case "DASH" -> ExcelChartMarkerStyle.DASH;
+          case "DIAMOND" -> ExcelChartMarkerStyle.DIAMOND;
+          case "DOT" -> ExcelChartMarkerStyle.DOT;
+          case "NONE" -> ExcelChartMarkerStyle.NONE;
+          case "PICTURE" -> ExcelChartMarkerStyle.PICTURE;
+          case "PLUS" -> ExcelChartMarkerStyle.PLUS;
+          case "SQUARE" -> ExcelChartMarkerStyle.SQUARE;
+          case "STAR" -> ExcelChartMarkerStyle.STAR;
+          case "TRIANGLE" -> ExcelChartMarkerStyle.TRIANGLE;
+          case "X" -> ExcelChartMarkerStyle.X;
+          default -> null;
+        });
   }
 
-  private static Short markerSize(CTMarker marker) {
+  static Short markerSize(CTMarker marker) {
     return marker != null && marker.isSetSize() ? (short) marker.getSize().getVal() : null;
   }
 

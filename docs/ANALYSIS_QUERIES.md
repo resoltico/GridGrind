@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: ANALYSIS_QUERIES
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, analysis queries, workbook health, formula health, hyperlink health, named-range health]
   questions: ["what analysis queries does gridgrind support", "how do i run workbook health checks in gridgrind", "how do i inspect findings in gridgrind"]
@@ -26,7 +26,7 @@ functions, formula-error results, and evaluation failures surface.
 {
   "stepId": "formula-health",
   "target": {
-    "type": "ALL"
+    "type": "SHEET_ALL"
   },
   "query": {
     "type": "ANALYZE_FORMULA_HEALTH"
@@ -46,7 +46,7 @@ unsupported rules, broken formulas, and overlapping validation coverage.
 {
   "stepId": "data-validation-health",
   "target": {
-    "type": "BY_NAMES",
+    "type": "SHEET_BY_NAMES",
     "names": [
       "Inventory",
       "Summary"
@@ -67,7 +67,7 @@ families, empty target ranges, or priority collisions.
 {
   "stepId": "conditional-formatting-health",
   "target": {
-    "type": "BY_NAMES",
+    "type": "SHEET_BY_NAMES",
     "names": [
       "Inventory",
       "Summary"
@@ -88,7 +88,7 @@ between sheet-level filters and tables.
 {
   "stepId": "autofilter-health",
   "target": {
-    "type": "BY_NAMES",
+    "type": "SHEET_BY_NAMES",
     "names": [
       "Inventory",
       "Summary"
@@ -109,7 +109,7 @@ mismatches.
 {
   "stepId": "table-health",
   "target": {
-    "type": "ALL"
+    "type": "TABLE_ALL"
   },
   "query": {
     "type": "ANALYZE_TABLE_HEALTH"
@@ -121,7 +121,7 @@ mismatches.
 {
   "stepId": "selected-table-health",
   "target": {
-    "type": "BY_NAMES",
+    "type": "TABLE_BY_NAMES",
     "names": [
       "InventoryTable",
       "Trips"
@@ -142,7 +142,7 @@ broken sources, duplicate names, synthetic fallback names, or unsupported persis
 {
   "stepId": "pivot-health",
   "target": {
-    "type": "ALL"
+    "type": "PIVOT_TABLE_ALL"
   },
   "query": {
     "type": "ANALYZE_PIVOT_TABLE_HEALTH"
@@ -154,7 +154,7 @@ broken sources, duplicate names, synthetic fallback names, or unsupported persis
 {
   "stepId": "selected-pivot-health",
   "target": {
-    "type": "BY_NAMES",
+    "type": "PIVOT_TABLE_BY_NAMES",
     "names": [
       "SalesPivot",
       "NamedPivot"
@@ -179,7 +179,7 @@ relative `FILE` targets are reported as `HYPERLINK_UNRESOLVED_FILE_TARGET`.
 {
   "stepId": "hyperlink-health",
   "target": {
-    "type": "BY_NAMES",
+    "type": "SHEET_BY_NAMES",
     "names": [
       "Inventory",
       "Summary"
@@ -199,7 +199,7 @@ Reports named-range findings such as broken references, unresolved targets, and 
 {
   "stepId": "named-range-health",
   "target": {
-    "type": "ALL"
+    "type": "NAMED_RANGE_ALL"
   },
   "query": {
     "type": "ANALYZE_NAMED_RANGE_HEALTH"
@@ -225,7 +225,7 @@ table, pivot-table, hyperlink, and named-range findings.
 {
   "stepId": "workbook-findings",
   "target": {
-    "type": "CURRENT"
+    "type": "WORKBOOK_CURRENT"
   },
   "query": {
     "type": "ANALYZE_WORKBOOK_FINDINGS"

@@ -107,7 +107,9 @@ final class GridGrindWorkbookTaskDefinitions {
                 + " only add mutations later if the audit calls for them.",
             protocolLookupNote(
                 "assertion shapes",
-                List.of("assertionTypes:EXPECT_PRESENT", "assertionTypes:EXPECT_CELL_VALUE"),
+                List.of(
+                    "assertionTypes:EXPECT_NAMED_RANGE_PRESENT",
+                    "assertionTypes:EXPECT_CELL_VALUE"),
                 List.of("assertion"))));
   }
 

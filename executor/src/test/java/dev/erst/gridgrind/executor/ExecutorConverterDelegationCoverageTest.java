@@ -2,7 +2,7 @@ package dev.erst.gridgrind.executor;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.erst.gridgrind.contract.action.MutationAction;
 import dev.erst.gridgrind.contract.dto.CellInput;
@@ -42,12 +42,12 @@ class ExecutorConverterDelegationCoverageTest {
             .getFirst()
             .text());
     assertEquals("Bold", WorkbookCommandConverter.toExcelRichTextRun(run).text());
-    assertNull(WorkbookCommandConverter.toExcelCellAlignment(null));
-    assertNull(WorkbookCommandConverter.toExcelCellFont(null));
-    assertNull(WorkbookCommandConverter.toExcelCellFill(null));
-    assertNull(WorkbookCommandConverter.toExcelCellProtection(null));
-    assertNull(WorkbookCommandConverter.toExcelBorderSide(null));
-    assertNull(WorkbookCommandConverter.toExcelDifferentialStyle(null));
+    assertTrue(WorkbookCommandConverter.toExcelCellAlignment(null).isEmpty());
+    assertTrue(WorkbookCommandConverter.toExcelCellFont(null).isEmpty());
+    assertTrue(WorkbookCommandConverter.toExcelCellFill(null).isEmpty());
+    assertTrue(WorkbookCommandConverter.toExcelCellProtection(null).isEmpty());
+    assertTrue(WorkbookCommandConverter.toExcelBorderSide(null).isEmpty());
+    assertTrue(WorkbookCommandConverter.toExcelDifferentialStyle(null).isEmpty());
   }
 
   @Test
@@ -90,17 +90,21 @@ class ExecutorConverterDelegationCoverageTest {
   void familyMutationConvertersReturnNullForOutOfFamilyActions() {
     MutationAction.SetCell setCell = new MutationAction.SetCell(new CellInput.Blank());
 
-    assertNull(
+    assertTrue(
         WorkbookCommandWorkbookMutationConverter.toCommand(
-            new CellSelector.ByAddress("Budget", "A1"), setCell));
-    assertNull(
+                new CellSelector.ByAddress("Budget", "A1"), setCell)
+            .isEmpty());
+    assertTrue(
         WorkbookCommandCellMutationConverter.toCommand(
-            new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet()));
-    assertNull(
+                new SheetSelector.ByName("Budget"), new MutationAction.EnsureSheet())
+            .isEmpty());
+    assertTrue(
         WorkbookCommandDrawingMutationConverter.toCommand(
-            new CellSelector.ByAddress("Budget", "A1"), setCell));
-    assertNull(
+                new CellSelector.ByAddress("Budget", "A1"), setCell)
+            .isEmpty());
+    assertTrue(
         WorkbookCommandStructuredMutationConverter.toCommand(
-            new CellSelector.ByAddress("Budget", "A1"), setCell));
+                new CellSelector.ByAddress("Budget", "A1"), setCell)
+            .isEmpty());
   }
 }

@@ -81,6 +81,7 @@ import dev.erst.gridgrind.excel.ExcelTableColumnDefinition;
 import dev.erst.gridgrind.excel.ExcelTableDefinition;
 import dev.erst.gridgrind.excel.ExcelTableStyle;
 import dev.erst.gridgrind.excel.ExcelWorkbookProtectionSettings;
+import java.util.Optional;
 
 /**
  * Converts structured contract inputs such as drawings, validations, tables, and layout settings
@@ -203,8 +204,8 @@ final class WorkbookCommandStructuredInputConverter {
         toExcelDataValidationRule(validation.rule()),
         validation.allowBlank(),
         validation.suppressDropDownArrow(),
-        toExcelDataValidationPrompt(validation.prompt()),
-        toExcelDataValidationErrorAlert(validation.errorAlert()));
+        toExcelDataValidationPrompt(validation.prompt()).orElse(null),
+        toExcelDataValidationErrorAlert(validation.errorAlert()).orElse(null));
   }
 
   static ExcelDataValidationRule toExcelDataValidationRule(DataValidationRuleInput rule) {
@@ -233,24 +234,28 @@ final class WorkbookCommandStructuredInputConverter {
     };
   }
 
-  static ExcelDataValidationPrompt toExcelDataValidationPrompt(DataValidationPromptInput prompt) {
+  static Optional<ExcelDataValidationPrompt> toExcelDataValidationPrompt(
+      DataValidationPromptInput prompt) {
     return prompt == null
-        ? null
-        : new ExcelDataValidationPrompt(
-            WorkbookCommandSourceSupport.inlineText(prompt.title(), "validation prompt title"),
-            WorkbookCommandSourceSupport.inlineText(prompt.text(), "validation prompt text"),
-            prompt.showPromptBox());
+        ? Optional.empty()
+        : Optional.of(
+            new ExcelDataValidationPrompt(
+                WorkbookCommandSourceSupport.inlineText(prompt.title(), "validation prompt title"),
+                WorkbookCommandSourceSupport.inlineText(prompt.text(), "validation prompt text"),
+                prompt.showPromptBox()));
   }
 
-  static ExcelDataValidationErrorAlert toExcelDataValidationErrorAlert(
+  static Optional<ExcelDataValidationErrorAlert> toExcelDataValidationErrorAlert(
       DataValidationErrorAlertInput errorAlert) {
     return errorAlert == null
-        ? null
-        : new ExcelDataValidationErrorAlert(
-            errorAlert.style(),
-            WorkbookCommandSourceSupport.inlineText(errorAlert.title(), "validation error title"),
-            WorkbookCommandSourceSupport.inlineText(errorAlert.text(), "validation error text"),
-            errorAlert.showErrorBox());
+        ? Optional.empty()
+        : Optional.of(
+            new ExcelDataValidationErrorAlert(
+                errorAlert.style(),
+                WorkbookCommandSourceSupport.inlineText(
+                    errorAlert.title(), "validation error title"),
+                WorkbookCommandSourceSupport.inlineText(errorAlert.text(), "validation error text"),
+                errorAlert.showErrorBox()));
   }
 
   static ExcelConditionalFormattingBlockDefinition toExcelConditionalFormattingBlock(
@@ -269,14 +274,14 @@ final class WorkbookCommandStructuredInputConverter {
           new ExcelConditionalFormattingRule.FormulaRule(
               formulaRule.formula(),
               formulaRule.stopIfTrue(),
-              toExcelDifferentialStyle(formulaRule.style()));
+              toExcelDifferentialStyle(formulaRule.style()).orElse(null));
       case ConditionalFormattingRuleInput.CellValueRule cellValueRule ->
           new ExcelConditionalFormattingRule.CellValueRule(
               cellValueRule.operator(),
               cellValueRule.formula1(),
               cellValueRule.formula2(),
               cellValueRule.stopIfTrue(),
-              toExcelDifferentialStyle(cellValueRule.style()));
+              toExcelDifferentialStyle(cellValueRule.style()).orElse(null));
       case ConditionalFormattingRuleInput.ColorScaleRule colorScaleRule ->
           new ExcelConditionalFormattingRule.ColorScaleRule(
               colorScaleRule.thresholds().stream()
@@ -285,12 +290,16 @@ final class WorkbookCommandStructuredInputConverter {
                           ::toExcelConditionalFormattingThreshold)
                   .toList(),
               colorScaleRule.colors().stream()
-                  .map(WorkbookCommandCellInputConverter::toExcelColor)
+                  .map(
+                      color ->
+                          WorkbookCommandCellInputConverter.toRequiredExcelColor(
+                              color, "color-scale color"))
                   .toList(),
               colorScaleRule.stopIfTrue());
       case ConditionalFormattingRuleInput.DataBarRule dataBarRule ->
           new ExcelConditionalFormattingRule.DataBarRule(
-              WorkbookCommandCellInputConverter.toExcelColor(dataBarRule.color()),
+              WorkbookCommandCellInputConverter.toRequiredExcelColor(
+                  dataBarRule.color(), "data-bar color"),
               dataBarRule.iconOnly(),
               dataBarRule.widthMin(),
               dataBarRule.widthMax(),
@@ -314,36 +323,39 @@ final class WorkbookCommandStructuredInputConverter {
               top10Rule.percent(),
               top10Rule.bottom(),
               top10Rule.stopIfTrue(),
-              toExcelDifferentialStyle(top10Rule.style()));
+              toExcelDifferentialStyle(top10Rule.style()).orElse(null));
     };
   }
 
-  static ExcelDifferentialStyle toExcelDifferentialStyle(DifferentialStyleInput style) {
+  static Optional<ExcelDifferentialStyle> toExcelDifferentialStyle(DifferentialStyleInput style) {
     if (style == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelDifferentialStyle(
-        style.numberFormat(),
-        style.bold(),
-        style.italic(),
-        WorkbookCommandCellInputConverter.toExcelFontHeight(style.fontHeight()),
-        style.fontColor(),
-        style.underline(),
-        style.strikeout(),
-        style.fillColor(),
-        toExcelDifferentialBorder(style.border()));
+    return Optional.of(
+        new ExcelDifferentialStyle(
+            style.numberFormat(),
+            style.bold(),
+            style.italic(),
+            WorkbookCommandCellInputConverter.toExcelFontHeight(style.fontHeight()).orElse(null),
+            style.fontColor(),
+            style.underline(),
+            style.strikeout(),
+            style.fillColor(),
+            toExcelDifferentialBorder(style.border()).orElse(null)));
   }
 
-  static ExcelDifferentialBorder toExcelDifferentialBorder(DifferentialBorderInput border) {
+  static Optional<ExcelDifferentialBorder> toExcelDifferentialBorder(
+      DifferentialBorderInput border) {
     if (border == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelDifferentialBorder(
-        toExcelDifferentialBorderSide(border.all()),
-        toExcelDifferentialBorderSide(border.top()),
-        toExcelDifferentialBorderSide(border.right()),
-        toExcelDifferentialBorderSide(border.bottom()),
-        toExcelDifferentialBorderSide(border.left()));
+    return Optional.of(
+        new ExcelDifferentialBorder(
+            toExcelDifferentialBorderSide(border.all()).orElse(null),
+            toExcelDifferentialBorderSide(border.top()).orElse(null),
+            toExcelDifferentialBorderSide(border.right()).orElse(null),
+            toExcelDifferentialBorderSide(border.bottom()).orElse(null),
+            toExcelDifferentialBorderSide(border.left()).orElse(null)));
   }
 
   static ExcelTableDefinition toExcelTableDefinition(TableInput table) {
@@ -508,7 +520,7 @@ final class WorkbookCommandStructuredInputConverter {
             presentation.display().displayRowColHeadings(),
             presentation.display().displayFormulas(),
             presentation.display().rightToLeft()),
-        WorkbookCommandCellInputConverter.toExcelColor(presentation.tabColor()),
+        WorkbookCommandCellInputConverter.toExcelColor(presentation.tabColor()).orElse(null),
         new ExcelSheetOutlineSummary(
             presentation.outlineSummary().rowSumsBelow(),
             presentation.outlineSummary().rowSumsRight()),
@@ -530,18 +542,20 @@ final class WorkbookCommandStructuredInputConverter {
         toExcelAutofilterFilterCriterion(column.criterion()));
   }
 
-  static ExcelAutofilterSortState toExcelAutofilterSortState(AutofilterSortStateInput sortState) {
+  static Optional<ExcelAutofilterSortState> toExcelAutofilterSortState(
+      AutofilterSortStateInput sortState) {
     if (sortState == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelAutofilterSortState(
-        sortState.range(),
-        sortState.caseSensitive(),
-        sortState.columnSort(),
-        sortState.sortMethod(),
-        sortState.conditions().stream()
-            .map(WorkbookCommandStructuredInputConverter::toExcelAutofilterSortCondition)
-            .toList());
+    return Optional.of(
+        new ExcelAutofilterSortState(
+            sortState.range(),
+            sortState.caseSensitive(),
+            sortState.columnSort(),
+            sortState.sortMethod(),
+            sortState.conditions().stream()
+                .map(WorkbookCommandStructuredInputConverter::toExcelAutofilterSortCondition)
+                .toList()));
   }
 
   private static ExcelChartDefinition.Title toExcelChartTitle(ChartInput.Title title) {
@@ -747,7 +761,9 @@ final class WorkbookCommandStructuredInputConverter {
           new ExcelAutofilterFilterCriterion.Top10(top10.value(), top10.top(), top10.percent());
       case AutofilterFilterCriterionInput.Color color ->
           new ExcelAutofilterFilterCriterion.Color(
-              color.cellColor(), WorkbookCommandCellInputConverter.toExcelColor(color.color()));
+              color.cellColor(),
+              WorkbookCommandCellInputConverter.toRequiredExcelColor(
+                  color.color(), "autofilter color"));
       case AutofilterFilterCriterionInput.Icon icon ->
           new ExcelAutofilterFilterCriterion.Icon(icon.iconSet(), icon.iconId());
     };
@@ -759,7 +775,7 @@ final class WorkbookCommandStructuredInputConverter {
         condition.range(),
         condition.descending(),
         condition.sortBy(),
-        WorkbookCommandCellInputConverter.toExcelColor(condition.color()),
+        WorkbookCommandCellInputConverter.toExcelColor(condition.color()).orElse(null),
         condition.iconId());
   }
 
@@ -769,9 +785,11 @@ final class WorkbookCommandStructuredInputConverter {
         threshold.type(), threshold.formula(), threshold.value());
   }
 
-  private static ExcelDifferentialBorderSide toExcelDifferentialBorderSide(
+  private static Optional<ExcelDifferentialBorderSide> toExcelDifferentialBorderSide(
       DifferentialBorderSideInput side) {
-    return side == null ? null : new ExcelDifferentialBorderSide(side.style(), side.color());
+    return side == null
+        ? Optional.empty()
+        : Optional.of(new ExcelDifferentialBorderSide(side.style(), side.color()));
   }
 
   private static ExcelPivotTableDefinition.Source toExcelPivotTableSource(

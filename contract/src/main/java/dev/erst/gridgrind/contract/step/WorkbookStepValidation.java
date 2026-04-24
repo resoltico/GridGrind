@@ -19,6 +19,7 @@ import dev.erst.gridgrind.contract.selector.WorkbookSelector;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Shared validation helpers for workbook-step compact constructors. */
 final class WorkbookStepValidation {
@@ -260,20 +261,14 @@ final class WorkbookStepValidation {
   private static final Map<Class<? extends Assertion>, Class<? extends Selector>[]>
       ASSERTION_TARGET_TYPES =
           Map.ofEntries(
-              Map.entry(
-                  Assertion.Present.class,
-                  targetTypes(
-                      NamedRangeSelector.class,
-                      TableSelector.class,
-                      PivotTableSelector.class,
-                      ChartSelector.class)),
-              Map.entry(
-                  Assertion.Absent.class,
-                  targetTypes(
-                      NamedRangeSelector.class,
-                      TableSelector.class,
-                      PivotTableSelector.class,
-                      ChartSelector.class)),
+              Map.entry(Assertion.NamedRangePresent.class, targetTypes(NamedRangeSelector.class)),
+              Map.entry(Assertion.NamedRangeAbsent.class, targetTypes(NamedRangeSelector.class)),
+              Map.entry(Assertion.TablePresent.class, targetTypes(TableSelector.class)),
+              Map.entry(Assertion.TableAbsent.class, targetTypes(TableSelector.class)),
+              Map.entry(Assertion.PivotTablePresent.class, targetTypes(PivotTableSelector.class)),
+              Map.entry(Assertion.PivotTableAbsent.class, targetTypes(PivotTableSelector.class)),
+              Map.entry(Assertion.ChartPresent.class, targetTypes(ChartSelector.class)),
+              Map.entry(Assertion.ChartAbsent.class, targetTypes(ChartSelector.class)),
               Map.entry(
                   Assertion.CellValue.class,
                   targetTypes(
@@ -404,35 +399,32 @@ final class WorkbookStepValidation {
 
   static String dynamicTargetSelectorRuleForAssertionType(
       Class<? extends Assertion> assertionType) {
+    return optionalDynamicTargetSelectorRuleForAssertionType(assertionType).orElse(null);
+  }
+
+  private static Optional<String> optionalDynamicTargetSelectorRuleForAssertionType(
+      Class<? extends Assertion> assertionType) {
     Objects.requireNonNull(assertionType, "assertionType must not be null");
     if (assertionType.equals(Assertion.AnalysisMaxSeverity.class)
         || assertionType.equals(Assertion.AnalysisFindingPresent.class)
         || assertionType.equals(Assertion.AnalysisFindingAbsent.class)) {
-      return "Matches the nested analysis query's target selectors.";
+      return Optional.of("Matches the nested analysis query's target selectors.");
     }
     if (assertionType.equals(Assertion.AllOf.class)
         || assertionType.equals(Assertion.AnyOf.class)) {
-      return "Matches the intersection of every nested assertion's target selectors.";
+      return Optional.of("Matches the intersection of every nested assertion's target selectors.");
     }
     if (assertionType.equals(Assertion.Not.class)) {
-      return "Matches the nested assertion's target selectors.";
+      return Optional.of("Matches the nested assertion's target selectors.");
     }
-    return null;
+    return Optional.empty();
   }
 
   static String targetSelectorRuleForAssertionType(Class<? extends Assertion> assertionType) {
     Objects.requireNonNull(assertionType, "assertionType must not be null");
-    String dynamicRule = dynamicTargetSelectorRuleForAssertionType(assertionType);
-    if (dynamicRule != null) {
-      return dynamicRule;
-    }
-    if (assertionType.equals(Assertion.Present.class)
-        || assertionType.equals(Assertion.Absent.class)) {
-      return "Shared selector wire types remain family-sensitive here: ALL, BY_NAME, and"
-          + " BY_NAMES are ambiguous across NamedRangeSelector, TableSelector, and"
-          + " PivotTableSelector, while BY_NAME_ON_SHEET is ambiguous across TableSelector"
-          + " and PivotTableSelector. Author the field set that identifies exactly one"
-          + " family.";
+    Optional<String> dynamicRule = optionalDynamicTargetSelectorRuleForAssertionType(assertionType);
+    if (dynamicRule.isPresent()) {
+      return dynamicRule.orElseThrow();
     }
     return null;
   }

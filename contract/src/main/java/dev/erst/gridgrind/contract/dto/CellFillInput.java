@@ -20,8 +20,10 @@ public record CellFillInput(
   }
 
   public CellFillInput {
-    foregroundColor = ProtocolRgbColorSupport.normalizeRgbHex(foregroundColor, "foregroundColor");
-    backgroundColor = ProtocolRgbColorSupport.normalizeRgbHex(backgroundColor, "backgroundColor");
+    foregroundColor =
+        ProtocolRgbColorSupport.normalizeRgbHex(foregroundColor, "foregroundColor").orElse(null);
+    backgroundColor =
+        ProtocolRgbColorSupport.normalizeRgbHex(backgroundColor, "backgroundColor").orElse(null);
     requireColorBaseOrNull(
         foregroundColor,
         foregroundColorTheme,

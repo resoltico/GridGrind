@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -74,7 +75,7 @@ final class FormulaExceptions {
           exception);
     }
     if (isUnregisteredUserDefinedFunctionFailure(context, exception, formula)) {
-      String functionName = leadingFunctionName(formula);
+      String functionName = leadingFunctionName(formula).orElse(null);
       return new UnregisteredUserDefinedFunctionException(
           sheetName,
           address,
@@ -167,7 +168,7 @@ final class FormulaExceptions {
   }
 
   private static String functionLabel(String formula) {
-    String functionName = leadingFunctionName(formula);
+    String functionName = leadingFunctionName(formula).orElse(null);
     return functionName == null ? "" : " function " + functionName;
   }
 
@@ -195,7 +196,7 @@ final class FormulaExceptions {
     if (!isUnsupportedFormulaFailure(exception)) {
       return false;
     }
-    String functionName = leadingFunctionName(formula);
+    String functionName = leadingFunctionName(formula).orElse(null);
     if (functionName == null) {
       return false;
     }
@@ -223,25 +224,25 @@ final class FormulaExceptions {
     return false;
   }
 
-  static String leadingFunctionName(String formula) {
+  static Optional<String> leadingFunctionName(String formula) {
     if (formula == null) {
-      return null;
+      return Optional.empty();
     }
     int openParenthesis = formula.indexOf('(');
     if (openParenthesis <= 0) {
-      return null;
+      return Optional.empty();
     }
     String candidate = formula.substring(0, openParenthesis).trim();
     if (candidate.isEmpty()) {
-      return null;
+      return Optional.empty();
     }
     for (int index = 0; index < candidate.length(); index++) {
       char current = candidate.charAt(index);
       if (!Character.isLetter(current) && current != '_' && current != '.') {
-        return null;
+        return Optional.empty();
       }
     }
-    return candidate;
+    return Optional.of(candidate);
   }
 
   static List<String> externalWorkbookNames(String formula) {

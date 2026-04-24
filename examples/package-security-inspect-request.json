@@ -14,7 +14,7 @@
   "steps" : [ {
     "stepId" : "security",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "query" : {
       "type" : "GET_PACKAGE_SECURITY"
@@ -22,7 +22,7 @@
   }, {
     "stepId" : "secure-cells",
     "target" : {
-      "type" : "BY_ADDRESSES",
+      "type" : "CELL_BY_ADDRESSES",
       "sheetName" : "Secure",
       "addresses" : [ "A1", "A2", "B2", "A3", "B3" ]
     },

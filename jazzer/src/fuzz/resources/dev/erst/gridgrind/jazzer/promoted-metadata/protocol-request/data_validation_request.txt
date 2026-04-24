@@ -2,7 +2,7 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/data_validation_request.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 6499
+Input Bytes: 6552
 Decode Outcome: PARSED
 Source Kind: NEW
 Persistence Kind: SAVE_AS
@@ -10,6 +10,6 @@ Operation Count: 6
 Assertion Count: 0
 Read Count: 3
 Assertion Kinds: (none)
-Read Kinds: GET_CELLS=1, ANALYZE_DATA_VALIDATION_HEALTH=1, GET_DATA_VALIDATIONS=1
+Read Kinds: GET_CELLS=1, GET_DATA_VALIDATIONS=1, ANALYZE_DATA_VALIDATION_HEALTH=1
 Style Kinds: (none)
-Operation Kinds: SET_DATA_VALIDATION=3, ENSURE_SHEET=1, CLEAR_DATA_VALIDATIONS=1, SET_RANGE=1
+Operation Kinds: SET_DATA_VALIDATION=3, SET_RANGE=1, CLEAR_DATA_VALIDATIONS=1, ENSURE_SHEET=1

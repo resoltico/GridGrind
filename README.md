@@ -42,6 +42,9 @@ RETRIEVAL_HINTS:
 - Help/catalog drift and a few key architecture seams are build-audited, so contract-to-engine
   bleed-through, direct ad hoc formula writes, and discovery-surface regressions fail CI instead
   of lingering quietly between releases.
+- The wire surface is pinned instead of implied: contract-exposed workbook enums and gradient-fill
+  type tokens are regression-checked so published JSON vocabulary does not drift quietly between
+  releases.
 - Save and reopen behavior is verified, not assumed: committed `.xlsx` round-trip regressions cover
   workbook metadata such as comments, validations, tables, copied sheets, and drawing-backed
   content so structural workbook edits do not quietly reopen differently later, including copied
@@ -57,17 +60,23 @@ RETRIEVAL_HINTS:
 ## Start Here
 
 - New to GridGrind: [docs/QUICK_START.md](docs/QUICK_START.md)
+- Using Docker `:latest`: for copy-paste-first commands, prefer
+  `docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest ...`. If you want to refresh
+  once and then run several commands locally, use `docker pull ghcr.io/resoltico/gridgrind:latest`
+  first. A plain `docker run ghcr.io/resoltico/gridgrind:latest ...` can reuse a stale local
+  `latest` tag.
 - Want the shipped example map and path rules: [docs/EXAMPLES.md](docs/EXAMPLES.md)
 - Want a quick runtime sanity check: run `java -jar gridgrind.jar` in an interactive terminal. It prints the same help text as `--help`, and `java -jar gridgrind.jar help` is the explicit equivalent; both exit with code `0`.
-- Want a concrete example first: `gridgrind --print-example BUDGET`, or [examples/budget-request.json](examples/budget-request.json) when you are already in a repo checkout
+- Want a no-write preflight report saved to disk: `gridgrind --doctor-request --request request.json --response doctor-report.json`
+- Want a concrete example first: `gridgrind --print-example BUDGET --response budget-request.json`, or [examples/budget-request.json](examples/budget-request.json) when you are already in a repo checkout
 - Need to know which built-in examples are fully self-contained versus repo-asset-backed: [docs/EXAMPLES.md](docs/EXAMPLES.md)
-- Want a starter scaffold for a common workbook job: `gridgrind --print-task-catalog`, `gridgrind --print-task-plan PIVOT_REPORT`, or `gridgrind --print-goal-plan "repair workbook comments and copy sheets safely"`
+- Want a starter scaffold for a common workbook job: `gridgrind --print-task-catalog --response tasks.json`, `gridgrind --print-task-plan PIVOT_REPORT --response pivot-plan.json`, or `gridgrind --print-goal-plan "repair workbook comments and copy sheets safely" --response goal-plan.json`
 - Want Java instead of hand-written JSON: [docs/JAVA_AUTHORING.md](docs/JAVA_AUTHORING.md) and [examples/java-authoring-workflow.java](examples/java-authoring-workflow.java)
 - Want a no-save health-check example: [examples/workbook-health-request.json](examples/workbook-health-request.json)
 - Want a copy-sheet maintenance example: [examples/sheet-maintenance-request.json](examples/sheet-maintenance-request.json)
 - Want an existing-workbook XML import/export example: [examples/custom-xml-request.json](examples/custom-xml-request.json)
 - Want a drawing and signature-line example: [examples/signature-line-request.json](examples/signature-line-request.json)
-- Need one operation or type fast without dumping the whole catalog: `gridgrind --print-protocol-catalog --search chart`
+- Need one operation or type fast without dumping the whole catalog: `gridgrind --print-protocol-catalog --search chart --response protocol-search.json`
 - Want the reference docs: [docs/QUICK_REFERENCE.md](docs/QUICK_REFERENCE.md), [docs/OPERATIONS.md](docs/OPERATIONS.md), and [docs/ERRORS.md](docs/ERRORS.md). The detailed long-form reference is split behind those entry points into focused docs under `docs/`.
 - Want the runnable download: [latest release](https://github.com/resoltico/GridGrind/releases/latest)
 

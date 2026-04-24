@@ -5,16 +5,10 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
-import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.openxml4j.opc.TargetMode;
-import org.apache.poi.xssf.usermodel.XSSFDrawing;
 import org.apache.poi.xssf.usermodel.XSSFPicture;
 import org.apache.poi.xssf.usermodel.XSSFPictureData;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -78,27 +72,31 @@ class ExcelDrawingPictureSupportTest {
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
       ExcelDrawingPictureSupport.PictureReadback readback =
           ExcelDrawingPictureSupport.requiredPictureReadback(picture);
-      String relationId = ExcelDrawingPictureSupport.pictureRelationId(picture);
-      assertNotNull(relationId);
+      String relationId = ExcelDrawingPictureSupport.pictureRelationId(picture).orElseThrow();
       assertEquals(
-          relationId,
+          java.util.Optional.of(relationId),
           ExcelDrawingPictureSupport.reusableRelationId(
               picture.getDrawing(), relationId, readback.picturePart().getPartName()));
-      assertNull(
+      assertTrue(
           ExcelDrawingPictureSupport.reusableRelationId(
-              picture.getDrawing(), null, readback.picturePart().getPartName()));
-      assertNull(
+                  picture.getDrawing(), null, readback.picturePart().getPartName())
+              .isEmpty());
+      assertTrue(
           ExcelDrawingPictureSupport.reusableRelationId(
-              picture.getDrawing(), " ", readback.picturePart().getPartName()));
-      assertNull(
+                  picture.getDrawing(), " ", readback.picturePart().getPartName())
+              .isEmpty());
+      assertTrue(
           ExcelDrawingPictureSupport.reusableRelationId(
-              picture.getDrawing(), relationId, sheet.xssfSheet().getPackagePart().getPartName()));
+                  picture.getDrawing(),
+                  relationId,
+                  sheet.xssfSheet().getPackagePart().getPartName())
+              .isEmpty());
 
       picture.getCTPicture().getBlipFill().getBlip().setEmbed("   ");
-      assertNull(ExcelDrawingPictureSupport.pictureRelationId(picture));
-      assertNull(ExcelDrawingPictureSupport.relatedImagePartOrNull(picture));
-      assertNull(ExcelDrawingPictureSupport.imagePartNameOrNull(picture));
-      assertNull(ExcelDrawingPictureSupport.pictureDataOrNull(picture));
+      assertTrue(ExcelDrawingPictureSupport.pictureRelationId(picture).isEmpty());
+      assertTrue(ExcelDrawingPictureSupport.relatedImagePartOrNull(picture).isEmpty());
+      assertTrue(ExcelDrawingPictureSupport.imagePartNameOrNull(picture).isEmpty());
+      assertTrue(ExcelDrawingPictureSupport.pictureDataOrNull(picture).isEmpty());
       assertTrue(
           ExcelDrawingPictureSupport.missingPictureRelationship(picture)
               .getMessage()
@@ -141,15 +139,27 @@ class ExcelDrawingPictureSupportTest {
               anchor(1, 1, 4, 6),
               "Queue preview"));
       XSSFPicture picture = requiredPicture(sheet.xssfSheet(), "OpsPicture");
-      String relationId = ExcelDrawingPictureSupport.pictureRelationId(picture);
-      assertNotNull(relationId);
+      String detachedRelationId = "rIdDetached";
+      String originalRelationId =
+          ExcelDrawingPictureSupport.pictureRelationId(picture).orElseThrow();
+      assertNotEquals(detachedRelationId, originalRelationId);
 
-      removeLoadedRelation(picture.getDrawing(), relationId);
+      ExcelDrawingPictureSupport.PictureReadback readback =
+          ExcelDrawingPictureSupport.requiredPictureReadback(picture);
+      picture
+          .getDrawing()
+          .getPackagePart()
+          .addRelationship(
+              readback.picturePart().getPartName(),
+              TargetMode.INTERNAL,
+              ExcelWorkbookImageCatalogSupport.pictureRelation(readback.format()).getRelation(),
+              detachedRelationId);
+      ExcelDrawingPictureSupport.setPictureRelationId(picture, detachedRelationId);
 
       assertNull(picture.getPictureData());
-      assertNotNull(ExcelDrawingPictureSupport.relatedImagePartOrNull(picture));
-      XSSFPictureData pictureData = ExcelDrawingPictureSupport.pictureDataOrNull(picture);
-      assertNotNull(pictureData);
+      assertTrue(ExcelDrawingPictureSupport.relatedImagePartOrNull(picture).isPresent());
+      XSSFPictureData pictureData =
+          ExcelDrawingPictureSupport.pictureDataOrNull(picture).orElseThrow();
       assertArrayEquals(PNG_PIXEL_BYTES, pictureData.getData());
       assertArrayEquals(
           PNG_PIXEL_BYTES, ExcelDrawingPictureSupport.requiredPictureReadback(picture).bytes());
@@ -181,9 +191,9 @@ class ExcelDrawingPictureSupportTest {
       assertNull(picture.getPictureData());
       assertEquals(
           sheet.xssfSheet().getPackagePart(),
-          ExcelDrawingPictureSupport.relatedImagePartOrNull(picture));
-      assertNull(ExcelDrawingPictureSupport.pictureDataOrNull(picture));
-      assertNull(ExcelDrawingPictureSupport.imagePartNameOrNull(picture));
+          ExcelDrawingPictureSupport.relatedImagePartOrNull(picture).orElseThrow());
+      assertTrue(ExcelDrawingPictureSupport.pictureDataOrNull(picture).isEmpty());
+      assertTrue(ExcelDrawingPictureSupport.imagePartNameOrNull(picture).isEmpty());
       assertTrue(
           ExcelDrawingPictureSupport.missingPictureRelationship(picture)
               .getMessage()
@@ -210,7 +220,7 @@ class ExcelDrawingPictureSupportTest {
           assertThrows(
               IllegalArgumentException.class,
               () ->
-                  newPictureReadback(
+                  new ExcelDrawingPictureSupport.PictureReadback(
                       readback.pictureData(),
                       readback.picturePart(),
                       readback.format(),
@@ -236,8 +246,8 @@ class ExcelDrawingPictureSupportTest {
       removeBlipFill(picture);
       assertNull(picture.getCTPicture().getBlipFill());
 
-      assertNull(ExcelDrawingPictureSupport.pictureRelationId(picture));
-      assertNull(ExcelDrawingPictureSupport.pictureDataOrNull(picture));
+      assertTrue(ExcelDrawingPictureSupport.pictureRelationId(picture).isEmpty());
+      assertTrue(ExcelDrawingPictureSupport.pictureDataOrNull(picture).isEmpty());
       IllegalStateException missingBlipFill =
           assertThrows(
               IllegalStateException.class,
@@ -279,49 +289,6 @@ class ExcelDrawingPictureSupportTest {
         .filter(shape -> objectName.equals(ExcelDrawingAnchorSupport.resolvedName(shape)))
         .findFirst()
         .orElseThrow();
-  }
-
-  @SuppressWarnings({"unchecked", "PMD.AvoidAccessibilityAlteration"})
-  private static void removeLoadedRelation(XSSFDrawing drawing, String relationId) {
-    try {
-      Field relationsField = POIXMLDocumentPart.class.getDeclaredField("relations");
-      relationsField.setAccessible(true);
-      Map<String, ?> relations = (Map<String, ?>) relationsField.get(drawing);
-      relations.remove(relationId);
-    } catch (ReflectiveOperationException exception) {
-      throw new LinkageError(exception.getMessage(), exception);
-    }
-  }
-
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-  private static ExcelDrawingPictureSupport.PictureReadback newPictureReadback(
-      XSSFPictureData pictureData,
-      org.apache.poi.openxml4j.opc.PackagePart picturePart,
-      ExcelPictureFormat format,
-      String contentType,
-      byte[] bytes) {
-    try {
-      Constructor<ExcelDrawingPictureSupport.PictureReadback> constructor =
-          ExcelDrawingPictureSupport.PictureReadback.class.getDeclaredConstructor(
-              XSSFPictureData.class,
-              org.apache.poi.openxml4j.opc.PackagePart.class,
-              ExcelPictureFormat.class,
-              String.class,
-              byte[].class);
-      constructor.setAccessible(true);
-      return constructor.newInstance(pictureData, picturePart, format, contentType, bytes);
-    } catch (InvocationTargetException exception) {
-      Throwable cause = exception.getCause();
-      if (cause instanceof RuntimeException runtime) {
-        runtime.addSuppressed(exception);
-        throw runtime;
-      }
-      AssertionError assertion = new AssertionError(cause);
-      assertion.addSuppressed(exception);
-      throw assertion;
-    } catch (ReflectiveOperationException exception) {
-      throw new LinkageError(exception.getMessage(), exception);
-    }
   }
 
   private static ExcelDrawingAnchor.TwoCell anchor(

@@ -559,15 +559,19 @@ class DefaultGridGrindRequestExecutorStyleAndFormulaTest
     int[] callCount = {0};
     DefaultGridGrindRequestExecutor executor =
         new DefaultGridGrindRequestExecutor(
-            new WorkbookCommandExecutor(),
-            new WorkbookReadExecutor(),
-            workbook -> {
-              int count = callCount[0];
-              callCount[0] = count + 1;
-              if (count == 0) {
-                throw new IllegalStateException("catastrophic close failure");
-              }
-            });
+            new DefaultGridGrindRequestExecutorDependencies(
+                new WorkbookCommandExecutor(),
+                new WorkbookReadExecutor(),
+                workbook -> {
+                  int count = callCount[0];
+                  callCount[0] = count + 1;
+                  if (count == 0) {
+                    throw new IllegalStateException("catastrophic close failure");
+                  }
+                },
+                Files::createTempFile,
+                dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySupport.ReadableWorkbook::close,
+                dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter::markRecalculateOnOpen));
 
     GridGrindResponse.Failure failure =
         failure(

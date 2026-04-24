@@ -73,14 +73,14 @@ final class ExcelTempFiles {
     return candidateRoots;
   }
 
-  private static Path systemTempRoot() {
+  static Path systemTempRoot() {
     String systemTempDir = System.getProperty(TEMP_DIR_PROPERTY);
     return systemTempDir == null || systemTempDir.isBlank()
         ? null
         : Path.of(systemTempDir).resolve(GRIDGRIND_TEMP_DIR_NAME);
   }
 
-  private static Path userHomeFallbackRoot() {
+  static Path userHomeFallbackRoot() {
     String userHome = System.getProperty(USER_HOME_PROPERTY);
     return userHome == null || userHome.isBlank()
         ? null

@@ -20,8 +20,8 @@ public record ExcelDifferentialStyleSnapshot(
     if (numberFormat != null && numberFormat.isBlank()) {
       throw new IllegalArgumentException("numberFormat must not be blank");
     }
-    fontColor = ExcelRgbColorSupport.normalizeRgbHex(fontColor, "fontColor");
-    fillColor = ExcelRgbColorSupport.normalizeRgbHex(fillColor, "fillColor");
+    fontColor = ExcelRgbColorSupport.normalizeRgbHex(fontColor, "fontColor").orElse(null);
+    fillColor = ExcelRgbColorSupport.normalizeRgbHex(fillColor, "fillColor").orElse(null);
     Objects.requireNonNull(unsupportedFeatures, "unsupportedFeatures must not be null");
     unsupportedFeatures = List.copyOf(unsupportedFeatures);
     for (ExcelConditionalFormattingUnsupportedFeature unsupportedFeature : unsupportedFeatures) {

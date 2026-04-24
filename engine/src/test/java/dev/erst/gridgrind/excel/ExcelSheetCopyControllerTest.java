@@ -271,6 +271,104 @@ class ExcelSheetCopyControllerTest {
   }
 
   @Test
+  void copySheetSupportsChartsBackedByWorkbookNamedRanges() throws IOException {
+    Path workbookPath = XlsxRoundTrip.newWorkbookPath("gridgrind-copy-sheet-chart-names-");
+
+    try (ExcelWorkbook workbook = ExcelWorkbook.create()) {
+      ExcelSheet source = workbook.getOrCreateSheet("Source");
+      ExcelChartTestSupport.seedChartData(source);
+      ExcelChartTestSupport.seedChartNamedRanges(workbook, "Source");
+      source.setChart(
+          ExcelChartTestSupport.barChart(
+              "NamedRangeChart",
+              ExcelChartTestSupport.anchor(4, 1, 10, 14),
+              new ExcelChartDefinition.Title.Text("Named ranges"),
+              new ExcelChartDefinition.Legend.Hidden(),
+              ExcelChartDisplayBlanksAs.GAP,
+              true,
+              false,
+              ExcelChartBarDirection.COLUMN,
+              List.of(
+                  new ExcelChartDefinition.Series(
+                      new ExcelChartDefinition.Title.Text("Plan"),
+                      ExcelChartTestSupport.ref("ChartCategories"),
+                      ExcelChartTestSupport.ref("ChartPlan")))));
+
+      assertDoesNotThrow(
+          () -> workbook.copySheet("Source", "Replica", new ExcelSheetCopyPosition.AppendAtEnd()));
+      assertEquals(List.of("Source", "Replica"), workbook.sheetNames());
+
+      ExcelChartSnapshot sourceChart = workbook.sheet("Source").charts().getFirst();
+      ExcelChartSnapshot.Series sourceSeries =
+          ExcelChartTestSupport.singlePlot(sourceChart, ExcelChartSnapshot.Bar.class)
+              .series()
+              .getFirst();
+      assertEquals(
+          "ChartCategories",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.StringReference.class, sourceSeries.categories())
+              .formula());
+      assertEquals(
+          "ChartPlan",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.NumericReference.class, sourceSeries.values())
+              .formula());
+
+      ExcelChartSnapshot copiedChart = workbook.sheet("Replica").charts().getFirst();
+      ExcelChartSnapshot.Series copiedSeries =
+          ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
+              .series()
+              .getFirst();
+      assertEquals(
+          "Replica!$A$2:$A$4",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.StringReference.class, copiedSeries.categories())
+              .formula());
+      assertEquals(
+          "Replica!$B$2:$B$4",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
+              .formula());
+
+      workbook.save(workbookPath);
+    }
+
+    try (ExcelWorkbook reopened = ExcelWorkbook.open(workbookPath)) {
+      ExcelChartSnapshot sourceChart = reopened.sheet("Source").charts().getFirst();
+      ExcelChartSnapshot.Series sourceSeries =
+          ExcelChartTestSupport.singlePlot(sourceChart, ExcelChartSnapshot.Bar.class)
+              .series()
+              .getFirst();
+      assertEquals(
+          "ChartCategories",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.StringReference.class, sourceSeries.categories())
+              .formula());
+      assertEquals(
+          "ChartPlan",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.NumericReference.class, sourceSeries.values())
+              .formula());
+
+      ExcelChartSnapshot copiedChart = reopened.sheet("Replica").charts().getFirst();
+      ExcelChartSnapshot.Series copiedSeries =
+          ExcelChartTestSupport.singlePlot(copiedChart, ExcelChartSnapshot.Bar.class)
+              .series()
+              .getFirst();
+      assertEquals(
+          "Replica!$A$2:$A$4",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.StringReference.class, copiedSeries.categories())
+              .formula());
+      assertEquals(
+          "Replica!$B$2:$B$4",
+          assertInstanceOf(
+                  ExcelChartSnapshot.DataSource.NumericReference.class, copiedSeries.values())
+              .formula());
+    }
+  }
+
+  @Test
   void copySheetRetargetsAdvancedWorkbookCoreStructures() throws IOException {
     ExcelAutofilterController autofilterController = new ExcelAutofilterController();
     ExcelTableController tableController = new ExcelTableController();
@@ -323,16 +421,21 @@ class ExcelSheetCopyControllerTest {
                           5L,
                           true,
                           new ExcelAutofilterFilterCriterionSnapshot.Icon("3TrafficLights1", 2))),
-                  new ExcelAutofilterSortStateSnapshot(
-                      "A1:F3",
-                      true,
-                      true,
-                      "stroke",
-                      List.of(
-                          new ExcelAutofilterSortConditionSnapshot(
-                              "A2:A3", true, "cellColor", new ExcelColorSnapshot("#102030"), null),
-                          new ExcelAutofilterSortConditionSnapshot(
-                              "B2:B3", false, "icon", null, 4))))),
+                  java.util.Optional.of(
+                      new ExcelAutofilterSortStateSnapshot(
+                          "A1:F3",
+                          true,
+                          true,
+                          "stroke",
+                          List.of(
+                              new ExcelAutofilterSortConditionSnapshot(
+                                  "A2:A3",
+                                  true,
+                                  "cellColor",
+                                  new ExcelColorSnapshot("#102030"),
+                                  null),
+                              new ExcelAutofilterSortConditionSnapshot(
+                                  "B2:B3", false, "icon", null, 4)))))),
           autofilterController.sheetOwnedAutofilters(replica.xssfSheet()));
       List<ExcelDataValidationSnapshot> replicaValidations =
           replica.dataValidations(new ExcelRangeSelection.All());
@@ -535,7 +638,7 @@ class ExcelSheetCopyControllerTest {
                           true,
                           new ExcelAutofilterFilterCriterionSnapshot.Values(
                               List.of("Ada"), false))),
-                  null)),
+                  java.util.Optional.empty())),
           autofilterController.sheetOwnedAutofilters(workbook.sheet("Replica").xssfSheet()));
       assertEquals(
           "SUM(Replica!$B$2:$B$3)",

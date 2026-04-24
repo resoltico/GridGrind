@@ -1,0 +1,16 @@
+{
+  "source": {
+    "type": "NEW"
+  },
+  "steps": [
+    {
+      "stepId": "assertion-missing-type",
+      "target": {
+        "type": "WORKBOOK_CURRENT"
+      },
+      "assertion": {
+        "F5pe": "EXPECT_CHART_PRESENT"
+      }
+    }
+  ]
+}

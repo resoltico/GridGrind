@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: LINK_COMMENT_MUTATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, hyperlink mutations, comment mutations, set-hyperlink, clear-hyperlink, set-comment, clear-comment]
   questions: ["how do i set hyperlinks in gridgrind", "how do i clear comments in gridgrind", "how do i manage comments in gridgrind"]
@@ -25,7 +25,7 @@ Attach or replace a hyperlink on one cell. The cell is created if needed.
 {
   "stepId": "set-hyperlink",
   "target": {
-    "type": "BY_ADDRESS",
+    "type": "CELL_BY_ADDRESS",
     "sheetName": "Inventory",
     "address": "A1"
   },
@@ -68,7 +68,7 @@ No-op when the cell does not physically exist.
 {
   "stepId": "clear-hyperlink",
   "target": {
-    "type": "BY_ADDRESS",
+    "type": "CELL_BY_ADDRESS",
     "sheetName": "Inventory",
     "address": "A1"
   },
@@ -95,7 +95,7 @@ requires the authoritative plain `text` plus `author`, and can also author order
 {
   "stepId": "set-comment",
   "target": {
-    "type": "BY_ADDRESS",
+    "type": "CELL_BY_ADDRESS",
     "sheetName": "Inventory",
     "address": "B4"
   },
@@ -177,7 +177,7 @@ No-op when the cell does not physically exist.
 {
   "stepId": "clear-comment",
   "target": {
-    "type": "BY_ADDRESS",
+    "type": "CELL_BY_ADDRESS",
     "sheetName": "Inventory",
     "address": "B4"
   },

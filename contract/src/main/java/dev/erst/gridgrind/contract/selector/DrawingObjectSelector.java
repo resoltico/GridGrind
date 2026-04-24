@@ -6,8 +6,10 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 /** Selects one or more sheet-local drawing objects. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = DrawingObjectSelector.AllOnSheet.class, name = "ALL_ON_SHEET"),
-  @JsonSubTypes.Type(value = DrawingObjectSelector.ByName.class, name = "BY_NAME")
+  @JsonSubTypes.Type(
+      value = DrawingObjectSelector.AllOnSheet.class,
+      name = "DRAWING_OBJECT_ALL_ON_SHEET"),
+  @JsonSubTypes.Type(value = DrawingObjectSelector.ByName.class, name = "DRAWING_OBJECT_BY_NAME")
 })
 public sealed interface DrawingObjectSelector extends Selector
     permits DrawingObjectSelector.AllOnSheet, DrawingObjectSelector.ByName {

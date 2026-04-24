@@ -189,7 +189,7 @@ final class ExcelPivotTableController {
               List.of(ExcelPivotTableIdentitySupport.resolvedName(handle))));
     }
 
-    PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle);
+    PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle).orElse(null);
     if (location == null) {
       findings.add(
           finding(
@@ -273,7 +273,7 @@ final class ExcelPivotTableController {
       String title,
       String message,
       List<String> evidence) {
-    PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle);
+    PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle).orElse(null);
     WorkbookAnalysis.AnalysisLocation analysisLocation =
         location == null
             ? new WorkbookAnalysis.AnalysisLocation.Sheet(handle.sheetName())
@@ -574,7 +574,7 @@ final class ExcelPivotTableController {
         return handle;
       }
     }
-    return null;
+    return java.util.Optional.<PivotHandle>empty().orElse(null);
   }
 
   List<PivotHandle> allPivotTables(ExcelWorkbook workbook) {
@@ -598,7 +598,7 @@ final class ExcelPivotTableController {
 
   ExcelPivotTableSnapshot snapshot(XSSFWorkbook workbook, PivotHandle handle) {
     String name = ExcelPivotTableIdentitySupport.resolvedName(handle);
-    PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle);
+    PivotLocation location = ExcelPivotTableIdentitySupport.safeLocation(handle).orElse(null);
     ExcelPivotTableSnapshot.Anchor anchor =
         location == null
             ? new ExcelPivotTableSnapshot.Anchor("A1", "A1")
@@ -803,11 +803,13 @@ final class ExcelPivotTableController {
 
   String numberFormat(XSSFWorkbook workbook, Long numFmtId) {
     if (numFmtId == null) {
-      return null;
+      return java.util.Optional.<String>empty().orElse(null);
     }
     short formatIndex = numFmtId > Short.MAX_VALUE ? Short.MAX_VALUE : (short) numFmtId.longValue();
     String format = workbook.createDataFormat().getFormat(formatIndex);
-    return format == null || format.isBlank() ? null : format;
+    return format == null || format.isBlank()
+        ? java.util.Optional.<String>empty().orElse(null)
+        : format;
   }
 
   XSSFPivotCacheDefinition requiredCacheDefinition(XSSFPivotTable pivotTable) {
@@ -822,7 +824,7 @@ final class ExcelPivotTableController {
     try {
       return pivotTable.getPivotCacheDefinition();
     } catch (RuntimeException exception) {
-      return null;
+      return java.util.Optional.<XSSFPivotCacheDefinition>empty().orElse(null);
     }
   }
 
@@ -836,7 +838,7 @@ final class ExcelPivotTableController {
         return relationType.cast(relation);
       }
     }
-    return null;
+    return java.util.Optional.<T>empty().orElse(null);
   }
 
   CTPivotCache workbookPivotCache(XSSFWorkbook workbook, long cacheId) {
@@ -845,7 +847,7 @@ final class ExcelPivotTableController {
         return cache;
       }
     }
-    return null;
+    return java.util.Optional.<CTPivotCache>empty().orElse(null);
   }
 
   List<CTPivotCache> workbookPivotCaches(XSSFWorkbook workbook) {

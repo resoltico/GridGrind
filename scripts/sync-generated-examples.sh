@@ -54,7 +54,7 @@ cat > "${request_path}" <<EOF
     {
       "stepId": "ensure-secure",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Secure"
       },
       "action": {
@@ -64,7 +64,7 @@ cat > "${request_path}" <<EOF
     {
       "stepId": "seed-secure-cells",
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Secure",
         "range": "A1:B3"
       },

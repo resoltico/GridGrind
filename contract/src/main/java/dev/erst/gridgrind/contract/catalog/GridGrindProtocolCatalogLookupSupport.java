@@ -41,7 +41,7 @@ final class GridGrindProtocolCatalogLookupSupport {
     List<CatalogSearchMatch> matches =
         allLookupRefs(catalog).stream()
             .map(ref -> searchMatch(ref, normalizedQuery, tokens))
-            .filter(Objects::nonNull)
+            .flatMap(Optional::stream)
             .sorted(
                 Comparator.comparingInt(RankedSearchMatch::rank)
                     .thenComparing(match -> match.match().qualifiedId()))
@@ -50,7 +50,7 @@ final class GridGrindProtocolCatalogLookupSupport {
     return new CatalogSearchResult(trimmedQuery, matches);
   }
 
-  private static RankedSearchMatch searchMatch(
+  private static Optional<RankedSearchMatch> searchMatch(
       CatalogLookupRef ref, String normalizedQuery, List<String> tokens) {
     String lookupId = ref.lookupId().toLowerCase(Locale.ROOT);
     String qualifiedId = ref.qualifiedId().toLowerCase(Locale.ROOT);
@@ -68,16 +68,17 @@ final class GridGrindProtocolCatalogLookupSupport {
       rank = 3;
     }
     if (rank == null) {
-      return null;
+      return Optional.empty();
     }
-    return new RankedSearchMatch(
-        rank,
-        new CatalogSearchMatch(
-            ref.catalogGroup(),
-            ref.lookupId(),
-            ref.qualifiedId(),
-            kindFor(ref.value()),
-            summaryFor(ref.value())));
+    return Optional.of(
+        new RankedSearchMatch(
+            rank,
+            new CatalogSearchMatch(
+                ref.catalogGroup(),
+                ref.lookupId(),
+                ref.qualifiedId(),
+                kindFor(ref.value()),
+                summaryFor(ref.value()))));
   }
 
   private static boolean containsAllTokens(String haystack, List<String> tokens) {

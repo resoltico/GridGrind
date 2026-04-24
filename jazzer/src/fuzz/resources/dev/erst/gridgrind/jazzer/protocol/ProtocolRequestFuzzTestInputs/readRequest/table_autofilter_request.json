@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Dispatch"
       }
     },
@@ -118,7 +118,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Dispatch",
         "range": "A1:C4"
       }
@@ -129,7 +129,7 @@
         "type": "SET_AUTOFILTER"
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Dispatch",
         "range": "A1:C4"
       }
@@ -148,7 +148,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME_ON_SHEET",
+        "type": "TABLE_BY_NAME_ON_SHEET",
         "name": "DispatchQueue",
         "sheetName": "Dispatch"
       }
@@ -225,7 +225,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Dispatch",
         "range": "H1:I4"
       }
@@ -236,7 +236,7 @@
         "type": "SET_AUTOFILTER"
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Dispatch",
         "range": "H1:I4"
       }
@@ -247,7 +247,7 @@
       },
       "stepId": "tables",
       "target": {
-        "type": "ALL"
+        "type": "TABLE_ALL"
       }
     },
     {
@@ -256,7 +256,7 @@
       },
       "stepId": "autofilters",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Dispatch"
       }
     },
@@ -266,7 +266,7 @@
       },
       "stepId": "table-health",
       "target": {
-        "type": "ALL"
+        "type": "TABLE_ALL"
       }
     },
     {
@@ -275,7 +275,7 @@
       },
       "stepId": "autofilter-health",
       "target": {
-        "type": "BY_NAMES",
+        "type": "SHEET_BY_NAMES",
         "names": [
           "Dispatch"
         ]

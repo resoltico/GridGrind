@@ -107,23 +107,17 @@ final class NativeStandardInputProbe implements BooleanSupplier {
 
   static NativeStandardInputProbe windowsCurrentProcess() {
     Linker linker = Linker.nativeLinker();
-    return windowsCurrentProcessFromLookup(kernel32Lookup(), downcallHandleProvider(linker));
+    SymbolLookup kernel32Lookup =
+        libraryLookup(() -> SymbolLookup.libraryLookup("Kernel32", Arena.global())).orElse(null);
+    return windowsCurrentProcessFromLookup(kernel32Lookup, linker::downcallHandle);
   }
 
-  private static SymbolLookup kernel32Lookup() {
-    return libraryLookupOrNull(() -> SymbolLookup.libraryLookup("Kernel32", Arena.global()));
-  }
-
-  static SymbolLookup libraryLookupOrNull(Supplier<SymbolLookup> lookupFactory) {
+  static Optional<SymbolLookup> libraryLookup(Supplier<SymbolLookup> lookupFactory) {
     try {
-      return lookupFactory.get();
+      return Optional.of(lookupFactory.get());
     } catch (RuntimeException | LinkageError exception) {
-      return null;
+      return Optional.empty();
     }
-  }
-
-  private static DowncallHandleProvider downcallHandleProvider(Linker linker) {
-    return linker::downcallHandle;
   }
 
   static NativeStandardInputProbe windowsCurrentProcessFromLookup(

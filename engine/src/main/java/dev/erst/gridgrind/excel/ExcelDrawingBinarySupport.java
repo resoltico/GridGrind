@@ -74,7 +74,7 @@ final class ExcelDrawingBinarySupport {
       org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     String sheetRelationId = previewSheetRelationId(objectData.getOleObject());
     if (sheetRelationId == null) {
-      return null;
+      return java.util.Optional.<org.apache.poi.openxml4j.opc.PackagePart>empty().orElse(null);
     }
     org.apache.poi.openxml4j.opc.PackagePart previewPart =
         relatedInternalPart(sheetPart(objectData), sheetRelationId);
@@ -91,13 +91,13 @@ final class ExcelDrawingBinarySupport {
   static org.apache.poi.openxml4j.opc.PackagePart relatedInternalPart(
       org.apache.poi.openxml4j.opc.PackagePart sourcePart, String relationshipId) {
     if (relationshipId == null || relationshipId.isBlank()) {
-      return null;
+      return java.util.Optional.<org.apache.poi.openxml4j.opc.PackagePart>empty().orElse(null);
     }
     org.apache.poi.openxml4j.opc.PackageRelationship relationship =
         sourcePart.getRelationship(relationshipId);
     if (relationship == null
         || relationship.getTargetMode() == org.apache.poi.openxml4j.opc.TargetMode.EXTERNAL) {
-      return null;
+      return java.util.Optional.<org.apache.poi.openxml4j.opc.PackagePart>empty().orElse(null);
     }
     try {
       return sourcePart
@@ -146,7 +146,7 @@ final class ExcelDrawingBinarySupport {
   static String previewSheetRelationId(
       org.openxmlformats.schemas.spreadsheetml.x2006.main.CTOleObject oleObject) {
     if (!oleObject.isSetObjectPr()) {
-      return null;
+      return java.util.Optional.<String>empty().orElse(null);
     }
     org.openxmlformats.schemas.spreadsheetml.x2006.main.CTObjectPr objectPr =
         oleObject.getObjectPr();
@@ -169,7 +169,7 @@ final class ExcelDrawingBinarySupport {
   static String previewDrawingRelationId(org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {
     if (objectData.getCTShape().getSpPr().getBlipFill() == null
         || objectData.getCTShape().getSpPr().getBlipFill().getBlip() == null) {
-      return null;
+      return java.util.Optional.<String>empty().orElse(null);
     }
     return objectData.getCTShape().getSpPr().getBlipFill().getBlip().getEmbed();
   }
@@ -291,7 +291,8 @@ final class ExcelDrawingBinarySupport {
       } else {
         for (org.apache.poi.xssf.usermodel.XSSFShape shape : drawing.getShapes()) {
           if (shape instanceof XSSFPicture picture
-              && imagePartName.equals(ExcelDrawingPictureSupport.imagePartNameOrNull(picture))) {
+              && imagePartName.equals(
+                  ExcelDrawingPictureSupport.imagePartNameOrNull(picture).orElse(null))) {
             return true;
           }
           if (shape instanceof org.apache.poi.xssf.usermodel.XSSFObjectData objectData) {

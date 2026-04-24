@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: LEGAL
-updated: "2026-04-19"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, patent, patents, legal, contributors, dependencies, non-assertion, mit, apache, bsd]
   questions: ["what is the patent posture for gridgrind", "does gridgrind include a patent non-assertion statement", "what do contributors need to know about patents"]

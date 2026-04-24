@@ -128,23 +128,25 @@ class ConditionalFormattingRuleReportTest {
             List.of(ExcelConditionalFormattingUnsupportedFeature.ALIGNMENT));
 
     DifferentialStyleReport report =
-        InspectionResultValidationReportSupport.toDifferentialStyleReport(style);
+        InspectionResultValidationReportSupport.toDifferentialStyleReport(style).orElseThrow();
     DifferentialBorderReport borderReport =
-        InspectionResultValidationReportSupport.toDifferentialBorderReport(border);
+        InspectionResultValidationReportSupport.toDifferentialBorderReport(border).orElseThrow();
     DifferentialBorderReport sparseBorderReport =
         InspectionResultValidationReportSupport.toDifferentialBorderReport(
-            new ExcelDifferentialBorder(
-                new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#102030"),
-                null,
-                null,
-                null,
-                null));
+                new ExcelDifferentialBorder(
+                    new ExcelDifferentialBorderSide(ExcelBorderStyle.THIN, "#102030"),
+                    null,
+                    null,
+                    null,
+                    null))
+            .orElseThrow();
     DifferentialBorderSideReport borderSideReport =
         InspectionResultValidationReportSupport.toDifferentialBorderSideReport(
-            new ExcelDifferentialBorderSide(ExcelBorderStyle.THICK, "#AABBCC"));
+                new ExcelDifferentialBorderSide(ExcelBorderStyle.THICK, "#AABBCC"))
+            .orElseThrow();
 
-    assertNull(InspectionResultValidationReportSupport.toDifferentialStyleReport(null));
-    assertNull(InspectionResultValidationReportSupport.toDifferentialBorderReport(null));
+    assertTrue(InspectionResultValidationReportSupport.toDifferentialStyleReport(null).isEmpty());
+    assertTrue(InspectionResultValidationReportSupport.toDifferentialBorderReport(null).isEmpty());
     assertEquals("#111111", report.fontColor());
     assertEquals("#EEEEEE", report.fillColor());
     assertEquals(
@@ -181,7 +183,8 @@ class ConditionalFormattingRuleReportTest {
     assertThrows(
         IllegalArgumentException.class,
         () -> new DifferentialBorderReport(null, null, null, null, null));
-    assertNull(InspectionResultValidationReportSupport.toDifferentialBorderSideReport(null));
+    assertTrue(
+        InspectionResultValidationReportSupport.toDifferentialBorderSideReport(null).isEmpty());
   }
 
   @Test

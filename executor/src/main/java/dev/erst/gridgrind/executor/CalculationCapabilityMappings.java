@@ -7,6 +7,7 @@ import dev.erst.gridgrind.excel.ExcelFormulaCapabilityAssessment;
 import dev.erst.gridgrind.excel.ExcelFormulaCapabilityKind;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Canonical executor mappings for engine-side formula capability facts. */
 final class CalculationCapabilityMappings {
@@ -46,18 +47,20 @@ final class CalculationCapabilityMappings {
     };
   }
 
-  static GridGrindProblemCode problemCodeFor(ExcelFormulaCapabilityAssessment assessment) {
+  static Optional<GridGrindProblemCode> problemCodeFor(
+      ExcelFormulaCapabilityAssessment assessment) {
     Objects.requireNonNull(assessment, "assessment must not be null");
     if (assessment.issue() == null) {
-      return null;
+      return Optional.empty();
     }
-    return switch (assessment.issue()) {
-      case INVALID_FORMULA -> GridGrindProblemCode.INVALID_FORMULA;
-      case MISSING_EXTERNAL_WORKBOOK -> GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK;
-      case UNREGISTERED_USER_DEFINED_FUNCTION ->
-          GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION;
-      case UNSUPPORTED_FORMULA -> GridGrindProblemCode.UNSUPPORTED_FORMULA;
-    };
+    return Optional.of(
+        switch (assessment.issue()) {
+          case INVALID_FORMULA -> GridGrindProblemCode.INVALID_FORMULA;
+          case MISSING_EXTERNAL_WORKBOOK -> GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK;
+          case UNREGISTERED_USER_DEFINED_FUNCTION ->
+              GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION;
+          case UNSUPPORTED_FORMULA -> GridGrindProblemCode.UNSUPPORTED_FORMULA;
+        });
   }
 
   static int severityRank(ExcelFormulaCapabilityAssessment assessment) {

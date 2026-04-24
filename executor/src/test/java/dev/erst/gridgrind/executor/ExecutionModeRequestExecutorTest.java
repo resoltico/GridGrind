@@ -206,7 +206,13 @@ class ExecutionModeRequestExecutorTest {
   void eventReadModeOnNewWorkbookWithoutMutationsUsesInjectedDefaultTempFactory() {
     DefaultGridGrindRequestExecutor executor =
         new DefaultGridGrindRequestExecutor(
-            new WorkbookCommandExecutor(), new WorkbookReadExecutor(), ExcelWorkbook::close);
+            new DefaultGridGrindRequestExecutorDependencies(
+                new WorkbookCommandExecutor(),
+                new WorkbookReadExecutor(),
+                ExcelWorkbook::close,
+                java.nio.file.Files::createTempFile,
+                dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySupport.ReadableWorkbook::close,
+                dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter::markRecalculateOnOpen));
 
     GridGrindResponse.Success success =
         success(
@@ -382,12 +388,15 @@ class ExecutionModeRequestExecutorTest {
   void streamingWriteModeReportsTempFileCreationIoFailure() {
     DefaultGridGrindRequestExecutor executor =
         new DefaultGridGrindRequestExecutor(
-            new WorkbookCommandExecutor(),
-            new WorkbookReadExecutor(),
-            ExcelWorkbook::close,
-            (_, _) -> {
-              throw new IOException("temp creation failed");
-            });
+            new DefaultGridGrindRequestExecutorDependencies(
+                new WorkbookCommandExecutor(),
+                new WorkbookReadExecutor(),
+                ExcelWorkbook::close,
+                (_, _) -> {
+                  throw new IOException("temp creation failed");
+                },
+                dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySupport.ReadableWorkbook::close,
+                dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter::markRecalculateOnOpen));
 
     GridGrindResponse.Failure failure =
         failure(

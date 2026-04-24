@@ -67,25 +67,29 @@ class DataValidationInputTest {
     assertEquals(
         new ExcelDataValidationPrompt("Ship date", "Use today or later.", true),
         WorkbookCommandConverter.toExcelDataValidationPrompt(
-            prompt("Ship date", "Use today or later.", null)));
+                prompt("Ship date", "Use today or later.", null))
+            .orElseThrow());
     assertEquals(
         new ExcelDataValidationPrompt("Ship date", "Use today or later.", false),
         WorkbookCommandConverter.toExcelDataValidationPrompt(
-            prompt("Ship date", "Use today or later.", false)));
+                prompt("Ship date", "Use today or later.", false))
+            .orElseThrow());
     assertEquals(
         new ExcelDataValidationErrorAlert(
             ExcelDataValidationErrorStyle.INFORMATION, "Invalid date", "Pick a real date.", true),
         WorkbookCommandConverter.toExcelDataValidationErrorAlert(
-            errorAlert(
-                ExcelDataValidationErrorStyle.INFORMATION,
-                "Invalid date",
-                "Pick a real date.",
-                null)));
+                errorAlert(
+                    ExcelDataValidationErrorStyle.INFORMATION,
+                    "Invalid date",
+                    "Pick a real date.",
+                    null))
+            .orElseThrow());
     assertEquals(
         new ExcelDataValidationErrorAlert(
             ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false),
         WorkbookCommandConverter.toExcelDataValidationErrorAlert(
-            errorAlert(
-                ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false)));
+                errorAlert(
+                    ExcelDataValidationErrorStyle.STOP, "Invalid date", "Pick a real date.", false))
+            .orElseThrow());
   }
 }

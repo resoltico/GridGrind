@@ -29,7 +29,7 @@ class GridGrindRequestDoctorTest {
               "steps": [
                 {
                   "stepId": "ensure-budget",
-                  "target": { "type": "BY_NAME", "name": "Budget" },
+                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
                   "action": { "type": "ENSURE_SHEET" }
                 }
               ]
@@ -44,12 +44,12 @@ class GridGrindRequestDoctorTest {
               "steps": [
                 {
                   "stepId": "ensure-budget",
-                  "target": { "type": "BY_NAME", "name": "Budget" },
+                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
                   "action": { "type": "ENSURE_SHEET" }
                 },
                 {
                   "stepId": "set-title",
-                  "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "action": {
                     "type": "SET_CELL",
                     "value": { "type": "TEXT", "source": { "type": "STANDARD_INPUT" } }
@@ -85,12 +85,12 @@ class GridGrindRequestDoctorTest {
               "steps": [
                 {
                   "stepId": "ensure-budget",
-                  "target": { "type": "BY_NAME", "name": "Budget Sheet" },
+                  "target": { "type": "SHEET_BY_NAME", "name": "Budget Sheet" },
                   "action": { "type": "ENSURE_SHEET" }
                 },
                 {
                   "stepId": "set-formula",
-                  "target": { "type": "BY_ADDRESS", "sheetName": "Budget Sheet", "address": "B2" },
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget Sheet", "address": "B2" },
                   "action": {
                     "type": "SET_CELL",
                     "value": {
@@ -132,12 +132,12 @@ class GridGrindRequestDoctorTest {
               "steps": [
                 {
                   "stepId": "ensure-budget",
-                  "target": { "type": "BY_NAME", "name": "Budget" },
+                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
                   "action": { "type": "ENSURE_SHEET" }
                 },
                 {
                   "stepId": "assert-budget",
-                  "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "assertion": {
                     "type": "EXPECT_CELL_VALUE",
                     "expectedValue": { "type": "BLANK" }
@@ -145,7 +145,7 @@ class GridGrindRequestDoctorTest {
                 },
                 {
                   "stepId": "read-budget",
-                  "target": { "type": "CURRENT" },
+                  "target": { "type": "WORKBOOK_CURRENT" },
                   "query": { "type": "GET_WORKBOOK_SUMMARY" }
                 }
               ]
@@ -164,6 +164,25 @@ class GridGrindRequestDoctorTest {
   }
 
   @Test
+  void productionConstructorsInstantiateConcreteWorkbookSupport() {
+    assertTrue(new GridGrindRequestDoctor().diagnose(null).problem().message().contains("request"));
+    assertTrue(
+        new GridGrindRequestDoctor(new ExecutionValidationSupport())
+            .diagnose(null)
+            .problem()
+            .message()
+            .contains("request"));
+    assertTrue(
+        new GridGrindRequestDoctor(
+                new ExecutionValidationSupport(),
+                new ExecutionWorkbookSupport(Files::createTempFile))
+            .diagnose(null)
+            .problem()
+            .message()
+            .contains("request"));
+  }
+
+  @Test
   void diagnoseWithBindingsReturnsCleanReportWhenRelativeInputsResolve() throws IOException {
     Path workingDirectory = Files.createTempDirectory("gridgrind-doctor-bindings-");
     Files.writeString(workingDirectory.resolve("title.txt"), "Quarterly Budget");
@@ -175,12 +194,12 @@ class GridGrindRequestDoctorTest {
               "steps": [
                 {
                   "stepId": "ensure-budget",
-                  "target": { "type": "BY_NAME", "name": "Budget" },
+                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
                   "action": { "type": "ENSURE_SHEET" }
                 },
                 {
                   "stepId": "set-title",
-                  "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "action": {
                     "type": "SET_CELL",
                     "value": {
@@ -213,12 +232,12 @@ class GridGrindRequestDoctorTest {
               "steps": [
                 {
                   "stepId": "ensure-budget",
-                  "target": { "type": "BY_NAME", "name": "Budget" },
+                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
                   "action": { "type": "ENSURE_SHEET" }
                 },
                 {
                   "stepId": "set-title",
-                  "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "action": {
                     "type": "SET_CELL",
                     "value": {
@@ -254,12 +273,12 @@ class GridGrindRequestDoctorTest {
               "steps": [
                 {
                   "stepId": "ensure-budget",
-                  "target": { "type": "BY_NAME", "name": "Budget" },
+                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
                   "action": { "type": "ENSURE_SHEET" }
                 },
                 {
                   "stepId": "set-title",
-                  "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "action": {
                     "type": "SET_CELL",
                     "value": {
@@ -300,7 +319,7 @@ class GridGrindRequestDoctorTest {
               "steps": [
                 {
                   "stepId": "summary",
-                  "target": { "type": "CURRENT" },
+                  "target": { "type": "WORKBOOK_CURRENT" },
                   "query": { "type": "GET_WORKBOOK_SUMMARY" }
                 }
               ]
@@ -339,7 +358,7 @@ class GridGrindRequestDoctorTest {
               "steps": [
                 {
                   "stepId": "summary",
-                  "target": { "type": "CURRENT" },
+                  "target": { "type": "WORKBOOK_CURRENT" },
                   "query": { "type": "GET_WORKBOOK_SUMMARY" }
                 }
               ]

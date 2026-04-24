@@ -23,7 +23,7 @@
   "steps" : [ {
     "stepId" : "step-01-ensure-sheet",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Ledger"
     },
     "action" : {
@@ -32,7 +32,7 @@
   }, {
     "stepId" : "step-02-append-header",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Ledger"
     },
     "action" : {
@@ -60,7 +60,7 @@
   }, {
     "stepId" : "step-03-append-ops",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Ledger"
     },
     "action" : {
@@ -85,7 +85,7 @@
   }, {
     "stepId" : "step-04-append-facilities",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Ledger"
     },
     "action" : {
@@ -110,7 +110,7 @@
   }, {
     "stepId" : "workbook",
     "target" : {
-      "type" : "CURRENT"
+      "type" : "WORKBOOK_CURRENT"
     },
     "query" : {
       "type" : "GET_WORKBOOK_SUMMARY"
@@ -118,7 +118,7 @@
   }, {
     "stepId" : "ledger-sheet",
     "target" : {
-      "type" : "BY_NAME",
+      "type" : "SHEET_BY_NAME",
       "name" : "Ledger"
     },
     "query" : {

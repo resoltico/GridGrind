@@ -140,7 +140,7 @@ final class ExcelSheetCopySupport {
         sheetAutofilter.filterColumns().stream()
             .map(ExcelSheetCopySupport::copyableAutofilterColumn)
             .toList(),
-        copyableSortState(sheetAutofilter.sortState()));
+        copyableSortState(sheetAutofilter.sortState()).orElse(null));
   }
 
   private static void copyLocalNamedRanges(
@@ -315,7 +315,7 @@ final class ExcelSheetCopySupport {
       ExcelDifferentialStyleSnapshot style, String sourceSheetName) {
     ExcelWorkbookSheetSupport.requireSheetName(sourceSheetName, "sourceSheetName");
     if (style == null) {
-      return null;
+      return java.util.Optional.<ExcelDifferentialStyle>empty().orElse(null);
     }
     if (!style.unsupportedFeatures().isEmpty()) {
       throw new IllegalArgumentException(
@@ -340,7 +340,7 @@ final class ExcelSheetCopySupport {
       List<ExcelAutofilterSnapshot> autofilters) {
     Objects.requireNonNull(autofilters, "autofilters must not be null");
     if (autofilters.isEmpty()) {
-      return null;
+      return java.util.Optional.<ExcelAutofilterSnapshot.SheetOwned>empty().orElse(null);
     }
     ExcelAutofilterSnapshot autofilter = autofilters.getFirst();
     return switch (autofilter) {
@@ -403,17 +403,19 @@ final class ExcelSheetCopySupport {
     };
   }
 
-  private static ExcelAutofilterSortState copyableSortState(
-      ExcelAutofilterSortStateSnapshot sortState) {
-    if (sortState == null) {
-      return null;
-    }
-    return new ExcelAutofilterSortState(
-        sortState.range(),
-        sortState.caseSensitive(),
-        sortState.columnSort(),
-        sortState.sortMethod(),
-        sortState.conditions().stream().map(ExcelSheetCopySupport::copyableSortCondition).toList());
+  private static Optional<ExcelAutofilterSortState> copyableSortState(
+      Optional<ExcelAutofilterSortStateSnapshot> sortState) {
+    return Objects.requireNonNull(sortState, "sortState must not be null")
+        .map(
+            snapshot ->
+                new ExcelAutofilterSortState(
+                    snapshot.range(),
+                    snapshot.caseSensitive(),
+                    snapshot.columnSort(),
+                    snapshot.sortMethod(),
+                    snapshot.conditions().stream()
+                        .map(ExcelSheetCopySupport::copyableSortCondition)
+                        .toList()));
   }
 
   private static ExcelAutofilterSortCondition copyableSortCondition(

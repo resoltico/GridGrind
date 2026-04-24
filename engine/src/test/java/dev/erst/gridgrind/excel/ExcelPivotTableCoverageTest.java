@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import dev.erst.gridgrind.excel.foundation.ExcelPivotDataConsolidateFunction;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.openxml4j.opc.PackagePart;
@@ -365,7 +366,7 @@ class ExcelPivotTableCoverageTest {
       Object firstHandle = allPivotHandles(workbook).getFirst();
       firstPivot.getCTPivotTableDefinition().getLocation().setRef(null);
       assertNull(invoke(controller, "rawLocationRange", Object.class, firstHandle));
-      assertNull(invoke(controller, "safeLocation", Object.class, firstHandle));
+      assertEquals(Optional.empty(), invoke(controller, "safeLocation", Object.class, firstHandle));
 
       WorkbookAnalysis.AnalysisFinding sheetFinding =
           invoke(

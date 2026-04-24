@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -740,24 +741,28 @@ class ExcelAdvancedValueObjectTest {
 
   private static void assertRgbColorSupportValueObjects() throws IOException {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
-      assertEquals("#AABBCC", ExcelRgbColorSupport.normalizeRgbHex("#aabbcc", "color"));
+      assertEquals(
+          Optional.of("#AABBCC"), ExcelRgbColorSupport.normalizeRgbHex("#aabbcc", "color"));
       assertThrows(
           NullPointerException.class, () -> ExcelRgbColorSupport.normalizeRgbHex("#AABBCC", null));
       assertThrows(
           IllegalArgumentException.class, () -> ExcelRgbColorSupport.normalizeRgbHex(" ", "color"));
-      assertNull(ExcelRgbColorSupport.toRgbHex(null));
+      assertEquals(Optional.empty(), ExcelRgbColorSupport.toRgbHex(null));
       assertEquals(
-          "#112233",
+          Optional.of("#112233"),
           ExcelRgbColorSupport.toRgbHex(
               new XSSFColor(
                   new byte[] {0x11, 0x22, 0x33}, workbook.getStylesSource().getIndexedColors())));
-      assertNull(
+      assertEquals(
+          Optional.empty(),
           ExcelRgbColorSupport.toRgbHex(
               new XSSFColor(
                   new byte[] {0x11, 0x22}, workbook.getStylesSource().getIndexedColors())));
       assertEquals(
-          "#AABBCC",
+          Optional.of("#AABBCC"),
           ExcelRgbColorSupport.toRgbHex(ExcelRgbColorSupport.toXssfColor(workbook, "#AABBCC")));
+      assertThrows(
+          IllegalArgumentException.class, () -> ExcelRgbColorSupport.toXssfColor(workbook, null));
       assertThrows(
           NullPointerException.class, () -> ExcelRgbColorSupport.toXssfColor(null, "#AABBCC"));
       assertThrows(

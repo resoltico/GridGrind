@@ -2,7 +2,7 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/rich_text_request.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 2877
+Input Bytes: 2910
 Decode Outcome: PARSED
 Source Kind: NEW
 Persistence Kind: SAVE_AS
@@ -10,6 +10,6 @@ Operation Count: 4
 Assertion Count: 0
 Read Count: 2
 Assertion Kinds: (none)
-Read Kinds: GET_WINDOW=1, GET_CELLS=1
-Style Kinds: wrap_text=1, alignment=1, font_color=1, font_height=1, vertical_alignment=1, font_name=1, font_height_points=1, font=1
-Operation Kinds: SET_CELL=2, ENSURE_SHEET=1, APPLY_STYLE=1
+Read Kinds: GET_CELLS=1, GET_WINDOW=1
+Style Kinds: alignment=1, font_color=1, wrap_text=1, font=1, font_name=1, font_height_points=1, vertical_alignment=1, font_height=1
+Operation Kinds: SET_CELL=2, APPLY_STYLE=1, ENSURE_SHEET=1

@@ -296,7 +296,7 @@ final class ExcelSheetStructureSupport {
     try {
       return ExcelRange.parse(range);
     } catch (IllegalArgumentException exception) {
-      return null;
+      return java.util.Optional.<ExcelRange>empty().orElse(null);
     }
   }
 

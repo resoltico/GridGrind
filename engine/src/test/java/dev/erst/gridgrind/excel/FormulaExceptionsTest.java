@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.apache.poi.ss.formula.atp.AnalysisToolPak;
 import org.apache.poi.ss.formula.eval.FunctionEval;
@@ -104,13 +105,16 @@ class FormulaExceptionsTest {
 
   @Test
   void extractsFunctionNamesConservatively() {
-    assertNull(FormulaExceptions.leadingFunctionName(null));
-    assertNull(FormulaExceptions.leadingFunctionName("A1"));
-    assertNull(FormulaExceptions.leadingFunctionName(" (A1)"));
-    assertNull(FormulaExceptions.leadingFunctionName("1SUM(A1)"));
-    assertEquals("TEXTAFTER", FormulaExceptions.leadingFunctionName("TEXTAFTER(\"a,b\",\",\")"));
+    assertEquals(Optional.empty(), FormulaExceptions.leadingFunctionName(null));
+    assertEquals(Optional.empty(), FormulaExceptions.leadingFunctionName("A1"));
+    assertEquals(Optional.empty(), FormulaExceptions.leadingFunctionName(" (A1)"));
+    assertEquals(Optional.empty(), FormulaExceptions.leadingFunctionName("1SUM(A1)"));
     assertEquals(
-        "_XLFN.TEXTAFTER", FormulaExceptions.leadingFunctionName("_XLFN.TEXTAFTER(\"a,b\",\",\")"));
+        Optional.of("TEXTAFTER"),
+        FormulaExceptions.leadingFunctionName("TEXTAFTER(\"a,b\",\",\")"));
+    assertEquals(
+        Optional.of("_XLFN.TEXTAFTER"),
+        FormulaExceptions.leadingFunctionName("_XLFN.TEXTAFTER(\"a,b\",\",\")"));
   }
 
   @Test

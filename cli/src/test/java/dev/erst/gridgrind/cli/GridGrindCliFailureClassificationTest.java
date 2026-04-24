@@ -390,7 +390,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                 {
                   "source": { "type": "NEW" },
                   "steps": [
-                    { "stepId": "summary", "target": { "type": "CURRENT" } }
+                    { "stepId": "summary", "target": { "type": "WORKBOOK_CURRENT" } }
                   ]
                 }
                 """
@@ -428,7 +428,7 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                     {
                       "stepId": "window",
                       "target": {
-                        "type": "RECTANGULAR_WINDOW",
+                        "type": "RANGE_RECTANGULAR_WINDOW",
                         "sheetName": "Budget",
                         "topLeftAddress": "A1",
                         "rowCount": 0,
@@ -599,8 +599,8 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                     "calculation": { "strategy": { "type": "EVALUATE_ALL" } }
                   },
                   "steps": [
-                    { "stepId": "ensure-data", "target": { "type": "BY_NAME", "name": "Data" }, "action": { "type": "ENSURE_SHEET" } },
-                    { "stepId": "set-formula", "target": { "type": "BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(" } } } }
+                    { "stepId": "ensure-data", "target": { "type": "SHEET_BY_NAME", "name": "Data" }, "action": { "type": "ENSURE_SHEET" } },
+                    { "stepId": "set-formula", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Data", "address": "A1" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(" } } } }
                   ]
                 }
                 """
@@ -679,11 +679,11 @@ class GridGrindCliFailureClassificationTest extends GridGrindCliTestSupport {
                     {
                       "source": { "type": "NEW" },
                       "steps": [
-                        { "stepId": "ensure-sheet", "target": { "type": "BY_NAME", "name": "S" }, "action": { "type": "ENSURE_SHEET" } },
+                        { "stepId": "ensure-sheet", "target": { "type": "SHEET_BY_NAME", "name": "S" }, "action": { "type": "ENSURE_SHEET" } },
                         {
                           "stepId": "w",
                           "target": {
-                            "type": "RECTANGULAR_WINDOW",
+                            "type": "RANGE_RECTANGULAR_WINDOW",
                             "sheetName": "S",
                             "topLeftAddress": "A1",
                             "rowCount": 1000,

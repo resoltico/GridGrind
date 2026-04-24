@@ -15,8 +15,6 @@ import dev.erst.gridgrind.excel.foundation.ExcelChartLegendPosition;
 import dev.erst.gridgrind.excel.foundation.ExcelChartMarkerStyle;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingShapeKind;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.List;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -75,14 +73,7 @@ class ExcelResidualHelperCoverageTest {
       varyingLineChart.getCTChart().getPlotArea().addNewLineChart().addNewVaryColors().setVal(true);
       assertTrue(ExcelChartSnapshotSupport.lineVaryColors(varyingLineChart));
 
-      List<?> emptyPlots =
-          (List<?>)
-              invokeStatic(
-                  ExcelChartPlotSnapshotSupport.class,
-                  "snapshotPlots",
-                  new Class<?>[] {XSSFChart.class, List.class},
-                  emptyChart,
-                  List.of());
+      List<?> emptyPlots = ExcelChartPlotSnapshotSupport.snapshotPlots(emptyChart, List.of());
       assertInstanceOf(ExcelChartSnapshot.Unsupported.class, emptyPlots.getFirst());
 
       XDDFBarChartData unplottedBarData =
@@ -92,13 +83,8 @@ class ExcelResidualHelperCoverageTest {
                   emptyChart.createCategoryAxis(AxisPosition.BOTTOM),
                   emptyChart.createValueAxis(AxisPosition.LEFT));
       List<?> unsupportedPlots =
-          (List<?>)
-              invokeStatic(
-                  ExcelChartPlotSnapshotSupport.class,
-                  "snapshotPlots",
-                  new Class<?>[] {XSSFChart.class, List.class},
-                  emptyChart,
-                  List.of(unplottedBarData, new UnsupportedChartData()));
+          ExcelChartPlotSnapshotSupport.snapshotPlots(
+              emptyChart, List.of(unplottedBarData, new UnsupportedChartData()));
       assertEquals(2, unsupportedPlots.size());
       assertTrue(
           unsupportedPlots.stream().allMatch(ExcelChartSnapshot.Unsupported.class::isInstance));
@@ -208,36 +194,18 @@ class ExcelResidualHelperCoverageTest {
       CTUnsignedInt missingAxisId = CTUnsignedInt.Factory.newInstance();
       missingAxisId.setVal(Long.MAX_VALUE);
       List<?> snapshotAxes =
-          (List<?>)
-              invokeStatic(
-                  ExcelChartPlotSnapshotSupport.class,
-                  "snapshotAxes",
-                  new Class<?>[] {java.util.Map.class, List.class},
-                  java.util.Map.of(scratchAxis.getId(), (XDDFChartAxis) scratchAxis),
-                  List.of(knownAxisId, missingAxisId));
+          ExcelChartPlotSnapshotSupport.snapshotAxes(
+              java.util.Map.of(scratchAxis.getId(), (XDDFChartAxis) scratchAxis),
+              List.of(knownAxisId, missingAxisId));
       assertEquals(1, snapshotAxes.size());
 
       assertThrows(
           IllegalStateException.class,
-          () ->
-              invokeStatic(
-                  ExcelChartPlotSnapshotSupport.class,
-                  "snapshotDataSource",
-                  new Class<?>[] {
-                    XSSFSheet.class, org.apache.poi.xddf.usermodel.chart.XDDFDataSource.class
-                  },
-                  sheet,
-                  null));
+          () -> ExcelChartPlotSnapshotSupport.snapshotDataSource(sheet, null));
       assertInstanceOf(
           ExcelChartSnapshot.DataSource.NumericLiteral.class,
-          invokeStatic(
-              ExcelChartPlotSnapshotSupport.class,
-              "snapshotDataSource",
-              new Class<?>[] {
-                XSSFSheet.class, org.apache.poi.xddf.usermodel.chart.XDDFDataSource.class
-              },
-              sheet,
-              XDDFDataSourcesFactory.fromArray(new Double[] {1d, 2d})));
+          ExcelChartPlotSnapshotSupport.snapshotDataSource(
+              sheet, XDDFDataSourcesFactory.fromArray(new Double[] {1d, 2d})));
 
       ExcelChartMutationSupport.createChart(
           sheet,
@@ -337,13 +305,7 @@ class ExcelResidualHelperCoverageTest {
           DrawingObjectNotFoundException.class,
           assertThrows(
               DrawingObjectNotFoundException.class,
-              () ->
-                  invokeInstance(
-                      controller,
-                      "requiredLocatedShape",
-                      new Class<?>[] {XSSFSheet.class, String.class},
-                      sheet,
-                      "Missing")));
+              () -> controller.requiredLocatedShape(sheet, "Missing")));
 
       XSSFChart chart = drawing.createChart(drawing.createAnchor(0, 0, 0, 0, 1, 13, 7, 20));
       XSSFGraphicFrame graphicFrame = chart.getGraphicFrame();
@@ -364,11 +326,7 @@ class ExcelResidualHelperCoverageTest {
 
       ExcelDrawingObjectSnapshot.Shape graphicFrameSnapshot =
           (ExcelDrawingObjectSnapshot.Shape)
-              invokeStatic(
-                  ExcelDrawingSnapshotSupport.class,
-                  "snapshotGraphicFrame",
-                  new Class<?>[] {XSSFGraphicFrame.class},
-                  graphicFrame);
+              ExcelDrawingSnapshotSupport.snapshotGraphicFrame(graphicFrame);
       assertEquals(ExcelDrawingShapeKind.GRAPHIC_FRAME, graphicFrameSnapshot.kind());
 
       XSSFSheet chartSheet = workbook.createSheet("ChartTarget");
@@ -407,40 +365,18 @@ class ExcelResidualHelperCoverageTest {
           new ExcelSheetAnnotationSupport(annotationSheet, new ExcelDrawingController());
       annotationSupport.setComment("A1", new ExcelComment("Review", "GridGrind", false));
       String vmlRelationId =
-          (String)
-              invokeStatic(
-                  ExcelSheetAnnotationSupport.class,
-                  "vmlDrawingRelationId",
-                  new Class<?>[] {XSSFSheet.class},
-                  annotationSheet);
-      assertNotNull(vmlRelationId);
+          ExcelSheetAnnotationSupport.vmlDrawingRelationId(annotationSheet).orElseThrow();
       assertEquals(
-          vmlRelationId,
-          invokeStatic(
-              ExcelSheetAnnotationSupport.class,
-              "legacyDrawingRelationId",
-              new Class<?>[] {XSSFSheet.class},
-              annotationSheet));
+          java.util.Optional.of(vmlRelationId),
+          ExcelSheetAnnotationSupport.legacyDrawingRelationId(annotationSheet));
       CTLegacyDrawing legacyDrawing = annotationSheet.getCTWorksheet().getLegacyDrawing();
       legacyDrawing.setId("rIdMissing");
-      invokeStatic(
-          ExcelSheetAnnotationSupport.class,
-          "repairBrokenLegacyDrawingReference",
-          new Class<?>[] {XSSFSheet.class},
-          annotationSheet);
+      ExcelSheetAnnotationSupport.repairBrokenLegacyDrawingReference(annotationSheet);
       assertFalse(annotationSheet.getCTWorksheet().isSetLegacyDrawing());
-      invokeStatic(
-          ExcelSheetAnnotationSupport.class,
-          "ensureLegacyDrawingReference",
-          new Class<?>[] {XSSFSheet.class},
-          annotationSheet);
+      ExcelSheetAnnotationSupport.ensureLegacyDrawingReference(annotationSheet);
       assertEquals(
-          vmlRelationId,
-          invokeStatic(
-              ExcelSheetAnnotationSupport.class,
-              "legacyDrawingRelationId",
-              new Class<?>[] {XSSFSheet.class},
-              annotationSheet));
+          java.util.Optional.of(vmlRelationId),
+          ExcelSheetAnnotationSupport.legacyDrawingRelationId(annotationSheet));
       annotationSupport.clearComment("A1");
       annotationSheet.createRow(5).createCell(5);
       ExcelSheetAnnotationSupport.clearCellComment(annotationSheet.getRow(5).getCell(5));
@@ -449,49 +385,20 @@ class ExcelResidualHelperCoverageTest {
             legacyWorkbook.createSheet("Legacy").createRow(0).createCell(0));
       }
       XSSFSheet blankAnnotationSheet = workbook.createSheet("Blank");
-      assertNull(
-          invokeStatic(
-              ExcelSheetAnnotationSupport.class,
-              "vmlDrawingRelationId",
-              new Class<?>[] {XSSFSheet.class},
-              blankAnnotationSheet));
-      assertNull(
-          invokeStatic(
-              ExcelSheetAnnotationSupport.class,
-              "legacyDrawingRelationId",
-              new Class<?>[] {XSSFSheet.class},
-              blankAnnotationSheet));
-      invokeStatic(
-          ExcelSheetAnnotationSupport.class,
-          "ensureLegacyDrawingReference",
-          new Class<?>[] {XSSFSheet.class},
-          blankAnnotationSheet);
+      assertTrue(ExcelSheetAnnotationSupport.vmlDrawingRelationId(blankAnnotationSheet).isEmpty());
+      assertTrue(
+          ExcelSheetAnnotationSupport.legacyDrawingRelationId(blankAnnotationSheet).isEmpty());
+      ExcelSheetAnnotationSupport.ensureLegacyDrawingReference(blankAnnotationSheet);
       assertFalse(blankAnnotationSheet.getCTWorksheet().isSetLegacyDrawing());
-      invokeStatic(
-          ExcelSheetAnnotationSupport.class,
-          "removeCommentFromTable",
-          new Class<?>[] {XSSFSheet.class, CellAddress.class},
-          blankAnnotationSheet,
-          new CellAddress("A1"));
-      invokeStatic(
-          ExcelSheetAnnotationSupport.class,
-          "removeCommentShapeIfPresent",
-          new Class<?>[] {XSSFSheet.class, CellAddress.class},
-          annotationSheet,
-          new CellAddress("A1"));
+      ExcelSheetAnnotationSupport.removeCommentFromTable(
+          blankAnnotationSheet, new CellAddress("A1"));
+      ExcelSheetAnnotationSupport.removeCommentShapeIfPresent(
+          annotationSheet, new CellAddress("A1"));
 
-      invokeStatic(
-          ExcelSheetPresentationController.class,
-          "clearTabColor",
-          new Class<?>[] {XSSFSheet.class},
-          workbook.createSheet("NoSheetPr"));
+      ExcelSheetPresentationController.clearTabColor(workbook.createSheet("NoSheetPr"));
       XSSFSheet colorSheet = workbook.createSheet("Color");
       colorSheet.setTabColor(ExcelColorSupport.toXssfColor(workbook, new ExcelColor("#FF0000")));
-      invokeStatic(
-          ExcelSheetPresentationController.class,
-          "clearTabColor",
-          new Class<?>[] {XSSFSheet.class},
-          colorSheet);
+      ExcelSheetPresentationController.clearTabColor(colorSheet);
       assertNull(colorSheet.getTabColor());
 
       XSSFSheet paneSheet = workbook.createSheet("Pane");
@@ -533,37 +440,23 @@ class ExcelResidualHelperCoverageTest {
       assertThrows(
           InvalidCellAddressException.class,
           () ->
-              invokeStatic(
-                  ExcelSheetCellMutationSupport.class,
-                  "requireValidCellReference",
-                  new Class<?>[] {String.class, CellReference.class},
-                  "A0",
-                  new CellReference(-1, 0)));
+              ExcelSheetCellMutationSupport.requireValidCellReference(
+                  "A0", new CellReference(-1, 0)));
       assertThrows(
           InvalidCellAddressException.class,
           () ->
-              invokeStatic(
-                  ExcelSheetCellMutationSupport.class,
-                  "requireValidCellReference",
-                  new Class<?>[] {String.class, CellReference.class},
-                  "A0",
-                  new CellReference(0, -1)));
+              ExcelSheetCellMutationSupport.requireValidCellReference(
+                  "A0", new CellReference(0, -1)));
       assertThrows(
           InvalidCellAddressException.class,
           () ->
-              invokeStatic(
-                  ExcelSheetCellMutationSupport.class,
-                  "requireValidCellReference",
-                  new Class<?>[] {String.class, CellReference.class},
+              ExcelSheetCellMutationSupport.requireValidCellReference(
                   "A0",
                   new CellReference(0, SpreadsheetVersion.EXCEL2007.getLastColumnIndex() + 1)));
       assertThrows(
           InvalidCellAddressException.class,
           () ->
-              invokeStatic(
-                  ExcelSheetCellMutationSupport.class,
-                  "requireValidCellReference",
-                  new Class<?>[] {String.class, CellReference.class},
+              ExcelSheetCellMutationSupport.requireValidCellReference(
                   "A1048577",
                   new CellReference(SpreadsheetVersion.EXCEL2007.getLastRowIndex() + 1, 0)));
 
@@ -626,7 +519,7 @@ class ExcelResidualHelperCoverageTest {
     String originalUserHome = System.getProperty("user.home");
     System.clearProperty("java.io.tmpdir");
     try {
-      assertNull(invokeStatic(ExcelTempFiles.class, "systemTempRoot", new Class<?>[0]));
+      assertNull(ExcelTempFiles.systemTempRoot());
       Path fallbackOnlyRoot = java.nio.file.Files.createTempDirectory("gridgrind-temp-home-only-");
       System.setProperty("user.home", fallbackOnlyRoot.toString());
       Path tempFile = ExcelTempFiles.createManagedTempFile("gridgrind-home-only-", ".tmp");
@@ -653,7 +546,7 @@ class ExcelResidualHelperCoverageTest {
 
     System.clearProperty("user.home");
     try {
-      assertNull(invokeStatic(ExcelTempFiles.class, "userHomeFallbackRoot", new Class<?>[0]));
+      assertNull(ExcelTempFiles.userHomeFallbackRoot());
       Path tempFile = ExcelTempFiles.createManagedTempFile("gridgrind-system-only-", ".tmp");
       assertEquals("gridgrind", tempFile.getParent().getFileName().toString());
       java.nio.file.Files.deleteIfExists(tempFile);
@@ -679,69 +572,27 @@ class ExcelResidualHelperCoverageTest {
               new ExcelNamedRangeScope.WorkbookScope(),
               new ExcelNamedRangeTarget("Target", "A1")));
 
-      invokeStatic(
-          ExcelSheetCopyController.class,
-          "deleteLocalNamedRanges",
-          new Class<?>[] {ExcelWorkbook.class, String.class},
-          workbook,
-          "Target");
+      ExcelSheetCopyController.deleteLocalNamedRanges(workbook, "Target");
       assertEquals(
           List.of("WorkbookName"),
           workbook.namedRanges().stream().map(ExcelNamedRangeSnapshot::name).toList());
+      assertTrue(ExcelSheetCopyController.mayReferenceCopiedSheet("Source!A1", "Source"));
       assertTrue(
-          (Boolean)
-              invokeStatic(
-                  ExcelSheetCopyController.class,
-                  "mayReferenceCopiedSheet",
-                  new Class<?>[] {String.class, String.class},
-                  "Source!A1",
-                  "Source"));
+          ExcelSheetCopyController.mayReferenceCopiedSheet("'Source Name'!A1", "Source Name"));
       assertTrue(
-          (Boolean)
-              invokeStatic(
-                  ExcelSheetCopyController.class,
-                  "mayReferenceCopiedSheet",
-                  new Class<?>[] {String.class, String.class},
-                  "'Source Name'!A1",
-                  "Source Name"));
+          ExcelSheetCopyController.mayReferenceCopiedSheet("SUM(Source:Target!A1)", "Source"));
       assertTrue(
-          (Boolean)
-              invokeStatic(
-                  ExcelSheetCopyController.class,
-                  "mayReferenceCopiedSheet",
-                  new Class<?>[] {String.class, String.class},
-                  "SUM(Source:Target!A1)",
-                  "Source"));
-      assertTrue(
-          (Boolean)
-              invokeStatic(
-                  ExcelSheetCopyController.class,
-                  "mayReferenceCopiedSheet",
-                  new Class<?>[] {String.class, String.class},
-                  "SUM('Source Name':'Target'!A1)",
-                  "Source Name"));
-      assertFalse(
-          (Boolean)
-              invokeStatic(
-                  ExcelSheetCopyController.class,
-                  "mayReferenceCopiedSheet",
-                  new Class<?>[] {String.class, String.class},
-                  "Other!A1",
-                  "Source"));
+          ExcelSheetCopyController.mayReferenceCopiedSheet(
+              "SUM('Source Name':'Target'!A1)", "Source Name"));
+      assertFalse(ExcelSheetCopyController.mayReferenceCopiedSheet("Other!A1", "Source"));
       workbook
           .sheet("Target")
           .xssfSheet()
           .getRow(0)
           .createCell(1)
           .setCellFormula("\"Source:note\"");
-      invokeStatic(
-          ExcelSheetCopyController.class,
-          "retargetCopiedSheetFormulas",
-          new Class<?>[] {ExcelWorkbook.class, String.class, String.class, XSSFSheet.class},
-          workbook,
-          "Source",
-          "Target Copy",
-          workbook.sheet("Target").xssfSheet());
+      ExcelSheetCopyController.retargetCopiedSheetFormulas(
+          workbook, "Source", "Target Copy", workbook.sheet("Target").xssfSheet());
       assertEquals(
           "1+1", workbook.sheet("Target").xssfSheet().getRow(0).getCell(0).getCellFormula());
       assertEquals(
@@ -807,20 +658,10 @@ class ExcelResidualHelperCoverageTest {
                 chart.createValueAxis(AxisPosition.LEFT));
     XDDFLineChartData.Series lineSeries =
         (XDDFLineChartData.Series) lineData.addSeries(categories, values);
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        lineSeries,
-        markerSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(lineSeries, markerSeries);
     assertEquals("square", lineSeries.getCTLineSer().getMarker().getSymbol().getVal().toString());
     assertEquals(9L, lineSeries.getCTLineSer().getMarker().getSize().getVal());
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        lineSeries,
-        noOptionsSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(lineSeries, noOptionsSeries);
 
     XDDFLine3DChartData line3DData =
         (XDDFLine3DChartData)
@@ -830,18 +671,8 @@ class ExcelResidualHelperCoverageTest {
                 chart.createValueAxis(AxisPosition.RIGHT));
     XDDFLine3DChartData.Series line3DSeries =
         (XDDFLine3DChartData.Series) line3DData.addSeries(categories, values);
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        line3DSeries,
-        markerSeries);
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        line3DSeries,
-        noOptionsSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(line3DSeries, markerSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(line3DSeries, noOptionsSeries);
 
     XDDFScatterChartData scatterData =
         (XDDFScatterChartData)
@@ -851,18 +682,8 @@ class ExcelResidualHelperCoverageTest {
                 chart.createValueAxis(AxisPosition.LEFT));
     XDDFScatterChartData.Series scatterSeries =
         (XDDFScatterChartData.Series) scatterData.addSeries(values, values);
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        scatterSeries,
-        markerSeries);
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        scatterSeries,
-        noOptionsSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(scatterSeries, markerSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(scatterSeries, noOptionsSeries);
 
     ExcelChartDefinition.Series explodedSeries =
         new ExcelChartDefinition.Series(
@@ -876,37 +697,17 @@ class ExcelResidualHelperCoverageTest {
     XDDFPieChartData pieData = (XDDFPieChartData) chart.createData(ChartTypes.PIE, null, null);
     XDDFPieChartData.Series pieSeries =
         (XDDFPieChartData.Series) pieData.addSeries(categories, values);
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        pieSeries,
-        explodedSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(pieSeries, explodedSeries);
     assertTrue(pieSeries.getCTPieSer().isSetExplosion());
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        pieSeries,
-        noOptionsSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(pieSeries, noOptionsSeries);
 
     XDDFPie3DChartData pie3DData =
         (XDDFPie3DChartData) chart.createData(ChartTypes.PIE3D, null, null);
     XDDFPie3DChartData.Series pie3DSeries =
         (XDDFPie3DChartData.Series) pie3DData.addSeries(categories, values);
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        pie3DSeries,
-        explodedSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(pie3DSeries, explodedSeries);
     assertTrue(pie3DSeries.getCTPieSer().isSetExplosion());
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        pie3DSeries,
-        noOptionsSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(pie3DSeries, noOptionsSeries);
 
     var doughnutData =
         (org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData)
@@ -914,19 +715,9 @@ class ExcelResidualHelperCoverageTest {
     var doughnutSeries =
         (org.apache.poi.xddf.usermodel.chart.XDDFDoughnutChartData.Series)
             doughnutData.addSeries(categories, values);
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        doughnutSeries,
-        explodedSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(doughnutSeries, explodedSeries);
     assertTrue(doughnutSeries.getCTPieSer().isSetExplosion());
-    invokeStatic(
-        ExcelChartPlotMutationSupport.class,
-        "applySeriesOptions",
-        new Class<?>[] {XDDFChartData.Series.class, ExcelChartDefinition.Series.class},
-        doughnutSeries,
-        noOptionsSeries);
+    ExcelChartPlotMutationSupport.applySeriesOptions(doughnutSeries, noOptionsSeries);
   }
 
   @SuppressWarnings("PMD.SignatureDeclareThrowsException")
@@ -978,20 +769,8 @@ class ExcelResidualHelperCoverageTest {
     assertFalse(pieSeries.getCTPieSer().isSetTx());
 
     chart.setTitleText("Old title");
-    invokeStatic(
-        ExcelChartMutationSupport.class,
-        "applyChartTitleFormula",
-        new Class<?>[] {XSSFChart.class, String.class, CellReference.class},
-        chart,
-        "Budget",
-        titleCell);
-    invokeStatic(
-        ExcelChartMutationSupport.class,
-        "applyChartTitleFormula",
-        new Class<?>[] {XSSFChart.class, String.class, CellReference.class},
-        chart,
-        "Budget 2",
-        titleCell);
+    ExcelChartMutationSupport.applyChartTitleFormula(chart, "Budget", titleCell);
+    ExcelChartMutationSupport.applyChartTitleFormula(chart, "Budget 2", titleCell);
     assertFalse(chart.getCTChart().getTitle().getTx().isSetRich());
     assertEquals(
         "Budget 2",
@@ -1099,65 +878,12 @@ class ExcelResidualHelperCoverageTest {
     return List.copyOf(shapes);
   }
 
-  @SuppressWarnings("PMD.SignatureDeclareThrowsException")
-  private static ExcelChartMarkerStyle invokeMarkerStyle(CTMarker marker) throws Exception {
-    return (ExcelChartMarkerStyle)
-        invokeStatic(
-            ExcelChartPlotSnapshotSupport.class,
-            "markerStyle",
-            new Class<?>[] {CTMarker.class},
-            marker);
+  private static ExcelChartMarkerStyle invokeMarkerStyle(CTMarker marker) {
+    return ExcelChartPlotSnapshotSupport.markerStyle(marker).orElse(null);
   }
 
-  @SuppressWarnings("PMD.SignatureDeclareThrowsException")
-  private static Short invokeMarkerSize(CTMarker marker) throws Exception {
-    return (Short)
-        invokeStatic(
-            ExcelChartPlotSnapshotSupport.class,
-            "markerSize",
-            new Class<?>[] {CTMarker.class},
-            marker);
-  }
-
-  @SuppressWarnings({"PMD.SignatureDeclareThrowsException", "PMD.AvoidAccessibilityAlteration"})
-  private static Object invokeStatic(
-      Class<?> type, String methodName, Class<?>[] parameterTypes, Object... args)
-      throws Exception {
-    Method method = type.getDeclaredMethod(methodName, parameterTypes);
-    method.setAccessible(true);
-    try {
-      return method.invoke(null, args);
-    } catch (InvocationTargetException exception) {
-      throw rethrow(exception);
-    }
-  }
-
-  @SuppressWarnings({"PMD.SignatureDeclareThrowsException", "PMD.AvoidAccessibilityAlteration"})
-  private static Object invokeInstance(
-      Object target, String methodName, Class<?>[] parameterTypes, Object... args)
-      throws Exception {
-    Method method = target.getClass().getDeclaredMethod(methodName, parameterTypes);
-    method.setAccessible(true);
-    try {
-      return method.invoke(target, args);
-    } catch (InvocationTargetException exception) {
-      throw rethrow(exception);
-    }
-  }
-
-  @SuppressWarnings("PMD.SignatureDeclareThrowsException")
-  private static RuntimeException rethrow(InvocationTargetException exception) throws Exception {
-    Throwable cause = exception.getCause();
-    if (cause instanceof RuntimeException runtimeException) {
-      return runtimeException;
-    }
-    if (cause instanceof Error error) {
-      throw error;
-    }
-    if (cause instanceof Exception checkedException) {
-      throw checkedException;
-    }
-    throw exception;
+  private static Short invokeMarkerSize(CTMarker marker) {
+    return ExcelChartPlotSnapshotSupport.markerSize(marker);
   }
 
   private static void restoreProperty(String name, String value) {

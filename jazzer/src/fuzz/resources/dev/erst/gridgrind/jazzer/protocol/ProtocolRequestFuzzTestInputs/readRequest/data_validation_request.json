@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Intake"
       }
     },
@@ -156,7 +156,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Intake",
         "range": "A1:E4"
       }
@@ -199,7 +199,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Intake",
         "range": "B2:B200"
       }
@@ -218,7 +218,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Intake",
         "range": "C2:C200"
       }
@@ -229,7 +229,7 @@
         "type": "CLEAR_DATA_VALIDATIONS"
       },
       "target": {
-        "type": "BY_RANGES",
+        "type": "RANGE_BY_RANGES",
         "sheetName": "Intake",
         "ranges": [
           "B3",
@@ -250,7 +250,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Intake",
         "range": "D2:D200"
       }
@@ -261,7 +261,7 @@
       },
       "stepId": "validations",
       "target": {
-        "type": "ALL_ON_SHEET",
+        "type": "RANGE_ALL_ON_SHEET",
         "sheetName": "Intake"
       }
     },
@@ -271,7 +271,7 @@
       },
       "stepId": "validation-health",
       "target": {
-        "type": "BY_NAMES",
+        "type": "SHEET_BY_NAMES",
         "names": [
           "Intake"
         ]
@@ -283,7 +283,7 @@
       },
       "stepId": "cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Intake",
         "addresses": [
           "B2",

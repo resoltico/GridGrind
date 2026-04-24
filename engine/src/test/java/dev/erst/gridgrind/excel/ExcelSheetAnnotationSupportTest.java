@@ -5,7 +5,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.lang.reflect.Method;
 import org.apache.poi.ss.util.CellAddress;
 import org.apache.poi.xssf.model.CommentsTable;
 import org.apache.poi.xssf.usermodel.XSSFComment;
@@ -65,19 +64,14 @@ class ExcelSheetAnnotationSupportTest {
   }
 
   @Test
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
   void removeCommentShapeIfPresentReturnsWhenSheetHasNoVmlDrawing() throws Exception {
     try (XSSFWorkbook workbook = new XSSFWorkbook()) {
       var sheet = workbook.createSheet("Ops");
       assertNull(sheet.getVMLDrawing(false));
-      Method method =
-          ExcelSheetAnnotationSupport.class.getDeclaredMethod(
-              "removeCommentShapeIfPresent",
-              org.apache.poi.xssf.usermodel.XSSFSheet.class,
-              CellAddress.class);
-      method.setAccessible(true);
-
-      assertDoesNotThrow(() -> method.invoke(null, sheet, new CellAddress("A1")));
+      assertDoesNotThrow(
+          () ->
+              ExcelSheetAnnotationSupport.removeCommentShapeIfPresent(
+                  sheet, new CellAddress("A1")));
       assertNull(sheet.getVMLDrawing(false));
     }
   }

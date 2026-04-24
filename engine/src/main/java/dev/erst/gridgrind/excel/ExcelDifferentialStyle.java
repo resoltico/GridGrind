@@ -17,8 +17,8 @@ public record ExcelDifferentialStyle(
     if (numberFormat != null && numberFormat.isBlank()) {
       throw new IllegalArgumentException("numberFormat must not be blank");
     }
-    fontColor = ExcelRgbColorSupport.normalizeRgbHex(fontColor, "fontColor");
-    fillColor = ExcelRgbColorSupport.normalizeRgbHex(fillColor, "fillColor");
+    fontColor = ExcelRgbColorSupport.normalizeRgbHex(fontColor, "fontColor").orElse(null);
+    fillColor = ExcelRgbColorSupport.normalizeRgbHex(fillColor, "fillColor").orElse(null);
     if (java.util.stream.Stream.of(
             numberFormat,
             bold,

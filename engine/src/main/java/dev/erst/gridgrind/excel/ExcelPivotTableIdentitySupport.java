@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.Locale;
+import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.ss.util.CellReference;
@@ -11,17 +12,17 @@ final class ExcelPivotTableIdentitySupport {
 
   private ExcelPivotTableIdentitySupport() {}
 
-  static PivotLocation safeLocation(PivotHandle handle) {
+  static Optional<PivotLocation> safeLocation(PivotHandle handle) {
     String rawRange = rawLocationRange(handle);
     if (rawRange == null) {
-      return null;
+      return Optional.empty();
     }
     try {
       AreaReference area = new AreaReference(rawRange, SpreadsheetVersion.EXCEL2007);
       String locationRange = normalizeArea(area);
-      return new PivotLocation(area.getFirstCell().formatAsString(), locationRange);
+      return Optional.of(new PivotLocation(area.getFirstCell().formatAsString(), locationRange));
     } catch (RuntimeException exception) {
-      return null;
+      return Optional.empty();
     }
   }
 
@@ -35,7 +36,7 @@ final class ExcelPivotTableIdentitySupport {
     if (actualName != null) {
       return actualName;
     }
-    PivotLocation location = safeLocation(handle);
+    PivotLocation location = safeLocation(handle).orElse(null);
     return syntheticName(
         handle.sheetName(),
         location == null ? "PIVOT_" + (handle.ordinalOnSheet() + 1) : location.topLeftAddress());

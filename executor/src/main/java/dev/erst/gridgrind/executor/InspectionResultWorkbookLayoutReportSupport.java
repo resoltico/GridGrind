@@ -61,13 +61,14 @@ final class InspectionResultWorkbookLayoutReportSupport {
       dev.erst.gridgrind.excel.WorkbookReadResult.CellHyperlink hyperlink) {
     return new GridGrindResponse.CellHyperlinkReport(
         hyperlink.address(),
-        InspectionResultCellReportSupport.toHyperlinkTarget(hyperlink.hyperlink()));
+        InspectionResultCellReportSupport.toHyperlinkTarget(hyperlink.hyperlink()).orElse(null));
   }
 
   static GridGrindResponse.CellCommentReport toCellCommentReport(
       dev.erst.gridgrind.excel.WorkbookReadResult.CellComment comment) {
     return new GridGrindResponse.CellCommentReport(
-        comment.address(), InspectionResultCellReportSupport.toCommentReport(comment.comment()));
+        comment.address(),
+        InspectionResultCellReportSupport.toCommentReport(comment.comment()).orElse(null));
   }
 
   static GridGrindResponse.SheetLayoutReport toSheetLayoutReport(
@@ -227,6 +228,6 @@ final class InspectionResultWorkbookLayoutReportSupport {
   }
 
   private static CellColorReport toCellColorReport(ExcelColorSnapshot color) {
-    return InspectionResultCellReportSupport.toCellColorReport(color);
+    return InspectionResultCellReportSupport.toCellColorReport(color).orElse(null);
   }
 }

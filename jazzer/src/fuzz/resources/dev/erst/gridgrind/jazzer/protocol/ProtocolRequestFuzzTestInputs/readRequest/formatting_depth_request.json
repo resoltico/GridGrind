@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Styled Report"
       }
     },
@@ -126,7 +126,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Styled Report",
         "range": "A1:D4"
       }
@@ -173,7 +173,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Styled Report",
         "range": "A1:D1"
       }
@@ -194,7 +194,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Styled Report",
         "range": "C2:D4"
       }
@@ -238,7 +238,7 @@
         }
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Styled Report",
         "range": "A4:D4"
       }
@@ -249,7 +249,7 @@
         "type": "AUTO_SIZE_COLUMNS"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Styled Report"
       }
     },
@@ -259,7 +259,7 @@
       },
       "stepId": "cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Styled Report",
         "addresses": [
           "A1",
@@ -273,7 +273,7 @@
       },
       "stepId": "window",
       "target": {
-        "type": "RECTANGULAR_WINDOW",
+        "type": "RANGE_RECTANGULAR_WINDOW",
         "sheetName": "Styled Report",
         "topLeftAddress": "A1",
         "rowCount": 4,
@@ -286,7 +286,7 @@
       },
       "stepId": "formula-surface",
       "target": {
-        "type": "BY_NAMES",
+        "type": "SHEET_BY_NAMES",
         "names": [
           "Styled Report"
         ]

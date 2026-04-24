@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Data"
       }
     },
@@ -24,7 +24,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "RangeReport"
       }
     },
@@ -34,7 +34,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "NamedReport"
       }
     },
@@ -44,7 +44,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "TableReport"
       }
     },
@@ -194,7 +194,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Data",
         "range": "A1:D5"
       }
@@ -213,7 +213,7 @@
         }
       },
       "target": {
-        "type": "WORKBOOK_SCOPE",
+        "type": "NAMED_RANGE_WORKBOOK_SCOPE",
         "name": "PivotSource"
       }
     },
@@ -231,7 +231,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME_ON_SHEET",
+        "type": "TABLE_BY_NAME_ON_SHEET",
         "name": "SalesTable",
         "sheetName": "Data"
       }
@@ -269,7 +269,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME_ON_SHEET",
+        "type": "PIVOT_TABLE_BY_NAME_ON_SHEET",
         "name": "Sales Pivot",
         "sheetName": "RangeReport"
       }
@@ -306,7 +306,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME_ON_SHEET",
+        "type": "PIVOT_TABLE_BY_NAME_ON_SHEET",
         "name": "Named Pivot",
         "sheetName": "NamedReport"
       }
@@ -341,7 +341,7 @@
         }
       },
       "target": {
-        "type": "BY_NAME_ON_SHEET",
+        "type": "PIVOT_TABLE_BY_NAME_ON_SHEET",
         "name": "Table Pivot",
         "sheetName": "TableReport"
       }
@@ -352,7 +352,7 @@
       },
       "stepId": "tables",
       "target": {
-        "type": "BY_NAMES",
+        "type": "TABLE_BY_NAMES",
         "names": [
           "SalesTable"
         ]
@@ -364,7 +364,7 @@
       },
       "stepId": "pivots",
       "target": {
-        "type": "ALL"
+        "type": "PIVOT_TABLE_ALL"
       }
     },
     {
@@ -373,7 +373,7 @@
       },
       "stepId": "pivot-health",
       "target": {
-        "type": "ALL"
+        "type": "PIVOT_TABLE_ALL"
       }
     }
   ]

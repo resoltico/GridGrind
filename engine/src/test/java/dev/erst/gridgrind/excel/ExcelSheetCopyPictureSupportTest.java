@@ -5,8 +5,6 @@ import static org.junit.jupiter.api.Assertions.*;
 import dev.erst.gridgrind.excel.foundation.ExcelDrawingAnchorBehavior;
 import dev.erst.gridgrind.excel.foundation.ExcelPictureFormat;
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.Base64;
 import java.util.List;
@@ -222,33 +220,14 @@ class ExcelSheetCopyPictureSupportTest {
         .orElseThrow();
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  private static ExcelSheetCopyPictureSupport.CopySnapshot copySnapshotOf(Object... plans) {
-    return new ExcelSheetCopyPictureSupport.CopySnapshot((List) List.of(plans));
+  private static ExcelSheetCopyPictureSupport.CopySnapshot copySnapshotOf(
+      ExcelSheetCopyPictureSupport.PictureCopyPlan... plans) {
+    return new ExcelSheetCopyPictureSupport.CopySnapshot(List.of(plans));
   }
 
-  @SuppressWarnings("PMD.AvoidAccessibilityAlteration")
-  private static Object newPictureCopyPlan(
+  private static ExcelSheetCopyPictureSupport.PictureCopyPlan newPictureCopyPlan(
       String objectName, String sourcePartName, ExcelPictureFormat format) {
-    try {
-      Class<?> type =
-          Class.forName("dev.erst.gridgrind.excel.ExcelSheetCopyPictureSupport$PictureCopyPlan");
-      Constructor<?> constructor =
-          type.getDeclaredConstructor(String.class, String.class, ExcelPictureFormat.class);
-      constructor.setAccessible(true);
-      return constructor.newInstance(objectName, sourcePartName, format);
-    } catch (InvocationTargetException exception) {
-      Throwable cause = exception.getCause();
-      if (cause instanceof RuntimeException runtime) {
-        runtime.addSuppressed(exception);
-        throw runtime;
-      }
-      AssertionError assertion = new AssertionError(cause);
-      assertion.addSuppressed(exception);
-      throw assertion;
-    } catch (ReflectiveOperationException exception) {
-      throw new LinkageError(exception.getMessage(), exception);
-    }
+    return new ExcelSheetCopyPictureSupport.PictureCopyPlan(objectName, sourcePartName, format);
   }
 
   private static ExcelDrawingAnchor.TwoCell anchor(

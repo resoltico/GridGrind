@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.buildlogic
 
 import com.diffplug.gradle.spotless.SpotlessExtension
+import com.diffplug.spotless.LineEnding
 import java.io.File
 import org.gradle.api.GradleException
 import org.gradle.api.Plugin
@@ -35,20 +36,9 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             }
 
             configure<SpotlessExtension> {
+                lineEndings = LineEnding.UNIX
                 format("projectFiles") {
-                    target(
-                        ".gitattributes",
-                        ".gitignore",
-                        ".dockerignore",
-                        "Dockerfile",
-                        "**/*.gradle.kts",
-                        "**/*.md",
-                        "**/*.yml",
-                        "gradle.properties",
-                        "gradle/**/*.toml",
-                        "examples/**/*.json",
-                    )
-                    targetExclude("**/build/**", "**/.gradle/**", "**/*.class", "**/*.jar")
+                    target(*projectFileTargets().toTypedArray())
                     trimTrailingWhitespace()
                     endWithNewline()
                 }
@@ -217,6 +207,57 @@ class GridGrindRootConventionsPlugin : Plugin<Project> {
             add(layout.projectDirectory.dir("gradle/build-logic/src/main/java").asFile)
             add(layout.projectDirectory.dir("gradle/build-logic/src/main/kotlin").asFile)
         }.distinct().filter(File::isDirectory)
+
+    private fun Project.projectFileTargets(): List<Any> =
+        buildList {
+            repositoryProjectFiles().forEach(::add)
+            add(projectFileTree(".codex") { include("**/*.md") })
+            add(projectFileTree("docs") { include("**/*.md") })
+            add(projectFileTree(".github") { include("**/*.yml") })
+            add(projectFileTree("examples") { include("**/*.json") })
+        }
+
+    private fun Project.repositoryProjectFiles(): List<File> =
+        buildList {
+            add(rootFile(".gitattributes"))
+            add(rootFile(".gitignore"))
+            add(rootFile(".dockerignore"))
+            add(rootFile("AGENTS.md"))
+            add(rootFile("CHANGELOG.md"))
+            add(rootFile("Dockerfile"))
+            add(rootFile("LICENSE"))
+            add(rootFile("LICENSE-APACHE-2.0"))
+            add(rootFile("LICENSE-BSD-3-CLAUSE"))
+            add(rootFile("NOTICE"))
+            add(rootFile("PATENTS.md"))
+            add(rootFile("README.md"))
+            add(rootFile("build.gradle.kts"))
+            add(rootFile("check.sh"))
+            add(rootFile("gradle.properties"))
+            add(rootFile("settings.gradle.kts"))
+            add(rootFile("authoring-java/build.gradle.kts"))
+            add(rootFile("cli/build.gradle.kts"))
+            add(rootFile("contract/build.gradle.kts"))
+            add(rootFile("engine/build.gradle.kts"))
+            add(rootFile("excel-foundation/build.gradle.kts"))
+            add(rootFile("executor/build.gradle.kts"))
+            add(rootFile("gradle/build-logic/build.gradle.kts"))
+            add(rootFile("gradle/build-logic/settings.gradle.kts"))
+            add(rootFile("gradle/libs.versions.toml"))
+            add(rootFile("jazzer/README.md"))
+            add(rootFile("jazzer/build.gradle.kts"))
+            add(rootFile("jazzer/settings.gradle.kts"))
+        }.filter(File::isFile)
+
+    private fun Project.projectFileTree(
+        path: String,
+        configureTree: org.gradle.api.file.ConfigurableFileTree.() -> Unit,
+    ) = fileTree(layout.projectDirectory.dir(path)) {
+        configureTree()
+    }
+
+    private fun Project.rootFile(path: String): File =
+        layout.projectDirectory.file(path).asFile
 
     private fun taskPathsByName(subprojects: List<Project>, taskName: String): List<String> =
         subprojects.mapNotNull { subproject ->

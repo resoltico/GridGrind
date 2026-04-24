@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: DRAWING_MUTATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, drawing mutations, picture, shape, embedded-object, chart, signature-line, anchor]
   questions: ["how do i author drawings in gridgrind", "how do i create charts in gridgrind", "how do i move a drawing object in gridgrind"]
@@ -490,7 +490,7 @@ supported charts.
 {
   "stepId": "set-drawing-object-anchor",
   "target": {
-    "type": "BY_NAME",
+    "type": "DRAWING_OBJECT_BY_NAME",
     "sheetName": "Ops",
     "objectName": "OpsPicture"
   },
@@ -530,7 +530,7 @@ Delete one existing named drawing object from one sheet.
 {
   "stepId": "delete-drawing-object",
   "target": {
-    "type": "BY_NAME",
+    "type": "DRAWING_OBJECT_BY_NAME",
     "sheetName": "Ops",
     "objectName": "OpsConnector"
   },

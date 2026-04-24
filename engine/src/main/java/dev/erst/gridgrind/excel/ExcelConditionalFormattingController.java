@@ -517,7 +517,7 @@ final class ExcelConditionalFormattingController {
   }
 
   private static String color(XSSFColor color) {
-    String rgb = ExcelRgbColorSupport.toRgbHex(color);
+    String rgb = ExcelRgbColorSupport.toRgbHex(color).orElse(null);
     if (rgb == null) {
       throw new IllegalArgumentException("conditional-formatting color must expose RGB data");
     }

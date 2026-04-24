@@ -384,6 +384,9 @@ class ExcelConditionalFormattingStyleSupportTest {
             unsupportedForeground, unsupportedFeatures));
     assertEquals(
         List.of(ExcelConditionalFormattingUnsupportedFeature.FILL_PATTERN), unsupportedFeatures);
+    assertThrows(
+        IllegalArgumentException.class,
+        () -> ExcelConditionalFormattingStyleSupport.argbBytes(null));
   }
 
   @Test

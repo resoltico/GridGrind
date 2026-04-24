@@ -7,27 +7,27 @@
     "outcomeKind" : "SUCCESS",
     "details" : {
       "type" : "PROTOCOL_REQUEST",
-      "inputBytes" : 18880,
+      "inputBytes" : 19137,
       "decodeOutcome" : "PARSED",
       "sourceKind" : "NEW",
       "persistenceKind" : "SAVE_AS",
       "operationCount" : 40,
       "operationKinds" : {
-        "APPEND_ROW" : 10,
-        "ENSURE_SHEET" : 2,
+        "AUTO_SIZE_COLUMNS" : 2,
         "SET_CELL" : 26,
-        "AUTO_SIZE_COLUMNS" : 2
+        "ENSURE_SHEET" : 2,
+        "APPEND_ROW" : 10
       },
       "styleKinds" : { },
       "assertionCount" : 0,
       "assertionKinds" : { },
       "readCount" : 7,
       "readKinds" : {
-        "GET_WINDOW" : 2,
-        "GET_WORKBOOK_SUMMARY" : 1,
-        "GET_FORMULA_SURFACE" : 1,
+        "GET_SHEET_SCHEMA" : 1,
         "GET_CELLS" : 2,
-        "GET_SHEET_SCHEMA" : 1
+        "GET_FORMULA_SURFACE" : 1,
+        "GET_WORKBOOK_SUMMARY" : 1,
+        "GET_WINDOW" : 2
       }
     }
   },

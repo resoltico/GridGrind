@@ -68,11 +68,11 @@ final class ExcelTableCalculatedColumnCanonicalizer {
 
   static String calculatedColumnFormula(CTTableColumn column) {
     if (!column.isSetCalculatedColumnFormula()) {
-      return null;
+      return java.util.Optional.<String>empty().orElse(null);
     }
     String formula =
         Objects.requireNonNullElse(column.getCalculatedColumnFormula().getStringValue(), "");
-    return formula.isBlank() ? null : formula;
+    return formula.isBlank() ? java.util.Optional.<String>empty().orElse(null) : formula;
   }
 
   private static void clearMaterializedCalculatedFormulaCell(

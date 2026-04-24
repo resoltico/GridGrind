@@ -7,9 +7,9 @@ import java.util.List;
 /** Selects one or more sheets. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = SheetSelector.All.class, name = "ALL"),
-  @JsonSubTypes.Type(value = SheetSelector.ByName.class, name = "BY_NAME"),
-  @JsonSubTypes.Type(value = SheetSelector.ByNames.class, name = "BY_NAMES")
+  @JsonSubTypes.Type(value = SheetSelector.All.class, name = "SHEET_ALL"),
+  @JsonSubTypes.Type(value = SheetSelector.ByName.class, name = "SHEET_BY_NAME"),
+  @JsonSubTypes.Type(value = SheetSelector.ByNames.class, name = "SHEET_BY_NAMES")
 })
 public sealed interface SheetSelector extends Selector
     permits SheetSelector.All, SheetSelector.ByName, SheetSelector.ByNames {

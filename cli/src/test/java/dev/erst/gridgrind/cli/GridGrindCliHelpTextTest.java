@@ -13,6 +13,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 /** Help, version, and documentation integration tests for GridGrindCli. */
@@ -179,6 +181,13 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
     assertTrue(help.contains("--print-task-plan <id>"));
     assertTrue(help.contains("--print-goal-plan <goal>"));
     assertTrue(help.contains("--doctor-request"));
+    assertTrue(help.contains("gridgrind --doctor-request [--request <path>] [--response <path>]"));
+    assertTrue(help.contains("First-Contact Workflows:"));
+    assertTrue(help.contains("Discover What To Send:"));
+    assertTrue(help.contains("Draft And Preflight:"));
+    assertTrue(help.contains("Execute And Keep Artifacts:"));
+    assertTrue(help.contains("give each one a stable stepId"));
+    assertTrue(help.contains("source.type to EXISTING"));
     assertTrue(
         help.contains("preflight source-backed input resolution"),
         "help must describe the doctor input-resolution scope");
@@ -195,6 +204,8 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
                 .entries()
                 .getLast()
                 .value()));
+    assertTrue(help.contains("source.type is required; use NEW to create a blank workbook"));
+    assertTrue(help.contains("Every authored step requires a stable caller-defined stepId."));
     assertTrue(
         help.contains("type group accepted by polymorphic fields"),
         "help must explain what the protocol catalog publishes");
@@ -218,6 +229,24 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
             .run(new String[] {"help"}, new ByteArrayInputStream(new byte[0]), bareStdout);
     assertEquals(0, bareExitCode);
     assertEquals(help, bareStdout.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
+  void helpCanWriteToAnExplicitResponsePath() throws IOException {
+    Path responsePath = Files.createTempFile("gridgrind-help-", ".txt");
+    Files.deleteIfExists(responsePath);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--help", "--response", responsePath.toString()},
+                new ByteArrayInputStream(new byte[0]),
+                stdout);
+
+    assertEquals(0, exitCode);
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertTrue(Files.readString(responsePath).contains("First-Contact Workflows:"));
   }
 
   @Test
@@ -272,6 +301,21 @@ class GridGrindCliHelpTextTest extends GridGrindCliTestSupport {
       assertTrue(
           help.contains(entry.value()),
           () -> "help must include file workflow value: " + entry.value());
+    }
+  }
+
+  @Test
+  void helpTextIncludesWorkflowEntriesFromTheContractSurface() {
+    String help = GridGrindCli.helpText("1.0.0");
+    CliSurface cliSurface = GridGrindProtocolCatalog.catalog().cliSurface();
+
+    assertTrue(help.contains("First-Contact Workflows:"));
+    for (CliSurface.WorkflowEntry entry : cliSurface.workflows().entries()) {
+      assertTrue(
+          help.contains(entry.title() + ":"), () -> "missing workflow title " + entry.title());
+      for (String line : entry.lines()) {
+        assertTrue(help.contains(line), () -> "missing workflow line " + line);
+      }
     }
   }
 

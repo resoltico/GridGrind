@@ -65,6 +65,14 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void printExampleFlagSuggestsStableIdForCommonNonCanonicalTokens() throws IOException {
+    assertSuggestedExampleId("chart");
+    assertSuggestedExampleId("chart-request.json");
+    assertSuggestedExampleId("chart-request");
+    assertSuggestedExampleId("chart request");
+  }
+
+  @Test
   void printTaskCatalogFlagPrintsCurrentCatalogAndReturnsExitCodeZero() throws IOException {
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
@@ -79,6 +87,27 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
 
     assertEquals(0, exitCode);
     assertEquals(GridGrindTaskCatalog.catalog(), catalog);
+  }
+
+  private static void assertSuggestedExampleId(String authoredValue) throws IOException {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-example", authoredValue},
+                new ByteArrayInputStream(new byte[0]),
+                stdout);
+
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class, GridGrindJson.readResponse(stdout.toByteArray()));
+    assertEquals(2, exitCode);
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
+    assertEquals("--print-example", failure.problem().context().argument());
+    assertTrue(
+        failure.problem().message().contains("did you mean CHART?"),
+        () -> "expected CHART suggestion for authored value " + authoredValue);
   }
 
   @Test
@@ -253,7 +282,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                       "steps": [
                         {
                           "stepId": "ensure-budget",
-                          "target": { "type": "BY_NAME", "name": "Budget" },
+                          "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
                           "action": { "type": "ENSURE_SHEET" }
                         }
                       ]
@@ -306,12 +335,12 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
                       "steps": [
                         {
                           "stepId": "ensure-budget",
-                          "target": { "type": "BY_NAME", "name": "Budget" },
+                          "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
                           "action": { "type": "ENSURE_SHEET" }
                         },
                         {
                           "stepId": "set-title",
-                          "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                          "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                           "action": {
                             "type": "SET_CELL",
                             "value": { "type": "TEXT", "source": { "type": "STANDARD_INPUT" } }
@@ -360,6 +389,34 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
   }
 
   @Test
+  void doctorRequestCanWriteReportToAnExplicitResponsePath() throws IOException {
+    Path responsePath = Files.createTempFile("gridgrind-doctor-report-", ".json");
+    Files.deleteIfExists(responsePath);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--doctor-request", "--response", responsePath.toString()},
+                new ByteArrayInputStream(
+                    """
+                    {
+                      "source": { "type": "NEW" },
+                      "steps": []
+                    }
+                    """
+                        .getBytes(StandardCharsets.UTF_8)),
+                stdout);
+
+    RequestDoctorReport report =
+        GridGrindJson.readRequestDoctorReport(Files.readAllBytes(responsePath));
+
+    assertEquals(0, exitCode);
+    assertTrue(report.valid());
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+  }
+
+  @Test
   void doctorRequestResolvesRelativeInputsFromTheRequestFileDirectory() throws IOException {
     Path requestDirectory = Files.createTempDirectory("gridgrind-doctor-root-");
     Path requestPath = requestDirectory.resolve("doctor request.json");
@@ -373,12 +430,12 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
           "steps": [
             {
               "stepId": "ensure-budget",
-              "target": { "type": "BY_NAME", "name": "Budget" },
+              "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
               "action": { "type": "ENSURE_SHEET" }
             },
             {
               "stepId": "set-title",
-              "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
               "action": {
                 "type": "SET_CELL",
                 "value": {
@@ -449,7 +506,7 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
           "steps": [
             {
               "stepId": "summary",
-              "target": { "type": "CURRENT" },
+              "target": { "type": "WORKBOOK_CURRENT" },
               "query": { "type": "GET_WORKBOOK_SUMMARY" }
             }
           ]
@@ -511,6 +568,26 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     Catalog catalog = GridGrindJson.readProtocolCatalog(stdout.toByteArray());
 
     assertEquals(0, exitCode);
+    assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
+  }
+
+  @Test
+  void printProtocolCatalogCanWriteItsPayloadToAnExplicitResponsePath() throws IOException {
+    Path responsePath = Files.createTempFile("gridgrind-protocol-catalog-", ".json");
+    Files.deleteIfExists(responsePath);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {"--print-protocol-catalog", "--response", responsePath.toString()},
+                InputStream.nullInputStream(),
+                stdout);
+
+    Catalog catalog = GridGrindJson.readProtocolCatalog(Files.readAllBytes(responsePath));
+
+    assertEquals(0, exitCode);
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
     assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
   }
 
@@ -664,6 +741,37 @@ class GridGrindCliCatalogCommandTest extends GridGrindCliTestSupport {
     GridGrindResponse.Failure failure = (GridGrindResponse.Failure) response;
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
     assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.journal().outcome().failureCode());
+    assertTrue(failure.problem().message().contains("BOGUS_XYZ"));
+  }
+
+  @Test
+  void printProtocolCatalogWritesStructuredFailuresToTheResponsePathWhenConfigured()
+      throws IOException {
+    Path responsePath = Files.createTempFile("gridgrind-protocol-error-", ".json");
+    Files.deleteIfExists(responsePath);
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+
+    int exitCode =
+        new GridGrindCli()
+            .run(
+                new String[] {
+                  "--print-protocol-catalog",
+                  "--operation",
+                  "BOGUS_XYZ",
+                  "--response",
+                  responsePath.toString()
+                },
+                InputStream.nullInputStream(),
+                stdout);
+
+    GridGrindResponse.Failure failure =
+        assertInstanceOf(
+            GridGrindResponse.Failure.class,
+            GridGrindJson.readResponse(Files.readAllBytes(responsePath)));
+
+    assertEquals(2, exitCode);
+    assertEquals("", stdout.toString(StandardCharsets.UTF_8));
+    assertEquals(GridGrindProblemCode.INVALID_ARGUMENTS, failure.problem().code());
     assertTrue(failure.problem().message().contains("BOGUS_XYZ"));
   }
 

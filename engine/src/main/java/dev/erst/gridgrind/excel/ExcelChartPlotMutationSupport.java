@@ -344,7 +344,7 @@ final class ExcelChartPlotMutationSupport {
     }
   }
 
-  private static void applySeriesOptions(
+  static void applySeriesOptions(
       XDDFChartData.Series series, ExcelChartDefinition.Series definition) {
     switch (series) {
       case XDDFLineChartData.Series lineSeries -> {

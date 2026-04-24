@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: EXAMPLES
-updated: "2026-04-24"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, examples, print-example, request fixtures, package security, java authoring]
   questions: ["what examples ship with gridgrind", "what is the difference between built-in and checked-in examples", "how do i run the java example", "how do i refresh the example fixtures"]
@@ -12,15 +12,19 @@ route:
 
 **Purpose**: Map the shipped example surfaces, explain how their paths resolve, and show how to
 refresh and verify them.
-**Fastest artifact-native path**: `gridgrind --print-example <ID>`
+**Fastest artifact-native path**: `gridgrind --print-example <ID> --response request.json`
+**Docker `:latest` note**: for first-contact artifact runs, prefer
+`docker run --pull=always --rm ghcr.io/resoltico/gridgrind:latest ...` or refresh once with
+`docker pull ghcr.io/resoltico/gridgrind:latest` before using plain `docker run ...:latest`
 **Checkout-owned fixtures**: [`../examples/`](../examples/)
 
 GridGrind ships the same example workflows in two forms:
 
-- **Built-in artifact examples** from `gridgrind --print-example <ID>`. These are designed to run
-  from an artifact working directory and use artifact-rooted paths such as `examples/...` or
-  `cli/build/generated-workbooks/...`. They are not all equally portable: most are self-contained
-  in a blank working directory, while a few are intentionally repo-asset-backed.
+- **Built-in artifact examples** from `gridgrind --print-example <ID> --response request.json`.
+  These are designed to run from an artifact working directory and use artifact-rooted paths such
+  as `examples/...` or `cli/build/generated-workbooks/...`. They are not all equally portable:
+  most are self-contained in a blank working directory, while a few are intentionally
+  repo-asset-backed.
 - **Checked-in repository fixtures** under [`../examples/`](../examples/). These are generated from
   the same contract-owned registry, but their relative paths are rooted from the request file's own
   directory so they run in place from a repository checkout.

@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: OPERATIONS
-updated: "2026-04-24"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, operations, assertions, inspections, reference, mutation, query, request, execution, quick-links]
   questions: ["where is the full gridgrind step reference", "what operations does gridgrind support", "what assertions does gridgrind support", "what inspection queries does gridgrind support"]
@@ -22,13 +22,14 @@ focused documents so the public surface stays easier to audit and harder to let 
 ## Contract Discovery
 
 ```bash
-gridgrind --print-request-template
-gridgrind --print-protocol-catalog
-gridgrind --print-protocol-catalog --search chart
+gridgrind --print-request-template --response request.json
+gridgrind --print-protocol-catalog --response protocol-catalog.json
+gridgrind --print-protocol-catalog --search chart --response chart-search.json
 gridgrind --print-protocol-catalog --operation mutationActionTypes:SET_CELL
-gridgrind --print-example BUDGET
-gridgrind --print-example ASSERTION
+gridgrind --print-example BUDGET --response budget-request.json
+gridgrind --print-example ASSERTION --response assertion-request.json
 printf '%s\n' '{"source":{"type":"NEW"},"steps":[]}' | gridgrind --doctor-request
+gridgrind --doctor-request --request request.json --response doctor-report.json
 ```
 
 `--print-protocol-catalog` is the authoritative machine-readable shape inventory. It publishes the
@@ -37,12 +38,14 @@ required versus optional fields, and the allowed nested selectors or payload gro
 fields. Use `--search` when you only know part of the name or summary, then switch to
 `--operation <group>:<id>` for the exact entry once you have the stable qualified id.
 Task discovery is layered on top of that same catalog surface:
-`--print-task-catalog`, `--print-task-plan <id>`, and `--print-goal-plan "<goal>"` now emit
+`--print-task-catalog --response tasks.json`, `--print-task-plan <id> --response task-plan.json`,
+and `--print-goal-plan "<goal>" --response goal-plan.json` now emit
 starter scaffolds for dashboards, tabular reports, data-entry flows, pivot reports, custom XML
 workflows, workbook maintenance, and drawing/signature workflows.
 `--doctor-request` is the fast preflight path for request shape, execution-mode limits,
 source-backed input resolution, and existing workbook-source accessibility; it does not mutate a
-workbook.
+workbook. `--response <path>` applies across execution, doctoring, and discovery, so primary
+outputs can be written directly to files during artifact, shell, or Docker workflows.
 
 ## Canonical Terminology
 
@@ -99,8 +102,10 @@ Structured feature actions:
 
 ## Assertion And Inspection Surface
 
-Assertion families include `EXPECT_PRESENT`, `EXPECT_ABSENT`, `EXPECT_CELL_VALUE`,
-`EXPECT_DISPLAY_VALUE`, `EXPECT_FORMULA_TEXT`, `EXPECT_CELL_STYLE`,
+Assertion families include `EXPECT_NAMED_RANGE_PRESENT`, `EXPECT_NAMED_RANGE_ABSENT`,
+`EXPECT_TABLE_PRESENT`, `EXPECT_TABLE_ABSENT`, `EXPECT_PIVOT_TABLE_PRESENT`,
+`EXPECT_PIVOT_TABLE_ABSENT`, `EXPECT_CHART_PRESENT`, `EXPECT_CHART_ABSENT`,
+`EXPECT_CELL_VALUE`, `EXPECT_DISPLAY_VALUE`, `EXPECT_FORMULA_TEXT`, `EXPECT_CELL_STYLE`,
 `EXPECT_WORKBOOK_PROTECTION`, `EXPECT_SHEET_STRUCTURE`, `EXPECT_NAMED_RANGE_FACTS`,
 `EXPECT_TABLE_FACTS`, `EXPECT_PIVOT_TABLE_FACTS`, `EXPECT_CHART_FACTS`,
 `EXPECT_ANALYSIS_MAX_SEVERITY`, `EXPECT_ANALYSIS_FINDING_PRESENT`,
@@ -156,7 +161,7 @@ charts are supported when every plot belongs to one of those families.
 - Java-first authoring without hand-written JSON: [JAVA_AUTHORING.md](./JAVA_AUTHORING.md) and
   [../examples/java-authoring-workflow.java](../examples/java-authoring-workflow.java)
 - Budget walkthrough: [../examples/budget-request.json](../examples/budget-request.json) or
-  `gridgrind --print-example BUDGET`
+  `gridgrind --print-example BUDGET --response budget-request.json`
 - Assertion walkthrough: [../examples/assertion-request.json](../examples/assertion-request.json)
 - Workbook-health walkthrough:
   [../examples/workbook-health-request.json](../examples/workbook-health-request.json)

@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
@@ -337,18 +338,18 @@ class CalculationPolicyExecutorTest {
     assertEquals(1, summary.evaluableNowCount());
     assertEquals(1, summary.unevaluableNowCount());
     assertEquals(1, summary.unparseableByPoiCount());
-    assertEquals(null, CalculationCapabilityMappings.problemCodeFor(evaluable));
+    assertEquals(Optional.empty(), CalculationCapabilityMappings.problemCodeFor(evaluable));
     assertEquals(
-        GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK,
+        Optional.of(GridGrindProblemCode.MISSING_EXTERNAL_WORKBOOK),
         CalculationCapabilityMappings.problemCodeFor(missingExternal));
     assertEquals(
-        GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION,
+        Optional.of(GridGrindProblemCode.UNREGISTERED_USER_DEFINED_FUNCTION),
         CalculationCapabilityMappings.problemCodeFor(unregistered));
     assertEquals(
-        GridGrindProblemCode.UNSUPPORTED_FORMULA,
+        Optional.of(GridGrindProblemCode.UNSUPPORTED_FORMULA),
         CalculationCapabilityMappings.problemCodeFor(unsupported));
     assertEquals(
-        GridGrindProblemCode.INVALID_FORMULA,
+        Optional.of(GridGrindProblemCode.INVALID_FORMULA),
         CalculationCapabilityMappings.problemCodeFor(invalid));
     assertEquals(
         FormulaCapabilityKind.EVALUABLE_NOW,

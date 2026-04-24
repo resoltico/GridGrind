@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: ERRORS
-updated: "2026-04-22"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, errors, problem, code, category, recovery, failure, assertion-failed, invalid-json, invalid-request-shape, invalid-formula, sheet-not-found, named-range-not-found, workbook-not-found, workbook-password-required, invalid-workbook-password, invalid-signing-configuration, workbook-security-error, input-source-not-found, input-source-unavailable, input-source-io-error, source-backed, standard_input, utf8_file, file, causes, context, sourceType, persistenceType, coordinates, rowindex, columnindex]
   questions: ["what error codes does gridgrind return", "what does a gridgrind failure response look like", "how do I handle gridgrind errors", "what is the problem model", "how do I read gridgrind error context", "how do I interpret gridgrind row or column index errors", "how does gridgrind report assertion failures", "how does gridgrind report encrypted workbook password failures", "how does gridgrind report signing failures", "how does gridgrind report source-backed input failures", "what happens if a gridgrind input file is missing"]
@@ -152,6 +152,10 @@ The `journal` block is always present. It records top-level phase timing plus or
 outcomes even when the request fails before persistence. Source-backed text and binary loading runs
 first under `journal.inputResolution`, before the workbook is opened.
 
+Every entry in `problem.causes` also carries an explicit `stage` token. Cause diagnostics are not
+stage-less fallbacks; they preserve the same pipeline stage vocabulary used by the primary
+`problem.context.stage` classification.
+
 Assertion mismatches attach an additional `problem.assertionFailure` payload:
 
 ```json
@@ -177,7 +181,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
       "stepId": "assert-total",
       "assertionType": "EXPECT_CELL_VALUE",
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Budget",
         "address": "B2"
       },
@@ -235,7 +239,7 @@ Assertion mismatches attach an additional `problem.assertionFailure` payload:
 
 | Code | Trigger |
 |:-----|:--------|
-| `ASSERTION_FAILED` | One authored assertion step did not match the observed workbook state. The failure includes `problem.assertionFailure` with the failed assertion contract and the observed factual read payloads that caused the mismatch. Presence-style assertions (`EXPECT_PRESENT`, `EXPECT_ABSENT`) treat selector misses as zero observed entities instead of surfacing selector-specific `*_NOT_FOUND` errors. |
+| `ASSERTION_FAILED` | One authored assertion step did not match the observed workbook state. The failure includes `problem.assertionFailure` with the failed assertion contract and the observed factual read payloads that caused the mismatch. Entity-presence assertions (`EXPECT_NAMED_RANGE_PRESENT`, `EXPECT_NAMED_RANGE_ABSENT`, `EXPECT_TABLE_PRESENT`, `EXPECT_TABLE_ABSENT`, `EXPECT_PIVOT_TABLE_PRESENT`, `EXPECT_PIVOT_TABLE_ABSENT`, `EXPECT_CHART_PRESENT`, `EXPECT_CHART_ABSENT`) treat selector misses as zero observed entities instead of surfacing selector-specific `*_NOT_FOUND` errors. |
 
 ### Formula (`FORMULA` category)
 

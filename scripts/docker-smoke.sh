@@ -37,11 +37,23 @@ resolve_script_dir() {
 readonly script_dir="$(resolve_script_dir)"
 readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly image_tag="gridgrind-docker-smoke:$$"
-readonly smoke_root="${repo_root}/tmp/docker smoke.$$"
+readonly smoke_root="$(mktemp -d "${TMPDIR:-/tmp}/gridgrind docker smoke.XXXXXX")"
 readonly docker_run_user="$(id -u):$(id -g)"
 readonly cli_jar_path="${repo_root}/cli/build/libs/gridgrind.jar"
 anonymous_docker_config=''
 docker_endpoint=''
+project_cache_dir=''
+
+prepare_project_cache_dir() {
+    local cache_root=$1
+    if [[ -z "${cache_root}" ]]; then
+        return 0
+    fi
+    mkdir -p "${cache_root}"
+    mktemp -d "${cache_root%/}/docker-smoke.XXXXXX"
+}
+
+project_cache_dir="$(prepare_project_cache_dir "${GRIDGRIND_PROJECT_CACHE_DIR:-}")"
 
 resolve_docker_buildx_plugin() {
     local docker_binary=''
@@ -91,6 +103,9 @@ cleanup() {
     local exit_code=$?
     # Mounted-path artifacts should stay caller-owned, but keep sudo as a defensive cleanup fallback.
     rm -rf "${smoke_root}" || sudo rm -rf "${smoke_root}" || true
+    if [[ -n "${project_cache_dir}" ]]; then
+        rm -rf "${project_cache_dir}" || true
+    fi
     if command -v docker >/dev/null 2>&1 && [[ -n "${anonymous_docker_config}" ]]; then
         docker_with_repo_config image rm -f "${image_tag}" >/dev/null 2>&1 || true
         rm -rf "${anonymous_docker_config}" || true
@@ -106,7 +121,16 @@ docker buildx version >/dev/null 2>&1 || die "docker buildx is required for the 
 [[ -x "${repo_root}/gradlew" ]] || die "missing Gradle wrapper at ${repo_root}/gradlew"
 
 printf 'Docker smoke: rebuilding CLI fat JAR\n'
-"${repo_root}/gradlew" --console=plain :cli:shadowJar >/dev/null
+gradle_command=(
+    "${repo_root}/gradlew"
+    --console=plain
+    --no-daemon
+)
+if [[ -n "${project_cache_dir}" ]]; then
+    gradle_command+=(--project-cache-dir "${project_cache_dir}")
+fi
+gradle_command+=(:cli:shadowJar)
+"${gradle_command[@]}" >/dev/null
 [[ -f "${cli_jar_path}" ]] || die "missing CLI fat JAR at ${cli_jar_path} after :cli:shadowJar"
 
 docker_endpoint="${DOCKER_HOST:-}"
@@ -168,7 +192,9 @@ readonly streaming_read_stderr_path="${smoke_root}/stderr streaming readback [do
 
 cat > "${request_path}" <<JSON
 {
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "${workbook_rel}"
@@ -182,7 +208,7 @@ cat > "${request_path}" <<JSON
     {
       "stepId": "ensure-smoke",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Smoke"
       },
       "action": {
@@ -192,7 +218,7 @@ cat > "${request_path}" <<JSON
     {
       "stepId": "workbook",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       },
       "query": {
         "type": "GET_WORKBOOK_SUMMARY"
@@ -208,12 +234,14 @@ cat > "${existing_request_path}" <<JSON
     "type": "EXISTING",
     "path": "${workbook_rel}"
   },
-  "persistence": { "type": "NONE" },
+  "persistence": {
+    "type": "NONE"
+  },
   "steps": [
     {
       "stepId": "existing-workbook",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       },
       "query": {
         "type": "GET_WORKBOOK_SUMMARY"
@@ -225,7 +253,9 @@ JSON
 
 cat > "${signature_request_path}" <<JSON
 {
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "${signature_workbook_rel}"
@@ -234,7 +264,7 @@ cat > "${signature_request_path}" <<JSON
     {
       "stepId": "ensure-approvals",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Approvals"
       },
       "action": {
@@ -244,7 +274,7 @@ cat > "${signature_request_path}" <<JSON
     {
       "stepId": "set-signature-line",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Approvals"
       },
       "action": {
@@ -287,7 +317,7 @@ cat > "${signature_request_path}" <<JSON
     {
       "stepId": "read-signature",
       "target": {
-        "type": "ALL_ON_SHEET",
+        "type": "DRAWING_OBJECT_ALL_ON_SHEET",
         "sheetName": "Approvals"
       },
       "query": {
@@ -300,7 +330,9 @@ JSON
 
 cat > "${streaming_request_path}" <<JSON
 {
-  "source": { "type": "NEW" },
+  "source": {
+    "type": "NEW"
+  },
   "persistence": {
     "type": "SAVE_AS",
     "path": "${streaming_workbook_rel}"
@@ -314,7 +346,7 @@ cat > "${streaming_request_path}" <<JSON
     {
       "stepId": "ensure-ledger",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ledger"
       },
       "action": {
@@ -324,7 +356,7 @@ cat > "${streaming_request_path}" <<JSON
     {
       "stepId": "append-header",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ledger"
       },
       "action": {
@@ -357,7 +389,7 @@ cat > "${streaming_request_path}" <<JSON
     {
       "stepId": "append-ops",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ledger"
       },
       "action": {
@@ -377,7 +409,10 @@ cat > "${streaming_request_path}" <<JSON
               "text": "Badge prep"
             }
           },
-          { "type": "NUMBER", "number": 6.5 }
+          {
+            "type": "NUMBER",
+            "number": 6.5
+          }
         ]
       }
     }
@@ -391,7 +426,9 @@ cat > "${streaming_read_request_path}" <<JSON
     "type": "EXISTING",
     "path": "${streaming_workbook_rel}"
   },
-  "persistence": { "type": "NONE" },
+  "persistence": {
+    "type": "NONE"
+  },
   "execution": {
     "mode": {
       "readMode": "EVENT_READ"
@@ -401,7 +438,7 @@ cat > "${streaming_read_request_path}" <<JSON
     {
       "stepId": "streaming-workbook",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       },
       "query": {
         "type": "GET_WORKBOOK_SUMMARY"
@@ -410,7 +447,7 @@ cat > "${streaming_read_request_path}" <<JSON
     {
       "stepId": "streaming-sheet",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ledger"
       },
       "query": {

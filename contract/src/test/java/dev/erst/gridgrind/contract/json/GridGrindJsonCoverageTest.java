@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import dev.erst.gridgrind.contract.catalog.Catalog;
@@ -28,6 +27,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.DateTimeException;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.TokenStreamLocation;
@@ -40,7 +40,7 @@ class GridGrindJsonCoverageTest {
   @Test
   void readsResponsesAndCatalogsFromStreamsWithoutClosingThem() throws IOException {
     GridGrindResponse response =
-        new GridGrindResponse.Success(
+        GridGrindResponse.success(
             null,
             null,
             null,
@@ -259,7 +259,7 @@ class GridGrindJsonCoverageTest {
                 () ->
                     GridGrindJson.writeResponse(
                         null,
-                        new GridGrindResponse.Failure(
+                        GridGrindResponse.failure(
                             null,
                             new GridGrindResponse.Problem(
                                 dev.erst.gridgrind.contract.dto.GridGrindProblemCode.INVALID_JSON,
@@ -396,19 +396,23 @@ class GridGrindJsonCoverageTest {
         GridGrindJson.mismatchedInputMessage(
             MismatchedInputException.from(
                 jsonFactory.createParser("null"), Integer.class, (String) null)));
-    assertNull(GridGrindJson.jsonLine(new TokenStreamLocation(null, 0L, 0L, 0, 9)));
-    assertNull(GridGrindJson.jsonColumn(new TokenStreamLocation(null, 0L, 0L, 4, 0)));
+    assertEquals(
+        Optional.empty(), GridGrindJson.jsonLine(new TokenStreamLocation(null, 0L, 0L, 0, 9)));
+    assertEquals(
+        Optional.empty(), GridGrindJson.jsonColumn(new TokenStreamLocation(null, 0L, 0L, 4, 0)));
   }
 
   @Test
   void typeEntryAndRequestReadersStayDeterministicThroughPublicRoundTrip() throws IOException {
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
     ByteArrayOutputStream taskOutputStream = new ByteArrayOutputStream();
+    ByteArrayOutputStream taskCatalogOutputStream = new ByteArrayOutputStream();
     ByteArrayOutputStream taskPlanOutputStream = new ByteArrayOutputStream();
     ByteArrayOutputStream goalPlanOutputStream = new ByteArrayOutputStream();
     ByteArrayOutputStream doctorReportOutputStream = new ByteArrayOutputStream();
     TypeEntry entry = GridGrindProtocolCatalog.entryFor("GET_CELLS").orElseThrow();
     var taskEntry = GridGrindTaskCatalog.entryFor("DASHBOARD").orElseThrow();
+    TaskCatalog taskCatalog = GridGrindTaskCatalog.catalog();
     TaskPlanTemplate taskPlanTemplate = GridGrindTaskPlanner.templateFor("DASHBOARD");
     GoalPlanReport goalPlanReport =
         GridGrindGoalPlanner.reportFor("Create a monthly sales dashboard with charts");
@@ -428,6 +432,7 @@ class GridGrindJsonCoverageTest {
                 0));
     GridGrindJson.writeTypeEntry(outputStream, entry);
     GridGrindJson.writeTaskEntry(taskOutputStream, taskEntry);
+    GridGrindJson.writeTaskCatalog(taskCatalogOutputStream, taskCatalog);
     GridGrindJson.writeTaskPlanTemplate(taskPlanOutputStream, taskPlanTemplate);
     GridGrindJson.writeGoalPlanReport(goalPlanOutputStream, goalPlanReport);
     GridGrindJson.writeRequestDoctorReport(doctorReportOutputStream, doctorReport);
@@ -435,10 +440,9 @@ class GridGrindJsonCoverageTest {
         GridGrindJson.readProtocolCatalog(
             new ByteArrayInputStream(
                 GridGrindJson.writeProtocolCatalogBytes(GridGrindProtocolCatalog.catalog())));
-    TaskCatalog taskCatalog =
+    TaskCatalog decodedTaskCatalog =
         GridGrindJson.readTaskCatalog(
-            new ByteArrayInputStream(
-                GridGrindJson.writeTaskCatalogBytes(GridGrindTaskCatalog.catalog())));
+            new ByteArrayInputStream(GridGrindJson.writeTaskCatalogBytes(taskCatalog)));
     TaskPlanTemplate decodedTaskPlanTemplate =
         GridGrindJson.readTaskPlanTemplate(
             new ByteArrayInputStream(GridGrindJson.writeTaskPlanTemplateBytes(taskPlanTemplate)));
@@ -455,11 +459,12 @@ class GridGrindJsonCoverageTest {
 
     assertFalse(outputStream.toString(StandardCharsets.UTF_8).isBlank());
     assertFalse(taskOutputStream.toString(StandardCharsets.UTF_8).isBlank());
+    assertFalse(taskCatalogOutputStream.toString(StandardCharsets.UTF_8).isBlank());
     assertFalse(taskPlanOutputStream.toString(StandardCharsets.UTF_8).isBlank());
     assertFalse(goalPlanOutputStream.toString(StandardCharsets.UTF_8).isBlank());
     assertFalse(doctorReportOutputStream.toString(StandardCharsets.UTF_8).isBlank());
     assertEquals(GridGrindProtocolCatalog.catalog(), catalog);
-    assertEquals(GridGrindTaskCatalog.catalog(), taskCatalog);
+    assertEquals(taskCatalog, decodedTaskCatalog);
     assertEquals(taskPlanTemplate, decodedTaskPlanTemplate);
     assertEquals(goalPlanReport, decodedGoalPlanReport);
     assertEquals(doctorReport, decodedDoctorReport);
@@ -477,7 +482,7 @@ class GridGrindJsonCoverageTest {
                       "steps": [
                         {
                           "stepId": "set-owner",
-                          "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                          "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                           "action": {
                             "type": "SET_CELL",
                             "value": {
@@ -492,9 +497,7 @@ class GridGrindJsonCoverageTest {
                 .formatted(largeText)
                 .getBytes(StandardCharsets.UTF_8));
     GridGrindResponse response =
-        new GridGrindResponse.Success(
-            null,
-            null,
+        GridGrindResponse.success(
             null,
             null,
             null,

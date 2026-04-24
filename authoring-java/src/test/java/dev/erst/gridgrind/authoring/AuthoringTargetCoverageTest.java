@@ -169,8 +169,8 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(InspectionQuery.GetTables.class, table.inspect().toStep("inspect").query());
     assertInstanceOf(
         InspectionQuery.AnalyzeTableHealth.class, table.analyzeHealth().toStep("health").query());
-    assertInstanceOf(Assertion.Present.class, table.present().toStep("present").assertion());
-    assertInstanceOf(Assertion.Absent.class, table.absent().toStep("absent").assertion());
+    assertInstanceOf(Assertion.TablePresent.class, table.present().toStep("present").assertion());
+    assertInstanceOf(Assertion.TableAbsent.class, table.absent().toStep("absent").assertion());
 
     Targets.TableCellRef tableCell = table.row(1).cell("Amount");
     assertInstanceOf(TableCellSelector.ByColumnName.class, tableCell.selector());
@@ -218,8 +218,10 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(
         InspectionQuery.AnalyzeNamedRangeHealth.class,
         namedRange.analyzeHealth().toStep("health").query());
-    assertInstanceOf(Assertion.Present.class, namedRange.present().toStep("present").assertion());
-    assertInstanceOf(Assertion.Absent.class, namedRange.absent().toStep("absent").assertion());
+    assertInstanceOf(
+        Assertion.NamedRangePresent.class, namedRange.present().toStep("present").assertion());
+    assertInstanceOf(
+        Assertion.NamedRangeAbsent.class, namedRange.absent().toStep("absent").assertion());
 
     Targets.ChartRef chart = Targets.chart("Budget", "RevenueChart");
     Targets.ChartRef allChartsOnSheet =
@@ -230,8 +232,8 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(SheetSelector.ByName.class, allChartsInspection.target());
     assertInstanceOf(InspectionQuery.GetCharts.class, namedChartInspection.query());
     assertInstanceOf(InspectionQuery.GetCharts.class, allChartsInspection.query());
-    assertInstanceOf(Assertion.Present.class, chart.present().toStep("present").assertion());
-    assertInstanceOf(Assertion.Absent.class, chart.absent().toStep("absent").assertion());
+    assertInstanceOf(Assertion.ChartPresent.class, chart.present().toStep("present").assertion());
+    assertInstanceOf(Assertion.ChartAbsent.class, chart.absent().toStep("absent").assertion());
 
     Targets.PivotTableRef pivotTable = Targets.pivotTable("RevenuePivot");
     Targets.PivotTableRef pivotTableOnSheet = Targets.pivotTableOnSheet("RevenuePivot", "Budget");
@@ -245,8 +247,10 @@ class AuthoringTargetCoverageTest {
     assertInstanceOf(
         InspectionQuery.AnalyzePivotTableHealth.class,
         pivotTable.analyzeHealth().toStep("health").query());
-    assertInstanceOf(Assertion.Present.class, pivotTable.present().toStep("present").assertion());
-    assertInstanceOf(Assertion.Absent.class, pivotTable.absent().toStep("absent").assertion());
+    assertInstanceOf(
+        Assertion.PivotTablePresent.class, pivotTable.present().toStep("present").assertion());
+    assertInstanceOf(
+        Assertion.PivotTableAbsent.class, pivotTable.absent().toStep("absent").assertion());
   }
 
   @Test

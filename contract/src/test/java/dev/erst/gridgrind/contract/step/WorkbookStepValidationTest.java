@@ -132,7 +132,8 @@ class WorkbookStepValidationTest {
         WorkbookStepValidation.requireCompatible(
             new SheetSelector.ByName("Budget"), analysisSeverity));
 
-    Assertion anyOf = new Assertion.AnyOf(List.of(new Assertion.Present(), new Assertion.Absent()));
+    Assertion anyOf =
+        new Assertion.AnyOf(List.of(new Assertion.TablePresent(), new Assertion.TableAbsent()));
     assertEquals(
         anyOf,
         WorkbookStepValidation.requireCompatible(
@@ -157,7 +158,7 @@ class WorkbookStepValidationTest {
                     new Assertion.AllOf(
                         List.of(
                             new Assertion.CellValue(new ExpectedCellValue.Text("Owner")),
-                            new Assertion.Present()))));
+                            new Assertion.TablePresent()))));
     assertEquals(
         "ALL_OF requires nested assertions with compatible target families",
         incompatibleComposite.getMessage());
@@ -234,16 +235,16 @@ class WorkbookStepValidationTest {
   }
 
   @Test
-  void exposesAssertionTargetSelectorRulesForDynamicAndSharedSelectorFamilies() {
+  void exposesAssertionTargetSelectorRulesForDynamicAndDirectSelectorFamilies() {
     assertEquals(
         "Matches the nested analysis query's target selectors.",
         WorkbookStepValidation.targetSelectorRuleForAssertionType(
             Assertion.AnalysisFindingAbsent.class));
     assertEquals(
-        "Shared selector wire types remain family-sensitive here: ALL, BY_NAME, and BY_NAMES are ambiguous across NamedRangeSelector, TableSelector, and PivotTableSelector, while BY_NAME_ON_SHEET is ambiguous across TableSelector and PivotTableSelector. Author the field set that identifies exactly one family.",
-        WorkbookStepValidation.targetSelectorRuleForAssertionType(Assertion.Absent.class));
-    assertEquals(
         null, WorkbookStepValidation.targetSelectorRuleForAssertionType(Assertion.CellValue.class));
+    assertEquals(
+        null,
+        WorkbookStepValidation.targetSelectorRuleForAssertionType(Assertion.TableAbsent.class));
   }
 
   @Test

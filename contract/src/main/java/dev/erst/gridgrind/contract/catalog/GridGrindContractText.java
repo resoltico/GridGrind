@@ -234,7 +234,8 @@ public final class GridGrindContractText {
 
   /** One stable step-kind explanation shared by help and discovery surfaces. */
   public static String stepKindSummary() {
-    return "Use MUTATION steps for workbook changes, ASSERTION steps for first-class"
+    return "Every authored step requires a stable caller-defined stepId."
+        + " Use MUTATION steps for workbook changes, ASSERTION steps for first-class"
         + " verification, and INSPECTION steps for factual or analytical reads."
         + " Step kind is inferred from exactly one of action, assertion, or query;"
         + " do not send step.type.";

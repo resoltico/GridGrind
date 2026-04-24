@@ -11,12 +11,36 @@ import java.util.Objects;
 final class Checks {
   private Checks() {}
 
-  static Assertion.Present present() {
-    return new Assertion.Present();
+  static Assertion.NamedRangePresent namedRangePresent() {
+    return new Assertion.NamedRangePresent();
   }
 
-  static Assertion.Absent absent() {
-    return new Assertion.Absent();
+  static Assertion.NamedRangeAbsent namedRangeAbsent() {
+    return new Assertion.NamedRangeAbsent();
+  }
+
+  static Assertion.TablePresent tablePresent() {
+    return new Assertion.TablePresent();
+  }
+
+  static Assertion.TableAbsent tableAbsent() {
+    return new Assertion.TableAbsent();
+  }
+
+  static Assertion.PivotTablePresent pivotTablePresent() {
+    return new Assertion.PivotTablePresent();
+  }
+
+  static Assertion.PivotTableAbsent pivotTableAbsent() {
+    return new Assertion.PivotTableAbsent();
+  }
+
+  static Assertion.ChartPresent chartPresent() {
+    return new Assertion.ChartPresent();
+  }
+
+  static Assertion.ChartAbsent chartAbsent() {
+    return new Assertion.ChartAbsent();
   }
 
   static Assertion.CellValue cellValue(Values.ExpectedValue expectedValue) {

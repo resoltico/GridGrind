@@ -19,7 +19,7 @@ class GridGrindResponseEdgeCoverageTest {
   @Test
   void successFailureWorkbookSummaryAndNamedRangeBranchesAreExplicit() {
     GridGrindResponse.Success success =
-        new GridGrindResponse.Success(
+        GridGrindResponse.success(
             null,
             null,
             null,
@@ -29,7 +29,7 @@ class GridGrindResponseEdgeCoverageTest {
                     "summary",
                     new GridGrindResponse.WorkbookSummary.Empty(0, List.of(), 0, false))));
     GridGrindResponse.Failure failure =
-        new GridGrindResponse.Failure(
+        GridGrindResponse.failure(
             null,
             GridGrindResponse.Problem.of(
                 GridGrindProblemCode.INVALID_REQUEST,

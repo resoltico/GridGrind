@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: WORKBOOK_SHEET_MUTATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, workbook mutations, sheet mutations, protection, copy-sheet, rename-sheet, custom-xml]
   questions: ["how do i manage sheets in gridgrind", "how do i protect workbooks in gridgrind", "how do i import custom xml mappings in gridgrind"]
@@ -34,7 +34,7 @@ All mutation operations (`SET_CELL`, `SET_RANGE`, `CLEAR_RANGE`, `APPLY_STYLE`,
 {
   "stepId": "ensure-sheet",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Inventory"
   },
   "action": {
@@ -58,7 +58,7 @@ Excel sheet name and must not conflict with another sheet name.
 {
   "stepId": "rename-sheet",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Archive"
   },
   "action": {
@@ -85,7 +85,7 @@ sheet, so attempting to delete the last remaining sheet or the last visible shee
 {
   "stepId": "delete-sheet",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Scratch"
   },
   "action": {
@@ -109,7 +109,7 @@ the operation runs, after all earlier operations in the same request.
 {
   "stepId": "move-sheet",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "History"
   },
   "action": {
@@ -135,7 +135,9 @@ regions, tables, sheet-scoped names, protection metadata, layout state, and supp
 content such as pictures, charts, and embedded objects. GridGrind runs repair passes after POI
 sheet cloning so copied drawing relations, copied comments, copied embedded-object worksheet
 relation ids, and copied workbook-core structures stay authoritative both in memory and after save
-or reopen.
+or reopen. Charts backed by defined names stay copy-safe as well: when Apache POI cannot rewrite a
+named chart source safely during clone, GridGrind normalizes the copied chart onto explicit
+destination-sheet area references while leaving the source-sheet chart formula unchanged.
 
 ```json
 {
@@ -146,7 +148,7 @@ or reopen.
     "targetIndex": 1
   },
   "source": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Budget"
   }
 }
@@ -157,7 +159,7 @@ or reopen.
   "type": "COPY_SHEET",
   "newSheetName": "Budget Snapshot",
   "source": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Budget"
   }
 }
@@ -184,7 +186,7 @@ Set the active sheet. Hidden sheets cannot be activated. The active sheet is alw
 {
   "stepId": "set-active-sheet",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Budget Review"
   },
   "action": {
@@ -209,7 +211,7 @@ sheet as the primary selected tab.
 {
   "stepId": "set-selected-sheets",
   "target": {
-    "type": "BY_NAMES",
+    "type": "SHEET_BY_NAMES",
     "names": [
       "Budget",
       "Budget Review"
@@ -236,7 +238,7 @@ last visible sheet is rejected.
 {
   "stepId": "set-sheet-visibility",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Archive"
   },
   "action": {
@@ -263,7 +265,7 @@ preserving the explicit authored lock flags.
 {
   "stepId": "set-sheet-protection",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Budget Review"
   },
   "action": {
@@ -306,7 +308,7 @@ Disable sheet protection entirely and clear any stored password hash.
 {
   "stepId": "clear-sheet-protection",
   "target": {
-    "type": "BY_NAME",
+    "type": "SHEET_BY_NAME",
     "name": "Budget Review"
   },
   "action": {
@@ -381,7 +383,7 @@ not author new workbook map definitions.
 {
   "stepId": "import-custom-xml",
   "target": {
-    "type": "CURRENT"
+    "type": "WORKBOOK_CURRENT"
   },
   "action": {
     "type": "IMPORT_CUSTOM_XML_MAPPING",

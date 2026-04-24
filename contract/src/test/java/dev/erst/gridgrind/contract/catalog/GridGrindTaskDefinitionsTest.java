@@ -104,7 +104,7 @@ class GridGrindTaskDefinitionsTest {
                               "steps": [
                                 {
                                   "stepId": "TODO_STEP",
-                                  "target": { "type": "BY_NAME", "name": "Budget" },
+                                  "target": { "type": "SHEET_BY_NAME", "name": "Budget" },
                                   "action": { "type": "ENSURE_SHEET" }
                                 }
                               ]

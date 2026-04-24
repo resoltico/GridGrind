@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.contract.dto;
 
 import java.util.Objects;
+import java.util.Optional;
 
 /** Authoritative signature-line creation or replacement payload. */
 public record SignatureLineInput(
@@ -18,12 +19,14 @@ public record SignatureLineInput(
     requireNonBlank(name, "name");
     anchor = requireTwoCellAnchor(anchor);
     allowComments = allowComments == null ? Boolean.TRUE : allowComments;
-    signingInstructions = normalizeOptional(signingInstructions, "signingInstructions");
-    suggestedSigner = normalizeOptional(suggestedSigner, "suggestedSigner");
-    suggestedSigner2 = normalizeOptional(suggestedSigner2, "suggestedSigner2");
-    suggestedSignerEmail = normalizeOptional(suggestedSignerEmail, "suggestedSignerEmail");
-    caption = normalizeOptional(caption, "caption");
-    invalidStamp = normalizeOptional(invalidStamp, "invalidStamp");
+    signingInstructions =
+        normalizeOptional(signingInstructions, "signingInstructions").orElse(null);
+    suggestedSigner = normalizeOptional(suggestedSigner, "suggestedSigner").orElse(null);
+    suggestedSigner2 = normalizeOptional(suggestedSigner2, "suggestedSigner2").orElse(null);
+    suggestedSignerEmail =
+        normalizeOptional(suggestedSignerEmail, "suggestedSignerEmail").orElse(null);
+    caption = normalizeOptional(caption, "caption").orElse(null);
+    invalidStamp = normalizeOptional(invalidStamp, "invalidStamp").orElse(null);
     if (caption != null && caption.lines().count() > 3L) {
       throw new IllegalArgumentException("caption must contain at most three lines");
     }
@@ -44,14 +47,14 @@ public record SignatureLineInput(
     return value;
   }
 
-  private static String normalizeOptional(String value, String fieldName) {
+  private static Optional<String> normalizeOptional(String value, String fieldName) {
     if (value == null) {
-      return null;
+      return Optional.empty();
     }
     if (value.isBlank()) {
       throw new IllegalArgumentException(fieldName + " must not be blank");
     }
-    return value;
+    return Optional.of(value);
   }
 
   private static DrawingAnchorInput requireTwoCellAnchor(DrawingAnchorInput anchor) {

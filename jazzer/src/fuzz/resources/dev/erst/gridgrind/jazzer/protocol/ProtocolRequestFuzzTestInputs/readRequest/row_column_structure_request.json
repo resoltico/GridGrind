@@ -14,7 +14,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Layout"
       }
     },
@@ -275,7 +275,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Layout",
         "range": "A1:F6"
       }
@@ -287,7 +287,7 @@
         "collapsed": true
       },
       "target": {
-        "type": "SPAN",
+        "type": "ROW_BAND_SPAN",
         "sheetName": "Layout",
         "firstRowIndex": 1,
         "lastRowIndex": 3
@@ -300,7 +300,7 @@
         "hidden": true
       },
       "target": {
-        "type": "SPAN",
+        "type": "ROW_BAND_SPAN",
         "sheetName": "Layout",
         "firstRowIndex": 5,
         "lastRowIndex": 5
@@ -313,7 +313,7 @@
         "collapsed": true
       },
       "target": {
-        "type": "SPAN",
+        "type": "COLUMN_BAND_SPAN",
         "sheetName": "Layout",
         "firstColumnIndex": 1,
         "lastColumnIndex": 3
@@ -326,7 +326,7 @@
         "hidden": true
       },
       "target": {
-        "type": "SPAN",
+        "type": "COLUMN_BAND_SPAN",
         "sheetName": "Layout",
         "firstColumnIndex": 5,
         "lastColumnIndex": 5
@@ -338,7 +338,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Moves"
       }
     },
@@ -434,7 +434,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Moves",
         "range": "A1:D3"
       }
@@ -445,7 +445,7 @@
         "type": "INSERT_ROWS"
       },
       "target": {
-        "type": "INSERTION",
+        "type": "ROW_BAND_INSERTION",
         "sheetName": "Moves",
         "beforeRowIndex": 1,
         "rowCount": 1
@@ -464,7 +464,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Moves",
         "address": "A2"
       }
@@ -476,7 +476,7 @@
         "delta": 1
       },
       "target": {
-        "type": "SPAN",
+        "type": "ROW_BAND_SPAN",
         "sheetName": "Moves",
         "firstRowIndex": 2,
         "lastRowIndex": 3
@@ -488,7 +488,7 @@
         "type": "DELETE_ROWS"
       },
       "target": {
-        "type": "SPAN",
+        "type": "ROW_BAND_SPAN",
         "sheetName": "Moves",
         "firstRowIndex": 2,
         "lastRowIndex": 2
@@ -500,7 +500,7 @@
         "type": "INSERT_COLUMNS"
       },
       "target": {
-        "type": "INSERTION",
+        "type": "COLUMN_BAND_INSERTION",
         "sheetName": "Moves",
         "beforeColumnIndex": 1,
         "columnCount": 1
@@ -519,7 +519,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Moves",
         "address": "B1"
       }
@@ -531,7 +531,7 @@
         "delta": 1
       },
       "target": {
-        "type": "SPAN",
+        "type": "COLUMN_BAND_SPAN",
         "sheetName": "Moves",
         "firstColumnIndex": 2,
         "lastColumnIndex": 4
@@ -543,7 +543,7 @@
         "type": "DELETE_COLUMNS"
       },
       "target": {
-        "type": "SPAN",
+        "type": "COLUMN_BAND_SPAN",
         "sheetName": "Moves",
         "firstColumnIndex": 2,
         "lastColumnIndex": 2
@@ -555,7 +555,7 @@
       },
       "stepId": "layout",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Layout"
       }
     },
@@ -565,7 +565,7 @@
       },
       "stepId": "moved-cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Moves",
         "addresses": [
           "A2",

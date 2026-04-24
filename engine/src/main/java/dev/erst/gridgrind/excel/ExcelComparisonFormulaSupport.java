@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import dev.erst.gridgrind.excel.foundation.ExcelComparisonOperator;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 
 /** Shared comparison-rule validation and formula normalization for Excel rule families. */
 final class ExcelComparisonFormulaSupport {
@@ -41,13 +42,13 @@ final class ExcelComparisonFormulaSupport {
   }
 
   /** Normalizes the optional second comparison operand when the operator requires it. */
-  static String normalizeOptionalComparisonUpperBound(
+  static Optional<String> normalizeOptionalComparisonUpperBound(
       ExcelComparisonOperator operator, String formula2) {
     if (operator == ExcelComparisonOperator.BETWEEN
         || operator == ExcelComparisonOperator.NOT_BETWEEN) {
-      return normalizeFormula(formula2, "formula2");
+      return Optional.of(normalizeFormula(formula2, "formula2"));
     }
-    return null;
+    return Optional.empty();
   }
 
   /** Requires one string field to be present and nonblank. */

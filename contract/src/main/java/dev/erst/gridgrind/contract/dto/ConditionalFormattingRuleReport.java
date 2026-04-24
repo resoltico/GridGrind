@@ -107,7 +107,7 @@ public sealed interface ConditionalFormattingRuleReport
       implements ConditionalFormattingRuleReport {
     public DataBarRule {
       requirePriority(priority);
-      color = ProtocolRgbColorSupport.normalizeRgbHex(color, "color");
+      color = ProtocolRgbColorSupport.normalizeRgbHex(color, "color").orElse(null);
       if (widthMin < 0) {
         throw new IllegalArgumentException("widthMin must not be negative");
       }
@@ -186,10 +186,11 @@ public sealed interface ConditionalFormattingRuleReport
 
   private static List<String> copyColors(List<String> colors) {
     Objects.requireNonNull(colors, "colors must not be null");
-    List<String> copy = List.copyOf(colors);
-    for (String color : copy) {
-      ProtocolRgbColorSupport.normalizeRgbHex(color, "colors");
+    List<String> copy = new java.util.ArrayList<>(List.copyOf(colors));
+    for (int index = 0; index < copy.size(); index++) {
+      copy.set(
+          index, ProtocolRgbColorSupport.normalizeRgbHex(copy.get(index), "colors").orElseThrow());
     }
-    return copy;
+    return List.copyOf(copy);
   }
 }

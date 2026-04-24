@@ -522,7 +522,7 @@ final class ExcelDataValidationController {
     String title = validation.getPromptBoxTitle();
     String text = validation.getPromptBoxText();
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
-      return null;
+      return java.util.Optional.<ExcelDataValidationPrompt>empty().orElse(null);
     }
     return new ExcelDataValidationPrompt(title, text, validation.getShowPromptBox());
   }
@@ -531,7 +531,7 @@ final class ExcelDataValidationController {
     String title = validation.isSetPromptTitle() ? validation.getPromptTitle() : null;
     String text = validation.isSetPrompt() ? validation.getPrompt() : null;
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
-      return null;
+      return java.util.Optional.<ExcelDataValidationPrompt>empty().orElse(null);
     }
     return new ExcelDataValidationPrompt(
         title, text, validation.isSetShowInputMessage() && validation.getShowInputMessage());
@@ -541,7 +541,7 @@ final class ExcelDataValidationController {
     String title = validation.getErrorBoxTitle();
     String text = validation.getErrorBoxText();
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
-      return null;
+      return java.util.Optional.<ExcelDataValidationErrorAlert>empty().orElse(null);
     }
     return new ExcelDataValidationErrorAlert(
         ExcelDataValidationPoiBridge.fromPoiErrorStyle(validation.getErrorStyle()),
@@ -554,7 +554,7 @@ final class ExcelDataValidationController {
     String title = validation.isSetErrorTitle() ? validation.getErrorTitle() : null;
     String text = validation.isSetError() ? validation.getError() : null;
     if (title == null || title.isBlank() || text == null || text.isBlank()) {
-      return null;
+      return java.util.Optional.<ExcelDataValidationErrorAlert>empty().orElse(null);
     }
     return new ExcelDataValidationErrorAlert(
         errorStyle(validation),

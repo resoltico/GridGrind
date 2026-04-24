@@ -324,7 +324,7 @@ final class WorkbookAssetExamples {
             ExamplePlanSupport.assertStep(
                 "chart-present",
                 new ChartSelector.ByName("Ops", "OpsChart"),
-                new Assertion.Present())));
+                new Assertion.ChartPresent())));
   }
 
   static GridGrindShippedExamples.ShippedExample pivotExample(ExamplePathLayout paths) {

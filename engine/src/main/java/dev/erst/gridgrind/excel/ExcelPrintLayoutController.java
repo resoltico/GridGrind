@@ -253,7 +253,7 @@ final class ExcelPrintLayoutController {
 
   static String rawPrintAreaFormulaOrNull(XSSFWorkbook workbook, int sheetIndex) {
     if (!workbook.getCTWorkbook().isSetDefinedNames()) {
-      return null;
+      return java.util.Optional.<String>empty().orElse(null);
     }
     for (CTDefinedName definedName :
         workbook.getCTWorkbook().getDefinedNames().getDefinedNameList()) {
@@ -263,7 +263,7 @@ final class ExcelPrintLayoutController {
         return definedName.getStringValue();
       }
     }
-    return null;
+    return java.util.Optional.<String>empty().orElse(null);
   }
 
   private static ExcelPrintOrientation orientation(XSSFSheet sheet) {
@@ -443,7 +443,7 @@ final class ExcelPrintLayoutController {
   static CTPageSetUpPr pageSetUpPrOrNull(XSSFSheet sheet) {
     CTSheetPr sheetPr = sheetPrOrNull(sheet);
     if (sheetPr == null || !sheetPr.isSetPageSetUpPr()) {
-      return null;
+      return java.util.Optional.<CTPageSetUpPr>empty().orElse(null);
     }
     return sheetPr.getPageSetUpPr();
   }

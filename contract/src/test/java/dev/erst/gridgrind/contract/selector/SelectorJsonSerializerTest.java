@@ -17,7 +17,7 @@ class SelectorJsonSerializerTest {
             .build()
             .writeValueAsString(new SelectorEnvelope(new CellSelector.ByAddress("Budget", "A1")));
 
-    assertTrue(json.contains("\"selector\":{\"type\":\"BY_ADDRESS\""));
+    assertTrue(json.contains("\"selector\":{\"type\":\"CELL_BY_ADDRESS\""));
     assertTrue(json.contains("\"sheetName\":\"Budget\""));
     assertTrue(json.contains("\"address\":\"A1\""));
   }

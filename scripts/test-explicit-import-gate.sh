@@ -26,11 +26,26 @@ readonly repo_root="$(cd -P -- "${script_dir}/.." && pwd)"
 readonly sentinel_path="${repo_root}/cli/src/main/java/dev/erst/gridgrind/cli/WildcardImportGateSentinel.java"
 readonly sentinel_relative_path='cli/src/main/java/dev/erst/gridgrind/cli/WildcardImportGateSentinel.java'
 output_file=''
+project_cache_dir=''
+
+prepare_project_cache_dir() {
+    local cache_root=$1
+    if [[ -z "${cache_root}" ]]; then
+        return 0
+    fi
+    mkdir -p "${cache_root}"
+    mktemp -d "${cache_root%/}/explicit-import-gate.XXXXXX"
+}
+
+project_cache_dir="$(prepare_project_cache_dir "${GRIDGRIND_PROJECT_CACHE_DIR:-}")"
 
 cleanup() {
     rm -f "${sentinel_path}"
     if [[ -n "${output_file}" ]]; then
         rm -f "${output_file}"
+    fi
+    if [[ -n "${project_cache_dir}" ]]; then
+        rm -rf "${project_cache_dir}"
     fi
 }
 
@@ -51,8 +66,18 @@ run_verify_explicit_imports() {
     local gradle_pid=''
     local heartbeat_pid=''
     local status=0
+    local -a gradle_command=(
+        "${repo_root}/gradlew"
+        --console=plain
+        --no-daemon
+    )
 
-    "${repo_root}/gradlew" --console=plain verifyExplicitImports >"${output_file}" 2>&1 &
+    if [[ -n "${project_cache_dir}" ]]; then
+        gradle_command+=(--project-cache-dir "${project_cache_dir}")
+    fi
+    gradle_command+=(verifyExplicitImports)
+
+    "${gradle_command[@]}" >"${output_file}" 2>&1 &
     gradle_pid=$!
     (
         while kill -0 "${gradle_pid}" 2>/dev/null; do

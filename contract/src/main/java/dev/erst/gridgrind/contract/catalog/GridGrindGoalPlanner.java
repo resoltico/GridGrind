@@ -7,6 +7,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -59,7 +60,7 @@ public final class GridGrindGoalPlanner {
     List<GoalPlanReport.Candidate> candidates =
         GridGrindTaskDefinitions.definitions().stream()
             .map(definition -> candidateFor(definition, normalizedTerms))
-            .filter(Objects::nonNull)
+            .flatMap(Optional::stream)
             .sorted(candidateOrdering())
             .toList();
     return new GoalPlanReport(
@@ -71,7 +72,7 @@ public final class GridGrindGoalPlanner {
         candidates);
   }
 
-  private static GoalPlanReport.Candidate candidateFor(
+  private static Optional<GoalPlanReport.Candidate> candidateFor(
       TaskDefinition definition, List<String> goalTerms) {
     TaskEntry task = definition.task();
     TaskMatchAccumulator accumulator = new TaskMatchAccumulator(task);
@@ -85,14 +86,15 @@ public final class GridGrindGoalPlanner {
     scorePhaseSurface(goalTerms, task.phases(), accumulator);
     scoreCapabilitySurface(goalTerms, task.phases(), accumulator);
     if (accumulator.score == 0 || !accumulator.hasSemanticMatch) {
-      return null;
+      return Optional.empty();
     }
-    return new GoalPlanReport.Candidate(
-        task,
-        accumulator.score,
-        List.copyOf(accumulator.matchedTerms),
-        List.copyOf(accumulator.reasons),
-        definition.starterTemplate());
+    return Optional.of(
+        new GoalPlanReport.Candidate(
+            task,
+            accumulator.score,
+            List.copyOf(accumulator.matchedTerms),
+            List.copyOf(accumulator.reasons),
+            definition.starterTemplate()));
   }
 
   private static void scorePhaseSurface(

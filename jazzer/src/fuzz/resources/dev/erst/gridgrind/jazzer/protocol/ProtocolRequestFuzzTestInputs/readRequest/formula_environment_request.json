@@ -28,7 +28,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Budget"
       }
     },
@@ -97,7 +97,7 @@
         ]
       },
       "target": {
-        "type": "BY_RANGE",
+        "type": "RANGE_BY_RANGE",
         "sheetName": "Budget",
         "range": "A1:C3"
       }
@@ -115,7 +115,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Budget",
         "address": "D2"
       }
@@ -133,7 +133,7 @@
         }
       },
       "target": {
-        "type": "BY_ADDRESS",
+        "type": "CELL_BY_ADDRESS",
         "sheetName": "Budget",
         "address": "E2"
       }
@@ -144,7 +144,7 @@
       },
       "stepId": "formula-cells",
       "target": {
-        "type": "BY_ADDRESSES",
+        "type": "CELL_BY_ADDRESSES",
         "sheetName": "Budget",
         "addresses": [
           "B2",
@@ -159,7 +159,7 @@
       },
       "stepId": "formula-surface",
       "target": {
-        "type": "BY_NAMES",
+        "type": "SHEET_BY_NAMES",
         "names": [
           "Budget"
         ]

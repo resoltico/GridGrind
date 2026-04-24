@@ -377,7 +377,7 @@ if assertion_types["EXPECT_ANALYSIS_FINDING_PRESENT"].get("targetSelectorRule") 
 
 mutation_action_types = {entry["id"]: entry for entry in catalog["mutationActionTypes"]}
 set_table_targets = mutation_action_types["SET_TABLE"].get("targetSelectors")
-if set_table_targets != [{"family": "TableSelector", "typeIds": ["BY_NAME_ON_SHEET"]}]:
+if set_table_targets != [{"family": "TableSelector", "typeIds": ["TABLE_BY_NAME_ON_SHEET"]}]:
     die("catalog SET_TABLE no longer publishes the exact allowed target selector family")
 
 catalog_groups = {}

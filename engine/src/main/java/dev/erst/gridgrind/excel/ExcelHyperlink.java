@@ -17,7 +17,7 @@ public sealed interface ExcelHyperlink
     public Url {
       target = requireNonBlank(target, "target");
       if (!ExcelHyperlinkValidation.isValidUrlTarget(target)) {
-        String scheme = ExcelHyperlinkValidation.absoluteUriScheme(target);
+        String scheme = ExcelHyperlinkValidation.absoluteUriScheme(target).orElse(null);
         if ("file".equalsIgnoreCase(scheme)) {
           throw new IllegalArgumentException(
               "target uses file: scheme; use FILE hyperlinks instead");

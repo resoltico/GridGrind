@@ -31,6 +31,7 @@ class GridGrindContractTextTest {
         GridGrindContractText.eventReadInspectionQueryClasses());
     assertTrue(GridGrindContractText.executionModeInputSummary().contains("markRecalculateOnOpen"));
     assertTrue(GridGrindContractText.sheetLayoutReadSummary().contains("presentation"));
+    assertTrue(GridGrindContractText.stepKindSummary().contains("stable caller-defined stepId"));
     assertTrue(
         GridGrindContractText.workbookFindingsDiscoverySummary()
             .contains("ANALYZE_WORKBOOK_FINDINGS"));

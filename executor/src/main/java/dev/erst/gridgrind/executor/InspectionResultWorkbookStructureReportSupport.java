@@ -113,7 +113,10 @@ final class InspectionResultWorkbookStructureReportSupport {
                       InspectionResultWorkbookStructureReportSupport
                           ::toAutofilterFilterColumnReport)
                   .toList(),
-              toAutofilterSortStateReport(sheetOwned.sortState()));
+              sheetOwned
+                  .sortState()
+                  .map(InspectionResultWorkbookStructureReportSupport::toAutofilterSortStateReport)
+                  .orElse(null));
       case ExcelAutofilterSnapshot.TableOwned tableOwned ->
           new AutofilterEntryReport.TableOwned(
               tableOwned.range(),
@@ -123,7 +126,10 @@ final class InspectionResultWorkbookStructureReportSupport {
                       InspectionResultWorkbookStructureReportSupport
                           ::toAutofilterFilterColumnReport)
                   .toList(),
-              toAutofilterSortStateReport(tableOwned.sortState()));
+              tableOwned
+                  .sortState()
+                  .map(InspectionResultWorkbookStructureReportSupport::toAutofilterSortStateReport)
+                  .orElse(null));
     };
   }
 
@@ -248,23 +254,21 @@ final class InspectionResultWorkbookStructureReportSupport {
 
   private static AutofilterSortStateReport toAutofilterSortStateReport(
       ExcelAutofilterSortStateSnapshot sortState) {
-    return sortState == null
-        ? null
-        : new AutofilterSortStateReport(
-            sortState.range(),
-            sortState.caseSensitive(),
-            sortState.columnSort(),
-            sortState.sortMethod(),
-            sortState.conditions().stream()
-                .map(
-                    condition ->
-                        new AutofilterSortConditionReport(
-                            condition.range(),
-                            condition.descending(),
-                            condition.sortBy(),
-                            toCellColorReport(condition.color()),
-                            condition.iconId()))
-                .toList());
+    return new AutofilterSortStateReport(
+        sortState.range(),
+        sortState.caseSensitive(),
+        sortState.columnSort(),
+        sortState.sortMethod(),
+        sortState.conditions().stream()
+            .map(
+                condition ->
+                    new AutofilterSortConditionReport(
+                        condition.range(),
+                        condition.descending(),
+                        condition.sortBy(),
+                        toCellColorReport(condition.color()),
+                        condition.iconId()))
+            .toList());
   }
 
   private static TableColumnReport toTableColumnReport(ExcelTableColumnSnapshot column) {
@@ -292,6 +296,6 @@ final class InspectionResultWorkbookStructureReportSupport {
 
   private static dev.erst.gridgrind.contract.dto.CellColorReport toCellColorReport(
       dev.erst.gridgrind.excel.ExcelColorSnapshot color) {
-    return InspectionResultCellReportSupport.toCellColorReport(color);
+    return InspectionResultCellReportSupport.toCellColorReport(color).orElse(null);
   }
 }

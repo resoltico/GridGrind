@@ -87,7 +87,7 @@ class GridGrindCliInvocationTest {
   private static GridGrindCli nonInteractiveCli() {
     return new GridGrindCli(
         (ignoredRequest, ignoredBindings, ignoredSink) ->
-            new GridGrindResponse.Success(null, null, List.of(), List.of(), List.of()),
+            GridGrindResponse.success(null, null, List.of(), List.of(), List.of()),
         new CliRequestReader(),
         new CliResponseWriter(),
         new CliJournalWriter(),

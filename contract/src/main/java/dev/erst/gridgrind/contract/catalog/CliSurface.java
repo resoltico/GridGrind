@@ -6,6 +6,7 @@ import java.util.Objects;
 /** Contract-owned structured CLI help metadata rendered by thin downstream transports. */
 public record CliSurface(
     CliSection usage,
+    CliWorkflowSection workflows,
     CliSection execution,
     CliDefinitionSection limits,
     CliSection request,
@@ -20,6 +21,7 @@ public record CliSurface(
     String standardInputRequiresRequestMessage) {
   public CliSurface {
     Objects.requireNonNull(usage, "usage must not be null");
+    Objects.requireNonNull(workflows, "workflows must not be null");
     Objects.requireNonNull(execution, "execution must not be null");
     Objects.requireNonNull(limits, "limits must not be null");
     Objects.requireNonNull(request, "request must not be null");
@@ -84,6 +86,26 @@ public record CliSurface(
     public CoordinateSystemEntry {
       pattern = CatalogRecordValidation.requireNonBlank(pattern, "pattern");
       convention = CatalogRecordValidation.requireNonBlank(convention, "convention");
+    }
+  }
+
+  /** One labeled workflow section for first-contact operator guidance. */
+  public record CliWorkflowSection(String label, List<WorkflowEntry> entries) {
+    public CliWorkflowSection {
+      label = CatalogRecordValidation.requireNonBlank(label, "label");
+      Objects.requireNonNull(entries, "entries must not be null");
+      entries =
+          entries.stream()
+              .map(entry -> Objects.requireNonNull(entry, "entries must not contain nulls"))
+              .toList();
+    }
+  }
+
+  /** One titled workflow entry made of ordered guidance lines. */
+  public record WorkflowEntry(String title, List<String> lines) {
+    public WorkflowEntry {
+      title = CatalogRecordValidation.requireNonBlank(title, "title");
+      lines = CatalogRecordValidation.copyStrings(lines, "lines");
     }
   }
 

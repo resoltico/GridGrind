@@ -25,7 +25,7 @@
         "type": "ENSURE_SHEET"
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ledger"
       }
     },
@@ -58,7 +58,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ledger"
       }
     },
@@ -88,7 +88,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ledger"
       }
     },
@@ -118,7 +118,7 @@
         ]
       },
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ledger"
       }
     },
@@ -128,7 +128,7 @@
       },
       "stepId": "workbook",
       "target": {
-        "type": "CURRENT"
+        "type": "WORKBOOK_CURRENT"
       }
     },
     {
@@ -137,7 +137,7 @@
       },
       "stepId": "ledger-sheet",
       "target": {
-        "type": "BY_NAME",
+        "type": "SHEET_BY_NAME",
         "name": "Ledger"
       }
     }

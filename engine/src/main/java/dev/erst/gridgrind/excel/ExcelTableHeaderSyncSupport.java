@@ -1,6 +1,7 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -24,8 +25,9 @@ final class ExcelTableHeaderSyncSupport {
     Objects.requireNonNull(changedRange, "changedRange must not be null");
 
     for (XSSFTable table : sheet.getTables()) {
-      ExcelRange headerRange = headerRangeOrNull(table);
-      if (headerRange != null && ExcelSheetStructureSupport.intersects(headerRange, changedRange)) {
+      Optional<ExcelRange> headerRange = headerRangeOrNull(table);
+      if (headerRange.isPresent()
+          && ExcelSheetStructureSupport.intersects(headerRange.orElseThrow(), changedRange)) {
         syncHeader(table);
       }
     }
@@ -42,27 +44,28 @@ final class ExcelTableHeaderSyncSupport {
   private static void syncHeader(XSSFTable table) {
     Objects.requireNonNull(table, "table must not be null");
 
-    if (headerRangeOrNull(table) != null) {
+    if (headerRangeOrNull(table).isPresent()) {
       table.updateHeaders();
     }
   }
 
-  private static ExcelRange headerRangeOrNull(XSSFTable table) {
+  private static Optional<ExcelRange> headerRangeOrNull(XSSFTable table) {
     Objects.requireNonNull(table, "table must not be null");
 
     if (table.getHeaderRowCount() < 1) {
-      return null;
+      return Optional.empty();
     }
     ExcelRange tableRange =
         ExcelSheetStructureSupport.parseRangeOrNull(
             Objects.requireNonNullElse(table.getCTTable().getRef(), ""));
     if (tableRange == null) {
-      return null;
+      return Optional.empty();
     }
-    return new ExcelRange(
-        tableRange.firstRow(),
-        Math.min(tableRange.lastRow(), tableRange.firstRow() + table.getHeaderRowCount() - 1),
-        tableRange.firstColumn(),
-        tableRange.lastColumn());
+    return Optional.of(
+        new ExcelRange(
+            tableRange.firstRow(),
+            Math.min(tableRange.lastRow(), tableRange.firstRow() + table.getHeaderRowCount() - 1),
+            tableRange.firstColumn(),
+            tableRange.lastColumn()));
   }
 }

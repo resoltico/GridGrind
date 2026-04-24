@@ -182,18 +182,34 @@ final class ExcelSheetCellMutationSupport {
     Cell cell = getOrCreateCell(rowIndex, columnIndex);
 
     switch (value) {
-      case ExcelCellValue.BlankValue _ -> cell.setBlank();
-      case ExcelCellValue.TextValue textValue -> cell.setCellValue(textValue.value());
-      case ExcelCellValue.RichTextValue richTextValue ->
-          cell.setCellValue(
-              ExcelRichTextSupport.toPoiRichText(xssfSheet().getWorkbook(), richTextValue.value()));
-      case ExcelCellValue.NumberValue numberValue -> cell.setCellValue(numberValue.value());
-      case ExcelCellValue.BooleanValue booleanValue -> cell.setCellValue(booleanValue.value());
+      case ExcelCellValue.BlankValue _ -> {
+        clearExistingFormula(cell);
+        cell.setBlank();
+      }
+      case ExcelCellValue.TextValue textValue -> {
+        clearExistingFormula(cell);
+        cell.setCellValue(textValue.value());
+      }
+      case ExcelCellValue.RichTextValue richTextValue -> {
+        clearExistingFormula(cell);
+        cell.setCellValue(
+            ExcelRichTextSupport.toPoiRichText(xssfSheet().getWorkbook(), richTextValue.value()));
+      }
+      case ExcelCellValue.NumberValue numberValue -> {
+        clearExistingFormula(cell);
+        cell.setCellValue(numberValue.value());
+      }
+      case ExcelCellValue.BooleanValue booleanValue -> {
+        clearExistingFormula(cell);
+        cell.setCellValue(booleanValue.value());
+      }
       case ExcelCellValue.DateValue dateValue -> {
+        clearExistingFormula(cell);
         cell.setCellValue(dateValue.value());
         cell.setCellStyle(styleRegistry.localDateStyle(cell));
       }
       case ExcelCellValue.DateTimeValue dateTimeValue -> {
+        clearExistingFormula(cell);
         cell.setCellValue(dateTimeValue.value());
         cell.setCellStyle(styleRegistry.localDateTimeStyle(cell));
       }
@@ -204,6 +220,12 @@ final class ExcelSheetCellMutationSupport {
               formulaRuntime,
               sheet.getSheetName(),
               new CellReference(rowIndex, columnIndex).formatAsString());
+    }
+  }
+
+  private static void clearExistingFormula(Cell cell) {
+    if (cell.getCellType() == CellType.FORMULA) {
+      cell.removeFormula();
     }
   }
 
@@ -273,7 +295,7 @@ final class ExcelSheetCellMutationSupport {
     }
   }
 
-  private static void requireValidCellReference(String address, CellReference cellReference) {
+  static void requireValidCellReference(String address, CellReference cellReference) {
     int row = cellReference.getRow();
     int col = cellReference.getCol();
     if (row < 0

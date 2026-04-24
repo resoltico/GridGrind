@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ooxml.POIXMLDocumentPart;
 import org.apache.poi.ooxml.POIXMLDocumentPart.RelationPart;
@@ -49,10 +50,7 @@ final class ExcelSheetAnnotationSupport {
 
   void clearHyperlink(String address) {
     ExcelSheet.requireNonBlank(address, "address");
-    Cell cell = optionalCell(address);
-    if (cell != null) {
-      cell.removeHyperlink();
-    }
+    optionalCell(address).ifPresent(Cell::removeHyperlink);
   }
 
   void setComment(String address, ExcelComment comment) {
@@ -69,10 +67,7 @@ final class ExcelSheetAnnotationSupport {
 
   void clearComment(String address) {
     ExcelSheet.requireNonBlank(address, "address");
-    Cell cell = optionalCell(address);
-    if (cell != null) {
-      clearCellComment(cell);
-    }
+    optionalCell(address).ifPresent(ExcelSheetAnnotationSupport::clearCellComment);
     drawingController.cleanupEmptyDrawingPatriarch((org.apache.poi.xssf.usermodel.XSSFSheet) sheet);
   }
 
@@ -90,7 +85,8 @@ final class ExcelSheetAnnotationSupport {
   }
 
   ExcelCellMetadataSnapshot metadata(Cell cell) {
-    return ExcelCellMetadataSnapshot.of(hyperlink(cell), commentSnapshot(cell));
+    return ExcelCellMetadataSnapshot.of(
+        optionalHyperlink(cell).orElse(null), optionalCommentSnapshot(cell).orElse(null));
   }
 
   List<WorkbookReadResult.CellHyperlink> hyperlinks(ExcelCellSelection selection) {
@@ -110,62 +106,35 @@ final class ExcelSheetAnnotationSupport {
   }
 
   static ExcelHyperlink hyperlink(Cell cell) {
-    return cell == null ? null : hyperlink(cell.getHyperlink());
+    return optionalHyperlink(cell).orElse(null);
   }
 
   static ExcelHyperlink hyperlink(org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
-    if (hyperlink == null || hyperlink.getType() == null) {
-      return null;
-    }
-    return hyperlink(hyperlink.getType(), hyperlink.getAddress());
+    return optionalHyperlink(hyperlink).orElse(null);
   }
 
   static ExcelHyperlink hyperlink(HyperlinkType hyperlinkType, String target) {
-    if (hyperlinkType == null || target == null || target.isBlank()) {
-      return null;
-    }
-    return switch (hyperlinkType) {
-      case URL ->
-          ExcelHyperlinkValidation.isValidUrlTarget(target) ? new ExcelHyperlink.Url(target) : null;
-      case EMAIL ->
-          ExcelHyperlinkValidation.isValidEmailTarget(target)
-              ? new ExcelHyperlink.Email(target)
-              : null;
-      case FILE ->
-          ExcelHyperlinkValidation.isValidFileTarget(target)
-              ? new ExcelHyperlink.File(target)
-              : null;
-      case DOCUMENT -> new ExcelHyperlink.Document(target);
-      case NONE -> null;
-    };
+    return optionalHyperlink(hyperlinkType, target).orElse(null);
   }
 
   static ExcelComment comment(Cell cell) {
-    return cell == null ? null : comment(cell.getCellComment());
+    return optionalComment(cell).orElse(null);
   }
 
   static ExcelComment comment(Comment comment) {
-    if (comment == null || comment.getString() == null) {
-      return null;
-    }
-    return comment(comment.getString().getString(), comment.getAuthor(), comment.isVisible());
+    return optionalComment(comment).orElse(null);
   }
 
   static ExcelComment comment(String text, String author, boolean visible) {
-    if (text == null || text.isBlank() || author == null || author.isBlank()) {
-      return null;
-    }
-    return new ExcelComment(text, author, visible);
+    return optionalComment(text, author, visible).orElse(null);
   }
 
   static ExcelCommentSnapshot commentSnapshot(Cell cell) {
-    return cell == null
-        ? null
-        : commentSnapshot(cell.getSheet().getWorkbook(), cell.getCellComment());
+    return optionalCommentSnapshot(cell).orElse(null);
   }
 
   static ExcelCommentSnapshot commentSnapshot(Comment comment) {
-    return commentSnapshot(null, comment);
+    return optionalCommentSnapshot(comment).orElse(null);
   }
 
   static HyperlinkType toPoi(ExcelHyperlinkType hyperlinkType) {
@@ -208,12 +177,12 @@ final class ExcelSheetAnnotationSupport {
     List<WorkbookReadResult.CellHyperlink> hyperlinks = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
-        ExcelHyperlink hyperlink = hyperlink(cell);
-        if (hyperlink != null) {
+        Optional<ExcelHyperlink> hyperlink = optionalHyperlink(cell);
+        if (hyperlink.isPresent()) {
           hyperlinks.add(
               new WorkbookReadResult.CellHyperlink(
                   new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
-                  hyperlink));
+                  hyperlink.orElseThrow()));
         }
       }
     }
@@ -223,13 +192,13 @@ final class ExcelSheetAnnotationSupport {
   private List<WorkbookReadResult.CellHyperlink> selectedHyperlinks(List<String> addresses) {
     List<WorkbookReadResult.CellHyperlink> hyperlinks = new ArrayList<>();
     for (String address : addresses) {
-      Cell cell = cellOrNull(address);
+      Cell cell = cellOrNull(address).orElse(null);
       if (cell == null) {
         continue;
       }
-      ExcelHyperlink hyperlink = hyperlink(cell);
-      if (hyperlink != null) {
-        hyperlinks.add(new WorkbookReadResult.CellHyperlink(address, hyperlink));
+      Optional<ExcelHyperlink> hyperlink = optionalHyperlink(cell);
+      if (hyperlink.isPresent()) {
+        hyperlinks.add(new WorkbookReadResult.CellHyperlink(address, hyperlink.orElseThrow()));
       }
     }
     return List.copyOf(hyperlinks);
@@ -239,12 +208,12 @@ final class ExcelSheetAnnotationSupport {
     List<WorkbookReadResult.CellComment> comments = new ArrayList<>();
     for (Row row : sheet) {
       for (Cell cell : row) {
-        ExcelCommentSnapshot comment = commentSnapshot(cell);
-        if (comment != null) {
+        Optional<ExcelCommentSnapshot> comment = optionalCommentSnapshot(cell);
+        if (comment.isPresent()) {
           comments.add(
               new WorkbookReadResult.CellComment(
                   new CellReference(cell.getRowIndex(), cell.getColumnIndex()).formatAsString(),
-                  comment));
+                  comment.orElseThrow()));
         }
       }
     }
@@ -254,36 +223,40 @@ final class ExcelSheetAnnotationSupport {
   private List<WorkbookReadResult.CellComment> selectedComments(List<String> addresses) {
     List<WorkbookReadResult.CellComment> comments = new ArrayList<>();
     for (String address : addresses) {
-      Cell cell = cellOrNull(address);
+      Cell cell = cellOrNull(address).orElse(null);
       if (cell == null) {
         continue;
       }
-      ExcelCommentSnapshot comment = commentSnapshot(cell);
-      if (comment != null) {
-        comments.add(new WorkbookReadResult.CellComment(address, comment));
+      Optional<ExcelCommentSnapshot> comment = optionalCommentSnapshot(cell);
+      if (comment.isPresent()) {
+        comments.add(new WorkbookReadResult.CellComment(address, comment.orElseThrow()));
       }
     }
     return List.copyOf(comments);
   }
 
-  private Cell cellOrNull(String address) {
+  private Optional<Cell> cellOrNull(String address) {
     CellReference reference = parseCellReference(address);
     Row row = sheet.getRow(reference.getRow());
-    return row == null ? null : row.getCell(reference.getCol());
+    return row == null ? Optional.empty() : Optional.ofNullable(row.getCell(reference.getCol()));
   }
 
-  private static ExcelCommentSnapshot commentSnapshot(Workbook workbook, Comment comment) {
+  private static Optional<ExcelCommentSnapshot> optionalCommentSnapshot(
+      Workbook workbook, Comment comment) {
     if (!(comment instanceof XSSFComment xssfComment)
         || xssfComment.getString() == null
         || xssfComment.getAuthor() == null
         || xssfComment.getAuthor().isBlank()) {
-      return null;
+      return Optional.empty();
     }
     ExcelComment plainComment =
-        comment(
-            xssfComment.getString().getString(), xssfComment.getAuthor(), xssfComment.isVisible());
+        optionalComment(
+                xssfComment.getString().getString(),
+                xssfComment.getAuthor(),
+                xssfComment.isVisible())
+            .orElse(null);
     if (plainComment == null) {
-      return null;
+      return Optional.empty();
     }
     ExcelCommentAnchorSnapshot anchor = null;
     if (xssfComment.getClientAnchor() instanceof XSSFClientAnchor clientAnchor) {
@@ -301,11 +274,12 @@ final class ExcelSheetAnnotationSupport {
                 (XSSFWorkbook) workbook,
                 xssfComment.getString(),
                 WorkbookStyleRegistry.snapshotFont(((XSSFWorkbook) workbook).getFontAt(0)));
-    return new ExcelCommentSnapshot(
-        plainComment.text(), plainComment.author(), plainComment.visible(), runs, anchor);
+    return Optional.of(
+        new ExcelCommentSnapshot(
+            plainComment.text(), plainComment.author(), plainComment.visible(), runs, anchor));
   }
 
-  private static void removeCommentFromTable(XSSFSheet sheet, CellAddress address) {
+  static void removeCommentFromTable(XSSFSheet sheet, CellAddress address) {
     for (POIXMLDocumentPart relation : sheet.getRelations()) {
       if (relation instanceof Comments comments) {
         comments.removeComment(address);
@@ -314,7 +288,7 @@ final class ExcelSheetAnnotationSupport {
     }
   }
 
-  private static void removeCommentShapeIfPresent(XSSFSheet sheet, CellAddress address) {
+  static void removeCommentShapeIfPresent(XSSFSheet sheet, CellAddress address) {
     XSSFVMLDrawing vmlDrawing = sheet.getVMLDrawing(false);
     if (vmlDrawing == null) {
       return;
@@ -328,13 +302,13 @@ final class ExcelSheetAnnotationSupport {
   }
 
   static void repairBrokenLegacyDrawingReference(XSSFSheet sheet) {
-    if (sheet.getCTWorksheet().isSetLegacyDrawing() && legacyDrawingRelationId(sheet) == null) {
+    if (sheet.getCTWorksheet().isSetLegacyDrawing() && legacyDrawingRelationId(sheet).isEmpty()) {
       sheet.getCTWorksheet().unsetLegacyDrawing();
     }
   }
 
   static void ensureLegacyDrawingReference(XSSFSheet sheet) {
-    String relationId = vmlDrawingRelationId(sheet);
+    String relationId = vmlDrawingRelationId(sheet).orElse(null);
     if (relationId == null) {
       return;
     }
@@ -344,27 +318,27 @@ final class ExcelSheetAnnotationSupport {
     sheet.getCTWorksheet().getLegacyDrawing().setId(relationId);
   }
 
-  static String legacyDrawingRelationId(XSSFSheet sheet) {
+  static Optional<String> legacyDrawingRelationId(XSSFSheet sheet) {
     if (!sheet.getCTWorksheet().isSetLegacyDrawing()) {
-      return null;
+      return Optional.empty();
     }
     String legacyDrawingId = sheet.getCTWorksheet().getLegacyDrawing().getId();
     for (RelationPart relationPart : sheet.getRelationParts()) {
       if (relationPart.getDocumentPart() instanceof XSSFVMLDrawing
           && legacyDrawingId.equals(relationPart.getRelationship().getId())) {
-        return legacyDrawingId;
+        return Optional.of(legacyDrawingId);
       }
     }
-    return null;
+    return Optional.empty();
   }
 
-  static String vmlDrawingRelationId(XSSFSheet sheet) {
+  static Optional<String> vmlDrawingRelationId(XSSFSheet sheet) {
     for (RelationPart relationPart : sheet.getRelationParts()) {
       if (relationPart.getDocumentPart() instanceof XSSFVMLDrawing) {
-        return relationPart.getRelationship().getId();
+        return Optional.of(relationPart.getRelationship().getId());
       }
     }
-    return null;
+    return Optional.empty();
   }
 
   private CellReference parseCellReference(String address) {
@@ -389,13 +363,13 @@ final class ExcelSheetAnnotationSupport {
     }
   }
 
-  private Cell optionalCell(String address) {
+  private Optional<Cell> optionalCell(String address) {
     CellReference cellReference = parseCellReference(address);
     Row row = sheet.getRow(cellReference.getRow());
     if (row == null) {
-      return null;
+      return Optional.empty();
     }
-    return row.getCell(cellReference.getCol());
+    return Optional.ofNullable(row.getCell(cellReference.getCol()));
   }
 
   private Cell getOrCreateCell(int rowIndex, int columnIndex) {
@@ -409,5 +383,67 @@ final class ExcelSheetAnnotationSupport {
       row = sheet.createRow(rowIndex);
     }
     return row;
+  }
+
+  private static Optional<ExcelHyperlink> optionalHyperlink(Cell cell) {
+    return cell == null ? Optional.empty() : optionalHyperlink(cell.getHyperlink());
+  }
+
+  private static Optional<ExcelHyperlink> optionalHyperlink(
+      org.apache.poi.ss.usermodel.Hyperlink hyperlink) {
+    return hyperlink == null || hyperlink.getType() == null
+        ? Optional.empty()
+        : optionalHyperlink(hyperlink.getType(), hyperlink.getAddress());
+  }
+
+  private static Optional<ExcelHyperlink> optionalHyperlink(
+      HyperlinkType hyperlinkType, String target) {
+    if (hyperlinkType == null || target == null || target.isBlank()) {
+      return Optional.empty();
+    }
+    return switch (hyperlinkType) {
+      case URL ->
+          ExcelHyperlinkValidation.isValidUrlTarget(target)
+              ? Optional.of(new ExcelHyperlink.Url(target))
+              : Optional.empty();
+      case EMAIL ->
+          ExcelHyperlinkValidation.isValidEmailTarget(target)
+              ? Optional.of(new ExcelHyperlink.Email(target))
+              : Optional.empty();
+      case FILE ->
+          ExcelHyperlinkValidation.isValidFileTarget(target)
+              ? Optional.of(new ExcelHyperlink.File(target))
+              : Optional.empty();
+      case DOCUMENT -> Optional.of(new ExcelHyperlink.Document(target));
+      case NONE -> Optional.empty();
+    };
+  }
+
+  private static Optional<ExcelComment> optionalComment(Cell cell) {
+    return cell == null ? Optional.empty() : optionalComment(cell.getCellComment());
+  }
+
+  private static Optional<ExcelComment> optionalComment(Comment comment) {
+    return comment == null || comment.getString() == null
+        ? Optional.empty()
+        : optionalComment(
+            comment.getString().getString(), comment.getAuthor(), comment.isVisible());
+  }
+
+  private static Optional<ExcelComment> optionalComment(
+      String text, String author, boolean visible) {
+    return text == null || text.isBlank() || author == null || author.isBlank()
+        ? Optional.empty()
+        : Optional.of(new ExcelComment(text, author, visible));
+  }
+
+  private static Optional<ExcelCommentSnapshot> optionalCommentSnapshot(Cell cell) {
+    return cell == null
+        ? Optional.empty()
+        : optionalCommentSnapshot(cell.getSheet().getWorkbook(), cell.getCellComment());
+  }
+
+  private static Optional<ExcelCommentSnapshot> optionalCommentSnapshot(Comment comment) {
+    return optionalCommentSnapshot(null, comment);
   }
 }

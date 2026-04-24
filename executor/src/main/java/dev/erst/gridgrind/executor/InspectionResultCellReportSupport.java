@@ -26,46 +26,44 @@ import dev.erst.gridgrind.excel.ExcelGradientFillSnapshot;
 import dev.erst.gridgrind.excel.ExcelHyperlink;
 import dev.erst.gridgrind.excel.ExcelRichTextSnapshot;
 import java.util.List;
+import java.util.Optional;
 
 /** Converts cell-local workbook snapshots into protocol report records. */
 final class InspectionResultCellReportSupport {
   private InspectionResultCellReportSupport() {}
 
-  static HyperlinkTarget toHyperlinkTarget(ExcelHyperlink hyperlink) {
+  static Optional<HyperlinkTarget> toHyperlinkTarget(ExcelHyperlink hyperlink) {
     if (hyperlink == null) {
-      return null;
+      return Optional.empty();
     }
-    return switch (hyperlink) {
-      case ExcelHyperlink.Url url -> new HyperlinkTarget.Url(url.target());
-      case ExcelHyperlink.Email email -> new HyperlinkTarget.Email(email.target());
-      case ExcelHyperlink.File file -> new HyperlinkTarget.File(file.path());
-      case ExcelHyperlink.Document document -> new HyperlinkTarget.Document(document.target());
-    };
+    return Optional.of(
+        switch (hyperlink) {
+          case ExcelHyperlink.Url url -> new HyperlinkTarget.Url(url.target());
+          case ExcelHyperlink.Email email -> new HyperlinkTarget.Email(email.target());
+          case ExcelHyperlink.File file -> new HyperlinkTarget.File(file.path());
+          case ExcelHyperlink.Document document -> new HyperlinkTarget.Document(document.target());
+        });
   }
 
-  static GridGrindResponse.CommentReport toCommentReport(ExcelComment comment) {
+  static Optional<GridGrindResponse.CommentReport> toCommentReport(ExcelComment comment) {
     if (comment == null) {
-      return null;
+      return Optional.empty();
     }
-    return new GridGrindResponse.CommentReport(comment.text(), comment.author(), comment.visible());
+    return Optional.of(
+        new GridGrindResponse.CommentReport(comment.text(), comment.author(), comment.visible()));
   }
 
-  static GridGrindResponse.CommentReport toCommentReport(ExcelCommentSnapshot comment) {
+  static Optional<GridGrindResponse.CommentReport> toCommentReport(ExcelCommentSnapshot comment) {
     if (comment == null) {
-      return null;
+      return Optional.empty();
     }
-    return new GridGrindResponse.CommentReport(
-        comment.text(),
-        comment.author(),
-        comment.visible(),
-        toRichTextRunReports(comment.runs()),
-        comment.anchor() == null
-            ? null
-            : new CommentAnchorReport(
-                comment.anchor().firstColumn(),
-                comment.anchor().firstRow(),
-                comment.anchor().lastColumn(),
-                comment.anchor().lastRow()));
+    return Optional.of(
+        new GridGrindResponse.CommentReport(
+            comment.text(),
+            comment.author(),
+            comment.visible(),
+            toRichTextRunReports(comment.runs()).orElse(null),
+            commentAnchorReport(comment).orElse(null)));
   }
 
   static FontHeightReport toFontHeightReport(ExcelFontHeight fontHeight) {
@@ -86,9 +84,9 @@ final class InspectionResultCellReportSupport {
         toCellFontReport(style.font()),
         new CellFillReport(
             style.fill().pattern(),
-            toCellColorReport(style.fill().foregroundColor()),
-            toCellColorReport(style.fill().backgroundColor()),
-            toCellGradientFillReport(style.fill().gradient())),
+            toCellColorReport(style.fill().foregroundColor()).orElse(null),
+            toCellColorReport(style.fill().backgroundColor()).orElse(null),
+            toCellGradientFillReport(style.fill().gradient()).orElse(null)),
         new CellBorderReport(
             toCellBorderSideReport(style.border().top()),
             toCellBorderSideReport(style.border().right()),
@@ -103,20 +101,21 @@ final class InspectionResultCellReportSupport {
         font.italic(),
         font.fontName(),
         toFontHeightReport(font.fontHeight()),
-        toCellColorReport(font.fontColor()),
+        toCellColorReport(font.fontColor()).orElse(null),
         font.underline(),
         font.strikeout());
   }
 
   static CellBorderSideReport toCellBorderSideReport(ExcelBorderSideSnapshot side) {
-    return new CellBorderSideReport(side.style(), toCellColorReport(side.color()));
+    return new CellBorderSideReport(side.style(), toCellColorReport(side.color()).orElse(null));
   }
 
   static GridGrindResponse.CellReport toCellReport(ExcelCellSnapshot snapshot) {
     GridGrindResponse.CellStyleReport style = toCellStyleReport(snapshot.style());
-    HyperlinkTarget hyperlink = toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null));
+    HyperlinkTarget hyperlink =
+        toHyperlinkTarget(snapshot.metadata().hyperlink().orElse(null)).orElse(null);
     GridGrindResponse.CommentReport comment =
-        toCommentReport(snapshot.metadata().comment().orElse(null));
+        toCommentReport(snapshot.metadata().comment().orElse(null)).orElse(null);
 
     return switch (snapshot) {
       case ExcelCellSnapshot.BlankSnapshot s ->
@@ -131,7 +130,7 @@ final class InspectionResultCellReportSupport {
               hyperlink,
               comment,
               s.stringValue(),
-              toRichTextRunReports(s.richText()));
+              toRichTextRunReports(s.richText()).orElse(null));
       case ExcelCellSnapshot.NumberSnapshot s ->
           new GridGrindResponse.CellReport.NumberReport(
               s.address(),
@@ -172,38 +171,51 @@ final class InspectionResultCellReportSupport {
     };
   }
 
-  @SuppressWarnings("PMD.ReturnEmptyCollectionRatherThanNull")
-  static List<RichTextRunReport> toRichTextRunReports(ExcelRichTextSnapshot richText) {
+  static Optional<List<RichTextRunReport>> toRichTextRunReports(ExcelRichTextSnapshot richText) {
     if (richText == null) {
-      return null;
+      return Optional.empty();
     }
-    return richText.runs().stream()
-        .map(run -> new RichTextRunReport(run.text(), toCellFontReport(run.font())))
-        .toList();
+    return Optional.of(
+        richText.runs().stream()
+            .map(run -> new RichTextRunReport(run.text(), toCellFontReport(run.font())))
+            .toList());
   }
 
-  static CellColorReport toCellColorReport(ExcelColorSnapshot color) {
+  static Optional<CellColorReport> toCellColorReport(ExcelColorSnapshot color) {
     return color == null
-        ? null
-        : new CellColorReport(color.rgb(), color.theme(), color.indexed(), color.tint());
+        ? Optional.empty()
+        : Optional.of(
+            new CellColorReport(color.rgb(), color.theme(), color.indexed(), color.tint()));
   }
 
-  private static CellGradientFillReport toCellGradientFillReport(
+  private static Optional<CellGradientFillReport> toCellGradientFillReport(
       ExcelGradientFillSnapshot gradient) {
     return gradient == null
-        ? null
-        : new CellGradientFillReport(
-            gradient.type(),
-            gradient.degree(),
-            gradient.left(),
-            gradient.right(),
-            gradient.top(),
-            gradient.bottom(),
-            gradient.stops().stream()
-                .map(
-                    stop ->
-                        new CellGradientStopReport(
-                            stop.position(), toCellColorReport(stop.color())))
-                .toList());
+        ? Optional.empty()
+        : Optional.of(
+            new CellGradientFillReport(
+                gradient.type(),
+                gradient.degree(),
+                gradient.left(),
+                gradient.right(),
+                gradient.top(),
+                gradient.bottom(),
+                gradient.stops().stream()
+                    .map(
+                        stop ->
+                            new CellGradientStopReport(
+                                stop.position(), toCellColorReport(stop.color()).orElse(null)))
+                    .toList()));
+  }
+
+  private static Optional<CommentAnchorReport> commentAnchorReport(ExcelCommentSnapshot comment) {
+    return comment.anchor() == null
+        ? Optional.empty()
+        : Optional.of(
+            new CommentAnchorReport(
+                comment.anchor().firstColumn(),
+                comment.anchor().firstRow(),
+                comment.anchor().lastColumn(),
+                comment.anchor().lastRow()));
   }
 }

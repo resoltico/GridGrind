@@ -29,8 +29,8 @@ class PromotionMetadataRefresherTest {
           "steps": [
             {
               "stepId": "assert-sheet",
-              "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
-              "assertion": { "type": "EXPECT_PRESENT" }
+              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+              "assertion": { "type": "EXPECT_CHART_PRESENT" }
             }
           ]
         }

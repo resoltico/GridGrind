@@ -78,7 +78,7 @@ public sealed interface ExcelConditionalFormattingRuleSnapshot
       implements ExcelConditionalFormattingRuleSnapshot {
     public DataBarRule {
       requirePriority(priority);
-      color = ExcelRgbColorSupport.normalizeRgbHex(color, "color");
+      color = ExcelRgbColorSupport.normalizeRgbHex(color, "color").orElse(null);
       if (widthMin < 0) {
         throw new IllegalArgumentException("widthMin must not be negative");
       }
@@ -153,7 +153,8 @@ public sealed interface ExcelConditionalFormattingRuleSnapshot
     Objects.requireNonNull(colors, "colors must not be null");
     List<String> copy = new ArrayList<>(List.copyOf(colors));
     for (int index = 0; index < copy.size(); index++) {
-      copy.set(index, ExcelRgbColorSupport.normalizeRgbHex(copy.get(index), "colors"));
+      copy.set(
+          index, ExcelRgbColorSupport.normalizeRgbHex(copy.get(index), "colors").orElseThrow());
     }
     return List.copyOf(copy);
   }

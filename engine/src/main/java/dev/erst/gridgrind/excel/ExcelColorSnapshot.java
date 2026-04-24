@@ -1,12 +1,12 @@
 package dev.erst.gridgrind.excel;
 
 import java.util.Locale;
-import java.util.Objects;
+import java.util.Optional;
 
 /** Immutable factual workbook color preserving RGB, theme, indexed, and tint semantics. */
 public record ExcelColorSnapshot(String rgb, Integer theme, Integer indexed, Double tint) {
   public ExcelColorSnapshot {
-    rgb = normalizeRgbHex(rgb);
+    rgb = normalizeRgbHex(rgb).orElse(null);
     if (theme != null && theme < 0) {
       throw new IllegalArgumentException("theme must not be negative");
     }
@@ -27,17 +27,16 @@ public record ExcelColorSnapshot(String rgb, Integer theme, Integer indexed, Dou
     this(rgb, null, null, null);
   }
 
-  private static String normalizeRgbHex(String rgb) {
+  private static Optional<String> normalizeRgbHex(String rgb) {
     if (rgb == null) {
-      return null;
+      return Optional.empty();
     }
-    Objects.requireNonNull(rgb, "rgb must not be null");
     if (rgb.isBlank()) {
       throw new IllegalArgumentException("rgb must not be blank");
     }
     if (!rgb.matches("^#[0-9A-Fa-f]{6}$")) {
       throw new IllegalArgumentException("rgb must match #RRGGBB");
     }
-    return rgb.toUpperCase(Locale.ROOT);
+    return Optional.of(rgb.toUpperCase(Locale.ROOT));
   }
 }

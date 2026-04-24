@@ -59,7 +59,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli(
                 (ignoredRequest, ignoredBindings, ignoredSink) ->
-                    new GridGrindResponse.Success(
+                    GridGrindResponse.success(
                         null,
                         new GridGrindResponse.PersistenceOutcome.NotSaved(),
                         List.of(),
@@ -92,7 +92,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
     int exitCode =
         new GridGrindCli(
                 (ignoredRequest, ignoredBindings, ignoredSink) ->
-                    new GridGrindResponse.Success(
+                    GridGrindResponse.success(
                         null,
                         new GridGrindResponse.PersistenceOutcome.NotSaved(),
                         List.of(),
@@ -162,18 +162,18 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 "calculation": { "strategy": { "type": "EVALUATE_ALL" } }
               },
               "steps": [
-                { "stepId": "ensure-budget", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
-                { "stepId": "append-header", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
+                { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+                { "stepId": "append-header", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
                   { "type": "TEXT", "source": { "type": "INLINE", "text": "Item" } },
                   { "type": "TEXT", "source": { "type": "INLINE", "text": "Amount" } }
                 ] } },
-                { "stepId": "append-hosting", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
+                { "stepId": "append-hosting", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "APPEND_ROW", "values": [
                   { "type": "TEXT", "source": { "type": "INLINE", "text": "Hosting" } },
                   { "type": "NUMBER", "number": 49.0 }
                 ] } },
-                { "stepId": "set-total", "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "B3" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(B2:B2)" } } } },
-                { "stepId": "workbook", "target": { "type": "CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } },
-                { "stepId": "cells", "target": { "type": "BY_ADDRESSES", "sheetName": "Budget", "addresses": ["A1", "B3"] }, "query": { "type": "GET_CELLS" } }
+                { "stepId": "set-total", "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "B3" }, "action": { "type": "SET_CELL", "value": { "type": "FORMULA", "source": { "type": "INLINE", "text": "SUM(B2:B2)" } } } },
+                { "stepId": "workbook", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } },
+                { "stepId": "cells", "target": { "type": "CELL_BY_ADDRESSES", "sheetName": "Budget", "addresses": ["A1", "B3"] }, "query": { "type": "GET_CELLS" } }
               ]
             }
             """;
@@ -212,10 +212,10 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
-                { "stepId": "ensure-budget", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+                { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
                 {
                   "stepId": "set-title",
-                  "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+                  "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
                   "action": {
                     "type": "SET_CELL",
                     "value": {
@@ -257,10 +257,10 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
           "source": { "type": "NEW" },
           "persistence": { "type": "NONE" },
           "steps": [
-            { "stepId": "ensure-budget", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+            { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
             {
               "stepId": "set-title",
-              "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
               "action": {
                 "type": "SET_CELL",
                 "value": {
@@ -271,7 +271,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
             },
             {
               "stepId": "cells",
-              "target": { "type": "BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
+              "target": { "type": "CELL_BY_ADDRESS", "sheetName": "Budget", "address": "A1" },
               "query": { "type": "GET_CELLS" }
             }
           ]
@@ -310,8 +310,8 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 "journal": { "level": "VERBOSE" }
               },
               "steps": [
-                { "stepId": "ensure-ledger", "target": { "type": "BY_NAME", "name": "Ledger" }, "action": { "type": "ENSURE_SHEET" } },
-                { "stepId": "summary", "target": { "type": "CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } }
+                { "stepId": "ensure-ledger", "target": { "type": "SHEET_BY_NAME", "name": "Ledger" }, "action": { "type": "ENSURE_SHEET" } },
+                { "stepId": "summary", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } }
               ]
             }
             """;
@@ -377,7 +377,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
-                { "stepId": "ensure-bad-sheet", "target": { "type": "BY_NAME", "name": "Bad:Name" }, "action": { "type": "ENSURE_SHEET" } }
+                { "stepId": "ensure-bad-sheet", "target": { "type": "SHEET_BY_NAME", "name": "Bad:Name" }, "action": { "type": "ENSURE_SHEET" } }
               ]
             }
             """;
@@ -409,10 +409,10 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
-                { "stepId": "ensure-dispatch", "target": { "type": "BY_NAME", "name": "Dispatch" }, "action": { "type": "ENSURE_SHEET" } },
+                { "stepId": "ensure-dispatch", "target": { "type": "SHEET_BY_NAME", "name": "Dispatch" }, "action": { "type": "ENSURE_SHEET" } },
                 {
                   "stepId": "seed-dispatch",
-                  "target": { "type": "BY_RANGE", "sheetName": "Dispatch", "range": "A1:B3" },
+                  "target": { "type": "RANGE_BY_RANGE", "sheetName": "Dispatch", "range": "A1:B3" },
                   "action": {
                     "type": "SET_RANGE",
                     "rows": [
@@ -433,7 +433,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                 },
                 {
                   "stepId": "set-dispatch-table",
-                  "target": { "type": "BY_NAME_ON_SHEET", "name": "DispatchQueue", "sheetName": "Dispatch" },
+                  "target": { "type": "TABLE_BY_NAME_ON_SHEET", "name": "DispatchQueue", "sheetName": "Dispatch" },
                   "action": {
                     "type": "SET_TABLE",
                     "table": {
@@ -444,7 +444,7 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
                     }
                   }
                 },
-                { "stepId": "tables", "target": { "type": "ALL" }, "query": { "type": "GET_TABLES" } }
+                { "stepId": "tables", "target": { "type": "TABLE_ALL" }, "query": { "type": "GET_TABLES" } }
               ]
             }
             """;
@@ -481,8 +481,8 @@ class GridGrindCliTest extends GridGrindCliTestSupport {
               "source": { "type": "NEW" },
               "persistence": { "type": "NONE" },
               "steps": [
-                { "stepId": "ensure-budget", "target": { "type": "BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
-                { "stepId": "workbook", "target": { "type": "CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } }
+                { "stepId": "ensure-budget", "target": { "type": "SHEET_BY_NAME", "name": "Budget" }, "action": { "type": "ENSURE_SHEET" } },
+                { "stepId": "workbook", "target": { "type": "WORKBOOK_CURRENT" }, "query": { "type": "GET_WORKBOOK_SUMMARY" } }
               ]
             }
             """);

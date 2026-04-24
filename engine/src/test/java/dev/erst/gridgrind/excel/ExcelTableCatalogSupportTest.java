@@ -3,6 +3,7 @@ package dev.erst.gridgrind.excel;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
+import java.util.Optional;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.util.AreaReference;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -41,7 +42,8 @@ class ExcelTableCatalogSupportTest {
 
     assertEquals(
         List.of("ArchiveQueue", "Queue"), selected.stream().map(ExcelTableSnapshot::name).toList());
-    assertNull(ExcelTableCatalogSupport.findTableSnapshotByName(allTables, "missing"));
+    assertEquals(
+        Optional.empty(), ExcelTableCatalogSupport.findTableSnapshotByName(allTables, "missing"));
   }
 
   @Test

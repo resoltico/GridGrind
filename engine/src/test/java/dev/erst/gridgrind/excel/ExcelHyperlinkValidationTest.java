@@ -47,8 +47,10 @@ class ExcelHyperlinkValidationTest {
 
   @Test
   void absoluteUriSchemeReturnsNullForBlankTargetsAndTheSchemeForAbsoluteUris() {
-    assertNull(ExcelHyperlinkValidation.absoluteUriScheme(null));
-    assertNull(ExcelHyperlinkValidation.absoluteUriScheme(" "));
-    assertEquals("https", ExcelHyperlinkValidation.absoluteUriScheme("https://example.com/report"));
+    assertEquals(java.util.Optional.empty(), ExcelHyperlinkValidation.absoluteUriScheme(null));
+    assertEquals(java.util.Optional.empty(), ExcelHyperlinkValidation.absoluteUriScheme(" "));
+    assertEquals(
+        java.util.Optional.of("https"),
+        ExcelHyperlinkValidation.absoluteUriScheme("https://example.com/report"));
   }
 }

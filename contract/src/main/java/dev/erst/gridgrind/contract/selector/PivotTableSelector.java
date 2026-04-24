@@ -7,10 +7,12 @@ import java.util.List;
 /** Selects one or more pivot tables by workbook-global identity. */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
 @JsonSubTypes({
-  @JsonSubTypes.Type(value = PivotTableSelector.All.class, name = "ALL"),
-  @JsonSubTypes.Type(value = PivotTableSelector.ByName.class, name = "BY_NAME"),
-  @JsonSubTypes.Type(value = PivotTableSelector.ByNames.class, name = "BY_NAMES"),
-  @JsonSubTypes.Type(value = PivotTableSelector.ByNameOnSheet.class, name = "BY_NAME_ON_SHEET")
+  @JsonSubTypes.Type(value = PivotTableSelector.All.class, name = "PIVOT_TABLE_ALL"),
+  @JsonSubTypes.Type(value = PivotTableSelector.ByName.class, name = "PIVOT_TABLE_BY_NAME"),
+  @JsonSubTypes.Type(value = PivotTableSelector.ByNames.class, name = "PIVOT_TABLE_BY_NAMES"),
+  @JsonSubTypes.Type(
+      value = PivotTableSelector.ByNameOnSheet.class,
+      name = "PIVOT_TABLE_BY_NAME_ON_SHEET")
 })
 public sealed interface PivotTableSelector extends Selector
     permits PivotTableSelector.All,

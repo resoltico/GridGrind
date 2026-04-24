@@ -310,7 +310,7 @@ final class WorkbookStyleRegistry {
     if (fromPoi(cellStyle.getFillPattern()) == ExcelFillPattern.NONE) {
       return ExcelFillPattern.SOLID;
     }
-    return null;
+    return java.util.Optional.<ExcelFillPattern>empty().orElse(null);
   }
 
   private void applyProtectionPatch(XSSFCellStyle cellStyle, ExcelCellProtection protectionPatch) {
@@ -408,7 +408,7 @@ final class WorkbookStyleRegistry {
 
   private ExcelBorderSide effectiveBorderSide(ExcelBorderStyle style, ExcelColor color) {
     if (style == null && color == null) {
-      return null;
+      return java.util.Optional.<ExcelBorderSide>empty().orElse(null);
     }
     if (color != null && (style == null || style == ExcelBorderStyle.NONE)) {
       throw new IllegalArgumentException("border side color requires an effective border style");

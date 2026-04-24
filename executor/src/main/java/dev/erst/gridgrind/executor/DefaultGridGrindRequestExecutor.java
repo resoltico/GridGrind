@@ -6,12 +6,7 @@ import dev.erst.gridgrind.contract.dto.GridGrindProtocolVersion;
 import dev.erst.gridgrind.contract.dto.GridGrindResponse;
 import dev.erst.gridgrind.contract.dto.RequestWarning;
 import dev.erst.gridgrind.contract.dto.WorkbookPlan;
-import dev.erst.gridgrind.excel.ExcelOoxmlPackageSecuritySupport;
-import dev.erst.gridgrind.excel.ExcelStreamingWorkbookWriter;
 import dev.erst.gridgrind.excel.ExcelWorkbook;
-import dev.erst.gridgrind.excel.WorkbookCommandExecutor;
-import dev.erst.gridgrind.excel.WorkbookReadExecutor;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -26,91 +21,36 @@ public final class DefaultGridGrindRequestExecutor implements GridGrindRequestEx
 
   /** Creates the production request executor with the default workbook executors and closers. */
   public DefaultGridGrindRequestExecutor() {
-    this(
-        new WorkbookCommandExecutor(),
-        new WorkbookReadExecutor(),
-        ExcelWorkbook::close,
-        Files::createTempFile,
-        ExcelOoxmlPackageSecuritySupport.ReadableWorkbook::close,
-        ExcelStreamingWorkbookWriter::markRecalculateOnOpen);
+    this(DefaultGridGrindRequestExecutorDependencies.production());
   }
 
-  /** Constructor for testing, allowing injection of custom workbook executors and closer. */
-  DefaultGridGrindRequestExecutor(
-      WorkbookCommandExecutor commandExecutor,
-      WorkbookReadExecutor readExecutor,
-      WorkbookCloser workbookCloser) {
-    this(
-        commandExecutor,
-        readExecutor,
-        workbookCloser,
-        Files::createTempFile,
-        ExcelOoxmlPackageSecuritySupport.ReadableWorkbook::close,
-        ExcelStreamingWorkbookWriter::markRecalculateOnOpen);
-  }
+  /** Creates one executor from an explicit owned dependency bundle. */
+  DefaultGridGrindRequestExecutor(DefaultGridGrindRequestExecutorDependencies dependencies) {
+    Objects.requireNonNull(dependencies, "dependencies must not be null");
 
-  /** Constructor for testing, allowing injection of custom executors, closer, and temp files. */
-  DefaultGridGrindRequestExecutor(
-      WorkbookCommandExecutor commandExecutor,
-      WorkbookReadExecutor readExecutor,
-      WorkbookCloser workbookCloser,
-      TempFileFactory tempFileFactory) {
-    this(
-        commandExecutor,
-        readExecutor,
-        workbookCloser,
-        tempFileFactory,
-        ExcelOoxmlPackageSecuritySupport.ReadableWorkbook::close,
-        ExcelStreamingWorkbookWriter::markRecalculateOnOpen);
-  }
-
-  /** Constructor for testing, allowing injection of direct-event readable-workbook closing. */
-  DefaultGridGrindRequestExecutor(
-      WorkbookCommandExecutor commandExecutor,
-      WorkbookReadExecutor readExecutor,
-      WorkbookCloser workbookCloser,
-      TempFileFactory tempFileFactory,
-      ReadableWorkbookCloser readableWorkbookCloser) {
-    this(
-        commandExecutor,
-        readExecutor,
-        workbookCloser,
-        tempFileFactory,
-        readableWorkbookCloser,
-        ExcelStreamingWorkbookWriter::markRecalculateOnOpen);
-  }
-
-  /** Constructor for testing, allowing injection of direct-event closing and streaming calc. */
-  DefaultGridGrindRequestExecutor(
-      WorkbookCommandExecutor commandExecutor,
-      WorkbookReadExecutor readExecutor,
-      WorkbookCloser workbookCloser,
-      TempFileFactory tempFileFactory,
-      ReadableWorkbookCloser readableWorkbookCloser,
-      StreamingCalculationApplier streamingCalculationApplier) {
-    Objects.requireNonNull(commandExecutor, "commandExecutor must not be null");
-    Objects.requireNonNull(readExecutor, "readExecutor must not be null");
-    Objects.requireNonNull(workbookCloser, "workbookCloser must not be null");
-    Objects.requireNonNull(tempFileFactory, "tempFileFactory must not be null");
-    Objects.requireNonNull(readableWorkbookCloser, "readableWorkbookCloser must not be null");
-    Objects.requireNonNull(
-        streamingCalculationApplier, "streamingCalculationApplier must not be null");
-
-    SemanticSelectorResolver selectorResolver = new SemanticSelectorResolver(readExecutor);
-    AssertionExecutor assertionExecutor = new AssertionExecutor(readExecutor, selectorResolver);
+    SemanticSelectorResolver selectorResolver =
+        new SemanticSelectorResolver(dependencies.readExecutor());
+    AssertionExecutor assertionExecutor =
+        new AssertionExecutor(dependencies.readExecutor(), selectorResolver);
     this.validationSupport = new ExecutionValidationSupport();
-    this.workbookSupport = new ExecutionWorkbookSupport(tempFileFactory);
+    this.workbookSupport = new ExecutionWorkbookSupport(dependencies.tempFileFactory());
     this.stepSupport =
         new ExecutionStepSupport(
-            commandExecutor, readExecutor, selectorResolver, assertionExecutor, tempFileFactory);
-    this.responseSupport = new ExecutionResponseSupport(workbookCloser, readableWorkbookCloser);
+            dependencies.commandExecutor(),
+            dependencies.readExecutor(),
+            selectorResolver,
+            assertionExecutor,
+            dependencies.tempFileFactory());
+    this.responseSupport =
+        new ExecutionResponseSupport(
+            dependencies.workbookCloser(), dependencies.readableWorkbookCloser());
     this.workflowSupport =
         new ExecutionWorkflowSupport(
             this.workbookSupport,
-            new ExecutionCalculationSupport(streamingCalculationApplier),
+            new ExecutionCalculationSupport(dependencies.streamingCalculationApplier()),
             this.stepSupport,
             this.responseSupport,
-            tempFileFactory);
+            dependencies.tempFileFactory());
   }
 
   /** Executes one complete GridGrind request with optional live verbose journal emission. */

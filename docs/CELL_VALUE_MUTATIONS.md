@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: CELL_VALUE_MUTATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, cell mutations, set-cell, set-range, clear-range, array-formula]
   questions: ["how do i write cells in gridgrind", "how do i write ranges in gridgrind", "how do i use array formulas in gridgrind"]
@@ -27,7 +27,7 @@ state on the targeted cell is preserved.
 {
   "stepId": "set-cell",
   "target": {
-    "type": "BY_ADDRESS",
+    "type": "CELL_BY_ADDRESS",
     "sheetName": "Inventory",
     "address": "B4"
   },
@@ -70,7 +70,7 @@ Any typed value variant accepted by `SET_CELL`, including `RICH_TEXT`, is valid 
 {
   "stepId": "set-range",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Inventory",
     "range": "A1:C3"
   },
@@ -158,7 +158,7 @@ normalizes the stored formula text before handing it to POI.
 {
   "stepId": "set-array-formula",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Calc",
     "range": "D2:D4"
   },
@@ -192,7 +192,7 @@ fails explicitly instead of silently doing nothing.
 {
   "stepId": "clear-array-formula",
   "target": {
-    "type": "BY_ADDRESS",
+    "type": "CELL_BY_ADDRESS",
     "sheetName": "Calc",
     "address": "D3"
   },
@@ -219,7 +219,7 @@ physically exist.
 {
   "stepId": "clear-range",
   "target": {
-    "type": "BY_RANGE",
+    "type": "RANGE_BY_RANGE",
     "sheetName": "Inventory",
     "range": "A2:C10"
   },

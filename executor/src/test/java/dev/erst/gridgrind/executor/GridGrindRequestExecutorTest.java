@@ -11,7 +11,7 @@ class GridGrindRequestExecutorTest {
   void requireNonNullReturnsExecutorAndRejectsNull() {
     GridGrindRequestExecutor executor =
         (request, bindings, sink) ->
-            new GridGrindResponse.Failure(
+            GridGrindResponse.failure(
                 GridGrindProtocolVersion.current(),
                 GridGrindProblems.problem(
                     GridGrindProblemCode.INVALID_REQUEST,

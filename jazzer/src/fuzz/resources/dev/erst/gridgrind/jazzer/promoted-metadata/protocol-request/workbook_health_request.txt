@@ -2,7 +2,7 @@ Replay Result
 Input: src/fuzz/resources/dev/erst/gridgrind/jazzer/protocol/ProtocolRequestFuzzTestInputs/readRequest/workbook_health_request.json
 Harness: protocol-request
 Outcome: SUCCESS
-Input Bytes: 2369
+Input Bytes: 2422
 Decode Outcome: PARSED
 Source Kind: NEW
 Persistence Kind: NONE
@@ -10,6 +10,6 @@ Operation Count: 5
 Assertion Count: 0
 Read Count: 4
 Assertion Kinds: (none)
-Read Kinds: GET_CELLS=1, ANALYZE_WORKBOOK_FINDINGS=1, GET_SHEET_SUMMARY=1, ANALYZE_FORMULA_HEALTH=1
+Read Kinds: GET_CELLS=1, ANALYZE_FORMULA_HEALTH=1, GET_SHEET_SUMMARY=1, ANALYZE_WORKBOOK_FINDINGS=1
 Style Kinds: (none)
 Operation Kinds: SET_CELL=3, ENSURE_SHEET=2

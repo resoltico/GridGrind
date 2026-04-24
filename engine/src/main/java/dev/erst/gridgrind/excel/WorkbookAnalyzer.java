@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /** Derives conclusion-bearing workbook findings from reusable workbook and sheet facts. */
@@ -206,14 +207,16 @@ final class WorkbookAnalyzer {
         continue;
       }
 
-      String referencedSheet = referencedSheetName(refersToFormula);
-      if (referencedSheet != null && !workbookSheetNames.contains(referencedSheet)) {
+      Optional<String> referencedSheet = referencedSheetName(refersToFormula);
+      if (referencedSheet.isPresent()
+          && !workbookSheetNames.contains(referencedSheet.orElseThrow())) {
         findings.add(
             new WorkbookAnalysis.AnalysisFinding(
                 WorkbookAnalysis.AnalysisFindingCode.NAMED_RANGE_BROKEN_REFERENCE,
                 WorkbookAnalysis.AnalysisSeverity.ERROR,
                 "Named range targets a missing sheet",
-                "Named range refers to a sheet that does not exist: " + referencedSheet,
+                "Named range refers to a sheet that does not exist: "
+                    + referencedSheet.orElseThrow(),
                 location,
                 List.of(refersToFormula)));
         continue;
@@ -281,22 +284,22 @@ final class WorkbookAnalyzer {
     return new WorkbookAnalysis.AnalysisLocation.NamedRange(namedRange.name(), namedRange.scope());
   }
 
-  String referencedSheetName(String refersToFormula) {
+  Optional<String> referencedSheetName(String refersToFormula) {
     int bangIndex = refersToFormula.indexOf('!');
     if (bangIndex <= 0) {
-      return null;
+      return Optional.empty();
     }
     String sheetName = refersToFormula.substring(0, bangIndex);
     if (!sheetName.startsWith("'")) {
-      return sheetName;
+      return Optional.of(sheetName);
     }
     if (!sheetName.endsWith("'")) {
-      return sheetName;
+      return Optional.of(sheetName);
     }
     if (sheetName.length() < 2) {
-      return sheetName;
+      return Optional.of(sheetName);
     }
-    return sheetName.substring(1, sheetName.length() - 1).replace("''", "'");
+    return Optional.of(sheetName.substring(1, sheetName.length() - 1).replace("''", "'"));
   }
 
   boolean looksLikeSheetRangeReference(String formula) {

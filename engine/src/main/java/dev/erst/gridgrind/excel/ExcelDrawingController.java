@@ -376,7 +376,7 @@ final class ExcelDrawingController {
     ExcelDrawingBinarySupport.removeRelationshipsToPart(sourcePart, targetPartName);
   }
 
-  private LocatedShape requiredLocatedShape(XSSFSheet sheet, String objectName) {
+  LocatedShape requiredLocatedShape(XSSFSheet sheet, String objectName) {
     LocatedShape located = optionalLocatedShape(sheet, objectName);
     if (located == null) {
       throw new DrawingObjectNotFoundException(sheet.getSheetName(), objectName);
@@ -405,7 +405,7 @@ final class ExcelDrawingController {
   private LocatedShape optionalLocatedShape(XSSFSheet sheet, String objectName) {
     XSSFDrawing drawing = sheet.getDrawingPatriarch();
     if (drawing == null) {
-      return null;
+      return java.util.Optional.<LocatedShape>empty().orElse(null);
     }
     XSSFShape matchedShape = null;
     XmlObject matchedShapeXml = null;
@@ -425,7 +425,7 @@ final class ExcelDrawingController {
       matchedShapeXml = shapeXml(shape);
     }
     return matchedShape == null
-        ? null
+        ? java.util.Optional.<LocatedShape>empty().orElse(null)
         : new LocatedShape(drawing, matchedShape, matchedShapeXml, parentAnchor(matchedShapeXml));
   }
 

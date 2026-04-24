@@ -1,8 +1,8 @@
 ---
 afad: "3.5"
-version: "0.58.0"
+version: "0.59.0"
 domain: STRUCTURED_FEATURE_MUTATIONS
-updated: "2026-04-23"
+updated: "2026-04-25"
 route:
   keywords: [gridgrind, structured feature mutations, style, validation, table, pivot, named-range, append-row]
   questions: ["where is the structured feature mutation reference", "how are structured feature mutations split in gridgrind", "where do i find table or validation mutations in gridgrind"]
