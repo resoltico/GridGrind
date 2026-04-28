@@ -64,6 +64,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   payloads through huge process environments. They now write case fixtures under `tmp/` and
   verify those release surfaces through file paths, avoiding Linux `Argument list too long`
   failures in release CI.
+- Release-surface shell regressions now follow the repo search-tool portability contract: they
+  prefer `rg` when available but fall back cleanly when it is not, instead of silently weakening
+  or breaking verification on lean CI runners.
 - The engine now names every private Apache POI contract it still depends on for relation
   removal, sheet-clone hyperlink preparation, workbook picture-catalog synchronization, and
   gradient-fill registry access. Compatibility tests and runtime failures now point at the exact
