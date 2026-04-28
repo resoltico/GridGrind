@@ -60,9 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `./check.sh` progress monitoring no longer assumes BSD `stat`. The root gate now sources a
   portable file-size helper with BSD, GNU, and generic fallback behavior, and a dedicated shell
   regression keeps the Linux/macOS seam from breaking release CI again.
-- The CLI-contract regression no longer pushes full fixture payloads through huge process
-  environments. It now writes case fixtures under `tmp/` and verifies the contract through file
-  paths, avoiding Linux `Argument list too long` failures in release CI.
+- The CLI-contract and public-container publication regressions no longer push full fixture
+  payloads through huge process environments. They now write case fixtures under `tmp/` and
+  verify those release surfaces through file paths, avoiding Linux `Argument list too long`
+  failures in release CI.
 - The engine now names every private Apache POI contract it still depends on for relation
   removal, sheet-clone hyperlink preparation, workbook picture-catalog synchronization, and
   gradient-fill registry access. Compatibility tests and runtime failures now point at the exact

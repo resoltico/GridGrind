@@ -56,6 +56,15 @@ cat > "${fake_bin}/docker" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 
+emit_fixture_file() {
+    local fixture_path=$1
+    [[ -f "${fixture_path}" ]] || {
+        printf 'missing fixture file: %s\n' "${fixture_path}" >&2
+        exit 1
+    }
+    cat "${fixture_path}"
+}
+
 log_path=${FAKE_DOCKER_LOG:?}
 printf '%s\n' "$*" >> "${log_path}"
 
@@ -93,35 +102,35 @@ case "${command}" in
         cli_flag=${args[$((run_index + 1))]:-}
         case "${cli_flag}" in
             '')
-                printf '%s' "${FAKE_DOCKER_HELP_OUTPUT:?}"
+                emit_fixture_file "${FAKE_DOCKER_HELP_OUTPUT_FILE:?}"
                 ;;
             --version)
                 case "${image_ref}" in
                     *:latest)
-                        printf '%s' "${FAKE_DOCKER_LATEST_VERSION_OUTPUT:?}"
+                        emit_fixture_file "${FAKE_DOCKER_LATEST_VERSION_OUTPUT_FILE:?}"
                         ;;
                     *)
-                        printf '%s' "${FAKE_DOCKER_VERSION_OUTPUT:?}"
+                        emit_fixture_file "${FAKE_DOCKER_VERSION_OUTPUT_FILE:?}"
                         ;;
                 esac
                 ;;
             --help)
-                printf '%s' "${FAKE_DOCKER_HELP_OUTPUT:?}"
+                emit_fixture_file "${FAKE_DOCKER_HELP_OUTPUT_FILE:?}"
                 ;;
             --print-task-catalog)
-                printf '%s' "${FAKE_DOCKER_TASK_CATALOG_OUTPUT:?}"
+                emit_fixture_file "${FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE:?}"
                 ;;
             --print-task-plan)
-                printf '%s' "${FAKE_DOCKER_TASK_PLAN_OUTPUT:?}"
+                emit_fixture_file "${FAKE_DOCKER_TASK_PLAN_OUTPUT_FILE:?}"
                 ;;
             --print-goal-plan)
-                printf '%s' "${FAKE_DOCKER_GOAL_PLAN_OUTPUT:?}"
+                emit_fixture_file "${FAKE_DOCKER_GOAL_PLAN_OUTPUT_FILE:?}"
                 ;;
             --doctor-request)
-                printf '%s' "${FAKE_DOCKER_DOCTOR_REPORT_OUTPUT:?}"
+                emit_fixture_file "${FAKE_DOCKER_DOCTOR_REPORT_OUTPUT_FILE:?}"
                 ;;
             --print-protocol-catalog)
-                printf '%s' "${FAKE_DOCKER_CATALOG_OUTPUT:?}"
+                emit_fixture_file "${FAKE_DOCKER_CATALOG_OUTPUT_FILE:?}"
                 ;;
             *)
                 printf 'unexpected docker run invocation: %s\n' "$*" >&2
@@ -137,36 +146,75 @@ esac
 EOF
 chmod +x "${fake_bin}/docker"
 
-run_verify_expect_success() {
+verify_case_counter=0
+
+next_case_dir() {
+    verify_case_counter=$((verify_case_counter + 1))
+    local case_dir="${test_root}/verify-case-${verify_case_counter}"
+    mkdir -p "${case_dir}"
+    printf '%s' "${case_dir}"
+}
+
+write_case_fixture() {
+    local case_dir=$1
+    local fixture_name=$2
+    local fixture_text=$3
+    local fixture_path="${case_dir}/${fixture_name}"
+
+    printf '%s' "${fixture_text}" > "${fixture_path}"
+    printf '%s' "${fixture_path}"
+}
+
+run_verify_with_fixture_texts() {
+    local version_output=$1
+    local latest_version_output=$2
+    local help_output=$3
+    local catalog_output=$4
+    local task_catalog_output=$5
+    local task_plan_output=$6
+    local goal_plan_output=$7
+    local doctor_report_output=$8
+    local case_dir
+    local version_output_file
+    local latest_version_output_file
+    local help_output_file
+    local catalog_output_file
+    local task_catalog_output_file
+    local task_plan_output_file
+    local goal_plan_output_file
+    local doctor_report_output_file
+
+    case_dir="$(next_case_dir)"
+    version_output_file="$(write_case_fixture "${case_dir}" 'version.txt' "${version_output}")"
+    latest_version_output_file="$(write_case_fixture "${case_dir}" 'latest-version.txt' "${latest_version_output}")"
+    help_output_file="$(write_case_fixture "${case_dir}" 'help.txt' "${help_output}")"
+    catalog_output_file="$(write_case_fixture "${case_dir}" 'protocol-catalog.json' "${catalog_output}")"
+    task_catalog_output_file="$(write_case_fixture "${case_dir}" 'task-catalog.json' "${task_catalog_output}")"
+    task_plan_output_file="$(write_case_fixture "${case_dir}" 'task-plan.json' "${task_plan_output}")"
+    goal_plan_output_file="$(write_case_fixture "${case_dir}" 'goal-plan.json' "${goal_plan_output}")"
+    doctor_report_output_file="$(write_case_fixture "${case_dir}" 'doctor-report.json' "${doctor_report_output}")"
+
     PATH="${fake_bin}:${PATH}" \
         FAKE_DOCKER_LOG="${fake_log}" \
-        FAKE_DOCKER_VERSION_OUTPUT="$1" \
-        FAKE_DOCKER_LATEST_VERSION_OUTPUT="$2" \
-        FAKE_DOCKER_HELP_OUTPUT="$3" \
-        FAKE_DOCKER_CATALOG_OUTPUT="$4" \
-        FAKE_DOCKER_TASK_CATALOG_OUTPUT="$5" \
-        FAKE_DOCKER_TASK_PLAN_OUTPUT="$6" \
-        FAKE_DOCKER_GOAL_PLAN_OUTPUT="$7" \
-        FAKE_DOCKER_DOCTOR_REPORT_OUTPUT="$8" \
+        FAKE_DOCKER_VERSION_OUTPUT_FILE="${version_output_file}" \
+        FAKE_DOCKER_LATEST_VERSION_OUTPUT_FILE="${latest_version_output_file}" \
+        FAKE_DOCKER_HELP_OUTPUT_FILE="${help_output_file}" \
+        FAKE_DOCKER_CATALOG_OUTPUT_FILE="${catalog_output_file}" \
+        FAKE_DOCKER_TASK_CATALOG_OUTPUT_FILE="${task_catalog_output_file}" \
+        FAKE_DOCKER_TASK_PLAN_OUTPUT_FILE="${task_plan_output_file}" \
+        FAKE_DOCKER_GOAL_PLAN_OUTPUT_FILE="${goal_plan_output_file}" \
+        FAKE_DOCKER_DOCTOR_REPORT_OUTPUT_FILE="${doctor_report_output_file}" \
         GRIDGRIND_PUBLICATION_VERIFY_RETRIES=1 \
         GRIDGRIND_PUBLICATION_VERIFY_DELAY_SECONDS=0 \
         "${verify_script}" "ghcr.io/example/gridgrind" "9.9.9" >/dev/null
 }
 
+run_verify_expect_success() {
+    run_verify_with_fixture_texts "$@"
+}
+
 run_verify_expect_failure() {
-    if PATH="${fake_bin}:${PATH}" \
-        FAKE_DOCKER_LOG="${fake_log}" \
-        FAKE_DOCKER_VERSION_OUTPUT="$1" \
-        FAKE_DOCKER_LATEST_VERSION_OUTPUT="$2" \
-        FAKE_DOCKER_HELP_OUTPUT="$3" \
-        FAKE_DOCKER_CATALOG_OUTPUT="$4" \
-        FAKE_DOCKER_TASK_CATALOG_OUTPUT="$5" \
-        FAKE_DOCKER_TASK_PLAN_OUTPUT="$6" \
-        FAKE_DOCKER_GOAL_PLAN_OUTPUT="$7" \
-        FAKE_DOCKER_DOCTOR_REPORT_OUTPUT="$8" \
-        GRIDGRIND_PUBLICATION_VERIFY_RETRIES=1 \
-        GRIDGRIND_PUBLICATION_VERIFY_DELAY_SECONDS=0 \
-        "${verify_script}" "ghcr.io/example/gridgrind" "9.9.9" >/dev/null 2>&1; then
+    if run_verify_with_fixture_texts "$@" >/dev/null 2>&1; then
         die "verifier unexpectedly succeeded"
     fi
 }
