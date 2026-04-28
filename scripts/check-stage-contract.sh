@@ -19,6 +19,7 @@ readonly check_stage_labels=(
 
 readonly check_stage4_script_paths=(
     scripts/test-check-process-support.sh
+    scripts/test-check-file-support.sh
     scripts/test-check-stage-contract.sh
     scripts/test-contract-module-split.sh
     scripts/test-explicit-import-gate.sh

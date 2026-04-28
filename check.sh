@@ -100,6 +100,7 @@ readonly repo_root="$(resolve_script_dir)"
 readonly gradlew="${repo_root}/gradlew"
 readonly project_cache_dir_root="${GRIDGRIND_PROJECT_CACHE_DIR:-}"
 readonly project_cache_dir="$(prepare_project_cache_dir "${project_cache_dir_root}")"
+readonly file_support_script="${repo_root}/scripts/check-file-support.sh"
 readonly process_support_script="${repo_root}/scripts/check-process-support.sh"
 readonly repo_lock_support_script="${repo_root}/scripts/repo-verification-lock-support.sh"
 readonly stage_contract_script="${repo_root}/scripts/check-stage-contract.sh"
@@ -119,9 +120,12 @@ readonly diagnostics_command_timeout_seconds=5
 readonly diagnostics_process_capture_limit=6
 readonly stall_exit_code=124
 
+[[ -f "${file_support_script}" ]] || die "missing file support helper at ${file_support_script}"
 [[ -f "${process_support_script}" ]] || die "missing process support helper at ${process_support_script}"
 [[ -f "${repo_lock_support_script}" ]] || die "missing repo verification lock helper at ${repo_lock_support_script}"
 [[ -f "${stage_contract_script}" ]] || die "missing check stage contract helper at ${stage_contract_script}"
+# shellcheck source=/dev/null
+source "${file_support_script}"
 # shellcheck source=/dev/null
 source "${process_support_script}"
 # shellcheck source=/dev/null
@@ -212,15 +216,6 @@ epoch_seconds() {
 }
 
 readonly check_started_at="$(epoch_seconds)"
-
-file_size_bytes() {
-    local file_path=$1
-    if [[ ! -f "${file_path}" ]]; then
-        printf '0'
-        return
-    fi
-    stat -f '%z' "${file_path}"
-}
 
 latest_nonempty_line() {
     local log_path=$1

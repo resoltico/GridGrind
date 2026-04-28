@@ -57,6 +57,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Docker smoke` as the required contexts, exposes `Contributor devcontainer` as a separate job,
   and the tag/merge release verifiers now treat that contributor-environment job as
   release-blocking too.
+- `./check.sh` progress monitoring no longer assumes BSD `stat`. The root gate now sources a
+  portable file-size helper with BSD, GNU, and generic fallback behavior, and a dedicated shell
+  regression keeps the Linux/macOS seam from breaking release CI again.
 - The engine now names every private Apache POI contract it still depends on for relation
   removal, sheet-clone hyperlink preparation, workbook picture-catalog synchronization, and
   gradient-fill registry access. Compatibility tests and runtime failures now point at the exact
